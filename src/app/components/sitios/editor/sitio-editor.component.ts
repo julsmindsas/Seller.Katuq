@@ -13,12 +13,20 @@ import { LimitesPlanService } from "../../../shared/services/limites-plan.servic
 import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
 import {
   INSTRUCCION_MAX,
+  MAX_REFERENCIAS,
   MensajeEditarIA,
   SUGERENCIAS_EDITAR_IA,
+  clasificarArchivo,
   historialParaServidor,
+  leerConversacion,
+  llaveConversacion,
   mensajeDeErrorEditarIA,
+  problemaConArchivo,
+  serializarConversacion,
+  textoAvance,
   validarInstruccion,
 } from "./editar-con-ia.logic";
+import { pdfAImagenes, reducirImagen } from "./editar-con-ia.archivos";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
 const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; icono: string }[] = [
@@ -2475,14 +2483,27 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   temaAnterior: any = null;
 
   // ── Editar con IA, conversando (bandera landingPrompt) ──
-  // El servidor devuelve la página cambiada; aquí se pone en pantalla y entra al historial (Ctrl+Z).
-  // Nada se guarda hasta que la persona toque Guardar.
+  // Pensado para alguien sin conocimientos técnicos: escribe lo que quiere (o muestra una foto, una
+  // captura o un PDF de cómo le gustaría) y la página cambia en pantalla. El servidor devuelve la página
+  // cambiada; aquí se aplica y entra al historial (Ctrl+Z). Nada se guarda hasta tocar Guardar.
   mensajesIA: MensajeEditarIA[] = [];
   mensajeIA = "";
   editandoIA = false;
+  textoAvanceIA = "";
   readonly sugerenciasIA = SUGERENCIAS_EDITAR_IA;
   readonly instruccionMax = INSTRUCCION_MAX;
+  readonly maxReferencias = MAX_REFERENCIAS;
   private pilaDeshacerIA: string[] = [];
+  private relojAvanceIA: any = null;
+  private conversacionCargada = "";
+
+  /** Lo que la persona adjuntó, ya listo para enviar (reducido a JPEG en el navegador). */
+  adjuntosIA: { id: string; nombre: string; dataUrl: string; archivo: File | null }[] = [];
+  /** ¿Para qué son las imágenes? null = todavía no lo dijo. */
+  propositoAdjuntos: "parecido" | "usar" | null = null;
+  preparandoAdjuntos = false;
+  arrastrandoSobreChat = false;
+  subiendoFotoIA = false;
 
   get puedeEditarConIA(): boolean {
     return !!(this.features && this.features.isEnabled("landingPrompt"));
@@ -2497,6 +2518,46 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     return [...this.mensajesIA].reverse();
   }
 
+  /** El último mensaje de la IA que cambió algo: debajo van "Me gusta, guardar" y "Deshacer". */
+  get ultimoCambioIA(): MensajeEditarIA | null {
+    const m = this.mensajesIA[this.mensajesIA.length - 1];
+    return m && m.rol === "ia" && Array.isArray(m.cambios) && m.cambios.length ? m : null;
+  }
+
+  /** La conversación de esta página se recuerda en este navegador (sin imágenes). */
+  private recordarConversacion(): void {
+    if (!this.id) return;
+    try {
+      localStorage.setItem(llaveConversacion(this.id), serializarConversacion(this.mensajesIA));
+    } catch (_) {
+      /* sin almacenamiento la conversación vive mientras la pantalla esté abierta */
+    }
+  }
+
+  /** Se llama al abrir la pestaña: trae lo que se habló antes sobre esta página. */
+  abrirChatIA(): void {
+    this.panel = "ia";
+    if (!this.id || this.conversacionCargada === this.id) return;
+    this.conversacionCargada = this.id;
+    try {
+      const previos = leerConversacion(localStorage.getItem(llaveConversacion(this.id)));
+      if (previos.length && !this.mensajesIA.length) this.mensajesIA = previos;
+    } catch (_) {
+      /* nada que traer */
+    }
+  }
+
+  empezarDeNuevoIA(): void {
+    if (this.editandoIA) return;
+    this.mensajesIA = [];
+    this.recordarConversacion();
+  }
+
+  private decirIA(mensaje: MensajeEditarIA): void {
+    this.mensajesIA.push(mensaje);
+    this.recordarConversacion();
+  }
+
   usarSugerenciaIA(texto: string): void {
     if (this.editandoIA) return;
     this.mensajeIA = texto;
@@ -2508,35 +2569,179 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.enviarChatIA();
   }
 
+  // ── Fotos, capturas y PDF ──
+
+  alElegirAdjuntos(evento: Event): void {
+    const input = evento.target as HTMLInputElement;
+    const archivos = input.files ? Array.from(input.files) : [];
+    input.value = "";
+    void this.agregarAdjuntos(archivos);
+  }
+
+  alArrastrarSobreChat(evento: DragEvent, encima: boolean): void {
+    evento.preventDefault();
+    this.arrastrandoSobreChat = encima;
+  }
+
+  alSoltarEnChat(evento: DragEvent): void {
+    evento.preventDefault();
+    this.arrastrandoSobreChat = false;
+    const archivos = evento.dataTransfer && evento.dataTransfer.files ? Array.from(evento.dataTransfer.files) : [];
+    void this.agregarAdjuntos(archivos);
+  }
+
+  /** Una captura copiada (Ctrl+V / Cmd+V) se adjunta sola. */
+  alPegarEnChat(evento: ClipboardEvent): void {
+    const items = evento.clipboardData ? Array.from(evento.clipboardData.items || []) : [];
+    const archivos = items.filter((i) => i.kind === "file").map((i) => i.getAsFile()).filter(Boolean) as File[];
+    if (!archivos.length) return;
+    evento.preventDefault();
+    void this.agregarAdjuntos(archivos);
+  }
+
+  private async agregarAdjuntos(archivos: File[]): Promise<void> {
+    if (!archivos.length || this.editandoIA) return;
+    this.preparandoAdjuntos = true;
+    try {
+      for (const archivo of archivos) {
+        if (this.adjuntosIA.length >= MAX_REFERENCIAS) {
+          this.toastr.info(`Puedes mostrarme hasta ${MAX_REFERENCIAS} imágenes por mensaje.`);
+          break;
+        }
+        const problema = problemaConArchivo(archivo);
+        if (problema) {
+          this.toastr.warning(problema);
+          continue;
+        }
+        if (clasificarArchivo(archivo) === "pdf") {
+          const paginas = await pdfAImagenes(archivo, MAX_REFERENCIAS - this.adjuntosIA.length);
+          paginas.forEach((dataUrl, k) =>
+            this.adjuntosIA.push({ id: `${Date.now()}_${k}`, nombre: `${archivo.name} · página ${k + 1}`, dataUrl, archivo: null }),
+          );
+          // Un PDF es casi siempre un diseño de referencia, no una foto para poner.
+          if (!this.propositoAdjuntos) this.propositoAdjuntos = "parecido";
+        } else {
+          const dataUrl = await reducirImagen(archivo);
+          this.adjuntosIA.push({ id: `${Date.now()}_${this.adjuntosIA.length}`, nombre: archivo.name || "Imagen", dataUrl, archivo });
+        }
+      }
+    } catch (_) {
+      this.toastr.error("No pude abrir ese archivo. Prueba con una captura de pantalla (JPG o PNG).");
+    } finally {
+      this.preparandoAdjuntos = false;
+    }
+  }
+
+  quitarAdjunto(indice: number): void {
+    this.adjuntosIA.splice(indice, 1);
+    if (!this.adjuntosIA.length) this.propositoAdjuntos = null;
+  }
+
+  elegirPropositoAdjuntos(proposito: "parecido" | "usar"): void {
+    this.propositoAdjuntos = proposito;
+  }
+
+  /** "Ponerla en mi página": se sube la foto original y se pone en la portada o en una galería. */
+  ponerFotoEnPagina(destino: "portada" | "galeria"): void {
+    const adjunto = this.adjuntosIA.find((a) => !!a.archivo);
+    if (!adjunto || !adjunto.archivo || !this.contenido || this.subiendoFotoIA) return;
+    this.subiendoFotoIA = true;
+    this.service.subirImagen(adjunto.archivo).subscribe({
+      next: (res) => {
+        this.subiendoFotoIA = false;
+        if (!res || !res.success || !res.url) {
+          this.decirIA({ rol: "ia", texto: (res && res.error) || "No pude subir la foto. Inténtalo de nuevo.", error: true });
+          return;
+        }
+        this.pilaDeshacerIA.push(JSON.stringify(this.contenido));
+        const bloques = this.bloques as any[];
+        let texto = "";
+        if (destino === "portada") {
+          const portada = bloques.find((b) => b.tipo === "hero");
+          if (!portada) {
+            this.pilaDeshacerIA.pop();
+            this.decirIA({ rol: "ia", texto: "Tu página no tiene portada. Agrégala en la pestaña Secciones y vuelve a intentarlo.", error: true });
+            return;
+          }
+          portada.datos = { ...(portada.datos || {}), imagen: res.url };
+          texto = "Listo, puse tu foto en la portada.";
+          if (Number(res.ancho) > 0 && Number(res.ancho) < 1600) {
+            texto += ` Ojo: mide ${res.ancho} px de ancho; en pantallas grandes puede verse un poco borrosa. Si tienes una más grande, mejor.`;
+          }
+        } else {
+          let galeria = bloques.find((b) => b.tipo === "galeria");
+          if (!galeria) {
+            galeria = { id: `b_${Date.now().toString(36)}_galeria`, tipo: "galeria", visible: true, datos: { titulo: "Galería", imagenes: [] } };
+            const pie = bloques.findIndex((b) => b.tipo === "footer");
+            bloques.splice(pie >= 0 ? pie : bloques.length, 0, galeria);
+          }
+          galeria.datos = { ...(galeria.datos || {}), imagenes: [...((galeria.datos && galeria.datos.imagenes) || []), { url: res.url, alt: "" }] };
+          galeria.visible = true;
+          texto = "Listo, agregué tu foto a la galería.";
+        }
+        this.seleccionado = -1;
+        this.marcarSucio();
+        this.decirIA({ rol: "ia", texto, cambios: [{ icono: "🖼️", texto: destino === "portada" ? "Foto de la portada" : "Nueva foto en la galería" }] });
+        this.adjuntosIA = this.adjuntosIA.filter((a) => a !== adjunto);
+        if (!this.adjuntosIA.length) this.propositoAdjuntos = null;
+      },
+      error: (e) => {
+        this.subiendoFotoIA = false;
+        this.decirIA({ rol: "ia", texto: (e && e.error && e.error.error) || "No pude subir la foto. Inténtalo de nuevo.", error: true });
+      },
+    });
+  }
+
+  // ── Enviar ──
+
   enviarChatIA(): void {
     if (!this.contenido || this.editandoIA || !this.puedeEditarConIA) return;
-    const v = validarInstruccion(this.mensajeIA);
+    const referencias = this.propositoAdjuntos === "usar" ? [] : this.adjuntosIA.map((a) => a.dataUrl);
+    // Con imágenes y sin texto, se entiende "que se parezca".
+    const escrito = this.mensajeIA.trim() || (referencias.length ? "Quiero que mi página se vea parecida a esto." : "");
+    const v = validarInstruccion(escrito);
     if (!v.ok) {
       this.toastr.warning(v.mensaje);
       return;
     }
     const historial = historialParaServidor(this.mensajesIA);
-    this.mensajesIA.push({ rol: "comercio", texto: v.instruccion });
+    this.decirIA({ rol: "comercio", texto: v.instruccion, adjuntos: referencias.length || undefined });
     this.mensajeIA = "";
+    if (referencias.length) {
+      this.adjuntosIA = [];
+      this.propositoAdjuntos = null;
+    }
     this.editandoIA = true;
+    const inicio = Date.now();
+    this.textoAvanceIA = textoAvance(0, referencias.length);
+    this.relojAvanceIA = setInterval(() => {
+      this.textoAvanceIA = textoAvance((Date.now() - inicio) / 1000, referencias.length);
+    }, 1500);
     const paginaDelPedido = this.paginaActiva;
+    const terminar = () => {
+      this.editandoIA = false;
+      if (this.relojAvanceIA) clearInterval(this.relojAvanceIA);
+      this.relojAvanceIA = null;
+    };
     this.service
       .editarConIA({
         siteId: this.id,
         instruccion: v.instruccion,
         historial,
         contenido: { bloques: this.bloques, tema: (this.contenido as any).tema },
+        ...(referencias.length ? { referencias } : {}),
       })
       .subscribe({
         next: (res) => {
-          this.editandoIA = false;
+          terminar();
           const d = res && res.data;
           if (!res || !res.success || !d) {
-            this.mensajesIA.push({ rol: "ia", texto: (res && (res as any).message) || "No pude aplicar el cambio.", error: true });
+            this.decirIA({ rol: "ia", texto: (res && (res as any).message) || "No pude aplicar el cambio.", error: true });
             return;
           }
           // Solo se aplica sobre la misma página que se pidió (si la persona cambió de página, no se pisa otra).
-          if (d.aplicados > 0 && this.contenido && paginaDelPedido === this.paginaActiva) {
+          const aplica = d.aplicados > 0 && !!this.contenido && paginaDelPedido === this.paginaActiva;
+          if (aplica) {
             this.pilaDeshacerIA.push(JSON.stringify(this.contenido));
             if (this.pilaDeshacerIA.length > 20) this.pilaDeshacerIA.shift();
             const pagina = this.paginaEnEdicion;
@@ -2546,13 +2751,17 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
             this.seleccionado = -1;
             this.marcarSucio();
           }
-          this.mensajesIA.push({ rol: "ia", texto: d.mensaje });
+          this.decirIA({ rol: "ia", texto: d.mensaje, cambios: aplica ? d.cambios || [] : undefined });
         },
         error: (e) => {
-          this.editandoIA = false;
-          this.mensajesIA.push({ rol: "ia", texto: mensajeDeErrorEditarIA(e), error: true });
+          terminar();
+          this.decirIA({ rol: "ia", texto: mensajeDeErrorEditarIA(e), error: true });
         },
       });
+  }
+
+  guardarDesdeChatIA(): void {
+    this.guardar();
   }
 
   deshacerChatIA(): void {
@@ -2561,7 +2770,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.contenido = JSON.parse(foto);
     this.seleccionado = -1;
     this.marcarSucio();
-    this.mensajesIA.push({ rol: "ia", texto: "Listo, deshice el último cambio." });
+    this.decirIA({ rol: "ia", texto: "Listo, deshice el último cambio." });
   }
 
   // ── Diseñar con IA ──
@@ -3612,6 +3821,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   ngOnDestroy(): void {
+    if (this.relojAvanceIA) clearInterval(this.relojAvanceIA);
     document.body.classList.remove("kq-editor-lleno");
     if (this.observadorLienzo) this.observadorLienzo.disconnect();
   }

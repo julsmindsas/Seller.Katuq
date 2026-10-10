@@ -63,9 +63,71 @@ test('el servicio usa BaseService y la ruta de la función', () => {
 
 test('los estilos del chat no usan degradados ni colores fuera de la tabla', () => {
   const scss = leer(path.join(EDITOR, 'sitio-editor.component.scss'));
-  const desde = scss.indexOf('"Con IA": chat');
+  const desde = scss.indexOf('"Con IA": diseñar la página conversando');
   assert.ok(desde > 0);
-  const bloque = scss.slice(desde, desde + 2500);
+  const bloque = scss.slice(desde, scss.indexOf('@keyframes chat-ia-punto', desde));
   assert.ok(!/gradient\(/.test(bloque));
   assert.ok(!/#2196f3|#4361ee|#2563eb|#5c6ac4|#667eea/i.test(bloque));
+});
+
+test('archivos: solo fotos JPG/PNG/WebP o PDF, hasta 20 MB, con mensajes para cualquiera', () => {
+  assert.equal(L.clasificarArchivo({ type: 'image/png', name: 'a.png' }), 'imagen');
+  assert.equal(L.clasificarArchivo({ type: '', name: 'captura.JPG' }), 'imagen');
+  assert.equal(L.clasificarArchivo({ type: 'application/pdf', name: 'diseño.pdf' }), 'pdf');
+  assert.equal(L.clasificarArchivo({ type: 'image/gif', name: 'a.gif' }), null);
+  assert.equal(L.clasificarArchivo({ type: 'application/zip', name: 'a.zip' }), null);
+  assert.equal(L.clasificarArchivo(null), null);
+  assert.equal(L.problemaConArchivo({ type: 'image/jpeg', name: 'a.jpg', size: 1000 }), '');
+  assert.match(L.problemaConArchivo({ type: 'video/mp4', name: 'a.mp4', size: 10 }), /foto o captura/);
+  assert.match(L.problemaConArchivo({ type: 'image/png', name: 'a.png', size: 30 * 1024 * 1024 }), /20 MB/);
+  assert.equal(L.MAX_REFERENCIAS, 3);
+});
+
+test('avance: dice qué está pasando, en palabras simples', () => {
+  assert.equal(L.textoAvance(1, 1), 'Mirando tu imagen…');
+  assert.equal(L.textoAvance(1, 2), 'Mirando tus 2 imágenes…');
+  assert.match(L.textoAvance(5, 2), /colores, la letra y el estilo/);
+  assert.match(L.textoAvance(1, 0), /Aplicando los cambios/);
+  assert.match(L.textoAvance(20, 0), /Ya casi/);
+});
+
+test('la conversación se recuerda sin imágenes, con tope, y una lectura rota no rompe nada', () => {
+  const mensajes = [];
+  for (let i = 0; i < 40; i++) mensajes.push({ rol: i % 2 ? 'ia' : 'comercio', texto: `m${i}`, ...(i === 39 ? { cambios: [{ icono: '🎨', texto: 'Colores', colores: ['#111111'] }] } : {}), ...(i === 38 ? { adjuntos: 2 } : {}) });
+  const guardado = L.serializarConversacion(mensajes);
+  assert.ok(!/data:image/.test(guardado));
+  const leido = L.leerConversacion(guardado);
+  assert.equal(leido.length, L.MENSAJES_GUARDADOS);
+  assert.equal(leido[leido.length - 1].cambios[0].texto, 'Colores');
+  assert.equal(leido[leido.length - 2].adjuntos, 2);
+  assert.deepEqual(L.leerConversacion('{roto'), []);
+  assert.deepEqual(L.leerConversacion(null), []);
+  assert.deepEqual(L.leerConversacion(JSON.stringify([{ rol: 'otro', texto: 'x' }, { rol: 'ia' }])), []);
+  assert.equal(L.llaveConversacion('s1'), 'katuq:editor-ia:s1');
+});
+
+test('el panel pregunta para qué es la imagen y deja guardar o deshacer después de un cambio', () => {
+  const html = leer(path.join(EDITOR, 'sitio-editor.component.html'));
+  assert.match(html, /¿Para qué es esta imagen\?/);
+  assert.match(html, /Que mi página se vea parecida/);
+  assert.match(html, /Ponerla en mi página/);
+  assert.match(html, /accept="image\/jpeg,image\/png,image\/webp,application\/pdf"/);
+  assert.match(html, /\(paste\)="alPegarEnChat/);
+  assert.match(html, /\(drop\)="alSoltarEnChat/);
+  assert.match(html, /Me gusta, guardar/);
+  assert.match(html, /Esto cambié:/);
+  assert.ok(!/hero|footer|faq/i.test(html.slice(html.indexOf('Diseña tu página conversando'), html.indexOf('<!-- ── Secciones ── -->'))), 'sin palabras técnicas en el panel');
+  const ts = leer(path.join(EDITOR, 'sitio-editor.component.ts'));
+  assert.match(ts, /localStorage\.setItem\(llaveConversacion/);
+  assert.match(ts, /if \(this\.relojAvanceIA\) clearInterval\(this\.relojAvanceIA\);/);
+  assert.match(ts, /this\.service\.subirImagen\(adjunto\.archivo\)/);
+});
+
+test('pdf.js se carga solo al adjuntar un PDF y su worker viaja como asset', () => {
+  const arch = leer(path.join(EDITOR, 'editar-con-ia.archivos.ts'));
+  assert.match(arch, /await import\('pdfjs-dist\/legacy\/build\/pdf'\)/);
+  assert.match(arch, /assets\/pdfjs\/pdf\.worker\.min\.js/);
+  const angular = leer(path.join(RAIZ, 'angular.json'));
+  assert.match(angular, /"glob": "pdf\.worker\.min\.js"/);
+  assert.match(leer(path.join(RAIZ, 'package.json')), /"pdfjs-dist": "\^?2\.16\.105"/);
 });

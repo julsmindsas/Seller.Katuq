@@ -63,7 +63,7 @@
     <aside class="panel">
       <nav class="pestanas">
         <!-- Editar la página conversando con la IA (bandera landingPrompt). -->
-        <button *ngIf="puedeEditarConIA" class="pestana-ia" [class.is-active]="panel === 'ia'" (click)="panel = 'ia'">✨ Con IA</button>
+        <button *ngIf="puedeEditarConIA" class="pestana-ia" [class.is-active]="panel === 'ia'" (click)="abrirChatIA()">✨ Con IA</button>
         <button [class.is-active]="panel === 'bloques'" (click)="panel = 'bloques'">Secciones</button>
         <button [class.is-active]="panel === 'diseno'" (click)="panel = 'diseno'; cargarMuestrasDeLetra()">Estilo</button>
         <button [class.is-active]="panel === 'tienda'" (click)="panel = 'tienda'; cargarBodegas()">Tienda</button>
@@ -75,35 +75,116 @@
         <button [class.is-active]="panel === 'ajustes'" (click)="panel = 'ajustes'">Ajustes</button>
       </nav>
 
-      <!-- ── Con IA: pedirle cambios a la página conversando ── -->
+      <!-- ── Con IA: pedirle cambios a la página conversando ──
+           Para alguien sin conocimientos técnicos: escribe como a un diseñador, o muestra una foto,
+           una captura o un PDF de cómo le gustaría. Nada se guarda hasta tocar Guardar. -->
       <div class="panel__contenido" *ngIf="panel === 'ia' && puedeEditarConIA">
-        <div class="grupo grupo--ia chat-ia">
-          <h3>Edita con IA</h3>
-          <p>Dime qué quieres cambiar de <strong>{{ nombrePaginaActiva }}</strong> y lo hago sobre la página. Si no te gusta, «Deshacer» o Ctrl+Z.</p>
+        <div class="chat-ia" [class.chat-ia--soltando]="arrastrandoSobreChat"
+             (dragover)="alArrastrarSobreChat($event, true)" (dragleave)="alArrastrarSobreChat($event, false)"
+             (drop)="alSoltarEnChat($event)">
 
+          <div class="chat-ia__cabecera">
+            <h3>✨ Diseña tu página conversando</h3>
+            <button type="button" class="chat-ia__nueva" *ngIf="mensajesIA.length && !editandoIA" (click)="empezarDeNuevoIA()">Empezar de nuevo</button>
+          </div>
+          <p class="chat-ia__intro">
+            Escríbeme como le hablarías a un diseñador: <em>«quiero colores más alegres»</em>, <em>«un título que venda más»</em>.
+            También puedes <strong>mostrarme una foto, una captura o un PDF</strong> de cómo te gustaría que se viera.
+          </p>
+
+          <!-- Conversación (el mensaje más nuevo queda abajo, a la vista) -->
           <div class="chat-ia__mensajes" *ngIf="mensajesIA.length || editandoIA">
-            <div class="chat-ia__pensando" *ngIf="editandoIA" role="status" aria-live="polite">Editando tu página…</div>
-            <div *ngFor="let m of mensajesIAInverso" class="chat-ia__burbuja"
-                 [class.chat-ia__burbuja--yo]="m.rol === 'comercio'"
-                 [class.chat-ia__burbuja--error]="m.error">{{ m.texto }}</div>
+            <div class="chat-ia__pensando" *ngIf="editandoIA" role="status" aria-live="polite">
+              <span class="chat-ia__puntos"><i></i><i></i><i></i></span>{{ textoAvanceIA }}
+            </div>
+            <ng-container *ngFor="let m of mensajesIAInverso">
+              <div class="chat-ia__burbuja" [class.chat-ia__burbuja--yo]="m.rol === 'comercio'" [class.chat-ia__burbuja--error]="m.error">
+                <span class="chat-ia__adjuntos" *ngIf="m.adjuntos">📎 {{ m.adjuntos === 1 ? '1 imagen' : m.adjuntos + ' imágenes' }}</span>
+                {{ m.texto }}
+                <ul class="chat-ia__cambios" *ngIf="m.cambios?.length">
+                  <li class="chat-ia__cambios-titulo">Esto cambié:</li>
+                  <li *ngFor="let c of m.cambios">
+                    <span class="chat-ia__icono" aria-hidden="true">{{ c.icono }}</span>
+                    <span>{{ c.texto }}</span>
+                    <span class="chat-ia__muestras" *ngIf="c.colores?.length">
+                      <i *ngFor="let color of c.colores" [style.background]="color" [attr.title]="'Color'"></i>
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </ng-container>
           </div>
 
-          <div class="chat-ia__sugerencias" *ngIf="!mensajesIA.length">
+          <!-- Después de un cambio: lo más probable es guardarlo o devolverlo -->
+          <div class="chat-ia__despues" *ngIf="ultimoCambioIA && !editandoIA">
+            <button class="btn-primario btn-primario--sm" (click)="guardarDesdeChatIA()" [disabled]="guardando">
+              {{ guardando ? 'Guardando…' : '💾 Me gusta, guardar' }}
+            </button>
+            <button class="btn-fantasma btn-fantasma--sm" (click)="deshacerChatIA()" [disabled]="!puedeDeshacerIA">↩️ Deshacer</button>
+          </div>
+
+          <!-- Ideas para empezar -->
+          <div class="chat-ia__sugerencias" *ngIf="!mensajesIA.length && !adjuntosIA.length">
+            <span class="chat-ia__etiqueta">Ideas para empezar (toca una):</span>
             <button type="button" class="chat-ia__sugerencia" *ngFor="let s of sugerenciasIA" (click)="usarSugerenciaIA(s)">{{ s }}</button>
           </div>
 
-          <div class="campo chat-ia__entrada">
+          <!-- Lo que adjuntó, y para qué es -->
+          <div class="chat-ia__adjuntados" *ngIf="adjuntosIA.length || preparandoAdjuntos">
+            <div class="chat-ia__miniaturas">
+              <figure *ngFor="let a of adjuntosIA; let i = index" class="chat-ia__miniatura">
+                <img [src]="a.dataUrl" [alt]="a.nombre" />
+                <button type="button" (click)="quitarAdjunto(i)" [disabled]="editandoIA" aria-label="Quitar esta imagen">✕</button>
+              </figure>
+              <span class="chat-ia__preparando" *ngIf="preparandoAdjuntos">Preparando tu archivo…</span>
+            </div>
+
+            <ng-container *ngIf="adjuntosIA.length">
+              <p class="chat-ia__pregunta">¿Para qué es esta imagen?</p>
+              <div class="chat-ia__propositos">
+                <button type="button" class="chat-ia__proposito" [class.is-active]="propositoAdjuntos === 'parecido'" (click)="elegirPropositoAdjuntos('parecido')">
+                  <strong>🎨 Que mi página se vea parecida</strong>
+                  <small>Tomo sus colores, su letra y su estilo. No copio textos ni logos.</small>
+                </button>
+                <button type="button" class="chat-ia__proposito" [class.is-active]="propositoAdjuntos === 'usar'" (click)="elegirPropositoAdjuntos('usar')"
+                        [disabled]="!adjuntosIA[0]?.archivo">
+                  <strong>🖼️ Ponerla en mi página</strong>
+                  <small>Es una foto mía: la pongo en la portada o en una galería.</small>
+                </button>
+              </div>
+              <div class="chat-ia__destinos" *ngIf="propositoAdjuntos === 'usar'">
+                <button class="btn-primario btn-primario--sm" (click)="ponerFotoEnPagina('portada')" [disabled]="subiendoFotoIA">
+                  {{ subiendoFotoIA ? 'Subiendo…' : 'Ponerla en la portada' }}
+                </button>
+                <button class="btn-fantasma btn-fantasma--sm" (click)="ponerFotoEnPagina('galeria')" [disabled]="subiendoFotoIA">En una galería de fotos</button>
+              </div>
+            </ng-container>
+          </div>
+
+          <!-- Escribir y enviar -->
+          <div class="campo chat-ia__entrada" *ngIf="propositoAdjuntos !== 'usar'">
             <textarea rows="3" [(ngModel)]="mensajeIA" [maxlength]="instruccionMax" [disabled]="editandoIA"
-                      (keydown.enter)="alEnterChatIA($any($event))"
-                      placeholder="Ej: pon un título más llamativo, colores verdes y agrega preguntas frecuentes"></textarea>
+                      (keydown.enter)="alEnterChatIA($any($event))" (paste)="alPegarEnChat($any($event))"
+                      [placeholder]="adjuntosIA.length ? 'Opcional: cuéntame qué te gusta de la imagen (por ejemplo: los colores)' : '¿Qué quieres cambiar? Ej: pon colores verdes y un título más llamativo'"></textarea>
           </div>
-          <div class="ia-acciones">
-            <button class="btn-primario btn-primario--sm" (click)="enviarChatIA()" [disabled]="editandoIA || mensajeIA.trim().length < 3">
-              {{ editandoIA ? 'Editando…' : 'Aplicar' }}
+          <div class="chat-ia__acciones" *ngIf="propositoAdjuntos !== 'usar'">
+            <label class="chat-ia__adjuntar" [class.is-disabled]="editandoIA || adjuntosIA.length >= maxReferencias">
+              <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple hidden
+                     [disabled]="editandoIA || adjuntosIA.length >= maxReferencias" (change)="alElegirAdjuntos($event)" />
+              📎 Mostrar una foto o PDF
+            </label>
+            <button class="btn-primario btn-primario--sm" (click)="enviarChatIA()"
+                    [disabled]="editandoIA || preparandoAdjuntos || (mensajeIA.trim().length < 3 && !adjuntosIA.length)">
+              {{ editandoIA ? 'Trabajando…' : 'Aplicar cambios' }}
             </button>
-            <button class="btn-fantasma btn-fantasma--sm" *ngIf="puedeDeshacerIA" (click)="deshacerChatIA()" [disabled]="editandoIA">Deshacer el último cambio</button>
           </div>
-          <small class="chat-ia__nota">No se guarda solo: revisa la página y toca Guardar. Fotos, productos y precios se cambian a mano.</small>
+          <p class="chat-ia__tip" *ngIf="!adjuntosIA.length && propositoAdjuntos !== 'usar'">
+            Tip: también puedes arrastrar una imagen aquí o pegar una captura con Ctrl+V.
+          </p>
+
+          <small class="chat-ia__nota">
+            Nada se guarda solo: mira cómo quedó y toca «Me gusta, guardar». Los productos y los precios se cambian en sus secciones.
+          </small>
         </div>
       </div>
 

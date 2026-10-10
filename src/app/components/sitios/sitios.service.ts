@@ -571,7 +571,19 @@ export class SitiosService extends BaseService {
     instruccion: string;
     historial: { rol: 'comercio' | 'ia'; texto: string }[];
     contenido: { bloques: any[]; tema: any };
-  }): Observable<Respuesta<{ bloques: any[]; tema: any; aplicados: number; ignorados: number; mensaje: string }>> {
+    /** Fotos, capturas o páginas de un PDF ya reducidas a JPEG (data URL), hasta 3. */
+    referencias?: string[];
+  }): Observable<
+    Respuesta<{
+      bloques: any[];
+      tema: any;
+      aplicados: number;
+      ignorados: number;
+      mensaje: string;
+      cambios?: { icono: string; texto: string; colores?: string[] }[];
+      referenciasMiradas?: number;
+    }>
+  > {
     return this.post<any>("/v1/onboarding/pagina-con-ia/editar", body);
   }
 

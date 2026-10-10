@@ -99,6 +99,11 @@
                 "glob": "**/*.worklet.js",
                 "input": "src/app/shared/worklets/gemini/",
                 "output": "assets/worklets/gemini/"
+              },
+              {
+                "glob": "pdf.worker.min.js",
+                "input": "node_modules/pdfjs-dist/legacy/build/",
+                "output": "assets/pdfjs/"
               }
             ],
             "styles": [
