@@ -138,7 +138,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
       this.isPremiumUser = subscription?.plan === 'premium';
     });
 
-    // Una pantalla pidió abrir Opttia con una pregunta ya escrita (D-400).
+    // Una pantalla pidió abrir Opttia con una pregunta ya escrita (D-401).
     this.openRequestSub = this.opttiaChat.openRequested$.subscribe(() => {
       this.selectedMode = 'opttia';
       this.chatFormVisible = true;

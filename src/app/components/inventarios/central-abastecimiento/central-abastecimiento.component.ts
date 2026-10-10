@@ -5,7 +5,7 @@ import { InventarioService } from '../../../shared/services/inventarios/inventar
 import { ExplicacionIA, InventoryInsights } from './insights.modelos';
 
 /**
- * Central de Abastecimiento: la IA de inventarios (openspec/changes/inventario-ia-util, D-400).
+ * Central de Abastecimiento: la IA de inventarios (openspec/changes/inventario-ia-util, D-401).
  *
  * Al abrir trae lo calculado (sin IA ni cupo). "Explicar con Opttia" pide las frases;
  * si Opttia no responde, la pantalla sigue con las cifras y lo dice. Toda cifra viene

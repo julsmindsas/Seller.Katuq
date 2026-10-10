@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { FilaComprar, InventoryInsights } from '../insights.modelos';
 
-/** Qué comprar ya (D-400). Solo muestra: la orden se crea en "Qué comprar". */
+/** Qué comprar ya (D-401). Solo muestra: la orden se crea en "Qué comprar". */
 @Component({
   selector: 'app-insights-comprar',
   templateUrl: './insights-comprar.component.html',

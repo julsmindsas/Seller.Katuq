@@ -8,7 +8,7 @@ const ACCIONES: Record<AccionCapital, { texto: string; clase: string }> = {
   revisar: { texto: 'Revisar', clase: 'is-slate' },
 };
 
-/** Capital parado (D-400): lo que no se vende o sobra, con la acción sugerida. */
+/** Capital parado (D-401): lo que no se vende o sobra, con la acción sugerida. */
 @Component({
   selector: 'app-insights-capital',
   templateUrl: './insights-capital.component.html',

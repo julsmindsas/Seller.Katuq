@@ -83,7 +83,7 @@ export class OpttiaChatService implements OnDestroy {
     return this.accessSubject.value?.tools.includes(name) === true;
   }
 
-  // Una pantalla (p. ej. la Central de Abastecimiento, D-400) puede pedir que se abra
+  // Una pantalla (p. ej. la Central de Abastecimiento, D-401) puede pedir que se abra
   // el chat con una pregunta ya escrita. La pregunta queda en la caja de texto y la
   // persona la envía: así se respetan el consentimiento y el cupo del plan.
   private readonly openRequestSubject = new Subject<string>();

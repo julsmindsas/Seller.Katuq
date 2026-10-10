@@ -1,6 +1,6 @@
 /**
  * Forma de `GET /v1/inventory/insights` y `POST /v1/inventory/insights/explicar`
- * (openspec/changes/inventario-ia-util, D-400). Toda cifra viene calculada del servidor;
+ * (openspec/changes/inventario-ia-util, D-401). Toda cifra viene calculada del servidor;
  * la IA solo aporta frases.
  */
 

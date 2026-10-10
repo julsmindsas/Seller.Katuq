@@ -683,7 +683,7 @@ export class InventarioService {
     });
   }
 
-  /** Qué comprar ya, capital parado y avisos, calculado en el servidor. No gasta cupo de IA (D-400). */
+  /** Qué comprar ya, capital parado y avisos, calculado en el servidor. No gasta cupo de IA (D-401). */
   getInventoryInsights(dias: number = 30, idBodega?: string): Observable<RespuestaInsights> {
     let params = new HttpParams().set('dias', String(dias));
     if (idBodega) params = params.set('idBodega', idBodega);

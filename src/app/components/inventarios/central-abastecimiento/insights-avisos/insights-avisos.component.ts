@@ -8,7 +8,7 @@ const TIPOS: Record<FilaAviso['tipo'], string> = {
   ajuste_atipico: 'Ajuste fuera de lo normal',
 };
 
-/** Avisos de anomalías (D-400). Solo informa: nada se repara desde aquí. */
+/** Avisos de anomalías (D-401). Solo informa: nada se repara desde aquí. */
 @Component({
   selector: 'app-insights-avisos',
   templateUrl: './insights-avisos.component.html',

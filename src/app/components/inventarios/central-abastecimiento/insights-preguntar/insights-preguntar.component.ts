@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { OpttiaChatService } from '../../../../shared/services/opttia-chat.service';
 
 /**
- * Preguntas sugeridas (D-400): abren el chat de Opttia con la pregunta escrita. La
+ * Preguntas sugeridas (D-401): abren el chat de Opttia con la pregunta escrita. La
  * persona la envía; así se respetan el consentimiento y el cupo del plan.
  */
 @Component({
