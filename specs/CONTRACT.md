@@ -9108,3 +9108,29 @@ Tras la revisión estática, Daniel pidió eliminarlos. Se retiraron 16 scripts:
 - **katuq_admin_back_firebase:** `functions/scripts/updateProductsDisponibilidad.js`, `functions/scripts/migrateCompaniesSubscription.js`, `functions/seed-mock-data.js`, `functions/scripts/cleanup-inventory-duplicates.js`, `scripts/deploy-to-lightsail.sh`, `scripts/setup-lightsail-env.sh`, `functions/_smoke_hardening.js`, `functions/debug-env.js`, `functions/scripts/tmp-gc-mapeo.js`, `functions/scripts/tmp-verif-total.js`, `functions/tmp-check-esc.js`, `functions/tmp-sombras.js`, `functions/tmp-vigia-escritura.js`.
 
 Se actualizaron las instrucciones operativas de suscripciones para retirar comandos al script eliminado. Las referencias en specs y decisiones históricas se conservan como evidencia. No se ejecutaron scripts de datos, migraciones ni despliegues; las bajas son de archivos versionados, recuperables desde Git. Validación: ninguna referencia ejecutable ni comando npm a los archivos retirados; `git diff --check` en ambos repositorios.
+
+## D-395 (2026-10-10) — Effix: empresas nuevas nacen con las funciones de la feria; tope del editor con IA; registro por IP holgado del 16 al 18
+
+**Disparador.** Daniel, 9-oct noche: "aprobado todo eso" sobre el resumen de lo que faltaba para Effix (los comercios que se registren en la feria no verían nada: todo estaba detrás de banderas solo encendidas en FLORECER).
+**Decisión.**
+1. Toda empresa creada desde ahora (registro público `saveSurveyResponse` y onboarding `createCompanyOnboarding`) nace con `featureFlags` = `productFromPhoto`, `productImportPhotos`, `singleStepStore`, `landingPrompt`, `buyNowCod`. Los comercios que ya operan no cambian. Interruptor general `NEW_COMPANY_FEATURE_FLAGS=off`. Nada de WhatsApp, Envíame, 3D ni alistamiento (dependen de cosas que una empresa nueva no tiene). Código: `services/companies/banderasEmpresaNueva.js`.
+2. Editor "Con IA" (Sonnet 4.6): 20 cambios al día por empresa en el plan gratis (`ai.pageEditsPerDay`), sin tope en los de pago; solo cuentan los cambios que salieron; si el contador falla, deja pasar. 429 `PAGE_AI_DAILY_LIMIT` con mensaje para el comercio.
+3. Registro: del 16 al 18-oct (Bogotá) los topes por IP pasan de 4/12 a 50/200 por hora (`umbralesPorIp`, ajustables con `REG_IP_*_PER_HOUR_FERIA`); fuera de la ventana, los de siempre.
+**Verificado.** 10 pruebas nuevas (`tests/sitios/funcionesFeriaEmpresaNueva.test.js`) + regresión de registro, banderas y editor en verde. Back commit `af177aa`. **Falta desplegar el back** (el ssh lo bloqueó el clasificador sin orden explícita).
+
+## D-396 (2026-10-10) — Confirmación del pedido y carrito abandonado por WhatsApp (Kapso), apagados; cierre de las 2 fallas MAYOR
+
+**Disparador.** Mismo "aprobado todo eso". Plantillas de Kapso ya aprobadas por Meta (`katuq_order_confirm_v1` UTILITY, `katuq_cart_reminder_v1` MARKETING).
+**Decisión.** Se aplican los parches revisados (`openspec/changes/whatsapp-confirmacion-y-carrito`) con `whatsappOrderConfirmation` y `whatsappCartRecovery` APAGADAS. Se cierran las MAYOR de la revisión del 9-oct: **M1** un pedido cancelado por el cliente desde WhatsApp no revive desde una pantalla vieja (edición y edición en lote lo rechazan con mensaje claro; una copia vieja no pisa `confirmacionWhatsapp`), `utils/pedidoCanceladoPorCliente.js`; **M2** la tienda guarda `telefonoCheckout` (el celular escrito) antes de reemplazar el cliente por la ficha del CRM y la confirmación va solo a ese. `whatsappCartRecovery` solo en FLORECER hasta verificar el teléfono (M3).
+**Verificado.** Todas las pruebas del paquete + 5 nuevas de M1/M2; regresión de pedidos, tienda y bot en verde (`test-cotizaciones-contract` tenía 2 fallas previas ajenas). Back `9c6f8a5`, front `ce0bbe05` (publicado 2026.10.09.23). Primer toque real pendiente de probar en FLORECER.
+
+## D-397 (2026-10-10) — Alistamiento: candado por empresa, bandera `pickingAlistamiento` y opción B (no mueve inventario)
+
+**Disparador.** Mismo "aprobado todo eso" (opción B recomendada en `openspec/changes/alistamiento-picking-rutas`).
+**Decisión.** Rutas reales + candado multiempresa + bandera `pickingAlistamiento` (apagada; el menú "Picking y packing" deja de salir a las 6 empresas que veían una pantalla rota). **Opción B:** completar NO vuelve a descontar (R1), funciona con 2+ productos (R2) y no publica existencias a Shopify/Woo; iniciar no exige saldo (R10) y solo acepta productos del pedido. El write-set del alistamiento queda en `orders`, `picking`, `packing` e `inventoryMovement` (sin `inventory`).
+**Verificado.** 38 + contrato + 7 del servidor, 38 del front, build de producción OK. Back `0302d43`, front `24ba5602` (publicado 2026.10.09.23). Siguen abiertos R3 (estados que el resto de la app no conoce) y R8 (lista de pendientes) antes de encender en una empresa real.
+
+### 2026-10-10 — Bitácora (sesión apoyodev, Effix)
+
+- Wompi 03 aplicado sin rotar el secreto (Daniel: "no cambies clave de wompi"): el webhook confirma cada transacción con Wompi antes de tocar un pedido. Medido en producción (solo lectura): desde el 2-sep **ningún** aviso de Wompi se procesó (206 descartados por firma, todos enlaces de ALMARA, timestamp en la raíz), así que para pagos reales nada cambia hasta el 04 (pendiente). Back `460cdec`.
+- Front publicado 2026.10.09.23. Back empujado hasta `460cdec`; **producción sigue en `0013a1b`** hasta que Daniel autorice el despliegue.
