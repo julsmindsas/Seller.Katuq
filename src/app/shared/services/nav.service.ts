@@ -21,6 +21,11 @@ export interface Menu {
   children?: Menu[];
   isOnlySuperAdministrador?: boolean;
   isOnlyAdmin?: boolean;
+  /**
+   * D-400: ruta vieja del permiso. Si el rol se guardó con ella, el ítem se sigue mostrando
+   * aunque `path` haya cambiado (los roles guardan rutas, no ítems).
+   */
+  permisoPrevio?: string;
 }
 
 @Injectable({
@@ -253,6 +258,7 @@ export class NavService implements OnDestroy {
             (!child.isOnlySuperAdministrador || isSuperAdmin) &&
             (!child.isOnlyAdmin || isJulsmindAdmin) &&
             (authorizedPaths.includes(child.path) ||
+              (!!child.permisoPrevio && authorizedPaths.includes(child.permisoPrevio)) ||
               (child.path === "facturacion-electronica" && canUseDianWorkspace) ||
               // D-386: "Katuq en vivo" no depende del menú del rol; basta ser Administrador o
               // Super Administrador de Julsmind (los mismos roles que acepta el backend).
@@ -799,13 +805,16 @@ export class NavService implements OnDestroy {
       children: [
         { path: "empresas", title: "Mi Empresa", type: "link", icon: "home" },
         {
-          path: "empresas/planes",
+          // D-400: "empresas/planes" no existía (404); la página de planes es /pricing.
+          path: "pricing",
+          permisoPrevio: "empresas/planes",
           title: "Planes y suscripciones",
           type: "link",
           icon: "award",
         },
         { path: "extras/formasPago", title: "Medios de pago", type: "link", icon: "credit-card" },
-        { path: "empresa/facturacion", title: "Facturación", type: "link", icon: "file-text" },
+        // D-400: "empresa/facturacion" no existía (404); "Facturación y consumo" es /billing.
+        { path: "billing", permisoPrevio: "empresa/facturacion", title: "Facturación", type: "link", icon: "file-text" },
         {
           path: "empresas/modulovariable/produccion/opciones",
           title: "Activación Módulos",
@@ -838,7 +847,6 @@ export class NavService implements OnDestroy {
           type: "link",
           icon: "list",
         },
-        { path: "app-entregas", title: "App de entregas", type: "link", icon: "smartphone" },
       ],
     },
     {

@@ -1,0 +1,288 @@
+// Pantallas de Configuración (D-400): encabezado, tarjeta y tabla con el tema canónico
+// "Todos los pedidos" (openspec/specs/design-system/spec.md). Plano, sin gradientes.
+//
+// Uso en el SCSS de la página:
+//   @import '<ruta relativa>/shared/styles/config-pagina';
+//   @include config-pagina;
+//
+// Marcado:
+//   <div class="cfg-pagina">
+//     <header class="cfg-cabeza">
+//       <div class="cfg-cabeza__textos">
+//         <span class="cfg-eyebrow">Configuración</span>
+//         <h1 class="cfg-titulo">Ocasiones</h1>
+//         <p class="cfg-sub">Para qué sirve…</p>
+//       </div>
+//       <div class="cfg-acciones">
+//         <button class="cfg-btn">…</button> <button class="cfg-btn cfg-btn--sec">…</button>
+//       </div>
+//     </header>
+//     <section class="cfg-card"> …p-table / formulario… </section>
+//   </div>
+//
+// Ojo con las trampas globales (memoria css-globales): nada de clases con "p-" dentro,
+// todo span con texto lleva clase con color propio y los h1 globales traen !important.
+
+$cfg-accent: #5F3FE0;
+$cfg-accent-hover: #4a2fc0;
+$cfg-accent-2: #7C5CFF;
+$cfg-accent-soft: #efe9ff;
+$cfg-ink: #211F3A;
+$cfg-body: #5b5878;
+$cfg-muted: #8f8bab;
+$cfg-line: #ececf4;
+$cfg-line-soft: #f1f0f7;
+$cfg-chip-bg: #f5f4fa;
+$cfg-chip-border: #e9e7f3;
+$cfg-tint: #faf9fe;
+$cfg-row-hover: #faf9ff;
+$cfg-tile: #f3f1fb;
+$cfg-ok: #1E874B;
+$cfg-ok-soft: #E6F7EE;
+$cfg-warn: #D9820A;
+$cfg-warn-soft: #FFF1DF;
+$cfg-err: #D64545;
+$cfg-err-soft: #FDECEC;
+$cfg-info: #1E6FD9;
+$cfg-info-soft: #E7F1FF;
+$cfg-shadow-panel: 0 1px 3px rgba(30, 20, 80, .04);
+$cfg-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
+
+@mixin config-pagina {
+  .cfg-pagina {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px 16px 32px;
+    color: $cfg-ink;
+    box-sizing: border-box;
+
+    @media (min-width: 768px) { padding: 24px 24px 40px; }
+
+    p, a, li, label, span, button { letter-spacing: normal; }
+    :focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+  }
+
+  // ── Encabezado ──
+  .cfg-cabeza {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid $cfg-line;
+    border-radius: 16px;
+    box-shadow: $cfg-shadow-panel;
+  }
+
+  .cfg-cabeza__textos {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    max-width: 640px;
+  }
+
+  .cfg-eyebrow {
+    align-self: flex-start;
+    font-size: 10.5px !important;
+    font-weight: 800;
+    letter-spacing: .7px !important;
+    text-transform: uppercase;
+    color: $cfg-accent !important;
+    background: $cfg-accent-soft;
+    border: 1px solid #ddd3fb;
+    border-radius: 20px;
+    padding: 4px 10px;
+  }
+
+  .cfg-titulo {
+    margin: 0;
+    font-size: 22px !important; // hay un `h1 { 1.5rem !important }` global
+    line-height: 1.2;
+    font-weight: 800;
+    color: $cfg-ink;
+  }
+
+  .cfg-sub {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: $cfg-body;
+  }
+
+  .cfg-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  // ── Botones ──
+  .cfg-btn {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid $cfg-accent;
+    border-radius: 11px;
+    background: $cfg-accent;
+    color: #fff !important;
+    font-size: 13.5px;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: $cfg-shadow-btn;
+    cursor: pointer;
+    transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
+
+    i, span { color: inherit !important; font-size: inherit; }
+
+    &:hover:not(:disabled) { background: $cfg-accent-hover; border-color: $cfg-accent-hover; transform: translateY(-1px); }
+    &:disabled { background: #d8d4ea; border-color: #d8d4ea; box-shadow: none; cursor: not-allowed; }
+  }
+
+  .cfg-btn--sec {
+    background: #fff;
+    color: $cfg-body !important;
+    border-color: #e4e2ef;
+    box-shadow: none;
+
+    &:hover:not(:disabled) { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent !important; }
+  }
+
+  .cfg-btn--peligro {
+    background: #fff;
+    color: $cfg-err !important;
+    border-color: #f3c9c9;
+    box-shadow: none;
+
+    &:hover:not(:disabled) { background: $cfg-err-soft; border-color: $cfg-err; color: $cfg-err !important; }
+  }
+
+  // ── Tarjeta / panel ──
+  .cfg-card {
+    position: relative;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid $cfg-line;
+    border-radius: 16px;
+    box-shadow: $cfg-shadow-panel;
+    min-width: 0;
+
+    @media (min-width: 768px) { padding: 20px; }
+  }
+
+  .cfg-card__titulo {
+    margin: 0 0 12px;
+    font-size: 16px;
+    font-weight: 800;
+    color: $cfg-ink;
+  }
+
+  .cfg-label {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: $cfg-muted;
+  }
+
+  // Aviso en par fuerte/fondo suave (sin border-left).
+  .cfg-aviso {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 11px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    background: $cfg-info-soft;
+    color: $cfg-info;
+  }
+  .cfg-aviso--ok { background: $cfg-ok-soft; color: $cfg-ok; }
+  .cfg-aviso--warn { background: $cfg-warn-soft; color: $cfg-warn; }
+  .cfg-aviso--error { background: $cfg-err-soft; color: $cfg-err; }
+
+  // Empty state.
+  .cfg-vacio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 32px 16px;
+    text-align: center;
+  }
+  .cfg-vacio__icono {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: $cfg-tile;
+    color: $cfg-accent;
+    font-size: 26px;
+  }
+  .cfg-vacio__titulo { margin: 0; font-size: 15px; font-weight: 800; color: $cfg-ink; }
+  .cfg-vacio__texto { margin: 0; font-size: 12.5px; color: $cfg-muted; }
+
+  // ── Tabla PrimeNG dentro de la tarjeta ──
+  :host ::ng-deep .cfg-card .p-datatable {
+    .p-datatable-wrapper { border-radius: 11px; }
+
+    .p-datatable-thead > tr > th {
+      background: $cfg-tint !important;
+      color: $cfg-muted !important;
+      font-size: 10.5px !important;
+      font-weight: 800;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      border-color: $cfg-line-soft !important;
+      padding: 12px 14px;
+    }
+
+    .p-datatable-thead > tr > th.p-highlight,
+    .p-datatable-thead > tr > th.p-sortable-column:not(.p-highlight):hover {
+      background: $cfg-accent-soft !important;
+      color: $cfg-accent !important;
+      .p-sortable-column-icon { color: $cfg-accent !important; }
+    }
+
+    .p-datatable-tbody > tr {
+      background: #fff;
+      color: $cfg-ink;
+      transition: background .12s ease;
+
+      > td { border-color: $cfg-line-soft !important; padding: 12px 14px; font-size: 13px; }
+      &:hover { background: $cfg-row-hover !important; }
+    }
+
+    .p-paginator {
+      background: transparent;
+      border: 0;
+      padding: 12px 0 0;
+
+      .p-paginator-page.p-highlight {
+        background: $cfg-accent !important;
+        border-color: $cfg-accent !important;
+        color: #fff !important;
+      }
+      .p-paginator-page,
+      .p-paginator-first,
+      .p-paginator-prev,
+      .p-paginator-next,
+      .p-paginator-last { border-radius: 9px; }
+    }
+
+    .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider { background: $cfg-accent !important; }
+  }
+
+  :host ::ng-deep .cfg-card .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider { background: $cfg-accent !important; }
+}

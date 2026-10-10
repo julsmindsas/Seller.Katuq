@@ -1,55 +1,44 @@
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-sm-12 p-2">
-      <br>
-      <div class="card">
-        <i class="icon-bg" width="80" height="80"
-          style="opacity: 0.4; position: absolute; color: #6ec0d4; top: 10px; left: 10px;"></i>
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">{{ 'Configuración' | translate }}</span>
+      <h1 class="cfg-titulo">Zonas de Cobro</h1>
+      <p class="cfg-sub">
+        Cada zona agrupa los municipios que cubre y el valor de la entrega para esos municipios.
+      </p>
+    </div>
 
-        <div class="loader-box" *ngIf="cargando">
-          <div class="loader-8"></div>
-        </div>
+    <div class="cfg-acciones">
+      <button class="cfg-btn" type="button" (click)="crearZonaCobro()">
+        <i placement="top" ngbTooltip="Nuevo" class="icofont icofont-plus"></i>
+        <span>{{'Crear Zona de Cobro' | translate}}</span>
+      </button>
+      <button class="cfg-btn cfg-btn--sec" type="button">
+        <i class="icofont icofont-file-excel"></i>{{ 'Excel' | translate }}
+      </button>
+    </div>
+  </header>
 
-        <!-- Header Standar -->
-        <div class="row col-12 m-2">
-          <div class="col-6">
-            <p class="text-left fc-secondary fs-24 m-0 p-0">Zonas de Cobro</p>
-            <p class="text-left text-muted fs-18 m-0 p-0">
-              Cada zona agrupa los municipios que cubre y el valor de la entrega para esos municipios.
-            </p>
-          </div>
+  <section class="cfg-card">
+    <div class="loader-box" *ngIf="cargando">
+      <div class="loader-8"></div>
+    </div>
 
-          <div class="col-6 p-3" style="text-align: end">
-            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="crearZonaCobro()">
-              <i placement="top" ngbTooltip="Nuevo"
-                style="font-size: 18px; color: white; cursor: pointer;"
-                class="icofont icofont-plus"></i>&nbsp;
-              <span style="color: white;">{{'Crear Zona de Cobro' | translate}}</span>
-            </button>
-            <button class="btn btn-primary ml-3 mb-2 mr-5">
-              <i class="icofont icofont-file-excel"></i>&nbsp;{{ 'Excel' | translate }}
-            </button>
-          </div>
-        </div>
-        <!-- FIN Header Standar -->
-
-        <div class="card-body custom-datatable" *ngIf="!cargando">
+    <div class="custom-datatable" *ngIf="!cargando">
 
           <!-- Toolbar de borrado múltiple (spec 011.1, D-054) -->
-          <div class="row m-1 mb-2" *ngIf="rows.length">
-            <div class="col-12 d-flex flex-wrap align-items-center gap-2">
-              <button type="button" class="btn btn-outline-danger btn-sm"
-                [disabled]="!seleccionadas.length" (click)="borrarSeleccionadas()">
-                <i class="icofont icofont-trash"></i>&nbsp;{{ 'Eliminar seleccionadas' | translate }}
-                <span *ngIf="seleccionadas.length">({{ seleccionadas.length }})</span>
-              </button>
-              <button type="button" class="btn btn-danger btn-sm ml-2" (click)="borrarTodas()">
-                <i class="icofont icofont-ui-delete"></i>&nbsp;{{ 'Eliminar TODAS' | translate }}
-              </button>
-              <span class="text-muted ml-2" *ngIf="seleccionadas.length">
-                {{ seleccionadas.length }} seleccionada{{ seleccionadas.length === 1 ? '' : 's' }} en esta página
-              </span>
-            </div>
+          <div class="cfg-barra" *ngIf="rows.length">
+            <button type="button" class="cfg-btn cfg-btn--peligro"
+              [disabled]="!seleccionadas.length" (click)="borrarSeleccionadas()">
+              <i class="icofont icofont-trash"></i>{{ 'Eliminar seleccionadas' | translate }}
+              <span *ngIf="seleccionadas.length">({{ seleccionadas.length }})</span>
+            </button>
+            <button type="button" class="cfg-btn cfg-btn--peligro" (click)="borrarTodas()">
+              <i class="icofont icofont-ui-delete"></i>{{ 'Eliminar TODAS' | translate }}
+            </button>
+            <span class="cfg-nota" *ngIf="seleccionadas.length">
+              {{ seleccionadas.length }} seleccionada{{ seleccionadas.length === 1 ? '' : 's' }} en esta página
+            </span>
           </div>
 
           <p-table #dt [value]="rows" dataKey="cd" [(selection)]="seleccionadas" [paginator]="true" [rows]="10"
@@ -127,7 +116,7 @@
                         <small class="text-muted" *ngIf="m.departamento"> - {{ m.departamento }}</small>
                         <small class="text-muted" *ngIf="m.codigoDane"> ({{ m.codigoDane }})</small>
                       </span>
-                      <span *ngIf="municipiosFiltrados(row).length === 0" class="text-muted">
+                      <span *ngIf="municipiosFiltrados(row).length === 0" class="cfg-nota">
                         Sin municipios que coincidan.
                       </span>
                     </div>
@@ -148,8 +137,6 @@
               </div>
             </ng-template>
           </p-table>
-        </div>
-      </div>
     </div>
-  </div>
+  </section>
 </div>

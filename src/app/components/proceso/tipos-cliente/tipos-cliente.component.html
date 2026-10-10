@@ -1,140 +1,125 @@
-<div class="container-fluid">
-  <div class="row">
-      <div class="col-sm-12 p-2">
-          <br />
-          <div class="card">
-              <i class="icon-bg" width="80" height="80" style="
-                      opacity: 0.4;
-                      position: absolute;
-                      color: #6ec0d4;
-                      top: 10px;
-                      left: 10px;
-                  "></i>
-              <div class="loader-box" *ngIf="cargando">
-                  <div class="loader-8"></div>
-              </div>
+<div class="cfg-pagina">
+    <header class="cfg-cabeza">
+        <div class="cfg-cabeza__textos">
+            <span class="cfg-eyebrow">{{ "Configuración" | translate }}</span>
+            <h1 class="cfg-titulo">{{ "Tipos de Cliente" | translate }}</h1>
+            <p class="cfg-sub">{{ "Segmenta tus clientes para ofrecer diferentes ofertas a cada grupo." | translate }}</p>
+        </div>
 
-              <!-- Header Standar -->
-              <div class="row col-12 p-4 pb-0">
-                  <div class="col-6">
-                      <p class="text-left fc-secondary fw-bold fs-24 m-0 p-0">{{ "Tipos de Cliente" | translate }}</p>
-                      <p class="text-left text-muted fs-18 m-0 p-0">{{ "Segmenta tus clientes para ofrecer diferentes ofertas a cada grupo." | translate }}</p>
-                  </div>
+        <div class="cfg-acciones">
+            <button class="cfg-btn" type="button" (click)="openCrearModal()">
+                <i placement="top" ngbTooltip="Nuevo" class="icofont icofont-plus"></i>
+                <span>{{ "Crear Tipo de Cliente" | translate }}</span>
+            </button>
+            <button class="cfg-btn cfg-btn--sec" type="button">
+                <i class="icofont icofont-file-excel"></i>
+                <span>{{ "Excel" | translate }}</span>
+            </button>
+        </div>
+    </header>
 
-                  <div class="col-6 p-3" style="text-align: end">
-                      <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="openCrearModal()">
-                          <i placement="top" ngbTooltip="Nuevo" style="font-size: 18px; color: white; cursor: pointer;" 
-                             class="icofont icofont-plus"></i>&nbsp;
-                          <span style="color: white">{{ "Crear Tipo de Cliente" | translate }}</span>
-                        </button>
-                      <button class="btn btn-success ml-3 mb-2" style="color: white" >
-                          <i class="icofont icofont-file-excel"></i>&nbsp;
-                          {{ "Excel" | translate }}
-                      </button>
-                  </div>
-              </div>
-              <!-- FIN Header Standar -->
+    <section class="cfg-card">
+        <div class="loader-box" *ngIf="cargando">
+            <div class="loader-8"></div>
+        </div>
 
-              <div class="card-body custom-datatable" *ngIf="!cargando">
-                  <p-table #dt [value]="rows" [paginator]="true" [rows]="10"
-                      [resizableColumns]="true" [scrollable]="true" scrollHeight="flex" [loading]="cargando"
-                      styleClass="p-datatable-gridlines p-datatable-striped" [rowsPerPageOptions]="[10, 20, 50]"
-                      [sortField]="'nombre'" [sortOrder]="1" [globalFilterFields]="[
-                          'nombre',
-                          'descripcion',
-                          'activo'
-                      ]" [tableStyle]="{ 'min-width': '20rem' }" [rowHover]="true" [showCurrentPageReport]="true"
-                      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} total registros">
+        <div class="custom-datatable" *ngIf="!cargando">
+            <p-table #dt [value]="rows" [paginator]="true" [rows]="10"
+                [resizableColumns]="true" [scrollable]="true" scrollHeight="flex" [loading]="cargando"
+                styleClass="p-datatable-gridlines p-datatable-striped" [rowsPerPageOptions]="[10, 20, 50]"
+                [sortField]="'nombre'" [sortOrder]="1" [globalFilterFields]="[
+                    'nombre',
+                    'descripcion',
+                    'activo'
+                ]" [tableStyle]="{ 'min-width': '20rem' }" [rowHover]="true" [showCurrentPageReport]="true"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} total registros">
 
-                      <ng-template pTemplate="header">
-                          <tr>
-                              <th *ngIf="!isMobile" class="text-center" pSortableColumn="id">
-                                  {{ "Id" | translate }}
-                                  <p-sortIcon field="id"></p-sortIcon>
-                              </th>
-                              <th class="text-center" pSortableColumn="nombre">
-                                  {{ "Nombre" | translate }}
-                                  <p-sortIcon field="nombre"></p-sortIcon>
-                              </th>
-                              <th class="text-center col-descripcion" pSortableColumn="descripcion">
-                                  {{ "Descripción" | translate }}
-                                  <p-sortIcon field="descripcion"></p-sortIcon>
-                              </th>
-                              <th class="text-center" pSortableColumn="esPrecioBase">
-                                  {{ "Precio base" | translate }}
-                                  <p-sortIcon field="esPrecioBase"></p-sortIcon>
-                              </th>
-                              <th *ngIf="!isMobile" class="text-center" pSortableColumn="activo">
-                                  {{ "Activo" | translate }}
-                                  <p-sortIcon field="activo"></p-sortIcon>
-                              </th>
-                              <th class="text-center">
-                                  {{ "Acciones" | translate }}
-                              </th>
-                          </tr>
-                      </ng-template>
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th *ngIf="!isMobile" class="text-center" pSortableColumn="id">
+                            {{ "Id" | translate }}
+                            <p-sortIcon field="id"></p-sortIcon>
+                        </th>
+                        <th class="text-center" pSortableColumn="nombre">
+                            {{ "Nombre" | translate }}
+                            <p-sortIcon field="nombre"></p-sortIcon>
+                        </th>
+                        <th class="text-center col-descripcion" pSortableColumn="descripcion">
+                            {{ "Descripción" | translate }}
+                            <p-sortIcon field="descripcion"></p-sortIcon>
+                        </th>
+                        <th class="text-center" pSortableColumn="esPrecioBase">
+                            {{ "Precio base" | translate }}
+                            <p-sortIcon field="esPrecioBase"></p-sortIcon>
+                        </th>
+                        <th *ngIf="!isMobile" class="text-center" pSortableColumn="activo">
+                            {{ "Activo" | translate }}
+                            <p-sortIcon field="activo"></p-sortIcon>
+                        </th>
+                        <th class="text-center">
+                            {{ "Acciones" | translate }}
+                        </th>
+                    </tr>
+                </ng-template>
 
-                      <ng-template pTemplate="body" let-row>
-                          <tr>
-                              <td *ngIf="!isMobile" class="text-center">{{ row.id }}</td>
-                              <td>{{ row.nombre }}</td>
-                              <!-- Estas descripciones son párrafos ("Lista B - Aquel cliente que
-                                   asume la propiedad de los productos para..."). Sin tope se van
-                                   en una sola línea y estiran la tabla hasta salirse de pantalla,
-                                   así que se envuelven y se recortan a 3 renglones. El texto
-                                   completo queda en el tooltip. -->
-                              <td class="col-descripcion">
-                                  <span class="descripcion-recortada" [title]="row.descripcion">{{ row.descripcion }}</span>
-                              </td>
-                              <td class="text-center">
-                                  <!-- Marca excluyente: el precio de este tipo también es el
-                                       precio base del producto. Se cambia en Editar. -->
-                                  <span class="badge-precio-base" *ngIf="row.esPrecioBase">
-                                      <i class="pi pi-star-fill"></i> {{ "Precio base" | translate }}
-                                  </span>
-                                  <span class="text-muted" *ngIf="!row.esPrecioBase">—</span>
-                              </td>
-                              <td *ngIf="!isMobile" class="text-center">
-                                  <!-- Apagarlo lo saca de circulación sin borrar los precios que
-                                       los productos tengan cargados a su nombre. Es la alternativa
-                                       reversible a la papelera, que sí borra. -->
-                                  <label class="switch"
-                                      placement="top"
-                                      ngbTooltip="{{ (row.active === false ? 'Activar' : 'Desactivar') | translate }}">
-                                      <input class="toggle" type="checkbox" [checked]="row.active !== false"
-                                          [disabled]="guardandoActivo[row.id]"
-                                          (change)="toggleActivo(row)" />
-                                      <span class="switch-state"></span>
-                                  </label>
-                              </td>
-                              <td class="text-center">
-                                  <i placement="top" ngbTooltip="{{ 'Editar' | translate }}"
-                                      style="font-size: 18px; margin-left: 10px; cursor: pointer;"
-                                      class="icofont icofont-pencil-alt-5 fc-primary" (click)="openEditarModal(row)">
-                                  </i>
-                                  <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
-                                      style="font-size: 18px; margin-left: 10px; cursor: pointer;"
-                                      class="icofont icofont-trash fc-danger" (click)="deleteTipoCliente(row)">
-                                  </i>
-                              </td>
-                          </tr>
-                      </ng-template>
+                <ng-template pTemplate="body" let-row>
+                    <tr>
+                        <td *ngIf="!isMobile" class="text-center">{{ row.id }}</td>
+                        <td>{{ row.nombre }}</td>
+                        <!-- Estas descripciones son párrafos ("Lista B - Aquel cliente que
+                             asume la propiedad de los productos para..."). Sin tope se van
+                             en una sola línea y estiran la tabla hasta salirse de pantalla,
+                             así que se envuelven y se recortan a 3 renglones. El texto
+                             completo queda en el tooltip. -->
+                        <td class="col-descripcion">
+                            <span class="descripcion-recortada" [title]="row.descripcion">{{ row.descripcion }}</span>
+                        </td>
+                        <td class="text-center">
+                            <!-- Marca excluyente: el precio de este tipo también es el
+                                 precio base del producto. Se cambia en Editar. -->
+                            <span class="badge-precio-base" *ngIf="row.esPrecioBase">
+                                <i class="pi pi-star-fill"></i> {{ "Precio base" | translate }}
+                            </span>
+                            <span class="texto-vacio" *ngIf="!row.esPrecioBase">—</span>
+                        </td>
+                        <td *ngIf="!isMobile" class="text-center">
+                            <!-- Apagarlo lo saca de circulación sin borrar los precios que
+                                 los productos tengan cargados a su nombre. Es la alternativa
+                                 reversible a la papelera, que sí borra. -->
+                            <label class="switch"
+                                placement="top"
+                                ngbTooltip="{{ (row.active === false ? 'Activar' : 'Desactivar') | translate }}">
+                                <input class="toggle" type="checkbox" [checked]="row.active !== false"
+                                    [disabled]="guardandoActivo[row.id]"
+                                    (change)="toggleActivo(row)" />
+                                <span class="switch-state"></span>
+                            </label>
+                        </td>
+                        <td class="text-center">
+                            <i placement="top" ngbTooltip="{{ 'Editar' | translate }}"
+                                style="font-size: 18px; margin-left: 10px; cursor: pointer;"
+                                class="icofont icofont-pencil-alt-5 fc-primary" (click)="openEditarModal(row)">
+                            </i>
+                            <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
+                                style="font-size: 18px; margin-left: 10px; cursor: pointer;"
+                                class="icofont icofont-trash fc-danger" (click)="deleteTipoCliente(row)">
+                            </i>
+                        </td>
+                    </tr>
+                </ng-template>
 
-                      <ng-template pTemplate="emptymessage">
-                          <tr>
-                              <td [attr.colspan]="isMobile ? 4 : 6">{{ "No hay datos disponibles" | translate }}</td>
-                          </tr>
-                      </ng-template>
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td [attr.colspan]="isMobile ? 4 : 6">{{ "No hay datos disponibles" | translate }}</td>
+                    </tr>
+                </ng-template>
 
-                      <ng-template pTemplate="summary">
-                          <div class="flex align-items-center justify-content-between">
-                              {{ "Total en esta consulta" | translate }}: {{rows ? rows.length : 0 }} {{ "registros" | translate }}.
-                          </div>
-                      </ng-template>
-                  </p-table>
-              </div>
-          </div>
-      </div>
-  </div>
+                <ng-template pTemplate="summary">
+                    <div class="flex align-items-center justify-content-between">
+                        {{ "Total en esta consulta" | translate }}: {{rows ? rows.length : 0 }} {{ "registros" | translate }}.
+                    </div>
+                </ng-template>
+            </p-table>
+        </div>
+    </section>
 </div>
-

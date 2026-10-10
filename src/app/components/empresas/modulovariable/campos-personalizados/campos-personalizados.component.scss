@@ -1,0 +1,102 @@
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.cfg-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cfg-btn--chico {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 12.5px;
+  box-shadow: none;
+}
+
+.cfg-btn--icono {
+  width: 34px;
+  padding: 0;
+}
+
+// Tarjeta de cada grupo: textos a la izquierda, acciones a la derecha.
+.cfg-grupo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cfg-grupo__textos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cfg-grupo__cabeza,
+.cfg-grupo__campos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.cfg-grupo__nombre {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: $cfg-ink;
+}
+
+.cfg-grupo__desc { margin: 0; font-size: 13px; color: $cfg-body; }
+.cfg-grupo__conteo { font-size: 12px; color: $cfg-muted; }
+
+// Chips planos: par fuerte/suave, siempre con color propio.
+.cfg-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 20px;
+  background: $cfg-chip-bg;
+  color: $cfg-body;
+  font-size: 12px;
+  font-weight: 700;
+
+  &--ok { background: $cfg-ok-soft; border-color: $cfg-ok-soft; color: $cfg-ok; }
+  &--info { background: $cfg-info-soft; border-color: $cfg-info-soft; color: $cfg-info; }
+}
+
+.cfg-tag__tipo { font-weight: 600; color: $cfg-muted; }
+
+// Formulario.
+.cfg-seccion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid $cfg-line-soft;
+}
+
+.cfg-nota {
+  padding: 12px 0;
+  text-align: center;
+  color: $cfg-muted;
+}
+
+.cfg-campo {
+  margin-bottom: 8px;
+  padding: 12px;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  background: $cfg-tint;
+}
+
+.cfg-pie {
+  justify-content: flex-end;
+  margin-top: 24px;
+}

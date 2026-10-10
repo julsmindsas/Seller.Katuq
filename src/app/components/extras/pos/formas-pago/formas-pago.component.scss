@@ -1,0 +1,6 @@
+// Pantalla de Configuración (D-400): base compartida cfg-*.
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.cfg-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+.cfg-filtro { max-width: 360px; }

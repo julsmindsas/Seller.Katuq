@@ -1,22 +1,5 @@
-.fc-secondary {
-  color: var(--theme-secondary);
-}
-
-.fc-primary {
-  color: var(--theme-primary);
-}
-
-.fc-danger {
-  color: #dc3545;
-}
-
-.fs-24 {
-  font-size: 24px;
-}
-
-.fs-18 {
-  font-size: 18px;
-}
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
 
 .loader-box {
   display: flex;
@@ -24,9 +7,6 @@
   align-items: center;
   padding: 50px;
 }
-
-
-
 
 /* Columna Descripción: son párrafos, no etiquetas ("Lista B - Aquel cliente que
    asume la propiedad de los productos para venderlos dentro de su propia red
@@ -52,6 +32,11 @@
   overflow-wrap: anywhere; /* una palabra larguísima parte en vez de desbordar */
   line-height: 1.45;
   text-align: left;
+  color: #211F3A;
+}
+
+.texto-vacio {
+  color: #8f8bab;
 }
 
 /* Marca de "precio base": el precio de este tipo también es el precio base del
