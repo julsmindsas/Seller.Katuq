@@ -70,6 +70,7 @@ import { TOOL_REGISTRARS } from './shared/services/tools/tool-registrar';
 import { TOOL_REGISTRARS_INITIALIZER } from './shared/services/tools/tool-registrars-initializer';
 import { SalesToolsRegistrarService } from './tools/sales-tools-registrar.service';
 import { OrderToolsRegistrarService } from './shared/services/tools/order-tools-registrar.service';
+import { PublicaModule } from './shared/components/publica/publica.module';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, "./assets/i18n/", ".json");
@@ -94,6 +95,7 @@ export function HttpLoaderFactory(http: HttpClient) {
   ],
   imports: [
     BrowserModule,
+    PublicaModule,
     FormsModule,
     ReactiveFormsModule,
     BrowserAnimationsModule,

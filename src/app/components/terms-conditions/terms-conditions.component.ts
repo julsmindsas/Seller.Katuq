@@ -8,11 +8,14 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 })
 export class TermsConditionsComponent implements OnInit {
 
-  pdfPath: string = 'assets/pdf/Terminos y Condiciones Generales de uso KATUQ.pdf';
+  // El archivo real en src/assets/pdf termina en ".docx.pdf".
+  pdfPath: string = 'assets/pdf/Terminos y Condiciones Generales de uso KATUQ.docx.pdf';
+  pdfUrl: string;
   safePdfUrl: SafeResourceUrl;
 
   constructor(private sanitizer: DomSanitizer) {
-    this.safePdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(encodeURI(this.pdfPath));
+    this.pdfUrl = encodeURI(this.pdfPath);
+    this.safePdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfUrl);
   }
 
   ngOnInit(): void { }

@@ -1,280 +1,103 @@
-.privacy-policy-container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+// Política de privacidad: marco y piezas de las pantallas públicas (D-398). Plano, sin gradientes.
+@import '../../shared/components/publica/publica';
+
+:host {
+  display: block;
+  @include publica-piezas;
 }
 
-.privacy-policy-content {
-  max-width: 900px;
-  margin: 0 auto;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-  overflow: hidden;
+.pol {
+  display: block;
 }
 
-.privacy-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 40px 30px;
-  text-align: center;
-  position: relative;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-    opacity: 0.3;
-  }
+.pol-cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid $pub-line;
 
-  h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin: 0 0 10px 0;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    position: relative;
-    z-index: 1;
-  }
-
-  h2 {
-    font-size: 1.5rem;
-    font-weight: 300;
-    margin: 0 0 15px 0;
-    opacity: 0.9;
-    position: relative;
-    z-index: 1;
-  }
-
-  .last-updated {
-    font-size: 0.9rem;
-    opacity: 0.8;
-    margin: 0;
-    position: relative;
-    z-index: 1;
-  }
+  .pub-lead { max-width: none; }
 }
 
-.privacy-section {
-  padding: 30px;
-  border-bottom: 1px solid #f0f0f0;
-  
-  &:last-of-type {
-    border-bottom: none;
-  }
+.pol-seccion {
+  padding: 28px 0;
+  border-bottom: 1px solid $pub-line;
 
-  h3 {
-    color: #333;
-    font-size: 1.4rem;
-    font-weight: 600;
-    margin: 0 0 20px 0;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #667eea;
-    position: relative;
-    
-    &::before {
-      content: '';
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      width: 50px;
-      height: 2px;
-      background: linear-gradient(90deg, #667eea, #764ba2);
-    }
-  }
-
-  h4 {
-    color: #555;
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin: 25px 0 15px 0;
-  }
+  .pub-h2 { margin-bottom: 14px; }
 
   p {
-    color: #666;
-    line-height: 1.7;
-    margin: 0 0 15px 0;
-    font-size: 1rem;
+    margin: 0 0 14px;
+    font-size: 15.5px;
+    line-height: 1.65;
+    color: $pub-body;
+
+    &:last-child { margin-bottom: 0; }
   }
 
   ul {
-    margin: 15px 0;
-    padding-left: 20px;
-    
-    li {
-      color: #666;
-      line-height: 1.6;
-      margin-bottom: 8px;
-      position: relative;
-      
-      &::before {
-        content: '•';
-        color: #667eea;
-        font-weight: bold;
-        position: absolute;
-        left: -15px;
-      }
-      
-      strong {
-        color: #333;
-        font-weight: 600;
-      }
-    }
+    margin: 0 0 14px;
+    padding-left: 22px;
+
+    &:last-child { margin-bottom: 0; }
+  }
+
+  li {
+    margin: 0 0 10px;
+    padding-left: 4px;
+    font-size: 15.5px;
+    line-height: 1.6;
+    color: $pub-body;
+
+    &:last-child { margin-bottom: 0; }
+    &::marker { color: $pub-accent; }
+  }
+
+  strong {
+    font-weight: 700;
+    color: $pub-ink;
+  }
+
+  a {
+    color: $pub-accent;
+    font-weight: 700;
+    text-decoration: none;
+    word-break: break-word;
+
+    &:hover { text-decoration: underline; color: $pub-accent; }
   }
 }
 
-.contact-info {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 10px;
-  padding: 20px;
-  margin: 20px 0;
-  border-left: 4px solid #667eea;
-  
-  p {
-    margin: 8px 0;
-    font-size: 0.95rem;
-    
-    strong {
-      color: #333;
-    }
-  }
+.pol-contacto {
+  margin-top: 16px;
+  padding: 18px 20px;
+  background: $pub-tile;
+  border: 1px solid $pub-chip-border;
+  border-radius: 16px;
+
+  p { font-size: 15px; }
+  p:last-child { margin-bottom: 0; }
 }
 
-.privacy-footer {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  padding: 30px;
+.pol-pie {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 28px;
   text-align: center;
-  border-top: 1px solid #f0f0f0;
-  
-  p {
-    margin: 10px 0;
-    color: #666;
-    
-    strong {
-      color: #333;
-      font-size: 1.1rem;
-    }
-  }
-  
-  .footer-note {
-    font-size: 0.9rem;
-    opacity: 0.8;
-    font-style: italic;
-    margin-top: 20px;
-  }
-}
 
-// Responsive design
-@media (max-width: 768px) {
-  .privacy-policy-container {
-    padding: 10px;
+  p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.55;
+    color: $pub-body;
   }
-  
-  .privacy-policy-content {
-    border-radius: 15px;
-  }
-  
-  .privacy-header {
-    padding: 30px 20px;
-    
-    h1 {
-      font-size: 2rem;
-    }
-    
-    h2 {
-      font-size: 1.2rem;
-    }
-  }
-  
-  .privacy-section {
-    padding: 20px;
-    
-    h3 {
-      font-size: 1.2rem;
-    }
-    
-    h4 {
-      font-size: 1rem;
-    }
-  }
-  
-  .privacy-footer {
-    padding: 20px;
-  }
+
+  strong { color: $pub-ink; }
+  .pub-fine { font-size: 13px; color: $pub-muted; }
 }
 
 @media (max-width: 480px) {
-  .privacy-header {
-    padding: 25px 15px;
-    
-    h1 {
-      font-size: 1.8rem;
-    }
-    
-    h2 {
-      font-size: 1.1rem;
-    }
-  }
-  
-  .privacy-section {
-    padding: 15px;
-    
-    h3 {
-      font-size: 1.1rem;
-    }
-  }
-}
-
-// Animaciones suaves
-.privacy-policy-content {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-// Efectos hover para enlaces
-a {
-  color: #667eea;
-  text-decoration: none;
-  transition: color 0.3s ease;
-  
-  &:hover {
-    color: #764ba2;
-    text-decoration: underline;
-  }
-}
-
-// Scrollbar personalizada
-.privacy-policy-container {
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 4px;
-    
-    &:hover {
-      background: linear-gradient(135deg, #5a6fd8, #6a4190);
-    }
-  }
+  .pol-seccion { padding: 22px 0; }
+  .pol-contacto { padding: 16px; }
 }

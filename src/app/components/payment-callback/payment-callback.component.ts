@@ -5,7 +5,8 @@ import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-payment-callback',
-  templateUrl: './payment-callback.component.html'
+  templateUrl: './payment-callback.component.html',
+  styleUrls: ['./payment-callback.component.scss']
 })
 export class PaymentCallbackComponent implements OnInit {
 

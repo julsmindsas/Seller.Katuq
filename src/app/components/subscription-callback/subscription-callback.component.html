@@ -1,108 +1,61 @@
-<div class="callback-container">
-  <div class="callback-card">
-    <!-- Loading State -->
-    <div *ngIf="loading" class="loading-section">
-      <div class="spinner-wrapper">
-        <i class="fa fa-spinner fa-spin"></i>
-      </div>
-      <h2>Verificando tu pago...</h2>
-      <p>Por favor espera mientras confirmamos tu suscripción.</p>
+<app-publica-marco ancho="angosto" rutaLogo="/dashboard">
+  <div class="pub-stack">
+
+    <!-- Verificando -->
+    <div *ngIf="loading" class="pub-stack" role="status" aria-live="polite">
+      <div class="pub-estado pub-estado--info" aria-hidden="true"><div class="sub-giro"></div></div>
+      <h1 class="pub-h1">Verificando tu pago</h1>
+      <p class="pub-lead">Espera un momento mientras confirmamos tu suscripción.</p>
     </div>
 
-    <!-- Success State -->
-    <div *ngIf="!loading && success" class="result-section success">
-      <div class="icon-wrapper success-icon">
-        <i class="fa fa-check-circle"></i>
-      </div>
-      <h2>¡Pago Exitoso!</h2>
-      <p class="message">{{ message }}</p>
-
-      <div class="success-features">
-        <h4>Ya puedes disfrutar de:</h4>
-        <div class="features-list">
-          <div class="feature-item">
-            <i class="fa fa-check"></i>
-            <span>Pedidos ilimitados</span>
-          </div>
-          <div class="feature-item">
-            <i class="fa fa-check"></i>
-            <span>IA sin restricciones</span>
-          </div>
-          <div class="feature-item">
-            <i class="fa fa-check"></i>
-            <span>Múltiples bodegas</span>
-          </div>
-          <div class="feature-item">
-            <i class="fa fa-check"></i>
-            <span>Integraciones avanzadas</span>
-          </div>
-          <div class="feature-item">
-            <i class="fa fa-check"></i>
-            <span>Dropshipping</span>
-          </div>
-          <div class="feature-item">
-            <i class="fa fa-check"></i>
-            <span>Soporte prioritario</span>
-          </div>
-        </div>
+    <!-- Pago exitoso -->
+    <ng-container *ngIf="!loading && success">
+      <div class="pub-stack" role="status" aria-live="polite">
+        <div class="pub-estado pub-estado--ok" aria-hidden="true">✓</div>
+        <h1 class="pub-h1">¡Pago exitoso!</h1>
+        <p class="pub-lead">{{ message }}</p>
       </div>
 
-      <div *ngIf="subscriptionId" class="subscription-info">
-        <p><strong>ID de Suscripción:</strong> {{ subscriptionId }}</p>
+      <div class="pub-card">
+        <h2 class="pub-h2">Ya puedes disfrutar de</h2>
+        <ul class="sub-lista">
+          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">Pedidos ilimitados</div></li>
+          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">IA sin restricciones</div></li>
+          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">Múltiples bodegas</div></li>
+          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">Integraciones avanzadas</div></li>
+          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">Dropshipping</div></li>
+          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">Soporte prioritario</div></li>
+        </ul>
       </div>
 
-      <button
-        pButton
-        type="button"
-        label="Ir al Dashboard"
-        icon="fa fa-home"
-        class="p-button-lg p-button-primary"
-        (click)="goToDashboard()">
-      </button>
-    </div>
+      <p *ngIf="subscriptionId" class="pub-fine">ID de suscripción: {{ subscriptionId }}</p>
 
-    <!-- Pending/Error State -->
-    <div *ngIf="!loading && !success" class="result-section pending" [class.failed]="failed">
-      <div class="icon-wrapper pending-icon">
-        <i class="fa" [class.fa-clock]="!failed" [class.fa-times-circle]="failed"></i>
-      </div>
-      <h2>{{ failed ? 'Pago no aprobado' : 'Pago pendiente' }}</h2>
-      <p class="message">{{ message }}</p>
+      <button class="pub-btn" type="button" (click)="goToDashboard()">Ir al panel</button>
+    </ng-container>
 
-      <div class="info-box">
-        <i class="fa fa-info-circle"></i>
-        <p *ngIf="!failed">
-          El procesamiento puede tomar algunos minutos. Recibirás un correo electrónico
-          cuando tu suscripción se active. Si el problema persiste, contacta a soporte.
-        </p>
-        <p *ngIf="failed">
-          No se activó un nuevo cobro. Puedes revisar el medio de pago o contactar a soporte si necesitas ayuda.
-        </p>
+    <!-- Pendiente o no aprobado -->
+    <ng-container *ngIf="!loading && !success">
+      <div class="pub-stack" role="status" aria-live="polite">
+        <div class="pub-estado" [ngClass]="failed ? 'pub-estado--error' : 'pub-estado--warn'" aria-hidden="true">{{ failed ? '✕' : '…' }}</div>
+        <h1 class="pub-h1">{{ failed ? 'Pago no aprobado' : 'Pago pendiente' }}</h1>
+        <p class="pub-lead">{{ message }}</p>
       </div>
 
-      <div *ngIf="subscriptionId" class="subscription-info">
-        <p><strong>ID de Suscripción:</strong> {{ subscriptionId }}</p>
-      </div>
+      <p *ngIf="!failed" class="pub-aviso pub-aviso--info">
+        El procesamiento puede tomar algunos minutos. Recibirás un correo electrónico
+        cuando tu suscripción se active. Si el problema persiste, contacta a soporte.
+      </p>
+      <p *ngIf="failed" class="pub-aviso pub-aviso--info">
+        No se activó un nuevo cobro. Puedes revisar el medio de pago o contactar a soporte si necesitas ayuda.
+      </p>
 
-      <div class="action-buttons">
-        <button
-          pButton
-          type="button"
-          label="Verificar Estado"
-          icon="fa fa-sync"
-          class="p-button-lg p-button-secondary"
-          (click)="retryCheck()">
-        </button>
+      <p *ngIf="subscriptionId" class="pub-fine">ID de suscripción: {{ subscriptionId }}</p>
 
-        <button
-          pButton
-          type="button"
-          label="Ir al Dashboard"
-          icon="fa fa-home"
-          class="p-button-lg p-button-text"
-          (click)="goToDashboard()">
-        </button>
+      <div class="pub-stack">
+        <button class="pub-btn" type="button" (click)="retryCheck()">Verificar estado</button>
+        <button class="pub-btn pub-btn--sec" type="button" (click)="goToDashboard()">Ir al panel</button>
       </div>
-    </div>
+    </ng-container>
+
   </div>
-</div>
+</app-publica-marco>

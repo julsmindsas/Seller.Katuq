@@ -86,6 +86,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DialogModule } from 'primeng/dialog';
 
 import { ImagenProductoPipe } from './pipes/imagen-producto.pipe';
+import { PublicaModule } from './components/publica/publica.module';
 @NgModule({
   declarations: [
     HeaderComponent,
@@ -140,6 +141,7 @@ import { ImagenProductoPipe } from './pipes/imagen-producto.pipe';
   imports: [
     ImagenProductoPipe,
     CommonModule,
+    PublicaModule,
     RouterModule,
     FormsModule,
     ReactiveFormsModule,

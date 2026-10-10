@@ -1,0 +1,328 @@
+// Pantallas públicas de Seller Center (D-398): mismos tokens y piezas que "Regístrese"
+// (components/diagnostic-survey, bloque `.reg-layout`, aprobado por Daniel el 2026-09-24).
+// Tema canónico (openspec/specs/design-system): acento #5F3FE0, plano, sin gradientes.
+//
+// Uso en una página:   @import '<ruta relativa>/shared/components/publica/publica';
+//                      :host { @include publica-piezas; }
+// El contenido que la página proyecta en <app-publica-marco> lo estiliza la página, por eso
+// cada página incluye las piezas.
+
+@font-face {
+  font-family: 'Geometr415BlkBTBlack';
+  src: url('/assets/images/logo/Katuq/Geometr415 Blk BT Black.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Geometr415L';
+  src: url('/assets/images/logo/Katuq/GEO415L.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+$pub-accent: #5F3FE0;
+$pub-accent-hover: #4a2fc0;
+$pub-accent-2: #7C5CFF;
+$pub-accent-soft: #efe9ff;
+$pub-ink: #211F3A;
+$pub-body: #5b5878;
+$pub-muted: #8f8bab;
+$pub-line: #ececf4;
+$pub-chip-bg: #f5f4fa;
+$pub-chip-border: #e9e7f3;
+$pub-tile: #f3f1fb;
+$pub-tint: #faf9fe;
+$pub-ok: #1E874B;
+$pub-ok-soft: #E6F7EE;
+$pub-warn: #B86E00;
+$pub-warn-soft: #FFF4E0;
+$pub-err: #D64545;
+$pub-err-soft: #FDECEC;
+$pub-info: #1E6FD9;
+$pub-info-soft: #E8F1FD;
+$pub-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
+$pub-shadow-float: 0 18px 40px -18px rgba(50, 40, 110, .35);
+$pub-display: 'Geometr415BlkBTBlack', 'Segoe UI', system-ui, sans-serif;
+$pub-text: 'Geometr415L', 'Segoe UI', system-ui, sans-serif;
+
+@mixin publica-piezas {
+  color: $pub-ink;
+  font-family: $pub-text;
+
+  // Reglas globales del Seller que pisan cualquier pantalla (memoria: css globales trampas):
+  // `* a` y `p` con letter-spacing, `span.ng-star-inserted` azul y `button:focus` sin contorno.
+  p, a, li, label, span, button { letter-spacing: normal; }
+  p { font-size: inherit; line-height: inherit; }
+  span.ng-star-inserted:not([class]) { color: inherit; }
+  :focus-visible { outline: 3px solid $pub-accent-2 !important; outline-offset: 2px; }
+
+  .pub-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .pub-eyebrow {
+    display: inline-flex;
+    align-self: flex-start;
+    font-family: $pub-display;
+    font-size: 11px;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    color: $pub-accent;
+    background: $pub-accent-soft;
+    border: 1px solid #ddd3fb;
+    border-radius: 20px;
+    padding: 5px 12px;
+  }
+
+  .pub-h1 {
+    margin: 0;
+    font-family: $pub-display;
+    font-weight: normal;
+    // Hay un `h1 { font-size: 1.5rem !important }` global: sin !important el título queda en 24 px.
+    font-size: clamp(28px, 7vw, 38px) !important;
+    line-height: 1.1;
+    letter-spacing: -.3px;
+    color: $pub-ink;
+    text-wrap: balance;
+  }
+
+  .pub-h2 {
+    margin: 0;
+    font-family: $pub-display;
+    font-weight: normal;
+    font-size: 20px !important;
+    line-height: 1.25;
+    color: $pub-ink;
+  }
+
+  .pub-hl { color: $pub-accent; }
+
+  // Etiqueta, título y texto seguidos (sin depender de que el contenedor tenga gap).
+  .pub-eyebrow + .pub-h1 { margin-top: 14px; }
+  .pub-h1 + .pub-lead,
+  .pub-h1 + .pub-fine,
+  .pub-h2 + .pub-lead { margin-top: 12px; }
+
+  .pub-lead {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.55;
+    color: $pub-body;
+    max-width: 44ch;
+  }
+
+  .pub-field {
+    display: grid;
+    gap: 8px;
+  }
+
+  .pub-label {
+    margin: 0;
+    font-family: $pub-display;
+    font-size: 11px;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: $pub-muted;
+  }
+
+  // Campo: el borde va en el contenedor para poder meter "Mostrar" adentro.
+  .pub-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 54px;
+    padding: 0 8px 0 14px;
+    background: $pub-chip-bg;
+    border: 1.5px solid $pub-chip-border;
+    border-radius: 11px;
+    box-sizing: border-box;
+    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+
+    &:focus-within {
+      background: #fff;
+      border-color: $pub-accent;
+      box-shadow: 0 0 0 4px rgba(95, 63, 224, .12);
+    }
+
+    &.is-error {
+      background: #fff;
+      border-color: $pub-err;
+    }
+
+    input {
+      flex: 1;
+      min-width: 0;
+      height: 50px;
+      border: 0;
+      outline: none;
+      background: transparent;
+      padding: 0;
+      font-family: $pub-text;
+      font-size: 17px;
+      color: $pub-ink;
+      box-shadow: none;
+
+      &::placeholder { color: #b4b0cb; }
+    }
+  }
+
+  .pub-input__accion {
+    flex: none;
+    height: 38px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    font-family: $pub-display;
+    font-size: 13px;
+    color: $pub-accent;
+    cursor: pointer;
+
+    &:hover { background: $pub-accent-soft; }
+  }
+
+  .pub-help {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: $pub-body;
+  }
+
+  .pub-error {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.4;
+    color: $pub-err;
+  }
+
+  .pub-btn {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 54px;
+    padding: 0 22px;
+    border: 0;
+    border-radius: 11px;
+    background: $pub-accent;
+    color: #fff;
+    font-family: $pub-display;
+    font-size: 17px;
+    letter-spacing: .2px;
+    text-decoration: none;
+    box-shadow: $pub-shadow-btn;
+    cursor: pointer;
+    transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
+
+    &:hover:not(:disabled) { background: $pub-accent-hover; color: #fff; transform: translateY(-1px); }
+
+    &:disabled,
+    &.disabled { background: #d8d4ea; box-shadow: none; cursor: not-allowed; transform: none; }
+  }
+
+  // Secundario: borde lila, fondo blanco.
+  .pub-btn--sec {
+    background: #fff;
+    color: $pub-accent;
+    border: 1.5px solid #ddd3fb;
+    box-shadow: none;
+
+    &:hover:not(:disabled) { background: $pub-accent-soft; color: $pub-accent; }
+  }
+
+  .pub-link {
+    border: 0;
+    background: none;
+    padding: 0;
+    color: $pub-accent;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover { text-decoration: underline; color: $pub-accent; }
+  }
+
+  .pub-fine {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: $pub-muted;
+  }
+
+  .pub-center { text-align: center; }
+
+  // Avisos: par fuerte / fondo suave, sin borde de acento.
+  .pub-aviso {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin: 0;
+    padding: 14px 16px;
+    border-radius: 11px;
+    font-size: 14.5px;
+    line-height: 1.5;
+
+    strong { display: block; font-family: $pub-display; font-weight: normal; }
+  }
+
+  .pub-aviso--ok { background: $pub-ok-soft; color: $pub-ok; }
+  .pub-aviso--error { background: $pub-err-soft; color: $pub-err; }
+  .pub-aviso--info { background: $pub-info-soft; color: $pub-info; }
+  .pub-aviso--warn { background: $pub-warn-soft; color: $pub-warn; }
+
+  // Ícono grande de estado (resultado de pagos, 404).
+  .pub-estado {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    font-size: 30px;
+    line-height: 1;
+  }
+
+  .pub-estado--ok { background: $pub-ok-soft; color: $pub-ok; }
+  .pub-estado--error { background: $pub-err-soft; color: $pub-err; }
+  .pub-estado--warn { background: $pub-warn-soft; color: $pub-warn; }
+  .pub-estado--info { background: $pub-accent-soft; color: $pub-accent; }
+
+  // Tarjeta para bloques dentro de la columna.
+  .pub-card {
+    padding: 20px;
+    background: #fff;
+    border: 1px solid $pub-line;
+    border-radius: 16px;
+  }
+
+  .pub-tick {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    background: $pub-ok-soft;
+    color: $pub-ok;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 14px;
+  }
+
+  .pub-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2.5px solid rgba(255, 255, 255, .45);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: pub-giro .8s linear infinite;
+  }
+
+  @keyframes pub-giro { to { transform: rotate(360deg); } }
+}

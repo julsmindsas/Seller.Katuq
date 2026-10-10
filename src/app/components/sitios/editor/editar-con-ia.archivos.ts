@@ -60,7 +60,9 @@ export async function pdfAImagenes(archivo: Blob, maxPaginas = PAGINAS_PDF): Pro
   const pdfjs: any = await import('pdfjs-dist/legacy/build/pdf');
   pdfjs.GlobalWorkerOptions.workerSrc = 'assets/pdfjs/pdf.worker.min.js';
   const datos = new Uint8Array(await archivo.arrayBuffer());
-  const documento = await pdfjs.getDocument({ data: datos }).promise;
+  // CVE-2024-4367: pdfjs-dist 2.x ejecuta código de las fuentes de un PDF malicioso si eval está
+  // permitido. Sin eval solo dibuja un poco más lento; la defensa completa es subir a >= 4.2.67.
+  const documento = await pdfjs.getDocument({ data: datos, isEvalSupported: false }).promise;
   const imagenes: string[] = [];
   const total = Math.min(documento.numPages, maxPaginas);
   for (let n = 1; n <= total; n++) {

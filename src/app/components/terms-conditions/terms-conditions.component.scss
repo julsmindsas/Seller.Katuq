@@ -1,13 +1,24 @@
-.terms-container {
-  padding: 20px;
-  h2 {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  
-  object {
-    width: 100%;
-    height: 80vh;
-    border: none;
-  }
+// Términos y condiciones: marco y piezas de las pantallas públicas (D-398). Plano, sin gradientes.
+@import '../../shared/components/publica/publica';
+
+:host {
+  display: block;
+  @include publica-piezas;
+}
+
+.ter-visor {
+  display: block;
+  width: 100%;
+  height: 75vh;
+  min-height: 420px;
+  background: $pub-tint;
+  border: 1px solid $pub-line;
+  border-radius: 16px;
+  box-sizing: border-box;
+
+  .pub-help { padding: 20px; }
+}
+
+@media (max-width: 600px) {
+  .ter-visor { height: 60vh; min-height: 360px; }
 }

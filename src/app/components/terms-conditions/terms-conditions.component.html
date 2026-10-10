@@ -1,6 +1,13 @@
-<div class="terms-container">
-  <h2>Términos y Condiciones</h2>
-  <object [data]="safePdfUrl" type="application/pdf" style="width:100%; height:80vh; border:none;">
-    <p>Tu navegador no soporta la visualización de PDF. Descarga el PDF <a [href]="safePdfUrl">aquí</a>.</p>
-  </object>
-</div>
+<app-publica-marco ancho="lectura">
+  <div class="pub-stack">
+    <span class="pub-eyebrow">Legal</span>
+    <h1 class="pub-h1">Términos y condiciones</h1>
+    <p class="pub-lead">Estas son las condiciones generales de uso de KATUQ. Puedes leerlas aquí o descargar el PDF.</p>
+
+    <a class="pub-btn pub-btn--sec" [href]="pdfUrl" download>Descargar el PDF</a>
+
+    <object class="ter-visor" [data]="safePdfUrl" type="application/pdf" aria-label="Términos y condiciones generales de uso de KATUQ">
+      <p class="pub-help">Tu navegador no puede mostrar el PDF aquí. <a class="pub-link" [href]="pdfUrl" target="_blank" rel="noopener">Ábrelo en una pestaña nueva</a> o usa el botón de descargar.</p>
+    </object>
+  </div>
+</app-publica-marco>

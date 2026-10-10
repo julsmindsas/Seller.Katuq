@@ -1,17 +1,12 @@
-<div class="error-wrapper">
-  <div class="container"><img src="assets/images/other-images/sad.png" alt="" class="img-100">
-    <div class="error-heading">
-      <h2 class="headline">404</h2>
+<app-publica-marco ancho="angosto" rutaLogo="/welcome">
+  <div class="pub-stack">
+    <div class="pub-estado pub-estado--info" aria-hidden="true">
+      <i class="fa fa-compass"></i>
     </div>
-    <div class="col-md-8 offset-md-2">
-      <p class="sub-content">¡Oops! Algo salió mal. 😔
-        <br><br>
-        Lamentablemente, no hemos encontrado la página que buscas. Puede que se haya movido, que el enlace esté roto o que sea un error de nuestra parte 🙏
-        <br><br>
-        Te invitamos a volver a la página principal y seguir navegando o puedes contactar con nuestro equipo de soporte si necesitas ayuda. 📞✉️</p>
-    </div>
-    <div>
-      <a [routerLink]="'/welcome/'" class="btn btn-primary btn-lg">REGRESAR AL INICIO</a>
-    </div>
+    <span class="pub-eyebrow">Error 404</span>
+    <h1 class="pub-h1">No encontramos esta página</h1>
+    <p class="pub-lead">Puede que se haya movido o que el enlace esté roto. Vuelve al inicio para seguir navegando.</p>
+    <a class="pub-btn" [routerLink]="'/welcome/'">Volver al inicio</a>
+    <p class="pub-fine">¿Necesitas ayuda? Contacta con nuestro equipo de soporte.</p>
   </div>
-</div>
+</app-publica-marco>

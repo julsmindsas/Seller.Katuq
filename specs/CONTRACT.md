@@ -9108,3 +9108,11 @@ Tras la revisión estática, Daniel pidió eliminarlos. Se retiraron 16 scripts:
 - **katuq_admin_back_firebase:** `functions/scripts/updateProductsDisponibilidad.js`, `functions/scripts/migrateCompaniesSubscription.js`, `functions/seed-mock-data.js`, `functions/scripts/cleanup-inventory-duplicates.js`, `scripts/deploy-to-lightsail.sh`, `scripts/setup-lightsail-env.sh`, `functions/_smoke_hardening.js`, `functions/debug-env.js`, `functions/scripts/tmp-gc-mapeo.js`, `functions/scripts/tmp-verif-total.js`, `functions/tmp-check-esc.js`, `functions/tmp-sombras.js`, `functions/tmp-vigia-escritura.js`.
 
 Se actualizaron las instrucciones operativas de suscripciones para retirar comandos al script eliminado. Las referencias en specs y decisiones históricas se conservan como evidencia. No se ejecutaron scripts de datos, migraciones ni despliegues; las bajas son de archivos versionados, recuperables desde Git. Validación: ninguna referencia ejecutable ni comando npm a los archivos retirados; `git diff --check` en ambos repositorios.
+
+## D-398 (2026-10-09) — Pantallas públicas con el diseño de "Regístrese" (openspec/changes/modernizar-paginas-publicas)
+
+**Disparador.** Daniel (/goal): "revisa páginas viejas de katuq y modernízalas como regístrese".
+
+**Hallazgo (capturas de producción a 1440 y 390 px).** Términos y condiciones muestra un 404 dentro (pide `...KATUQ.pdf`; el archivo es `...KATUQ.docx.pdf`). Recuperar y crear nueva contraseña con el logo roto. Desbloquear y las demos de la plantilla (`authentication/login/*`, `register/*`) en inglés y con logo roto. Cambio obligatorio de contraseña sin diseño. Privacidad y resultado de suscripción con gradientes (prohibidos por D-131). Resultado del pago con letra de serifa. Login armado pero con otro estilo y "show"/"app@yourmail.com".
+
+**Decisión.** Base común `shared/components/publica/` (`app-publica-marco` + mixin `publica-piezas` con los tokens de Regístrese) y rediseño de cada pantalla SIN cambiar su comportamiento (mismos campos, llamadas y redirecciones). Regístrese no se toca. Las rutas de la plantilla y `forget-password` pasan a `redirectTo`. Backend sin cambios.

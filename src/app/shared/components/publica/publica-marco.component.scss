@@ -1,0 +1,135 @@
+@import 'publica';
+
+// Mismo marco que `.reg-layout` de Regístrese: primero celular, dos columnas desde 960 px.
+:host {
+  display: block;
+}
+
+.pub-marco {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #fff;
+  color: $pub-ink;
+  font-family: $pub-text;
+  box-sizing: border-box;
+}
+
+.pub-marco__shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 16px 16px 32px;
+  box-sizing: border-box;
+}
+
+.pub-marco__main {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+}
+
+.pub-marco__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pub-marco__marca {
+  display: inline-flex;
+  line-height: 0;
+}
+
+.pub-marco__logo {
+  display: block;
+  height: 24px;
+  width: auto;
+}
+
+.pub-marco__acceso {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: $pub-body;
+
+  // `span.ng-star-inserted` global lo pinta de azul.
+  span { color: $pub-body; font-size: 14px; letter-spacing: normal; }
+}
+
+.pub-marco__enlace {
+  padding: 6px 2px;
+  color: $pub-accent;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; color: $pub-accent; }
+  &:focus-visible { outline: 3px solid $pub-accent-2; outline-offset: 2px; }
+}
+
+.pub-marco__contenido {
+  width: 100%;
+  min-width: 0;
+}
+
+.pub-marco--angosto .pub-marco__contenido { max-width: 480px; }
+.pub-marco--lectura .pub-marco__contenido { max-width: 760px; }
+
+.pub-marco__pie {
+  margin-top: auto;
+  font-size: 12.5px;
+  color: $pub-muted;
+}
+
+.pub-marco__aside {
+  min-width: 0;
+  padding: 24px;
+  background: $pub-tile;
+  border-radius: 20px;
+  box-sizing: border-box;
+}
+
+// Sin panel lateral, el contenido se centra en la pantalla.
+.pub-marco:not(.pub-marco--con-aside) {
+  .pub-marco__shell { max-width: 1120px; }
+
+  .pub-marco__contenido {
+    align-self: center;
+  }
+
+  .pub-marco__main { min-height: calc(100vh - 48px); }
+}
+
+@media (min-width: 960px) {
+  .pub-marco__shell {
+    padding: 24px 32px;
+  }
+
+  .pub-marco--con-aside .pub-marco__shell {
+    grid-template-columns: minmax(0, 1fr) minmax(0, .95fr);
+    gap: 48px;
+    min-height: 100vh;
+    align-items: stretch;
+  }
+
+  .pub-marco:not(.pub-marco--con-aside) .pub-marco__contenido {
+    margin-block: auto;
+  }
+
+  .pub-marco--con-aside .pub-marco__contenido {
+    margin-block: auto;
+  }
+
+  .pub-marco__aside {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px;
+  }
+}

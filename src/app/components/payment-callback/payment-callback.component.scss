@@ -5,7 +5,7 @@
   @include publica-piezas;
 
   // Círculo de carga en el cuadro de estado (el .pub-spinner es blanco, para botones).
-  .sub-giro {
+  .res-giro {
     width: 28px;
     height: 28px;
     border: 3px solid #ddd3fb;
@@ -14,24 +14,29 @@
     animation: pub-giro .8s linear infinite;
   }
 
-  .sub-lista {
+  .res-datos {
     display: grid;
-    gap: 12px;
-    margin: 16px 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .sub-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    gap: 16px;
     margin: 0;
   }
 
-  .sub-texto {
-    font-size: 15.5px;
+  .res-fila {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+  }
+
+  .res-valor {
+    margin: 0;
+    font-size: 17px;
     line-height: 1.35;
     color: $pub-ink;
+    word-break: break-word;
+  }
+
+  .res-nota {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid $pub-line;
   }
 }

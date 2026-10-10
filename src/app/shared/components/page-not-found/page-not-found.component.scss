@@ -1,51 +1,7 @@
-.headline{
-  color: #000000;
-}
+// Página no encontrada (D-398): piezas compartidas de las pantallas públicas.
+@import '../publica/publica';
 
-/* ============================================
-   404 ERROR PAGE - MOBILE-OPTIMIZED
-   ============================================ */
-
-.error-wrapper {
-  padding: 20px 15px;
-
-  .img-100 {
-    max-width: 80px;
-    height: auto;
-  }
-
-  .error-heading .headline {
-    font-size: 120px;
-    margin-top: -60px;
-  }
-
-  .sub-content {
-    font-size: 0.875rem;
-    line-height: 1.6;
-    padding: 0 10px;
-  }
-
-  .btn {
-    font-size: 0.875rem;
-    padding: 10px 20px;
-    margin-top: 20px;
-    min-height: 44px;
-    min-width: 120px;
-  }
-}
-
-@media (max-width: 576px) {
-  .error-wrapper {
-    padding: 15px 10px;
-
-    .error-heading .headline {
-      font-size: 80px;
-      margin-top: -40px;
-    }
-
-    .sub-content {
-      font-size: 0.75rem;
-      padding: 0 5px;
-    }
-  }
+:host {
+  display: block;
+  @include publica-piezas;
 }

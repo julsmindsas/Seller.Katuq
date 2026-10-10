@@ -18,10 +18,12 @@ import { UnlockUserComponent } from './unlock-user/unlock-user.component';
 import { ForgetPasswordComponent } from './forget-password/forget-password.component';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
+import { PublicaModule } from '../../shared/components/publica/publica.module';
 
 @NgModule({
   imports: [
     CommonModule,
+    PublicaModule,
     ReactiveFormsModule,
     FormsModule,
     SharedModule,
