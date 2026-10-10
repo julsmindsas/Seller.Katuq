@@ -99,25 +99,53 @@ export class WarehouseSelectorComponent implements OnInit, AfterViewInit {
         this.dataStore.remove('warehousePOS');
     }
 
+    /** Nombre del canal de venta del POS en Configuración > Bodegas por canal. */
+    private static readonly CANAL_POS = 'POS';
+
+    /**
+     * Ticket 1174: el POS es un canal de venta y en Configuración > Bodegas por
+     * canal se le asignan bodegas, pero el selector mostraba todas las de la
+     * empresa. Ahora pide primero las bodegas asociadas al canal POS y solo si
+     * el canal no existe o no tiene ninguna asignada cae a la lista completa,
+     * para no dejar sin POS a los comercios que nunca configuraron el canal.
+     */
     cargarBodegas() {
         this.cargando = true;
-        this.bodegaService.getBodegas().subscribe({
-            next: (bodegas) => {
-                this.bodegas = bodegas;
-                this.cargando = false;
-                console.log('Bodegas cargadas:', this.bodegas);
-                
-                // Actualizar la selección después de cargar las bodegas
-                setTimeout(() => {
-                    this.actualizarSeleccionBodega();
-                }, 100);
+        this.bodegaService.getBodegasByChannelName(WarehouseSelectorComponent.CANAL_POS).subscribe({
+            next: (bodegasCanal) => {
+                const asignadas = (bodegasCanal || []).filter(b => b && (b.idBodega || b.id));
+                if (asignadas.length > 0) {
+                    this.aplicarBodegas(asignadas);
+                } else {
+                    this.cargarTodasLasBodegas();
+                }
             },
+            error: () => {
+                // 404 = canal POS sin crear en esta empresa: se comporta como antes.
+                this.cargarTodasLasBodegas();
+            }
+        });
+    }
+
+    private cargarTodasLasBodegas() {
+        this.bodegaService.getBodegas().subscribe({
+            next: (bodegas) => this.aplicarBodegas(bodegas),
             error: (error) => {
                 console.error('Error al cargar bodegas:', error);
                 this.toastr.error('Error al cargar las bodegas', 'Error');
                 this.cargando = false;
             }
         });
+    }
+
+    private aplicarBodegas(bodegas: any[]) {
+        this.bodegas = (bodegas || []).map(b => ({ ...b, id: b.id || b.cd }));
+        this.cargando = false;
+
+        // Actualizar la selección después de cargar las bodegas
+        setTimeout(() => {
+            this.actualizarSeleccionBodega();
+        }, 100);
     }
 
     // Función para manejar la selección de una bodega
