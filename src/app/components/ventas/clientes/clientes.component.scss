@@ -1468,7 +1468,31 @@ input[type="checkbox"] {
 // ==============================================
 // DIALOG CREAR / EDITAR CLIENTE
 // ==============================================
-::ng-deep .cliente-form-dialog {
+// Ticket 1163: formulario inline (reemplaza al modal de crear cliente)
+.cliente-form-inline {
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #fff;
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1.5px solid #ede9fe;
+  }
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 1rem 0 0;
+    margin-top: 1rem;
+    border-top: 1px solid #ede9fe;
+  }
+  .form-container { padding: 1rem 1.25rem 1.25rem !important; }
+  form .row.g-4 { margin: 0; --bs-gutter-y: 0.875rem; }
+}
+
+::ng-deep .cliente-form-dialog,
+.cliente-form-inline {
   .p-dialog {
     border-radius: 12px;
     overflow: hidden;

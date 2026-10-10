@@ -5,6 +5,13 @@ import { catchError, timeout, retry } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import firebase from 'firebase/compat/app';
+import { esDireccionBasura } from '../util/areas-geograficas.util';
+import {
+  ContextoDireccion,
+  SenalesProveedor,
+  validarResultadoGeocodificacion,
+  Veredicto,
+} from '../util/geocoding-validador.util';
 
 export interface GeocodingResponse {
   id: string;
@@ -15,6 +22,30 @@ export interface GeocodingResponse {
   longitud: string;
   coordDestino: string;
   quality: number;
+  /** Señales del proveedor (solo Google las trae) para el validador (D4). */
+  senales?: SenalesProveedor;
+}
+
+/**
+ * Opciones de `geocodeDireccion` (ticket 1136, OpenSpec fix-geocodificacion-corregimientos).
+ * - `barrio` / `zonaCobro`: entran a la consulta y definen el área esperada.
+ * - `direccionEntrega: true` → modo estricto: todo resultado se valida, no hay
+ *   respaldo al centroide de la ciudad y, si nada sirve, se emite
+ *   `GeocodingError` con código `SIN_RESULTADO_CONFIABLE` para que la UI pida
+ *   marcar el punto en el mapa. Sin esta opción se conserva el comportamiento
+ *   histórico (bodegas, mapa de despachos): validar, pero caer al aproximado.
+ */
+export interface GeocodeOpciones extends ContextoDireccion {
+  direccionEntrega?: boolean;
+}
+
+export type GeocodingErrorCode = 'SIN_RESULTADO_CONFIABLE' | 'DIRECCION_INVALIDA';
+
+export class GeocodingError extends Error {
+  constructor(public code: GeocodingErrorCode, message: string, public rechazos: Veredicto[] = []) {
+    super(message);
+    this.name = 'GeocodingError';
+  }
 }
 
 // Interfaces para respuestas de diferentes APIs
@@ -97,13 +128,33 @@ export class GeocodingService {
 
   // ─── Caché Firestore ───────────────────────────────────────────────────────
 
-  private buildCacheKey(direccion: string, ciudad: string): string {
-    return `${direccion}_${ciudad}`
+  // D6: la clave lleva versión y barrio. Las entradas v1 (sin prefijo) quedan
+  // huérfanas y dejan de usarse solas; no se borran ni se migran.
+  private buildCacheKey(direccion: string, ciudad: string, barrio: string = ''): string {
+    return `v2_${direccion}_${barrio}_${ciudad}`
       .toLowerCase()
       .normalize('NFD').replace(/[̀-ͯ]/g, '') // quitar tildes
       .replace(/[^a-z0-9]/g, '_')
       .replace(/_+/g, '_')
       .substring(0, 200);
+  }
+
+  /** Dirección + barrio (si hay) tal como se le manda a los proveedores. */
+  private direccionConBarrio(direccion: string, barrio?: string | null): string {
+    const b = (barrio || '').trim();
+    if (!b) { return direccion; }
+    // Si la dirección ya menciona el barrio, no repetirlo.
+    return direccion.toLowerCase().includes(b.toLowerCase()) ? direccion : `${direccion}, ${b}`;
+  }
+
+  /** Barrio efectivo para la consulta: el barrio, o el corregimiento de la zona de cobro. */
+  private barrioParaConsulta(opciones?: GeocodeOpciones): string {
+    const barrio = (opciones?.barrio || '').trim();
+    if (barrio) { return barrio; }
+    const zona = (opciones?.zonaCobro || '').trim();
+    // "Corregimiento San Antonio de Prado" → "San Antonio de Prado"
+    const m = zona.match(/corregimiento\s+(.+)$/i);
+    return m ? m[1].trim() : '';
   }
 
   private async buscarEnCacheFirestore(key: string): Promise<GeocodingResponse | null> {
@@ -191,13 +242,27 @@ export class GeocodingService {
    *     console.log(`Quality: ${response.quality}`);
    *   });
    */
-  geocodeDireccion(direccion: string, ciudad: string): Observable<GeocodingResponse> {
+  geocodeDireccion(direccion: string, ciudad: string, opciones: GeocodeOpciones = {}): Observable<GeocodingResponse> {
+    const estricto = opciones.direccionEntrega === true;
+    const barrio = this.barrioParaConsulta(opciones);
+
+    // D6: una dirección basura no va a ningún proveedor ni a la caché.
+    if (esDireccionBasura(direccion)) {
+      if (estricto) {
+        return throwError(() => new GeocodingError('DIRECCION_INVALIDA',
+          'La dirección está vacía o es de relleno; escribe la dirección real antes de ubicarla.'));
+      }
+      return new Observable(observer => {
+        this.geocodificacionAproximada(direccion, ciudad).then(r => { observer.next(r); observer.complete(); });
+      });
+    }
+
     // Normalizar antes de consultar cualquier API
-    const direccionNormalizada = this.normalizarDireccion(direccion, ciudad);
+    const direccionNormalizada = this.normalizarDireccion(this.direccionConBarrio(direccion, barrio), ciudad);
     console.log(`🌍 Iniciando geocodificación: ${direccionNormalizada}`);
 
-    // Verificar caché primero (clave basada en la dirección normalizada)
-    const cacheKey = direccionNormalizada.toLowerCase();
+    // Verificar caché en memoria (v2: incluye barrio y modo)
+    const cacheKey = `v2|${estricto ? 'e' : 'r'}|${direccionNormalizada.toLowerCase()}`;
     const cached = this.geocodingCache.get(cacheKey);
 
     if (cached && (Date.now() - cached.timestamp) < this.CACHE_DURATION) {
@@ -207,7 +272,8 @@ export class GeocodingService {
 
     return new Observable(observer => {
       const direccionExpandida = this.expandirAbreviaturas(direccion);
-      this.geocodeWithFallback(direccionExpandida, ciudad).then(result => {
+      const contexto: ContextoDireccion = { barrio: opciones.barrio, zonaCobro: opciones.zonaCobro, ciudad };
+      this.geocodeWithFallback(direccionExpandida, ciudad, barrio, contexto, estricto).then(result => {
         this.geocodingCache.set(cacheKey, { result, timestamp: Date.now() });
         observer.next(result);
         observer.complete();
@@ -266,22 +332,44 @@ export class GeocodingService {
    * - Firebase Backend Proxy (redundante con GeoBlr)
    * - Nominatim OpenStreetMap (baja precisión)
    */
-  private async geocodeWithFallback(direccion: string, ciudad: string): Promise<GeocodingResponse> {
+  private async geocodeWithFallback(
+    direccion: string,
+    ciudad: string,
+    barrio: string,
+    contexto: ContextoDireccion,
+    estricto: boolean,
+  ): Promise<GeocodingResponse> {
     const providers = [
       GeocodingProvider.GEO_BLR,
       GeocodingProvider.GOOGLE_MAPS,
       GeocodingProvider.NOMINATIM
     ];
 
-    console.log(`🗺️ Geocodificando: "${direccion}", ciudad: "${ciudad}"`);
+    // Lo que ven los proveedores: dirección + barrio/corregimiento (spec: la
+    // consulta incluye el barrio). Sin barrio, la consulta es la de siempre.
+    const direccionConsulta = this.direccionConBarrio(direccion, barrio);
+    console.log(`🗺️ Geocodificando: "${direccionConsulta}", ciudad: "${ciudad}"${estricto ? ' (entrega, estricto)' : ''}`);
 
-    const firestoreKey = this.buildCacheKey(direccion, ciudad);
+    const firestoreKey = this.buildCacheKey(direccion, ciudad, barrio);
+    const rechazos: Veredicto[] = [];
+
+    // D1: todo resultado, venga de donde venga, pasa por el validador.
+    const aceptar = (origen: string, result: GeocodingResponse): boolean => {
+      const veredicto = validarResultadoGeocodificacion(
+        { latitud: result.latitud, longitud: result.longitud, senales: result.senales },
+        contexto,
+      );
+      if (veredicto.valido) { return true; }
+      rechazos.push(veredicto);
+      console.warn(`🚫 ${origen} rechazado (${veredicto.motivo}): ${veredicto.detalle || ''} → ${result.latitud},${result.longitud}`);
+      return false;
+    };
 
     for (const provider of providers) {
       // Antes de llamar a Google Maps, consultar caché Firestore
       if (provider === GeocodingProvider.GOOGLE_MAPS) {
         const cached = await this.buscarEnCacheFirestore(firestoreKey);
-        if (cached) {
+        if (cached && aceptar('caché Firestore', cached)) {
           this.lastProviderUsed = GeocodingProvider.FIREBASE;
           return cached;
         }
@@ -289,13 +377,19 @@ export class GeocodingService {
 
       try {
         console.log(`🔄 Intentando con ${provider}...`);
-        const result = await this.geocodeWithProvider(provider, direccion, ciudad);
+        const result = await this.geocodeWithProvider(provider, direccionConsulta, ciudad, estricto);
+
+        if (!aceptar(provider, result)) {
+          this.providerStats.get(provider)!.errors++;
+          continue;
+        }
 
         const stats = this.providerStats.get(provider)!;
         stats.success++;
         this.lastProviderUsed = provider;
 
         // Guardar en Firestore solo si vino de Google Maps (el que tiene costo)
+        // y solo si pasó la validación (D6).
         if (provider === GeocodingProvider.GOOGLE_MAPS) {
           this.guardarEnCacheFirestore(firestoreKey, result, 'google_maps');
         }
@@ -310,6 +404,13 @@ export class GeocodingService {
       }
     }
 
+    if (estricto) {
+      // D5: para una dirección de entrega no se inventa un punto.
+      const motivos = Array.from(new Set(rechazos.map(r => r.motivo))).join(', ') || 'sin respuesta';
+      throw new GeocodingError('SIN_RESULTADO_CONFIABLE',
+        `Ningún proveedor ubicó la dirección con confianza (${motivos}). Marca el punto en el mapa.`, rechazos);
+    }
+
     console.log(`⚠️ Todos los proveedores fallaron, usando geocodificación aproximada`);
     return this.geocodificacionAproximada(direccion, ciudad);
   }
@@ -317,7 +418,7 @@ export class GeocodingService {
   /**
    * Geocodifica usando un proveedor específico
    */
-  private async geocodeWithProvider(provider: GeocodingProvider, direccion: string, ciudad: string): Promise<GeocodingResponse> {
+  private async geocodeWithProvider(provider: GeocodingProvider, direccion: string, ciudad: string, estricto: boolean = false): Promise<GeocodingResponse> {
     switch (provider) {
       case GeocodingProvider.GEO_BLR:
         return this.geocodeWithGeoBlr(direccion, ciudad);
@@ -337,7 +438,7 @@ export class GeocodingService {
         return this.geocodeWithOpenRoute(direccion, ciudad);
 
       case GeocodingProvider.NOMINATIM:
-        return this.geocodeWithNominatim(direccion, ciudad);
+        return this.geocodeWithNominatim(direccion, ciudad, estricto);
 
       default:
         throw new Error(`Proveedor no soportado: ${provider}`);
@@ -476,7 +577,8 @@ export class GeocodingService {
       throw new Error(`GMaps REST: ${data?.status || 'sin respuesta'} para "${query}"`);
     }
 
-    const loc = data.results[0].geometry.location;
+    const first = data.results[0];
+    const loc = first.geometry.location;
     return {
       id: `gmaps_rest_${Date.now()}`,
       direccion,
@@ -485,7 +587,13 @@ export class GeocodingService {
       latitud: loc.lat.toString(),
       longitud: loc.lng.toString(),
       coordDestino: `${loc.lat},${loc.lng}`,
-      quality: 95
+      quality: 95,
+      // D4: señales para que el validador descarte centroides de municipio.
+      senales: {
+        locationType: first.geometry.location_type,
+        partialMatch: first.partial_match === true,
+        types: Array.isArray(first.types) ? first.types : [],
+      },
     };
   }
 
@@ -564,7 +672,13 @@ export class GeocodingService {
         latitud: lat.toString(),
         longitud: lng.toString(),
         coordDestino: `${lat},${lng}`,
-        quality: 95 // Alta calidad para Google Maps directo
+        quality: 95, // Alta calidad para Google Maps directo
+        // D4: el SDK expone las mismas señales que el REST.
+        senales: {
+          locationType: result.geometry?.location_type,
+          partialMatch: result.partial_match === true,
+          types: Array.isArray(result.types) ? result.types : [],
+        },
       };
     } catch (error) {
       console.warn('Google Maps geocoding error:', error);
@@ -660,16 +774,23 @@ export class GeocodingService {
   /**
    * Geocodificación con Nominatim usando múltiples estrategias
    */
-  private async geocodeWithNominatim(direccion: string, ciudad: string): Promise<GeocodingResponse> {
-    // Array de diferentes formatos de búsqueda para probar
-    const queryFormats = [
-      `${direccion}, ${ciudad}, Colombia`,
-      `${direccion}, ${ciudad}`,
-      `${ciudad}, Colombia`,
-      `${ciudad}, Antioquia, Colombia`,
-      `${ciudad}`,
-      `${direccion}`
-    ];
+  private async geocodeWithNominatim(direccion: string, ciudad: string, estricto: boolean = false): Promise<GeocodingResponse> {
+    // Array de diferentes formatos de búsqueda para probar. D5: para una
+    // dirección de entrega solo valen los formatos que incluyen la dirección;
+    // "${ciudad}, Colombia" devuelve el centroide del municipio.
+    const queryFormats = estricto
+      ? [
+        `${direccion}, ${ciudad}, Colombia`,
+        `${direccion}, ${ciudad}`,
+      ]
+      : [
+        `${direccion}, ${ciudad}, Colombia`,
+        `${direccion}, ${ciudad}`,
+        `${ciudad}, Colombia`,
+        `${ciudad}, Antioquia, Colombia`,
+        `${ciudad}`,
+        `${direccion}`
+      ];
 
     console.log(`🗺️ Geocodificando con Nominatim: ${direccion}, ${ciudad}`);
 
@@ -706,7 +827,11 @@ export class GeocodingService {
       }
     }
 
-    // Si todos los intentos fallaron, intentar geocodificación aproximada
+    // Si todos los intentos fallaron: en modo estricto se reporta el fallo
+    // (geocodeWithFallback decide); en el histórico, geocodificación aproximada.
+    if (estricto) {
+      throw new Error(`Nominatim: sin resultados para "${direccion}, ${ciudad}"`);
+    }
     return this.geocodificacionAproximada(direccion, ciudad);
   }
 

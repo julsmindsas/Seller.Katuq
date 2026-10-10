@@ -28,6 +28,10 @@ import { MunicipioDane } from "../../../../shared/data/colombia-dane-codes";
 export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   @Input() direccionActual: string = "";
   @Input() ciudadActual: string = "";
+  // Ticket 1136: el barrio/corregimiento y la zona de cobro entran a la
+  // geocodificación y definen el área donde debe caer el punto.
+  @Input() barrioActual: string = "";
+  @Input() zonaCobroActual: string = "";
   @Output() direccionGenerada = new EventEmitter<string>();
 
   @ViewChild("mapContainer", { static: false }) mapContainer?: ElementRef;
@@ -700,9 +704,11 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   }
 
   // Geocodifica la dirección actual. Devuelve una promesa que SIEMPRE resuelve
-  // (nunca rechaza) — geocodeDireccion() ya tiene un fallback de último recurso
-  // que nunca falla, así que esto permite esperar el resultado desde
-  // generarDireccion() sin necesidad de manejar un caso de rechazo.
+  // (nunca rechaza). Ticket 1136: va en modo "dirección de entrega": todo
+  // resultado se valida contra el barrio/corregimiento y la zona, no hay
+  // respaldo al centroide de la ciudad y, si ningún proveedor ubica la
+  // dirección con confianza, las coordenadas quedan VACÍAS y se pide marcar el
+  // punto en el mapa (generarDireccion() no cierra sin coordenadas).
   geocodificarDireccion(): Promise<void> {
     // Solo geocodificar si el formulario es válido y hay una ciudad
     if (!this.direccionForm.valid || !this.direccionForm.get("ciudad")?.value) {
@@ -714,9 +720,14 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
 
     const direccion = this.vistaPrevia;
     const ciudad = this.direccionForm.get("ciudad")?.value;
+    const opciones = {
+      barrio: this.barrioActual || "",
+      zonaCobro: this.zonaCobroActual || "",
+      direccionEntrega: true,
+    };
 
     return new Promise<void>((resolve) => {
-      this.geocodingService.geocodeDireccion(direccion, ciudad).subscribe({
+      this.geocodingService.geocodeDireccion(direccion, ciudad, opciones).subscribe({
         next: (respuesta) => {
           this.geocodificando = false;
           this.geocodingQuality = respuesta.quality;
@@ -749,8 +760,18 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
           console.error("Error al geocodificar:", error);
           this.geocodificando = false;
           this.errorGeocodificacion = true;
-          this.mensajeError =
-            "No se pudo obtener la ubicación. Verifica la dirección o búscala en Google Maps.";
+          // Ticket 1136: sin resultado confiable no se deja ningún punto puesto.
+          // Las coordenadas anteriores (si las había) podían ser el error que
+          // estamos evitando; el usuario marca el punto en el mapa.
+          this.latitud = "";
+          this.longitud = "";
+          this.direccionForm.get("coordenadas")?.setValue("");
+          const code = error?.code;
+          this.mensajeError = code === "DIRECCION_INVALIDA"
+            ? "Escribe la dirección real antes de ubicarla."
+            : code === "SIN_RESULTADO_CONFIABLE"
+              ? "No encontramos esta dirección con confianza en el mapa. Haz clic en el mapa sobre el punto exacto de entrega para continuar."
+              : "No se pudo obtener la ubicación. Verifica la dirección o márcala en el mapa.";
           const ciudad = this.direccionForm.get('ciudad')?.value || '';
           const query = encodeURIComponent(`${this.vistaPrevia}, ${ciudad}, Colombia`);
           this.urlGoogleMaps = `https://www.google.com/maps/search/?api=1&query=${query}`;

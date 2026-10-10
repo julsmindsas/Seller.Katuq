@@ -81,14 +81,6 @@
             <span class="greeting-text">{{greeting}} <span class="emoji">👋</span></span>
             <span class="user-name">{{firstName}}</span>
           </div>
-          <div class="brand-logo">
-            <img class="logo-light"
-                 src="assets/images/logo/Katuq/katuq_dark.svg"
-                 alt="Katuq">
-            <img class="logo-dark"
-                 src="assets/images/logo/Katuq/katuq-dark.png"
-                 alt="Katuq">
-          </div>
         </div>
       </div>
 
@@ -102,10 +94,6 @@
       </button>
     </div>
 
-    <!-- Versión (solo expandido) -->
-    <div class="version-badge" *ngIf="!collapseMenu || isTemporarilyExpanded">
-      <span>v{{version}}</span>
-    </div>
   </header>
 
   <!-- Barra de Búsqueda -->
@@ -376,60 +364,15 @@
     </div>
   </nav>
 
-  <!-- Notification Bell Section -->
-  <div class="sidebar-notification-section"
-       [class.collapsed]="collapseMenu || isCompactMode"
-       [class.compact]="isCompactMode"
-       role="region"
-       aria-label="Notificaciones">
-    <div class="sidebar-notification-bell"
-         (click)="openNotificationCenter()"
-         role="button"
-         tabindex="0"
-         (keydown.enter)="openNotificationCenter()"
-         (keydown.space)="$event.preventDefault(); openNotificationCenter()"
-         [attr.title]="'Notificaciones' + (unreadNotificationCount > 0 ? ' (' + unreadNotificationCount + ' no leídas)' : '')"
-         [attr.aria-label]="unreadNotificationCount > 0 ? 'Notificaciones: ' + unreadNotificationCount + ' sin leer' : 'Notificaciones'">
-      <div class="bell-container">
-        <i class="fa fa-bell"
-           [class.has-notifications]="unreadNotificationCount > 0"
-           [class.ringing]="hasNewNotifications"
-           aria-hidden="true"></i>
-        <span class="notification-count-badge"
-              *ngIf="unreadNotificationCount > 0"
-              [class.pulse]="hasNewNotifications"
-              aria-hidden="true">
-          {{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}
-        </span>
-      </div>
-      <span class="notification-label" *ngIf="!collapseMenu && !isCompactMode">
-        {{ 'Notificaciones' | translate }}
-      </span>
-      <div class="notification-preview" *ngIf="latestNotification && !collapseMenu && !isCompactMode">
-        <small class="preview-text">{{ latestNotification }}</small>
-      </div>
-    </div>
-
-    <!-- Quick Actions for Notifications -->
-    <div class="notification-quick-actions" *ngIf="!collapseMenu && !isCompactMode">
-      <button class="quick-action-btn"
-              type="button"
-              (click)="markAllNotificationsAsRead($event)"
-              *ngIf="unreadNotificationCount > 0"
-              [attr.aria-label]="'Marcar todas como leídas' | translate"
-              title="Marcar todas como leídas">
-        <i class="fa fa-check" aria-hidden="true"></i>
-      </button>
-      <button class="quick-action-btn"
-              type="button"
-              (click)="toggleNotificationSound($event)"
-              [class.active]="notificationSoundEnabled"
-              [attr.aria-label]="notificationSoundEnabled ? ('Desactivar sonido de notificaciones' | translate) : ('Activar sonido de notificaciones' | translate)"
-              [attr.aria-pressed]="notificationSoundEnabled"
-              title="Sonido de notificaciones">
-        <i class="fa" [ngClass]="notificationSoundEnabled ? 'fa-volume-up' : 'fa-volume-off'" aria-hidden="true"></i>
-      </button>
-    </div>
+  <!-- Tickets 1178 y 1184: el botón "Notificaciones" del menú se retiró (la campana
+       vive en la cabecera y el sonido se controla desde el panel de notificaciones).
+       En su lugar baja el logo de Katuq con la versión, que antes iban arriba. -->
+  <div class="sidebar-brand-footer"
+       *ngIf="!collapseMenu && !isCompactMode"
+       role="contentinfo">
+    <img class="logo-light" src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq">
+    <img class="logo-dark" src="assets/images/logo/Katuq/katuq-dark.png" alt="Katuq">
+    <span class="version-badge">v{{version}}</span>
   </div>
 
   <!-- Plan Card -->

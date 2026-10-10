@@ -235,6 +235,21 @@
   color: #6b7280;
 }
 
+// Ticket 1178: toggle de sonido en la cabecera del panel
+.btn-icon.btn-sound.active {
+  color: #7c5cff;
+}
+
+// Ticket 1179: "marcar todas" siempre visible, apagado si no hay pendientes
+.btn-icon.btn-mark-all {
+  color: #16a34a;
+}
+.btn-icon.btn-mark-all:disabled {
+  color: #c4c9d4;
+  cursor: default;
+  background: none;
+}
+
 .btn-icon.btn-close:hover {
   background-color: rgba(220, 38, 38, 0.1);
   color: #dc2626;
@@ -898,8 +913,20 @@
   align-items: flex-start;
   gap: 4px;
   margin-left: 8px;
-  opacity: 0;
   transition: opacity 0.2s ease;
+}
+
+// Ticket 1179: el check de "leída" siempre se ve; el de eliminar solo al pasar el mouse.
+.notification-actions .btn-icon.btn-delete {
+  opacity: 0;
+}
+.notification-item:hover .notification-actions .btn-icon.btn-delete {
+  opacity: 1;
+}
+.notification-actions .btn-icon.btn-read-done {
+  color: #16a34a;
+  opacity: .55;
+  cursor: default;
 }
 
 .notification-actions .btn-icon {
@@ -916,7 +943,7 @@
 }
 
 .notification-actions .btn-icon i {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .notification-actions .btn-icon.btn-mark-read {
@@ -935,9 +962,6 @@
   background-color: rgba(220, 38, 38, 0.1);
 }
 
-.notification-item:hover .notification-actions {
-  opacity: 1;
-}
 
 .unread-indicator {
   position: absolute;

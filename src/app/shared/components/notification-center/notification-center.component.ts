@@ -68,6 +68,9 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   public showPreferences = false;
   public showClearConfirm = false;
 
+  /** Ticket 1178: sonido de notificaciones. Misma llave que usa el sidebar al sonar. */
+  public soundEnabled: boolean = localStorage.getItem('notificationSound') !== 'false';
+
   // Referencias para cleanup
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
@@ -584,6 +587,14 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
    */
   public togglePreferences(): void {
     this.showPreferences = !this.showPreferences;
+  }
+
+  /** Ticket 1178: activa o silencia el sonido de las notificaciones nuevas. */
+  public toggleSound(): void {
+    this.soundEnabled = !this.soundEnabled;
+    try {
+      localStorage.setItem('notificationSound', String(this.soundEnabled));
+    } catch (_) { /* almacenamiento bloqueado: queda solo en memoria */ }
   }
 
   /**

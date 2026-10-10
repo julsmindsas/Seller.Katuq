@@ -28,11 +28,25 @@
     </div>
     
     <div class="header-actions">
+      <!-- Ticket 1178: el sonido se controla acá (antes estaba en el menú lateral) -->
+      <button class="btn-icon btn-sound"
+              type="button"
+              (click)="toggleSound()"
+              [class.active]="soundEnabled"
+              [attr.aria-pressed]="soundEnabled"
+              [title]="soundEnabled ? 'Silenciar notificaciones' : 'Activar sonido de notificaciones'">
+        <i class="fa" [ngClass]="soundEnabled ? 'fa-volume-up' : 'fa-volume-off'"></i>
+      </button>
       <button class="btn-icon" (click)="togglePreferences()" title="Preferencias">
         <i class="fa fa-cog"></i>
       </button>
-      <button class="btn-icon" (click)="markAllAsRead()" *ngIf="unreadCount > 0" title="Marcar todas como leídas">
-        <i class="fa fa-check"></i>
+      <!-- Ticket 1179: siempre visible; se inhabilita cuando no hay nada por leer -->
+      <button class="btn-icon btn-mark-all"
+              type="button"
+              (click)="markAllAsRead()"
+              [disabled]="unreadCount === 0"
+              [title]="unreadCount > 0 ? 'Marcar todas como leídas' : 'No hay notificaciones sin leer'">
+        <i class="fa fa-check-square-o"></i>
       </button>
       <button class="btn-icon" (click)="showClearAllConfirm()" title="Limpiar todas">
         <i class="fa fa-trash"></i>
@@ -217,13 +231,21 @@
 
         <!-- Notification Actions -->
         <div class="notification-actions">
-          <button 
+          <!-- Ticket 1179: check visible en cada notificación para marcarla leída -->
+          <button
             class="btn-icon btn-mark-read"
+            type="button"
             *ngIf="notification.status !== NotificationStatus.READ"
             (click)="$event.stopPropagation(); markAsRead(notification)"
-            title="Marcar como leída">
-            <i class="fa fa-check"></i>
+            title="Marcar como leída"
+            aria-label="Marcar como leída">
+            <i class="fa fa-square-o"></i>
           </button>
+          <span class="btn-icon btn-read-done"
+                *ngIf="notification.status === NotificationStatus.READ"
+                title="Leída" aria-label="Leída">
+            <i class="fa fa-check-square"></i>
+          </span>
           
           <button 
             class="btn-icon btn-delete"

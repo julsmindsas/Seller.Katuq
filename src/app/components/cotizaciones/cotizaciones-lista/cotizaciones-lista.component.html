@@ -172,6 +172,10 @@
             <th role="button" (click)="sortBy('cliente')">
               Cliente <span class="sort-caret" [class.on]="sortKey==='cliente'" [class.desc]="sortKey==='cliente' && sortDir===-1"></span>
             </th>
+            <!-- Ticket 1176: el comercial que hizo la cotización, para ubicarla de un vistazo -->
+            <th role="button" (click)="sortBy('vendedor')">
+              Asesor <span class="sort-caret" [class.on]="sortKey==='vendedor'" [class.desc]="sortKey==='vendedor' && sortDir===-1"></span>
+            </th>
             <th role="button" (click)="sortBy('fechaEmision')">
               Emisión <span class="sort-caret" [class.on]="sortKey==='fechaEmision'" [class.desc]="sortKey==='fechaEmision' && sortDir===-1"></span>
             </th>
@@ -190,13 +194,13 @@
         </thead>
         <tbody>
           <tr *ngIf="loading">
-            <td colspan="8" class="state-cell">Cargando…</td>
+            <td colspan="9" class="state-cell">Cargando…</td>
           </tr>
           <tr *ngIf="!loading && error">
-            <td colspan="8" class="state-cell error">{{ error }}</td>
+            <td colspan="9" class="state-cell error">{{ error }}</td>
           </tr>
           <tr *ngIf="!loading && !error && cotizaciones.length === 0">
-            <td colspan="8" class="state-cell empty">
+            <td colspan="9" class="state-cell empty">
               <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
               <div class="empty-txt">No hay cotizaciones que coincidan con el filtro.</div>
               <button type="button" class="btn-accent sm" (click)="nuevaCotizacion()">
@@ -241,6 +245,7 @@
                 </div>
               </div>
             </td>
+            <td class="td-asesor" [title]="c.vendedor?.email || ''">{{ vendedorNombre(c) }}</td>
             <td class="td-emision">{{ fecha(c.fechaEmision || c.fechaCreacion) }}</td>
             <td>
               <span class="valida" [ngClass]="validezClase(c)">{{ fecha(c.fechaVencimiento) }}</span>

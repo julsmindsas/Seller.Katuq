@@ -5584,12 +5584,26 @@ $pd-chip-border: #e9e7f3;
     font-weight: 700;
   }
   &__main { flex: 1; min-width: 0; }
-  &__top { display: flex; align-items: center; gap: 7px; }
+  &__top { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
   &__nro {
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 11px;
     font-weight: 700;
     color: #1E6FD9;
+  }
+  // Ticket 1185: chip de número externo (SH-xxx / OSM-xxx) en la vista panel
+  &__ext {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    color: #6c757d;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 1px 5px;
+    white-space: nowrap;
+    cursor: help;
+    .pi-truck { font-size: 9px; color: #10B981; margin-left: 3px; vertical-align: middle; }
   }
   &__urg {
     font-size: 8px;
@@ -5744,6 +5758,20 @@ $pd-chip-border: #e9e7f3;
     border-radius: 7px;
   }
   &__entrega { font-size: 11.5px; color: $pd-muted-2; }
+  // Ticket 1185: número externo (SH-xxx / OSM-xxx) junto al número de pedido
+  &__ext {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6c757d;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 7px;
+    padding: 3px 8px;
+    white-space: nowrap;
+    cursor: help;
+    .pi-truck { font-size: 10px; color: #10B981; margin-left: 3px; vertical-align: middle; }
+  }
   &__total { text-align: right; flex: none; }
   &__total-label { display: block; font-size: 10px; font-weight: 700; color: #a5a1bf; letter-spacing: .5px; }
   &__total-value { font-size: 22px; font-weight: 800; color: $pd-accent; }

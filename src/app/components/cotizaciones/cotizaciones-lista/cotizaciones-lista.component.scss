@@ -529,6 +529,17 @@
   color: var(--grey);
 }
 
+// Ticket 1176: columna Asesor
+.td-asesor {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .valida {
   font-size: 13.5px;
   font-weight: 800;

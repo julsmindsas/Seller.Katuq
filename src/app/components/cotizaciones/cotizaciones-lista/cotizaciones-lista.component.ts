@@ -195,6 +195,9 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
       if (key === "cliente") {
         x = this.clienteNombre(a).toLowerCase();
         y = this.clienteNombre(b).toLowerCase();
+      } else if (key === "vendedor") {
+        x = this.vendedorNombre(a).toLowerCase();
+        y = this.vendedorNombre(b).toLowerCase();
       } else if (key === "total") {
         x = a.total || 0;
         y = b.total || 0;
@@ -345,6 +348,13 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
       cli.documento ||
       "—"
     );
+  }
+
+  /** Ticket 1176: nombre del comercial (o su correo si no tiene nombre). */
+  vendedorNombre(c: Cotizacion): string {
+    const v = c.vendedor;
+    if (!v) return "—";
+    return v.nombre || v.email || "—";
   }
 
   clienteSub(c: Cotizacion): string {
