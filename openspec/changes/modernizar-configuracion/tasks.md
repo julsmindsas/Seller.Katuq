@@ -14,6 +14,6 @@
 
 ## 3. Cierre
 
-- [ ] 3.1 `ng build --configuration production` sin errores.
-- [ ] 3.2 `git pull`, publicar y revisar cada pantalla en el navegador (sesión de Daniel), y los tres enlaces del menú.
-- [ ] 3.3 Registrar el cierre en CONTRACT.md.
+- [x] 3.1 `ng build --configuration production` sin errores.
+- [x] 3.2 `git pull`, publicar y revisar cada pantalla en el navegador (sesión de Daniel), y los tres enlaces del menú.
+- [x] 3.3 Registrar el cierre en CONTRACT.md.
