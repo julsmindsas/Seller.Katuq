@@ -1608,6 +1608,15 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   // DIALOG CREAR / EDITAR (modo standalone)
   // =============================================
   showClienteModal: boolean = false;
+  /** Ticket 1163: el buscador de clientes existentes va plegado al crear. */
+  buscadorAbierto: boolean = false;
+
+  toggleBuscador(): void {
+    this.buscadorAbierto = !this.buscadorAbierto;
+    if (!this.buscadorAbierto) {
+      this.resultadosBusqueda = [];
+    }
+  }
 
   abrirModalCrear(): void {
     this.encontrado = false;

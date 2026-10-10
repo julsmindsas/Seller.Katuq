@@ -21,13 +21,17 @@
                         class="p-button-outlined p-button-sm btn-tags-cfg"
                         (click)="abrirConfigEtiquetas()"
                         pTooltip="{{ 'Gestionar etiquetas de clientes' | translate }}"></button>
+                <!-- Ticket 1163: el formulario ya carga abierto; el buscador de clientes
+                     existentes queda plegado y se abre desde acá. -->
                 <button *ngIf="!isEdit"
                         pButton
                         type="button"
-                        icon="pi pi-plus"
-                        label="{{ 'Crear Cliente' | translate }}"
-                        class="p-button-primary p-button-sm"
-                        (click)="abrirModalCrear()"></button>
+                        [icon]="buscadorAbierto ? 'pi pi-chevron-up' : 'pi pi-search'"
+                        label="{{ 'Buscar existente' | translate }}"
+                        class="p-button-outlined p-button-sm"
+                        [class.p-button-secondary]="buscadorAbierto"
+                        (click)="toggleBuscador()"
+                        pTooltip="{{ 'Buscar un cliente ya creado para editarlo' | translate }}"></button>
                 <button *ngIf="isEdit"
                         pButton
                         type="button"
@@ -38,8 +42,8 @@
             </div>
         </div>
 
-        <!-- Buscador de cliente -->
-        <div class="search-section px-4 py-3 bg-light border-bottom">
+        <!-- Buscador de cliente (ticket 1163: plegado por defecto al crear) -->
+        <div class="search-section px-4 py-3 bg-light border-bottom" *ngIf="isEdit || buscadorAbierto">
             <div class="row align-items-end g-2">
                 <div class="col-12 col-md-3">
                     <label class="form-label fw-semibold small">{{ "Buscar por" | translate }}</label>
@@ -967,17 +971,10 @@
 <!-- ====================================================
      DIALOG: Crear / Editar Cliente (modo standalone)
      ==================================================== -->
-<p-dialog *ngIf="!isEdit"
-    [(visible)]="showClienteModal"
-    [modal]="true"
-    [closable]="true"
-    [dismissableMask]="false"
-    [appendTo]="'body'"
-    [baseZIndex]="10000"
-    [style]="{ width: '92vw', maxWidth: '920px' }"
-    [contentStyle]="{ padding: '0.75rem 1.25rem 1.25rem', background: '#fafbfc', overflow: 'auto', maxHeight: '70vh' }"
-    styleClass="cliente-form-dialog">
-    <ng-template pTemplate="header">
+<!-- Ticket 1163: el formulario de crear cliente ya no va en un modal: carga de una
+     vez debajo de la cabecera (con el botón Etiquetas arriba). -->
+<div *ngIf="!isEdit" class="card border-0 shadow-sm mb-4 cliente-form-inline">
+    <div class="cliente-form-inline__head">
         <div class="d-flex align-items-center gap-3">
             <i class="dialog-header-icon"
                [ngClass]="encontrado ? 'pi pi-user-edit' : 'pi pi-user-plus'"></i>
@@ -990,8 +987,11 @@
                 </span>
             </div>
         </div>
-    </ng-template>
-
+        <button *ngIf="encontrado" pButton type="button" icon="pi pi-plus"
+                label="{{ 'Nuevo cliente' | translate }}" class="p-button-outlined p-button-sm"
+                (click)="abrirModalCrear()"></button>
+    </div>
+  <div class="card-body form-container">
     <form *ngIf="formulario" [formGroup]="formulario" autocomplete="off">
         <div class="row g-4 mx-0">
             <!-- Información Básica -->
@@ -1217,17 +1217,18 @@
         </div>
     </form>
 
-    <ng-template pTemplate="footer">
-        <button pButton type="button" icon="pi pi-times" label="{{ 'Cancelar' | translate }}"
-                class="p-button-text" (click)="showClienteModal = false"></button>
+    <div class="cliente-form-inline__footer">
+        <button pButton type="button" icon="pi pi-eraser" label="{{ 'Limpiar' | translate }}"
+                class="p-button-text" (click)="abrirModalCrear()"></button>
         <button *ngIf="!encontrado" pButton type="button" icon="pi pi-save"
                 label="{{ 'Crear Cliente' | translate }}" class="p-button-primary"
                 [disabled]="!formulario?.valid" (click)="crearCliente()"></button>
         <button *ngIf="encontrado" pButton type="button" icon="pi pi-user-edit"
                 label="{{ 'Actualizar Cliente' | translate }}" class="p-button-primary"
                 [disabled]="!formulario?.valid" (click)="editarCliente()"></button>
-    </ng-template>
-</p-dialog>
+    </div>
+  </div>
+</div>
 
 <ng-template #nota let-modal>
     <div class="modal-header" style="background:#fff; border-bottom:1.5px solid #ede9fe; padding:1rem 1.25rem;">
