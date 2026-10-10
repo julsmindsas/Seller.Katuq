@@ -356,6 +356,8 @@
                                                                     'badge-danger': pedido?.estadoProceso === 'Rechazado',
                                                                     'badge-dark': pedido?.estadoProceso === 'Cerrado'
                                                                 }">{{ getStatusDisplay(pedido?.estadoProceso).short }}</span>
+                                                            <span *ngIf="etiquetaConfirmacionWhatsapp(pedido) as confWa" class="modern-badge pedido-pill"
+                                                                [ngClass]="confWa.clase" [title]="confWa.titulo | translate">{{ confWa.texto | translate }}</span>
                                                         </div>
                                                     </div>
                                                     <div class="pedido-row__right">
@@ -432,6 +434,8 @@
                                                                     'badge-danger': pedidoDetalle?.estadoProceso === 'Rechazado',
                                                                     'badge-dark': pedidoDetalle?.estadoProceso === 'Cerrado'
                                                                 }">{{ 'Proceso' | translate }}: {{ getStatusDisplay(pedidoDetalle?.estadoProceso).short }}</span>
+                                                            <span *ngIf="etiquetaConfirmacionWhatsapp(pedidoDetalle) as confWa" class="modern-badge pedido-pill"
+                                                                [ngClass]="confWa.clase" [title]="confWa.titulo | translate">{{ confWa.texto | translate }}</span>
                                                             <span *ngIf="isPedidoCongelado(pedidoDetalle)" class="pedido-frozen-chip">
                                                                 <i class="fa fa-snowflake-o"></i> {{ 'Congelado' | translate }}
                                                             </span>
@@ -1223,6 +1227,9 @@
                                                         <i class="fa fa-snowflake-o frozen-icon"></i>
                                                         <span class="frozen-text">Congelado</span>
                                                     </div>
+                                                    <!-- Confirmación por WhatsApp (solo pedidos con el mensaje enviado) -->
+                                                    <span *ngIf="etiquetaConfirmacionWhatsapp(pedido) as confWa" class="modern-badge"
+                                                        [ngClass]="confWa.clase" [title]="confWa.titulo | translate">{{ confWa.texto | translate }}</span>
                                                 </div>
                                             </td>
 
