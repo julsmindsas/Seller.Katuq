@@ -9,8 +9,8 @@
 
 // Variables CSS dinámicas (se setean desde TypeScript)
 :root {
-  --company-primary: #667eea;
-  --company-secondary: #764ba2;
+  --company-primary: #5F3FE0;
+  --company-secondary: #5F3FE0;
   --font-size-base: 18px;
   --spacing-base: 1.5rem;
 }
@@ -48,7 +48,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--company-primary) 0%, var(--company-secondary) 100%);
+  background: var(--company-primary);
   padding: var(--spacing-base);
   gap: var(--spacing-base);
 
@@ -446,7 +446,7 @@
   .audio-status-bar {
     margin-top: 1.5rem;
     padding: 1.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #5F3FE0;
     border-radius: 12px;
     display: flex;
     flex-direction: column;
@@ -571,12 +571,12 @@
     }
 
     &.btn-start {
-      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%) !important;
+      background: #1E874B !important;
       color: white !important;
     }
 
     &.btn-stop {
-      background: linear-gradient(135deg, #fc8181 0%, #f56565 100%) !important;
+      background: #D64545 !important;
       color: white !important;
     }
   }

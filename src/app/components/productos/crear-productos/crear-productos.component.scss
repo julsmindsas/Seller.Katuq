@@ -11,7 +11,7 @@
   .p-tabview-nav li:nth-child(7) { // Tab de Dropshipping (índice 6, pero nth-child es 1-indexed)
     .p-tabview-nav-link {
       background-color: #e3f2fd !important;
-      border-color: #2196f3 !important;
+      border-color: #5F3FE0 !important;
       font-weight: bold !important;
     }
   }
@@ -179,7 +179,7 @@ td {
 // =====================================================================
 :host {
   --mp-accent: #6a4dfb;
-  --mp-grad: linear-gradient(135deg, #7b5bff, #6338f0);
+  --mp-grad: #5F3FE0;
   --mp-text: #211d33;
   --mp-text-2: #8b879f;
   --mp-text-3: #a7a3bd;
@@ -322,7 +322,7 @@ td {
 .mp-progress__fill {
   height: 100%;
   border-radius: 99px;
-  background: linear-gradient(90deg, #7b5bff, #22c07a);
+  background: #5F3FE0;
   transition: width .45s ease;
 }
 

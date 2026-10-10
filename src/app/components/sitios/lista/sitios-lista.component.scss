@@ -306,10 +306,10 @@
     height: 44px;
     border-radius: 8px;
 
-    &--1 { background: linear-gradient(135deg, #ffd7ec, #ffb3d9); }
-    &--2 { background: linear-gradient(135deg, #d9c8ff, #b79bff); }
-    &--3 { background: linear-gradient(135deg, #c8ecff, #8fd4f7); }
-    &--4 { background: linear-gradient(135deg, #d7f5e3, #96e0b6); }
+    &--1 { background: #ffd7ec; }
+    &--2 { background: #d9c8ff; }
+    &--3 { background: #c8ecff; }
+    &--4 { background: #d7f5e3; }
   }
 
   &__parrafo {

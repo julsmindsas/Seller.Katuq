@@ -126,7 +126,7 @@
     position: absolute;
     top: -12px;
     right: -12px;
-    background: linear-gradient(135deg, #FF4E50, #FC913A);
+    background: #B86E00;
     color: white;
     padding: 6px 12px;
     border-radius: 20px;
@@ -139,7 +139,7 @@
   
   /* Estilo especial para el plan Early Adopter */
   .plan-option.isPromo {
-    background: linear-gradient(145deg, #fff, #FFF9F0);
+    background: #fff;
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     border: 2px solid #FC913A;
     overflow: hidden;
@@ -165,7 +165,7 @@
   .plan-option.isPromo .plan-price .amount {
     color: #FF4E50;
     font-weight: 700;
-    background: -webkit-linear-gradient(#FF4E50, #FC913A);
+    background: #5F3FE0;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -302,7 +302,7 @@
     position: relative;
     margin: 15px -20px 15px;
     padding: 6px;
-    background: linear-gradient(135deg, #FF4E50, #FC913A);
+    background: #B86E00;
     color: white;
     font-weight: 600;
     font-size: 0.85rem;
@@ -360,7 +360,7 @@
     position: absolute;
     width: 80px;
     height: 3px;
-    background: linear-gradient(to right, #9932CC, #8b5cf6);
+    background: #5F3FE0;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
@@ -425,7 +425,7 @@
     position: absolute;
     width: 80px;
     height: 3px;
-    background: linear-gradient(to right, #9932CC, #8b5cf6);
+    background: #5F3FE0;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);

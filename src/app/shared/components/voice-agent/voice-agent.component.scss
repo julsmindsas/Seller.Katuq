@@ -84,7 +84,7 @@ $transition-standard: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     justify-content: space-between;
     align-items: center;
     padding: 12px 15px;
-    background: linear-gradient(135deg, $tertiary-color, darken($tertiary-color, 15%));
+    background: #1E874B;
     color: $light-color;
     
     &.draggable {

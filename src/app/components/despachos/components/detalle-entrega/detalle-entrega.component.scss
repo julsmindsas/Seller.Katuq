@@ -42,7 +42,7 @@ $de-selected-border: #d9cffb;
 
 // Header mejorado con tonos pasteles
 .modal-header {
-  background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%);
+  background: #efe9ff;
   border: none;
   border-radius: var(--border-radius) var(--border-radius) 0 0;
   padding: 1.5rem;
@@ -187,7 +187,7 @@ $de-selected-border: #d9cffb;
   .info-icon {
     width: 2.5rem;
     height: 2.5rem;
-    background: linear-gradient(135deg, #e0e7ff, #f0f4ff);
+    background: #efe9ff;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -247,19 +247,19 @@ $de-selected-border: #d9cffb;
   letter-spacing: 0.025em;
   
   &.status-delivered {
-    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    background: #E6F7EE;
     color: var(--gray-800);
     border: 1px solid rgba(34, 197, 94, 0.3);
   }
   
   &.status-processing {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    background: #FFF4E0;
     color: var(--gray-800);
     border: 1px solid rgba(245, 158, 11, 0.3);
   }
   
   &.status-failed {
-    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    background: #FDECEC;
     color: var(--gray-800);
     border: 1px solid rgba(239, 68, 68, 0.3);
   }
@@ -480,7 +480,7 @@ $de-selected-border: #d9cffb;
   }
   
   .notes-content {
-    background: linear-gradient(135deg, #f0f4ff, #e0e7ff);
+    background: #efe9ff;
     border-left: 4px solid var(--primary-color);
     border-radius: var(--border-radius-sm);
     padding: 1.25rem;
@@ -532,7 +532,7 @@ $de-selected-border: #d9cffb;
   justify-content: flex-end;
   
   .btn-close-modal {
-    background: linear-gradient(135deg, #e0e7ff, #c4d0ff);
+    background: #efe9ff;
     color: var(--gray-700);
     border: 1px solid rgba(168, 181, 255, 0.3);
     border-radius: var(--border-radius-sm);
@@ -545,7 +545,7 @@ $de-selected-border: #d9cffb;
     transition: all 0.2s ease;
     
     &:hover {
-      background: linear-gradient(135deg, #c4d0ff, #a8b5ff);
+      background: #e2d8ff;
       transform: translateY(-1px);
       box-shadow: var(--shadow-md);
     }

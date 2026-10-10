@@ -51,22 +51,22 @@
     margin-bottom: 1rem;
 
     .metric-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #5F3FE0;
       color: white;
       padding: 1.5rem;
       border-radius: 12px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 
       &:nth-child(2) {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        background: #D64545;
       }
 
       &:nth-child(3) {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        background: #1E6FD9;
       }
 
       &:nth-child(4) {
-        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        background: #1E874B;
       }
 
       .metric-header {
@@ -294,7 +294,7 @@
 
       .card-header {
         padding: 1.25rem;
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        background: #f8f9fa;
         border-left: 4px solid;
         display: flex;
         align-items: center;

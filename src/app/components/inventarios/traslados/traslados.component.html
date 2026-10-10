@@ -7,11 +7,11 @@
 
         <!-- Header -->
         <div class="module-header px-4 py-3 border-bottom"
-             style="background: #f8fafc; border-left: 4px solid #5c6ac4;">
+             style="background: #f8fafc; border-left: 4px solid #5F3FE0;">
             <div class="d-flex justify-content-between align-items-center flex-wrap">
                 <div class="mb-2 mb-md-0">
                     <h4 class="mb-1 fw-bold text-dark">
-                        <i class="pi pi-arrow-right-arrow-left me-2" style="color: #5c6ac4;"></i>
+                        <i class="pi pi-arrow-right-arrow-left me-2" style="color: #5F3FE0;"></i>
                         {{ 'Traslado de Productos' | translate }}
                     </h4>
                     <p class="text-muted small mb-0">
@@ -29,7 +29,7 @@
                     <div class="bodega-card p-3 rounded bg-light text-center">
                         <div class="bodega-icon mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle"
                              style="width: 48px; height: 48px; background-color: rgba(92, 106, 196, 0.15);">
-                            <i class="pi pi-building" style="font-size: 1.2rem; color: #5c6ac4;"></i>
+                            <i class="pi pi-building" style="font-size: 1.2rem; color: #5F3FE0;"></i>
                         </div>
                         <h6 class="fw-bold mb-2 text-dark">{{ 'Bodega Origen' | translate }}</h6>
                         <select class="form-select" [formControl]="bodegaForm.controls['bodegaOrigenId']">
@@ -39,8 +39,8 @@
                     </div>
                 </div>
                 <div class="col-md-2 text-center py-2">
-                    <i class="pi pi-arrow-right d-none d-md-inline" style="font-size: 1.5rem; color: #5c6ac4;"></i>
-                    <i class="pi pi-arrow-down d-md-none" style="font-size: 1.5rem; color: #5c6ac4;"></i>
+                    <i class="pi pi-arrow-right d-none d-md-inline" style="font-size: 1.5rem; color: #5F3FE0;"></i>
+                    <i class="pi pi-arrow-down d-md-none" style="font-size: 1.5rem; color: #5F3FE0;"></i>
                 </div>
                 <div class="col-md-5">
                     <div class="bodega-card p-3 rounded bg-light text-center">
@@ -74,7 +74,7 @@
                 <!-- Buscador de productos -->
                 <div class="mb-3">
                     <label class="fw-semibold mb-1 d-block">
-                        <i class="pi pi-search me-1" style="color: #5c6ac4;"></i>{{ 'Agregar productos' | translate }}
+                        <i class="pi pi-search me-1" style="color: #5F3FE0;"></i>{{ 'Agregar productos' | translate }}
                     </label>
                     <input type="text" class="form-control form-control-sm mb-1"
                            [(ngModel)]="busquedaProducto"
@@ -131,7 +131,7 @@
                                     <br><small class="text-muted font-monospace">{{ p.referencia }}</small>
                                 </td>
                                 <td class="text-center align-middle">
-                                    <span class="badge" style="background: #eef0fb; color: #5c6ac4;">{{ p.stockDisponible }}</span>
+                                    <span class="badge" style="background: #efe9ff; color: #5F3FE0;">{{ p.stockDisponible }}</span>
                                 </td>
                                 <td class="text-center align-middle">
                                     <input type="number" class="form-control form-control-sm text-center"
@@ -150,7 +150,7 @@
                         <tfoot style="background: #f8fafc;">
                             <tr>
                                 <td colspan="3" class="text-end pe-3 fw-semibold">{{ 'Total' | translate }}:</td>
-                                <td class="text-center fw-bold" style="color: #5c6ac4;">{{ totalItems }} {{ 'unid.' | translate }}</td>
+                                <td class="text-center fw-bold" style="color: #5F3FE0;">{{ totalItems }} {{ 'unid.' | translate }}</td>
                                 <td></td>
                             </tr>
                         </tfoot>
@@ -166,7 +166,7 @@
                 <!-- Observaciones -->
                 <div class="mt-3" *ngIf="productosTraslado.length > 0">
                     <label class="fw-semibold mb-1 d-block">
-                        <i class="pi pi-comment me-1" style="color: #5c6ac4;"></i>{{ 'Observaciones' | translate }}
+                        <i class="pi pi-comment me-1" style="color: #5F3FE0;"></i>{{ 'Observaciones' | translate }}
                     </label>
                     <input type="text" class="form-control" [formControl]="bodegaForm.controls['observaciones']"
                            [placeholder]="'Motivo del traslado (opcional)' | translate">
@@ -190,7 +190,7 @@
                 <button pButton type="button"
                         [label]="'Trasladar ' + productosTraslado.length + ' productos'"
                         icon="pi pi-arrow-right-arrow-left"
-                        style="background-color: #5c6ac4; border-color: #5c6ac4;"
+                        style="background-color: #5F3FE0; border-color: #5F3FE0;"
                         (click)="confirmarTraslado()"
                         [loading]="loading"
                         [disabled]="!canTraslado"></button>

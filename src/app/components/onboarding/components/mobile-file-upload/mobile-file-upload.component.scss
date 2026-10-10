@@ -168,7 +168,7 @@
           background: var(--surface-200);
 
           .p-progressbar-value {
-            background: linear-gradient(90deg, var(--primary-color), var(--primary-400));
+            background: var(--primary-color);
           }
 
           .p-progressbar-label {

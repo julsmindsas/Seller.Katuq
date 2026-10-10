@@ -16,7 +16,7 @@
 
   &.border-required {
     border-left-color: var(--orange-500);
-    background: linear-gradient(90deg, var(--orange-50) 0%, transparent 100%);
+    background: var(--orange-50);
 
     &:hover {
       border-left-color: var(--orange-600);
@@ -25,7 +25,7 @@
 
   &.border-adjusted {
     border-left-color: var(--blue-500);
-    background: linear-gradient(90deg, var(--blue-50) 0%, transparent 100%);
+    background: var(--blue-50);
 
     &:hover {
       border-left-color: var(--blue-600);

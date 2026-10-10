@@ -391,7 +391,7 @@
 
 .video-section-elderly {
     position: relative;
-    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    background: #1a202c;
     flex-shrink: 0;
     border-radius: 12px;
     margin: 0.5rem;
@@ -460,7 +460,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, rgba(69, 155, 209, 0.1) 0%, rgba(69, 85, 209, 0.1) 100%);
+            background: rgba(69, 155, 209, 0.1);
             color: #ffffff;
 
             i {
@@ -1030,7 +1030,7 @@
         border: none;
         box-shadow: 0 4px 20px rgba(69, 155, 209, 0.3);
         transition: all 0.2s ease;
-        background: linear-gradient(135deg, var(--katuq-primary) 0%, var(--katuq-tertiary) 100%);
+        background: var(--katuq-primary);
 
         &:hover:not(:disabled) {
             transform: translateY(-2px);
@@ -1423,7 +1423,7 @@
     border-radius: 50%;
 
     /* HIGH CONTRAST RED with pulsing animation */
-    background: linear-gradient(135deg, #ff0000 0%, #dc143c 100%);
+    background: #ff0000;
     animation: pulse-fab 2s ease-in-out infinite;
 
     color: white;
@@ -1504,7 +1504,7 @@
     /* Dragging state */
     &.dragging {
         transform: scale(1.2) rotate(5deg);
-        background: linear-gradient(135deg, #ff4757 0%, #e84855 100%);
+        background: #ff4757;
         box-shadow:
             0 12px 28px rgba(220, 53, 69, 0.7),
             0 24px 48px rgba(220, 53, 69, 0.5),

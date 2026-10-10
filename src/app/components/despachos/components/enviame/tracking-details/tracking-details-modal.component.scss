@@ -9,6 +9,7 @@
 :root {
   // Colores principales
   --primary-color: #{$katuq-primary};
+  --primary-solid: #5F3FE0;
   --primary-gradient: linear-gradient(135deg, #{$katuq-purple-400} 0%, #{$katuq-purple-600} 100%);
   --secondary-color: #{$katuq-primary};
   --success-color: #{$katuq-success};
@@ -226,7 +227,7 @@
   // STATUS CARD PROMINENTE
   // ===============================================
   .status-card-prominent {
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    background: #f8fafc;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     margin-bottom: 1.5rem;
@@ -236,7 +237,7 @@
 
     .status-visual-compact {
       position: relative;
-      background: var(--primary-gradient);
+      background: var(--primary-solid);
       padding: 1.5rem;
       text-align: center;
       display: flex;
@@ -334,7 +335,7 @@
           .detail-icon-prominent {
             width: 36px;
             height: 36px;
-            background: var(--primary-gradient);
+            background: var(--primary-solid);
             border-radius: var(--radius-md);
             display: flex;
             align-items: center;
@@ -372,7 +373,7 @@
       }
 
       .progress-section-prominent {
-        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+        background: var(--bg-secondary);
         border-radius: var(--radius-md);
         padding: 1.25rem;
         border: 1px solid var(--border-color);
@@ -392,7 +393,7 @@
           .progress-percentage {
             font-size: 1.25rem;
             font-weight: 700;
-            background: var(--primary-gradient);
+            background: var(--primary-solid);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             animation: countUp var(--transition-slow) ease-out;
@@ -413,13 +414,13 @@
             .progress-background {
               position: absolute;
               inset: 0;
-              background: linear-gradient(90deg, #{$katuq-purple-100} 0%, #{$katuq-purple-50} 100%);
+              background: #efe9ff;
             }
 
             .progress-fill-modern {
               position: relative;
               height: 100%;
-              background: linear-gradient(90deg, #{$katuq-purple-400} 0%, #{$katuq-purple-600} 100%);
+              background: #5F3FE0;
               border-radius: var(--radius-full);
               transition: width var(--transition-slow) ease-out;
               overflow: hidden;
@@ -514,7 +515,7 @@
       .section-icon-wrapper {
         width: 32px;
         height: 32px;
-        background: var(--primary-gradient);
+        background: var(--primary-solid);
         border-radius: var(--radius-sm);
         display: flex;
         align-items: center;
@@ -568,7 +569,7 @@
         top: 32px;
         bottom: 32px;
         width: 2px;
-        background: linear-gradient(180deg, var(--primary-color) 0%, transparent 100%);
+        background: #5F3FE0;
         opacity: 0.3;
       }
 
@@ -587,7 +588,7 @@
         &.is-latest {
           .timeline-card {
             border-color: var(--primary-color);
-            background: linear-gradient(135deg, rgba($katuq-purple-400, 0.05) 0%, rgba($katuq-purple-600, 0.05) 100%);
+            background: #faf9fe;
           }
         }
 
@@ -770,7 +771,7 @@
       .section-icon-wrapper {
         width: 32px;
         height: 32px;
-        background: linear-gradient(135deg, #{$katuq-purple-400} 0%, #{$katuq-purple-600} 100%);
+        background: #5F3FE0;
         border-radius: var(--radius-sm);
         display: flex;
         align-items: center;
@@ -826,7 +827,7 @@
         }
 
         &.success-card {
-          background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%);
+          background: #E6F7EE;
           border-color: var(--success-color);
         }
 
@@ -844,19 +845,19 @@
           box-shadow: var(--shadow-sm);
 
           &.recipient {
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            background: #5F3FE0;
           }
 
           &.delivery {
-            background: linear-gradient(135deg, #{$katuq-purple-400} 0%, #{$katuq-purple-600} 100%);
+            background: #7C5CFF;
           }
 
           &.success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: #1E874B;
           }
 
           &.package {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            background: #B86E00;
           }
         }
 
@@ -1029,7 +1030,7 @@
           top: 50%;
           width: 4px;
           height: 20px;
-          background: var(--primary-gradient);
+          background: var(--primary-solid);
           border-radius: var(--radius-full);
           transform-origin: center -10px;
           animation: spinner-blade 1.2s linear infinite;
@@ -1108,7 +1109,7 @@
           align-items: center;
           gap: 0.5rem;
           padding: 0.75rem 1.5rem;
-          background: var(--primary-gradient);
+          background: var(--primary-solid);
           color: white;
           border: none;
           border-radius: var(--radius-md);

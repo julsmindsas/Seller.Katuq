@@ -45,7 +45,7 @@
 /* Result Type Classes */
 .result-diy {
   .result-icon {
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    background: #1E874B;
   }
 
   .section-header i {
@@ -55,7 +55,7 @@
 
 .result-service {
   .result-icon {
-    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+    background: #B86E00;
   }
 
   .section-header i {
@@ -65,7 +65,7 @@
 
 .result-escalate {
   .result-icon {
-    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+    background: #D64545;
   }
 
   .section-header i {
@@ -75,7 +75,7 @@
 
 .result-info {
   .result-icon {
-    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    background: #1E6FD9;
   }
 
   .section-header i {
@@ -184,7 +184,7 @@
 
   i {
     font-size: 1.25rem;
-    color: #667eea;
+    color: #5F3FE0;
     margin-top: 0.2rem;
   }
 
@@ -230,7 +230,7 @@
     color: #2d3748;
 
     i {
-      color: #667eea;
+      color: #5F3FE0;
     }
   }
 
@@ -249,7 +249,7 @@
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #5F3FE0;
       color: white;
       display: flex;
       align-items: center;
@@ -320,7 +320,7 @@
       content: '•';
       position: absolute;
       left: 0.5rem;
-      color: #667eea;
+      color: #5F3FE0;
       font-weight: bold;
     }
   }

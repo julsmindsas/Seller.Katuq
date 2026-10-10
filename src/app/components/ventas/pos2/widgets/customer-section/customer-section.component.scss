@@ -21,7 +21,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  background: #5F3FE0;
   color: white;
   border: none;
   border-radius: 8px;
@@ -168,7 +168,7 @@
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    background: #efe9ff;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -244,7 +244,7 @@
 
 // Cliente Card (cuando esta seleccionado)
 .cliente-card {
-  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  background: #E6F7EE;
   border: 1px solid #86efac;
   border-radius: 12px;
   overflow: hidden;
@@ -320,7 +320,7 @@
       width: 52px;
       height: 52px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+      background: #E6F7EE;
       display: flex;
       align-items: center;
       justify-content: center;

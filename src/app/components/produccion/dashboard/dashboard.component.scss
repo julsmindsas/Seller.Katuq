@@ -1,6 +1,6 @@
 // Variables
 // Acento del módulo: morado B2B, alineado con despachos / inventarios.
-$primary-color: #5c6ac4;
+$primary-color: #5F3FE0;
 $primary-light: rgba(92, 106, 196, 0.12);
 $success-color: #66BB6A;
 $success-light: rgba(102, 187, 106, 0.12);
@@ -406,7 +406,7 @@ $transition: all 0.3s ease;
     width: 44px;
     height: 44px;
     border-radius: 13px;
-    background: linear-gradient(135deg, #8b5cff, #6d28d9);
+    background: #5F3FE0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -427,7 +427,7 @@ $transition: all 0.3s ease;
     padding: 10px 20px;
     border: none;
     border-radius: 12px;
-    background: linear-gradient(135deg, #8b5cff, #6d28d9);
+    background: #5F3FE0;
     color: #fff;
     font-family: inherit;
     font-weight: 700;

@@ -1079,11 +1079,11 @@ img.product-thumbnail[src^="data:image/svg"] {
 
 // Gradient backgrounds
 .bg-gradient-primary {
-  background: linear-gradient(135deg, $katuq-primary 0%, $katuq-primary-dark 100%);
+  background: #5F3FE0;
 }
 
 .bg-gradient-warning {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  background: #fef3c7;
   border: none !important;
 }
 

@@ -179,7 +179,7 @@
 }
 
 /* Variables */
-$primary-color: #2196F3;
+$primary-color: #5F3FE0;
 $primary-light: rgba(33, 150, 243, 0.12);
 $primary-dark: #1976D2;
 $success-color: #66BB6A;
@@ -379,7 +379,7 @@ $transition: all 0.3s ease;
     align-items: center;
     justify-content: space-between;
     padding: 1.25rem;
-    background: linear-gradient(135deg, $primary-color, $primary-dark);
+    background: $primary-color;
     color: white;
     
     .order-id {

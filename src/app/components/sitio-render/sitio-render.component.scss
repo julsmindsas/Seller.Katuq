@@ -1254,7 +1254,7 @@ h3 {
 // gesto y solo en el editor — la página publicada no la conoce.
 .guia {
   position: absolute;
-  background: #2563eb;
+  background: #5F3FE0;
   pointer-events: none;
   z-index: 40;
 
@@ -1297,7 +1297,7 @@ h3 {
 
 .sitio--editable .celda--arrastrando {
   cursor: grabbing;
-  outline-color: #2563eb !important;
+  outline-color: #5F3FE0 !important;
   outline-style: solid;
   z-index: 5;
   user-select: none;
@@ -1312,7 +1312,7 @@ h3 {
   height: 34px;
   margin-top: -17px;
   border-radius: 7px;
-  background: #2563eb;
+  background: #5F3FE0;
   border: 2px solid #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
   cursor: ew-resize;

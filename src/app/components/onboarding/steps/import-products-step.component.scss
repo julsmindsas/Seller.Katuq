@@ -134,7 +134,7 @@
     @include mobile-card;
     padding: $spacing-xxl $spacing-xl;
     text-align: center;
-    background: linear-gradient(135deg, var(--primary-50) 0%, var(--blue-50) 100%);
+    background: var(--primary-50);
 
     @include mobile {
       padding: $spacing-xl $spacing-lg;

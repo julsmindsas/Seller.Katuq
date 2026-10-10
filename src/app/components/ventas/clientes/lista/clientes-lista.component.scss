@@ -15,7 +15,7 @@ $border-radius: 8px;
 // HEADER DEL MÓDULO
 // ===================================
 .module-header {
-    background: linear-gradient(to right, white, #fafafa);
+    background: white;
     transition: all 0.3s ease;
 
     h5 {
@@ -49,7 +49,7 @@ $border-radius: 8px;
 // MÉTRICAS BREADCRUMB (ESTILO KATUQ)
 // ===================================
 .metrics-breadcrumb-panel {
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    background: #f8f9fa;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -1542,7 +1542,7 @@ $border-radius: 8px;
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #6c4ce0, #8c6bff);
+    background: #5F3FE0;
     color: #fff;
     font-size: 1.2rem;
     font-weight: 700;

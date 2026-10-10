@@ -7,7 +7,7 @@
 // ===========================================
 // COLOR PALETTE - Tailwind-inspired consistency
 // ===========================================
-$color-primary: #2563eb;        // blue-600 (single primary blue)
+$color-primary: #5F3FE0;        // blue-600 (single primary blue)
 $color-primary-hover: #1d4ed8;  // blue-700
 $color-primary-light: #dbeafe;  // blue-100
 $color-primary-50: #eff6ff;     // blue-50
@@ -126,7 +126,7 @@ $transition-slow: 300ms ease;
     left: $space-4;
     right: $space-4;
     height: 2px;
-    background: linear-gradient(90deg, $color-primary 0%, transparent 100%);
+    background: $color-primary;
     border-radius: $radius-full;
     opacity: 0.6;
   }
@@ -386,7 +386,7 @@ $transition-slow: 300ms ease;
   min-width: 22px;
   height: 22px;
   padding: 0 $space-2;
-  background: linear-gradient(135deg, $color-primary, darken($color-primary, 8%));
+  background: $color-primary;
   color: white;
   border-radius: $radius-full;
   font-size: $font-xs;

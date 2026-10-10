@@ -7,11 +7,11 @@
 
         <!-- Header Moderno Katuq -->
         <div class="module-header px-4 py-3 border-bottom"
-             style="background: #f8fafc; border-left: 4px solid #5c6ac4;">
+             style="background: #f8fafc; border-left: 4px solid #5F3FE0;">
             <div class="d-flex justify-content-between align-items-center flex-wrap">
                 <div class="mb-2 mb-md-0">
                     <h4 class="mb-1 fw-bold text-dark">
-                        <i class="pi pi-download me-2" style="color: #5c6ac4;"></i>
+                        <i class="pi pi-download me-2" style="color: #5F3FE0;"></i>
                         {{ 'Ajustes de Inventario' | translate }}
                     </h4>
                     <p class="text-muted small mb-0">
@@ -20,7 +20,7 @@
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <span class="badge d-flex align-items-center gap-1 px-3 py-2"
-                          style="background-color: #5c6ac4;"
+                          style="background-color: #5F3FE0;"
                           *ngIf="productoForm.get('bodegaSeleccionada')?.value">
                         <i class="pi pi-building"></i>
                         {{ productoForm.get('bodegaSeleccionada')?.value?.nombre }}
@@ -28,7 +28,7 @@
                     <button pButton type="button"
                             icon="pi pi-refresh"
                             class="p-button-rounded p-button-text p-button-lg"
-                            style="color: #5c6ac4;"
+                            style="color: #5F3FE0;"
                             (click)="cargarBodegas()"
                             [disabled]="cargando"
                             pTooltip="Actualizar datos"></button>
@@ -40,13 +40,13 @@
         <div class="stats-bar px-4 py-3 bg-light border-bottom" *ngIf="productos.length > 0">
             <div class="row g-3">
                 <div class="col-md-3 col-6">
-                    <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-2" style="border-color: #5c6ac4 !important;">
+                    <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-2" style="border-color: #5F3FE0 !important;">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h3 class="mb-0 fw-bold" style="color: #5c6ac4;">{{ productos.length }}</h3>
+                                <h3 class="mb-0 fw-bold" style="color: #5F3FE0;">{{ productos.length }}</h3>
                                 <small class="text-muted">{{ 'Productos' | translate }}</small>
                             </div>
-                            <i class="pi pi-box" style="font-size: 1.5rem; opacity: 0.4; color: #5c6ac4;"></i>
+                            <i class="pi pi-box" style="font-size: 1.5rem; opacity: 0.4; color: #5F3FE0;"></i>
                         </div>
                     </div>
                 </div>
@@ -99,7 +99,7 @@
                     <!-- Selector de Bodega -->
                     <div class="col-md-4">
                         <label class="form-label fw-bold mb-2">
-                            <i class="pi pi-building me-1" style="color: #5c6ac4;"></i>
+                            <i class="pi pi-building me-1" style="color: #5F3FE0;"></i>
                             {{ 'Seleccionar Bodega' | translate }}
                         </label>
                         <p-dropdown [options]="bodegas"
@@ -113,7 +113,7 @@
                                     appendTo="body">
                             <ng-template pTemplate="selectedItem" let-bodega>
                                 <div class="d-flex align-items-center gap-2" *ngIf="bodega">
-                                    <i class="pi pi-building" style="color: #5c6ac4;"></i>
+                                    <i class="pi pi-building" style="color: #5F3FE0;"></i>
                                     <span>{{ bodega.nombre }}</span>
                                 </div>
                             </ng-template>
@@ -134,7 +134,7 @@
                     <!-- Selector de Tipo de Movimiento -->
                     <div class="col-md-4">
                         <label class="form-label fw-bold mb-2">
-                            <i class="pi pi-tag me-1" style="color: #5c6ac4;"></i>
+                            <i class="pi pi-tag me-1" style="color: #5F3FE0;"></i>
                             {{ 'Tipo de Movimiento' | translate }}
                         </label>
                         <p-dropdown [options]="tiposMovimientoRecepcion"
@@ -161,7 +161,7 @@
                     <!-- Observaciones -->
                     <div class="col-md-4">
                         <label class="form-label fw-bold mb-2">
-                            <i class="pi pi-comment me-1" style="color: #5c6ac4;"></i>
+                            <i class="pi pi-comment me-1" style="color: #5F3FE0;"></i>
                             {{ 'Observaciones' | translate }}
                         </label>
                         <input pInputText type="text"
@@ -173,13 +173,13 @@
             </form>
 
             <!-- Sección de Búsqueda de Productos -->
-            <div class="busqueda-producto-section p-4 border rounded mb-4" style="background: linear-gradient(to bottom, #f8fafc, #ffffff);">
+            <div class="busqueda-producto-section p-4 border rounded mb-4" style="background: #f8fafc;">
                 <label class="form-label fw-bold mb-3">
-                    <i class="pi pi-search me-2" style="color: #5c6ac4;"></i>
+                    <i class="pi pi-search me-2" style="color: #5F3FE0;"></i>
                     {{ 'Buscar y agregar productos' | translate }}
                 </label>
                 <div class="p-inputgroup">
-                    <span class="p-inputgroup-addon" style="background-color: #5c6ac4; color: white;">
+                    <span class="p-inputgroup-addon" style="background-color: #5F3FE0; color: white;">
                         <i class="pi pi-search"></i>
                     </span>
                     <p-autoComplete [(ngModel)]="busquedaInput"
@@ -289,7 +289,7 @@
                             </td>
                             <!-- Precio -->
                             <td class="text-end">
-                                <span class="fw-bold" style="color: #5c6ac4;">
+                                <span class="fw-bold" style="color: #5F3FE0;">
                                     {{ item.producto.precio?.precioUnitarioConIva | currency:'COP':'symbol-narrow':'1.0-0' || 'N/A' }}
                                 </span>
                             </td>
@@ -347,7 +347,7 @@
                     <ng-template pTemplate="summary">
                         <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between p-2">
                             <div class="d-flex align-items-center gap-2">
-                                <span class="badge px-3 py-2" style="background-color: #5c6ac4;">
+                                <span class="badge px-3 py-2" style="background-color: #5F3FE0;">
                                     {{ productos.length }} {{ 'productos' | translate }}
                                 </span>
                                 <span class="badge bg-success px-3 py-2" *ngIf="productos.length > 0">
@@ -362,7 +362,7 @@
             <!-- Botones de Acción -->
             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-4 p-3 bg-light border rounded gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <span class="badge fs-6 px-3 py-2" style="background-color: #5c6ac4;">
+                    <span class="badge fs-6 px-3 py-2" style="background-color: #5F3FE0;">
                         {{ productos.length }} {{ 'productos' | translate }}
                     </span>
                     <span class="badge bg-success fs-6 px-3 py-2">

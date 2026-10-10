@@ -1,5 +1,5 @@
 // Variables Katuq
-$primary-color: #5c6ac4;
+$primary-color: #5F3FE0;
 $secondary-color: #6c7ae0;
 $success-color: #36b37e;
 $warning-color: #ff991f;
@@ -61,7 +61,7 @@ $box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   
   .header-line {
     height: 4px;
-    background: linear-gradient(to right, $primary-color, $secondary-color);
+    background: $primary-color;
     border-radius: 2px;
     width: 100px;
     margin-top: 12px;
@@ -311,7 +311,7 @@ $box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
           
           .meter-fill {
             height: 100%;
-            background: linear-gradient(to right, $primary-color, $secondary-color);
+            background: $primary-color;
             transition: width 0.3s ease;
           }
         }

@@ -43,11 +43,11 @@
 }
 
 .btn-primary {
-  background: #2563eb;
+  background: #5F3FE0;
   color: #fff;
 
   &:hover {
-    background: #1d4ed8;
+    background: #4a2fc0;
   }
 }
 
@@ -100,7 +100,7 @@
   gap: 10px;
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-left: 3px solid #2563eb;
+  border-left: 3px solid #5F3FE0;
   border-radius: 8px;
   padding: 10px 12px;
   cursor: pointer;
@@ -116,7 +116,7 @@
   width: 28px;
   height: 28px;
   background: #eff6ff;
-  color: #2563eb;
+  color: #5F3FE0;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -330,7 +330,7 @@
   transition: all 0.15s ease;
 }
 .preset-card:hover {
-  border-left: 3px solid #2563eb;
+  border-left: 3px solid #5F3FE0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   transform: translateY(-1px);
 }
@@ -379,7 +379,7 @@
   color: #6b7280;
 }
 .meta-info {
-  color: #2563eb;
+  color: #5F3FE0;
   font-size: 11px;
   margin-left: 6px;
 }

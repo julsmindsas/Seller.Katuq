@@ -198,7 +198,7 @@
                     <div class="embedded-response" *ngIf="step.subAgentResponse"
                       [class.response-waiting]="step.status === 'waiting'"
                       [style.border-left-color]="getDepartmentColor(step.subAgentResponse.department)"
-                      [style.background]="step.status === 'waiting' ? 'rgba(255, 193, 7, 0.1)' : 'linear-gradient(90deg, ' + getDepartmentColor(step.subAgentResponse.department) + '0D, transparent)'">
+                      [style.background]="step.status === 'waiting' ? 'rgba(255, 193, 7, 0.1)' : getDepartmentColor(step.subAgentResponse.department) + '0D'">
                       <div class="embedded-header">
                         <div class="embedded-avatar"
                           [style.background]="getDepartmentColor(step.subAgentResponse.department)">

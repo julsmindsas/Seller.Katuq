@@ -3,7 +3,7 @@
     flex-direction: column;
     height: 100vh;
     max-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #5F3FE0;
     padding: 1rem;
     overflow: hidden;
 
@@ -37,7 +37,7 @@
         margin: 0;
         font-size: 1.5rem;
         font-weight: 600;
-        color: #667eea;
+        color: #5F3FE0;
         display: flex;
         align-items: center;
         gap: 0.5rem;
@@ -83,7 +83,7 @@
         gap: 0.5rem;
 
         i {
-            color: #667eea;
+            color: #5F3FE0;
         }
     }
 
@@ -272,13 +272,13 @@
         flex-direction: row-reverse;
 
         .message-content {
-            background: #667eea;
+            background: #5F3FE0;
             color: white;
             border-radius: 18px 18px 4px 18px;
         }
 
         .message-avatar {
-            background: #667eea;
+            background: #5F3FE0;
         }
     }
 
@@ -445,7 +445,7 @@
 /* Result Sidebar Styles */
 ::ng-deep .result-sidebar {
     .p-sidebar-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #5F3FE0;
         color: white;
 
         h3 {

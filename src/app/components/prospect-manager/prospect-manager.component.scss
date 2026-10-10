@@ -43,7 +43,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
       top: 0;
       bottom: 0;
       width: 4px;
-      background: linear-gradient(to bottom, $accent-color, $secondary-color);
+      background: $accent-color;
     }
     
     h2 {
@@ -1027,7 +1027,7 @@ form {
 
 // Mejoras para modales
 .modal-header {
-  background: linear-gradient(135deg, $secondary-color, $primary-color);
+  background: #5F3FE0;
   color: $white;
   border-bottom: none;
   padding: 1rem 1.5rem;
@@ -1147,7 +1147,7 @@ form {
     top: 0;
     bottom: 0;
     width: 4px;
-    background: linear-gradient(to bottom, $accent-color, $fixed-primary);
+    background: $accent-color;
   }
   
   .header-main {

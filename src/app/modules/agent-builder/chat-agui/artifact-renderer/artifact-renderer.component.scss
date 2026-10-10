@@ -562,7 +562,7 @@ $border: #e5e7eb;
     .dispatch-map-container {
         width: 100%;
         height: 350px;
-        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        background: #1e40af;
         position: relative;
     }
 
@@ -605,7 +605,7 @@ $border: #e5e7eb;
             }
 
             &.highlight {
-                background: linear-gradient(135deg, $success 0%, #059669 100%);
+                background: #1E874B;
                 border-color: $success;
 
                 i, .value, .label {
@@ -622,7 +622,7 @@ $border: #e5e7eb;
             align-items: center;
             gap: 8px;
             padding: 10px 14px;
-            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            background: #1e40af;
             color: white;
 
             i {
@@ -860,7 +860,7 @@ $border: #e5e7eb;
             align-items: center;
             gap: 8px;
             padding: 12px 14px;
-            background: linear-gradient(135deg, $success 0%, #059669 100%);
+            background: #1E874B;
             color: white;
 
             i {
@@ -918,7 +918,7 @@ $border: #e5e7eb;
             }
 
             .btn-dispatch-all {
-                background: linear-gradient(135deg, $success 0%, #059669 100%);
+                background: #1E874B;
                 color: white;
                 box-shadow: 0 4px 12px rgba($success, 0.3);
 
@@ -981,7 +981,7 @@ $border: #e5e7eb;
 
 .hitl-card {
     position: relative;
-    background: linear-gradient(135deg, #fefce8 0%, #fef3c7 50%, #fde68a 100%);
+    background: #FFF4E0;
     border: 2px solid $warning;
     border-radius: 16px;
     overflow: hidden;
@@ -1012,7 +1012,7 @@ $border: #e5e7eb;
             width: 48px;
             height: 48px;
             border-radius: 14px;
-            background: linear-gradient(135deg, $warning 0%, #d97706 100%);
+            background: #B86E00;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1133,12 +1133,12 @@ $border: #e5e7eb;
             }
 
             &.approve {
-                background: linear-gradient(135deg, $success 0%, #059669 100%);
+                background: #1E874B;
                 box-shadow: 0 4px 12px rgba($success, 0.3);
             }
 
             &.reject {
-                background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+                background: #64748b;
                 box-shadow: 0 4px 12px rgba(#64748b, 0.3);
             }
         }
@@ -1182,7 +1182,7 @@ $border: #e5e7eb;
                 border-color: rgba($danger, 0.3);
 
                 .btn-icon-wrapper.reject {
-                    background: linear-gradient(135deg, $danger 0%, #dc2626 100%);
+                    background: #D64545;
                     box-shadow: 0 4px 12px rgba($danger, 0.3);
                 }
 

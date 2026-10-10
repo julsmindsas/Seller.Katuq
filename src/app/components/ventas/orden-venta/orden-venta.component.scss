@@ -613,7 +613,7 @@ $color-danger: #e74c3c;
 
       .progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, $color-primary, lighten($color-primary, 10%));
+        background: $color-primary;
         border-radius: 4px;
         transition: width 0.3s ease;
       }

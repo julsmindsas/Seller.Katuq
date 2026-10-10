@@ -1,5 +1,5 @@
 // Variables
-$primary-color: #2196f3;
+$primary-color: #5F3FE0;
 $success-color: #4caf50;
 $warning-color: #ffc107;
 $danger-color: #f44336;
@@ -26,7 +26,7 @@ $filter-border-color: #e0e0e0;
 // Barra de filtros principal - siempre visible
 .filter-bar-main {
   padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  background: #f8f9fa;
   border-radius: $border-radius;
 
   .filter-bar-row {
@@ -472,7 +472,7 @@ $filter-border-color: #e0e0e0;
   }
 
   .p-datatable-thead > tr > th {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: #f8f9fa;
     border: none !important;
     border-bottom: 2px solid #dee2e6 !important;
     color: #495057;
@@ -651,7 +651,7 @@ $filter-border-color: #e0e0e0;
   }
 
   &.badge-info {
-    background-color: #2196F3;
+    background-color: #5F3FE0;
     color: white;
     border: none;
     border-bottom: 2px solid #1565C0;
@@ -723,11 +723,7 @@ $filter-border-color: #e0e0e0;
     font-family: "Courier New", monospace;
     font-weight: 600;
     color: $primary-color;
-    background: linear-gradient(
-      135deg,
-      rgba($primary-color, 0.1) 0%,
-      rgba($primary-color, 0.05) 100%
-    );
+    background: rgba($primary-color, 0.1);
     padding: 0.25rem 0.5rem;
     border-radius: 6px;
     border: 1px solid rgba($primary-color, 0.2);
@@ -868,11 +864,7 @@ $filter-border-color: #e0e0e0;
 
   &.total-cell {
     .total-amount {
-      background: linear-gradient(
-        135deg,
-        rgba($success-color, 0.15) 0%,
-        rgba($success-color, 0.08) 100%
-      );
+      background: rgba($success-color, 0.15);
       padding: 0.3rem 0.6rem;
       border-radius: 6px;
       border: 1px solid rgba($success-color, 0.3);
@@ -1713,7 +1705,7 @@ $filter-border-color: #e0e0e0;
 
 // Estilos para filtros modernos
 .modern-filters-container {
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  background: #f8f9fa;
   border-radius: $border-radius;
   border: 1px solid #e9ecef;
   margin-bottom: 1rem;
@@ -2280,7 +2272,7 @@ $filter-border-color: #e0e0e0;
   width: 45px;
   height: 45px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #5F3FE0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2374,7 +2366,7 @@ $filter-border-color: #e0e0e0;
         font-weight: 600;
         &.badge-warning { background: #fef3c7; color: #d97706; }
         &.badge-success { background: #d1fae5; color: #059669; }
-        &.badge-info { background: #dbeafe; color: #2563eb; }
+        &.badge-info { background: #efe9ff; color: #5F3FE0; }
         &.badge-danger { background: #fee2e2; color: #dc2626; }
         &.badge-process { background: #e0e7ff; color: #4f46e5; }
       }
@@ -2544,32 +2536,32 @@ $filter-border-color: #e0e0e0;
 }
 
 .pdf-icon {
-  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  background: #D64545;
 }
 .production-icon {
-  background: linear-gradient(135deg, #a55eea, #8b2cf5);
+  background: #5F3FE0;
 }
 .client-icon {
-  background: linear-gradient(135deg, #26d0ce, #1dd1a1);
+  background: #01a3a4;
 }
 .address-icon {
-  background: linear-gradient(135deg, #feca57, #ff9ff3);
+  background: #B86E00;
 }
 .billing-icon {
-  background: linear-gradient(135deg, #48dbfb, #0abde3);
+  background: #1E6FD9;
 }
 .notes-icon {
-  background: linear-gradient(135deg, #ff9ff3, #f368e0);
+  background: #f368e0;
 }
 .payment-icon {
-  background: linear-gradient(135deg, #54a0ff, #2e86de);
+  background: #1E6FD9;
 }
 .cleanup-icon {
-  background: linear-gradient(135deg, #ffc107, #ff8f00);
+  background: #ffc107;
   color: #212529 !important;
   
   &:hover {
-    background: linear-gradient(135deg, #e0a800, #ff8f00);
+    background: #e0a800;
     transform: scale(1.05);
     transition: all 0.2s ease;
   }
@@ -2583,25 +2575,25 @@ $filter-border-color: #e0e0e0;
   }
 }
 .cart-icon {
-  background: linear-gradient(135deg, #5f27cd, #341f97);
+  background: #5F3FE0;
 }
 .seller-icon {
-  background: linear-gradient(135deg, #00d2d3, #01a3a4);
+  background: #01a3a4;
 }
 .history-icon {
-  background: linear-gradient(135deg, #ff6348, #e17055);
+  background: #ff6348;
 }
 .discount-icon {
-  background: linear-gradient(135deg, #2ed573, #1e90ff);
+  background: #1E874B;
 }
 .edit-discount-icon {
-  background: linear-gradient(135deg, #ffa726, #fb8c00);
+  background: #B86E00;
 }
 .delete-icon {
-  background: linear-gradient(135deg, #ff3838, #ff4757);
+  background: #D64545;
 }
 .delivery-icon {
-  background: linear-gradient(135deg, #00d2d3, #054f52);
+  background: #054f52;
 }
 
 // Contenedor simple para el modal de entrega sin conflictos CSS
@@ -2951,8 +2943,8 @@ $filter-border-color: #e0e0e0;
   gap: 0.25rem;
   margin-top: 0.25rem;
   padding: 0.2rem 0.4rem;
-  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-  border: 1px solid #2196f3;
+  background: #efe9ff;
+  border: 1px solid #5F3FE0;
   border-radius: 12px;
   font-size: 0.65rem;
   font-weight: 600;
@@ -2963,7 +2955,7 @@ $filter-border-color: #e0e0e0;
 
   .frozen-icon {
     font-size: 0.7rem;
-    color: #2196f3;
+    color: #5F3FE0;
     animation: rotate 3s linear infinite;
   }
 
@@ -3037,7 +3029,7 @@ $filter-border-color: #e0e0e0;
 // Badge para estado Cerrado
 .modern-badge {
   &.badge-dark {
-    background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+    background: #343a40;
     color: white;
     border: 2px solid rgba(52, 58, 64, 0.3);
 
@@ -3074,7 +3066,7 @@ $filter-border-color: #e0e0e0;
 
 // ESTILOS PARA LA FILA DE RESUMEN
 :host ::ng-deep .p-datatable .summary-row {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+  background: #f8f9fa !important;
   border-top: 3px solid $primary-color !important;
   border-bottom: 2px solid $primary-color !important;
   font-weight: 600;
@@ -3130,7 +3122,7 @@ $filter-border-color: #e0e0e0;
     }
 
     &.total-highlight {
-      background: linear-gradient(135deg, rgba($primary-color, 0.1) 0%, rgba($primary-color, 0.05) 100%);
+      background: rgba($primary-color, 0.1);
       padding: 0.5rem;
       border-radius: 8px;
       border: 1px solid rgba($primary-color, 0.2);
@@ -3166,20 +3158,20 @@ $filter-border-color: #e0e0e0;
       line-height: 1;
 
       &.badge-success {
-        background: linear-gradient(135deg, $success-color 0%, darken($success-color, 10%) 100%);
+        background: $success-color;
       }
 
       &.badge-warning {
-        background: linear-gradient(135deg, $warning-color 0%, darken($warning-color, 10%) 100%);
+        background: $warning-color;
         color: #212529;
       }
 
       &.badge-secondary {
-        background: linear-gradient(135deg, $secondary-color 0%, darken($secondary-color, 10%) 100%);
+        background: $secondary-color;
       }
 
       &.badge-info {
-        background: linear-gradient(135deg, $info-color 0%, darken($info-color, 10%) 100%);
+        background: $info-color;
       }
     }
   }
@@ -3203,7 +3195,7 @@ $filter-border-color: #e0e0e0;
       top: 0;
       bottom: 0;
       width: 3px;
-      background: linear-gradient(135deg, $primary-color 0%, darken($primary-color, 20%) 100%);
+      background: $primary-color;
       border-radius: 0 2px 2px 0;
       box-shadow: 2px 0 4px rgba($primary-color, 0.3);
     }
@@ -3294,7 +3286,7 @@ $filter-border-color: #e0e0e0;
 // Responsive para dispositivos móviles pequeños (< 576px)
 @media (max-width: 575px) {
   :host ::ng-deep .p-datatable .summary-row {
-    background: linear-gradient(135deg, #f0f2f5 0%, #e8eaed 100%) !important;
+    background: #f0f2f5 !important;
     padding: 0.25rem 0 !important;
 
     .summary-cell {
@@ -3371,7 +3363,7 @@ $filter-border-color: #e0e0e0;
 
 // Indicadores visuales adicionales para pedidos congelados
 .frozen-warning {
-  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  background: #FFF4E0;
   border: 1px solid #ffc107;
   color: #856404;
   padding: 0.5rem;
@@ -3413,7 +3405,7 @@ $filter-border-color: #e0e0e0;
 // ===== ESTILOS PARA BÚSQUEDA LOCAL ADICIONAL =====
 
 .local-search-container {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: #f8f9fa;
   border: 1px solid #dee2e6;
   border-radius: 8px;
   padding: 1rem;
@@ -4205,7 +4197,7 @@ $filter-border-color: #e0e0e0;
    ======================================== */
 
 .metrics-breadcrumb-panel {
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  background: #f8f9fa;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   .d-flex {
@@ -5057,7 +5049,7 @@ $filter-border-color: #e0e0e0;
     .total-amount {
       font-size: 0.8rem !important;
       font-weight: 700;
-      color: #2196f3;
+      color: #5F3FE0;
     }
   }
 

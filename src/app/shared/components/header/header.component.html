@@ -2,8 +2,8 @@
 <div class="subscription-banner" *ngIf="(subscriptionService.subscription$ | async) as sub"
      [hidden]="sub.plan === 'premium'">
   <div class="d-flex align-items-center justify-content-center gap-2 py-1 px-3"
-       [style.background]="(subscriptionService.usage$ | async)?.orders?.remaining <= 3 ? '#fee2e2' : '#eef0fb'"
-       [style.color]="(subscriptionService.usage$ | async)?.orders?.remaining <= 3 ? '#991b1b' : '#5c6ac4'"
+       [style.background]="(subscriptionService.usage$ | async)?.orders?.remaining <= 3 ? '#fee2e2' : '#efe9ff'"
+       [style.color]="(subscriptionService.usage$ | async)?.orders?.remaining <= 3 ? '#991b1b' : '#5F3FE0'"
        style="font-size: 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.06);">
     <i class="pi pi-info-circle" style="font-size: 0.7rem;"></i>
     <span *ngIf="(subscriptionService.usage$ | async) as usage">

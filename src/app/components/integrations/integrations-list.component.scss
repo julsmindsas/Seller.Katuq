@@ -42,7 +42,7 @@
       font-size: 1rem;
       flex-shrink: 0;
 
-      &.bg-primary { background: #667eea; }
+      &.bg-primary { background: #5F3FE0; }
       &.bg-success { background: #10b981; }
       &.bg-warning { background: #f59e0b; }
       &.bg-info { background: #06b6d4; }
@@ -81,7 +81,7 @@
     color: #1f2937;
 
     i {
-      color: #667eea;
+      color: #5F3FE0;
       margin-right: 0.5rem;
     }
   }
@@ -95,7 +95,7 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      color: #667eea;
+      color: #5F3FE0;
       font-size: 0.875rem;
 
       i {
@@ -148,7 +148,7 @@
 
 :host {
   display: block;
-  background: linear-gradient(135deg, var(--intg-gray-25, #fcfcfd) 0%, var(--intg-primary-50, #eef2ff) 100%);
+  background: var(--intg-gray-25, #fcfcfd);
   min-height: 100vh;
 }
 
@@ -234,7 +234,7 @@
       }
 
       &.bg-info {
-        background: linear-gradient(135deg, var(--intg-info-500, #3b82f6) 0%, var(--intg-info-800, #1e40af) 100%);
+        background: #1E6FD9;
       }
     }
 
@@ -274,7 +274,7 @@
   overflow: hidden;
 
   .card-header {
-    background: linear-gradient(135deg, var(--intg-gray-25, #fcfcfd) 0%, var(--intg-primary-50, #eef2ff) 100%);
+    background: var(--intg-gray-25, #fcfcfd);
     border-bottom: 1px solid var(--intg-gray-200, #e5e7eb);
     padding: 1.5rem 2rem;
 
@@ -1437,7 +1437,7 @@
     }
 
     &.info .toast-icon {
-      background: linear-gradient(135deg, var(--intg-info-500, #3b82f6) 0%, var(--intg-info-800, #1e40af) 100%);
+      background: #1E6FD9;
     }
   }
 }
@@ -1621,7 +1621,7 @@
 // Dark mode adjustments
 :root[data-theme="dark"] {
   :host {
-    background: linear-gradient(135deg, var(--intg-gray-900) 0%, var(--intg-gray-800) 100%);
+    background: var(--intg-gray-900);
   }
 
   .stat-card,

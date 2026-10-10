@@ -762,7 +762,7 @@ $border-radius: 6px;
 
 // ESTILOS PARA LA FILA DE RESUMEN
 :host ::ng-deep .p-datatable .summary-row {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+  background: #f8f9fa !important;
   border-top: 3px solid $primary-color !important;
   font-weight: 600;
   position: sticky;

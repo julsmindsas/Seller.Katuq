@@ -212,7 +212,7 @@ $border-radius: 8px;
     // Colores para diferentes tipos de cards
     &.stat-primary {
       .stat-icon {
-        background: linear-gradient(135deg, $katuq-purple-500 0%, $katuq-purple-600 100%);
+        background: #5F3FE0;
       }
 
       .stat-value {
@@ -222,7 +222,7 @@ $border-radius: 8px;
 
     &.stat-success {
       .stat-icon {
-        background: linear-gradient(135deg, $katuq-success 0%, $katuq-success-dark 100%);
+        background: #1E874B;
       }
 
       .stat-value {
@@ -232,7 +232,7 @@ $border-radius: 8px;
 
     &.stat-info {
       .stat-icon {
-        background: linear-gradient(135deg, $katuq-purple-400 0%, $katuq-purple-500 100%);
+        background: #7C5CFF;
       }
 
       .stat-value {
@@ -242,7 +242,7 @@ $border-radius: 8px;
 
     &.stat-warning {
       .stat-icon {
-        background: linear-gradient(135deg, $katuq-warning 0%, $katuq-warning-dark 100%);
+        background: #B86E00;
       }
 
       .stat-value {
@@ -252,7 +252,7 @@ $border-radius: 8px;
 
     &.stat-danger {
       .stat-icon {
-        background: linear-gradient(135deg, $katuq-danger 0%, $katuq-danger-dark 100%);
+        background: #D64545;
       }
 
       .stat-value {
@@ -262,7 +262,7 @@ $border-radius: 8px;
 
     &.stat-secondary {
       .stat-icon {
-        background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+        background: #5A6B78;
       }
 
       .stat-value {
@@ -272,7 +272,7 @@ $border-radius: 8px;
 
     &.stat-production {
       .stat-icon {
-        background: linear-gradient(135deg, $katuq-purple-600 0%, $katuq-purple-700 100%);
+        background: #4a2fc0;
       }
 
       .stat-value {
@@ -282,7 +282,7 @@ $border-radius: 8px;
 
     &.stat-packed {
       .stat-icon {
-        background: linear-gradient(135deg, $katuq-cyan-500 0%, $katuq-cyan-600 100%);
+        background: $katuq-cyan-600;
       }
 
       .stat-value {
@@ -436,7 +436,7 @@ $border-radius: 8px;
 
 // Estilo del encabezado del módulo
 .module-header {
-  background: linear-gradient(to right, white, #fafafa);
+  background: #fff;
   border-radius: $border-radius $border-radius 0 0;
 
   h5 {
@@ -730,13 +730,13 @@ $border-radius: 8px;
 
   .map-placeholder {
     min-height: 400px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: #f8f9fa;
     border: 2px dashed #dee2e6;
     transition: all 0.3s ease;
 
     &:hover {
       border-color: #8b5cf6;
-      background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+      background: #efe9ff;
     }
 
     i {
@@ -897,7 +897,7 @@ $border-radius: 8px;
       border-left-color: $katuq-cyan-500;
 
       .stat-icon {
-        background: linear-gradient(45deg, $katuq-cyan-500, $katuq-purple-300);
+        background: $katuq-cyan-600;
       }
     }
 
@@ -905,7 +905,7 @@ $border-radius: 8px;
       border-left-color: #ffc107;
 
       .stat-icon {
-        background: linear-gradient(45deg, #ffc107, #fd7e14);
+        background: #B86E00;
       }
     }
   }
@@ -1085,11 +1085,11 @@ $border-radius: 8px;
       transition: width 0.3s ease;
 
       &.bg-success {
-        background: linear-gradient(45deg, #28a745, #20c997);
+        background: #1E874B;
       }
 
       &.bg-primary {
-        background: linear-gradient(45deg, #a78bfa, #0056b3);
+        background: #5F3FE0;
       }
     }
   }
@@ -1902,7 +1902,7 @@ $border-radius: 8px;
    ======================================== */
 
 .metrics-breadcrumb-panel {
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  background: #f8f9fa;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   .d-flex {
@@ -2435,7 +2435,7 @@ $border-radius: 8px;
 
   // Contador de filtros activos: gradiente morado
   .count-badge {
-    background: linear-gradient(135deg, $katuq-primary, $katuq-primary-dark) !important;
+    background: #5F3FE0 !important;
     box-shadow: 0 2px 4px rgba($katuq-primary, 0.3) !important;
   }
 

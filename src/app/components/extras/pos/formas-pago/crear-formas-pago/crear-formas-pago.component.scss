@@ -2,8 +2,8 @@
 // Variables de color y espaciado
 // ===================================
 :root {
-  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --success-gradient: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  --primary-gradient: #5F3FE0;
+  --success-gradient: #1E874B;
   --danger-color: #dc3545;
   --warning-color: #ffc107;
   --light-gray: #f8f9fa;
@@ -205,12 +205,12 @@ textarea.form-control {
 // Card especial para el switch
 .card.border-light {
   border: 2px dashed #e9ecef !important;
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  background: #f8f9fa;
   transition: all 0.3s ease;
 
   &:hover {
     border-color: #28a745 !important;
-    background: linear-gradient(135deg, #f0fff4 0%, #ffffff 100%);
+    background: #f0fff4;
   }
 
   .card-body {

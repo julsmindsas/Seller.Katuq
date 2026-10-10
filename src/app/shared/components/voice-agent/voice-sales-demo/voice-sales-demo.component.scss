@@ -2,13 +2,13 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #5F3FE0;
   color: #333;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 
   // === HEADER ===
   .demo-header {
-    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    background: #2c3e50;
     color: white;
     padding: 2rem;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
@@ -131,7 +131,7 @@
 
       .progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, #27ae60 0%, #2ecc71 100%);
+        background: #1E874B;
         transition: width 0.8s ease;
         border-radius: 6px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -201,13 +201,13 @@
 
         &.demo-step-completed {
           border-color: #27ae60;
-          background: linear-gradient(135deg, #d5f4e6 0%, #abebc6 100%);
+          background: #E6F7EE;
           box-shadow: 0 4px 20px rgba(39, 174, 96, 0.2);
         }
 
         &.demo-step-active {
           border-color: #3498db;
-          background: linear-gradient(135deg, #d6eaf8 0%, #aed6f1 100%);
+          background: #E8F1FD;
           box-shadow: 0 4px 20px rgba(52, 152, 219, 0.2);
           transform: scale(1.02);
         }

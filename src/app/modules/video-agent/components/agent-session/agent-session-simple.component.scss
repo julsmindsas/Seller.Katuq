@@ -8,8 +8,8 @@
 
 // Variables CSS dinámicas
 :root {
-    --company-primary: #667eea;
-    --company-secondary: #764ba2;
+    --company-primary: #5F3FE0;
+    --company-secondary: #5F3FE0;
 }
 
 // Container simple
@@ -403,11 +403,7 @@
     .audio-status-bar {
         margin-top: 1rem;
         padding: 1rem;
-        background: linear-gradient(
-            135deg,
-            var(--company-primary) 0%,
-            var(--company-secondary) 100%
-        );
+        background: var(--company-primary);
         border-radius: 8px;
         display: flex;
         align-items: center;

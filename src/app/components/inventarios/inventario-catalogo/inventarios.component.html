@@ -435,7 +435,7 @@
                                             </th>
                                             <!-- Columna Valor Total -->
                                             <th style="width: 130px;" class="text-end py-2">
-                                                <span class="fw-bold" style="color: #5c6ac4;">
+                                                <span class="fw-bold" style="color: #5F3FE0;">
                                                     {{ getMetricaValorTotal() | currency:'COP':'symbol-narrow':'1.0-0' }}
                                                 </span>
                                             </th>
@@ -526,7 +526,7 @@
                                             </td>
                                             <!-- Valor Total (precio × stock) -->
                                             <td class="text-end" style="white-space: nowrap;">
-                                                <span *ngIf="producto.precio > 0" class="fw-bold" style="color: #5c6ac4; font-size: 0.9rem;">{{ (precioSinIvaFila(producto) * producto.stockTotal) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                <span *ngIf="producto.precio > 0" class="fw-bold" style="color: #5F3FE0; font-size: 0.9rem;">{{ (precioSinIvaFila(producto) * producto.stockTotal) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
                                                 <span *ngIf="!producto.precio || producto.precio === 0" class="text-muted small">—</span>
                                             </td>
                                             <!-- Valor a Costo (costo × stock) — siempre visible -->
@@ -753,7 +753,7 @@
                             <!-- Barra de búsqueda global -->
                             <div class="col-md-12 mb-4" data-tour="search-productos">
                                 <div class="input-group">
-                                    <span class="input-group-text" style="background-color: #5c6ac4; color: white;">
+                                    <span class="input-group-text" style="background-color: #5F3FE0; color: white;">
                                         <i class="pi pi-search"></i>
                                     </span>
                                     <input type="text" class="form-control"

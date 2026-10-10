@@ -1243,7 +1243,7 @@ html {
   transition: all 0.3s ease;
 
   .card-header {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: #f8f9fa;
     border-bottom: 1px solid #dee2e6;
 
     h6 {
@@ -2481,7 +2481,7 @@ $step1-radius: 8px;
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background: linear-gradient(135deg, lighten($step1-accent, 35%) 0%, lighten($step1-accent, 25%) 100%);
+    background: lighten($step1-accent, 35%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3611,7 +3611,7 @@ $step1-radius: 8px;
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.25rem;
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  background: var(--primary-color);
   color: white;
 
   .sidebar-title {
@@ -3873,7 +3873,7 @@ $step1-radius: 8px;
     justify-content: center;
     width: 100%;
     height: 48px;
-    background: linear-gradient(135deg, var(--success-color) 0%, var(--success-dark) 100%);
+    background: var(--success-color);
     border: none;
     border-radius: 8px;
     color: white;
@@ -4321,7 +4321,7 @@ $step1-radius: 8px;
     }
 
     &.btn-primary {
-      background: linear-gradient(135deg, var(--primary) 0%, darken(#5c6bc0, 8%) 100%);
+      background: var(--primary);
       border: none;
       box-shadow: 0 2px 8px rgba(92, 107, 192, 0.3);
 
@@ -4349,7 +4349,7 @@ $step7-success-border: rgba(16, 185, 129, 0.3);
 }
 
 .section-header-success {
-  background: linear-gradient(135deg, $step7-success 0%, darken($step7-success, 8%) 100%) !important;
+  background: $step7-success !important;
   border-bottom-color: $step7-success !important;
   color: white !important;
 
@@ -4494,7 +4494,7 @@ $step7-success-border: rgba(16, 185, 129, 0.3);
 .forma-entrega-selector-container {
   .card {
     border-radius: var(--border-radius-lg);
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    background: #f8fafc;
 
     .card-body {
       padding: 1.25rem 1.5rem;

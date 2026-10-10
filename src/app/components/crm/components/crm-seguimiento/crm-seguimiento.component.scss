@@ -31,7 +31,7 @@
 .stat-card-seen {
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-left: 4px solid #2563eb;
+  border-left: 4px solid #5F3FE0;
   border-radius: 8px;
 }
 
@@ -79,7 +79,7 @@
   }
 
   &.metric-chip-warning .metric-value { color: #D35400; }
-  &.metric-chip-info .metric-value { color: #2563eb; }
+  &.metric-chip-info .metric-value { color: #5F3FE0; }
   &.metric-chip-danger .metric-value { color: #d12b38; }
   &.metric-chip-neutral .metric-value { color: #1f2937; }
 }
@@ -101,7 +101,7 @@
   }
   &.stat-badge-info {
     background: #eff6ff;
-    color: #2563eb;
+    color: #5F3FE0;
   }
   &.stat-badge-purple {
     background: #f5f3ff;

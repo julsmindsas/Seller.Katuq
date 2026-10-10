@@ -54,7 +54,7 @@
 
 .payment-notice-loading,
 .payment-notice-sandbox {
-  border-left-color: #2563eb;
+  border-left-color: #5F3FE0;
 
   i,
   strong {
@@ -132,7 +132,7 @@
   gap: 0.2rem 1rem;
   padding: 0.85rem 1rem;
   border: 1px solid #bfdbfe;
-  border-left: 4px solid #2563eb;
+  border-left: 4px solid #5F3FE0;
   border-radius: 8px;
   background: #eff6ff;
 
@@ -201,7 +201,7 @@
 }
 
 .security-status-loading {
-  border-left-color: #2563eb;
+  border-left-color: #5F3FE0;
 
   .security-icon {
     background: #dbeafe;
@@ -381,7 +381,7 @@
 .consent-card {
   padding: 0.85rem 0.95rem;
   border: 1px solid #e2e8f0;
-  border-left: 4px solid #2563eb;
+  border-left: 4px solid #5F3FE0;
   border-radius: 9px;
   background: #f8fafc;
 
@@ -461,7 +461,7 @@
 
   h4 {
     margin: 0 0 1rem 0;
-    color: #667eea;
+    color: #5F3FE0;
     font-size: 1.1rem;
     font-weight: 600;
 
@@ -486,7 +486,7 @@
     transition: all 0.3s ease;
 
     i {
-      color: #667eea;
+      color: #5F3FE0;
       font-size: 1.2rem;
     }
 
@@ -525,7 +525,7 @@
   }
 
   &.selected {
-    border-color: #667eea;
+    border-color: #5F3FE0;
     background: #f7f5ff;
     box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
   }
@@ -534,7 +534,7 @@
     border-color: #ffc107;
 
     &.selected {
-      border-color: #667eea;
+      border-color: #5F3FE0;
     }
   }
 
@@ -585,7 +585,7 @@
     .main-price {
       font-size: 2rem;
       font-weight: 700;
-      color: #667eea;
+      color: #5F3FE0;
       margin-bottom: 0.5rem;
     }
 
@@ -618,7 +618,7 @@
   }
 
   &.selected .select-indicator {
-    background: #667eea;
+    background: #5F3FE0;
 
     i {
       color: white;
@@ -636,11 +636,11 @@
   gap: 1rem;
   padding: 1rem;
   background: #e7f1ff;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #5F3FE0;
   border-radius: 8px;
 
   i {
-    color: #667eea;
+    color: #5F3FE0;
     font-size: 1.2rem;
     margin-top: 0.25rem;
   }

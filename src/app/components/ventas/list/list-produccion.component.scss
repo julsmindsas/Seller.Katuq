@@ -55,9 +55,9 @@
   font-weight: 600;
 }
 .btn-outline-primary:hover {
-  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+  background: #5F3FE0;
   color: #fff;
-  border-color: #2563eb;
+  border-color: #5F3FE0;
   box-shadow: 0 2px 8px rgba(59,130,246,0.12);
 }
 
@@ -161,7 +161,7 @@
 
   // Estados de Pago
   &.badge-success {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    background: #1E874B;
     color: white;
     border: 2px solid rgba(40, 167, 69, 0.3);
 
@@ -171,7 +171,7 @@
   }
 
   &.badge-warning {
-    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    background: #ffc107;
     color: #212529;
     border: 2px solid rgba(255, 193, 7, 0.3);
 
@@ -181,7 +181,7 @@
   }
 
   &.badge-danger {
-    background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+    background: #D64545;
     color: white;
     border: 2px solid rgba(220, 53, 69, 0.3);
 
@@ -191,7 +191,7 @@
   }
 
   &.badge-info {
-    background: linear-gradient(135deg, #c4b5fd 0%, #3498db 100%);
+    background: #1E6FD9;
     color: white;
     border: 2px solid rgba(23, 162, 184, 0.3);
 
@@ -201,7 +201,7 @@
   }
 
   &.badge-primary {
-    background: linear-gradient(135deg, #2196f3 0%, #6610f2 100%);
+    background: #5F3FE0;
     color: white;
     border: 2px solid rgba(33, 150, 243, 0.3);
 
@@ -211,7 +211,7 @@
   }
 
   &.badge-secondary {
-    background: linear-gradient(135deg, #6c757d 0%, #95a5a6 100%);
+    background: #6c757d;
     color: white;
     border: 2px solid rgba(108, 117, 125, 0.3);
 
@@ -221,7 +221,7 @@
   }
 
   &.badge-dark {
-    background: linear-gradient(135deg, #343a40 0%, #2c3e50 100%);
+    background: #343a40;
     color: white;
     border: 2px solid rgba(52, 58, 64, 0.3);
 
@@ -277,7 +277,7 @@
 
 // ESTILOS ESPECÍFICOS PARA BADGE DE REVISADO
 .revisado-badge {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  background: #1E874B !important;
   border: 2px solid rgba(40, 167, 69, 0.3);
   box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
   animation: fadeInScale 0.5s ease-out;
@@ -352,7 +352,7 @@
    ======================================== */
 
 .metrics-breadcrumb-panel {
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  background: #f8f9fa;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   .d-flex {

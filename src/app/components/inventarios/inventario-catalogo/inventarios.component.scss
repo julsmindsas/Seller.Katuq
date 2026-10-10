@@ -2,7 +2,7 @@
 // VARIABLES DEL TEMA KATUQ
 // Paleta profesional B2B (estilo Atlassian/Shopify)
 // ===================================
-$primary-color: #5c6ac4;    // Morado profesional
+$primary-color: #5F3FE0;    // Morado profesional
 $success-color: #36b37e;    // Verde equilibrado
 $danger-color: #de350b;     // Rojo profesional
 $warning-color: #ff991f;    // Ámbar suave
@@ -69,7 +69,7 @@ $border-radius: 8px;
 :host ::ng-deep {
     .p-datatable {
         .p-datatable-header {
-            background: linear-gradient(to right, #f8f9fa, #ffffff);
+            background: #f8f9fa;
             border-radius: $border-radius $border-radius 0 0;
         }
 
@@ -171,7 +171,7 @@ $border-radius: 8px;
 .empty-state {
     padding: 3rem;
     text-align: center;
-    background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+    background: #f8f9fa;
     border-radius: $border-radius;
     animation: fadeIn 0.3s ease;
 
@@ -230,7 +230,7 @@ $border-radius: 8px;
 :host ::ng-deep {
     .p-datatable {
         .p-datatable-header {
-            background: linear-gradient(to right, #f8f9fa, #ffffff);
+            background: #f8f9fa;
             padding: 1.5rem;
             border-radius: 8px 8px 0 0;
         }
@@ -301,7 +301,7 @@ $border-radius: 8px;
 }
 
 .marketplace-item {
-    background: linear-gradient(to bottom right, #ffffff, #f8f9fa);
+    background: #ffffff;
     padding: 1rem;
     border: 1px solid #dee2e6;
     border-radius: 8px;
@@ -368,7 +368,7 @@ $border-radius: 8px;
 .empty-state {
     padding: 3rem 1rem;
     text-align: center;
-    background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+    background: #f8f9fa;
     border-radius: 8px;
 
     i {
@@ -529,7 +529,7 @@ $border-radius: 8px;
 
     .modal-header {
         border-bottom: 1px solid rgba(0,0,0,0.1);
-        background: linear-gradient(to right, #f8f9fa, #ffffff);
+        background: #f8f9fa;
     }
 
     .modal-footer {
@@ -694,7 +694,7 @@ th.text-center .d-flex.align-items-center.justify-content-center {
 
 /* Estilos para la sección de filtros mejorada */
 .filtros-externos {
-  background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+  background: #f8f9fa;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   margin-bottom: 1.5rem;
@@ -926,7 +926,7 @@ th.text-center .d-flex.align-items-center.justify-content-center {
 
 :host ::ng-deep .badge.bg-primary,
 .badge.bg-primary {
-  background-color: #5c6ac4 !important;
+  background-color: #5F3FE0 !important;
   color: #ffffff !important;
 }
 

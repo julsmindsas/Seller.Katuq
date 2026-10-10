@@ -245,14 +245,14 @@
     align-items: center;
     gap: 16px;
     padding: 16px 20px;
-    background: linear-gradient(135deg, #f0f7ff 0%, #f5f3ff 100%);
+    background: #f0f7ff;
     border: 1px solid #c7d8f7;
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.15s;
 
     &:hover {
-        background: linear-gradient(135deg, #e7f1ff 0%, #ede9fe 100%);
+        background: #e7f1ff;
         border-color: #80bdff;
         transform: translateY(-1px);
     }

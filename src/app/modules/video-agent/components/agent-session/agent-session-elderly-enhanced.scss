@@ -12,22 +12,22 @@
 
     /* 🟢 Verde: Escuchando */
     &.state-listening {
-        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+        background: #e8f5e9 !important;
     }
 
     /* 🔵 Azul: Asistente hablando */
     &.state-speaking {
-        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
+        background: #e3f2fd !important;
     }
 
     /* 🟡 Amarillo: Procesando */
     &.state-processing {
-        background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%) !important;
+        background: #fff3e0 !important;
     }
 
     /* ⚪ Gris claro: Idle */
     &.state-idle {
-        background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%) !important;
+        background: #f5f5f5 !important;
     }
 }
 
@@ -602,7 +602,7 @@
         display: flex;
         align-items: center;
         gap: 12px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #5F3FE0;
         color: white;
         padding: 14px 24px;
         border-radius: 50px;

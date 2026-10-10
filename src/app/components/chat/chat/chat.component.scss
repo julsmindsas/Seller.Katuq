@@ -24,7 +24,7 @@ $assistant-bubble-light: $white;
 $assistant-bubble-dark: $dark-card-inbox; // #323846
 $assistant-text-light: $chat-text-light;
 $assistant-text-dark: $chat-text-dark;
-$user-bubble-gradient: linear-gradient(135deg, $primary-color, $secondary-color);
+$user-bubble-gradient: $secondary-color;
 $user-text-light: $white;
 $user-text-dark: $white;
 
@@ -142,7 +142,7 @@ $font-size-tiny: 11px;
   }
 
   .send-button:not(.disabled) {
-    background: linear-gradient(135deg, $chat-primary, $chat-primary-dark);
+    background: $chat-primary-dark;
     color: $user-text-dark;
 
     &:hover { filter: brightness(1.1); }

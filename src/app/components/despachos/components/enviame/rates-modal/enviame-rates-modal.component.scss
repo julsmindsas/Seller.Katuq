@@ -111,7 +111,7 @@ $radius-lg: 12px;
 
       .progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, $primary, $primary-dark);
+        background: #5F3FE0;
         transition: width 0.3s ease;
       }
 
@@ -552,7 +552,7 @@ $radius-lg: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, rgba($primary, 0.1), rgba($primary, 0.05));
+        background: #efe9ff;
         border-radius: $radius-lg;
         flex-shrink: 0;
 
@@ -779,7 +779,7 @@ $radius-lg: 12px;
       border-top: 2px dashed $border-light;
 
       .distance-card {
-        background: linear-gradient(135deg, rgba($warning, 0.03), rgba($warning, 0.01));
+        background: #FFF4E0;
         border: 2px solid rgba($warning, 0.3);
         border-left: 4px solid $warning;
         border-radius: $radius-lg;
@@ -791,7 +791,7 @@ $radius-lg: 12px;
           align-items: center;
           gap: $spacing-md;
           padding: $spacing-lg;
-          background: linear-gradient(135deg, rgba($warning, 0.06) 0%, rgba($warning, 0.02) 100%);
+          background: #FFF4E0;
           border-bottom: 1px solid $border-light;
 
           i {
@@ -1186,7 +1186,7 @@ $radius-lg: 12px;
 
       .card-header {
         padding: $spacing-base $spacing-lg;
-        background: linear-gradient(135deg, $lighter-bg, white);
+        background: $lighter-bg;
         border-bottom: 1px solid $border-light;
         display: flex;
         align-items: center;
@@ -1282,7 +1282,7 @@ $radius-lg: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, rgba($primary, 0.1), rgba($primary, 0.05));
+        background: #efe9ff;
         border-radius: $radius-md;
         flex-shrink: 0;
 
@@ -1365,7 +1365,7 @@ $radius-lg: 12px;
 
           .field-unit {
             right: $spacing-md;
-            background: linear-gradient(135deg, $primary, $primary-dark);
+            background: #5F3FE0;
             color: white;
             padding: 4px $spacing-sm;
             border-radius: $radius-sm;
@@ -1401,7 +1401,7 @@ $radius-lg: 12px;
 
           .progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, $success, darken($success, 10%));
+            background: #1E874B;
             transition: width 0.3s ease;
             max-width: 100%;
           }
@@ -1415,7 +1415,7 @@ $radius-lg: 12px;
       justify-content: center;
       margin-bottom: $spacing-xl;
       padding: $spacing-lg;
-      background: linear-gradient(135deg, $lighter-bg, white);
+      background: $lighter-bg;
       border-radius: $radius-md;
 
       .box-3d {
@@ -1431,7 +1431,7 @@ $radius-lg: 12px;
 
         .face {
           position: absolute;
-          background: linear-gradient(135deg, rgba($primary, 0.8), rgba($primary, 0.6));
+          background: rgba(95, 63, 224, 0.8);
           border: 1px solid rgba($primary-dark, 0.5);
           opacity: 0.9;
         }
@@ -1530,7 +1530,7 @@ $radius-lg: 12px;
       justify-content: center;
       gap: $spacing-base;
       padding: $spacing-md;
-      background: linear-gradient(135deg, rgba($primary, 0.05), rgba($primary, 0.02));
+      background: #faf9fe;
       border: 1px solid rgba($primary, 0.2);
       border-radius: $radius-md;
       margin-top: $spacing-lg;
@@ -1648,7 +1648,7 @@ $radius-lg: 12px;
         left: 0;
         width: 5px;
         height: 100%;
-        background: linear-gradient(180deg, $warning, darken($warning, 10%));
+        background: #B86E00;
         box-shadow: 0 0 12px rgba($warning, 0.3);
       }
 
@@ -1743,7 +1743,7 @@ $radius-lg: 12px;
               position: absolute;
               inset: -2px;
               border-radius: $radius-md;
-              background: linear-gradient(135deg, transparent, transparent);
+              background: transparent;
               opacity: 0;
               transition: opacity 0.3s ease;
               pointer-events: none;
@@ -1760,7 +1760,7 @@ $radius-lg: 12px;
 
               &::before {
                 opacity: 1;
-                background: linear-gradient(135deg, rgba($primary, 0.05), rgba($primary, 0.02));
+                background: #faf9fe;
               }
             }
 
@@ -1795,7 +1795,7 @@ $radius-lg: 12px;
               color: white;
               font-weight: 700;
               font-size: 13px;
-              background: linear-gradient(135deg, $primary, $primary-dark);
+              background: #5F3FE0;
               padding: $spacing-sm $spacing-md;
               border-radius: $radius-md;
               text-transform: uppercase;
@@ -2695,7 +2695,7 @@ $radius-lg: 12px;
       gap: $spacing-sm;
       margin-bottom: $spacing-lg;
       padding: $spacing-md;
-      background: linear-gradient(135deg, $primary 0%, darken($primary, 10%) 100%);
+      background: #5F3FE0;
       color: white;
       border-radius: $radius-md;
       font-size: 15px;
@@ -2731,7 +2731,7 @@ $radius-lg: 12px;
 
       &.active {
         border-color: $primary;
-        background: linear-gradient(135deg, rgba($primary, 0.05) 0%, rgba($primary, 0.02) 100%);
+        background: #faf9fe;
         box-shadow: 0 0 0 3px rgba($primary, 0.1);
 
         .card-header h5 {

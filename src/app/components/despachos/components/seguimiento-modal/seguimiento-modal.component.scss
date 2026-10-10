@@ -62,64 +62,64 @@
     }
     
     &.estado-transito {
-      background: linear-gradient(135deg, $katuq-purple-300 0%, $katuq-cyan-500 100%);
+      background: #5F3FE0;
       color: white;
     }
 
     &.estado-entregado {
-      background: linear-gradient(135deg, $katuq-success 0%, $katuq-success-dark 100%);
+      background: #1E874B;
       color: white;
     }
 
     &.estado-ruta {
-      background: linear-gradient(135deg, $katuq-primary-light 0%, $katuq-purple-700 100%);
+      background: #5F3FE0;
       color: white;
     }
 
     &.estado-retenido {
-      background: linear-gradient(135deg, $katuq-warning 0%, $katuq-warning-dark 100%);
+      background: $katuq-warning;
       color: $katuq-gray-900;
     }
 
     &.estado-devuelto {
-      background: linear-gradient(135deg, $katuq-danger 0%, $katuq-danger-dark 100%);
+      background: #D64545;
       color: white;
     }
 
     &.estado-default {
-      background: linear-gradient(135deg, $katuq-gray-500 0%, $katuq-gray-400 100%);
+      background: $katuq-gray-500;
       color: white;
     }
 
     // Estados de Prindel
     &.estado-creado {
-      background: linear-gradient(135deg, $katuq-cyan-600 0%, $katuq-cyan-500 100%);
+      background: $katuq-cyan-600;
       color: white;
     }
 
     &.estado-recogido {
-      background: linear-gradient(135deg, $katuq-primary 0%, $katuq-purple-700 100%);
+      background: #5F3FE0;
       color: white;
     }
 
     &.estado-error {
-      background: linear-gradient(135deg, $katuq-danger 0%, $katuq-danger-dark 100%);
+      background: #D64545;
       color: white;
     }
 
     // Estados normalizados
     &.estado-pendiente {
-      background: linear-gradient(135deg, $katuq-warning 0%, $katuq-warning-dark 100%);
+      background: $katuq-warning;
       color: $katuq-gray-900;
     }
 
     &.estado-procesando {
-      background: linear-gradient(135deg, $katuq-purple-700 0%, $katuq-primary-light 100%);
+      background: #5F3FE0;
       color: white;
     }
 
     &.estado-cancelado {
-      background: linear-gradient(135deg, $katuq-gray-500 0%, $katuq-gray-800 100%);
+      background: $katuq-gray-800;
       color: white;
     }
   }
@@ -136,7 +136,7 @@
       top: 0;
       bottom: 0;
       width: 2px;
-      background: linear-gradient(to bottom, $katuq-primary-light, #e9ecef);
+      background: #d9cffb;
     }
     
     .timeline-item {

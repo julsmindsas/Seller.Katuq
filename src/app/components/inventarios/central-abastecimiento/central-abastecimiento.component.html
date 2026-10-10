@@ -9,11 +9,11 @@
 
         <!-- Header estilo Katuq -->
         <div class="module-header px-4 py-3 border-bottom"
-             style="background: #f8fafc; border-left: 4px solid #5c6ac4;">
+             style="background: #f8fafc; border-left: 4px solid #5F3FE0;">
           <div class="d-flex justify-content-between align-items-center flex-wrap">
             <div class="mb-2 mb-md-0">
               <h4 class="mb-1 fw-bold text-dark">
-                <i class="pi pi-compass me-2" style="color: #5c6ac4;"></i>{{ 'Central de Abastecimiento' | translate }}
+                <i class="pi pi-compass me-2" style="color: #5F3FE0;"></i>{{ 'Central de Abastecimiento' | translate }}
               </h4>
               <p class="text-muted small mb-0">
                 {{ 'Inteligencia de inventario basada en datos reales' | translate }}
@@ -29,7 +29,7 @@
               </select>
               <button pButton type="button" icon="pi pi-bolt" label="IA"
                       class="p-button-sm"
-                      style="background: #5c6ac4; border-color: #5c6ac4;"
+                      style="background: #5F3FE0; border-color: #5F3FE0;"
                       (click)="analizarConIA()"
                       [disabled]="analizandoIA || cargando || !resumen"
                       [loading]="analizandoIA"
@@ -37,7 +37,7 @@
                       tooltipPosition="bottom"></button>
               <button pButton type="button" icon="pi pi-refresh"
                       class="p-button-rounded p-button-outlined"
-                      style="border-color: #5c6ac4; color: #5c6ac4; width: 2.5rem; height: 2.5rem;"
+                      style="border-color: #5F3FE0; color: #5F3FE0; width: 2.5rem; height: 2.5rem;"
                       (click)="cargarDatos()" [disabled]="cargando"
                       pTooltip="Actualizar datos"></button>
             </div>
@@ -55,15 +55,15 @@
             <div class="d-flex justify-content-between align-items-start">
               <div>
                 <small class="text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">{{ 'Valor Total' | translate }}</small>
-                <h3 class="fw-bold mb-0 mt-1" style="color: #5c6ac4;">{{ formatCurrency(resumen.valorTotal) }}</h3>
+                <h3 class="fw-bold mb-0 mt-1" style="color: #5F3FE0;">{{ formatCurrency(resumen.valorTotal) }}</h3>
                 <small class="text-muted">{{ resumen.totalUnidades | number }} {{ 'unidades' | translate }}</small>
                 <div *ngIf="resumen.valorTotalCosto !== undefined" class="mt-1">
                   <small class="text-muted d-block" style="font-size: 0.7rem;">{{ 'A costo' | translate }}: <span class="fw-semibold" style="color: #f59e0b;">{{ formatCurrency(resumen.valorTotalCosto) }}</span></small>
                   <small class="text-muted d-block" style="font-size: 0.7rem;">{{ 'Margen potencial' | translate }}: <span class="fw-semibold" style="color: #10b981;">{{ formatCurrency(resumen.margenPotencial || 0) }}</span></small>
                 </div>
               </div>
-              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #eef0fb;">
-                <i class="pi pi-dollar" style="color: #5c6ac4;"></i>
+              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #efe9ff;">
+                <i class="pi pi-dollar" style="color: #5F3FE0;"></i>
               </div>
             </div>
           </div>
@@ -124,12 +124,12 @@
 
     <!-- Panel IA -->
     <div class="card border-0 shadow-sm mb-4" *ngIf="iaResumen"
-         style="border-left: 3px solid #5c6ac4 !important;">
+         style="border-left: 3px solid #5F3FE0 !important;">
       <div class="card-body p-3">
         <div class="d-flex align-items-start gap-3">
           <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-               style="width: 36px; height: 36px; background: #eef0fb;">
-            <i class="pi pi-bolt" style="color: #5c6ac4;"></i>
+               style="width: 36px; height: 36px; background: #efe9ff;">
+            <i class="pi pi-bolt" style="color: #5F3FE0;"></i>
           </div>
           <div class="flex-grow-1">
             <div class="d-flex align-items-center gap-2 mb-2">
@@ -142,7 +142,7 @@
             <p class="mb-2" style="font-size: 0.85rem; color: #172b4d;">{{ iaResumen }}</p>
             <div *ngIf="iaSugerencias.length > 0">
               <div *ngFor="let s of iaSugerencias" class="d-flex align-items-start gap-2 mb-1">
-                <i class="pi pi-chevron-right" style="font-size: 0.65rem; margin-top: 5px; color: #5c6ac4;"></i>
+                <i class="pi pi-chevron-right" style="font-size: 0.65rem; margin-top: 5px; color: #5F3FE0;"></i>
                 <small style="color: #44546f;">{{ s }}</small>
               </div>
             </div>
@@ -190,9 +190,9 @@
     <!-- Sugerencias de Traslado -->
     <div class="card border-0 shadow-sm mb-4" *ngIf="sugerenciasTraslado.length > 0">
       <div class="card-header bg-white border-bottom d-flex align-items-center gap-2 py-3">
-        <i class="pi pi-arrows-h" style="color: #5c6ac4;"></i>
+        <i class="pi pi-arrows-h" style="color: #5F3FE0;"></i>
         <span class="fw-semibold">{{ 'Sugerencias de Traslado' | translate }}</span>
-        <span class="badge ms-auto" style="background: #eef0fb; color: #5c6ac4;">{{ sugerenciasTraslado.length }}</span>
+        <span class="badge ms-auto" style="background: #efe9ff; color: #5F3FE0;">{{ sugerenciasTraslado.length }}</span>
       </div>
       <div class="card-body p-0">
         <table class="table table-hover mb-0" style="font-size: 0.85rem;">
@@ -213,9 +213,9 @@
                 <br><small class="text-muted font-monospace">{{ s.referencia }}</small>
               </td>
               <td>{{ s.bodegaOrigen.nombre }} <small class="text-muted">({{ s.bodegaOrigen.stock }})</small></td>
-              <td class="text-center"><i class="pi pi-arrow-right" style="color: #5c6ac4;"></i></td>
+              <td class="text-center"><i class="pi pi-arrow-right" style="color: #5F3FE0;"></i></td>
               <td>{{ s.bodegaDestino.nombre }} <small class="text-danger">({{ s.bodegaDestino.stock }})</small></td>
-              <td class="text-center fw-bold" style="color: #5c6ac4;">{{ s.cantidadSugerida }}</td>
+              <td class="text-center fw-bold" style="color: #5F3FE0;">{{ s.cantidadSugerida }}</td>
               <td><small class="text-muted">{{ s.razon }}</small></td>
             </tr>
           </tbody>

@@ -96,7 +96,7 @@ $katuq-primary-light: #8c6bff;
 
 /* === Modal form styles === */
 .modal-header {
-  background: linear-gradient(135deg, $katuq-primary, $katuq-primary-light);
+  background: $katuq-primary;
   color: #fff;
   border-bottom: none;
   border-radius: 0;

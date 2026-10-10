@@ -104,7 +104,7 @@ $transition: all 0.3s ease;
 // Placeholder cuando el mapa no está cargado
 .mapa-placeholder {
   min-height: 400px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: #f8f9fa;
   border: 2px dashed #dee2e6;
 
   .spinner-border {

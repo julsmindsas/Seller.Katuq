@@ -4,7 +4,7 @@
 // ===================================
 
 // Variables
-$primary-color: #667eea;
+$primary-color: #5F3FE0;
 $success-color: #2dce89;
 $danger-color: #f5365c;
 $warning-color: #fb6340;
@@ -15,7 +15,7 @@ $border-radius: 8px;
 // HEADER DEL MÓDULO
 // ===================================
 .module-header {
-    background: linear-gradient(to right, white, #fafafa);
+    background: white;
     transition: all 0.3s ease;
 
     h5 {
@@ -48,7 +48,7 @@ $border-radius: 8px;
 // MÉTRICAS BREADCRUMB (ESTILO KATUQ)
 // ===================================
 .metrics-breadcrumb-panel {
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    background: #f8f9fa;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -312,7 +312,7 @@ $border-radius: 8px;
 
     &:hover {
         background-color: #f8f9fa;
-        border-color: #2196F3;
+        border-color: #5F3FE0;
         transform: scale(1.05);
     }
 
@@ -355,10 +355,10 @@ $border-radius: 8px;
 
         &:hover {
             background-color: #f8f9fa;
-            color: #2196F3;
+            color: #5F3FE0;
 
             i {
-                color: #2196F3;
+                color: #5F3FE0;
             }
         }
 
@@ -419,7 +419,7 @@ $border-radius: 8px;
 
             // Fila activa
             &.row-active {
-                background-color: rgba(#2196F3, 0.05) !important;
+                background-color: rgba(#5F3FE0, 0.05) !important;
             }
         }
     }
@@ -439,7 +439,7 @@ $border-radius: 8px;
         border-radius: 5px;
 
         &:hover {
-            background: #667eea;
+            background: #5F3FE0;
         }
     }
 }
@@ -472,7 +472,7 @@ $border-radius: 8px;
     padding-bottom: 0.5rem;
 
     i {
-        color: #667eea;
+        color: #5F3FE0;
     }
 }
 

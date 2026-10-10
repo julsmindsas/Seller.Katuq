@@ -328,7 +328,7 @@
   justify-content: center;
   margin-right: 10px;
   color: white;
-  background: linear-gradient(135deg, #7366ff, #a992ff);
+  background: #5F3FE0;
   font-size: 14px;
   flex-shrink: 0;
 }
@@ -795,7 +795,7 @@
 }
 
 .integration-modal .modal-header {
-  background: linear-gradient(135deg, #7366ff, #a992ff);
+  background: #5F3FE0;
   color: white;
   border-bottom: none;
   padding: 20px 25px;
@@ -1401,7 +1401,7 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7366ff, #a992ff);
+  background: #5F3FE0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1491,7 +1491,7 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  background: #f8f9fa;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1503,7 +1503,7 @@
 }
 
 .category-option.selected .category-option-icon {
-  background: linear-gradient(135deg, #7366ff, #a992ff);
+  background: #5F3FE0;
   color: white;
   transform: scale(1.1);
 }
@@ -1625,7 +1625,7 @@
   width: 50px;
   height: 50px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #7366ff, #a992ff);
+  background: #5F3FE0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1700,7 +1700,7 @@
 .credentials-info-card {
   display: flex;
   align-items: flex-start;
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  background: #f8f9fa;
   border-left: 4px solid #7366ff;
   padding: 16px;
   border-radius: 8px;
@@ -2046,7 +2046,7 @@
   display: none;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #7366ff, #a992ff);
+  background: #5F3FE0;
   border-radius: 8px;
   color: white;
   font-size: 18px;
@@ -2055,13 +2055,13 @@
   height: 40px;
 }
 
-.integration-icon.shopify { background: linear-gradient(135deg, #95bf47, #b8d65c); }
-.integration-icon.wompi { background: linear-gradient(135deg, #6c5ce7, #a29bfe); }
-.integration-icon.epayco { background: linear-gradient(135deg, #ff6b35, #ff7675); }
-.integration-icon.paypal { background: linear-gradient(135deg, #0070ba, #00457c); }
-.integration-icon.stripe { background: linear-gradient(135deg, #6772e5, #5469d4); }
-.integration-icon.payu { background: linear-gradient(135deg, #66cc00, #7ed321); }
-.integration-icon.mercadopago { background: linear-gradient(135deg, #009ee3, #0099d4); }
+.integration-icon.shopify { background: #95bf47; }
+.integration-icon.wompi { background: #6c5ce7; }
+.integration-icon.epayco { background: #ff6b35; }
+.integration-icon.paypal { background: #0070ba; }
+.integration-icon.stripe { background: #6772e5; }
+.integration-icon.payu { background: #66cc00; }
+.integration-icon.mercadopago { background: #009ee3; }
 
 /* Animación de fallback */
 @keyframes fadeInFallback {

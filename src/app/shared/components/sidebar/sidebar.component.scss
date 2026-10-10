@@ -24,7 +24,7 @@
   --ktq-primary-deep: #5f3fe0;
   --ktq-primary-soft: #efe9ff;
   --ktq-primary-rail: #efeaff;
-  --ktq-grad: linear-gradient(135deg, #7c5cff, #9d7bff);
+  --ktq-grad: #5F3FE0;
   --ktq-input: #f5f3fc;
   --ktq-hover: #f4f1fd;
   --ktq-active-row: #f6f3fe;
@@ -77,9 +77,7 @@
 // LIENZO GENERAL — fondo suave con brillo radial (como el diseño)
 // =====================================================================
 .page-wrapper .page-body-wrapper {
-  background:
-    radial-gradient(1200px 600px at 80% -10%, #efeaff 0%, rgba(239, 234, 255, 0) 55%),
-    var(--ktq-bg);
+  background: var(--ktq-bg);
 
   .page-body {
     background: transparent;
@@ -101,7 +99,7 @@
   flex-direction: column;
   height: calc(100vh - 24px);
   margin: 12px 6px 12px 12px;
-  background: linear-gradient(180deg, var(--ktq-card) 0%, var(--ktq-card-2) 100%);
+  background: var(--ktq-card);
   border: 1px solid var(--ktq-border);
   border-radius: var(--sidebar-radius);
   box-shadow: var(--ktq-shadow-card);
@@ -151,7 +149,7 @@
     width: 46px;
     height: 46px;
     border-radius: 15px;
-    background: linear-gradient(135deg, #8b6bff, #c9a5ff);
+    background: #5F3FE0;
     padding: 2px;
     position: relative;
 
@@ -997,7 +995,7 @@
 
     // La fila premium se tiñe suave de lila para diferenciarla
     &:has(.plan-badge.premium) {
-      background: linear-gradient(100deg, #f3efff 0%, #efe9ff 100%);
+      background: #efe9ff;
       border-color: #e2d9fb;
     }
 
@@ -1037,7 +1035,7 @@
         margin-left: auto; // empuja el badge a la derecha, antes del toggle
         box-shadow: 0 4px 10px -4px rgba(124, 92, 255, .6);
 
-        &.premium { background: linear-gradient(90deg, #7c5cff, #a06bff); }
+        &.premium { background: #5F3FE0; }
         &.freemium {
           background: var(--ktq-gray-tint);
           color: var(--ktq-gray);
@@ -1088,7 +1086,7 @@
     border-radius: 20px;
     padding: 18px;
     color: #fff;
-    background: linear-gradient(140deg, #8b6bff 0%, #6b4fe0 55%, #5730d6 100%);
+    background: #5F3FE0;
     box-shadow: 0 20px 44px -20px rgba(95, 63, 224, .7);
     position: relative;
     overflow: hidden;
@@ -1099,10 +1097,7 @@
       content: '';
       position: absolute;
       inset: 0;
-      background:
-        radial-gradient(150px 90px at 22% 8%, rgba(255, 255, 255, .32), transparent 70%),
-        radial-gradient(130px 130px at 108% 20%, rgba(63, 181, 230, .35), transparent 70%),
-        radial-gradient(160px 120px at -10% 115%, rgba(199, 165, 255, .4), transparent 70%);
+      background: none;
       pointer-events: none;
       z-index: -1;
     }
@@ -1115,20 +1110,18 @@
       left: -20%;
       width: 55%;
       height: 220%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .12), transparent);
+      background: none;
       transform: rotate(18deg);
       pointer-events: none;
       z-index: -1;
     }
 
     &.freemium-card {
-      background: linear-gradient(140deg, #5b5670 0%, #3a3550 55%, #2a2640 100%);
+      background: #3a3550;
       box-shadow: 0 20px 44px -20px rgba(46, 43, 64, .7);
 
       &::before {
-        background:
-          radial-gradient(150px 90px at 22% 8%, rgba(255, 255, 255, .18), transparent 70%),
-          radial-gradient(160px 120px at -10% 115%, rgba(139, 107, 255, .3), transparent 70%);
+        background: none;
       }
     }
 
@@ -1145,7 +1138,7 @@
         width: 34px;
         height: 25px;
         border-radius: 7px;
-        background: linear-gradient(135deg, #ffe9a8, #f5c451);
+        background: #f5c451;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1343,13 +1336,13 @@
         .progress-bar-fill {
           height: 100%;
           border-radius: 99px;
-          background: linear-gradient(90deg, #7bef9e, #4ade80);
+          background: #4ade80;
           position: relative;
           transition: width .4s ease;
           box-shadow: 0 0 10px rgba(74, 222, 128, .5);
 
-          &.medium { background: linear-gradient(90deg, #ffe08a, #fbbf24); box-shadow: 0 0 10px rgba(251, 191, 36, .5); }
-          &.high { background: linear-gradient(90deg, #fda4a4, #f87171); box-shadow: 0 0 10px rgba(248, 113, 113, .5); }
+          &.medium { background: #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, .5); }
+          &.high { background: #f87171; box-shadow: 0 0 10px rgba(248, 113, 113, .5); }
 
           .progress-glow {
             position: absolute;
@@ -1468,7 +1461,7 @@
     width: 4px;
     height: 120px;
     border-radius: 0 4px 4px 0;
-    background: linear-gradient(180deg, #7c5cff, #9d7bff);
+    background: #5F3FE0;
     opacity: .5;
   }
 
@@ -1576,13 +1569,11 @@ body.dark-only {
   --divider-color: #262233;
 
   .page-wrapper .page-body-wrapper {
-    background:
-      radial-gradient(1200px 600px at 80% -10%, rgba(124, 92, 255, .12) 0%, rgba(124, 92, 255, 0) 55%),
-      #14121c;
+    background: #14121c;
   }
 
   .sidebar-container {
-    background: linear-gradient(180deg, #1b1826 0%, #17151f 100%);
+    background: #1b1826;
     border-color: #262233;
     box-shadow: 0 24px 60px -30px rgba(0, 0, 0, .6);
   }
@@ -1663,7 +1654,7 @@ body.dark-only {
       &:hover { background: #2a2440; border-color: #3a3355; }
 
       &:has(.plan-badge.premium) {
-        background: linear-gradient(100deg, #241d3a 0%, #2a2145 100%);
+        background: #241d3a;
         border-color: #3a2d63;
       }
 

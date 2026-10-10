@@ -22,7 +22,7 @@
   --intg-primary-300: #93c5fd;
   --intg-primary-400: #60a5fa;
   --intg-primary-500: #3b82f6;
-  --intg-primary-600: #2563eb;
+  --intg-primary-600: #5F3FE0;
   --intg-primary-700: #1d4ed8;
   
   // Semantic Colors
@@ -127,10 +127,10 @@
   --intg-card-bg: white;
   --intg-card-border: var(--intg-gray-200);
 
-  --intg-gradient-primary: linear-gradient(135deg, var(--intg-primary-500) 0%, var(--intg-primary-600) 100%);
-  --intg-gradient-success: linear-gradient(135deg, var(--intg-success-500) 0%, var(--intg-success-700) 100%);
-  --intg-gradient-warning: linear-gradient(135deg, var(--intg-warning-400) 0%, var(--intg-warning-500) 100%);
-  --intg-gradient-error: linear-gradient(135deg, var(--intg-error-500) 0%, var(--intg-error-600) 100%);
+  --intg-gradient-primary: #5F3FE0;
+  --intg-gradient-success: #1E874B;
+  --intg-gradient-warning: #B86E00;
+  --intg-gradient-error: #D64545;
 }
 
 // Apply base font to the body

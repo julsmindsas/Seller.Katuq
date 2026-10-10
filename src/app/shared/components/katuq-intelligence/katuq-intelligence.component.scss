@@ -45,10 +45,10 @@
 
   // Estado premium (ilimitado)
   &.premium {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #5F3FE0;
     color: white;
-    border: 1px solid #667eea;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    border: 1px solid #5F3FE0;
+    box-shadow: 0 2px 8px rgba(95, 63, 224, 0.3);
   }
 
   // Warning (quedan 3 o menos)

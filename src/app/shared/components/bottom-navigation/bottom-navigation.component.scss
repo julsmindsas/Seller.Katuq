@@ -83,7 +83,7 @@
           left: 50%;
           width: 40px;
           height: 40px;
-          background: radial-gradient(circle, rgba(var(--item-color-rgb, 69, 155, 209), 0.2) 0%, transparent 70%);
+          background: rgba(var(--item-color-rgb, 69, 155, 209), 0.2);
           border-radius: 50%;
           transform: translate(-50%, -50%);
           animation: glowPulse 2s ease-in-out infinite;

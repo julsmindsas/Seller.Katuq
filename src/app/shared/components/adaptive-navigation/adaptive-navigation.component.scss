@@ -383,7 +383,6 @@
 .menu-card {
   position: relative;
   background: var(--card-color, #007AFF);
-  background: linear-gradient(135deg, var(--card-color, #007AFF) 0%, color-mix(in srgb, var(--card-color, #007AFF) 80%, black 20%) 100%);
   border-radius: 16px;
   padding: 20px;
   min-height: 120px;

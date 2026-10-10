@@ -69,8 +69,8 @@
         }
         
         &.active .page-link {
-          background-color: var(--primary-color, #4361ee);
-          border-color: var(--primary-color, #4361ee);
+          background-color: var(--primary-color, #5F3FE0);
+          border-color: var(--primary-color, #5F3FE0);
           color: white;
           transform: translateY(-2px);
           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
@@ -487,7 +487,7 @@
 
     // Botón Quick Add - Verde para agregar rápido
     &.btn-action-quick {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      background: #1E874B;
       color: white;
       border: 1px solid rgba(255, 255, 255, 0.2);
 
@@ -496,7 +496,7 @@
       }
 
       &:hover {
-        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        background: #17703d;
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
       }
@@ -504,12 +504,12 @@
 
     // Botón Configurar - Azul para productos con configuración
     &.btn-action-config {
-      background: linear-gradient(135deg, #2f6fe0 0%, #2256c0 100%);
+      background: #1E6FD9;
       color: white;
       border: 1px solid rgba(255, 255, 255, 0.2);
 
       &:hover {
-        background: linear-gradient(135deg, #2256c0 0%, #1c48a0 100%);
+        background: #1859ad;
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(47, 111, 224, 0.4);
       }
@@ -1624,7 +1624,7 @@
 
 // Spinner de carga principal
 .spinner-border.text-primary {
-  color: var(--primary-color, #4361ee) !important;
+  color: var(--primary-color, #5F3FE0) !important;
 }
 
 // Alerta de error con botón de reintentar

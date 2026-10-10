@@ -1,5 +1,5 @@
 /* Variables */
-$primary-color: #2196F3;
+$primary-color: #5F3FE0;
 $success-color: #4CAF50;
 $warning-color: #FF9800;
 $danger-color: #F44336;
@@ -95,7 +95,7 @@ $transition: all 0.3s ease;
     }
     
     thead {
-        background: linear-gradient(to right, $primary-color, darken($primary-color, 10%));
+        background: $primary-color;
         
         th {
             color: white;

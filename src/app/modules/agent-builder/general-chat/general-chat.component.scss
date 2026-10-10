@@ -89,10 +89,7 @@
     --gemini-thought-bg: #f8f9fa;
     --gemini-mention-bg: rgba(11, 87, 208, 0.1);
     --gemini-mention-text: #0b57d0;
-    --gemini-greeting-gradient: linear-gradient(90deg,
-            #4285f4,
-            #9b72cb,
-            #d96570);
+    --gemini-greeting-gradient: #5F3FE0; // plano (D-399): el saludo se pinta con background-clip: text
 }
 
 // Dark Theme (System Preference)
@@ -237,11 +234,11 @@ $font-family: "Google Sans",
                     // Chat Pro V2 specific styles
                     &.chat-pro-link {
                         text-decoration: none;
-                        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+                        background: rgba(99, 102, 241, 0.1);
                         border: 1px solid rgba(99, 102, 241, 0.2);
 
                         &:hover {
-                            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+                            background: rgba(99, 102, 241, 0.2);
                             border-color: rgba(99, 102, 241, 0.4);
                         }
 
@@ -250,7 +247,7 @@ $font-family: "Google Sans",
                             font-size: 9px;
                             font-weight: 600;
                             padding: 2px 6px;
-                            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+                            background: #5F3FE0;
                             color: white;
                             border-radius: 4px;
                             letter-spacing: 0.5px;
@@ -660,7 +657,7 @@ $font-family: "Google Sans",
                             transition: transform 0.2s;
 
                             &.manager-avatar {
-                                background: linear-gradient(135deg, #4285f4, #9b72cb);
+                                background: #4285f4;
                                 border-color: #dfe3eb;
 
                                 .gm-initials {
