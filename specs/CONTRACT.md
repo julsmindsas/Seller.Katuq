@@ -9192,7 +9192,7 @@ Se actualizaron las instrucciones operativas de suscripciones para retirar coman
 
 **Cierre D-402 (publicado 2026.10.10.1).** Probado en producción con la sesión de Daniel (Super Administrador), sin guardar: al elegir API aparecen la dirección y la clave, la dirección se ve en el resumen, Guardar se activa sin pedir la clave, la consola no muestra errores y el bloque de desarrollo se ve. No probado: que quede oculto con un rol distinto, que depende de `rol === 'Super Administrador'`. En la misma publicación salió un arreglo de seguridad sobre el ticket 1185 de otra sesión: el tooltip OSM de la lista de pedidos se pinta con `[escape]="false"` y metía sin escapar `status`/`lastNote` de Cereza; ahora se escapan (`escaparHtml` en `list.component.ts`).
 
-## D-403 (2026-10-10) — Dropshipping: candado de empresa, claves cifradas y configuración en el servidor (openspec/changes/dropshipping-config-servidor) — PROPUESTA, pendiente de aprobación
+## D-403 (2026-10-10) — Dropshipping: candado de empresa, claves cifradas y configuración en el servidor (openspec/changes/dropshipping-config-servidor) — APROBADA, implementada, sin desplegar
 
 **Disparador.** Daniel ("sí, arma la propuesta") después de D-402.
 
@@ -9204,3 +9204,23 @@ Se actualizaron las instrucciones operativas de suscripciones para retirar coman
 - **Front:** lee la empresa en vez de `localStorage`; ofrece subir una sola vez la copia local; se quitan la sección de integración de la empresa (sin efecto) y las herramientas de prueba.
 
 Sin colecciones nuevas. Sin cambios en orders, inventario, productos ni precios.
+
+**Aprobada (10-oct):** Daniel, "sí, aprobada, arranca".
+
+**Medición en producción (10-oct, solo lectura, `scripts/dropshipping-cifrar-claves.js` en ensayo contra `julsmind-katuq`):** 0 proveedores y 0 órdenes de dropshipping. El hueco existía pero ningún comercio quedó expuesto, no hay claves que cifrar ni registros sin empresa, y ninguna pantalla de plataforma usa esas rutas (solo el módulo Dropshipping del comercio y la lista de proveedores activos de productos).
+
+**Implementación (10-oct).** Backend (`backend-aws-security`):
+- `2c6b243`, fase 1: `utils/dropshippingTenant.js`, `utils/dropshippingClaves.js` y `utils/dropshippingConsultas.js`; controladores de proveedores y órdenes con la empresa del JWT y 404 por id ajeno; clave cifrada y `****1234` + `tiene_api_key`; email único por empresa; `crear-desde-venta` solo con pedidos propios; las órdenes vuelven a guardar `proveedor_id` (se perdía); script de ensayo y `--apply`.
+- `c56ff88`, fase 2: `GET/POST /v1/companies/dropshipping-settings` y `services/companies/dropshippingSettings.js`; `dropshipping` entra a los campos que la ficha no escribe (`sanitizeCompanyUpdate`).
+- `100c8da`: los proveedores responden `id` y `validate-email` acepta `?exclude=`.
+
+Pruebas en verde: `tests/dropshipping/` (tenantIsolation.contract, apiKeyMasking, settings), `tests/companies/` salvo `soloLectura`, `tests/enVivo/` salvo `writeset.contract` y `subscriptionSecurity.contract`. Las dos que fallan ya fallaban sin este cambio: `soloLectura` por dos rutas POST de `accounting.js` y `logistica.js` sin clasificar, y `writeset.contract` falla igual con los controladores anteriores.
+
+Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.service.ts`); `nav.service` y `crear-productos` leen `currentCompany.dropshipping`, y el menú se recalcula al guardar. La pantalla de configuración lee y guarda en el servidor, ofrece subir la copia local, deja solo lectura a quien no es administrador y pierde la sección de integración, el webhook, la clave y las herramientas de desarrollo. Se quitó `enableDropshippingForTesting` de `crear-productos`. En proveedores: lista desempacada, clave enmascarada, y al editar el campo de la clave queda vacío y se conserva la guardada.
+
+**Despliegue pendiente: decisión de Daniel.** En `origin/backend-aws-security`, encima de producción (`460cdec`), están antes los commits `6718ad1` y `9139bfb` de D-401 (IA de inventarios), que no están desplegados y cuyo despliegue está pendiente de avisarle a Daniel. Con `--ff-only`, desplegar D-403 los publica también. El front se publica después del backend: sin las rutas nuevas, la pantalla de configuración no carga.
+
+**Hallazgos no corregidos (fuera del alcance):**
+- El front llama `POST /v1/dropshipping/crear-desde-venta` y `/sincronizar-productos`, pero el servidor las monta bajo `/v1/dropshipping/ordenes/`, así que hoy dan 404.
+- `calcularComisionTotal` manda `proveedorId`/`montoVenta`, y el servidor espera `proveedor_id`/`total_venta`.
+- `GET /v1/productos/por-proveedor` devuelve el nombre del proveedor por id sin revisar a qué empresa pertenece. La ruta no usa `requireJwtTenant`. Hoy no hay proveedores.

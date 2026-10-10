@@ -64,6 +64,21 @@ El problema está en proposal.md (Why). Estado actual que define el enfoque:
    - **Migración:** al cargar, si el servidor no tiene `dropshipping` y existe `dropshippingConfig_*` (o `allDropshippingConfigs`), un `Swal` ofrece subirla. Con o sin aceptación, se borran las llaves locales de dropshipping.
    - **Pantalla:** se quitan la sección de integración, la URL de webhook, la clave y "Herramientas de desarrollo", y se agrega un aviso con enlace a Proveedores ("La conexión por API se configura en cada proveedor"). Sigue la base `cfg-*` (D-400).
 
+## Resultados de la implementación (10-oct)
+
+- **Medición (1.2):** en `julsmind-katuq` hay 0 documentos en `dropshipping_proveedores` y 0 en `dropshipping_ordenes`. El hueco nunca expuso datos; no hay claves que cifrar ni registros sin empresa.
+- **Resultado de 3.1:** `currentCompany` es la empresa completa que devuelve `POST /v1/companies/byName` (`servicios.getEmpresaByName` → `SecurityService.setCompanyInformationLogged`), el mismo camino por el que ya llegan las `featureFlags` (`CompanyFeaturesService`). Trae los campos de primer nivel, así que `nav.service` lee `currentCompany.dropshipping` sin pedir `GET dropshipping-settings`. La pantalla de configuración sí lee del servidor y, al leer o guardar, refresca `currentCompany` y emite `companyInformation$`, que `nav.service` escucha para recalcular el menú. La lectura está en una función compartida (`dropshippingHabilitadoEnLaSesion`), que solo le cree a la empresa guardada si es la de la sesión (misma regla que `CompanyFeaturesService`); `crear-productos` usa la misma función.
+- **Desvíos menores:**
+  - Helpers separados por responsabilidad: `utils/dropshippingClaves.js` (`presentarProveedor`, `apiConfigParaGuardar`) y `utils/dropshippingConsultas.js` (paginación).
+  - Máscara `****` + últimos 4: `maskForDisplay` deja también los 3 primeros y la spec pide a lo sumo los últimos 4.
+  - Las listas filtran por empresa en Firestore y ordenan/paginan en memoria: antes leían todo para contar y luego volvían a leer. No hace falta ningún índice compuesto con `fecha_creacion` (no existía en `firestore.indexes.json`). `pageSize` máximo 100.
+  - Email de proveedor único **por empresa**: antes era global y revelaba si otra empresa tenía ese proveedor.
+  - `crear-desde-venta` solo acepta pedidos (`orders`) de la empresa de la sesión.
+  - Las órdenes guardan `proveedor_id`: el helper lo tomaba de `proveedor._id` y el controlador pasaba `doc.data()` sin id.
+  - Un texto ya cifrado (`enc:v1:…`) que llegue del cliente no se acepta como clave nueva.
+  - `dropshipping` se protege en `services/companies/sanitizeCompanyUpdate.js` (lista de campos de otro dueño y `quitarBanderas`), que ya usan `updateCompanyById`, `editCompany` y `createCompany`.
+  - Front de proveedores: `getProveedores` desempaca `{ proveedores }` (la lista recibía el objeto), el servidor devuelve también `id` (las pantallas navegan con `id`) y `validate-email` acepta el `?exclude=` que manda el front.
+
 ## Risks / Trade-offs
 
 - [Julsmind o una pantalla de plataforma dependía de la lista global] → Primero la medición: el script en ensayo cuenta proveedores y órdenes por empresa y los que no tienen empresa. Si aparece un consumidor de plataforma, se para y se le pregunta a Daniel.

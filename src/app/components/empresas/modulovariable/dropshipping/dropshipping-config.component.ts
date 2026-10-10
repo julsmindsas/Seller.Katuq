@@ -1,8 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { DropshippingModule, DropshippingConfig } from '../../../../shared/models/productos/otrosprocesos';
 import Swal from 'sweetalert2';
+import {
+  DropshippingAjustes,
+  DropshippingAjustesEntrada,
+  DropshippingSettingsService,
+} from '../../../../shared/services/dropshipping-settings.service';
 
+/** Roles que el servidor deja guardar (ONLY_ADMIN de routers/companies.js). */
+const ROLES_QUE_GUARDAN = ['Administrador', 'Super Administrador'];
+
+/**
+ * Configuración de Dropshipping de la empresa (D-403). Lee y guarda en el servidor
+ * (`/v1/companies/dropshipping-settings`); antes vivía solo en el localStorage del
+ * navegador. La conexión por API se configura en cada proveedor, no aquí.
+ */
 @Component({
   selector: 'app-dropshipping-config',
   templateUrl: './dropshipping-config.component.html',
@@ -13,13 +25,13 @@ export class DropshippingConfigComponent implements OnInit {
   dropshippingConfigForm: FormGroup;
   loading = false;
   saving = false;
+  errorCarga = '';
   currentCompany: any;
-  showApiKey = false;
-  // Las herramientas de prueba (localStorage) no se muestran a los comercios.
-  readonly esSuperAdmin = JSON.parse(localStorage.getItem('user') || '{}').rol === 'Super Administrador';
+  readonly puedeGuardar = ROLES_QUE_GUARDAN.includes(JSON.parse(localStorage.getItem('user') || '{}').rol);
 
   constructor(
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private settings: DropshippingSettingsService,
   ) {
     this.initializeForm();
   }
@@ -32,20 +44,15 @@ export class DropshippingConfigComponent implements OnInit {
   initializeForm(): void {
     this.dropshippingConfigForm = this.fb.group({
       habilitado: [false, [Validators.required]],
-      // Configuración avanzada
       proveedoresPermitidos: [[]],
-      margenMinimoPermitido: [0, [Validators.min(0), Validators.max(100)]],
+      margenMinimoPermitido: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
       automatizacionActivada: [false],
       notificacionesActivadas: [true],
-      tiempoLimiteOrden: [7, [Validators.min(1), Validators.max(30)]],
-      // Configuración de API
-      api_config: this.fb.group({
-        tipo_integracion: ['manual', Validators.required],
-        endpoint: [''],
-        api_key: [''],
-        configuracion_adicional: [{}]
-      })
+      tiempoLimiteOrden: [7, [Validators.required, Validators.min(1), Validators.max(30)]],
     });
+    if (!this.puedeGuardar) {
+      this.dropshippingConfigForm.disable();
+    }
   }
 
   loadCurrentCompany(): void {
@@ -57,161 +64,155 @@ export class DropshippingConfigComponent implements OnInit {
 
   loadDropshippingConfig(): void {
     this.loading = true;
-    
-    // Aquí implementarías la carga desde Firebase/Backend
-    // Por ahora simulamos la carga
-    setTimeout(() => {
-      // Cargar configuración existente si existe
-      const existingConfig = this.getCurrentDropshippingConfig();
-      
-      if (existingConfig) {
-        this.dropshippingConfigForm.patchValue({
-          habilitado: existingConfig.habilitado,
-          margenMinimoPermitido: existingConfig.configuracion?.margenMinimoPermitido || 0,
-          automatizacionActivada: existingConfig.configuracion?.automatizacionActivada || false,
-          notificacionesActivadas: existingConfig.configuracion?.notificacionesActivadas ?? true,
-          tiempoLimiteOrden: existingConfig.configuracion?.tiempoLimiteOrden || 7,
-          api_config: {
-            tipo_integracion: existingConfig.configuracion?.api_config?.tipo_integracion || 'manual',
-            endpoint: existingConfig.configuracion?.api_config?.endpoint || '',
-            api_key: existingConfig.configuracion?.api_config?.api_key || '',
-            configuracion_adicional: existingConfig.configuracion?.api_config?.configuracion_adicional || {}
-          }
-        });
-        
-        // Actualizar validaciones según el tipo de integración cargado
-        this.onTipoIntegracionChange();
+    this.errorCarga = '';
+    this.settings.obtener().subscribe({
+      next: (ajustes) => {
+        this.aplicarAlFormulario(ajustes);
+        this.loading = false;
+        this.revisarCopiaLocal(ajustes);
+      },
+      error: () => {
+        this.loading = false;
+        this.errorCarga = 'No pudimos cargar la configuración. Revisa tu conexión y vuelve a intentarlo.';
       }
-      
-      this.loading = false;
-    }, 500);
+    });
   }
 
-  getCurrentDropshippingConfig(): DropshippingModule | null {
+  private aplicarAlFormulario(ajustes: DropshippingAjustes): void {
+    const c = ajustes.configuracion;
+    this.dropshippingConfigForm.reset({
+      habilitado: ajustes.habilitado,
+      proveedoresPermitidos: c.proveedoresPermitidos,
+      margenMinimoPermitido: c.margenMinimoPermitido,
+      automatizacionActivada: c.automatizacionActivada,
+      notificacionesActivadas: c.notificacionesActivadas,
+      tiempoLimiteOrden: c.tiempoLimiteOrden,
+    });
+  }
+
+  // ── Migración de una sola vez: la copia que quedó en este navegador ──────────
+
+  private llavesLocales(): { llave: string; datos: any } | null {
     try {
-      const currentCompany = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-      const companyId = currentCompany.id || currentCompany._id || 'default';
-      const configKey = `dropshippingConfig_${companyId}`;
-      
-      const savedConfig = localStorage.getItem(configKey);
-      if (savedConfig) {
-        return JSON.parse(savedConfig) as DropshippingModule;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error loading dropshipping config from localStorage:', error);
+      const id = this.currentCompany?.id || this.currentCompany?._id || 'default';
+      const propia = localStorage.getItem(`dropshippingConfig_${id}`);
+      if (propia) return { llave: `dropshippingConfig_${id}`, datos: JSON.parse(propia) };
+      const todas = JSON.parse(localStorage.getItem('allDropshippingConfigs') || '{}');
+      return todas[id] ? { llave: `dropshippingConfig_${id}`, datos: todas[id] } : null;
+    } catch {
       return null;
     }
   }
+
+  private borrarCopiaLocal(): void {
+    try {
+      const todas = JSON.parse(localStorage.getItem('allDropshippingConfigs') || '{}');
+      Object.keys(todas).forEach((id) => localStorage.removeItem(`dropshippingConfig_${id}`));
+      Object.keys(localStorage)
+        .filter((llave) => llave.startsWith('dropshippingConfig_'))
+        .forEach((llave) => localStorage.removeItem(llave));
+      localStorage.removeItem('allDropshippingConfigs');
+    } catch {
+      // Sin almacenamiento no hay copia que borrar.
+    }
+  }
+
+  private revisarCopiaLocal(ajustes: DropshippingAjustes): void {
+    const local = this.llavesLocales();
+    if (!local) return;
+
+    // El servidor ya tiene configuración: manda la del servidor y la copia sobra.
+    if (ajustes.configurado) {
+      this.borrarCopiaLocal();
+      return;
+    }
+    // Solo quien puede guardar decide si la sube.
+    if (!this.puedeGuardar) return;
+
+    Swal.fire({
+      title: 'Encontramos una configuración en este navegador',
+      text: '¿Quieres guardarla para toda la empresa? Así se verá igual en cualquier computador.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, guardarla',
+      cancelButtonText: 'No, descartarla',
+      confirmButtonColor: '#5F3FE0',
+    }).then((r) => {
+      if (!r.isConfirmed) {
+        this.borrarCopiaLocal();
+        return;
+      }
+      const c = local.datos?.configuracion || {};
+      this.guardar({
+        habilitado: local.datos?.habilitado === true,
+        configuracion: {
+          margenMinimoPermitido: Number(c.margenMinimoPermitido ?? 0),
+          tiempoLimiteOrden: Math.round(Number(c.tiempoLimiteOrden ?? 7)),
+          automatizacionActivada: c.automatizacionActivada === true,
+          notificacionesActivadas: c.notificacionesActivadas !== false,
+          proveedoresPermitidos: Array.isArray(c.proveedoresPermitidos) ? c.proveedoresPermitidos : [],
+        },
+      }, () => this.borrarCopiaLocal());
+    });
+  }
+
+  // ── Guardar ─────────────────────────────────────────────────────────────────
 
   onSubmit(): void {
-    if (this.dropshippingConfigForm.valid) {
-      this.saving = true;
-
-      const dropshippingConfig: DropshippingModule = {
-        habilitado: this.dropshippingConfigForm.get('habilitado')?.value,
-        fechaActivacion: this.dropshippingConfigForm.get('habilitado')?.value ? new Date().toISOString() : undefined,
-        configuracion: {
-          margenMinimoPermitido: this.dropshippingConfigForm.get('margenMinimoPermitido')?.value,
-          automatizacionActivada: this.dropshippingConfigForm.get('automatizacionActivada')?.value,
-          notificacionesActivadas: this.dropshippingConfigForm.get('notificacionesActivadas')?.value,
-          tiempoLimiteOrden: this.dropshippingConfigForm.get('tiempoLimiteOrden')?.value,
-          proveedoresPermitidos: this.dropshippingConfigForm.get('proveedoresPermitidos')?.value,
-          // La API key no se persiste en el navegador (credencial en texto plano).
-          api_config: {
-            tipo_integracion: this.dropshippingConfigForm.get('api_config.tipo_integracion')?.value,
-            endpoint: this.dropshippingConfigForm.get('api_config.endpoint')?.value || '',
-            configuracion_adicional: this.dropshippingConfigForm.get('api_config.configuracion_adicional')?.value || {}
-          }
-        }
-      };
-
-      // Guardado en localStorage para pruebas
-      this.saveDropshippingConfigToLocalStorage(dropshippingConfig);
-    } else {
+    if (!this.puedeGuardar) return;
+    if (this.dropshippingConfigForm.invalid) {
       this.markFormGroupTouched();
+      return;
     }
+    const v = this.dropshippingConfigForm.getRawValue();
+    this.guardar({
+      habilitado: v.habilitado === true,
+      configuracion: {
+        margenMinimoPermitido: Number(v.margenMinimoPermitido),
+        tiempoLimiteOrden: Number(v.tiempoLimiteOrden),
+        automatizacionActivada: v.automatizacionActivada === true,
+        notificacionesActivadas: v.notificacionesActivadas === true,
+        proveedoresPermitidos: v.proveedoresPermitidos || [],
+      },
+    });
   }
 
-  saveDropshippingConfigToLocalStorage(config: DropshippingModule): void {
-    try {
-      const currentCompany = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-      const companyId = currentCompany.id || currentCompany._id || 'default';
-      const configKey = `dropshippingConfig_${companyId}`;
-      
-      // Agregar metadata al guardado
-      const configWithMetadata = {
-        ...config,
-        lastUpdated: new Date().toISOString(),
-        companyId: companyId,
-        companyName: currentCompany.nomComercial || 'Empresa'
-      };
-      
-      // Guardar en localStorage
-      localStorage.setItem(configKey, JSON.stringify(configWithMetadata));
-      
-      // También guardar en una lista general para fácil acceso
-      const allConfigs = JSON.parse(localStorage.getItem('allDropshippingConfigs') || '{}');
-      allConfigs[companyId] = configWithMetadata;
-      localStorage.setItem('allDropshippingConfigs', JSON.stringify(allConfigs));
-      
-      this.saving = false;
-      
-      Swal.fire({
-        title: '¡Configuración Guardada en LocalStorage!',
-        html: `
-          <div style="text-align: left; margin: 20px 0;">
-            <p><strong>Estado del Dropshipping:</strong> ${config.habilitado ? '<span class="text-success">Habilitado</span>' : '<span class="text-danger">Deshabilitado</span>'}</p>
-            <p><strong>Empresa:</strong> ${this.currentCompany.nomComercial}</p>
-            <p><strong>Guardado en:</strong> ${configKey}</p>
-            ${config.habilitado ? `
-              <hr>
-              <p><strong>Configuraciones aplicadas:</strong></p>
-              <ul>
-                <li>Margen mínimo permitido: ${config.configuracion?.margenMinimoPermitido}%</li>
-                <li>Automatización: ${config.configuracion?.automatizacionActivada ? 'Activada' : 'Desactivada'}</li>
-                <li>Notificaciones: ${config.configuracion?.notificacionesActivadas ? 'Activadas' : 'Desactivadas'}</li>
-                <li>Tiempo límite de orden: ${config.configuracion?.tiempoLimiteOrden} días</li>
-              </ul>
-            ` : ''}
-            <hr>
-            <p><small class="text-muted">Nota: Esta configuración se guarda en localStorage para efectos de prueba.</small></p>
-          </div>
-        `,
-        icon: 'success',
-        confirmButtonText: 'Perfecto',
-        confirmButtonColor: '#5F3FE0'
-      });
-
-      // Si se habilitó dropshipping, actualizar navegación
-      if (config.habilitado) {
-        this.updateNavigationMenu();
+  private guardar(entrada: DropshippingAjustesEntrada, alGuardar?: () => void): void {
+    this.saving = true;
+    this.settings.guardar(entrada).subscribe({
+      next: (ajustes) => {
+        this.saving = false;
+        this.aplicarAlFormulario(ajustes);
+        alGuardar?.();
+        Swal.fire({
+          title: 'Configuración guardada',
+          text: ajustes.habilitado
+            ? 'Dropshipping quedó habilitado para toda la empresa.'
+            : 'Dropshipping quedó deshabilitado para toda la empresa.',
+          icon: 'success',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#5F3FE0'
+        });
+      },
+      error: (err) => {
+        this.saving = false;
+        // Un 403 (rol o plan) ya lo explica el interceptor con su aviso.
+        if (err?.status === 403) return;
+        Swal.fire({
+          title: 'No se pudo guardar',
+          text: err?.error?.error || err?.error?.message || 'Ocurrió un error al guardar la configuración.',
+          icon: 'error',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#5F3FE0'
+        });
       }
-
-    } catch (error) {
-      this.saving = false;
-      console.error('Error saving dropshipping config to localStorage:', error);
-      
-      Swal.fire({
-        title: 'Error al Guardar',
-        text: 'Ocurrió un error al guardar la configuración en localStorage',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      });
-    }
-  }
-
-  updateNavigationMenu(): void {
-    // Aquí implementarías la actualización de authorizedMenuItems
-    // para incluir las rutas de dropshipping
-    console.log('Actualizando menú de navegación con rutas de dropshipping...');
+    });
   }
 
   onHabilitadoChange(): void {
     const habilitado = this.dropshippingConfigForm.get('habilitado')?.value;
-    
+
     if (!habilitado) {
-      // Si se deshabilita, mostrar advertencia
       Swal.fire({
         title: '¿Deshabilitar Dropshipping?',
         text: 'Al deshabilitar dropshipping, los usuarios no podrán configurar nuevos productos de dropshipping. Los productos ya configurados mantendrán su configuración.',
@@ -219,10 +220,9 @@ export class DropshippingConfigComponent implements OnInit {
         showCancelButton: true,
         confirmButtonText: 'Sí, deshabilitar',
         cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#dc3545'
+        confirmButtonColor: '#D64545'
       }).then((result) => {
         if (!result.isConfirmed) {
-          // Si cancela, volver a habilitar
           this.dropshippingConfigForm.patchValue({ habilitado: true });
         }
       });
@@ -231,8 +231,7 @@ export class DropshippingConfigComponent implements OnInit {
 
   private markFormGroupTouched(): void {
     Object.keys(this.dropshippingConfigForm.controls).forEach(key => {
-      const control = this.dropshippingConfigForm.get(key);
-      control?.markAsTouched();
+      this.dropshippingConfigForm.get(key)?.markAsTouched();
     });
   }
 
@@ -254,277 +253,23 @@ export class DropshippingConfigComponent implements OnInit {
   resetToDefaults(): void {
     Swal.fire({
       title: '¿Restablecer Configuración?',
-      text: 'Se restablecerán todos los valores a su configuración por defecto',
+      text: 'Se restablecerán todos los valores a su configuración por defecto. No se guarda hasta que pulses Guardar.',
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'Sí, restablecer',
-      cancelButtonText: 'Cancelar'
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#5F3FE0'
     }).then((result) => {
       if (result.isConfirmed) {
         this.dropshippingConfigForm.reset({
           habilitado: false,
+          proveedoresPermitidos: [],
           margenMinimoPermitido: 0,
           automatizacionActivada: false,
           notificacionesActivadas: true,
           tiempoLimiteOrden: 7,
-          api_config: { tipo_integracion: 'manual', endpoint: '', api_key: '', configuracion_adicional: {} }
         });
-        this.onTipoIntegracionChange();
       }
     });
-  }
-
-  /**
-   * Método para limpiar todas las configuraciones de dropshipping guardadas en localStorage
-   * (útil para pruebas y desarrollo)
-   */
-  clearAllDropshippingConfigs(): void {
-    Swal.fire({
-      title: '⚠️ Limpiar Configuraciones de Prueba',
-      html: `
-        <p>Esta acción eliminará <strong>todas las configuraciones de dropshipping</strong> guardadas en localStorage para todas las empresas.</p>
-        <p class="text-danger"><strong>Nota:</strong> Esta opción es solo para efectos de prueba y desarrollo.</p>
-      `,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, limpiar todo',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#dc3545'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        try {
-          // Obtener todas las configuraciones existentes
-          const allConfigs = JSON.parse(localStorage.getItem('allDropshippingConfigs') || '{}');
-          const configKeys = Object.keys(allConfigs);
-          
-          // Eliminar cada configuración individual
-          configKeys.forEach(companyId => {
-            localStorage.removeItem(`dropshippingConfig_${companyId}`);
-          });
-          
-          // Eliminar la lista general
-          localStorage.removeItem('allDropshippingConfigs');
-          
-          // Resetear el formulario
-          this.dropshippingConfigForm.reset({
-            habilitado: false,
-            margenMinimoPermitido: 0,
-            automatizacionActivada: false,
-            notificacionesActivadas: true,
-            tiempoLimiteOrden: 7
-          });
-
-          Swal.fire({
-            title: '🧹 Configuraciones Limpiadas',
-            text: `Se eliminaron ${configKeys.length} configuraciones de dropshipping del localStorage`,
-            icon: 'success',
-            confirmButtonText: 'Entendido'
-          });
-
-        } catch (error) {
-          console.error('Error clearing dropshipping configs:', error);
-          Swal.fire({
-            title: 'Error',
-            text: 'Ocurrió un error al limpiar las configuraciones',
-            icon: 'error',
-            confirmButtonText: 'Entendido'
-          });
-        }
-      }
-    });
-  }
-
-  /**
-   * Método para ver todas las configuraciones guardadas en localStorage
-   * (útil para debugging y pruebas)
-   */
-  viewAllConfigs(): void {
-    try {
-      const allConfigs = JSON.parse(localStorage.getItem('allDropshippingConfigs') || '{}');
-      const configCount = Object.keys(allConfigs).length;
-
-      if (configCount === 0) {
-        Swal.fire({
-          title: 'Sin Configuraciones',
-          text: 'No hay configuraciones de dropshipping guardadas en localStorage',
-          icon: 'info',
-          confirmButtonText: 'Entendido'
-        });
-        return;
-      }
-
-      let configsHtml = '<div style="text-align: left;">';
-      Object.keys(allConfigs).forEach(companyId => {
-        const config = allConfigs[companyId];
-        configsHtml += `
-          <div class="mb-3 p-2" style="border: 1px solid #ddd; border-radius: 5px;">
-            <strong>Empresa:</strong> ${config.companyName || companyId}<br>
-            <strong>Estado:</strong> ${config.habilitado ? '<span class="text-success">Habilitado</span>' : '<span class="text-danger">Deshabilitado</span>'}<br>
-            <strong>Última actualización:</strong> ${new Date(config.lastUpdated).toLocaleString()}<br>
-            <strong>Key:</strong> <code>dropshippingConfig_${companyId}</code>
-          </div>
-        `;
-      });
-      configsHtml += '</div>';
-
-      Swal.fire({
-        title: `📋 Configuraciones en localStorage (${configCount})`,
-        html: configsHtml,
-        icon: 'info',
-        confirmButtonText: 'Cerrar',
-        width: '600px'
-      });
-
-    } catch (error) {
-      console.error('Error viewing configs:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'Ocurrió un error al cargar las configuraciones',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      });
-    }
-  }
-
-  /**
-   * Cuenta las configuraciones de dropshipping en localStorage
-   */
-  getDropshippingKeysCount(): number {
-    try {
-      const allKeys = Object.keys(localStorage);
-      return allKeys.filter(key => key.includes('dropshipping')).length;
-    } catch (error) {
-      return 0;
-    }
-  }
-
-  /**
-   * Getter para determinar si mostrar la configuración de API
-   */
-  get showApiConfig(): boolean {
-    const tipoIntegracion = this.dropshippingConfigForm.get('api_config.tipo_integracion')?.value;
-    return tipoIntegracion && tipoIntegracion !== 'manual';
-  }
-
-  /**
-   * Maneja el cambio de tipo de integración
-   */
-  onTipoIntegracionChange(): void {
-    const tipoIntegracion = this.dropshippingConfigForm.get('api_config.tipo_integracion')?.value;
-    
-    // Limpiar campos API cuando se selecciona manual
-    if (tipoIntegracion === 'manual') {
-      this.dropshippingConfigForm.patchValue({
-        api_config: {
-          endpoint: '',
-          api_key: '',
-          configuracion_adicional: {}
-        }
-      });
-    }
-
-    // Actualizar validaciones según el tipo de integración
-    const endpointControl = this.dropshippingConfigForm.get('api_config.endpoint');
-    const apiKeyControl = this.dropshippingConfigForm.get('api_config.api_key');
-
-    // La API key no es obligatoria: no se guarda, y exigirla bloquearía guardar tras recargar.
-    if (this.showApiConfig) {
-      endpointControl?.setValidators([Validators.required]);
-      apiKeyControl?.clearValidators();
-    } else {
-      endpointControl?.clearValidators();
-      apiKeyControl?.clearValidators();
-    }
-
-    endpointControl?.updateValueAndValidity();
-    apiKeyControl?.updateValueAndValidity();
-  }
-
-  /**
-   * Alterna la visibilidad de la API Key
-   */
-  toggleApiKeyVisibility(): void {
-    this.showApiKey = !this.showApiKey;
-  }
-
-  /**
-   * Obtiene el label del tipo de integración
-   */
-  getTipoIntegracionLabel(tipo: string): string {
-    const tipos: { [key: string]: string } = {
-      'manual': 'Manual',
-      'api': 'API',
-      'csv': 'CSV',
-      'webhook': 'Webhook'
-    };
-    return tipos[tipo] || 'No seleccionado';
-  }
-
-  /**
-   * Genera la URL del webhook para la empresa actual
-   */
-  getWebhookUrl(): string {
-    const baseUrl = window.location.origin;
-    const companyId = this.currentCompany?.id || this.currentCompany?._id || 'company';
-    return `${baseUrl}/api/dropshipping/webhook/${companyId}`;
-  }
-
-  /**
-   * Copia la URL del webhook al portapapeles
-   */
-  copyWebhookUrl(): void {
-    const webhookUrl = this.getWebhookUrl();
-    
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(webhookUrl).then(() => {
-        Swal.fire({
-          title: 'URL Copiada',
-          text: 'La URL del webhook ha sido copiada al portapapeles',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        });
-      }).catch(err => {
-        console.error('Error copying to clipboard:', err);
-        this.fallbackCopyToClipboard(webhookUrl);
-      });
-    } else {
-      this.fallbackCopyToClipboard(webhookUrl);
-    }
-  }
-
-  /**
-   * Método fallback para copiar al portapapeles en navegadores más antiguos
-   */
-  private fallbackCopyToClipboard(text: string): void {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '-999999px';
-    textArea.style.top = '-999999px';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    
-    try {
-      document.execCommand('copy');
-      Swal.fire({
-        title: 'URL Copiada',
-        text: 'La URL del webhook ha sido copiada al portapapeles',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      });
-    } catch (err) {
-      console.error('Error copying to clipboard:', err);
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudo copiar la URL. Por favor, cópiela manualmente.',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      });
-    }
-    
-    document.body.removeChild(textArea);
   }
 }

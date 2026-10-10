@@ -15,14 +15,27 @@
           <strong>Empresa:</strong> {{ currentCompany.nomComercial }}
         </p>
       </div>
-      <div class="cfg-acciones">
+      <div class="cfg-acciones" *ngIf="puedeGuardar && !errorCarga">
         <button type="button" class="cfg-btn cfg-btn--sec" (click)="resetToDefaults()">
           <i class="fa fa-refresh"></i> Restablecer
         </button>
       </div>
     </header>
 
-    <form class="dsh-form" [formGroup]="dropshippingConfigForm" (ngSubmit)="onSubmit()">
+    <!-- No se pudo cargar -->
+    <div class="cfg-aviso cfg-aviso--error" *ngIf="errorCarga">
+      <i class="fa fa-exclamation-circle dsh-aviso__icono" aria-hidden="true"></i>
+      <div>
+        <strong>{{ errorCarga }}</strong>
+        <div class="dsh-aviso__acciones">
+          <button type="button" class="cfg-btn cfg-btn--sec" (click)="loadDropshippingConfig()">
+            <i class="fa fa-repeat"></i> Reintentar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <form class="dsh-form" [formGroup]="dropshippingConfigForm" (ngSubmit)="onSubmit()" *ngIf="!errorCarga">
 
       <!-- Qué es -->
       <div class="cfg-aviso">
@@ -33,6 +46,15 @@
             El dropshipping permite que tu empresa venda productos sin mantener inventario.
             Cuando un cliente hace un pedido, el producto se envía directamente desde el proveedor.
           </p>
+        </div>
+      </div>
+
+      <!-- Solo lectura para quien no administra -->
+      <div class="cfg-aviso cfg-aviso--warn" *ngIf="!puedeGuardar">
+        <i class="fa fa-lock dsh-aviso__icono" aria-hidden="true"></i>
+        <div>
+          <strong>Solo un administrador puede cambiar esta configuración.</strong>
+          <p class="dsh-aviso__texto">Aquí ves la que tiene tu empresa.</p>
         </div>
       </div>
 
@@ -48,7 +70,7 @@
           <div>
             <label class="dsh-interruptor__titulo" for="enableDropshipping">Habilitar módulo de Dropshipping para esta empresa</label>
             <small class="dsh-ayuda">
-              Al habilitar este módulo, los usuarios podrán configurar productos como dropshipping y gestionar órdenes con proveedores externos.
+              Al habilitar este módulo, los usuarios podrán configurar productos como dropshipping y gestionar órdenes con proveedores externos. Aplica para toda la empresa.
             </small>
           </div>
         </div>
@@ -104,6 +126,7 @@
                   formControlName="tiempoLimiteOrden"
                   min="1"
                   max="30"
+                  step="1"
                   placeholder="7">
                 <small class="form-text dsh-ayuda">
                   Tiempo máximo para procesar órdenes de dropshipping
@@ -159,163 +182,16 @@
           </div>
         </section>
 
-        <!-- Configuración de Integración -->
-        <section class="cfg-card">
-          <h2 class="cfg-card__titulo"><i class="fa fa-plug dsh-icono" aria-hidden="true"></i> Configuración de Integración</h2>
-
-          <div class="row" formGroupName="api_config">
-            <div class="col-md-6">
-              <div class="form-group">
-                <label class="cfg-label" for="tipo_integracion">
-                  Tipo de Integración <span class="dsh-req">*</span>
-                </label>
-                <select
-                  class="form-control"
-                  [class.is-invalid]="isFieldInvalid('api_config.tipo_integracion')"
-                  id="tipo_integracion"
-                  formControlName="tipo_integracion"
-                  (change)="onTipoIntegracionChange()">
-                  <option value="">Seleccionar tipo</option>
-                  <option value="manual">Manual</option>
-                  <option value="api">API</option>
-                  <option value="csv">CSV</option>
-                  <option value="webhook">Webhook</option>
-                </select>
-                <small class="form-text dsh-ayuda">
-                  Seleccione cómo se integrarán los datos de productos y órdenes
-                </small>
-                <div class="invalid-feedback" *ngIf="isFieldInvalid('api_config.tipo_integracion')">
-                  {{ getFieldError('api_config.tipo_integracion') }}
-                </div>
-              </div>
-            </div>
-
-            <div class="col-md-6">
-              <div class="form-group">
-                <label class="cfg-label">Descripción del Tipo</label>
-                <div class="dsh-tipo">
-                  <small class="dsh-tipo__linea" *ngIf="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'manual'">
-                    <i class="fa fa-hand-paper-o dsh-icono" aria-hidden="true"></i>
-                    <strong>Manual:</strong> Gestión manual de productos y órdenes
-                  </small>
-                  <small class="dsh-tipo__linea" *ngIf="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'api'">
-                    <i class="fa fa-code dsh-icono" aria-hidden="true"></i>
-                    <strong>API:</strong> Integración automática mediante API REST
-                  </small>
-                  <small class="dsh-tipo__linea" *ngIf="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'csv'">
-                    <i class="fa fa-file-excel-o dsh-icono" aria-hidden="true"></i>
-                    <strong>CSV:</strong> Importación/exportación mediante archivos CSV
-                  </small>
-                  <small class="dsh-tipo__linea" *ngIf="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'webhook'">
-                    <i class="fa fa-bolt dsh-icono" aria-hidden="true"></i>
-                    <strong>Webhook:</strong> Notificaciones automáticas en tiempo real
-                  </small>
-                  <small class="dsh-tipo__linea" *ngIf="!dropshippingConfigForm.get('api_config.tipo_integracion')?.value">
-                    Seleccione un tipo de integración para ver la descripción
-                  </small>
-                </div>
-              </div>
-            </div>
+        <!-- La conexión por API vive en cada proveedor -->
+        <div class="cfg-aviso">
+          <i class="fa fa-plug dsh-aviso__icono" aria-hidden="true"></i>
+          <div>
+            <strong>La conexión por API se configura en cada proveedor.</strong>
+            <p class="dsh-aviso__texto">
+              Entra a <a class="dsh-enlace" routerLink="/dropshipping/proveedores">Proveedores</a> y edita el proveedor para indicar cómo se integra.
+            </p>
           </div>
-
-          <!-- Configuración API - Solo visible cuando se selecciona API o Webhook -->
-          <div *ngIf="showApiConfig" class="row animate-fade-in" formGroupName="api_config">
-            <div class="col-md-6">
-              <div class="form-group">
-                <label class="cfg-label" for="endpoint">
-                  Endpoint API <span class="dsh-req">*</span>
-                </label>
-                <input
-                  type="url"
-                  class="form-control"
-                  [class.is-invalid]="isFieldInvalid('api_config.endpoint')"
-                  id="endpoint"
-                  formControlName="endpoint"
-                  placeholder="https://api.miempresa.com/v1/dropshipping"
-                  [required]="showApiConfig">
-                <small class="form-text dsh-ayuda">
-                  URL del endpoint para sincronización de datos
-                </small>
-                <div class="invalid-feedback" *ngIf="isFieldInvalid('api_config.endpoint')">
-                  {{ getFieldError('api_config.endpoint') }}
-                </div>
-              </div>
-            </div>
-
-            <div class="col-md-6">
-              <div class="form-group">
-                <label class="cfg-label" for="api_key">
-                  API Key
-                </label>
-                <div class="input-group">
-                  <input
-                    [type]="showApiKey ? 'text' : 'password'"
-                    class="form-control"
-                    [class.is-invalid]="isFieldInvalid('api_config.api_key')"
-                    id="api_key"
-                    formControlName="api_key"
-                    placeholder="Clave de API para autenticación">
-                  <div class="input-group-append">
-                    <button
-                      class="cfg-btn cfg-btn--sec dsh-btn-ojo"
-                      type="button"
-                      (click)="toggleApiKeyVisibility()">
-                      <i class="fa" [class.fa-eye]="!showApiKey" [class.fa-eye-slash]="showApiKey"></i>
-                    </button>
-                  </div>
-                </div>
-                <small class="form-text dsh-ayuda">
-                  Clave de autenticación para acceso a la API. Por seguridad no se guarda en este navegador.
-                </small>
-                <div class="invalid-feedback" *ngIf="isFieldInvalid('api_config.api_key')">
-                  {{ getFieldError('api_config.api_key') }}
-                </div>
-              </div>
-            </div>
-
-            <!-- Configuración adicional para CSV y Webhook -->
-            <div class="col-12" *ngIf="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'csv'">
-              <div class="cfg-aviso">
-                <i class="fa fa-info-circle dsh-aviso__icono" aria-hidden="true"></i>
-                <div>
-                  <strong>Configuración CSV</strong>
-                  <ul class="dsh-aviso__lista">
-                    <li>Los archivos CSV deben seguir el formato estándar de la plataforma</li>
-                    <li>Programar importaciones automáticas desde el endpoint configurado</li>
-                    <li>Los archivos se procesarán cada 6 horas automáticamente</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-12" *ngIf="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'webhook'">
-              <div class="cfg-aviso cfg-aviso--ok dsh-aviso--col">
-                <div>
-                  <strong><i class="fa fa-bolt" aria-hidden="true"></i> Configuración Webhook</strong>
-                  <p class="dsh-aviso__texto"><strong>URL de callback para webhooks:</strong></p>
-                </div>
-                <div class="input-group">
-                  <input
-                    type="text"
-                    class="form-control dsh-solo-lectura"
-                    readonly
-                    [value]="getWebhookUrl()">
-                  <div class="input-group-append">
-                    <button
-                      class="cfg-btn cfg-btn--sec dsh-btn-ojo"
-                      type="button"
-                      (click)="copyWebhookUrl()">
-                      <i class="fa fa-copy"></i>
-                    </button>
-                  </div>
-                </div>
-                <small class="dsh-aviso__texto">
-                  Use esta URL para recibir notificaciones automáticas de cambios
-                </small>
-              </div>
-            </div>
-          </div>
-        </section>
+        </div>
 
         <!-- Resumen de Configuración -->
         <section class="cfg-card dsh-resumen">
@@ -343,20 +219,6 @@
               <strong>Notificaciones:</strong>
               {{ dropshippingConfigForm.get('notificacionesActivadas')?.value ? 'Activadas' : 'Desactivadas' }}
             </li>
-            <li>
-              <strong>Tipo de Integración:</strong>
-              <span class="dsh-tag"
-                    [class.dsh-tag--acento]="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'manual'"
-                    [class.dsh-tag--ok]="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'api'"
-                    [class.dsh-tag--warn]="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'csv'"
-                    [class.dsh-tag--info]="dropshippingConfigForm.get('api_config.tipo_integracion')?.value === 'webhook'">
-                {{ getTipoIntegracionLabel(dropshippingConfigForm.get('api_config.tipo_integracion')?.value) }}
-              </span>
-            </li>
-            <li *ngIf="showApiConfig">
-              <strong>Endpoint API:</strong>
-              <code class="dsh-codigo">{{ dropshippingConfigForm.get('api_config.endpoint')?.value || 'No configurado' }}</code>
-            </li>
           </ul>
         </section>
 
@@ -381,6 +243,7 @@
           <i class="fa fa-arrow-left"></i> Volver
         </a>
         <button
+          *ngIf="puedeGuardar"
           type="submit"
           class="cfg-btn"
           [disabled]="!dropshippingConfigForm.valid || saving">
@@ -392,52 +255,5 @@
 
     </form>
   </ng-container>
-
-  <!-- Herramientas de Desarrollo (solo para pruebas): solo Super Administrador -->
-  <section class="cfg-card dsh-dev" *ngIf="esSuperAdmin">
-    <div class="dsh-dev__cabeza">
-      <h2 class="cfg-card__titulo dsh-dev__titulo">
-        <i class="fa fa-wrench dsh-icono" aria-hidden="true"></i> Herramientas de Desarrollo
-      </h2>
-      <span class="dsh-etiqueta">Solo desarrollo</span>
-    </div>
-
-    <div class="cfg-aviso cfg-aviso--warn dsh-aviso--col">
-      <p class="dsh-aviso__texto">
-        <strong>Nota:</strong> La configuración se está guardando en <strong>localStorage</strong> para efectos de prueba.
-      </p>
-      <p class="dsh-aviso__texto">
-        En producción, esta configuración se guardaría en la base de datos Firebase.
-      </p>
-    </div>
-
-    <div class="dsh-dev__botones">
-      <button
-        type="button"
-        class="cfg-btn cfg-btn--sec"
-        (click)="viewAllConfigs()">
-        <i class="fa fa-eye"></i> Ver Configuraciones
-      </button>
-      <button
-        type="button"
-        class="cfg-btn cfg-btn--peligro"
-        (click)="clearAllDropshippingConfigs()">
-        <i class="fa fa-trash"></i> Limpiar Todo
-      </button>
-      <button
-        type="button"
-        class="cfg-btn cfg-btn--sec"
-        onclick="console.log('localStorage keys:', Object.keys(localStorage).filter(k => k.includes('dropshipping')))">
-        <i class="fa fa-code"></i> Debug Console
-      </button>
-    </div>
-
-    <div class="dsh-dev__estado">
-      <div class="cfg-label">Estado del LocalStorage</div>
-      <code class="dsh-codigo">
-        Keys de dropshipping: {{ getDropshippingKeysCount() }} encontradas
-      </code>
-    </div>
-  </section>
 
 </div>

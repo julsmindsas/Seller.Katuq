@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { BaseService } from '../../../shared/services/base.service';
 import { Proveedor, ProveedorSummary } from '../interfaces';
 
@@ -14,8 +15,11 @@ export class ProveedoresService extends BaseService {
   }
 
   // CRUD básico
+  // El servidor responde { proveedores, pagination }; las pantallas esperan la lista.
   getProveedores(): Observable<Proveedor[]> {
-    return this.get<Proveedor[]>('/v1/dropshipping/proveedores');
+    return this.get<any>('/v1/dropshipping/proveedores?pageSize=100').pipe(
+      map((r) => (Array.isArray(r) ? r : r?.proveedores || []))
+    );
   }
 
   getProveedor(id: string): Observable<Proveedor> {

@@ -5,6 +5,8 @@ import { Router } from "@angular/router";
 import { CartSingletonService } from "./ventas/cart.singleton.service";
 import { UtilsService } from "./utils.service";
 import { CompanyFeaturesService } from "./company-features.service";
+import { SecurityService } from "./security/security.service";
+import { dropshippingHabilitadoEnLaSesion } from "./dropshipping-settings.service";
 
 // Menu
 export interface Menu {
@@ -82,12 +84,15 @@ export class NavService implements OnDestroy {
   // El alistamiento (picking y packing) nace apagado: su entrada del menú solo se ofrece a la
   // empresa con la bandera `pickingAlistamiento` prendida. Último valor con el que se filtró el menú.
   private alistamientoPrendido: boolean = false;
+  // Igual para dropshipping (D-403): último valor con el que se filtró el menú.
+  private dropshippingPrendido: boolean = false;
 
   constructor(
     private router: Router,
     private cartSingleton: CartSingletonService,
     private utils: UtilsService,
     private features: CompanyFeaturesService,
+    private securityService: SecurityService,
   ) {
     const user = localStorage.getItem("user");
     if (user) {
@@ -130,6 +135,15 @@ export class NavService implements OnDestroy {
           this.filterMenuItemsByAuthorization();
         }
       });
+
+    // Dropshipping: cambia al iniciar sesión o al guardar su configuración, sin volver a entrar.
+    this.securityService.companyInformation$
+      .pipe(takeUntil(this.unsubscriber))
+      .subscribe(() => {
+        if (this.isDropshippingEnabled() !== this.dropshippingPrendido) {
+          this.filterMenuItemsByAuthorization();
+        }
+      });
   }
 
   refrescarCart() {
@@ -163,27 +177,12 @@ export class NavService implements OnDestroy {
     }).filter((item) => item !== null) as Menu[];
   }
 
+  /**
+   * D-403: lo dice el servidor (campo `dropshipping` de la empresa, que llega con el login y
+   * se actualiza al guardar la configuración), no una copia en el localStorage del navegador.
+   */
   isDropshippingEnabled(): boolean {
-    try {
-      // Verificar si el dropshipping está habilitado para la empresa actual desde localStorage
-      const currentCompany = JSON.parse(
-        localStorage.getItem("currentCompany") || "{}",
-      );
-      const companyId = currentCompany.id || currentCompany._id || "default";
-      const configKey = `dropshippingConfig_${companyId}`;
-
-      const savedConfig = localStorage.getItem(configKey);
-      if (savedConfig) {
-        const dropshippingConfig = JSON.parse(savedConfig);
-        return dropshippingConfig.habilitado === true;
-      }
-
-      // Si no hay configuración guardada, devolver false
-      return false;
-    } catch (error) {
-      console.error("Error checking dropshipping status:", error);
-      return false;
-    }
+    return dropshippingHabilitadoEnLaSesion();
   }
 
   filterMenuItemsByAuthorization() {
@@ -213,6 +212,7 @@ export class NavService implements OnDestroy {
 
     // Verificar si dropshipping está habilitado para filtros adicionales
     const isDropshippingEnabled = this.isDropshippingEnabled();
+    this.dropshippingPrendido = isDropshippingEnabled;
 
     // Alistamiento (picking y packing): sin la bandera de la empresa no se ofrece
     this.alistamientoPrendido = this.features.isEnabled("pickingAlistamiento");
