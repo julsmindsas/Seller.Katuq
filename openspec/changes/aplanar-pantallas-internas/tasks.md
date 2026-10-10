@@ -16,5 +16,5 @@
 ## 3. Cierre
 
 - [x] 3.1 Inventario de nuevo: solo quedan los casos conservados (listados por archivo y motivo).
-- [ ] 3.2 `ng build --configuration production` sin errores.
-- [ ] 3.3 `git pull`, publicar, revisar en el navegador las pantallas con más cambios y registrar el cierre en CONTRACT.md.
+- [x] 3.2 `ng build --configuration production` sin errores.
+- [x] 3.3 `git pull`, publicar, revisar en el navegador las pantallas con más cambios y registrar el cierre en CONTRACT.md.
