@@ -9189,3 +9189,5 @@ Se actualizaron las instrucciones operativas de suscripciones para retirar coman
 5. "Notificaciones" volvía siempre a activada al recargar (`|| true` en lugar de `?? true`).
 6. "Restablecer" también vuelve la integración a Manual.
 7. El botón de confirmación pasa del verde al acento.
+
+**Cierre D-402 (publicado 2026.10.10.1).** Probado en producción con la sesión de Daniel (Super Administrador), sin guardar: al elegir API aparecen la dirección y la clave, la dirección se ve en el resumen, Guardar se activa sin pedir la clave, la consola no muestra errores y el bloque de desarrollo se ve. No probado: que quede oculto con un rol distinto, que depende de `rol === 'Super Administrador'`. En la misma publicación salió un arreglo de seguridad sobre el ticket 1185 de otra sesión: el tooltip OSM de la lista de pedidos se pinta con `[escape]="false"` y metía sin escapar `status`/`lastNote` de Cereza; ahora se escapan (`escaparHtml` en `list.component.ts`).
