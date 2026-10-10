@@ -436,7 +436,10 @@
             </div>
 
             <!-- Búsqueda de productos -->
-            <div class="filter-item filter-search" [class.filter-disabled]="!selectedCity || selectedCity === 'seleccione'">
+            <!-- Ticket 1170: en modo "Sin inventario" no hay bodega ni ciudad, pero el
+                 buscador sí aplica (filtra los productos bajo pedido). El contenedor
+                 quedaba con pointer-events: none aunque el input ya estaba habilitado. -->
+            <div class="filter-item filter-search" [class.filter-disabled]="!catalogoSinInventario && (!selectedCity || selectedCity === 'seleccione')">
               <label class="filter-label">
                 <i class="fa fa-search"></i>
                 Buscar productos
