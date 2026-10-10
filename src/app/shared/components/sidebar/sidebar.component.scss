@@ -221,10 +221,6 @@
       }
     }
 
-    .brand-logo {
-      img { max-height: 16px; width: auto; }
-      .logo-dark { display: none; }
-    }
   }
 
   .collapse-toggle-btn {
@@ -247,26 +243,6 @@
       background: #f0ecff;
       color: #6b4fe0;
       border-color: #ddd4f7;
-    }
-  }
-
-  .version-badge {
-    margin-top: 10px;
-    display: flex;
-    justify-content: flex-end;
-
-    span {
-      font-size: 10px;
-      font-weight: 600;
-      color: #a29fb5;
-      background: #f4f2fc;
-      border: 1px solid var(--ktq-border);
-      padding: 3px 8px;
-      border-radius: 99px;
-      white-space: nowrap;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
   }
 
@@ -827,127 +803,36 @@
 // =====================================================================
 // NOTIFICACIONES (footer) — tarjeta como el diseño
 // =====================================================================
-.sidebar-notification-section {
+// Tickets 1178 y 1184: pie del menú con el logo de Katuq y la versión
+// (reemplaza al botón "Notificaciones", que se retiró).
+.sidebar-brand-footer {
   flex-shrink: 0;
-  padding: 10px 12px 6px;
-  border-top: 1px solid var(--ktq-border-soft);
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px 8px;
+  border-top: 1px solid var(--ktq-border-soft);
 
-  .sidebar-notification-bell {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    background: var(--ktq-input);
+  img {
+    max-height: 20px;
+    width: auto;
+    display: block;
+  }
+  .logo-dark { display: none; }
+
+  .version-badge {
+    font-size: 10px;
+    font-weight: 600;
+    color: #a29fb5;
+    background: #f4f2fc;
     border: 1px solid var(--ktq-border);
-    border-radius: 14px;
-    padding: 9px 12px;
-    cursor: pointer;
-    transition: all .15s;
-
-    &:hover {
-      background: #f0ecff;
-      border-color: #ddd4f7;
-    }
-
-    .bell-container {
-      position: relative;
-      width: 34px;
-      height: 34px;
-      flex-shrink: 0;
-      border-radius: 11px;
-      background: var(--ktq-primary-soft);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--ktq-primary);
-
-      i { font-size: 15px; }
-
-      i.ringing { animation: ktq-ring 1.2s ease-in-out infinite; }
-
-      .notification-count-badge {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        min-width: 17px;
-        height: 17px;
-        padding: 0 4px;
-        border-radius: 99px;
-        background: var(--ktq-red);
-        color: #fff;
-        font-size: 10px;
-        font-weight: 800;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 2px solid #fff;
-
-        &.pulse { animation: ktq-pulse 1.6s infinite; }
-      }
-    }
-
-    .notification-label {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--ktq-ink);
-      white-space: nowrap;
-    }
-
-    .notification-preview {
-      min-width: 0;
-      .preview-text {
-        display: block;
-        font-size: 11px;
-        color: var(--ktq-muted-2);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 120px;
-      }
-    }
-  }
-
-  .notification-quick-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-
-    .quick-action-btn {
-      width: 26px;
-      height: 26px;
-      border: 1px solid var(--ktq-border);
-      background: #faf9ff;
-      border-radius: 8px;
-      color: var(--ktq-muted);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all .15s;
-      i { font-size: 10px; }
-
-      &:hover, &.active {
-        background: #f0ecff;
-        color: #6b4fe0;
-        border-color: #ddd4f7;
-      }
-    }
-  }
-
-  &.collapsed {
-    justify-content: center;
-    padding: 10px 6px 6px;
-
-    .sidebar-notification-bell {
-      background: transparent;
-      border: none;
-      padding: 4px;
-      justify-content: center;
-    }
+    padding: 3px 8px;
+    border-radius: 99px;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
@@ -1580,17 +1465,19 @@ body.dark-only {
 
   .sidebar-header.unified-header {
     .expanded-info .greeting-section .user-name { color: #f2f0fa; }
-    .expanded-info .brand-logo {
-      .logo-light { display: none; }
-      .logo-dark { display: block; }
-    }
     .collapse-toggle-btn {
       background: #211d30;
       border-color: #2c2740;
       color: #8f8ba5;
       &:hover { background: #2a2440; color: #b3a5ff; }
     }
-    .version-badge span { background: #211d30; border-color: #2c2740; color: #8f8ba5; }
+  }
+
+  .sidebar-brand-footer {
+    border-top-color: #262233;
+    .logo-light { display: none; }
+    .logo-dark { display: block; }
+    .version-badge { background: #211d30; border-color: #2c2740; color: #8f8ba5; }
   }
 
   .search-section .search-input-container {
@@ -1628,22 +1515,6 @@ body.dark-only {
   .favorites-section .favorite-link {
     color: #a9a5bf;
     &:hover { background: #221e33; color: #cfc5ff; }
-  }
-
-  .sidebar-notification-section {
-    border-top-color: #262233;
-
-    .sidebar-notification-bell {
-      background: #211d30;
-      border-color: #2c2740;
-      .notification-label { color: #e8e5f2; }
-      &:hover { background: #2a2440; }
-    }
-
-    .notification-quick-actions .quick-action-btn {
-      background: #211d30;
-      border-color: #2c2740;
-    }
   }
 
   .plan-card-container {

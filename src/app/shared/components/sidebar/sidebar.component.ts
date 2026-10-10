@@ -2946,7 +2946,10 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   private triggerNewNotificationAnimation(): void {
     this.hasNewNotifications = true;
 
-    // Reproducir sonido si está habilitado
+    // Reproducir sonido si está habilitado. Ticket 1178: el toggle ahora vive en
+    // el panel de notificaciones (otro componente), así que la preferencia se
+    // relee de localStorage en el momento de sonar.
+    this.notificationSoundEnabled = localStorage.getItem('notificationSound') !== 'false';
     if (this.notificationSoundEnabled) {
       this.playNotificationSound();
     }
