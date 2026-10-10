@@ -9116,7 +9116,7 @@ Se actualizaron las instrucciones operativas de suscripciones para retirar coman
 1. Toda empresa creada desde ahora (registro público `saveSurveyResponse` y onboarding `createCompanyOnboarding`) nace con `featureFlags` = `productFromPhoto`, `productImportPhotos`, `singleStepStore`, `landingPrompt`, `buyNowCod`. Los comercios que ya operan no cambian. Interruptor general `NEW_COMPANY_FEATURE_FLAGS=off`. Nada de WhatsApp, Envíame, 3D ni alistamiento (dependen de cosas que una empresa nueva no tiene). Código: `services/companies/banderasEmpresaNueva.js`.
 2. Editor "Con IA" (Sonnet 4.6): 20 cambios al día por empresa en el plan gratis (`ai.pageEditsPerDay`), sin tope en los de pago; solo cuentan los cambios que salieron; si el contador falla, deja pasar. 429 `PAGE_AI_DAILY_LIMIT` con mensaje para el comercio.
 3. Registro: del 16 al 18-oct (Bogotá) los topes por IP pasan de 4/12 a 50/200 por hora (`umbralesPorIp`, ajustables con `REG_IP_*_PER_HOUR_FERIA`); fuera de la ventana, los de siempre.
-**Verificado.** 10 pruebas nuevas (`tests/sitios/funcionesFeriaEmpresaNueva.test.js`) + regresión de registro, banderas y editor en verde. Back commit `af177aa`. **Falta desplegar el back** (el ssh lo bloqueó el clasificador sin orden explícita).
+**Verificado.** 10 pruebas nuevas (`tests/sitios/funcionesFeriaEmpresaNueva.test.js`) + regresión de registro, banderas y editor en verde. Back commit `af177aa`, en producción desde el 10-oct.
 
 ## D-396 (2026-10-10) — Confirmación del pedido y carrito abandonado por WhatsApp (Kapso), apagados; cierre de las 2 fallas MAYOR
 
@@ -9133,7 +9133,7 @@ Se actualizaron las instrucciones operativas de suscripciones para retirar coman
 ### 2026-10-10 — Bitácora (sesión apoyodev, Effix)
 
 - Wompi 03 aplicado sin rotar el secreto (Daniel: "no cambies clave de wompi"): el webhook confirma cada transacción con Wompi antes de tocar un pedido. Medido en producción (solo lectura): desde el 2-sep **ningún** aviso de Wompi se procesó (206 descartados por firma, todos enlaces de ALMARA, timestamp en la raíz), así que para pagos reales nada cambia hasta el 04 (pendiente). Back `460cdec`.
-- Front publicado 2026.10.09.23. Back empujado hasta `460cdec`; **producción sigue en `0013a1b`** hasta que Daniel autorice el despliegue.
+- Front publicado 2026.10.09.23. Back **desplegado en producción en `460cdec`** (Daniel: "dale tu despliega todo"): katuq-api estable, rutas nuevas responden 401 sin sesión, sin errores de arranque.
 
 ## D-398 (2026-10-09) — Pantallas públicas con el diseño de "Regístrese" (openspec/changes/modernizar-paginas-publicas)
 
