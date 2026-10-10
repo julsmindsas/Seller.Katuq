@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 import { PickingPackingService } from '../../../shared/services/picking-packig/picking-packing.service';
 import { PickingResponse } from '../models/picking.model';
 import { Order } from '../models/order.model';
+import { avisoDeErrorPicking, puedeAlistarse, textoDeEstadoPedido } from '../picking-mensajes';
 
 @Component({
   selector: 'app-picking-list',
@@ -15,11 +17,15 @@ export class PickingListComponent implements OnInit {
   ordenesPendientes: Order[] = [];
   filtroForm: FormGroup;
   loading = false;
+
+  // Textos para la plantilla
+  textoEstadoPedido = textoDeEstadoPedido;
   
   constructor(
     private pickingService: PickingPackingService,
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private toastr: ToastrService
   ) {
     this.filtroForm = this.fb.group({
       nroPedido: [''],
@@ -49,8 +55,8 @@ export class PickingListComponent implements OnInit {
         this.loading = false;
       },
       (error) => {
-        console.error('Error al cargar órdenes pendientes', error);
         this.loading = false;
+        this.avisarError(error);
       }
     );
   }
@@ -59,18 +65,14 @@ export class PickingListComponent implements OnInit {
     const nroPedido = this.filtroForm.get('nroPedido')?.value;
     if (nroPedido) {
       this.loading = true;
-      this.pickingService.getOrderByNroPedido(nroPedido).subscribe(
-        (orden) => {
-          if (orden) {
-            this.ordenesPendientes = [orden];
-          } else {
-            this.ordenesPendientes = [];
-          }
+      this.pickingService.buscarPedidos(nroPedido).subscribe(
+        (ordenes) => {
+          this.ordenesPendientes = ordenes;
           this.loading = false;
         },
         (error) => {
-          console.error('Error al buscar pedido', error);
           this.loading = false;
+          this.avisarError(error);
         }
       );
     } else {
@@ -83,9 +85,14 @@ export class PickingListComponent implements OnInit {
   }
 
   verDetallePedido(orden: Order): void {
-    if (orden._id) {
-      this.router.navigate(['/picking-packing/picking/orden', orden._id]);
+    // El número del pedido viaja en la URL: la pantalla de detalle lo busca y de ahí saca el alistamiento
+    if (orden.nroPedido) {
+      this.router.navigate(['/picking-packing/picking/orden', orden.nroPedido]);
     }
+  }
+
+  puedeIniciarPicking(orden: Order): boolean {
+    return puedeAlistarse(String(orden.estadoProceso));
   }
 
   iniciarNuevoPicking(): void {
@@ -99,5 +106,12 @@ export class PickingListComponent implements OnInit {
   limpiarFiltros(): void {
     this.filtroForm.reset();
     this.cargarOrdenesPendientes();
+  }
+
+  private avisarError(error: any): void {
+    const aviso = avisoDeErrorPicking(error, 'listar');
+    if (aviso) {
+      this.toastr.error(aviso.mensaje, aviso.titulo);
+    }
   }
 } 

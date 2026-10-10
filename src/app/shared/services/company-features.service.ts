@@ -18,6 +18,7 @@ export const COMPANY_FEATURE_FLAGS = [
   'singleStepStore',
   'landingPrompt',
   'product3d',
+  'pickingAlistamiento',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

@@ -89,15 +89,15 @@
                   }">
                    
                   </span> -->
-                  {{ orden?.estadoProceso }}
+                  {{ textoEstadoPedido(orden?.estadoProceso) }}
                 </td>
-                <td>{{ orden.total | currency }}</td>
+                <td>{{ orden.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                 <td>
                   <button pButton type="button" icon="pi pi-eye" class="p-button-rounded p-button-info p-button-sm mr-2"
                     (click)="verDetallePedido(orden)" pTooltip="Ver Detalle"></button>
                   <button pButton type="button" icon="pi pi-cart-plus"
-                    class="p-button-rounded p-button-success p-button-sm" *ngIf="orden.estadoProceso === 'pendiente'"
-                    (click)="iniciarNuevoPicking()" pTooltip="Iniciar Picking"></button>
+                    class="p-button-rounded p-button-success p-button-sm" *ngIf="puedeIniciarPicking(orden)"
+                    (click)="verDetallePedido(orden)" pTooltip="Iniciar Picking"></button>
                 </td>
               </tr>
             </ng-template>
@@ -162,7 +162,7 @@
             <ng-template pTemplate="emptymessage">
               <tr>
                 <td colspan="7" class="text-center">
-                  No hay registros de picking disponibles.
+                  Los alistamientos en curso se ven en la tabla de arriba, con el estado «En alistamiento».
                 </td>
               </tr>
             </ng-template>

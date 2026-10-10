@@ -1,7 +1,7 @@
 <div class="container-fluid">
   <div class="row mb-3">
     <div class="col-12">
-      <button pButton type="button" icon="pi pi-arrow-left" label="Volver" 
+      <button pButton type="button" icon="pi pi-arrow-left" label="Volver"
               class="p-button-secondary" (click)="volverALista()"></button>
     </div>
   </div>
@@ -13,170 +13,75 @@
     </div>
   </div>
 
-  <!-- Formulario para nuevo picking -->
+  <!-- Elegir el pedido a alistar -->
   <div *ngIf="isNuevo && !loading" class="row">
     <div class="col-12">
       <div class="card">
         <div class="card-header">
-          <h5 class="card-title">Iniciar Nuevo Picking</h5>
+          <h5 class="card-title">Elegir el pedido a alistar</h5>
         </div>
         <div class="card-body">
-          <form [formGroup]="pickingForm" (ngSubmit)="iniciarPicking()">
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <span class="p-float-label">
-                  <select id="ordenId" pInputText formControlName="ordenId" class="form-control w-100">
-                    <option value="">Seleccione una orden</option>
-                    <option *ngFor="let orden of ordenesPendientes" [value]="orden._id">
-                      {{ orden.nroPedido }} - {{ orden.cliente?.nombre }}
-                    </option>
-                  </select>
-                  <label for="ordenId">ID de Orden *</label>
-                </span>
-                <small class="p-error" *ngIf="pickingForm.get('ordenId')?.invalid && pickingForm.get('ordenId')?.touched">
-                  El ID de orden es requerido
-                </small>
-              </div>
-              <div class="col-md-6">
-                <span class="p-float-label">
-                  <select id="bodegaId" formControlName="bodegaId" class="form-control w-100">
-                    <option value="">Seleccione una bodega</option>
-                    <option *ngFor="let bodega of bodegasDisponibles" [value]="bodega.id">
-                      {{ bodega.nombre }}
-                    </option>
-                  </select>
-                  <label for="bodegaId">Bodega *</label>
-                </span>
-                <small class="p-error" *ngIf="pickingForm.get('bodegaId')?.invalid && pickingForm.get('bodegaId')?.touched">
-                  La bodega es requerida
-                </small>
-              </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="nroPedidoElegido">Pedido *</label>
+              <select id="nroPedidoElegido" class="form-control w-100" [(ngModel)]="nroPedidoElegido">
+                <option value="">Seleccione un pedido</option>
+                <option *ngFor="let orden of ordenesPendientes" [value]="orden.nroPedido">
+                  {{ orden.nroPedido }} - {{ orden.cliente?.nombres_completos }}
+                </option>
+              </select>
+              <small class="text-muted">
+                Después eliges la bodega y se alistan los productos del pedido.
+                ¿No ves el pedido? Búscalo por su número en la lista de picking.
+              </small>
             </div>
-            
-            <div class="row mb-3">
-              <div class="col-12">
-                <h6>Productos a Recolectar</h6>
-                <div class="row mb-3">
-                  <div class="col-md-8">
-                    <select class="form-control" [(ngModel)]="productoSeleccionadoId" 
-                            [ngModelOptions]="{standalone: true}">
-                      <option value="">Seleccione un producto</option>
-                      <option *ngFor="let producto of productosDisponibles" [value]="producto.productoId">
-                        {{ producto.sku }} - {{ producto.nombre }}
-                      </option>
-                    </select>
-                  </div>
-                  <div class="col-md-4">
-                    <button pButton type="button" label="Agregar Producto" 
-                            (click)="seleccionarProducto()" 
-                            [disabled]="!productoSeleccionadoId"
-                            class="p-button-success w-100"></button>
-                  </div>
-                </div>
-                
-                <p-table [value]="productosSeleccionados" [scrollable]="true" scrollHeight="250px">
-                  <ng-template pTemplate="header">
-                    <tr>
-                      <th>SKU</th>
-                      <th>Nombre</th>
-                      <th>Cantidad</th>
-                      <th>Ubicación</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </ng-template>
-                  <ng-template pTemplate="body" let-producto let-i="rowIndex">
-                    <tr>
-                      <td>{{ producto.sku }}</td>
-                      <td>{{ producto.nombre }}</td>
-                      <td>
-                        <input type="number" [(ngModel)]="producto.cantidad" 
-                               [ngModelOptions]="{standalone: true}" 
-                               class="form-control" min="1" style="width: 70px;">
-                      </td>
-                      <td>{{ producto.ubicacion || 'No especificada' }}</td>
-                      <td>
-                        <button pButton type="button" icon="pi pi-trash" 
-                                class="p-button-rounded p-button-danger p-button-sm"
-                                (click)="eliminarProducto(i)"></button>
-                      </td>
-                    </tr>
-                  </ng-template>
-                  <ng-template pTemplate="emptymessage">
-                    <tr>
-                      <td colspan="5" class="text-center">
-                        No hay productos seleccionados.
-                      </td>
-                    </tr>
-                  </ng-template>
-                </p-table>
-              </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12 text-end">
+              <button pButton type="button" label="Continuar" icon="pi pi-arrow-right"
+                      [disabled]="!nroPedidoElegido" (click)="irAlPedidoElegido()"
+                      class="p-button-primary"></button>
             </div>
-            
-            <div class="row">
-              <div class="col-md-12 text-end">
-                <button pButton type="submit" label="Iniciar Picking" 
-                        [disabled]="pickingForm.invalid || productosSeleccionados.length === 0 || submitting"
-                        [loading]="submitting" class="p-button-primary"></button>
-              </div>
-            </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Vista de pedido para iniciar picking -->
-  <div *ngIf="isFromOrder && !loading && order" class="row">
+  <!-- Pedido a alistar -->
+  <div *ngIf="!isNuevo && !loading && order" class="row">
     <div class="col-12">
       <div class="card">
         <div class="card-header">
           <div class="d-flex justify-content-between align-items-center">
             <h5 class="card-title">Pedido: {{ order.nroPedido }}</h5>
-            <span class="badge" [ngClass]="{
-              'bg-warning': order.estadoProceso === 'pendiente',
-              'bg-primary': order.estadoProceso === 'picking' || order.estadoProceso === 'packing',
-              'bg-success': order.estadoProceso === 'enviado' || order.estadoProceso === 'entregado',
-              'bg-danger': order.estadoProceso === 'cancelado'
-            }">
-              {{ order.estadoProceso | titlecase }}
+            <span class="badge bg-primary">
+              {{ textoEstadoPedido(order.estadoProceso) }}
             </span>
           </div>
         </div>
         <div class="card-body">
           <div class="row mb-3">
             <div class="col-md-4">
-              <p><strong>Cliente:</strong> {{ order.cliente?.nombre }}</p>
+              <p><strong>Cliente:</strong> {{ order.cliente?.nombres_completos }}</p>
             </div>
             <div class="col-md-4">
               <p><strong>Fecha de Creación:</strong> {{ order.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</p>
             </div>
             <div class="col-md-4">
-              <p><strong>Total:</strong> {{ order.total | currency }}</p>
+              <p><strong>Total:</strong> {{ order.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</p>
             </div>
           </div>
-          
-          <div class="row mb-3" *ngIf="order.cliente?.direccion">
-            <div class="col-12">
-              <h6>Dirección de Entrega</h6>
-              <p>
-                {{ order.cliente?.direccion?.calle }} {{ order.cliente?.direccion?.numero }},
-                {{ order.cliente?.direccion?.ciudad }}, {{ order.cliente?.direccion?.estado }},
-                {{ order.cliente?.direccion?.codigoPostal }}
-              </p>
-            </div>
-          </div>
-          
+
           <div class="row mb-4">
             <div class="col-12">
               <h6>Productos del Pedido</h6>
-              <p-table [value]="order.productos" [scrollable]="true" scrollHeight="250px">
+              <p-table [value]="productosSeleccionados" [scrollable]="true" scrollHeight="250px">
                 <ng-template pTemplate="header">
                   <tr>
-                    <th>SKU</th>
-                    <th>Nombre</th>
+                    <th>Referencia</th>
+                    <th>Producto</th>
                     <th>Cantidad</th>
-                    <th>Precio Unitario</th>
-                    <th>Subtotal</th>
                   </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-producto>
@@ -184,15 +89,23 @@
                     <td>{{ producto.sku }}</td>
                     <td>{{ producto.nombre }}</td>
                     <td>{{ producto.cantidad }}</td>
-                    <td>{{ producto.precio | currency }}</td>
-                    <td>{{ producto.subtotal | currency }}</td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="3" class="text-center">
+                      Este pedido no tiene productos que se guarden en bodega.
+                    </td>
                   </tr>
                 </ng-template>
               </p-table>
+              <small class="text-muted" *ngIf="lineasOmitidas > 0">
+                {{ lineasOmitidas }} línea(s) del pedido no se alistan porque no se guardan en bodega (por ejemplo, servicios).
+              </small>
             </div>
           </div>
-          
-          <div class="row mb-3">
+
+          <div class="row mb-3" *ngIf="!picking">
             <div class="col-12">
               <h6>Iniciar Picking para este Pedido</h6>
               <form [formGroup]="pickingForm">
@@ -201,7 +114,7 @@
                     <span class="p-float-label">
                       <select id="bodegaId" formControlName="bodegaId" class="form-control w-100">
                         <option value="">Seleccione una bodega</option>
-                        <option *ngFor="let bodega of bodegasDisponibles" [value]="bodega.id">
+                        <option *ngFor="let bodega of bodegasDisponibles" [value]="bodega.idBodega">
                           {{ bodega.nombre }}
                         </option>
                       </select>
@@ -213,13 +126,16 @@
                   </div>
                 </div>
               </form>
+              <small class="p-error" *ngIf="!puedeIniciar() && productosSeleccionados.length > 0">
+                Este pedido está en «{{ textoEstadoPedido(order.estadoProceso) }}» y ya no se puede alistar.
+              </small>
             </div>
           </div>
-          
-          <div class="row">
+
+          <div class="row" *ngIf="!picking">
             <div class="col-md-12 text-end">
               <button pButton type="button" label="Iniciar Picking" icon="pi pi-cart-plus"
-                      [disabled]="pickingForm.get('bodegaId')?.invalid || submitting"
+                      [disabled]="pickingForm.get('bodegaId')?.invalid || submitting || !puedeIniciar()"
                       [loading]="submitting" (click)="iniciarPickingDesdeOrden()"
                       class="p-button-success"></button>
             </div>
@@ -229,46 +145,46 @@
     </div>
   </div>
 
-  <!-- Detalle de picking existente -->
-  <div *ngIf="!isNuevo && !isFromOrder && !loading && picking" class="row">
+  <!-- Alistamiento del pedido (ya iniciado o completado) -->
+  <div *ngIf="!isNuevo && !loading && picking" class="row">
     <div class="col-12">
       <div class="card">
         <div class="card-header">
           <div class="d-flex justify-content-between align-items-center">
-            <h5 class="card-title">Picking ID: {{ picking._id }}</h5>
+            <h5 class="card-title">Alistamiento del pedido {{ nroPedido }}</h5>
             <span class="badge" [ngClass]="{
               'bg-warning': picking.estado === 'pendiente',
               'bg-primary': picking.estado === 'en_proceso',
-              'bg-success': picking.estado === 'completado'
+              'bg-success': picking.estado === 'completado',
+              'bg-secondary': picking.estado === 'cancelado'
             }">
-              {{ picking.estado | titlecase }}
+              {{ textoEstadoAlistamiento(picking.estado) }}
             </span>
           </div>
         </div>
         <div class="card-body">
           <div class="row mb-3">
             <div class="col-md-4">
-              <p><strong>Orden ID:</strong> {{ picking.ordenId }}</p>
-            </div>
-            <div class="col-md-4">
-              <p><strong>Bodega:</strong> {{ picking.bodegaId }}</p>
+              <p><strong>Bodega:</strong> {{ nombreBodega(picking.bodegaId) || picking.bodegaId }}</p>
             </div>
             <div class="col-md-4">
               <p><strong>Fecha de Inicio:</strong> {{ picking.fechaInicio | date:'dd/MM/yyyy HH:mm' }}</p>
             </div>
+            <div class="col-md-4" *ngIf="picking.fechaCompletado">
+              <p><strong>Fecha de Completado:</strong> {{ picking.fechaCompletado | date:'dd/MM/yyyy HH:mm' }}</p>
+            </div>
           </div>
-          
+
           <div class="row mb-4">
             <div class="col-12">
               <h6>Productos a Recolectar</h6>
               <p-table [value]="picking.productos" [scrollable]="true" scrollHeight="250px">
                 <ng-template pTemplate="header">
                   <tr>
-                    <th>SKU</th>
-                    <th>Nombre</th>
+                    <th>Referencia</th>
+                    <th>Producto</th>
                     <th>Cantidad Solicitada</th>
                     <th>Cantidad Recolectada</th>
-                    <th>Ubicación</th>
                     <th>Estado</th>
                   </tr>
                 </ng-template>
@@ -278,7 +194,6 @@
                     <td>{{ producto.nombre }}</td>
                     <td>{{ producto.cantidad }}</td>
                     <td>{{ producto.cantidadRecolectada || 0 }}</td>
-                    <td>{{ producto.ubicacion || 'No especificada' }}</td>
                     <td>
                       <span class="badge" [ngClass]="{
                         'bg-warning': !producto.recolectado,
@@ -292,8 +207,8 @@
               </p-table>
             </div>
           </div>
-          
-          <div class="row" *ngIf="picking.estado !== 'completado'">
+
+          <div class="row" *ngIf="picking.estado !== 'completado' && picking.estado !== 'cancelado'">
             <div class="col-12 text-end">
               <button pButton type="button" label="Completar Picking" icon="pi pi-check"
                       [loading]="submitting" [disabled]="submitting"
@@ -304,4 +219,4 @@
       </div>
     </div>
   </div>
-</div> 
+</div>

@@ -30,6 +30,7 @@ function fixture(width) {
     { events },
     { refreshCart: () => rxjs.of([]) },
     { deepClone: value => JSON.parse(JSON.stringify(value)) },
+    { isEnabled: () => false, isEnabled$: () => rxjs.of(false) }, // banderas por comercio: todo apagado
   );
   return { nav, events, viewport };
 }

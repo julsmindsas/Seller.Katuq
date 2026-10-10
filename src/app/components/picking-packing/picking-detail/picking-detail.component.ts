@@ -1,9 +1,23 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
+import Swal from 'sweetalert2';
 import { PickingPackingService } from '../../../shared/services/picking-packig/picking-packing.service';
 import { PickingResponse, Producto, PickingRequest, PickingCompletarRequest } from '../models/picking.model';
 import { Order } from '../models/order.model';
+import {
+  AccionPicking,
+  avisoDeErrorPicking,
+  bodegaSugerida,
+  destinoDelDetalle,
+  lineasDePicking,
+  mensajeAHtml,
+  puedeAlistarse,
+  textoDeConfirmarCompletar,
+  textoDeEstadoAlistamiento,
+  textoDeEstadoPedido
+} from '../picking-mensajes';
 
 @Component({
   selector: 'app-picking-detail',
@@ -11,28 +25,34 @@ import { Order } from '../models/order.model';
   styleUrls: ['./picking-detail.component.scss']
 })
 export class PickingDetailComponent implements OnInit {
-  pickingId: string = '';
-  ordenId: string = '';
+  /** Número del pedido: es lo que viaja en la URL (picking/orden/:id). El alistamiento se consulta por pedido. */
+  nroPedido: string = '';
   isNuevo: boolean = false;
-  isFromOrder: boolean = false;
   picking: PickingResponse | null = null;
   order: Order | null = null;
   pickingForm: FormGroup;
   loading: boolean = false;
   submitting: boolean = false;
-  
-  // Para nuevo picking
-  productosDisponibles: Producto[] = [];
-  productosSeleccionados: Producto[] = [];
-  bodegasDisponibles: any[] = [];
+
+  // Para elegir el pedido a alistar (ruta "nuevo")
   ordenesPendientes: any[] = [];
-  productoSeleccionadoId: string = '';
-  
+  nroPedidoElegido: string = '';
+
+  // Productos del pedido que se van a alistar (salen del carrito del pedido) y bodegas activas
+  productosSeleccionados: Producto[] = [];
+  lineasOmitidas: number = 0;
+  bodegasDisponibles: any[] = [];
+
+  // Textos para la plantilla
+  textoEstadoPedido = textoDeEstadoPedido;
+  textoEstadoAlistamiento = textoDeEstadoAlistamiento;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private fb: FormBuilder,
-    private pickingService: PickingPackingService
+    private pickingService: PickingPackingService,
+    private toastr: ToastrService
   ) {
     this.pickingForm = this.fb.group({
       ordenId: ['', Validators.required],
@@ -41,43 +61,41 @@ export class PickingDetailComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.route.url.subscribe(segments => {
-      this.isFromOrder = segments.some(segment => segment.path === 'orden');
-      
-      this.route.params.subscribe(params => {
-        this.pickingId = params['id'];
-        
-        if (this.pickingId === 'nuevo') {
-          this.isNuevo = true;
-          this.cargarDatosIniciales();
-        } else if (this.isFromOrder) {
-          this.ordenId = this.pickingId; // En este caso, pickingId contiene el ordenId
-          this.cargarBodegasYDetallePedido();
-        } else {
-          this.cargarDetallePicking();
-        }
-      });
+    this.route.params.subscribe(params => {
+      // "picking/nuevo" es una ruta propia SIN :id, así que se reconoce por su ruta y no por el parámetro
+      const destino = destinoDelDetalle(this.route.snapshot.routeConfig?.path, params['id']);
+      this.picking = null;
+      this.order = null;
+
+      if (destino.eligePedido) {
+        this.isNuevo = true;
+        this.cargarDatosIniciales();
+      } else {
+        // picking/orden/:id y picking/:id traen el NÚMERO DEL PEDIDO: el servidor no consulta por id de picking
+        this.isNuevo = false;
+        this.nroPedido = destino.nroPedido;
+        this.cargarBodegasYDetallePedido();
+      }
     });
   }
 
   cargarDatosIniciales(): void {
     this.loading = true;
-    
-    // Cargar bodegas disponibles
-    this.pickingService.getBodegasDisponibles().subscribe(bodegas => {
-      this.bodegasDisponibles = bodegas;
-      
-      // Cargar productos disponibles
-      this.pickingService.getProductosDisponibles().subscribe(productos => {
-        this.productosDisponibles = productos;
-        
-        // Cargar órdenes pendientes
-        this.pickingService.getOrdenesPendientes().subscribe(ordenes => {
-          this.ordenesPendientes = ordenes;
-          this.loading = false;
-        });
-      });
+    this.pickingService.getOrdenesPendientes().subscribe({
+      next: (ordenes) => {
+        this.ordenesPendientes = ordenes;
+        this.loading = false;
+      },
+      error: (error) => {
+        this.loading = false;
+        this.avisarError('consultar', error);
+      }
     });
+  }
+
+  irAlPedidoElegido(): void {
+    if (!this.nroPedidoElegido) return;
+    this.router.navigate(['/picking-packing/picking/orden', this.nroPedidoElegido]);
   }
 
   cargarBodegasYDetallePedido(): void {
@@ -90,84 +108,80 @@ export class PickingDetailComponent implements OnInit {
         this.cargarDetallePedido();
       },
       error: (error) => {
-        console.error('Error al cargar bodegas:', error);
         this.loading = false;
-      }
-    });
-  }
-
-  cargarDetallePicking(): void {
-    this.loading = true;
-    this.pickingService.getEstadoPicking(this.pickingId).subscribe({
-      next: (data) => {
-        this.picking = data;
-        this.ordenId = data.ordenId;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error al cargar picking:', error);
-        this.loading = false;
+        this.avisarError('consultar', error);
       }
     });
   }
 
   cargarDetallePedido(): void {
-    this.pickingService.getOrderByNroPedido(this.ordenId).subscribe({
+    this.pickingService.getOrderByNroPedido(this.nroPedido).subscribe({
       next: (data) => {
         this.order = data;
-        
-        // Pre-llenar el formulario de picking
+
+        // Los productos a alistar salen del carrito del pedido
+        const { lineas, omitidas } = lineasDePicking(data);
+        this.productosSeleccionados = lineas;
+        this.lineasOmitidas = omitidas;
+
+        // Pre-llenar el formulario: el pedido y, si sigue activa, la bodega con la que se vendió
         this.pickingForm.patchValue({
-          ordenId: this.order._id
+          ordenId: data._id,
+          bodegaId: bodegaSugerida(this.bodegasDisponibles, data.bodegaId)
         });
-        
-        // Convertir productos del pedido a productos para picking
-        if (this.order && this.order.productos) {
-          this.productosSeleccionados = this.order.productos.map(p => ({
-            productoId: p.productoId,
-            nombre: p.nombre,
-            sku: p.sku,
-            cantidad: p.cantidad,
-            ubicacion: 'Por determinar' // Valor por defecto, se actualizará cuando obtengamos datos reales
-          }));
+
+        // Por último, ¿ya se empezó a alistar este pedido?
+        this.cargarDetallePicking();
+      },
+      error: (error) => {
+        this.loading = false;
+        this.avisarError('consultar', error);
+      }
+    });
+  }
+
+  /** Lee el alistamiento DEL PEDIDO. Si todavía no se inició, `picking` queda en null. */
+  cargarDetallePicking(): void {
+    if (!this.order || !this.order._id) {
+      this.loading = false;
+      return;
+    }
+    this.loading = true;
+    this.pickingService.getEstadoPicking(this.order._id).subscribe({
+      next: (data) => {
+        this.picking = data;
+        if (data) {
+          this.completarNombres(data);
         }
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error al cargar pedido:', error);
         this.loading = false;
-        // Aquí podrías mostrar un mensaje de error al usuario
+        this.avisarError('consultar', error);
       }
     });
   }
 
-  iniciarPicking(): void {
-    if (this.pickingForm.invalid || this.productosSeleccionados.length === 0) {
-      this.pickingForm.markAllAsTouched();
-      return;
-    }
-
-    this.submitting = true;
-    const data: PickingRequest = {
-      ordenId: this.pickingForm.get('ordenId')?.value,
-      bodegaId: this.pickingForm.get('bodegaId')?.value,
-      productos: this.productosSeleccionados
-    };
-
-    this.pickingService.iniciarPicking(data).subscribe({
-      next: (response) => {
-        this.submitting = false;
-        this.router.navigate(['/picking-packing/picking', response._id]);
-      },
-      error: (error) => {
-        console.error('Error al iniciar picking:', error);
-        this.submitting = false;
+  /** Al completar, el servidor reescribe las líneas sin nombre ni referencia: se recuperan del pedido. */
+  private completarNombres(picking: PickingResponse): void {
+    const porId: { [productoId: string]: Producto } = {};
+    this.productosSeleccionados.forEach(p => { porId[p.productoId] = p; });
+    picking.productos.forEach(p => {
+      const linea = porId[p.productoId];
+      if (linea) {
+        p.nombre = p.nombre || linea.nombre;
+        p.sku = p.sku || linea.sku;
       }
     });
+  }
+
+  /** El pedido está en un estado en el que se puede alistar y tiene productos para alistar. */
+  puedeIniciar(): boolean {
+    return !!this.order && puedeAlistarse(String(this.order.estadoProceso)) && this.productosSeleccionados.length > 0;
   }
 
   iniciarPickingDesdeOrden(): void {
-    if (!this.order || !this.order._id || this.pickingForm.get('bodegaId')?.invalid) {
+    if (!this.order || !this.order._id || this.pickingForm.get('bodegaId')?.invalid || !this.puedeIniciar()) {
       this.pickingForm.markAllAsTouched();
       return;
     }
@@ -180,24 +194,49 @@ export class PickingDetailComponent implements OnInit {
     };
 
     this.pickingService.iniciarPicking(data).subscribe({
-      next: (response) => {
+      next: () => {
         this.submitting = false;
-        this.router.navigate(['/picking-packing/picking', response._id]);
+        this.toastr.success('Pedido ' + this.nroPedido, 'Alistamiento iniciado');
+        this.cargarDetallePicking();
       },
       error: (error) => {
-        console.error('Error al iniciar picking:', error);
         this.submitting = false;
+        this.avisarError('iniciar', error);
       }
     });
   }
 
   completarPicking(): void {
     if (!this.picking || !this.picking._id) return;
-    
+
+    const picking = this.picking;
+    // Completar descuenta inventario: se le dice al usuario antes de hacerlo
+    Swal.fire({
+      title: '¿Completar el alistamiento?',
+      text: textoDeConfirmarCompletar({
+        nroPedido: this.nroPedido,
+        productos: picking.productos.length,
+        unidades: picking.productos.reduce((total, p) => total + (Number(p.cantidad) || 0), 0),
+        bodega: this.nombreBodega(picking.bodegaId)
+      }),
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, completar',
+      cancelButtonText: 'Todavía no',
+      confirmButtonColor: '#5F3FE0',
+      focusCancel: true
+    }).then(resultado => {
+      if (resultado.isConfirmed) {
+        this.enviarCompletar(picking);
+      }
+    });
+  }
+
+  private enviarCompletar(picking: PickingResponse): void {
     this.submitting = true;
     const data: PickingCompletarRequest = {
-      pickingId: this.picking._id,
-      productos: this.picking.productos.map(p => ({
+      pickingId: picking._id,
+      productos: picking.productos.map(p => ({
         ...p,
         recolectado: true,
         cantidadRecolectada: p.cantidad // Por defecto se recolecta toda la cantidad solicitada
@@ -207,39 +246,45 @@ export class PickingDetailComponent implements OnInit {
     this.pickingService.completarPicking(data).subscribe({
       next: () => {
         this.submitting = false;
+        this.toastr.success('Pedido ' + this.nroPedido, 'Alistamiento completado');
         this.cargarDetallePicking();
       },
       error: (error) => {
-        console.error('Error al completar picking:', error);
         this.submitting = false;
+        this.avisarError('completar', error);
       }
     });
   }
 
-  agregarProducto(producto: Producto): void {
-    if (!this.productosSeleccionados.some(p => p.productoId === producto.productoId)) {
-      this.productosSeleccionados.push({...producto});
-    }
+  /** Nombre de la bodega a partir de su código de negocio (BOD-001). */
+  nombreBodega(idBodega?: string): string {
+    const bodega = this.bodegasDisponibles.find(b => b.idBodega === idBodega);
+    return bodega ? bodega.nombre : '';
   }
 
-  eliminarProducto(index: number): void {
-    this.productosSeleccionados.splice(index, 1);
-  }
+  /** Muestra el error al comercio con palabras claras. Si el interceptor ya avisó, no repite. */
+  private avisarError(accion: AccionPicking, error: any): void {
+    const nombresPorId: { [productoId: string]: string } = {};
+    this.productosSeleccionados.forEach(p => { nombresPorId[p.productoId] = p.nombre; });
 
-  seleccionarProducto(): void {
-    if (!this.productoSeleccionadoId) return;
-    
-    const productoSeleccionado = this.productosDisponibles.find(
-      p => p.productoId === this.productoSeleccionadoId
-    );
-    
-    if (productoSeleccionado) {
-      this.agregarProducto(productoSeleccionado);
-      this.productoSeleccionadoId = ''; // Limpiar selección después de agregar
+    const aviso = avisoDeErrorPicking(error, accion, {
+      nroPedido: this.nroPedido,
+      nombresPorId,
+      nombreBodega: this.nombreBodega(this.pickingForm.get('bodegaId')?.value)
+    });
+    if (!aviso) {
+      return;
     }
+    Swal.fire({
+      icon: 'warning',
+      title: aviso.titulo,
+      html: '<div style="text-align:left">' + mensajeAHtml(aviso.mensaje) + '</div>',
+      confirmButtonText: 'Entendido',
+      confirmButtonColor: '#5F3FE0'
+    });
   }
 
   volverALista(): void {
     this.router.navigate(['/picking-packing/picking']);
   }
-} 
+}
