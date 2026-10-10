@@ -1,0 +1,47 @@
+<section class="ins-panel">
+  <header class="ins-panel__head">
+    <span class="ins-panel__icon" style="background: #FFF1DF; color: #D9820A;"><i class="pi pi-wallet"></i></span>
+    <div>
+      <h3 class="ins-panel__title">Capital parado</h3>
+      <p class="ins-panel__sub">Productos sin ventas en {{ ventanaDias }} días o con mercancía para más de seis meses.</p>
+    </div>
+    <div class="ins-panel__actions" *ngIf="capital.total > 0">
+      <div class="ins-row__nums">
+        <div class="ins-label">A costo</div>
+        <div class="ins-row__big">{{ dinero(capital.valorCosto) }}</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="ins-row" *ngFor="let fila of capital.filas | slice:0:10; trackBy: trackId">
+    <div>
+      <p class="ins-row__name">{{ fila.nombre || fila.referencia }}</p>
+      <span class="ins-row__meta">
+        {{ bodega(fila.idBodega) }} · {{ fila.unidades | number }} unidades
+        <span *ngIf="fila.inmovilizado"> · sin ventas</span>
+      </span>
+    </div>
+    <div class="ins-row__nums">
+      <span class="ins-pill" [ngClass]="accion(fila).clase">{{ accion(fila).texto }}</span>
+      <div class="ins-row__meta mt-1" *ngIf="!fila.sinCosto">{{ dinero(fila.valorCosto) }}</div>
+      <div class="ins-row__meta mt-1" *ngIf="fila.sinCosto">Sin costo registrado</div>
+    </div>
+    <div class="ins-row__why">
+      <i class="pi pi-angle-right"></i>
+      <span>
+        <ng-container *ngIf="frasesIA[fila.id]; else base"><span class="ins-row__ia">Opttia · </span>{{ frasesIA[fila.id].motivo }}</ng-container>
+        <ng-template #base>{{ fila.motivoBase }}</ng-template>
+      </span>
+    </div>
+  </div>
+
+  <div class="ins-empty" *ngIf="capital.total === 0">
+    <strong>No hay capital parado</strong>
+    Todo lo que tiene en bodega se está vendiendo a buen ritmo.
+  </div>
+
+  <div class="ins-note" *ngIf="capital.total > 10 || capital.sinCosto > 0">
+    <span *ngIf="capital.total > 10">Y {{ capital.total - 10 | number }} productos más. </span>
+    <span *ngIf="capital.sinCosto > 0">{{ capital.sinCosto | number }} no tienen costo registrado y no suman al total: el valor es un piso.</span>
+  </div>
+</section>

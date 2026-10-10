@@ -1,5 +1,5 @@
 import { Injectable, NgZone, OnDestroy } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   KatuqCommerceContext,
@@ -81,6 +81,27 @@ export class OpttiaChatService implements OnDestroy {
 
   hasTool(name: string): boolean {
     return this.accessSubject.value?.tools.includes(name) === true;
+  }
+
+  // Una pantalla (p. ej. la Central de Abastecimiento, D-400) puede pedir que se abra
+  // el chat con una pregunta ya escrita. La pregunta queda en la caja de texto y la
+  // persona la envía: así se respetan el consentimiento y el cupo del plan.
+  private readonly openRequestSubject = new Subject<string>();
+  readonly openRequested$ = this.openRequestSubject.asObservable();
+  private pendingDraft: string | null = null;
+
+  askFromScreen(question: string): void {
+    const text = (question || '').trim();
+    if (!text) return;
+    this.pendingDraft = text;
+    this.openRequestSubject.next(text);
+  }
+
+  /** El chat la toma al abrirse; después se borra para no repetirla. */
+  takePendingDraft(): string | null {
+    const draft = this.pendingDraft;
+    this.pendingDraft = null;
+    return draft;
   }
 
   async refreshAccess(): Promise<void> {

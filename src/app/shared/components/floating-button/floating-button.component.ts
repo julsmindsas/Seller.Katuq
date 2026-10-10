@@ -8,6 +8,8 @@ import { DOCUMENT } from '@angular/common';
 import { VoiceAgentService, VoiceAgentConfig, VisualStep } from '../../services/voice-agent.service';
 import { ToolAdapter, TOOL_ADAPTER } from '../../services/tools/tool-adapter';
 import { SubscriptionService } from '../../services/subscription.service';
+import { OpttiaChatService } from '../../services/opttia-chat.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-floating-button',
@@ -49,6 +51,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
   public isLoggedIn = false;
   public chatMaximized: boolean = false;
   public isPremiumUser: boolean = false;
+  private openRequestSub?: Subscription;
 
   constructor(
     public authService: AuthService,
@@ -59,7 +62,8 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     @Inject(DOCUMENT) private document: Document,
     @Inject(TOOL_ADAPTER) private toolAdapter: ToolAdapter,
     private voiceAgentService: VoiceAgentService,
-    private subscriptionService: SubscriptionService
+    private subscriptionService: SubscriptionService,
+    private opttiaChat: OpttiaChatService
   ) {
     this.useModelBig = environment.useModelBig;
 
@@ -132,6 +136,15 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     // Suscribirse a cambios del plan de suscripción
     this.subscriptionService.subscription$.subscribe(subscription => {
       this.isPremiumUser = subscription?.plan === 'premium';
+    });
+
+    // Una pantalla pidió abrir Opttia con una pregunta ya escrita (D-400).
+    this.openRequestSub = this.opttiaChat.openRequested$.subscribe(() => {
+      this.selectedMode = 'opttia';
+      this.chatFormVisible = true;
+      this.chatMinimized = false;
+      this.hasUnreadMessages = false;
+      this.saveState();
     });
   }
 
@@ -842,6 +855,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.openRequestSub?.unsubscribe();
     // Detener sesión de voz si está activa
     if (this.voiceAgentService.isSessionActive()) {
       this.voiceAgentService.stopVoiceSession();

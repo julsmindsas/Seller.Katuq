@@ -1,0 +1,33 @@
+<section class="ins-panel">
+  <header class="ins-panel__head">
+    <span class="ins-panel__icon" style="background: #E7F1FF; color: #1E6FD9;"><i class="pi pi-flag"></i></span>
+    <div>
+      <h3 class="ins-panel__title">Avisos</h3>
+      <p class="ins-panel__sub">Cosas raras en los registros que conviene revisar.</p>
+    </div>
+  </header>
+
+  <div class="ins-row" *ngFor="let fila of avisos.filas | slice:0:10; trackBy: trackId">
+    <div>
+      <p class="ins-row__name">{{ fila.nombre || fila.referencia }}</p>
+      <span class="ins-row__meta">{{ bodega(fila.idBodega) }}</span>
+    </div>
+    <div class="ins-row__nums">
+      <span class="ins-pill" [ngClass]="prioridadClase(fila)">{{ tipo(fila) }}</span>
+    </div>
+    <div class="ins-row__why">
+      <i class="pi pi-angle-right"></i>
+      <span>
+        <ng-container *ngIf="frasesIA[fila.id]; else base"><span class="ins-row__ia">Opttia · </span>{{ frasesIA[fila.id].explicacion }}</ng-container>
+        <ng-template #base>{{ fila.motivoBase }}</ng-template>
+      </span>
+    </div>
+  </div>
+
+  <div class="ins-empty" *ngIf="avisos.total === 0">
+    <strong>Sin avisos</strong>
+    No encontramos nada raro en los registros del período.
+  </div>
+
+  <div class="ins-note" *ngIf="avisos.total > 10">Y {{ avisos.total - 10 | number }} avisos más.</div>
+</section>

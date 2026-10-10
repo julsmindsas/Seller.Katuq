@@ -6,6 +6,7 @@ import { MovimientoInventario, MovimientosResponse } from '../../../components/i
 import { TipoMovimientoInventario } from '../../../components/inventarios/enums/tipos-movimiento.enum';
 import { Bodega } from '../../models/inventarios/bodega.model';
 import { Traslado } from '../../models/inventarios/traslado.model';
+import { RespuestaInsights } from '../../../components/inventarios/central-abastecimiento/insights.modelos';
 
 export interface Proveedor {
   id: string;
@@ -680,6 +681,18 @@ export class InventarioService {
     return this.http.get(`${this.apiUrl}/inventory/central-abastecimiento`, {
       params: { dias: dias.toString() }
     });
+  }
+
+  /** Qué comprar ya, capital parado y avisos, calculado en el servidor. No gasta cupo de IA (D-400). */
+  getInventoryInsights(dias: number = 30, idBodega?: string): Observable<RespuestaInsights> {
+    let params = new HttpParams().set('dias', String(dias));
+    if (idBodega) params = params.set('idBodega', idBodega);
+    return this.http.get<RespuestaInsights>(`${this.apiUrl}/inventory/insights`, { params });
+  }
+
+  /** Lo mismo, más las frases de Opttia. Consume un mensaje del cupo de chat. */
+  explicarInventoryInsights(dias: number = 30, idBodega?: string): Observable<RespuestaInsights> {
+    return this.http.post<RespuestaInsights>(`${this.apiUrl}/inventory/insights/explicar`, { dias, idBodega: idBodega || null });
   }
 
   quitarProductoSinStock(productoId: string): Observable<any> {

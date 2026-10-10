@@ -36,6 +36,7 @@ export class OpttiaChatComponent implements OnInit, OnDestroy, AfterViewChecked 
   get suggestions(): string[] {
     return [
       { tool: 'get_sales_today', text: '¿Cómo van las ventas de hoy?' },
+      { tool: 'get_inventory_insights', text: '¿Qué tengo que comprar esta semana?' },
       { tool: 'get_low_stock_products', text: '¿Qué productos tienen bajo stock?' },
       { tool: 'get_orders', text: 'Muéstrame los pedidos pendientes' }
     ].filter(suggestion => this.opttia.hasTool(suggestion.tool)).map(suggestion => suggestion.text);
@@ -52,6 +53,17 @@ export class OpttiaChatComponent implements OnInit, OnDestroy, AfterViewChecked 
   ngOnInit(): void {
     this.opttia.prepareForCurrentSession();
     this.hasConsent = localStorage.getItem(this.consentKey) === 'accepted';
+
+    // Pregunta que dejó una pantalla al abrir el chat (o mientras ya estaba abierto).
+    const pending = this.opttia.takePendingDraft();
+    if (pending) this.draft = pending;
+    this.opttia.openRequested$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        const draft = this.opttia.takePendingDraft();
+        if (draft) this.draft = draft;
+        this.cdr.markForCheck();
+      });
 
     this.opttia.messages$
       .pipe(takeUntil(this.destroy$))

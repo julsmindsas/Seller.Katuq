@@ -1,0 +1,12 @@
+<section class="ins-panel">
+  <header class="ins-panel__head">
+    <span class="ins-panel__icon" style="background: #efe9ff; color: #5F3FE0;"><i class="pi pi-comments"></i></span>
+    <div>
+      <h3 class="ins-panel__title">Pregúntele a Opttia</h3>
+      <p class="ins-panel__sub">Responde con las mismas cifras de esta pantalla.</p>
+    </div>
+  </header>
+  <div class="d-flex flex-wrap gap-2 p-3">
+    <button type="button" class="ins-chip" *ngFor="let p of preguntas" (click)="preguntar(p)">{{ p }}</button>
+  </div>
+</section>

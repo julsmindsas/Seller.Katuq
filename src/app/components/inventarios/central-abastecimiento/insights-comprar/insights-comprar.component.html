@@ -1,0 +1,52 @@
+<section class="ins-panel">
+  <header class="ins-panel__head">
+    <span class="ins-panel__icon" style="background: #FDECEC; color: #D64545;"><i class="pi pi-shopping-cart"></i></span>
+    <div>
+      <h3 class="ins-panel__title">Qué comprar ya</h3>
+      <p class="ins-panel__sub">Se agotan antes de que llegue el pedido al proveedor.</p>
+    </div>
+    <div class="ins-panel__actions" *ngIf="comprar.total > 0">
+      <a class="ins-btn is-primary" routerLink="/compras/reposicion">
+        <i class="pi pi-file-edit"></i> Pasar a la orden
+      </a>
+    </div>
+  </header>
+
+  <div class="ins-row" *ngFor="let fila of comprar.filas | slice:0:10; trackBy: trackId">
+    <div>
+      <p class="ins-row__name">{{ fila.nombre || fila.referencia }}</p>
+      <span class="ins-row__meta">
+        {{ bodega(fila.idBodega) }} · {{ dias(fila) }} · el proveedor tarda {{ fila.diasEntrega }} días<span *ngIf="fila.diasEntregaSupuesto"> (supuesto)</span>
+        <span *ngIf="fila.yaPedido > 0"> · ya pedido {{ fila.yaPedido | number }}</span>
+      </span>
+    </div>
+    <div class="ins-row__nums">
+      <div class="ins-label">Comprar</div>
+      <div class="ins-row__big">{{ fila.sugerido | number }}</div>
+      <span class="ins-row__meta" *ngIf="fila.ventasEnRiesgo !== null">{{ dinero(fila.ventasEnRiesgo) }} en riesgo</span>
+    </div>
+    <div class="ins-row__why">
+      <i class="pi pi-angle-right"></i>
+      <span>
+        <ng-container *ngIf="frasesIA[fila.id]; else base"><span class="ins-row__ia">Opttia · </span>{{ frasesIA[fila.id] }}</ng-container>
+        <ng-template #base>{{ fila.motivoBase }}</ng-template>
+        <span *ngIf="fila.traslado" class="ins-pill is-info ms-1">Trasladar primero: {{ fila.traslado.cantidad | number }} desde {{ bodega(fila.traslado.origen) }}</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="ins-empty" *ngIf="comprar.total === 0 && comprar.sinDemanda === 0">
+    <strong>Nada urgente por comprar</strong>
+    Ningún producto se agota antes de que llegue un pedido.
+  </div>
+  <div class="ins-empty" *ngIf="comprar.total === 0 && comprar.sinDemanda > 0">
+    <strong>No hay ventas suficientes para sugerir compras</strong>
+    {{ comprar.sinDemanda | number }} productos no registran ventas en el período. Sin ventas registradas no se puede calcular cuándo se agotan.
+  </div>
+
+  <div class="ins-note" *ngIf="comprar.total > 10 || comprar.sinDemanda > 0 || comprar.sinPrecio > 0">
+    <span *ngIf="comprar.total > 10">Y {{ comprar.total - 10 | number }} más en "Qué comprar". </span>
+    <span *ngIf="comprar.total > 0 && comprar.sinDemanda > 0">{{ comprar.sinDemanda | number }} productos quedaron fuera por no registrar ventas. </span>
+    <span *ngIf="comprar.sinPrecio > 0">{{ comprar.sinPrecio | number }} sin precio de venta: no suman a las ventas en riesgo.</span>
+  </div>
+</section>
