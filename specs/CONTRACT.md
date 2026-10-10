@@ -9191,3 +9191,16 @@ Se actualizaron las instrucciones operativas de suscripciones para retirar coman
 7. El botón de confirmación pasa del verde al acento.
 
 **Cierre D-402 (publicado 2026.10.10.1).** Probado en producción con la sesión de Daniel (Super Administrador), sin guardar: al elegir API aparecen la dirección y la clave, la dirección se ve en el resumen, Guardar se activa sin pedir la clave, la consola no muestra errores y el bloque de desarrollo se ve. No probado: que quede oculto con un rol distinto, que depende de `rol === 'Super Administrador'`. En la misma publicación salió un arreglo de seguridad sobre el ticket 1185 de otra sesión: el tooltip OSM de la lista de pedidos se pinta con `[escape]="false"` y metía sin escapar `status`/`lastNote` de Cereza; ahora se escapan (`escaparHtml` en `list.component.ts`).
+
+## D-403 (2026-10-10) — Dropshipping: candado de empresa, claves cifradas y configuración en el servidor (openspec/changes/dropshipping-config-servidor) — PROPUESTA, pendiente de aprobación
+
+**Disparador.** Daniel ("sí, arma la propuesta") después de D-402.
+
+**Hallazgo de seguridad (escalado en el chat, no corregido).** En `/v1/dropshipping/proveedores` y `/v1/dropshipping/ordenes` el filtro por empresa es opcional (`req.body.company || req.query.company`, y sin valor no filtra). El front no manda ese parámetro, así que la lista de proveedores devuelve los de todas las empresas. Las rutas por id (`getById`, `update`, `delete`, `activar`, `desactivar`, `api-config`, `summary`, `sincronizar-productos`) no comprueban la empresa del documento. `dropshipping_proveedores.api_config.api_key` está en texto plano y sale en las respuestas. Alcance: comercios con un plan que incluya `dropshipping`. La integración por API es simulada; nada usa esas claves para llamar a terceros.
+
+**Propuesta.**
+- **Fase 1 (backend, primero):** la empresa sale solo del JWT, con filtro obligatorio y 404 por id ajeno; la clave se cifra con `secretsCrypto` y sale enmascarada; script de cifrado con `--dry-run`.
+- **Fase 2:** campo `dropshipping` en `companies`, con `GET/POST /v1/companies/dropshipping-settings` (molde pricing-mode). `editCompany` y `updateCompanyById` no lo pisan.
+- **Front:** lee la empresa en vez de `localStorage`; ofrece subir una sola vez la copia local; se quitan la sección de integración de la empresa (sin efecto) y las herramientas de prueba.
+
+Sin colecciones nuevas. Sin cambios en orders, inventario, productos ni precios.
