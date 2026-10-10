@@ -18,6 +18,6 @@
 
 ## 3. Cierre
 
-- [ ] 3.1 `ng build --configuration production` sin errores.
-- [ ] 3.2 Capturas Playwright 1440/390 de cada pantalla desde el `dist` local; sin logo roto, sin inglés, sin scroll horizontal.
-- [ ] 3.3 Publicar, probar en producción y registrar el cierre en CONTRACT.md.
+- [x] 3.1 `ng build --configuration production` sin errores.
+- [x] 3.2 Capturas Playwright 1440/390 de cada pantalla desde el `dist` local; sin logo roto, sin inglés, sin scroll horizontal.
+- [x] 3.3 Publicar, probar en producción y registrar el cierre en CONTRACT.md.
