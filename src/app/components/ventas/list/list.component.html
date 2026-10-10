@@ -336,6 +336,16 @@
                                                             <span *ngIf="isPedidoUrgente(pedido)" class="pedido-row__urg">URG</span>
                                                             <i *ngIf="isPedidoCongelado(pedido)" class="fa fa-snowflake-o pedido-row__frozen"
                                                                [title]="'Pedido congelado' | translate"></i>
+                                                            <!-- Ticket 1185: la vista panel también muestra los números externos
+                                                                 (SH-xxx Shopify, OSM-xxx Osmosis) que ya tenía la vista tabla. -->
+                                                            <span *ngFor="let ref of getExternalOrderNumbers(pedido)"
+                                                                  class="pedido-row__ext"
+                                                                  [pTooltip]="ref.tooltip || ('Orden de ' + ref.platform)"
+                                                                  [escape]="false"
+                                                                  tooltipPosition="top">
+                                                                {{ ref.label }}
+                                                                <i *ngIf="ref.hasNote" class="pi pi-truck" aria-label="Con tracking"></i>
+                                                            </span>
                                                         </div>
                                                         <div class="pedido-row__cliente">{{ getClienteNombre(pedido) }}</div>
                                                         <div class="pedido-row__badges">
@@ -403,6 +413,15 @@
                                                             </div>
                                                             <div class="pedido-detail__meta">
                                                                 <span class="pedido-detail__nro">{{ pedidoDetalle.nroPedido }}</span>
+                                                                <!-- Ticket 1185: números externos (Shopify / Osmosis) en el detalle -->
+                                                                <span *ngFor="let ref of getExternalOrderNumbers(pedidoDetalle)"
+                                                                      class="pedido-detail__ext"
+                                                                      [pTooltip]="ref.tooltip || ('Orden de ' + ref.platform)"
+                                                                      [escape]="false"
+                                                                      tooltipPosition="top">
+                                                                    {{ ref.label }}
+                                                                    <i *ngIf="ref.hasNote" class="pi pi-truck" aria-label="Con tracking"></i>
+                                                                </span>
                                                                 <span class="pedido-detail__entrega">
                                                                     {{ 'Entrega' | translate }} {{ convertFechaEntregaString(pedidoDetalle?.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega) }}
                                                                 </span>
