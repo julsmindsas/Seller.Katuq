@@ -584,7 +584,8 @@ export class SitiosService extends BaseService {
       referenciasMiradas?: number;
     }>
   > {
-    return this.post<any>("/v1/onboarding/pagina-con-ia/editar", body);
+    // Sin la pantalla de carga global: el chat muestra su propio avance ("Mirando tu imagen…").
+    return this.postSinLoader<any>("/v1/onboarding/pagina-con-ia/editar", body);
   }
 
   /**
@@ -653,6 +654,20 @@ export class SitiosService extends BaseService {
   /** Resuelve los productos ya elegidos, para mostrarlos al abrir el selector. */
   productosPorIds(ids: string[]): Observable<RespuestaProductos> {
     return this.post<RespuestaProductos>("/v1/productos/by-ids", { ids });
+  }
+
+  /** Igual que `subirImagen`, sin la pantalla de carga global (el chat "Con IA" muestra su propio avance). */
+  subirImagenEnSegundoPlano(
+    archivo: File,
+    carpeta = "Sitios"
+  ): Observable<{ success: boolean; url?: string; path?: string; error?: string; ancho?: number; alto?: number }> {
+    const datos = new FormData();
+    datos.append("file", archivo);
+    datos.append("carpeta", carpeta);
+    return this.postSinLoader<{ success: boolean; url?: string; path?: string; error?: string; ancho?: number; alto?: number }>(
+      "/v1/media/upload",
+      datos
+    );
   }
 
   subirImagen(

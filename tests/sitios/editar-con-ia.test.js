@@ -58,7 +58,7 @@ test('la pestaña "Con IA" solo se dibuja con la bandera, y el panel también', 
 
 test('el servicio usa BaseService y la ruta de la función', () => {
   const s = leer(path.join(RAIZ, 'src/app/components/sitios/sitios.service.ts'));
-  assert.match(s, /editarConIA\([\s\S]*?this\.post<any>\("\/v1\/onboarding\/pagina-con-ia\/editar", body\)/);
+  assert.match(s, /editarConIA\([\s\S]*?this\.postSinLoader<any>\("\/v1\/onboarding\/pagina-con-ia\/editar", body\)/);
 });
 
 test('los estilos del chat no usan degradados ni colores fuera de la tabla', () => {
@@ -120,7 +120,7 @@ test('el panel pregunta para qué es la imagen y deja guardar o deshacer despué
   const ts = leer(path.join(EDITOR, 'sitio-editor.component.ts'));
   assert.match(ts, /localStorage\.setItem\(llaveConversacion/);
   assert.match(ts, /if \(this\.relojAvanceIA\) clearInterval\(this\.relojAvanceIA\);/);
-  assert.match(ts, /this\.service\.subirImagen\(adjunto\.archivo\)/);
+  assert.match(ts, /this\.service\.subirImagenEnSegundoPlano\(adjunto\.archivo\)/);
 });
 
 test('pdf.js se carga solo al adjuntar un PDF y su worker viaja como asset', () => {

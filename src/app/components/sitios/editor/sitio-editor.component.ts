@@ -2646,7 +2646,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     const adjunto = this.adjuntosIA.find((a) => !!a.archivo);
     if (!adjunto || !adjunto.archivo || !this.contenido || this.subiendoFotoIA) return;
     this.subiendoFotoIA = true;
-    this.service.subirImagen(adjunto.archivo).subscribe({
+    this.service.subirImagenEnSegundoPlano(adjunto.archivo).subscribe({
       next: (res) => {
         this.subiendoFotoIA = false;
         if (!res || !res.success || !res.url) {
