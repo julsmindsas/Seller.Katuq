@@ -219,7 +219,7 @@
           </div>
 
           <!-- Configuración API - Solo visible cuando se selecciona API o Webhook -->
-          <div *ngIf="showApiConfig" class="row animate-fade-in">
+          <div *ngIf="showApiConfig" class="row animate-fade-in" formGroupName="api_config">
             <div class="col-md-6">
               <div class="form-group">
                 <label class="cfg-label" for="endpoint">
@@ -245,7 +245,7 @@
             <div class="col-md-6">
               <div class="form-group">
                 <label class="cfg-label" for="api_key">
-                  API Key <span class="dsh-req">*</span>
+                  API Key
                 </label>
                 <div class="input-group">
                   <input
@@ -254,8 +254,7 @@
                     [class.is-invalid]="isFieldInvalid('api_config.api_key')"
                     id="api_key"
                     formControlName="api_key"
-                    placeholder="Clave de API para autenticación"
-                    [required]="showApiConfig">
+                    placeholder="Clave de API para autenticación">
                   <div class="input-group-append">
                     <button
                       class="cfg-btn cfg-btn--sec dsh-btn-ojo"
@@ -266,7 +265,7 @@
                   </div>
                 </div>
                 <small class="form-text dsh-ayuda">
-                  Clave de autenticación para acceso a la API
+                  Clave de autenticación para acceso a la API. Por seguridad no se guarda en este navegador.
                 </small>
                 <div class="invalid-feedback" *ngIf="isFieldInvalid('api_config.api_key')">
                   {{ getFieldError('api_config.api_key') }}
@@ -394,8 +393,8 @@
     </form>
   </ng-container>
 
-  <!-- Herramientas de Desarrollo (solo para pruebas) -->
-  <section class="cfg-card dsh-dev">
+  <!-- Herramientas de Desarrollo (solo para pruebas): solo Super Administrador -->
+  <section class="cfg-card dsh-dev" *ngIf="esSuperAdmin">
     <div class="dsh-dev__cabeza">
       <h2 class="cfg-card__titulo dsh-dev__titulo">
         <i class="fa fa-wrench dsh-icono" aria-hidden="true"></i> Herramientas de Desarrollo

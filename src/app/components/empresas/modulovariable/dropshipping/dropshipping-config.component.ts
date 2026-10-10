@@ -15,6 +15,8 @@ export class DropshippingConfigComponent implements OnInit {
   saving = false;
   currentCompany: any;
   showApiKey = false;
+  // Las herramientas de prueba (localStorage) no se muestran a los comercios.
+  readonly esSuperAdmin = JSON.parse(localStorage.getItem('user') || '{}').rol === 'Super Administrador';
 
   constructor(
     private fb: FormBuilder
@@ -67,7 +69,7 @@ export class DropshippingConfigComponent implements OnInit {
           habilitado: existingConfig.habilitado,
           margenMinimoPermitido: existingConfig.configuracion?.margenMinimoPermitido || 0,
           automatizacionActivada: existingConfig.configuracion?.automatizacionActivada || false,
-          notificacionesActivadas: existingConfig.configuracion?.notificacionesActivadas || true,
+          notificacionesActivadas: existingConfig.configuracion?.notificacionesActivadas ?? true,
           tiempoLimiteOrden: existingConfig.configuracion?.tiempoLimiteOrden || 7,
           api_config: {
             tipo_integracion: existingConfig.configuracion?.api_config?.tipo_integracion || 'manual',
@@ -114,7 +116,13 @@ export class DropshippingConfigComponent implements OnInit {
           automatizacionActivada: this.dropshippingConfigForm.get('automatizacionActivada')?.value,
           notificacionesActivadas: this.dropshippingConfigForm.get('notificacionesActivadas')?.value,
           tiempoLimiteOrden: this.dropshippingConfigForm.get('tiempoLimiteOrden')?.value,
-          proveedoresPermitidos: this.dropshippingConfigForm.get('proveedoresPermitidos')?.value
+          proveedoresPermitidos: this.dropshippingConfigForm.get('proveedoresPermitidos')?.value,
+          // La API key no se persiste en el navegador (credencial en texto plano).
+          api_config: {
+            tipo_integracion: this.dropshippingConfigForm.get('api_config.tipo_integracion')?.value,
+            endpoint: this.dropshippingConfigForm.get('api_config.endpoint')?.value || '',
+            configuracion_adicional: this.dropshippingConfigForm.get('api_config.configuracion_adicional')?.value || {}
+          }
         }
       };
 
@@ -172,7 +180,7 @@ export class DropshippingConfigComponent implements OnInit {
         `,
         icon: 'success',
         confirmButtonText: 'Perfecto',
-        confirmButtonColor: '#28a745'
+        confirmButtonColor: '#5F3FE0'
       });
 
       // Si se habilitó dropshipping, actualizar navegación
@@ -258,8 +266,10 @@ export class DropshippingConfigComponent implements OnInit {
           margenMinimoPermitido: 0,
           automatizacionActivada: false,
           notificacionesActivadas: true,
-          tiempoLimiteOrden: 7
+          tiempoLimiteOrden: 7,
+          api_config: { tipo_integracion: 'manual', endpoint: '', api_key: '', configuracion_adicional: {} }
         });
+        this.onTipoIntegracionChange();
       }
     });
   }
@@ -417,9 +427,10 @@ export class DropshippingConfigComponent implements OnInit {
     const endpointControl = this.dropshippingConfigForm.get('api_config.endpoint');
     const apiKeyControl = this.dropshippingConfigForm.get('api_config.api_key');
 
+    // La API key no es obligatoria: no se guarda, y exigirla bloquearía guardar tras recargar.
     if (this.showApiConfig) {
       endpointControl?.setValidators([Validators.required]);
-      apiKeyControl?.setValidators([Validators.required]);
+      apiKeyControl?.clearValidators();
     } else {
       endpointControl?.clearValidators();
       apiKeyControl?.clearValidators();
