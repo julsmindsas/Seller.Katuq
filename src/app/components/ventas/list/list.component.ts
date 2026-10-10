@@ -2139,10 +2139,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         cancelled: 'Cancelado',
       };
       const label = labelMap[String(osmosis.status).toLowerCase()] || osmosis.status;
-      parts.push(`Estado: <b>${label}</b>`);
+      parts.push(`Estado: <b>${this.escaparHtml(label)}</b>`);
     }
     if (osmosis.lastNote) {
-      parts.push(`Tracking: ${osmosis.lastNote}`);
+      parts.push(`Tracking: ${this.escaparHtml(osmosis.lastNote)}`);
     }
     if (osmosis.lastStatusSync) {
       try {
@@ -2151,6 +2151,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       } catch (_) { /* skip */ }
     }
     return parts.join('<br>');
+  }
+
+  // El tooltip va con [escape]="false": todo dato que venga de Cereza se escapa.
+  private escaparHtml(valor: any): string {
+    return String(valor)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   /**
