@@ -601,7 +601,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   /** Índice del bloque en edición. -1 = ninguno. */
   seleccionado = -1;
   dispositivo: "escritorio" | "movil" = "escritorio";
-  panel: "bloques" | "diseno" | "tienda" | "resenas" | "pauta" | "ajustes" = "bloques";
+  panel: "ia" | "bloques" | "diseno" | "tienda" | "resenas" | "pauta" | "ajustes" = "bloques";
 
   // ── Opiniones de compradores ────────────────────────────────────────────
   resenas: ResenaSitio[] = [];
