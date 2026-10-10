@@ -1,121 +1,114 @@
 <div class="wa-billing-meter">
 
   <!-- Estado de carga -->
-  <div *ngIf="isLoading" class="wa-card wa-card--loading">
-    <div class="wa-card__body">
-      <p class="text-muted mb-0">Cargando saldo de WhatsApp Business...</p>
-    </div>
-  </div>
+  <section *ngIf="isLoading" class="cfg-card">
+    <p class="wa-muted">Cargando saldo de WhatsApp Business...</p>
+  </section>
 
   <!-- Estado de error -->
-  <div *ngIf="!isLoading && errorMessage" class="wa-card wa-card--error">
-    <div class="wa-card__body">
-      <p class="mb-2">{{ errorMessage }}</p>
-      <button type="button" class="btn-reload" (click)="loadBalance()">
+  <section *ngIf="!isLoading && errorMessage" class="cfg-card">
+    <div class="cfg-aviso cfg-aviso--error wa-aviso">
+      <p class="wa-aviso__texto">{{ errorMessage }}</p>
+    </div>
+    <div class="wa-actions">
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="loadBalance()">
         Reintentar
       </button>
     </div>
-  </div>
+  </section>
 
   <!-- Tarjeta principal -->
-  <div *ngIf="!isLoading && !errorMessage && balance" class="wa-card wa-card--main">
-    <div class="wa-card__header">
-      <div class="wa-card__title">
-        <app-feather-icons [icon]="'message-circle'"></app-feather-icons>
-        <span>Saldo WhatsApp Business</span>
+  <section *ngIf="!isLoading && !errorMessage && balance" class="cfg-card">
+    <h2 class="cfg-card__titulo wa-titulo">
+      <app-feather-icons class="wa-icono wa-icono--whatsapp" [icon]="'message-circle'"></app-feather-icons>
+      Saldo WhatsApp Business
+    </h2>
+
+    <div class="wa-balance">
+      <div class="wa-balance__amount">
+        {{ balance.balanceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}
+      </div>
+      <div class="wa-balance__sub">
+        Precio por mensaje:
+        <strong>{{ balance.priceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        — equivale a ~{{ equivalentMessages | number:'1.0-0' }} mensajes
       </div>
     </div>
 
-    <div class="wa-card__body">
-      <div class="wa-balance">
-        <div class="wa-balance__amount">
-          {{ balance.balanceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}
-        </div>
-        <div class="wa-balance__sub">
-          Precio por mensaje:
-          <strong>{{ balance.priceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
-          — equivale a ~{{ equivalentMessages | number:'1.0-0' }} mensajes
-        </div>
+    <!-- Banner saldo bajo / cuenta closing -->
+    <div *ngIf="showLowBalanceBanner" class="cfg-aviso cfg-aviso--warn wa-aviso">
+      <app-feather-icons [icon]="'alert-triangle'"></app-feather-icons>
+      <p class="wa-aviso__texto">{{ lowBalanceMessage }}</p>
+    </div>
+
+    <!-- KPIs -->
+    <div class="wa-kpis">
+      <div class="wa-kpi">
+        <div class="wa-kpi__label">Mensajes del mes</div>
+        <div class="wa-kpi__value">{{ balance.messagesMonth | number:'1.0-0' }}</div>
       </div>
-
-      <!-- Banner saldo bajo / cuenta closing -->
-      <div *ngIf="showLowBalanceBanner" class="wa-banner wa-banner--warn">
-        <app-feather-icons [icon]="'alert-triangle'"></app-feather-icons>
-        <span>{{ lowBalanceMessage }}</span>
+      <div class="wa-kpi">
+        <div class="wa-kpi__label">Costo del mes</div>
+        <div class="wa-kpi__value">{{ balance.costMonthCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       </div>
-
-      <!-- KPIs -->
-      <div class="wa-kpis">
-        <div class="wa-kpi wa-kpi--blue">
-          <div class="wa-kpi__label">Mensajes del mes</div>
-          <div class="wa-kpi__value">{{ balance.messagesMonth | number:'1.0-0' }}</div>
-        </div>
-        <div class="wa-kpi wa-kpi--orange">
-          <div class="wa-kpi__label">Costo del mes</div>
-          <div class="wa-kpi__value">{{ balance.costMonthCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
-        </div>
-        <div class="wa-kpi wa-kpi--green">
-          <div class="wa-kpi__label">Total recargado</div>
-          <div class="wa-kpi__value">{{ balance.totalToppedUpCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
-        </div>
-        <div class="wa-kpi wa-kpi--purple">
-          <div class="wa-kpi__label">Total consumido</div>
-          <div class="wa-kpi__value">{{ balance.totalConsumedCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
-        </div>
+      <div class="wa-kpi">
+        <div class="wa-kpi__label">Total recargado</div>
+        <div class="wa-kpi__value">{{ balance.totalToppedUpCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       </div>
-
-      <!-- Acciones -->
-      <div class="wa-actions">
-        <button type="button" class="btn-topup" (click)="openTopupModal('whatsapp')">
-          <app-feather-icons [icon]="'plus-circle'"></app-feather-icons>
-          <span>Recargar con tarjeta / PSE</span>
-        </button>
-
-        <button
-          *ngIf="balance.welcomeBonusAvailable"
-          type="button"
-          class="btn-bonus"
-          [disabled]="isClaimingBonus"
-          (click)="claimWelcomeBonus()">
-          <app-feather-icons [icon]="'gift'"></app-feather-icons>
-          <span *ngIf="!isClaimingBonus">Activar bonus de bienvenida ($20.000)</span>
-          <span *ngIf="isClaimingBonus">Activando...</span>
-        </button>
+      <div class="wa-kpi">
+        <div class="wa-kpi__label">Total consumido</div>
+        <div class="wa-kpi__value">{{ balance.totalConsumedCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       </div>
     </div>
-  </div>
+
+    <!-- Acciones -->
+    <div class="wa-actions">
+      <button type="button" class="cfg-btn" (click)="openTopupModal('whatsapp')">
+        <app-feather-icons [icon]="'plus-circle'"></app-feather-icons>
+        <span>Recargar con tarjeta / PSE</span>
+      </button>
+
+      <button
+        *ngIf="balance.welcomeBonusAvailable"
+        type="button"
+        class="cfg-btn cfg-btn--sec"
+        [disabled]="isClaimingBonus"
+        (click)="claimWelcomeBonus()">
+        <app-feather-icons [icon]="'gift'"></app-feather-icons>
+        <span *ngIf="!isClaimingBonus">Activar bonus de bienvenida ($20.000)</span>
+        <span *ngIf="isClaimingBonus">Activando...</span>
+      </button>
+    </div>
+  </section>
 
   <!-- [D-106] Tarjeta de saldo SMS (separado) -->
-  <div *ngIf="!isLoadingSms && smsBalance" class="wa-card wa-card--main" style="margin-top: 1rem;">
-    <div class="wa-card__header">
-      <div class="wa-card__title">
-        <app-feather-icons [icon]="'smartphone'"></app-feather-icons>
-        <span>Saldo SMS</span>
+  <section *ngIf="!isLoadingSms && smsBalance" class="cfg-card wa-tarjeta-sms">
+    <h2 class="cfg-card__titulo wa-titulo">
+      <app-feather-icons class="wa-icono" [icon]="'smartphone'"></app-feather-icons>
+      Saldo SMS
+    </h2>
+
+    <div class="wa-balance">
+      <div class="wa-balance__amount">
+        {{ smsBalance.balanceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}
+      </div>
+      <div class="wa-balance__sub">
+        Precio por SMS:
+        <strong>{{ smsBalance.priceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        — equivale a ~{{ smsEquivalentMessages | number:'1.0-0' }} SMS
       </div>
     </div>
-    <div class="wa-card__body">
-      <div class="wa-balance">
-        <div class="wa-balance__amount">
-          {{ smsBalance.balanceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}
-        </div>
-        <div class="wa-balance__sub">
-          Precio por SMS:
-          <strong>{{ smsBalance.priceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
-          — equivale a ~{{ smsEquivalentMessages | number:'1.0-0' }} SMS
-        </div>
-      </div>
-      <div *ngIf="!smsBalance.billingEnabled" class="wa-banner wa-banner--warn">
-        <app-feather-icons [icon]="'info'"></app-feather-icons>
-        <span>El cobro de SMS aún no está activo para tu comercio; los SMS se envían sin descontar saldo por ahora.</span>
-      </div>
-      <div class="wa-actions">
-        <button type="button" class="btn-topup" (click)="openTopupModal('sms')">
-          <app-feather-icons [icon]="'plus-circle'"></app-feather-icons>
-          <span>Recargar SMS con tarjeta / PSE</span>
-        </button>
-      </div>
+    <div *ngIf="!smsBalance.billingEnabled" class="cfg-aviso cfg-aviso--warn wa-aviso">
+      <app-feather-icons [icon]="'info'"></app-feather-icons>
+      <p class="wa-aviso__texto">El cobro de SMS aún no está activo para tu comercio; los SMS se envían sin descontar saldo por ahora.</p>
     </div>
-  </div>
+    <div class="wa-actions">
+      <button type="button" class="cfg-btn" (click)="openTopupModal('sms')">
+        <app-feather-icons [icon]="'plus-circle'"></app-feather-icons>
+        <span>Recargar SMS con tarjeta / PSE</span>
+      </button>
+    </div>
+  </section>
 
   <!-- Modal de recarga (Wompi real) -->
   <div *ngIf="showTopupModal" class="wa-modal-backdrop" (click)="closeTopupModal()">
@@ -138,21 +131,21 @@
           placeholder="50000" />
         <p class="wa-field-helper">Mínimo $50.000. Pagas con tarjeta, PSE o Nequi vía Wompi.</p>
 
-        <div class="wa-actions" style="gap: 8px; flex-wrap: wrap; margin-top: 8px;">
-          <button type="button" class="btn-bonus" (click)="topupAmount = 50000">$50.000</button>
-          <button type="button" class="btn-bonus" (click)="topupAmount = 100000">$100.000</button>
-          <button type="button" class="btn-bonus" (click)="topupAmount = 200000">$200.000</button>
+        <div class="wa-actions wa-rapidos">
+          <button type="button" class="cfg-btn cfg-btn--sec" (click)="topupAmount = 50000">$50.000</button>
+          <button type="button" class="cfg-btn cfg-btn--sec" (click)="topupAmount = 100000">$100.000</button>
+          <button type="button" class="cfg-btn cfg-btn--sec" (click)="topupAmount = 200000">$200.000</button>
         </div>
 
-        <p *ngIf="topupStatusMsg" class="wa-field-helper" style="margin-top: 12px; color: #4c6fff; font-weight: 600;">
+        <p *ngIf="topupStatusMsg" class="wa-field-helper wa-estado">
           {{ topupStatusMsg }}
         </p>
       </div>
       <div class="wa-modal__footer">
-        <button type="button" class="btn-cancel" (click)="closeTopupModal()" [disabled]="isToppingUp">
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="closeTopupModal()" [disabled]="isToppingUp">
           Cancelar
         </button>
-        <button type="button" class="btn-confirm" (click)="confirmTopup()" [disabled]="isToppingUp">
+        <button type="button" class="cfg-btn" (click)="confirmTopup()" [disabled]="isToppingUp">
           <span *ngIf="!isToppingUp">Pagar {{ topupAmount | currency:'COP':'symbol-narrow':'1.0-0' }} con Wompi</span>
           <span *ngIf="isToppingUp">Procesando…</span>
         </button>

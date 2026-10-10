@@ -1,75 +1,72 @@
-<app-breadcrumb [title]="'Formas de Pago'" [items]="['Extras/Formas de Pago']" [active_item]="'Formas de Pago'">
-</app-breadcrumb>
-
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-sm-12">
-      <div class="card">
-        <div class="loader-box" *ngIf="cargando">
-          <div class="loader-8"></div>
-        </div>
-
-        <div class="card-body custom-datatable" *ngIf="!cargando">
-          <div class="row">
-            <div class="col-sm-6">
-              <input type="text" class="filter-ngx form-control mb-3"
-                     placeholder="{{'Escribe el texto que desees filtrar' | translate}}" 
-                     (keyup)='updateFilter($event)' />
-            </div>
-            <div class="col-sm-6 mb-3 text-end">
-              <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="crearFormasPago()">
-                <span style="color: white;">{{'Crear Formas de Pago' | translate}}</span>
-                <i placement="top" ngbTooltip="Nuevo" 
-                   style="font-size: 18px; margin-left: 10px; color: white; cursor: pointer;" 
-                   class="icofont icofont-plus"></i>
-              </button>
-            </div>
-          </div>
-
-          <p-table #dt [columns]="columns" [value]="rows" [paginator]="true" [rows]="10" [resizableColumns]="true" 
-                   [scrollable]="true" scrollHeight="flex" [loading]="cargando" [rowsPerPageOptions]="[10,20,50]">
-            <ng-template pTemplate="header">
-              <tr>
-                <th *ngFor="let col of columns" [pSortableColumn]="col.field" class="text-center">
-                  {{ col.header | translate }}
-                  <p-sortIcon [field]="col.field"></p-sortIcon>
-                </th>
-                <th class="text-center">
-                  {{ 'Acciones' | translate }}
-                </th>
-              </tr>
-            </ng-template>
-
-            <ng-template pTemplate="body" let-row let-columns="columns">
-              <tr>
-                <td *ngFor="let col of columns">
-                  {{ row[col.field] }}
-                </td>
-                <td>
-                  <i placement="top" ngbTooltip="{{'Edit' | translate}}" 
-                     style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;" 
-                     class="icofont icofont-pencil-alt-5" (click)="editar(row)">
-                  </i>
-                  <i placement="top" ngbTooltip="{{'Eliminar' | translate}}" 
-                     style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;" 
-                     class="icofont icofont-ui-delete" (click)="deletePayMethod(row)">
-                  </i>
-                </td>
-              </tr>
-            </ng-template>
-
-            <ng-template pTemplate="emptymessage">
-              <tr>
-                <td colspan="6">No hay datos disponibles</td>
-              </tr>
-            </ng-template>
-          </p-table>
-          <br>
-          <button class="btn btn-primary" style="color: white;">
-            <i class="icofont icofont-file-excel"></i> Excel
-          </button>
-        </div>
-      </div>
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">{{ 'Configuración' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'Medios de pago POS' | translate }}</h1>
+      <p class="cfg-sub">{{ 'Formas de pago disponibles en el punto de venta.' | translate }}</p>
     </div>
-  </div>
+
+    <div class="cfg-acciones">
+      <button class="cfg-btn" type="button" *ngIf="!cargando" (click)="crearFormasPago()">
+        <i placement="top" ngbTooltip="Nuevo" class="icofont icofont-plus"></i>
+        <span>{{'Crear Formas de Pago' | translate}}</span>
+      </button>
+      <button class="cfg-btn cfg-btn--sec" type="button" *ngIf="!cargando">
+        <i class="icofont icofont-file-excel"></i>Excel
+      </button>
+    </div>
+  </header>
+
+  <section class="cfg-card">
+    <div class="loader-box" *ngIf="cargando">
+      <div class="loader-8"></div>
+    </div>
+
+    <div class="custom-datatable" *ngIf="!cargando">
+      <div class="cfg-barra">
+        <input type="text" class="filter-ngx form-control cfg-filtro"
+               placeholder="{{'Escribe el texto que desees filtrar' | translate}}"
+               (keyup)='updateFilter($event)' />
+      </div>
+
+      <p-table #dt [columns]="columns" [value]="rows" [paginator]="true" [rows]="10" [resizableColumns]="true"
+               [scrollable]="true" scrollHeight="flex" [loading]="cargando" [rowsPerPageOptions]="[10,20,50]">
+        <ng-template pTemplate="header">
+          <tr>
+            <th *ngFor="let col of columns" [pSortableColumn]="col.field" class="text-center">
+              {{ col.header | translate }}
+              <p-sortIcon [field]="col.field"></p-sortIcon>
+            </th>
+            <th class="text-center">
+              {{ 'Acciones' | translate }}
+            </th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-row let-columns="columns">
+          <tr>
+            <td *ngFor="let col of columns">
+              {{ row[col.field] }}
+            </td>
+            <td>
+              <i placement="top" ngbTooltip="{{'Edit' | translate}}"
+                 style="font-size: 18px; margin-left: 10px; cursor: pointer;"
+                 class="icofont icofont-pencil-alt-5 fc-primary" (click)="editar(row)">
+              </i>
+              <i placement="top" ngbTooltip="{{'Eliminar' | translate}}"
+                 style="font-size: 18px; margin-left: 10px; cursor: pointer;"
+                 class="icofont icofont-ui-delete fc-danger" (click)="deletePayMethod(row)">
+              </i>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6">No hay datos disponibles</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </section>
 </div>

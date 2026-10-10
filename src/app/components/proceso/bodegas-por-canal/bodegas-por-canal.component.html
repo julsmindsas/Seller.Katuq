@@ -1,22 +1,18 @@
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-sm-12 p-2">
-      <div class="card">
-        <i class="icon-bg fa fa-link"></i>
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Configuración</span>
+      <h1 class="cfg-titulo">Bodegas por Canal</h1>
+      <p class="cfg-sub">Permite relacionar canales de venta con las bodegas disponibles.</p>
+    </div>
+  </header>
+
+  <section class="cfg-card">
         <div class="loader-box" *ngIf="cargando">
           <div class="loader-8"></div>
         </div>
 
-        <!-- Header -->
-        <div class="row col-12 p-4 pb-0">
-          <div class="col-md-8">
-            <h2 class="fc-secondary fw-bold m-0 p-0" style="font-size: 1.5rem;">Bodegas por Canal</h2>
-            <p class="text-muted m-0 p-0 mt-1" style="font-size: 1rem;">Permite relacionar canales de venta con las bodegas disponibles.</p>
-          </div>
-        </div>
-        <!-- Fin Header -->
-
-        <div class="card-body">
+        <div class="cfg-contenido">
           <form [formGroup]="seleccionForm">
             <!-- Selector de Canal -->
             <div class="row mb-4">
@@ -168,17 +164,13 @@
           </div>
           
           <!-- Mensaje cuando no hay canal seleccionado -->
-          <div *ngIf="!canalSeleccionado && !cargando" class="row mt-4">
-            <div class="col-12 text-center">
-              <div class="alert alert-warning">
-                <i class="fa fa-exclamation-triangle fa-2x mb-3"></i>
-                <h5>Seleccione un canal de venta</h5>
-                <p>Para gestionar las bodegas asignadas, primero debe seleccionar un canal de venta activo.</p>
-              </div>
+          <div *ngIf="!canalSeleccionado && !cargando" class="cfg-aviso cfg-aviso--warn">
+            <i class="fa fa-exclamation-triangle cfg-aviso__icono"></i>
+            <div class="cfg-aviso__cuerpo">
+              <strong class="cfg-aviso__titulo">Seleccione un canal de venta</strong>
+              <span class="cfg-aviso__texto">Para gestionar las bodegas asignadas, primero debe seleccionar un canal de venta activo.</span>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+  </section>
 </div> 

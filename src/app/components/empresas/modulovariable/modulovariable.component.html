@@ -1,48 +1,35 @@
-<app-breadcrumb [title]="'Modulos variables'" [items]="['Empresa']" [active_item]="'centrosTrabajo'"></app-breadcrumb>
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm-12 text-center">
-            <div class="card">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button"
-                                [routerLink]="['/empresas/modulovariable/produccion/centrotrabajos']"
-                                routerLinkActive="router-link-active">
-                                <span style="color: white;">{{'Ir a centro de trabajo' | translate}}</span>
-                                <i placement="top"
-                                    style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
-                                    class="icofont icofont-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button"
-                                [routerLink]="['/empresas/modulovariable/produccion/procesos']"
-                                routerLinkActive="router-link-active">
-                                <span style="color: white;">{{'Ir a procesos' | translate}}</span>
-                                <i placement="top" ngbTooltip="Nuevo"
-                                    style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
-                                    class="icofont icofont-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <button class="btn btn-info btn-previous ml-3 mb-2" type="button"
-                                [routerLink]="['/empresas/modulovariable/dropshipping/configuracion']"
-                                routerLinkActive="router-link-active">
-                                <span style="color: white;">{{'Configurar Dropshipping' | translate}}</span>
-                                <i placement="top" ngbTooltip="Configurar Dropshipping"
-                                    style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
-                                    class="icofont icofont-truck"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="cfg-pagina">
+    <header class="cfg-cabeza">
+        <div class="cfg-cabeza__textos">
+            <span class="cfg-eyebrow">Configuración</span>
+            <h1 class="cfg-titulo">Módulos</h1>
+            <p class="cfg-sub">Activa y ajusta los módulos opcionales de tu empresa: producción y dropshipping.</p>
         </div>
+    </header>
+
+    <div class="mod-grilla">
+        <a class="cfg-card mod-tarjeta" [routerLink]="['/empresas/modulovariable/produccion/centrotrabajos']"
+            routerLinkActive="router-link-active">
+            <div class="cfg-vacio__icono mod-tarjeta__icono"><i class="fa fa-industry" aria-hidden="true"></i></div>
+            <div class="mod-tarjeta__titulo">Centros de trabajo</div>
+            <p class="mod-tarjeta__texto">Define las áreas y estaciones donde se fabrican tus productos.</p>
+            <div class="mod-tarjeta__ir">{{'Ir a centro de trabajo' | translate}} <i class="fa fa-arrow-right" aria-hidden="true"></i></div>
+        </a>
+
+        <a class="cfg-card mod-tarjeta" [routerLink]="['/empresas/modulovariable/produccion/procesos']"
+            routerLinkActive="router-link-active">
+            <div class="cfg-vacio__icono mod-tarjeta__icono"><i class="fa fa-sitemap" aria-hidden="true"></i></div>
+            <div class="mod-tarjeta__titulo">Procesos</div>
+            <p class="mod-tarjeta__texto">Arma los pasos de producción y el orden en que se ejecutan.</p>
+            <div class="mod-tarjeta__ir">{{'Ir a procesos' | translate}} <i class="fa fa-arrow-right" aria-hidden="true"></i></div>
+        </a>
+
+        <a class="cfg-card mod-tarjeta" [routerLink]="['/empresas/modulovariable/dropshipping/configuracion']"
+            routerLinkActive="router-link-active">
+            <div class="cfg-vacio__icono mod-tarjeta__icono"><i class="fa fa-truck" aria-hidden="true"></i></div>
+            <div class="mod-tarjeta__titulo">Dropshipping</div>
+            <p class="mod-tarjeta__texto">Vende sin inventario propio y gestiona las órdenes con tus proveedores.</p>
+            <div class="mod-tarjeta__ir">{{'Configurar Dropshipping' | translate}} <i class="fa fa-arrow-right" aria-hidden="true"></i></div>
+        </a>
     </div>
 </div>

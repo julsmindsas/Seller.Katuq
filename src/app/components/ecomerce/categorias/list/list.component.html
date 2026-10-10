@@ -4,80 +4,61 @@
      había dónde pintarlos, así que ninguna acción de esta pantalla daba señal. -->
 <p-toast [position]="position"></p-toast>
 
-<div class="container-fluid category-management">
-    <div class="row">
-        <div class="col-sm-12">
-            <br>
-            <div class="card p-3">
-                <!-- <i class="icon-bg" width="80" height="80"
-                    style="opacity: 0.4;position: absolute; color: #6ec0d4; top: 10px; left: 10px;"></i> -->
-                <div class="loader-box" *ngIf="cargando">
-                    <div class="loader-8"></div>
-                </div>
+<div class="cfg-pagina category-management">
+    <header class="cfg-cabeza">
+        <div class="cfg-cabeza__textos">
+            <span class="cfg-eyebrow">{{ "Configuración" | translate }}</span>
+            <h1 class="cfg-titulo">{{ "Categorías" | translate }}</h1>
+            <p class="cfg-sub">{{ "Listado de categorías. Recuerda grabar antes de salir." | translate }}</p>
+        </div>
+        <div class="cfg-acciones" *ngIf="!cargando">
+            <button class="cfg-btn cfg-btn--sec" type="button" (click)="create()"
+                aria-label="Agregar categoría principal"
+                ngbTooltip="Haga clic aquí para crear una nueva categoría principal">
+                <span>{{'Agregar' | translate}}</span>
+                <i class="icofont icofont-plus"></i>
+            </button>
+            <button class="cfg-btn" type="button" (click)="confirmSave()"
+                aria-label="Guardar todas las categorías"
+                ngbTooltip="Haga clic aquí para guardar todas las categorías">
+                <span>{{'Guardar' | translate}}</span>
+                <i class="icofont icofont-save"></i>
+            </button>
+            <button class="cfg-btn cfg-btn--sec" type="button" (click)="openImportModal()"
+                aria-label="Importar categorías desde archivo"
+                ngbTooltip="Importar categorías desde un archivo Excel o JSON">
+                <i class="pi pi-upload"></i>
+                <span>{{'Importar' | translate}}</span>
+            </button>
+        </div>
+    </header>
 
-                <div class="card-body custom-datatable p-3" *ngIf="!cargando">
+    <div class="loader-box" *ngIf="cargando">
+        <div class="loader-8"></div>
+    </div>
 
-                    <div class="row">
-                        <div class="col-6">
-                            <p class="text-left fc-secondary fw-bold fs-24 m-0 p-0">{{ "Categorías" | translate }}</p>
-                            <p class="text-left text-muted fs-18 m-0 p-0">{{ "Listado de categorías. Recuerda grabar antes de salir." | translate }}</p>
-                            <div class="row mt-3">
-                                <div class="col-sm-12">
-                                    <button class="btn btn-primary fc-white ml-4 mb-2" type="button" (click)="create()"
-                                        aria-label="Agregar categoría principal"
-                                        ngbTooltip="Haga clic aquí para crear una nueva categoría principal">
-                                        <span>{{'Agregar' | translate}}</span>&nbsp;
-                                        <i class="icofont icofont-plus"></i>
-                                    </button>
-                                    <button class="btn btn-success fc-white ml-4 mb-2" type="button" (click)="confirmSave()"
-                                        aria-label="Guardar todas las categorías"
-                                        ngbTooltip="Haga clic aquí para guardar todas las categorías">
-                                        <span>{{'Guardar' | translate}}</span>&nbsp;
-                                        <i class="icofont icofont-save"></i>
-                                    </button>
-                                    <button class="btn btn-primary fc-white ml-4 mb-2" type="button" (click)="openImportModal()"
-                                        aria-label="Importar categorías desde archivo"
-                                        ngbTooltip="Importar categorías desde un archivo Excel o JSON"
-                                        style="background-color: #5F3FE0; border-color: #5F3FE0;">
-                                        <i class="pi pi-upload mr-1"></i>
-                                        <span>{{'Importar' | translate}}</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <!-- Instructions section -->
-                            <div class="alert alert-info fs-12">
-                                <h5><i class="fa fa-info-circle mr-2"></i>Instrucciones:</h5>
-                                <!-- <p>Aquí puede gestionar las categorías de sus productos. Puede:</p> -->
-                                <ul>
-                                    <li>Crear nuevas categorías con el botón "Agregar categoría"</li>
-                                    <li>Agregar subcategorías usando el botón <i class="pi pi-plus"></i> en cada fila
-                                    </li>
-                                    <!-- <li>Eliminar categorías usando el botón <i class="pi pi-trash"></i></li> -->
-                                    <li>Editar el nombre y otros datos haciendo doble clic en el campo</li>
-                                    <li>Finalmente, no olvide guardar sus cambios con el botón "Guardar categorías"</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
+    <section class="cfg-card" *ngIf="!cargando">
+        <!-- Instructions section -->
+        <div class="cfg-aviso">
+            <i class="fa fa-info-circle"></i>
+            <div>
+                <strong class="cfg-aviso__titulo">Instrucciones:</strong>
+                <ul class="cfg-aviso__lista">
+                    <li>Crear nuevas categorías con el botón "Agregar categoría"</li>
+                    <li>Agregar subcategorías usando el botón <i class="pi pi-plus"></i> en cada fila</li>
+                    <li>Editar el nombre y otros datos haciendo doble clic en el campo</li>
+                    <li>Finalmente, no olvide guardar sus cambios con el botón "Guardar categorías"</li>
+                </ul>
+            </div>
+        </div>
 
+        <div class="cfg-vacio" *ngIf="data.length === 0">
+            <div class="cfg-vacio__icono"><i class="pi pi-sitemap"></i></div>
+            <p class="cfg-vacio__titulo">Aún no hay categorías</p>
+            <p class="cfg-vacio__texto">Para comenzar, haga clic en el botón "Agregar categoría"</p>
+        </div>
 
-
-                    <div class="row" *ngIf="data.length === 0">
-                        <div class="col-12 text-center py-5">
-                            <div class="alert alert-warning">
-                                <h4>Aún no hay categorías</h4>
-                                <p>Para comenzar, haga clic en el botón "Agregar categoría"</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-12 mt-3" *ngIf="data.length > 0">
-                        <!-- <div class="category-header">
-                            <i class="pi pi-list mr-2"></i> Lista de categorías
-                        </div> -->
-
+        <div class="cfg-tabla" *ngIf="data.length > 0">
                         <p-treeTable [value]="data" [style]="{'width':'100%'}">
                             <ng-template pTemplate="header">
                                 <tr>
@@ -95,9 +76,8 @@
                                         <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
                                         <p-treeTableCellEditor>
                                             <ng-template pTemplate="input">
-                                                <input pInputText type="text" [(ngModel)]="node.data.nombre"
+                                                <input pInputText class="cfg-input-celda" type="text" [(ngModel)]="node.data.nombre"
                                                     [ngStyle]="{'width': '100%', 'font-size': '1.1rem', 'padding': '8px'}"
-                                                    style="border-color: black;"
                                                     placeholder="Ingrese el nombre de la categoría">
                                             </ng-template>
                                             <ng-template pTemplate="output">
@@ -108,9 +88,9 @@
                                     </td>
                                     <td>
                                         <div class="image-upload-container">
-                                            <button class="btn btn-sm btn-outline-info" (click)="selectImage(node)"
+                                            <button class="cfg-btn cfg-btn--sec cfg-btn--chico" (click)="selectImage(node)"
                                                 ngbTooltip="Haga clic para seleccionar una imagen">
-                                                <i class="pi pi-image mr-1"></i> Seleccionar imagen
+                                                <i class="pi pi-image"></i> Seleccionar imagen
                                             </button>
                                             <div *ngIf="node.data.imagen" class="mt-2">
                                                 <img [src]="node.data.imagen" alt="Vista previa" class="image-preview">
@@ -123,9 +103,9 @@
                                     <td class="text-center" ttEditableColumn [ngClass]="{'p-toggler-column': true}">
                                         <p-treeTableCellEditor>
                                             <ng-template pTemplate="input">
-                                                <input  class="text-center" pInputText type="number" [(ngModel)]="node.data.posicion"
+                                                <input class="text-center cfg-input-celda" pInputText type="number" [(ngModel)]="node.data.posicion"
                                                     [ngStyle]="{'width': '100%', 'font-size': '1.1rem', 'padding': '8px'}"
-                                                    style="border-color: black;" placeholder="Ingrese la posición">
+                                                    placeholder="Ingrese la posición">
                                             </ng-template>
                                             <ng-template pTemplate="output">
                                                 <span
@@ -136,9 +116,9 @@
                                     <td class="text-center" ttEditableColumn [ngClass]="{'p-toggler-column': true}">
                                         <p-treeTableCellEditor>
                                             <ng-template pTemplate="input">
-                                                <input class="text-center" pInputText type="number" [(ngModel)]="node.data.consecutivo"
+                                                <input class="text-center cfg-input-celda" pInputText type="number" [(ngModel)]="node.data.consecutivo"
                                                     [ngStyle]="{'width': '100%', 'font-size': '1.1rem', 'padding': '8px'}"
-                                                    style="border-color: black;" placeholder="Id Categoria SIIGO">
+                                                    placeholder="Id Categoria SIIGO">
                                             </ng-template>
                                             <ng-template pTemplate="output">
                                                 <span
@@ -150,8 +130,8 @@
                                         <p-inputSwitch [(ngModel)]="node.data.activo" ariaLabel="¿Categoría activa?"
                                             ngbTooltip="Activa o desactiva esta categoría">
                                         </p-inputSwitch>
-                                        <small *ngIf="node.data.activo" class="text-success ml-2">Activo</small>
-                                        <small *ngIf="!node.data.activo" class="text-muted ml-2">Inactivo</small>
+                                        <small *ngIf="node.data.activo" class="cfg-estado cfg-estado--on">Activo</small>
+                                        <small *ngIf="!node.data.activo" class="cfg-estado">Inactivo</small>
                                     </td>
                                     <!-- Los textos dicen el NIVEL de esta fila. Antes todas decían
                                          "categoría", así que el basurero de una subcategoría decía
@@ -173,12 +153,8 @@
                                 </tr>
                             </ng-template>
                         </p-treeTable>
-
-                    </div>
-                </div>
-            </div>
         </div>
-    </div>
+    </section>
 </div>
 
 <app-import-modal

@@ -1,164 +1,101 @@
-.category-management {
-  .action-button {
-    min-width: 120px;
-    font-size: 1.1rem;
-    margin: 5px;
-    padding: 10px 15px;
-    border-radius: 8px;
-    
-    i {
-      margin-left: 8px;
-    }
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
+
+// Aviso de instrucciones (par info fuerte/suave).
+.cfg-aviso {
+  margin-bottom: 16px;
+
+  .cfg-aviso__titulo { font-weight: 800; }
+  .cfg-aviso__lista { margin: 6px 0 0; padding-left: 18px; }
+}
+
+.cfg-btn--chico {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 12.5px;
+  box-shadow: none;
+}
+
+.image-preview {
+  max-width: 100px;
+  max-height: 100px;
+  margin-top: 5px;
+  padding: 3px;
+  border: 1px solid $cfg-line;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.image-upload-container {
+  padding: 10px;
+  border: 1px dashed #d9d5ee;
+  border-radius: 11px;
+  background: $cfg-tint;
+}
+
+.cfg-estado {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: $cfg-muted;
+
+  &--on { color: $cfg-ok; }
+}
+
+// Botones redondos de cada fila (agregar hijo / eliminar), en par fuerte/suave.
+.action-icon-button {
+  width: 36px;
+  height: 36px;
+  margin: 0 4px;
+  border: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .15s ease;
+
+  &.add-button {
+    background: $cfg-accent-soft;
+    color: $cfg-accent;
+    &:hover { background: #e2d8fd; }
   }
 
-  .action-icon-button {
-    width: 40px;
-    height: 40px;
-    margin: 0 5px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    
-    &.add-button {
-      background-color: var(--success-color);
-      color: white;
-      border: none;
-      
-      &:hover {
-        background-color: var(--success-color);
-      }
-    }
-    
-    &.delete-button {
-      background-color: var(--error-color);
-      color: white;
-      border: none;
-      
-      &:hover {
-        background-color: var(--error-color);
-      }
-    }
+  &.delete-button {
+    background: $cfg-err-soft;
+    color: $cfg-err;
+    &:hover { background: #fbd9d9; }
+  }
+}
+
+// Tabla de árbol (p-treetable) con el mismo tema que la tabla de datos.
+:host ::ng-deep .cfg-card .p-treetable {
+  .p-treetable-thead > tr > th {
+    background: $cfg-tint;
+    color: $cfg-muted;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    border: 0;
+    border-bottom: 1px solid $cfg-line-soft;
+    padding: 12px 14px;
   }
 
-  .help-text {
-    font-size: 0.9rem;
-    color: #666;
-    margin: 10px 0;
-    font-style: italic;
-  }
+  .p-treetable-tbody > tr {
+    background: #fff;
+    color: $cfg-ink;
 
-  .image-preview {
-    max-width: 100px;
-    max-height: 100px;
-    margin-top: 5px;
-    border: 2px solid #dee2e6;
-    padding: 3px;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    > td { border: 0; border-bottom: 1px solid $cfg-line-soft; padding: 12px 14px; font-size: 13px; }
+    &:hover { background: $cfg-row-hover; }
   }
-  
-  .p-inputswitch {
-    transform: scale(1.2);
-  }
-  
-  .form-section {
-    padding: 10px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    border: 2px solid #d1d8e0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
-  
-  .category-header {
-    font-size: 1.2rem;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
-    border: 1px solid #e9ecef;
-    padding: 10px;
-    border-radius: 6px;
-    background-color: #f8f9fa;
-  }
-  
-  /* Adding clear border delimiters */
-  .card {
-    border: 3px solid #dee2e6;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .alert {
-    border: 2px solid #a8c9e8;
-    border-radius: 8px;
-  }
-  
-  .image-upload-container {
-    border: 1px dashed #adb5bd;
-    padding: 10px;
-    border-radius: 6px;
-    background-color: #f8f9fa;
-  }
-  
-  /* Improvement for the tree table */
-  ::ng-deep {
-    .p-treetable {
-      font-size: 1.1rem;
-      border: 2px solid #dee2e6;
-      border-radius: 8px;
-      overflow: hidden;
-      
-      .p-treetable-header {
-        background-color: #f0f8ff;
-        padding: 15px;
-      }
-      
-      .p-treetable-thead > tr > th {
-        padding: 15px 10px;
-        background-color: #f0f8ff;
-        font-weight: bold;
-        border: 1px solid #cfd8dc;
-      }
-      
-      .p-treetable-tbody > tr > td {
-        padding: 15px 10px;
-        border: 1px solid #e9ecef;
-      }
-      
-      .p-treetable-toggler {
-        width: 2.5rem;
-        height: 2.5rem;
-      }
-      
-      .p-treetable-tbody > tr {
-        border-bottom: 2px solid #dee2e6;
-        
-        &:last-child {
-          border-bottom: none;
-        }
-        
-        &:hover {
-          background-color: #f0f8ff;
-        }
-      }
-    }
-  }
-  
-  /* Dialog border improvements */
-  ::ng-deep {
-    .modal-content {
-      border: 3px solid #6c757d;
-      border-radius: 10px;
-      
-      .modal-header {
-        border-bottom: 2px solid #dee2e6;
-      }
-      
-      .modal-footer {
-        border-top: 2px solid #dee2e6;
-      }
-    }
-  }
+}
+
+:host ::ng-deep .cfg-card .cfg-input-celda {
+  width: 100%;
+  padding: 8px;
+  font-size: 13px;
+  color: $cfg-ink;
+  border: 1px solid $cfg-accent;
+  border-radius: 9px;
 }

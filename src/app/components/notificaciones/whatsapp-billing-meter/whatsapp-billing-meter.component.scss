@@ -1,166 +1,106 @@
-// Medidor de saldo WhatsApp Business.
-// Estilo plano "visor" — NO gradientes. border-left 4px en card y KPIs.
+// Medidor de saldo WhatsApp Business y SMS (D-400): tarjetas planas del tema canónico.
+// El verde de marca de WhatsApp solo vive en su ícono.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
 
-$katuq-green: #1f7a4d;
-$katuq-green-tint: #e8f3ed;
-
-$blue: #2f6fd6;
-$blue-tint: #ebf2fd;
-$orange: #d97706;
-$orange-tint: #fdf4e7;
-$green: #1f7a4d;
-$green-tint: #e8f3ed;
-$purple: #6e44b8;
-$purple-tint: #f1ecf9;
-$warn-yellow: #c08a00;
-$warn-yellow-bg: #fff7df;
-$warn-yellow-border: #e9c97a;
+:host { display: block; }
 
 .wa-billing-meter {
-  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-// ---------- Tarjeta principal ----------
-.wa-card {
-  background: #ffffff;
-  border: 1px solid #eaeaea;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-  margin-bottom: 16px;
+.wa-muted {
+  margin: 0;
+  font-size: 13.5px;
+  color: #8f8bab;
+}
 
-  &--main {
-    border-left: 4px solid $katuq-green;
-  }
+// ---------- Título e íconos ----------
+.wa-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+}
 
-  &--loading,
-  &--error {
-    border-left: 4px solid #cfcfcf;
-  }
+.wa-icono {
+  display: inline-flex;
+  color: #5F3FE0;
 
-  &--error {
-    border-left-color: #c0392b;
-  }
-
-  &__header {
-    padding: 18px 22px 0 22px;
-  }
-
-  &__title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 15px;
-    font-weight: 700;
-    color: #1a1a1a;
-
-    app-feather-icons {
-      color: $katuq-green;
-      display: inline-flex;
-    }
-  }
-
-  &__body {
-    padding: 16px 22px 22px 22px;
-  }
+  &--whatsapp { color: #25D366; }
 }
 
 // ---------- Saldo grande ----------
 .wa-balance {
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 
   &__amount {
-    font-size: 38px;
-    font-weight: 700;
-    color: #1a1a1a;
+    font-size: 34px;
+    font-weight: 800;
+    color: #211F3A;
     line-height: 1.1;
-    letter-spacing: -0.5px;
   }
 
   &__sub {
     margin-top: 6px;
     font-size: 13px;
-    color: #6c757d;
+    color: #5b5878;
 
-    strong {
-      color: #1a1a1a;
-    }
+    strong { color: #211F3A; }
   }
 }
 
-// ---------- Banner saldo bajo ----------
-.wa-banner {
-  display: flex;
+// ---------- Avisos ----------
+.wa-aviso {
   align-items: center;
-  gap: 10px;
-  background: $warn-yellow-bg;
-  border: 1px solid $warn-yellow-border;
-  border-left: 4px solid $warn-yellow;
-  color: #4a3a00;
-  padding: 12px 14px;
-  border-radius: 6px;
-  font-size: 13.5px;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 
-  app-feather-icons {
-    color: $warn-yellow;
-    display: inline-flex;
-  }
+  app-feather-icons { display: inline-flex; color: inherit; flex: 0 0 auto; }
 }
 
-// ---------- KPIs ----------
+.wa-aviso__texto {
+  margin: 0;
+  color: inherit;
+  font-size: 13.5px;
+}
+
+// ---------- KPIs: chips planos tintados ----------
 .wa-kpis {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 
-  @media (max-width: 992px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  @media (max-width: 576px) {
-    grid-template-columns: 1fr;
-  }
+  @media (max-width: 992px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 576px) { grid-template-columns: 1fr; }
 }
 
 .wa-kpi {
-  background: #fafafa;
-  border: 1px solid #eaeaea;
-  border-radius: 6px;
   padding: 12px 14px;
+  background: #faf9fe;
+  border: 1px solid #eeecf7;
+  border-radius: 10px;
+  transition: transform .15s ease;
+
+  &:hover { transform: translateY(-1px); }
 
   &__label {
-    font-size: 12px;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    font-weight: 600;
     margin-bottom: 6px;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: #8f8bab;
   }
 
   &__value {
     font-size: 18px;
-    font-weight: 700;
-    color: #1a1a1a;
+    font-weight: 800;
     line-height: 1.2;
+    color: #5F3FE0;
     word-break: break-word;
-  }
-
-  &--blue {
-    border-left: 4px solid $blue;
-    background: $blue-tint;
-  }
-  &--orange {
-    border-left: 4px solid $orange;
-    background: $orange-tint;
-  }
-  &--green {
-    border-left: 4px solid $green;
-    background: $green-tint;
-  }
-  &--purple {
-    border-left: 4px solid $purple;
-    background: $purple-tint;
   }
 }
 
@@ -169,64 +109,17 @@ $warn-yellow-border: #e9c97a;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+
+  app-feather-icons { display: inline-flex; color: inherit; }
 }
 
-.btn-topup,
-.btn-bonus,
-.btn-reload,
-.btn-cancel,
-.btn-confirm {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 10px 18px;
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-}
-
-.btn-topup {
-  background: $katuq-green;
-  color: #ffffff;
-
-  &:hover:not(:disabled) {
-    background: darken($katuq-green, 6%);
-  }
-}
-
-.btn-bonus {
-  background: #ffffff;
-  color: $katuq-green;
-  border: 1px solid $katuq-green;
-
-  &:hover:not(:disabled) {
-    background: $katuq-green-tint;
-  }
-}
-
-.btn-reload {
-  background: #ffffff;
-  color: #c0392b;
-  border: 1px solid #c0392b;
-
-  &:hover:not(:disabled) {
-    background: #fdecea;
-  }
-}
+.wa-rapidos { margin-top: 8px; }
 
 // ---------- Modal ----------
 .wa-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(20, 20, 20, 0.45);
+  background: rgba(33, 31, 58, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -235,12 +128,12 @@ $warn-yellow-border: #e9c97a;
 }
 
 .wa-modal {
-  background: #ffffff;
-  border-radius: 10px;
-  border-left: 4px solid $katuq-green;
   width: 100%;
   max-width: 480px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+  background: #ffffff;
+  border: 1px solid #ececf4;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(33, 31, 58, 0.18);
   overflow: hidden;
 
   &__header {
@@ -248,103 +141,75 @@ $warn-yellow-border: #e9c97a;
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
-    border-bottom: 1px solid #eaeaea;
+    border-bottom: 1px solid #f1f0f7;
   }
 
   &__title {
     margin: 0;
     font-size: 16px;
-    font-weight: 700;
-    color: #1a1a1a;
+    font-weight: 800;
+    color: #211F3A;
   }
 
   &__close {
+    display: inline-flex;
+    padding: 4px;
     background: transparent;
     border: none;
-    color: #6c757d;
+    color: #8f8bab;
     cursor: pointer;
-    padding: 4px;
-    display: inline-flex;
 
-    &:hover {
-      color: #1a1a1a;
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+    &:hover { color: #5F3FE0; }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
   }
 
-  &__body {
-    padding: 18px 20px;
-  }
+  &__body { padding: 18px 20px; }
 
   &__footer {
-    padding: 14px 20px;
-    border-top: 1px solid #eaeaea;
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid #f1f0f7;
   }
 }
 
 .wa-field-label {
   display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: #333;
   margin-bottom: 6px;
-
-  &.mt-3 {
-    margin-top: 16px;
-  }
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: #8f8bab;
 }
 
-.wa-input,
-.wa-textarea {
+.wa-input {
   width: 100%;
-  border: 1px solid #d0d4d9;
-  border-radius: 6px;
-  padding: 9px 12px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #e9e7f3;
+  border-radius: 11px;
+  background: #f5f4fa;
   font-size: 14px;
-  color: #1a1a1a;
-  background: #ffffff;
+  color: #211F3A;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
   &:focus {
     outline: none;
-    border-color: $katuq-green;
-    box-shadow: 0 0 0 3px rgba(31, 122, 77, 0.15);
+    border-color: #5F3FE0;
+    box-shadow: 0 0 0 3px rgba(95, 63, 224, 0.15);
   }
-}
-
-.wa-textarea {
-  resize: vertical;
-  min-height: 60px;
 }
 
 .wa-field-helper {
-  margin: 6px 0 0 0;
+  margin: 6px 0 0;
   font-size: 12px;
-  color: #6c757d;
+  color: #8f8bab;
 }
 
-.btn-cancel {
-  background: #ffffff;
-  color: #555;
-  border: 1px solid #d0d4d9;
-
-  &:hover:not(:disabled) {
-    background: #f5f6f8;
-  }
-}
-
-.btn-confirm {
-  background: $katuq-green;
-  color: #ffffff;
-
-  &:hover:not(:disabled) {
-    background: darken($katuq-green, 6%);
-  }
+.wa-estado {
+  margin-top: 12px;
+  font-weight: 600;
+  color: #5F3FE0;
 }

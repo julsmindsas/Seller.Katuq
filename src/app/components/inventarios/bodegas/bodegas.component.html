@@ -1,62 +1,47 @@
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm-12 p-2">
-            <br />
-            <div class="card">
-                <i class="fa fa-warehouse icon-bg" width="80" height="80" style="
-                        opacity: 0.4;
-                        position: absolute;
-                        color: #6ec0d4;
-                        top: 10px;
-                        left: 10px;
-                    "></i>
-                <div class="loader-box" *ngIf="cargando">
-                    <div class="loader-8"></div>
+<div class="cfg-pagina">
+    <header class="cfg-cabeza">
+        <div class="cfg-cabeza__textos">
+            <span class="cfg-eyebrow">Configuración</span>
+            <h1 class="cfg-titulo">Bodegas</h1>
+            <p class="cfg-sub">Listado de bodegas</p>
+        </div>
+
+        <div class="cfg-acciones">
+            <button class="cfg-btn" type="button" (click)="abrirModalCrear()">
+                <i class="fa fa-plus"></i>
+                <span>Crear Bodega</span>
+            </button>
+            <div class="d-inline-block" ngbDropdown>
+                <button class="cfg-btn cfg-btn--sec" type="button" ngbDropdownToggle
+                        [disabled]="importandoFulfillment"
+                        ngbTooltip="Importar bodegas">
+                    <i class="fa fa-cloud-download" *ngIf="!importandoFulfillment"></i>
+                    <i class="fa fa-spinner fa-spin" *ngIf="importandoFulfillment"></i>
+                    <span>Importar</span>
+                </button>
+                <div ngbDropdownMenu>
+                    <button ngbDropdownItem (click)="importarBodegasFulfillment()"
+                            [disabled]="importandoFulfillment">
+                        <i class="fa fa-cloud-download"></i>&nbsp; Importar de Fulfillment
+                    </button>
+                    <button ngbDropdownItem *ngIf="siigoEnabled" (click)="abrirMapeoSiigo()">
+                        <i class="fa fa-refresh"></i>&nbsp; Importar SIIGO
+                    </button>
                 </div>
+            </div>
+            <button class="cfg-btn cfg-btn--sec" type="button" (click)="exportarExcel()">
+                <i class="fa fa-file-excel-o"></i>
+                <span>Excel</span>
+            </button>
+        </div>
+    </header>
 
-                <!-- Header Estilo Similar -->
-                <div class="row col-12 m-2">
-                    <div class="col-6">
-                        <p class="text-left fw-bold fc-secondary fs-24 m-0 p-0">Bodegas</p>
-                        <p class="text-left text-muted fs-18 m-0 p-0">Listado de bodegas</p>
-                    </div>
+    <section class="cfg-card">
+        <div class="loader-box" *ngIf="cargando">
+            <div class="loader-8"></div>
+        </div>
 
-                    <div class="col-6 p-3" style="text-align: end">
-                        <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="abrirModalCrear()">
-                            <i class="fa fa-plus" style="
-                                    font-size: 18px;
-                                    color: white;
-                                    cursor: pointer;
-                                "></i>&nbsp;
-                            <span style="color: white">Crear Bodega</span>
-                        </button>
-                        <div class="btn-group ml-3 mb-2" ngbDropdown>
-                            <button class="btn btn-importar" ngbDropdownToggle
-                                    [disabled]="importandoFulfillment"
-                                    ngbTooltip="Importar bodegas">
-                                <i class="fa fa-cloud-download" *ngIf="!importandoFulfillment"></i>
-                                <i class="fa fa-spinner fa-spin" *ngIf="importandoFulfillment"></i>&nbsp;
-                                Importar
-                            </button>
-                            <div ngbDropdownMenu>
-                                <button ngbDropdownItem (click)="importarBodegasFulfillment()"
-                                        [disabled]="importandoFulfillment">
-                                    <i class="fa fa-cloud-download"></i>&nbsp; Importar de Fulfillment
-                                </button>
-                                <button ngbDropdownItem *ngIf="siigoEnabled" (click)="abrirMapeoSiigo()">
-                                    <i class="fa fa-refresh"></i>&nbsp; Importar SIIGO
-                                </button>
-                            </div>
-                        </div>
-                        <button class="btn btn-success ml-3 mb-2" style="color: white" (click)="exportarExcel()">
-                            <i class="fa fa-file-excel-o"></i>&nbsp;
-                            Excel
-                        </button>
-                    </div>
-                </div>
-                <!-- FIN Header -->
-
-                <div class="card-body custom-datatable" *ngIf="!cargando">
+        <div class="custom-datatable" *ngIf="!cargando">
                     <p-table #dt [columns]="selectedColumns" [value]="bodegas" [paginator]="true" [rows]="10"
                         [resizableColumns]="true"
                         styleClass="p-datatable-gridlines p-datatable-striped" [rowsPerPageOptions]="[10, 20, 50]"
@@ -104,7 +89,7 @@
                                 </td>
                                 <td class="text-center">{{ bodega.idBodega }}</td>
                                 <td class="text-center">
-                                    <span *ngIf="bodega.tipo === 'Física'">
+                                    <span *ngIf="bodega.tipo === 'Física'" class="texto-celda">
                                         {{ bodega.ciudad }}, {{ bodega.departamento }}
                                     </span>
                                     <span *ngIf="bodega.tipo === 'Transaccional'" class="text-muted">
@@ -158,7 +143,7 @@
                                         <a class="btn-icon" ngbTooltip="Ver inventario" placement="top"
                                            [routerLink]="['/inventario/bodega-detalle']"
                                            [queryParams]="{ bodegaId: bodega.idBodega }">
-                                            <i class="fa fa-list-ul" style="color: #8b5cf6;"></i>
+                                            <i class="fa fa-list-ul" style="color: #5F3FE0;"></i>
                                         </a>
                                         <a class="btn-icon" ngbTooltip="Indicadores de esta bodega" placement="top"
                                            [routerLink]="['/inventario/indicadores']"
@@ -204,9 +189,6 @@
                             </div>
                         </ng-template>
                     </p-table>
-                </div>
-            </div>
         </div>
-    </div>
+    </section>
 </div>
-

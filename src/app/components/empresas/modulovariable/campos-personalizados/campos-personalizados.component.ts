@@ -6,7 +6,8 @@ import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-campos-personalizados',
-  templateUrl: './campos-personalizados.component.html'
+  templateUrl: './campos-personalizados.component.html',
+  styleUrls: ['./campos-personalizados.component.scss']
 })
 export class CamposPersonalizadosComponent implements OnInit {
   grupos: CustomFieldGroup[] = [];

@@ -1,2 +1,25 @@
-// El componente lista hereda estilos de Bootstrap + PrimeNG.
-// Sin estilos adicionales necesarios.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.loader-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 50px;
+}
+
+// Buscador del encabezado (input del design-system).
+.cfg-buscador {
+  height: 40px;
+  min-width: 220px;
+  padding: 0 14px;
+  background: #f5f4fa;
+  border: 1px solid #e9e7f3;
+  border-radius: 10px;
+  color: #211F3A;
+  font-size: 13.5px;
+  outline: none;
+
+  &::placeholder { color: #8f8bab; }
+  &:focus { border-color: #7C5CFF; background: #fff; box-shadow: 0 0 0 3px #efe9ff; }
+}

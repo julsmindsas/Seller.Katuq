@@ -1,161 +1,143 @@
-<div class="container-fluid padding-top-notif">
-    <div class="row">
-        <div class="col-sm-12">
-            <!-- Título de la vista -->
-            <div class="page-title">
-                <div class="row">
-                    <div class="col-6">
-                        <h3>{{ 'Ajustes de notificaciones' | translate }}</h3>
-                    </div>
-                    <div class="col-6">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item">
-                                <a routerLink="/"><app-feather-icons [icon]="'home'"></app-feather-icons></a>
-                            </li>
-                            <li class="breadcrumb-item">{{ 'Perfil' | translate }}</li>
-                            <li class="breadcrumb-item active">{{ 'Ajustes de notificaciones' | translate }}</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Medidor de saldo WhatsApp Business -->
-            <app-whatsapp-billing-meter></app-whatsapp-billing-meter>
-
-            <!-- Texto descriptivo de política de privacidad -->
-            <div class="privacy-note mb-2">
-                <p class="text-muted">
-                    {{ 'notificaciones.privacy_note_1' | translate }}
-                    <a routerLink="/privacy-policy" class="text-primary font-weight-bold">{{ 'Política de privacidad' | translate }}</a>.
-                    {{ 'notificaciones.privacy_note_2' | translate }}
-                </p>
-            </div>
-
-            <!-- Estado de carga -->
-            <div *ngIf="isLoading" class="text-center py-5">
-                <p class="text-muted">{{ 'Cargando...' | translate }}</p>
-            </div>
-
-            <!-- Tarjeta principal de configuración -->
-            <div class="card notification-card" *ngIf="!isLoading">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table preferences-table">
-
-                            <thead>
-                                <tr>
-                                    <th class="td-category"></th>
-                                    <th class="td-channel text-center td-email">
-                                        <div class="channel-header">
-                                            <i class="fa fa-envelope me-1" aria-hidden="true"></i>
-                                            {{ 'Email' | translate }}
-                                        </div>
-                                    </th>
-                                    <th class="td-channel text-center td-sms">
-                                        <div class="channel-header">
-                                            <i class="fa fa-comment me-1" aria-hidden="true"></i>
-                                            {{ 'Mensaje de texto' | translate }}
-                                        </div>
-                                    </th>
-                                    <th class="td-channel text-center td-company-copy">
-                                        <div class="channel-header">
-                                            <i class="fa fa-building me-1" aria-hidden="true"></i>
-                                            {{ 'Copia a empresa' | translate }}
-                                        </div>
-                                    </th>
-                                    <th class="td-channel text-center td-whatsapp">
-                                        <div class="channel-header">
-                                            <i class="fa fa-whatsapp me-1" aria-hidden="true"></i>
-                                            WhatsApp
-                                        </div>
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                <tr *ngFor="let pref of preferences; let last = last" [class.border-bottom-0]="last">
-                                    <td class="td-category">
-                                        <h6 class="font-weight-bold mb-1">{{ pref.title }}</h6>
-                                        <p class="text-muted mb-0 font-sm">{{ pref.description }}</p>
-                                    </td>
-
-                                    <td class="td-channel td-email text-center align-middle">
-                                        <div class="checkbox-container">
-                                            <input type="checkbox" class="custom-checkbox" [id]="'email-' + pref.id"
-                                                [checked]="pref.channels.email"
-                                                (change)="toggleEmail(pref.id)">
-                                            <label [for]="'email-' + pref.id"></label>
-                                        </div>
-                                    </td>
-
-                                    <td class="td-channel td-sms text-center align-middle">
-                                        <div class="checkbox-container">
-                                            <input type="checkbox" class="custom-checkbox" [id]="'sms-' + pref.id"
-                                                [checked]="pref.channels.sms"
-                                                (change)="toggleSms(pref.id)">
-                                            <label [for]="'sms-' + pref.id"></label>
-                                        </div>
-                                    </td>
-
-                                    <td class="td-channel td-company-copy text-center align-middle">
-                                        <div class="checkbox-container">
-                                            <input type="checkbox" class="custom-checkbox" [id]="'cc-' + pref.id"
-                                                [checked]="pref.channels.company_copy"
-                                                (change)="toggleCompanyCopy(pref.id)">
-                                            <label [for]="'cc-' + pref.id"></label>
-                                        </div>
-                                    </td>
-
-                                    <td class="td-channel td-whatsapp text-center align-middle">
-                                        <div class="checkbox-container">
-                                            <input type="checkbox" class="custom-checkbox" [id]="'wa-' + pref.id"
-                                                [checked]="pref.channels.whatsapp"
-                                                (change)="toggleWhatsapp(pref.id)">
-                                            <label [for]="'wa-' + pref.id"></label>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Ticket 1128: avisar al equipo de cada pedido nuevo -->
-            <div class="card notification-card team-alerts" *ngIf="!isLoading">
-                <div class="card-body">
-                    <h6 class="team-alerts__titulo">{{ 'Pedidos nuevos: avisar a tu equipo' | translate }}</h6>
-                    <p class="team-alerts__ayuda">
-                        {{ 'Cada vez que entra un pedido, estas personas reciben un correo con el número, el cliente y el total, aunque no estén dentro de Katuq. Hasta 5 correos.' | translate }}
-                    </p>
-
-                    <div class="team-alerts__lista" *ngIf="avisosPedidoNuevo.length; else sinAvisos">
-                        <span class="team-alerts__chip" *ngFor="let correo of avisosPedidoNuevo">
-                            <span class="team-alerts__correo">{{ correo }}</span>
-                            <button type="button" class="team-alerts__quitar" (click)="quitarCorreoAviso(correo)"
-                                [disabled]="guardandoAvisos" [attr.aria-label]="'Quitar ' + correo">
-                                <i class="fa fa-times" aria-hidden="true"></i>
-                            </button>
-                        </span>
-                    </div>
-                    <ng-template #sinAvisos>
-                        <p class="team-alerts__vacio">{{ 'Todavía no se le avisa a nadie.' | translate }}</p>
-                    </ng-template>
-
-                    <form class="team-alerts__form" (ngSubmit)="agregarCorreoAviso()">
-                        <input type="email" class="form-control team-alerts__input" name="nuevoCorreoAviso"
-                            [(ngModel)]="nuevoCorreoAviso" placeholder="logistica@tuempresa.com" autocomplete="off"
-                            [disabled]="guardandoAvisos || avisosPedidoNuevo.length >= maxAvisos"
-                            aria-label="Correo de la persona a la que se le avisa">
-                        <button type="submit" class="team-alerts__agregar"
-                            [disabled]="guardandoAvisos || !nuevoCorreoAviso.trim() || avisosPedidoNuevo.length >= maxAvisos">
-                            {{ 'Agregar' | translate }}
-                        </button>
-                    </form>
-                </div>
-            </div>
-
+<div class="cfg-pagina">
+    <header class="cfg-cabeza">
+        <div class="cfg-cabeza__textos">
+            <span class="cfg-eyebrow">{{ 'Configuración' | translate }}</span>
+            <h1 class="cfg-titulo">{{ 'Notificaciones' | translate }}</h1>
+            <p class="cfg-sub">{{ 'Elige por qué canal avisamos a tus clientes y a tu equipo, y administra el saldo de mensajes.' | translate }}</p>
         </div>
+    </header>
+
+    <!-- Medidor de saldo WhatsApp Business -->
+    <app-whatsapp-billing-meter></app-whatsapp-billing-meter>
+
+    <!-- Texto descriptivo de política de privacidad -->
+    <div class="notif-privacidad">
+        <p class="notif-privacidad__texto">
+            {{ 'notificaciones.privacy_note_1' | translate }}
+            <a routerLink="/privacy-policy" class="notif-privacidad__enlace">{{ 'Política de privacidad' | translate }}</a>.
+            {{ 'notificaciones.privacy_note_2' | translate }}
+        </p>
     </div>
+
+    <!-- Estado de carga -->
+    <div *ngIf="isLoading" class="cfg-vacio">
+        <p class="cfg-vacio__texto">{{ 'Cargando...' | translate }}</p>
+    </div>
+
+    <!-- Tarjeta principal de configuración -->
+    <section class="cfg-card notif-tarjeta-tabla" *ngIf="!isLoading">
+        <div class="table-responsive">
+            <table class="table preferences-table">
+
+                <thead>
+                    <tr>
+                        <th class="td-category"></th>
+                        <th class="td-channel text-center td-email">
+                            <div class="channel-header">
+                                <i class="fa fa-envelope me-1" aria-hidden="true"></i>
+                                {{ 'Email' | translate }}
+                            </div>
+                        </th>
+                        <th class="td-channel text-center td-sms">
+                            <div class="channel-header">
+                                <i class="fa fa-comment me-1" aria-hidden="true"></i>
+                                {{ 'Mensaje de texto' | translate }}
+                            </div>
+                        </th>
+                        <th class="td-channel text-center td-company-copy">
+                            <div class="channel-header">
+                                <i class="fa fa-building me-1" aria-hidden="true"></i>
+                                {{ 'Copia a empresa' | translate }}
+                            </div>
+                        </th>
+                        <th class="td-channel text-center td-whatsapp">
+                            <div class="channel-header">
+                                <i class="fa fa-whatsapp notif-icono-whatsapp me-1" aria-hidden="true"></i>
+                                WhatsApp
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr *ngFor="let pref of preferences; let last = last" [class.border-bottom-0]="last">
+                        <td class="td-category">
+                            <h6 class="notif-pref__titulo">{{ pref.title }}</h6>
+                            <p class="notif-pref__texto">{{ pref.description }}</p>
+                        </td>
+
+                        <td class="td-channel td-email text-center align-middle">
+                            <div class="checkbox-container">
+                                <input type="checkbox" class="custom-checkbox" [id]="'email-' + pref.id"
+                                    [checked]="pref.channels.email"
+                                    (change)="toggleEmail(pref.id)">
+                                <label [for]="'email-' + pref.id"></label>
+                            </div>
+                        </td>
+
+                        <td class="td-channel td-sms text-center align-middle">
+                            <div class="checkbox-container">
+                                <input type="checkbox" class="custom-checkbox" [id]="'sms-' + pref.id"
+                                    [checked]="pref.channels.sms"
+                                    (change)="toggleSms(pref.id)">
+                                <label [for]="'sms-' + pref.id"></label>
+                            </div>
+                        </td>
+
+                        <td class="td-channel td-company-copy text-center align-middle">
+                            <div class="checkbox-container">
+                                <input type="checkbox" class="custom-checkbox" [id]="'cc-' + pref.id"
+                                    [checked]="pref.channels.company_copy"
+                                    (change)="toggleCompanyCopy(pref.id)">
+                                <label [for]="'cc-' + pref.id"></label>
+                            </div>
+                        </td>
+
+                        <td class="td-channel td-whatsapp text-center align-middle">
+                            <div class="checkbox-container">
+                                <input type="checkbox" class="custom-checkbox" [id]="'wa-' + pref.id"
+                                    [checked]="pref.channels.whatsapp"
+                                    (change)="toggleWhatsapp(pref.id)">
+                                <label [for]="'wa-' + pref.id"></label>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+        </div>
+    </section>
+
+    <!-- Ticket 1128: avisar al equipo de cada pedido nuevo -->
+    <section class="cfg-card team-alerts" *ngIf="!isLoading">
+        <h2 class="cfg-card__titulo team-alerts__titulo">{{ 'Pedidos nuevos: avisar a tu equipo' | translate }}</h2>
+        <p class="team-alerts__ayuda">
+            {{ 'Cada vez que entra un pedido, estas personas reciben un correo con el número, el cliente y el total, aunque no estén dentro de Katuq. Hasta 5 correos.' | translate }}
+        </p>
+
+        <div class="team-alerts__lista" *ngIf="avisosPedidoNuevo.length; else sinAvisos">
+            <span class="team-alerts__chip" *ngFor="let correo of avisosPedidoNuevo">
+                <span class="team-alerts__correo">{{ correo }}</span>
+                <button type="button" class="team-alerts__quitar" (click)="quitarCorreoAviso(correo)"
+                    [disabled]="guardandoAvisos" [attr.aria-label]="'Quitar ' + correo">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </button>
+            </span>
+        </div>
+        <ng-template #sinAvisos>
+            <p class="team-alerts__vacio">{{ 'Todavía no se le avisa a nadie.' | translate }}</p>
+        </ng-template>
+
+        <form class="team-alerts__form" (ngSubmit)="agregarCorreoAviso()">
+            <input type="email" class="form-control team-alerts__input" name="nuevoCorreoAviso"
+                [(ngModel)]="nuevoCorreoAviso" placeholder="logistica@tuempresa.com" autocomplete="off"
+                [disabled]="guardandoAvisos || avisosPedidoNuevo.length >= maxAvisos"
+                aria-label="Correo de la persona a la que se le avisa">
+            <button type="submit" class="cfg-btn team-alerts__agregar"
+                [disabled]="guardandoAvisos || !nuevoCorreoAviso.trim() || avisosPedidoNuevo.length >= maxAvisos">
+                {{ 'Agregar' | translate }}
+            </button>
+        </form>
+    </section>
+
 </div>

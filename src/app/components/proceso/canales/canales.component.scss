@@ -1,4 +1,6 @@
-/* Estilos para el componente de canales */
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
 .loader-box {
   height: 150px;
   display: flex;
@@ -59,23 +61,3 @@ input:focus + .switch-state {
 input:checked + .switch-state:before {
   transform: translateX(20px);
 }
-
-/* Estilo personalizado para los iconos */
-.fc-primary {
-  color: #4099ff;
-}
-
-.fc-danger {
-  color: #ff5370;
-}
-
-.fc-secondary {
-  color: #6ec0d4;
-}
-
-/* Estilos responsivos */
-@media (max-width: 768px) {
-  .text-left {
-    text-size: 20px;
-  }
-} 

@@ -1,3 +1,6 @@
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
 /* =============================================
    BODEGAS TABLE - CLEAN MINIMAL DESIGN
    ============================================= */
@@ -25,48 +28,6 @@ $teal-bg: #e0f2f1;
 $teal-text: #00796b;
 $green-bg: #e8f5e9;
 $green-text: #2e7d32;
-
-// =============================================
-// BOTÓN "IMPORTAR" (bodegas) — magenta tenue → hover magenta fuerte + animación
-// =============================================
-.btn-importar {
-  background-color: #d17aae;   // magenta tenue (default)
-  border-color: #d17aae;
-  color: #ffffff;
-  transition: background-color 0.25s ease, border-color 0.25s ease,
-              transform 0.2s ease, box-shadow 0.25s ease;
-
-  &:hover,
-  &:focus,
-  &.show {                      // .show = dropdown abierto
-    background-color: #a61d78;  // magenta más fuerte (hover/activo)
-    border-color: #a61d78;
-    color: #ffffff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 14px rgba(166, 29, 120, 0.35);
-  }
-
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(166, 29, 120, 0.3);
-  }
-
-  &:disabled,
-  &.disabled {
-    background-color: #d17aae;
-    border-color: #d17aae;
-    opacity: 0.6;
-    transform: none;
-    box-shadow: none;
-  }
-}
-
-// =============================================
-// ICON STYLES
-// =============================================
-.icon-bg {
-  z-index: 0;
-}
 
 // =============================================
 // LOADER
@@ -172,11 +133,11 @@ $green-text: #2e7d32;
 }
 
 .btn-icon-edit {
-  color: #5c6bc0;
+  color: #5F3FE0;
 
   &:hover {
-    background: #e8eaf6;
-    color: #3f51b5;
+    background: #efe9ff;
+    color: #4a2fc0;
   }
 }
 
@@ -198,74 +159,8 @@ $green-text: #2e7d32;
   }
 }
 
-// Legacy classes (mantener compatibilidad)
-.fc-primary {
-  color: #5c6bc0;
-}
-
-.fc-danger {
-  color: #ef5350;
-}
-
-.fc-secondary {
-  color: $gray-700;
-}
-
-// =============================================
-// TABLE CUSTOMIZATION
-// =============================================
-.custom-datatable {
-  ::ng-deep {
-    .p-datatable {
-      .p-datatable-thead > tr > th {
-        background: $gray-100;
-        color: $gray-700;
-        font-weight: 600;
-        font-size: 13px;
-        padding: 12px 16px;
-        border-bottom: 2px solid $gray-300;
-      }
-
-      .p-datatable-tbody > tr > td {
-        padding: 12px 16px;
-        font-size: 13px;
-        color: $gray-800;
-        border-bottom: 1px solid $gray-200;
-        vertical-align: middle;
-      }
-
-      .p-datatable-tbody > tr:hover {
-        background: $gray-100;
-      }
-
-      // Paginator
-      .p-paginator {
-        background: transparent;
-        border: none;
-        padding: 12px 0;
-
-        .p-paginator-element {
-          min-width: 32px;
-          height: 32px;
-          border-radius: 4px;
-          margin: 0 2px;
-
-          &:hover {
-            background: $gray-200;
-          }
-        }
-
-        .p-highlight {
-          background: #5c6bc0;
-          color: white;
-
-          &:hover {
-            background: #3f51b5;
-          }
-        }
-      }
-    }
-  }
+.texto-celda {
+  color: #211F3A;
 }
 
 // =============================================
@@ -315,11 +210,11 @@ $green-text: #2e7d32;
   }
 
   .btn-icon-edit {
-    color: #7986cb;
+    color: #b6a3ff;
 
     &:hover {
-      background: rgba(#5c6bc0, 0.15);
-      color: #9fa8da;
+      background: rgba(#5F3FE0, 0.15);
+      color: #b6a3ff;
     }
   }
 
