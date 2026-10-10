@@ -156,6 +156,46 @@ Aplicar `openspec/specs/design-system/spec.md`: acento `#5F3FE0`, tinta `#211F3A
 
 No introducir primarios paralelos (`#2196f3`, `#4361ee`, `#2563eb`, `#5c6ac4`, `#667eea`). La discrepancia con `_katuq-tokens.scss` (`#8b5cf6`) requiere propuesta OpenSpec antes de una migración masiva.
 
+### Regla de diseño Katuq: pantallas nuevas y modernizadas (D-398, D-399, D-400)
+
+Toda pantalla nueva, o vieja que se toque, debe verse como "Regístrese" y "Todos los pedidos": plana, con fondo lila, tarjetas blancas y el acento `#5F3FE0`. No se crean estilos sueltos por pantalla; se usa la base que corresponde:
+
+| Tipo de pantalla | Base obligatoria | Decisión |
+|------------------|------------------|----------|
+| Pública, sin menú (login, contraseñas, términos, resultados de pago, 404) | `shared/components/publica/`: `<app-publica-marco>` + `@include publica-piezas` (`PublicaModule`) | D-398 |
+| Interna de lista o configuración (encabezado, acciones, tabla PrimeNG) | `shared/styles/_config-pagina.scss`: `@include config-pagina`, clases `cfg-pagina`, `cfg-cabeza`, `cfg-eyebrow`, `cfg-titulo`, `cfg-sub`, `cfg-acciones`, `cfg-btn` (`--sec`, `--peligro`), `cfg-card`, `cfg-aviso`, `cfg-vacio` | D-400 |
+| Cualquier otra interna | Tokens y patrones de `openspec/specs/design-system/spec.md` | D-131, D-399 |
+
+**Prohibido en pantallas de producto:**
+
+- `linear-gradient`/`radial-gradient` decorativos en fondos, cards, headers, botones, pestañas o textos (`background-clip: text`). Solo se permiten en `katuq-flow`, Regístrese, skeleton/shimmer, fades sobre imágenes y brillos animados (D-399).
+- Primarios paralelos: los cinco de arriba y también los azules sueltos `#3b82f6`, `#1d4ed8`, `#6366f1`, `#1976d2`, `#7366ff` y `rgba(102,126,234,…)`.
+- La plantilla vieja: títulos azules `fc-secondary fs-24`, botón principal verde `btn-success`, encabezados de color fuerte, bloques negros y `border-left` de acento.
+
+**Cómo se ve:**
+
+- Botón principal morado, botones secundarios blancos con borde y avisos en par color fuerte / fondo suave.
+- Labels y cabeceras de tabla en UPPERCASE muted.
+- Estado vacío con ícono, título y texto corto.
+- Radios de 16/11/20 px.
+
+**Modernizar cambia solo la presentación.** No se tocan columnas, filtros, eventos, modales, servicios, validaciones ni textos funcionales. Si el rediseño exige cambiar comportamiento, se hace en un cambio aparte con su spec.
+
+**Trampas de CSS global** (vienen de `src/assets/scss/base/_reset.scss` y similares; pisan el SCSS del componente):
+
+- `[class*="p-"]` fuerza el `font-size` de cualquier clase que contenga "p-" (por ejemplo `chip--`, `step-`, `top-`, `help-`, `map-`). Ningún nombre de clase nuevo debe contener "p-".
+- `span.ng-star-inserted` pinta de azul todo `span` creado por `*ngIf`, así que todo span con texto lleva color y tamaño propios. En pestañas PrimeNG sobre morado plano, el título `.p-tabview-title` necesita `color: inherit` o no se ve.
+- `h1 { font-size: 1.5rem !important }`: el tamaño del título va con `!important`.
+- `button:focus` quita el outline. Devolverlo con `:focus-visible { outline: 3px solid #7C5CFF !important }`.
+- `a` y `p` traen `letter-spacing`: neutralizarlo con `letter-spacing: normal`.
+
+**Antes de cerrar un cambio de diseño:**
+
+1. Build de producción sin errores.
+2. Contar `(linear|radial)-gradient(` y los primarios prohibidos del módulo tocado: no deben subir.
+3. Revisar cada pantalla en el navegador a 1440 y 390 px, sin scroll horizontal y sin texto invisible.
+4. Registrar la decisión en `specs/CONTRACT.md`.
+
 ### Entornos
 
 - `src/environments/environment.ts` → configuración de desarrollo; actualmente `urlApi` apunta a `https://back.katuq.com`.
