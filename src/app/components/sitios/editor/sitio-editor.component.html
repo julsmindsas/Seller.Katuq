@@ -116,7 +116,8 @@
           </div>
 
           <!-- Después de un cambio: lo más probable es guardarlo o devolverlo -->
-          <div class="chat-ia__despues" *ngIf="ultimoCambioIA && !editandoIA">
+          <!-- Solo si el cambio está de verdad en la página (tras recargar, la conversación vuelve pero el cambio no). -->
+          <div class="chat-ia__despues" *ngIf="ultimoCambioIA && puedeDeshacerIA && !editandoIA">
             <button class="btn-primario btn-primario--sm" (click)="guardarDesdeChatIA()" [disabled]="guardando">
               {{ guardando ? 'Guardando…' : '💾 Me gusta, guardar' }}
             </button>
