@@ -1,3 +1,4 @@
+import { ModuloIaComponent } from '../../shared/components/modulo-ia/modulo-ia.component';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -26,6 +27,7 @@ import { CarteraAgingComponent } from './components/cartera-aging/cartera-aging.
     CarteraAgingComponent,
   ],
   imports: [
+    ModuloIaComponent,
     CommonModule,
     FormsModule,
     SharedModule,

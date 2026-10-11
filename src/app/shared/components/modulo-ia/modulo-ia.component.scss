@@ -1,0 +1,78 @@
+// IA de módulos. Tema canónico, plano. Spans con color propio (trampa `span.ng-star-inserted`);
+// ningún nombre de clase contiene "p-" (trampa `[class*="p-"]`).
+$accent: #5F3FE0;
+$ink: #211F3A;
+$muted: #8f8bab;
+
+.mi-ico { background: #efe9ff; color: $accent; }
+
+.mi-barra {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: #fff;
+  border: 1px solid #ececf4;
+  border-radius: 16px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 6px 24px rgba(95, 63, 224, 0.05);
+}
+
+.mi-barra__texto { color: $ink; font-size: 13.5px; font-weight: 600; flex: 1; min-width: 200px; letter-spacing: normal; }
+
+.mi-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 14px 18px 4px; }
+
+.mi-stat {
+  background: #faf9fe;
+  border: 1px solid #eeecf7;
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong { font-size: 17px; font-weight: 800; color: $accent; }
+  strong.is-danger { color: #D64545; }
+  strong.is-warning { color: #D9820A; }
+}
+
+.mi-small { font-size: 12px; color: $muted; font-weight: 700; }
+
+.mi-opttia {
+  margin: 10px 18px 0;
+  padding: 10px 12px;
+  border: 1px solid #d9cffb;
+  border-radius: 12px;
+
+  .mi-texto { color: $ink; font-size: 13.5px; letter-spacing: normal; }
+}
+
+.mi-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; padding: 14px 18px 8px; }
+.mi-lista { padding: 6px 18px 8px; }
+.mi-pad { padding: 12px 18px 0; }
+.mi-tit { display: block; margin-bottom: 6px; }
+.mi-mt { margin-top: 14px; }
+.mi-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.mi-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f0f7;
+
+  &:last-of-type { border-bottom: 0; }
+}
+
+.mi-item__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mi-item__name { color: $ink; font-size: 13.5px; font-weight: 700; }
+.mi-item__meta { color: $muted; font-size: 12px; letter-spacing: normal; }
+.mi-item__why { color: #4b4868; font-size: 12.5px; letter-spacing: normal; }
+.mi-wa { text-decoration: none; border: 0; cursor: pointer; }
+.mi-pie, .mi-vacio span { display: block; color: $muted; font-size: 12px; margin: 6px 18px 10px; letter-spacing: normal; }
+
+@media (max-width: 992px) {
+  .mi-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mi-cols { grid-template-columns: 1fr; }
+}

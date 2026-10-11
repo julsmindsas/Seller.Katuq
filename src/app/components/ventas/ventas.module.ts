@@ -1,3 +1,4 @@
+import { ModuloIaComponent } from '../../shared/components/modulo-ia/modulo-ia.component';
 import { NgModule, Injector } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { SharedModule } from "../../../app/shared/shared.module";
@@ -94,6 +95,7 @@ import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
 import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-imagen.module';
 @NgModule({
   imports: [
+    ModuloIaComponent,
     ImagenProductoPipe,
     VisorImagenModule,
     NgSelectModule,

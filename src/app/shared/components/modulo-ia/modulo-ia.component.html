@@ -1,0 +1,114 @@
+<!-- Barra compacta: no se calcula nada hasta que la persona lo pide -->
+<div class="mi-barra" *ngIf="!abierto">
+  <span class="ins-panel__icon mi-ico"><i class="pi pi-bolt"></i></span>
+  <span class="mi-barra__texto">{{ titulo }}: Katuq lo calcula y Opttia se lo explica.</span>
+  <button type="button" class="ins-btn is-primary" (click)="abrir()"><i class="pi pi-bolt"></i> Ver con IA</button>
+</div>
+
+<section class="ins-panel" *ngIf="abierto">
+  <header class="ins-panel__head">
+    <span class="ins-panel__icon mi-ico"><i class="pi pi-bolt"></i></span>
+    <div>
+      <h3 class="ins-panel__title">{{ titulo }}</h3>
+      <p class="ins-panel__sub" *ngIf="d?.soloPropios">Solo con los pedidos que usted tiene asignados.</p>
+      <p class="ins-panel__sub" *ngIf="!d?.soloPropios && modulo === 'cartera'">La misma cartera de tesorería, ordenada por lo que hay que cobrar primero.</p>
+      <p class="ins-panel__sub" *ngIf="!d?.soloPropios && modulo !== 'cartera'">Con los pedidos de los últimos 12 meses.</p>
+    </div>
+    <div class="ins-panel__actions">
+      <button type="button" class="ins-btn is-primary" (click)="explicar()" [disabled]="explicando || cargando || !d">
+        <i class="pi" [ngClass]="explicando ? 'pi-spin pi-spinner' : 'pi-bolt'"></i>
+        {{ explicando ? 'Opttia está leyendo…' : 'Explicar con Opttia' }}
+      </button>
+      <button type="button" class="ins-btn" (click)="cargar()" [disabled]="cargando" aria-label="Actualizar"><i class="pi pi-refresh" [class.pi-spin]="cargando"></i></button>
+      <button type="button" class="ins-btn" (click)="abierto = false" aria-label="Cerrar"><i class="pi pi-times"></i></button>
+    </div>
+  </header>
+
+  <div class="ins-empty" *ngIf="cargando && !d"><span>Calculando…</span></div>
+  <div class="ins-note" *ngIf="error"><i class="pi pi-exclamation-circle"></i> <span>{{ error }}</span></div>
+
+  <ng-container *ngIf="d">
+    <div class="mi-opttia" *ngIf="ia?.resumen"><span class="ins-row__ia">Opttia · </span><span class="mi-texto">{{ ia.resumen }}</span></div>
+    <div class="ins-note" *ngIf="avisoIA"><i class="pi pi-info-circle"></i> <span>{{ avisoIA }}</span></div>
+
+    <!-- ── Clientes ─────────────────────────────────────────── -->
+    <ng-container *ngIf="modulo === 'clientes'">
+      <div class="mi-stats">
+        <div class="mi-stat"><span class="ins-label">Por recuperar</span><strong [class.is-warning]="d.porRecuperar.total">{{ d.porRecuperar.total | number }}</strong></div>
+        <div class="mi-stat"><span class="ins-label">Compraron en el año</span><strong>{{ dinero(d.porRecuperar.valor) }}</strong></div>
+        <div class="mi-stat"><span class="ins-label">Nuevos sin repetir</span><strong>{{ d.nuevosSinRepetir.total | number }}</strong></div>
+        <div class="mi-stat"><span class="ins-label">Clientes con compras</span><strong>{{ d.clientesConCompras | number }}</strong></div>
+      </div>
+      <div class="mi-cols">
+        <div>
+          <div class="ins-label mi-tit">Compraban seguido y dejaron de comprar</div>
+          <div class="mi-item" *ngFor="let f of d.porRecuperar.filas | slice:0:8">
+            <div class="mi-item__top">
+              <strong class="mi-item__name">{{ f.nombre || f.clienteId }}</strong>
+              <a class="ins-pill is-success mi-wa" *ngIf="whatsapp(f, 'porRecuperar') as url" [href]="url" target="_blank" rel="noopener"><i class="pi pi-whatsapp"></i> Escribirle</a>
+            </div>
+            <span class="mi-item__why"><span class="ins-row__ia" *ngIf="esIA('porRecuperar', f.id)">Opttia · </span>{{ frase('porRecuperar', f.id, f.motivoBase) }}</span>
+          </div>
+          <div class="mi-vacio" *ngIf="!d.porRecuperar.total"><span>Ningún cliente frecuente ha dejado de comprar.</span></div>
+        </div>
+        <div>
+          <div class="ins-label mi-tit">Compraron una vez y no volvieron</div>
+          <div class="mi-item" *ngFor="let f of d.nuevosSinRepetir.filas | slice:0:5">
+            <div class="mi-item__top">
+              <strong class="mi-item__name">{{ f.nombre || f.clienteId }}</strong>
+              <a class="ins-pill is-success mi-wa" *ngIf="whatsapp(f, 'nuevosSinRepetir') as url" [href]="url" target="_blank" rel="noopener"><i class="pi pi-whatsapp"></i> Escribirle</a>
+            </div>
+            <span class="mi-item__why"><span class="ins-row__ia" *ngIf="esIA('nuevosSinRepetir', f.id)">Opttia · </span>{{ frase('nuevosSinRepetir', f.id, f.motivoBase) }}</span>
+          </div>
+          <div class="ins-label mi-tit mi-mt" *ngIf="d.mejores.filas.length">Mejores clientes (90 días)</div>
+          <div class="mi-chips"><span class="ins-pill is-accent" *ngFor="let f of d.mejores.filas | slice:0:6">{{ f.nombre || f.clienteId }} · {{ dinero(f.valor90) }}</span></div>
+        </div>
+      </div>
+      <p class="mi-pie" *ngIf="!ia?.plantillas">Toque "Explicar con Opttia" para recibir un mensaje sugerido y el botón para escribirle por WhatsApp.</p>
+    </ng-container>
+
+    <!-- ── Cartera ──────────────────────────────────────────── -->
+    <ng-container *ngIf="modulo === 'cartera'">
+      <div class="mi-stats">
+        <div class="mi-stat"><span class="ins-label">Por cobrar</span><strong>{{ dinero(d.total) }}</strong></div>
+        <div class="mi-stat"><span class="ins-label">Vencido</span><strong [class.is-danger]="d.vencido">{{ dinero(d.vencido) }} <small class="mi-small">{{ d.pctVencido }}%</small></strong></div>
+        <div class="mi-stat"><span class="ins-label">Días promedio de cobro</span><strong>{{ d.dso | number }}</strong></div>
+        <div class="mi-stat"><span class="ins-label">Pasaron su cupo</span><strong [class.is-warning]="d.excedenCupo">{{ d.excedenCupo | number }}</strong></div>
+      </div>
+      <div class="mi-chips mi-pad"><span class="ins-pill" *ngFor="let t of d.tramos" [ngClass]="t.id === 'd60' ? 'is-danger' : t.id === 'corriente' ? 'is-success' : 'is-warning'">{{ t.texto }} · {{ dinero(t.valor) }}</span></div>
+      <div class="mi-lista">
+        <div class="mi-item" *ngFor="let f of d.deudores.filas | slice:0:10">
+          <div class="mi-item__top">
+            <strong class="mi-item__name">{{ f.nombre || f.clienteId || 'Sin cliente' }}</strong>
+            <button type="button" class="ins-pill is-accent mi-wa" *ngIf="ia?.plantillas?.deudores" (click)="copiar(f, 'deudores')"><i class="pi" [ngClass]="copiado === f.id ? 'pi-check' : 'pi-copy'"></i> {{ copiado === f.id ? 'Copiado' : 'Copiar mensaje' }}</button>
+          </div>
+          <span class="mi-item__meta" *ngIf="f.vendedor">Vendedor: {{ f.vendedor }}</span>
+          <span class="mi-item__why"><span class="ins-row__ia" *ngIf="esIA('deudores', f.id)">Opttia · </span>{{ frase('deudores', f.id, f.motivoBase) }}</span>
+        </div>
+        <div class="mi-vacio" *ngIf="!d.deudores.total"><span>No hay cartera pendiente.</span></div>
+      </div>
+    </ng-container>
+
+    <!-- ── Pedidos ──────────────────────────────────────────── -->
+    <ng-container *ngIf="modulo === 'pedidos'">
+      <div class="mi-chips mi-pad">
+        <span class="ins-pill" *ngFor="let t of ['por_producir', 'pagado_quieto', 'sin_pago']" [ngClass]="tipoPedido(t).clase">{{ tipoPedido(t).texto }} · {{ d.porTipo[t] || 0 }}</span>
+      </div>
+      <div class="mi-lista">
+        <div class="mi-item" *ngFor="let f of d.filas | slice:0:10">
+          <div class="mi-item__top">
+            <strong class="mi-item__name">Pedido {{ f.nroPedido }}</strong>
+            <span class="ins-pill" [ngClass]="tipoPedido(f.tipo).clase">{{ tipoPedido(f.tipo).texto }}</span>
+          </div>
+          <span class="mi-item__why"><span class="ins-row__ia" *ngIf="esIA('pedidos', f.id)">Opttia · </span>{{ frase('pedidos', f.id, f.motivoBase) }}</span>
+        </div>
+        <div class="mi-vacio" *ngIf="!d.total"><span>Ningún pedido necesita atención especial hoy.</span></div>
+        <span class="mi-pie" *ngIf="d.total > 10">Y {{ d.total - 10 | number }} más.</span>
+      </div>
+    </ng-container>
+
+    <div class="d-flex flex-wrap gap-2 px-3 pb-3">
+      <button type="button" class="ins-chip" *ngFor="let p of preguntas" (click)="preguntar(p)">{{ p }}</button>
+    </div>
+  </ng-container>
+</section>
