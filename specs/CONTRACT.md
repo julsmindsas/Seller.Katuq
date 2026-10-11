@@ -9231,6 +9231,8 @@ Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.ser
 - `calcularComisionTotal` manda `proveedorId`/`montoVenta`, y el servidor espera `proveedor_id`/`total_venta`.
 - `GET /v1/productos/por-proveedor` devuelve el nombre del proveedor por id sin revisar a qué empresa pertenece. La ruta no usa `requireJwtTenant`. Hoy no hay proveedores.
 
+**D-401, adenda (11-oct, decisión de Daniel: "corregir y seguir en sombra").** La revisión de destinatarios en producción mostró que FLORECER (demo) le escribía a personal real de ALMARA, CAFE ESCOBAR tenía un correo en `gamil.com` y ALMARA llegaba al tope de 10 administradores. Ahora el resumen va solo a los correos de la empresa (`emailNotificacionesSistema`, `emailContacto`), las empresas demo solo a correos de Katuq/Julsmind y los dominios mal escritos se omiten (`dc17677`); la sombra guarda a quién le habría llegado. Sigue en sombra; OK de Daniel para el envío tras revisar W42 y W43 (~25-oct). Pendientes de datos: un correo @katuq.com para FLORECER y el correo de CAFE ESCOBAR.
+
 ## D-404 (2026-10-11) — IA de despachos que entregue valor (openspec/changes/despachos-ia-util)
 
 **Disparador.** /goal de Daniel (11-oct): "permea de IA los principales módulos, termina inventario y luego sigue con despachos". La aprobación del cambio es ese /goal; todo es de solo lectura.
