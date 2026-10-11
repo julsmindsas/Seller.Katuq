@@ -511,7 +511,8 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       datosFacturacionElec;
 
     // Si los datos editados son los que están en uso en el pedido, actualizarlos
-    if (this.pedidoGral?.facturacion && this.pedidoGral.facturacion.alias === this.originalAliasFact) {
+    const esLaFacturacionEnUso = !!(this.pedidoGral?.facturacion && this.pedidoGral.facturacion.alias === this.originalAliasFact);
+    if (esLaFacturacionEnUso) {
       this.pedidoGral.facturacion = { ...datosFacturacionElec };
       this.pedidoGral = { ...this.pedidoGral };
       // Emitir el cambio al componente padre
@@ -527,6 +528,25 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     // ✅ LLAMADA ÚNICA: Solo editClient() - el formulario ya tiene todos los datos
     this.service.editClient(this.formulario.value).subscribe({
       next: (r) => {
+        // Ticket 1196: si los datos editados NO eran los del pedido, se pregunta
+        // de una vez si se usan en el pedido (antes había que volver a dar "Usar").
+        const aplicarEnPedido = () => {
+          this.pedidoGral.facturacion = { ...datosFacturacionElec };
+          this.pedidoGral = { ...this.pedidoGral };
+          this.overridePedido.emit(this.pedidoGral);
+        };
+        const preguntarUso: Promise<any> = esLaFacturacionEnUso
+          ? Promise.resolve()
+          : Swal.fire({
+              title: "Datos de facturación guardados",
+              text: "¿Quieres usar estos datos actualizados en el pedido?",
+              icon: "question",
+              showCancelButton: true,
+              confirmButtonText: "Sí, usar en el pedido",
+              cancelButtonText: "No, solo guardarlos",
+              confirmButtonColor: "#5F3FE0",
+            }).then((r) => { if (r.isConfirmed) aplicarEnPedido(); });
+        preguntarUso.then(() => {
         // Cerrar el modal después de guardar exitosamente
         this.modalService.dismissAll();
 
@@ -568,6 +588,7 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
         this.departamento = "";
         this.ciudad_municipio = "";
         this.codigo_postal = "";
+        });
       },
       error: (err) => {
         console.error("Error al editar datos de facturación:", err);

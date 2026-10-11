@@ -557,6 +557,26 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     // ✅ LLAMADA ÚNICA: Solo editClient() - el formulario ya tiene todos los datos
     this.service.editClient(this.formulario.value).subscribe({
       next: (r) => {
+        // Ticket 1196: si la dirección editada NO era la del pedido, se pregunta
+        // de una vez si se usa en el pedido. Antes había que volver a darle
+        // "Usar" y muchos asumían que ya había quedado.
+        const aplicarEnPedido = () => {
+          this.pedidoGral.envio = { ...datosEntreg };
+          this.pedidoGral = { ...this.pedidoGral };
+          this.overridePedido.emit(this.pedidoGral);
+        };
+        const preguntarUso: Promise<any> = esLaDireccionEnUso
+          ? Promise.resolve()
+          : Swal.fire({
+              title: "Dirección guardada",
+              text: "¿Quieres usar esta dirección actualizada en el pedido?",
+              icon: "question",
+              showCancelButton: true,
+              confirmButtonText: "Sí, usar en el pedido",
+              cancelButtonText: "No, solo guardarla",
+              confirmButtonColor: "#5F3FE0",
+            }).then((r) => { if (r.isConfirmed) aplicarEnPedido(); });
+        preguntarUso.then(() => {
         // Cerrar el modal después de guardar exitosamente
         this.modalService.dismissAll();
 
@@ -610,6 +630,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         this.zona_cobro = "";
         this.valor_zona_cobro = "";
         this.codigo_postal_entrega = "";
+        });
       },
       error: (err) => {
         console.error("Error al editar dirección de entrega:", err);
