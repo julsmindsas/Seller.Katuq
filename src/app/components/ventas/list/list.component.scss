@@ -2485,7 +2485,9 @@ $filter-border-color: #e0e0e0;
 
 .options-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  // Ticket 1188: tantas columnas como quepan (3 a 5 en escritorio), para ver
+  // todas las opciones sin scroll. En móvil vuelve a una sola columna.
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: 8px;
   max-height: calc(90vh - 200px); // Ajustar según header y footer
   overflow-y: auto;
@@ -2522,6 +2524,9 @@ $filter-border-color: #e0e0e0;
     }
   }
 }
+
+.option-icon.duplicate-icon { background: #0E9F6E; }
+.option-icon.invoice-icon { background: #5F3FE0; }
 
 .option-icon {
   width: 36px;
@@ -2692,6 +2697,12 @@ $filter-border-color: #e0e0e0;
   max-height: 90vh;
   overflow-y: auto;
   animation: slideIn 0.3s ease-out;
+
+  // Ticket 1188: el modal de opciones del pedido ocupa el ancho de la pantalla
+  &.options-modal {
+    max-width: min(1240px, 96vw);
+    width: 96%;
+  }
   
   &.delivery-modal {
     max-width: 700px;
@@ -2914,6 +2925,7 @@ $filter-border-color: #e0e0e0;
 
   .options-grid {
     max-height: calc(98vh - 180px);
+    grid-template-columns: 1fr;
   }
 
   .option-btn {

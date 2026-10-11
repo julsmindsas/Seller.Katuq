@@ -2142,7 +2142,8 @@
 
 <!-- Modal de Opciones -->
 <div *ngIf="modalVisible" class="custom-modal-overlay" (click)="onBackdropClick($event)">
-    <div class="custom-modal">
+    <!-- Ticket 1188: las opciones se reparten en varias columnas para no tener que hacer scroll -->
+    <div class="custom-modal options-modal">
         <div class="custom-modal-content">
             <!-- Modal Header -->
             <div class="modal-header border-0 pb-2">
@@ -2169,8 +2170,8 @@
                             <i class="fa fa-file-pdf-o"></i>
                         </div>
                         <div class="option-content">
-                            <span class="option-title">{{ 'Imprimir PDF' | translate }}</span>
-                            <small class="option-description">{{ 'Generar documento del pedido' | translate }}</small>
+                            <span class="option-title">{{ 'Generar PDF del pedido' | translate }}</span>
+                            <small class="option-description">{{ 'Genera un documento PDF con toda la información completa del pedido.' | translate }}</small>
                         </div>
                     </button>
 
@@ -2181,8 +2182,32 @@
                             <i class="fa fa-file-text-o"></i>
                         </div>
                         <div class="option-content">
-                            <span class="option-title">{{ 'Orden de Venta' | translate }}</span>
-                            <small class="option-description">{{ 'Generar orden de venta profesional' | translate }}</small>
+                            <span class="option-title">{{ 'Generar PDF orden de venta simplificada' | translate }}</span>
+                            <small class="option-description">{{ 'Genera una orden de venta con formato profesional para presentar al cliente.' | translate }}</small>
+                        </div>
+                    </button>
+
+                    <!-- Ticket 1189: Duplicar también en la lista general (antes solo en el menú rápido) -->
+                    <button class="option-btn" type="button"
+                        (click)="duplicarPedido(selectedOrder); closeOptionsModal()">
+                        <div class="option-icon duplicate-icon">
+                            <i class="fa fa-clone"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Duplicar pedido' | translate }}</span>
+                            <small class="option-description">{{ 'Ten en cuenta que el nuevo debes editarlo según tus necesidades.' | translate }}</small>
+                        </div>
+                    </button>
+
+                    <!-- Ticket 1189: Facturar también en la lista general (misma condición que el menú rápido) -->
+                    <button *ngIf="!isFromProduction && puedeFacturarSiigo(selectedOrder)" class="option-btn" type="button"
+                        (click)="facturarPedidoSiigo(selectedOrder); closeOptionsModal()">
+                        <div class="option-icon invoice-icon">
+                            <i class="fa fa-file-text"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Facturar' | translate }}</span>
+                            <small class="option-description">{{ 'Genera la factura electrónica de este pedido.' | translate }}</small>
                         </div>
                     </button>
 
@@ -2238,7 +2263,7 @@
                             <i class="fa fa-user"></i>
                         </div>
                         <div class="option-content">
-                            <span class="option-title">{{ 'Editar Cliente' | translate }}</span>
+                            <span class="option-title">{{ 'Permite actualizar la información principal del cliente asociado al pedido.' | translate }}</span>
                             <small class="option-description">{{ 'Modificar datos del cliente' | translate }}</small>
                         </div>
                     </button>
@@ -2253,7 +2278,7 @@
                             <i *ngIf="!canEditDeliveryAddressByDeliveryType(selectedOrder)" class="fa fa-lock frozen-lock"></i>
                         </div>
                         <div class="option-content">
-                            <span class="option-title">{{ 'Editar Dirección' | translate }}</span>
+                            <span class="option-title">{{ 'Edita o corrige la dirección registrada para la entrega del pedido.' | translate }}</span>
                             <small class="option-description">
                                 <span *ngIf="canEditDeliveryAddressByDeliveryType(selectedOrder)">{{ 'Modificar dirección de entrega' | translate }}</span>
                                 <span *ngIf="!canEditDeliveryAddressByDeliveryType(selectedOrder)" class="text-warning">
@@ -2273,7 +2298,7 @@
                             <i class="fa fa-credit-card"></i>
                         </div>
                         <div class="option-content">
-                            <span class="option-title">{{ 'Editar Facturación' | translate }}</span>
+                            <span class="option-title">{{ 'Ajusta los datos de facturación necesarios para esta venta.' | translate }}</span>
                             <small class="option-description">{{ 'Modificar datos de facturación' | translate }}</small>
                         </div>
                     </button>
@@ -2285,8 +2310,8 @@
                             <i class="fa fa-sticky-note"></i>
                         </div>
                         <div class="option-content">
-                            <span class="option-title">{{ 'Editar Notas' | translate }}</span>
-                            <small class="option-description">{{ 'Agregar o modificar notas' | translate }}</small>
+                            <span class="option-title">{{ 'Notas del pedido' | translate }}</span>
+                            <small class="option-description">{{ 'Agrega, visualiza o modifica notas importantes relacionadas con el pedido.' | translate }}</small>
                         </div>
                     </button>
 
@@ -2297,8 +2322,8 @@
                             <i class="fa fa-broom"></i>
                         </div>
                         <div class="option-content">
-                            <span class="option-title">{{ 'Limpiar Notas Huérfanas' | translate }}</span>
-                            <small class="option-description">{{ 'Eliminar notas de productos eliminados' | translate }}</small>
+                            <span class="option-title">{{ 'Eliminar notas huérfanas' | translate }}</span>
+                            <small class="option-description">{{ 'Borra notas asociadas a productos que ya no están en el pedido.' | translate }}</small>
                         </div>
                     </button>
 
@@ -2309,8 +2334,8 @@
                             <i class="fa fa-credit-card-alt"></i>
                         </div>
                         <div class="option-content">
-                            <span class="option-title">{{ 'Estado de Pago' | translate }}</span>
-                            <small class="option-description">{{ 'Cambiar estado del pago' | translate }}</small>
+                            <span class="option-title">{{ 'Actualizar estados del pedido' | translate }}</span>
+                            <small class="option-description">{{ 'Modifica manualmente los estados de pago y proceso según corresponda.' | translate }}</small>
                         </div>
                     </button>
 
@@ -2325,9 +2350,9 @@
                             <i *ngIf="!canAddProducts(selectedOrder)" class="fa fa-lock frozen-lock"></i>
                         </div>
                         <div class="option-content">
-                            <span class="option-title">{{ 'Agregar Productos' | translate }}</span>
+                            <span class="option-title">{{ 'Añadir o retirar productos' | translate }}</span>
                             <small class="option-description">
-                                <span *ngIf="canAddProducts(selectedOrder)">{{ 'Añadir más productos al pedido' | translate }}</span>
+                                <span *ngIf="canAddProducts(selectedOrder)">{{ 'Incluye o retira productos en el pedido actual.' | translate }}</span>
                                 <span *ngIf="!canAddProducts(selectedOrder)" class="text-warning">
                                     <i class="fa fa-lock me-1"></i>
                                     {{ 'Pedido congelado - Estado: ' + selectedOrder?.estadoProceso | translate }}
@@ -2346,7 +2371,7 @@
                             <i *ngIf="!canAssignSeller(selectedOrder)" class="fa fa-lock frozen-lock"></i>
                         </div>
                         <div class="option-content">
-                            <span class="option-title">{{ 'Asignar Asesor' | translate }}</span>
+                            <span class="option-title">{{ 'Actualiza el asesor asignado para el seguimiento del pedido.' | translate }}</span>
                             <small class="option-description">
                                 <span *ngIf="canAssignSeller(selectedOrder)">{{ 'Cambiar asesor responsable' | translate }}</span>
                                 <span *ngIf="!canAssignSeller(selectedOrder)" class="text-warning">
@@ -2364,8 +2389,8 @@
                             <i class="fa fa-history"></i>
                         </div>
                         <div class="option-content">
-                            <span class="option-title">{{ 'Historial Pagos' | translate }}</span>
-                            <small class="option-description">{{ 'Ver historial de pagos' | translate }}</small>
+                            <span class="option-title">{{ 'Gestión de pagos' | translate }}</span>
+                            <small class="option-description">{{ 'Registra nuevos pagos y consulta el historial completo de transacciones.' | translate }}</small>
                         </div>
                     </button>
 
@@ -2376,8 +2401,8 @@
                             <i class="fa fa-ticket"></i>
                         </div>
                         <div class="option-content">
-                            <span class="option-title">{{ 'Aplicar Descuento' | translate }}</span>
-                            <small class="option-description">{{ 'Ingresar código de cupón' | translate }}</small>
+                            <span class="option-title">{{ 'Aplicar descuento al pedido' | translate }}</span>
+                            <small class="option-description">{{ 'Aplica o ajusta los descuentos asociados al pedido.' | translate }}</small>
                         </div>
                     </button>
 
@@ -2402,8 +2427,8 @@
                             <i class="fa fa-truck"></i>
                         </div>
                         <div class="option-content">
-                            <span class="option-title">{{ 'Ver Detalles de Entrega' | translate }}</span>
-                            <small class="option-description">{{ 'Información de la entrega realizada' | translate }}</small>
+                            <span class="option-title">{{ 'Ver detalles de despacho y entrega' | translate }}</span>
+                            <small class="option-description">{{ 'Obtén información sobre el despacho y la entrega.' | translate }}</small>
                         </div>
                     </button>
 
@@ -2417,8 +2442,8 @@
                             <i class="pi pi-history"></i>
                         </div>
                         <div class="option-content">
-                            <span class="option-title">{{ 'Ver Historial' | translate }}</span>
-                            <small class="option-description">{{ 'Cambios de estado' | translate }}</small>
+                            <span class="option-title">{{ 'Historial de estados y movimientos' | translate }}</span>
+                            <small class="option-description">{{ 'Revisa la trazabilidad del pedido y los cambios realizados.' | translate }}</small>
                         </div>
                     </button>
 
@@ -2431,8 +2456,8 @@
                             <i class="fa fa-percent"></i>
                         </div>
                         <div class="option-content">
-                            <span class="option-title">{{ 'Editar IVA' | translate }}</span>
-                            <small class="option-description">{{ 'Modificar IVA de un producto' | translate }}</small>
+                            <span class="option-title">{{ 'Ajustar impuestos de este pedido' | translate }}</span>
+                            <small class="option-description">{{ 'Ajusta los impuestos que refiere según la condición que aplique.' | translate }}</small>
                         </div>
                     </button>
 
@@ -2443,8 +2468,8 @@
                             <i class="fa fa-trash"></i>
                         </div>
                         <div class="option-content">
-                            <span class="option-title">{{ 'Eliminar Pedido' | translate }}</span>
-                            <small class="option-description">{{ 'Eliminar permanentemente' | translate }}</small>
+                            <span class="option-title">{{ 'Eliminar pedido permanentemente' | translate }}</span>
+                            <small class="option-description">{{ 'Elimina el pedido de forma irreversible de la plataforma.' | translate }}</small>
                         </div>
                     </button>
 
@@ -2944,12 +2969,7 @@
 
 </p-dialog>
 
-<!-- Hidden PDF Template for Orden de Venta (configurado para portrait) -->
-<div #ordenVentaContainer style="position: absolute; left: -9999px; top: -9999px; width: 100%; visibility: hidden;">
-  <app-orden-venta #ordenVentaTemplate
-    [pedido]="pedidoParaOrdenVenta">
-  </app-orden-venta>
-</div>
+<!-- Ticket 1194: la orden de venta se abre en modal (OrdenVentaComponent), ya no hay plantilla oculta -->
 
 <!-- Estilos inline para el modal (no afecta estilos existentes) -->
 <style>

@@ -26,6 +26,16 @@ export interface PedidoEntrega extends Pedido {
    */
   fechaEntregaReal?: string;
 
+  /**
+   * Ticket 1193: mensajero que lleva el pedido (de la ficha del transportador),
+   * para verlo desde que el pedido sale, no solo cuando ya se entregó.
+   */
+  mensajeroNombre?: string;
+  mensajeroTelefono?: string;
+  mensajeroWhatsapp?: string;
+  /** true mientras el pedido está Despachado: aún no hay receptor, fotos ni firma. */
+  entregaEnCurso?: boolean;
+
   // Datos adicionales
   observacionesEntrega?: string;
   fechaRecepcion?: string;

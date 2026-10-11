@@ -6,7 +6,7 @@
         </div>
         <div class="header-text">
             <h5 class="modal-title">{{ 'Detalle de Entrega' | translate }}</h5>
-            <small class="header-subtitle">{{ 'Información completa de la entrega' | translate }}</small>
+            <small class="header-subtitle">{{ (pedido?.entregaEnCurso ? 'Pedido en camino: datos del mensajero' : 'Información completa de la entrega') | translate }}</small>
         </div>
     </div>
     <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()">
@@ -42,13 +42,49 @@
                     <label>{{ 'Estado de Entrega' | translate }}</label>
                     <span class="status-badge" [ngClass]="{
                         'status-delivered': pedido?.estadoProceso === 'Entregado',
-                        'status-processing': pedido?.estadoProceso === 'En proceso',
+                        'status-processing': pedido?.estadoProceso === 'En proceso' || pedido?.estadoProceso === 'Despachado',
                         'status-failed': pedido?.estadoProceso === 'Fallido'
                     }">{{ pedido?.estadoProceso || 'N/A' }}</span>
                 </div>
             </div>
         </div>
 
+        <!-- Ticket 1193: mensajero que lleva el pedido (visible desde Despachado) -->
+        <div class="section-header" *ngIf="pedido?.mensajeroNombre || pedido?.transportador">
+            <i class="pi pi-send"></i>
+            <h6>{{ 'Mensajero' | translate }}</h6>
+        </div>
+        <div class="info-grid" *ngIf="pedido?.mensajeroNombre || pedido?.transportador">
+            <div class="info-item">
+                <div class="info-icon"><i class="pi pi-id-card"></i></div>
+                <div class="info-content">
+                    <label>{{ 'Quién lo lleva' | translate }}</label>
+                    <span class="info-value">{{ pedido?.mensajeroNombre || pedido?.transportador || 'N/A' }}</span>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon"><i class="pi pi-phone"></i></div>
+                <div class="info-content">
+                    <label>{{ 'Celular del mensajero' | translate }}</label>
+                    <span class="info-value" *ngIf="pedido?.mensajeroTelefono">
+                        <a [href]="'tel:' + pedido?.mensajeroTelefono">{{ pedido?.mensajeroTelefono }}</a>
+                        <a *ngIf="pedido?.mensajeroWhatsapp" class="ms-2" target="_blank" rel="noopener"
+                           [href]="'https://wa.me/57' + pedido?.mensajeroWhatsapp" title="WhatsApp">
+                            <i class="pi pi-whatsapp"></i>
+                        </a>
+                    </span>
+                    <span class="info-value" *ngIf="!pedido?.mensajeroTelefono">{{ 'Sin teléfono en la ficha del transportador' | translate }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mientras el pedido está en camino no hay receptor, fotos ni firma -->
+        <div class="no-evidence" *ngIf="pedido?.entregaEnCurso">
+            <div class="no-evidence-icon"><i class="pi pi-clock"></i></div>
+            <p>{{ 'Cuando el mensajero entregue, aquí verás quién recibió, las fotos y la firma.' | translate }}</p>
+        </div>
+
+        <ng-container *ngIf="!pedido?.entregaEnCurso">
         <!-- Sección de Receptor -->
         <div class="section-header">
             <i class="pi pi-user"></i>
@@ -206,6 +242,7 @@
                 </div>
             </div>
         </div>
+        </ng-container>
     </div>
 </div>
 

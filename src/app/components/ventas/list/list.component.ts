@@ -63,6 +63,8 @@ import { ColumnDefinition } from "../interfaces/column-definition.interface";
 import * as XLSX from "xlsx";
 import { EcomerceProductsComponent } from "../catalogo/ecomerce-products/ecomerce-products.component";
 import { PedidoEntrega } from "../../despachos/interfaces/pedido-entrega.interface";
+import { LogisticaService } from "../../../shared/services/despachos/logistica.services";
+import { normalizeTransportadorName } from "../../../shared/services/despachos/transportador.util";
 import { Observable, Subject, firstValueFrom, forkJoin, of } from "rxjs";
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap, takeUntil } from "rxjs/operators";
 import { OrdenVentaComponent } from "../orden-venta/orden-venta.component";
@@ -96,8 +98,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild("entrega", { static: false }) entrega: PedidoEntregaComponent;
   @ViewChild("htmlPdf", { static: true }) htmlPdf: ElementRef;
   @ViewChild("sharedFilters", { static: false }) sharedFilters: any;
-  @ViewChild("ordenVentaTemplate", { static: false }) ordenVentaTemplate: any;
-  @ViewChild("ordenVentaContainer", { static: false }) ordenVentaContainer: ElementRef;
 
   // Referencias a modales para menú de opciones rápidas
   @ViewChild("modalContent", { static: false }) modalContentRef: any;
@@ -119,7 +119,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   clienteSeleccionado: Cliente;
   formulario: any;
   pedidoSeleccionado: Pedido;
-  pedidoParaOrdenVenta: Pedido | null = null; // Pedido para el componente de orden de venta
 
   // Menú de opciones dropdown (3 puntos)
   rowMenuItems: MenuItem[] = [];
@@ -2785,6 +2784,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     private changeDetectorRef: ChangeDetectorRef,
     private integrationsService: IntegrationsService,
     private treasuryService: TreasuryService,
+    private logisticaService: LogisticaService,
   ) {
     this.registerCustomFilters();
     this.setupSearchDebounce();
@@ -5645,112 +5645,25 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * MODIFICADO: Ahora genera el PDF directamente del DOM (igual que despachos)
    * @param order - El pedido para el cual generar la orden de venta
    */
-  async generarOrdenVenta(order: Pedido): Promise<void> {
+  /**
+   * Ticket 1194: la orden de venta se abre en un modal (igual que "Generar PDF
+   * del pedido"), con vista previa, Imprimir y Descargar. Antes se pintaba en
+   * una plantilla oculta al pie de la página, que se veía un instante, y luego
+   * abría el PDF en otra pestaña.
+   */
+  generarOrdenVenta(order: Pedido): void {
     if (!order) {
       this.toastrService.error('No se ha seleccionado un pedido', 'Error');
       return;
     }
-
-    if (!this.ordenVentaContainer) {
-      this.toastrService.error('El contenedor de orden de venta no está disponible', 'Error');
-      console.error('❌ ordenVentaContainer ViewChild no está disponible');
-      return;
-    }
-
-    // Actualizar el pedido antes de generar la orden
     const pedidoActualizado = this.actualizarPedidoParaPDF(order);
-
-    // Actualizar la propiedad que alimenta el componente renderizado
-    this.pedidoParaOrdenVenta = pedidoActualizado;
-
-    // Esperar un ciclo de Angular para que se actualice el componente
-    setTimeout(async () => {
-      try {
-        console.log('📄 Generando PDF de orden de venta...');
-
-        // Importar html2pdf dinámicamente
-        const html2pdf = (await import("html2pdf.js")).default;
-
-        // Obtener el elemento del DOM
-        const element = this.ordenVentaContainer.nativeElement;
-
-        // Hacer el elemento visible temporalmente para la captura (como despachos)
-        const originalVisibility = element.style.visibility;
-        const originalPosition = element.style.position;
-        element.style.visibility = 'visible';
-        element.style.position = 'static';
-
-        console.log('📸 Elemento visible para captura');
-
-        // Configuración del PDF optimizada para portrait
-        const options = {
-          margin: [10, 10, 10, 10], // Márgenes apropiados para vertical
-          filename: `orden-venta-${pedidoActualizado.nroPedido || 'sin-numero'}.pdf`,
-          image: {
-            type: "jpeg",
-            quality: 0.95
-          },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: "#ffffff",
-            logging: false,
-            letterRendering: true,
-            windowWidth: document.body.clientWidth, // Usar ancho del documento
-            windowHeight: document.body.clientHeight // Usar alto del documento
-          },
-          jsPDF: {
-            unit: "mm",
-            format: "a4",
-            orientation: "portrait",
-            compress: true
-          },
-          pagebreak: {
-            mode: ['avoid-all', 'css', 'legacy'],
-            before: '.page-break-before',
-            after: '.page-break-after',
-            avoid: ['tr', 'img']
-          }
-        };
-
-        // Generar PDF
-        await html2pdf()
-          .from(element)
-          .set(options)
-          .toPdf()
-          .get("pdf")
-          .then((pdf: any) => {
-            // Restaurar visibilidad original
-            element.style.visibility = originalVisibility;
-            element.style.position = originalPosition;
-            console.log('🔄 Visibilidad restaurada');
-
-            // Abrir PDF en nueva ventana
-            const blob = pdf.output("blob");
-            const blobUrl = URL.createObjectURL(blob);
-
-            setTimeout(() => {
-              URL.revokeObjectURL(blobUrl);
-            }, 30000);
-
-            window.open(blobUrl, "_blank");
-
-            console.log('✅ PDF de orden de venta generado exitosamente');
-            this.toastrService.success('PDF generado exitosamente', 'Éxito');
-          })
-          .catch((err: any) => {
-            // Restaurar visibilidad en caso de error
-            element.style.visibility = originalVisibility;
-            element.style.position = originalPosition;
-            throw err;
-          });
-
-      } catch (error) {
-        console.error('❌ Error al generar PDF de orden de venta:', error);
-        this.toastrService.error('Error al generar el PDF', 'Error');
-      }
-    }, 200); // Dar tiempo para que Angular actualice el template
+    const ref = this.modalService.open(OrdenVentaComponent, {
+      size: 'xl',
+      scrollable: true,
+      centered: true,
+      backdrop: 'static',
+    });
+    (ref.componentInstance as OrdenVentaComponent).pedido = pedidoActualizado;
   }
 
   /**
@@ -6694,64 +6607,74 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Muestra el modal con detalles de entrega para pedidos entregados
    * @param order Pedido entregado del cual mostrar los detalles
    */
+  /** Ticket 1193: ficha de transportadores, leída una vez por sesión de la pantalla. */
+  private transportadoresCache: any[] | null = null;
+
+  /**
+   * Ticket 1193: "Ver detalles de despacho y entrega" aparecía desde Despachado
+   * pero el método rechazaba todo lo que no fuera Entregado (solo un aviso que
+   * pasaba desapercibido). Ahora:
+   *  - Despachado → muestra el mensajero que lo lleva (nombre, teléfono, WhatsApp).
+   *  - Entregado  → además quién recibió, fotos, firma y notas, como antes.
+   */
   mostrarDetalleEntrega(order: Pedido) {
-    // Verificar que el pedido esté en estado "Entregado"
-    if (order.estadoProceso !== "Entregado") {
+    const estado = String(order?.estadoProceso || '');
+    if (estado !== "Entregado" && estado !== "Despachado") {
       this.toastrService.warning(
-        "Esta opción solo está disponible para pedidos entregados",
+        "Esta opción está disponible desde que el pedido sale a despacho",
         "Estado inválido",
       );
       return;
     }
-
-    // Convertir Pedido a PedidoEntrega con datos adicionales
-    this.pedidoEntregaData = {
-      ...order,
-      // Datos adicionales que podrían venir del backend
-      quienRecibio: order.quienRecibio || "No especificado",
-      parentesco: order.parentesco || "No especificado",
-      telefono: order.envio?.celular || order.cliente?.numero_celular_comprador,
-      fechaRecepcion: order.fechaEntrega || new Date().toISOString(),
-      observacionesEntrega:
-        order.notasPedido?.notasEntregas?.[0]?.descripcion || "",
-      // Acceso a datos reales de evidencia de entrega
-      fotosEvidencia: order.fotosEvidencia || [], // Array de fotos de evidencia
-      fotoEvidencia: order.fotoEvidencia || "", // Foto individual de evidencia
-      signatureImage: order.signatureImage || "", // Firma digital
-      calificacion: 0,
+    const abrir = (mensajero: any) => {
+      this.pedidoEntregaData = {
+        ...order,
+        quienRecibio: order.quienRecibio || "No especificado",
+        parentesco: order.parentesco || "No especificado",
+        telefono: order.envio?.celular || order.cliente?.numero_celular_comprador,
+        fechaRecepcion: order.fechaEntrega || new Date().toISOString(),
+        observacionesEntrega: order.notasPedido?.notasEntregas?.[0]?.descripcion || "",
+        fotosEvidencia: order.fotosEvidencia || [],
+        fotoEvidencia: order.fotoEvidencia || "",
+        signatureImage: order.signatureImage || "",
+        calificacion: 0,
+        entregaEnCurso: estado === "Despachado",
+        mensajeroNombre: mensajero
+          ? `${mensajero.nombres || ''} ${mensajero.apellidos || ''}`.trim()
+          : (typeof order.transportador === 'string' ? order.transportador : (order.transportador as any)?.nombre || ''),
+        mensajeroTelefono: mensajero?.telefono ? String(mensajero.telefono) : '',
+        mensajeroWhatsapp: mensajero?.whatsapp ? String(mensajero.whatsapp) : (mensajero?.telefono ? String(mensajero.telefono) : ''),
+      };
+      this.detalleEntregaVisible = true;
+      this.changeDetectorRef.markForCheck();
     };
-
-    // Debug: Verificar datos y fotos de evidencia
-    console.log("📸 Debug fotos evidencia - Original order:", {
-      fotosEvidencia: order.fotosEvidencia,
-      fotoEvidencia: order.fotoEvidencia,
-      signatureImage: order.signatureImage,
+    this.cargarTransportadores().subscribe({
+      next: (lista) => abrir(this.buscarMensajero(lista, order.transportador)),
+      error: () => abrir(null),
     });
-    console.log("📸 Debug fotos evidencia - Processed data:", {
-      fotosEvidencia: this.pedidoEntregaData?.fotosEvidencia,
-      fotoEvidencia: this.pedidoEntregaData?.fotoEvidencia,
-      signatureImage: this.pedidoEntregaData?.signatureImage,
-      hayFotos:
-        (this.pedidoEntregaData?.fotosEvidencia?.length || 0) > 0 ||
-        !!this.pedidoEntregaData?.fotoEvidencia,
-    });
-    console.log("Datos del pedido de entrega:", this.pedidoEntregaData);
-    console.log("Mostrando modal con detalleEntregaVisible:", true);
+  }
 
-    // Mostrar el modal
-    this.detalleEntregaVisible = true;
+  private cargarTransportadores(): Observable<any[]> {
+    if (this.transportadoresCache) return of(this.transportadoresCache);
+    return this.logisticaService.getTransportadores().pipe(
+      map((res: any) => {
+        const lista = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+        this.transportadoresCache = lista;
+        return lista;
+      }),
+    );
+  }
 
-    // Debug adicional después de 100ms para verificar que el cambio se propague
-    setTimeout(() => {
-      console.log(
-        "Estado después de 100ms - detalleEntregaVisible:",
-        this.detalleEntregaVisible,
-      );
-      console.log(
-        "Estado después de 100ms - pedidoEntregaData:",
-        this.pedidoEntregaData,
-      );
-    }, 100);
+  /** Empareja el nombre guardado en el pedido (D-083, normalizado) con la ficha del transportador. */
+  private buscarMensajero(lista: any[], transportador: any): any | null {
+    const clave = (t: any) => normalizeTransportadorName(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const nombrePedido = clave(typeof transportador === 'string' ? transportador : transportador?.nombre || transportador?.nombres || '');
+    if (!nombrePedido) return null;
+    return (lista || []).find((t: any) => {
+      const completo = clave(`${t?.nombres || ''} ${t?.apellidos || ''}`);
+      const solo = clave(t?.nombres || '');
+      return completo === nombrePedido || (solo && solo === nombrePedido);
+    }) || null;
   }
 
   /**
