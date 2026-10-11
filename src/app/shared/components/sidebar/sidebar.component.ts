@@ -3003,6 +3003,16 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  /** Ticket 1177: la insignia del ítem se muestra mientras no venza badgeUntil. */
+  public badgeVisible(item: Menu): boolean {
+    return NavService.badgeVisible(item);
+  }
+
+  /** Ticket 1177: un ítem padre marca un punto cuando alguno de sus hijos tiene insignia vigente. */
+  public hasNewChild(item: Menu): boolean {
+    return !!item?.children?.some((c) => NavService.badgeVisible(c));
+  }
+
   public toggleNotificationSound(event: Event): void {
     event.stopPropagation();
 

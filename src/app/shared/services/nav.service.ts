@@ -16,6 +16,8 @@ export interface Menu {
   type?: string;
   badgeType?: string;
   badgeValue?: string;
+  /** Ticket 1177: fecha (YYYY-MM-DD) hasta la que se muestra la insignia; después se oculta sola. */
+  badgeUntil?: string;
   active?: boolean;
   bookmark?: boolean;
   children?: Menu[];
@@ -186,10 +188,43 @@ export class NavService implements OnDestroy {
     }
   }
 
+  /** Normaliza acentos/mayúsculas y acepta la familia "Administrador" (p. ej. "Administrador LT"). */
+  static esRolAdministrador(rol: any): boolean {
+    const normalizado = String(rol || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+    if (normalizado === "super administrador") return false;
+    return /(^|[^a-z0-9])administrador([^a-z0-9]|$)/.test(normalizado);
+  }
+
+  /** Todos los paths declarados en el menú (ítems, hijos y nietos). */
+  private collectAllMenuPaths(): string[] {
+    const out: string[] = [];
+    const walk = (items: Menu[]) => {
+      for (const it of items || []) {
+        if (it.path) out.push(it.path);
+        if (it.children) walk(it.children);
+      }
+    };
+    walk(this.ALLMENUITEMS);
+    return out;
+  }
+
+  /** Ticket 1177: la insignia (p. ej. NUEVO) se muestra solo hasta badgeUntil, si está definida. */
+  static badgeVisible(item: Menu | undefined | null): boolean {
+    if (!item || !item.badgeValue) return false;
+    if (!item.badgeUntil) return true;
+    const limite = new Date(item.badgeUntil + "T23:59:59");
+    return isNaN(limite.getTime()) ? true : new Date() <= limite;
+  }
+
   filterMenuItemsByAuthorization() {
-    const authorizedPaths = JSON.parse(
+    const rawAuthorized: any[] = JSON.parse(
       localStorage.getItem("authorizedMenuItems") || "[]",
-    ).map((item: any) => item.path);
+    );
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     const isSuperAdmin = user.rol === "Super Administrador";
     const isJulsmindAdmin =
@@ -197,6 +232,21 @@ export class NavService implements OnDestroy {
     const isAdminKatuqEnVivo =
       user.company === "Julsmind" &&
       (user.rol === "Administrador" || user.rol === "Super Administrador");
+    // Ticket 1177: el rol Administrador de cualquier comercio ve todo el menú
+    // por defecto (salvo lo exclusivo de Katuq/Super Administrador), sin que
+    // haya que marcar pantalla por pantalla en Roles. También se respeta el
+    // comodín "*" que ya usaban las plantillas de rol (role-templates.ts).
+    const isCompanyAdmin = NavService.esRolAdministrador(user.rol);
+    const hasWildcard = rawAuthorized.some(
+      (item: any) => item === "*" || item?.path === "*",
+    );
+    const explicitPaths: string[] = rawAuthorized
+      .map((item: any) => (typeof item === "string" ? item : item?.path))
+      .filter((p: any) => typeof p === "string");
+    const authorizedPaths: string[] =
+      isCompanyAdmin || hasWildcard || isSuperAdmin
+        ? this.collectAllMenuPaths()
+        : explicitPaths;
     // El centro DIAN es operativo y debe estar disponible para quien ya
     // administra integraciones o consulta la cartera del comercio.
     const canUseDianWorkspace =
@@ -418,6 +468,16 @@ export class NavService implements OnDestroy {
       active: false,
       children: [
         { path: "sitios", title: "Mis páginas", type: "link", icon: "layout" },
+        // Ticket 1175: acceso directo a los catálogos digitales (vitrina D-141).
+        {
+          path: "sitios/catalogos",
+          title: "Catálogos",
+          type: "link",
+          icon: "book-open",
+          badgeType: "primary",
+          badgeValue: "NUEVO",
+          badgeUntil: "2026-11-30",
+        },
       ],
     },
     {

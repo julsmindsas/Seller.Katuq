@@ -229,6 +229,8 @@
               </div>
               <span class="menu-text"
                     [class.sr-only]="isCompactMode || (collapseMenu && !isTemporarilyExpanded)">{{item.title | translate}}</span>
+              <!-- Ticket 1177: insignia (NUEVO) para que los administradores vean lo recién publicado -->
+              <span class="menu-badge" *ngIf="badgeVisible(item) && (!collapseMenu || isTemporarilyExpanded)">{{item.badgeValue | translate}}</span>
               <button class="favorite-btn"
                       *ngIf="!collapseMenu || isTemporarilyExpanded"
                       (click)="toggleFavorite(item, $event)"
@@ -277,6 +279,7 @@
               </div>
               <span class="menu-text"
                     [class.sr-only]="isCompactMode || (collapseMenu && !isTemporarilyExpanded)">{{item.title | translate}}</span>
+              <span class="menu-badge menu-badge--dot" *ngIf="!item.active && hasNewChild(item) && (!collapseMenu || isTemporarilyExpanded)" title="Hay opciones nuevas"></span>
               <i class="fa fa-chevron-down submenu-chevron"
                  *ngIf="!collapseMenu || isTemporarilyExpanded"
                  [class.rotated]="item.active" 
@@ -316,6 +319,7 @@
                     <i class="fa" [ngClass]="getSubmenuIcon(child.icon, child.title)" aria-hidden="true"></i>
                   </div>
                   <span class="submenu-text">{{child.title | translate}}</span>
+                  <span class="menu-badge" *ngIf="badgeVisible(child)">{{child.badgeValue | translate}}</span>
                 </a>
 
                 <!-- Subitem con nietos -->

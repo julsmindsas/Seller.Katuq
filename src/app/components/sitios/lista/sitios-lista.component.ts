@@ -178,6 +178,14 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   sitioPendienteId = "";
   private vigilancia: any = null;
 
+  /**
+   * Ticket 1175: la ruta `sitios/catalogos` abre esta misma lista mostrando
+   * solo los catálogos y creando catálogos por defecto. Null = todas las páginas.
+   */
+  get soloTipo(): "catalogo" | null {
+    return this.route.snapshot.data?.["tipo"] === "catalogo" ? "catalogo" : null;
+  }
+
   /** Página cuyas métricas se están viendo. Null = ninguna. */
   sitioMetricas: Sitio | null = null;
 
@@ -255,7 +263,8 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
     this.service.listar().subscribe({
       next: (res) => {
         this.cargando = false;
-        this.sitios = (res && res.data) || [];
+        const todos: Sitio[] = (res && res.data) || [];
+        this.sitios = this.soloTipo ? todos.filter((x) => x.tipo === this.soloTipo) : todos;
         this.vigilar();
         this.abrirDesdeEnlace();
       },
@@ -454,6 +463,8 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
     // El sector del kit filtra las plantillas de entrada: quien ya dijo a qué
     // se dedica no debería tener que volver a buscarlo entre todas.
     this.sectorFiltro = this.sectorMarca;
+    // Ticket 1175: desde "Catálogos" el asistente arranca en catálogo.
+    if (this.soloTipo === "catalogo") this.elegirTipo("catalogo-vender");
 
     if (this.plantillas.length) return;
     this.cargandoPlantillas = true;
