@@ -1331,9 +1331,17 @@ export class ProductosComponent implements OnInit, OnDestroy {
       if (row.exposicion) row.exposicion.activar = nuevoEstado;
       row._guardandoEstado = true;
 
-      const productoActualizado = { ...row };
-      this.service.createProduct(productoActualizado).subscribe({
-        next: () => {
+      // Solo cambia el estado del producto existente. Antes se mandaba la fila
+      // completa a /productos/create, que crea OTRO producto con referencia
+      // aleatoria y deja el original igual (tickets 1198 y 1199).
+      this.service.bulkPatchProductos([this.rowId(row)], accion).subscribe({
+        next: (res: any) => {
+          if (res?.success === false) {
+            if (row.exposicion) row.exposicion.activar = valorAnterior;
+            row._guardandoEstado = false;
+            this.toastr.error('No se pudo cambiar el estado', 'Error');
+            return;
+          }
           row._guardandoEstado = false;
           this.toastr.success(
             `Producto ${nuevoEstado ? 'activado' : 'desactivado'}`,
@@ -1370,9 +1378,14 @@ export class ProductosComponent implements OnInit, OnDestroy {
       if (row.exposicion) row.exposicion.disponible = nuevaDisp;
       row._guardandoDisp = true;
 
-      const productoActualizado = { ...row };
-      this.service.createProduct(productoActualizado).subscribe({
-        next: () => {
+      this.service.bulkPatchProductos([this.rowId(row)], nuevaDisp ? 'disponible' : 'agotado').subscribe({
+        next: (res: any) => {
+          if (res?.success === false) {
+            if (row.exposicion) row.exposicion.disponible = valorAnterior;
+            row._guardandoDisp = false;
+            this.toastr.error('No se pudo cambiar la disponibilidad', 'Error');
+            return;
+          }
           row._guardandoDisp = false;
           this.toastr.success(
             `Marcado como ${nuevaDisp ? 'disponible' : 'agotado'}`,
