@@ -221,6 +221,11 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
    * recibe sus entradas antes del primer ciclo.
    */
   ngOnChanges(changes: SimpleChanges): void {
+    // Documento buscado que no existe: se precarga para crearlo (solo al crear).
+    const doc = changes['documentoPrellenado'];
+    if (doc && !doc.firstChange && this.formulario && !this.isEdit && this.documentoPrellenado) {
+      this.formulario.controls['documento'].setValue(this.documentoPrellenado);
+    }
     const cambio = changes['clienteData'] || changes['isEdit'];
     if (!cambio || cambio.firstChange || !this.formulario) return;
     this.cargarArreglos(this.isEdit ? this.clienteData : this.prefill);

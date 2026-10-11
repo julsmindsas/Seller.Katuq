@@ -1,20 +1,19 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, Input, ChangeDetectorRef } from '@angular/core';
-import { zonaCubreCiudad } from '../../../shared/util/zona-cobro.util';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { alMenosUnTelefono, PATRON_TELEFONO_FIJO } from './cliente-telefonos.validator';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2'
-import { DataStoreService } from '../../../shared/services/dataStoreService';
-import { InfoPaises } from '../../../../Mock/pais-estado-ciudad'
-import { InfoIndicativos } from '../../../../Mock/indicativosPais'
-import { NgbActiveModal, NgbModal, ModalDismissReasons, NgbModalConfig } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CrearClienteModalComponent } from './crear-cliente-modal/crear-cliente-modal.component';
-import { DireccionEstructuradaComponent } from '../entrega/direccion-estructurada/direccion-estructurada.component';
-import { DaneCodesService } from '../../../shared/services/dane-codes.service';
-import { MunicipioDane } from '../../../shared/data/colombia-dane-codes';
 import { ClientConfigService, ClientTag } from './services/client-config.service';
 import { clientBillingProfiles, matchesClientSearch } from '../../../shared/utils/client-search';
+
+/**
+ * Pantalla Crear cliente (`ventas/clientes`).
+ *
+ * D-404: el formulario de cliente (Contacto / Entrega / Facturación / Notas) es
+ * `CrearClienteModalComponent` incrustado en modo inline; esta pantalla solo
+ * aporta el buscador de clientes existentes (ticket 1163), la ficha 360 del
+ * cliente encontrado y la configuración de etiquetas.
+ */
 @Component({
   selector: 'app-clientes',
   templateUrl: './clientes.component.html',
@@ -24,177 +23,27 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   billingProfiles = clientBillingProfiles;
 
   @ViewChild('documentoBusqueda') documentoBusqueda: ElementRef
-  @ViewChild('whatsapp') whatsapp: ElementRef
   @ViewChild('resultadosModal') resultadosModal: any;
 
-  @Input() clienteEdit: any;
-  formulario: any;
   tipoBusqueda: string = 'CC-NIT'; // Valor por defecto para el dropdown de búsqueda
-  formularioFacturacionElectronica: any;
-  formularioFacturacion: any;
-  formularioEntrega: any;
-  private _encontrado = false;
-  /**
-   * En modo edición (cliente encontrado) el tipo de documento NO es editable,
-   * igual que el número de documento. Al cambiar este flag se deshabilita /
-   * habilita el control. El valor se conserva: el backend hace .update() (merge)
-   * y no pisa el campo aunque no venga en formulario.value.
-   */
-  get encontrado(): boolean { return this._encontrado; }
-  set encontrado(val: boolean) {
-    this._encontrado = val;
-    const ctrl = this.formulario?.controls?.['tipo_documento_comprador'];
-    if (!ctrl) return;
-    if (val) ctrl.disable({ emitEvent: false });
-    else ctrl.enable({ emitEvent: false });
-  }
-  formPrincipal: any;
-  facturacionElectronica: boolean = false
-  formularioNotas: any;
-  indicativos: { nombre: string; name: string; nom: string; iso2: string; iso3: string; phone_code: string; }[];
-  IndicativoPlaceholder: string;
-  departamentos: any;
-  ciudades: string[];
-  ciudadesOrigen: { value: string; label: string; }[];
-  paises: string[];
-  departamentos1: string[];
-  ciudades1: string[];
-  ciudadesOrigen1: { value: string; label: string; }[];
+  encontrado = false;
+  /** Documento buscado que no existe: se precarga en el formulario para crearlo. */
+  documentoNoEncontrado = '';
   bloqueado: boolean = false;
-  nombreCliente: any;
   datos: any;
   notas: any;
-  activarFacturacion: any;
-  notaNueva: any;
-  fecha: Date;
   activarNotas: boolean;
-  dateactual: string;
-  pais: string;
-  departamento: string;
-  razon_social: any;
-  tipo_documento_facturacion: any;
-  numero_documento_facturacion: any;
-  indicativo_celular_facturacion: any;
-  numero_celular_facturacion: any;
-  correo_electronico_facturacion: any;
   datosFacturacionElectronica: any[];
-  direccion_facturacion: any;
-  ciudad_municipio: any;
-  codigo_postal: any;
-  alias_facturacion: any;
   activarDatosFact: boolean;
-  codigo_postal_entrega: any;
-  ciudad_municipio_entrega: any;
-  departamento_entrega: string;
-  pais_entrega: string;
-  direccion_entrega: any;
-  numero_celular_entrega: any;
-  indicativo_celular_entrega: any;
-  nombres_entrega: any;
-  entrega: boolean;
   datosEntregas: any[];
-  entregar: boolean;
-  otro_numero_entrega: any;
-  alias_entrega: any;
-  observaciones: any;
   activarDatosEntrega: boolean;
-  apellidos_entrega: any;
-  indicativo_celular_entrega2: any;
-  barrio: any;
-  nombreUnidad: any;
-  especificacionesInternas: any;
-  latitud: string;
-  longitud: string;
-  coordenadas: string;
-  departamentosDane: string[] = [];
-  municipiosDane: MunicipioDane[] = [];
-  searchQueryCiudadDane: string = '';
-  cargandoCiudadesDane: boolean = false;
-  editandodato: boolean;
-  idenxEntrega: any;
-  idenxFacturacion: any;
-  @Input() isEdit: boolean = false;
-  filteredResults: any;
-  allBillingZone: any;
-  zona_cobro: any;
-  valor_zona_cobro: any;
   resultadosBusqueda: any[] = [];
 
-  // Tipo de cliente y etiquetas
-  clientTypes: { label: string; value: string }[] = [];
+  // Etiquetas (catálogo para mostrar las del cliente en la ficha 360)
   clientTagsCatalog: ClientTag[] = [];
   etiquetasSeleccionadas: string[] = [];
 
-  // ngModel standalone para p-dropdown tipo_documento (bypasses PrimeNG CVA timing bug)
-  tipoDocSeleccionado: string = 'CC';
-  readonly tipoDocOptions = [
-    { label: 'CC - Cédula de ciudadanía', value: 'CC' },
-    { label: 'NIT', value: 'NIT' },
-    { label: 'TI - Tarjeta de identidad', value: 'TI' },
-    { label: 'RC - Registro civil', value: 'RC' },
-    { label: 'CE - Cédula de extranjería', value: 'CE' },
-    { label: 'TE - Tarjeta de extranjería', value: 'TE' },
-    { label: 'PA - Pasaporte', value: 'PA' },
-    { label: 'DIE - Doc. identificación extranjero', value: 'DIE' },
-    { label: 'PEP - Permiso Especial de Permanencia', value: 'PEP' },
-    { label: 'PPT - Permiso por Protección Temporal', value: 'PPT' },
-    { label: 'NIT_EXT - NIT de otro país', value: 'NIT_EXT' },
-    { label: 'NUIP', value: 'NUIP' },
-  ];
-
-  onTipoDocChange(value: string): void {
-    this.tipoDocSeleccionado = value;
-    this.formulario.controls['tipo_documento_comprador'].setValue(value);
-  }
-
-  /** Ticket 1083: con NIT (persona jurídica) no hay apellidos, solo razón social. */
-  get esPersonaJuridica(): boolean {
-    const tipo = this.formulario?.getRawValue?.()?.tipo_documento_comprador;
-    return tipo === 'NIT' || tipo === 'NIT_EXT';
-  }
-
-  /** Ticket 1083: "Apellidos" es obligatorio solo para persona natural. */
-  private ajustarApellidosSegunTipoDoc(): void {
-    const apellidos = this.formulario?.controls?.['apellidos_completos'];
-    if (!apellidos) return;
-    apellidos.setValidators(this.esPersonaJuridica ? null : Validators.required);
-    apellidos.updateValueAndValidity({ emitEvent: false });
-  }
-
-  /**
-   * Convierte el valor guardado (que puede ser un código válido, un combinado
-   * legacy "CC-NIT" o el texto completo "Cédula de ciudadanía") al código del
-   * catálogo. Cae a 'CC' solo cuando no se puede determinar.
-   */
-  private normalizeTipoDoc(raw: any): string {
-    if (raw === null || raw === undefined || raw === '') return 'CC';
-    const v = String(raw).trim();
-    if (this.tipoDocOptions.some(o => o.value === v)) return v;
-    if (v.toUpperCase() === 'CC-NIT') return 'CC';
-    const lower = v.toLowerCase();
-    if (lower.includes('extranjer')) {
-      return (lower.includes('cédula') || lower.includes('cedula')) ? 'CE' : 'DIE';
-    }
-    if (lower.includes('cédula de ciudad') || lower.includes('cedula de ciudad')) return 'CC';
-    if (lower.includes('tarjeta de identidad')) return 'TI';
-    if (lower.includes('registro civil')) return 'RC';
-    if (lower.includes('pasaporte')) return 'PA';
-    if (lower.includes('permiso especial')) return 'PEP';
-    if (lower.includes('protección temporal') || lower.includes('proteccion temporal')) return 'PPT';
-    if (lower.includes('nit')) return 'NIT';
-    if (lower.includes('cédula') || lower.includes('cedula')) return 'CC';
-    return 'CC';
-  }
-
-  // Visibilidad de columnas por tabla
-  colsCliente = [
-    { key: 'cliente',   label: 'Cliente',     visible: true },
-    { key: 'tipoDoc',   label: 'Tipo Doc.',   visible: true },
-    { key: 'documento', label: 'Documento',   visible: true },
-    { key: 'correo',    label: 'Correo',      visible: true },
-    { key: 'acciones',  label: 'Acciones',    visible: true },
-  ];
-
+  // Visibilidad de columnas por tabla de la ficha 360 (solo lectura: se edita en el formulario)
   colsNotas = [
     { key: 'fecha',  label: 'Fecha', visible: true },
     { key: 'nota',   label: 'Nota',  visible: true },
@@ -205,14 +54,12 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     { key: 'nombre',         label: 'Nombre / Razón Social', visible: true },
     { key: 'tipoDocumento',  label: 'Tipo Documento',        visible: true },
     { key: 'documento',      label: 'Documento',             visible: true },
-    { key: 'acciones',       label: 'Acciones',              visible: true },
   ];
 
   colsEntrega = [
     { key: 'referencia', label: 'Referencia', visible: true },
     { key: 'nombre',     label: 'Nombre',     visible: true },
     { key: 'direccion',  label: 'Dirección',  visible: true },
-    { key: 'acciones',   label: 'Acciones',   visible: true },
   ];
 
   toggleCol(cols: { key: string; label: string; visible: boolean }[], key: string): void {
@@ -230,324 +77,43 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   }
 
 
-  constructor(private router: Router, private dataStore: DataStoreService, private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos, private cdr: ChangeDetectorRef, private daneCodesService: DaneCodesService, private clientConfig: ClientConfigService, private route: ActivatedRoute) {
-    this.daneCodesService.getDepartamentos().subscribe(deptos => {
-      this.departamentosDane = deptos;
-    });
+  constructor(private router: Router, private modalService: NgbModal, private service: MaestroService, private cdr: ChangeDetectorRef, private clientConfig: ClientConfigService, private route: ActivatedRoute) {
   }
 
-  async ngAfterViewInit(): Promise<void> {
-    try {
-      // Entrada explícita desde Nueva factura: consultar la ficha completa, nunca crear ni guardar al abrir.
-      const invoiceCustomer = this.route.snapshot.queryParamMap.get('invoiceCustomer');
-      if (invoiceCustomer && invoiceCustomer.length <= 50 && this.documentoBusqueda?.nativeElement) {
-        this.tipoBusqueda = 'CC-NIT';
-        this.documentoBusqueda.nativeElement.value = invoiceCustomer;
-        this.buscar();
-        this.cdr.detectChanges();
-        return;
-      }
-      // Si ya tenemos clienteEdit desde el @Input, usarlo directamente
-      if (this.clienteEdit && this.isEdit) {
-        console.log('Cargando cliente desde @Input:', this.clienteEdit);
-        // Dar más tiempo para que los ViewChild se inicialicen
-        setTimeout(() => {
-          if (this.documentoBusqueda && this.documentoBusqueda.nativeElement) {
-            this.documentoBusqueda.nativeElement.value = this.clienteEdit.documento;
-            // Asegurar que el tipo de búsqueda esté establecido
-            if (!this.tipoBusqueda) {
-              this.tipoBusqueda = 'CC-NIT';
-            }
-            this.buscar();
-          }
-        }, 500); // Aumentar el tiempo de espera
-        return;
-      }
-
-      // Si no, intentar cargar desde IndexedDB
-      // Verificar y cargar isEdit desde IndexedDB
-      if (this.isEdit === null || this.isEdit === undefined || this.isEdit === false) {
-        const isEditFromStore = await this.dataStore.get<boolean>('isEdit');
-        if (isEditFromStore !== null && isEditFromStore !== undefined) {
-          this.isEdit = isEditFromStore;
-          await this.dataStore.remove('isEdit'); // Limpiar después de usar
-        }
-      }
-
-      // Verificar y cargar cliente desde IndexedDB
-      if (!this.clienteEdit) {
-        const clienteFromStore = await this.dataStore.get<any>('cliente');
-        if (clienteFromStore !== null && clienteFromStore !== undefined) {
-          this.clienteEdit = clienteFromStore;
-          await this.dataStore.remove('cliente'); // Limpiar después de usar
-        }
-      }
-
-      // Si estamos en modo edición y tenemos datos del cliente
-      if (this.isEdit && this.clienteEdit) {
-        console.log('Cargando cliente desde IndexedDB:', this.clienteEdit);
-        setTimeout(() => {
-          if (this.documentoBusqueda && this.documentoBusqueda.nativeElement) {
-            this.documentoBusqueda.nativeElement.value = this.clienteEdit.documento;
-            // Asegurar que el tipo de búsqueda esté establecido
-            if (!this.tipoBusqueda) {
-              this.tipoBusqueda = 'CC-NIT';
-            }
-            this.buscar();
-          }
-        }, 500); // Aumentar tiempo de espera
-      }
-    } catch (error) {
-      console.error('Error al cargar datos desde IndexedDB:', error);
-    }
+  ngAfterViewInit(): void {
+    // Entrada explícita desde Nueva factura: consultar la ficha completa, nunca crear ni guardar al abrir.
+    const invoiceCustomer = this.route.snapshot.queryParamMap.get('invoiceCustomer');
+    if (!invoiceCustomer || invoiceCustomer.length > 50) return;
+    // El buscador va plegado (ticket 1163): se abre para que exista el campo de búsqueda.
+    this.buscadorAbierto = true;
+    this.tipoBusqueda = 'CC-NIT';
+    this.cdr.detectChanges();
+    if (!this.documentoBusqueda?.nativeElement) return;
+    this.documentoBusqueda.nativeElement.value = invoiceCustomer;
+    this.buscar();
+    this.cdr.detectChanges();
   }
 
-  identificarDepto() {
-    this.inforPaises.paises.map(x => {
-      if (x.Pais == this.pais) {
-        this.departamentos = x.Regiones.map(c => {
-          return c.departamento
-        })
-      }
-    })
-
-  }
-  identificarCiu() {
-    this.inforPaises.paises.map(x => {
-      if (x.Pais == this.pais) {
-        x.Regiones.map(y => {
-          if (y.departamento == this.departamento) {
-            this.ciudades = y.ciudades.map(c => {
-              return c
-            })
-            this.ciudadesOrigen = this.ciudades.map(city => ({
-              value: city, label: city
-            }))
-
-          }
-        })
-
-      }
-    })
-  }
-  identificarDepto1() {
-    this.inforPaises.paises.map(x => {
-      if (x.Pais == this.pais_entrega) {
-        this.departamentos1 = x.Regiones.map(c => {
-          return c.departamento
-        })
-      }
-    })
-
-  }
-  identificarCiu1() {
-    this.inforPaises.paises.map(x => {
-      if (x.Pais == this.pais_entrega) {
-        x.Regiones.map(y => {
-          if (y.departamento == this.departamento_entrega) {
-            this.ciudades1 = y.ciudades.map(c => {
-              return c
-            })
-            // this.ciudadesOrigen1 = this.ciudades.map(city => ({
-            //   value: city, label: city
-            // }))
-
-          }
-        })
-
-      }
-    })
+  /** Documento del cliente en pantalla: el encontrado o, si no hay, el que se está buscando. */
+  private documentoActual(): string {
+    return this.datos?.documento || this.documentoBusqueda?.nativeElement?.value || '';
   }
 
-  onPaisChange() {
-    this.identificarDepto1();
-    this.departamento_entrega = '';
-    this.ciudad_municipio_entrega = '';
-    this.ciudades1 = [];
-    this.zona_cobro = '';
-    this.valor_zona_cobro = '';
-    this.filteredResults = [];
-  }
-
-  onDepartamentoChange() {
-    this.identificarCiu1();
-    this.ciudad_municipio_entrega = '';
-    this.zona_cobro = '';
-    this.valor_zona_cobro = '';
-    this.filteredResults = [];
-  }
-
-  onCiudadChange() {
-    this.zona_cobro = '';
-    this.valor_zona_cobro = '';
-    this.filteredResults = [];
-    setTimeout(() => { this.idBillingZone(''); }, 100);
-  }
-
-  onZonaCobroSelected(): void {
-    if (!this.zona_cobro || !this.filteredResults || this.filteredResults.length === 0) {
-      this.valor_zona_cobro = '';
-      return;
-    }
-    const zonaSeleccionada = this.filteredResults.find((item: any) => item.nombreZonaCobro === this.zona_cobro);
-    this.valor_zona_cobro = zonaSeleccionada ? zonaSeleccionada.valorZonaCobro : '';
-  }
-
-  abrirModalDireccion() {
-    const modalRef = this.modalService.open(DireccionEstructuradaComponent, {
-      size: 'xl',
-      backdrop: 'static',
-      keyboard: false,
-    });
-    modalRef.componentInstance.direccionActual = this.direccion_entrega || '';
-    modalRef.componentInstance.ciudadActual = this.ciudad_municipio_entrega || '';
-    modalRef.result.then(
-      (resultado) => {
-        if (typeof resultado === 'object') {
-          this.direccion_entrega = resultado.direccion;
-          if (resultado.ciudad && resultado.ciudad !== this.ciudad_municipio_entrega) {
-            this.ciudad_municipio_entrega = resultado.ciudad;
-            if (resultado.estructura && resultado.estructura.departamento) {
-              this.departamento_entrega = resultado.estructura.departamento;
-            }
-            this.zona_cobro = '';
-            this.valor_zona_cobro = '';
-            this.filteredResults = [];
-            setTimeout(() => { this.idBillingZone(''); }, 500);
-          }
-          if (resultado.coordenadas) {
-            this.coordenadas = resultado.coordenadas;
-            const coords = resultado.coordenadas.split(',').map((c: string) => c.trim());
-            if (coords.length === 2) {
-              this.latitud = coords[0];
-              this.longitud = coords[1];
-            }
-          }
-        } else {
-          this.direccion_entrega = resultado;
-        }
-      },
-      () => {}
-    );
-  }
-
-  buscarMunicipioDane(query: string): void {
-    if (!query || query.length < 2) {
-      this.municipiosDane = [];
-      return;
-    }
-    this.cargandoCiudadesDane = true;
-    this.daneCodesService.searchMunicipios(query).subscribe(resultados => {
-      this.municipiosDane = resultados;
-      this.cargandoCiudadesDane = false;
-    });
-  }
-
-  onDepartamentoDaneChange(departamento: string): void {
-    if (!departamento) {
-      this.municipiosDane = [];
-      this.ciudades1 = [];
-      return;
-    }
-    this.cargandoCiudadesDane = true;
-    this.daneCodesService.getMunicipiosByDepartamento(departamento).subscribe(municipios => {
-      this.municipiosDane = municipios;
-      this.ciudades1 = municipios.map(m => m.nombre);
-      this.cargandoCiudadesDane = false;
-    });
-  }
-
-  seleccionarMunicipioDane(municipio: MunicipioDane): void {
-    this.pais_entrega = 'Colombia';
-    this.departamento_entrega = municipio.departamento;
-    this.ciudad_municipio_entrega = municipio.nombre;
-    this.ciudades1 = [municipio.nombre];
-    this.daneCodesService.addMunicipioFrecuente(municipio);
-    this.zona_cobro = '';
-    this.valor_zona_cobro = '';
-    this.filteredResults = [];
-    setTimeout(() => { this.idBillingZone(''); }, 300);
-    this.municipiosDane = [];
-    this.searchQueryCiudadDane = '';
-  }
-
-  datosFacElect(event) {
-    if (this.facturacionElectronica === true) {
-      this.razon_social = this.formulario.value.nombres_completos + ' ' + this.formulario.value.apellidos_completos
-      this.tipo_documento_facturacion = this.formulario.value.tipo_documento_comprador
-      this.numero_documento_facturacion = this.formulario.value.documento
-    } else {
-      this.razon_social = ""
-      this.tipo_documento_facturacion = ""
-      this.numero_documento_facturacion = ""
-    }
-  }
-
-  // Método auxiliar para cargar datos del cliente en modo edición
-  cargarDatosCliente() {
-    if (!this.clienteEdit || !this.clienteEdit.documento) {
-      console.warn('⚠️ No hay cliente para cargar');
-      return;
-    }
-
-    // Cargar los datos del cliente directamente desde el servidor
-    const data = { documento: this.clienteEdit.documento };
-
-    this.service.getClientByDocument(data).subscribe((res: any) => {
-      if (res && res.company) {
-        try {
-          this.formulario.patchValue(res);
-
-          // Establecer valores específicos del formulario
-          this.tipoDocSeleccionado = this.normalizeTipoDoc(res.tipo_documento_comprador);
-          this.formulario.controls['tipo_documento_comprador'].setValue(this.tipoDocSeleccionado);
-          this.formulario.controls['indicativo_celular_comprador'].setValue(res.indicativo_celular_comprador);
-          this.formulario.controls['numero_celular_comprador'].setValue(res.numero_celular_comprador);
-          this.formulario.controls['indicativo_celular_whatsapp'].setValue(res.indicativo_celular_whatsapp);
-          this.formulario.controls['numero_celular_whatsapp'].setValue(res.numero_celular_whatsapp);
-          this.formulario.controls['apellidos_completos'].setValue(this.toTitleCase(res.apellidos_completos));
-          this.formulario.controls['nombres_completos'].setValue(this.toTitleCase(res.nombres_completos));
-          this.formulario.controls['documento'].setValue(res.documento);
-          this.formulario.controls['correo_electronico_comprador'].setValue(res.correo_electronico_comprador);
-          this.formulario.controls['estado'].setValue(res.estado);
-          this.etiquetasSeleccionadas = Array.isArray(res.etiquetas) ? res.etiquetas.map((e: string) => this.toTitleCase(e)) : [];
-
-          this.activarNotas = false;
-          this.verNotas();
-
-          this.datos = res;
-          this.formularioFacturacion.patchValue(res.datosFacturacionElectronica);
-          this.formularioEntrega.patchValue(res.datosEntrega);
-          this.identificarDepto();
-          this.identificarCiu();
-          this.identificarDepto1();
-          this.identificarCiu1();
-          this.encontrado = true;
-
-          if (this.formulario.value.estado == 'bloqueado') {
-          this.bloqueado = true
-        } else {
-          this.bloqueado = false
-        }
-
-          console.log('✅ Cliente cargado exitosamente en modo edición');
-        } catch (error) {
-          console.error('❌ Error cargando datos del cliente:', error);
-        }
-      }
-    }, error => {
-      console.error('❌ Error obteniendo cliente del servidor:', error);
-    });
+  /** Deja un cliente como "encontrado": ficha 360 abajo y formulario unificado editándolo. */
+  private mostrarCliente(cliente: any): void {
+    sessionStorage.setItem('cliente', JSON.stringify(cliente));
+    this.datos = cliente;
+    this.etiquetasSeleccionadas = Array.isArray(cliente.etiquetas) ? cliente.etiquetas.map((e: string) => this.toTitleCase(e)) : [];
+    this.encontrado = true;
+    this.bloqueado = cliente.estado === 'bloqueado';
+    this.activarNotas = false;
+    this.verNotas();
   }
 
   buscar() {
     // Validar que el campo de búsqueda exista
     if (!this.documentoBusqueda || !this.documentoBusqueda.nativeElement) {
       console.warn('⚠️ Campo de búsqueda no está inicializado');
-      // Si estamos en modo edición y tenemos un cliente, cargar directamente
-      if (this.isEdit && this.clienteEdit) {
-        this.cargarDatosCliente();
-      }
       return;
     }
 
@@ -563,9 +129,6 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     }
 
     this.bloqueado = false
-    this.formulario.reset()
-    this.formularioEntrega.reset()
-    this.formularioFacturacion.reset()
 
     if (this.tipoBusqueda == "CC-NIT") {
 
@@ -575,9 +138,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
 
       this.service.getClientByDocument(data).subscribe((res: any) => {
         if (!res.company) {
-          this.formulario.controls['documento'].setValue(this.documentoBusqueda.nativeElement.value)
           this.encontrado = false
+          this.datos = null
           this.bloqueado = false
+          this.documentoNoEncontrado = String(data.documento || '').trim();
           Swal.fire({
             title: 'No encontrado!',
             text: 'No se encuentra el documento. Si desea crearlo llene los datos a continuacion',
@@ -585,47 +149,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
             confirmButtonText: 'Ok'
           });
         } else {
-          sessionStorage.setItem('cliente', JSON.stringify(res))
-          try {
-            this.formulario.patchValue(res)
-            this.tipoDocSeleccionado = this.normalizeTipoDoc(res.tipo_documento_comprador);
-            this.formulario.controls['tipo_documento_comprador'].setValue(this.tipoDocSeleccionado);
-            this.formulario.controls['indicativo_celular_comprador'].setValue(
-              res.indicativo_celular_comprador != null ? String(res.indicativo_celular_comprador) : '57'
-            );
-            this.formulario.controls['numero_celular_comprador'].setValue(
-              res.numero_celular_comprador != null ? String(res.numero_celular_comprador) : ''
-            );
-            this.formulario.controls['indicativo_celular_whatsapp'].setValue(
-              res.indicativo_celular_whatsapp != null ? String(res.indicativo_celular_whatsapp) : '57'
-            );
-            this.formulario.controls['numero_celular_whatsapp'].setValue(
-              res.numero_celular_whatsapp != null ? String(res.numero_celular_whatsapp) : ''
-            );
-            this.formulario.controls['apellidos_completos'].setValue(this.toTitleCase(res.apellidos_completos));
-            this.formulario.controls['nombres_completos'].setValue(this.toTitleCase(res.nombres_completos));
-            this.formulario.controls['documento'].setValue(res.documento);
-            this.formulario.controls['correo_electronico_comprador'].setValue(res.correo_electronico_comprador);
-            this.formulario.controls['estado'].setValue(res.estado);
-            this.activarNotas = false;
-            this.verNotas();
-          } catch (error) {
-            console.log(error);
-          }
-          this.datos = res
-          this.etiquetasSeleccionadas = Array.isArray(res.etiquetas) ? res.etiquetas.map((e: string) => this.toTitleCase(e)) : [];
-          this.formularioFacturacion.patchValue(res.datosFacturacionElectronica)
-          this.formularioEntrega.patchValue(res.datosEntrega)
-          this.identificarDepto()
-          this.identificarCiu()
-          this.identificarDepto1()
-          this.identificarCiu1()
-          this.encontrado = true
-          if (this.formulario.value.estado == 'bloqueado') {
-          this.bloqueado = true
-        } else {
-          this.bloqueado = false
-        }
+          this.mostrarCliente(res);
           Swal.fire({
             title: 'Consultado!',
             text: 'Consultado con éxito',
@@ -664,7 +188,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
           });
         } else {
           this.resultadosBusqueda = [...lista];
-          this.notaModalRef = this.modalService.open(this.resultadosModal, { size: 'lg', backdrop: 'static' });
+          this.modalService.open(this.resultadosModal, { size: 'lg', backdrop: 'static' });
         }
       });
     }
@@ -672,550 +196,11 @@ export class ClientesComponent implements OnInit, AfterViewInit {
 
   seleccionarClienteResultado(cliente: any) {
     this.resultadosBusqueda = [];
-    sessionStorage.setItem('cliente', JSON.stringify(cliente));
-    try {
-      this.formulario.patchValue(cliente);
-      this.tipoDocSeleccionado = this.normalizeTipoDoc(cliente.tipo_documento_comprador);
-      this.formulario.controls['tipo_documento_comprador'].setValue(this.tipoDocSeleccionado);
-      this.formulario.controls['indicativo_celular_comprador'].setValue(cliente.indicativo_celular_comprador);
-      this.formulario.controls['numero_celular_comprador'].setValue(cliente.numero_celular_comprador);
-      this.formulario.controls['indicativo_celular_whatsapp'].setValue(cliente.indicativo_celular_whatsapp);
-      this.formulario.controls['numero_celular_whatsapp'].setValue(cliente.numero_celular_whatsapp);
-      this.formulario.controls['apellidos_completos'].setValue(this.toTitleCase(cliente.apellidos_completos));
-      this.formulario.controls['nombres_completos'].setValue(this.toTitleCase(cliente.nombres_completos));
-      this.formulario.controls['documento'].setValue(cliente.documento);
-      this.formulario.controls['correo_electronico_comprador'].setValue(cliente.correo_electronico_comprador);
-      this.formulario.controls['estado'].setValue(cliente.estado);
-      this.activarNotas = false;
-      this.verNotas();
-    } catch (error) {
-      console.log(error);
-    }
-    this.datos = cliente;
-    this.etiquetasSeleccionadas = Array.isArray(cliente.etiquetas) ? cliente.etiquetas.map((e: string) => this.toTitleCase(e)) : [];
-    if (cliente.datosFacturacionElectronica) this.formularioFacturacion.patchValue(cliente.datosFacturacionElectronica);
-    if (cliente.datosEntrega) this.formularioEntrega.patchValue(cliente.datosEntrega);
-    this.identificarDepto();
-    this.identificarCiu();
-    this.identificarDepto1();
-    this.identificarCiu1();
-    this.encontrado = true;
-    this.bloqueado = this.formulario.value.estado === 'bloqueado';
+    this.mostrarCliente(cliente);
   }
-
-  toggleWithGreeting(tooltip, greeting: string) {
-    if (tooltip.isOpen()) {
-      tooltip.close();
-    } else {
-      tooltip.open({ greeting });
-    }
-  }
-  redirectToPostalCode() {
-    window.open('https://visor.codigopostal.gov.co/472/visor', '_blank');
-  }
-
-  replicarWhatsApp(event) {
-    const checked = event?.target?.checked ?? (this.whatsapp?.nativeElement?.checked === true);
-    if (checked) {
-      this.formulario.controls['indicativo_celular_whatsapp'].setValue(this.formulario.value.indicativo_celular_comprador);
-      this.formulario.controls['numero_celular_whatsapp'].setValue(this.formulario.value.numero_celular_comprador);
-    } else {
-      this.formulario.controls['indicativo_celular_whatsapp'].setValue('');
-      this.formulario.controls['numero_celular_whatsapp'].setValue('');
-    }
-  }
-  getBillingZone() {
-    const context = this;
-    this.service.getBillingZone().subscribe({
-      next(value: any) {
-        context.allBillingZone = value;
-      },
-      error(err) {
-      },
-    })
-  }
-  datosEntregass(event) {
-    if (this.entregar === true) {
-      this.nombres_entrega = this.formulario.value.nombres_completos
-      this.apellidos_entrega = this.formulario.value.apellidos_completos
-      this.indicativo_celular_entrega = this.formulario.value.indicativo_celular_comprador
-      this.numero_celular_entrega = this.formulario.value.numero_celular_comprador
-    } else {
-      this.nombres_entrega = "";
-      this.indicativo_celular_entrega = "57";
-      this.numero_celular_entrega = "";
-    }
-  }
-  idBillingZone(zona_cobro: any) {
-    console.log(this.ciudad_municipio_entrega)
-    const ciudad = this.ciudad_municipio_entrega
-    const context = this;
-    // this.service.getBillingZone().subscribe({
-    //   next(value: any) {
-    // context.allBillingZone = value;
-    // Spec 011 v2: la zona es un paquete; se cubre la ciudad si está en municipios[].
-    context.filteredResults = context.allBillingZone.filter(item => zonaCubreCiudad(item, ciudad));
-    if (zona_cobro.zonaCobro) {
-      context.zona_cobro = zona_cobro.zonaCobro;
-      context.valor_zona_cobro = zona_cobro.valorZonaCobro
-
-    }
-    //   },
-    //   error(err) {
-    //     console.log(err);
-    //   },
-    // })
-  }
-
-  eliminarDato(index: number): void {
-    Swal.fire({
-      title: '¿Está seguro?',
-      text: '¿Desea eliminar este registro de facturación?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#d33',
-    }).then((result) => {
-      if (!result.isConfirmed) return;
-      this.datosFacturacionElectronica.splice(index, 1);
-      const data = { documento: this.formulario.value.documento };
-      this.service.getClientByDocument(data).subscribe((res: any) => {
-        this.formulario.controls['datosFacturacionElectronica'].setValue(this.datosFacturacionElectronica);
-        this.formulario.controls['datosEntrega'].setValue(res.datosEntrega);
-        this.formulario.controls['notas'].setValue(res.notas);
-        this.formulario.controls['estado'].setValue(res.estado);
-        this.service.editClient(this.formulario.value).subscribe(r => {
-          Swal.fire({ title: 'Eliminado!', text: 'Eliminado con éxito', icon: 'success', confirmButtonText: 'Ok' });
-        });
-      });
-    });
-  }
-  eliminarDato1(index: number): void {
-    Swal.fire({
-      title: '¿Está seguro?',
-      text: '¿Desea eliminar este registro de entrega?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#d33',
-    }).then((result) => {
-      if (!result.isConfirmed) return;
-      this.datosEntregas.splice(index, 1);
-      const data = { documento: this.formulario.value.documento };
-      this.service.getClientByDocument(data).subscribe((res: any) => {
-        this.formulario.controls['datosFacturacionElectronica'].setValue(res.datosFacturacionElectronica);
-        this.formulario.controls['datosEntrega'].setValue(this.datosEntregas);
-        this.formulario.controls['notas'].setValue(res.notas);
-        this.formulario.controls['estado'].setValue(res.estado);
-        this.service.editClient(this.formulario.value).subscribe(r => {
-          Swal.fire({ title: 'Eliminado!', text: 'Eliminado con éxito', icon: 'success', confirmButtonText: 'Ok' });
-        });
-      });
-    });
-  }
-  ngOnInit(): void {
-    this.getBillingZone()
-    this.pais = 'Colombia';
-    this.pais_entrega = 'Colombia';
-    this.fecha = new Date()
-    this.dateactual = this.fecha.getFullYear() + '-' + (this.fecha.getMonth() + 1).toString().padStart(2, '0') + '-' + this.fecha.getDate().toString().padStart(2, '0')
-    this.paises = this.inforPaises.paises.map(x => {
-      return x.Pais
-    })
-    this.IndicativoPlaceholder = 'indicativo'
-    this.indicativos = this.infoIndicativo.datos
-
-    this.clientConfig.loadClientTags().subscribe((tags) => {
-      this.clientTagsCatalog = tags;
-    });
-    this.service.consultarTiposClienteActivos().subscribe({
-      next: (tipos: any) => {
-        this.clientTypes = Array.isArray(tipos) ? tipos.filter((t: any) => t.active !== false).map((t: any) => ({ label: t.nombre, value: t.nombre })) : [];
-      },
-      error: () => { this.clientTypes = []; }
-    });
-
-    this.formulario = this.formBuilder.group({
-      cd: [''],
-      nombres_completos: ['', Validators.required],
-      apellidos_completos: ['', Validators.required],
-      tipo_documento_comprador: ['CC', Validators.required],
-      documento: ['', Validators.required],
-      indicativo_celular_comprador: ['57', Validators.required],
-      // Ticket 1050: celular o fijo, al menos uno (validador del grupo). WhatsApp
-      // deja de ser obligatorio, igual que en el formulario corto.
-      numero_celular_comprador: ['', [Validators.pattern(/^[0-9]{10}$/)]],
-      telefono_fijo: ['', [Validators.pattern(PATRON_TELEFONO_FIJO)]],
-      indicativo_celular_whatsapp: ['57'],
-      numero_celular_whatsapp: [''],
-      correo_electronico_comprador: ['', [Validators.required, Validators.email]],
-      tipoCliente: [''],
-      fechaCumpleanos: [''],
-      comoNosConocio: [''],
-      // Crédito y plazo de pago (spec 014 — CxC/Cartera). Mismo par de campos
-      // que ya captura CrearClienteModalComponent (D-303) — sin esto, un
-      // cliente creado desde este formulario nacía sin cupo/plazo y había
-      // que volver a editarlo desde "Listado de clientes" para completarlos.
-      creditLimit: [0, [Validators.min(0)]],
-      payTermDays: [0, [Validators.min(0)]],
-      etiquetas: [[]],
-      datosFacturacionElectronica: [['']],
-      datosEntrega: [['']],
-      notas: [['']],
-      estado: ['activo'],
-    }, { validators: alMenosUnTelefono });
-
-    this.formularioFacturacion = this.formBuilder.group({
-      alias_facturacion: [''],
-      razon_social: ['', Validators.required],
-      tipo_documento_facturacion: ['', Validators.required],
-      numero_documento_facturacion: ['', Validators.required],
-    })
-
-    this.formularioEntrega = this.formBuilder.group({
-      // Datos de Entrega
-      nombres_entrega: ['', Validators.required],
-      apellidos_entrega: ['', Validators.required],
-      indicativo_celular_entrega: ['57', Validators.required],
-      numero_celular_entrega: ['', Validators.required],
-      otro_numero_entrega: [''],
-      direccion_entrega: ['', Validators.required],
-      observaciones: [''],
-      pais_entrega: ['', Validators.required],
-      departamento_entrega: ['', Validators.required],
-      ciudad_municipio_entrega: ['', Validators.required],
-      codigo_postal_entrega: ['', Validators.required]
-    });
-
-    // Ticket 1083: con NIT, "Apellidos" deja de ser obligatorio.
-    this.formulario.controls['tipo_documento_comprador'].valueChanges.subscribe(() => this.ajustarApellidosSegunTipoDoc());
-  }
-  validarSoloNumeros(event: KeyboardEvent) {
-    if (!/[0-9]/.test(event.key)) {
-      event.preventDefault();
-    }
-  }
-
-
-  crearCliente() {
-    // Primero verificar si el cliente ya existe
-    const documentoCliente = this.formulario.value.documento;
-
-    if (!documentoCliente) {
-      Swal.fire({
-        title: 'Error',
-        text: 'Por favor ingrese un número de documento',
-        icon: 'error',
-        confirmButtonText: 'Ok'
-      });
-      return;
-    }
-
-    console.log("🔍 Verificando si el cliente ya existe con documento:", documentoCliente);
-
-    this.service.getClientByDocument({ documento: documentoCliente }).subscribe({
-      next: (res: any) => {
-        // Verificar si el cliente ya existe
-        const clienteExiste = res && res.company;
-
-        if (clienteExiste) {
-          // Cliente ya existe - mostrar alerta informativa
-          console.log("⚠️ Cliente ya existe:", res);
-
-          Swal.fire({
-            title: "Cliente ya registrado",
-            html: `
-              <div class="text-start">
-                <p>El documento <strong>${documentoCliente}</strong> ya se encuentra registrado.</p>
-                <p><strong>Cliente:</strong> ${res.nombres_completos} ${res.apellidos_completos || ""}</p>
-                <p>Se cargarán los datos del cliente existente.</p>
-              </div>
-            `,
-            icon: "info",
-            confirmButtonText: "Entendido",
-          }).then(() => {
-            // Cargar los datos del cliente existente en el formulario
-            sessionStorage.setItem('cliente', JSON.stringify(res));
-            this.formulario.patchValue(res);
-            this.tipoDocSeleccionado = this.normalizeTipoDoc(res.tipo_documento_comprador);
-            this.formulario.controls['tipo_documento_comprador'].setValue(this.tipoDocSeleccionado);
-            this.formulario.controls['indicativo_celular_comprador'].setValue(res.indicativo_celular_comprador);
-            this.formulario.controls['numero_celular_comprador'].setValue(res.numero_celular_comprador);
-            this.formulario.controls['indicativo_celular_whatsapp'].setValue(res.indicativo_celular_whatsapp);
-            this.formulario.controls['numero_celular_whatsapp'].setValue(res.numero_celular_whatsapp);
-            this.formulario.controls['apellidos_completos'].setValue(res.apellidos_completos);
-            this.formulario.controls['nombres_completos'].setValue(res.nombres_completos);
-            this.formulario.controls['documento'].setValue(res.documento);
-            this.formulario.controls['correo_electronico_comprador'].setValue(res.correo_electronico_comprador);
-            this.formulario.controls['estado'].setValue(res.estado);
-
-            this.datos = res;
-            this.formularioFacturacion.patchValue(res.datosFacturacionElectronica);
-            this.formularioEntrega.patchValue(res.datosEntrega);
-            this.identificarDepto();
-            this.identificarCiu();
-            this.identificarDepto1();
-            this.identificarCiu1();
-            this.encontrado = true;
-
-            this.bloqueado = res.estado === 'inactivo';
-          });
-        } else {
-          // Cliente no existe - proceder con la creación
-          console.log("✅ Cliente no existe, procediendo con creación");
-          this.ejecutarCreacionCliente();
-        }
-      },
-      error: (error: any) => {
-        // En caso de error en la búsqueda, intentar crear el cliente de todas formas
-        console.warn("⚠️ Error al verificar cliente existente, procediendo con creación:", error);
-        this.ejecutarCreacionCliente();
-      },
-    });
-  }
-
-  private ejecutarCreacionCliente() {
-    this.formulario.controls['datosFacturacionElectronica'].setValue([]);
-    this.formulario.controls['datosEntrega'].setValue([]);
-    this.formulario.controls['notas'].setValue([]);
-    this.formulario.controls['estado'].setValue('activo');
-    this.formulario.controls['nombres_completos'].setValue(this.toTitleCase(this.formulario.value.nombres_completos));
-    this.formulario.controls['apellidos_completos'].setValue(this.toTitleCase(this.formulario.value.apellidos_completos));
-    this.formulario.controls['etiquetas'].setValue(this.etiquetasSeleccionadas.map(e => this.toTitleCase(e)));
-    this.service.createClient(this.formulario.value).subscribe(r => {
-      const data = { documento: this.formulario.value.documento };
-      this.service.getClientByDocument(data).subscribe((res: any) => {
-        sessionStorage.setItem('cliente', JSON.stringify(res));
-        this.formulario.patchValue(res);
-        this.datos = res;
-        this.etiquetasSeleccionadas = Array.isArray(res.etiquetas) ? [...res.etiquetas] : [];
-        this.datosFacturacionElectronica = res.datosFacturacionElectronica || [];
-        this.datosEntregas = res.datosEntrega || [];
-        this.notas = res.notas || [];
-        this.formularioFacturacion.patchValue(res.datosFacturacionElectronica);
-        this.formularioEntrega.patchValue(res.datosEntrega);
-        this.identificarDepto();
-        this.identificarCiu();
-        this.identificarDepto1();
-        this.identificarCiu1();
-        this.encontrado = true;
-        this.showClienteModal = false;
-        Swal.fire({
-          title: '¡Cliente creado!',
-          text: `${res.nombres_completos} ${res.apellidos_completos || ''} fue guardado exitosamente.`,
-          icon: 'success',
-          timer: 2500,
-          timerProgressBar: true,
-          showConfirmButton: false,
-          toast: true,
-          position: 'top-end'
-        });
-      });
-    });
-  }
-  bloquear() {
-
-    this.formulario.controls['estado'].setValue('bloqueado')
-    this.service.editClient(this.formulario.value).subscribe(r => {
-      Swal.fire({
-        title: 'Usuario Bloqueado!',
-        text: 'Usuario bloqueado con exito',
-        icon: 'error',
-        confirmButtonText: 'Ok'
-      });
-      const data = {
-        documento: this.documentoBusqueda.nativeElement.value
-      }
-      this.service.getClientByDocument(data).subscribe((res: any) => {
-        sessionStorage.setItem('cliente', JSON.stringify(res))
-        this.formulario.patchValue(res)
-        this.datos = res
-        this.formularioFacturacion.patchValue(res.datosFacturacionElectronica)
-        this.formularioEntrega.patchValue(res.datosEntrega)
-        this.identificarDepto()
-        this.identificarCiu()
-        this.identificarDepto1()
-        this.identificarCiu1()
-        this.encontrado = true
-        if (this.formulario.value.estado == 'bloqueado') {
-          this.bloqueado = true
-        } else {
-          this.bloqueado = false
-        }
-      })
-    });
-
-  }
-
-  editarDatos1(modal, index) {
-    this.idenxFacturacion = index
-    this.editandodato = true
-    this.alias_facturacion = this.datosFacturacionElectronica[index].alias
-    this.razon_social = this.datosFacturacionElectronica[index].nombres
-    this.tipo_documento_facturacion = this.datosFacturacionElectronica[index].tipoDocumento
-    this.numero_documento_facturacion = this.datosFacturacionElectronica[index].documento
-    this.correo_electronico_facturacion = this.datosFacturacionElectronica[index].correo || ''
-    this.direccion_facturacion = this.datosFacturacionElectronica[index].direccion
-    this.pais = this.datosFacturacionElectronica[index].pais
-    this.departamento = this.datosFacturacionElectronica[index].departamento
-    this.ciudad_municipio = this.datosFacturacionElectronica[index].ciudad
-    this.codigo_postal = this.datosFacturacionElectronica[index].codigoPostal
-    this.identificarDepto()
-    this.identificarCiu()
-    this.notaModalRef = this.modalService.open(modal, { size: 'lg' });
-    this.notaModalRef.result.then(
-      () => { this.limpiarVariables(); },
-      () => { this.limpiarVariables(); }
-    );
-  }
-  editarDatosFacturacion() {
-    if (!this.razon_social || !this.tipo_documento_facturacion || !this.numero_documento_facturacion) {
-      Swal.fire({ title: 'Error', text: 'Razón Social, Tipo de Documento y Documento son obligatorios', icon: 'error', confirmButtonText: 'Ok' });
-      return;
-    }
-    const datosFacturacionElec = {
-      alias: this.alias_facturacion,
-      nombres: this.razon_social,
-      tipoDocumento: this.tipo_documento_facturacion,
-      documento: this.numero_documento_facturacion,
-      correo: this.correo_electronico_facturacion || '',
-    }
-    this.datosFacturacionElectronica[this.idenxFacturacion] = datosFacturacionElec
-    const data = {
-      documento: this.documentoBusqueda.nativeElement.value
-    }
-
-    this.service.getClientByDocument(data).subscribe((res: any) => {
-      this.formulario.controls['datosFacturacionElectronica'].setValue(this.datosFacturacionElectronica);
-      this.formulario.controls['datosEntrega'].setValue(res.datosEntrega);
-      this.formulario.controls['notas'].setValue(res.notas);
-      this.formulario.controls['estado'].setValue(res.estado);
-      this.service.editClient(this.formulario.value).subscribe(r => {
-        if (this.notaModalRef) { this.notaModalRef.close(); }
-        Swal.fire({ title: 'Editado!', text: 'Editado con éxito', icon: 'success', confirmButtonText: 'Ok' });
-      });
-
-
-    })
-  }
-  editarDatos(modal, index) {
-    this.idenxEntrega = index;
-    this.editandodato = true;
-    const d = this.datosEntregas[index];
-    this.alias_entrega = d.alias;
-    this.nombres_entrega = d.nombres;
-    this.apellidos_entrega = d.apellidos;
-    this.indicativo_celular_entrega = d.indicativoCel || '57';
-    this.numero_celular_entrega = d.celular;
-    this.indicativo_celular_entrega2 = d.indicativoOtroNumero || '57';
-    this.otro_numero_entrega = d.otroNumero;
-    this.direccion_entrega = d.direccionEntrega;
-    this.observaciones = d.observaciones;
-    this.barrio = d.barrio;
-    this.nombreUnidad = d.nombreUnidad;
-    this.especificacionesInternas = d.especificacionesInternas;
-    this.pais_entrega = d.pais;
-    this.departamento_entrega = d.departamento;
-    this.ciudad_municipio_entrega = d.ciudad;
-    this.zona_cobro = d.zonaCobro;
-    this.valor_zona_cobro = d.valorZonaCobro;
-    this.codigo_postal_entrega = d.codigoPV;
-    this.latitud = d.latitud || '';
-    this.longitud = d.longitud || '';
-    this.coordenadas = d.coordenadas || '';
-    this.identificarDepto1();
-    this.identificarCiu1();
-    this.notaModalRef = this.modalService.open(modal, { size: 'lg' });
-    this.notaModalRef.result.then(
-      () => { this.limpiarVariables(); },
-      () => { this.limpiarVariables(); }
-    );
-  }
-  editarDatosEntrega() {
-    if (!this.nombres_entrega || !this.numero_celular_entrega || !this.direccion_entrega || !this.ciudad_municipio_entrega) {
-      Swal.fire({ title: 'Campos obligatorios', text: 'Nombres, Celular, Dirección y Ciudad son requeridos', icon: 'warning', confirmButtonText: 'Ok' });
-      return;
-    }
-    const datosEntreg = {
-      alias: this.alias_entrega,
-      nombres: this.nombres_entrega,
-      apellidos: this.apellidos_entrega,
-      indicativoCel: this.indicativo_celular_entrega,
-      celular: this.numero_celular_entrega,
-      indicativoOtroNumero: this.indicativo_celular_entrega2,
-      otroNumero: this.otro_numero_entrega,
-      direccionEntrega: this.direccion_entrega,
-      observaciones: this.observaciones,
-      barrio: this.barrio,
-      nombreUnidad: this.nombreUnidad,
-      especificacionesInternas: this.especificacionesInternas,
-      pais: this.pais_entrega,
-      departamento: this.departamento_entrega,
-      ciudad: this.ciudad_municipio_entrega,
-      zonaCobro: this.zona_cobro,
-      valorZonaCobro: this.valor_zona_cobro,
-      codigoPV: this.codigo_postal_entrega,
-      latitud: this.latitud,
-      longitud: this.longitud,
-      coordenadas: this.coordenadas,
-    };
-    this.datosEntregas[this.idenxEntrega] = datosEntreg;
-    const data = { documento: this.documentoBusqueda.nativeElement.value };
-
-    this.service.getClientByDocument(data).subscribe((res: any) => {
-      this.formulario.controls['datosFacturacionElectronica'].setValue(res.datosFacturacionElectronica);
-      this.formulario.controls['datosEntrega'].setValue(this.datosEntregas);
-      this.formulario.controls['notas'].setValue(res.notas);
-      this.formulario.controls['estado'].setValue(res.estado);
-      this.service.editClient(this.formulario.value).subscribe(r => {
-        if (this.notaModalRef) { this.notaModalRef.close(); }
-        Swal.fire({ title: 'Editado!', text: 'Editado con éxito', icon: 'success', confirmButtonText: 'Ok' });
-        this.limpiarVariablesEntrega();
-      });
-    });
-  }
-  limpiarVariablesEntrega() {
-    this.alias_entrega = '';
-    this.nombres_entrega = '';
-    this.apellidos_entrega = '';
-    this.indicativo_celular_entrega = '57';
-    this.indicativo_celular_entrega2 = '57';
-    this.numero_celular_entrega = '';
-    this.otro_numero_entrega = '';
-    this.direccion_entrega = '';
-    this.observaciones = '';
-    this.barrio = '';
-    this.nombreUnidad = '';
-    this.especificacionesInternas = '';
-    this.pais_entrega = 'Colombia';
-    this.departamento_entrega = '';
-    this.ciudad_municipio_entrega = '';
-    this.zona_cobro = '';
-    this.valor_zona_cobro = '';
-    this.codigo_postal_entrega = '';
-    this.latitud = '';
-    this.longitud = '';
-    this.coordenadas = '';
-    this.searchQueryCiudadDane = '';
-    this.municipiosDane = [];
-  }
-
-  limpiarVariables() {
-    this.editandodato = false;
-    this.limpiarVariablesEntrega();
-    this.facturacionElectronica = false;
-    this.alias_facturacion = '';
-    this.razon_social = '';
-    this.tipo_documento_facturacion = 'CC';
-    this.numero_documento_facturacion = '';
-    this.correo_electronico_facturacion = '';
-  }
-  private notaModalRef: any;
 
   nuevoPedido() {
-    const documento = this.documentoBusqueda?.nativeElement?.value || this.formulario?.value?.documento;
+    const documento = this.documentoActual();
     if (!documento) {
       Swal.fire({ title: 'Sin cliente', text: 'Primero busca o crea un cliente para crear un pedido', icon: 'warning', confirmButtonText: 'Ok' });
       return;
@@ -1223,203 +208,44 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.router.navigate(['/ventas/crear-ventas'], { queryParams: { documento } });
   }
 
-  abrirModalAgregarEntrega(modal: any) {
-    this.editandodato = false;
-    this.limpiarVariablesEntrega();
-    this.notaModalRef = this.modalService.open(modal, { size: 'lg' });
-    this.notaModalRef.result.then(
-      () => { this.limpiarVariables(); },
-      () => { this.limpiarVariables(); }
-    );
+  bloquear() {
+    this.cambiarEstadoCliente('bloqueado');
   }
 
-  openLg(notaAclaratoria) {
-    this.notaModalRef = this.modalService.open(notaAclaratoria, { size: 'lg' });
-    this.notaModalRef.result.then(
-      () => {
-        this.limpiarVariables();
-      },
-      () => {
-        this.limpiarVariables();
-      }
-    );
-  }
-
-  guardarNota() {
-    this.fecha = new Date()
-    this.notas = []
-    const nota = {
-      fecha: this.fecha.getFullYear() + '-' + (this.fecha.getMonth() + 1).toString().padStart(2, '0') + '-' + this.fecha.getDate().toString().padStart(2, '0'),
-      nota: this.notaNueva
-    }
-    const data = {
-      documento: this.documentoBusqueda.nativeElement.value
-    }
-
-    this.service.getClientByDocument(data).subscribe((res: any) => {
-      res.notas.map(x => {
-        this.notas.push(x)
-      })
-      this.notas.push(nota)
-      this.formulario.controls['datosFacturacionElectronica'].setValue(res.datosFacturacionElectronica);
-      this.formulario.controls['datosEntrega'].setValue(res.datosEntrega);
-      this.formulario.controls['notas'].setValue(this.notas)
-      this.formulario.controls['estado'].setValue(res.estado)
-      this.service.editClient(this.formulario.value).subscribe(r => {
-        if (this.notaModalRef) {
-          this.notaModalRef.close();
-        }
-        Swal.fire({
-          title: 'Guardado!',
-          text: 'Guardado con éxito',
-          icon: 'success',
-          confirmButtonText: 'Ok'
-        });
-        this.notaNueva = "";
-      });
-    })
-  }
-  guardarDatosFacturacionElectronica() {
-    if (!this.razon_social || !this.tipo_documento_facturacion || !this.numero_documento_facturacion) {
-      Swal.fire({ title: 'Error', text: 'Razón Social, Tipo de Documento y Documento son obligatorios', icon: 'error', confirmButtonText: 'Ok' });
-      return;
-    }
-
-    this.datosFacturacionElectronica = []
-    const datosFacturacionElec = {
-      alias: this.alias_facturacion,
-      nombres: this.razon_social,
-      tipoDocumento: this.tipo_documento_facturacion,
-      documento: this.numero_documento_facturacion,
-      correo: this.correo_electronico_facturacion || '',
-    }
-    const data = {
-      documento: this.documentoBusqueda.nativeElement.value
-    }
-
-    this.service.getClientByDocument(data).subscribe({
-      next: (res: any) => {
-        (res.datosFacturacionElectronica || []).forEach(x => {
-          this.datosFacturacionElectronica.push(x)
-        })
-        this.datosFacturacionElectronica.push(datosFacturacionElec)
-        this.formulario.controls['datosFacturacionElectronica'].setValue(this.datosFacturacionElectronica);
-        this.formulario.controls['datosEntrega'].setValue(res.datosEntrega);
-        this.formulario.controls['notas'].setValue(res.notas)
-        this.formulario.controls['estado'].setValue(res.estado)
-        this.service.editClient(this.formulario.value).subscribe({
-          next: (r: any) => {
-            if (this.notaModalRef) { this.notaModalRef.close(); }
-            Swal.fire({
-              title: 'Guardado!',
-              text: 'Guardado con éxito',
-              icon: 'success',
-              confirmButtonText: 'Ok'
-            });
-            this.facturacionElectronica = false
-            this.alias_facturacion = ""
-            this.razon_social = ""
-            this.tipo_documento_facturacion = ""
-            this.numero_documento_facturacion = ""
-          },
-          error: (error) => {
-            Swal.fire({ title: 'Error al guardar', text: error?.error?.error || error?.message || 'No se pudieron guardar los datos de facturación', icon: 'error', confirmButtonText: 'Ok' });
-          }
-        });
-      },
-      error: (error) => {
-        Swal.fire({ title: 'Error', text: 'No se pudo cargar el cliente para agregar los datos de facturación', icon: 'error', confirmButtonText: 'Ok' });
-      }
-    })
-  }
-  guardarDatosEntrega() {
-    if (!this.nombres_entrega || !this.numero_celular_entrega || !this.direccion_entrega || !this.ciudad_municipio_entrega) {
-      Swal.fire({ title: 'Campos obligatorios', text: 'Nombres, Celular, Dirección y Ciudad son requeridos', icon: 'warning', confirmButtonText: 'Ok' });
-      return;
-    }
-    this.datosEntregas = [];
-    const datosEntreg = {
-      alias: this.alias_entrega,
-      nombres: this.nombres_entrega,
-      apellidos: this.apellidos_entrega,
-      indicativoCel: this.indicativo_celular_entrega,
-      celular: this.numero_celular_entrega,
-      indicativoOtroNumero: this.indicativo_celular_entrega2,
-      otroNumero: this.otro_numero_entrega,
-      direccionEntrega: this.direccion_entrega,
-      observaciones: this.observaciones,
-      barrio: this.barrio,
-      nombreUnidad: this.nombreUnidad,
-      especificacionesInternas: this.especificacionesInternas,
-      pais: this.pais_entrega,
-      departamento: this.departamento_entrega,
-      ciudad: this.ciudad_municipio_entrega,
-      zonaCobro: this.zona_cobro,
-      valorZonaCobro: this.valor_zona_cobro,
-      codigoPV: this.codigo_postal_entrega,
-      latitud: this.latitud,
-      longitud: this.longitud,
-      coordenadas: this.coordenadas,
-    };
-    const data = { documento: this.documentoBusqueda.nativeElement.value };
-
-    this.service.getClientByDocument(data).subscribe({
-      next: (res: any) => {
-        (res.datosEntrega || []).forEach((x: any) => { this.datosEntregas.push(x); });
-        this.datosEntregas.push(datosEntreg);
-        this.formulario.controls['datosFacturacionElectronica'].setValue(res.datosFacturacionElectronica);
-        this.formulario.controls['datosEntrega'].setValue(this.datosEntregas);
-        this.formulario.controls['notas'].setValue(res.notas);
-        this.formulario.controls['estado'].setValue(res.estado);
-        this.service.editClient(this.formulario.value).subscribe({
-          next: (r: any) => {
-            if (this.notaModalRef) { this.notaModalRef.close(); }
-            Swal.fire({ title: 'Guardado!', text: 'Guardado con éxito', icon: 'success', confirmButtonText: 'Ok' });
-            this.limpiarVariablesEntrega();
-          },
-          error: (error) => {
-            Swal.fire({ title: 'Error al guardar', text: error?.error?.error || error?.message || 'No se pudieron guardar los datos de entrega', icon: 'error', confirmButtonText: 'Ok' });
-          }
-        });
-      },
-      error: (error) => {
-        Swal.fire({ title: 'Error', text: 'No se pudo cargar el cliente para agregar los datos de entrega', icon: 'error', confirmButtonText: 'Ok' });
-      }
-    });
-  }
   desbloquear() {
+    this.cambiarEstadoCliente('activo');
+  }
 
-    this.formulario.controls['estado'].setValue('activo')
-    this.service.editClient(this.formulario.value).subscribe(r => {
-      console.log(r)
-      Swal.fire({
-        title: 'Usuario Desbloqueado!',
-        text: 'Usuario desbloqueado con exito',
-        icon: 'success',
-        confirmButtonText: 'Ok'
-      });
-      const data = {
-        documento: this.documentoBusqueda.nativeElement.value
+  /**
+   * Bloquear / desbloquear desde la ficha 360. Envía solo el estado (parche):
+   * `clients/edit` hace merge superficial y así no pisa entrega, facturación ni
+   * notas con una copia vieja. Al recargar, `datos` cambia y el formulario
+   * unificado se refresca con el estado nuevo.
+   */
+  private cambiarEstadoCliente(estado: 'activo' | 'bloqueado'): void {
+    const documento = this.documentoActual();
+    if (!documento) return;
+    const parche: any = { documento, estado };
+    if (this.datos?.cd) parche.cd = this.datos.cd;
+    this.service.editClient(parche).subscribe({
+      next: () => {
+        Swal.fire(estado === 'bloqueado'
+          ? { title: 'Usuario Bloqueado!', text: 'Usuario bloqueado con exito', icon: 'error', confirmButtonText: 'Ok' }
+          : { title: 'Usuario Desbloqueado!', text: 'Usuario desbloqueado con exito', icon: 'success', confirmButtonText: 'Ok' });
+        this.service.getClientByDocument({ documento }).subscribe((res: any) => {
+          if (!res || !res.company) return;
+          sessionStorage.setItem('cliente', JSON.stringify(res));
+          this.datos = res;
+          this.encontrado = true;
+          this.bloqueado = res.estado === 'bloqueado';
+        });
+      },
+      error: (error) => {
+        Swal.fire({ title: 'Error', text: error?.error?.error || 'No se pudo cambiar el estado del cliente', icon: 'error', confirmButtonText: 'Ok' });
       }
-      this.service.getClientByDocument(data).subscribe((res: any) => {
-        sessionStorage.setItem('cliente', JSON.stringify(res))
-        this.formulario.patchValue(res)
-        this.datos = res
-        this.formularioFacturacion.patchValue(res.datosFacturacionElectronica)
-        this.formularioEntrega.patchValue(res.datosEntrega)
-        this.identificarDepto()
-        this.identificarCiu()
-        this.identificarDepto1()
-        this.identificarCiu1()
-        this.encontrado = true
-        if (this.formulario.value.estado == 'bloqueado') {
-          this.bloqueado = true
-        } else {
-          this.bloqueado = false
-        }
-      })
     });
   }
+
   private activarTab(tab: 'notas' | 'facturacion' | 'entrega') {
     this.activarNotas = tab === 'notas';
     this.activarDatosFact = tab === 'facturacion';
@@ -1433,7 +259,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     }
     this.activarTab('notas');
     this.notas = [];
-    const data = { documento: this.documentoBusqueda.nativeElement.value };
+    const data = { documento: this.documentoActual() };
     this.service.getClientByDocument(data).subscribe((res: any) => {
       (res?.notas || []).forEach((x: any) => this.notas.push(x));
     });
@@ -1446,7 +272,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     }
     this.activarTab('facturacion');
     this.datosFacturacionElectronica = [];
-    const data = { documento: this.documentoBusqueda.nativeElement.value };
+    const data = { documento: this.documentoActual() };
     this.service.getClientByDocument(data).subscribe((res: any) => {
       (res?.datosFacturacionElectronica || []).forEach((x: any) => this.datosFacturacionElectronica.push(x));
     });
@@ -1459,123 +285,21 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     }
     this.activarTab('entrega');
     this.datosEntregas = [];
-    const data = { documento: this.documentoBusqueda.nativeElement.value };
+    const data = { documento: this.documentoActual() };
     this.service.getClientByDocument(data).subscribe((res: any) => {
       (res?.datosEntrega || []).forEach((x: any) => this.datosEntregas.push(x));
     });
   }
 
-  editarCliente() {
-    const data = {
-      documento: this.documentoBusqueda.nativeElement.value
-    }
-
-    this.service.getClientByDocument(data).subscribe((res: any) => {
-      this.formulario.controls['datosFacturacionElectronica'].setValue(res.datosFacturacionElectronica);
-      this.formulario.controls['datosEntrega'].setValue(res.datosEntrega);
-      this.formulario.controls['notas'].setValue(res.notas);
-      this.formulario.controls['estado'].setValue(res.estado);
-      this.formulario.controls['nombres_completos'].setValue(this.toTitleCase(this.formulario.value.nombres_completos));
-      this.formulario.controls['apellidos_completos'].setValue(this.toTitleCase(this.formulario.value.apellidos_completos));
-      this.formulario.controls['etiquetas'].setValue(this.etiquetasSeleccionadas.map(e => this.toTitleCase(e)));
-      this.service.editClient(this.formulario.value).subscribe(r => {
-        if (this.isEdit) {
-          this.service.getClientByDocument(data).subscribe((clienteActualizado: any) => {
-            this.modalService.dismissAll(clienteActualizado);
-            Swal.fire({ title: 'Editado!', text: 'Cliente actualizado con éxito', icon: 'success', confirmButtonText: 'Ok' });
-          }, error => {
-            this.modalService.dismissAll(this.formulario.value);
-            Swal.fire({ title: 'Editado!', text: 'Cliente actualizado (con advertencia)', icon: 'warning', confirmButtonText: 'Ok' });
-          });
-        } else {
-          // Actualizar estado local con los datos del formulario (sin request adicional)
-          const datosActualizados = { ...this.datos, ...this.formulario.value };
-          datosActualizados.etiquetas = this.etiquetasSeleccionadas;
-          this.datos = datosActualizados;
-          this.bloqueado = this.formulario.value.estado === 'bloqueado';
-          this.encontrado = true;
-          sessionStorage.setItem('cliente', JSON.stringify(datosActualizados));
-          this.showClienteModal = false;
-          Swal.fire({
-            title: '¡Cliente actualizado!',
-            icon: 'success',
-            timer: 2000,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end'
-          });
-        }
-      });
-    })
-
-  }
-
-  cambiarEstado(estado: string) {
-
-    // if (estado === 'on') {
-    //   estado = 'off';
-    // } else {
-    //   estado = 'on';
-    // }
-
-    // if (estado !== 'on') {
-    //   this.formulario.controls['estado'].setValue('activo')
-    // } else {
-    //   this.formulario.controls['estado'].setValue('bloqueado')
-    // }
-
-    this.formulario.controls['estado'].setValue(estado !== 'on' ? 'activo' : 'bloqueado')
-    this.service.editClient(this.formulario.value).subscribe(r => {
-      console.log(r)
-      // Swal.fire({
-      //   title: 'Usuario Bloqueado!',
-      //   text: 'Usuario bloqueado con exito',
-      //   icon: 'error',
-      //   confirmButtonText: 'Ok'
-      // });
-      const data = {
-        documento: this.documentoBusqueda.nativeElement.value
-      }
-      this.service.getClientByDocument(data).subscribe((res: any) => {
-        sessionStorage.setItem('cliente', JSON.stringify(res))
-        this.formulario.patchValue(res)
-        this.datos = res
-        this.formularioFacturacion.patchValue(res.datosFacturacionElectronica)
-        this.formularioEntrega.patchValue(res.datosEntrega)
-        this.identificarDepto()
-        this.identificarCiu()
-        this.identificarDepto1()
-        this.identificarCiu1()
-        this.encontrado = true
-        if (this.formulario.value.estado == 'bloqueado') {
-          this.bloqueado = true
-        } else {
-          this.bloqueado = false
-        }
-      })
+  ngOnInit(): void {
+    this.clientConfig.loadClientTags().subscribe((tags) => {
+      this.clientTagsCatalog = tags;
     });
-
-
   }
 
   // =============================================
-  // ETIQUETAS
+  // ETIQUETAS (colores para la ficha 360)
   // =============================================
-  toggleEtiqueta(nombre: string): void {
-    const idx = this.etiquetasSeleccionadas.indexOf(nombre);
-    if (idx >= 0) {
-      this.etiquetasSeleccionadas.splice(idx, 1);
-    } else {
-      this.etiquetasSeleccionadas.push(nombre);
-    }
-    this.formulario.controls['etiquetas'].setValue([...this.etiquetasSeleccionadas]);
-  }
-
-  tieneEtiqueta(nombre: string): boolean {
-    return this.etiquetasSeleccionadas.includes(nombre);
-  }
-
   getTagColor(tag: ClientTag): string {
     const map: Record<string, string> = {
       violet: '#ede9fe',
@@ -1605,9 +329,8 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   }
 
   // =============================================
-  // DIALOG CREAR / EDITAR (modo standalone)
+  // BUSCADOR + FORMULARIO UNIFICADO INCRUSTADO
   // =============================================
-  showClienteModal: boolean = false;
   /** Ticket 1163: el buscador de clientes existentes va plegado al crear. */
   buscadorAbierto: boolean = false;
 
@@ -1627,59 +350,6 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     if (!this.buscadorAbierto) {
       this.resultadosBusqueda = [];
     }
-  }
-
-  abrirModalCrear(): void {
-    this.encontrado = false;
-    this.bloqueado = false;
-    this.etiquetasSeleccionadas = [];
-    this.resultadosBusqueda = [];
-    this.tipoDocSeleccionado = 'CC';
-    if (this.formulario) {
-      this.formulario.reset();
-      this.formulario.patchValue({
-        indicativo_celular_comprador: '57',
-        indicativo_celular_whatsapp: '57',
-        tipo_documento_comprador: 'CC',
-        estado: 'activo',
-        creditLimit: 0,
-        payTermDays: 0,
-      });
-    }
-    this.showClienteModal = true;
-  }
-
-  abrirModalEditar(): void {
-    this.showClienteModal = true;
-    setTimeout(() => {
-      if (!this.datos) return;
-      this.formulario.patchValue(this.datos);
-
-      const tipoDoc = this.normalizeTipoDoc(this.datos.tipo_documento_comprador);
-      this.tipoDocSeleccionado = tipoDoc;
-      this.formulario.controls['tipo_documento_comprador'].setValue(tipoDoc);
-      this.formulario.controls['indicativo_celular_comprador'].setValue(
-        this.datos.indicativo_celular_comprador != null ? String(this.datos.indicativo_celular_comprador) : '57'
-      );
-      this.formulario.controls['indicativo_celular_whatsapp'].setValue(
-        this.datos.indicativo_celular_whatsapp != null ? String(this.datos.indicativo_celular_whatsapp) : '57'
-      );
-      this.formulario.controls['numero_celular_comprador'].setValue(
-        this.datos.numero_celular_comprador != null ? String(this.datos.numero_celular_comprador) : ''
-      );
-      this.formulario.controls['numero_celular_whatsapp'].setValue(
-        this.datos.numero_celular_whatsapp != null ? String(this.datos.numero_celular_whatsapp) : ''
-      );
-      this.formulario.controls['apellidos_completos'].setValue(this.datos.apellidos_completos);
-      this.formulario.controls['nombres_completos'].setValue(this.datos.nombres_completos);
-      this.formulario.controls['documento'].setValue(this.datos.documento);
-      this.formulario.controls['correo_electronico_comprador'].setValue(this.datos.correo_electronico_comprador);
-      this.formulario.controls['estado'].setValue(this.datos.estado || 'activo');
-      if (this.datos.tipoCliente) {
-        this.formulario.controls['tipoCliente'].setValue(this.datos.tipoCliente);
-      }
-      this.etiquetasSeleccionadas = Array.isArray(this.datos.etiquetas) ? [...this.datos.etiquetas] : [];
-    });
   }
 
   // =============================================

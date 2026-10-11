@@ -18,7 +18,6 @@ import { TreeSelectModule } from "primeng/treeselect";
 import { POSRoutingModule } from "./pos-routing.module"
 import { QuickViewComponent } from "./pos-quick-view/quick-view.component";
 import { CheckOutPOSComponent } from "./pos-checkout/pos-checkout.component";
-import { ClientesComponent } from "../ventas/clientes/clientes.component";
 import { POSPedidoFacturacionComponent } from './pos-facturacion/pos-pedido-facturacion.component'
 import { EcomerceProductsComponent } from "./pos-catalogo/ecomerce-products/ecomerce-products.component";
 import { POSConfProductToCartComponent } from "./pos-catalogo/conf-product-to-cart/conf-product-to-cart.component";

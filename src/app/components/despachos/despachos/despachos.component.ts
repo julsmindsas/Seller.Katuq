@@ -31,7 +31,6 @@ import { ServiciosService } from "../../../shared/services/servicios.service";
 import "bootstrap";
 import html2canvas from "html2canvas";
 import { rasterizarTarjeta } from "../../../shared/utils/tarjeta-regalo";
-import { ClientesComponent } from "../../ventas/clientes/clientes.component";
 import Swal from "sweetalert2";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { PedidoEntregaComponent } from "../../ventas/entrega/pedido-entrega.component";
@@ -162,7 +161,6 @@ interface UbicacionPedido {
 })
 export class DespachosComponent implements OnInit, OnDestroy {
   @ViewChild("autoCompleteInput") autoCompleteInput: any;
-  @ViewChild("clientes", { static: false }) clientes: ClientesComponent;
   @ViewChild("entrega", { static: false }) entrega: PedidoEntregaComponent;
   @ViewChild("pantallaOrdenEnvioModal", { static: false })
   pantallaOrdenEnvioModal: TemplateRef<any>;

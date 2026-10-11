@@ -1834,8 +1834,13 @@
         </button>
     </div>
     <div class="modal-body">
-        <app-clientes #clientes name="clientes" id="clientes" [isEdit]="true"
-            [clienteEdit]="clienteSeleccionado"></app-clientes>
+        <!-- D-404: el formulario unificado de cliente. Al guardar entrega el
+             cliente actualizado y editDatosClientes lo aplica al pedido. -->
+        <app-crear-cliente-modal modo="inline"
+            [isEdit]="!!clienteSeleccionado?.documento"
+            [clienteData]="clienteSeleccionado"
+            (guardado)="modal.dismiss($event.cliente)"
+            (cancelado)="modal.dismiss('Cross click')"></app-crear-cliente-modal>
     </div>
 </ng-template>
 

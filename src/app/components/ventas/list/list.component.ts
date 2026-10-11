@@ -36,7 +36,6 @@ import { jsPDF } from "jspdf";
 import { ActivatedRoute } from "@angular/router";
 // import * as jsPDF from 'jspdf';
 import html2canvas from "html2canvas";
-import { ClientesComponent } from "../clientes/clientes.component";
 import Swal from "sweetalert2";
 import { FormBuilder, Validators } from "@angular/forms";
 import { PedidoEntregaComponent } from "../entrega/pedido-entrega.component";
@@ -94,7 +93,6 @@ import { TreasuryService } from "../../../shared/services/treasury/treasury.serv
   ],
 })
 export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild("clientes", { static: false }) clientes: ClientesComponent;
   @ViewChild("entrega", { static: false }) entrega: PedidoEntregaComponent;
   @ViewChild("htmlPdf", { static: true }) htmlPdf: ElementRef;
   @ViewChild("sharedFilters", { static: false }) sharedFilters: any;
@@ -6197,9 +6195,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         backdrop: "static", // 🔒 NUEVO: Prevenir cierre al hacer clic fuera del modal
         keyboard: false, // 🔒 NUEVO: Prevenir cierre con tecla ESC
       });
-      setTimeout(() => {
-        this.inicializarComponenteClientes();
-      }, 500);
+      this.refrescarClienteSeleccionado();
       modalRef.result.then(
         (result) => {
           const last = this.scrollStack.pop();
@@ -6227,86 +6223,23 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 100);
   }
 
-  private inicializarComponenteClientes(): void {
-    // Intentar inicializar el componente clientes con reintentos
-    let intentos = 0;
-    const maxIntentos = 10;
-
-    const inicializar = () => {
-      intentos++;
-
-      // Verificar si el componente clientes existe
-      if (this.clientes && this.clienteSeleccionado?.documento) {
-        console.log(
-          "🎯 Inicializando componente clientes con documento:",
-          this.clienteSeleccionado.documento,
-        );
-
-        // Intentar establecer el documento en el campo de búsqueda si existe
-        if (
-          this.clientes.documentoBusqueda &&
-          this.clientes.documentoBusqueda.nativeElement
-        ) {
-          this.clientes.documentoBusqueda.nativeElement.value =
-            this.clienteSeleccionado.documento;
-
-          // Establecer el tipo de búsqueda
-          this.clientes.tipoBusqueda = "CC-NIT";
-
-          // Llamar al método buscar
-          this.clientes.buscar();
-          console.log("✅ Componente clientes inicializado con búsqueda");
-        } else {
-          // Si los elementos de búsqueda no están disponibles,
-          // usar el método alternativo cargarDatosCliente
-          console.log(
-            "⚠️ Elementos de búsqueda no disponibles, usando carga directa",
-          );
-
-          // Asignar el cliente directamente al componente
-          this.clientes.clienteEdit = this.clienteSeleccionado;
-          this.clientes.isEdit = true;
-
-          // Llamar al método de carga directa si existe
-          if (typeof this.clientes.cargarDatosCliente === "function") {
-            this.clientes.cargarDatosCliente();
-            console.log("✅ Cliente cargado directamente");
-          } else {
-            // Si el método no existe aún, intentar buscar
-            this.clientes.buscar();
-          }
+  /**
+   * D-404: el cliente embebido en el pedido puede estar desactualizado. Se
+   * relee por documento para editar lo que hay en `clients` (el formulario
+   * unificado recarga solo al cambiar `clienteData`).
+   */
+  private refrescarClienteSeleccionado(): void {
+    const documento = this.clienteSeleccionado?.documento;
+    if (!documento) return;
+    this.maestroService.getClientByDocument({ documento }).subscribe({
+      next: (res: any) => {
+        const cliente = Array.isArray(res) ? res[0] : res;
+        if (cliente && cliente.documento && this.clienteSeleccionado?.documento === documento) {
+          this.clienteSeleccionado = { ...this.clienteSeleccionado, ...cliente };
         }
-      } else if (intentos < maxIntentos) {
-        console.log(
-          `⏳ Intento ${intentos}/${maxIntentos} - Esperando inicialización del componente clientes...`,
-        );
-        setTimeout(inicializar, 200);
-      } else {
-        console.error(
-          "❌ No se pudo inicializar el componente clientes después de",
-          maxIntentos,
-          "intentos",
-        );
-        console.log("Estado del componente:", {
-          clientes: !!this.clientes,
-          documentoBusqueda: !!this.clientes?.documentoBusqueda,
-          nativeElement: !!this.clientes?.documentoBusqueda?.nativeElement,
-          clienteSeleccionado: !!this.clienteSeleccionado,
-          documento: this.clienteSeleccionado?.documento,
-        });
-
-        // Como último recurso, intentar asignar los datos directamente
-        if (this.clientes && this.clienteSeleccionado) {
-          this.clientes.clienteEdit = this.clienteSeleccionado;
-          this.clientes.isEdit = true;
-          console.log(
-            "⚠️ Datos del cliente asignados directamente como último recurso",
-          );
-        }
-      }
-    };
-
-    inicializar();
+      },
+      error: () => { /* se edita con la copia del pedido */ },
+    });
   }
 
   private editOrder(order: Pedido, skipEstadoPagoCheck = false) {

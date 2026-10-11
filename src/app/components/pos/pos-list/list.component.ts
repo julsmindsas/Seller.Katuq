@@ -13,7 +13,6 @@ import { UserLogged } from 'src/app/shared/models/User/UserLogged';
 import { ServiciosService } from 'src/app/shared/services/servicios.service';
 import { PaymentService } from 'src/app/shared/services/ventas/payment.service';
 import { VentasService } from 'src/app/shared/services/ventas/ventas.service';
-import { ClientesComponent } from '../../ventas/clientes/clientes.component';
 import { PedidoEntregaComponent } from '../../ventas/entrega/pedido-entrega.component';
 import { Pedido, Cliente, EstadoPago, Carrito, EstadoProcesoFiltros, EstadoProceso } from '../../ventas/modelo/pedido';
 import { PedidosUtilService } from '../../ventas/service/pedidos.util.service';
@@ -27,7 +26,6 @@ import * as XLSX from 'xlsx';
 })
 export class POSListOrdersComponent implements OnInit {
 
-  @ViewChild('clientes', { static: false }) clientes: ClientesComponent;
   @ViewChild('htmlPdf', { static: true }) htmlPdf: ElementRef;
 
   @Output() producirPedido = new EventEmitter<POSPedido>();

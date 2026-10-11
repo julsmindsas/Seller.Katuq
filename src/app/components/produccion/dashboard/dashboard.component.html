@@ -829,23 +829,6 @@
     </div>
 </ng-template>
 
-<!-- Modal Clientes -->
-<ng-template #clientesModal let-modal>
-    <div class="modal-header modern-modal-header">
-        <h4 class="modal-title">
-            <i class="pi pi-user me-2"></i>
-            <span>Información del Cliente</span>
-        </h4>
-        <button type="button" class="close modern-close-btn" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <i class="pi pi-times"></i>
-        </button>
-    </div>
-    <div class="modal-body">
-        <app-clientes #clientes name="clientes" id="clientes" [isEdit]="true"
-            [clienteEdit]="clienteSeleccionado"></app-clientes>
-    </div>
-</ng-template>
-
 <!-- Modal Datos de Entrega -->
 <ng-template #datosEnregaModal let-modal>
     <div class="modal-header modern-modal-header">

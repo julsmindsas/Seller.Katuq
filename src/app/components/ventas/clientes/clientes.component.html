@@ -6,15 +6,13 @@
             <div>
                 <h5 class="mb-1 fw-bold d-flex align-items-center gap-2" style="color: #8b5cf6;">
                     <i class="pi pi-users" style="color: #8b5cf6;"></i>{{ "Clientes" | translate }}
-                    <i *ngIf="isEdit" class="pi pi-arrow-right text-muted" style="font-size: 0.9rem;"></i>
                 </h5>
                 <p class="text-muted mb-0" style="font-size: 0.95rem;">
-                    {{ isEdit ? ("Editar datos del cliente" | translate) : ("Ingresa todos los datos para crear un cliente nuevo" | translate) }}
+                    {{ "Ingresa todos los datos para crear un cliente nuevo" | translate }}
                 </p>
             </div>
             <div class="d-flex gap-2">
-                <button *ngIf="!isEdit"
-                        pButton
+                <button pButton
                         type="button"
                         icon="pi pi-tags"
                         label="{{ 'Etiquetas' | translate }}"
@@ -23,8 +21,7 @@
                         pTooltip="{{ 'Gestionar etiquetas de clientes' | translate }}"></button>
                 <!-- Ticket 1163: el formulario ya carga abierto; el buscador de clientes
                      existentes queda plegado y se abre desde acá. -->
-                <button *ngIf="!isEdit"
-                        pButton
+                <button pButton
                         type="button"
                         [icon]="buscadorAbierto ? 'pi pi-chevron-up' : 'pi pi-search'"
                         label="{{ 'Buscar existente' | translate }}"
@@ -32,18 +29,11 @@
                         [class.p-button-secondary]="buscadorAbierto"
                         (click)="toggleBuscador()"
                         pTooltip="{{ 'Buscar un cliente ya creado para editarlo' | translate }}"></button>
-                <button *ngIf="isEdit"
-                        pButton
-                        type="button"
-                        icon="pi pi-arrow-left"
-                        label="{{ 'Volver al listado' | translate }}"
-                        class="p-button-secondary p-button-sm"
-                        [routerLink]="'/ventas/clienteslista'"></button>
             </div>
         </div>
 
         <!-- Buscador de cliente (ticket 1163: plegado por defecto al crear) -->
-        <div class="search-section px-4 py-3 bg-light border-bottom" *ngIf="isEdit || buscadorAbierto">
+        <div class="search-section px-4 py-3 bg-light border-bottom" *ngIf="buscadorAbierto">
             <div class="row align-items-end g-2">
                 <div class="col-12 col-md-3">
                     <label class="form-label fw-semibold small">{{ "Buscar por" | translate }}</label>
@@ -115,22 +105,6 @@
             </div>
         </div>
 
-        <!-- Formulario inline solo cuando isEdit=true (dentro del modal del listado) -->
-        <div *ngIf="isEdit" class="card-body form-container">
-            <form *ngIf="formulario" [formGroup]="formulario" autocomplete="off">
-                <ng-container *ngTemplateOutlet="formBody"></ng-container>
-                <div class="row mt-4">
-                    <div class="col-12 d-flex gap-2">
-                        <button *ngIf="!encontrado" pButton type="button" icon="pi pi-save"
-                                label="{{ 'Crear Cliente' | translate }}" class="p-button-primary"
-                                [disabled]="!formulario.valid" (click)="crearCliente()"></button>
-                        <button *ngIf="encontrado" pButton type="button" icon="pi pi-user-edit"
-                                label="{{ 'Actualizar Cliente' | translate }}" class="p-button-primary"
-                                [disabled]="!formulario.valid" (click)="editarCliente()"></button>
-                    </div>
-                </div>
-            </form>
-        </div>
     </div>
 
     <!-- Ficha 360° del cliente -->
@@ -158,18 +132,12 @@
                         <i class="pi pi-lock"></i> Bloqueado
                     </span>
                     <div class="c360-actions-sep"></div>
-                    <button *ngIf="!isEdit" class="btn-tbl-action btn-tbl-primary" ngbTooltip="Editar cliente" (click)="abrirModalEditar()">
-                        <i class="pi pi-user-edit"></i>
-                    </button>
                     <button class="btn-tbl-action btn-tbl-neutral" ngbTooltip="Pedidos relacionados"
                         [class.active]="cm.mostrarPedidos" (click)="cm.togglePedidos()">
                         <i class="fa fa-list-alt"></i>
                     </button>
                     <button class="btn-tbl-action btn-tbl-primary" ngbTooltip="Nuevo Pedido" (click)="nuevoPedido()">
                         <i class="fa fa-plus"></i>
-                    </button>
-                    <button class="btn-tbl-action btn-tbl-neutral" ngbTooltip="Agregar Nota" (click)="openLg(nota)">
-                        <i class="fa fa-sticky-note"></i>
                     </button>
                     <button *ngIf="!bloqueado" class="btn-tbl-action btn-tbl-danger" ngbTooltip="Bloquear" (click)="bloquear()">
                         <i class="fa fa-lock"></i>
@@ -241,9 +209,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <button class="btn btn-sm btn-primary" (click)="openLg(nota)">
-                                    <i class="fa fa-plus me-1"></i>Agregar Nota
-                                </button>
                             </div>
                         </div>
                         <div class="table-responsive">
@@ -287,9 +252,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <button class="btn btn-sm btn-primary" (click)="openLg(facturacion)">
-                                    <i class="fa fa-plus me-1"></i>Agregar Datos
-                                </button>
                             </div>
                         </div>
                         <div class="table-responsive">
@@ -300,26 +262,14 @@
                                         <th *ngIf="colVisible(colsFact, 'nombre')">Nombre / Razón Social</th>
                                         <th *ngIf="colVisible(colsFact, 'tipoDocumento')">Tipo Documento</th>
                                         <th *ngIf="colVisible(colsFact, 'documento')">Documento</th>
-                                        <th *ngIf="colVisible(colsFact, 'acciones')" class="col-acciones">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr *ngFor="let item of datosFacturacionElectronica; let i = index">
+                                    <tr *ngFor="let item of datosFacturacionElectronica">
                                         <td *ngIf="colVisible(colsFact, 'referencia')">{{item.alias}}</td>
                                         <td *ngIf="colVisible(colsFact, 'nombre')">{{item.nombres}}</td>
                                         <td *ngIf="colVisible(colsFact, 'tipoDocumento')">{{item.tipoDocumento}}</td>
                                         <td *ngIf="colVisible(colsFact, 'documento')">{{item.documento}}</td>
-                                        <td *ngIf="colVisible(colsFact, 'acciones')" class="col-acciones">
-                                            <div class="table-actions">
-                                                <button class="btn-tbl-edit" ngbTooltip="Editar"
-                                                    (click)="editarDatos1(facturacion,i)">
-                                                    <i class="fa fa-pencil"></i>
-                                                </button>
-                                                <button class="btn-tbl-delete" ngbTooltip="Eliminar" (click)="eliminarDato(i)">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
                                     </tr>
                                     <tr *ngIf="!datosFacturacionElectronica || datosFacturacionElectronica.length === 0">
                                         <td [attr.colspan]="visibleCount(colsFact)" class="empty-state">
@@ -349,9 +299,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <button class="btn btn-sm btn-primary" (click)="abrirModalAgregarEntrega(entrega)">
-                                    <i class="fa fa-plus me-1"></i>Agregar Datos
-                                </button>
                             </div>
                         </div>
                         <div class="table-responsive">
@@ -361,25 +308,13 @@
                                         <th *ngIf="colVisible(colsEntrega, 'referencia')">Referencia</th>
                                         <th *ngIf="colVisible(colsEntrega, 'nombre')">Nombre</th>
                                         <th *ngIf="colVisible(colsEntrega, 'direccion')">Dirección</th>
-                                        <th *ngIf="colVisible(colsEntrega, 'acciones')" class="col-acciones">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr *ngFor="let item of datosEntregas;let i=index">
+                                    <tr *ngFor="let item of datosEntregas">
                                         <td *ngIf="colVisible(colsEntrega, 'referencia')">{{item.alias}}</td>
                                         <td *ngIf="colVisible(colsEntrega, 'nombre')">{{item.nombres}} {{item.apellidos}}</td>
                                         <td *ngIf="colVisible(colsEntrega, 'direccion')"><i class="fa fa-map-marker me-1 text-muted"></i>{{item.direccionEntrega}}</td>
-                                        <td *ngIf="colVisible(colsEntrega, 'acciones')" class="col-acciones">
-                                            <div class="table-actions">
-                                                <button class="btn-tbl-edit" ngbTooltip="Editar"
-                                                    (click)="editarDatos(entrega,i)">
-                                                    <i class="fa fa-pencil"></i>
-                                                </button>
-                                                <button class="btn-tbl-delete" ngbTooltip="Eliminar" (click)="eliminarDato1(i)">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
                                     </tr>
                                     <tr *ngIf="!datosEntregas || datosEntregas.length === 0">
                                         <td [attr.colspan]="visibleCount(colsEntrega)" class="empty-state">
@@ -395,273 +330,6 @@
         </div>
     </div>
 </div>
-<ng-template #entrega let-modal>
-    <div class="modal-header" style="background:#fff; border-bottom:1.5px solid #ede9fe; padding:1rem 1.25rem;">
-        <div class="d-flex align-items-center gap-3">
-            <i class="pi pi-map-marker" style="font-size:1.4rem; color:#8b5cf6;"></i>
-            <div class="d-flex flex-column" style="line-height:1.2;">
-                <span style="font-size:1.1rem; font-weight:800; color:#111;">Crear Datos de Entrega</span>
-                <span style="font-size:0.78rem; font-weight:400; color:#6b7280;">Dirección y datos de envío del cliente</span>
-            </div>
-        </div>
-    </div>
-    <div class="modal-body py-2">
-
-        <!-- Fila 0: Checkbox -->
-        <div class="form-check mb-2">
-            <input [(ngModel)]="entregar" type="checkbox" class="form-check-input" id="checkEntrega"
-                (change)="datosEntregass($event)">
-            <label class="form-check-label" for="checkEntrega">
-                <strong>Los datos de entrega son iguales a los datos del cliente</strong>
-            </label>
-        </div>
-
-        <!-- Fila 1: Referencia | Nombres | Apellidos -->
-        <div class="row g-2 mb-2">
-            <div class="col-4">
-                <label class="form-label mb-1"><strong>Referencia</strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="alias_entrega" placeholder="Ej: Casa principal, Oficina..." />
-            </div>
-            <div class="col-4">
-                <label class="form-label mb-1"><strong>Nombres <span class="text-danger">*</span></strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="nombres_entrega" />
-            </div>
-            <div class="col-4">
-                <label class="form-label mb-1"><strong>Apellidos</strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="apellidos_entrega" />
-            </div>
-        </div>
-
-        <!-- Fila 2: Ind.Cel | Celular | Ind.Otro | Otro Núm | Dirección -->
-        <div class="row g-2 mb-2">
-            <div class="col-2">
-                <label class="form-label mb-1"><strong>Indicativo <span class="text-danger">*</span></strong></label>
-                <select [(ngModel)]="indicativo_celular_entrega" class="form-control form-control-sm select-default">
-                    <option value="57">Colombia (+57)</option>
-                    <option value="{{item.phone_code}}" *ngFor="let item of indicativos">{{item.nombre}} (+{{item.phone_code}})</option>
-                </select>
-            </div>
-            <div class="col-2">
-                <label class="form-label mb-1"><strong>Celular <span class="text-danger">*</span></strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="numero_celular_entrega" />
-            </div>
-            <div class="col-2">
-                <label class="form-label mb-1"><strong>Ind. Otro</strong></label>
-                <select [(ngModel)]="indicativo_celular_entrega2" class="form-control form-control-sm select-default">
-                    <option value="57">Colombia (+57)</option>
-                    <option value="{{item.phone_code}}" *ngFor="let item of indicativos">{{item.nombre}} (+{{item.phone_code}})</option>
-                </select>
-            </div>
-            <div class="col-2">
-                <label class="form-label mb-1"><strong>Otro Núm.</strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="otro_numero_entrega" />
-            </div>
-            <div class="col-4">
-                <label class="form-label mb-1"><strong>Dirección <span class="text-danger">*</span></strong></label>
-                <div class="input-group">
-                    <input class="form-control form-control-sm" type="text" [(ngModel)]="direccion_entrega"
-                        placeholder="Clic para crear dirección estructurada"
-                        (click)="abrirModalDireccion()" readonly style="cursor:pointer;" />
-                    <span class="input-group-text" style="cursor:pointer;" (click)="abrirModalDireccion()">
-                        <i class="fa fa-map-marker"></i>
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Fila 3: Barrio | Nombre Unidad | Especificaciones | Observaciones -->
-        <div class="row g-2 mb-2">
-            <div class="col-3">
-                <label class="form-label mb-1"><strong>Barrio / Sector</strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="barrio" />
-            </div>
-            <div class="col-3">
-                <label class="form-label mb-1"><strong>Nombre Unidad / Edificio</strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="nombreUnidad" />
-            </div>
-            <div class="col-3">
-                <label class="form-label mb-1"><strong>Torre / Apto / Oficina</strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="especificacionesInternas" />
-            </div>
-            <div class="col-3">
-                <label class="form-label mb-1"><strong>Observaciones</strong></label>
-                <textarea class="form-control form-control-sm" rows="1" [(ngModel)]="observaciones"></textarea>
-            </div>
-        </div>
-
-        <!-- Buscador DANE -->
-        <div class="row g-2 mb-2">
-            <div class="col-6">
-                <label class="form-label mb-1"><strong><i class="fa fa-search me-1"></i>Buscar ciudad / municipio (DANE)</strong></label>
-                <div class="input-group">
-                    <input type="text" class="form-control form-control-sm" [(ngModel)]="searchQueryCiudadDane"
-                        placeholder="Nombre o código DANE..." (input)="buscarMunicipioDane(searchQueryCiudadDane)" />
-                    <span class="input-group-text"><i class="fa fa-search"></i></span>
-                </div>
-                <small class="text-muted">Base DANE – 1122 municipios de Colombia</small>
-            </div>
-            <div class="col-6">
-                <label class="form-label mb-1"><strong>Filtrar por departamento (DANE)</strong></label>
-                <select class="form-control form-control-sm" (change)="onDepartamentoDaneChange($event.target.value)">
-                    <option value="">-- Todos los departamentos --</option>
-                    <option *ngFor="let depto of departamentosDane" [value]="depto">{{depto}}</option>
-                </select>
-            </div>
-        </div>
-        <div class="row g-2 mb-2" *ngIf="municipiosDane.length > 0">
-            <div class="col-12">
-                <label class="form-label mb-1"><strong>Municipios encontrados</strong> <small class="text-muted">(clic para seleccionar)</small></label>
-                <div class="d-flex flex-wrap gap-1" style="max-height:120px;overflow-y:auto;">
-                    <span *ngFor="let municipio of municipiosDane"
-                        class="badge bg-light text-dark border p-2" style="cursor:pointer;"
-                        (click)="seleccionarMunicipioDane(municipio)">
-                        <strong>{{municipio.nombre}}</strong>
-                        <small class="text-muted"> – {{municipio.departamento}} ({{municipio.codigo}})</small>
-                    </span>
-                </div>
-            </div>
-        </div>
-        <div class="row mb-1" *ngIf="cargandoCiudadesDane">
-            <div class="col-12 text-center"><i class="fa fa-spinner fa-spin"></i> Cargando...</div>
-        </div>
-
-        <hr class="my-2">
-
-        <!-- Ubicación seleccionada via DANE -->
-        <div class="row g-2 mb-2" *ngIf="departamento_entrega || ciudad_municipio_entrega">
-            <div class="col-12">
-                <span class="badge" style="background:#ede9fe;color:#5b21b6;font-size:0.82rem;padding:0.4rem 0.75rem;">
-                    <i class="pi pi-map-marker me-1"></i>
-                    {{ ciudad_municipio_entrega }}{{ departamento_entrega ? ' — ' + departamento_entrega : '' }}{{ pais_entrega ? ' (' + pais_entrega + ')' : '' }}
-                </span>
-            </div>
-        </div>
-
-        <!-- País | Zona Cobro | Código Postal | Botón -->
-        <div class="row g-2">
-            <div class="col-2">
-                <label class="form-label mb-1"><strong>País</strong></label>
-                <select [(ngModel)]="pais_entrega" class="form-control form-control-sm select-default"
-                    (change)="onPaisChange()">
-                    <option disabled selected>País</option>
-                    <option *ngFor="let item of paises" value="{{item}}">{{item}}</option>
-                </select>
-            </div>
-            <div class="col-3">
-                <label class="form-label mb-1"><strong>Zona Cobro</strong></label>
-                <select class="form-control form-control-sm select-default" [(ngModel)]="zona_cobro"
-                    (ngModelChange)="onZonaCobroSelected()">
-                    <option disabled selected>Zona</option>
-                    <option *ngFor="let item of filteredResults" value="{{ item.nombreZonaCobro }}">
-                        {{ item.nombreZonaCobro }} ({{ item.valorZonaCobro | currency }})
-                    </option>
-                </select>
-                <small *ngIf="valor_zona_cobro" class="text-muted">Domicilio: <strong>{{valor_zona_cobro | currency}}</strong></small>
-            </div>
-            <div class="col-2">
-                <label class="form-label mb-1"><strong>Cód. Postal</strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="codigo_postal_entrega" />
-            </div>
-            <div class="col-2 d-flex flex-column">
-                <label class="form-label mb-1" style="visibility:hidden;">.</label>
-                <button type="button" class="btn btn-postal btn-sm w-100" (click)="redirectToPostalCode()">
-                    <i class="pi pi-map-marker me-1"></i>Cód. Postal
-                </button>
-            </div>
-        </div>
-
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
-            Cerrar
-        </button>
-        <button *ngIf="!editandodato" type="button" class="btn btn-primary" (click)="guardarDatosEntrega()">
-            Guardar
-        </button>
-        <button *ngIf="editandodato" type="button" class="btn btn-primary" (click)="editarDatosEntrega()">
-            Guardar
-        </button>
-    </div>
-</ng-template>
-<ng-template #facturacion let-modal>
-    <div class="modal-header" style="background:#fff; border-bottom:1.5px solid #ede9fe; padding:1rem 1.25rem;">
-        <div class="d-flex align-items-center gap-3">
-            <i class="pi pi-file-edit" style="font-size:1.4rem; color:#8b5cf6;"></i>
-            <div class="d-flex flex-column" style="line-height:1.2;">
-                <span style="font-size:1.1rem; font-weight:800; color:#111;">Crear Datos Facturación Electrónica</span>
-                <span style="font-size:0.78rem; font-weight:400; color:#6b7280;">Información fiscal para emisión de facturas</span>
-            </div>
-        </div>
-    </div>
-    <div class="modal-body py-2">
-
-        <!-- Fila 0: Checkbox -->
-        <div class="form-check mb-2">
-            <input [(ngModel)]="facturacionElectronica" type="checkbox" class="form-check-input"
-                id="checkFacElect" (change)="datosFacElect($event)">
-            <label class="form-check-label" for="checkFacElect">
-                <strong>Los datos de facturación electrónica son iguales a los del cliente</strong>
-            </label>
-        </div>
-
-        <!-- Fila 1: Referencia | Razón Social | Tipo Doc | Documento -->
-        <div class="row g-2 mb-2">
-            <div class="col-3">
-                <label class="form-label mb-1"><strong>Referencia</strong></label>
-                <input placeholder="Ej: Empresa principal" class="form-control form-control-sm" type="text"
-                    [(ngModel)]="alias_facturacion" />
-            </div>
-            <div class="col-3">
-                <label class="form-label mb-1"><strong>Razón Social / Nombre <span class="text-danger">*</span></strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="razon_social" required />
-            </div>
-            <div class="col-3">
-                <label class="form-label mb-1"><strong>Tipo de Documento <span class="text-danger">*</span></strong></label>
-                <select class="form-control form-control-sm" [(ngModel)]="tipo_documento_facturacion" required>
-                    <option value="CC">CC - Cédula de ciudadanía</option>
-                    <option value="NIT">NIT</option>
-                    <option value="TI">TI - Tarjeta de identidad</option>
-                    <option value="RC">RC - Registro civil</option>
-                    <option value="CE">CE - Cédula de extranjería</option>
-                    <option value="TE">TE - Tarjeta de extranjería</option>
-                    <option value="PA">PA - Pasaporte</option>
-                    <option value="DIE">DIE - Doc. identificación extranjero</option>
-                    <option value="PEP">PEP - Permiso Especial de Permanencia</option>
-                    <option value="PPT">PPT - Permiso por Protección Temporal</option>
-                    <option value="NIT_EXT">NIT_EXT - NIT de otro país</option>
-                    <option value="NUIP">NUIP</option>
-                </select>
-            </div>
-            <div class="col-3">
-                <label class="form-label mb-1"><strong>Documento <span class="text-danger">*</span></strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="numero_documento_facturacion" required />
-            </div>
-        </div>
-
-        <!-- Fila 2: Correo -->
-        <div class="row g-2 mb-2">
-            <div class="col-6">
-                <label class="form-label mb-1"><strong>Correo Electrónico</strong></label>
-                <input class="form-control form-control-sm" type="email"
-                    placeholder="correo@empresa.com (opcional)"
-                    [(ngModel)]="correo_electronico_facturacion" />
-            </div>
-        </div>
-
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
-            Cerrar
-        </button>
-        <button type="button" *ngIf="!editandodato" class="btn btn-primary"
-            (click)="guardarDatosFacturacionElectronica()">
-            Guardar
-        </button>
-        <button type="button" *ngIf="editandodato" class="btn btn-primary" (click)="editarDatosFacturacion()">
-            Guardar
-        </button>
-    </div>
-</ng-template>
 <ng-template #resultadosModal let-modal>
     <div class="modal-header">
         <h4 class="modal-title"><strong>Resultados de búsqueda</strong></h4>
@@ -698,323 +366,17 @@
         <button type="button" class="btn btn-outline-secondary" (click)="modal.close()">Cerrar</button>
     </div>
 </ng-template>
-
-<!-- ====================================================
-     TEMPLATE: Campos del formulario (reutilizado en inline y en dialog)
-     ==================================================== -->
-<ng-template #formBody>
-    <div class="row g-4 mx-0">
-        <!-- Sección de información básica -->
-        <div class="col-lg-6">
-            <div class="form-section-modern">
-                <div class="section-header">
-                    <i class="pi pi-user" style="color:#8b5cf6;"></i>
-                    <h6>{{ "Información Básica" | translate }}</h6>
-                </div>
-                <div class="row g-3">
-                    <!-- Tipo de Documento -->
-                    <div class="col-12 col-sm-6">
-                        <label class="form-label-modern">{{ "Tipo de Documento" | translate }} <span class="required">*</span></label>
-                        <select formControlName="tipo_documento_comprador" class="form-select tipo-doc-select"
-                            [class.tipo-doc-locked]="encontrado">
-                            <option value="CC">CC - Cédula de ciudadanía</option>
-                            <option value="NIT">NIT</option>
-                            <option value="TI">TI - Tarjeta de identidad</option>
-                            <option value="RC">RC - Registro civil</option>
-                            <option value="CE">CE - Cédula de extranjería</option>
-                            <option value="TE">TE - Tarjeta de extranjería</option>
-                            <option value="PA">PA - Pasaporte</option>
-                            <option value="DIE">DIE - Doc. identificación extranjero</option>
-                            <option value="PEP">PEP - Permiso Especial de Permanencia</option>
-                            <option value="PPT">PPT - Permiso por Protección Temporal</option>
-                            <option value="NIT_EXT">NIT_EXT - NIT de otro país</option>
-                            <option value="NUIP">NUIP</option>
-                        </select>
-                        <div *ngIf="formulario.get('tipo_documento_comprador')?.invalid && formulario.get('tipo_documento_comprador')?.touched"
-                            class="error-message mt-1">
-                            <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
-                        </div>
-                    </div>
-                    <!-- Documento -->
-                    <div class="col-12 col-sm-6">
-                        <label class="form-label-modern">{{ "Número de Documento" | translate }} <span class="required">*</span></label>
-                        <input pInputText type="text" placeholder="{{ 'Número de documento' | translate }}"
-                            formControlName="documento" [attr.disabled]="encontrado ? true : null" class="w-100">
-                        <div *ngIf="formulario.get('documento')?.invalid && formulario.get('documento')?.touched"
-                            class="error-message mt-1">
-                            <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
-                        </div>
-                    </div>
-                    <!-- Nombres -->
-                    <div class="col-12 col-sm-6">
-                        <label class="form-label-modern">{{ (esPersonaJuridica ? "Razón social" : "Nombres Completos") | translate }} <span class="required">*</span></label>
-                        <input pInputText type="text" placeholder="{{ 'Nombres completos' | translate }}"
-                            formControlName="nombres_completos" class="w-100">
-                        <div *ngIf="formulario.get('nombres_completos')?.invalid && formulario.get('nombres_completos')?.touched"
-                            class="error-message mt-1">
-                            <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
-                        </div>
-                    </div>
-                    <!-- Apellidos -->
-                    <div class="col-12 col-sm-6">
-                        <label class="form-label-modern">{{ "Apellidos Completos" | translate }} <span class="required" *ngIf="!esPersonaJuridica">*</span><span class="text-muted" *ngIf="esPersonaJuridica"> ({{ "opcional" | translate }})</span></label>
-                        <input pInputText type="text" placeholder="{{ 'Apellidos completos' | translate }}"
-                            formControlName="apellidos_completos" class="w-100">
-                        <div *ngIf="formulario.get('apellidos_completos')?.invalid && formulario.get('apellidos_completos')?.touched"
-                            class="error-message mt-1">
-                            <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
-                        </div>
-                    </div>
-                    <!-- Estado + Tipo de Cliente en misma fila -->
-                    <div class="col-12 col-sm-6">
-                        <label class="form-label-modern">{{ "Estado" | translate }}</label>
-                        <div class="estado-toggle">
-                            <p-inputSwitch formControlName="estado"
-                                [ngModel]="!bloqueado"
-                                (onChange)="bloqueado ? desbloquear() : bloquear()">
-                            </p-inputSwitch>
-                            <span class="ms-2">{{!bloqueado ? 'Activo' : 'Bloqueado'}}</span>
-                        </div>
-                    </div>
-                    <!-- Tipo de Cliente -->
-                    <div class="col-12 col-sm-6" *ngIf="clientTypes && clientTypes.length > 0">
-                        <label class="form-label-modern">{{ "Tipo de Cliente" | translate }}</label>
-                        <p-dropdown formControlName="tipoCliente" [options]="clientTypes"
-                            optionLabel="label" optionValue="value"
-                            placeholder="{{ 'Seleccionar tipo...' | translate }}"
-                            [showClear]="true" styleClass="w-100" panelStyleClass="buscar-por-panel"
-                            appendTo="body" scrollHeight="180px"
-                            [filter]="true" filterBy="label" filterMatchMode="contains"
-                            filterPlaceholder="{{ 'Buscar tipo...' | translate }}">
-                        </p-dropdown>
-                    </div>
-                    <!-- Fecha de Cumpleaños -->
-                    <div class="col-12" [class.col-sm-6]="clientTypes && clientTypes.length > 0">
-                        <label class="form-label-modern">
-                            <i class="pi pi-gift me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Fecha de Cumpleaños" | translate }}
-                        </label>
-                        <p-calendar formControlName="fechaCumpleanos"
-                            dateFormat="dd/mm/yy"
-                            [showIcon]="true"
-                            placeholder="dd/mm/aaaa"
-                            styleClass="w-100"
-                            inputStyleClass="w-100"
-                            autocomplete="bday"
-                            [appendTo]="'body'">
-                        </p-calendar>
-                    </div>
-                    <!-- Crédito (ticket 1050): mismo cupo y plazo que el formulario corto -->
-                    <div class="col-12 col-sm-6">
-                        <label class="form-label-modern">
-                            <i class="pi pi-credit-card me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Cupo de crédito" | translate }}
-                        </label>
-                        <input pInputText type="number" min="0" formControlName="creditLimit" placeholder="0" class="w-100">
-                        <small class="text-muted">{{ "0 = sin cupo. Se usa en Cartera (CxC)." | translate }}</small>
-                    </div>
-                    <div class="col-12 col-sm-6">
-                        <label class="form-label-modern">
-                            <i class="pi pi-clock me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Plazo de pago (días)" | translate }}
-                        </label>
-                        <input pInputText type="number" min="0" formControlName="payTermDays" placeholder="0" class="w-100">
-                        <small class="text-muted">{{ "0 = contado. Define el vencimiento en Cartera." | translate }}</small>
-                    </div>
-                    <!-- Etiquetas con catálogo -->
-                    <div class="col-12" *ngIf="clientTagsCatalog && clientTagsCatalog.length > 0">
-                        <div class="d-flex align-items-center justify-content-between mb-1">
-                            <label class="form-label-modern mb-0">
-                                <i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ "Etiquetas" | translate }}
-                            </label>
-                            <button type="button" class="btn btn-link p-0" style="color:#8b5cf6;font-size:0.8rem;"
-                                    (click)="abrirConfigEtiquetas()" pTooltip="Configurar etiquetas">
-                                <i class="pi pi-cog"></i>
-                            </button>
-                        </div>
-                        <div class="tags-picker">
-                            <span *ngFor="let tag of clientTagsCatalog"
-                                  class="tag-chip"
-                                  [class.tag-chip-selected]="tieneEtiqueta(tag.name)"
-                                  [style.background-color]="tieneEtiqueta(tag.name) ? getTagColor(tag) : ''"
-                                  [style.color]="tieneEtiqueta(tag.name) ? getTagTextColor(tag) : ''"
-                                  (click)="toggleEtiqueta(tag.name)">
-                                <i class="pi pi-check" *ngIf="tieneEtiqueta(tag.name)"></i>
-                                {{ tag.name }}
-                            </span>
-                        </div>
-                    </div>
-                    <!-- Etiquetas sin catálogo -->
-                    <div class="col-12" *ngIf="!clientTagsCatalog || clientTagsCatalog.length === 0">
-                        <div class="d-flex align-items-center justify-content-between mb-1">
-                            <label class="form-label-modern mb-0">
-                                <i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ "Etiquetas" | translate }}
-                            </label>
-                            <button type="button" class="btn btn-link p-0" style="color:#8b5cf6;font-size:0.8rem;"
-                                    (click)="abrirConfigEtiquetas()" pTooltip="Configurar etiquetas">
-                                <i class="pi pi-cog"></i>
-                            </button>
-                        </div>
-                        <div class="tags-empty-hint">
-                            <i class="pi pi-info-circle me-1"></i>
-                            {{ "No hay etiquetas configuradas. Usa el botón ⚙ para crearlas." | translate }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sección de contacto -->
-        <div class="col-lg-6">
-            <div class="form-section-modern">
-                <div class="section-header">
-                    <i class="pi pi-phone" style="color:#8b5cf6;"></i>
-                    <h6>{{ "Información de Contacto" | translate }}</h6>
-                </div>
-                <div class="row g-3">
-                    <!-- Teléfono Celular -->
-                    <div class="col-12">
-                        <label class="form-label-modern">{{ "Teléfono Celular" | translate }}</label>
-                        <div class="phone-input-group">
-                            <p-dropdown [options]="indicativos"
-                                        optionLabel="phone_code" optionValue="phone_code"
-                                        placeholder="{{ 'Código' | translate }}"
-                                        formControlName="indicativo_celular_comprador"
-                                        styleClass="country-code"
-                                        panelStyleClass="buscar-por-panel"></p-dropdown>
-                            <input pInputText type="text" placeholder="{{ 'Número celular' | translate }}"
-                                   formControlName="numero_celular_comprador" autocomplete="tel" maxlength="10"
-                                   (keypress)="validarSoloNumeros($event)" class="flex-grow-1">
-                        </div>
-                        <div *ngIf="formulario.get('numero_celular_comprador')?.invalid && formulario.get('numero_celular_comprador')?.touched"
-                            class="error-message mt-1">
-                            <i class="pi pi-exclamation-circle"></i>
-                            <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
-                            <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('pattern')">{{ "Debe tener exactamente 10 dígitos" | translate }}</span>
-                        </div>
-                    </div>
-                    <!-- Teléfono fijo (ticket 1050): el RUT suele traer fijo y no celular -->
-                    <div class="col-12">
-                        <label class="form-label-modern">{{ "Teléfono fijo" | translate }}</label>
-                        <input pInputText type="text" placeholder="{{ 'Ej: 6044441234' | translate }}"
-                               formControlName="telefono_fijo" autocomplete="tel" maxlength="10"
-                               (keypress)="validarSoloNumeros($event)" class="w-100">
-                        <div *ngIf="formulario.get('telefono_fijo')?.hasError('pattern') && formulario.get('telefono_fijo')?.touched" class="error-message mt-1">
-                            <i class="pi pi-exclamation-circle"></i><span>{{ "Entre 7 y 10 dígitos" | translate }}</span>
-                        </div>
-                        <div *ngIf="formulario.hasError('sinTelefono') && (formulario.get('numero_celular_comprador')?.touched || formulario.get('telefono_fijo')?.touched)" class="error-message mt-1">
-                            <i class="pi pi-exclamation-circle"></i><span>{{ "Registra al menos un teléfono: celular o fijo" | translate }}</span>
-                        </div>
-                    </div>
-                    <!-- Correo + Cómo nos conoció en misma fila -->
-                    <div class="col-12 col-sm-7">
-                        <label class="form-label-modern">{{ "Correo Electrónico" | translate }} <span class="required">*</span></label>
-                        <input pInputText type="email" placeholder="{{ 'correo@ejemplo.com' | translate }}"
-                               formControlName="correo_electronico_comprador" class="w-100">
-                        <div *ngIf="formulario.get('correo_electronico_comprador')?.touched && formulario.get('correo_electronico_comprador')?.invalid"
-                            class="error-message mt-1">
-                            <i class="pi pi-exclamation-circle"></i>
-                            <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
-                            <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('email')">{{ "Correo inválido" | translate }}</span>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-5">
-                        <label class="form-label-modern">
-                            <i class="pi pi-compass me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "¿Cómo nos conoció?" | translate }}
-                        </label>
-                        <p-dropdown formControlName="comoNosConocio"
-                            [options]="[
-                                {label: 'Redes Sociales', value: 'Redes Sociales'},
-                                {label: 'Referido / Amigo', value: 'Referido / Amigo'},
-                                {label: 'Google / Búsqueda web', value: 'Google / Búsqueda web'},
-                                {label: 'Publicidad online', value: 'Publicidad online'},
-                                {label: 'Evento / Feria', value: 'Evento / Feria'},
-                                {label: 'Visita en tienda', value: 'Visita en tienda'},
-                                {label: 'WhatsApp / Email', value: 'WhatsApp / Email'},
-                                {label: 'Otro', value: 'Otro'}
-                            ]"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="{{ 'Seleccionar...' | translate }}"
-                            [showClear]="true"
-                            styleClass="w-100"
-                            panelStyleClass="buscar-por-panel">
-                        </p-dropdown>
-                    </div>
-                    <!-- WhatsApp -->
-                    <div class="col-12">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern mb-0">{{ "WhatsApp" | translate }}</label>
-                            <div class="d-flex align-items-center gap-2">
-                                <input type="checkbox" id="whatsappCheckbox" #whatsapp
-                                       (change)="replicarWhatsApp($event)" class="form-check-input mt-0">
-                                <label for="whatsappCheckbox" class="form-label-modern mb-0" style="font-size:0.8rem;color:#6b7280;">
-                                    {{ "Mismo número" | translate }}
-                                </label>
-                            </div>
-                        </div>
-                        <div class="phone-input-group">
-                            <p-dropdown [options]="indicativos"
-                                        optionLabel="phone_code" optionValue="phone_code"
-                                        placeholder="{{ 'Código' | translate }}"
-                                        formControlName="indicativo_celular_whatsapp"
-                                        styleClass="country-code"
-                                        panelStyleClass="buscar-por-panel"></p-dropdown>
-                            <input pInputText type="text" placeholder="{{ 'Número WhatsApp' | translate }}"
-                                   formControlName="numero_celular_whatsapp" autocomplete="tel-national"
-                                   (keypress)="validarSoloNumeros($event)" class="flex-grow-1">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</ng-template>
-
-<!-- ====================================================
-     DIALOG: Crear / Editar Cliente (modo standalone)
-     ==================================================== -->
 <!-- D-404: el formulario unificado de cliente (Contacto / Entrega / Facturación / Notas)
      carga de una vez debajo de la cabecera (ticket 1163) y guarda el cliente completo
      en una sola acción (tickets 1164, 1166). Al elegir un resultado del buscador pasa
      a editar ese cliente. -->
-<app-crear-cliente-modal *ngIf="!isEdit"
+<app-crear-cliente-modal
     modo="inline"
     [isEdit]="encontrado && !!datos"
     [clienteData]="encontrado ? datos : null"
+    [documentoPrellenado]="documentoNoEncontrado"
     (guardado)="onClienteGuardadoInline($event)">
 </app-crear-cliente-modal>
-
-<ng-template #nota let-modal>
-    <div class="modal-header" style="background:#fff; border-bottom:1.5px solid #ede9fe; padding:1rem 1.25rem;">
-        <div class="d-flex align-items-center gap-3">
-            <i class="pi pi-pencil" style="font-size:1.4rem; color:#8b5cf6;"></i>
-            <div class="d-flex flex-column" style="line-height:1.2;">
-                <span style="font-size:1.1rem; font-weight:800; color:#111;">Crear Nota</span>
-                <span style="font-size:0.78rem; font-weight:400; color:#6b7280;">Agrega una observación o comentario del cliente</span>
-            </div>
-        </div>
-    </div>
-    <div class="modal-body">
-        <form class="custom-datepicker custom-datepicker-dropdown">
-            <div class="form-group mb-3">
-                <label for="date"><strong>Fecha</strong></label>
-                <div id="date" class="form-control-plaintext border rounded px-3 py-2 bg-light">
-                    {{ dateactual }}
-                </div>
-            </div>
-            <div class="form-group mb-2">
-                <label for="note"><strong>Nota</strong></label>
-                <textarea id="note" [(ngModel)]="notaNueva" name="notaNueva" class="form-control" rows="5" placeholder="Escriba su nota aquí..."></textarea>
-            </div>
-        </form>
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
-            Cerrar
-        </button>
-        <button type="button" class="btn btn-primary" (click)="guardarNota()">
-            Guardar
-        </button>
-    </div>
-</ng-template>
 
 <!-- Modal configuración de etiquetas -->
 <p-dialog

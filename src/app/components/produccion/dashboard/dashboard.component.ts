@@ -9,7 +9,6 @@ import Swal from 'sweetalert2';
 import { FormBuilder, Validators } from '@angular/forms';
 import { UserLogged } from 'src/app/shared/models/User/UserLogged';
 import { UserLite } from 'src/app/shared/models/User/UserLite';
-import { ClientesComponent } from '../../ventas/clientes/clientes.component';
 import { PedidoEntregaComponent } from '../../ventas/entrega/pedido-entrega.component';
 import { Pedido, Cliente, EstadoPago, Carrito, EstadoProceso } from '../../ventas/modelo/pedido';
 import { PedidosUtilService } from '../../ventas/service/pedidos.util.service';
@@ -50,7 +49,6 @@ const ESTADOS_PEDIDO_YA_SALIDO: string[] = [
 })
 export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
-  @ViewChild('clientes', { static: false }) clientes: ClientesComponent;
   @ViewChild('entrega', { static: false }) entrega: PedidoEntregaComponent;
   @ViewChild('listOrders', { static: false }) listaPedidos: ListOrdersComponent;
   orders: PedidoParaProduccion[] = [];

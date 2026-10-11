@@ -49,8 +49,13 @@
 ## 8. Reemplazo en Crear cliente
 
 - [x] 8.1 Reemplazar el bloque inline del ticket 1163 por el componente en modo inline; conservar buscador plegable, Etiquetas y carga por documento (al seleccionar un resultado se pasa `clienteData` e `isEdit=true`)
-- [ ] 8.2 Eliminar `formulario`, `formularioEntrega`, `formularioFacturacion`, `formularioNotas`, los modales de entrega/facturación/notas y la plantilla duplicada en `clientes.component.*`
+- [x] 8.2 Eliminar `formulario`, `formularioEntrega`, `formularioFacturacion`, `formularioNotas`, los modales de entrega/facturación/notas y la plantilla duplicada en `clientes.component.*`
+  - Hecho 2026-10-11: borrados formularios viejos, modales entrega/facturación/notas, `formBody`, modo `isEdit`/`clienteEdit` (+ lectura de IndexedDB), guardados por separado y helpers DANE/zona/país; la ficha 360 queda de solo lectura (se edita en el formulario unificado) y bloquear/desbloquear envía un parche `{cd, documento, estado}`. ts 1798→465, html 1065→426, scss 1555→1200; quitados `@ViewChild('clientes')` sin uso en despachos y POS. tsc limpio (salvo `apiUrl` preexistente).
+- [x] 8.2b Migrar los `<app-clientes [isEdit]="true">` que quedaban: la lista de pedidos (modal "Modificar datos del cliente") usa `<app-crear-cliente-modal modo="inline">`, relee el cliente por documento al abrir y, al guardar, el modal entrega el cliente al pedido; el modal de producción no se abría desde ningún lado y se retiró
+- [x] 8.2c Al buscar un documento que no existe, el número se precarga en el formulario unificado (`documentoPrellenado` reacciona en `ngOnChanges`)
+- [x] 8.2d Traducciones EN/PT de las pestañas y textos del formulario y del modal "Opciones del pedido" (126 claves)
 - [ ] 8.3 Build sin errores y prueba: crear cliente completo en una sola acción desde Crear cliente
+  - Build 2026-10-11 sin errores nuevos (solo `apiUrl` preexistente; se arregló `$color-text-light` que había borrado el commit del ticket 1195). Falta la prueba en navegador.
 
 ## 9. Cierre
 
