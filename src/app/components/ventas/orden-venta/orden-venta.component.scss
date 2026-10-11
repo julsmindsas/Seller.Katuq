@@ -1,484 +1,269 @@
 // ============================================================
-// ESTILOS OPTIMIZADOS PARA PDF VERTICAL (A4 Portrait)
-// Diseñado desde cero para evitar cortes y problemas de visualización
+// ORDEN DE VENTA — documento (ticket 1195)
+// Mismo lenguaje visual que el documento de cotización (cot-doc): sin
+// rellenos de color (el PDF se imprime), jerarquía por tinta y bordes,
+// acento morado solo en el nombre del comercio.
 // ============================================================
-
-// Variables del sistema de diseño
-$color-primary: #2c3e50;
-$color-secondary: #34495e;
-$color-text: #2d3436;
-$color-text-light: #636e72;
-$color-border: #dfe6e9;
-$color-border-dark: #b2bec3;
+$color-primary: #5F3FE0;
 $color-bg-light: #f8f9fa;
-$color-success: #27ae60;
-$color-danger: #e74c3c;
+$color-border: #dfe6e9;
 
-// ============================================================
-// CONTENEDOR PRINCIPAL PARA PDF
-// ============================================================
-.orden-venta-pdf-wrapper {
-  // Dimensiones ajustadas para evitar cortes
+.ov-doc {
+  --ink: #2a2e3c;
+  --ink2: #52586b;
+  --muted: #8a90a2;
+  --line: #ecedf3;
+  --line2: #f0f1f6;
+  --primary: #5F3FE0;
+
+  background: #fff;
+  color: var(--ink);
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
   width: 100%;
-  max-width: 800px; // Ancho máximo para pantalla
-  min-height: auto;
-  padding: 15px 20px;
+  max-width: 800px;
   margin: 0 auto;
-  background: white;
-  font-family: 'Arial', 'Helvetica', sans-serif;
-  font-size: 9pt; // Reducido para que quepa mejor
-  color: $color-text;
+  padding: 30px 34px;
   box-sizing: border-box;
-  position: relative;
+  font-size: 11px;
 
-  // Forzar renderizado de colores en PDF
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    color-adjust: exact !important;
   }
 
-  // Vista en pantalla
+  .doc-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 18px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .doc-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  // Ticket 1195: logo más grande y completo (antes 60px recortado)
+  .doc-logo-img {
+    width: 84px;
+    height: 84px;
+    object-fit: contain;
+    flex-shrink: 0;
+    background: #fff;
+  }
+
+  .doc-brand-txt { min-width: 0; }
+
+  .doc-logo {
+    font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    color: var(--primary);
+    line-height: 1.1;
+  }
+
+  .doc-sub {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .doc-meta {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 11.5px;
+    color: var(--ink2);
+    flex-shrink: 0;
+
+    strong {
+      font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      color: var(--ink);
+    }
+
+    .doc-nro {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--primary);
+    }
+  }
+
+  .doc-client-grid {
+    display: flex;
+    gap: 24px;
+    margin: 18px 0;
+
+    > .doc-client { flex: 1; min-width: 0; }
+  }
+
+  .doc-client {
+    small {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    strong {
+      display: block;
+      font-size: 15px;
+      margin: 2px 0;
+    }
+
+    span {
+      display: block;
+      font-size: 11.5px;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .doc-tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10.5px;
+    table-layout: fixed;
+
+    th {
+      text-align: left;
+      padding: 7px 4px;
+      border-bottom: 1.5px solid var(--line);
+      color: var(--muted);
+      font-size: 9px;
+      text-transform: uppercase;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    td {
+      padding: 7px 4px;
+      border-bottom: 1px solid var(--line2);
+      vertical-align: top;
+    }
+
+    // Mismo reparto de 9 columnas que la cotización: con table-layout fixed
+    // la descripción no reclama el espacio sobrante si no se le da ancho.
+    th:nth-child(1), td:nth-child(1) { width: 24%; }
+    th:nth-child(2), td:nth-child(2) { width: 5%; }
+    th:nth-child(3), td:nth-child(3) { width: 10.5%; }
+    th:nth-child(4), td:nth-child(4) { width: 10.5%; }
+    th:nth-child(5), td:nth-child(5) { width: 10.5%; }
+    th:nth-child(6), td:nth-child(6) { width: 6%; }
+    th:nth-child(7), td:nth-child(7) { width: 10.5%; }
+    th:nth-child(8), td:nth-child(8) { width: 10.5%; }
+    th:nth-child(9), td:nth-child(9) { width: 12.5%; }
+
+    th:not(:first-child) {
+      text-align: right;
+      white-space: normal;
+      hyphens: none;
+    }
+
+    td:not(:first-child) {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    td:first-child { overflow-wrap: anywhere; }
+
+    .doc-prod-txt { display: block; }
+
+    .doc-ref {
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .doc-detalle {
+      display: block;
+      font-size: 9px;
+      white-space: pre-line;
+      margin-top: 2px;
+      color: var(--ink2);
+    }
+
+    .doc-vacio {
+      text-align: center;
+      color: var(--muted);
+      padding: 18px;
+    }
+
+    tr { page-break-inside: avoid; }
+  }
+
+  .doc-totals {
+    margin: 16px 0 0 auto;
+    width: 280px;
+    max-width: 100%;
+    font-size: 11.5px;
+
+    > div {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--line2);
+      color: var(--ink2);
+    }
+
+    .doc-total {
+      margin-top: 4px;
+      padding-top: 8px;
+      border-top: 2px solid var(--ink);
+      border-bottom: 0;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+  }
+
+  .doc-recibido {
+    display: flex;
+    gap: 24px;
+    margin-top: 34px;
+    page-break-inside: avoid;
+
+    .doc-recibido-campo {
+      flex: 1;
+      font-size: 9.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .doc-recibido-linea {
+      display: block;
+      height: 26px;
+      border-bottom: 1px solid var(--ink2);
+      margin-bottom: 4px;
+    }
+  }
+
+  .doc-footer {
+    margin-top: 18px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line2);
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
   @media screen {
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    margin: 20px auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+    margin: 16px auto;
   }
 
-  // Para impresión/PDF
   @media print {
     margin: 0;
     padding: 10mm;
     box-shadow: none;
-    page-break-after: always;
-  }
-}
-
-// ============================================================
-// HEADER - Logo y Empresa (Compacto)
-// ============================================================
-.pdf-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding-bottom: 10px;
-  margin-bottom: 15px;
-  border-bottom: 2px solid $color-primary;
-
-  .empresa-info {
-    display: flex;
-    align-items: center;
-    flex: 1;
-
-    .logo-empresa {
-      width: 60px !important;
-      height: 60px !important;
-      max-width: 60px !important;
-      max-height: 60px !important;
-      object-fit: contain;
-      margin-right: 10px;
-      flex-shrink: 0;
-      background-color: white;
-      padding: 3px;
-      border-radius: 3px;
-    }
-
-    .empresa-datos {
-      flex: 1;
-
-      .empresa-nombre {
-        font-size: 12pt;
-        font-weight: bold;
-        color: $color-primary;
-        margin: 0 0 3px 0;
-        text-transform: uppercase;
-      }
-
-      .empresa-nit {
-        font-size: 8pt;
-        color: $color-text;
-        margin: 1px 0;
-      }
-
-      .empresa-contacto {
-        font-size: 7pt;
-        color: $color-text-light;
-        margin: 1px 0;
-      }
-    }
-  }
-
-  .documento-info {
-    text-align: right;
-    flex-shrink: 0;
-
-    .documento-titulo {
-      font-size: 11pt;
-      font-weight: bold;
-      color: $color-primary;
-      margin: 0 0 5px 0;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .documento-numero {
-      font-size: 10pt;
-      font-weight: 600;
-      color: $color-primary;
-      margin: 0 0 3px 0;
-    }
-
-    .documento-fecha {
-      font-size: 8pt;
-      color: $color-text-light;
-    }
-  }
-}
-
-// ============================================================
-// SECCIÓN DE CLIENTE (Compacta)
-// ============================================================
-.cliente-section {
-  background: $color-bg-light;
-  padding: 10px;
-  margin-bottom: 12px;
-  border-left: 3px solid $color-primary;
-  page-break-inside: avoid;
-
-  .section-title {
-    font-size: 9pt;
-    font-weight: bold;
-    color: $color-primary;
-    margin: 0 0 8px 0;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-  }
-
-  .cliente-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 5px;
-
-    .cliente-item {
-      display: flex;
-      align-items: flex-start;
-
-      &.full-width {
-        grid-column: 1 / -1;
-      }
-
-      .label {
-        font-weight: 600;
-        color: $color-text-light;
-        margin-right: 5px;
-        min-width: 60px;
-        font-size: 8pt;
-      }
-
-      .value {
-        color: $color-text;
-        font-size: 8pt;
-        flex: 1;
-        word-wrap: break-word;
-      }
-    }
-  }
-}
-
-// ============================================================
-// TABLA DE PRODUCTOS (Compacta)
-// ============================================================
-.productos-section {
-  margin-bottom: 12px;
-  page-break-inside: auto;
-
-  .section-title {
-    font-size: 9pt;
-    font-weight: bold;
-    color: $color-primary;
-    margin: 0 0 8px 0;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    padding-bottom: 3px;
-    border-bottom: 1px solid $color-border;
-  }
-
-  .productos-tabla {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 8pt;
-    border: 1px solid $color-border-dark;
-
-    thead {
-      background-color: $color-primary;
-      color: white;
-
-      th {
-        padding: 5px 4px;
-        text-align: left;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 7pt;
-        letter-spacing: 0.3px;
-        border-right: 1px solid rgba(255,255,255,0.2);
-
-        &:last-child {
-          border-right: none;
-        }
-
-        &.col-item {
-          width: 5%;
-          text-align: center;
-        }
-
-        &.col-codigo {
-          width: 12%;
-        }
-
-        &.col-descripcion {
-          width: 43%;
-        }
-
-        &.col-cantidad {
-          width: 8%;
-          text-align: center;
-        }
-
-        &.col-unitario {
-          width: 16%;
-          text-align: right;
-        }
-
-        &.col-total {
-          width: 16%;
-          text-align: right;
-        }
-      }
-    }
-
-    tbody {
-      tr {
-        border-bottom: 1px solid $color-border;
-        page-break-inside: avoid;
-
-        &:nth-child(even) {
-          background-color: $color-bg-light;
-        }
-
-        td {
-          padding: 4px;
-          color: $color-text;
-          border-right: 1px solid $color-border;
-          font-size: 7.5pt;
-
-          &:last-child {
-            border-right: none;
-          }
-
-          &.col-item {
-            text-align: center;
-            font-weight: 500;
-            color: $color-text-light;
-          }
-
-          &.col-codigo {
-            font-size: 7pt;
-            color: $color-text-light;
-          }
-
-          &.col-descripcion {
-            font-weight: 500;
-            font-size: 7.5pt;
-          }
-
-          &.col-cantidad {
-            text-align: center;
-            font-weight: 600;
-          }
-
-          &.col-unitario {
-            text-align: right;
-            font-family: 'Courier New', monospace;
-            font-size: 7.5pt;
-
-            .desc-linea-badge {
-              display: inline-block;
-              margin-left: 4px;
-              padding: 1px 4px;
-              border-radius: 3px;
-              font-family: 'Arial', 'Helvetica', sans-serif;
-              font-size: 6.5pt;
-              font-weight: 600;
-              color: $color-danger;
-              background: rgba($color-danger, 0.1);
-            }
-          }
-
-          &.col-total {
-            text-align: right;
-            font-weight: 600;
-            font-family: 'Courier New', monospace;
-            color: $color-primary;
-            font-size: 7.5pt;
-          }
-
-          &.sin-productos {
-            text-align: center;
-            padding: 15px;
-            color: $color-text-light;
-            font-style: italic;
-          }
-        }
-      }
-    }
-  }
-}
-
-// ============================================================
-// SECCIÓN DE TOTALES (Compacta)
-// ============================================================
-.totales-section {
-  margin: 12px 0;
-  display: flex;
-  justify-content: flex-end;
-  page-break-inside: avoid;
-
-  .totales-container {
-    width: 280px;
-    padding: 8px;
-    background: $color-bg-light;
-    border: 1px solid $color-border-dark;
-    border-left: 3px solid $color-primary;
-
-    .total-line {
-      display: flex;
-      justify-content: space-between;
-      padding: 4px 0;
-      font-size: 8pt;
-      border-bottom: 1px solid $color-border;
-
-      &:last-child {
-        border-bottom: none;
-      }
-
-      .total-label {
-        color: $color-text-light;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 7.5pt;
-      }
-
-      .total-value {
-        font-family: 'Courier New', monospace;
-        font-weight: 600;
-        color: $color-text;
-        text-align: right;
-        font-size: 8pt;
-
-        &.descuento {
-          color: $color-danger;
-        }
-      }
-
-      &.total-final {
-        margin-top: 5px;
-        padding-top: 8px;
-        padding-bottom: 8px;
-        border-top: 2px solid $color-primary;
-        background: white;
-        margin: 5px -8px -8px -8px;
-        padding-left: 8px;
-        padding-right: 8px;
-
-        .total-label {
-          font-size: 9pt;
-          font-weight: bold;
-          color: $color-primary;
-        }
-
-        .total-value {
-          font-size: 10pt;
-          font-weight: bold;
-          color: $color-primary;
-        }
-      }
-    }
-  }
-}
-
-// ============================================================
-// SECCIÓN DE OBSERVACIONES
-// ============================================================
-.observaciones-section {
-  margin: 20px 0;
-  padding: 15px;
-  background: $color-bg-light;
-  border-left: 4px solid $color-primary;
-  page-break-inside: avoid;
-
-  .section-title {
-    font-size: 11pt;
-    font-weight: bold;
-    color: $color-primary;
-    margin: 0 0 10px 0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .observaciones-text {
-    font-size: 9pt;
-    line-height: 1.6;
-    color: $color-text;
-    margin: 0;
-  }
-}
-
-// ============================================================
-// RECIBIDO (ticket 1084: la orden se entrega como remisión)
-// ============================================================
-.recibido-section {
-  display: flex;
-  gap: 18px;
-  margin-top: 28px;
-  page-break-inside: avoid;
-
-  .recibido-campo {
-    flex: 1;
-    font-size: 8pt;
-    color: $color-text-light;
-    text-align: center;
-  }
-
-  .recibido-linea {
-    display: block;
-    border-top: 1px solid $color-border-dark;
-    margin-bottom: 4px;
-  }
-}
-
-// ============================================================
-// FOOTER (Compacto)
-// ============================================================
-.pdf-footer {
-  margin-top: 15px;
-  text-align: center;
-  padding-top: 8px;
-  border-top: 1px solid $color-border;
-  page-break-inside: avoid;
-
-  .logo-katuq {
-    width: 60px !important;
-    height: 20px !important;
-    max-width: 60px !important;
-    max-height: 20px !important;
-    object-fit: contain;
-    margin-bottom: 3px;
-    opacity: 0.7;
-  }
-
-  .footer-text {
-    font-size: 7pt;
-    color: $color-text-light;
-    margin: 0;
   }
 }
 
@@ -517,6 +302,22 @@ $color-danger: #e74c3c;
       &:hover {
         background: #5a6268;
         border-color: #545b62;
+      }
+    }
+
+    // Ticket 1195: botón Imprimir
+    &.btn-outline {
+      background: #fff;
+      color: $color-primary;
+      border-color: $color-primary;
+
+      &:hover:not(:disabled) {
+        background: #f1edff;
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
       }
     }
 

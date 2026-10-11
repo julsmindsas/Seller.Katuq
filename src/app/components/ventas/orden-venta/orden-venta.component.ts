@@ -496,7 +496,7 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
       },
       pagebreak: {
         mode: ['avoid-all', 'css', 'legacy'],
-        avoid: ['tr', '.cliente-section', '.totales-section', '.pdf-footer']
+        avoid: ['tr', '.doc-client-grid', '.doc-totals', '.doc-recibido']
       },
     };
   }
@@ -509,89 +509,124 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
     this.currentProgressMessage = message;
   }
 
-  /**
-   * Método para descargar como PDF usando html2pdf.js
-   */
+  /** Descarga el PDF al equipo. */
   async descargarPDF(): Promise<void> {
-    if (this.generandoPDF) {
-      return;
-    }
+    await this.generarPdf('descargar');
+  }
 
+  /** Ticket 1195: abre el PDF en una pestaña y lanza el diálogo de impresión. */
+  async imprimir(): Promise<void> {
+    await this.generarPdf('imprimir');
+  }
+
+  private async generarPdf(modo: 'descargar' | 'imprimir'): Promise<void> {
+    if (this.generandoPDF) return;
     this.generandoPDF = true;
     this.pdfProgress = 0;
     this.currentProgressMessage = "Iniciando...";
-
     try {
-      this.updatePDFProgress(10, "Iniciando generación...");
-
-      // Importar dinámicamente html2pdf
+      this.updatePDFProgress(10, "Preparando documento...");
       const html2pdf = (await import("html2pdf.js")).default;
-
-      this.updatePDFProgress(30, "Preparando contenido...");
-
-      // USAR VIEWCHILD EN LUGAR DE getElementById
       const element = this.ordenVentaContentRef?.nativeElement;
-      if (!element) {
-        throw new Error("Elemento no encontrado");
-      }
-
-      this.updatePDFProgress(50, "Configurando opciones de PDF...");
-
+      if (!element) throw new Error("Elemento no encontrado");
       const options = this.getOptimizedPDFOptions();
-
-      this.updatePDFProgress(70, "Generando PDF...");
-
-      // HACER VISIBLE TEMPORALMENTE PARA CAPTURA
-      const originalVisibility = element.style.visibility;
-      const originalPosition = element.style.position;
-      element.style.visibility = 'visible';
-      element.style.position = 'static';
-
-      // Dar tiempo para que se renderice completamente
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Generar PDF usando html2pdf
-      await html2pdf()
-        .from(element)
-        .set(options)
-        .toPdf()
-        .get("pdf")
-        .then((pdf: any) => {
-          this.updatePDFProgress(90, "Finalizando...");
-
-          // RESTAURAR VISIBILIDAD ORIGINAL
-          element.style.visibility = originalVisibility;
-          element.style.position = originalPosition;
-
-          // Abrir en nueva pestaña
-          const blob = pdf.output("blob");
-          const blobUrl = URL.createObjectURL(blob);
-
-          // Programar limpieza del blob URL
-          setTimeout(() => {
-            URL.revokeObjectURL(blobUrl);
-          }, 30000);
-
-          window.open(blobUrl, "_blank");
-
-          this.updatePDFProgress(100, "¡PDF generado exitosamente!");
-        })
-        .catch((err: any) => {
-          // RESTAURAR VISIBILIDAD EN CASO DE ERROR
-          element.style.visibility = originalVisibility;
-          element.style.position = originalPosition;
-          throw err;
-        });
+      this.updatePDFProgress(50, "Generando PDF...");
+      const worker: any = html2pdf().from(element).set(options).toPdf();
+      if (modo === 'descargar') {
+        await worker.save();
+      } else {
+        const pdf: any = await worker.get("pdf");
+        const blobUrl = URL.createObjectURL(pdf.output("blob"));
+        const ventana = window.open(blobUrl, "_blank");
+        if (ventana) {
+          ventana.addEventListener("load", () => {
+            try { ventana.focus(); ventana.print(); } catch (_) { /* el visor del navegador ya permite imprimir */ }
+          });
+        }
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+      }
+      this.updatePDFProgress(100, modo === 'descargar' ? "PDF descargado" : "Listo para imprimir");
     } catch (error) {
       alert("Error al generar el PDF. Por favor, intente nuevamente.");
     } finally {
-      // Dar tiempo para que se vea el mensaje de completado
       setTimeout(() => {
         this.generandoPDF = false;
         this.pdfProgress = 0;
         this.currentProgressMessage = "";
-      }, 1000);
+      }, 800);
     }
+  }
+
+  // ---- Ticket 1195: columnas de impuestos, como en la cotización ----
+  readonly digitosValor = '1.0-0';
+
+  /** % de IVA de la línea: el manual si lo hay, si no el del producto. */
+  ivaPct(item: any): number {
+    const manual = item?._ivaManualOverride;
+    if (manual !== undefined && manual !== null && manual !== '') return Number(manual) || 0;
+    return Number(item?.producto?.precio?.precioUnitarioIva) || 0;
+  }
+
+  /** Precio unitario con IVA antes del descuento de línea. */
+  valorBruto(item: any): number {
+    return this.getPrecioUnitarioBruto(item);
+  }
+
+  descuentoUnitario(item: any): number {
+    return Math.max(0, this.valorBruto(item) - this.getPrecioUnitario(item));
+  }
+
+  precioSinIva(item: any): number {
+    return this.getPrecioUnitario(item) / (1 + this.ivaPct(item) / 100);
+  }
+
+  valorIva(item: any): number {
+    return this.getPrecioUnitario(item) - this.precioSinIva(item);
+  }
+
+  /** % IVA del combo si todos sus productos llevan el mismo; null si varía. */
+  comboIvaPct(fila: FilaCombo<any>): number | null {
+    return valorComun(fila.lineas.map((l) => this.ivaPct(l)));
+  }
+
+  comboValorBrutoUnit(fila: FilaCombo<any>): number {
+    const total = fila.lineas.reduce((acc, l) => acc + this.valorBruto(l) * (Number(l.cantidad) || 0), 0);
+    return total / (fila.cantidad || 1);
+  }
+
+  comboDescuentoUnit(fila: FilaCombo<any>): number {
+    return Math.max(0, this.comboValorBrutoUnit(fila) - this.comboPrecioUnitario(fila));
+  }
+
+  comboSinIvaUnit(fila: FilaCombo<any>): number {
+    const total = fila.lineas.reduce((acc, l) => acc + this.precioSinIva(l) * (Number(l.cantidad) || 0), 0);
+    return total / (fila.cantidad || 1);
+  }
+
+  comboValorIvaUnit(fila: FilaCombo<any>): number {
+    return this.comboPrecioUnitario(fila) - this.comboSinIvaUnit(fila);
+  }
+
+  /** Razón social del comercio (ticket 1195); vacío si no está configurada. */
+  get razonSocialEmpresa(): string {
+    return (
+      this.companyInformation?.razonSocial ||
+      (this.empresaActual as any)?.razonSocial ||
+      ''
+    );
+  }
+
+  /** Teléfono y correo del comercio en una línea, sin "No disponible". */
+  get contactoEmpresa(): string {
+    return [this.telefonoEmpresa, this.emailEmpresa].filter((v) => v && v !== 'No disponible').join(' · ');
+  }
+
+  /** Documento · celular · correo del cliente. */
+  get clienteMeta(): string {
+    const c: any = this.pedido?.cliente || {};
+    const doc = c.documento ? `${c.tipo_documento_comprador ? c.tipo_documento_comprador + ' ' : ''}${c.documento}` : '';
+    const cel = c.numero_celular_comprador ? String(c.numero_celular_comprador) : '';
+    return [doc, cel, c.correo_electronico_comprador || ''].filter(Boolean).join(' · ');
   }
 
   /**

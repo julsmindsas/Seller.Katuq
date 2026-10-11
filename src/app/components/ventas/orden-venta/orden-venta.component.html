@@ -1,150 +1,132 @@
-<!-- Contenedor principal para PDF vertical A4 -->
-<div class="orden-venta-pdf-wrapper" #ordenVentaContentRef>
+<!-- Ticket 1195: la orden de venta sigue el diseño del documento de cotización
+     (mismo encabezado, bloque de cliente, tabla con impuestos y totales) para que el
+     comercio entregue papeles homogéneos. -->
+<div class="ov-doc" #ordenVentaContentRef>
 
-  <!-- Header con logo y datos de empresa -->
-  <div class="pdf-header">
-    <div class="empresa-info">
+  <div class="doc-head">
+    <div class="doc-brand">
       <!-- Ticket 1084: el logo llega como data URL (proxy) para que html2canvas lo capture -->
-      <img *ngIf="logoDataUrl" [src]="logoDataUrl" alt="Logo" class="logo-empresa">
-      <div class="empresa-datos">
-        <h1 class="empresa-nombre">{{ nombreEmpresa }}</h1>
-        <p class="empresa-nit">NIT: {{ nitEmpresaFormateado }}</p>
-        <p class="empresa-contacto" *ngIf="direccionEmpresa !== 'No disponible'">{{ direccionEmpresa }}</p>
-        <p class="empresa-contacto">{{ telefonoEmpresa }} | {{ emailEmpresa }}</p>
+      <img *ngIf="logoDataUrl" [src]="logoDataUrl" alt="Logo" class="doc-logo-img">
+      <div class="doc-brand-txt">
+        <div class="doc-logo">{{ nombreEmpresa }}</div>
+        <small class="doc-sub" *ngIf="razonSocialEmpresa && razonSocialEmpresa !== nombreEmpresa">{{ razonSocialEmpresa }}</small>
+        <small class="doc-sub" *ngIf="nitEmpresaFormateado !== 'No disponible'">NIT {{ nitEmpresaFormateado }}</small>
+        <small class="doc-sub" *ngIf="direccionEmpresa !== 'No disponible'">{{ direccionEmpresa }}</small>
+        <small class="doc-sub">{{ contactoEmpresa }}</small>
       </div>
     </div>
-    <div class="documento-info">
-      <h2 class="documento-titulo">ORDEN DE VENTA</h2>
-      <div class="documento-numero">#{{ pedido?.nroPedido || 'Sin número' }}</div>
-      <div class="documento-fecha">{{ (pedido?.fechaCreacion || fechaEmision) | date:'dd/MM/yyyy' }}</div>
-    </div>
-  </div>
-
-  <!-- Información del cliente -->
-  <div class="cliente-section">
-    <h3 class="section-title">INFORMACIÓN DEL CLIENTE</h3>
-    <div class="cliente-grid">
-      <div class="cliente-item">
-        <span class="label">Cliente:</span>
-        <span class="value">{{ nombreCliente }}</span>
-      </div>
-      <div class="cliente-item">
-        <span class="label">Documento:</span>
-        <span class="value">{{ pedido?.cliente?.documento || 'N/A' }}</span>
-      </div>
-      <div class="cliente-item">
-        <span class="label">Teléfono:</span>
-        <span class="value">{{ pedido?.cliente?.numero_celular_comprador || 'N/A' }}</span>
-      </div>
-      <div class="cliente-item">
-        <span class="label">Email:</span>
-        <span class="value">{{ pedido?.cliente?.correo_electronico_comprador || 'N/A' }}</span>
-      </div>
-      <div class="cliente-item full-width" *ngIf="direccionEnvio">
-        <span class="label">Dirección:</span>
-        <span class="value">{{ direccionEnvio }}</span>
-      </div>
+    <div class="doc-meta">
+      <strong>ORDEN DE VENTA</strong>
+      <span class="doc-nro">{{ pedido?.nroPedido || 'Sin número' }}</span>
+      <span>Fecha: {{ (pedido?.fechaCreacion || fechaEmision) | date:'dd/MM/yyyy' }}</span>
+      <span *ngIf="nombreAsesor !== 'No asignado'">Atendido por: {{ nombreAsesor }}</span>
+      <span *ngIf="pedido?.estadoProceso">Estado: {{ pedido?.estadoProceso }}</span>
     </div>
   </div>
 
-  <!-- Tabla de productos -->
-  <div class="productos-section">
-    <h3 class="section-title">DETALLE DE PRODUCTOS</h3>
-    <table class="productos-tabla">
-      <thead>
-        <tr>
-          <th class="col-item">#</th>
-          <th class="col-codigo">Código</th>
-          <th class="col-descripcion">Descripción</th>
-          <th class="col-cantidad">Cant.</th>
-          <th class="col-unitario">P. Unit.</th>
-          <th class="col-total">Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        <ng-container *ngFor="let fila of filas; let i = index">
-          <!-- Ticket 1097: combo cerrado = una sola fila, sin sus productos -->
-          <tr *ngIf="esComboFila(fila)">
-            <td class="col-item">{{ i + 1 }}</td>
-            <td class="col-codigo">COMBO</td>
-            <td class="col-descripcion">
-              {{ fila.combo.nombre }}
+  <div class="doc-client-grid">
+    <div class="doc-client">
+      <small>CLIENTE</small>
+      <strong>{{ nombreCliente }}</strong>
+      <span *ngIf="clienteMeta">{{ clienteMeta }}</span>
+      <span *ngIf="direccionEnvio !== 'No especificada'">Entrega: {{ direccionEnvio }}</span>
+      <span *ngIf="pedido?.envio?.nombres">
+        Recibe: {{ pedido?.envio?.nombres }} {{ pedido?.envio?.apellidos }}<ng-container *ngIf="pedido?.envio?.celular"> · {{ pedido?.envio?.celular }}</ng-container>
+      </span>
+      <span *ngIf="pedido?.envio?.observaciones">Indicaciones: {{ pedido?.envio?.observaciones }}</span>
+    </div>
+    <div class="doc-client" *ngIf="pedido?.facturacion?.nombres">
+      <small>FACTURAR A</small>
+      <strong>{{ pedido?.facturacion?.nombres }}</strong>
+      <span *ngIf="pedido?.facturacion?.documento">{{ pedido?.facturacion?.tipoDocumento }} {{ pedido?.facturacion?.documento }}</span>
+      <span *ngIf="direccionFacturacion !== 'No especificada'">{{ direccionFacturacion }}</span>
+      <span *ngIf="pedido?.facturacion?.correoElectronico || pedido?.facturacion?.correo">{{ pedido?.facturacion?.correoElectronico || pedido?.facturacion?.correo }}</span>
+    </div>
+  </div>
+
+  <table class="doc-tbl">
+    <thead>
+      <tr>
+        <th>Descripción</th>
+        <th>Cant.</th>
+        <th>Valor bruto</th>
+        <th>Descuento</th>
+        <th>P. unit. sin IVA</th>
+        <th>% IVA</th>
+        <th>Valor IVA</th>
+        <th>P. unit. con IVA</th>
+        <th>Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let fila of filas">
+        <!-- Ticket 1097: combo cerrado = una sola fila, sin sus productos -->
+        <tr *ngIf="esComboFila(fila)">
+          <td>
+            <span class="doc-prod-txt">
+              {{ fila.combo.nombre }}<span class="doc-ref"> · Combo</span>
               <!-- Ticket 1116: la descripción del combo la ve el cliente -->
-              <div class="combo-descripcion" *ngIf="fila.combo.descripcion">{{ fila.combo.descripcion }}</div>
-            </td>
-            <td class="col-cantidad">{{ fila.cantidad }}</td>
-            <td class="col-unitario">
-              {{ comboPrecioUnitario(fila) | currency:'COP':'':'1.0-0' }}
-              <span class="desc-linea-badge" *ngIf="comboDescPct(fila) > 0">-{{ comboDescPct(fila) }}%</span>
-            </td>
-            <td class="col-total">{{ comboTotal(fila) | currency:'COP':'':'1.0-0' }}</td>
-          </tr>
-          <tr *ngIf="!esComboFila(fila) && fila.item as item">
-            <td class="col-item">{{ i + 1 }}</td>
-            <td class="col-codigo">{{ getReferencia(item) }}</td>
-            <td class="col-descripcion">{{ getNombreProducto(item) }}</td>
-            <td class="col-cantidad">{{ item.cantidad || 0 }}</td>
-            <td class="col-unitario">
-              {{ getPrecioUnitario(item) | currency:'COP':'':'1.0-0' }}
-              <span class="desc-linea-badge" *ngIf="descLineaPct(item) > 0">-{{ descLineaPct(item) }}%</span>
-            </td>
-            <td class="col-total">{{ calcularTotalProducto(item) | currency:'COP':'':'1.0-0' }}</td>
-          </tr>
-        </ng-container>
-        <tr *ngIf="!pedido?.carrito || pedido.carrito.length === 0">
-          <td colspan="6" class="sin-productos">No hay productos en esta orden</td>
+              <span class="doc-detalle" *ngIf="fila.combo.descripcion">{{ fila.combo.descripcion }}</span>
+            </span>
+          </td>
+          <td>{{ fila.cantidad }}</td>
+          <td>{{ comboValorBrutoUnit(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+          <td>{{ comboDescPct(fila) > 0 ? (comboDescuentoUnit(fila) | currency:'COP':'symbol-narrow':digitosValor) : '—' }}</td>
+          <td>{{ comboSinIvaUnit(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+          <td>{{ comboIvaPct(fila) !== null ? comboIvaPct(fila) + '%' : 'Varios' }}</td>
+          <td>{{ comboValorIvaUnit(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+          <td>{{ comboPrecioUnitario(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+          <td>{{ comboTotal(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
         </tr>
-      </tbody>
-    </table>
-  </div>
+        <tr *ngIf="!esComboFila(fila) && fila.item as item">
+          <td>
+            <span class="doc-prod-txt">
+              {{ getNombreProducto(item) }}
+              <span class="doc-ref" *ngIf="getReferencia(item) !== '-'"> · Ref: {{ getReferencia(item) }}</span>
+            </span>
+          </td>
+          <td>{{ item.cantidad || 0 }}</td>
+          <td>{{ valorBruto(item) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+          <td>{{ descLineaPct(item) > 0 ? (descuentoUnitario(item) | currency:'COP':'symbol-narrow':digitosValor) : '—' }}</td>
+          <td>{{ precioSinIva(item) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+          <td>{{ ivaPct(item) }}%</td>
+          <td>{{ valorIva(item) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+          <td>{{ getPrecioUnitario(item) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+          <td>{{ calcularTotalProducto(item) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+        </tr>
+      </ng-container>
+      <tr *ngIf="!pedido?.carrito || pedido.carrito.length === 0">
+        <td colspan="9" class="doc-vacio">No hay productos en esta orden</td>
+      </tr>
+    </tbody>
+  </table>
 
-  <!-- Resumen de totales -->
-  <div class="totales-section">
-    <div class="totales-container">
-      <div class="total-line" *ngIf="subtotalSinImpuestos > 0">
-        <span class="total-label">Subtotal:</span>
-        <span class="total-value">{{ subtotalSinImpuestos | currency:'COP':'':'1.0-0' }}</span>
-      </div>
-      <div class="total-line" *ngIf="totalDescuentos > 0">
-        <span class="total-label">Descuento:</span>
-        <span class="total-value descuento">-{{ totalDescuentos | currency:'COP':'':'1.0-0' }}</span>
-      </div>
-      <div class="total-line" *ngIf="totalImpuestos > 0">
-        <span class="total-label">IVA:</span>
-        <span class="total-value">{{ totalImpuestos | currency:'COP':'':'1.0-0' }}</span>
-      </div>
-      <div class="total-line" *ngIf="totalEnvio > 0">
-        <span class="total-label">Envío:</span>
-        <span class="total-value">{{ totalEnvio | currency:'COP':'':'1.0-0' }}</span>
-      </div>
-      <div class="total-line total-final">
-        <span class="total-label">TOTAL A PAGAR:</span>
-        <span class="total-value">{{ totalFinal | currency:'COP':'':'1.0-0' }}</span>
-      </div>
-    </div>
+  <div class="doc-totals">
+    <div *ngIf="subtotalSinImpuestos > 0"><span>Subtotal</span><span>{{ subtotalSinImpuestos | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
+    <div *ngIf="totalDescuentos > 0"><span>Descuento</span><span>– {{ totalDescuentos | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
+    <div *ngIf="totalImpuestos > 0"><span>IVA</span><span>{{ totalImpuestos | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
+    <div *ngIf="totalEnvio > 0"><span>Envío</span><span>{{ totalEnvio | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
+    <div class="doc-total"><span>Total a pagar</span><span>{{ totalFinal | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
   </div>
-
 
   <!-- Ticket 1084: la orden viaja con el pedido como remisión: constancia de recibido -->
-  <div class="recibido-section">
-    <div class="recibido-campo"><span class="recibido-linea"></span>Recibido por (nombre)</div>
-    <div class="recibido-campo"><span class="recibido-linea"></span>Firma / C.C.</div>
-    <div class="recibido-campo"><span class="recibido-linea"></span>Fecha</div>
+  <div class="doc-recibido">
+    <div class="doc-recibido-campo"><span class="doc-recibido-linea"></span>Recibido por (nombre)</div>
+    <div class="doc-recibido-campo"><span class="doc-recibido-linea"></span>Firma / C.C.</div>
+    <div class="doc-recibido-campo"><span class="doc-recibido-linea"></span>Fecha</div>
   </div>
 
-  <!-- Footer con logo Katuq -->
-  <div class="pdf-footer">
-    <!-- Logo temporal removido mientras se configura Firebase
-    <img [src]="logoKatuq" alt="Powered by Katuq" class="logo-katuq"> -->
-    <p class="footer-text">Generado con Katuq | {{ fechaEmision | date:'dd/MM/yyyy HH:mm' }}</p>
-  </div>
-
+  <div class="doc-footer">Generado con Katuq · {{ fechaEmision | date:'dd/MM/yyyy HH:mm' }}</div>
 </div>
 
 <!-- Botones de acción (solo visible en modal, no en PDF) -->
 <div class="modal-actions" *ngIf="activeModal">
   <button type="button" class="btn btn-secondary" (click)="cerrar()">
     <i class="fa fa-times"></i> Cerrar
+  </button>
+  <!-- Ticket 1195: imprimir directo -->
+  <button type="button" class="btn btn-outline" (click)="imprimir()" [disabled]="generandoPDF">
+    <i class="fa fa-print"></i> Imprimir
   </button>
   <button type="button" class="btn btn-primary" (click)="descargarPDF()" [disabled]="generandoPDF">
     <i class="fa fa-download" *ngIf="!generandoPDF"></i>
