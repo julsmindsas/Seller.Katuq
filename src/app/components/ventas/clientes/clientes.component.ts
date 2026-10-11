@@ -1611,6 +1611,17 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   /** Ticket 1163: el buscador de clientes existentes va plegado al crear. */
   buscadorAbierto: boolean = false;
 
+  /**
+   * D-402: resultado del formulario unificado incrustado en la pantalla. El
+   * cliente creado/actualizado queda como "encontrado" (ficha 360 abajo) y el
+   * formulario pasa a modo edición sobre él.
+   */
+  onClienteGuardadoInline(resultado: { cliente: any; action: string }): void {
+    if (!resultado || !resultado.cliente || resultado.action === 'draft') return;
+    this.seleccionarClienteResultado(resultado.cliente);
+    this.buscadorAbierto = false;
+  }
+
   toggleBuscador(): void {
     this.buscadorAbierto = !this.buscadorAbierto;
     if (!this.buscadorAbierto) {

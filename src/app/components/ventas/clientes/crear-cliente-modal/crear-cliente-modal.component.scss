@@ -1,4 +1,4 @@
-$primary:      #6c4ce0;
+$primary:      #5F3FE0;
 $primary-bg:   #ede9fe;
 $border-color: #e9ecef;
 $text-dark:    #333;
@@ -114,7 +114,7 @@ $bg-light:     #f8f9fa;
       height: 22px;
       border-radius: 6px;
       background: $primary-bg;
-      color: #533bc4;
+      color: $primary;
       font-size: 0.75rem;
     }
 
@@ -225,8 +225,8 @@ $bg-light:     #f8f9fa;
       border-color: $primary;
 
       &:hover:not(:disabled) {
-        background: #533bc4;
-        border-color: #533bc4;
+        background: #4c31c4;
+        border-color: #4c31c4;
       }
 
       &:disabled {
@@ -335,3 +335,249 @@ $bg-light:     #f8f9fa;
     overflow: hidden;
   }
 }
+
+// ══════════════════════════════════════════════════════════════════
+// D-402: pestañas Contacto / Entrega / Facturación / Notas, listas y
+// editores de elementos. Tema canónico "Todos los pedidos": plano, sin
+// gradientes, acento #5F3FE0, labels en mayúscula apagadas.
+// ══════════════════════════════════════════════════════════════════
+$ink:        #211F3A;
+$muted:      #8a86a3;
+$surface:    #f6f4fc;
+$border-soft:#ece8f7;
+
+.cliente-modal--inline {
+  max-height: none;
+  animation: none;
+  border-radius: 16px;
+  border: 1px solid $border-soft;
+  box-shadow: 0 10px 30px rgba(95, 63, 224, .06);
+
+  .modal-body-modern { max-height: none; }
+}
+
+.label-icon { color: $primary; font-size: 0.85rem; }
+.label-hint { font-size: 0.8rem; color: $text-muted; }
+.input-fecha {
+  height: 36px; border: 1px solid $border-color; border-radius: 6px;
+  padding: 0 0.65rem; font-size: 0.85rem;
+}
+.input-clickable { cursor: pointer; }
+
+.header-title i { color: $primary; }
+
+::ng-deep .cliente-tabs {
+  .p-tabview-nav {
+    background: transparent;
+    border: 0;
+    border-bottom: 1.5px solid $border-soft;
+    gap: 4px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+
+    li {
+      .p-tabview-nav-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: transparent;
+        border: 0;
+        border-bottom: 2.5px solid transparent;
+        margin-bottom: -1.5px;
+        padding: 0.6rem 0.9rem;
+        font-size: 0.74rem;
+        font-weight: 800;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+        color: $muted;
+        border-radius: 11px 11px 0 0;
+        transition: color .15s, background .15s, border-color .15s;
+
+        .pi { font-size: 0.85rem; }
+
+        &:not(.p-disabled):focus { box-shadow: none; }
+        &:hover { color: $ink; background: $surface; }
+      }
+
+      &.p-highlight .p-tabview-nav-link {
+        color: $primary;
+        border-bottom-color: $primary;
+        background: transparent;
+      }
+    }
+
+    .p-tabview-ink-bar { display: none; }
+  }
+
+  .p-tabview-panels {
+    background: transparent;
+    padding: 0;
+    border: 0;
+  }
+}
+
+.tab-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 800;
+  color: $primary;
+  background: $primary-bg;
+}
+.tab-alert {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 900;
+  color: #D64545;
+  background: #FDECEC;
+}
+
+// Listas de direcciones, perfiles y notas
+.lista-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid $border-soft;
+  border-radius: 11px;
+  background: #fff;
+  transition: border-color .15s, background .15s;
+
+  &:hover { border-color: #d9cffb; background: #fcfbff; }
+  &--editing { border-color: $primary; background: $surface; }
+
+  .item-icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: $primary-bg;
+    color: $primary;
+    font-size: 0.8rem;
+    margin-top: 1px;
+  }
+  .item-main { flex: 1; min-width: 0; }
+  .item-title {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: $ink;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .item-sub { font-size: 0.76rem; color: $text-muted; margin-top: 1px; }
+  .item-nota { font-size: 0.85rem; color: $ink; white-space: pre-wrap; }
+  .item-actions { display: flex; gap: 2px; flex: none; }
+}
+.btn-icon {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: $text-muted;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  transition: background .15s, color .15s;
+
+  &:hover { background: $primary-bg; color: $primary; }
+  &--danger:hover { background: #FDECEC; color: #D64545; }
+}
+.pill-default {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  color: #15803d;
+  background: #e9f8ef;
+  padding: 2px 7px;
+  border-radius: 99px;
+}
+
+// Editor de un elemento (dirección o perfil)
+.item-editor {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px dashed #d9cffb;
+  border-radius: 11px;
+  background: $surface;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $primary;
+    margin-bottom: 10px;
+
+    .pi { font-size: 0.8rem; }
+  }
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+  }
+}
+.check-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: $ink;
+  cursor: pointer;
+}
+
+.username-input {
+  display: flex;
+  align-items: stretch;
+
+  .username-prefix {
+    display: grid;
+    place-items: center;
+    padding: 0 10px;
+    border: 1px solid $border-color;
+    border-right: 0;
+    border-radius: 6px 0 0 6px;
+    background: $surface;
+    color: $muted;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+  ::ng-deep .p-inputtext { border-radius: 0 6px 6px 0 !important; }
+}
+
+.nota-nueva {
+  ::ng-deep textarea.p-inputtextarea,
+  textarea {
+    border: 1px solid $border-color;
+    border-radius: 6px;
+    padding: 0.5rem 0.65rem;
+    font-size: 0.85rem;
+    resize: vertical;
+    &:focus { outline: none; border-color: $primary; box-shadow: 0 0 0 2px rgba($primary, .12); }
+  }
+}
+
+.section-header .ms-auto { margin-left: auto; }

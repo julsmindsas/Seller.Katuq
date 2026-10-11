@@ -1,15 +1,15 @@
-<div class="modal-content cliente-modal">
+<div class="modal-content cliente-modal" [class.cliente-modal--inline]="modo === 'inline'">
   <!-- Encabezado -->
   <div class="modal-header-modern">
     <div class="header-content">
       <div class="header-title">
-        <i class="pi" [ngClass]="isEdit ? 'pi-user-edit' : 'pi-user-plus'" style="color:#8b5cf6;"></i>
+        <i class="pi" [ngClass]="isEdit ? 'pi-user-edit' : 'pi-user-plus'"></i>
         <div>
           <h5>{{ title || (isEdit ? 'Editar ' + entityLabel : 'Crear Nuevo ' + entityLabel) }}</h5>
           <p>{{ (isEdit ? 'Actualiza los datos del ' : 'Completa los datos para registrar un nuevo ') + entityLabel.toLowerCase() }}</p>
         </div>
       </div>
-      <button type="button" class="btn-close-modern" aria-label="Close" (click)="activeModal.dismiss()">
+      <button *ngIf="modo === 'modal'" type="button" class="btn-close-modern" aria-label="Close" (click)="cerrar()">
         <i class="pi pi-times"></i>
       </button>
     </div>
@@ -18,306 +18,542 @@
   <!-- Cuerpo -->
   <div class="modal-body-modern">
     <form [formGroup]="formulario" autocomplete="off">
-      <div class="row g-4 mx-0">
 
-        <!-- ── Información Básica ── -->
-        <div class="col-md-6">
-          <div class="form-section-modern">
-            <div class="section-header">
-              <i class="pi pi-user" style="color:#8b5cf6;"></i>
-              <h6>{{ "Información Básica" | translate }}</h6>
-            </div>
-            <div class="row g-3">
+      <!-- D-402: pestañas. Contacto es obligatoria; Entrega, Facturación y Notas son opcionales. -->
+      <p-tabView [(activeIndex)]="pestana" styleClass="cliente-tabs">
 
-              <!-- Tipo Doc + Documento -->
-              <div class="col-12 col-sm-6">
-                <label class="form-label-modern">{{ "Tipo de Documento" | translate }} <span class="required">*</span></label>
-                <select formControlName="tipo_documento_comprador" class="form-select tipo-doc-select"
-                  [class.tipo-doc-locked]="isEdit">
-                  <option value="CC">CC - Cédula de ciudadanía</option>
-                  <option value="NIT">NIT</option>
-                  <option value="TI">TI - Tarjeta de identidad</option>
-                  <option value="RC">RC - Registro civil</option>
-                  <option value="CE">CE - Cédula de extranjería</option>
-                  <option value="TE">TE - Tarjeta de extranjería</option>
-                  <option value="PA">PA - Pasaporte</option>
-                  <option value="DIE">DIE - Doc. identificación extranjero</option>
-                  <option value="PEP">PEP - Permiso Especial de Permanencia</option>
-                  <option value="PPT">PPT - Permiso por Protección Temporal</option>
-                  <option value="NIT_EXT">NIT_EXT - NIT de otro país</option>
-                  <option value="NUIP">NUIP</option>
-                </select>
-                <div *ngIf="formulario.get('tipo_documento_comprador')?.invalid && formulario.get('tipo_documento_comprador')?.touched" class="error-message mt-1">
-                  <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
-                </div>
-              </div>
-              <div class="col-12 col-sm-6">
-                <label class="form-label-modern">{{ "Número de Documento" | translate }} <span class="required">*</span></label>
-                <input pInputText type="text" placeholder="{{ 'Número de documento' | translate }}"
-                  formControlName="documento" [attr.disabled]="isEdit ? true : null" class="w-100">
-                <div *ngIf="formulario.get('documento')?.invalid && formulario.get('documento')?.touched" class="error-message mt-1">
-                  <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
-                </div>
-              </div>
+        <!-- ══════════════ CONTACTO ══════════════ -->
+        <p-tabPanel>
+          <ng-template pTemplate="header">
+            <i class="pi pi-user"></i>
+            <span>{{ "Contacto" | translate }}</span>
+            <span class="tab-alert" *ngIf="formulario.invalid && formulario.touched" title="Faltan datos">!</span>
+          </ng-template>
 
-              <!-- Nombres + Apellidos -->
-              <div class="col-12 col-sm-6">
-                <label class="form-label-modern">{{ (esPersonaJuridica ? "Razón social" : "Nombres Completos") | translate }} <span class="required">*</span></label>
-                <input pInputText type="text" placeholder="{{ 'Nombres completos' | translate }}"
-                  formControlName="nombres_completos" class="w-100">
-                <div *ngIf="formulario.get('nombres_completos')?.invalid && formulario.get('nombres_completos')?.touched" class="error-message mt-1">
-                  <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
-                </div>
-              </div>
-              <div class="col-12 col-sm-6">
-                <label class="form-label-modern">{{ "Apellidos Completos" | translate }} <span class="required" *ngIf="!esPersonaJuridica">*</span><span class="text-muted" *ngIf="esPersonaJuridica"> ({{ "opcional" | translate }})</span></label>
-                <input pInputText type="text" placeholder="{{ 'Apellidos completos' | translate }}"
-                  formControlName="apellidos_completos" class="w-100">
-                <div *ngIf="formulario.get('apellidos_completos')?.invalid && formulario.get('apellidos_completos')?.touched" class="error-message mt-1">
-                  <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
-                </div>
-              </div>
+          <div class="row g-4 mx-0">
 
-              <!-- Tipo de Cliente + Fecha Cumpleaños -->
-              <div class="col-12 col-sm-6" *ngIf="clientTypes && clientTypes.length > 0">
-                <label class="form-label-modern">{{ "Tipo de Cliente" | translate }}</label>
-                <p-dropdown formControlName="tipoCliente" [options]="clientTypes"
-                  optionLabel="label" optionValue="value"
-                  placeholder="{{ 'Seleccionar tipo...' | translate }}"
-                  [showClear]="true" styleClass="w-100" panelStyleClass="buscar-por-panel"
-                  appendTo="body" scrollHeight="180px"
-                  [filter]="true" filterBy="label" filterMatchMode="contains"
-                  filterPlaceholder="{{ 'Buscar tipo...' | translate }}">
-                </p-dropdown>
-              </div>
-              <div class="col-12" [class.col-sm-6]="clientTypes && clientTypes.length > 0">
-                <label class="form-label-modern">
-                  <i class="pi pi-gift me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Fecha de Cumpleaños" | translate }}
-                </label>
-                <input type="date" formControlName="fechaCumpleanos"
-                  autocomplete="bday"
-                  class="w-100 p-inputtext"
-                  style="height:36px; border:1px solid #e9ecef; border-radius:6px; padding:0 0.65rem; font-size:0.85rem;">
-              </div>
-
-              <!-- Crédito y plazo de pago (spec 014 — CxC/Cartera). Visibles
-                   también para corporativos (D-110): el formulario es el mismo
-                   para poder conectarlo con Finanzas. -->
-              <div class="col-12 col-sm-6">
-                <label class="form-label-modern">
-                  <i class="pi pi-credit-card me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Cupo de crédito" | translate }}
-                </label>
-                <input pInputText type="number" min="0" formControlName="creditLimit"
-                  placeholder="0" class="w-100">
-                <small class="text-muted">{{ "0 = sin cupo. Se usa en Cartera (CxC)." | translate }}</small>
-              </div>
-              <div class="col-12 col-sm-6">
-                <label class="form-label-modern">
-                  <i class="pi pi-clock me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Plazo de pago (días)" | translate }}
-                </label>
-                <input pInputText type="number" min="0" formControlName="payTermDays"
-                  placeholder="0" class="w-100">
-                <small class="text-muted">{{ "0 = contado. Define el vencimiento en Cartera." | translate }}</small>
-              </div>
-
-              <!-- Etiquetas con catálogo -->
-              <div class="col-12" *ngIf="clientTagsCatalog && clientTagsCatalog.length > 0">
-                <div class="d-flex align-items-center justify-content-between mb-1">
-                  <label class="form-label-modern mb-0">
-                    <i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ "Etiquetas" | translate }}
-                  </label>
+            <!-- ── Información Básica ── -->
+            <div class="col-md-6">
+              <div class="form-section-modern">
+                <div class="section-header">
+                  <i class="pi pi-user"></i>
+                  <h6>{{ "Información Básica" | translate }}</h6>
                 </div>
-                <div class="tags-picker">
-                  <span *ngFor="let tag of clientTagsCatalog" class="tag-chip"
-                    [class.tag-chip-selected]="tieneEtiqueta(tag.name)"
-                    [style.background-color]="tieneEtiqueta(tag.name) ? getTagColor(tag) : ''"
-                    [style.color]="tieneEtiqueta(tag.name) ? getTagTextColor(tag) : ''"
-                    (click)="toggleEtiqueta(tag.name)">
-                    <i class="pi pi-check" *ngIf="tieneEtiqueta(tag.name)"></i>{{ tag.name }}
-                  </span>
-                </div>
-              </div>
-              <!-- Sin catálogo -->
-              <div class="col-12" *ngIf="!clientTagsCatalog || clientTagsCatalog.length === 0">
-                <label class="form-label-modern mb-0">
-                  <i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ "Etiquetas" | translate }}
-                </label>
-                <div class="tags-empty-hint mt-1">
-                  <i class="pi pi-info-circle me-1"></i>{{ "No hay etiquetas configuradas." | translate }}
-                </div>
-              </div>
+                <div class="row g-3">
 
-            </div>
-          </div>
-        </div>
+                  <!-- Tipo Doc + Documento -->
+                  <div class="col-12 col-sm-6">
+                    <label class="form-label-modern">{{ "Tipo de Documento" | translate }} <span class="required">*</span></label>
+                    <select formControlName="tipo_documento_comprador" class="form-select tipo-doc-select"
+                      [class.tipo-doc-locked]="isEdit">
+                      <option *ngFor="let t of tipoDocOptions" [value]="t.value">{{ t.label }}</option>
+                    </select>
+                    <div *ngIf="formulario.get('tipo_documento_comprador')?.invalid && formulario.get('tipo_documento_comprador')?.touched" class="error-message mt-1">
+                      <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6">
+                    <label class="form-label-modern">{{ "Número de Documento" | translate }} <span class="required">*</span></label>
+                    <input pInputText type="text" placeholder="{{ 'Número de documento' | translate }}"
+                      formControlName="documento" [attr.disabled]="isEdit ? true : null" class="w-100">
+                    <div *ngIf="formulario.get('documento')?.invalid && formulario.get('documento')?.touched" class="error-message mt-1">
+                      <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
+                    </div>
+                  </div>
 
-        <!-- ── Información de Contacto ── -->
-        <div class="col-md-6">
-          <div class="form-section-modern">
-            <div class="section-header">
-              <i class="pi pi-phone" style="color:#8b5cf6;"></i>
-              <h6>{{ "Información de Contacto" | translate }}</h6>
-            </div>
-            <div class="row g-3">
+                  <!-- Nombres + Apellidos -->
+                  <div class="col-12 col-sm-6">
+                    <label class="form-label-modern">{{ (esPersonaJuridica ? "Razón social" : "Nombres Completos") | translate }} <span class="required">*</span></label>
+                    <input pInputText type="text" placeholder="{{ 'Nombres completos' | translate }}"
+                      formControlName="nombres_completos" class="w-100">
+                    <div *ngIf="formulario.get('nombres_completos')?.invalid && formulario.get('nombres_completos')?.touched" class="error-message mt-1">
+                      <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6">
+                    <label class="form-label-modern">{{ "Apellidos Completos" | translate }} <span class="required" *ngIf="!esPersonaJuridica">*</span><span class="text-muted" *ngIf="esPersonaJuridica"> ({{ "opcional" | translate }})</span></label>
+                    <input pInputText type="text" placeholder="{{ 'Apellidos completos' | translate }}"
+                      formControlName="apellidos_completos" class="w-100">
+                    <div *ngIf="formulario.get('apellidos_completos')?.invalid && formulario.get('apellidos_completos')?.touched" class="error-message mt-1">
+                      <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
+                    </div>
+                  </div>
 
-              <!-- Teléfono -->
-              <div class="col-12">
-                <label class="form-label-modern">{{ "Teléfono Celular" | translate }}</label>
-                <div class="phone-input-group">
-                  <p-dropdown [options]="indicativos" optionLabel="phone_code" optionValue="phone_code"
-                    placeholder="{{ 'Código' | translate }}"
-                    formControlName="indicativo_celular_comprador"
-                    styleClass="country-code" panelStyleClass="buscar-por-panel">
-                  </p-dropdown>
-                  <input pInputText type="text" placeholder="{{ 'Número celular' | translate }}"
-                    formControlName="numero_celular_comprador" autocomplete="tel" maxlength="10"
-                    (keypress)="validarSoloNumeros($event)" class="flex-grow-1">
-                </div>
-                <div *ngIf="formulario.get('numero_celular_comprador')?.invalid && formulario.get('numero_celular_comprador')?.touched" class="error-message mt-1">
-                  <i class="pi pi-exclamation-circle"></i>
-                  <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
-                  <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('pattern')">{{ "Debe tener exactamente 10 dígitos" | translate }}</span>
-                </div>
-              </div>
-
-              <!-- Teléfono fijo (ticket 1050): el RUT suele traer fijo y no celular -->
-              <div class="col-12">
-                <label class="form-label-modern" for="crear-cliente-fijo">{{ "Teléfono fijo" | translate }}</label>
-                <input id="crear-cliente-fijo" pInputText type="text" placeholder="{{ 'Ej: 6044441234' | translate }}"
-                  formControlName="telefono_fijo" autocomplete="tel" maxlength="10"
-                  (keypress)="validarSoloNumeros($event)" class="w-100">
-                <div *ngIf="formulario.get('telefono_fijo')?.hasError('pattern') && formulario.get('telefono_fijo')?.touched" class="error-message mt-1">
-                  <i class="pi pi-exclamation-circle"></i><span>{{ "Entre 7 y 10 dígitos" | translate }}</span>
-                </div>
-                <div *ngIf="formulario.hasError('sinTelefono') && (formulario.get('numero_celular_comprador')?.touched || formulario.get('telefono_fijo')?.touched)" class="error-message mt-1">
-                  <i class="pi pi-exclamation-circle"></i><span>{{ "Registra al menos un teléfono: celular o fijo" | translate }}</span>
-                </div>
-              </div>
-
-              <!-- Correo + Cómo nos conoció en misma fila -->
-              <div class="col-12 col-sm-7">
-                <label class="form-label-modern" for="crear-cliente-email">{{ emailLabel | translate }} <span class="required">*</span></label>
-                <input id="crear-cliente-email" pInputText type="email" placeholder="{{ 'correo@ejemplo.com' | translate }}"
-                  formControlName="correo_electronico_comprador" class="w-100" [attr.aria-describedby]="emailHint ? 'crear-cliente-email-help' : null">
-                <small id="crear-cliente-email-help" class="text-muted d-block mt-1" *ngIf="emailHint">{{ emailHint | translate }}</small>
-                <div *ngIf="formulario.get('correo_electronico_comprador')?.touched && formulario.get('correo_electronico_comprador')?.invalid" class="error-message mt-1">
-                  <i class="pi pi-exclamation-circle"></i>
-                  <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
-                  <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('email')">{{ "Correo inválido" | translate }}</span>
-                </div>
-              </div>
-              <div class="col-12 col-sm-5">
-                <label class="form-label-modern">
-                  <i class="pi pi-compass me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "¿Cómo nos conoció?" | translate }}
-                </label>
-                <p-dropdown formControlName="comoNosConocio"
-                  [options]="[
-                    {label: 'Redes Sociales', value: 'Redes Sociales'},
-                    {label: 'Referido / Amigo', value: 'Referido / Amigo'},
-                    {label: 'Google / Búsqueda web', value: 'Google / Búsqueda web'},
-                    {label: 'Publicidad online', value: 'Publicidad online'},
-                    {label: 'Evento / Feria', value: 'Evento / Feria'},
-                    {label: 'Visita en tienda', value: 'Visita en tienda'},
-                    {label: 'WhatsApp / Email', value: 'WhatsApp / Email'},
-                    {label: 'Otro', value: 'Otro'}
-                  ]"
-                  optionLabel="label" optionValue="value"
-                  placeholder="{{ 'Seleccionar...' | translate }}"
-                  [showClear]="true" styleClass="w-100" panelStyleClass="buscar-por-panel">
-                </p-dropdown>
-              </div>
-
-              <!-- WhatsApp compacto -->
-              <div class="col-12">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                  <label class="form-label-modern mb-0">{{ "WhatsApp" | translate }}</label>
-                  <div class="d-flex align-items-center gap-2">
-                    <input type="checkbox" id="whatsappCheckboxModal"
-                      formControlName="whatsappSameAsPhone"
-                      (change)="replicarWhatsApp($event)" class="form-check-input mt-0">
-                    <label for="whatsappCheckboxModal" class="form-label-modern mb-0" style="font-size:0.8rem;color:#6b7280;">
-                      {{ "Mismo número" | translate }}
+                  <!-- Tipo de Cliente + Fecha Cumpleaños -->
+                  <div class="col-12 col-sm-6" *ngIf="clientTypes && clientTypes.length > 0">
+                    <label class="form-label-modern">{{ "Tipo de Cliente" | translate }}</label>
+                    <p-dropdown formControlName="tipoCliente" [options]="clientTypes"
+                      optionLabel="label" optionValue="value"
+                      placeholder="{{ 'Seleccionar tipo...' | translate }}"
+                      [showClear]="true" styleClass="w-100" panelStyleClass="buscar-por-panel"
+                      appendTo="body" scrollHeight="180px"
+                      [filter]="true" filterBy="label" filterMatchMode="contains"
+                      filterPlaceholder="{{ 'Buscar tipo...' | translate }}">
+                    </p-dropdown>
+                  </div>
+                  <div class="col-12" [class.col-sm-6]="clientTypes && clientTypes.length > 0">
+                    <label class="form-label-modern">
+                      <i class="pi pi-gift me-1 label-icon"></i>{{ "Fecha de Cumpleaños" | translate }}
                     </label>
+                    <input type="date" formControlName="fechaCumpleanos"
+                      autocomplete="bday"
+                      class="w-100 p-inputtext input-fecha">
+                  </div>
+
+                  <!-- Crédito y plazo de pago (spec 014 — CxC/Cartera). Visibles
+                       también para corporativos (D-110): el formulario es el mismo
+                       para poder conectarlo con Finanzas. -->
+                  <div class="col-12 col-sm-6">
+                    <label class="form-label-modern">
+                      <i class="pi pi-credit-card me-1 label-icon"></i>{{ "Cupo de crédito" | translate }}
+                    </label>
+                    <input pInputText type="number" min="0" formControlName="creditLimit"
+                      placeholder="0" class="w-100">
+                    <small class="text-muted">{{ "0 = sin cupo. Se usa en Cartera (CxC)." | translate }}</small>
+                  </div>
+                  <div class="col-12 col-sm-6">
+                    <label class="form-label-modern">
+                      <i class="pi pi-clock me-1 label-icon"></i>{{ "Plazo de pago (días)" | translate }}
+                    </label>
+                    <input pInputText type="number" min="0" formControlName="payTermDays"
+                      placeholder="0" class="w-100">
+                    <small class="text-muted">{{ "0 = contado. Define el vencimiento en Cartera." | translate }}</small>
+                  </div>
+
+                  <!-- Etiquetas con catálogo -->
+                  <div class="col-12" *ngIf="clientTagsCatalog && clientTagsCatalog.length > 0">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                      <label class="form-label-modern mb-0">
+                        <i class="pi pi-tags me-1 label-icon"></i>{{ "Etiquetas" | translate }}
+                      </label>
+                    </div>
+                    <div class="tags-picker">
+                      <span *ngFor="let tag of clientTagsCatalog" class="tag-chip"
+                        [class.tag-chip-selected]="tieneEtiqueta(tag.name)"
+                        [style.background-color]="tieneEtiqueta(tag.name) ? getTagColor(tag) : ''"
+                        [style.color]="tieneEtiqueta(tag.name) ? getTagTextColor(tag) : ''"
+                        (click)="toggleEtiqueta(tag.name)">
+                        <i class="pi pi-check" *ngIf="tieneEtiqueta(tag.name)"></i>{{ tag.name }}
+                      </span>
+                    </div>
+                  </div>
+                  <!-- Sin catálogo -->
+                  <div class="col-12" *ngIf="!clientTagsCatalog || clientTagsCatalog.length === 0">
+                    <label class="form-label-modern mb-0">
+                      <i class="pi pi-tags me-1 label-icon"></i>{{ "Etiquetas" | translate }}
+                    </label>
+                    <div class="tags-empty-hint mt-1">
+                      <i class="pi pi-info-circle me-1"></i>{{ "No hay etiquetas configuradas." | translate }}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Información de Contacto ── -->
+            <div class="col-md-6">
+              <div class="form-section-modern">
+                <div class="section-header">
+                  <i class="pi pi-phone"></i>
+                  <h6>{{ "Información de Contacto" | translate }}</h6>
+                </div>
+                <div class="row g-3">
+
+                  <!-- Teléfono -->
+                  <div class="col-12">
+                    <label class="form-label-modern">{{ "Teléfono Celular" | translate }}</label>
+                    <div class="phone-input-group">
+                      <p-dropdown [options]="indicativos" optionLabel="phone_code" optionValue="phone_code"
+                        placeholder="{{ 'Código' | translate }}"
+                        formControlName="indicativo_celular_comprador"
+                        styleClass="country-code" panelStyleClass="buscar-por-panel">
+                      </p-dropdown>
+                      <input pInputText type="text" placeholder="{{ 'Número celular' | translate }}"
+                        formControlName="numero_celular_comprador" autocomplete="tel" maxlength="10"
+                        (keypress)="validarSoloNumeros($event)" class="flex-grow-1">
+                    </div>
+                    <div *ngIf="formulario.get('numero_celular_comprador')?.invalid && formulario.get('numero_celular_comprador')?.touched" class="error-message mt-1">
+                      <i class="pi pi-exclamation-circle"></i>
+                      <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
+                      <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('pattern')">{{ "Debe tener exactamente 10 dígitos" | translate }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Teléfono fijo (ticket 1050): el RUT suele traer fijo y no celular -->
+                  <div class="col-12">
+                    <label class="form-label-modern" for="crear-cliente-fijo">{{ "Teléfono fijo" | translate }}</label>
+                    <input id="crear-cliente-fijo" pInputText type="text" placeholder="{{ 'Ej: 6044441234' | translate }}"
+                      formControlName="telefono_fijo" autocomplete="tel" maxlength="10"
+                      (keypress)="validarSoloNumeros($event)" class="w-100">
+                    <div *ngIf="formulario.get('telefono_fijo')?.hasError('pattern') && formulario.get('telefono_fijo')?.touched" class="error-message mt-1">
+                      <i class="pi pi-exclamation-circle"></i><span>{{ "Entre 7 y 10 dígitos" | translate }}</span>
+                    </div>
+                    <div *ngIf="formulario.hasError('sinTelefono') && (formulario.get('numero_celular_comprador')?.touched || formulario.get('telefono_fijo')?.touched)" class="error-message mt-1">
+                      <i class="pi pi-exclamation-circle"></i><span>{{ "Registra al menos un teléfono: celular o fijo" | translate }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Correo + Cómo nos conoció en misma fila -->
+                  <div class="col-12 col-sm-7">
+                    <label class="form-label-modern" for="crear-cliente-email">{{ emailLabel | translate }} <span class="required">*</span></label>
+                    <input id="crear-cliente-email" pInputText type="email" placeholder="{{ 'correo@ejemplo.com' | translate }}"
+                      formControlName="correo_electronico_comprador" class="w-100" [attr.aria-describedby]="emailHint ? 'crear-cliente-email-help' : null">
+                    <small id="crear-cliente-email-help" class="text-muted d-block mt-1" *ngIf="emailHint">{{ emailHint | translate }}</small>
+                    <div *ngIf="formulario.get('correo_electronico_comprador')?.touched && formulario.get('correo_electronico_comprador')?.invalid" class="error-message mt-1">
+                      <i class="pi pi-exclamation-circle"></i>
+                      <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
+                      <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('email')">{{ "Correo inválido" | translate }}</span>
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-5">
+                    <label class="form-label-modern">
+                      <i class="pi pi-compass me-1 label-icon"></i>{{ "¿Cómo nos conoció?" | translate }}
+                    </label>
+                    <p-dropdown formControlName="comoNosConocio"
+                      [options]="[
+                        {label: 'Redes Sociales', value: 'Redes Sociales'},
+                        {label: 'Referido / Amigo', value: 'Referido / Amigo'},
+                        {label: 'Google / Búsqueda web', value: 'Google / Búsqueda web'},
+                        {label: 'Publicidad online', value: 'Publicidad online'},
+                        {label: 'Evento / Feria', value: 'Evento / Feria'},
+                        {label: 'Visita en tienda', value: 'Visita en tienda'},
+                        {label: 'WhatsApp / Email', value: 'WhatsApp / Email'},
+                        {label: 'Otro', value: 'Otro'}
+                      ]"
+                      optionLabel="label" optionValue="value"
+                      placeholder="{{ 'Seleccionar...' | translate }}"
+                      [showClear]="true" styleClass="w-100" panelStyleClass="buscar-por-panel">
+                    </p-dropdown>
+                  </div>
+
+                  <!-- WhatsApp compacto -->
+                  <div class="col-12">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <label class="form-label-modern mb-0">{{ "WhatsApp" | translate }}</label>
+                      <div class="d-flex align-items-center gap-2">
+                        <input type="checkbox" id="whatsappCheckboxModal"
+                          formControlName="whatsappSameAsPhone"
+                          (change)="replicarWhatsApp($event)" class="form-check-input mt-0">
+                        <label for="whatsappCheckboxModal" class="form-label-modern mb-0 label-hint">
+                          {{ "Mismo número" | translate }}
+                        </label>
+                      </div>
+                    </div>
+                    <div class="phone-input-group">
+                      <p-dropdown [options]="indicativos" optionLabel="phone_code" optionValue="phone_code"
+                        placeholder="{{ 'Código' | translate }}"
+                        formControlName="indicativo_celular_whatsapp"
+                        styleClass="country-code" panelStyleClass="buscar-por-panel">
+                      </p-dropdown>
+                      <input pInputText type="text" placeholder="{{ 'Número WhatsApp' | translate }}"
+                        formControlName="numero_celular_whatsapp" autocomplete="tel-national"
+                        (keypress)="validarSoloNumeros($event)" class="flex-grow-1">
+                    </div>
+                  </div>
+
+                  <!-- Ticket 1166: usuario de WhatsApp -->
+                  <div class="col-12">
+                    <label class="form-label-modern" for="crear-cliente-wa-user">{{ "Usuario de WhatsApp" | translate }} <span class="text-muted">({{ "opcional" | translate }})</span></label>
+                    <div class="username-input">
+                      <span class="username-prefix">@</span>
+                      <input id="crear-cliente-wa-user" pInputText type="text" placeholder="{{ 'ej: maria.flores' | translate }}"
+                        formControlName="whatsappUsername" maxlength="33" autocomplete="off"
+                        (blur)="onUsernameBlur()" class="flex-grow-1">
+                    </div>
+                    <div *ngIf="formulario.get('whatsappUsername')?.invalid && formulario.get('whatsappUsername')?.touched" class="error-message mt-1">
+                      <i class="pi pi-exclamation-circle"></i><span>{{ "De 3 a 32 caracteres: letras, números, punto o guion bajo" | translate }}</span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </p-tabPanel>
+
+        <!-- ══════════════ ENTREGA ══════════════ -->
+        <p-tabPanel *ngIf="permiteExtras">
+          <ng-template pTemplate="header">
+            <i class="pi pi-map-marker"></i>
+            <span>{{ "Entrega" | translate }}</span>
+            <span class="tab-count" *ngIf="totalEntregas">{{ totalEntregas }}</span>
+            <span class="tab-alert" *ngIf="entregaPendiente" title="Dirección sin terminar">!</span>
+          </ng-template>
+
+          <div class="form-section-modern">
+            <div class="section-header">
+              <i class="pi pi-map-marker"></i>
+              <h6>{{ "Direcciones de entrega" | translate }}</h6>
+              <small class="text-muted ms-2">{{ "Opcional · puedes tener varias" | translate }}</small>
+              <button pButton type="button" icon="pi pi-plus" label="{{ 'Agregar dirección' | translate }}"
+                class="p-button-outlined p-button-sm ms-auto" (click)="nuevaEntrega(); abrirModalDireccion()"
+                *ngIf="!entregaEditando"></button>
+            </div>
+
+            <!-- Lista -->
+            <div *ngIf="entregas.length; else sinEntregas" class="lista-items">
+              <div *ngFor="let e of entregas; let i = index" class="item-row" [class.item-row--editing]="entregaIndex === i">
+                <i class="pi pi-map-marker item-icon"></i>
+                <div class="item-main">
+                  <div class="item-title">{{ e.alias || e.direccionEntrega }}</div>
+                  <div class="item-sub">
+                    <span *ngIf="e.alias">{{ e.direccionEntrega }} · </span>{{ e.barrio ? e.barrio + ' · ' : '' }}{{ e.ciudad }}<span *ngIf="e.departamento">, {{ e.departamento }}</span>
+                    <span *ngIf="e.zonaCobro"> · {{ "Zona" | translate }} {{ e.zonaCobro }}</span>
+                  </div>
+                  <div class="item-sub" *ngIf="e.nombres || e.celular">{{ e.nombres }} {{ e.apellidos }}<span *ngIf="e.celular"> · {{ e.celular }}</span></div>
+                </div>
+                <div class="item-actions">
+                  <button type="button" class="btn-icon" title="{{ 'Editar' | translate }}" (click)="editarEntrega(i)"><i class="pi pi-pencil"></i></button>
+                  <button type="button" class="btn-icon btn-icon--danger" title="{{ 'Eliminar' | translate }}" (click)="eliminarEntrega(i)"><i class="pi pi-trash"></i></button>
+                </div>
+              </div>
+            </div>
+            <ng-template #sinEntregas>
+              <div class="tags-empty-hint" *ngIf="!entregaEditando">
+                <i class="pi pi-info-circle me-1"></i>{{ "Este cliente aún no tiene direcciones de entrega." | translate }}
+              </div>
+            </ng-template>
+
+            <!-- Editor de una dirección -->
+            <div class="item-editor" *ngIf="entregaEditando">
+              <div class="item-editor__title">
+                <i class="pi" [ngClass]="entregaIndex >= 0 ? 'pi-pencil' : 'pi-plus'"></i>
+                {{ (entregaIndex >= 0 ? "Editar dirección" : "Nueva dirección") | translate }}
+              </div>
+              <div class="row g-3">
+                <div class="col-12 col-md-8">
+                  <label class="form-label-modern" for="entrega-direccion">{{ "Dirección" | translate }} <span class="required">*</span></label>
+                  <div class="d-flex gap-2">
+                    <input id="entrega-direccion" pInputText type="text" readonly class="flex-grow-1 input-clickable"
+                      [value]="entregaEditando.direccionEntrega || ''"
+                      placeholder="{{ 'Clic para escribir la dirección' | translate }}"
+                      (click)="abrirModalDireccion()" (keydown.enter)="abrirModalDireccion()">
+                    <button pButton type="button" icon="pi pi-map-marker" class="p-button-outlined"
+                      [attr.aria-label]="'Escribir dirección' | translate" (click)="abrirModalDireccion()"></button>
+                  </div>
+                  <small *ngIf="entregaEditando.ciudad" class="text-muted d-block mt-1">
+                    {{ entregaEditando.ciudad }}<span *ngIf="entregaEditando.departamento">, {{ entregaEditando.departamento }}</span>
+                  </small>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label-modern" for="entrega-alias">{{ "Alias" | translate }}</label>
+                  <input id="entrega-alias" pInputText type="text" class="w-100" placeholder="{{ 'Casa, Oficina…' | translate }}"
+                    [(ngModel)]="entregaEditando.alias" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label-modern" for="entrega-barrio">{{ "Barrio" | translate }}</label>
+                  <input id="entrega-barrio" pInputText type="text" class="w-100"
+                    [(ngModel)]="entregaEditando.barrio" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12 col-md-8">
+                  <label class="form-label-modern" for="entrega-indicaciones">{{ "Indicaciones para la entrega" | translate }}</label>
+                  <input id="entrega-indicaciones" pInputText type="text" class="w-100"
+                    placeholder="{{ 'Ej: portería, segundo piso, horario' | translate }}"
+                    [(ngModel)]="entregaEditando.observaciones" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label-modern" for="entrega-nombres">{{ "Quién recibe" | translate }}</label>
+                  <input id="entrega-nombres" pInputText type="text" class="w-100"
+                    [(ngModel)]="entregaEditando.nombres" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label-modern" for="entrega-celular">{{ "Celular de quien recibe" | translate }}</label>
+                  <div class="phone-input-group">
+                    <p-dropdown [options]="indicativos" optionLabel="phone_code" optionValue="phone_code"
+                      [(ngModel)]="entregaEditando.indicativoCel" [ngModelOptions]="{ standalone: true }"
+                      styleClass="country-code" panelStyleClass="buscar-por-panel"></p-dropdown>
+                    <input id="entrega-celular" pInputText type="text" class="flex-grow-1" maxlength="10"
+                      (keypress)="validarSoloNumeros($event)"
+                      [(ngModel)]="entregaEditando.celular" [ngModelOptions]="{ standalone: true }">
                   </div>
                 </div>
-                <div class="phone-input-group">
-                  <p-dropdown [options]="indicativos" optionLabel="phone_code" optionValue="phone_code"
-                    placeholder="{{ 'Código' | translate }}"
-                    formControlName="indicativo_celular_whatsapp"
-                    styleClass="country-code" panelStyleClass="buscar-por-panel">
-                  </p-dropdown>
-                  <input pInputText type="text" placeholder="{{ 'Número WhatsApp' | translate }}"
-                    formControlName="numero_celular_whatsapp" autocomplete="tel-national"
-                    (keypress)="validarSoloNumeros($event)" class="flex-grow-1">
+                <div class="col-12 col-md-4" *ngIf="zonasParaCiudad.length">
+                  <label class="form-label-modern" for="entrega-zona">{{ "Zona de cobro" | translate }}</label>
+                  <select id="entrega-zona" class="form-select"
+                    [(ngModel)]="entregaEditando.zonaCobro" [ngModelOptions]="{ standalone: true }"
+                    (ngModelChange)="onZonaCobroChange()">
+                    <option value="">{{ "Sin zona" | translate }}</option>
+                    <option *ngFor="let z of zonasParaCiudad" [value]="z.nombreZonaCobro">
+                      {{ z.nombreZonaCobro }}<ng-container *ngIf="z.valorZonaCobro"> · {{ z.valorZonaCobro | currency:'COP':'symbol-narrow':'1.0-0' }}</ng-container>
+                    </option>
+                  </select>
                 </div>
               </div>
-
+              <div class="item-editor__actions">
+                <button pButton type="button" icon="pi pi-times" label="{{ 'Descartar' | translate }}"
+                  class="p-button-text p-button-secondary p-button-sm" (click)="descartarEntrega()"></button>
+                <button pButton type="button" icon="pi pi-check" label="{{ (entregaIndex >= 0 ? 'Guardar cambios' : 'Agregar a la lista') | translate }}"
+                  class="p-button-outlined p-button-sm" (click)="confirmarEntrega()"></button>
+              </div>
             </div>
           </div>
-        </div>
+        </p-tabPanel>
 
-        <!-- ── Dirección de entrega (opcional, ticket 1046) ── -->
-        <div class="col-12" *ngIf="permiteDireccion">
+        <!-- ══════════════ FACTURACIÓN ══════════════ -->
+        <p-tabPanel *ngIf="permiteExtras">
+          <ng-template pTemplate="header">
+            <i class="pi pi-file"></i>
+            <span>{{ "Facturación" | translate }}</span>
+            <span class="tab-count" *ngIf="totalPerfiles">{{ totalPerfiles }}</span>
+            <span class="tab-alert" *ngIf="perfilPendiente" title="Perfil sin terminar">!</span>
+          </ng-template>
+
           <div class="form-section-modern">
             <div class="section-header">
-              <i class="pi pi-map-marker" style="color:#8b5cf6;"></i>
-              <h6>{{ "Dirección de entrega" | translate }}</h6>
-              <small class="text-muted ms-2">{{ "Opcional" | translate }}</small>
+              <i class="pi pi-file"></i>
+              <h6>{{ "Datos de facturación electrónica" | translate }}</h6>
+              <small class="text-muted ms-2">{{ "Opcional · a quién se le factura" | translate }}</small>
+              <button pButton type="button" icon="pi pi-plus" label="{{ 'Agregar perfil' | translate }}"
+                class="p-button-outlined p-button-sm ms-auto" (click)="nuevoPerfil()" *ngIf="!perfilEditando"></button>
             </div>
 
-            <div *ngIf="direccionesExistentes.length > 0" class="mb-3">
-              <label class="form-label-modern mb-1">{{ "Direcciones guardadas" | translate }}</label>
-              <div *ngFor="let e of direccionesExistentes" class="d-flex align-items-start gap-2 mb-1" style="font-size:0.85rem;">
-                <i class="pi pi-map-marker text-muted mt-1"></i>
-                <span>{{ e.direccionEntrega }}<span *ngIf="e.ciudad"> — {{ e.ciudad }}</span></span>
-              </div>
-            </div>
-
-            <div class="row g-3">
-              <div class="col-12 col-md-7">
-                <label class="form-label-modern" for="crear-cliente-direccion">
-                  {{ (direccionesExistentes.length ? "Agregar otra dirección" : "Dirección") | translate }}
-                </label>
-                <div class="d-flex gap-2">
-                  <input id="crear-cliente-direccion" pInputText type="text" readonly class="flex-grow-1" style="cursor:pointer;"
-                    [value]="entregaNueva?.direccionEntrega || ''"
-                    placeholder="{{ 'Clic para escribir la dirección' | translate }}"
-                    (click)="abrirModalDireccion()" (keydown.enter)="abrirModalDireccion()">
-                  <button pButton type="button" icon="pi pi-map-marker" class="p-button-outlined"
-                    [attr.aria-label]="'Escribir dirección' | translate" (click)="abrirModalDireccion()"></button>
-                  <button *ngIf="entregaNueva" pButton type="button" icon="pi pi-times"
-                    class="p-button-outlined p-button-secondary"
-                    [attr.aria-label]="'Quitar dirección' | translate" (click)="quitarDireccion()"></button>
+            <div *ngIf="perfiles.length; else sinPerfiles" class="lista-items">
+              <div *ngFor="let p of perfiles; let i = index" class="item-row" [class.item-row--editing]="perfilIndex === i">
+                <i class="pi pi-file item-icon"></i>
+                <div class="item-main">
+                  <div class="item-title">
+                    {{ p.alias || p.nombres }}
+                    <span class="pill-default" *ngIf="p.predeterminado">{{ "Predeterminado" | translate }}</span>
+                  </div>
+                  <div class="item-sub"><span *ngIf="p.alias">{{ p.nombres }} · </span>{{ p.tipoDocumento }} {{ p.documento }}<span *ngIf="p.correo"> · {{ p.correo }}</span></div>
                 </div>
-                <small *ngIf="entregaNueva?.ciudad" class="text-muted d-block mt-1">
-                  {{ entregaNueva.ciudad }}<span *ngIf="entregaNueva.departamento">, {{ entregaNueva.departamento }}</span>
-                </small>
+                <div class="item-actions">
+                  <button type="button" class="btn-icon" *ngIf="!p.predeterminado" title="{{ 'Hacer predeterminado' | translate }}" (click)="marcarPredeterminado(i)"><i class="pi pi-star"></i></button>
+                  <button type="button" class="btn-icon" title="{{ 'Editar' | translate }}" (click)="editarPerfil(i)"><i class="pi pi-pencil"></i></button>
+                  <button type="button" class="btn-icon btn-icon--danger" title="{{ 'Eliminar' | translate }}" (click)="eliminarPerfil(i)"><i class="pi pi-trash"></i></button>
+                </div>
               </div>
-              <div class="col-12 col-md-5" *ngIf="entregaNueva">
-                <label class="form-label-modern" for="crear-cliente-barrio">{{ "Barrio" | translate }}</label>
-                <input id="crear-cliente-barrio" pInputText type="text" class="w-100"
-                  [(ngModel)]="entregaNueva.barrio" [ngModelOptions]="{ standalone: true }">
+            </div>
+            <ng-template #sinPerfiles>
+              <div class="tags-empty-hint" *ngIf="!perfilEditando">
+                <i class="pi pi-info-circle me-1"></i>{{ "Sin perfiles: se factura con los datos de contacto o a Consumidor Final." | translate }}
               </div>
-              <div class="col-12" *ngIf="entregaNueva">
-                <label class="form-label-modern" for="crear-cliente-indicaciones">{{ "Indicaciones para la entrega" | translate }}</label>
-                <input id="crear-cliente-indicaciones" pInputText type="text" class="w-100"
-                  placeholder="{{ 'Ej: portería, segundo piso, horario' | translate }}"
-                  [(ngModel)]="entregaNueva.observaciones" [ngModelOptions]="{ standalone: true }">
+            </ng-template>
+
+            <div class="item-editor" *ngIf="perfilEditando">
+              <div class="item-editor__title">
+                <i class="pi" [ngClass]="perfilIndex >= 0 ? 'pi-pencil' : 'pi-plus'"></i>
+                {{ (perfilIndex >= 0 ? "Editar perfil" : "Nuevo perfil de facturación") | translate }}
+                <button pButton type="button" icon="pi pi-user" label="{{ 'Usar los datos del cliente' | translate }}"
+                  class="p-button-text p-button-sm ms-auto" (click)="usarDatosDelCliente()"></button>
+              </div>
+              <div class="row g-3">
+                <div class="col-12 col-md-4">
+                  <label class="form-label-modern" for="perfil-alias">{{ "Alias" | translate }}</label>
+                  <input id="perfil-alias" pInputText type="text" class="w-100" placeholder="{{ 'Empresa, Personal…' | translate }}"
+                    [(ngModel)]="perfilEditando.alias" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12 col-md-8">
+                  <label class="form-label-modern" for="perfil-nombres">{{ "Razón social / Nombre" | translate }} <span class="required">*</span></label>
+                  <input id="perfil-nombres" pInputText type="text" class="w-100"
+                    [(ngModel)]="perfilEditando.nombres" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label-modern" for="perfil-tipodoc">{{ "Tipo de documento" | translate }} <span class="required">*</span></label>
+                  <select id="perfil-tipodoc" class="form-select"
+                    [(ngModel)]="perfilEditando.tipoDocumento" [ngModelOptions]="{ standalone: true }">
+                    <option *ngFor="let t of tipoDocOptions" [value]="t.value">{{ t.label }}</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label-modern" for="perfil-doc">{{ "Número de documento" | translate }} <span class="required">*</span></label>
+                  <input id="perfil-doc" pInputText type="text" class="w-100"
+                    [(ngModel)]="perfilEditando.documento" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label-modern" for="perfil-correo">{{ "Correo para la factura" | translate }}</label>
+                  <input id="perfil-correo" pInputText type="email" class="w-100"
+                    [(ngModel)]="perfilEditando.correo" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12 col-md-8">
+                  <label class="form-label-modern" for="perfil-direccion">{{ "Dirección fiscal" | translate }}</label>
+                  <input id="perfil-direccion" pInputText type="text" class="w-100"
+                    [(ngModel)]="perfilEditando.direccion" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label-modern" for="perfil-ciudad">{{ "Ciudad" | translate }}</label>
+                  <input id="perfil-ciudad" pInputText type="text" class="w-100"
+                    [(ngModel)]="perfilEditando.ciudad" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12">
+                  <label class="check-inline">
+                    <input type="checkbox" class="form-check-input mt-0"
+                      [(ngModel)]="perfilEditando.predeterminado" [ngModelOptions]="{ standalone: true }">
+                    <span>{{ "Usar este perfil por defecto al facturar" | translate }}</span>
+                  </label>
+                </div>
+              </div>
+              <div class="item-editor__actions">
+                <button pButton type="button" icon="pi pi-times" label="{{ 'Descartar' | translate }}"
+                  class="p-button-text p-button-secondary p-button-sm" (click)="descartarPerfil()"></button>
+                <button pButton type="button" icon="pi pi-check" label="{{ (perfilIndex >= 0 ? 'Guardar cambios' : 'Agregar a la lista') | translate }}"
+                  class="p-button-outlined p-button-sm" (click)="confirmarPerfil()"></button>
               </div>
             </div>
           </div>
-        </div>
+        </p-tabPanel>
 
-      </div>
+        <!-- ══════════════ NOTAS ══════════════ -->
+        <p-tabPanel *ngIf="permiteExtras">
+          <ng-template pTemplate="header">
+            <i class="pi pi-comment"></i>
+            <span>{{ "Notas" | translate }}</span>
+            <span class="tab-count" *ngIf="totalNotas">{{ totalNotas }}</span>
+          </ng-template>
+
+          <div class="form-section-modern">
+            <div class="section-header">
+              <i class="pi pi-comment"></i>
+              <h6>{{ "Notas del cliente" | translate }}</h6>
+              <small class="text-muted ms-2">{{ "Solo las ve tu equipo" | translate }}</small>
+            </div>
+
+            <div class="nota-nueva">
+              <textarea pInputTextarea rows="2" class="w-100" placeholder="{{ 'Escribe una nota: preferencias, acuerdos, advertencias…' | translate }}"
+                [(ngModel)]="notaNueva" [ngModelOptions]="{ standalone: true }"></textarea>
+              <div class="d-flex justify-content-end mt-2">
+                <button pButton type="button" icon="pi pi-plus" label="{{ 'Agregar nota' | translate }}"
+                  class="p-button-outlined p-button-sm" [disabled]="!notaNueva.trim()" (click)="agregarNota()"></button>
+              </div>
+            </div>
+
+            <div *ngIf="notas.length; else sinNotas" class="lista-items mt-3">
+              <div *ngFor="let n of notas; let i = index" class="item-row">
+                <i class="pi pi-comment item-icon"></i>
+                <div class="item-main">
+                  <div class="item-nota">{{ n.nota }}</div>
+                  <div class="item-sub">{{ n.fecha }}<span *ngIf="n.usuario"> · {{ n.usuario }}</span></div>
+                </div>
+                <div class="item-actions">
+                  <button type="button" class="btn-icon btn-icon--danger" title="{{ 'Eliminar' | translate }}" (click)="eliminarNota(i)"><i class="pi pi-trash"></i></button>
+                </div>
+              </div>
+            </div>
+            <ng-template #sinNotas>
+              <div class="tags-empty-hint mt-3">
+                <i class="pi pi-info-circle me-1"></i>{{ "Sin notas todavía." | translate }}
+              </div>
+            </ng-template>
+          </div>
+        </p-tabPanel>
+
+      </p-tabView>
     </form>
   </div>
 
   <!-- Footer -->
   <div class="modal-footer-modern">
-    <button pButton type="button" icon="pi pi-times"
+    <button *ngIf="modo === 'modal'" pButton type="button" icon="pi pi-times"
       label="{{ 'Cancelar' | translate }}"
       class="p-button-outlined p-button-secondary"
-      (click)="activeModal.dismiss()">
+      (click)="cerrar()">
+    </button>
+    <button *ngIf="modo === 'inline'" pButton type="button" icon="pi pi-eraser"
+      label="{{ (isEdit ? 'Nuevo cliente' : 'Limpiar') | translate }}"
+      class="p-button-outlined p-button-secondary"
+      (click)="limpiar()">
     </button>
     <button pButton type="button"
       [icon]="isEdit ? 'pi pi-check' : 'pi pi-save'"

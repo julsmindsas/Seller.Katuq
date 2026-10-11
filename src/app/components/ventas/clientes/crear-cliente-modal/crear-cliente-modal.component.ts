@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from "@angular/core";
+import { Component, EventEmitter, Input, OnChanges, OnInit, Optional, Output, SimpleChanges } from "@angular/core";
 import { FormGroup, FormBuilder, Validators } from "@angular/forms";
 import { NgbActiveModal, NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { map } from "rxjs/operators";
@@ -11,14 +11,45 @@ import { InfoIndicativos } from "../../../../../Mock/indicativosPais";
 import { DireccionEstructuradaComponent } from "../../entrega/direccion-estructurada/direccion-estructurada.component";
 import { DaneCodesService } from "../../../../shared/services/dane-codes.service";
 import { alMenosUnTelefono, PATRON_TELEFONO_FIJO } from "../cliente-telefonos.validator";
+import { EntregaCliente, esEntregaCompleta, normalizarEntrega, normalizarEntregas, resumenEntrega } from "../../../../shared/utils/client-delivery";
+import { normalizeZonasCobro, zonaCubreCiudad } from "../../../../shared/util/zona-cobro.util";
 import Swal from "sweetalert2";
+
+/** Resultado que el formulario entrega a quien lo abrió (modal: `close()`, inline: `guardado`). */
+export interface ResultadoFormularioCliente {
+  cliente: any;
+  action: 'created' | 'updated' | 'existing_found' | 'draft';
+}
+
+/** Perfil de facturación electrónica (`clients.datosFacturacionElectronica[]`). */
+export interface PerfilFacturacion {
+  alias: string;
+  nombres: string;
+  tipoDocumento: string;
+  documento: string;
+  correo: string;
+  direccion?: string;
+  ciudad?: string;
+  predeterminado?: boolean;
+  [extra: string]: any;
+}
+
+/** Nota del cliente (`clients.notas[]`). */
+export interface NotaCliente {
+  fecha: string;
+  nota: string;
+  usuario?: string;
+}
+
+/** Ticket 1166: nombre de usuario de WhatsApp, sin `@`. */
+const PATRON_WHATSAPP_USERNAME = /^[A-Za-z0-9._]{3,32}$/;
 
 @Component({
   selector: "app-crear-cliente-modal",
   templateUrl: "./crear-cliente-modal.component.html",
   styleUrls: ["./crear-cliente-modal.component.scss"],
 })
-export class CrearClienteModalComponent implements OnInit {
+export class CrearClienteModalComponent implements OnInit, OnChanges {
   @Input() clienteData: any;
   @Input() isEdit: boolean = false;
   @Input() documentoPrellenado: string = "";
@@ -54,6 +85,15 @@ export class CrearClienteModalComponent implements OnInit {
    * mezclar los dos catálogos (spec 011).
    */
   @Input() tagsCatalog: ClientTag[] | null = null;
+  /**
+   * D-402: el mismo formulario sirve dentro de un modal (`NgbModal.open`, como
+   * hasta ahora) o incrustado en una pantalla (`<app-crear-cliente-modal
+   * modo="inline">`). En inline no hay `NgbActiveModal`: el resultado sale por
+   * `guardado` y "cancelar" por `cancelado`.
+   */
+  @Input() modo: 'modal' | 'inline' = 'modal';
+  @Output() guardado = new EventEmitter<ResultadoFormularioCliente>();
+  @Output() cancelado = new EventEmitter<void>();
 
   formulario: FormGroup;
   indicativos: any[] = [];
@@ -66,19 +106,43 @@ export class CrearClienteModalComponent implements OnInit {
   etiquetasSeleccionadas: string[] = [];
   tipoDocSeleccionado: string = 'CC';
 
-  /**
-   * Ticket 1046 (ALMACEN BOMBAS): este formulario no tenía dónde registrar la
-   * dirección de entrega, así que los clientes creados desde el listado o el
-   * POS quedaban sin dirección. Es opcional y usa el mismo modal de dirección
-   * estructurada de la pantalla completa de clientes.
-   */
-  entregaNueva: any = null;
-  /** Direcciones que el cliente ya tiene (solo se muestran; al guardar se conservan). */
-  direccionesExistentes: any[] = [];
-  /** Solo para clientes habituales que se guardan: corporativos van por CRM y el borrador no persiste. */
-  get permiteDireccion(): boolean {
+  // ── Pestañas (D-402) ────────────────────────────────────────────────
+  /** Índice de la pestaña activa: 0 Contacto, 1 Entrega, 2 Facturación, 3 Notas. */
+  pestana = 0;
+  /** Las pestañas extra solo aplican a clientes habituales que se guardan (corporativos van por CRM; el borrador no persiste). */
+  get permiteExtras(): boolean {
     return this.target === 'client' && this.persist;
   }
+  /** Compatibilidad con la plantilla anterior (ticket 1046). */
+  get permiteDireccion(): boolean {
+    return this.permiteExtras;
+  }
+
+  // ── Entrega (varias direcciones) ────────────────────────────────────
+  entregas: EntregaCliente[] = [];
+  /** Dirección que se está escribiendo o editando. Null = ninguna abierta. */
+  entregaEditando: EntregaCliente | null = null;
+  /** Índice en `entregas` si se edita una existente; -1 si es nueva. */
+  entregaIndex = -1;
+  /** Zonas de cobro de la empresa, cargadas la primera vez que se abre Entrega. */
+  private zonasCobro: any[] | null = null;
+  zonasParaCiudad: any[] = [];
+
+  // ── Facturación (varios perfiles) ───────────────────────────────────
+  perfiles: PerfilFacturacion[] = [];
+  perfilEditando: PerfilFacturacion | null = null;
+  perfilIndex = -1;
+
+  // ── Notas ───────────────────────────────────────────────────────────
+  notas: NotaCliente[] = [];
+  notaNueva = '';
+
+  /**
+   * Qué arreglos tocó el usuario. `clients/edit` hace un merge superficial, así
+   * que al editar solo se envía el arreglo que cambió: si la pantalla que abrió
+   * el formulario trajo el cliente sin alguno de ellos, no se borra por omisión.
+   */
+  private tocado = { entrega: false, facturacion: false, notas: false };
 
   readonly tipoDocOptions = [
     { label: 'CC - Cédula de ciudadanía', value: 'CC' },
@@ -100,7 +164,7 @@ export class CrearClienteModalComponent implements OnInit {
     private maestroService: MaestroService,
     private corpService: CorporateClientsService,
     private crmService: CrmService,
-    public activeModal: NgbActiveModal,
+    @Optional() public activeModal: NgbActiveModal | null,
     private infoIndicativos: InfoIndicativos,
     private clientConfig: ClientConfigService,
     private modalService: NgbModal,
@@ -111,9 +175,7 @@ export class CrearClienteModalComponent implements OnInit {
 
   ngOnInit(): void {
     this.indicativos = this.infoIndicativos.datos;
-    this.direccionesExistentes = this.isEdit && Array.isArray(this.clienteData?.datosEntrega)
-      ? this.clienteData.datosEntrega.filter((e: any) => e && e.direccionEntrega)
-      : [];
+    this.cargarArreglos(this.isEdit ? this.clienteData : this.prefill);
     if (this.tagsCatalog) {
       this.clientTagsCatalog = this.tagsCatalog;
     } else {
@@ -145,100 +207,151 @@ export class CrearClienteModalComponent implements OnInit {
     // estén renderizados antes de intentar setear el valor seleccionado
     setTimeout(() => {
       if (this.clienteData && this.isEdit) {
-        this.formulario.patchValue(this.clienteData);
-
-        // Legacy: algunos clientes guardan el nombre completo en `nombres_completos`
-        // con `apellidos_completos` vacío. Separar para que cada campo muestre lo suyo.
-        // Ticket 1083: una empresa (NIT) no se parte: su razón social va entera en nombres.
-        const tipoGuardado = this.normalizeTipoDoc(this.clienteData.tipo_documento_comprador);
-        const split = tipoGuardado === 'NIT' || tipoGuardado === 'NIT_EXT'
-          ? { nombres: String(this.clienteData.nombres_completos || '').trim(), apellidos: String(this.clienteData.apellidos_completos || '').trim() }
-          : this.splitNombreApellido(
-            this.clienteData.nombres_completos,
-            this.clienteData.apellidos_completos,
-          );
-        this.formulario.controls['nombres_completos'].setValue(split.nombres);
-        this.formulario.controls['apellidos_completos'].setValue(split.apellidos);
-
-        this.etiquetasSeleccionadas = this.sinEtiquetasRepetidas(Array.isArray(this.clienteData.etiquetas)
-          ? [...this.clienteData.etiquetas]
-          : []);
-        this.formulario.controls['etiquetas'].setValue([...this.etiquetasSeleccionadas]);
-
-        // tipo_documento: normaliza el valor guardado (puede venir legacy como
-        // "CC-NIT" o texto completo "Cédula de ciudadanía") al código real del
-        // catálogo, para que el <select> muestre el tipo correcto del cliente.
-        const tipoDoc = this.normalizeTipoDoc(this.clienteData.tipo_documento_comprador);
-        this.tipoDocSeleccionado = tipoDoc;
-        this.formulario.controls['tipo_documento_comprador'].setValue(tipoDoc);
-        // En edición el tipo de documento no es editable (igual que el número).
-        // El guardado usa getRawValue(), así que el valor se conserva.
-        this.formulario.controls['tipo_documento_comprador'].disable({ emitEvent: false });
-
-        // Normalizar indicativos a string (pueden venir como número desde Firestore)
-        this.formulario.controls['indicativo_celular_comprador'].setValue(
-          this.clienteData.indicativo_celular_comprador != null
-            ? String(this.clienteData.indicativo_celular_comprador) : '57'
-        );
-        this.formulario.controls['indicativo_celular_whatsapp'].setValue(
-          this.clienteData.indicativo_celular_whatsapp != null
-            ? String(this.clienteData.indicativo_celular_whatsapp) : '57'
-        );
-
-        // Coercionar números de celular a string
-        if (this.clienteData.numero_celular_comprador != null) {
-          this.formulario.controls['numero_celular_comprador'].setValue(
-            String(this.clienteData.numero_celular_comprador)
-          );
-        }
-        if (this.clienteData.telefono_fijo != null) {
-          this.formulario.controls['telefono_fijo'].setValue(String(this.clienteData.telefono_fijo));
-        }
-        if (this.clienteData.numero_celular_whatsapp != null) {
-          this.formulario.controls['numero_celular_whatsapp'].setValue(
-            String(this.clienteData.numero_celular_whatsapp)
-          );
-        }
-
-        if (!this.clienteData.indicativo_celular_whatsapp && !this.clienteData.numero_celular_whatsapp) {
-          this.replicarWhatsApp({ target: { checked: true } });
-        }
+        this.cargarEnFormulario(this.clienteData);
       } else {
-        this.tipoDocSeleccionado = 'CC';
-        this.formulario.reset();
-        this.formulario.patchValue({
-          tipo_documento_comprador: "CC",
-          documento: this.documentoPrellenado || "",
-          indicativo_celular_comprador: "57",
-          indicativo_celular_whatsapp: "57",
-          estado: "activo",
-          creditLimit: 0,
-          payTermDays: 0,
-        });
-
-        // Precarga al crear (D-111): sobre los defaults, sin pisarlos con vacíos.
-        if (this.prefill) {
-          const limpio: any = {};
-          Object.entries(this.prefill).forEach(([k, v]) => {
-            if (v !== null && v !== undefined && v !== "" && this.formulario.get(k)) limpio[k] = v;
-          });
-          this.formulario.patchValue(limpio);
-
-          const tipoDoc = this.normalizeTipoDoc(this.prefill.tipo_documento_comprador);
-          this.tipoDocSeleccionado = tipoDoc;
-          this.formulario.controls['tipo_documento_comprador'].setValue(tipoDoc);
-
-          this.etiquetasSeleccionadas = this.sinEtiquetasRepetidas(Array.isArray(this.prefill.etiquetas)
-            ? [...this.prefill.etiquetas]
-            : []);
-          this.formulario.controls['etiquetas'].setValue([...this.etiquetasSeleccionadas]);
-
-          // Marca los campos faltantes para que el usuario vea de una qué debe
-          // completar, en vez de descubrirlo al presionar Guardar.
-          this.marcarControlesComoTocados();
-        }
+        this.reiniciarParaCrear();
       }
     });
+  }
+
+  /**
+   * En modo inline la pantalla puede cambiar `clienteData` / `isEdit` con el
+   * componente ya creado (elegir otro resultado del buscador, pasar de crear a
+   * editar). Se recarga igual que al abrir; el modal no pasa por aquí porque
+   * recibe sus entradas antes del primer ciclo.
+   */
+  ngOnChanges(changes: SimpleChanges): void {
+    const cambio = changes['clienteData'] || changes['isEdit'];
+    if (!cambio || cambio.firstChange || !this.formulario) return;
+    this.cargarArreglos(this.isEdit ? this.clienteData : this.prefill);
+    if (this.clienteData && this.isEdit) {
+      this.cargarEnFormulario(this.clienteData);
+    } else {
+      this.reiniciarParaCrear();
+    }
+  }
+
+  /** Carga un cliente existente en el formulario (edición o "ya existe"). */
+  private cargarEnFormulario(cliente: any): void {
+    this.formulario.patchValue(cliente);
+
+    // Legacy: algunos clientes guardan el nombre completo en `nombres_completos`
+    // con `apellidos_completos` vacío. Separar para que cada campo muestre lo suyo.
+    // Ticket 1083: una empresa (NIT) no se parte: su razón social va entera en nombres.
+    const tipoGuardado = this.normalizeTipoDoc(cliente.tipo_documento_comprador);
+    const split = tipoGuardado === 'NIT' || tipoGuardado === 'NIT_EXT'
+      ? { nombres: String(cliente.nombres_completos || '').trim(), apellidos: String(cliente.apellidos_completos || '').trim() }
+      : this.splitNombreApellido(cliente.nombres_completos, cliente.apellidos_completos);
+    this.formulario.controls['nombres_completos'].setValue(split.nombres);
+    this.formulario.controls['apellidos_completos'].setValue(split.apellidos);
+
+    this.etiquetasSeleccionadas = this.sinEtiquetasRepetidas(Array.isArray(cliente.etiquetas)
+      ? [...cliente.etiquetas]
+      : []);
+    this.formulario.controls['etiquetas'].setValue([...this.etiquetasSeleccionadas]);
+
+    // tipo_documento: normaliza el valor guardado (puede venir legacy como
+    // "CC-NIT" o texto completo "Cédula de ciudadanía") al código real del
+    // catálogo, para que el <select> muestre el tipo correcto del cliente.
+    const tipoDoc = this.normalizeTipoDoc(cliente.tipo_documento_comprador);
+    this.tipoDocSeleccionado = tipoDoc;
+    this.formulario.controls['tipo_documento_comprador'].setValue(tipoDoc);
+    // En edición el tipo de documento no es editable (igual que el número).
+    // El guardado usa getRawValue(), así que el valor se conserva.
+    this.formulario.controls['tipo_documento_comprador'].disable({ emitEvent: false });
+
+    // Normalizar indicativos a string (pueden venir como número desde Firestore)
+    this.formulario.controls['indicativo_celular_comprador'].setValue(
+      cliente.indicativo_celular_comprador != null ? String(cliente.indicativo_celular_comprador) : '57'
+    );
+    this.formulario.controls['indicativo_celular_whatsapp'].setValue(
+      cliente.indicativo_celular_whatsapp != null ? String(cliente.indicativo_celular_whatsapp) : '57'
+    );
+
+    // Coercionar números de celular a string
+    if (cliente.numero_celular_comprador != null) {
+      this.formulario.controls['numero_celular_comprador'].setValue(String(cliente.numero_celular_comprador));
+    }
+    if (cliente.telefono_fijo != null) {
+      this.formulario.controls['telefono_fijo'].setValue(String(cliente.telefono_fijo));
+    }
+    if (cliente.numero_celular_whatsapp != null) {
+      this.formulario.controls['numero_celular_whatsapp'].setValue(String(cliente.numero_celular_whatsapp));
+    }
+    this.formulario.controls['whatsappUsername'].setValue(this.limpiarUsername(cliente.whatsappUsername));
+
+    if (!cliente.indicativo_celular_whatsapp && !cliente.numero_celular_whatsapp) {
+      this.replicarWhatsApp({ target: { checked: true } });
+    }
+  }
+
+  /** Valores por defecto para crear (más la precarga D-111 si la hay). */
+  private reiniciarParaCrear(): void {
+    this.tipoDocSeleccionado = 'CC';
+    this.formulario.reset();
+    this.formulario.controls['tipo_documento_comprador'].enable({ emitEvent: false });
+    this.formulario.patchValue({
+      tipo_documento_comprador: "CC",
+      documento: this.documentoPrellenado || "",
+      indicativo_celular_comprador: "57",
+      indicativo_celular_whatsapp: "57",
+      estado: "activo",
+      creditLimit: 0,
+      payTermDays: 0,
+      whatsappUsername: "",
+    });
+    this.etiquetasSeleccionadas = [];
+    this.formulario.controls['etiquetas'].setValue([]);
+
+    // Precarga al crear (D-111): sobre los defaults, sin pisarlos con vacíos.
+    if (this.prefill) {
+      const limpio: any = {};
+      Object.entries(this.prefill).forEach(([k, v]) => {
+        if (v !== null && v !== undefined && v !== "" && this.formulario.get(k)) limpio[k] = v;
+      });
+      this.formulario.patchValue(limpio);
+
+      const tipoDoc = this.normalizeTipoDoc(this.prefill.tipo_documento_comprador);
+      this.tipoDocSeleccionado = tipoDoc;
+      this.formulario.controls['tipo_documento_comprador'].setValue(tipoDoc);
+
+      this.etiquetasSeleccionadas = this.sinEtiquetasRepetidas(Array.isArray(this.prefill.etiquetas)
+        ? [...this.prefill.etiquetas]
+        : []);
+      this.formulario.controls['etiquetas'].setValue([...this.etiquetasSeleccionadas]);
+
+      // Marca los campos faltantes para que el usuario vea de una qué debe
+      // completar, en vez de descubrirlo al presionar Guardar.
+      this.marcarControlesComoTocados();
+    }
+  }
+
+  /** Entregas, perfiles de facturación y notas tal como vienen del cliente (o de la precarga). */
+  private cargarArreglos(origen: any): void {
+    this.entregas = normalizarEntregas(origen?.datosEntrega);
+    this.perfiles = Array.isArray(origen?.datosFacturacionElectronica)
+      ? origen.datosFacturacionElectronica.filter((p: any) => p && typeof p === 'object').map((p: any) => ({ ...p }))
+      : [];
+    this.notas = Array.isArray(origen?.notas)
+      ? origen.notas.filter((n: any) => n && typeof n === 'object').map((n: any) => ({ ...n }))
+      : [];
+    this.ordenarNotas();
+    this.entregaEditando = null;
+    this.perfilEditando = null;
+    this.notaNueva = '';
+    this.tocado = { entrega: false, facturacion: false, notas: false };
+    this.pestana = 0;
+  }
+
+  /**
+   * Modo inline: vuelve a dejar el formulario como recién abierto para crear
+   * otro cliente (el botón "Limpiar" / "Nuevo cliente" de las pantallas).
+   */
+  limpiar(): void {
+    this.isEdit = false;
+    this.clienteData = null;
+    this.cargarArreglos(this.prefill);
+    this.reiniciarParaCrear();
   }
 
   onTipoDocChange(value: string): void {
@@ -320,6 +433,8 @@ export class CrearClienteModalComponent implements OnInit {
       indicativo_celular_whatsapp: ["57"],
       numero_celular_whatsapp: [""],
       whatsappSameAsPhone: [false],
+      // Ticket 1166: usuario de WhatsApp (sin @). Opcional.
+      whatsappUsername: ["", [Validators.pattern(PATRON_WHATSAPP_USERNAME)]],
       tipoCliente: [""],
       fechaCumpleanos: [""],
       comoNosConocio: [""],
@@ -357,11 +472,21 @@ export class CrearClienteModalComponent implements OnInit {
     }
   }
 
+  /** Ticket 1166: el usuario se guarda sin `@` ni espacios alrededor. */
+  private limpiarUsername(raw: any): string {
+    return String(raw || '').trim().replace(/^@+/, '');
+  }
+
+  onUsernameBlur(): void {
+    const c = this.formulario.controls['whatsappUsername'];
+    c.setValue(this.limpiarUsername(c.value));
+  }
+
   // Ticket 1100: el catálogo trae "CONTADO" y el cliente guarda "Contado" (se
   // guarda en formato título). Comparar exacto hacía que la etiqueta nunca se
   // viera marcada, que marcarla la repitiera y que desmarcarla no la quitara.
   private normalizarEtiqueta(nombre: any): string {
-    return String(nombre || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+    return String(nombre || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
   }
 
   private sinEtiquetasRepetidas(etiquetas: string[]): string[] {
@@ -420,6 +545,7 @@ export class CrearClienteModalComponent implements OnInit {
       numero_celular_comprador:      'Teléfono Celular (10 dígitos)',
       telefono_fijo:                 'Teléfono fijo (7 a 10 dígitos)',
       correo_electronico_comprador:  'Correo Electrónico',
+      whatsappUsername:              'Usuario de WhatsApp (3 a 32 letras, números, punto o guion bajo)',
     };
     const faltantes = Object.entries(labels)
       .filter(([key]) => this.formulario.get(key)?.invalid)
@@ -428,12 +554,251 @@ export class CrearClienteModalComponent implements OnInit {
     return faltantes;
   }
 
+  // ── Pestañas: contadores y estado de error ─────────────────────────
+  get totalEntregas(): number { return this.entregas.length; }
+  get totalPerfiles(): number { return this.perfiles.length; }
+  get totalNotas(): number { return this.notas.length; }
+
+  /** Hay una dirección a medio escribir (bloquea el guardado hasta completarla o descartarla). */
+  get entregaPendiente(): boolean {
+    return !!this.entregaEditando && !esEntregaCompleta(this.entregaEditando);
+  }
+  /** Hay un perfil a medio escribir. */
+  get perfilPendiente(): boolean {
+    return !!this.perfilEditando && !this.perfilCompleto(this.perfilEditando);
+  }
+
+  // ── Entrega: varias direcciones (D-402, reemplaza el campo único del ticket 1046) ──
+  resumenEntrega(e: any): string { return resumenEntrega(e); }
+
+  nuevaEntrega(): void {
+    const fv = this.formulario.getRawValue();
+    this.entregaIndex = -1;
+    this.entregaEditando = normalizarEntrega({
+      nombres: this.toTitleCase(fv.nombres_completos || ''),
+      apellidos: this.toTitleCase(fv.apellidos_completos || ''),
+      indicativoCel: String(fv.indicativo_celular_comprador || '57'),
+      celular: String(fv.numero_celular_comprador || ''),
+    });
+    this.zonasParaCiudad = [];
+  }
+
+  editarEntrega(i: number): void {
+    this.entregaIndex = i;
+    this.entregaEditando = normalizarEntrega(this.entregas[i]);
+    this.filtrarZonas();
+  }
+
+  eliminarEntrega(i: number): void {
+    this.entregas.splice(i, 1);
+    this.tocado.entrega = true;
+    if (this.entregaIndex === i) this.descartarEntrega();
+  }
+
+  descartarEntrega(): void {
+    this.entregaEditando = null;
+    this.entregaIndex = -1;
+  }
+
+  confirmarEntrega(): void {
+    if (!this.entregaEditando) return;
+    if (!esEntregaCompleta(this.entregaEditando)) {
+      Swal.fire({
+        title: 'Falta completar la dirección',
+        text: 'Escribe la dirección con su ciudad, o descártala si no la vas a registrar ahora.',
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#5F3FE0',
+      });
+      return;
+    }
+    const lista = normalizarEntrega(this.entregaEditando);
+    if (this.entregaIndex >= 0) this.entregas[this.entregaIndex] = lista;
+    else this.entregas.push(lista);
+    this.tocado.entrega = true;
+    this.descartarEntrega();
+  }
+
+  abrirModalDireccion(): void {
+    if (!this.entregaEditando) this.nuevaEntrega();
+    const actual = this.entregaEditando as EntregaCliente;
+    const ref = this.modalService.open(DireccionEstructuradaComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      keyboard: false,
+    });
+    ref.componentInstance.direccionActual = actual.direccionEntrega || '';
+    ref.componentInstance.ciudadActual = actual.ciudad || '';
+    ref.result.then(
+      (r: any) => {
+        if (!r || !this.entregaEditando) return;
+        if (typeof r === 'string') {
+          this.entregaEditando.direccionEntrega = r;
+          return;
+        }
+        const [lat, lng] = String(r.coordenadas || '').split(',').map((c: string) => c.trim());
+        this.entregaEditando = normalizarEntrega({
+          ...this.entregaEditando,
+          direccionEntrega: r.direccion || '',
+          ciudad: r.ciudad || this.entregaEditando.ciudad || '',
+          departamento: r.departamento || '',
+          pais: 'Colombia',
+          coordenadas: r.coordenadas || '',
+          latitud: lat || '',
+          longitud: lng || '',
+          especificacionesInternas: r.referencias || this.entregaEditando.especificacionesInternas || '',
+        });
+        if (!this.entregaEditando.departamento && this.entregaEditando.ciudad) {
+          this.completarDepartamento(this.entregaEditando.ciudad);
+        }
+        this.filtrarZonas();
+      },
+      () => {},
+    );
+  }
+
+  /** Solo llena el departamento cuando la ciudad corresponde a UN único departamento. */
+  private completarDepartamento(ciudad: string): void {
+    const clave = (t: any) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+    this.daneCodes.searchMunicipios(ciudad).subscribe((municipios: any[]) => {
+      const exactos = (municipios || []).filter((m: any) => clave(m.nombre) === clave(ciudad));
+      const departamentos = Array.from(new Set(exactos.map((m: any) => m.departamento)));
+      if (departamentos.length === 1 && this.entregaEditando && !this.entregaEditando.departamento) {
+        this.entregaEditando.departamento = departamentos[0];
+      }
+    });
+  }
+
+  /** Zonas de cobro que cubren la ciudad de la dirección en edición (spec 011 v2). */
+  private filtrarZonas(): void {
+    const ciudad = this.entregaEditando?.ciudad || '';
+    const aplicar = () => {
+      this.zonasParaCiudad = (this.zonasCobro || []).filter((z) => zonaCubreCiudad(z, ciudad));
+      if (this.entregaEditando?.zonaCobro && !this.zonasParaCiudad.some((z) => z.nombreZonaCobro === this.entregaEditando?.zonaCobro)) {
+        // La zona guardada ya no cubre la ciudad: se deja ver pero sin valor.
+        this.zonasParaCiudad = [{ nombreZonaCobro: this.entregaEditando.zonaCobro, valorZonaCobro: this.entregaEditando.valorZonaCobro }, ...this.zonasParaCiudad];
+      }
+    };
+    if (this.zonasCobro) { aplicar(); return; }
+    if (!this.permiteExtras) { this.zonasCobro = []; aplicar(); return; }
+    this.maestroService.getBillingZone().subscribe({
+      next: (zonas: any) => { this.zonasCobro = normalizeZonasCobro(zonas); aplicar(); },
+      error: () => { this.zonasCobro = []; aplicar(); },
+    });
+  }
+
+  onZonaCobroChange(): void {
+    if (!this.entregaEditando) return;
+    const zona = this.zonasParaCiudad.find((z) => z.nombreZonaCobro === this.entregaEditando?.zonaCobro);
+    this.entregaEditando.valorZonaCobro = zona ? zona.valorZonaCobro : '';
+  }
+
+  // ── Facturación: varios perfiles ───────────────────────────────────
+  perfilCompleto(p: any): boolean {
+    return !!(p && String(p.nombres || '').trim() && String(p.tipoDocumento || '').trim() && String(p.documento || '').trim());
+  }
+
+  nuevoPerfil(): void {
+    this.perfilIndex = -1;
+    this.perfilEditando = { alias: '', nombres: '', tipoDocumento: 'NIT', documento: '', correo: '', direccion: '', ciudad: '', predeterminado: this.perfiles.length === 0 };
+  }
+
+  /** Copia nombre, tipo y número de documento y correo desde Contacto. */
+  usarDatosDelCliente(): void {
+    if (!this.perfilEditando) this.nuevoPerfil();
+    const fv = this.formulario.getRawValue();
+    const p = this.perfilEditando as PerfilFacturacion;
+    p.nombres = [fv.nombres_completos, this.esPersonaJuridica ? '' : fv.apellidos_completos].filter(Boolean).join(' ').trim();
+    p.tipoDocumento = fv.tipo_documento_comprador || 'CC';
+    p.documento = String(fv.documento || '');
+    p.correo = fv.correo_electronico_comprador || '';
+  }
+
+  editarPerfil(i: number): void {
+    this.perfilIndex = i;
+    this.perfilEditando = { ...this.perfiles[i] };
+  }
+
+  eliminarPerfil(i: number): void {
+    const eraPredeterminado = !!this.perfiles[i]?.predeterminado;
+    this.perfiles.splice(i, 1);
+    if (eraPredeterminado && this.perfiles.length) this.perfiles[0].predeterminado = true;
+    this.tocado.facturacion = true;
+    if (this.perfilIndex === i) this.descartarPerfil();
+  }
+
+  descartarPerfil(): void {
+    this.perfilEditando = null;
+    this.perfilIndex = -1;
+  }
+
+  confirmarPerfil(): void {
+    if (!this.perfilEditando) return;
+    if (!this.perfilCompleto(this.perfilEditando)) {
+      Swal.fire({
+        title: 'Falta completar el perfil',
+        text: 'Razón social, tipo y número de documento son obligatorios.',
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#5F3FE0',
+      });
+      return;
+    }
+    const p: PerfilFacturacion = {
+      ...this.perfilEditando,
+      alias: String(this.perfilEditando.alias || '').trim(),
+      nombres: String(this.perfilEditando.nombres || '').trim(),
+      documento: String(this.perfilEditando.documento || '').trim(),
+      correo: String(this.perfilEditando.correo || '').trim(),
+    };
+    if (this.perfilIndex >= 0) this.perfiles[this.perfilIndex] = p;
+    else this.perfiles.push(p);
+    if (p.predeterminado) this.marcarPredeterminado(this.perfilIndex >= 0 ? this.perfilIndex : this.perfiles.length - 1);
+    this.tocado.facturacion = true;
+    this.descartarPerfil();
+  }
+
+  marcarPredeterminado(i: number): void {
+    this.perfiles.forEach((p, idx) => { p.predeterminado = idx === i; });
+    this.tocado.facturacion = true;
+  }
+
+  // ── Notas ──────────────────────────────────────────────────────────
+  private usuarioActual(): string {
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      return u?.email || u?.correo || '';
+    } catch { return ''; }
+  }
+
+  private ordenarNotas(): void {
+    this.notas.sort((a, b) => String(b.fecha || '').localeCompare(String(a.fecha || '')));
+  }
+
+  agregarNota(): void {
+    const texto = String(this.notaNueva || '').trim();
+    if (!texto) return;
+    const hoy = new Date();
+    const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+    this.notas.unshift({ fecha, nota: texto, usuario: this.usuarioActual() });
+    this.notaNueva = '';
+    this.tocado.notas = true;
+  }
+
+  eliminarNota(i: number): void {
+    this.notas.splice(i, 1);
+    this.tocado.notas = true;
+  }
+
+  // ── Guardar ────────────────────────────────────────────────────────
   guardarCliente() {
     if (!this.canPersist()) {
       Swal.fire('Comercio cambiado', 'Cierra este formulario y vuelve a abrir Crear cliente en el comercio correcto.', 'warning');
       return;
     }
+    this.onUsernameBlur();
     if (this.formulario.invalid) {
+      this.pestana = 0;
       this.marcarControlesComoTocados();
       const faltantes = this.getCamposFaltantes();
       const lista = faltantes.map(f => `• ${f}`).join('<br>');
@@ -442,24 +807,39 @@ export class CrearClienteModalComponent implements OnInit {
         html: `Por favor completa los siguientes campos:<br><br>${lista}`,
         icon: 'warning',
         confirmButtonText: 'Entendido',
-        confirmButtonColor: '#8b5cf6',
+        confirmButtonColor: '#5F3FE0',
       });
       return;
     }
 
-    if (this.permiteDireccion && this.entregaNueva && (!this.entregaNueva.direccionEntrega || !this.entregaNueva.ciudad)) {
+    if (this.permiteExtras && this.entregaPendiente) {
+      this.pestana = 1;
       Swal.fire({
-        title: 'Falta completar la dirección',
-        text: 'Escribe la dirección con su ciudad, o quítala si no la vas a registrar ahora.',
+        title: 'Hay una dirección sin terminar',
+        text: 'Complétala con "Agregar a la lista" o descártala antes de guardar.',
         icon: 'warning',
         confirmButtonText: 'Entendido',
-        confirmButtonColor: '#8b5cf6',
+        confirmButtonColor: '#5F3FE0',
       });
       return;
     }
+    if (this.permiteExtras && this.perfilPendiente) {
+      this.pestana = 2;
+      Swal.fire({
+        title: 'Hay un perfil de facturación sin terminar',
+        text: 'Complétalo con "Agregar a la lista" o descártalo antes de guardar.',
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#5F3FE0',
+      });
+      return;
+    }
+    // Una dirección o un perfil completos pero sin confirmar se toman como confirmados.
+    if (this.permiteExtras && this.entregaEditando) this.confirmarEntrega();
+    if (this.permiteExtras && this.perfilEditando) this.confirmarPerfil();
+    if (this.permiteExtras && String(this.notaNueva || '').trim()) this.agregarNota();
 
     const formValue = this.formulario.getRawValue();
-    const entrega = this.permiteDireccion && this.entregaNueva ? this.construirEntrega(formValue) : null;
     const clienteData: any = {
       ...formValue,
       nombres_completos: this.toTitleCase(formValue.nombres_completos),
@@ -474,20 +854,47 @@ export class CrearClienteModalComponent implements OnInit {
       numero_celular_whatsapp: formValue.numero_celular_whatsapp
         ? Number(formValue.numero_celular_whatsapp)
         : null,
+      whatsappUsername: this.limpiarUsername(formValue.whatsappUsername),
     };
+
+    if (this.permiteExtras) {
+      // Al crear van los tres arreglos (vacíos si no hay nada). Al editar solo
+      // los que el usuario tocó: `clients/edit` es un merge superficial y así
+      // no se pisa lo que la pantalla no trajo (ver `tocado`).
+      if (!this.isEdit || this.tocado.entrega) clienteData.datosEntrega = this.entregas.map(normalizarEntrega);
+      if (!this.isEdit || this.tocado.facturacion) clienteData.datosFacturacionElectronica = this.perfiles.map((p) => ({ ...p }));
+      if (!this.isEdit || this.tocado.notas) clienteData.notas = this.notas.map((n) => ({ ...n }));
+    }
 
     // Modo borrador: sin persistencia, el caller se queda con el valor.
     if (!this.persist) {
-      this.activeModal.close({ cliente: clienteData, action: 'draft' });
+      this.emitirResultado({ cliente: clienteData, action: 'draft' });
       return;
     }
 
     if (this.isEdit) {
-      this.ejecutarEdicion(clienteData, entrega);
+      this.ejecutarEdicion(clienteData);
     } else {
-      if (entrega) clienteData.datosEntrega = [entrega];
       this.verificarYCrearCliente(clienteData);
     }
+  }
+
+  /** Cierra el modal o emite el resultado, según el modo (D-402). */
+  private emitirResultado(resultado: ResultadoFormularioCliente): void {
+    if (this.modo === 'modal' && this.activeModal) {
+      this.activeModal.close(resultado);
+      return;
+    }
+    this.guardado.emit(resultado);
+  }
+
+  /** Botón Cancelar / cerrar: cierra el modal o avisa a la pantalla. */
+  cerrar(): void {
+    if (this.modo === 'modal' && this.activeModal) {
+      this.activeModal.dismiss();
+      return;
+    }
+    this.cancelado.emit();
   }
 
   // ── Persistencia según target (client | corporate) ──────────────────
@@ -533,33 +940,8 @@ export class CrearClienteModalComponent implements OnInit {
     return this.failOnCrmError<any>(this.crmService.updateLead(payload.cd, payload, true));
   }
 
-  private ejecutarEdicion(clienteData: any, entrega: any = null) {
+  private ejecutarEdicion(clienteData: any) {
     const payload = { ...clienteData, cd: this.clienteData.cd || this.clienteData.id };
-    if (!entrega) {
-      this.enviarEdicion(payload);
-      return;
-    }
-    // La dirección nueva se AGREGA a las que ya tiene. Se leen del cliente
-    // guardado (no de lo que trajo la pantalla) para no perder ninguna.
-    this.lookupByDocument(payload.documento).subscribe({
-      next: (res: any) => {
-        const guardado = Array.isArray(res) ? res[0] : res;
-        const existentes = Array.isArray(guardado?.datosEntrega)
-          ? guardado.datosEntrega
-          : (Array.isArray(this.clienteData?.datosEntrega) ? this.clienteData.datosEntrega : []);
-        this.enviarEdicion({ ...payload, datosEntrega: [...existentes, entrega] });
-      },
-      error: () => {
-        if (Array.isArray(this.clienteData?.datosEntrega)) {
-          this.enviarEdicion({ ...payload, datosEntrega: [...this.clienteData.datosEntrega, entrega] });
-          return;
-        }
-        Swal.fire('No se pudo agregar la dirección', 'No logramos leer las direcciones que ya tiene el cliente. Intenta de nuevo en un momento.', 'error');
-      },
-    });
-  }
-
-  private enviarEdicion(payload: any) {
     this.persistEdit(payload).subscribe({
       next: () => {
         this.lookupByDocument(payload.documento).subscribe({
@@ -577,10 +959,11 @@ export class CrearClienteModalComponent implements OnInit {
               toast: true,
               position: 'top-end'
             });
-            this.activeModal.close({ cliente: clienteActualizado, action: 'updated' });
+            this.tocado = { entrega: false, facturacion: false, notas: false };
+            this.emitirResultado({ cliente: clienteActualizado, action: 'updated' });
           },
           error: () => {
-            this.activeModal.close({ cliente: payload, action: 'updated' });
+            this.emitirResultado({ cliente: payload, action: 'updated' });
           }
         });
       },
@@ -596,15 +979,23 @@ export class CrearClienteModalComponent implements OnInit {
         const esArrayVacio = Array.isArray(res) && res.length === 0;
         if (res && !esArrayVacio) {
           const clienteEncontrado = Array.isArray(res) ? res[0] : res;
+          const traeExtras = (clienteData.datosEntrega?.length || 0) + (clienteData.datosFacturacionElectronica?.length || 0) + (clienteData.notas?.length || 0) > 0;
           Swal.fire({
             title: `${this.entityLabel} ya registrado`,
             html: `<p>El documento <strong>${clienteData.documento}</strong> ya está registrado.</p>
                    <p><strong>${this.entityLabel}:</strong> ${clienteEncontrado.nombres_completos} ${clienteEncontrado.apellidos_completos || ""}</p>
-                   ${clienteData.datosEntrega?.length ? '<p class="text-muted" style="font-size:0.9em;">La dirección que escribiste no se guardó: edita ese cliente para agregarla.</p>' : ''}`,
+                   ${traeExtras ? '<p class="text-muted" style="font-size:0.9em;">Las direcciones, perfiles o notas que escribiste no se guardaron: se cargó el cliente existente para que las agregues ahí.</p>' : ''}`,
             icon: "info",
             confirmButtonText: "Entendido",
           }).then(() => {
-            this.activeModal.close({ cliente: clienteEncontrado, action: 'existing_found' });
+            if (this.modo === 'inline') {
+              // En la pantalla el formulario sigue abierto: pasa a editar el existente.
+              this.isEdit = true;
+              this.clienteData = clienteEncontrado;
+              this.cargarArreglos(clienteEncontrado);
+              this.cargarEnFormulario(clienteEncontrado);
+            }
+            this.emitirResultado({ cliente: clienteEncontrado, action: 'existing_found' });
           });
         } else {
           this.crearCliente(clienteData);
@@ -628,7 +1019,21 @@ export class CrearClienteModalComponent implements OnInit {
           toast: true,
           position: 'top-end'
         });
-        this.activeModal.close({ cliente: { ...clienteData, ...clienteCreado }, action: 'created' });
+        const base = { ...clienteData, ...clienteCreado };
+        if (base.cd || this.target === 'corporate') {
+          this.emitirResultado({ cliente: base, action: 'created' });
+          return;
+        }
+        // D-402: `clients/create` responde solo {msg:'added'}, sin el id. Se relee
+        // por documento para entregar el cliente con su `cd` (venta asistida lo
+        // necesita para editarlo después sin crear un duplicado).
+        this.lookupByDocument(clienteData.documento).subscribe({
+          next: (res: any) => {
+            const guardado = Array.isArray(res) ? res[0] : res;
+            this.emitirResultado({ cliente: guardado && guardado.documento ? { ...base, ...guardado } : base, action: 'created' });
+          },
+          error: () => this.emitirResultado({ cliente: base, action: 'created' }),
+        });
       },
       error: (err: any) => {
         if (err?.code === 'EXISTE_OTRO_COMERCIAL') {
@@ -643,87 +1048,6 @@ export class CrearClienteModalComponent implements OnInit {
         Swal.fire("Error", `Ocurrió un error al crear el ${this.entityLabel.toLowerCase()}`, "error");
       },
     });
-  }
-
-  // ── Dirección de entrega (ticket 1046) ─────────────────────────────
-  abrirModalDireccion(): void {
-    const ref = this.modalService.open(DireccionEstructuradaComponent, {
-      size: 'xl',
-      backdrop: 'static',
-      keyboard: false,
-    });
-    ref.componentInstance.direccionActual = this.entregaNueva?.direccionEntrega || '';
-    ref.componentInstance.ciudadActual = this.entregaNueva?.ciudad || '';
-    ref.result.then(
-      (r: any) => {
-        if (!r) return;
-        const previo = this.entregaNueva || {};
-        if (typeof r === 'string') {
-          this.entregaNueva = { ...previo, direccionEntrega: r };
-          return;
-        }
-        const [lat, lng] = String(r.coordenadas || '').split(',').map((c: string) => c.trim());
-        this.entregaNueva = {
-          ...previo,
-          direccionEntrega: r.direccion || '',
-          ciudad: r.ciudad || previo.ciudad || '',
-          departamento: r.departamento || '',
-          pais: 'Colombia',
-          coordenadas: r.coordenadas || '',
-          latitud: lat || '',
-          longitud: lng || '',
-          especificacionesInternas: r.referencias || previo.especificacionesInternas || '',
-        };
-        if (!this.entregaNueva.departamento && this.entregaNueva.ciudad) {
-          this.completarDepartamento(this.entregaNueva.ciudad);
-        }
-      },
-      () => {},
-    );
-  }
-
-  quitarDireccion(): void {
-    this.entregaNueva = null;
-  }
-
-  /** Solo llena el departamento cuando la ciudad corresponde a UN único departamento. */
-  private completarDepartamento(ciudad: string): void {
-    const clave = (t: any) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
-    this.daneCodes.searchMunicipios(ciudad).subscribe((municipios: any[]) => {
-      const exactos = (municipios || []).filter((m: any) => clave(m.nombre) === clave(ciudad));
-      const departamentos = Array.from(new Set(exactos.map((m: any) => m.departamento)));
-      if (departamentos.length === 1 && this.entregaNueva && !this.entregaNueva.departamento) {
-        this.entregaNueva.departamento = departamentos[0];
-      }
-    });
-  }
-
-  /** Misma forma que guarda la pantalla completa de clientes (clientes.component::guardarDatosEntrega). */
-  private construirEntrega(fv: any): any {
-    const e = this.entregaNueva || {};
-    return {
-      alias: e.alias || '',
-      nombres: this.toTitleCase(fv.nombres_completos || ''),
-      apellidos: this.toTitleCase(fv.apellidos_completos || ''),
-      indicativoCel: String(fv.indicativo_celular_comprador || '57'),
-      celular: String(fv.numero_celular_comprador || ''),
-      indicativoOtroNumero: String(fv.indicativo_celular_comprador || '57'),
-      otroNumero: '',
-      direccionEntrega: e.direccionEntrega || '',
-      observaciones: e.observaciones || '',
-      barrio: e.barrio || '',
-      nombreUnidad: '',
-      especificacionesInternas: e.especificacionesInternas || '',
-      pais: e.pais || 'Colombia',
-      departamento: e.departamento || '',
-      ciudad: e.ciudad || '',
-      zonaCobro: '',
-      valorZonaCobro: '',
-      codigoPV: '',
-      latitud: e.latitud || '',
-      longitud: e.longitud || '',
-      coordenadas: e.coordenadas || '',
-    };
   }
 
   private marcarControlesComoTocados() {

@@ -1652,6 +1652,111 @@ export class CrearVentasComponent
     this.ref.detectChanges();
   }
 
+  // ── D-402: formulario unificado de cliente incrustado en el paso 1 ────────
+
+  /** El formulario inline edita cuando ya hay un cliente elegido para el pedido. */
+  get clienteInlineEsEdicion(): boolean {
+    return !!(this.encontrado && this.pedidoGral?.cliente && this.pedidoGral.cliente.documento);
+  }
+
+  /** Cliente que se edita, con su `cd` (puede venir solo en el formulario del pedido). */
+  get clienteInlineData(): any {
+    if (!this.clienteInlineEsEdicion) return null;
+    const c = this.pedidoGral.cliente as any;
+    return c.cd ? c : { ...c, cd: this.formulario?.value?.cd || c.id };
+  }
+
+  /** Guarda sobre el comercio activo; si la sesión cambió de comercio, el formulario avisa. */
+  puedePersistirClienteInline = (): boolean => true;
+
+  /**
+   * Resultado del formulario unificado: el pedido toma ese cliente (creado,
+   * actualizado o el que ya existía) tal como lo hacía `crearClienteRapido`.
+   */
+  onClienteGuardadoInline(resultado: { cliente: any; action: string }): void {
+    if (!resultado || !resultado.cliente || resultado.action === 'draft') return;
+    this.aplicarClienteAlPedido(resultado.cliente, resultado.action === 'created');
+  }
+
+  /**
+   * Mismo efecto que elegir un cliente en la búsqueda: formulario del pedido,
+   * sessionStorage, notas, facturación y entrega. `recienCreado` deja el perfil
+   * y la dirección iniciales elegidos, como hacía la creación rápida.
+   */
+  private aplicarClienteAlPedido(cliente: any, recienCreado: boolean): void {
+    this.creandoCliente = false;
+    this.pedidoGral.cliente = cliente;
+    sessionStorage.setItem("cliente", JSON.stringify(cliente));
+
+    this.formulario.patchValue({
+      cd: cliente.cd,
+      nombres_completos: cliente.nombres_completos,
+      apellidos_completos: cliente.apellidos_completos,
+      tipo_documento_comprador: cliente.tipo_documento_comprador,
+      documento: cliente.documento,
+      indicativo_celular_comprador: cliente.indicativo_celular_comprador,
+      numero_celular_comprador: cliente.numero_celular_comprador,
+      indicativo_celular_whatsapp: cliente.indicativo_celular_whatsapp,
+      numero_celular_whatsapp: cliente.numero_celular_whatsapp,
+      correo_electronico_comprador: cliente.correo_electronico_comprador,
+      datosFacturacionElectronica: cliente.datosFacturacionElectronica || [],
+      datosEntrega: cliente.datosEntrega || [],
+      notas: cliente.notas || [],
+      estado: cliente.estado || "activo",
+    });
+
+    const notasCliente = (cliente.notas || []) as any[];
+    if (!this.pedidoGral.notasPedido) {
+      this.pedidoGral.notasPedido = {
+        notasCliente,
+        notasDespachos: [],
+        notasEntregas: [],
+        notasProduccion: [],
+        notasFacturacionPagos: [],
+      } as any;
+    } else {
+      this.pedidoGral.notasPedido.notasCliente = notasCliente as any;
+      this.pedidoGral.notasPedido.notasDespachos = this.pedidoGral.notasPedido.notasDespachos || [];
+      this.pedidoGral.notasPedido.notasEntregas = this.pedidoGral.notasPedido.notasEntregas || [];
+      this.pedidoGral.notasPedido.notasProduccion = this.pedidoGral.notasPedido.notasProduccion || [];
+      this.pedidoGral.notasPedido.notasFacturacionPagos = this.pedidoGral.notasPedido.notasFacturacionPagos || [];
+    }
+    this.cargarNotasDelCliente();
+
+    this.datos = cliente;
+    this.documentoBuscar = cliente.documento;
+    this.identificarDepto();
+    this.identificarCiu();
+    this.identificarDepto1();
+    this.identificarCiu1();
+
+    this.encontrado = true;
+    this.mostrarFormularioCliente = false;
+    this.clienteRecienCreado = recienCreado;
+    this.categoriaClienteSeleccionada = cliente.categoria && cliente.categoria.id ? cliente.categoria : null;
+    this.bloqueado = String(cliente.estado || '').toLowerCase() === 'bloqueado';
+
+    const perfiles: any[] = Array.isArray(cliente.datosFacturacionElectronica)
+      ? [...cliente.datosFacturacionElectronica]
+      : [];
+    this.datosFacturacionElectronica = perfiles;
+    this.originalDataFacturacionElectronica = this.utils.deepClone(perfiles) || [];
+    this.datosEntregas = Array.isArray(cliente.datosEntrega) ? [...cliente.datosEntrega] : [];
+    this.originalDataEntregas = this.utils.deepClone(this.datosEntregas) || [];
+
+    // Perfil predeterminado (o el primero si el cliente es nuevo) y primera dirección.
+    const predeterminado = perfiles.find((p: any) => p && p.predeterminado)
+      || (recienCreado ? perfiles[0] : null);
+    if (predeterminado) this.pedidoGral.facturacion = predeterminado;
+    if (recienCreado && this.datosEntregas[0]) this.pedidoGral.envio = this.datosEntregas[0];
+
+    this.pedidoGral = { ...this.pedidoGral };
+    this.ref.markForCheck();
+    // Relee los perfiles del servidor (misma rutina que usa la búsqueda de cliente).
+    this.verDatosFacturacion();
+    this.ref.detectChanges();
+  }
+
   /**
    * Método para cancelar la edición del cliente y volver al estado anterior
    */
@@ -1950,6 +2055,12 @@ export class CrearVentasComponent
         ? [...cliente.datosFacturacionElectronica]
         : [];
       this.originalDataFacturacionElectronica = this.utils.deepClone(this.datosFacturacionElectronica) || [];
+      // D-402: si el cliente marcó un perfil de facturación como predeterminado,
+      // queda elegido de una; el vendedor puede cambiarlo en la pestaña Facturación.
+      const perfilPredeterminado = this.datosFacturacionElectronica.find((p: any) => p && p.predeterminado);
+      if (perfilPredeterminado) {
+        this.pedidoGral.facturacion = perfilPredeterminado;
+      }
       this.datosEntregas = [];
       if (cliente.datosEntrega) {
         cliente.datosEntrega.forEach((x) => {

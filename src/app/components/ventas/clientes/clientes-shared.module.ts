@@ -4,6 +4,8 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { DropdownModule } from "primeng/dropdown";
 import { InputTextModule } from "primeng/inputtext";
 import { ButtonModule } from "primeng/button";
+import { TabViewModule } from "primeng/tabview";
+import { InputTextareaModule } from "primeng/inputtextarea";
 import { SharedModule } from "../../../shared/shared.module";
 import { CrearClienteModalComponent } from "./crear-cliente-modal/crear-cliente-modal.component";
 
@@ -29,6 +31,9 @@ import { CrearClienteModalComponent } from "./crear-cliente-modal/crear-cliente-
     DropdownModule,
     InputTextModule,
     ButtonModule,
+    // D-402: pestañas Contacto/Entrega/Facturación/Notas y notas del cliente
+    TabViewModule,
+    InputTextareaModule,
   ],
   declarations: [CrearClienteModalComponent],
   exports: [CrearClienteModalComponent],
