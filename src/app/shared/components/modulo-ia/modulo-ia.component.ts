@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -49,7 +49,8 @@ export class ModuloIaComponent implements OnDestroy {
   avisoIA: string | null = null;
   copiado: string | null = null;
 
-  constructor(private servicio: ModulosIaService, private opttia: OpttiaChatService) {}
+  // markForCheck: el panel vive dentro de pantallas OnPush (Cartera) y sin esto no se repinta.
+  constructor(private servicio: ModulosIaService, private opttia: OpttiaChatService, private cdr: ChangeDetectorRef) {}
 
   get titulo(): string { return TITULOS[this.modulo]; }
   get preguntas(): string[] { return PREGUNTAS[this.modulo]; }
@@ -68,12 +69,13 @@ export class ModuloIaComponent implements OnDestroy {
     this.cargando = true;
     this.error = null;
     this.servicio.obtener(this.modulo).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (r) => { this.d = r.insights; this.cargando = false; },
+      next: (r) => { this.d = r.insights; this.cargando = false; this.cdr.markForCheck(); },
       error: (e) => {
         this.error = e?.status === 403
           ? 'Esta información la ven los roles de tesorería y administración.'
           : (e?.error?.error || 'No pudimos calcular esto en este momento. Intente de nuevo en unos minutos.');
         this.cargando = false;
+        this.cdr.markForCheck();
       },
     });
   }
@@ -83,12 +85,13 @@ export class ModuloIaComponent implements OnDestroy {
     this.explicando = true;
     this.avisoIA = null;
     this.servicio.explicar(this.modulo).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (r) => { this.d = r.insights; this.ia = r.ia || null; this.avisoIA = r.aviso || null; this.explicando = false; },
+      next: (r) => { this.d = r.insights; this.ia = r.ia || null; this.avisoIA = r.aviso || null; this.explicando = false; this.cdr.markForCheck(); },
       error: (e) => {
         this.avisoIA = e?.status === 429 || e?.status === 403
           ? (e?.error?.message || 'Se acabaron los mensajes de Opttia de su plan por hoy. Las cifras siguen siendo correctas.')
           : 'Opttia no está disponible ahora; las cifras son las calculadas.';
         this.explicando = false;
+        this.cdr.markForCheck();
       },
     });
   }
@@ -116,7 +119,8 @@ export class ModuloIaComponent implements OnDestroy {
     try {
       await navigator.clipboard.writeText(texto.replace(/\{nombre\}/g, nombre).trim());
       this.copiado = f.id;
-      setTimeout(() => (this.copiado = null), 2000);
+      this.cdr.markForCheck();
+      setTimeout(() => { this.copiado = null; this.cdr.markForCheck(); }, 2000);
     } catch {
       this.copiado = null;
     }
