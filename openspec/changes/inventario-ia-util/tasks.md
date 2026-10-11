@@ -29,7 +29,7 @@ Reglas: módulo sensible (inventario), un cambio a la vez con diff y aprobación
 - [x] 4.2 Los cuatro componentes y la Central rehecha, en el tema canónico (sin gradientes, sin primarios prohibidos).
 - [x] 4.3 *(la pregunta queda escrita en el chat y la persona la envía: respeta consentimiento y cupo)* Botón "Explicar con Opttia" y chips hacia el chat.
 - [x] 4.4 *("Qué comprar" ya preselecciona los urgentes al abrir: basta el enlace)* "Pasar a la orden" hacia "Qué comprar".
-- [ ] 4.5 *(build OK; falta la prueba en navegador, que necesita el backend desplegado o corriendo contra producción)* Build sin errores y prueba en el navegador con sesión real (FLORECER y ALMARA), probando también Opttia caído.
+- [x] 4.5 *(11-oct, en producción con ALMACEN BOMBAS: cifras, traslados, avisos, chips al chat y 390 px; se corrigieron los span azules en 2026.10.11.1. Sin probar "Explicar con Opttia" para no gastar el cupo de un comercio real)* Build sin errores y prueba en el navegador con sesión real (FLORECER y ALMARA), probando también Opttia caído.
 
 ## 5. Resumen semanal
 - [x] 5.1 Bandera `inventoryDigest` en `FEATURE_FLAG_NAMES`, con su prueba.
