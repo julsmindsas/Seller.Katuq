@@ -9173,9 +9173,63 @@ Se actualizaron las instrucciones operativas de suscripciones para retirar coman
 
 **Implementación (9-oct, commits backend `6718ad1`, ADK `43de1b0` y este del front; sin push ni despliegue).** Backend (`katuq_admin_back_firebase`, rama `backend-aws-security`): `services/inventory/inventoryInsights.js` (cálculo), `services/ai/inventoryInsightsExplain.js` + prompt (validación: id, acción de lista cerrada, guarda de números; Opttia caído → null), `controllers/inventoryInsights.js` + rutas `GET /v1/inventory/insights`, `POST /v1/inventory/insights/explicar` (cupo de chat) y `GET /v1/inventory/digest/baja` (pública, token firmado), tool MCP `get_inventory_insights` (registro + `opttiaAccessPolicy`), resumen semanal `services/inventory/digest/*` + plantilla + cron `inventarioDigest` (lunes 7:00 COT, `INVENTARIO_DIGEST=apagada|sombra|envio`, apagado por omisión) + bandera `inventoryDigest`. Cambios sensibles aprobados por Daniel y aplicados: `sugerirReposicion` acepta `informe` cargado (una sola lectura) y el informe KPI expone salidas sin motivo por fila, documentos repetidos y ajustes manuales (campos nuevos). ADK (`kai`, rama `feat/claude-agent-sdk`): `get_inventory_insights` en `INVENTORY_TOOLS`. Front: Central de Abastecimiento rehecha (4 componentes, tema canónico), chips que dejan la pregunta escrita en el chat de Opttia, sugerencia en el chat. Pruebas: cálculo puro, punta a punta con Firestore falso (una lectura de inventario, misma demanda que "Qué comprar", traslado antes de comprar), IA, tool sin red, resumen (sombra, un envío por semana, sin novedad, falla aislada, baja por persona, destinatarios por `empresa`), contrato de write-set; todas las de inventario y compras en verde; build del front OK. Hallazgo: una tercera ruta vieja de IA (`POST /inventory/analizar-abastecimiento-ia`) entra al retiro. Pendiente: medición en producción (tarea 0, bloqueada por permisos; script listo), prueba en navegador, despliegue (avisar a Daniel; ADK con código vivo sin commitear en prod), retiro de rutas viejas, sombra y envío.
 
+**Desplegado (11-oct, ~11:55 COT).** Backend `100c8da` en `katuq-api` (entraron también 3 commits de dropshipping D-403 de otra sesión, con su OK; única variable nueva `SECRET_TOKEN`, ya presente): `/v1/inventory/insights` 401 sin sesión, `/digest/baja` 400 con token malo, `get_inventory_insights` registrada. Front: ya estaba publicado desde 2026.10.10.1 (otra sesión, 10-oct 11:01 COT, verificado en el chunk servido) — la pantalla estuvo ~25 h sin sus rutas en el backend. ADK `559ebac` (trajo también Haiku 5.5, conectores con candado de empresa y `calidad: alta`; `site_design_endpoint.py` vivo en prod era la versión de `2f50437` a mano, contenida en origin; respaldo en `~/kai/respaldo-deploy-20261011-165501`), `kai-adk` activo, `/adk/health` 200 y `/api/ai/json` responde. Resumen semanal sigue apagado (`INVENTARIO_DIGEST` sin definir). Pendiente: probar la pantalla con sesión real (FLORECER/ALMARA), medición de la tarea 0, retiro de rutas viejas desde el 18-oct, sombra.
+
+**11-oct, tarde (pedido de Daniel: "falta la IA en inventario por catálogo").** El botón "IA" del catálogo deja el análisis viejo y muestra `<app-insights-resumen>` con el mismo cálculo y frases de Opttia (front 2026.10.11.2). El resumen de Opttia se descartaba siempre (escribe "18 millones"): la guarda acepta ahora miles/millones con un decimal (`a1b8a1a`). Opttia escribía con voseo y "trasladar en 7 días": prompt en "usted" y sin plazos inventados (`6ae76c9`). Probado en producción con ALMACEN BOMBAS (premium: chat sin límite, no se gastó cupo). También 2026.10.11.1: span azules corregidos. Backend en prod `6ae76c9`.
+
 **Renumerada (10-oct):** nació como D-400 y chocó con la D-400 de Configuración, publicada antes por otra sesión; los commits `6718ad1` (backend) y `43de1b0` (ADK) dicen D-400 en el mensaje, pero se refieren a esta.
 
-## D-402 (2026-10-10) — Formulario único de cliente con Contacto / Entrega / Facturación / Notas (openspec/changes/formulario-unificado-cliente)
+## D-402 (2026-10-10) — Configuración de Dropshipping: arreglos de la pantalla (hallazgos de D-400)
+
+**Disparador.** Daniel ("sí, arregla lo de dropshipping") sobre los dos hallazgos latentes de D-400.
+
+**Hallazgo de fondo (escalado, no corregido aquí).** `dropshipping-config` nunca guarda en el servidor: lee y escribe `localStorage` (`dropshippingConfig_<companyId>`), y `nav.service.isDropshippingEnabled` y `crear-productos` leen de ahí mismo. La configuración vale solo para ese navegador, y el backend no tiene ruta para ella (`/v1/dropshipping` solo tiene `summary`, proveedores y órdenes). La URL de webhook que se muestra (`<origin>/api/dropshipping/webhook/<id>`) apunta al hosting y no existe. Para pasarla a Firestore hace falta una propuesta con su endpoint; la clave del proveedor debería ir por `/integrations`.
+
+**Arreglos (solo esta pantalla):**
+1. `endpoint`/`api_key` pasan dentro de `formGroupName="api_config"`. Antes, al elegir API o Webhook, Angular no encontraba los controles y el validador `required` dejaba el formulario inválido, así que no se podía guardar.
+2. `onSubmit` incluye `api_config` (tipo e endpoint). Antes se perdía al recargar.
+3. La API key no se guarda en el navegador porque es una credencial en texto plano. Por eso deja de ser obligatoria y la ayuda lo dice.
+4. El bloque "Herramientas de desarrollo" solo lo ve el Super Administrador.
+5. "Notificaciones" volvía siempre a activada al recargar (`|| true` en lugar de `?? true`).
+6. "Restablecer" también vuelve la integración a Manual.
+7. El botón de confirmación pasa del verde al acento.
+
+**Cierre D-402 (publicado 2026.10.10.1).** Probado en producción con la sesión de Daniel (Super Administrador), sin guardar: al elegir API aparecen la dirección y la clave, la dirección se ve en el resumen, Guardar se activa sin pedir la clave, la consola no muestra errores y el bloque de desarrollo se ve. No probado: que quede oculto con un rol distinto, que depende de `rol === 'Super Administrador'`. En la misma publicación salió un arreglo de seguridad sobre el ticket 1185 de otra sesión: el tooltip OSM de la lista de pedidos se pinta con `[escape]="false"` y metía sin escapar `status`/`lastNote` de Cereza; ahora se escapan (`escaparHtml` en `list.component.ts`).
+
+## D-403 (2026-10-10) — Dropshipping: candado de empresa, claves cifradas y configuración en el servidor (openspec/changes/dropshipping-config-servidor) — APROBADA, implementada, sin desplegar
+
+**Disparador.** Daniel ("sí, arma la propuesta") después de D-402.
+
+**Hallazgo de seguridad (escalado en el chat, no corregido).** En `/v1/dropshipping/proveedores` y `/v1/dropshipping/ordenes` el filtro por empresa es opcional (`req.body.company || req.query.company`, y sin valor no filtra). El front no manda ese parámetro, así que la lista de proveedores devuelve los de todas las empresas. Las rutas por id (`getById`, `update`, `delete`, `activar`, `desactivar`, `api-config`, `summary`, `sincronizar-productos`) no comprueban la empresa del documento. `dropshipping_proveedores.api_config.api_key` está en texto plano y sale en las respuestas. Alcance: comercios con un plan que incluya `dropshipping`. La integración por API es simulada; nada usa esas claves para llamar a terceros.
+
+**Propuesta.**
+- **Fase 1 (backend, primero):** la empresa sale solo del JWT, con filtro obligatorio y 404 por id ajeno; la clave se cifra con `secretsCrypto` y sale enmascarada; script de cifrado con `--dry-run`.
+- **Fase 2:** campo `dropshipping` en `companies`, con `GET/POST /v1/companies/dropshipping-settings` (molde pricing-mode). `editCompany` y `updateCompanyById` no lo pisan.
+- **Front:** lee la empresa en vez de `localStorage`; ofrece subir una sola vez la copia local; se quitan la sección de integración de la empresa (sin efecto) y las herramientas de prueba.
+
+Sin colecciones nuevas. Sin cambios en orders, inventario, productos ni precios.
+
+**Aprobada (10-oct):** Daniel, "sí, aprobada, arranca".
+
+**Medición en producción (10-oct, solo lectura, `scripts/dropshipping-cifrar-claves.js` en ensayo contra `julsmind-katuq`):** 0 proveedores y 0 órdenes de dropshipping. El hueco existía pero ningún comercio quedó expuesto, no hay claves que cifrar ni registros sin empresa, y ninguna pantalla de plataforma usa esas rutas (solo el módulo Dropshipping del comercio y la lista de proveedores activos de productos).
+
+**Implementación (10-oct).** Backend (`backend-aws-security`):
+- `2c6b243`, fase 1: `utils/dropshippingTenant.js`, `utils/dropshippingClaves.js` y `utils/dropshippingConsultas.js`; controladores de proveedores y órdenes con la empresa del JWT y 404 por id ajeno; clave cifrada y `****1234` + `tiene_api_key`; email único por empresa; `crear-desde-venta` solo con pedidos propios; las órdenes vuelven a guardar `proveedor_id` (se perdía); script de ensayo y `--apply`.
+- `c56ff88`, fase 2: `GET/POST /v1/companies/dropshipping-settings` y `services/companies/dropshippingSettings.js`; `dropshipping` entra a los campos que la ficha no escribe (`sanitizeCompanyUpdate`).
+- `100c8da`: los proveedores responden `id` y `validate-email` acepta `?exclude=`.
+
+Pruebas en verde: `tests/dropshipping/` (tenantIsolation.contract, apiKeyMasking, settings), `tests/companies/` salvo `soloLectura`, `tests/enVivo/` salvo `writeset.contract` y `subscriptionSecurity.contract`. Las dos que fallan ya fallaban sin este cambio: `soloLectura` por dos rutas POST de `accounting.js` y `logistica.js` sin clasificar, y `writeset.contract` falla igual con los controladores anteriores.
+
+Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.service.ts`); `nav.service` y `crear-productos` leen `currentCompany.dropshipping`, y el menú se recalcula al guardar. La pantalla de configuración lee y guarda en el servidor, ofrece subir la copia local, deja solo lectura a quien no es administrador y pierde la sección de integración, el webhook, la clave y las herramientas de desarrollo. Se quitó `enableDropshippingForTesting` de `crear-productos`. En proveedores: lista desempacada, clave enmascarada, y al editar el campo de la clave queda vacío y se conserva la guardada.
+
+**Despliegue pendiente: decisión de Daniel.** En `origin/backend-aws-security`, encima de producción (`460cdec`), están antes los commits `6718ad1` y `9139bfb` de D-401 (IA de inventarios), que no están desplegados y cuyo despliegue está pendiente de avisarle a Daniel. Con `--ff-only`, desplegar D-403 los publica también. El front se publica después del backend: sin las rutas nuevas, la pantalla de configuración no carga.
+
+**Hallazgos no corregidos (fuera del alcance):**
+- El front llama `POST /v1/dropshipping/crear-desde-venta` y `/sincronizar-productos`, pero el servidor las monta bajo `/v1/dropshipping/ordenes/`, así que hoy dan 404.
+- `calcularComisionTotal` manda `proveedorId`/`montoVenta`, y el servidor espera `proveedor_id`/`total_venta`.
+- `GET /v1/productos/por-proveedor` devuelve el nombre del proveedor por id sin revisar a qué empresa pertenece. La ruta no usa `requireJwtTenant`. Hoy no hay proveedores.
+
+## D-404 (2026-10-10) — Formulario único de cliente con Contacto / Entrega / Facturación / Notas (openspec/changes/formulario-unificado-cliente)
 
 **Disparador.** Jairo, tickets 1164 (crear el cliente completo en una sola pantalla), 1165 (editar completo desde el listado), 1166 (usuario de WhatsApp) y 1167 (formularios de cliente homogéneos), 2026-10-10.
 
@@ -9187,3 +9241,5 @@ Se actualizaron las instrucciones operativas de suscripciones para retirar coman
 
 **Estado (10-oct).** Código local sin commit. Builds parciales en verde hasta el reemplazo de venta asistida; el build final con Crear cliente quedó detenido por memoria del equipo y debe repetirse. Pendientes: borrar `formulario`/`formularioEntrega`/`formularioFacturacion`/`formularioNotas` y la plantilla vieja de `ClientesComponent` (sigue viva para el modo `isEdit` que abren pedidos y producción), traducciones EN/PT de las pestañas, prueba en navegador de los 8 escenarios de la spec y publicar versión.
 
+
+**Renumerada (11-oct):** nació como D-402 y chocó con la D-402 de Dropshipping, publicada antes por otra sesión; el commit `621adfc3` dice D-402 en el mensaje, pero se refiere a esta.

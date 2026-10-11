@@ -51,6 +51,7 @@ import { error } from "console";
 // Dropshipping imports
 import { ProveedoresService } from "../../dropshipping/services/proveedores.service";
 import { Proveedor } from "../../dropshipping/interfaces";
+import { dropshippingHabilitadoEnLaSesion } from "../../../shared/services/dropshipping-settings.service";
 
 // DANE codes imports
 import { DaneCodesService } from "../../../shared/services/dane-codes.service";
@@ -3187,27 +3188,11 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   /**
-   * Verifica si dropshipping está habilitado para la empresa actual
+   * Verifica si dropshipping está habilitado para la empresa actual. Lo dice el servidor
+   * (D-403), con la misma regla que el menú.
    */
   isDropshippingEnabled(): boolean {
-    try {
-      // Verificar si el dropshipping está habilitado para la empresa actual desde localStorage
-      const currentCompany = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-      const companyId = currentCompany.id || currentCompany._id || 'default';
-      const configKey = `dropshippingConfig_${companyId}`;
-      
-      const savedConfig = localStorage.getItem(configKey);
-      if (savedConfig) {
-        const dropshippingConfig = JSON.parse(savedConfig);
-        return dropshippingConfig.habilitado === true;
-      }
-      
-      // Si no hay configuración guardada, devolver false (no está habilitado)
-      return false;
-    } catch (error) {
-      console.error('Error checking dropshipping status:', error);
-      return false;
-    }
+    return dropshippingHabilitadoEnLaSesion();
   }
 
   /**
@@ -3429,50 +3414,6 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.dropshippingConfig.get('supplierId')?.updateValueAndValidity();
     this.dropshippingConfig.get('supplierName')?.updateValueAndValidity();
     this.dropshippingConfig.get('costoProveedor')?.updateValueAndValidity();
-  }
-
-  /**
-   * Método para habilitar dropshipping de manera temporal para pruebas
-   * (solo para debugging y desarrollo)
-   */
-  enableDropshippingForTesting(): void {
-    try {
-      const currentCompany = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-      const companyId = currentCompany.id || currentCompany._id || 'default';
-      const configKey = `dropshippingConfig_${companyId}`;
-      
-      const testConfig = {
-        habilitado: true,
-        fechaActivacion: new Date().toISOString(),
-        configuracion: {
-          margenMinimoPermitido: 10,
-          automatizacionActivada: false,
-          notificacionesActivadas: true,
-          tiempoLimiteOrden: 7,
-          proveedoresPermitidos: []
-        },
-        lastUpdated: new Date().toISOString(),
-        companyId: companyId,
-        companyName: currentCompany.nomComercial || 'Empresa de Prueba'
-      };
-      
-      localStorage.setItem(configKey, JSON.stringify(testConfig));
-      
-      // También guardar en la lista general
-      const allConfigs = JSON.parse(localStorage.getItem('allDropshippingConfigs') || '{}');
-      allConfigs[companyId] = testConfig;
-      localStorage.setItem('allDropshippingConfigs', JSON.stringify(allConfigs));
-      
-      console.log('✅ Dropshipping habilitado temporalmente para pruebas');
-      console.log('📍 Configuración guardada en:', configKey);
-      console.log('🔄 Recarga la página para ver los cambios');
-      
-      // Forzar detección de cambios
-      this.cdr.detectChanges();
-      
-    } catch (error) {
-      console.error('❌ Error habilitando dropshipping para pruebas:', error);
-    }
   }
 
   /**

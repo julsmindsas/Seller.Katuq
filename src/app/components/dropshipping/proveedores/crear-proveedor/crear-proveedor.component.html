@@ -155,8 +155,10 @@
                       id="api_key" 
                       type="password" 
                       formControlName="api_key"
-                      placeholder="Clave de API del proveedor"
+                      [placeholder]="claveGuardada ? 'Guardada (' + claveGuardada + '). Escribe una nueva solo para cambiarla' : 'Clave de API del proveedor'"
+                      autocomplete="new-password"
                       class="w-100">
+                    <small class="text-muted">Se guarda cifrada y nunca se vuelve a mostrar completa.</small>
                   </div>
                 </div>
               </div>

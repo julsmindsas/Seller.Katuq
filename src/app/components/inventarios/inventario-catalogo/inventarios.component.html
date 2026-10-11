@@ -64,8 +64,8 @@
                         <!-- Análisis con IA -->
                         <button type="button" class="inv-btn is-primary"
                                 (click)="analizarConIA()"
-                                [disabled]="analizandoIA || loadingConsolidado || bodegasConsolidadas.length === 0"
-                                pTooltip="Analizar inventario con IA" tooltipPosition="bottom">
+                                [disabled]="analizandoIA || loadingConsolidado"
+                                pTooltip="Qué comprar, qué está quieto y qué revisar, explicado por Opttia" tooltipPosition="bottom">
                             <i class="pi" [ngClass]="analizandoIA ? 'pi-spin pi-spinner' : 'pi-bolt'"></i>
                             IA
                         </button>
@@ -145,25 +145,9 @@
                     </div>
                 </div>
 
-                <!-- Resumen del análisis con IA -->
-                <div class="inv-ia" *ngIf="iaMetricasGlobales?.saludInventario"
-                     [ngClass]="{
-                         'is-good': iaMetricasGlobales.saludInventario === 'BUENA',
-                         'is-regular': iaMetricasGlobales.saludInventario === 'REGULAR',
-                         'is-critical': iaMetricasGlobales.saludInventario === 'CRITICA'
-                     }">
-                    <span class="inv-ia-badge">
-                        <i class="pi pi-bolt"></i>
-                        Salud: {{ iaMetricasGlobales.saludInventario }}
-                    </span>
-                    <span *ngIf="iaMetricasGlobales.bodegaCritica" class="inv-ia-warn">
-                        <i class="pi pi-exclamation-triangle"></i>
-                        Bodega crítica: {{ getNombreBodegaById(iaMetricasGlobales.bodegaCritica) }}
-                    </span>
-                    <span class="inv-ia-text">
-                        <i class="pi pi-info-circle"></i>
-                        {{ iaMetricasGlobales.resumenEjecutivo }}
-                    </span>
+                <!-- IA de inventarios (D-401): mismo cálculo de la Central de Abastecimiento -->
+                <div class="inv-ia-insights" *ngIf="iaInsights">
+                    <app-insights-resumen [insights]="iaInsights" [ia]="iaExplicacion" [aviso]="iaAviso" (cerrar)="cerrarIA()"></app-insights-resumen>
                 </div>
 
                 <div class="card-body">

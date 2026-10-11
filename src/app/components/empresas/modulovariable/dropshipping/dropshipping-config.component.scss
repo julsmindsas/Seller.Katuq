@@ -40,18 +40,14 @@
   color: inherit;
 }
 
-.dsh-aviso__lista {
-  margin: 6px 0 0;
-  padding-left: 18px;
-  font-size: 13px;
-  color: inherit;
+.dsh-aviso__acciones {
+  margin-top: 10px;
 }
 
-.dsh-aviso--col {
-  flex-direction: column;
-  gap: 8px;
-
-  p { margin: 0; }
+.dsh-enlace {
+  color: inherit;
+  font-weight: 800;
+  text-decoration: underline;
 }
 
 // ── Interruptor de habilitar ──
@@ -141,30 +137,7 @@
   label.cfg-label { display: block; margin-bottom: 6px; }
 }
 
-.dsh-btn-ojo {
-  min-height: 38px;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-.dsh-solo-lectura { background: #faf9fe !important; }
-
-.dsh-tipo {
-  display: flex;
-  align-items: center;
-  min-height: 38px;
-  padding: 8px 12px;
-  background: #faf9fe;
-  border: 1px solid #eeecf7;
-  border-radius: 11px;
-
-  &__linea {
-    font-size: 13px;
-    color: #5b5878;
-
-    strong { color: #211F3A; }
-  }
-}
+.dsh-switch:disabled { cursor: not-allowed; opacity: .6; }
 
 .is-invalid {
   border-color: #D64545 !important;
@@ -201,19 +174,7 @@
   font-size: 12px;
   font-weight: 700;
 
-  &--acento { background: #efe9ff; border-color: #ddd3fb; color: #5F3FE0; }
   &--ok { background: #E6F7EE; border-color: #E6F7EE; color: #1E874B; }
-  &--warn { background: #FFF1DF; border-color: #FFF1DF; color: #D9820A; }
-  &--info { background: #E7F1FF; border-color: #E7F1FF; color: #1E6FD9; }
-}
-
-.dsh-codigo {
-  padding: 2px 8px;
-  background: #faf9fe;
-  border: 1px solid #eeecf7;
-  border-radius: 8px;
-  color: #5F3FE0;
-  font-size: 12.5px;
 }
 
 // ── Pie de acciones ──
@@ -225,47 +186,4 @@
 
     .cfg-btn { flex: 1 1 100%; }
   }
-}
-
-// ── Herramientas de desarrollo: plano, sin negro ──
-.dsh-dev {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  background: #faf9fe;
-  border-color: #eeecf7;
-
-  &__cabeza {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  &__titulo { margin: 0; }
-
-  &__botones {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  &__estado {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-}
-
-.dsh-etiqueta {
-  padding: 4px 10px;
-  border-radius: 20px;
-  background: #FFF1DF;
-  color: #D9820A;
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: .6px;
-  text-transform: uppercase;
 }

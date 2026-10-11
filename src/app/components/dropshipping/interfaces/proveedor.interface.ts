@@ -1,5 +1,8 @@
 export interface Proveedor {
   id?: string;
+  _id?: string;
+  /** D-403: el servidor nunca devuelve la clave completa; `api_config.api_key` llega enmascarada. */
+  tiene_api_key?: boolean;
   nombre: string;
   contacto: string;
   email: string;

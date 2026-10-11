@@ -164,10 +164,10 @@
             </div>
           </div>
           
-          <div class="col-md-3" *ngIf="proveedor.api_config.api_key">
+          <div class="col-md-3" *ngIf="proveedor.tiene_api_key">
             <div class="info-item">
               <label>API Key:</label>
-              <span class="text-muted">••••••••••••</span>
+              <span class="text-muted">{{ proveedor.api_config?.api_key || '****' }}</span>
             </div>
           </div>
         </div>

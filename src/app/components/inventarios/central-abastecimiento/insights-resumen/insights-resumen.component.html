@@ -1,0 +1,61 @@
+<section class="ins-panel">
+  <header class="ins-panel__head">
+    <span class="ins-panel__icon" style="background: #efe9ff; color: #5F3FE0;"><i class="pi pi-bolt"></i></span>
+    <div>
+      <h3 class="ins-panel__title">Lo que importa del inventario</h3>
+      <p class="ins-panel__sub">Ventas reales de los últimos {{ insights.ventana.dias }} días, con la misma cuenta de "Qué comprar".</p>
+    </div>
+    <div class="ins-panel__actions">
+      <a class="ins-btn is-primary" routerLink="/inventario/central-abastecimiento"><i class="pi pi-compass"></i> Ver el detalle</a>
+      <button type="button" class="ins-btn" (click)="cerrar.emit()" aria-label="Cerrar"><i class="pi pi-times"></i></button>
+    </div>
+  </header>
+
+  <div class="rs-stats">
+    <div class="rs-stat">
+      <span class="ins-label">Comprar ya</span>
+      <strong [class.is-danger]="insights.comprar.total > 0">{{ insights.comprar.total | number }}</strong>
+    </div>
+    <div class="rs-stat">
+      <span class="ins-label">Ventas en riesgo</span>
+      <strong>{{ dinero(insights.comprar.ventasEnRiesgo) }}</strong>
+    </div>
+    <div class="rs-stat">
+      <span class="ins-label">Capital parado</span>
+      <strong>{{ dinero(insights.capital.valorCosto) }}</strong>
+    </div>
+    <div class="rs-stat">
+      <span class="ins-label">Avisos</span>
+      <strong [class.is-warning]="insights.avisos.total > 0">{{ insights.avisos.total | number }}</strong>
+    </div>
+  </div>
+
+  <div class="rs-opttia" *ngIf="ia?.resumen">
+    <span class="ins-row__ia">Opttia · </span><span class="rs-texto">{{ ia?.resumen }}</span>
+  </div>
+  <div class="ins-note" *ngIf="aviso"><i class="pi pi-info-circle"></i> <span>{{ aviso }}</span></div>
+
+  <div class="rs-cols">
+    <div class="rs-col">
+      <div class="ins-label rs-col__title">Lo más urgente</div>
+      <div class="rs-item" *ngFor="let f of insights.comprar.filas | slice:0:3">
+        <strong class="rs-item__name">{{ f.nombre || f.referencia }}</strong>
+        <span class="rs-item__meta">{{ bodega(f.idBodega) }} · comprar {{ f.sugerido | number }}</span>
+        <span class="rs-item__why">{{ frase(f.id, f.motivoBase) }}</span>
+      </div>
+      <div class="rs-vacio" *ngIf="insights.comprar.total === 0">
+        <span>{{ insights.comprar.sinDemanda > 0 ? 'No hay ventas suficientes para sugerir compras.' : 'Nada urgente por comprar.' }}</span>
+      </div>
+    </div>
+    <div class="rs-col" *ngIf="porBodega.length">
+      <div class="ins-label rs-col__title">Por bodega</div>
+      <div class="rs-bodega" *ngFor="let b of porBodega">
+        <span class="rs-bodega__name">{{ b.nombre }}</span>
+        <span class="ins-pill is-danger" *ngIf="b.urgentes">{{ b.urgentes }} por comprar</span>
+        <span class="ins-pill is-warning" *ngIf="b.capital">{{ dinero(b.capital) }} quieto</span>
+        <span class="ins-pill is-info" *ngIf="b.avisos">{{ b.avisos }} {{ b.avisos === 1 ? 'aviso' : 'avisos' }}</span>
+      </div>
+      <span class="rs-pie">Entre los primeros productos de cada lista; el total completo está en el detalle.</span>
+    </div>
+  </div>
+</section>

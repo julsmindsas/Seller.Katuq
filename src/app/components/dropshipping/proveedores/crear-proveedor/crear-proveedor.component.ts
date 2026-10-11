@@ -18,6 +18,8 @@ export class CrearProveedorComponent implements OnInit {
   proveedorId: string | null = null;
   loading = false;
   saving = false;
+  /** Clave enmascarada que ya tiene el proveedor (p. ej. "****1234"); vacío si no tiene. */
+  claveGuardada = '';
 
   tiposIntegracion = [
     { label: 'Manual', value: 'manual' },
@@ -70,7 +72,12 @@ export class CrearProveedorComponent implements OnInit {
     this.loading = true;
     this.proveedoresService.getProveedor(this.proveedorId).subscribe({
       next: (proveedor) => {
-        this.form.patchValue(proveedor);
+        // La clave llega enmascarada (D-403): no se pone en el campo. Vacío = conservar la guardada.
+        this.claveGuardada = proveedor.tiene_api_key ? proveedor.api_config?.api_key || '****' : '';
+        this.form.patchValue({
+          ...proveedor,
+          api_config: { ...(proveedor.api_config || {}), api_key: '' }
+        });
         this.loading = false;
       },
       error: (error) => {
