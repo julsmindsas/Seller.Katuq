@@ -7,4 +7,4 @@
 - [x] 1.4 Tools MCP + política + ADK.
 - [x] 1.5 Pruebas y contrato de solo lectura.
 - [x] 2.1 Front: `app-modulo-ia` (standalone) en Clientes, Todos los pedidos y Cartera; carga a pedido.
-- [ ] 3.1 Desplegar y probar en producción.
+- [x] 3.1 *(11-oct: back fe9d3f5/885879b, ADK e31a5de, front 2026.10.11.5/.6; probado con ALMACEN BOMBAS)* Desplegar y probar en producción.

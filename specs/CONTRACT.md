@@ -9241,3 +9241,13 @@ Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.ser
 
 **Desplegado (11-oct).** Backend `e9fbb6b`, ADK `b8f6c2e`, front 2026.10.11.3. Probado en producción con ALMACEN BOMBAS. Fase 2 pendiente: cumplimiento por transportador con `order_status_history` (la fecha real de entrega no sirve).
 
+## D-405 (2026-10-11) — IA en clientes, cartera y pedidos (openspec/changes/ia-modulos-principales)
+
+**Disparador.** /goal de Daniel: "permea de IA los principales módulos" (después de inventario D-401 y despachos D-404). Solo lectura.
+
+**Hallazgo (producción, solo lectura).** Las métricas de clientes contaban "en alerta" pero no decían quiénes; la cartera de tesorería no ordenaba a quién cobrar (OH MY STORE $840 M, 80 % vencido; CAFÉ 90 %; ALMARA 86 %); nada señalaba pedidos quedados. Calibración: compras del mismo día juntas (si no, "compraba cada 1 día"); "sin pago" sin contraentrega ni crédito ("CXC NOMINA"/"PreAprobado" daban 165 falsas alarmas en OMS).
+
+**Decisión.** `GET/POST /v1/insights/:modulo[/explicar]` (clientes | cartera | pedidos). Cartera = `buildCartera` de tesorería sin recalcular (mismo total que la pantalla) y solo roles de tesorería; vendedor restringido ve solo lo suyo (metricasPropias). Explicación genérica por bloques (`services/ai/explicarBloques.js`): Opttia no recibe nombres, teléfonos ni documentos; plantillas de WhatsApp con `{nombre}` y sin números; el enlace lo envía la persona. Tools MCP `get_customer_insights` (clientes/view), `get_receivables_insights` (contabilidad/view), `get_orders_attention` (ventas/view), también en el ADK. Front: `app-modulo-ia` standalone en Clientes, Todos los pedidos y Cartera, cargado a pedido (12 meses de pedidos en cada apertura costarían lecturas).
+
+**Desplegado (11-oct).** Backend `fe9d3f5` + `885879b`, ADK `e31a5de`, front 2026.10.11.5/.6. Probado en producción con ALMACEN BOMBAS en los tres paneles. Corregidos en vivo: panel sin repintar dentro de Cartera (OnPush) y "Opttia no está disponible" cuando simplemente no había nada que explicar.
+
