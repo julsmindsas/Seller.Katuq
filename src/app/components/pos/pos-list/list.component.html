@@ -2,8 +2,16 @@
      POS-LIST (list.component.html optimizado)
      ========================================= -->
 
-<app-breadcrumb [title]="'Lista pedidos POS'" [items]="['Punto de venta']" [active_item]="'Listado Ventas POS'">
-</app-breadcrumb>
+<div class="container-fluid">
+    <!-- Título de la pantalla (D-400): mismo nombre que en el menú -->
+    <header class="cfg-cabeza titulo-pantalla">
+        <div class="cfg-cabeza__textos">
+            <span class="cfg-eyebrow">{{ 'Pedidos' | translate }}</span>
+            <h1 class="cfg-titulo">{{ 'Pedidos POS' | translate }}</h1>
+            <p class="cfg-sub">{{ 'Las ventas hechas en el punto de venta, con su pago y su estado.' | translate }}</p>
+        </div>
+    </header>
+</div>
 
 <div class="container-fluid pos-mobile">
     <div class="row">

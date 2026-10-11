@@ -1,3 +1,11 @@
+// Título de la pantalla con la base común (D-400)
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.titulo-pantalla {
+  margin: 8px 0 16px;
+}
+
 // Estilos para métricas del dashboard
 .card {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

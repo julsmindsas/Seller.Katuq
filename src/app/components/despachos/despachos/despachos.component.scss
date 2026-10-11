@@ -1,5 +1,12 @@
 // Katuq Design Tokens
 @import '../../../../assets/scss/utils/katuq-tokens';
+// Título de la pantalla con la base común (D-400)
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.despachos-cabeza {
+  margin: 8px 0 16px;
+}
 
 $primary-color: $katuq-primary;
 $success-color: $katuq-success;

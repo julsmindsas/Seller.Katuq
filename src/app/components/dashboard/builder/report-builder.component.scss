@@ -520,3 +520,12 @@
 }
 .truncated-notice .limit-control label { margin: 0; }
 .truncated-notice .limit-control input { width: 100px; }
+
+// Título de la pantalla dentro de la barra (la vista ocupa todo el alto)
+.builder-heading {
+  margin: 0;
+  font-size: 15px !important; // hay un h1 global con !important
+  font-weight: 800;
+  color: #211F3A;
+  white-space: nowrap;
+}

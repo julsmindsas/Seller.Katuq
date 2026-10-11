@@ -1,0 +1,8 @@
+// Título de la pantalla con la base común (D-400)
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.titulo-pantalla {
+  margin: 8px 0 16px;
+}
+

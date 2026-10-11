@@ -1,13 +1,12 @@
-<app-breadcrumb [title]="'Carga de Ventas' | translate" [items]="['Ventas']" [active_item]="'Carga de Ventas' | translate"></app-breadcrumb>
-<div class="card">
-  <div class="card-header">
-    <div class="row">
-      <div class="col-sm-6">
-        <h5>{{ 'Carga masiva de ventas' | translate }}</h5>
-        <p>{{ 'Utilice esta herramienta para cargar ventas desde un archivo JSON o Excel.' | translate }}</p>
-      </div>
+<!-- Título de la pantalla (D-400): mismo nombre que en el menú -->
+<header class="cfg-cabeza titulo-pantalla">
+    <div class="cfg-cabeza__textos">
+        <span class="cfg-eyebrow">{{ 'Ventas' | translate }}</span>
+        <h1 class="cfg-titulo">{{ 'Ventas masivas' | translate }}</h1>
+        <p class="cfg-sub">{{ 'Carga varias ventas a la vez desde un archivo JSON o Excel.' | translate }}</p>
     </div>
-  </div>
+</header>
+<div class="card">
   <div class="card-body">
     <div class="row mb-4">
       <div class="col-md-6">

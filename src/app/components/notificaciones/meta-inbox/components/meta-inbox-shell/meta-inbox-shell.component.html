@@ -1,4 +1,13 @@
 <div class="mb-inbox">
+  <!-- Título de la pantalla (D-400): mismo nombre que en el menú -->
+  <header class="cfg-cabeza titulo-pantalla">
+      <div class="cfg-cabeza__textos">
+          <span class="cfg-eyebrow">Mensajes</span>
+          <h1 class="cfg-titulo">Conversaciones de {{ canalLabel }}</h1>
+          <p class="cfg-sub">Lo que tus clientes te escriben por {{ canalLabel }}, en un solo lugar.</p>
+      </div>
+  </header>
+
   <!-- Estado de conexión: lo primero que el usuario necesita entender -->
   <div class="mb-aviso mb-aviso--alerta" *ngIf="!cargandoConexion && !conectado">
     <div class="mb-aviso__texto">

@@ -1,4 +1,13 @@
-<app-breadcrumb [title]="'Adiciones'" [items]="['Catalogo']" [active_item]="'Adiciones'"></app-breadcrumb>
+<div class="container-fluid">
+    <!-- Título de la pantalla (D-400): mismo nombre que en el menú -->
+    <header class="cfg-cabeza titulo-pantalla">
+        <div class="cfg-cabeza__textos">
+            <span class="cfg-eyebrow">{{ 'Productos' | translate }}</span>
+            <h1 class="cfg-titulo">{{ 'Adiciones' | translate }}</h1>
+            <p class="cfg-sub">{{ 'Los extras que el cliente puede sumarle a un producto al comprarlo.' | translate }}</p>
+        </div>
+    </header>
+</div>
 
 <div class="container-fluid">
     <div class="row">
