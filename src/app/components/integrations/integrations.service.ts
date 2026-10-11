@@ -1196,6 +1196,8 @@ export class IntegrationsService {
     // Ticket 1052: vendedor y centro de costo elegidos en la ventana de factura.
     if (options?.sellerId) body.sellerId = options.sellerId;
     if (options?.costCenterId) body.costCenterId = options.costCenterId;
+    // REFACTURAR: id de la factura que la nueva reemplaza (el servidor valida rol y que siga siendo esa).
+    if (options?.reemplazarFactura) body.reemplazarFactura = options.reemplazarFactura;
 
     return this.http.post<any>(
       `${environment.urlApi}/v1/accounting/${provider}/invoices/from-order-async`,
@@ -1218,6 +1220,7 @@ export class IntegrationsService {
     if (Array.isArray(options?.retenciones) && options.retenciones.length) body.retenciones = options.retenciones;
     if (options?.sellerId) body.sellerId = options.sellerId;
     if (options?.costCenterId) body.costCenterId = options.costCenterId;
+    if (options?.reemplazarFactura) body.reemplazarFactura = options.reemplazarFactura;
 
     return this.http.post<any>(
       `${environment.urlApi}/v1/accounting/${provider}/invoices/preview`,

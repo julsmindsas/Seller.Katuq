@@ -12,7 +12,7 @@
                 <!-- Header Compacto (rediseño 1b) -->
                 <div class="pedidos-topbar" [class.pedidos-topbar--compact]="isFromProduction">
                     <div class="pedidos-topbar__title">
-                        <h5 class="pedidos-topbar__h">{{ "Pedidos" | translate }}</h5>
+                        <h5 class="pedidos-topbar__h">{{ (isFromProduction ? "Pedidos" : "Todos los pedidos") | translate }}</h5>
                         <!-- En produccion este contador es de pedidos, pero la tabla de abajo
                              lista lineas de producto: dos cifras distintas que confundian. -->
                         <small class="pedidos-topbar__sub" *ngIf="!isFromProduction">
@@ -2206,6 +2206,18 @@
                         </div>
                     </button>
 
+                    <!-- Reenviar al cliente el correo de confirmación con los datos actuales -->
+                    <button *ngIf="!isFromProduction" class="option-btn" type="button"
+                        (click)="reenviarConfirmacionPedido(selectedOrder); closeOptionsModal()">
+                        <div class="option-icon notes-icon">
+                            <i class="fa fa-envelope"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Envía de nuevo la confirmación del pedido' | translate }}</span>
+                            <small class="option-description">{{ 'Utiliza esta opción para enviar la confirmación del pedido si ha tenido actualizaciones o cambios luego de la creación del pedido.' | translate }}</small>
+                        </div>
+                    </button>
+
                     <!-- Ticket 1189: Facturar también en la lista general (misma condición que el menú rápido) -->
                     <button *ngIf="!isFromProduction && puedeFacturarSiigo(selectedOrder)" class="option-btn" type="button"
                         (click)="facturarPedidoSiigo(selectedOrder); closeOptionsModal()">
@@ -2215,6 +2227,18 @@
                         <div class="option-content">
                             <span class="option-title">{{ 'Facturar' | translate }}</span>
                             <small class="option-description">{{ 'Genera la factura electrónica de este pedido.' | translate }}</small>
+                        </div>
+                    </button>
+
+                    <!-- REFACTURAR: solo si el pedido ya está facturado (SIIGO / World Office) -->
+                    <button *ngIf="puedeRefacturar(selectedOrder)" class="option-btn" type="button"
+                        (click)="refacturarPedido(selectedOrder); closeOptionsModal()">
+                        <div class="option-icon invoice-icon">
+                            <i class="fa fa-refresh"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'REFACTURAR' | translate }}</span>
+                            <small class="option-description">{{ 'Usa esta opción si te equivocaste en la generación de la factura anterior, ten cuidado debes anular manualmente la factura anterior y evitar duplicidades.' | translate }}</small>
                         </div>
                     </button>
 
@@ -2568,12 +2592,29 @@
 <!-- Modal de facturación SIIGO: tipo doc + forma de pago + vencimiento de crédito (D-042) -->
 <ng-template #facturaSiigoModal let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="factura-siigo-title">¿Generar Factura Electrónica?</h4>
+        <h4 class="modal-title" id="factura-siigo-title">{{ facturaReemplazo ? 'Refacturar pedido' : '¿Generar Factura Electrónica?' }}</h4>
         <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
     <div class="modal-body" *ngIf="facturaPedido">
+        <!-- REFACTURAR: qué factura se reemplaza; el número abre la factura en SIIGO -->
+        <div class="factura-aviso-cf mb-3" *ngIf="facturaReemplazo && facturaReemplazo.pedidoId === facturaPedido._id" role="alert">
+            <p class="mb-1">
+                <i class="fa fa-exclamation-triangle me-1"></i>
+                <strong>Este pedido ya está facturado</strong> con la factura
+                <a *ngIf="facturaReemplazo.url" [href]="facturaReemplazo.url" target="_blank" rel="noopener noreferrer"><strong>{{ facturaReemplazo.numero }}</strong></a>
+                <strong *ngIf="!facturaReemplazo.url">{{ facturaReemplazo.numero }}</strong>.
+                Esta nueva la reemplazará.
+            </p>
+            <p class="mb-2">Recuerda anular la anterior en {{ getAccountingProviderDisplayName() }} para no duplicar.</p>
+            <!-- Si la anterior salió a otro cliente/NIT, se corrige aquí (fuera de REFACTURAR sigue bloqueado) -->
+            <p class="mb-1">¿Salió a otro cliente o NIT? Corrige primero los datos de facturación y vuelve a abrir Refacturar.</p>
+            <button type="button" class="btn btn-sm btn-outline-primary"
+                    (click)="modal.dismiss('corregir-facturacion'); editDatosFacturacion(datosFacturacionModal, facturaPedido)">
+                Corregir datos de facturación
+            </button>
+        </div>
         <p class="mb-1">Se generará una factura electrónica para el pedido:</p>
         <p class="mb-1"><strong>{{ facturaPedido.nroPedido }}</strong></p>
         <!-- Ticket 1145: a quién sale la factura (sección Facturación del pedido), no el cliente -->
@@ -2601,11 +2642,11 @@
 
         <!-- 1. Tipo de documento -->
         <div class="form-group mb-3">
-            <label for="facturaDocumentType">Tipo de documento <span class="text-danger">*</span></label>
+            <label for="facturaDocumentType">Tipo de factura (talonario de {{ getAccountingProviderDisplayName() }}) <span class="text-danger">*</span></label>
             <select id="facturaDocumentType" class="form-select form-control"
                     [(ngModel)]="facturaDocumentTypeId"
                     (ngModelChange)="onFacturaDocumentTypeChange()">
-                <option [ngValue]="null" disabled>Seleccione un tipo de documento</option>
+                <option [ngValue]="null" disabled>Seleccione el tipo de factura</option>
                 <option *ngFor="let dt of facturaDocumentTypes" [ngValue]="dt.id">
                     {{ dt.etiqueta }}
                 </option>
@@ -2643,7 +2684,7 @@
                 </option>
             </select>
             <small class="text-muted" *ngIf="!facturaDocumentTypeId">
-                Primero seleccione el tipo de documento.
+                Primero seleccione el tipo de factura.
             </small>
         </div>
 
@@ -2763,7 +2804,7 @@
         <button type="button" class="btn btn-primary"
                 [disabled]="!facturaFormValido || !facturaDestinoConfirmado"
                 (click)="confirmarFacturaSiigo(modal)">
-            <i class="fa fa-file-invoice me-1"></i> Generar factura
+            <i class="fa fa-file-invoice me-1"></i> {{ facturaReemplazo ? 'Refacturar' : 'Generar factura' }}
         </button>
     </div>
 </ng-template>

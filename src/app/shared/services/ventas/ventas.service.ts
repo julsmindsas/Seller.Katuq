@@ -960,5 +960,12 @@ export class VentasService extends BaseService {
     }
   }
 
+  /**
+   * "Envía de nuevo la confirmación del pedido": el servidor vuelve a mandar al cliente
+   * el correo de confirmación con los datos actuales del pedido.
+   */
+  reenviarConfirmacionPedido(orderId: string): Observable<any> {
+    return this.post<any>(`/v1/orders/${encodeURIComponent(orderId)}/resend-confirmation`, {});
+  }
 
 }

@@ -161,6 +161,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private facturaVistaPreviaFirma: string = "";
   /** Ticket 1145: quien factura confirmó que el pedido sí es para Consumidor Final. */
   facturaConfirmaConsumidorFinal: boolean = false;
+  /** REFACTURAR: la factura que la nueva va a reemplazar (null = facturar normal). */
+  facturaReemplazo: { pedidoId: string; invoiceId: string; numero: string; url: string | null } | null = null;
   // SIIGO no define plazos: los define Katuq y se calcula la fecha. 'exacta' abre date-picker.
   readonly facturaPlazosCredito: { value: string; label: string }[] = [
     { value: "8", label: "8 días" },
@@ -487,6 +489,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     ];
 
+    if (!this.isFromProduction) {
+      items.push({
+        label: 'Enviar de nuevo la confirmación',
+        icon: 'pi pi-envelope',
+        command: () => this.reenviarConfirmacionPedido(this.selectedMenuPedido)
+      });
+    }
+
     // Agregar opciones de edición solo si no es desde producción
     if (!this.isFromProduction) {
       items.push(
@@ -522,6 +532,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         label: 'Facturar',
         icon: 'pi pi-file-export',
         command: () => this.facturarPedidoSiigo(this.selectedMenuPedido)
+      });
+    }
+
+    // REFACTURAR: solo si el pedido ya tiene factura de SIIGO / World Office
+    if (this.puedeRefacturar(pedido)) {
+      items.push({
+        label: 'Refacturar',
+        icon: 'pi pi-refresh',
+        command: () => this.refacturarPedido(this.selectedMenuPedido)
       });
     }
 
@@ -971,7 +990,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Retorna el nombre legible del proveedor contable activo
    */
-  private getAccountingProviderDisplayName(): string {
+  getAccountingProviderDisplayName(): string {
     const names: { [key: string]: string } = {
       'siigo': 'Siigo',
       'world_office': 'World Office',
@@ -1012,6 +1031,50 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param pedido Pedido a facturar
    */
   facturarPedidoSiigo(pedido: Pedido): void {
+    this.facturaReemplazo = null;
+    this.abrirVentanaFactura(pedido);
+  }
+
+  /**
+   * REFACTURAR: el pedido ya tiene factura de SIIGO / World Office y salió mal. Misma
+   * ventana de "Facturar", avisando qué factura se reemplaza. Katuq no anula la anterior:
+   * se anula a mano en el sistema contable. Mismos roles que "Liberar factura"; el servidor
+   * vuelve a validar el rol y que la factura siga siendo la misma.
+   */
+  puedeRefacturar(pedido: Pedido): boolean {
+    if (!this.hasInvoicingIntegration || !this.puedeLiberarFactura(pedido) || (pedido as any)?._facturando) return false;
+    const provider = this.activeAccountingProvider || 'siigo';
+    if (provider !== 'siigo' && provider !== 'world_office') return false;
+    const fiscal = (pedido as any)?.facturacionElectronica || {};
+    return !fiscal.provider || fiscal.provider === provider;
+  }
+
+  refacturarPedido(pedido: Pedido): void {
+    if (!this.puedeRefacturar(pedido)) return;
+    const fiscal = (pedido as any)?.facturacionElectronica || {};
+    this.facturaReemplazo = {
+      pedidoId: pedido._id,
+      invoiceId: String(fiscal.invoiceId),
+      numero: String(fiscal.invoiceNumber ?? pedido.nroFactura ?? fiscal.invoiceId),
+      url: pedido.pdfUrlInvoice || fiscal.pdfUrl || null,
+    };
+    this.abrirVentanaFactura(pedido);
+  }
+
+  /** Aviso de REFACTURAR para las confirmaciones con SweetAlert (World Office). */
+  private avisoReemplazoHtml(pedido: Pedido): string {
+    const r = this.facturaReemplazo;
+    if (!r || r.pedidoId !== pedido?._id) return '';
+    const numero = escaparHtml(r.numero);
+    const enlace = r.url && /^https:\/\//i.test(r.url)
+      ? `<a href="${escaparHtml(r.url)}" target="_blank" rel="noopener noreferrer">${numero}</a>`
+      : `<strong>${numero}</strong>`;
+    return `<p style="text-align:left;color:#B45309;background:#FEF3C7;border-radius:11px;padding:10px 12px">
+      <strong>Este pedido ya está facturado</strong> con la factura ${enlace}. Esta nueva la reemplazará.
+      Recuerda anular la anterior en ${escaparHtml(this.getAccountingProviderDisplayName())} para no duplicar.</p>`;
+  }
+
+  private abrirVentanaFactura(pedido: Pedido): void {
     const providerDisplayName = this.getAccountingProviderDisplayName();
     const provider = this.activeAccountingProvider || 'siigo';
 
@@ -1286,6 +1349,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         .map((v) => Number(v)),
       sellerId: this.facturaVendedorId || undefined,
       costCenterId: this.facturaUsaCentroCosto ? (this.facturaCentroCostoId || undefined) : undefined,
+      reemplazarFactura: this.facturaReemplazo?.pedidoId === this.facturaPedido?._id ? this.facturaReemplazo?.invoiceId : undefined,
     };
   }
 
@@ -1407,8 +1471,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             });
 
             Swal.fire({
-              title: '¿Generar Factura Electrónica?',
+              title: this.facturaReemplazo ? 'Refacturar pedido' : '¿Generar Factura Electrónica?',
               html: `
+                ${this.avisoReemplazoHtml(pedido)}
                 <p>Se generará una factura en <strong>${providerDisplayName}</strong> para:</p>
                 <p><strong>${pedido.nroPedido}</strong></p>
                 <p class="text-muted">Cliente: ${pedido.cliente?.nombres_completos || 'N/A'}</p>
@@ -1451,8 +1516,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const destino = clienteDeFactura(pedido);
     const porError = facturaPorErrorAConsumidorFinal(pedido);
     Swal.fire({
-      title: '¿Generar Factura Electrónica?',
+      title: this.facturaReemplazo ? 'Refacturar pedido' : '¿Generar Factura Electrónica?',
       html: `
+        ${this.avisoReemplazoHtml(pedido)}
         <p>Se generará una factura en <strong>${escaparHtml(providerDisplayName)}</strong> para:</p>
         <p><strong>${escaparHtml(pedido.nroPedido)}</strong></p>
         <p>Se factura a: <strong>${escaparHtml(destino.nombre || 'N/A')}</strong> · ${escaparHtml(destino.tipoDocumento)} ${escaparHtml(destino.documento)}</p>
@@ -1470,7 +1536,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       showCancelButton: true,
       confirmButtonColor: '#5F3FE0',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Generar factura',
+      confirmButtonText: this.facturaReemplazo ? 'Refacturar' : 'Generar factura',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
@@ -1516,6 +1582,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (extras?.retenciones?.length) options.retenciones = extras.retenciones; // ticket 1054
     if (extras?.sellerId) options.sellerId = extras.sellerId; // ticket 1052
     if (extras?.costCenterId) options.costCenterId = extras.costCenterId; // ticket 1052
+    // REFACTURAR: el servidor solo reemplaza si el pedido sigue con esta factura.
+    const reemplazo = this.facturaReemplazo?.pedidoId === pedido._id ? this.facturaReemplazo : null;
+    if (reemplazo) options.reemplazarFactura = reemplazo.invoiceId;
+    this.facturaReemplazo = null;
 
     // Usar endpoint async para no bloquear (responde 202 inmediato)
     const provider = this.activeAccountingProvider || 'siigo';
@@ -1638,6 +1708,51 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         icon: 'success',
         confirmButtonColor: '#5F3FE0',
       });
+    });
+  }
+
+  /**
+   * "Envía de nuevo la confirmación del pedido": vuelve a mandar al cliente el correo
+   * "Tu pedido #… – Confirmado" con los datos actuales (productos, totales, entrega).
+   * Solo correo; el servidor no deja reenviar el mismo pedido dos veces en 2 minutos.
+   */
+  reenviarConfirmacionPedido(pedido: Pedido): void {
+    const correo = String(pedido?.cliente?.correo_electronico_comprador || '').trim();
+    const nro = escaparHtml(pedido?.nroPedido || '');
+    if (!correo) {
+      Swal.fire({
+        title: 'El cliente no tiene correo',
+        html: `El pedido <strong>${nro}</strong> no tiene correo del cliente. Agrégalo en <strong>Editar cliente</strong> y vuelve a intentar.`,
+        icon: 'info',
+        confirmButtonColor: '#5F3FE0',
+      });
+      return;
+    }
+    Swal.fire({
+      title: 'Enviar de nuevo la confirmación',
+      html: `
+        <p style="text-align:left">Se enviará al cliente el correo de confirmación del pedido <strong>${nro}</strong>
+        con los datos actuales: productos, totales, dirección y fecha de entrega.</p>
+        <p style="text-align:left" class="mb-0">Llegará a: <strong>${escaparHtml(correo)}</strong></p>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#5F3FE0',
+      confirmButtonText: 'Enviar',
+      cancelButtonText: 'Cancelar',
+      showLoaderOnConfirm: true,
+      allowOutsideClick: () => !Swal.isLoading(),
+      preConfirm: () =>
+        firstValueFrom(this.ventasService.reenviarConfirmacionPedido(pedido._id))
+          .catch((error) => {
+            Swal.showValidationMessage(error?.error?.message || 'No se pudo enviar la confirmación.');
+            return null;
+          }),
+    }).then((result) => {
+      const data = result.isConfirmed ? (result.value as any)?.data : null;
+      if (!data) return;
+      (pedido as any).confirmacionReenviada = { en: data.en, a: data.correo };
+      this.toastrService.success(`Confirmación enviada a ${data.correo}`, `Pedido ${pedido.nroPedido || ''}`);
     });
   }
 
