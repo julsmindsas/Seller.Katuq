@@ -9271,3 +9271,29 @@ Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.ser
 
 
 **Renumerada (11-oct):** nació como D-402 y chocó con la D-402 de Dropshipping; luego fue D-404 y chocó con la D-404 de IA en Despachos, ambas publicadas antes por otras sesiones. Los commits `621adfc3` (D-402), `15b9f7cd` y `e6b4ee2d` (D-404) se refieren a esta.
+
+## D-407 (2026-10-11) — REFACTURAR: factura nueva para un pedido ya facturado (SIIGO / World Office)
+
+**Disparador.** Pedido de operación: opción "REFACTURAR" en Pedidos (columna Opciones y "Más opciones") para cuando la factura anterior salió mal. El comercio anula a mano la anterior en su sistema contable.
+
+**Hallazgo.** El servidor bloqueaba a propósito facturar un pedido con factura (`ALREADY_INVOICED`, lock transaccional en `createInvoiceFromOrder`). La recuperación tras `DUPLICATED_DOCUMENT` busca por cliente + fecha + total y, al refacturar, habría re-vinculado la factura VIEJA diciendo "factura creada". "Editar facturación" se bloquea con factura solo en el front.
+
+**Decisión (aprobada por la usuaria).** Solo Administrador/Tesorería (mismos roles que Liberar factura, ticket 1145) y solo SIIGO y World Office; DIAN directa sigue con nota crédito + Liberar. `from-order-async` y `preview` aceptan `reemplazarFactura: <invoiceId>`: el rol se valida ANTES del 202 y, dentro de la transacción, que el pedido siga con ESA factura (`INVOICE_CHANGED` si no; `REINVOICE_NOT_SUPPORTED`, `REINVOICE_PROVIDER_MISMATCH`, `NOT_INVOICED`). La anterior pasa a `facturasReemplazadas` solo cuando la nueva se guarda; si la nueva falla, el pedido queda con la anterior. La recuperación excluye las reemplazadas. Evento `invoice_replaced` en `accounting_invoice_errors`. Front: misma ventana de Facturar con alerta "ya está facturado con la factura #### (enlace a SIIGO), esta nueva la reemplazará" y botón "Corregir datos de facturación" (única puerta para editar facturación de un pedido facturado). Etiqueta "Tipo de documento" → "Tipo de factura (talonario de SIIGO)".
+
+**Pruebas.** `npm run test:reemplazar-factura` (11) y `test:liberar-factura` (14) en verde. Probado en navegador con ALMACEN BOMBAS hasta la vista previa; la emisión real NO (crea factura DIAN real): hacerla desplegado y coordinada con el comercio.
+
+## D-408 (2026-10-11) — "Envía de nuevo la confirmación del pedido"
+
+**Disparador.** Pedido de operación: reenviar al cliente la confirmación si el pedido cambió después de creado.
+
+**Decisión.** Reenvía el correo ORDER_CREATED ("Tu pedido #… – Confirmado") con los datos ACTUALES; solo correo (WhatsApp y SMS se cobran por mensaje). `POST /v1/orders/:orderId/resend-confirmation` (auth + requireJwtTenant, empresa de la sesión), inline en `routers/orders.js` para no tocar `controllers/orders.js`. Manual y explícito: no depende de la preferencia `order_created`; el interruptor global de correos lo sigue aplicando la cola. Un reenvío por pedido cada 2 min (transacción); marca `confirmacionReenviada` + `confirmacionReenvios`, sin tocar `date_upd`. El armado del correo se extrajo a `notificationHooks.correoPedidoCreado()`, compartido con la creación (diff `-w`: contenido idéntico). Front: confirmación que muestra el correo de destino; sin correo, avisa y no envía.
+
+**Pruebas.** `npm run test:reenviar-confirmacion` (8) y las de notificación de pedidos existentes en verde. Sin prueba en navegador: la cola vive en producción y el correo llega al cliente real.
+
+## D-409 (2026-10-11) — Títulos de pantalla = nombre del menú
+
+**Disparador.** "Organizar y mejorar los títulos de las pantallas, algunas no tienen" (pantallazo de Envíos y entregas sin título).
+
+**Decisión.** El título de cada pantalla es el nombre del menú lateral (`nav.service.ts`). Sin título → cabecera D-400 (`cfg-cabeza`, eyebrow = grupo del menú): Envíos y entregas, Pedidos POS, Adiciones, Ventas masivas, Órdenes de dropshipping, Conversaciones de Instagram/Facebook; Constructor de reportes con título compacto en su barra (ocupa todo el alto). Con título → solo el texto (25 pantallas: Todos los pedidos, Crear cliente / Listado de clientes, Inventario por bodega / Detalle por bodega —estaban cruzados—, Tesorería, Órdenes de producción, Órdenes de picking/packing, Lista de precios, Agent Builder en español, etc.); el estilo viejo no se tocó (cambio aparte). `meta-inbox-shell` no carga TranslateModule: texto plano.
+
+**Pendientes sin decidir.** "Prospectos" (`prospectos/lista`) lleva al 404 (su routing nunca se importa). `shouldHide` del sidebar oculta todo lo que diga empresa/usuario/rol y el grupo "Seguridad" puede quedar vacío. Modernizar a D-400 Clientes, CRM, Picking/Packing, Dropshipping e Inventario.
