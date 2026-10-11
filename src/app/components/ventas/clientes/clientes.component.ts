@@ -1612,7 +1612,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   buscadorAbierto: boolean = false;
 
   /**
-   * D-402: resultado del formulario unificado incrustado en la pantalla. El
+   * D-404: resultado del formulario unificado incrustado en la pantalla. El
    * cliente creado/actualizado queda como "encontrado" (ficha 360 abajo) y el
    * formulario pasa a modo edición sobre él.
    */

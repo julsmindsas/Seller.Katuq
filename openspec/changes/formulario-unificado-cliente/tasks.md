@@ -54,6 +54,6 @@
 
 ## 9. Cierre
 
-- [x] 9.1 Registrar D-402 en `specs/CONTRACT.md` (formulario único de cliente, `whatsappUsername`, forma canónica de `datosEntrega[]`) y bitácora
+- [x] 9.1 Registrar D-404 en `specs/CONTRACT.md` (formulario único de cliente, `whatsappUsername`, forma canónica de `datosEntrega[]`) y bitácora
 - [x] 9.2 Actualizar notas internas de los tickets 1164, 1165, 1166 y 1167 con el resumen y los archivos tocados
 - [ ] 9.3 Build final y lista de pruebas manuales para el usuario antes de publicar versión

@@ -1652,7 +1652,7 @@ export class CrearVentasComponent
     this.ref.detectChanges();
   }
 
-  // ── D-402: formulario unificado de cliente incrustado en el paso 1 ────────
+  // ── D-404: formulario unificado de cliente incrustado en el paso 1 ────────
 
   /** El formulario inline edita cuando ya hay un cliente elegido para el pedido. */
   get clienteInlineEsEdicion(): boolean {
@@ -2055,7 +2055,7 @@ export class CrearVentasComponent
         ? [...cliente.datosFacturacionElectronica]
         : [];
       this.originalDataFacturacionElectronica = this.utils.deepClone(this.datosFacturacionElectronica) || [];
-      // D-402: si el cliente marcó un perfil de facturación como predeterminado,
+      // D-404: si el cliente marcó un perfil de facturación como predeterminado,
       // queda elegido de una; el vendedor puede cambiarlo en la pestaña Facturación.
       const perfilPredeterminado = this.datosFacturacionElectronica.find((p: any) => p && p.predeterminado);
       if (perfilPredeterminado) {

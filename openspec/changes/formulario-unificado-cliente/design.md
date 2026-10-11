@@ -68,7 +68,7 @@ String opcional, se guarda tal cual (sin `@`), validación de formato laxa (3 a 
 1. Extender el componente (pestañas, modo inline, `whatsappUsername`, mapeador de entrega). Sin cambiar a quien lo usa; se despliega y se prueba en Listado → Editar, cotizaciones y CRM.
 2. Reemplazar el formulario de venta asistida (ambas plantillas).
 3. Reemplazar el formulario de Crear cliente.
-4. Registrar D-402 en `specs/CONTRACT.md` y publicar versión.
+4. Registrar D-404 en `specs/CONTRACT.md` y publicar versión.
 
 Rollback: cada paso es un commit; revertir el paso que falle deja el anterior funcionando porque el componente mantiene el contrato del modal.
 

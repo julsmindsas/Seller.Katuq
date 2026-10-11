@@ -31,7 +31,7 @@ import { CrearClienteModalComponent } from "./crear-cliente-modal/crear-cliente-
     DropdownModule,
     InputTextModule,
     ButtonModule,
-    // D-402: pestañas Contacto/Entrega/Facturación/Notas y notas del cliente
+    // D-404: pestañas Contacto/Entrega/Facturación/Notas y notas del cliente
     TabViewModule,
     InputTextareaModule,
   ],
