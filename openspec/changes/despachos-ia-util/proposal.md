@@ -1,6 +1,6 @@
 # Propuesta: IA de despachos que entregue valor
 
-> Estado: en implementación por el /goal de Daniel (11-oct: "permea de IA los principales módulos, termina inventario y luego sigue con despachos"). Mismo principio y mismas piezas que la IA de inventarios (D-401). Solo lectura: no cambia estados, órdenes de envío ni transportadores.
+> Estado (D-404): desplegado el 11-oct por el /goal de Daniel (11-oct: "permea de IA los principales módulos, termina inventario y luego sigue con despachos"). Mismo principio y mismas piezas que la IA de inventarios (D-401). Solo lectura: no cambia estados, órdenes de envío ni transportadores.
 
 ## Por qué
 

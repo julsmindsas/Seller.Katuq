@@ -9231,9 +9231,7 @@ Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.ser
 - `calcularComisionTotal` manda `proveedorId`/`montoVenta`, y el servidor espera `proveedor_id`/`total_venta`.
 - `GET /v1/productos/por-proveedor` devuelve el nombre del proveedor por id sin revisar a qué empresa pertenece. La ruta no usa `requireJwtTenant`. Hoy no hay proveedores.
 
-## D-402b (2026-10-11) — IA de despachos que entregue valor (openspec/changes/despachos-ia-util)
-
-> Número: D-402 y D-403 ya están tomados por dropshipping; se registra como continuación del /goal de Daniel sin abrir otro número. Si el contrato pide uno propio, renumerar a D-404.
+## D-404 (2026-10-11) — IA de despachos que entregue valor (openspec/changes/despachos-ia-util)
 
 **Disparador.** /goal de Daniel (11-oct): "permea de IA los principales módulos, termina inventario y luego sigue con despachos". La aprobación del cambio es ese /goal; todo es de solo lectura.
 
