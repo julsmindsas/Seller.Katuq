@@ -473,7 +473,7 @@
                         <ng-template ngbPanelContent>
                             <form [formGroup]="datosEntrega" class="datos-entrega-form">
                                 <!-- Sección de fecha de entrega -->
-                                <div *ngIf="producto?.procesoComercial?.llevaCalendario" class="mb-3">
+                                <div *ngIf="usaCalendario" class="mb-3">
                                     <h5 class="section-title">{{'1. Fecha de entrega' | translate}}</h5>
                                     <div class="form-group">
                                         <div class="input-group">
@@ -533,12 +533,18 @@
                                     </div>
                                 </div>
 
-                                <!-- Texto informativo para entregas estándar -->
-                                <div *ngIf="!producto?.procesoComercial?.llevaCalendario"
-                                    class="alert alert-light p-3 mb-3">
-                                    <i class="fa fa-info-circle me-2"></i>
-                                    <p class="mb-0">{{'Entregamos tu producto en un plazo que puede ir desde el mismo día de la compra, y siempre haremos lo posible por hacerlo llegar lo más rápido posible.
-                                        Te enviaremos una notificación tan pronto iniciemos el proceso de envío, para que estés listo/a para recibirlo' | translate}}</p>
+                                <!-- Ticket 1197: sin calendario, la fecha es hoy; el vendedor puede elegir otra -->
+                                <div *ngIf="!usaCalendario" class="alert alert-light p-3 mb-3 sin-calendario">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <i class="fa fa-calendar-o mt-1"></i>
+                                        <div class="flex-grow-1">
+                                            <p class="mb-1 fw-semibold">{{'Este producto no tiene calendario definido: su fecha de entrega es ' | translate}}{{ fechaEntregaTexto }}.</p>
+                                            <small class="text-muted d-block">{{'Se entrega con la forma y el horario estándar del comercio. Si este pedido necesita otra fecha, forma u hora, elígela aquí.' | translate}}</small>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" (click)="activarCalendario()">
+                                        <i class="fa fa-calendar me-1"></i>{{'Elegir fecha, forma y hora de entrega' | translate}}
+                                    </button>
                                 </div>
 
                                 <!-- Sección de personalización -->
@@ -1197,7 +1203,7 @@
                             <i class="fa fa-exclamation-triangle"></i>
                             <span>{{'Sin stock' | translate}}</span>
                         </div>
-                        <div class="error-message" *ngIf="!isStockUnavailable() && !errorCargaDatosMaestros && (!formasEntregaProducto || formasEntregaProducto.length === 0) && producto?.procesoComercial?.llevaCalendario">
+                        <div class="error-message" *ngIf="!isStockUnavailable() && !errorCargaDatosMaestros && (!formasEntregaProducto || formasEntregaProducto.length === 0) && usaCalendario">
                             <i class="fa fa-truck"></i>
                             <span class="d-none d-sm-inline">{{'Sin formas de entrega' | translate}}</span>
                         </div>

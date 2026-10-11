@@ -1857,7 +1857,7 @@ export class ConfProductToCartComponent
     let hasValidationErrors = false;
 
     // Verificar si el formulario datosEntrega tiene campos obligatorios que deban validarse
-    if (this.producto?.procesoComercial?.llevaCalendario) {
+    if (this.usaCalendario) {
       // Si debe llevar calendario, estos campos son obligatorios
       if (!this.datosEntrega.get("fechaEntrega")?.value) {
         this.toastrService.warning(
@@ -3206,7 +3206,7 @@ export class ConfProductToCartComponent
 
     // Verificar si no hay formas de entrega disponibles
     if (
-      this.producto?.procesoComercial?.llevaCalendario &&
+      this.usaCalendario &&
       (!this.formasEntregaProducto || this.formasEntregaProducto.length === 0)
     ) {
       return true;
@@ -3215,8 +3215,8 @@ export class ConfProductToCartComponent
     // Verificar formulario datosEntrega pero solo los campos que aplican según la configuración
     let datosEntregaInvalid = false;
 
-    // Solo validar fechaEntrega si llevaCalendario es true
-    if (this.producto?.procesoComercial?.llevaCalendario) {
+    // Solo validar fechaEntrega si el producto usa calendario (propio o pedido a mano)
+    if (this.usaCalendario) {
       if (!this.datosEntrega.get("fechaEntrega")?.value)
         datosEntregaInvalid = true;
       if (!this.datosEntrega.get("formaEntrega")?.value)
@@ -3312,7 +3312,7 @@ export class ConfProductToCartComponent
     }
 
     if (
-      this.producto?.procesoComercial?.llevaCalendario &&
+      this.usaCalendario &&
       (!this.formasEntregaProducto || this.formasEntregaProducto.length === 0)
     ) {
       debugMessage +=
@@ -3337,7 +3337,7 @@ export class ConfProductToCartComponent
     debugMessage += "<strong>Estado de campos requeridos:</strong><br>";
 
     // Calendario, forma y horario entrega
-    if (this.producto?.procesoComercial?.llevaCalendario) {
+    if (this.usaCalendario) {
       const fechaEntrega = this.datosEntrega.get("fechaEntrega")?.value;
       const formaEntrega = this.datosEntrega.get("formaEntrega")?.value;
       const horarioEntrega = this.datosEntrega.get("horarioEntrega")?.value;
@@ -4107,6 +4107,33 @@ export class ConfProductToCartComponent
     if (this.datosMaestrosCargados && this.formasEntregaProducto?.length === 0)
       return "no-delivery-options";
     return "unknown";
+  }
+
+  /**
+   * Ticket 1197: un producto sin calendario sale con fecha de hoy y forma/horario
+   * estándar. Desde el aviso el vendedor puede abrir el calendario igual que si el
+   * producto lo tuviera, al vender y al editar el producto del pedido.
+   */
+  calendarioForzado = false;
+
+  /** Calendario del producto o calendario pedido a mano por el vendedor. */
+  get usaCalendario(): boolean {
+    return !!this.producto?.procesoComercial?.llevaCalendario || this.calendarioForzado;
+  }
+
+  activarCalendario(): void {
+    this.calendarioForzado = true;
+    // Los valores por defecto (hoy, domicilio, lo más pronto posible) quedan
+    // como punto de partida; el vendedor cambia solo lo que necesite.
+    this.asignarDatosEntregaPorDefecto();
+    this.activeAccordionPanel = "datosEntregaPanel";
+  }
+
+  /** Fecha de entrega actual del formulario, legible, para el aviso. */
+  get fechaEntregaTexto(): string {
+    const f: any = this.datosEntrega?.get("fechaEntrega")?.value;
+    if (!f || !f.year) return "hoy";
+    return `${String(f.day).padStart(2, "0")}/${String(f.month).padStart(2, "0")}/${f.year}`;
   }
 
   /**
