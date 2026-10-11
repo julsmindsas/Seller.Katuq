@@ -99,6 +99,17 @@ $hover: #faf9ff;
 
 .ins-row__ia { color: $accent; font-weight: 700; font-size: 11px; }
 
+// El global `span.ng-star-inserted` pinta de azul todo span creado por *ngIf
+// ("(supuesto)", "ya pedido", notas): estos heredan el color de su línea.
+.ins-row__meta span,
+.ins-row__why span:not(.ins-pill):not(.ins-row__ia),
+.ins-note span,
+.ins-empty span {
+  color: inherit;
+  font-size: inherit;
+  letter-spacing: normal;
+}
+
 .ins-row__nums { text-align: right; }
 .ins-row__big { font-size: 17px; font-weight: 800; color: $accent; line-height: 1.1; }
 
