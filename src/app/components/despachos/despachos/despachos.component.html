@@ -33,6 +33,9 @@
                     </div>
                 </div>
 
+                <!-- IA de despachos (openspec/changes/despachos-ia-util) -->
+                <app-despachos-ia *ngIf="mostrarPanelIA" (cerrar)="mostrarPanelIA = false"></app-despachos-ia>
+
                 <!-- Pestañas -->
                 <p-tabView styleClass="modern-tabs" (onChange)="onTabChange($event)">
                     <p-tabPanel>
@@ -172,7 +175,8 @@
                             </div>
                             <div class="actions-group">
                                 <button pButton type="button" icon="pi pi-send" label="{{ 'Generar Orden' | translate }}" class="p-button-primary p-button-sm d-none d-md-flex" (click)="openModal(generarOrdenEnvioModal)"></button>
-                                <p-splitButton label="{{ 'Acciones' | translate }}" icon="pi pi-cog" (onClick)="mostrarRecomendacionesOptimizacion()" [model]="accionesMenu" styleClass="p-button-secondary p-button-sm p-button-outlined d-none d-md-flex"></p-splitButton>
+                                <button pButton type="button" icon="pi pi-bolt" label="IA" class="p-button-primary p-button-sm" (click)="mostrarPanelIA = !mostrarPanelIA" pTooltip="Qué despachar hoy, despachados sin cerrar y avisos, explicado por Opttia" tooltipPosition="bottom"></button>
+                                <p-splitButton label="{{ 'Acciones' | translate }}" icon="pi pi-cog" (onClick)="accionesSplit.onDropdownButtonClick($event)" #accionesSplit [model]="accionesMenu" styleClass="p-button-secondary p-button-sm p-button-outlined d-none d-md-flex"></p-splitButton>
                                 <div class="d-md-none">
                                     <button pButton type="button" icon="pi pi-ellipsis-v" class="p-button-text p-button-sm" (click)="menuAcciones.toggle($event)"></button>
                                     <p-menu #menuAcciones [model]="accionesMenu" [popup]="true"></p-menu>
