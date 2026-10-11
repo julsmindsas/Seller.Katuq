@@ -8,6 +8,6 @@
 - [x] 1.5 Herramienta MCP `get_dispatch_insights` + política + ADK, con prueba sin red.
 - [x] 1.6 Contrato de solo lectura.
 - [x] 2.1 Front: `app-despachos-ia` reemplaza las "Recomendaciones KAI"; build sin errores.
-- [ ] 3.1 Desplegar backend, ADK y front; probar en producción con un comercio real.
-- [ ] 3.2 Registrar en CONTRACT.
+- [x] 3.1 *(11-oct: backend e9fbb6b, ADK b8f6c2e, front 2026.10.11.3; probado con ALMACEN BOMBAS: panel, Opttia en 7 s, de "usted")* Desplegar backend, ADK y front; probar en producción con un comercio real.
+- [x] 3.2 Registrar en CONTRACT.
 - [ ] Fase 2 (fuera de este cambio): cumplimiento por transportador con `order_status_history`.

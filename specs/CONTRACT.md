@@ -9230,3 +9230,16 @@ Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.ser
 - El front llama `POST /v1/dropshipping/crear-desde-venta` y `/sincronizar-productos`, pero el servidor las monta bajo `/v1/dropshipping/ordenes/`, así que hoy dan 404.
 - `calcularComisionTotal` manda `proveedorId`/`montoVenta`, y el servidor espera `proveedor_id`/`total_venta`.
 - `GET /v1/productos/por-proveedor` devuelve el nombre del proveedor por id sin revisar a qué empresa pertenece. La ruta no usa `requireJwtTenant`. Hoy no hay proveedores.
+
+## D-402b (2026-10-11) — IA de despachos que entregue valor (openspec/changes/despachos-ia-util)
+
+> Número: D-402 y D-403 ya están tomados por dropshipping; se registra como continuación del /goal de Daniel sin abrir otro número. Si el contrato pide uno propio, renumerar a D-404.
+
+**Disparador.** /goal de Daniel (11-oct): "permea de IA los principales módulos, termina inventario y luego sigue con despachos". La aprobación del cambio es ese /goal; todo es de solo lectura.
+
+**Hallazgo (medido en producción desde el servidor, solo lectura).** Las "Recomendaciones KAI" de Despachos eran frases fijas con zonas inventadas y un botón "Aplicar" que decía haber cambiado el sistema sin cambiar nada. Casi todos los pedidos activos tienen la fecha pactada vencida (ALMARA 3.407 de 3.416), así que "urgente = hoy o vencido" marca todo. Miles de pedidos quedan en "Despachado" para siempre: OH MY STORE 766 de hace más de 3 días con $416 M por cobrar (Osmosis 493 / $243 M, Prindel 216 / $133 M, Fullpi 53 / $40 M); CAFE ESCOBAR 257 con $53 M (Partners Logistics 250). La fecha real de entrega casi nunca se registra (30 de 400 en ALMARA, 0 en las demás).
+
+**Decisión.** Mismo principio que inventario (D-401): el código calcula, Opttia redacta y lo que invente se descarta (validación compartida `services/ai/frasesVerificadas.js`). Cola en tramos (vencido 1–3 días, hoy, mañana, atrasado 4–15; más viejo = aviso), rutas por ciudad normalizada, despachados sin cerrar por transportador con la plata por cobrar, avisos de catálogo cerrado. `GET /v1/logistica/insights` (sin cupo) y `POST …/explicar` (cupo de chat); tool MCP `get_dispatch_insights` (despachos/view) también en el ADK; panel `app-despachos-ia` con botón "IA" en Despachos. La IA nunca recibe nombre, teléfono ni dirección del cliente final.
+
+**Desplegado (11-oct).** Backend `e9fbb6b`, ADK `b8f6c2e`, front 2026.10.11.3. Probado en producción con ALMACEN BOMBAS. Fase 2 pendiente: cumplimiento por transportador con `order_status_history` (la fecha real de entrega no sirve).
+
