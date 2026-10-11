@@ -1,0 +1,79 @@
+<section class="ins-panel">
+  <header class="ins-panel__head">
+    <span class="ins-panel__icon" style="background: #efe9ff; color: #5F3FE0;"><i class="pi pi-bolt"></i></span>
+    <div>
+      <h3 class="ins-panel__title">Lo que importa hoy en despachos</h3>
+      <p class="ins-panel__sub">Calculado con los pedidos activos; Opttia lo explica si se lo pide.</p>
+    </div>
+    <div class="ins-panel__actions">
+      <button type="button" class="ins-btn is-primary" (click)="explicar()" [disabled]="explicando || cargando || !insights">
+        <i class="pi" [ngClass]="explicando ? 'pi-spin pi-spinner' : 'pi-bolt'"></i>
+        {{ explicando ? 'Opttia está leyendo…' : 'Explicar con Opttia' }}
+      </button>
+      <button type="button" class="ins-btn" (click)="cargar()" [disabled]="cargando" aria-label="Actualizar"><i class="pi pi-refresh" [class.pi-spin]="cargando"></i></button>
+      <button type="button" class="ins-btn" (click)="cerrar.emit()" aria-label="Cerrar"><i class="pi pi-times"></i></button>
+    </div>
+  </header>
+
+  <div class="ins-empty" *ngIf="cargando && !insights"><span>Revisando los pedidos activos…</span></div>
+  <div class="ins-note" *ngIf="error"><i class="pi pi-exclamation-circle"></i> <span>{{ error }}</span></div>
+
+  <ng-container *ngIf="insights">
+    <div class="di-stats">
+      <div class="di-stat"><span class="ins-label">Despachar hoy</span><strong [class.is-danger]="paraHoy > 0">{{ paraHoy | number }}</strong></div>
+      <div class="di-stat"><span class="ins-label">Atrasados (4 a 15 días)</span><strong [class.is-warning]="insights.cola.porTramo.atrasado > 0">{{ insights.cola.porTramo.atrasado | number }}</strong></div>
+      <div class="di-stat"><span class="ins-label">Despachados sin cerrar</span><strong [class.is-warning]="insights.sinCerrar.total > 0">{{ insights.sinCerrar.total | number }}</strong></div>
+      <div class="di-stat"><span class="ins-label">Por cobrar sin cerrar</span><strong>{{ dinero(insights.sinCerrar.porCobrar) }}</strong></div>
+      <div class="di-stat"><span class="ins-label">Avisos</span><strong [class.is-warning]="insights.avisos.total > 0">{{ insights.avisos.total | number }}</strong></div>
+    </div>
+
+    <div class="di-opttia" *ngIf="ia?.resumen"><span class="ins-row__ia">Opttia · </span><span class="di-texto">{{ ia?.resumen }}</span></div>
+    <div class="ins-note" *ngIf="avisoIA"><i class="pi pi-info-circle"></i> <span>{{ avisoIA }}</span></div>
+
+    <div class="di-cols">
+      <div class="di-col">
+        <div class="ins-label di-col__title">Qué despachar primero</div>
+        <div class="di-rutas" *ngIf="insights.cola.rutas.length">
+          <span class="ins-pill is-accent" *ngFor="let r of insights.cola.rutas | slice:0:5">{{ r.pedidos }} · {{ r.ciudad }}<ng-container *ngIf="r.zona"> {{ r.zona }}</ng-container></span>
+        </div>
+        <div class="di-item" *ngFor="let f of insights.cola.filas | slice:0:8">
+          <div class="di-item__top">
+            <strong class="di-item__name">Pedido {{ f.nroPedido }}</strong>
+            <span class="ins-pill" [ngClass]="tramo(f).clase">{{ tramo(f).texto }}</span>
+          </div>
+          <span class="di-item__meta">{{ f.ciudad || 'Sin ciudad' }}<ng-container *ngIf="f.franja"> · {{ f.franja }}</ng-container><ng-container *ngIf="f.porCobrar"> · {{ dinero(f.porCobrar) }} por cobrar</ng-container></span>
+          <span class="di-item__why"><ng-container *ngIf="ia?.cola?.[f.id]; else baseCola"><span class="ins-row__ia">Opttia · </span>{{ ia?.cola?.[f.id] }}</ng-container><ng-template #baseCola>{{ f.motivoBase }}</ng-template></span>
+        </div>
+        <div class="di-vacio" *ngIf="insights.cola.total === 0"><span>Nada pendiente para hoy, mañana ni de los últimos 15 días.</span></div>
+        <span class="di-pie" *ngIf="insights.cola.total > 8">Y {{ insights.cola.total - 8 | number }} más en la cola.</span>
+      </div>
+
+      <div class="di-col">
+        <div class="ins-label di-col__title">Despachados sin cerrar, por transportador</div>
+        <div class="di-item" *ngFor="let t of insights.sinCerrar.transportadores | slice:0:6">
+          <div class="di-item__top">
+            <strong class="di-item__name">{{ t.transportador }}</strong>
+            <span class="ins-pill is-warning" *ngIf="t.porCobrar">{{ dinero(t.porCobrar) }}</span>
+          </div>
+          <span class="di-item__why"><ng-container *ngIf="ia?.transportadores?.[t.id]; else baseT"><span class="ins-row__ia">Opttia · </span>{{ ia?.transportadores?.[t.id] }}</ng-container><ng-template #baseT>{{ t.motivoBase }}</ng-template></span>
+        </div>
+        <div class="di-vacio" *ngIf="insights.sinCerrar.total === 0"><span>Todos los despachados de hace más de 3 días ya están cerrados.</span></div>
+
+        <div class="ins-label di-col__title di-mt">Avisos</div>
+        <div class="di-item" *ngFor="let a of insights.avisos.filas | slice:0:6">
+          <div class="di-item__top">
+            <strong class="di-item__name">Pedido {{ a.nroPedido }}</strong>
+            <span class="ins-pill" [ngClass]="claseAviso(a)">{{ tipoAviso(a) }}</span>
+          </div>
+          <span class="di-item__why"><ng-container *ngIf="ia?.avisos?.[a.id]; else baseA"><span class="ins-row__ia">Opttia · </span>{{ ia?.avisos?.[a.id]?.frase }}</ng-container><ng-template #baseA>{{ a.motivoBase }}</ng-template></span>
+        </div>
+        <div class="di-vacio" *ngIf="insights.avisos.total === 0"><span>Sin avisos.</span></div>
+        <span class="di-pie" *ngIf="insights.avisos.total > 6">Y {{ insights.avisos.total - 6 | number }} avisos más.</span>
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 px-3 pb-3">
+      <button type="button" class="ins-chip" *ngFor="let p of preguntas" (click)="preguntar(p)">{{ p }}</button>
+    </div>
+  </ng-container>
+</section>

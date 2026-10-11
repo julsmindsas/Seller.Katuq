@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { RespuestaDispatchInsights } from '../../../components/despachos/components/despachos-ia/despachos-ia.modelos';
 
 /** Lo que gana el mensajero por entrega: un valor fijo en pesos o un porcentaje del domicilio cobrado. */
 export interface PagoMensajero {
@@ -22,6 +23,15 @@ export class LogisticaServiceV2 extends BaseService {
 
     constructor(public http: HttpClient) {
         super(http);
+    }
+
+    // IA de despachos (openspec/changes/despachos-ia-util): el cálculo no gasta cupo; explicar sí.
+    getDispatchInsights(): Observable<RespuestaDispatchInsights> {
+        return this.http.get<RespuestaDispatchInsights>(`${this.apiUrl}/v1/logistica/insights`);
+    }
+
+    explicarDispatchInsights(): Observable<RespuestaDispatchInsights> {
+        return this.http.post<RespuestaDispatchInsights>(`${this.apiUrl}/v1/logistica/insights/explicar`, {});
     }
 
     // Transportadores

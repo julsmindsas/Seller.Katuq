@@ -460,17 +460,6 @@ export interface TipoClienteResp {
 }
 
 /**
- * Interfaz para métricas de IA por bodega (FUTURO)
- */
-export interface MetricasIABodega {
-  alertaReorden: string | null;        // "URGENTE" | "PRONTO" | null
-  productosParaReorden: string[];      // IDs de productos
-  tendencia: string | null;            // "SUBIENDO" | "BAJANDO" | "ESTABLE"
-  prediccionAgotamiento: number | null; // Días estimados
-  sugerencias: string[];
-}
-
-/**
  * Interfaz para métricas globales de una bodega
  */
 export interface MetricasBodega {
@@ -491,8 +480,6 @@ export interface MetricasBodega {
   coberturaCatalogo: number;      // % de SKUs con stock
   valorPromedioPorSKU: number;    // Valor promedio
   porcentajeInventario: number;   // % del total
-  // IA (FUTURO)
-  ia?: MetricasIABodega;
 }
 
 /**
@@ -506,15 +493,6 @@ export interface BodegaConsolidada {
   fulfillmentId: string | null;
   fulfillmentProvider: string | null;
   metricas?: MetricasBodega;
-}
-
-/**
- * Interfaz para métricas de IA globales (FUTURO)
- */
-export interface MetricasIAGlobal {
-  saludInventario: string | null;   // "BUENA" | "REGULAR" | "CRITICA"
-  bodegaCritica: string | null;     // ID de bodega
-  resumenEjecutivo: string | null;  // Texto generado por IA
 }
 
 /**
@@ -541,7 +519,6 @@ export interface TotalesGlobales {
   totalUnidades: number;
   totalProductos: number;        // SKUs únicos con stock
   totalSKUsCatalogo: number;     // Total SKUs inventariables
-  ia?: MetricasIAGlobal;
 }
 
 /**
@@ -677,12 +654,6 @@ export class InventarioService {
    * @param tipoMovimiento Tipo de movimiento de inventario
    * @returns Observable con el resultado de la operación
    */
-  getCentralAbastecimiento(dias: number = 30): Observable<any> {
-    return this.http.get(`${this.apiUrl}/inventory/central-abastecimiento`, {
-      params: { dias: dias.toString() }
-    });
-  }
-
   /** Qué comprar ya, capital parado y avisos, calculado en el servidor. No gasta cupo de IA (D-401). */
   getInventoryInsights(dias: number = 30, idBodega?: string): Observable<RespuestaInsights> {
     let params = new HttpParams().set('dias', String(dias));
@@ -697,10 +668,6 @@ export class InventarioService {
 
   quitarProductoSinStock(productoId: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/inventory/quitar-sin-stock/${productoId}`);
-  }
-
-  analizarAbastecimientoIA(datos: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/katuqintelligence/kai/inventory-analysis`, datos);
   }
 
   ingresarProductos(
@@ -1256,32 +1223,6 @@ export class InventarioService {
       apply: 'false',
     };
     return this.http.post(`${this.apiUrl}/inventory/reparar`, {}, { params });
-  }
-
-  /**
-   * Analiza el inventario usando ADK Agent IA
-   * Ejecuta análisis inteligente para detectar alertas de reorden, tendencias y predicciones
-   * @param bodegas Array de bodegas a analizar
-   * @returns Observable con métricas de IA por bodega y globales
-   */
-  analyzeInventoryWithIA(bodegas: BodegaConsolidada[]): Observable<{
-    success: boolean;
-    metricasPorBodega: { [bodegaId: string]: MetricasIABodega };
-    metricasGlobales: MetricasIAGlobal;
-    timestamp: string;
-    error?: string;
-  }> {
-    const url = `${this.apiUrl}/inventory/analyze-ia`;
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json'
-    });
-
-    return this.http.post<any>(url, {
-      bodegas: bodegas.map(b => ({
-        id: b.id,
-        nombre: b.nombre
-      }))
-    }, { headers });
   }
 
   /**

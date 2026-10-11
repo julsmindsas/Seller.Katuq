@@ -52,6 +52,8 @@
                     <div class="">
                         <div class="">
                             <div class="p-2">
+                                    <!-- IA de pedidos (D-405): los que necesitan atención hoy -->
+                                    <app-modulo-ia modulo="pedidos"></app-modulo-ia>
                                     <!-- ====== FILTROS + MÉTRICAS (rediseño 1b: fuera de la tabla, visibles en ambas vistas) ====== -->
                                         <app-shared-filters
                                             #sharedFilters
@@ -1834,7 +1836,7 @@
         </button>
     </div>
     <div class="modal-body">
-        <!-- D-404: el formulario unificado de cliente. Al guardar entrega el
+        <!-- D-406: el formulario unificado de cliente. Al guardar entrega el
              cliente actualizado y editDatosClientes lo aplica al pedido. -->
         <app-crear-cliente-modal modo="inline"
             [isEdit]="!!clienteSeleccionado?.documento"

@@ -9177,6 +9177,8 @@ Se actualizaron las instrucciones operativas de suscripciones para retirar coman
 
 **11-oct, tarde (pedido de Daniel: "falta la IA en inventario por catálogo").** El botón "IA" del catálogo deja el análisis viejo y muestra `<app-insights-resumen>` con el mismo cálculo y frases de Opttia (front 2026.10.11.2). El resumen de Opttia se descartaba siempre (escribe "18 millones"): la guarda acepta ahora miles/millones con un decimal (`a1b8a1a`). Opttia escribía con voseo y "trasladar en 7 días": prompt en "usted" y sin plazos inventados (`6ae76c9`). Probado en producción con ALMACEN BOMBAS (premium: chat sin límite, no se gastó cupo). También 2026.10.11.1: span azules corregidos. Backend en prod `6ae76c9`.
 
+**Cierre de inventario (11-oct, /goal de Daniel "permea de IA los principales módulos, termina inventario y luego sigue con despachos").** Medición en producción hecha (`openspec/changes/inventario-ia-util/findings.md`): la Central vieja no marcaba 46 de 50 urgentes de ALMARA ni 78 de 87 de OMS; tiempo en el servidor 1–10,6 s (objetivo ≤ 12 s). Retiradas las tres IA viejas y la Central vieja (`42b4052`; antes del 18-oct planeado porque nada las usa). Destinatarios del resumen corregidos al esquema real (`users.roles`, `emailNotificacionesSistema`). Bug: "sin ventas registradas" leía `sinDemanda` en vez de `sinDemandaRegistrada` (`eea18af`). Resumen semanal EN SOMBRA: `INVENTARIO_DIGEST=sombra` en prod (respaldo del `.env`) y bandera `inventoryDigest` en FLORECER, ALMARA FELICIDAD y CAFE ESCOBAR; primera vuelta manual W41 sin errores (3 en sombra, 0 correos). Queda: revisar la sombra dos semanas (hasta ~25-oct) y el OK de Daniel para `envio`.
+
 **Renumerada (10-oct):** nació como D-400 y chocó con la D-400 de Configuración, publicada antes por otra sesión; los commits `6718ad1` (backend) y `43de1b0` (ADK) dicen D-400 en el mensaje, pero se refieren a esta.
 
 ## D-402 (2026-10-10) — Configuración de Dropshipping: arreglos de la pantalla (hallazgos de D-400)
@@ -9229,7 +9231,27 @@ Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.ser
 - `calcularComisionTotal` manda `proveedorId`/`montoVenta`, y el servidor espera `proveedor_id`/`total_venta`.
 - `GET /v1/productos/por-proveedor` devuelve el nombre del proveedor por id sin revisar a qué empresa pertenece. La ruta no usa `requireJwtTenant`. Hoy no hay proveedores.
 
-## D-404 (2026-10-10) — Formulario único de cliente con Contacto / Entrega / Facturación / Notas (openspec/changes/formulario-unificado-cliente)
+## D-404 (2026-10-11) — IA de despachos que entregue valor (openspec/changes/despachos-ia-util)
+
+**Disparador.** /goal de Daniel (11-oct): "permea de IA los principales módulos, termina inventario y luego sigue con despachos". La aprobación del cambio es ese /goal; todo es de solo lectura.
+
+**Hallazgo (medido en producción desde el servidor, solo lectura).** Las "Recomendaciones KAI" de Despachos eran frases fijas con zonas inventadas y un botón "Aplicar" que decía haber cambiado el sistema sin cambiar nada. Casi todos los pedidos activos tienen la fecha pactada vencida (ALMARA 3.407 de 3.416), así que "urgente = hoy o vencido" marca todo. Miles de pedidos quedan en "Despachado" para siempre: OH MY STORE 766 de hace más de 3 días con $416 M por cobrar (Osmosis 493 / $243 M, Prindel 216 / $133 M, Fullpi 53 / $40 M); CAFE ESCOBAR 257 con $53 M (Partners Logistics 250). La fecha real de entrega casi nunca se registra (30 de 400 en ALMARA, 0 en las demás).
+
+**Decisión.** Mismo principio que inventario (D-401): el código calcula, Opttia redacta y lo que invente se descarta (validación compartida `services/ai/frasesVerificadas.js`). Cola en tramos (vencido 1–3 días, hoy, mañana, atrasado 4–15; más viejo = aviso), rutas por ciudad normalizada, despachados sin cerrar por transportador con la plata por cobrar, avisos de catálogo cerrado. `GET /v1/logistica/insights` (sin cupo) y `POST …/explicar` (cupo de chat); tool MCP `get_dispatch_insights` (despachos/view) también en el ADK; panel `app-despachos-ia` con botón "IA" en Despachos. La IA nunca recibe nombre, teléfono ni dirección del cliente final.
+
+**Desplegado (11-oct).** Backend `e9fbb6b`, ADK `b8f6c2e`, front 2026.10.11.3. Probado en producción con ALMACEN BOMBAS. Fase 2 pendiente: cumplimiento por transportador con `order_status_history` (la fecha real de entrega no sirve).
+
+## D-405 (2026-10-11) — IA en clientes, cartera y pedidos (openspec/changes/ia-modulos-principales)
+
+**Disparador.** /goal de Daniel: "permea de IA los principales módulos" (después de inventario D-401 y despachos D-404). Solo lectura.
+
+**Hallazgo (producción, solo lectura).** Las métricas de clientes contaban "en alerta" pero no decían quiénes; la cartera de tesorería no ordenaba a quién cobrar (OH MY STORE $840 M, 80 % vencido; CAFÉ 90 %; ALMARA 86 %); nada señalaba pedidos quedados. Calibración: compras del mismo día juntas (si no, "compraba cada 1 día"); "sin pago" sin contraentrega ni crédito ("CXC NOMINA"/"PreAprobado" daban 165 falsas alarmas en OMS).
+
+**Decisión.** `GET/POST /v1/insights/:modulo[/explicar]` (clientes | cartera | pedidos). Cartera = `buildCartera` de tesorería sin recalcular (mismo total que la pantalla) y solo roles de tesorería; vendedor restringido ve solo lo suyo (metricasPropias). Explicación genérica por bloques (`services/ai/explicarBloques.js`): Opttia no recibe nombres, teléfonos ni documentos; plantillas de WhatsApp con `{nombre}` y sin números; el enlace lo envía la persona. Tools MCP `get_customer_insights` (clientes/view), `get_receivables_insights` (contabilidad/view), `get_orders_attention` (ventas/view), también en el ADK. Front: `app-modulo-ia` standalone en Clientes, Todos los pedidos y Cartera, cargado a pedido (12 meses de pedidos en cada apertura costarían lecturas).
+
+**Desplegado (11-oct).** Backend `fe9d3f5` + `885879b`, ADK `e31a5de`, front 2026.10.11.5/.6. Probado en producción con ALMACEN BOMBAS en los tres paneles. Corregidos en vivo: panel sin repintar dentro de Cartera (OnPush) y "Opttia no está disponible" cuando simplemente no había nada que explicar.
+
+## D-406 (2026-10-10) — Formulario único de cliente con Contacto / Entrega / Facturación / Notas (openspec/changes/formulario-unificado-cliente)
 
 **Disparador.** Jairo, tickets 1164 (crear el cliente completo en una sola pantalla), 1165 (editar completo desde el listado), 1166 (usuario de WhatsApp) y 1167 (formularios de cliente homogéneos), 2026-10-10.
 
@@ -9242,4 +9264,4 @@ Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.ser
 **Estado (10-oct).** Código local sin commit. Builds parciales en verde hasta el reemplazo de venta asistida; el build final con Crear cliente quedó detenido por memoria del equipo y debe repetirse. Pendientes: borrar `formulario`/`formularioEntrega`/`formularioFacturacion`/`formularioNotas` y la plantilla vieja de `ClientesComponent` (sigue viva para el modo `isEdit` que abren pedidos y producción), traducciones EN/PT de las pestañas, prueba en navegador de los 8 escenarios de la spec y publicar versión.
 
 
-**Renumerada (11-oct):** nació como D-402 y chocó con la D-402 de Dropshipping, publicada antes por otra sesión; el commit `621adfc3` dice D-402 en el mensaje, pero se refiere a esta.
+**Renumerada (11-oct):** nació como D-402 y chocó con la D-402 de Dropshipping; luego fue D-404 y chocó con la D-404 de IA en Despachos, ambas publicadas antes por otras sesiones. Los commits `621adfc3` (D-402), `15b9f7cd` y `e6b4ee2d` (D-404) se refieren a esta.

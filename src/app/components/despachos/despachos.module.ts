@@ -68,6 +68,7 @@ import { EnviameHelperService } from "./components/enviame/services/enviame-help
 import { EvidenciaEmpacadoModalComponent } from "./components/evidencia-empacado-modal/evidencia-empacado-modal.component";
 import { DespachoExpressModalComponent } from "./components/despacho-express-modal/despacho-express-modal.component";
 import { DispatchRulesConfigComponent } from "./components/dispatch-rules-config/dispatch-rules-config.component";
+import { DespachosIaComponent } from "./components/despachos-ia/despachos-ia.component";
 
 // Servicios para códigos DANE
 import { DaneCodesService } from "../../shared/services/dane-codes.service";
@@ -154,6 +155,7 @@ import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-im
     EvidenciaEmpacadoModalComponent,
     DespachoExpressModalComponent,
     DispatchRulesConfigComponent,
+    DespachosIaComponent,
   ],
   exports: [DetalleEntregaComponent],
 })

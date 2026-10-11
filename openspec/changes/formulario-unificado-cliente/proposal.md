@@ -27,7 +27,7 @@ Hoy el cliente se captura en cuatro formularios distintos (pantalla Crear client
 - **Backend (katuq_admin_back_firebase)**: sin cambios de contrato. `clients/create` y `clients/edit` guardan el body completo; el índice de búsqueda (`clients_search_index`) no indexa los campos nuevos. Solo se verifica que `whatsappUsername` pase por `editClient` sin ser filtrado.
 - **Datos**: `clients.<doc>.whatsappUsername` (string opcional, nuevo). `datosEntrega[]`, `datosFacturacionElectronica[]` y `notas[]` se mantienen con su forma actual para no romper venta asistida, cotizaciones, facturación electrónica ni logística, que ya los leen.
 - **Riesgo sobre módulos sensibles**: ninguno sobre pedidos, inventario ni consecutivos. El cambio no escribe `orders`, `inventory` ni `products`. La venta asistida sigue armando el pedido a partir del cliente seleccionado como hoy; solo cambia el formulario con el que se crea o edita ese cliente.
-- **Decisión a registrar**: D-404 en `specs/CONTRACT.md` (formulario único de cliente y campo `whatsappUsername`).
+- **Decisión a registrar**: D-406 en `specs/CONTRACT.md` (formulario único de cliente y campo `whatsappUsername`).
 
 ## No-goals
 

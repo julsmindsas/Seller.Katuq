@@ -9,7 +9,7 @@ import { clientBillingProfiles, matchesClientSearch } from '../../../shared/util
 /**
  * Pantalla Crear cliente (`ventas/clientes`).
  *
- * D-404: el formulario de cliente (Contacto / Entrega / Facturación / Notas) es
+ * D-406: el formulario de cliente (Contacto / Entrega / Facturación / Notas) es
  * `CrearClienteModalComponent` incrustado en modo inline; esta pantalla solo
  * aporta el buscador de clientes existentes (ticket 1163), la ficha 360 del
  * cliente encontrado y la configuración de etiquetas.
@@ -335,7 +335,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   buscadorAbierto: boolean = false;
 
   /**
-   * D-404: resultado del formulario unificado incrustado en la pantalla. El
+   * D-406: resultado del formulario unificado incrustado en la pantalla. El
    * cliente creado/actualizado queda como "encontrado" (ficha 360 abajo) y el
    * formulario pasa a modo edición sobre él.
    */

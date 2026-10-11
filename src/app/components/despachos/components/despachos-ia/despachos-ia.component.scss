@@ -1,0 +1,68 @@
+// IA de despachos. Tema canónico, plano. Todo span con texto lleva color propio por el
+// global `span.ng-star-inserted`. Ningún nombre de clase contiene "p-" (trampa global).
+$accent: #5F3FE0;
+$ink: #211F3A;
+$muted: #8f8bab;
+
+.di-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  padding: 14px 18px 4px;
+}
+
+.di-stat {
+  background: #faf9fe;
+  border: 1px solid #eeecf7;
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong { font-size: 17px; font-weight: 800; color: $accent; }
+  strong.is-danger { color: #D64545; }
+  strong.is-warning { color: #D9820A; }
+}
+
+.di-opttia {
+  margin: 10px 18px 0;
+  padding: 10px 12px;
+  border: 1px solid #d9cffb;
+  border-radius: 12px;
+
+  .di-texto { color: $ink; font-size: 13.5px; letter-spacing: normal; }
+}
+
+.di-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 22px;
+  padding: 14px 18px 12px;
+}
+
+.di-col__title { display: block; margin-bottom: 6px; }
+.di-mt { margin-top: 16px; }
+
+.di-rutas { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+
+.di-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f0f7;
+
+  &:last-of-type { border-bottom: 0; }
+}
+
+.di-item__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.di-item__name { color: $ink; font-size: 13.5px; font-weight: 700; }
+.di-item__meta { color: $muted; font-size: 12px; letter-spacing: normal; }
+.di-item__why { color: #4b4868; font-size: 12.5px; letter-spacing: normal; }
+.di-pie, .di-vacio span { display: block; color: $muted; font-size: 12px; margin-top: 6px; letter-spacing: normal; }
+
+@media (max-width: 992px) {
+  .di-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .di-cols { grid-template-columns: 1fr; }
+}

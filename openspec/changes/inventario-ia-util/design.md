@@ -77,7 +77,7 @@ Backend (rutas nuevas, no rompe nada) → front → semana de convivencia → re
 - **Resumen:** idempotencia semanal, sombra sin envío, bandera apagada sin IA, baja por persona, sin accionable sin correo, una empresa que falla no frena a las demás.
 - **Herramienta MCP:** solo la empresa de la sesión.
 
-## Preguntas abiertas (se cierran en la tarea 0.1, con lectura en producción)
+## Preguntas abiertas — CERRADAS el 11-oct (ver findings.md)
 1. Campo de precio sin IVA: el código usa `precio.precioUnitarioSinIva` (más de 40 lecturas en el backend); falta confirmar en datos reales qué tan poblado está.
 2. Nombres exactos de los roles administradores para los destinatarios.
 3. Umbrales `SOBRESTOCK_DIAS` y de ajuste atípico, validados con ALMARA.

@@ -86,7 +86,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
    */
   @Input() tagsCatalog: ClientTag[] | null = null;
   /**
-   * D-404: el mismo formulario sirve dentro de un modal (`NgbModal.open`, como
+   * D-406: el mismo formulario sirve dentro de un modal (`NgbModal.open`, como
    * hasta ahora) o incrustado en una pantalla (`<app-crear-cliente-modal
    * modo="inline">`). En inline no hay `NgbActiveModal`: el resultado sale por
    * `guardado` y "cancelar" por `cancelado`.
@@ -106,7 +106,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
   etiquetasSeleccionadas: string[] = [];
   tipoDocSeleccionado: string = 'CC';
 
-  // ── Pestañas (D-404) ────────────────────────────────────────────────
+  // ── Pestañas (D-406) ────────────────────────────────────────────────
   /** Índice de la pestaña activa: 0 Contacto, 1 Entrega, 2 Facturación, 3 Notas. */
   pestana = 0;
   /** Las pestañas extra solo aplican a clientes habituales que se guardan (corporativos van por CRM; el borrador no persiste). */
@@ -573,7 +573,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     return !!this.perfilEditando && !this.perfilCompleto(this.perfilEditando);
   }
 
-  // ── Entrega: varias direcciones (D-404, reemplaza el campo único del ticket 1046) ──
+  // ── Entrega: varias direcciones (D-406, reemplaza el campo único del ticket 1046) ──
   resumenEntrega(e: any): string { return resumenEntrega(e); }
 
   nuevaEntrega(): void {
@@ -884,7 +884,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     }
   }
 
-  /** Cierra el modal o emite el resultado, según el modo (D-404). */
+  /** Cierra el modal o emite el resultado, según el modo (D-406). */
   private emitirResultado(resultado: ResultadoFormularioCliente): void {
     if (this.modo === 'modal' && this.activeModal) {
       this.activeModal.close(resultado);
@@ -1029,7 +1029,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
           this.emitirResultado({ cliente: base, action: 'created' });
           return;
         }
-        // D-404: `clients/create` responde solo {msg:'added'}, sin el id. Se relee
+        // D-406: `clients/create` responde solo {msg:'added'}, sin el id. Se relee
         // por documento para entregar el cliente con su `cd` (venta asistida lo
         // necesita para editarlo después sin crear un duplicado).
         this.lookupByDocument(clienteData.documento).subscribe({

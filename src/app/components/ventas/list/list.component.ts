@@ -6224,7 +6224,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * D-404: el cliente embebido en el pedido puede estar desactualizado. Se
+   * D-406: el cliente embebido en el pedido puede estar desactualizado. Se
    * relee por documento para editar lo que hay en `clients` (el formulario
    * unificado recarga solo al cambiar `clienteData`).
    */

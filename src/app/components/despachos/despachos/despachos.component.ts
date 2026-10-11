@@ -307,6 +307,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
   diasUmbralRiesgo: number = 3; // Pedidos con 3 días o menos para entrega
   mostrarAlertasAvanzadas: boolean = true;
   kaiPredicciones: any = null;
+  /** Panel de IA de despachos (qué despachar hoy, sin cerrar, avisos). */
+  mostrarPanelIA = false;
 
   // Dispatch Rules Config modal
   showDispatchRulesConfig = false;
@@ -471,8 +473,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
     // Definir items para el menú de acciones unificado
     this.accionesMenu = [
       {
-        label: 'Recomendaciones KAI',
-        icon: 'pi pi-brain',
+        label: 'Lo que importa hoy (IA)',
+        icon: 'pi pi-bolt',
         command: () => this.mostrarRecomendacionesOptimizacion()
       },
       {
@@ -1563,34 +1565,13 @@ export class DespachosComponent implements OnInit, OnDestroy {
   }
 
   // Método para mostrar recomendaciones de optimización
+  /**
+   * Abre el panel de IA de despachos (openspec/changes/despachos-ia-util). Reemplaza el
+   * diálogo de "Recomendaciones KAI": sus frases eran fijas, sus zonas inventadas y su
+   * botón "Aplicar" decía que había cambiado el sistema sin cambiar nada.
+   */
   mostrarRecomendacionesOptimizacion() {
-    if (!this.kaiPredicciones) return;
-
-    const recomendaciones =
-      this.kaiPredicciones.recomendaciones.join("</li><li>");
-
-    Swal.fire({
-      title: "Recomendaciones de KAI",
-      icon: "info",
-      html: `
-        <div class="text-start">
-          <p>Basado en el análisis de datos históricos y patrones actuales, KAI sugiere:</p>
-          <ul><li>${recomendaciones}</li></ul>
-        </div>
-      `,
-      confirmButtonText: "Aplicar recomendaciones",
-      showCancelButton: true,
-      cancelButtonText: "Revisar más tarde",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Aquí se implementaría la lógica para aplicar las recomendaciones
-        Swal.fire(
-          "Recomendaciones aplicadas",
-          "Los cambios han sido implementados en el sistema",
-          "success",
-        );
-      }
-    });
+    this.mostrarPanelIA = true;
   }
 
   calculateValorBruto(): number {

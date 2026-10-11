@@ -37,6 +37,9 @@
   <!-- Contenido -->
   <ng-container *ngIf="data && !loading && !error && !forbidden">
 
+    <!-- IA de cartera (D-405): a quién cobrar primero, sobre esta misma cartera -->
+    <app-modulo-ia modulo="cartera"></app-modulo-ia>
+
     <!-- Pestañas (segmented control) -->
     <div class="cx-tabs" role="tablist">
       <button type="button" role="tab" class="cx-tab" [class.is-active]="activeIndex === 0"
