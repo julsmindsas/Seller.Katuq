@@ -25,6 +25,7 @@ import { MenuItem } from "primeng/api";
 import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 import { LoaderService } from "../../../shared/services/loader.service";
+import { ExplicacionIA, InventoryInsights } from "../central-abastecimiento/insights.modelos";
 
 // Tipo extendido para productos con información de inventario
 interface ProductoInventario extends Producto {
@@ -493,13 +494,10 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
 
   // ============== ANÁLISIS IA ==============
   analizandoIA: boolean = false;
-  iaAnalysisError: string | null = null;
   iaLastAnalysis: Date | null = null;
-  iaMetricasGlobales: {
-    saludInventario: string | null;
-    bodegaCritica: string | null;
-    resumenEjecutivo: string | null;
-  } | null = null;
+  iaInsights: InventoryInsights | null = null;
+  iaExplicacion: ExplicacionIA | null = null;
+  iaAviso: string | null = null;
 
   constructor(
     private service: MaestroService,
@@ -1235,56 +1233,54 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   // ============== ANÁLISIS IA ==============
 
   /**
-   * Ejecuta análisis de inventario con IA (ADK Agent)
-   * Popula los campos de IA en las métricas de cada bodega y globales
+   * IA de inventarios (D-401): el mismo cálculo de la Central de Abastecimiento (qué
+   * comprar, capital parado, avisos), con las frases de Opttia. Reemplaza el análisis
+   * viejo, que no veía ventas e inventaba tendencias. Si Opttia no responde, se
+   * muestran igual las cifras calculadas.
    */
   analizarConIA(): void {
-    if (this.bodegasConsolidadas.length === 0) {
-      this.toastr.warning("No hay bodegas para analizar", "Análisis IA");
-      return;
-    }
-
+    if (this.analizandoIA) return;
     this.analizandoIA = true;
-    this.iaAnalysisError = null;
+    this.iaAviso = null;
 
     this.inventarioService
-      .analyzeInventoryWithIA(this.bodegasConsolidadas)
+      .explicarInventoryInsights(30)
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
-          if (response.success) {
-            // Update IA metrics for each bodega
-            this.bodegasConsolidadas.forEach((bodega) => {
-              const iaMetrics = response.metricasPorBodega[bodega.id];
-              if (iaMetrics && bodega.metricas) {
-                bodega.metricas.ia = iaMetrics;
-              }
-            });
-
-            // Update global IA metrics
-            this.iaMetricasGlobales = response.metricasGlobales;
-
-            this.iaLastAnalysis = new Date(response.timestamp);
-            this.toastr.success(
-              "Análisis completado",
-              "Inteligencia Artificial",
-            );
-          } else {
-            this.iaAnalysisError =
-              response.error || "Error desconocido en el análisis";
-            this.toastr.error(this.iaAnalysisError, "Error IA");
-          }
+        next: (res) => {
+          this.iaInsights = res.insights;
+          this.iaExplicacion = res.ia || null;
+          this.iaAviso = res.aviso || null;
+          this.iaLastAnalysis = new Date();
           this.analizandoIA = false;
         },
         error: (error) => {
-          console.error("Error en análisis IA:", error);
-          this.iaAnalysisError =
-            error.error?.details ||
-            error.error?.error ||
-            "Error de conexión con servicio de IA";
-          this.toastr.error(this.iaAnalysisError, "Error IA");
-          this.analizandoIA = false;
+          // Sin cupo de Opttia todavía se pueden ver las cifras: se piden sin IA.
+          this.iaAviso = error?.status === 429 || error?.status === 403
+            ? (error?.error?.message || "Se acabaron los mensajes de Opttia de su plan por hoy. Abajo están las cifras calculadas.")
+            : "Opttia no está disponible ahora. Abajo están las cifras calculadas.";
+          this.inventarioService.getInventoryInsights(30)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: (res) => {
+                this.iaInsights = res.insights;
+                this.iaExplicacion = null;
+                this.iaLastAnalysis = new Date();
+                this.analizandoIA = false;
+              },
+              error: () => {
+                this.toastr.error("No pudimos calcular el inventario en este momento. Intente de nuevo en unos minutos.", "Inventario");
+                this.analizandoIA = false;
+              },
+            });
         },
       });
+  }
+
+  cerrarIA(): void {
+    this.iaInsights = null;
+    this.iaExplicacion = null;
+    this.iaAviso = null;
   }
 
   /**
@@ -1293,16 +1289,6 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   getNombreBodegaById(bodegaId: string): string {
     const bodega = this.bodegasConsolidadas.find((b) => b.id === bodegaId);
     return bodega?.nombre || bodegaId;
-  }
-
-  /**
-   * Genera el tooltip con sugerencias de IA para una bodega
-   */
-  getIASugerenciasTooltip(bodega: BodegaConsolidada): string {
-    if (!bodega.metricas?.ia?.sugerencias?.length) {
-      return "Sin sugerencias";
-    }
-    return bodega.metricas.ia.sugerencias.join("\n");
   }
 
   /**

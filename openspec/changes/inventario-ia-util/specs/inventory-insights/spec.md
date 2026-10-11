@@ -82,7 +82,11 @@ El sistema SHALL reemplazar los dos análisis con IA actuales por una sola panta
 
 #### Scenario: retiro de los análisis anteriores
 - **WHEN** la pantalla nueva esté en producción
-- **THEN** the system SHALL dejar de exponer los dos botones de análisis IA anteriores
+- **THEN** the system SHALL dejar de usar los dos análisis IA anteriores
+
+#### Scenario: IA en el inventario por catálogo (Daniel, 11-oct)
+- **WHEN** la persona toca "IA" en el inventario por catálogo
+- **THEN** the system SHALL mostrar ahí un resumen con el mismo cálculo y las mismas frases de Opttia que la Central de Abastecimiento, y un enlace al detalle
 
 #### Scenario: lecturas acotadas
 - **WHEN** se calcula una consulta

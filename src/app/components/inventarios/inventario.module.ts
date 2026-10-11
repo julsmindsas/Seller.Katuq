@@ -43,6 +43,7 @@ import { InsightsComprarComponent } from './central-abastecimiento/insights-comp
 import { InsightsCapitalComponent } from './central-abastecimiento/insights-capital/insights-capital.component';
 import { InsightsAvisosComponent } from './central-abastecimiento/insights-avisos/insights-avisos.component';
 import { InsightsPreguntarComponent } from './central-abastecimiento/insights-preguntar/insights-preguntar.component';
+import { InsightsResumenComponent } from './central-abastecimiento/insights-resumen/insights-resumen.component';
 import { BodegaDetalleComponent } from './bodega-detalle/bodega-detalle.component';
 import { SiigoBodegaMappingComponent } from './siigo-bodega-mapping/siigo-bodega-mapping.component';
 import { IndicadoresComponent } from './indicadores/indicadores.component';
@@ -98,6 +99,7 @@ import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
         InsightsCapitalComponent,
         InsightsAvisosComponent,
         InsightsPreguntarComponent,
+        InsightsResumenComponent,
         BodegaDetalleComponent,
         SiigoBodegaMappingComponent,
         IndicadoresComponent,

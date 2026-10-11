@@ -1410,56 +1410,9 @@ th.text-center .d-flex.align-items-center.justify-content-center {
 .inv-stat.is-red    { --inv-wash: #fce9e8;               --inv-border: #f6d4d2; --inv-fg: #e0483f; }
 .inv-stat.is-gray   { --inv-wash: var(--kc-canvas);      --inv-border: var(--kc-line); --inv-fg: var(--kc-ink2); }
 
-// ── Resumen del análisis con IA ───────────────────────────────────────────
-.inv-ia {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+// ── IA de inventarios (D-401): el panel lo pinta <app-insights-resumen> ──
+.inv-ia-insights {
   margin-top: 14px;
-  padding: 12px 16px;
-  border-radius: 16px;
-  border: 1px solid var(--inv-border, var(--kc-line));
-  background: var(--inv-wash, var(--kc-canvas));
-
-  &.is-good     { --inv-wash: var(--kc-green-wash);  --inv-border: #cbebd8; --inv-fg: var(--kc-green); }
-  &.is-regular  { --inv-wash: #fdf6dc;               --inv-border: #f4e7b5; --inv-fg: #c99a0f; }
-  &.is-critical { --inv-wash: #fce9e8;               --inv-border: #f6d4d2; --inv-fg: #e0483f; }
-}
-.inv-ia-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #fff;
-  color: var(--inv-fg, var(--kc-ink));
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 12.5px;
-  font-weight: 800;
-}
-.inv-ia-warn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #fff;
-  color: #e0483f;
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 12.5px;
-  font-weight: 800;
-}
-.inv-ia-text {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: 7px;
-  flex: 1;
-  min-width: 200px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--kc-ink2);
-  font-style: italic;
-
-  i { margin-top: 2px; color: var(--kc-muted2); font-style: normal; }
 }
 
 // ── Barra de filtros ──────────────────────────────────────────────────────

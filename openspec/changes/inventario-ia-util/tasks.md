@@ -31,6 +31,9 @@ Reglas: módulo sensible (inventario), un cambio a la vez con diff y aprobación
 - [x] 4.4 *("Qué comprar" ya preselecciona los urgentes al abrir: basta el enlace)* "Pasar a la orden" hacia "Qué comprar".
 - [x] 4.5 *(11-oct, en producción con ALMACEN BOMBAS: cifras, traslados, avisos, chips al chat y 390 px; se corrigieron los span azules en 2026.10.11.1. Sin probar "Explicar con Opttia" para no gastar el cupo de un comercio real)* Build sin errores y prueba en el navegador con sesión real (FLORECER y ALMARA), probando también Opttia caído.
 
+- [x] 4.6 *(desvío pedido por Daniel, 11-oct)* El botón "IA" del inventario por catálogo usa el mismo cálculo y muestra `<app-insights-resumen>` (cuatro números, Opttia, lo más urgente y por bodega) en vez del análisis viejo.
+- [x] 4.7 La validación acepta la plata en miles/millones con un decimal: en producción el resumen de Opttia se descartaba siempre.
+
 ## 5. Resumen semanal
 - [x] 5.1 Bandera `inventoryDigest` en `FEATURE_FLAG_NAMES`, con su prueba.
 - [x] 5.2 Estado, semana clave y comparación con la anterior (puro), con pruebas.
