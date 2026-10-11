@@ -41,7 +41,7 @@ Reglas: módulo sensible (inventario), un cambio a la vez con diff y aprobación
 ## 6. Cierre
 - [ ] 6.1 Suites, builds y contratos en verde (backend y front).
 - [ ] 6.2 Contrastar con ALMARA, Café Escobar y OH MY STORE (sin demanda) antes de publicar; revisar que la lista creíble y las cifras coincidan con "Qué comprar".
-- [ ] 6.3 Desplegar backend y después front (avisar a Daniel; sale del modo automático).
+- [x] 6.3 *(11-oct: backend 100c8da, ADK 559ebac; el front ya había salido en 2026.10.10.1)* Desplegar backend y después front (avisar a Daniel; sale del modo automático).
 - [ ] 6.4 Una semana después: retirar `POST /kai/inventory-analysis`, `POST /inventory/analyze-ia`, `POST /inventory/analizar-abastecimiento-ia` (tercera ruta vieja, encontrada al implementar), `GET /inventory/central-abastecimiento`, `parseIAResponse`, `analizarAbastecimientoIA`, `analyzeInventoryWithIA` y el botón IA del catálogo.
 - [ ] 6.5 Encender `INVENTARIO_DIGEST=sombra` y la bandera en FLORECER, luego ALMARA y Café Escobar; revisar el resumen guardado durante dos semanas.
 - [ ] 6.6 Con el OK de Daniel, `envio` por empresa.
