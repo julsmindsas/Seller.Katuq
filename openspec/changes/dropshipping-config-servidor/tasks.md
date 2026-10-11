@@ -12,7 +12,7 @@
 - [x] 2.4 `controllers/dropshippingProveedores.js`: listas y búsqueda con filtro obligatorio, rutas por id con `docDeLaEmpresa` (404), `create` con la empresa del JWT, cifrado al guardar y `presentarProveedor` en toda respuesta.
 - [x] 2.5 `controllers/dropshippingOrdenes.js`: lo mismo en las listas, por id, por proveedor, por estado, resumen, `create`, `crearDesdeVenta` y `sincronizarProductos`.
 - [x] 2.6 Modo real del script de 1.1 (`--apply`): cifra las claves en texto plano, es idempotente y solo toca `api_config.api_key`.
-- [ ] 2.7 `node --check`, suites de `tests/dropshipping/` y `tests/enVivo/` en verde; commit; desplegar a EC2 (`set -e`, HEAD verificado, `pm2 restart katuq-api`); ejecutar el script con `--apply` y registrar el resultado. → commits `2c6b243` y `100c8da` subidos; **despliegue pendiente** (ver CONTRACT D-403). Con 0 proveedores, `--apply` no tiene nada que cifrar.
+- [x] 2.7 `node --check`, suites de `tests/dropshipping/` y `tests/enVivo/` en verde; commit; desplegar a EC2 (`set -e`, HEAD verificado, `pm2 restart katuq-api`); ejecutar el script con `--apply` y registrar el resultado. → 11-oct: en producción con `dc17677` (desplegado por la sesión de D-405); suites de `tests/dropshipping/` en verde en el servidor; ensayo del script: 0 claves por cifrar, sin `--apply`.
 
 ## 3. Backend fase 2: configuración de la empresa
 
@@ -21,7 +21,7 @@
 - [x] 3.3 `controllers/companies.js`: `getDropshippingSettings` y `setDropshippingSettings`, siguiendo el molde de pricing-mode.
 - [x] 3.4 `routers/companies.js`: las dos rutas, antes de `/:id`, con `auth`, `requireJwtTenant` y, en el POST, `ONLY_ADMIN` y `requireSubscriptionFeature('dropshipping')`.
 - [x] 3.5 `editCompany` y `updateCompanyById` quitan `dropshipping` del payload. → vía `sanitizeCompanyUpdate`.
-- [ ] 3.6 Suites en verde, commit y despliegue igual que en 2.7. → commit `c56ff88` subido; despliegue pendiente con la fase 1.
+- [x] 3.6 Suites en verde, commit y despliegue igual que en 2.7. → 11-oct: en producción con la fase 1.
 
 ## 4. Front (rama `feature/venta-asistida-mejorada`)
 
@@ -40,7 +40,7 @@
 
 ## 5. Cierre
 
-- [ ] 5.1 `git pull`, publicar el front (versión mayor a la viva, `verify-dist-prod`) y commitear `version.json`. → después del backend.
+- [x] 5.1 `git pull`, publicar el front (versión mayor a la viva, `verify-dist-prod`) y commitear `version.json`. → 11-oct: ya publicado en `2026.10.11.6` (incluye `15178b12`); no se republicó.
 - [ ] 5.2 Prueba en el navegador con la sesión de Daniel en FLORECER:
   - habilitar y guardar;
   - el menú aparece;

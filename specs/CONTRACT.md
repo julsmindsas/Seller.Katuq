@@ -9198,7 +9198,7 @@ Se actualizaron las instrucciones operativas de suscripciones para retirar coman
 
 **Cierre D-402 (publicado 2026.10.10.1).** Probado en producción con la sesión de Daniel (Super Administrador), sin guardar: al elegir API aparecen la dirección y la clave, la dirección se ve en el resumen, Guardar se activa sin pedir la clave, la consola no muestra errores y el bloque de desarrollo se ve. No probado: que quede oculto con un rol distinto, que depende de `rol === 'Super Administrador'`. En la misma publicación salió un arreglo de seguridad sobre el ticket 1185 de otra sesión: el tooltip OSM de la lista de pedidos se pinta con `[escape]="false"` y metía sin escapar `status`/`lastNote` de Cereza; ahora se escapan (`escaparHtml` en `list.component.ts`).
 
-## D-403 (2026-10-10) — Dropshipping: candado de empresa, claves cifradas y configuración en el servidor (openspec/changes/dropshipping-config-servidor) — APROBADA, implementada, sin desplegar
+## D-403 (2026-10-10) — Dropshipping: candado de empresa, claves cifradas y configuración en el servidor (openspec/changes/dropshipping-config-servidor) — APROBADA, implementada y desplegada (falta la prueba en el navegador)
 
 **Disparador.** Daniel ("sí, arma la propuesta") después de D-402.
 
@@ -9224,7 +9224,11 @@ Pruebas en verde: `tests/dropshipping/` (tenantIsolation.contract, apiKeyMasking
 
 Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.service.ts`); `nav.service` y `crear-productos` leen `currentCompany.dropshipping`, y el menú se recalcula al guardar. La pantalla de configuración lee y guarda en el servidor, ofrece subir la copia local, deja solo lectura a quien no es administrador y pierde la sección de integración, el webhook, la clave y las herramientas de desarrollo. Se quitó `enableDropshippingForTesting` de `crear-productos`. En proveedores: lista desempacada, clave enmascarada, y al editar el campo de la clave queda vacío y se conserva la guardada.
 
-**Despliegue pendiente: decisión de Daniel.** En `origin/backend-aws-security`, encima de producción (`460cdec`), están antes los commits `6718ad1` y `9139bfb` de D-401 (IA de inventarios), que no están desplegados y cuyo despliegue está pendiente de avisarle a Daniel. Con `--ff-only`, desplegar D-403 los publica también. El front se publica después del backend: sin las rutas nuevas, la pantalla de configuración no carga.
+**Despliegue (11-oct).** Daniel aprobó desplegarlo junto con D-401 ("sí, despliega todo junto"). Al revisar, ya estaba en producción:
+- **Servidor:** la sesión de D-405 desplegó `dc17677`, que contiene `2c6b243`, `c56ff88` y `100c8da`. El proceso `katuq-api` arrancó a las 19:43 UTC, 10 s después de ese commit. En el servidor pasan `tests/dropshipping/` (tenantIsolation.contract, apiKeyMasking, settings). Sin sesión, las rutas `dropshipping-settings` y `dropshipping/proveedores` responden 401.
+- **Script en ensayo en producción:** 0 proveedores, 0 órdenes, 0 sin empresa y 0 claves por cifrar. `--apply` no hace falta.
+- **Front:** la versión publicada `2026.10.11.6` (`c891a22`) ya incluye `15178b12`. No se volvió a publicar, porque encima hay commits de otras sesiones sin publicar.
+- **Pendiente:** prueba en el navegador en FLORECER (tarea 5.2). Necesita que Daniel inicie sesión y que autorice guardar la configuración.
 
 **Hallazgos no corregidos (fuera del alcance):**
 - El front llama `POST /v1/dropshipping/crear-desde-venta` y `/sincronizar-productos`, pero el servidor las monta bajo `/v1/dropshipping/ordenes/`, así que hoy dan 404.
