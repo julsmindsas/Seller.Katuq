@@ -671,3 +671,19 @@ $de-selected-border: #d9cffb;
   color: var(--primary-dark);
   margin-right: 0.35rem;
 }
+
+/* D-415: acceso al mapa del punto de entrega (tema "Todos los pedidos"). */
+.btn-abrir-mapa {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #5f3fe0;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

@@ -8,6 +8,7 @@ import {
 } from "@angular/core";
 import Swal from "sweetalert2";
 import { coordenadasCoincidenConZona } from "../../../shared/util/geocoding-validador.util";
+import { esEntregaCompleta } from "../../../shared/utils/client-delivery";
 import * as XLSX from "xlsx";
 import { zonaCubreCiudad } from "../../../shared/util/zona-cobro.util";
 import { Pedido } from "../modelo/pedido";
@@ -103,6 +104,10 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
   latitud: string;
   longitud: string;
   coordenadas: string;
+  // D-415 (ticket 1203): origen del punto y enlace pegado, para no perder un
+  // punto marcado a mano al editar la entrega.
+  fuenteUbicacion: string = "";
+  enlaceUbicacion: string = "";
 
   // Propiedades para DANE codes
   departamentosDane: string[] = [];
@@ -313,8 +318,12 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
   }
 
   guardarDatosEntrega() {
-    if (!this.nombres_entrega || !this.numero_celular_entrega || !this.direccion_entrega || !this.ciudad_municipio_entrega) {
-      Swal.fire({ title: 'Campos obligatorios', text: 'Nombres, Celular, Dirección y Ciudad son requeridos', icon: 'warning', confirmButtonText: 'Ok' });
+    // D-415: la entrega sirve con dirección escrita o con un punto en el mapa.
+    if (!this.nombres_entrega || !this.numero_celular_entrega || !esEntregaCompleta({
+      direccionEntrega: this.direccion_entrega, ciudad: this.ciudad_municipio_entrega,
+      latitud: this.latitud, longitud: this.longitud, coordenadas: this.coordenadas,
+    })) {
+      Swal.fire({ title: 'Campos obligatorios', text: 'Nombres, Celular, Ciudad y la Dirección o la ubicación son requeridos', icon: 'warning', confirmButtonText: 'Ok' });
       return;
     }
     // Spec 024: mutar en el lugar (no reasignar) — `datosEntregas` es un
@@ -343,6 +352,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       latitud: this.latitud,
       longitud: this.longitud,
       coordenadas: this.coordenadas,
+      fuenteUbicacion: this.fuenteUbicacion || "geocodificada",
+      enlaceUbicacion: this.enlaceUbicacion || "",
     };
     this.datosEntregas.push(datosEntreg);
 
@@ -439,6 +450,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         this.latitud = "";
         this.longitud = "";
         this.coordenadas = "";
+        this.fuenteUbicacion = "";
+        this.enlaceUbicacion = "";
 
         // Limpiar variables DANE
         this.searchQueryCiudadDane = "";
@@ -530,6 +543,12 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       zonaCobro: this.zona_cobro,
       valorZonaCobro: this.valor_zona_cobro,
       codigoPV: this.codigo_postal_entrega,
+      // D-415: antes se perdían las coordenadas al editar la entrega.
+      latitud: this.latitud || "",
+      longitud: this.longitud || "",
+      coordenadas: this.coordenadas || "",
+      fuenteUbicacion: this.fuenteUbicacion || "geocodificada",
+      enlaceUbicacion: this.enlaceUbicacion || "",
     };
     this.datosEntregas[this.idenxEntrega] = datosEntreg;
 
@@ -946,6 +965,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       (this.latitud && this.longitud
         ? `${this.latitud}, ${this.longitud}`
         : "");
+    this.fuenteUbicacion = this.datosEntregas[index].fuenteUbicacion || "";
+    this.enlaceUbicacion = this.datosEntregas[index].enlaceUbicacion || "";
 
     this.modalService.open(modal, { size: "lg" }).result.then(
       () => {
@@ -989,6 +1010,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     this.latitud = "";
     this.longitud = "";
     this.coordenadas = "";
+    this.fuenteUbicacion = "";
+    this.enlaceUbicacion = "";
 
     // Variables DANE
     this.searchQueryCiudadDane = "";
@@ -1112,6 +1135,10 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     // Prado no caiga en Belén.
     modalRef.componentInstance.barrioActual = this.barrio || "";
     modalRef.componentInstance.zonaCobroActual = this.zona_cobro || "";
+    // D-415: el punto actual y su origen; si lo puso una persona se respeta.
+    modalRef.componentInstance.coordenadasActuales = this.coordenadas || "";
+    modalRef.componentInstance.fuenteActual = this.fuenteUbicacion || "";
+    modalRef.componentInstance.enlaceActual = this.enlaceUbicacion || "";
 
     // Suscribirse al resultado del modal
     modalRef.result.then(
@@ -1160,6 +1187,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
               this.latitud = coords[0];
               this.longitud = coords[1];
             }
+            this.fuenteUbicacion = resultado.fuenteUbicacion || "geocodificada";
+            this.enlaceUbicacion = resultado.enlaceUbicacion || "";
             // Ticket 1136: si la zona ya estaba elegida, revisar que el punto
             // nuevo le corresponda.
             this.verificarCoordenadasContraZona();

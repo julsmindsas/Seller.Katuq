@@ -25,10 +25,15 @@
         <input type="radio" class="btn-check" id="nomRural" name="tipoNomenclatura" autocomplete="off"
                [checked]="tipoNomenclatura === 'rural'" (change)="cambiarTipoDireccion('rural')">
         <label class="btn btn-outline-primary btn-sm" for="nomRural">Rural</label>
+
+        <input type="radio" class="btn-check" id="nomUbicacion" name="tipoNomenclatura" autocomplete="off"
+               [checked]="tipoNomenclatura === 'ubicacion'" (change)="cambiarTipoDireccion('ubicacion')">
+        <label class="btn btn-outline-primary btn-sm" for="nomUbicacion">Solo ubicación</label>
       </div>
       <small class="form-text text-muted">
         <ng-container *ngIf="tipoNomenclatura === 'manzana'">Para urbanizaciones y conjuntos: "Manzana 36 Casa 26".</ng-container>
         <ng-container *ngIf="tipoNomenclatura === 'rural'">Vereda, Corregimiento, Finca, etc.</ng-container>
+        <ng-container *ngIf="tipoNomenclatura === 'ubicacion'">Para fincas y lugares sin dirección: marca el punto en el mapa, pega un enlace de Google Maps o usa tu ubicación.</ng-container>
       </small>
     </div>
   </div>
@@ -58,6 +63,18 @@
           <div class="mb-3">
             <label class="form-label">Referencias / Descripción</label>
             <textarea class="form-control" rows="3" placeholder="Ej: A 500 metros de la escuela, casa de dos pisos color blanco" formControlName="referencias"></textarea>
+          </div>
+        </div>
+
+        <!-- SOLO UBICACIÓN (D-415, ticket 1203) -->
+        <div *ngIf="tipoNomenclatura === 'ubicacion'" class="ubicacion-form">
+          <div class="mb-3">
+            <label class="form-label">Referencia (opcional)</label>
+            <input type="text" class="form-control" placeholder="Ej: Finca El Lago, vía Yumbo, portón verde"
+                   formControlName="referencias" maxlength="200">
+            <small class="form-text text-muted">
+              Es el texto que verán el mensajero, la guía y la transportadora. Si lo dejas vacío se usan las coordenadas.
+            </small>
           </div>
         </div>
 
@@ -276,13 +293,33 @@
           </div>
         </div>
 
+        <!-- D-415: indicar el punto sin depender de la dirección escrita -->
+        <div class="mb-3 ubicacion-herramientas">
+          <label class="form-label">{{ tipoNomenclatura === 'ubicacion' ? 'Ubicación de entrega *' : 'Ajustar la ubicación (opcional)' }}</label>
+          <div class="input-group input-group-sm">
+            <input type="text" class="form-control" placeholder="Pega un enlace de Google Maps o coordenadas (3.5841, -76.4925)"
+                   [(ngModel)]="textoEnlace" [ngModelOptions]="{standalone: true}" (keyup.enter)="aplicarEnlace()">
+            <button class="btn btn-outline-primary" type="button" (click)="aplicarEnlace()" [disabled]="!textoEnlace?.trim()">
+              Usar enlace
+            </button>
+          </div>
+          <button type="button" class="btn btn-link btn-sm px-0 mt-1" (click)="usarMiUbicacion()" [disabled]="obteniendoGps">
+            <i class="pi pi-compass me-1"></i>{{ obteniendoGps ? 'Obteniendo tu ubicación...' : 'Usar mi ubicación' }}
+          </button>
+          <small *ngIf="mensajeUbicacion" class="d-block text-danger">{{ mensajeUbicacion }}</small>
+          <small *ngIf="puntoProtegido()" class="d-block text-muted">
+            <i class="pi pi-lock me-1"></i>Punto {{ fuenteUbicacion === 'manual' ? 'marcado en el mapa' : fuenteUbicacion === 'enlace' ? 'tomado del enlace' : 'tomado del dispositivo' }}: se conserva al editar.
+          </small>
+        </div>
+
         <!-- Coordenadas (solo lectura) -->
         <div class="mb-3">
           <label class="form-label">Ubicación geográfica</label>
           <div class="input-group">
             <span class="input-group-text"><i class="pi pi-map-marker"></i></span>
             <input type="text" class="form-control" placeholder="Coordenadas" formControlName="coordenadas" readonly>
-            <button class="btn btn-outline-primary" type="button" (click)="buscarCoordenadas()" [disabled]="geocodificando">
+            <button *ngIf="tipoNomenclatura !== 'ubicacion'" class="btn btn-outline-primary" type="button" (click)="buscarCoordenadas()" [disabled]="geocodificando"
+                    title="Buscar las coordenadas de la dirección escrita">
               <i class="pi pi-search"></i>
             </button>
           </div>
@@ -305,7 +342,7 @@
           <button type="button" class="btn btn-outline-warning btn-sm me-2" (click)="limpiarFormulario()">
             <i class="pi pi-refresh"></i> Limpiar
           </button>
-          <button type="button" class="btn btn-outline-info btn-sm" (click)="buscarCoordenadas()" [disabled]="geocodificando">
+          <button *ngIf="tipoNomenclatura !== 'ubicacion'" type="button" class="btn btn-outline-info btn-sm" (click)="buscarCoordenadas()" [disabled]="geocodificando">
             <i class="pi pi-search"></i> Buscar coordenadas
           </button>
         </div>

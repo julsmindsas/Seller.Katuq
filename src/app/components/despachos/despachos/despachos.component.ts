@@ -1,3 +1,4 @@
+import { puntoEsProtegido } from "../../../shared/utils/client-delivery";
 import {
   Component,
   ElementRef,
@@ -6433,9 +6434,10 @@ export class DespachosComponent implements OnInit, OnDestroy {
     // Limpiar caché para forzar nueva geocodificación
     this.geocodingCache.clear();
 
-    // Limpiar coordenadas existentes
+    // Limpiar coordenadas existentes. D-415 (ticket 1203): menos las que puso
+    // una persona (mapa, enlace o GPS), que no se recalculan.
     this.orders.forEach(pedido => {
-      if (pedido.envio) {
+      if (pedido.envio && !puntoEsProtegido(pedido.envio)) {
         pedido.envio.latitud = undefined;
         pedido.envio.longitud = undefined;
       }

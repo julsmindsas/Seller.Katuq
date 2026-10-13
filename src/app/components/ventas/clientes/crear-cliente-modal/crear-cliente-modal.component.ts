@@ -610,7 +610,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     if (!esEntregaCompleta(this.entregaEditando)) {
       Swal.fire({
         title: 'Falta completar la dirección',
-        text: 'Escribe la dirección con su ciudad, o descártala si no la vas a registrar ahora.',
+        text: 'Escribe la dirección o marca la ubicación, con su ciudad, o descártala si no la vas a registrar ahora.',
         icon: 'warning',
         confirmButtonText: 'Entendido',
         confirmButtonColor: '#5F3FE0',
@@ -634,6 +634,10 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     });
     ref.componentInstance.direccionActual = actual.direccionEntrega || '';
     ref.componentInstance.ciudadActual = actual.ciudad || '';
+    // D-415: el punto actual y su origen, para no perder un punto puesto a mano.
+    ref.componentInstance.coordenadasActuales = actual.coordenadas || (actual.latitud && actual.longitud ? `${actual.latitud}, ${actual.longitud}` : '');
+    ref.componentInstance.fuenteActual = actual.fuenteUbicacion || '';
+    ref.componentInstance.enlaceActual = actual.enlaceUbicacion || '';
     ref.result.then(
       (r: any) => {
         if (!r || !this.entregaEditando) return;
@@ -649,8 +653,10 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
           departamento: r.departamento || '',
           pais: 'Colombia',
           coordenadas: r.coordenadas || '',
-          latitud: lat || '',
-          longitud: lng || '',
+          latitud: r.latitud || lat || '',
+          longitud: r.longitud || lng || '',
+          fuenteUbicacion: r.fuenteUbicacion,
+          enlaceUbicacion: r.enlaceUbicacion || '',
           especificacionesInternas: r.referencias || this.entregaEditando.especificacionesInternas || '',
         });
         if (!this.entregaEditando.departamento && this.entregaEditando.ciudad) {
