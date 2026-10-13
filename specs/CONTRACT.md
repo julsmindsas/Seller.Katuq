@@ -9233,7 +9233,7 @@ Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.ser
 **Hallazgos no corregidos (fuera del alcance):**
 - El front llama `POST /v1/dropshipping/crear-desde-venta` y `/sincronizar-productos`, pero el servidor las monta bajo `/v1/dropshipping/ordenes/`, así que hoy dan 404.
 - `calcularComisionTotal` manda `proveedorId`/`montoVenta`, y el servidor espera `proveedor_id`/`total_venta`.
-- `GET /v1/productos/por-proveedor` devuelve el nombre del proveedor por id sin revisar a qué empresa pertenece. La ruta no usa `requireJwtTenant`. Hoy no hay proveedores.
+- Un hallazgo menor de aislamiento en la consulta de productos por proveedor (hoy no hay proveedores, así que nada quedó expuesto). El detalle está en el repo privado del backend (`opttia-despachos-con-aprobacion`, D.2).
 
 **D-401, adenda (11-oct, decisión de Daniel: "corregir y seguir en sombra").** La revisión de destinatarios en producción mostró que FLORECER (demo) le escribía a personal real de ALMARA, CAFE ESCOBAR tenía un correo en `gamil.com` y ALMARA llegaba al tope de 10 administradores. Ahora el resumen va solo a los correos de la empresa (`emailNotificacionesSistema`, `emailContacto`), las empresas demo solo a correos de Katuq/Julsmind y los dominios mal escritos se omiten (`dc17677`); la sombra guarda a quién le habría llegado. Sigue en sombra; OK de Daniel para el envío tras revisar W42 y W43 (~25-oct). Pendientes de datos: un correo @katuq.com para FLORECER y el correo de CAFE ESCOBAR.
 
@@ -9297,3 +9297,39 @@ Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.ser
 **Decisión.** El título de cada pantalla es el nombre del menú lateral (`nav.service.ts`). Sin título → cabecera D-400 (`cfg-cabeza`, eyebrow = grupo del menú): Envíos y entregas, Pedidos POS, Adiciones, Ventas masivas, Órdenes de dropshipping, Conversaciones de Instagram/Facebook; Constructor de reportes con título compacto en su barra (ocupa todo el alto). Con título → solo el texto (25 pantallas: Todos los pedidos, Crear cliente / Listado de clientes, Inventario por bodega / Detalle por bodega —estaban cruzados—, Tesorería, Órdenes de producción, Órdenes de picking/packing, Lista de precios, Agent Builder en español, etc.); el estilo viejo no se tocó (cambio aparte). `meta-inbox-shell` no carga TranslateModule: texto plano.
 
 **Pendientes sin decidir.** "Prospectos" (`prospectos/lista`) lleva al 404 (su routing nunca se importa). `shouldHide` del sidebar oculta todo lo que diga empresa/usuario/rol y el grupo "Seguridad" puede quedar vacío. Modernizar a D-400 Clientes, CRM, Picking/Packing, Dropshipping e Inventario.
+
+## D-410 (2026-10-13) — Opttia organiza los despachos y la persona aprueba, desde En vivo (openspec/changes/despachos-con-opttia) — PROPUESTA, esperando aprobación
+
+**Disparador.** Daniel (13-oct): "quiero tener un apartado aquí mismo [En vivo] donde Opttia tenga un poco más de autonomía, como organizar despachos automáticos al comercio según su integración, si tiene mensajeros, y que el usuario solo apruebe. Y revisa si hace falta cosas en los MCP". Luego: "es hacerlo genérico para futuros comercios".
+
+**Medición en producción (13-oct, solo lectura, 30 días).**
+- **Los comercios que despachan lo hacen todo a mano, y nada sale solo:**
+  - con mensajeros propios, unas 9 órdenes y 34 pedidos al día, con 4 mensajeros en promedio;
+  - por transportadora, 512 órdenes, una por pedido;
+  - el envío automático que existe está apagado donde está conectado.
+- **Mismo día:** 1.507 de 1.514 pedidos salieron el día de su fecha de entrega.
+- **Señales débiles:**
+  - no hay reglas de despacho guardadas ni zonas por mensajero;
+  - el estado "en línea" casi nunca se apaga;
+  - casi ningún pedido trae coordenadas;
+  - el mensajero más frecuente de una zona se lleva el 38 % a 30 días, y el 71 % de las zonas del día salen con uno solo.
+- **Lo que sí sirve:** casi todos los pedidos traen zona de cobro y franja.
+
+**Propuesta.** Un motor genérico para todo comercio, actual o futuro, sin reglas por comercio ni por transportadora:
+- **Perfil detectado solo:** modo de despacho, mensajeros, integraciones, tamaño de grupo y franjas. Las reglas que guarde el comercio mandan.
+- **Plan determinista armado en el servidor:** grupos por zona y franja con el mensajero sugerido y su razón; grupos por transportadora; lo que no entra al plan, con su razón.
+- **Opttia:** explica y avisa; nunca asigna.
+- **Aprobación de una persona:** produce lo mismo que "Guardar y despachar" de la pantalla, con el mismo servicio compartido. Es idempotente por grupo.
+- **En pantalla:** cuarta vista "Despachos" en En vivo. El resto de En vivo sigue de solo lectura, como excepción anotada al requisito de `tablero-en-vivo`.
+- **Transportadoras:** por la capa común, con las capacidades que declara cada adaptador. Solo se ofrecen las que garantizan un envío por pedido.
+- **Encendido:** bandera `despachosOpttia` comercio por comercio, con un ensayo en sombra de 14 días antes.
+
+Sin colecciones nuevas. Write-set: `shipping_orders`, campos de despacho de `orders` y `order_status_history`.
+
+**Prerrequisito privado.** `opttia-despachos-con-aprobacion` en el repo del backend: herramientas MCP y ADK, y los accesos que hay que corregir antes de encender. El detalle de esos hallazgos vive solo ahí, porque este repo es público.
+
+**Decisiones propuestas para Daniel:**
+- (a) aprobar = "Guardar y despachar", como se hace hoy;
+- (b) primero mensajeros y después transportadoras;
+- (c) ensayo en sombra y encendido por comercio;
+- (d) índice `orders (company, estadoProceso, fechaEntrega)`.
