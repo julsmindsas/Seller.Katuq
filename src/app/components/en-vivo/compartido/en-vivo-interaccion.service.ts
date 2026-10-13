@@ -36,6 +36,8 @@ export type AccionPantalla =
 export interface OpcionVista {
   id: string;
   etiqueta: string;
+  /** Numerito al lado de la etiqueta (por ejemplo, pedidos listos en "Despachos"). */
+  insignia?: string | null;
 }
 
 /** Estado de "Repetir el día": mientras `activa`, no hay sonidos ni celebraciones. */

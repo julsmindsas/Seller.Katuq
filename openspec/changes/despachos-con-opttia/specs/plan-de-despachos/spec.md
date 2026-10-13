@@ -59,33 +59,47 @@ Esos pedidos MUST NOT entrar a un grupo. El plan MUST NOT prender, apagar ni ree
 - **THEN** el pedido aparece en "Envío automático" como "falló" y el motivo está en palabras
 
 ### Requirement: Grupos de mensajero por zona y franja
-En un comercio con mensajeros, los pedidos del plan SHALL agruparse por zona de cobro y franja de entrega.
+En un comercio con mensajeros, los pedidos del plan SHALL agruparse por zona de cobro y franja de entrega. Después SHALL juntarse los grupos que el comercio suele llevar en un mismo recorrido, si se cumplen todas estas condiciones:
+- sus franjas se cruzan de a pares. Una franja con horas no se junta con "Lo antes posible", y un grupo sin franja se junta con cualquiera;
+- son de la misma ciudad, o son zonas que el comercio juntó en sus recorridos de los últimos 14 días;
+- juntos no pasan el tope.
+
+Además:
 - **Tamaño:** un grupo MUST NOT pasar la capacidad registrada del mensajero sugerido. Si no tiene, o es menor que 2, el tope es el tamaño de grupo habitual del perfil del comercio. Un grupo más grande se parte en grupos seguidos.
-- **Zonas pequeñas:** las zonas con 2 pedidos o menos se juntan con otra de la misma ciudad y franja.
-- **Orden:** los grupos salen ordenados por la hora en que empieza su franja.
+- **Orden:** primero los de "Lo antes posible", luego por la hora en que empieza su franja, y al final los que no tienen franja.
 
 #### Scenario: Más pedidos que la capacidad
 - **WHEN** una zona tiene 12 pedidos en la misma franja y el mensajero sugerido tiene capacidad 10
 - **THEN** el plan arma un grupo de 10 y otro de 2, en ese orden
 
-#### Scenario: Dos franjas en la misma zona
-- **WHEN** una zona tiene pedidos de la mañana y de la tarde
+#### Scenario: Franjas que no se cruzan
+- **WHEN** una zona tiene pedidos de 7:00 a 10:00 y de 2:00 a 5:00 p. m.
 - **THEN** quedan en grupos distintos, y primero el de la mañana
 
+#### Scenario: Zonas que el comercio suele juntar
+- **WHEN** en los últimos 14 días el comercio llevó varias veces en un mismo recorrido las zonas A y B (de ciudades distintas), y hoy hay 2 pedidos de A y 2 de B en franjas que se cruzan
+- **THEN** el plan arma un solo grupo con las dos zonas, si no pasa el tope
+
 ### Requirement: Mensajero sugerido con su razón
-Cada grupo de mensajero SHALL sugerir un mensajero propio de la empresa que no esté fuera de línea en la app y SHALL decir la razón. El orden de preferencia es:
-1. una regla de despacho guardada por el comercio, si aplica;
-2. el que ya llevó esa zona hoy;
-3. el que tiene la app conectada desde hace 30 minutos o menos;
-4. el que ya despachó hoy;
-5. el que más llevó esa zona en los últimos 14 días;
-6. el de menos pedidos hoy.
+Cada grupo de mensajero SHALL sugerir un mensajero propio de la empresa que no esté fuera de línea en la app, con la razón, y dos alternativas para cambiarlo con un toque. El orden de preferencia es:
+1. una regla de despacho guardada por el comercio, si aplica, o la zona de cobertura que el comercio registró en el mensajero;
+2. quien trabaja hoy (tiene la app conectada desde hace 30 minutos o menos, o ya despachó hoy) y no está en ruta;
+3. quien trabaja hoy pero está en ruta, con la hora a la que vuelve;
+4. quien llevó esas zonas en los últimos 14 días, aunque hoy no haya trabajado.
 
-Un mensajero MUST NOT recibir dos grupos de la misma franja mientras haya otro con señal de los puntos 2 a 4. Si ningún mensajero tiene señal, el grupo queda "sin sugerencia" y la persona escoge.
+**Cómo se calcula "en ruta":** un mensajero que salió con N pedidos está en ruta hasta la hora de su salida más N veces los minutos por pedido del perfil del comercio.
 
-#### Scenario: La zona ya salió hoy
-- **WHEN** en la mañana una zona salió con un mensajero que sigue en línea y a media mañana hay otro grupo de esa zona
-- **THEN** el plan sugiere ese mensajero con la razón "Ya llevó esta zona hoy"
+**Desempate:** dentro de cada nivel, gana el que más conoce esas zonas (veces en 14 días y si ya las llevó hoy), luego el que lleva menos pedidos hoy.
+
+**Franjas:** un mensajero MUST NOT recibir dos grupos de franjas que se cruzan mientras haya otro de los niveles 2 o 3. Si ningún mensajero tiene señal, el grupo queda "sin sugerencia" y la persona escoge.
+
+#### Scenario: El que llevó la zona sigue en la calle
+- **WHEN** a las 8:00 una zona salió con un mensajero que llevaba 4 pedidos y a las 8:30 hay otro grupo de esa zona, con otro mensajero que tiene la app conectada
+- **THEN** el plan sugiere al que tiene la app conectada, y deja al primero como alternativa, con la razón "Está en ruta; vuelve hacia las …"
+
+#### Scenario: Ya volvió
+- **WHEN** el mensajero que llevó la zona en la mañana ya cumplió su tiempo de vuelta
+- **THEN** el plan lo sugiere con la razón "Ya volvió de su último recorrido y llevó esta zona hoy"
 
 #### Scenario: Nadie con señal
 - **WHEN** ningún mensajero ha despachado hoy, ni tiene la app conectada, ni llevó la zona en 14 días

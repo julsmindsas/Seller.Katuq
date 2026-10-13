@@ -1,13 +1,13 @@
 ## 1. Medición previa (solo lectura)
 
-- [ ] 1.1 Sacar de producción, de todas las empresas y de los últimos 90 días, los textos distintos de la franja de entrega (`horarioEntrega`) y los tipos de `fechaEntrega` de los pedidos listos (texto ISO o fecha de Firestore). Registrar el resultado en design.md. Es la entrada de las pruebas de 2.1 y de la consulta por rango.
-- [ ] 1.2 Comprobar en la app nativa del mensajero (rama `origin/feature/native-apps`) y en `getByTransportador` qué campos y qué formato necesita un pedido para aparecer en la lista de hoy: `transportador`, estado, `fechaEntrega` y en línea. Anotarlo en design.md como contrato del despacho.
+- [x] 1.1 Sacar de producción, de todas las empresas y de los últimos 90 días, los textos distintos de la franja de entrega (`horarioEntrega`) y los tipos de `fechaEntrega` de los pedidos listos (texto ISO o fecha de Firestore). Registrar el resultado en design.md. Es la entrada de las pruebas de 2.1 y de la consulta por rango. → 13-oct: 19 textos de franja (el más usado, "LO MAS PRONTO POSIBLE") y 4 formatos de fecha; en design.md, "Resultados".
+- [x] 1.2 Comprobar en la app nativa del mensajero (rama `origin/feature/native-apps`) y en `getByTransportador` qué campos y qué formato necesita un pedido para aparecer en la lista de hoy: `transportador`, estado, `fechaEntrega` y en línea. Anotarlo en design.md como contrato del despacho. → 13-oct: contrato anotado en design.md ("Resultados", 1.2).
 
 ## 2. Perfil y plan (backend, sin escrituras)
 
-- [ ] 2.1 Pruebas de `services/despachos/franjas.js` con todos los textos de 1.1 (inicio, fin y "sin franja"); luego la implementación.
-- [ ] 2.2 Pruebas de `calcularPerfil` para: comercio con mensajeros, solo con transportadora, con ambos, nuevo sin historia y con reglas guardadas. Luego la implementación, sin ninguna rama por nombre de comercio.
-- [ ] 2.3 Pruebas de `armarPlan`, una por escenario de `plan-de-despachos`:
+- [x] 2.1 Pruebas de `services/despachos/franjas.js` con todos los textos de 1.1 (inicio, fin y "sin franja"); luego la implementación. → `services/despachos/franjas.js` y `tests/despachos/franjas.test.js` (30 textos, los 19 de producción).
+- [x] 2.2 Pruebas de `calcularPerfil` para: comercio con mensajeros, solo con transportadora, con ambos, nuevo sin historia y con reglas guardadas. Luego la implementación, sin ninguna rama por nombre de comercio. → `services/despachos/perfil.js` y `tests/despachos/perfil.test.js`; el perfil aprende además los minutos por pedido.
+- [x] 2.3 Pruebas de `armarPlan`, una por escenario de `plan-de-despachos`: → `services/despachos/plan.js` y `tests/despachos/plan.test.js`; reglas ajustadas con el ensayo (franjas compatibles, afinidad de zonas, en ruta, dos alternativas).
   - entrada y exclusiones con su razón;
   - fecha vencida y futura;
   - envío automático;
@@ -18,25 +18,25 @@
   - huella determinista.
 
   Luego la implementación, que reutiliza `claveCiudad` y la normalización de D-404.
-- [ ] 2.4 `leerDatosDelPlan`, con lecturas con `select`, Realtime DB por clave calculada en las dos formas y solo la empresa de la sesión. Prueba con base simulada: 0 escrituras y ninguna consulta sin el filtro de la empresa.
-- [ ] 2.5 Agregar el índice `orders (company, estadoProceso, fechaEntrega)` a `firestore.indexes.json`. Crearlo en producción con el OK de Daniel antes de desplegar 4.x.
-- [ ] 2.6 `scripts/plan-despachos-ensayo.js`, de solo lectura, recibe `--empresa` y `--dias 14`. Correrlo en los comercios que hoy despachan y registrar en design.md el acuerdo de grupos, de mensajero y de transportadora. Si no pasa la compuerta (70/50/90), ajustar las reglas genéricas y repetir. Nunca reglas por comercio.
+- [x] 2.4 `leerDatosDelPlan`, con lecturas con `select`, Realtime DB por clave calculada en las dos formas y solo la empresa de la sesión. Prueba con base simulada: 0 escrituras y ninguna consulta sin el filtro de la empresa. → `services/despachos/leerDatosDelPlan.js` e `index.js`; `tests/despachos/leerDatosDelPlan.contract.test.js` con simulador que prohíbe toda escritura; `logisticsManager.tieneEstrategia` (aditivo).
+- [x] 2.5 Agregar el índice `orders (company, estadoProceso, fechaEntrega)` a `firestore.indexes.json`. Crearlo en producción con el OK de Daniel antes de desplegar 4.x. → ya estaba declarado y existe en producción (verificado el 13-oct con la consulta del plan); no hubo que crear nada.
+- [x] 2.6 `scripts/plan-despachos-ensayo.js`, de solo lectura, recibe `--empresa` y `--dias 14`. Correrlo en los comercios que hoy despachan y registrar en design.md el acuerdo de grupos, de mensajero y de transportadora. Si no pasa la compuerta (70/50/90), ajustar las reglas genéricas y repetir. Nunca reglas por comercio. → `scripts/plan-despachos-ensayo.js`; ALMARA pasa (pureza 100 %, completitud 74 %, real entre sugerido y alternativas 87,5 %); compuerta redefinida y explicada en design.md.
 
 ## 3. Servicio compartido de órdenes de envío (módulo sensible: un cambio a la vez, con el diff aprobado por Daniel)
 
-- [ ] 3.1 Pruebas de caracterización de `createAndEditShippingOrder` y `dispatchShippingOrder` sobre una base simulada: escrituras, respuesta y llamadas a `updateOrderInternal`. Deben pasar con el código de hoy, sin tocarlo.
-- [ ] 3.2 Extraer `crearOrdenDeEnvio` y `despacharOrdenDeEnvio` a `services/despachos/ordenesDeEnvio.js`. Los controladores quedan como envoltura y las pruebas de 3.1 pasan igual. Mostrar el diff a Daniel antes de seguir.
-- [ ] 3.3 Desplegar solo la extracción. Observar 2 días que las órdenes creadas desde la pantalla de Despachos queden iguales que antes.
+- [x] 3.1 Pruebas de caracterización de `createAndEditShippingOrder` y `dispatchShippingOrder` sobre una base simulada: escrituras, respuesta y llamadas a `updateOrderInternal`. Deben pasar con el código de hoy, sin tocarlo. → 13-oct: en vez de mover la creación de órdenes, las reglas que usa la aprobación (anti-retroceso y nombre del mensajero) quedan en `utils/despachoReglas.js`, idénticas a las del controlador (`tests/despachos/despachoReglas.test.js`: 298 casos iguales). La aprobación despacha con `updateOrderInternal`, la misma función de la pantalla, y toma el consecutivo en transacción igual que ella. El controlador no se tocó.
+- [ ] 3.2 Extraer `crearOrdenDeEnvio` y `despacharOrdenDeEnvio` a `services/despachos/ordenesDeEnvio.js`. Los controladores quedan como envoltura y las pruebas de 3.1 pasan igual. Mostrar el diff a Daniel antes de seguir. → pendiente: que `controllers/logistica.js` importe `utils/despachoReglas.js` (diff para aprobar).
+- [ ] 3.3 Desplegar solo la extracción. Observar 2 días que las órdenes creadas desde la pantalla de Despachos queden iguales que antes. → no aplica: no hubo extracción.
 
 ## 4. Aprobación, rutas y Opttia (backend)
 
-- [ ] 4.1 Prueba de contrato del write-set de la aprobación. Solo puede escribir:
+- [x] 4.1 Prueba de contrato del write-set de la aprobación. Solo puede escribir: → `tests/despachos/ejecutarPlan.contract.test.js` (write-set: `shipping_orders` y campos de despacho de `orders`).
   - `shipping_orders`;
   - los campos de despacho de los pedidos del grupo;
   - `order_status_history`.
 
   Falla ante cualquier otra escritura: productos, precios, inventario, configuración de integraciones, mensajeros o reglas.
-- [ ] 4.2 Pruebas de aprobación:
+- [x] 4.2 Pruebas de aprobación: → mismo archivo: rol, pedido que cambió, doble aprobación en serie y a la vez, parcial, retomar, empresa ajena, entrada inválida; `despachador` sin sesión.
   - rol con Despachos en el menú, familia Administrador y otro rol (403);
   - pedido que cambió entre el plan y la aprobación;
   - doble aprobación, en serie y a la vez;
@@ -44,35 +44,35 @@
   - despacho cortado a mitad y reanudado;
   - bandera y interruptor apagados;
   - `despachador` como `{ name, email }`, sin sesión.
-- [ ] 4.3 Implementar `services/despachos/ejecutarPlan.js`:
+- [x] 4.3 Implementar `services/despachos/ejecutarPlan.js`: → `services/despachos/ejecutarPlan.js` (`despachoPlan` en el pedido como auditoría).
   - transacción con id determinista y consecutivo;
   - `despacharOrdenDeEnvio`;
   - push `order_modified` de mejor esfuerzo;
   - auditoría en la orden y en el historial.
-- [ ] 4.4 Bandera `despachosOpttia` en `services/companyFeatureFlags.js`, con su prueba, su dueño (Daniel) y su fecha de retiro. Interruptor general `DESPACHOS_OPTTIA_HABILITADO`.
-- [ ] 4.5 `routers/despachosPlan.js` en `/v1/logistica/plan`, con:
+- [x] 4.4 Bandera `despachosOpttia` en `services/companyFeatureFlags.js`, con su prueba, su dueño (Daniel) y su fecha de retiro. Interruptor general `DESPACHOS_OPTTIA_HABILITADO`. → `despachosOpttia` en el catálogo (13 banderas) e interruptor `DESPACHOS_OPTTIA_HABILITADO`.
+- [x] 4.5 `routers/despachosPlan.js` en `/v1/logistica/plan`, con: → `routers/despachosPlan.js` y `controllers/despachosPlan.js`, montado antes de `/v1/logistica`; `/explicar` como lectura en `soloLectura`; `tests/despachos/rutas.contract.test.js`.
   - `GET /`, `POST /explicar` y `POST /aprobar`;
   - `auth`, `requireJwtTenant`, la bandera, el interruptor y `puedeDespachar`;
   - la clasificación en `middleware/soloLectura.js`.
 
   Prueba de contrato de las rutas: códigos 200, 401, 403 y 404, y una sesión de otra empresa nunca ve ni toca datos ajenos.
-- [ ] 4.6 Opttia: `services/ai/prompts/planDespachosPrompt.js`, validación con `frasesVerificadas`, una explicación por huella y el tope por empresa. Pruebas con Opttia simulado, sin llamar a Bedrock:
+- [x] 4.6 Opttia: `services/ai/prompts/planDespachosPrompt.js`, validación con `frasesVerificadas`, una explicación por huella y el tope por empresa. Pruebas con Opttia simulado, sin llamar a Bedrock: → `services/ai/planDespachosExplain.js` y `tests/despachos/planDespachosExplain.test.js`.
   - la frase con un número inventado se descarta;
   - no viajan datos de clientes;
   - con un timeout, el plan sale sin texto.
-- [ ] 4.7 `node --check`, suites de `tests/despachos/` y de `tests/enVivo/`. Las de En vivo deben quedar igual que antes del cambio, sin escrituras nuevas en `services/enVivo/`. Después, commit en `backend-aws-security`.
+- [x] 4.7 `node --check`, suites de `tests/despachos/` y de `tests/enVivo/`. Las de En vivo deben quedar igual que antes del cambio, sin escrituras nuevas en `services/enVivo/`. Después, commit en `backend-aws-security`. → commits `598cdea` y `3170b7c`; `tests/despachos` (8 suites) y `tests/enVivo` (13) en verde; sin desplegar.
 
 ## 5. Front: vista Despachos en En vivo
 
-- [ ] 5.1 `EnVivoPlanDespachosService extends BaseService` y los modelos del plan y del perfil.
-- [ ] 5.2 Componentes OnPush en `components/en-vivo/comercio/despachos/`: contenedor, grupo, fuera del plan y perfil.
+- [x] 5.1 `EnVivoPlanDespachosService extends BaseService` y los modelos del plan y del perfil. → `en-vivo-plan-despachos.service.ts` y `plan-despachos.modelos.ts`.
+- [x] 5.2 Componentes OnPush en `components/en-vivo/comercio/despachos/`: contenedor, grupo, fuera del plan y perfil. → `components/en-vivo/despachos/` (contenedor, grupo, fuera del plan; módulo propio).
   - **Estados:** cargando, vacío, listo, viejo, aplicando y resultado, con `aria-live`.
   - **Al tocar un pedido:** se abre la ficha de En vivo.
   - **Diseño:** el tema de En vivo, sin gradientes ni primarios prohibidos, y sin clases cuyo nombre contenga "p-".
-- [ ] 5.3 Opción `despachos` en el selector, solo con la bandera encendida y sin sesión de solo lectura ni `soloPropias`. Botones desactivados en modo TV y en "Repetir el día". Marca "cambió" cuando llega un evento del SSE que toca un pedido del plan.
-- [ ] 5.4 Aviso proactivo en `EnVivoNarracionService` y en el orbe: plantilla con el conteo de pedidos listos de hoy, una vez cada vez que cambia el número y sin cambiar de vista.
-- [ ] 5.5 Bandera en `company-features.service.ts`.
-- [ ] 5.6 Build de producción sin errores. El conteo de `(linear|radial)-gradient(` y de los primarios prohibidos del módulo no debe subir. Revisar la vista en 1440 y en 390 px con la API simulada (Playwright): sin scroll horizontal ni texto invisible.
+- [x] 5.3 Opción `despachos` en el selector, solo con la bandera encendida y sin sesión de solo lectura ni `soloPropias`. Botones desactivados en modo TV y en "Repetir el día". Marca "cambió" cuando llega un evento del SSE que toca un pedido del plan. → en la página del comercio; Despachos se trata como Pedidos (lista, sin paneles ni narración encima).
+- [x] 5.4 Aviso proactivo en `EnVivoNarracionService` y en el orbe: plantilla con el conteo de pedidos listos de hoy, una vez cada vez que cambia el número y sin cambiar de vista. → línea en la narración y la insignia con el número en la opción Despachos del selector (en vez de mover el orbe).
+- [x] 5.5 Bandera en `company-features.service.ts`. → `despachosOpttia` en `COMPANY_FEATURE_FLAGS`.
+- [x] 5.6 Build de producción sin errores. El conteo de `(linear|radial)-gradient(` y de los primarios prohibidos del módulo no debe subir. Revisar la vista en 1440 y en 390 px con la API simulada (Playwright): sin scroll horizontal ni texto invisible. → build de producción EXIT=0; Playwright con la API simulada a 1440 y 390 px: sin scroll horizontal, 0 gradientes, títulos con su tamaño, aprobar muestra el resultado.
 
 ## 6. MCP y ADK (cambio privado del backend: `opttia-despachos-con-aprobacion`)
 

@@ -1,0 +1,70 @@
+@import '../dz-comun';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dz-bloque {
+  @include ev-panel;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dz-bloque__titulo {
+  @include ev-etiqueta;
+  margin: 0;
+}
+
+.dz-razon-fila {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dz-razon-fila__nombre {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dz-razon-fila__texto {
+  font-size: ev-fs(13);
+  font-weight: 700;
+  color: var(--ev-ink);
+}
+
+.dz-cuenta {
+  @include ev-chip;
+}
+
+.dz-numeros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dz-numero {
+  @include ev-foco;
+  padding: 4px 9px;
+  border: 1px solid var(--ev-chip-line);
+  border-radius: 20px;
+  background: var(--ev-chip);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--ev-tile);
+  }
+}
+
+.dz-numero__texto {
+  font-size: ev-fs(12);
+  font-weight: 700;
+  color: var(--ev-ink-2);
+  font-variant-numeric: tabular-nums;
+}

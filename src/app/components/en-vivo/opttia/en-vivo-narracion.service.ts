@@ -1,10 +1,11 @@
 import { Injectable, NgZone, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, combineLatest, Observable, Subscription } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../compartido/en-vivo-interaccion.service';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { LineaNarracion, NarradorOpttia, PERIODO_NARRACION_MS, PRIMERA_LINEA_MS } from './opttia-narrador';
 import { mascaraDe } from './opttia-reglas';
+import { contarListos } from '../despachos/plan-despachos.reglas';
 
 /**
  * Narración de Opttia sobre la escena (D-386, tarea 4.10, diseño 16): una línea que cambia cada
@@ -57,6 +58,14 @@ export class EnVivoNarracionService implements OnDestroy {
     suscripciones.add(
       this.estado.nuevos$.subscribe((evento) => {
         this.narrador.alEvento(evento, this.estado.estado, this.estado.preferencias.ocultar, this.interaccion.repitiendo);
+      })
+    );
+    // Plan de despachos (D-410): si la vista "Despachos" existe y no es la que se está mirando, avisa
+    // cuántos pedidos están listos (con lo que la pantalla ya tiene; no llama al servidor ni a Opttia).
+    suscripciones.add(
+      combineLatest([this.estado.estado$, this.interaccion.opciones$, this.interaccion.opcionActiva$]).subscribe(([e, opciones, activa]) => {
+        if (!opciones.some((o) => o.id === 'despachos') || activa === 'despachos') return;
+        this.narrador.avisarPlanDespachos(contarListos(e.pedidos), this.interaccion.repitiendo);
       })
     );
     // Al activar "ocultar", lo que ya estaba armado (y a la vista) pudo traer montos o nombres: se descarta.

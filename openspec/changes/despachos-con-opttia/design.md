@@ -73,9 +73,9 @@ Se crea `services/despachos/`, fuera de `services/enVivo/`, con estas piezas:
   6. **App conectada:** en Realtime DB, por mensajero, la clave calculada en las dos formas (con y sin tildes). No se lee el nodo entero.
 - `calcularPerfil(datos)` y `armarPlan(datos, perfil, ahora)`: funciones puras, sin I/O y deterministas. La huella es un SHA-256 de los pedidos ordenados con `estadoProceso`, `estadoPago`, `shippingOrder` y `date_edit`, más el mensajero o proveedor y la franja de cada grupo.
 - `franjas.js`: lee la franja de cualquier texto, con hora de inicio y de fin. Se prueba con todos los textos distintos que hoy existen en producción, de todas las empresas.
-- **Índice nuevo:** las consultas 1 y 2 requieren `orders (company, estadoProceso, fechaEntrega)`. Se agrega a `firestore.indexes.json` y se crea antes del despliegue. Es el camino que pide la regla de "optimizar en origen".
-- **Sin el índice:** la consulta 1 lee todos los listos (en un comercio, 350, de los que 322 son viejos).
-- **Costo estimado:** unas 800 lecturas pequeñas por plan en el comercio más activo. El plan solo se arma cuando alguien abre la vista o actualiza.
+- **Índice:** las consultas 1 y 2 usan `orders (company, estadoProceso, fechaEntrega)`. Ya está declarado en `firestore.indexes.json` y **existe en producción** (verificado el 13-oct con la misma consulta del plan): los candidatos de ALMARA son 9 pedidos, no los 350 listos (322 de ellos viejos), y la historia de 15 días son 417. No hay que crear nada.
+- **Si un día falta el índice:** los candidatos caen a la consulta sin rango y la historia se omite, con aviso. El plan sale igual.
+- **Costo estimado:** unas 450 lecturas pequeñas por plan en el comercio más activo. El plan solo se arma cuando alguien abre la vista o actualiza.
 
 *Alternativas descartadas:*
 - **Que el modelo arme el plan:** puede inventar, cuesta en cada consulta, y va contra la regla de D-401 y D-404.
@@ -172,7 +172,7 @@ Mide:
 - **Mensajero:** el porcentaje con el mismo mensajero.
 - **Transportadora:** el porcentaje con la misma transportadora.
 
-Compuerta propuesta: grupos ≥ 70 %, mensajero ≥ 50 % y transportadora ≥ 90 %. Si no se cumple, se ajustan las reglas genéricas, nunca por comercio, y se repite. El script sirve igual para cualquier empresa.
+Compuerta (ajustada con el primer ensayo, ver "Resultados" abajo): pureza ≥ 70 %, completitud ≥ 60 % y el mensajero real entre el sugerido y sus dos alternativas ≥ 80 %. Para transportadora, la misma transportadora ≥ 90 % (fase 2). Si no se cumple, se ajustan las reglas genéricas, nunca por comercio, y se repite. El script sirve igual para cualquier empresa. Con menos de 10 olas responde "datos insuficientes", y si el comercio despacha casi todo por transportadora lo deja para la fase 2.
 
 ### 9. MCP y ADK (cambio privado del backend)
 - **Lectura del plan:** `get_dispatch_plan`, sobre el mismo servicio.
@@ -181,6 +181,78 @@ Compuerta propuesta: grupos ≥ 70 %, mensajero ≥ 50 % y transportadora ≥ 90
   - o con el callback de Telegram, que valida el vínculo con una cuenta de Katuq y su permiso.
 - **Herramientas actuales:** las cuatro que escriben se retiran o pasan al servicio compartido.
 - **Lo demás** (alcances del OAuth por rol, autor real en el historial, listas de escritura del ADK) va en el repo privado.
+
+## Resultados de la implementación (13-oct)
+
+**1.1 Franjas y fechas (producción, 90 días, todas las empresas).**
+- **Franjas:** hay 19 textos distintos. El más usado es "LO MAS PRONTO POSIBLE" (1.186 pedidos), que no tiene horas pero es urgente: el lector lo trata como "Lo antes posible" y lo pone de primero (la spec se ajustó).
+- **Formatos de `fechaEntrega`:** cuatro.
+  - con Z: 3.107;
+  - sin zona, con microsegundos: 1.161 (todos de ALMARA, entre las 7 y las 18);
+  - sin zona: 15;
+  - con -05:00: 14.
+- **"Hoy":** el plan usa la misma regla que la lista del mensajero (texto entre el inicio y el fin del día de Colombia en UTC), así que lo que llama "de hoy" es lo que el mensajero ve. En ALMARA, 993 de 998 pedidos salieron el día de su fecha.
+
+**1.2 Contrato con la app del mensajero.** La app no lee `shipping_orders`. Lista `orders` cuando se cumplen todas estas condiciones:
+- `transportador` es el texto "Nombres Apellidos";
+- el pedido está en Despachado;
+- su `fechaEntrega` es del día;
+- el mensajero está en línea.
+
+Recarga la lista con el push `order_modified`. La clave de `active_users` es `nombre completo_empresa` sin otros caracteres: Android no pliega tildes, iOS sí. El lector prueba las dos formas.
+
+**2.6 Ensayo en sombra, ALMARA, 14 días, 56 olas y 313 pedidos con mensajero.**
+
+El primer armado (zona por franja, con "ya llevó la zona hoy" como señal fuerte) **no pasó**: completitud 56 % y mismo mensajero 40 %. Lo que mostraron los datos:
+- **Las personas juntan zonas y franjas.**
+  - el 59 % de sus órdenes lleva 2 o más zonas y el 51 %, 2 o más ciudades;
+  - el 54 % junta dos franjas que se cruzan (9 a 13 con 11 a 15; 7 a 10 con 9 a 13).
+- **"Ya llevó esta zona hoy" acertaba solo 42 %:** ese mensajero suele seguir en la calle. La mediana entre dos salidas del mismo mensajero es de 2 h 36 min, unos 37 minutos por pedido que llevaba.
+
+Cambios, todos genéricos (aprendidos de la historia de cada comercio):
+- **Grupos:** se juntan cuando las franjas se cruzan de a pares y son de la misma ciudad o de zonas que el comercio juntó en 14 días (afinidad). El tope es el tamaño habitual.
+- **Mensajero:**
+  1. regla o cobertura;
+  2. trabaja hoy y no está en ruta;
+  3. está en ruta, con su hora de vuelta (salida + pedidos × minutos por pedido del perfil);
+  4. conoce la zona.
+
+  Desempata quien más conoce las zonas. Se probaron también "el que más espera" y "el de menos carga", con 35 % frente a 41 %.
+- **Dos alternativas por grupo:** para cambiar el mensajero con un toque.
+
+Resultado final (con la señal de asistencia como sustituto de "app conectada" entre paréntesis):
+
+| Medida | Resultado |
+|---|---|
+| pureza | 100 % |
+| completitud | 74 % |
+| cobertura | 99,7 % |
+| sin sugerencia | 0,6 % |
+| mensajero exacto | 40 % (41 %) |
+| el sugerido salió en esa ola | 67 % (71 %) |
+| **el real está entre el sugerido y sus dos alternativas** | **87,5 % (89 %)** |
+
+La compuerta se redefinió con esto: el mensajero exacto depende de quién está físicamente en el punto, algo que el sistema no ve. La medida útil es si la persona lo encuentra con un toque. ALMARA **pasa**. ALMACEN BOMBAS tiene datos insuficientes (1 ola). OH MY STORE y CAFÉ ESCOBAR despachan por transportadora, y se miden en la fase 2.
+
+**Otros.** `logisticsManager.tieneEstrategia(proveedor)` (aditivo) dice si hay estrategia para crear envíos, con alias. La lista vieja de `LegacyConfigAdapter.#isLogisticsProvider` deja por fuera a osmosis, fullpi, prindel y partners_logistics, por eso no se usa.
+
+**Cambios al implementar (13-oct).**
+- **Decisión 2, cambiada:** no se extrajo la creación de órdenes del controlador. Esa función también maneja edición, pedidos movidos y liberaciones que el plan no necesita, y moverla era el cambio más riesgoso en un módulo sensible. En su lugar:
+  - la aprobación usa las mismas reglas, en `utils/despachoReglas.js`, que una prueba compara con las del controlador en 298 casos;
+  - toma el consecutivo en transacción, igual que la pantalla;
+  - despacha con `updateOrderInternal`, la misma función del botón Despachar;
+  - pasarle esa función al pedido sin el carrito no toca inventario.
+
+  Queda pendiente la tarea 3.2: que el controlador importe el módulo compartido.
+- **Auditoría:** el pedido guarda `despachoPlan` (origen, canal, quién aprobó y huella), y la orden, `origen`, `aprobadoPor`, `canal` y `despacho.estado`. El historial de estados lo escribe `updateOrderInternal` con el correo de quien aprobó.
+- **Una sola orden:** el id de la orden sale de (empresa, mensajero, pedidos y sus huellas).
+  - Mientras alguien despacha, otra aprobación del mismo grupo responde "Lo está aprobando…".
+  - Si se cortó hace más de 2 minutos, la siguiente retoma los pedidos pendientes.
+- **Acceso:**
+  - **Quién:** ve y aprueba la familia Administrador o quien tiene Despachos en el menú; quien solo tiene En vivo, ve.
+  - **Excluidos:** el vendedor restringido (D-349) no ve el plan.
+  - **ALMARA:** en la última semana, los 146 despachos con usuario identificado fueron del rol Administrador.
+- **Aviso proactivo:** una insignia con el número de listos en la opción Despachos y una línea de la narración. Se descartó mover el orbe 3D hacia el encabezado.
 
 ## Risks / Trade-offs
 

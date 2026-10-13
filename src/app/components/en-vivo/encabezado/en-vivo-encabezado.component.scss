@@ -233,3 +233,21 @@
     transition: none;
   }
 }
+
+// Insignia de la opción "Despachos" (D-410): pedidos listos. Color y tamaño propios para que la
+// regla global de los span creados por *ngIf no la pinte de azul.
+.seg__insignia {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 20px;
+  background: var(--ev-accent);
+  color: var(--ev-on-accent);
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: middle;
+}

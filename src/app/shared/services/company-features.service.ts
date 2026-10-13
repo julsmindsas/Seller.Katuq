@@ -19,6 +19,8 @@ export const COMPANY_FEATURE_FLAGS = [
   'landingPrompt',
   'product3d',
   'pickingAlistamiento',
+  // Opttia organiza los despachos y una persona aprueba, en En vivo (D-410).
+  'despachosOpttia',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

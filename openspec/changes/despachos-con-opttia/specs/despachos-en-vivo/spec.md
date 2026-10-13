@@ -69,7 +69,7 @@ Los resultados y errores MUST anunciarse también a los lectores de pantalla.
 - **THEN** el pedido se marca como "cambió", la vista ofrece actualizar el plan y no se aprueba nada sola
 
 ### Requirement: Opttia avisa que hay pedidos para planear
-En las otras vistas del comercio, cuando la bandera está encendida y los datos que En vivo ya tiene muestran pedidos de hoy listos para salir, la narración SHALL decir "Hay N pedidos listos; armo el plan en Despachos" y el orbe de Opttia SHALL señalar el selector de vistas.
+En las otras vistas del comercio, cuando la bandera está encendida y los datos que En vivo ya tiene muestran pedidos de hoy listos para salir, la narración SHALL decir "Hay N pedidos listos; armo el plan en Despachos" y la opción "Despachos" del selector SHALL mostrar N en una insignia.
 - **Sin gasto:** el aviso MUST armarse con plantilla y con los datos que la pantalla ya recibe, sin llamar a Opttia y sin leer pedidos de más.
 - **Cuándo se arma el plan:** solo cuando la persona abre la vista Despachos.
 - **Frecuencia:** sale a lo sumo una vez cada vez que cambia ese número, en cada sesión.

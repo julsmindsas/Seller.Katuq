@@ -1,7 +1,7 @@
 <app-en-vivo
   vista="comercio"
   [empresa]="(empresa$ | async) || undefined"
-  [eventosFlotantes]="!ampliado && (vm$ | async)?.opcion !== 'pedidos'"
+  [eventosFlotantes]="!ampliado && !sinEscena((vm$ | async)?.opcion)"
 >
   <!-- Encabezado: botones extra -->
   <ng-container ngProjectAs="[slot=acciones]">
@@ -25,7 +25,7 @@
   <!-- Escena: recuadro de alto fijo + paneles flotantes (o apilados) + ficha -->
   <ng-container ngProjectAs="[slot=escena]">
     <div class="ev-zona" *ngIf="vm$ | async as vm">
-      <div class="ev-escena-slot" [class.ev-escena-slot--lista]="vm.opcion === 'pedidos'" [attr.data-vista]="vm.opcion">
+      <div class="ev-escena-slot" [class.ev-escena-slot--lista]="sinEscena(vm.opcion)" [attr.data-vista]="vm.opcion">
         <!-- Una escena a la vez: "Mi operación" y "Mi país" son 3D (sin WebGL muestran su aviso) y "Pedidos" es el tablero. -->
         <ng-container [ngSwitch]="vm.opcion">
           <app-en-vivo-escena-operacion
@@ -42,9 +42,10 @@
             (disponible3d)="alDisponible3d($event)"
           ></app-en-vivo-escena-mapa>
           <app-en-vivo-tablero-pedidos *ngSwitchCase="'pedidos'"></app-en-vivo-tablero-pedidos>
+          <app-en-vivo-despachos *ngSwitchCase="'despachos'"></app-en-vivo-despachos>
         </ng-container>
 
-        <app-en-vivo-narracion *ngIf="(vm.opcion !== 'pedidos') && vm.opttiaActivo"></app-en-vivo-narracion>
+        <app-en-vivo-narracion *ngIf="!sinEscena(vm.opcion) && vm.opttiaActivo"></app-en-vivo-narracion>
         <app-en-vivo-ficha [empresa]="(empresa$ | async) || undefined" (abrirTablero)="alAbrirTablero($event)"></app-en-vivo-ficha>
       </div>
 

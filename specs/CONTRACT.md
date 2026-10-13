@@ -9298,7 +9298,7 @@ Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.ser
 
 **Pendientes sin decidir.** "Prospectos" (`prospectos/lista`) lleva al 404 (su routing nunca se importa). `shouldHide` del sidebar oculta todo lo que diga empresa/usuario/rol y el grupo "Seguridad" puede quedar vacío. Modernizar a D-400 Clientes, CRM, Picking/Packing, Dropshipping e Inventario.
 
-## D-410 (2026-10-13) — Opttia organiza los despachos y la persona aprueba, desde En vivo (openspec/changes/despachos-con-opttia) — PROPUESTA, esperando aprobación
+## D-410 (2026-10-13) — Opttia organiza los despachos y la persona aprueba, desde En vivo (openspec/changes/despachos-con-opttia) — APROBADA 13-oct, en implementación
 
 **Disparador.** Daniel (13-oct): "quiero tener un apartado aquí mismo [En vivo] donde Opttia tenga un poco más de autonomía, como organizar despachos automáticos al comercio según su integración, si tiene mensajeros, y que el usuario solo apruebe. Y revisa si hace falta cosas en los MCP". Luego: "es hacerlo genérico para futuros comercios".
 
@@ -9326,6 +9326,8 @@ Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.ser
 
 Sin colecciones nuevas. Write-set: `shipping_orders`, campos de despacho de `orders` y `order_status_history`.
 
+**Aprobada (13-oct).** Daniel: "Eso ten en cuenta la seguridad" y luego "seguridad de esto de IA, no de toda la app". Se aprueban las decisiones (a) a (d). La seguridad que entra es la de esta función: candado de empresa y de rol en sus rutas, aprobación solo por una persona, idempotencia, write-set cerrado y las herramientas MCP y ADK de despachos. Los huecos generales de la app siguen escalados en su programa, fuera de este cambio.
+
 **Prerrequisito privado.** `opttia-despachos-con-aprobacion` en el repo del backend: herramientas MCP y ADK, y los accesos que hay que corregir antes de encender. El detalle de esos hallazgos vive solo ahí, porque este repo es público.
 
 **Decisiones propuestas para Daniel:**
@@ -9336,9 +9338,60 @@ Sin colecciones nuevas. Write-set: `shipping_orders`, campos de despacho de `ord
 
 **De paso (13-oct).** `tests/enVivo/writeset.contract.test.js` fallaba desde el 10-oct (D-403 lo registró como falla anterior). La causa era la prueba, no producción: usaba la fecha fija del 8-oct contra la instancia compartida, que mira ayer y hoy con el reloj real. Arreglada en el backend `933a925`; las 13 suites de En vivo pasan.
 
+## D-411 (2026-10-13) — Tickets de soporte con varios agentes: principal, apoyo y observador (backend openspec/changes/multi-asignacion-tickets-soporte) — IMPLEMENTADO y pusheado 13-oct; Support desplegado, backend pendiente de deploy
+
+**Disparador.** Santiago (13-oct): "que al asignar un ticket a alguno de los agentes de soporte se pueda asignar a más de una persona". En la definición agregó un tercer rol: "el observador es alguien que no es responsable del ticket pero desea que le lleguen los avances".
+
+**Decisión.**
+- **Tres roles en el mismo documento del ticket**, sin colección nueva:
+  - `usuarioMesaAyuda`: el principal, sin cambio de forma. Seller Center y el MCP siguen leyendo solo este campo.
+  - `apoyosMesaAyuda[]`: también trabajan el caso.
+  - `observadoresMesaAyuda[]`: no son responsables, pero reciben los avances.
+- **Un agente, un rol por ticket**, con prioridad principal > apoyo > observador. Reemplazar al principal lo saca del ticket; no pasa a apoyo.
+- **Avisos internos (correo y campana) a los tres roles, nunca a quien hizo la acción.** Aplica a estado, cierre, reapertura, respuesta, prioridad y SLA. El aviso de asignación le llega solo a quien entra y dice con qué rol.
+- **Ticket sin principal ni apoyos sigue siendo "de todos"** en la campana (`destinatarios: null`) aunque tenga observadores. Si responde el comercio, el correo va al grupo de soporte y a los observadores.
+- **Métricas por agente:** se siguen atribuyendo solo al principal.
+- **Apoyos y observadores son campos solo-operador** en el PUT (`CAMPOS_SOLO_OPERADOR`): el comercio no los ve ni los escribe, y un PUT del Seller con una copia vieja no los pisa.
+- **App Support:**
+  - detalle con Apoyo, Observadores y botón Seguir;
+  - backlog y tablero con "+N" de apoyos;
+  - el filtro por agente incluye apoyos, y hay un filtro nuevo "Lo que sigo";
+  - asignación masiva de apoyo y observador que no pisa el equipo existente.
+- **De paso:** la URL del backend en Support sale de `environment.katuqApi` (antes `api.katuq.com` estaba escrito a mano en 3 servicios y en el interceptor). El build de producción sigue en `api.katuq.com`.
+
+**Fuera de alcance (follow-up):** MCP (`update_support_ticket` solo asigna al principal y no aplica la unicidad; el backend deduplica al leer) y la vista del comercio en Seller.
+
+**Deploy:** primero el backend y después Support. Si sale Support primero, el PUT descarta los arreglos en silencio.
+
+## D-412 (2026-10-13) — Comercios afectados por un ticket de soporte, y campos internos fuera del alcance del comercio (backend openspec/changes/comercios-afectados-tickets) — IMPLEMENTADO en local, sin commit ni deploy
+
+**Disparador.** Santiago (13-oct): "abrir un segmento donde aparezca a qué comercios afecta un ticket", tocando backend, frontend y MCP.
+
+**Decisión.**
+- **`comerciosAfectados[]`** (`{ id, nomComercial, nit }`, tomados del maestro de empresas) y **`avisoAfectados`** (texto) en el mismo documento del ticket, sin colección nueva. Son **internos**:
+  - el comercio no los ve ni los escribe;
+  - un comercio afectado **no** gana acceso al ticket ajeno (el aislamiento entre comercios no cambia);
+  - el comercio que reportó no se repite como afectado.
+- **Aviso solo al cerrar** (Resuelto o Archivado): correo al contacto de cada afectado y aviso en la campana de su Seller Center. Lleva **únicamente el texto que escribe el equipo**, sin asunto, número ni nombre del comercio que reportó. Si el texto está vacío, no se avisa. Sale una vez por comercio y por cierre; reabrir y volver a cerrar avisa de nuevo.
+- **Endpoint nuevo aprobado:** `GET /v1/support/comercios`, la lista liviana de empresas activas para el buscador. Solo el equipo operador, validado por el tenant firmado en la sesión.
+- **Support:**
+  - el detalle tiene un bloque "Comercios afectados" con buscador, chips y el texto del aviso;
+  - el backlog muestra "+N afectados" y un filtro "Afecta a…", que trae lo que el comercio reportó y lo que lo afecta.
+- **MCP:**
+  - las lecturas devuelven los afectados solo al equipo;
+  - `get_support_tickets` acepta el filtro `afectaA`;
+  - `update_support_ticket` acepta `agregarComerciosAfectados`, `quitarComerciosAfectados` y `avisoAfectados`. Un comercio que no está en el maestro aborta el cambio completo.
+- **Corrección de fuga (también de D-411):** las lecturas del comercio (API REST de tickets y `get_support_ticket` del MCP) devolvían el documento crudo, con los apoyos y observadores del equipo. Ahora quitan todos los campos internos. El alta pública de tickets también los descarta.
+
+**Hallazgo aparte (no se corrige aquí):** en el módulo de empresas hay endpoints que deciden el acceso de operador con un criterio más débil que el de soporte. El detalle está en el change del backend; va en un cambio propio.
+
+**Deploy:** primero el backend y después Support. Antes de desplegar Support, verificar que `/v1/support/comercios` responda en producción.
+
 ---
 
-## D-411 (2026-10-13) — Automatizaciones: que los pasos funcionen sin tocar los webhooks vivos (openspec/changes/flows-pasos-que-funcionan) — APROBADA por Daniel 2026-10-13 ("dale"), en implementación
+## D-413 (2026-10-13) — Automatizaciones: que los pasos funcionen sin tocar los webhooks vivos (openspec/changes/flows-pasos-que-funcionan) — APROBADA por Daniel 2026-10-13 ("dale"), en implementación
+
+> Renumerada el 13-oct: nació como D-411, pero ese número ya lo usaba la entrada de tickets de soporte publicada antes. El código del backend y del front la cita como D-413.
 
 **Contexto.** Daniel: "/flows sigue siendo muy difícil de poner a funcionar estilo n8n, los nodos no funcionan bien". La auditoría del 11-oct (front + motor) encontró que el problema es del motor:
 - el catálogo no carga (`contracts/node-catalog` solo existe en `.ts`);
@@ -9375,16 +9428,7 @@ Nada de eso cambia en ningún modo de la bandera. Lo protege una prueba de regre
 
 **No-goals:** el blindaje del webhook (D-350), el modo prueba sin efectos, el arreglo de los conectores SIIGO/WO/Aliaddo/Envíame/Wompi, la UI del panel, backfills y colecciones nuevas.
 
-**Pendiente:** mapa de solo lectura de los flows activos de todos los comercios (tarea 0.2). El modo automático bloqueó la lectura de producción.
-
-
-## D-412 (2026-10-13) — Kuvo: conectar los catálogos públicos existentes — APROBADO por Daniel
-
-Daniel pidió «conectalo al backend de katuq, osea haslo ya», después de aprobar la propuesta de marketplace de clientes. Primera conexión aditiva y de solo lectura: `GET /v1/sites/public/directorio`, antes de la ruta de slug, reutiliza consultarCatalogo, marcaDeLaEmpresa y categorías ocultas de la copia publicada. Solo tiendas en estado publicado con `published.tienda.habilitada` y bloque catálogo visible con `permitirCompra=true`; no publica comercios ni productos. Los precios COP se formatean en servidor, identificadores públicos con namespace de slug; proyección de nombre, ciudad, fotografía, descripción y categorías, sin company, correos, credenciales, costos o inventario interno. Caché 60 segundos, dos tiendas concurrentes, máximo 40 tiendas y 20 páginas por tienda; truncamiento anunciado y enlace a la tienda pública. Sin nuevas colecciones, índices ni escrituras. CORS admite el origen exacto de Kuvo. Web Angular 21 y clientes SwiftUI/Compose leen el mismo contrato sin sesión del personal ni fallback ficticio.
-
-Los pedidos y pagos de Kuvo siguen pendientes: crearPedido descuenta stock y no se reutiliza como cotización. No se prueban escrituras en producción ni se altera inventario, cron, flows, webhooks, autenticación de gestión o liquidaciones.
-
-**Implementación D-411 (2026-10-13), sin desplegar.** Está en el backend (`backend-aws-security`) y en el front (`feature/venta-asistida-mejorada`).
+**Implementación D-413 (2026-10-13), sin desplegar.** Está en el backend (`backend-aws-security`) y en el front (`feature/venta-asistida-mejorada`).
 
 - **Mapa de producción.** Hay 9 flows activos: 8 de OH MY STORE y 1 de CAFE ESCOBAR. Ninguno usa Repetir, Elegir, `$node` por notas, pasos no disponibles ni `triggers` vacíos.
   - Hallazgo aparte: `fullpi-orders-status-pull-oms` figura `active` sin binding activo, así que no corre. Fullpi está dormido y no se tocó.
@@ -9414,3 +9458,13 @@ Los pedidos y pagos de Kuvo siguen pendientes: crearPedido descuenta stock y no 
   - `motorCorregido`.
 - **Build.** El de producción del front pasa.
 - **Pendiente.** Desplegar backend y front (fuera del modo automático), verificar los siguientes pedidos de OH MY STORE con `motor.diferencias` vacía, encender en FLORECER y, después de una semana de sombra, pedir el visto bueno para OH MY STORE.
+
+---
+
+## D-414 (2026-10-13) — Kuvo: conectar los catálogos públicos existentes — APROBADO por Daniel
+
+> Renumerada el 13-oct: nació como D-412, que ya era la entrada de comercios afectados por un ticket de soporte.
+
+Daniel pidió «conectalo al backend de katuq, osea haslo ya», después de aprobar la propuesta de marketplace de clientes. Primera conexión aditiva y de solo lectura: `GET /v1/sites/public/directorio`, antes de la ruta de slug, reutiliza consultarCatalogo, marcaDeLaEmpresa y categorías ocultas de la copia publicada. Solo tiendas en estado publicado con `published.tienda.habilitada` y bloque catálogo visible con `permitirCompra=true`; no publica comercios ni productos. Los precios COP se formatean en servidor, identificadores públicos con namespace de slug; proyección de nombre, ciudad, fotografía, descripción y categorías, sin company, correos, credenciales, costos o inventario interno. Caché 60 segundos, dos tiendas concurrentes, máximo 40 tiendas y 20 páginas por tienda; truncamiento anunciado y enlace a la tienda pública. Sin nuevas colecciones, índices ni escrituras. CORS admite el origen exacto de Kuvo. Web Angular 21 y clientes SwiftUI/Compose leen el mismo contrato sin sesión del personal ni fallback ficticio.
+
+Los pedidos y pagos de Kuvo siguen pendientes: crearPedido descuenta stock y no se reutiliza como cotización. No se prueban escrituras en producción ni se altera inventario, cron, flows, webhooks, autenticación de gestión o liquidaciones.

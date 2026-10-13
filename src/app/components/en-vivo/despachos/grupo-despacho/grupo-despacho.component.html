@@ -1,0 +1,88 @@
+<article class="dz-grupo" [class.dz-grupo--hecho]="aprobado" [attr.aria-labelledby]="'dz-grupo-' + numero">
+  <header class="dz-grupo__cabeza">
+    <div class="dz-grupo__titulos">
+      <span class="dz-franja" [class.t-bad]="grupo.urgente" [class.t-accent]="!grupo.urgente">
+        <app-en-vivo-icono nombre="reloj"></app-en-vivo-icono>
+        <span class="dz-franja__texto">{{ grupo.franja }}</span>
+      </span>
+      <h3 class="dz-grupo__zona" [id]="'dz-grupo-' + numero">{{ grupo.zona }}</h3>
+      <p class="dz-grupo__cifras">
+        <span class="dz-dato">{{ grupo.pedidos.length }} {{ grupo.pedidos.length === 1 ? 'pedido' : 'pedidos' }}</span>
+        <span class="dz-dato" *ngIf="porCobrar > 0">· {{ dinero(porCobrar) }} por cobrar</span>
+      </p>
+    </div>
+    <span class="dz-grupo__numero" aria-hidden="true">{{ numero }}</span>
+  </header>
+
+  <div class="dz-mensajero">
+    <label class="dz-etiqueta" [for]="'dz-sel-' + numero">Mensajero</label>
+    <select
+      class="dz-select"
+      [id]="'dz-sel-' + numero"
+      [disabled]="!puedeTocar"
+      [ngModel]="grupo.mensajeroId || ''"
+      (ngModelChange)="elegir($event)"
+    >
+      <option value="" disabled>Escoge un mensajero</option>
+      <option *ngFor="let o of opciones; let i = index; trackBy: trackOpcion" [value]="o.id">{{ etiquetaOpcion(o, i) }}</option>
+    </select>
+    <p class="dz-razon" *ngIf="mensajero?.razon as razon">
+      <app-en-vivo-icono nombre="ia"></app-en-vivo-icono>
+      <span class="dz-razon__texto">{{ razon }}</span>
+    </p>
+    <p class="dz-aviso-chico t-warn" *ngIf="!grupo.mensajeroId">
+      <span class="dz-aviso-chico__texto">Opttia no tiene a quién sugerir: escoge tú.</span>
+    </p>
+    <p class="dz-aviso-chico t-warn" *ngIf="mensajero && mensajero.app === 'sin-conectar'">
+      <span class="dz-aviso-chico__texto">Su app no está conectada: verá los pedidos cuando la abra.</span>
+    </p>
+  </div>
+
+  <p class="dz-frase" *ngIf="grupo.frase">
+    <span class="dz-frase__marca">Opttia</span>
+    <span class="dz-frase__texto">{{ grupo.frase }}</span>
+  </p>
+
+  <ul class="dz-pedidos">
+    <li class="dz-pedido" *ngFor="let p of grupo.pedidos; trackBy: trackPedido">
+      <button type="button" class="dz-pedido__abrir" (click)="abrirPedido.emit(p.id)" [attr.aria-label]="'Abrir el pedido ' + p.nroPedido">
+        <span class="dz-pedido__nro">#{{ p.nroPedido }}</span>
+        <span class="dz-pedido__zona">{{ p.zona }}</span>
+        <span class="dz-pedido__cobro" *ngIf="p.porCobrar > 0">{{ dinero(p.porCobrar) }}</span>
+      </button>
+      <div class="dz-pedido__acciones" *ngIf="puedeTocar">
+        <select
+          class="dz-select dz-select--chico"
+          *ngIf="otrosGrupos.length"
+          [attr.aria-label]="'Pasar el pedido ' + p.nroPedido + ' a otro grupo'"
+          (change)="moverA(p, $any($event.target).value); $any($event.target).value = ''"
+        >
+          <option value="">Pasar a…</option>
+          <option *ngFor="let g of otrosGrupos" [value]="g.id">{{ g.etiqueta }}</option>
+        </select>
+        <button type="button" class="dz-btn-icono" (click)="sacar.emit(p)" [attr.aria-label]="'Sacar el pedido ' + p.nroPedido + ' del grupo'">
+          <app-en-vivo-icono nombre="equis"></app-en-vivo-icono>
+        </button>
+      </div>
+    </li>
+  </ul>
+
+  <footer class="dz-grupo__pie">
+    <p class="dz-resultado" *ngIf="resultado" [ngClass]="tonoResultado">
+      <app-en-vivo-icono [nombre]="tonoResultado === 't-ok' ? 'check' : 'alerta'"></app-en-vivo-icono>
+      <span class="dz-resultado__texto">{{ textoResultado }}</span>
+    </p>
+    <ul class="dz-fuera-chico" *ngIf="resultado?.fuera?.length">
+      <li *ngFor="let f of resultado?.fuera"><span class="dz-fuera-chico__texto">#{{ f.nroPedido || f.id }}: {{ f.razon }}</span></li>
+    </ul>
+    <button
+      type="button"
+      class="dz-btn"
+      *ngIf="puedeAprobar && !aprobado"
+      [disabled]="!puedeTocar || !grupo.mensajeroId || !grupo.pedidos.length"
+      (click)="aprobar.emit()"
+    >
+      <span>{{ aplicando ? 'Aprobando…' : 'Aprobar y despachar' }}</span>
+    </button>
+  </footer>
+</article>
