@@ -9339,8 +9339,8 @@ Sin colecciones nuevas. Write-set: `shipping_orders`, campos de despacho de `ord
 **De paso (13-oct).** `tests/enVivo/writeset.contract.test.js` fallaba desde el 10-oct (D-403 lo registró como falla anterior). La causa era la prueba, no producción: usaba la fecha fija del 8-oct contra la instancia compartida, que mira ayer y hoy con el reloj real. Arreglada en el backend `933a925`; las 13 suites de En vivo pasan.
 
 **Avance (13-oct, tarde; nada desplegado).** Daniel: "Termina lo pendiente".
-- **Tarea 3.2 (backend `7df5b14`):** la pantalla de Despachos importa las reglas compartidas (`utils/despachoReglas.js`) en vez de tener su copia. No cambia el comportamiento: la prueba compara contra la versión original congelada en 298 casos.
-- **MCP y ADK (cambio privado `opttia-despachos-con-aprobacion`; backend `20177d5`, ADK `35e43cf`):**
+- **Tarea 3.2 (backend `b432adb`):** la pantalla de Despachos importa las reglas compartidas (`utils/despachoReglas.js`) en vez de tener su copia. No cambia el comportamiento: la prueba compara contra la versión original congelada en 298 casos.
+- **MCP y ADK (cambio privado `opttia-despachos-con-aprobacion`; backend `bf68501`, ADK `35e43cf`):**
   - por chat se despacha leyendo el plan (`get_dispatch_plan`) y pidiendo la aprobación (`request_dispatch_plan_approval`), que no escribe;
   - aprueba una persona: en Katuq, desde En vivo; en Telegram, con el botón, solo quien pidió el plan y con su cuenta de Katuq vinculada;
   - las herramientas viejas que despachaban por su cuenta se retiraron; nadie las había usado;
@@ -9359,6 +9359,13 @@ Sin colecciones nuevas. Write-set: `shipping_orders`, campos de despacho de `ord
   - antes de reintentar un envío sin respuesta, se busca si ya existe.
 
   Hasta la aprobación de Daniel no se implementa la parte que escribe.
+
+**Desplegado (13-oct, con el OK de Daniel: "git pull y merge … para desplegar" y "Despliega opttia").**
+- **Backend `3e2fb82`:** entró también D-412 de otra sesión. Después otra sesión dejó producción en `6c0a820`. Verificado: arranca con 60 herramientas, las rutas nuevas responden 401 sin sesión y no hay errores nuevos.
+- **ADK `35e43cf`:** `/health` responde 200 y los 5 bots de Telegram están activos. `OPTTIA_WRITE_MODE` no está definido en producción, así que las aprobaciones por Telegram no aparecen hasta que se pase a `dry_run` o `live`.
+- **Front 2026.10.13.1:** `verify-dist-prod` OK.
+
+La bandera `despachosOpttia` sigue apagada en todas las empresas. Falta prenderla en FLORECER y probar con la sesión de Daniel.
 
 ## D-411 (2026-10-13) — Tickets de soporte con varios agentes: principal, apoyo y observador (backend openspec/changes/multi-asignacion-tickets-soporte) — IMPLEMENTADO y pusheado 13-oct; Support desplegado, backend pendiente de deploy
 

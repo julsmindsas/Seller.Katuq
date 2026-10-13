@@ -243,7 +243,7 @@ La compuerta se redefinió con esto: el mensajero exacto depende de quién está
   - despacha con `updateOrderInternal`, la misma función del botón Despachar;
   - pasarle esa función al pedido sin el carrito no toca inventario.
 
-  La tarea 3.2 quedó hecha el 13-oct en la tarde: el controlador importa el módulo compartido (backend `7df5b14`).
+  La tarea 3.2 quedó hecha el 13-oct en la tarde: el controlador importa el módulo compartido (backend `b432adb`).
 - **Auditoría:** el pedido guarda `despachoPlan` (origen, canal, quién aprobó y huella), y la orden, `origen`, `aprobadoPor`, `canal` y `despacho.estado`. El historial de estados lo escribe `updateOrderInternal` con el correo de quien aprobó.
 - **Una sola orden:** el id de la orden sale de (empresa, mensajero, pedidos y sus huellas).
   - Mientras alguien despacha, otra aprobación del mismo grupo responde "Lo está aprobando…".
