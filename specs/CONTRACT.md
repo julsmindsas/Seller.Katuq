@@ -9298,7 +9298,7 @@ Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.ser
 
 **Pendientes sin decidir.** "Prospectos" (`prospectos/lista`) lleva al 404 (su routing nunca se importa). `shouldHide` del sidebar oculta todo lo que diga empresa/usuario/rol y el grupo "Seguridad" puede quedar vacío. Modernizar a D-400 Clientes, CRM, Picking/Packing, Dropshipping e Inventario.
 
-## D-410 (2026-10-13) — Opttia organiza los despachos y la persona aprueba, desde En vivo (openspec/changes/despachos-con-opttia) — PROPUESTA, esperando aprobación
+## D-410 (2026-10-13) — Opttia organiza los despachos y la persona aprueba, desde En vivo (openspec/changes/despachos-con-opttia) — APROBADA 13-oct, en implementación
 
 **Disparador.** Daniel (13-oct): "quiero tener un apartado aquí mismo [En vivo] donde Opttia tenga un poco más de autonomía, como organizar despachos automáticos al comercio según su integración, si tiene mensajeros, y que el usuario solo apruebe. Y revisa si hace falta cosas en los MCP". Luego: "es hacerlo genérico para futuros comercios".
 
@@ -9325,6 +9325,8 @@ Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.ser
 - **Encendido:** bandera `despachosOpttia` comercio por comercio, con un ensayo en sombra de 14 días antes.
 
 Sin colecciones nuevas. Write-set: `shipping_orders`, campos de despacho de `orders` y `order_status_history`.
+
+**Aprobada (13-oct).** Daniel: "Eso ten en cuenta la seguridad" y luego "seguridad de esto de IA, no de toda la app". Se aprueban las decisiones (a) a (d). La seguridad que entra es la de esta función: candado de empresa y de rol en sus rutas, aprobación solo por una persona, idempotencia, write-set cerrado y las herramientas MCP y ADK de despachos. Los huecos generales de la app siguen escalados en su programa, fuera de este cambio.
 
 **Prerrequisito privado.** `opttia-despachos-con-aprobacion` en el repo del backend: herramientas MCP y ADK, y los accesos que hay que corregir antes de encender. El detalle de esos hallazgos vive solo ahí, porque este repo es público.
 

@@ -1,13 +1,13 @@
 ## 1. Medición previa (solo lectura)
 
-- [ ] 1.1 Sacar de producción, de todas las empresas y de los últimos 90 días, los textos distintos de la franja de entrega (`horarioEntrega`) y los tipos de `fechaEntrega` de los pedidos listos (texto ISO o fecha de Firestore). Registrar el resultado en design.md. Es la entrada de las pruebas de 2.1 y de la consulta por rango.
-- [ ] 1.2 Comprobar en la app nativa del mensajero (rama `origin/feature/native-apps`) y en `getByTransportador` qué campos y qué formato necesita un pedido para aparecer en la lista de hoy: `transportador`, estado, `fechaEntrega` y en línea. Anotarlo en design.md como contrato del despacho.
+- [x] 1.1 Sacar de producción, de todas las empresas y de los últimos 90 días, los textos distintos de la franja de entrega (`horarioEntrega`) y los tipos de `fechaEntrega` de los pedidos listos (texto ISO o fecha de Firestore). Registrar el resultado en design.md. Es la entrada de las pruebas de 2.1 y de la consulta por rango. → 13-oct: 19 textos de franja (el más usado, "LO MAS PRONTO POSIBLE") y 4 formatos de fecha; en design.md, "Resultados".
+- [x] 1.2 Comprobar en la app nativa del mensajero (rama `origin/feature/native-apps`) y en `getByTransportador` qué campos y qué formato necesita un pedido para aparecer en la lista de hoy: `transportador`, estado, `fechaEntrega` y en línea. Anotarlo en design.md como contrato del despacho. → 13-oct: contrato anotado en design.md ("Resultados", 1.2).
 
 ## 2. Perfil y plan (backend, sin escrituras)
 
-- [ ] 2.1 Pruebas de `services/despachos/franjas.js` con todos los textos de 1.1 (inicio, fin y "sin franja"); luego la implementación.
-- [ ] 2.2 Pruebas de `calcularPerfil` para: comercio con mensajeros, solo con transportadora, con ambos, nuevo sin historia y con reglas guardadas. Luego la implementación, sin ninguna rama por nombre de comercio.
-- [ ] 2.3 Pruebas de `armarPlan`, una por escenario de `plan-de-despachos`:
+- [x] 2.1 Pruebas de `services/despachos/franjas.js` con todos los textos de 1.1 (inicio, fin y "sin franja"); luego la implementación. → `services/despachos/franjas.js` y `tests/despachos/franjas.test.js` (30 textos, los 19 de producción).
+- [x] 2.2 Pruebas de `calcularPerfil` para: comercio con mensajeros, solo con transportadora, con ambos, nuevo sin historia y con reglas guardadas. Luego la implementación, sin ninguna rama por nombre de comercio. → `services/despachos/perfil.js` y `tests/despachos/perfil.test.js`; el perfil aprende además los minutos por pedido.
+- [x] 2.3 Pruebas de `armarPlan`, una por escenario de `plan-de-despachos`: → `services/despachos/plan.js` y `tests/despachos/plan.test.js`; reglas ajustadas con el ensayo (franjas compatibles, afinidad de zonas, en ruta, dos alternativas).
   - entrada y exclusiones con su razón;
   - fecha vencida y futura;
   - envío automático;
@@ -18,9 +18,9 @@
   - huella determinista.
 
   Luego la implementación, que reutiliza `claveCiudad` y la normalización de D-404.
-- [ ] 2.4 `leerDatosDelPlan`, con lecturas con `select`, Realtime DB por clave calculada en las dos formas y solo la empresa de la sesión. Prueba con base simulada: 0 escrituras y ninguna consulta sin el filtro de la empresa.
-- [ ] 2.5 Agregar el índice `orders (company, estadoProceso, fechaEntrega)` a `firestore.indexes.json`. Crearlo en producción con el OK de Daniel antes de desplegar 4.x.
-- [ ] 2.6 `scripts/plan-despachos-ensayo.js`, de solo lectura, recibe `--empresa` y `--dias 14`. Correrlo en los comercios que hoy despachan y registrar en design.md el acuerdo de grupos, de mensajero y de transportadora. Si no pasa la compuerta (70/50/90), ajustar las reglas genéricas y repetir. Nunca reglas por comercio.
+- [x] 2.4 `leerDatosDelPlan`, con lecturas con `select`, Realtime DB por clave calculada en las dos formas y solo la empresa de la sesión. Prueba con base simulada: 0 escrituras y ninguna consulta sin el filtro de la empresa. → `services/despachos/leerDatosDelPlan.js` e `index.js`; `tests/despachos/leerDatosDelPlan.contract.test.js` con simulador que prohíbe toda escritura; `logisticsManager.tieneEstrategia` (aditivo).
+- [x] 2.5 Agregar el índice `orders (company, estadoProceso, fechaEntrega)` a `firestore.indexes.json`. Crearlo en producción con el OK de Daniel antes de desplegar 4.x. → ya estaba declarado y existe en producción (verificado el 13-oct con la consulta del plan); no hubo que crear nada.
+- [x] 2.6 `scripts/plan-despachos-ensayo.js`, de solo lectura, recibe `--empresa` y `--dias 14`. Correrlo en los comercios que hoy despachan y registrar en design.md el acuerdo de grupos, de mensajero y de transportadora. Si no pasa la compuerta (70/50/90), ajustar las reglas genéricas y repetir. Nunca reglas por comercio. → `scripts/plan-despachos-ensayo.js`; ALMARA pasa (pureza 100 %, completitud 74 %, real entre sugerido y alternativas 87,5 %); compuerta redefinida y explicada en design.md.
 
 ## 3. Servicio compartido de órdenes de envío (módulo sensible: un cambio a la vez, con el diff aprobado por Daniel)
 
