@@ -50,7 +50,7 @@
 }
 
 .dz-numero {
-  @include ev-foco;
+  @include dz-foco;
   padding: 4px 9px;
   border: 1px solid var(--ev-chip-line);
   border-radius: 20px;

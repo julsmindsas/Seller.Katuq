@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { combineLatest, from, of, Subscription } from 'rxjs';
-import { catchError, concatMap, finalize, map } from 'rxjs/operators';
+import { catchError, concatMap, finalize, map, takeWhile } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../compartido/en-vivo-interaccion.service';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { EventoEnVivo } from '../servicios/en-vivo.modelos';
@@ -15,6 +15,15 @@ const MAX_PEDIDOS_TRANSPORTADORA = 5;
 
 /** Un grupo de transportadora que se quedó sin respuesta pudo haber enviado: no se dice que no salió. */
 const SIN_RESPUESTA = 'Katuq no respondió a tiempo y no sé si alcanzó a enviar. Actualiza el plan antes de volver a aprobar.';
+const COLA_DETENIDA = 'Se detuvo la aprobación: un grupo de transportadora no respondió a tiempo. Actualiza el plan antes de aprobar los que faltan.';
+
+/** Lo que deja cada petición de la serie de "Aprobar todo". */
+interface PasoAprobacion {
+  ok: number;
+  error: string | null;
+  /** Un grupo de transportadora quedó sin respuesta: no se lanza ninguno más. */
+  detener: boolean;
+}
 
 /**
  * Vista "Despachos" de En vivo (D-410): el plan de despachos que arma el servidor, explicado por
@@ -51,6 +60,8 @@ export class EnVivoDespachosComponent implements OnInit, OnDestroy {
   private opcionesPorGrupo = new Map<string, OpcionMensajero[]>();
   private idsDelPlan = new Set<string>();
   private readonly subs = new Subscription();
+  /** La serie de aprobaciones en curso: al salir de la vista se corta para no lanzar las que faltan. */
+  private serie: Subscription | null = null;
 
   constructor(
     private readonly api: EnVivoPlanDespachosService,
@@ -76,6 +87,7 @@ export class EnVivoDespachosComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
+    this.serie?.unsubscribe();
   }
 
   // ── Carga ──────────────────────────────────────────────────────────────────
@@ -166,28 +178,44 @@ export class EnVivoDespachosComponent implements OnInit, OnDestroy {
   private destinos(tipo: TipoGrupo, excluir: GrupoEditable | null): Array<{ id: string; etiqueta: string }> {
     return this.grupos
       .map((x, i) => ({ x, i }))
-      .filter(({ x }) => x !== excluir && x.tipo === tipo && !this.resultados.has(x.id))
+      .filter(({ x }) => x !== excluir && x.tipo === tipo && this.libreComoDestino(x))
       .filter(({ x }) => tipo !== 'transportadora' || x.pedidos.length < MAX_PEDIDOS_TRANSPORTADORA)
       .map(({ x, i }) => ({ id: x.id, etiqueta: `${i + 1}. ${x.zona}` }));
   }
 
-  cambiarMensajero(g: GrupoEditable, id: string): void {
-    this.grupos = this.grupos.map((x) => (x === g ? { ...x, mensajeroId: id } : x));
+  /** Destino válido: ni aprobándose, ni en la cola de "Aprobar todo", ni con resultado. */
+  private libreComoDestino(g: GrupoEditable): boolean {
+    return !this.aplicando.has(g.id) && !this.resultados.has(g.id);
   }
 
+  /** Ajustar el propio grupo: como la tarjeta, se puede mientras no esté en curso ni aprobado ("no despachado" sí). */
+  private ajustable(g: GrupoEditable): boolean {
+    const r = this.resultados.get(g.id);
+    return !this.aplicando.has(g.id) && (!r || r.estado === 'no-despachado');
+  }
+
+  cambiarMensajero(g: GrupoEditable, id: string): void {
+    if (!this.ajustable(g)) return;
+    this.grupos =this.grupos.map((x) => (x === g ? { ...x, mensajeroId: id } : x));
+  }
+
+  /** El título sigue a la elegida: "Por <nombre>". La nota y la tarifa salen de la elegida en la tarjeta. */
   cambiarTransportadora(g: GrupoEditable, proveedor: string): void {
-    if (!g.transportadoras.some((t) => t.proveedor === proveedor)) return;
-    this.grupos = this.grupos.map((x) => (x === g ? { ...x, proveedor } : x));
+    const elegida = g.transportadoras.find((t) => t.proveedor === proveedor);
+    if (!elegida || !this.ajustable(g)) return;
+    this.grupos = this.grupos.map((x) => (x === g ? { ...x, proveedor, zona: `Por ${elegida.nombre}` } : x));
   }
 
   sacar(g: GrupoEditable, p: PedidoEditable): void {
+    if (!this.ajustable(g)) return;
     this.grupos = this.grupos.map((x) => (x === g ? { ...x, pedidos: x.pedidos.filter((y) => y.id !== p.id) } : x));
     this.sinGrupo = [...this.sinGrupo, p];
   }
 
   mover(origen: GrupoEditable | null, p: PedidoEditable, destinoId: string): void {
     const destino = this.grupos.find((x) => x.id === destinoId);
-    if (!destino || destino.tipo !== p.origen) return;
+    if (!destino || destino.tipo !== p.origen || !this.libreComoDestino(destino) || (origen && !this.ajustable(origen))) return;
+    if (destino.tipo === 'transportadora' && destino.pedidos.length >= MAX_PEDIDOS_TRANSPORTADORA) return;
     this.grupos = this.grupos.map((x) => {
       if (x === origen) return { ...x, pedidos: x.pedidos.filter((y) => y.id !== p.id) };
       if (x === destino) return { ...x, pedidos: [...x.pedidos, p] };
@@ -226,7 +254,8 @@ export class EnVivoDespachosComponent implements OnInit, OnDestroy {
     let ok = 0;
     let hechos = 0;
     let ultimoError: string | null = null;
-    from(lotes)
+    let detenida = false;
+    this.serie = from(lotes)
       .pipe(
         concatMap((lote) =>
           this.api.aprobar(lote.map((g) => paraAprobar(g, huella))).pipe(
@@ -235,28 +264,39 @@ export class EnVivoDespachosComponent implements OnInit, OnDestroy {
             finalize(() => {
               lote.forEach((g) => this.aplicando.delete(g.id));
               hechos += lote.length;
-              if (hechos < gs.length) this.anuncio = `Aprobando… van ${hechos} de ${gs.length} grupos.`;
+              if (hechos < gs.length && !detenida) this.anuncio = `Aprobando… van ${hechos} de ${gs.length} grupos.`;
               this.cd.markForCheck();
             })
           )
-        )
+        ),
+        // Un grupo de transportadora sin respuesta detiene la serie: los que faltan no se lanzan.
+        takeWhile((paso) => !paso.detener, true),
+        finalize(() => {
+          gs.forEach((g) => this.aplicando.delete(g.id));
+          this.serie = null;
+          this.cd.markForCheck();
+        })
       )
       .subscribe({
-        next: (r) => {
-          ok += r.ok;
-          if (r.error) ultimoError = r.error;
+        next: (paso) => {
+          ok += paso.ok;
+          if (paso.error) ultimoError = paso.error;
+          if (paso.detener) detenida = true;
         },
         complete: () => {
+          const faltan = gs.filter((g) => !this.resultados.has(g.id)).length;
           this.anuncio =
-            ok === gs.length
-              ? ok === 1 ? 'Grupo despachado.' : `${ok} grupos despachados.`
-              : gs.length === 1 && ultimoError ? ultimoError : 'Revisa el resultado de cada grupo.';
+            detenida && faltan
+              ? COLA_DETENIDA
+              : ok === gs.length
+                ? ok === 1 ? 'Grupo despachado.' : `${ok} grupos despachados.`
+                : gs.length === 1 && ultimoError ? ultimoError : 'Revisa el resultado de cada grupo.';
           this.cd.markForCheck();
         },
       });
   }
 
-  private alAprobar(lote: GrupoEditable[], r: RespuestaAprobacion): { ok: number; error: string | null } {
+  private alAprobar(lote: GrupoEditable[], r: RespuestaAprobacion): PasoAprobacion {
     const resultados = new Map(this.resultados);
     for (const res of r.resultados) {
       const g = lote[res.indice];
@@ -264,18 +304,18 @@ export class EnVivoDespachosComponent implements OnInit, OnDestroy {
     }
     this.resultados = resultados;
     this.viejoDesde = this.viejoDesde ?? Date.now();
-    return { ok: r.resultados.filter((x) => x.estado === 'despachado' || x.estado === 'reanudado').length, error: null };
+    return { ok: r.resultados.filter((x) => x.estado === 'despachado' || x.estado === 'reanudado').length, error: null, detener: false };
   }
 
-  /** Sin respuesta en un grupo de transportadora: "en curso" y el plan queda viejo. Lo demás, como siempre. */
-  private alFallar(lote: GrupoEditable[], e: unknown): { ok: number; error: string } {
+  /** Sin respuesta en un grupo de transportadora: "en curso", el plan queda viejo y la serie se detiene. Lo demás, como siempre. */
+  private alFallar(lote: GrupoEditable[], e: unknown): PasoAprobacion {
     const enDuda = lote.every((g) => g.tipo === 'transportadora') && sinRespuesta(e);
     const razon = enDuda ? SIN_RESPUESTA : mensajeDe(e, 'No se pudo aprobar. Inténtalo de nuevo.');
     const resultados = new Map(this.resultados);
     lote.forEach((g, i) => resultados.set(g.id, { indice: i, estado: enDuda ? 'en-curso' : 'no-despachado', razon }));
     this.resultados = resultados;
     if (enDuda) this.viejoDesde = this.viejoDesde ?? Date.now();
-    return { ok: 0, error: razon };
+    return { ok: 0, error: razon, detener: enDuda };
   }
 
   abrirPedido(id: string): void {
@@ -392,11 +432,18 @@ function horaCorta(ms: number): string {
   return new Date(ms).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/Bogota' });
 }
 
-/** Se acabó el tiempo o no hubo respuesta: red caída, el proxy cortó o el servidor no estaba disponible. */
+/**
+ * Se acabó el tiempo o no hubo respuesta: red caída, el proxy cortó, el servidor no estaba o pasaron
+ * los 75 s del cliente. Un error con `code` en el cuerpo (p. ej. un 503 del interruptor) sí es una
+ * respuesta del servidor: se trata como un error normal con su `message`.
+ */
 function sinRespuesta(e: unknown): boolean {
   const err = e as { status?: number; error?: unknown; name?: string } | null;
   if (!err) return false;
-  return err.status === 0 || err.status === 502 || err.status === 503 || err.status === 504 || err.error instanceof ProgressEvent || err.name === 'TimeoutError';
+  if (err.name === 'TimeoutError' || err.status === 0 || err.error instanceof ProgressEvent) return true;
+  const cuerpo = err.error as { code?: unknown } | null | undefined;
+  if (cuerpo && typeof cuerpo === 'object' && cuerpo.code !== undefined && cuerpo.code !== null) return false;
+  return err.status === 502 || err.status === 503 || err.status === 504;
 }
 
 function mensajeDe(e: unknown, defecto: string): string {

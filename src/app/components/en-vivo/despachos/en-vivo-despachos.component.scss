@@ -91,7 +91,7 @@
 }
 
 .dz-enlace {
-  @include ev-foco;
+  @include dz-foco;
   padding: 0;
   border: 0;
   background: none;
@@ -230,7 +230,7 @@
 }
 
 .dz-sin-grupo__abrir {
-  @include ev-foco;
+  @include dz-foco;
   display: flex;
   align-items: baseline;
   gap: 8px;

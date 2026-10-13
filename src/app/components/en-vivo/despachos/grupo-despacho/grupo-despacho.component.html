@@ -115,6 +115,7 @@
       class="dz-btn"
       *ngIf="puedeAprobar && !aprobado"
       [disabled]="!puedeTocar || ocupado || !conQuien || !grupo.pedidos.length"
+      [attr.aria-label]="(aplicando ? 'Aprobando el grupo ' : 'Aprobar el grupo ') + numero + ', ' + grupo.zona"
       (click)="aprobar.emit()"
     >
       <span>{{ aplicando ? 'Aprobando…' : esTransportadora ? 'Aprobar y enviar' : 'Aprobar y despachar' }}</span>
