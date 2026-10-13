@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, OnChanges, SimpleChanges } from '@angular/core';
 import { PedidoEntrega } from '../../interfaces/pedido-entrega.interface';
+import { enlaceMaps } from '../../../../shared/util/ubicacion-enlace.util';
 
 @Component({
   selector: 'app-detalle-entrega',
@@ -30,6 +31,18 @@ export class DetalleEntregaComponent implements OnInit, OnChanges {
     }
   }
   
+  /** D-417: enlace de Google Maps al punto de entrega, si el pedido lo tiene. */
+  get enlaceMapa(): string {
+    const envio: any = this.pedido?.envio;
+    if (!envio) return '';
+    let lat = envio.latitud;
+    let lng = envio.longitud;
+    if ((!lat || !lng) && typeof envio.coordenadas === 'string' && envio.coordenadas.includes(',')) {
+      [lat, lng] = envio.coordenadas.split(',').map((c: string) => c.trim());
+    }
+    return enlaceMaps(lat, lng);
+  }
+
   isArray(value: any): boolean {
     return Array.isArray(value);
   }

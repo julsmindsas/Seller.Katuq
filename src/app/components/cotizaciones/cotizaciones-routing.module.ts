@@ -7,6 +7,11 @@ const routes: Routes = [
   { path: "", component: CotizacionesListaComponent },
   { path: "editor", component: CotizacionEditorComponent },
   { path: "editor/:id", component: CotizacionEditorComponent },
+  // D-416: catálogos por link (lo que pide el comprador llega como cotización).
+  {
+    path: "catalogos",
+    loadChildren: () => import("./catalogos-link/catalogos-link.module").then((m) => m.CatalogosLinkModule),
+  },
 ];
 
 @NgModule({

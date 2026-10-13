@@ -41,8 +41,12 @@ export interface NotaCliente {
   usuario?: string;
 }
 
-/** Ticket 1166: nombre de usuario de WhatsApp, sin `@`. */
-const PATRON_WHATSAPP_USERNAME = /^[A-Za-z0-9._]{3,32}$/;
+/**
+ * Ticket 1166: nombre de usuario de WhatsApp, sin `@`. Ticket 1206 (ALMACEN
+ * BOMBAS): muchos comercios guardan aquí el nombre del contacto como aparece en
+ * WhatsApp ("María Fernanda Ríos"), así que se aceptan espacios y tildes.
+ */
+const PATRON_WHATSAPP_USERNAME = /^[\p{L}\p{N}][\p{L}\p{N} ._'-]{1,59}$/u;
 
 @Component({
   selector: "app-crear-cliente-modal",
@@ -477,9 +481,9 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     }
   }
 
-  /** Ticket 1166: el usuario se guarda sin `@` ni espacios alrededor. */
+  /** Ticket 1166: el usuario se guarda sin `@` ni espacios alrededor (ticket 1206: ni espacios repetidos). */
   private limpiarUsername(raw: any): string {
-    return String(raw || '').trim().replace(/^@+/, '');
+    return String(raw || '').trim().replace(/^@+/, '').replace(/\s+/g, ' ');
   }
 
   onUsernameBlur(): void {
@@ -550,7 +554,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
       numero_celular_comprador:      'Teléfono Celular (10 dígitos)',
       telefono_fijo:                 'Teléfono fijo (7 a 10 dígitos)',
       correo_electronico_comprador:  'Correo Electrónico',
-      whatsappUsername:              'Usuario de WhatsApp (3 a 32 letras, números, punto o guion bajo)',
+      whatsappUsername:              'Usuario de WhatsApp (2 a 60 caracteres: letras, números, espacios, punto o guion)',
     };
     const faltantes = Object.entries(labels)
       .filter(([key]) => this.formulario.get(key)?.invalid)
@@ -610,7 +614,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     if (!esEntregaCompleta(this.entregaEditando)) {
       Swal.fire({
         title: 'Falta completar la dirección',
-        text: 'Escribe la dirección con su ciudad, o descártala si no la vas a registrar ahora.',
+        text: 'Escribe la dirección o marca la ubicación, con su ciudad, o descártala si no la vas a registrar ahora.',
         icon: 'warning',
         confirmButtonText: 'Entendido',
         confirmButtonColor: '#5F3FE0',
@@ -634,6 +638,10 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     });
     ref.componentInstance.direccionActual = actual.direccionEntrega || '';
     ref.componentInstance.ciudadActual = actual.ciudad || '';
+    // D-417: el punto actual y su origen, para no perder un punto puesto a mano.
+    ref.componentInstance.coordenadasActuales = actual.coordenadas || (actual.latitud && actual.longitud ? `${actual.latitud}, ${actual.longitud}` : '');
+    ref.componentInstance.fuenteActual = actual.fuenteUbicacion || '';
+    ref.componentInstance.enlaceActual = actual.enlaceUbicacion || '';
     ref.result.then(
       (r: any) => {
         if (!r || !this.entregaEditando) return;
@@ -649,8 +657,10 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
           departamento: r.departamento || '',
           pais: 'Colombia',
           coordenadas: r.coordenadas || '',
-          latitud: lat || '',
-          longitud: lng || '',
+          latitud: r.latitud || lat || '',
+          longitud: r.longitud || lng || '',
+          fuenteUbicacion: r.fuenteUbicacion,
+          enlaceUbicacion: r.enlaceUbicacion || '',
           especificacionesInternas: r.referencias || this.entregaEditando.especificacionesInternas || '',
         });
         if (!this.entregaEditando.departamento && this.entregaEditando.ciudad) {

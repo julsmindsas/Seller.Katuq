@@ -9510,3 +9510,57 @@ Nada de eso cambia en ningún modo de la bandera. Lo protege una prueba de regre
 Daniel pidió «conectalo al backend de katuq, osea haslo ya», después de aprobar la propuesta de marketplace de clientes. Primera conexión aditiva y de solo lectura: `GET /v1/sites/public/directorio`, antes de la ruta de slug, reutiliza consultarCatalogo, marcaDeLaEmpresa y categorías ocultas de la copia publicada. Solo tiendas en estado publicado con `published.tienda.habilitada` y bloque catálogo visible con `permitirCompra=true`; no publica comercios ni productos. Los precios COP se formatean en servidor, identificadores públicos con namespace de slug; proyección de nombre, ciudad, fotografía, descripción y categorías, sin company, correos, credenciales, costos o inventario interno. Caché 60 segundos, dos tiendas concurrentes, máximo 40 tiendas y 20 páginas por tienda; truncamiento anunciado y enlace a la tienda pública. Sin nuevas colecciones, índices ni escrituras. CORS admite el origen exacto de Kuvo. Web Angular 21 y clientes SwiftUI/Compose leen el mismo contrato sin sesión del personal ni fallback ficticio.
 
 Los pedidos y pagos de Kuvo siguen pendientes: crearPedido descuenta stock y no se reutiliza como cotización. No se prueban escrituras en producción ni se altera inventario, cron, flows, webhooks, autenticación de gestión o liquidaciones.
+
+### D-414 — Ampliación solicitada por Daniel: Almara y OH MY STORE (2026-10-13)
+
+La primera conexión exigía un sitio publicado y dejaba fuera a comercios reales. Daniel indicó «almara, oh my store etc». Se incorporan ALMARA FELICIDAD (slug almara, nombre Almara) y OH MY STORE (slug oh-my-store) mediante configuración explícita de comercios autorizados de Kuvo, independiente del constructor de Sitios. No se publican sus borradores ni se modifica companies/products/catalogos/inventory. Para estas incorporaciones solo se muestran productos activos, disponibles, con precio público de vitrina y `marketplace.paginaWeb === true`; no se aplica el fallback legacy que permite productos sin marca. Se conservan los límites de plan y la cadena canónica de precios. Datos devueltos limitados a la proyección pública; los nombres de empresa internos no viajan al cliente.
+
+Directorio inicial con hasta dos páginas por incorporación; `GET /v1/sites/public/directorio/:slug/catalogo?pagina=N` resuelve el comercio en servidor desde las incorporaciones autorizadas o sitios publicados, sin aceptar company del navegador, y conserva las reglas de publicación. Web, SwiftUI y Compose incorporan «Ver más productos». Sin colecciones nuevas, sin pruebas de pedido/pago en producción, sin cambios a flows/Shopify o inventario. Pruebas de publicación, aislamiento por slug, paginación y fuentes aprobadas, más compilación de los tres clientes.
+
+
+## D-415 (2026-10-13) — Kuvo: completar compra/pedido y capacidades de marketplace — AUTORIZADO por Daniel
+
+Objetivo explícito: «dejar funcional el marketplace que se puedan hacer pedidos, y lo que requiere un marketplace». Desarrollo bajo `backend/openspec/changes/kuvo-compra-completa`, conservando el alcance aprobado del marketplace de clientes: cotización íntegra en servidor, pedido idempotente, inventario canónico, pago verificado/seguimiento, consumidor independiente, publicación/retirada, cobertura y liquidación si recauda plataforma, con web Angular 21 y apps SwiftUI/Compose. Hitos parciales no acreditan terminación.
+
+No se escriben pedidos/pagos ni datos de QA en producción. Emulator demo local y datos aislados; sandbox real solo con ambiente de prueba identificado. Reutilizar siteOrden, siteConfiguracion, zonasCobroPackage, warehouseAllocation/orderSplit y ledger transaccional. Cada cambio sensible se aplica por separado y con diff/contratos antes de desplegar; se mantiene auth, multi-tenancy y write-set cerrado (inventario/efectos/movimientos, jamás products/precios/catálogos). Sin colecciones nuevas ni endpoints v2. Preservar cambios ajenos de notificaciones, flows y orders.
+
+**Entrega Git autorizada (13-oct).** Daniel pidió «sube cambios a git» y eligió
+el repositorio del backend para los clientes. Commits propios:
+`0bb95d1` (directorio), `af63f70` (base de cotización, sin montar rutas de compra)
+y `a749c7d` (fuentes web/iOS/Android en Marketplace). La copia iOS compila desde
+ese repositorio con sus tokens incluidos. Validación de esta entrega: 14 pruebas
+puras backend, 3 HTTP/Firestore en Emulator demo y 6 web; build iOS Simulator.
+El pedido completo, identidad, pago, conciliación y liquidación siguen pendientes.
+FLORECER fue propuesto para QA, pero su Wompi actual es producción; no se hicieron
+compras ni cobros reales. Los cambios de otras tareas permanecen fuera de estos
+commits y el push no despliega ni activa checkout.
+
+## D-416 (2026-10-13) — Catálogos por link desde la web (openspec/changes/catalogos-por-link-web) — APROBADO por Daniel ("dale aprobado catalogo"), implementado en local
+
+**Disparador.** Los catálogos por link (D-141) solo se podían armar desde la app iOS; el backend y la vitrina `/cat/<link>` ya estaban en producción, pero el vendedor de la web no tenía dónde crearlos.
+
+**Decisión.**
+- Entrada **"Catálogos por link"** dentro de **Cotizaciones** (lo que pide el comprador llega como cotización), rutas `cotizaciones/catalogos`, `cotizaciones/catalogos/nuevo` y `cotizaciones/catalogos/:id`, en un módulo lazy propio.
+- Visible con `permisoPrevio: "cotizaciones"`: quien ya ve Cotizaciones la ve, sin escribir en `roles.menus`. Insignia NUEVO hasta el 2026-12-31.
+- Lista con estado (Activo, Apagado, Vencido), vistas y pedidos recibidos; detalle con link (generar, copiar, WhatsApp), prender/apagar con Swal, edición enviando solo lo que cambió y productos con la marca Agotado.
+- Productos con el selector visual de Sitios y Campañas, ampliado con `maximo`, `subtitulo` y `tituloElegidos` (por defecto igual que antes: 24 y los mismos textos).
+- Sin cambios de backend, colecciones ni endpoints: usa `/v1/catalogos/*` existentes. No toca pedidos, inventario, productos ni precios.
+- "Mi página web › Catálogos" (constructor, ticket 1175) no cambia.
+
+**Numeración.** La propuesta se escribió como D-413, que ya era de Automatizaciones; se registra como D-416.
+
+**Estado.** DESPLEGADO el 2026-10-13 (front 2026.10.13.2, commit e1c4486f) por orden de Daniel («despliega»), compilado desde el repo principal con el `src` idéntico al commit. Build de producción sin errores; 0 gradientes y 0 primarios prohibidos en el módulo. Verificado en producción el mismo día en FLORECER (ticket 1259): crear, generar link, vitrina pública con fotos y sin el agotado, apagar (el link responde "ya no está disponible") y prender. Solo llamadas a `/v1/catalogos/*`; productos sin tocar. A 390 px la lista de productos del detalle se salía de la tarjeta: corregido en el SCSS, sale en la próxima publicación (no se republicó para no arrastrar D-417 sin probar).
+
+## D-417 (2026-10-13) — Entrega por ubicación: dirección, punto en el mapa o ambos (openspec/changes/entrega-por-ubicacion)
+
+**Disparador.** Jairo, ticket 1203 (2026-10-13): Punto Verde Vidagas entrega en fincas y lugares de Cali y Yumbo sin nomenclatura; a veces solo tienen el punto en el mapa o el pin de WhatsApp, y Katuq no lo permitía.
+
+**Hallazgo.** Katuq ya guardaba `latitud`, `longitud` y `coordenadas` en `clients.datosEntrega[]` y `orders.envio`, y la app de mensajeros ya abría Google Maps con ellas. El problema era de captura y conservación: el modal de dirección exigía nomenclatura y, al editar, volvía a geocodificar y borraba el punto si fallaba (ticket 1136); además `pedido-entrega.editarDatosEntrega` armaba la entrega sin coordenadas y las perdía.
+
+**Decisión.** Modo "Solo ubicación" en el modal (`DireccionEstructuradaComponent`): ciudad obligatoria, referencia opcional y un punto (clic en el mapa, enlace de Google Maps o coordenadas pegadas, o "Usar mi ubicación"). Dos campos opcionales nuevos en la misma entrega: `fuenteUbicacion` (`geocodificada` | `manual` | `enlace` | `gps`; sin él = `geocodificada`) y `enlaceUbicacion`. Un punto con fuente distinta de `geocodificada` no se vuelve a geocodificar ni se borra (modal, "forzar geocodificación" de Despachos). `esEntregaCompleta` = ciudad y (dirección o punto válido en Colombia, no 0,0). Sin dirección, `direccionEntrega` se llena con la referencia o "Ubicación: lat, lng"; el backend repite ese respaldo para la calle de Enviame y la guía Katuq (`services/logistics/ubicacionEntrega.js`). "Abrir en Maps" en el detalle de entrega (pedidos y Despachos) y enlace en la guía PDF. Sin colecciones ni endpoints nuevos; no toca inventario, productos, precios ni consecutivos. `crear-ventas` no se tocó: la venta asistida captura la entrega con `<pedido-entrega>`.
+
+**Fuera de alcance (fase 2).** Enlaces cortos `maps.app.goo.gl`, ubicación recibida por WhatsApp directo al pedido, POS, zona de cobro por coordenadas.
+
+**Estado (13-oct).** Implementado sin commit. Pruebas: utilidad y regla de entrega 25/25 (Jasmine), backend 7/7, smoke de la guía, build del front en verde. Pendiente: pruebas en navegador y un despacho real por Enviame de un pedido solo por ubicación antes de cerrar el ticket 1203.
+
+**Renumerada (13-oct):** nació como D-415 y chocó con la D-415 de Kuvo, publicada al mismo tiempo por otra sesión; el commit `962b46e3` dice D-415 en el mensaje, pero se refiere a esta.

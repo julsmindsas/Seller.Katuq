@@ -1,0 +1,161 @@
+@import '../catalogo-link-comun';
+@include catalogo-link-comun;
+
+.cabeza-estado { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 2px; }
+.contador { color: $cfg-body; font-size: 12.5px; font-weight: 600; }
+
+.rejilla {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  @media (min-width: 1100px) { grid-template-columns: minmax(0, 1fr) 360px; }
+}
+.columna { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+// En pantallas angostas el link va primero: es lo que más se busca al volver.
+.columna--lateral { @media (max-width: 1099px) { order: -1; } }
+
+.campos { display: grid; gap: 14px; }
+.campo { display: flex; flex-direction: column; gap: 6px; margin: 0; }
+.campo--fecha { max-width: 260px; }
+.ayuda { color: $cfg-muted; font-size: 12px; }
+
+.entrada {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid #e4e2ef;
+  border-radius: 11px;
+  background: #fff;
+  color: $cfg-ink;
+  font-size: 14px;
+  box-sizing: border-box;
+  resize: vertical;
+
+  &:focus { outline: none; border-color: $cfg-accent; box-shadow: 0 0 0 3px $cfg-accent-soft; }
+}
+
+.card-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  .cfg-card__titulo { margin: 0; }
+}
+
+.productos {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  // Sin minmax(0, 1fr) el título con nowrap ensancha la fila y a 390 px se sale de la tarjeta.
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+.producto {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  background: #fff;
+}
+.producto--agotado { background: $cfg-tint; }
+.producto__foto {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border-radius: 9px;
+  object-fit: cover;
+  background: $cfg-tile;
+}
+.producto--agotado .producto__foto { opacity: .55; }
+.producto__textos { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.producto__titulo {
+  color: $cfg-ink;
+  font-size: 13.5px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.producto__ref { color: $cfg-muted; font-size: 11.5px; }
+.producto__precio { color: $cfg-accent; font-size: 13px; font-weight: 800; }
+.marca-agotado {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: $cfg-warn-soft;
+  color: $cfg-warn;
+  font-size: 11px;
+  font-weight: 800;
+}
+.quitar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: $cfg-muted;
+  cursor: pointer;
+
+  &:hover { background: $cfg-err-soft; color: $cfg-err; }
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; }
+}
+
+.barra-guardar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.faltante { color: $cfg-muted; font-size: 13px; margin-right: auto; }
+
+.link { margin-bottom: 10px; }
+.link__texto { font-size: 12.5px; color: $cfg-body; background: $cfg-tint; }
+.link__acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+.aviso-link { margin-top: 12px; }
+.texto-suave { display: block; color: $cfg-muted; font-size: 12.5px; margin: 0 0 10px; }
+
+.interruptor-fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.interruptor-textos { display: flex; flex-direction: column; gap: 2px; .texto-suave { margin: 0; } }
+.interruptor-titulo { color: $cfg-ink; font-size: 14px; font-weight: 700; }
+
+.interruptor {
+  position: relative;
+  flex: none;
+  width: 46px;
+  height: 26px;
+  border: 0;
+  border-radius: 20px;
+  background: #d8d4ea;
+  cursor: pointer;
+  transition: background .15s ease;
+
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+  &:disabled { opacity: .6; cursor: wait; }
+}
+.interruptor--on { background: $cfg-accent; }
+.interruptor__bola {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(30, 20, 80, .25);
+  transition: transform .15s ease;
+}
+.interruptor--on .interruptor__bola { transform: translateX(20px); }
+
+.enlace { color: inherit; font-weight: 800; text-decoration: underline; margin-left: 4px; }

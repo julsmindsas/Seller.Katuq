@@ -34,6 +34,10 @@ interface ProductoElegible {
 export class SelectorProductosComponent implements OnInit {
   /** Ids ya elegidos, en su orden. */
   @Input() seleccionados: string[] = [];
+  /** Tope de productos. 24 es el del bloque de Sitios; el catálogo por link admite 200. */
+  @Input() maximo = 24;
+  @Input() subtitulo = "Se muestran con el precio y la disponibilidad del momento en que alguien abra tu página.";
+  @Input() tituloElegidos = "En este bloque";
 
   @Output() confirmar = new EventEmitter<string[]>();
   @Output() cerrar = new EventEmitter<void>();
@@ -150,9 +154,9 @@ export class SelectorProductosComponent implements OnInit {
       this.elegidos = this.elegidos.filter((x) => x.id !== p.id);
       return;
     }
-    // El backend recorta a 24 por bloque: mejor avisarlo aquí que perderlos al guardar.
-    if (this.elegidos.length >= 24) {
-      this.toastr.warning("Puedes destacar hasta 24 productos en un bloque.");
+    // El backend recorta al tope: mejor avisarlo aquí que perderlos al guardar.
+    if (this.elegidos.length >= this.maximo) {
+      this.toastr.warning(`Puedes elegir hasta ${this.maximo} productos.`);
       return;
     }
     this.elegidos = [...this.elegidos, p];

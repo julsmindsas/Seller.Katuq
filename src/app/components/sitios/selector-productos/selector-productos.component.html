@@ -6,7 +6,7 @@
     <header class="caja__cabecera">
       <div>
         <h5>Elegir productos</h5>
-        <p class="sub">Se muestran con el precio y la disponibilidad del momento en que alguien abra tu página.</p>
+        <p class="sub">{{ subtitulo }}</p>
       </div>
       <button class="cerrar" (click)="cerrar.emit()" title="Cerrar" aria-label="Cerrar">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -50,7 +50,7 @@
 
       <!-- Elegidos, en orden -->
       <aside class="elegidos">
-        <h6>En este bloque ({{ elegidos.length }})</h6>
+        <h6>{{ tituloElegidos }} ({{ elegidos.length }})</h6>
 
         <p class="pista" *ngIf="cargandoElegidos">Cargando…</p>
         <p class="pista" *ngIf="!cargandoElegidos && !elegidos.length">

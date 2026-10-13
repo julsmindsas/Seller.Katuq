@@ -1,3 +1,5 @@
+import { esPuntoValido, formatoCoordenadas, FuenteUbicacion } from '../util/ubicacion-enlace.util';
+
 /**
  * Direcciones de entrega del cliente (`clients.datosEntrega[]`).
  *
@@ -5,7 +7,12 @@
  * `{ alias, nombres, apellidos, indicativoCel, celular, indicativoOtroNumero,
  *    otroNumero, direccionEntrega, observaciones, barrio, nombreUnidad,
  *    especificacionesInternas, pais, departamento, ciudad, zonaCobro,
- *    valorZonaCobro, codigoPV, latitud, longitud, coordenadas }`.
+ *    valorZonaCobro, codigoPV, latitud, longitud, coordenadas,
+ *    fuenteUbicacion, enlaceUbicacion }`.
+ *
+ * D-417 (ticket 1203): `fuenteUbicacion` dice de dónde salió el punto
+ * ('geocodificada' | 'manual' | 'enlace' | 'gps'); sin ella se asume
+ * 'geocodificada', que es como se comportan las entregas anteriores.
  *
  * Algunos documentos viejos traen elementos con claves tipo snake
  * (`direccion_entrega`, `ciudad_municipio_entrega`, `nombres_entrega`…), que
@@ -58,6 +65,8 @@ export interface EntregaCliente {
   latitud: string;
   longitud: string;
   coordenadas: string;
+  fuenteUbicacion: FuenteUbicacion;
+  enlaceUbicacion: string;
   [extra: string]: any;
 }
 
@@ -104,7 +113,55 @@ export function normalizarEntrega(raw: any): EntregaCliente {
     latitud,
     longitud,
     coordenadas,
+    fuenteUbicacion: normalizarFuente(e.fuenteUbicacion),
+    enlaceUbicacion: s(e.enlaceUbicacion),
   };
+}
+
+const FUENTES: FuenteUbicacion[] = ['geocodificada', 'manual', 'enlace', 'gps'];
+
+/** Sin fuente (o con una desconocida) el punto se trata como geocodificado. */
+export function normalizarFuente(f: any): FuenteUbicacion {
+  return FUENTES.includes(f) ? f : 'geocodificada';
+}
+
+/** True si la entrega tiene un punto válido (en Colombia, no 0,0). */
+export function tienePuntoValido(e: any): boolean {
+  if (!e) return false;
+  let lat = s(e.latitud);
+  let lng = s(e.longitud);
+  if ((!lat || !lng) && s(e.coordenadas).includes(',')) {
+    [lat, lng] = s(e.coordenadas).split(',').map((c) => c.trim());
+  }
+  return esPuntoValido(lat, lng);
+}
+
+/**
+ * D-417: un punto que no salió de la geocodificación (lo marcó o pegó una
+ * persona) no se vuelve a geocodificar ni se borra.
+ */
+export function puntoEsProtegido(e: any): boolean {
+  return tienePuntoValido(e) && normalizarFuente(e?.fuenteUbicacion) !== 'geocodificada';
+}
+
+/**
+ * Texto de dirección para una entrega sin nomenclatura: la referencia o
+ * "Ubicación: lat, lng". La guía, las notificaciones y las transportadoras
+ * leen `direccionEntrega` y no deben recibirla vacía.
+ */
+export function textoDireccionRespaldo(e: any): string {
+  if (!e) return '';
+  // Solo la referencia del modal: especificacionesInternas son notas del equipo
+  // y no deben salir en la guía ni en las notificaciones al cliente.
+  const referencia = s(e.referencia || e.referencias).trim();
+  if (referencia) return referencia;
+  let lat = s(e.latitud);
+  let lng = s(e.longitud);
+  if ((!lat || !lng) && s(e.coordenadas).includes(',')) {
+    [lat, lng] = s(e.coordenadas).split(',').map((c) => c.trim());
+  }
+  const coords = formatoCoordenadas(lat, lng);
+  return coords ? `Ubicación: ${coords}` : '';
 }
 
 /** Normaliza el arreglo completo; descarta elementos que no son objetos. */
@@ -114,9 +171,14 @@ export function normalizarEntregas(lista: any): EntregaCliente[] {
     : [];
 }
 
-/** Mínimo para que una dirección sirva para despachar: dirección y ciudad. */
+/**
+ * Mínimo para que una entrega sirva para despachar: ciudad y, además,
+ * dirección escrita o un punto válido (D-417, entregas en fincas sin
+ * nomenclatura).
+ */
 export function esEntregaCompleta(e: any): boolean {
-  return !!(e && s(e.direccionEntrega).trim() && s(e.ciudad).trim());
+  if (!e || !s(e.ciudad).trim()) return false;
+  return !!s(e.direccionEntrega).trim() || tienePuntoValido(e);
 }
 
 /** Texto corto para listar una dirección. */

@@ -1,0 +1,175 @@
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Catálogo por link</span>
+      <h1 class="cfg-titulo">{{ esNuevo ? "Nuevo catálogo" : catalogo?.nombre || "Catálogo" }}</h1>
+      <p class="cfg-sub" *ngIf="esNuevo">
+        Ponle un nombre, elige los productos y guárdalo. Después generas el link para compartirlo.
+      </p>
+      <div class="cabeza-estado" *ngIf="estado">
+        <span class="estado" [ngClass]="'estado--' + estado">{{ etiqueta[estado] }}</span>
+        <span class="contador">{{ catalogo?.vistasCount || 0 }} vistas</span>
+        <span class="contador">{{ catalogo?.solicitudesCount || 0 }} pedidos recibidos</span>
+      </div>
+    </div>
+    <div class="cfg-acciones">
+      <button class="cfg-btn cfg-btn--sec" type="button" (click)="volver()">
+        <i class="fa fa-arrow-left"></i><span>Volver</span>
+      </button>
+    </div>
+  </header>
+
+  <p class="cfg-aviso cfg-aviso--error" *ngIf="error">
+    <span class="aviso-texto">{{ error }}</span>
+    <button class="cfg-btn cfg-btn--sec" type="button" (click)="cargar()">Reintentar</button>
+  </p>
+
+  <div class="cargando" *ngIf="cargando"><span class="cargando-texto">Abriendo catálogo…</span></div>
+
+  <ng-container *ngIf="!cargando && !error && (esNuevo || catalogo)">
+    <div class="rejilla">
+      <!-- Columna principal: datos y productos -->
+      <div class="columna">
+        <section class="cfg-card">
+          <h2 class="cfg-card__titulo">Datos</h2>
+          <div class="campos">
+            <label class="campo">
+              <span class="cfg-label">Nombre *</span>
+              <input type="text" class="entrada" [(ngModel)]="nombre" maxlength="120"
+                     placeholder="Ej: Colección Navidad" />
+            </label>
+            <label class="campo">
+              <span class="cfg-label">Descripción</span>
+              <textarea class="entrada" rows="2" [(ngModel)]="descripcion" maxlength="500"
+                        placeholder="Lo que verá tu cliente arriba de los productos"></textarea>
+            </label>
+            <label class="campo campo--fecha">
+              <span class="cfg-label">Vence el</span>
+              <input type="date" class="entrada" [(ngModel)]="vence" [min]="hoy" />
+              <span class="ayuda">Opcional. Ese día al terminar, el link deja de abrir solo.</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="cfg-card">
+          <div class="card-cabeza">
+            <h2 class="cfg-card__titulo">Productos ({{ productoIds.length }})</h2>
+            <button class="cfg-btn cfg-btn--sec" type="button" (click)="eligiendo = true">
+              <i class="fa fa-pencil"></i><span>{{ productoIds.length ? "Cambiar productos" : "Elegir productos" }}</span>
+            </button>
+          </div>
+
+          <p class="cfg-aviso cfg-aviso--warn" *ngIf="ocultos">
+            <span class="aviso-texto">
+              {{ ocultos }} sin existencias: el comprador no {{ ocultos === 1 ? "lo" : "los" }} ve mientras sigan agotados.
+            </span>
+          </p>
+
+          <div class="cfg-vacio" *ngIf="!productoIds.length">
+            <div class="cfg-vacio__icono"><i class="fa fa-shopping-bag"></i></div>
+            <h3 class="cfg-vacio__titulo">Sin productos todavía</h3>
+            <p class="cfg-vacio__texto">Busca por nombre o referencia y elige hasta {{ maximo }}.</p>
+          </div>
+
+          <div class="cargando" *ngIf="resolviendoProductos"><span class="cargando-texto">Cargando productos…</span></div>
+
+          <ul class="productos" *ngIf="productos.length">
+            <li class="producto" *ngFor="let p of productos" [class.producto--agotado]="!p.disponible">
+              <img class="producto__foto" [src]="imagen(p)" [alt]="p.titulo" loading="lazy" />
+              <div class="producto__textos">
+                <span class="producto__titulo">{{ p.titulo }}</span>
+                <span class="producto__ref" *ngIf="p.referencia">{{ p.referencia }}</span>
+                <span class="producto__precio">{{ precio(p.precioConIva) }}</span>
+              </div>
+              <span class="marca-agotado" *ngIf="!p.disponible">Agotado</span>
+              <button class="quitar" type="button" (click)="quitarProducto(p.productoId)"
+                      [attr.aria-label]="'Quitar ' + p.titulo" title="Quitar">
+                <i class="fa fa-times"></i>
+              </button>
+            </li>
+          </ul>
+        </section>
+
+        <div class="barra-guardar">
+          <span class="faltante" *ngIf="faltante">{{ faltante }}</span>
+          <span class="faltante" *ngIf="!faltante && !hayCambios">Sin cambios por guardar.</span>
+          <button class="cfg-btn cfg-btn--sec" type="button" *ngIf="!esNuevo && hayCambios" (click)="descartar()">
+            Descartar
+          </button>
+          <button class="cfg-btn" type="button" [disabled]="!puedeGuardar" (click)="guardar()">
+            {{ guardando ? "Guardando…" : esNuevo ? "Crear catálogo" : "Guardar cambios" }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Columna lateral: link y estado (solo con el catálogo creado) -->
+      <aside class="columna columna--lateral" *ngIf="catalogo">
+        <section class="cfg-card">
+          <h2 class="cfg-card__titulo">Link para el comprador</h2>
+
+          <ng-container *ngIf="link; else sinLink">
+            <div class="link">
+              <input class="entrada link__texto" type="text" [value]="link" readonly (focus)="$any($event.target).select()" />
+            </div>
+            <div class="link__acciones">
+              <button class="cfg-btn" type="button" (click)="copiarLink()">
+                <i class="fa fa-copy"></i><span>Copiar</span>
+              </button>
+              <a class="cfg-btn cfg-btn--sec" [href]="linkWhatsapp" target="_blank" rel="noopener">
+                <i class="fa fa-whatsapp"></i><span>WhatsApp</span>
+              </a>
+              <a class="cfg-btn cfg-btn--sec" [href]="link" target="_blank" rel="noopener">
+                <i class="fa fa-external-link"></i><span>Ver</span>
+              </a>
+            </div>
+          </ng-container>
+          <ng-template #sinLink>
+            <p class="texto-suave">Este catálogo todavía no tiene link.</p>
+            <button class="cfg-btn" type="button" [disabled]="generandoLink" (click)="generarLink()">
+              {{ generandoLink ? "Generando…" : "Generar link" }}
+            </button>
+          </ng-template>
+
+          <p class="cfg-aviso cfg-aviso--warn aviso-link" *ngIf="estado === 'apagado'">
+            <span class="aviso-texto">Está apagado: quien abra el link verá que el catálogo no está disponible.</span>
+          </p>
+          <p class="cfg-aviso cfg-aviso--warn aviso-link" *ngIf="estado === 'vencido'">
+            <span class="aviso-texto">Ya venció: cambia o borra la fecha de vencimiento para que el link vuelva a abrir.</span>
+          </p>
+        </section>
+
+        <section class="cfg-card">
+          <div class="interruptor-fila">
+            <div class="interruptor-textos">
+              <span class="interruptor-titulo">Catálogo activo</span>
+              <span class="texto-suave">Al apagarlo, el link deja de abrir.</span>
+            </div>
+            <button type="button" class="interruptor" role="switch"
+                    [attr.aria-checked]="catalogo.activo" [class.interruptor--on]="catalogo.activo"
+                    [disabled]="cambiandoEstado" (click)="alternarActivo()"
+                    aria-label="Catálogo activo">
+              <span class="interruptor__bola"></span>
+            </button>
+          </div>
+        </section>
+
+        <p class="cfg-aviso">
+          <span class="aviso-texto">
+            Lo que pide el comprador te llega como cotización.
+            <a class="enlace" routerLink="/cotizaciones">Ver cotizaciones</a>
+          </span>
+        </p>
+      </aside>
+    </div>
+  </ng-container>
+</div>
+
+<app-selector-productos
+  *ngIf="eligiendo"
+  [seleccionados]="productoIds"
+  [maximo]="maximo"
+  subtitulo="Tu cliente verá el precio y la disponibilidad del momento en que abra el link. Los agotados no se muestran."
+  tituloElegidos="En este catálogo"
+  (confirmar)="productosElegidos($event)"
+  (cerrar)="eligiendo = false"
+></app-selector-productos>
