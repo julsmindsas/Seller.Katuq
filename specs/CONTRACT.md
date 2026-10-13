@@ -9338,6 +9338,28 @@ Sin colecciones nuevas. Write-set: `shipping_orders`, campos de despacho de `ord
 
 **De paso (13-oct).** `tests/enVivo/writeset.contract.test.js` fallaba desde el 10-oct (D-403 lo registró como falla anterior). La causa era la prueba, no producción: usaba la fecha fija del 8-oct contra la instancia compartida, que mira ayer y hoy con el reloj real. Arreglada en el backend `933a925`; las 13 suites de En vivo pasan.
 
+**Avance (13-oct, tarde; nada desplegado).** Daniel: "Termina lo pendiente".
+- **Tarea 3.2 (backend `7df5b14`):** la pantalla de Despachos importa las reglas compartidas (`utils/despachoReglas.js`) en vez de tener su copia. No cambia el comportamiento: la prueba compara contra la versión original congelada en 298 casos.
+- **MCP y ADK (cambio privado `opttia-despachos-con-aprobacion`; backend `20177d5`, ADK `35e43cf`):**
+  - por chat se despacha leyendo el plan (`get_dispatch_plan`) y pidiendo la aprobación (`request_dispatch_plan_approval`), que no escribe;
+  - aprueba una persona: en Katuq, desde En vivo; en Telegram, con el botón, solo quien pidió el plan y con su cuenta de Katuq vinculada;
+  - las herramientas viejas que despachaban por su cuenta se retiraron; nadie las había usado;
+  - la escritura por chat pasa por el rol de la persona, y el historial guarda su correo.
+
+  Los hallazgos de seguridad y su detalle viven solo en el repo privado.
+- **Fase 2, transportadoras: falta una decisión antes de implementar.** La medición del 13-oct (solo lectura) cambia una regla de la spec `plan-con-transportadora`:
+  - **Mismo día:** el comercio con más envíos por transportadora despacha el mismo día de la fecha de entrega (490 órdenes; p90 de 0 días), así que la regla de "hoy" sirve también aquí.
+  - **La transportadora depende de los productos:** en una muestra de 200 pedidos, los que eran todos de un proveedor salieron por él (172) y los que no tenían ninguno, por la otra transportadora (28). No hubo mezclados. Sugerir "la más usada", como dice la spec, mandaría pedidos al proveedor equivocado.
+  - **Sin cotización:** el proveedor con candado no cotiza (el envío va incluido) y ningún pedido trae código DANE.
+
+  **Propuesta:**
+  - cada adaptador declara qué pedidos acepta y con qué datos;
+  - el plan sugiere solo una transportadora que acepte el pedido y garantice un envío por pedido;
+  - si nadie lo acepta, queda "se despacha desde Despachos";
+  - antes de reintentar un envío sin respuesta, se busca si ya existe.
+
+  Hasta la aprobación de Daniel no se implementa la parte que escribe.
+
 ## D-411 (2026-10-13) — Tickets de soporte con varios agentes: principal, apoyo y observador (backend openspec/changes/multi-asignacion-tickets-soporte) — IMPLEMENTADO y pusheado 13-oct; Support desplegado, backend pendiente de deploy
 
 **Disparador.** Santiago (13-oct): "que al asignar un ticket a alguno de los agentes de soporte se pueda asignar a más de una persona". En la definición agregó un tercer rol: "el observador es alguien que no es responsable del ticket pero desea que le lleguen los avances".

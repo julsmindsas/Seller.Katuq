@@ -25,7 +25,7 @@
 ## 3. Servicio compartido de órdenes de envío (módulo sensible: un cambio a la vez, con el diff aprobado por Daniel)
 
 - [x] 3.1 Pruebas de caracterización de `createAndEditShippingOrder` y `dispatchShippingOrder` sobre una base simulada: escrituras, respuesta y llamadas a `updateOrderInternal`. Deben pasar con el código de hoy, sin tocarlo. → 13-oct: en vez de mover la creación de órdenes, las reglas que usa la aprobación (anti-retroceso y nombre del mensajero) quedan en `utils/despachoReglas.js`, idénticas a las del controlador (`tests/despachos/despachoReglas.test.js`: 298 casos iguales). La aprobación despacha con `updateOrderInternal`, la misma función de la pantalla, y toma el consecutivo en transacción igual que ella. El controlador no se tocó.
-- [ ] 3.2 Extraer `crearOrdenDeEnvio` y `despacharOrdenDeEnvio` a `services/despachos/ordenesDeEnvio.js`. Los controladores quedan como envoltura y las pruebas de 3.1 pasan igual. Mostrar el diff a Daniel antes de seguir. → pendiente: que `controllers/logistica.js` importe `utils/despachoReglas.js` (diff para aprobar).
+- [x] 3.2 Extraer `crearOrdenDeEnvio` y `despacharOrdenDeEnvio` a `services/despachos/ordenesDeEnvio.js`. Los controladores quedan como envoltura y las pruebas de 3.1 pasan igual. Mostrar el diff a Daniel antes de seguir. → 13-oct: `controllers/logistica.js` importa `esRetroceso` y `canonicalTransportadorName` de `utils/despachoReglas.js` y borra sus copias (backend `7df5b14`). Sin cambio de comportamiento: la prueba compara con la versión original congelada (298 casos) y verifica que el controlador no vuelva a definirlas. El diff va en el reporte a Daniel; se despliega solo con su OK.
 - [ ] 3.3 Desplegar solo la extracción. Observar 2 días que las órdenes creadas desde la pantalla de Despachos queden iguales que antes. → no aplica: no hubo extracción.
 
 ## 4. Aprobación, rutas y Opttia (backend)
@@ -76,20 +76,22 @@
 
 ## 6. MCP y ADK (cambio privado del backend: `opttia-despachos-con-aprobacion`)
 
-- [ ] 6.1 Escribir y aprobar ese cambio en el repo privado. Cubre:
+- [x] 6.1 Escribir y aprobar ese cambio en el repo privado. Cubre:
   - los alcances por rol;
   - las cuatro herramientas que hoy escriben;
   - el comprobante canjeable solo por un botón;
   - Telegram;
   - el autor real en el historial.
-- [ ] 6.2 `get_dispatch_plan` y `request_dispatch_plan_approval`, sobre el mismo servicio del plan. Retirar o migrar `assign_transporter`, `create_shipping_order`, `dispatch_shipping_order` y `update_order_status`, con sus pruebas.
-- [ ] 6.3 ADK:
+- [x] 6.2 `get_dispatch_plan` y `request_dispatch_plan_approval`, sobre el mismo servicio del plan. Retirar o migrar `assign_transporter`, `create_shipping_order`, `dispatch_shipping_order` y `update_order_status`, con sus pruebas. → backend `20177d5`: las tres primeras se retiran (nadie las usó); `update_order_status` pasa por `updateOrderInternal`; las dos nuevas usan las compuertas de la vista. Detalle en el cambio privado.
+- [x] 6.3 ADK (`35e43cf`, rama `feat/claude-agent-sdk`; `aprobar_despachos_hitl` reemplaza a `assign_transporter_hitl` y `dispatch_routes_hitl`):
   - las herramientas nuevas entran en las listas de escritura y de confirmación humana;
   - `dispatch_routes_hitl` pasa a usar el plan;
   - en grupos de Telegram, la aprobación queda atada a la cuenta de Katuq y a su permiso;
   - en WhatsApp, solo lectura.
 
 ## 7. Transportadora (segunda fase)
+
+> 13-oct: en espera de una decisión de Daniel. La medición cambia la regla de cuál transportadora sugerir: en el comercio con más envíos por transportadora, esta depende de los productos del pedido, no de cuál se usa más. Detalle y propuesta en `specs/CONTRACT.md` (D-410, "Avance 13-oct") y en `design.md` ("Fase 2: medición"). La parte que escribe no se implementa hasta su OK.
 
 - [ ] 7.1 `capacidades()` en la capa común de proveedores (`services/logisticsManager.js`). Sin declaración, el proveedor no se ofrece. Va con su prueba.
 - [ ] 7.2 Extraer el servicio que usa `POST /v1/logistics/shipments`, con la empresa de la sesión firmada y pruebas de caracterización. Módulo sensible: diff aprobado.

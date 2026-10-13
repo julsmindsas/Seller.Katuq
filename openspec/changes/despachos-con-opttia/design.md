@@ -243,7 +243,7 @@ La compuerta se redefinió con esto: el mensajero exacto depende de quién está
   - despacha con `updateOrderInternal`, la misma función del botón Despachar;
   - pasarle esa función al pedido sin el carrito no toca inventario.
 
-  Queda pendiente la tarea 3.2: que el controlador importe el módulo compartido.
+  La tarea 3.2 quedó hecha el 13-oct en la tarde: el controlador importa el módulo compartido (backend `7df5b14`).
 - **Auditoría:** el pedido guarda `despachoPlan` (origen, canal, quién aprobó y huella), y la orden, `origen`, `aprobadoPor`, `canal` y `despacho.estado`. El historial de estados lo escribe `updateOrderInternal` con el correo de quien aprobó.
 - **Una sola orden:** el id de la orden sale de (empresa, mensajero, pedidos y sus huellas).
   - Mientras alguien despacha, otra aprobación del mismo grupo responde "Lo está aprobando…".
@@ -253,6 +253,27 @@ La compuerta se redefinió con esto: el mensajero exacto depende de quién está
   - **Excluidos:** el vendedor restringido (D-349) no ve el plan.
   - **ALMARA:** en la última semana, los 146 despachos con usuario identificado fueron del rol Administrador.
 - **Aviso proactivo:** una insignia con el número de listos en la opción Despachos y una línea de la narración. Se descartó mover el orbe 3D hacia el encabezado.
+
+## Fase 2: medición del 13-oct y propuesta (pendiente de aprobación)
+
+Medido en producción, solo lectura, con el motor del plan y 30 días de órdenes de envío.
+
+- **Cuándo despacha quien usa transportadora:** el comercio con más envíos por transportadora creó 490 órdenes en 30 días. La diferencia entre el día de despacho y la fecha de entrega fue de 0 días en el p50, el p75 y el p90 (máximo 10). La regla de "hoy" de la fase 1 sirve igual.
+  - Ese comercio tiene 386 pedidos en estado listo, de los cuales 385 tienen la fecha vencida. Son pedidos represados que no se cerraron, no trabajo del día; el plan ya los deja fuera.
+- **Qué transportadora toma cada pedido:** una muestra de 200 pedidos de ese comercio.
+  - Los 172 con todos los productos de un proveedor salieron por ese proveedor.
+  - Los 28 sin ningún producto suyo salieron por la otra integración.
+  - No hubo pedidos mezclados.
+  - La regla de la spec, "la que el comercio usó más", mandaría los 28 al proveedor equivocado.
+- **Tarifa y datos:** la integración con candado contra duplicados no cotiza, porque el envío va incluido, así que sale "sin tarifa". Ningún pedido trae código DANE, y esa integración no lo pide.
+- **Duplicados:** solo una integración tiene candado. Ese candado cubre el envío en curso y el ya hecho, pero no la respuesta que se pierde. Por eso, antes de reintentar se busca el envío, con la búsqueda por pedido que ya tiene la capa común.
+
+**Ajuste propuesto a `plan-con-transportadora`, que Daniel debe aprobar:**
+- **Lo que declara cada adaptador:** además de la tarifa, los datos que exige y la garantía contra duplicados, declara qué pedidos acepta. La regla vive en el adaptador, no en el plan, para no tener reglas por nombre de transportadora (Artículo VI).
+- **Qué sugiere el plan:** solo una integración que acepte el pedido y garantice un envío por pedido. Si hay varias, la de menor tarifa, o la más usada entre las que lo aceptan.
+- **Si ninguna lo acepta:** el pedido queda "se despacha desde Despachos".
+- **Respuesta perdida:** antes de reintentar un envío sin respuesta, se busca si ya existe. Si no se puede saber, el pedido queda "por revisar".
+- **Cotización por API:** queda para cuando un adaptador sepa cotizar un pedido por sí solo; hoy ninguno lo hace.
 
 ## Risks / Trade-offs
 
