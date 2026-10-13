@@ -19,6 +19,16 @@ import {
 import { InfoPaises } from "../../../../../Mock/pais-estado-ciudad";
 import { DaneCodesService } from "../../../../shared/services/dane-codes.service";
 import { MunicipioDane } from "../../../../shared/data/colombia-dane-codes";
+import {
+  esPuntoValido,
+  FuenteUbicacion,
+  leerUbicacion,
+  pareceEnlace,
+} from "../../../../shared/util/ubicacion-enlace.util";
+import { normalizarFuente, textoDireccionRespaldo } from "../../../../shared/utils/client-delivery";
+
+/** Tipos de dirección del modal. "ubicacion" = sin nomenclatura (D-417, ticket 1203). */
+export type TipoDireccion = "urbana" | "manzana" | "rural" | "ubicacion";
 
 @Component({
   selector: "app-direccion-estructurada",
@@ -32,6 +42,12 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   // geocodificación y definen el área donde debe caer el punto.
   @Input() barrioActual: string = "";
   @Input() zonaCobroActual: string = "";
+  // D-417 (ticket 1203): punto que ya tiene la entrega. Si no salió de la
+  // geocodificación (lo marcó, pegó o tomó una persona) se respeta: no se
+  // vuelve a geocodificar al abrir y no se borra si la geocodificación falla.
+  @Input() coordenadasActuales: string = "";
+  @Input() fuenteActual: string = "";
+  @Input() enlaceActual: string = "";
   @Output() direccionGenerada = new EventEmitter<string>();
 
   @ViewChild("mapContainer", { static: false }) mapContainer?: ElementRef;
@@ -189,6 +205,13 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   latitud?: string;
   longitud?: string;
 
+  // D-417: de dónde salió el punto y, si se pegó, el enlace original.
+  fuenteUbicacion: FuenteUbicacion = "geocodificada";
+  enlaceUbicacion = "";
+  textoEnlace = "";
+  mensajeUbicacion = "";
+  obteniendoGps = false;
+
   // Nuevas propiedades para el contexto colombiano
   esDireccionRural = false;
   ciudadSeleccionada: string = "";
@@ -228,6 +251,7 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.inicializarFormulario();
+    this.cargarPuntoActual();
 
     // Si hay una dirección actual, intentar parsearla
     if (this.direccionActual) {
@@ -336,16 +360,34 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
           direccion,
         );
 
+      const esManzana = /^(Manzana|Mz\.?)\s*[A-Z0-9]/i.test(direccion);
+      const esUrbana = /^(Calle|Carrera|Avenida|Diagonal|Carretera|Transversal|Circular|Autopista|Bulevar|Circunvalar|Variante|V[ií]a|Kil[oó]metro|Troncal|Anillo Vial|Cl|Cra|Kr|Av|Dg|Tv)\b/i.test(direccion);
+
+      // D-417: una entrega con punto protegido y sin nomenclatura reconocible
+      // ("Finca El Lago, vía Yumbo" o "Ubicación: 3.58, -76.49") se abre en
+      // el modo "Solo ubicación" con su referencia.
+      if (this.puntoProtegido() && !esRural && !esManzana && !esUrbana) {
+        this.direccionForm.get("tipoNomenclatura")?.setValue("ubicacion");
+        if (!/^Ubicaci[oó]n:/i.test(direccion)) {
+          this.direccionForm.get("referencias")?.setValue(direccion);
+        }
+        this.actualizarVistaPrevia();
+        return;
+      }
+
       if (esRural) {
         this.parsearDireccionRural(direccion);
-      } else if (/^(Manzana|Mz\.?)\s*[A-Z0-9]/i.test(direccion)) {
+      } else if (esManzana) {
         this.parsearDireccionManzana(direccion);
       } else {
         this.parsearDireccionUrbana(direccion);
       }
 
-      // Intentar geocodificar la dirección para obtener las coordenadas
-      this.geocodificarDireccion();
+      // Intentar geocodificar la dirección para obtener las coordenadas.
+      // D-417: un punto puesto por una persona no se recalcula al abrir.
+      if (!this.puntoProtegido()) {
+        this.geocodificarDireccion();
+      }
     } catch (error) {
       console.error("Error al parsear la dirección:", error);
     }
@@ -501,6 +543,14 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
 
     const form = this.direccionForm.value;
 
+    // D-417: solo ubicación → la referencia o "Ubicación: lat, lng".
+    if (form.tipoNomenclatura === "ubicacion") {
+      this.vistaPrevia =
+        textoDireccionRespaldo({ referencias: form.referencias, latitud: this.latitud, longitud: this.longitud }) ||
+        "Marca la ubicación de entrega en el mapa";
+      return;
+    }
+
     // Si es dirección rural
     if (form.esRural) {
       let direccionRural = "";
@@ -572,13 +622,18 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     const tipo = this.direccionForm.get("tipoNomenclatura")?.value || "urbana";
     const esRural = tipo === "rural";
     const esManzana = tipo === "manzana";
+    const esUbicacion = tipo === "ubicacion";
 
     // Campos de manzana: solo obligatorios en su modo
     const validadoresManzana = esManzana ? [Validators.required] : [];
     this.direccionForm.get("manzana")?.setValidators(validadoresManzana);
     this.direccionForm.get("numeroInmueble")?.setValidators(validadoresManzana);
 
-    if (esManzana) {
+    if (esUbicacion) {
+      // D-417: sin nomenclatura; ciudad y punto se validan aparte.
+      ["tipoVia", "numeroVia", "numero", "numeroCasa", "tipoNomenclaturaRural", "nombreRural", "manzana", "numeroInmueble"]
+        .forEach((k) => this.direccionForm.get(k)?.clearValidators());
+    } else if (esManzana) {
       // Ni urbanos ni rurales aplican
       ["tipoVia", "numeroVia", "numero", "numeroCasa", "tipoNomenclaturaRural", "nombreRural"]
         .forEach((k) => this.direccionForm.get(k)?.clearValidators());
@@ -634,7 +689,12 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     const form = this.direccionForm.value;
 
     // Validación básica simplificada y más permisiva
-    if (form.tipoNomenclatura === "manzana") {
+    if (form.tipoNomenclatura === "ubicacion") {
+      if (!esPuntoValido(this.latitud, this.longitud)) {
+        this.mensajeError = "Marca la ubicación en el mapa, pega un enlace de Google Maps o usa tu ubicación";
+        return false;
+      }
+    } else if (form.tipoNomenclatura === "manzana") {
       if (!form.manzana || !form.numeroInmueble) {
         this.mensajeError = "Indica la manzana y el número de casa, lote o apartamento";
         return false;
@@ -710,8 +770,13 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   // dirección con confianza, las coordenadas quedan VACÍAS y se pide marcar el
   // punto en el mapa (generarDireccion() no cierra sin coordenadas).
   geocodificarDireccion(): Promise<void> {
-    // Solo geocodificar si el formulario es válido y hay una ciudad
-    if (!this.direccionForm.valid || !this.direccionForm.get("ciudad")?.value) {
+    // Solo geocodificar si el formulario es válido y hay una ciudad.
+    // D-417: en "Solo ubicación" no hay dirección que geocodificar.
+    if (
+      this.tipoNomenclatura === "ubicacion" ||
+      !this.direccionForm.valid ||
+      !this.direccionForm.get("ciudad")?.value
+    ) {
       return Promise.resolve();
     }
 
@@ -735,6 +800,8 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
           // Guardar coordenadas
           this.latitud = respuesta.latitud;
           this.longitud = respuesta.longitud;
+          this.fuenteUbicacion = "geocodificada";
+          this.enlaceUbicacion = "";
 
           // Construir URL de verificación en Google Maps
           const ciudad = this.direccionForm.get('ciudad')?.value || '';
@@ -763,9 +830,12 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
           // Ticket 1136: sin resultado confiable no se deja ningún punto puesto.
           // Las coordenadas anteriores (si las había) podían ser el error que
           // estamos evitando; el usuario marca el punto en el mapa.
-          this.latitud = "";
-          this.longitud = "";
-          this.direccionForm.get("coordenadas")?.setValue("");
+          // D-417: salvo que el punto lo haya puesto una persona: ese se conserva.
+          if (!this.puntoProtegido()) {
+            this.latitud = "";
+            this.longitud = "";
+            this.direccionForm.get("coordenadas")?.setValue("");
+          }
           const code = error?.code;
           this.mensajeError = code === "DIRECCION_INVALIDA"
             ? "Escribe la dirección real antes de ubicarla."
@@ -811,6 +881,11 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
       // Actualizar propiedades
       this.latitud = lat.toFixed(7);
       this.longitud = lng.toFixed(7);
+      // D-417: un punto marcado a mano no se vuelve a geocodificar.
+      this.fuenteUbicacion = "manual";
+      this.enlaceUbicacion = "";
+      this.mensajeUbicacion = "";
+      this.actualizarVistaPrevia();
 
       // Actualizar el formulario
       this.direccionForm
@@ -889,7 +964,7 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
 
     this.actualizarVistaPrevia();
 
-    if (!this.direccionForm.get("coordenadas")?.value) {
+    if (!this.direccionForm.get("coordenadas")?.value && this.tipoNomenclatura !== "ubicacion") {
       await this.geocodificarDireccion();
     }
 
@@ -908,6 +983,11 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
       // Ticket 1046: el departamento ya se resolvía aquí pero no se devolvía.
       departamento: this.departamentoSeleccionado || this.direccionForm.get("departamento")?.value || "",
       referencias: this.direccionForm.get("referencias")?.value,
+      // D-417: el punto por separado, su origen y el enlace pegado (si lo hubo).
+      latitud: this.latitud || "",
+      longitud: this.longitud || "",
+      fuenteUbicacion: this.fuenteUbicacion,
+      enlaceUbicacion: this.enlaceUbicacion,
       // Datos estructurados para facilitar posteriores usos
       estructura: this.obtenerEstructuraDireccion(),
     };
@@ -919,6 +999,10 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   // Obtiene la estructura detallada de la dirección para fácil acceso a sus partes
   private obtenerEstructuraDireccion(): any {
     const form = this.direccionForm.value;
+
+    if (form.tipoNomenclatura === "ubicacion") {
+      return { tipo: "ubicacion", referencias: String(form.referencias || "").trim() };
+    }
 
     if (form.tipoNomenclatura === "manzana") {
       return {
@@ -954,7 +1038,7 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   }
 
   // Método para cambiar entre dirección urbana, por manzana y rural
-  cambiarTipoDireccion(tipo?: "urbana" | "manzana" | "rural"): void {
+  cambiarTipoDireccion(tipo?: TipoDireccion): void {
     if (tipo) {
       this.direccionForm.get("tipoNomenclatura")?.setValue(tipo);
     }
@@ -991,6 +1075,12 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     this.sugerenciasCiudad = [];
 
     this.esDireccionRural = false;
+    this.latitud = "";
+    this.longitud = "";
+    this.fuenteUbicacion = "geocodificada";
+    this.enlaceUbicacion = "";
+    this.textoEnlace = "";
+    this.mensajeUbicacion = "";
     this.actualizarValidadores();
     this.actualizarVistaPrevia();
 
@@ -1001,6 +1091,80 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     });
     this.municipios = [...new Set<string>(todasLasCiudades)]
       .sort((a, b) => a.localeCompare(b));
+  }
+
+  // ── D-417 (ticket 1203): ubicación de la entrega ─────────────────────
+
+  /** El punto lo puso una persona (mapa, enlace o GPS): no se recalcula ni se borra. */
+  puntoProtegido(): boolean {
+    return this.fuenteUbicacion !== "geocodificada" && esPuntoValido(this.latitud, this.longitud);
+  }
+
+  /** Carga el punto que ya tenía la entrega. */
+  private cargarPuntoActual(): void {
+    const punto = leerUbicacion(this.coordenadasActuales);
+    if (!punto) return;
+    this.latitud = String(punto.lat);
+    this.longitud = String(punto.lng);
+    this.fuenteUbicacion = normalizarFuente(this.fuenteActual);
+    this.enlaceUbicacion = this.enlaceActual || "";
+    this.direccionForm.get("coordenadas")?.setValue(`${this.latitud}, ${this.longitud}`, { emitEvent: false });
+  }
+
+  /** Pone el punto en el formulario y en el mapa, con su origen. */
+  private ponerPunto(lat: number, lng: number, fuente: FuenteUbicacion, enlace = ""): void {
+    this.latitud = lat.toFixed(7);
+    this.longitud = lng.toFixed(7);
+    this.fuenteUbicacion = fuente;
+    this.enlaceUbicacion = enlace;
+    this.errorGeocodificacion = false;
+    this.direccionForm.get("coordenadas")?.setValue(`${this.latitud}, ${this.longitud}`);
+    this.actualizarMarcador();
+    this.actualizarVistaPrevia();
+  }
+
+  /** Lee el enlace de Google Maps o las coordenadas pegadas. */
+  aplicarEnlace(): void {
+    const texto = (this.textoEnlace || "").trim();
+    if (!texto) return;
+    const punto = leerUbicacion(texto);
+    if (!punto) {
+      this.mensajeUbicacion = pareceEnlace(texto)
+        ? "Ese enlace no trae las coordenadas (pasa con los enlaces cortos maps.app.goo.gl). Ábrelo, copia las coordenadas del punto y pégalas aquí, o marca el punto en el mapa."
+        : "No reconocemos coordenadas en Colombia en ese texto. Pega un enlace de Google Maps o algo como 3.5841, -76.4925.";
+      return;
+    }
+    this.mensajeUbicacion = "";
+    this.ponerPunto(punto.lat, punto.lng, "enlace", pareceEnlace(texto) ? texto : "");
+    this.textoEnlace = "";
+  }
+
+  /** Usa la ubicación del dispositivo (útil cuando quien registra está en el sitio). */
+  usarMiUbicacion(): void {
+    if (!navigator?.geolocation) {
+      this.mensajeUbicacion = "Este navegador no permite tomar la ubicación. Marca el punto en el mapa.";
+      return;
+    }
+    this.obteniendoGps = true;
+    this.mensajeUbicacion = "";
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        this.obteniendoGps = false;
+        const { latitude, longitude } = pos.coords;
+        if (!esPuntoValido(latitude, longitude)) {
+          this.mensajeUbicacion = "La ubicación del dispositivo no está en Colombia. Marca el punto en el mapa.";
+          return;
+        }
+        this.ponerPunto(latitude, longitude, "gps");
+      },
+      (err) => {
+        this.obteniendoGps = false;
+        this.mensajeUbicacion = err?.code === 1
+          ? "No diste permiso para usar tu ubicación. Actívalo en el navegador o marca el punto en el mapa."
+          : "No se pudo obtener tu ubicación. Marca el punto en el mapa.";
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
   }
 
   // Cierra el modal sin aplicar cambios

@@ -9537,3 +9537,17 @@ commits y el push no despliega ni activa checkout.
 **Numeración.** La propuesta se escribió como D-413, que ya era de Automatizaciones; se registra como D-416.
 
 **Estado.** DESPLEGADO el 2026-10-13 (front 2026.10.13.2, commit e1c4486f) por orden de Daniel («despliega»), compilado desde el repo principal con el `src` idéntico al commit. Build de producción sin errores; 0 gradientes y 0 primarios prohibidos en el módulo. **No verificado en el navegador**: la extensión estaba desconectada. Falta la prueba en FLORECER (1440 y 390 px, link en incógnito, apagar y prender) y comprobar que los productos usados no cambiaron.
+
+## D-417 (2026-10-13) — Entrega por ubicación: dirección, punto en el mapa o ambos (openspec/changes/entrega-por-ubicacion)
+
+**Disparador.** Jairo, ticket 1203 (2026-10-13): Punto Verde Vidagas entrega en fincas y lugares de Cali y Yumbo sin nomenclatura; a veces solo tienen el punto en el mapa o el pin de WhatsApp, y Katuq no lo permitía.
+
+**Hallazgo.** Katuq ya guardaba `latitud`, `longitud` y `coordenadas` en `clients.datosEntrega[]` y `orders.envio`, y la app de mensajeros ya abría Google Maps con ellas. El problema era de captura y conservación: el modal de dirección exigía nomenclatura y, al editar, volvía a geocodificar y borraba el punto si fallaba (ticket 1136); además `pedido-entrega.editarDatosEntrega` armaba la entrega sin coordenadas y las perdía.
+
+**Decisión.** Modo "Solo ubicación" en el modal (`DireccionEstructuradaComponent`): ciudad obligatoria, referencia opcional y un punto (clic en el mapa, enlace de Google Maps o coordenadas pegadas, o "Usar mi ubicación"). Dos campos opcionales nuevos en la misma entrega: `fuenteUbicacion` (`geocodificada` | `manual` | `enlace` | `gps`; sin él = `geocodificada`) y `enlaceUbicacion`. Un punto con fuente distinta de `geocodificada` no se vuelve a geocodificar ni se borra (modal, "forzar geocodificación" de Despachos). `esEntregaCompleta` = ciudad y (dirección o punto válido en Colombia, no 0,0). Sin dirección, `direccionEntrega` se llena con la referencia o "Ubicación: lat, lng"; el backend repite ese respaldo para la calle de Enviame y la guía Katuq (`services/logistics/ubicacionEntrega.js`). "Abrir en Maps" en el detalle de entrega (pedidos y Despachos) y enlace en la guía PDF. Sin colecciones ni endpoints nuevos; no toca inventario, productos, precios ni consecutivos. `crear-ventas` no se tocó: la venta asistida captura la entrega con `<pedido-entrega>`.
+
+**Fuera de alcance (fase 2).** Enlaces cortos `maps.app.goo.gl`, ubicación recibida por WhatsApp directo al pedido, POS, zona de cobro por coordenadas.
+
+**Estado (13-oct).** Implementado sin commit. Pruebas: utilidad y regla de entrega 25/25 (Jasmine), backend 7/7, smoke de la guía, build del front en verde. Pendiente: pruebas en navegador y un despacho real por Enviame de un pedido solo por ubicación antes de cerrar el ticket 1203.
+
+**Renumerada (13-oct):** nació como D-415 y chocó con la D-415 de Kuvo, publicada al mismo tiempo por otra sesión; el commit `962b46e3` dice D-415 en el mensaje, pero se refiere a esta.

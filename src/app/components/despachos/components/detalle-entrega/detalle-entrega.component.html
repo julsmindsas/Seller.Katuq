@@ -49,6 +49,26 @@
             </div>
         </div>
 
+        <!-- D-417 (ticket 1203): dónde se entrega, con acceso al mapa -->
+        <div class="section-header" *ngIf="pedido?.envio?.direccionEntrega || enlaceMapa">
+            <i class="pi pi-map-marker"></i>
+            <h6>{{ 'Dirección de entrega' | translate }}</h6>
+        </div>
+        <div class="info-grid" *ngIf="pedido?.envio?.direccionEntrega || enlaceMapa">
+            <div class="info-item">
+                <div class="info-icon"><i class="pi pi-home"></i></div>
+                <div class="info-content">
+                    <label>{{ 'Dirección' | translate }}</label>
+                    <span class="info-value">
+                        {{ pedido?.envio?.direccionEntrega || 'N/A' }}<ng-container *ngIf="pedido?.envio?.ciudad">, {{ pedido?.envio?.ciudad }}</ng-container>
+                    </span>
+                    <a *ngIf="enlaceMapa" class="btn-abrir-mapa" [href]="enlaceMapa" target="_blank" rel="noopener">
+                        <i class="pi pi-external-link"></i> {{ 'Abrir en Maps' | translate }}
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <!-- Ticket 1193: mensajero que lleva el pedido (visible desde Despachado) -->
         <div class="section-header" *ngIf="pedido?.mensajeroNombre || pedido?.transportador">
             <i class="pi pi-send"></i>
