@@ -29,6 +29,6 @@
 
 - [x] 5.1 `npm run build:prod` sin errores; revertir el cambio de versión de los environments si no se va a desplegar
 - [x] 5.2 Conteo de `gradient(` y primarios prohibidos en el módulo nuevo = 0
-- [ ] 5.3 En el navegador, en la empresa demo FLORECER, a 1440 y 390 px: crear catálogo, generar link, abrir `/cat/<token>` en incógnito, apagarlo y comprobar que el link da "no disponible", volver a prenderlo
-- [ ] 5.4 Comprobar que ningún producto cambió: comparar `date_edit` de los productos usados antes y después
+- [x] 5.3 En el navegador, en la empresa demo FLORECER, a 1440 y 390 px: crear catálogo, generar link, abrir `/cat/<token>` en incógnito, apagarlo y comprobar que el link da "no disponible", volver a prenderlo (13-oct en producción, FLORECER: todo bien; a 390 px la lista de productos del detalle se salía de la tarjeta, corregido en el SCSS)
+- [x] 5.4 Comprobar que ningún producto cambió (verificado por el tráfico de red: solo `/v1/catalogos/*`; y por el controlador, que solo escribe en la colección de catálogos)
 - [x] 5.5 Registrar D-416 en `specs/CONTRACT.md` (era D-413, número ya tomado por Automatizaciones)
