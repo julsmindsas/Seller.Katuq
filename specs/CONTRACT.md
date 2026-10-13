@@ -9337,3 +9337,28 @@ Sin colecciones nuevas. Write-set: `shipping_orders`, campos de despacho de `ord
 - (d) índice `orders (company, estadoProceso, fechaEntrega)`.
 
 **De paso (13-oct).** `tests/enVivo/writeset.contract.test.js` fallaba desde el 10-oct (D-403 lo registró como falla anterior). La causa era la prueba, no producción: usaba la fecha fija del 8-oct contra la instancia compartida, que mira ayer y hoy con el reloj real. Arreglada en el backend `933a925`; las 13 suites de En vivo pasan.
+
+## D-411 (2026-10-13) — Tickets de soporte con varios agentes: principal, apoyo y observador (backend openspec/changes/multi-asignacion-tickets-soporte) — IMPLEMENTADO en local, sin commit ni deploy
+
+**Disparador.** Santiago (13-oct): "que al asignar un ticket a alguno de los agentes de soporte se pueda asignar a más de una persona". En la definición agregó un tercer rol: "el observador es alguien que no es responsable del ticket pero desea que le lleguen los avances".
+
+**Decisión.**
+- **Tres roles en el mismo documento del ticket**, sin colección nueva:
+  - `usuarioMesaAyuda`: el principal, sin cambio de forma. Seller Center y el MCP siguen leyendo solo este campo.
+  - `apoyosMesaAyuda[]`: también trabajan el caso.
+  - `observadoresMesaAyuda[]`: no son responsables, pero reciben los avances.
+- **Un agente, un rol por ticket**, con prioridad principal > apoyo > observador. Reemplazar al principal lo saca del ticket; no pasa a apoyo.
+- **Avisos internos (correo y campana) a los tres roles, nunca a quien hizo la acción.** Aplica a estado, cierre, reapertura, respuesta, prioridad y SLA. El aviso de asignación le llega solo a quien entra y dice con qué rol.
+- **Ticket sin principal ni apoyos sigue siendo "de todos"** en la campana (`destinatarios: null`) aunque tenga observadores. Si responde el comercio, el correo va al grupo de soporte y a los observadores.
+- **Métricas por agente:** se siguen atribuyendo solo al principal.
+- **Apoyos y observadores son campos solo-operador** en el PUT (`CAMPOS_SOLO_OPERADOR`): el comercio no los ve ni los escribe, y un PUT del Seller con una copia vieja no los pisa.
+- **App Support:**
+  - detalle con Apoyo, Observadores y botón Seguir;
+  - backlog y tablero con "+N" de apoyos;
+  - el filtro por agente incluye apoyos, y hay un filtro nuevo "Lo que sigo";
+  - asignación masiva de apoyo y observador que no pisa el equipo existente.
+- **De paso:** la URL del backend en Support sale de `environment.katuqApi` (antes `api.katuq.com` estaba escrito a mano en 3 servicios y en el interceptor). El build de producción sigue en `api.katuq.com`.
+
+**Fuera de alcance (follow-up):** MCP (`update_support_ticket` solo asigna al principal y no aplica la unicidad; el backend deduplica al leer) y la vista del comercio en Seller.
+
+**Deploy:** primero el backend y después Support. Si sale Support primero, el PUT descarta los arreglos en silencio.
