@@ -9379,6 +9379,20 @@ La bandera `despachosOpttia` sigue apagada en todas las empresas. Falta prenderl
 - **Plan:** lo que los mensajeros no cubren va a un grupo "Por <transportadora>" de hasta 10 pedidos. Si varias lo aceptan, se escoge la de menor tarifa o la más usada entre esas. Si ninguna lo acepta, el pedido queda en "No entra al plan" como antes. Sin declaraciones, el plan es idéntico al de la fase 1.
 - **Aprobar:** cada pedido lleva su propia orden de envío, y el envío se crea por la misma capa de la pantalla de Despachos. Lo que queda en el pedido sale de una función compartida con la pantalla (`services/logistics/pedidoConEnvio.js`), caracterizada contra el código original en 72 combinaciones. Si un envío falla, ese pedido queda libre con su razón y los demás siguen.
 - **Un solo envío por pedido:** antes de reintentar un envío que quedó sin confirmar, el servicio único de envío a esa integración lo busca. El detalle está en `design.md`, "Fase 2". Así protege también a la pantalla y a las automatizaciones.
+- **Revisión adversarial antes de publicar:** 57 agentes, 26 hallazgos, 18 confirmados por dos verificadores independientes. Antes de desplegar se corrigió lo que afectaba el resultado:
+  - retomar un envío;
+  - pedidos cancelados entre tanto;
+  - fallas sin respuesta;
+  - un camino manual que no pasaba por el candado;
+  - la cola de "Aprobar todo";
+  - el foco con teclado.
+
+  Los riesgos aceptados y el detalle viven en el cambio privado del backend.
+- **Desplegado (13-oct, noche; Daniel: "Desplegar todo junto ya"):**
+  - backend `0a03ce6`, junto con los commits de otras sesiones que estaban en origin;
+  - ADK `917bb1b`;
+  - front 2026.10.13.4.
+- **Bandera:** encendida en FLORECER. OH MY STORE la enciende Daniel.
 
 ## D-411 (2026-10-13) — Tickets de soporte con varios agentes: principal, apoyo y observador (backend openspec/changes/multi-asignacion-tickets-soporte) — IMPLEMENTADO y pusheado 13-oct; Support desplegado, backend pendiente de deploy
 
