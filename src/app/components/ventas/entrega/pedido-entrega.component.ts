@@ -104,7 +104,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
   latitud: string;
   longitud: string;
   coordenadas: string;
-  // D-415 (ticket 1203): origen del punto y enlace pegado, para no perder un
+  // D-417 (ticket 1203): origen del punto y enlace pegado, para no perder un
   // punto marcado a mano al editar la entrega.
   fuenteUbicacion: string = "";
   enlaceUbicacion: string = "";
@@ -318,7 +318,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
   }
 
   guardarDatosEntrega() {
-    // D-415: la entrega sirve con dirección escrita o con un punto en el mapa.
+    // D-417: la entrega sirve con dirección escrita o con un punto en el mapa.
     if (!this.nombres_entrega || !this.numero_celular_entrega || !esEntregaCompleta({
       direccionEntrega: this.direccion_entrega, ciudad: this.ciudad_municipio_entrega,
       latitud: this.latitud, longitud: this.longitud, coordenadas: this.coordenadas,
@@ -543,7 +543,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       zonaCobro: this.zona_cobro,
       valorZonaCobro: this.valor_zona_cobro,
       codigoPV: this.codigo_postal_entrega,
-      // D-415: antes se perdían las coordenadas al editar la entrega.
+      // D-417: antes se perdían las coordenadas al editar la entrega.
       latitud: this.latitud || "",
       longitud: this.longitud || "",
       coordenadas: this.coordenadas || "",
@@ -1135,7 +1135,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     // Prado no caiga en Belén.
     modalRef.componentInstance.barrioActual = this.barrio || "";
     modalRef.componentInstance.zonaCobroActual = this.zona_cobro || "";
-    // D-415: el punto actual y su origen; si lo puso una persona se respeta.
+    // D-417: el punto actual y su origen; si lo puso una persona se respeta.
     modalRef.componentInstance.coordenadasActuales = this.coordenadas || "";
     modalRef.componentInstance.fuenteActual = this.fuenteUbicacion || "";
     modalRef.componentInstance.enlaceActual = this.enlaceUbicacion || "";

@@ -37,7 +37,7 @@
 
 ## 6. Cierre
 
-- [x] 6.1 Registrar D-415 en `specs/CONTRACT.md` y bitácora
+- [x] 6.1 Registrar D-417 en `specs/CONTRACT.md` y bitácora
 - [ ] 6.2 Pruebas en navegador: crear cliente con entrega solo por ubicación (mapa, enlace, mi ubicación); editarla sin perder el punto; venta asistida con esa entrega; editar la entrega desde la lista de pedidos; Despachos (Abrir en Maps y forzar geocodificación); guía de envío Katuq
 - [ ] 6.3 Prueba con un despacho real por Enviame (ALMACEN BOMBAS) de un pedido solo por ubicación, con permiso del usuario
 - [x] 6.4 Nota interna en el ticket 1203 con lo hecho y los archivos tocados

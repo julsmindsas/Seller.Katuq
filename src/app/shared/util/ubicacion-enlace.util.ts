@@ -1,5 +1,5 @@
 /**
- * Ticket 1203 / D-415: ubicación de una entrega como punto en el mapa.
+ * Ticket 1203 / D-417: ubicación de una entrega como punto en el mapa.
  *
  * Lee las coordenadas que el comercio pega (enlace de Google Maps o texto
  * "lat, lng"), valida que el punto sirva para despachar en Colombia y arma el

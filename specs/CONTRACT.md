@@ -9538,7 +9538,7 @@ commits y el push no despliega ni activa checkout.
 
 **Estado.** Build de producción sin errores; 0 gradientes y 0 primarios prohibidos en el módulo. Pendiente: prueba en el navegador en FLORECER (1440 y 390 px, link en incógnito, apagar y prender) y comprobar que los productos usados no cambiaron. Sin commit ni despliegue.
 
-## D-415 (2026-10-13) — Entrega por ubicación: dirección, punto en el mapa o ambos (openspec/changes/entrega-por-ubicacion)
+## D-417 (2026-10-13) — Entrega por ubicación: dirección, punto en el mapa o ambos (openspec/changes/entrega-por-ubicacion)
 
 **Disparador.** Jairo, ticket 1203 (2026-10-13): Punto Verde Vidagas entrega en fincas y lugares de Cali y Yumbo sin nomenclatura; a veces solo tienen el punto en el mapa o el pin de WhatsApp, y Katuq no lo permitía.
 
@@ -9549,3 +9549,5 @@ commits y el push no despliega ni activa checkout.
 **Fuera de alcance (fase 2).** Enlaces cortos `maps.app.goo.gl`, ubicación recibida por WhatsApp directo al pedido, POS, zona de cobro por coordenadas.
 
 **Estado (13-oct).** Implementado sin commit. Pruebas: utilidad y regla de entrega 25/25 (Jasmine), backend 7/7, smoke de la guía, build del front en verde. Pendiente: pruebas en navegador y un despacho real por Enviame de un pedido solo por ubicación antes de cerrar el ticket 1203.
+
+**Renumerada (13-oct):** nació como D-415 y chocó con la D-415 de Kuvo, publicada al mismo tiempo por otra sesión; el commit `962b46e3` dice D-415 en el mensaje, pero se refiere a esta.

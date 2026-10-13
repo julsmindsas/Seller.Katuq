@@ -29,7 +29,7 @@ Katuq ya guarda `latitud`, `longitud` y `coordenadas` en cada entrega del client
 - **Backend (katuq_admin_back_firebase)**: `services/logistics/guiaKatuqPdf.js` (enlace de ubicación en la guía) y `services/shippingProviders/enviameProvider.js` (respaldo de `street` cuando no hay dirección). Sin endpoints nuevos.
 - **Datos**: dos campos opcionales nuevos en cada elemento de `clients.datosEntrega[]` y en `orders.envio`: `fuenteUbicacion` y `enlaceUbicacion`. Nada se migra; las entregas actuales siguen funcionando igual.
 - **Riesgos sobre módulos sensibles**: toca `orders.envio` (solo los campos de entrega que ya se escriben al crear o editar el pedido) y la integración Enviame. No escribe `inventory`, `products`, precios ni consecutivos. Enviame y otras transportadoras siguen pidiendo un texto de calle: con el respaldo nunca va vacío, pero una "Ubicación: lat, lng" podría no ser aceptada por la transportadora; se prueba con un despacho real de ALMACEN BOMBAS antes de cerrar. La geocodificación del ticket 1136 (validación por corregimiento) se mantiene para los puntos geocodificados.
-- **Decisión a registrar**: D-415 en `specs/CONTRACT.md`.
+- **Decisión a registrar**: D-417 en `specs/CONTRACT.md`.
 
 ## No-goals
 

@@ -7,7 +7,7 @@ import {
   tienePuntoValido,
 } from './client-delivery';
 
-/** D-415 / ticket 1203: entregas por ubicación (fincas sin nomenclatura en Yumbo). */
+/** D-417 / ticket 1203: entregas por ubicación (fincas sin nomenclatura en Yumbo). */
 describe('client-delivery (entrega por ubicación)', () => {
   const finca = { ciudad: 'Yumbo', latitud: '3.5841', longitud: '-76.4925', coordenadas: '3.5841, -76.4925', fuenteUbicacion: 'manual' };
 

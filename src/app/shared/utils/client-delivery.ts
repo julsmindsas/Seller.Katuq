@@ -10,7 +10,7 @@ import { esPuntoValido, formatoCoordenadas, FuenteUbicacion } from '../util/ubic
  *    valorZonaCobro, codigoPV, latitud, longitud, coordenadas,
  *    fuenteUbicacion, enlaceUbicacion }`.
  *
- * D-415 (ticket 1203): `fuenteUbicacion` dice de dónde salió el punto
+ * D-417 (ticket 1203): `fuenteUbicacion` dice de dónde salió el punto
  * ('geocodificada' | 'manual' | 'enlace' | 'gps'); sin ella se asume
  * 'geocodificada', que es como se comportan las entregas anteriores.
  *
@@ -137,7 +137,7 @@ export function tienePuntoValido(e: any): boolean {
 }
 
 /**
- * D-415: un punto que no salió de la geocodificación (lo marcó o pegó una
+ * D-417: un punto que no salió de la geocodificación (lo marcó o pegó una
  * persona) no se vuelve a geocodificar ni se borra.
  */
 export function puntoEsProtegido(e: any): boolean {
@@ -173,7 +173,7 @@ export function normalizarEntregas(lista: any): EntregaCliente[] {
 
 /**
  * Mínimo para que una entrega sirva para despachar: ciudad y, además,
- * dirección escrita o un punto válido (D-415, entregas en fincas sin
+ * dirección escrita o un punto válido (D-417, entregas en fincas sin
  * nomenclatura).
  */
 export function esEntregaCompleta(e: any): boolean {

@@ -27,7 +27,7 @@ import {
 } from "../../../../shared/util/ubicacion-enlace.util";
 import { normalizarFuente, textoDireccionRespaldo } from "../../../../shared/utils/client-delivery";
 
-/** Tipos de dirección del modal. "ubicacion" = sin nomenclatura (D-415, ticket 1203). */
+/** Tipos de dirección del modal. "ubicacion" = sin nomenclatura (D-417, ticket 1203). */
 export type TipoDireccion = "urbana" | "manzana" | "rural" | "ubicacion";
 
 @Component({
@@ -42,7 +42,7 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   // geocodificación y definen el área donde debe caer el punto.
   @Input() barrioActual: string = "";
   @Input() zonaCobroActual: string = "";
-  // D-415 (ticket 1203): punto que ya tiene la entrega. Si no salió de la
+  // D-417 (ticket 1203): punto que ya tiene la entrega. Si no salió de la
   // geocodificación (lo marcó, pegó o tomó una persona) se respeta: no se
   // vuelve a geocodificar al abrir y no se borra si la geocodificación falla.
   @Input() coordenadasActuales: string = "";
@@ -205,7 +205,7 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   latitud?: string;
   longitud?: string;
 
-  // D-415: de dónde salió el punto y, si se pegó, el enlace original.
+  // D-417: de dónde salió el punto y, si se pegó, el enlace original.
   fuenteUbicacion: FuenteUbicacion = "geocodificada";
   enlaceUbicacion = "";
   textoEnlace = "";
@@ -363,7 +363,7 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
       const esManzana = /^(Manzana|Mz\.?)\s*[A-Z0-9]/i.test(direccion);
       const esUrbana = /^(Calle|Carrera|Avenida|Diagonal|Carretera|Transversal|Circular|Autopista|Bulevar|Circunvalar|Variante|V[ií]a|Kil[oó]metro|Troncal|Anillo Vial|Cl|Cra|Kr|Av|Dg|Tv)\b/i.test(direccion);
 
-      // D-415: una entrega con punto protegido y sin nomenclatura reconocible
+      // D-417: una entrega con punto protegido y sin nomenclatura reconocible
       // ("Finca El Lago, vía Yumbo" o "Ubicación: 3.58, -76.49") se abre en
       // el modo "Solo ubicación" con su referencia.
       if (this.puntoProtegido() && !esRural && !esManzana && !esUrbana) {
@@ -384,7 +384,7 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
       }
 
       // Intentar geocodificar la dirección para obtener las coordenadas.
-      // D-415: un punto puesto por una persona no se recalcula al abrir.
+      // D-417: un punto puesto por una persona no se recalcula al abrir.
       if (!this.puntoProtegido()) {
         this.geocodificarDireccion();
       }
@@ -543,7 +543,7 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
 
     const form = this.direccionForm.value;
 
-    // D-415: solo ubicación → la referencia o "Ubicación: lat, lng".
+    // D-417: solo ubicación → la referencia o "Ubicación: lat, lng".
     if (form.tipoNomenclatura === "ubicacion") {
       this.vistaPrevia =
         textoDireccionRespaldo({ referencias: form.referencias, latitud: this.latitud, longitud: this.longitud }) ||
@@ -630,7 +630,7 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     this.direccionForm.get("numeroInmueble")?.setValidators(validadoresManzana);
 
     if (esUbicacion) {
-      // D-415: sin nomenclatura; ciudad y punto se validan aparte.
+      // D-417: sin nomenclatura; ciudad y punto se validan aparte.
       ["tipoVia", "numeroVia", "numero", "numeroCasa", "tipoNomenclaturaRural", "nombreRural", "manzana", "numeroInmueble"]
         .forEach((k) => this.direccionForm.get(k)?.clearValidators());
     } else if (esManzana) {
@@ -771,7 +771,7 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   // punto en el mapa (generarDireccion() no cierra sin coordenadas).
   geocodificarDireccion(): Promise<void> {
     // Solo geocodificar si el formulario es válido y hay una ciudad.
-    // D-415: en "Solo ubicación" no hay dirección que geocodificar.
+    // D-417: en "Solo ubicación" no hay dirección que geocodificar.
     if (
       this.tipoNomenclatura === "ubicacion" ||
       !this.direccionForm.valid ||
@@ -830,7 +830,7 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
           // Ticket 1136: sin resultado confiable no se deja ningún punto puesto.
           // Las coordenadas anteriores (si las había) podían ser el error que
           // estamos evitando; el usuario marca el punto en el mapa.
-          // D-415: salvo que el punto lo haya puesto una persona: ese se conserva.
+          // D-417: salvo que el punto lo haya puesto una persona: ese se conserva.
           if (!this.puntoProtegido()) {
             this.latitud = "";
             this.longitud = "";
@@ -881,7 +881,7 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
       // Actualizar propiedades
       this.latitud = lat.toFixed(7);
       this.longitud = lng.toFixed(7);
-      // D-415: un punto marcado a mano no se vuelve a geocodificar.
+      // D-417: un punto marcado a mano no se vuelve a geocodificar.
       this.fuenteUbicacion = "manual";
       this.enlaceUbicacion = "";
       this.mensajeUbicacion = "";
@@ -983,7 +983,7 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
       // Ticket 1046: el departamento ya se resolvía aquí pero no se devolvía.
       departamento: this.departamentoSeleccionado || this.direccionForm.get("departamento")?.value || "",
       referencias: this.direccionForm.get("referencias")?.value,
-      // D-415: el punto por separado, su origen y el enlace pegado (si lo hubo).
+      // D-417: el punto por separado, su origen y el enlace pegado (si lo hubo).
       latitud: this.latitud || "",
       longitud: this.longitud || "",
       fuenteUbicacion: this.fuenteUbicacion,
@@ -1093,7 +1093,7 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
       .sort((a, b) => a.localeCompare(b));
   }
 
-  // ── D-415 (ticket 1203): ubicación de la entrega ─────────────────────
+  // ── D-417 (ticket 1203): ubicación de la entrega ─────────────────────
 
   /** El punto lo puso una persona (mapa, enlace o GPS): no se recalcula ni se borra. */
   puntoProtegido(): boolean {

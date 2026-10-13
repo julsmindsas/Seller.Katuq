@@ -31,7 +31,7 @@ export class DetalleEntregaComponent implements OnInit, OnChanges {
     }
   }
   
-  /** D-415: enlace de Google Maps al punto de entrega, si el pedido lo tiene. */
+  /** D-417: enlace de Google Maps al punto de entrega, si el pedido lo tiene. */
   get enlaceMapa(): string {
     const envio: any = this.pedido?.envio;
     if (!envio) return '';
