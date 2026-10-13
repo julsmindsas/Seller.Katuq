@@ -102,9 +102,9 @@
 
 ## 8. Despliegue y encendido
 
-- [ ] 8.1 Desplegar el backend: `git pull` local, `git merge --ff-only` en el servidor, `set -e`, HEAD verificado, `node --check`, suites y `pm2 restart katuq-api`. Si antes de lo propio hay commits ajenos sin desplegar, preguntarle a Daniel. La bandera queda apagada en todas las empresas.
-- [ ] 8.2 Publicar el front: `git pull`, `npm run build:prod`, `node scripts/verify-dist-prod.js`, `firebase deploy --only hosting` y commit de `src/assets/version.json`. La versión debe quedar mayor que la viva.
-- [ ] 8.3 Prueba de punta a punta en FLORECER, con la sesión de Daniel y pedidos de demo autorizados:
+- [x] 8.1 Desplegar el backend: `git pull` local, `git merge --ff-only` en el servidor, `set -e`, HEAD verificado, `node --check`, suites y `pm2 restart katuq-api`. Si antes de lo propio hay commits ajenos sin desplegar, preguntarle a Daniel. La bandera queda apagada en todas las empresas. → 13-oct: backend `3e2fb82` (después otra sesión desplegó `6c0a820` encima) y ADK `35e43cf`; bandera apagada en todas las empresas.
+- [x] 8.2 Publicar el front: `git pull`, `npm run build:prod`, `node scripts/verify-dist-prod.js`, `firebase deploy --only hosting` y commit de `src/assets/version.json`. La versión debe quedar mayor que la viva. → 13-oct: versión 2026.10.13.1.
+- [ ] 8.3 Prueba de punta a punta en FLORECER (13-oct, lectura: el rol Administrador no tiene En vivo en el menú, su único mensajero está fuera de línea y no hay pedidos listos; encender la bandera lo hace Daniel con `scripts/set-company-feature.js`), con la sesión de Daniel y pedidos de demo autorizados:
   1. armar el plan;
   2. cambiar un mensajero;
   3. aprobar;
