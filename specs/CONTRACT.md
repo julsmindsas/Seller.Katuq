@@ -9536,4 +9536,4 @@ commits y el push no despliega ni activa checkout.
 
 **Numeración.** La propuesta se escribió como D-413, que ya era de Automatizaciones; se registra como D-416.
 
-**Estado.** Build de producción sin errores; 0 gradientes y 0 primarios prohibidos en el módulo. Pendiente: prueba en el navegador en FLORECER (1440 y 390 px, link en incógnito, apagar y prender) y comprobar que los productos usados no cambiaron. Sin commit ni despliegue.
+**Estado.** DESPLEGADO el 2026-10-13 (front 2026.10.13.2, commit e1c4486f) por orden de Daniel («despliega»), compilado desde el repo principal con el `src` idéntico al commit. Build de producción sin errores; 0 gradientes y 0 primarios prohibidos en el módulo. **No verificado en el navegador**: la extensión estaba desconectada. Falta la prueba en FLORECER (1440 y 390 px, link en incógnito, apagar y prender) y comprobar que los productos usados no cambiaron.
