@@ -100,6 +100,11 @@
   color: var(--ev-accent);
   text-decoration: underline;
   cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 .dz-opttia {

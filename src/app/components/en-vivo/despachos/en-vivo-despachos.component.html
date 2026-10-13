@@ -23,7 +23,7 @@
         </div>
         <div class="dz-cabeza__acciones">
           <span class="dz-hora">Armado a las {{ horaPlan }}</span>
-          <button type="button" class="dz-btn dz-btn--sec" (click)="cargar()"><span>Actualizar</span></button>
+          <button type="button" class="dz-btn dz-btn--sec" [disabled]="aplicando.size > 0" (click)="cargar()"><span>Actualizar</span></button>
           <button
             type="button"
             class="dz-btn"
@@ -38,8 +38,8 @@
 
       <div class="dz-avisos">
         <p class="dz-aviso t-warn" *ngIf="viejoDesde">
-          <span class="dz-aviso__texto">Cambió algo desde las {{ horaViejo }}.</span>
-          <button type="button" class="dz-enlace" (click)="cargar()">Actualizar el plan</button>
+          <span class="dz-aviso__texto">Cambió algo desde las {{ horaViejo }}</span>
+          <button type="button" class="dz-enlace" [disabled]="aplicando.size > 0" (click)="cargar()">Actualizar el plan</button>
         </p>
         <p class="dz-aviso t-info" *ngIf="bloqueado">
           <span class="dz-aviso__texto">{{ bloqueado }}</span>
@@ -74,8 +74,10 @@
           [puedeAprobar]="puedeAprobar"
           [bloqueado]="bloqueado"
           [aplicando]="aplicando.has(g.id)"
+          [ocupado]="aplicando.size > 0"
           [resultado]="resultados.get(g.id) || null"
           (cambiarMensajero)="cambiarMensajero(g, $event)"
+          (cambiarTransportadora)="cambiarTransportadora(g, $event)"
           (sacar)="sacar(g, $event)"
           (mover)="mover(g, $event.pedido, $event.destino)"
           (aprobar)="aprobarGrupo(g)"
@@ -85,7 +87,7 @@
       <ng-template #vacio>
         <div class="dz-vacio">
           <app-en-vivo-icono nombre="check"></app-en-vivo-icono>
-          <p class="dz-vacio__titulo">Nada por despachar con mensajero ahora</p>
+          <p class="dz-vacio__titulo">Nada por despachar ahora</p>
           <p class="dz-vacio__texto">{{ textoVacio }}</p>
         </div>
       </ng-template>
@@ -100,12 +102,12 @@
             </button>
             <select
               class="dz-select dz-select--chico"
-              *ngIf="otrosGrupos(null).length"
+              *ngIf="destinosDe(p).length"
               [attr.aria-label]="'Pasar el pedido ' + p.nroPedido + ' a un grupo'"
               (change)="mover(null, p, $any($event.target).value); $any($event.target).value = ''"
             >
               <option value="">Pasar a…</option>
-              <option *ngFor="let og of otrosGrupos(null)" [value]="og.id">{{ og.etiqueta }}</option>
+              <option *ngFor="let og of destinosDe(p)" [value]="og.id">{{ og.etiqueta }}</option>
             </select>
           </li>
         </ul>

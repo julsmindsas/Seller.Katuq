@@ -91,14 +91,14 @@
 
 ## 7. Transportadora (segunda fase)
 
-> 13-oct: en espera de una decisión de Daniel. La medición cambia la regla de cuál transportadora sugerir: en el comercio con más envíos por transportadora, esta depende de los productos del pedido, no de cuál se usa más. Detalle y propuesta en `specs/CONTRACT.md` (D-410, "Avance 13-oct") y en `design.md` ("Fase 2: medición"). La parte que escribe no se implementa hasta su OK.
+> 13-oct: Daniel aprobó el ajuste de la regla: cada integración declara qué pedidos acepta y solo se ofrecen las que garantizan un envío por pedido. La spec `plan-con-transportadora` quedó ajustada y `design.md` ("Fase 2") explica cómo se busca un envío que quedó sin respuesta.
 
-- [ ] 7.1 `capacidades()` en la capa común de proveedores (`services/logisticsManager.js`). Sin declaración, el proveedor no se ofrece. Va con su prueba.
-- [ ] 7.2 Extraer el servicio que usa `POST /v1/logistics/shipments`, con la empresa de la sesión firmada y pruebas de caracterización. Módulo sensible: diff aprobado.
-- [ ] 7.3 Prueba de contrato "respuesta perdida" por proveedor. Declarar `unEnvioPorPedido: true` solo donde pase; primero el proveedor que ya tiene candado.
-- [ ] 7.4 Grupos por transportadora en `armarPlan`: cobertura, cotización con 10 s de espera, tarifa fija o "sin tarifa", y datos exigidos.
-- [ ] 7.5 Aprobación por transportadora (una orden por pedido), con pruebas de idempotencia y del write-set.
-- [ ] 7.6 Front: grupos por transportadora con la tarifa, "sin tarifa por ahora" y el cambio de transportadora.
+- [x] 7.1 `capacidades()` en la capa común de proveedores (`services/logisticsManager.js`). Sin declaración, el proveedor no se ofrece. Va con su prueba. → `LogisticsManager.capacidades()`; la integración con candado declara qué pedidos acepta (todos sus productos de su catálogo), tarifa incluida, datos exigidos, garantía y una nota; el plan las lee en `services/despachos/transportadoras.js`, sin nombres de transportadora.
+- [x] 7.2 Extraer el servicio que usa `POST /v1/logistics/shipments`, con la empresa de la sesión firmada y pruebas de caracterización. Módulo sensible: diff aprobado. → lo que queda en el pedido al crear el envío pasó a `services/logistics/pedidoConEnvio.js` y lo usan la pantalla y el plan; caracterización contra una copia congelada del bloque original (72 combinaciones). El plan crea el envío con `LogisticsManager.createShipment` y la empresa de la sesión.
+- [x] 7.3 Prueba de contrato "respuesta perdida" por proveedor. Declarar `unEnvioPorPedido: true` solo donde pase; primero el proveedor que ya tiene candado. → búsqueda antes de reintentar en el servicio único de envío a esa integración (protege también a la pantalla y a las automatizaciones), espera de 2 minutos tras una falla ambigua y "por revisar" si no se puede confirmar; `tests/despachos/cerezaRespuestaPerdida.contract.test.js`. Solo esa integración declara la garantía.
+- [x] 7.4 Grupos por transportadora en `armarPlan`: cobertura, cotización con 10 s de espera, tarifa fija o "sin tarifa", y datos exigidos. → grupos "Por <transportadora>" de hasta 10 pedidos, menor tarifa o la más usada entre las que aceptan, alternativas y "Falta <dato>"; sin declaraciones el plan queda igual que en la fase 1. La cotización por API espera a que un adaptador sepa cotizar (spec ajustada). `tests/despachos/planTransportadora.test.js`.
+- [x] 7.5 Aprobación por transportadora (una orden por pedido), con pruebas de idempotencia y del write-set. → `ejecutarPlan.js`: orden por pedido con id por (empresa, transportadora, pedido, huella), retomar, liberar si el envío falla; `tests/despachos/ejecutarPlanTransportadora.contract.test.js`.
+- [x] 7.6 Front: grupos por transportadora con la tarifa, "sin tarifa por ahora" y el cambio de transportadora. → grupos "Por <transportadora>" con tarifa, nota y selector solo si hay alternativas; una orden por pedido; "Aprobar todo" manda cada grupo de transportadora en su propia petición; sin respuesta a tiempo queda "en curso" y pide actualizar. Build de producción y Playwright a 1440 y 390 px con la API simulada.
 
 ## 8. Despliegue y encendido
 

@@ -30,7 +30,9 @@
   min-width: 0;
 }
 
-.dz-franja {
+// La franja (mensajero) o el chip "Una orden por pedido" (transportadora).
+.dz-franja,
+.dz-envio {
   @include ev-pastilla;
 
   app-en-vivo-icono {
@@ -39,7 +41,8 @@
   }
 }
 
-.dz-franja__texto {
+.dz-franja__texto,
+.dz-envio__texto {
   color: inherit;
   font-size: inherit;
 }
@@ -80,7 +83,8 @@
   font-weight: 800;
 }
 
-.dz-mensajero {
+.dz-mensajero,
+.dz-transportadora {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -110,6 +114,64 @@
   font-size: ev-fs(12.5);
   color: var(--ev-ink-2);
   line-height: 1.4;
+}
+
+.dz-transportadora__ficha {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid var(--ev-line);
+  border-radius: 11px;
+  background: var(--ev-surface-2);
+  letter-spacing: normal;
+
+  app-en-vivo-icono {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    color: var(--ev-accent);
+  }
+}
+
+.dz-transportadora__nombre {
+  min-width: 0;
+  font-size: ev-fs(13.5);
+  font-weight: 800;
+  color: var(--ev-ink);
+  overflow-wrap: anywhere;
+}
+
+// Selector nuevo (fase 2): foco visible fuerte, como pide la regla de diseño.
+.dz-select--transportadora:focus-visible {
+  outline: 3px solid var(--ev-accent-2, #7c5cff) !important;
+  outline-offset: 2px;
+}
+
+.dz-tarifa {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  letter-spacing: normal;
+
+  app-en-vivo-icono {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    margin-top: 2px;
+    color: var(--ev-muted);
+  }
+}
+
+.dz-tarifa__texto {
+  font-size: ev-fs(12.5);
+  font-weight: 700;
+  color: var(--ev-ink-2);
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
 }
 
 .dz-frase {

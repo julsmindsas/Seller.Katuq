@@ -9367,6 +9367,19 @@ Sin colecciones nuevas. Write-set: `shipping_orders`, campos de despacho de `ord
 
 La bandera `despachosOpttia` sigue apagada en todas las empresas. Falta prenderla en FLORECER y probar con la sesión de Daniel.
 
+**Fase 2, transportadoras (13-oct, noche).** Daniel aprobó el ajuste propuesto ("Aprobado"). La spec `plan-con-transportadora` quedó ajustada y las tareas 7.1-7.6 están implementadas:
+- **Cada integración declara** en su adaptador:
+  - qué pedidos acepta;
+  - su tarifa;
+  - los datos que exige;
+  - si garantiza un solo envío por pedido;
+  - una nota para la persona.
+
+  El plan solo lee esas declaraciones (`services/despachos/transportadoras.js`) y no tiene reglas con nombre de transportadora. Hoy solo la integración con candado lo declara: acepta los pedidos con todos sus productos de su catálogo, el envío va incluido y sale con la transportadora que ella tiene por defecto.
+- **Plan:** lo que los mensajeros no cubren va a un grupo "Por <transportadora>" de hasta 10 pedidos. Si varias lo aceptan, se escoge la de menor tarifa o la más usada entre esas. Si ninguna lo acepta, el pedido queda en "No entra al plan" como antes. Sin declaraciones, el plan es idéntico al de la fase 1.
+- **Aprobar:** cada pedido lleva su propia orden de envío, y el envío se crea por la misma capa de la pantalla de Despachos. Lo que queda en el pedido sale de una función compartida con la pantalla (`services/logistics/pedidoConEnvio.js`), caracterizada contra el código original en 72 combinaciones. Si un envío falla, ese pedido queda libre con su razón y los demás siguen.
+- **Un solo envío por pedido:** antes de reintentar un envío que quedó sin confirmar, el servicio único de envío a esa integración lo busca. El detalle está en `design.md`, "Fase 2". Así protege también a la pantalla y a las automatizaciones.
+
 ## D-411 (2026-10-13) — Tickets de soporte con varios agentes: principal, apoyo y observador (backend openspec/changes/multi-asignacion-tickets-soporte) — IMPLEMENTADO y pusheado 13-oct; Support desplegado, backend pendiente de deploy
 
 **Disparador.** Santiago (13-oct): "que al asignar un ticket a alguno de los agentes de soporte se pueda asignar a más de una persona". En la definición agregó un tercer rol: "el observador es alguien que no es responsable del ticket pero desea que le lleguen los avances".

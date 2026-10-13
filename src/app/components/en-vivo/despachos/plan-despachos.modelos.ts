@@ -33,17 +33,47 @@ export interface MensajeroSugerido {
   alternativas: ReadonlyArray<{ id: string; nombre: string; razon: string }>;
 }
 
+/** Fase 2: además de los grupos de mensajero, el plan trae grupos "Por <transportadora>". */
+export type TipoGrupo = 'mensajero' | 'transportadora';
+
+/** Tarifa que declara el adaptador de la transportadora; el front no la calcula. */
+export interface TarifaPlan {
+  tipo: 'incluida' | 'fija' | 'ninguna';
+  /** Solo en "fija": la plata por pedido. */
+  valor: number | null;
+  /** Lo que se muestra tal cual en "incluida" y "ninguna". */
+  texto: string | null;
+}
+
+export interface OpcionTransportadoraPlan {
+  proveedor: string;
+  nombre: string;
+  tarifa: TarifaPlan;
+  /** Aviso que declara la integración (p. ej. con qué transportadora sale); se muestra tal cual. */
+  nota?: string | null;
+}
+
+export interface TransportadoraDelGrupo extends OpcionTransportadoraPlan {
+  nota: string | null;
+  /** Otras que aceptan todos los pedidos del grupo; casi siempre vacío. */
+  alternativas: OpcionTransportadoraPlan[];
+}
+
 export interface GrupoPlan {
   id: string;
-  tipo: 'mensajero';
+  tipo: TipoGrupo;
+  /** En los de transportadora es "Por <nombre>". */
   zona: string;
   zonasClave: string[];
   ciudades: string[];
-  franja: FranjaPlan;
+  /** null en los grupos de transportadora: cada pedido sale con su propia orden de envío. */
+  franja: FranjaPlan | null;
   pedidos: PedidoDelGrupo[];
   /** Huella de cada pedido tal como lo vio la persona: el servidor la compara al aprobar. */
   huellasPedidos: Record<string, string>;
   sugerido: MensajeroSugerido | null;
+  /** Solo en los grupos de transportadora. */
+  transportadora?: TransportadoraDelGrupo;
 }
 
 export interface FueraDelPlan {
@@ -91,6 +121,8 @@ export interface PlanDespachos {
     envioAutomatico: number;
     fuera: number;
     porCobrar: number;
+    /** Pedidos en grupos de transportadora. */
+    porTransportadora?: number;
   };
   grupos: GrupoPlan[];
   fueraDelPlan: FueraDelPlan[];
@@ -114,11 +146,15 @@ export interface RespuestaPlan {
   explicacion: ExplicacionPlan | null;
 }
 
-export interface GrupoParaAprobar {
-  transportadorId: string;
+interface GrupoParaAprobarBase {
   planHuella: string;
   pedidos: Array<{ id: string; huella: string }>;
 }
+
+/** Un grupo va O BIEN con el mensajero (`transportadorId`) O BIEN con la transportadora (`proveedor`), nunca con los dos. */
+export type GrupoParaAprobar =
+  | (GrupoParaAprobarBase & { transportadorId: string; proveedor?: never })
+  | (GrupoParaAprobarBase & { proveedor: string; transportadorId?: never });
 
 export type EstadoResultado = 'despachado' | 'despachado-parcial' | 'no-despachado' | 'ya-aprobado' | 'en-curso' | 'reanudado';
 
@@ -127,6 +163,10 @@ export interface ResultadoGrupo {
   estado: EstadoResultado;
   razon?: string;
   nroShippingOrder?: number;
+  /** Transportadora: una orden de envío por pedido. */
+  nroShippingOrders?: number[];
+  /** Transportadora: su nombre. */
+  transportadora?: string;
   despachados?: string[];
   fuera?: Array<{ id: string; nroPedido: string; razon: string }>;
   aprobadoPor?: string;

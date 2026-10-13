@@ -1,14 +1,20 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { combineLatest, Subscription } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { combineLatest, from, of, Subscription } from 'rxjs';
+import { catchError, concatMap, finalize, map } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../compartido/en-vivo-interaccion.service';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { EventoEnVivo } from '../servicios/en-vivo.modelos';
 import { EnVivoPlanDespachosService } from './en-vivo-plan-despachos.service';
 import { GrupoEditable, OpcionMensajero, PedidoEditable } from './grupo-despacho/grupo-despacho.component';
-import { AlertaPlan, ExplicacionPlan, GrupoPlan, PlanDespachos, RespuestaPlan, ResultadoGrupo } from './plan-despachos.modelos';
+import { AlertaPlan, ExplicacionPlan, GrupoParaAprobar, GrupoPlan, PlanDespachos, RespuestaAprobacion, RespuestaPlan, ResultadoGrupo, TipoGrupo } from './plan-despachos.modelos';
 
 type Fase = 'cargando' | 'error' | 'listo';
+
+/** Lo mismo que el servidor: un grupo de transportadora lleva a lo sumo 5 pedidos (cada uno es una llamada a la integración). */
+const MAX_PEDIDOS_TRANSPORTADORA = 5;
+
+/** Un grupo de transportadora que se quedó sin respuesta pudo haber enviado: no se dice que no salió. */
+const SIN_RESPUESTA = 'Katuq no respondió a tiempo y no sé si alcanzó a enviar. Actualiza el plan antes de volver a aprobar.';
 
 /**
  * Vista "Despachos" de En vivo (D-410): el plan de despachos que arma el servidor, explicado por
@@ -75,6 +81,8 @@ export class EnVivoDespachosComponent implements OnInit, OnDestroy {
   // ── Carga ──────────────────────────────────────────────────────────────────
 
   cargar(): void {
+    // Con aprobaciones en cola, un plan nuevo mostraría como pendientes grupos que todavía se están enviando.
+    if (this.aplicando.size) return;
     this.fase = 'cargando';
     this.cd.markForCheck();
     this.api.obtener().subscribe({
@@ -95,7 +103,7 @@ export class EnVivoDespachosComponent implements OnInit, OnDestroy {
     this.resultados = new Map();
     this.sinGrupo = [];
     this.viejoDesde = null;
-    this.opcionesPorGrupo = new Map(plan.grupos.map((g) => [g.id, opcionesDe(g, plan)]));
+    this.opcionesPorGrupo = new Map(plan.grupos.filter((g) => g.tipo !== 'transportadora').map((g) => [g.id, opcionesDe(g, plan)]));
     this.grupos = plan.grupos.map((g) => editable(g, this.explicacion));
     this.idsDelPlan = new Set([
       ...plan.grupos.flatMap((g) => g.pedidos.map((p) => p.id)),
@@ -145,15 +153,31 @@ export class EnVivoDespachosComponent implements OnInit, OnDestroy {
     return this.opcionesPorGrupo.get(g.id) ?? [];
   }
 
-  otrosGrupos(g: GrupoEditable | null): Array<{ id: string; etiqueta: string }> {
+  /** "Pasar a…" desde un grupo: solo entre grupos de mensajero; un grupo de transportadora no pasa ni recibe. */
+  otrosGrupos(g: GrupoEditable): Array<{ id: string; etiqueta: string }> {
+    return g.tipo === 'transportadora' ? [] : this.destinos('mensajero', g);
+  }
+
+  /** Un pedido sacado vuelve solo a un grupo del mismo tipo del que salió. */
+  destinosDe(p: PedidoEditable): Array<{ id: string; etiqueta: string }> {
+    return this.destinos(p.origen, null);
+  }
+
+  private destinos(tipo: TipoGrupo, excluir: GrupoEditable | null): Array<{ id: string; etiqueta: string }> {
     return this.grupos
       .map((x, i) => ({ x, i }))
-      .filter(({ x }) => x !== g && !this.resultados.has(x.id))
+      .filter(({ x }) => x !== excluir && x.tipo === tipo && !this.resultados.has(x.id))
+      .filter(({ x }) => tipo !== 'transportadora' || x.pedidos.length < MAX_PEDIDOS_TRANSPORTADORA)
       .map(({ x, i }) => ({ id: x.id, etiqueta: `${i + 1}. ${x.zona}` }));
   }
 
   cambiarMensajero(g: GrupoEditable, id: string): void {
     this.grupos = this.grupos.map((x) => (x === g ? { ...x, mensajeroId: id } : x));
+  }
+
+  cambiarTransportadora(g: GrupoEditable, proveedor: string): void {
+    if (!g.transportadoras.some((t) => t.proveedor === proveedor)) return;
+    this.grupos = this.grupos.map((x) => (x === g ? { ...x, proveedor } : x));
   }
 
   sacar(g: GrupoEditable, p: PedidoEditable): void {
@@ -163,7 +187,7 @@ export class EnVivoDespachosComponent implements OnInit, OnDestroy {
 
   mover(origen: GrupoEditable | null, p: PedidoEditable, destinoId: string): void {
     const destino = this.grupos.find((x) => x.id === destinoId);
-    if (!destino) return;
+    if (!destino || destino.tipo !== p.origen) return;
     this.grupos = this.grupos.map((x) => {
       if (x === origen) return { ...x, pedidos: x.pedidos.filter((y) => y.id !== p.id) };
       if (x === destino) return { ...x, pedidos: [...x.pedidos, p] };
@@ -175,7 +199,7 @@ export class EnVivoDespachosComponent implements OnInit, OnDestroy {
   // ── Aprobar ────────────────────────────────────────────────────────────────
 
   get aprobables(): GrupoEditable[] {
-    return this.grupos.filter((g) => g.mensajeroId && g.pedidos.length && !this.resultados.has(g.id) && !this.aplicando.has(g.id));
+    return this.grupos.filter((g) => conQuien(g) && g.pedidos.length && !this.resultados.has(g.id) && !this.aplicando.has(g.id));
   }
 
   aprobarGrupo(g: GrupoEditable): void {
@@ -186,38 +210,72 @@ export class EnVivoDespachosComponent implements OnInit, OnDestroy {
     this.aprobarVarios(this.aprobables);
   }
 
+  /**
+   * Los grupos de mensajero van juntos en una petición; cada grupo de transportadora va en la suya,
+   * uno tras otro y nunca en paralelo: cada pedido es una llamada a la integración y el proxy corta
+   * a los 60 s.
+   */
   private aprobarVarios(gs: GrupoEditable[]): void {
-    if (!this.plan || !gs.length || this.bloqueado || !this.puedeAprobar) return;
+    if (!this.plan || !gs.length || this.bloqueado || !this.puedeAprobar || this.aplicando.size) return;
     const huella = this.plan.huella;
+    const mensajeros = gs.filter((g) => g.tipo !== 'transportadora');
+    const lotes = [...(mensajeros.length ? [mensajeros] : []), ...gs.filter((g) => g.tipo === 'transportadora').map((g) => [g])];
     gs.forEach((g) => this.aplicando.add(g.id));
     this.anuncio = gs.length === 1 ? 'Aprobando el grupo…' : `Aprobando ${gs.length} grupos…`;
     this.cd.markForCheck();
-    this.api
-      .aprobar(gs.map((g) => ({ transportadorId: g.mensajeroId as string, planHuella: huella, pedidos: g.pedidos.map((p) => ({ id: p.id, huella: p.huella })) })))
-      .pipe(finalize(() => {
-        gs.forEach((g) => this.aplicando.delete(g.id));
-        this.cd.markForCheck();
-      }))
+    let ok = 0;
+    let hechos = 0;
+    let ultimoError: string | null = null;
+    from(lotes)
+      .pipe(
+        concatMap((lote) =>
+          this.api.aprobar(lote.map((g) => paraAprobar(g, huella))).pipe(
+            map((r) => this.alAprobar(lote, r)),
+            catchError((e) => of(this.alFallar(lote, e))),
+            finalize(() => {
+              lote.forEach((g) => this.aplicando.delete(g.id));
+              hechos += lote.length;
+              if (hechos < gs.length) this.anuncio = `Aprobando… van ${hechos} de ${gs.length} grupos.`;
+              this.cd.markForCheck();
+            })
+          )
+        )
+      )
       .subscribe({
         next: (r) => {
-          const resultados = new Map(this.resultados);
-          for (const res of r.resultados) {
-            const g = gs[res.indice];
-            if (g) resultados.set(g.id, res);
-          }
-          this.resultados = resultados;
-          const ok = r.resultados.filter((x) => x.estado === 'despachado' || x.estado === 'reanudado').length;
-          this.anuncio = ok === gs.length ? (ok === 1 ? 'Grupo despachado.' : `${ok} grupos despachados.`) : 'Revisa el resultado de cada grupo.';
-          this.viejoDesde = this.viejoDesde ?? Date.now();
+          ok += r.ok;
+          if (r.error) ultimoError = r.error;
         },
-        error: (e) => {
-          const razon = mensajeDe(e, 'No se pudo aprobar. Inténtalo de nuevo.');
-          const resultados = new Map(this.resultados);
-          gs.forEach((g, i) => resultados.set(g.id, { indice: i, estado: 'no-despachado', razon }));
-          this.resultados = resultados;
-          this.anuncio = razon;
+        complete: () => {
+          this.anuncio =
+            ok === gs.length
+              ? ok === 1 ? 'Grupo despachado.' : `${ok} grupos despachados.`
+              : gs.length === 1 && ultimoError ? ultimoError : 'Revisa el resultado de cada grupo.';
+          this.cd.markForCheck();
         },
       });
+  }
+
+  private alAprobar(lote: GrupoEditable[], r: RespuestaAprobacion): { ok: number; error: string | null } {
+    const resultados = new Map(this.resultados);
+    for (const res of r.resultados) {
+      const g = lote[res.indice];
+      if (g) resultados.set(g.id, res);
+    }
+    this.resultados = resultados;
+    this.viejoDesde = this.viejoDesde ?? Date.now();
+    return { ok: r.resultados.filter((x) => x.estado === 'despachado' || x.estado === 'reanudado').length, error: null };
+  }
+
+  /** Sin respuesta en un grupo de transportadora: "en curso" y el plan queda viejo. Lo demás, como siempre. */
+  private alFallar(lote: GrupoEditable[], e: unknown): { ok: number; error: string } {
+    const enDuda = lote.every((g) => g.tipo === 'transportadora') && sinRespuesta(e);
+    const razon = enDuda ? SIN_RESPUESTA : mensajeDe(e, 'No se pudo aprobar. Inténtalo de nuevo.');
+    const resultados = new Map(this.resultados);
+    lote.forEach((g, i) => resultados.set(g.id, { indice: i, estado: enDuda ? 'en-curso' : 'no-despachado', razon }));
+    this.resultados = resultados;
+    if (enDuda) this.viejoDesde = this.viejoDesde ?? Date.now();
+    return { ok: 0, error: razon };
   }
 
   abrirPedido(id: string): void {
@@ -230,7 +288,7 @@ export class EnVivoDespachosComponent implements OnInit, OnDestroy {
     const p = this.plan;
     if (!p) return '';
     const n = this.grupos.reduce((s, g) => s + g.pedidos.length, 0);
-    if (!n) return 'Nada por despachar con mensajero ahora';
+    if (!n) return 'Nada por despachar ahora';
     return `${n} ${n === 1 ? 'pedido listo' : 'pedidos listos'} en ${this.grupos.length} ${this.grupos.length === 1 ? 'grupo' : 'grupos'}`;
   }
 
@@ -244,7 +302,7 @@ export class EnVivoDespachosComponent implements OnInit, OnDestroy {
 
   get textoVacio(): string {
     const modo = this.plan?.perfil.modo;
-    if (modo === 'transportadora') return 'Tu comercio despacha por transportadora. Esa parte del plan llega en la siguiente fase; por ahora despacha desde Despachos.';
+    if (modo === 'transportadora') return 'Cuando haya pedidos de hoy que una transportadora conectada pueda llevar, Opttia los arma aquí. Los demás se despachan desde Despachos.';
     if (modo === 'ninguno') return 'Todavía no hay mensajeros ni transportadoras con qué armar despachos.';
     return 'Cuando haya pedidos de hoy listos para salir, Opttia arma aquí los grupos.';
   }
@@ -282,15 +340,34 @@ export class EnVivoDespachosComponent implements OnInit, OnDestroy {
 }
 
 function editable(g: GrupoPlan, explicacion: ExplicacionPlan | null): GrupoEditable {
+  const tipo: TipoGrupo = g.tipo === 'transportadora' ? 'transportadora' : 'mensajero';
+  const t = tipo === 'transportadora' ? g.transportadora ?? null : null;
+  const alternativas = (t?.alternativas || []).filter((a) => a.proveedor !== t?.proveedor);
   return {
     id: g.id,
+    tipo,
     zona: g.zona,
-    franja: g.franja.etiqueta,
-    urgente: g.franja.urgente,
-    pedidos: g.pedidos.map((p) => ({ id: p.id, nroPedido: p.nroPedido, porCobrar: p.porCobrar, zona: p.zona, franja: p.franja, huella: g.huellasPedidos[p.id] })),
-    mensajeroId: g.sugerido ? g.sugerido.id : null,
+    franja: g.franja ? g.franja.etiqueta : null,
+    urgente: g.franja?.urgente === true,
+    pedidos: g.pedidos.map((p) => ({ id: p.id, nroPedido: p.nroPedido, porCobrar: p.porCobrar, zona: p.zona, franja: p.franja, huella: g.huellasPedidos[p.id], origen: tipo })),
+    mensajeroId: tipo === 'mensajero' && g.sugerido ? g.sugerido.id : null,
+    proveedor: t ? t.proveedor : null,
+    transportadoras: t ? [{ proveedor: t.proveedor, nombre: t.nombre, tarifa: t.tarifa, nota: t.nota ?? null }, ...alternativas] : [],
     frase: explicacion?.grupos?.[g.id] ?? null,
   };
+}
+
+/** Mensajero: necesita a quién; transportadora: necesita cuál. */
+function conQuien(g: GrupoEditable): boolean {
+  return g.tipo === 'transportadora' ? !!g.proveedor : !!g.mensajeroId;
+}
+
+/** O BIEN el mensajero (`transportadorId`) O BIEN la transportadora (`proveedor`), nunca los dos. */
+function paraAprobar(g: GrupoEditable, planHuella: string): GrupoParaAprobar {
+  const pedidos = g.pedidos.map((p) => ({ id: p.id, huella: p.huella }));
+  return g.tipo === 'transportadora'
+    ? { proveedor: g.proveedor as string, planHuella, pedidos }
+    : { transportadorId: g.mensajeroId as string, planHuella, pedidos };
 }
 
 /** El sugerido y sus alternativas (con su razón) primero; después los demás mensajeros disponibles. */
@@ -313,6 +390,13 @@ function opcionesDe(g: GrupoPlan, plan: PlanDespachos): OpcionMensajero[] {
 
 function horaCorta(ms: number): string {
   return new Date(ms).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/Bogota' });
+}
+
+/** Se acabó el tiempo o no hubo respuesta: red caída, el proxy cortó o el servidor no estaba disponible. */
+function sinRespuesta(e: unknown): boolean {
+  const err = e as { status?: number; error?: unknown; name?: string } | null;
+  if (!err) return false;
+  return err.status === 0 || err.status === 502 || err.status === 503 || err.status === 504 || err.error instanceof ProgressEvent || err.name === 'TimeoutError';
 }
 
 function mensajeDe(e: unknown, defecto: string): string {

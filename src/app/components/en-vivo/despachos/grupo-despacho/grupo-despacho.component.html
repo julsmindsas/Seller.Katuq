@@ -1,10 +1,16 @@
 <article class="dz-grupo" [class.dz-grupo--hecho]="aprobado" [attr.aria-labelledby]="'dz-grupo-' + numero">
   <header class="dz-grupo__cabeza">
     <div class="dz-grupo__titulos">
-      <span class="dz-franja" [class.t-bad]="grupo.urgente" [class.t-accent]="!grupo.urgente">
+      <span class="dz-franja" *ngIf="!esTransportadora; else chipEnvio" [class.t-bad]="grupo.urgente" [class.t-accent]="!grupo.urgente">
         <app-en-vivo-icono nombre="reloj"></app-en-vivo-icono>
         <span class="dz-franja__texto">{{ grupo.franja }}</span>
       </span>
+      <ng-template #chipEnvio>
+        <span class="dz-envio t-info">
+          <app-en-vivo-icono nombre="caja"></app-en-vivo-icono>
+          <span class="dz-envio__texto">Una orden por pedido</span>
+        </span>
+      </ng-template>
       <h3 class="dz-grupo__zona" [id]="'dz-grupo-' + numero">{{ grupo.zona }}</h3>
       <p class="dz-grupo__cifras">
         <span class="dz-dato">{{ grupo.pedidos.length }} {{ grupo.pedidos.length === 1 ? 'pedido' : 'pedidos' }}</span>
@@ -14,7 +20,7 @@
     <span class="dz-grupo__numero" aria-hidden="true">{{ numero }}</span>
   </header>
 
-  <div class="dz-mensajero">
+  <div class="dz-mensajero" *ngIf="!esTransportadora; else bloqueTransportadora">
     <label class="dz-etiqueta" [for]="'dz-sel-' + numero">Mensajero</label>
     <select
       class="dz-select"
@@ -38,6 +44,35 @@
     </p>
   </div>
 
+  <ng-template #bloqueTransportadora>
+    <div class="dz-transportadora">
+      <p class="dz-etiqueta" [id]="'dz-tr-' + numero">Transportadora</p>
+      <select
+        class="dz-select dz-select--transportadora"
+        *ngIf="grupo.transportadoras.length > 1; else fichaTransportadora"
+        [attr.aria-labelledby]="'dz-tr-' + numero"
+        [disabled]="!puedeTocar"
+        [ngModel]="grupo.proveedor || ''"
+        (ngModelChange)="elegirTransportadora($event)"
+      >
+        <option *ngFor="let t of grupo.transportadoras; let i = index; trackBy: trackTransportadora" [value]="t.proveedor">{{ etiquetaTransportadora(t, i) }}</option>
+      </select>
+      <ng-template #fichaTransportadora>
+        <p class="dz-transportadora__ficha">
+          <app-en-vivo-icono nombre="camion"></app-en-vivo-icono>
+          <span class="dz-transportadora__nombre">{{ transportadora?.nombre || 'Sin transportadora' }}</span>
+        </p>
+      </ng-template>
+      <p class="dz-tarifa" *ngIf="transportadora as t">
+        <app-en-vivo-icono nombre="efectivo"></app-en-vivo-icono>
+        <span class="dz-tarifa__texto">{{ textoTarifa(t.tarifa) }}</span>
+      </p>
+      <p class="dz-aviso-chico t-ink" *ngIf="transportadora?.nota as nota">
+        <span class="dz-aviso-chico__texto">{{ nota }}</span>
+      </p>
+    </div>
+  </ng-template>
+
   <p class="dz-frase" *ngIf="grupo.frase">
     <span class="dz-frase__marca">Opttia</span>
     <span class="dz-frase__texto">{{ grupo.frase }}</span>
@@ -53,7 +88,7 @@
       <div class="dz-pedido__acciones" *ngIf="puedeTocar">
         <select
           class="dz-select dz-select--chico"
-          *ngIf="otrosGrupos.length"
+          *ngIf="!esTransportadora && otrosGrupos.length"
           [attr.aria-label]="'Pasar el pedido ' + p.nroPedido + ' a otro grupo'"
           (change)="moverA(p, $any($event.target).value); $any($event.target).value = ''"
         >
@@ -79,10 +114,10 @@
       type="button"
       class="dz-btn"
       *ngIf="puedeAprobar && !aprobado"
-      [disabled]="!puedeTocar || !grupo.mensajeroId || !grupo.pedidos.length"
+      [disabled]="!puedeTocar || ocupado || !conQuien || !grupo.pedidos.length"
       (click)="aprobar.emit()"
     >
-      <span>{{ aplicando ? 'Aprobando…' : 'Aprobar y despachar' }}</span>
+      <span>{{ aplicando ? 'Aprobando…' : esTransportadora ? 'Aprobar y enviar' : 'Aprobar y despachar' }}</span>
     </button>
   </footer>
 </article>

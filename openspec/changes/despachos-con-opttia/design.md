@@ -254,7 +254,7 @@ La compuerta se redefinió con esto: el mensajero exacto depende de quién está
   - **ALMARA:** en la última semana, los 146 despachos con usuario identificado fueron del rol Administrador.
 - **Aviso proactivo:** una insignia con el número de listos en la opción Despachos y una línea de la narración. Se descartó mover el orbe 3D hacia el encabezado.
 
-## Fase 2: medición del 13-oct y propuesta (pendiente de aprobación)
+## Fase 2: medición del 13-oct y propuesta (aprobada por Daniel el 13-oct)
 
 Medido en producción, solo lectura, con el motor del plan y 30 días de órdenes de envío.
 
@@ -268,12 +268,19 @@ Medido en producción, solo lectura, con el motor del plan y 30 días de órdene
 - **Tarifa y datos:** la integración con candado contra duplicados no cotiza, porque el envío va incluido, así que sale "sin tarifa". Ningún pedido trae código DANE, y esa integración no lo pide.
 - **Duplicados:** solo una integración tiene candado. Ese candado cubre el envío en curso y el ya hecho, pero no la respuesta que se pierde. Por eso, antes de reintentar se busca el envío, con la búsqueda por pedido que ya tiene la capa común.
 
-**Ajuste propuesto a `plan-con-transportadora`, que Daniel debe aprobar:**
+**Ajuste a `plan-con-transportadora`, aprobado por Daniel el 13-oct:**
 - **Lo que declara cada adaptador:** además de la tarifa, los datos que exige y la garantía contra duplicados, declara qué pedidos acepta. La regla vive en el adaptador, no en el plan, para no tener reglas por nombre de transportadora (Artículo VI).
 - **Qué sugiere el plan:** solo una integración que acepte el pedido y garantice un envío por pedido. Si hay varias, la de menor tarifa, o la más usada entre las que lo aceptan.
 - **Si ninguna lo acepta:** el pedido queda "se despacha desde Despachos".
 - **Respuesta perdida:** antes de reintentar un envío sin respuesta, se busca si ya existe. Si no se puede saber, el pedido queda "por revisar".
 - **Cotización por API:** queda para cuando un adaptador sepa cotizar un pedido por sí solo; hoy ninguno lo hace.
+
+**Cómo se busca un envío que quedó sin respuesta** (medido el 13-oct en la integración con candado, solo lectura):
+- La lista de órdenes de la integración viene de la más nueva a la más vieja, 50 por página, y no filtra por referencia: los filtros se ignoran. La búsqueda "por pedido" que ya tenía la capa común solo miraba la primera página, así que no sirve para confirmar que un envío no existe.
+- Cada orden trae el id del pedido de Katuq (`external_id`) y su número (`reference`).
+- Por eso la búsqueda recorre las páginas desde la más nueva hasta pasar el primer intento de ese pedido (con 10 minutos de margen), o hasta la última página. Si lo encuentra, adopta ese envío; si llega a ese punto sin encontrarlo, el envío no existe y se crea; si algo falla o se acaban las 20 páginas, el pedido queda "por revisar".
+- Si el intento anterior falló hace menos de 2 minutos por una respuesta que no llegó, se espera: la integración puede estar terminando de crearlo.
+- La búsqueda vive en el servicio único de envío a esa integración, así que protege también a la pantalla de Despachos y a las automatizaciones, no solo al plan.
 
 ## Risks / Trade-offs
 

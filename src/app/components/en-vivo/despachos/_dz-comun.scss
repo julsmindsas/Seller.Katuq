@@ -97,10 +97,12 @@
   padding: 6px 10px;
   border-radius: 11px;
   background: var(--tone-soft);
+  letter-spacing: normal;
 }
 
 .dz-aviso-chico__texto {
   font-size: ev-fs(12);
   font-weight: 700;
+  line-height: 1.4;
   color: var(--tone);
 }
