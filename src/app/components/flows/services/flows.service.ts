@@ -77,6 +77,27 @@ export class FlowsService extends BaseService {
       .pipe(map((res) => unwrapSingle<FlowSpec>(res, 'flow')));
   }
 
+  /**
+   * Guarda (crea o actualiza) y devuelve también los avisos del servidor en
+   * palabras de negocio (D-411): pasos incompletos, paso de inicio quitado, etc.
+   * Guardar nunca cambia si la automatización está encendida.
+   */
+  guardar(id: string | null, payload: Partial<FlowSpec>): Observable<{ flow: FlowSpec | null; avisos: string[] }> {
+    const peticion = id
+      ? this.http.put<any>(`${this.baseUrl}/${id}`, payload)
+      : this.http.post<any>(this.baseUrl, payload);
+    return peticion.pipe(
+      map((res) => ({
+        flow: unwrapSingle<FlowSpec>(res, 'flow'),
+        avisos: Array.from(new Set<string>(
+          ((res && res.warnings) || [])
+            .map((w: any) => w && w.mensaje)
+            .filter((m: any) => typeof m === 'string' && m.trim().length > 0)
+        )),
+      }))
+    );
+  }
+
   update(id: string, payload: Partial<FlowSpec>): Observable<FlowSpec | null> {
     return this.http
       .put<ApiResponse<FlowSpec> | FlowSpec>(`${this.baseUrl}/${id}`, payload)

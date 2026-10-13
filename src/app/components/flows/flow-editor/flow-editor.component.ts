@@ -46,6 +46,8 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
   loading = false;
   saving = false;
   errorMessage = '';
+  /** Avisos del último guardado (pasos incompletos, paso de inicio quitado…). */
+  avisosGuardado: string[] = [];
   webComponentReady = false;
   isNew = true;
   hasUnsaved = false;
@@ -213,7 +215,8 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
     this.triggerType = trigger.type;
     if (trigger.type === 'cron' || trigger.type === 'polling') {
       this.scheduleDraft = {
-        cron: trigger.config?.cron,
+        // El despachador lee `cronExpression`; `cron` es el campo viejo del editor.
+        cron: trigger.config?.cronExpression ?? trigger.config?.cron,
         intervalMinutes: trigger.config?.intervalMinutes
       };
     } else if (trigger.type === 'webhook') {
@@ -546,27 +549,31 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
     // Build triggers array, applying scheduleDraft if it changed.
     const triggers: FlowTriggerBinding[] = this.buildTriggersForSave();
 
+    // Sin `status`: guardar nunca enciende ni apaga (D-411). Antes el autoguardado
+    // mandaba su copia vieja y devolvía a borrador una automatización encendida.
     const payload: Partial<FlowSpec> = {
       name: this.flowName?.trim() || 'Sin nombre',
       description: this.flowDescription || undefined,
       graph: this.graph,
-      status: this.flowStatus,
       tags: this.flowTags && this.flowTags.length ? this.flowTags : undefined,
       triggers
     };
 
-    const action = this.isNew
-      ? this.flowsService.create(payload)
-      : this.flowsService.update(this.flow!.id, payload);
+    const action = this.flowsService.guardar(this.isNew ? null : this.flow!.id, payload);
 
     action.subscribe({
-      next: (saved) => {
+      next: ({ flow: saved, avisos }) => {
+        this.avisosGuardado = avisos;
         if (saved) {
           const isCreation = this.isNew;
           this.flow = saved;
           this.isNew = false;
           this.hasUnsaved = false;
           this.state.upsertFlow(saved);
+          // El servidor puede haber completado los pasos de inicio: refrescar
+          // horario y dirección del aviso.
+          this.hydrateTriggerInfo(saved);
+          if (saved.status) this.flowStatus = saved.status;
           this.saving = false;
           if (!opts.silent) {
             this.toastr.success('Cambios guardados.', '', { timeOut: 1800 });
@@ -580,8 +587,8 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        const msg = err?.error?.message || 'No pudimos guardar los cambios. Vuelve a intentarlo.';
-        this.toastr.error(msg, 'Error al guardar', { timeOut: 5000 });
+        const msg = this.mensajeDeGuardado(err);
+        this.toastr.error(msg, 'No se guardó', { timeOut: 6000 });
         this.saving = false;
         if (opts.silent) {
           // re-trigger so the user sees the failure and can retry manually
@@ -605,7 +612,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
           ...t,
           config: {
             ...t.config,
-            ...(this.scheduleDraft.cron ? { cron: this.scheduleDraft.cron } : {}),
+            ...(this.scheduleDraft.cron ? { cronExpression: this.scheduleDraft.cron } : {}),
             ...(this.scheduleDraft.intervalMinutes
               ? { intervalMinutes: this.scheduleDraft.intervalMinutes }
               : {})
@@ -614,6 +621,24 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
       }
       return t;
     });
+  }
+
+  /** Error al guardar en palabras de negocio (los del servidor vienen en inglés técnico). */
+  private mensajeDeGuardado(err: any): string {
+    const errores: any[] = err?.error?.errors || [];
+    if (errores.some((e) => e?.category === 'cycle')) {
+      return 'Hay pasos conectados en círculo: una automatización no puede volver a un paso anterior. Quita la línea que regresa.';
+    }
+    if (errores.some((e) => /duplicate/.test(e?.message || ''))) {
+      return 'Hay dos pasos o dos líneas repetidos. Borra uno de ellos y vuelve a guardar.';
+    }
+    if (errores.some((e) => e?.category === 'triggers')) {
+      return 'El paso de inicio no es válido. Revisa con qué arranca la automatización.';
+    }
+    if (err?.status === 403 || err?.status === 404) {
+      return 'Esta automatización ya no existe o es de otra empresa. Recarga la página.';
+    }
+    return 'No pudimos guardar los cambios. Vuelve a intentarlo.';
   }
 
   toggleActivate(): void {
@@ -653,10 +678,14 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
+        // El servidor dice qué paso y qué campo faltan (D-411).
+        const delServidor = err?.error?.code === 'FLOW_INCOMPLETO' || err?.error?.code === 'SIN_PASO_DE_INICIO'
+          ? err.error.message
+          : '';
         this.toastr.error(
-          wasActive ? 'No pudimos apagarla. Vuelve a intentarlo.' : 'No pudimos encenderla. Revisa que todos sus pasos estén completos.',
-          'Error',
-          { timeOut: 4500 }
+          delServidor || (wasActive ? 'No pudimos apagarla. Vuelve a intentarlo.' : 'No pudimos encenderla. Vuelve a intentarlo.'),
+          wasActive ? 'No se apagó' : 'No se encendió',
+          { timeOut: 6000 }
         );
       }
     });
