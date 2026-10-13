@@ -1,0 +1,26 @@
+// Piezas compartidas por la lista y el detalle de catálogos por link (D-416).
+// Ojo: ninguna clase contiene "p-" (regla global de font-size) y todo span con
+// texto lleva color propio (regla global `span.ng-star-inserted`).
+@import '../../../shared/styles/config-pagina';
+
+@mixin catalogo-link-comun {
+  @include config-pagina;
+
+  .estado {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 800;
+    border: 1px solid transparent;
+  }
+  .estado--activo { background: $cfg-ok-soft; color: $cfg-ok; border-color: #bfe6cf; }
+  .estado--apagado { background: $cfg-chip-bg; color: $cfg-body; border-color: $cfg-chip-border; }
+  .estado--vencido { background: $cfg-warn-soft; color: $cfg-warn; border-color: #f6d6a8; }
+
+  .aviso-texto { color: inherit; font-size: inherit; flex: 1; }
+
+  .cargando { padding: 24px 0; text-align: center; }
+  .cargando-texto { color: $cfg-muted; font-size: 13px; }
+}

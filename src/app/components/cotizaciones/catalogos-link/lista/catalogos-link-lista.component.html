@@ -1,0 +1,72 @@
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Cotizaciones</span>
+      <h1 class="cfg-titulo">Catálogos por link</h1>
+      <p class="cfg-sub">
+        Elige productos, comparte el link y tu cliente arma su pedido sin crear cuenta.
+        Lo que pide te llega como cotización.
+      </p>
+    </div>
+    <div class="cfg-acciones">
+      <button class="cfg-btn" type="button" (click)="nuevo()">
+        <i class="fa fa-plus"></i><span>Nuevo catálogo</span>
+      </button>
+    </div>
+  </header>
+
+  <section class="cfg-card">
+    <p class="cfg-aviso cfg-aviso--error" *ngIf="error">
+      <span class="aviso-texto">{{ error }}</span>
+      <button class="cfg-btn cfg-btn--sec" type="button" (click)="cargar()">Reintentar</button>
+    </p>
+
+    <div class="cargando" *ngIf="cargando">
+      <span class="cargando-texto">Cargando catálogos…</span>
+    </div>
+
+    <div class="cfg-vacio" *ngIf="!cargando && !error && !filas.length">
+      <div class="cfg-vacio__icono"><i class="fa fa-book"></i></div>
+      <h3 class="cfg-vacio__titulo">Todavía no tienes catálogos</h3>
+      <p class="cfg-vacio__texto">
+        Arma uno con los productos de una temporada o para un cliente y compártelo por WhatsApp.
+      </p>
+      <button class="cfg-btn" type="button" (click)="nuevo()">Crear mi primer catálogo</button>
+    </div>
+
+    <p-table *ngIf="!cargando && !error && filas.length" [value]="filas" responsiveLayout="stack" [breakpoint]="'760px'">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Catálogo</th>
+          <th>Productos</th>
+          <th>Estado</th>
+          <th>Vistas</th>
+          <th>Pedidos recibidos</th>
+          <th>Creado</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-fila>
+        <tr class="fila" tabindex="0" (click)="abrir(fila)" (keydown.enter)="abrir(fila)">
+          <td>
+            <span class="columna-titulo">Catálogo</span>
+            <div class="nombre-celda">
+              <span class="nombre">{{ fila.catalogo.nombre }}</span>
+              <span class="descripcion" *ngIf="fila.catalogo.descripcion">{{ fila.catalogo.descripcion }}</span>
+            </div>
+          </td>
+          <td><span class="columna-titulo">Productos</span><span class="dato">{{ fila.productos }}</span></td>
+          <td>
+            <span class="columna-titulo">Estado</span>
+            <span class="estado" [ngClass]="'estado--' + fila.estado">{{ etiqueta[fila.estado] }}</span>
+          </td>
+          <td><span class="columna-titulo">Vistas</span><span class="dato">{{ fila.catalogo.vistasCount || 0 }}</span></td>
+          <td><span class="columna-titulo">Pedidos recibidos</span><span class="dato">{{ fila.catalogo.solicitudesCount || 0 }}</span></td>
+          <td>
+            <span class="columna-titulo">Creado</span>
+            <span class="dato dato--suave">{{ fila.catalogo.fechaCreacion | date: "d MMM y" }}</span>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </section>
+</div>

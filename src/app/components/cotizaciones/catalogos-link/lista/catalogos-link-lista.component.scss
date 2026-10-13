@@ -1,0 +1,33 @@
+@import '../catalogo-link-comun';
+@include catalogo-link-comun;
+
+.fila { cursor: pointer; }
+
+.nombre-celda { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nombre { color: $cfg-ink; font-weight: 700; font-size: 13.5px; }
+.descripcion {
+  color: $cfg-muted;
+  font-size: 12px;
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dato { color: $cfg-ink; font-size: 13px; font-weight: 600; }
+.dato--suave { color: $cfg-body; font-weight: 500; }
+
+.columna-titulo { display: none; }
+
+// En el apilado móvil de PrimeNG cada celda muestra su título a la izquierda.
+@media (max-width: 760px) {
+  .columna-titulo {
+    display: inline-block;
+    min-width: 130px;
+    color: $cfg-muted;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+  .descripcion { max-width: 200px; }
+}

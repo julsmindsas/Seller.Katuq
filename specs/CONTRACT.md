@@ -9497,3 +9497,19 @@ Nada de eso cambia en ningún modo de la bandera. Lo protege una prueba de regre
 Daniel pidió «conectalo al backend de katuq, osea haslo ya», después de aprobar la propuesta de marketplace de clientes. Primera conexión aditiva y de solo lectura: `GET /v1/sites/public/directorio`, antes de la ruta de slug, reutiliza consultarCatalogo, marcaDeLaEmpresa y categorías ocultas de la copia publicada. Solo tiendas en estado publicado con `published.tienda.habilitada` y bloque catálogo visible con `permitirCompra=true`; no publica comercios ni productos. Los precios COP se formatean en servidor, identificadores públicos con namespace de slug; proyección de nombre, ciudad, fotografía, descripción y categorías, sin company, correos, credenciales, costos o inventario interno. Caché 60 segundos, dos tiendas concurrentes, máximo 40 tiendas y 20 páginas por tienda; truncamiento anunciado y enlace a la tienda pública. Sin nuevas colecciones, índices ni escrituras. CORS admite el origen exacto de Kuvo. Web Angular 21 y clientes SwiftUI/Compose leen el mismo contrato sin sesión del personal ni fallback ficticio.
 
 Los pedidos y pagos de Kuvo siguen pendientes: crearPedido descuenta stock y no se reutiliza como cotización. No se prueban escrituras en producción ni se altera inventario, cron, flows, webhooks, autenticación de gestión o liquidaciones.
+
+## D-416 (2026-10-13) — Catálogos por link desde la web (openspec/changes/catalogos-por-link-web) — APROBADO por Daniel ("dale aprobado catalogo"), implementado en local
+
+**Disparador.** Los catálogos por link (D-141) solo se podían armar desde la app iOS; el backend y la vitrina `/cat/<link>` ya estaban en producción, pero el vendedor de la web no tenía dónde crearlos.
+
+**Decisión.**
+- Entrada **"Catálogos por link"** dentro de **Cotizaciones** (lo que pide el comprador llega como cotización), rutas `cotizaciones/catalogos`, `cotizaciones/catalogos/nuevo` y `cotizaciones/catalogos/:id`, en un módulo lazy propio.
+- Visible con `permisoPrevio: "cotizaciones"`: quien ya ve Cotizaciones la ve, sin escribir en `roles.menus`. Insignia NUEVO hasta el 2026-12-31.
+- Lista con estado (Activo, Apagado, Vencido), vistas y pedidos recibidos; detalle con link (generar, copiar, WhatsApp), prender/apagar con Swal, edición enviando solo lo que cambió y productos con la marca Agotado.
+- Productos con el selector visual de Sitios y Campañas, ampliado con `maximo`, `subtitulo` y `tituloElegidos` (por defecto igual que antes: 24 y los mismos textos).
+- Sin cambios de backend, colecciones ni endpoints: usa `/v1/catalogos/*` existentes. No toca pedidos, inventario, productos ni precios.
+- "Mi página web › Catálogos" (constructor, ticket 1175) no cambia.
+
+**Numeración.** La propuesta se escribió como D-413, que ya era de Automatizaciones; se registra como D-416.
+
+**Estado.** Build de producción sin errores; 0 gradientes y 0 primarios prohibidos en el módulo. Pendiente: prueba en el navegador en FLORECER (1440 y 390 px, link en incógnito, apagar y prender) y comprobar que los productos usados no cambiaron. Sin commit ni despliegue.

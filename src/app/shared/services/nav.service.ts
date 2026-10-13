@@ -459,6 +459,17 @@ export class NavService implements OnDestroy {
       children: [
         { path: "cotizaciones", title: "Listado de cotizaciones", type: "link", icon: "list" },
         { path: "cotizaciones/editor", title: "Nueva cotización", type: "link", icon: "file-plus" },
+        // D-416: visible para quien ya ve Cotizaciones, sin tocar los menús de cada rol.
+        {
+          path: "cotizaciones/catalogos",
+          title: "Catálogos por link",
+          type: "link",
+          icon: "share-2",
+          permisoPrevio: "cotizaciones",
+          badgeType: "primary",
+          badgeValue: "NUEVO",
+          badgeUntil: "2026-12-31",
+        },
       ],
     },
     {
