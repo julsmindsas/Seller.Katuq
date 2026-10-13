@@ -41,8 +41,12 @@ export interface NotaCliente {
   usuario?: string;
 }
 
-/** Ticket 1166: nombre de usuario de WhatsApp, sin `@`. */
-const PATRON_WHATSAPP_USERNAME = /^[A-Za-z0-9._]{3,32}$/;
+/**
+ * Ticket 1166: nombre de usuario de WhatsApp, sin `@`. Ticket 1206 (ALMACEN
+ * BOMBAS): muchos comercios guardan aquí el nombre del contacto como aparece en
+ * WhatsApp ("María Fernanda Ríos"), así que se aceptan espacios y tildes.
+ */
+const PATRON_WHATSAPP_USERNAME = /^[\p{L}\p{N}][\p{L}\p{N} ._'-]{1,59}$/u;
 
 @Component({
   selector: "app-crear-cliente-modal",
@@ -477,9 +481,9 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     }
   }
 
-  /** Ticket 1166: el usuario se guarda sin `@` ni espacios alrededor. */
+  /** Ticket 1166: el usuario se guarda sin `@` ni espacios alrededor (ticket 1206: ni espacios repetidos). */
   private limpiarUsername(raw: any): string {
-    return String(raw || '').trim().replace(/^@+/, '');
+    return String(raw || '').trim().replace(/^@+/, '').replace(/\s+/g, ' ');
   }
 
   onUsernameBlur(): void {
@@ -550,7 +554,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
       numero_celular_comprador:      'Teléfono Celular (10 dígitos)',
       telefono_fijo:                 'Teléfono fijo (7 a 10 dígitos)',
       correo_electronico_comprador:  'Correo Electrónico',
-      whatsappUsername:              'Usuario de WhatsApp (3 a 32 letras, números, punto o guion bajo)',
+      whatsappUsername:              'Usuario de WhatsApp (2 a 60 caracteres: letras, números, espacios, punto o guion)',
     };
     const faltantes = Object.entries(labels)
       .filter(([key]) => this.formulario.get(key)?.invalid)

@@ -851,5 +851,7 @@
   "Código:": "Código:",
   "Porcentaje:": "Porcentagem:",
   "Envío gratis": "Frete grátis",
-  "Valor del descuento:": "Valor do desconto:"
+  "Valor del descuento:": "Valor do desconto:",
+  "ej: maria.flores o María Flores": "ex.: maria.flores ou María Flores",
+  "De 2 a 60 caracteres: letras, números, espacios, punto o guion": "De 2 a 60 caracteres: letras, números, espaços, ponto ou hífen"
 }

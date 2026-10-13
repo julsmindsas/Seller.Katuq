@@ -871,5 +871,7 @@
   "Código:": "Code:",
   "Porcentaje:": "Percentage:",
   "Envío gratis": "Free shipping",
-  "Valor del descuento:": "Discount amount:"
+  "Valor del descuento:": "Discount amount:",
+  "ej: maria.flores o María Flores": "e.g.: maria.flores or María Flores",
+  "De 2 a 60 caracteres: letras, números, espacios, punto o guion": "2 to 60 characters: letters, numbers, spaces, period or hyphen"
 }
