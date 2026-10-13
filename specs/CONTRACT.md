@@ -9395,6 +9395,7 @@ La bandera `despachosOpttia` sigue apagada en todas las empresas. Falta prenderl
 - **Bandera:** encendida el 13-oct en la noche (Daniel: "haslo tú").
   - **FLORECER:** también se agregó En vivo al rol Administrador, y hay dos pedidos de prueba listos.
   - **OH MY STORE:** ahí aprobar manda pedidos reales a Cereza.
+  - **ALMARA FELICIDAD** (Daniel: "prendelo a almara"): ve y aprueba Despachos quien tiene Administrador o VENTAS en el menú; tiene 20 mensajeros.
 
 ## D-411 (2026-10-13) — Tickets de soporte con varios agentes: principal, apoyo y observador (backend openspec/changes/multi-asignacion-tickets-soporte) — IMPLEMENTADO y pusheado 13-oct; Support desplegado, backend pendiente de deploy
 
