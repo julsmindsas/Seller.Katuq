@@ -9333,3 +9333,5 @@ Sin colecciones nuevas. Write-set: `shipping_orders`, campos de despacho de `ord
 - (b) primero mensajeros y después transportadoras;
 - (c) ensayo en sombra y encendido por comercio;
 - (d) índice `orders (company, estadoProceso, fechaEntrega)`.
+
+**De paso (13-oct).** `tests/enVivo/writeset.contract.test.js` fallaba desde el 10-oct (D-403 lo registró como falla anterior). La causa era la prueba, no producción: usaba la fecha fija del 8-oct contra la instancia compartida, que mira ayer y hoy con el reloj real. Arreglada en el backend `933a925`; las 13 suites de En vivo pasan.
