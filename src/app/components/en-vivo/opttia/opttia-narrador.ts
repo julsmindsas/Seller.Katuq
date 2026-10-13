@@ -34,7 +34,7 @@ export const MAX_COLA_NARRACION = 8;
 /** Cuántos puestos del podio se narran. */
 export const PUESTOS_NARRADOS = 3;
 
-export type TipoLineaNarracion = 'pedido-opttia' | 'carrera' | 'alerta' | 'vuelve' | 'record' | 'resumen';
+export type TipoLineaNarracion = 'pedido-opttia' | 'carrera' | 'alerta' | 'vuelve' | 'record' | 'resumen' | 'plan';
 
 export interface LineaNarracion {
   /** Crece con cada línea: sirve para distinguir una línea igual a la anterior. */
@@ -205,6 +205,8 @@ export class NarradorOpttia {
   private readonly hitos = new Set<string>();
   private cursor = 0;
   private secuencia = 0;
+  /** Último número de pedidos listos que se avisó (D-410); -1 = ninguno todavía. */
+  private ultimoAvisoPlan = -1;
 
   constructor(private readonly maxCola: number = MAX_COLA_NARRACION) {}
 
@@ -228,6 +230,18 @@ export class NarradorOpttia {
     this.cola = [];
     this.base = null;
     this.cursor = 0;
+    this.ultimoAvisoPlan = -1;
+  }
+
+  /**
+   * Plan de despachos (D-410): "Hay N pedidos listos; armo el plan en Despachos", con plantilla y
+   * una sola vez cada vez que cambia N. No cambia de vista: la persona escoge Despachos.
+   */
+  avisarPlanDespachos(cantidad: number, callar = false): void {
+    if (callar || cantidad === this.ultimoAvisoPlan) return;
+    this.ultimoAvisoPlan = cantidad;
+    if (cantidad <= 0) return;
+    this.encolar('plan', `Hay ${cantidad} ${cantidad === 1 ? 'pedido listo' : 'pedidos listos'}; armo el plan en Despachos.`, false);
   }
 
   /**

@@ -22,7 +22,7 @@
       type="button"
       [attr.aria-pressed]="o.id === opcionActiva"
       (click)="elegirOpcion.emit(o.id)"
-    >{{ o.etiqueta }}</button>
+    >{{ o.etiqueta }}<span class="seg__insignia" *ngIf="o.insignia" [attr.aria-label]="o.insignia + ' listos'">{{ o.insignia }}</span></button>
   </div>
 
   <div class="actions" *ngIf="!sinAcceso">

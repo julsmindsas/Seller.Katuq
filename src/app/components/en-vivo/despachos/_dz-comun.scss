@@ -1,0 +1,106 @@
+// Piezas comunes de la vista Despachos de En vivo (D-410). Tema de En vivo (D-131): plano,
+// acento morado, avisos en par color fuerte / fondo suave. Ningún nombre de clase lleva "p-"
+// (la regla global [class*="p-"] pisaría el tamaño de letra).
+@import '../en-vivo-tema';
+
+.dz-btn {
+  @include ev-foco;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--ev-accent);
+  color: var(--ev-on-accent);
+  font-size: ev-fs(13);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--ev-sh-btn);
+
+  span {
+    color: inherit;
+    font-size: inherit;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--ev-accent-hover);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  &--sec {
+    background: var(--ev-surface);
+    color: var(--ev-ink);
+    border: 1px solid var(--ev-line);
+    box-shadow: none;
+
+    &:hover:not(:disabled) {
+      background: var(--ev-tile);
+    }
+  }
+}
+
+.dz-btn-icono {
+  @include ev-foco;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--ev-line);
+  border-radius: 11px;
+  background: var(--ev-surface);
+  color: var(--ev-ink-2);
+  cursor: pointer;
+
+  app-en-vivo-icono {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    background: var(--ev-tile);
+  }
+}
+
+.dz-select {
+  @include ev-foco;
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid var(--ev-line);
+  border-radius: 11px;
+  background: var(--ev-surface);
+  color: var(--ev-ink);
+  font-size: ev-fs(13);
+
+  &:disabled {
+    background: var(--ev-tile);
+    color: var(--ev-ink-2);
+  }
+
+  &--chico {
+    flex: none;
+    width: 104px;
+    min-height: 30px;
+    padding: 4px 6px;
+    font-size: ev-fs(12);
+  }
+}
+
+.dz-aviso-chico {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 11px;
+  background: var(--tone-soft);
+}
+
+.dz-aviso-chico__texto {
+  font-size: ev-fs(12);
+  font-weight: 700;
+  color: var(--tone);
+}

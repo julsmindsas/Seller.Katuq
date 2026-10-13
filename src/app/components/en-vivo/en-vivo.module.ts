@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EnVivoComercioModule } from './comercio/en-vivo-comercio.module';
+import { EnVivoDespachosModule } from './despachos/en-vivo-despachos.module';
 import { EnVivoCompartidoModule } from './compartido/en-vivo-compartido.module';
 import { EnVivoEscenasModule } from './escenas/en-vivo-escenas.module';
 import { EnVivoRoutingModule } from './en-vivo-routing.module';
@@ -28,6 +29,7 @@ import { EnVivoPlataformaModule } from './plataforma/en-vivo-plataforma.module';
     EnVivoFichaModule,
     EnVivoPlataformaModule,
     EnVivoComercioModule,
+    EnVivoDespachosModule,
     EnVivoOpttiaModule,
     EnVivoEscenasModule,
     EnVivoRoutingModule,

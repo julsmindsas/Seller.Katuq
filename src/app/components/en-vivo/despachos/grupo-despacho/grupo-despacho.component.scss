@@ -1,0 +1,255 @@
+@import '../dz-comun';
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+@include ev-tonos;
+
+.dz-grupo {
+  @include ev-panel;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+
+  &--hecho {
+    background: var(--ev-surface-2);
+  }
+}
+
+.dz-grupo__cabeza {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dz-grupo__titulos {
+  min-width: 0;
+}
+
+.dz-franja {
+  @include ev-pastilla;
+
+  app-en-vivo-icono {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.dz-franja__texto {
+  color: inherit;
+  font-size: inherit;
+}
+
+.dz-grupo__zona {
+  margin: 6px 0 2px;
+  font-size: ev-fs(16) !important;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--ev-ink);
+  overflow-wrap: anywhere;
+}
+
+.dz-grupo__cifras {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dz-dato {
+  font-size: ev-fs(12.5);
+  font-weight: 600;
+  color: var(--ev-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.dz-grupo__numero {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 11px;
+  background: var(--ev-accent-soft);
+  color: var(--ev-accent);
+  font-size: ev-fs(13);
+  font-weight: 800;
+}
+
+.dz-mensajero {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dz-etiqueta {
+  @include ev-etiqueta;
+  margin: 0;
+}
+
+.dz-razon {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+
+  app-en-vivo-icono {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    margin-top: 2px;
+    color: var(--ev-accent);
+  }
+}
+
+.dz-razon__texto {
+  font-size: ev-fs(12.5);
+  color: var(--ev-ink-2);
+  line-height: 1.4;
+}
+
+.dz-frase {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: var(--ev-accent-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dz-frase__marca {
+  @include ev-etiqueta;
+  color: var(--ev-accent);
+}
+
+.dz-frase__texto {
+  font-size: ev-fs(13);
+  color: var(--ev-ink);
+  line-height: 1.45;
+}
+
+.dz-pedidos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--ev-line-soft);
+}
+
+.dz-pedido {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--ev-line-soft);
+}
+
+.dz-pedido__abrir {
+  @include ev-foco;
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--ev-ink);
+}
+
+.dz-pedido__nro {
+  font-size: ev-fs(13);
+  font-weight: 800;
+  color: var(--ev-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.dz-pedido__zona {
+  min-width: 0;
+  font-size: ev-fs(12);
+  color: var(--ev-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dz-pedido__cobro {
+  flex: none;
+  white-space: nowrap;
+  margin-left: auto;
+  font-size: ev-fs(12);
+  font-weight: 700;
+  color: var(--ev-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.dz-pedido__acciones {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dz-grupo__pie {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dz-resultado {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: var(--tone-soft);
+
+  app-en-vivo-icono {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    color: var(--tone);
+  }
+}
+
+.dz-resultado__texto {
+  font-size: ev-fs(13);
+  font-weight: 700;
+  color: var(--tone);
+}
+
+.dz-fuera-chico {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dz-fuera-chico__texto {
+  font-size: ev-fs(12);
+  color: var(--ev-ink-2);
+}
+
+.dz-btn {
+  align-self: flex-end;
+}
+
+@media (max-width: 600px) {
+  .dz-btn {
+    align-self: stretch;
+    justify-content: center;
+    min-height: 44px;
+  }
+}

@@ -236,6 +236,24 @@ La compuerta se redefinió con esto: el mensajero exacto depende de quién está
 
 **Otros.** `logisticsManager.tieneEstrategia(proveedor)` (aditivo) dice si hay estrategia para crear envíos, con alias. La lista vieja de `LegacyConfigAdapter.#isLogisticsProvider` deja por fuera a osmosis, fullpi, prindel y partners_logistics, por eso no se usa.
 
+**Cambios al implementar (13-oct).**
+- **Decisión 2, cambiada:** no se extrajo la creación de órdenes del controlador. Esa función también maneja edición, pedidos movidos y liberaciones que el plan no necesita, y moverla era el cambio más riesgoso en un módulo sensible. En su lugar:
+  - la aprobación usa las mismas reglas, en `utils/despachoReglas.js`, que una prueba compara con las del controlador en 298 casos;
+  - toma el consecutivo en transacción, igual que la pantalla;
+  - despacha con `updateOrderInternal`, la misma función del botón Despachar;
+  - pasarle esa función al pedido sin el carrito no toca inventario.
+
+  Queda pendiente la tarea 3.2: que el controlador importe el módulo compartido.
+- **Auditoría:** el pedido guarda `despachoPlan` (origen, canal, quién aprobó y huella), y la orden, `origen`, `aprobadoPor`, `canal` y `despacho.estado`. El historial de estados lo escribe `updateOrderInternal` con el correo de quien aprobó.
+- **Una sola orden:** el id de la orden sale de (empresa, mensajero, pedidos y sus huellas).
+  - Mientras alguien despacha, otra aprobación del mismo grupo responde "Lo está aprobando…".
+  - Si se cortó hace más de 2 minutos, la siguiente retoma los pedidos pendientes.
+- **Acceso:**
+  - **Quién:** ve y aprueba la familia Administrador o quien tiene Despachos en el menú; quien solo tiene En vivo, ve.
+  - **Excluidos:** el vendedor restringido (D-349) no ve el plan.
+  - **ALMARA:** en la última semana, los 146 despachos con usuario identificado fueron del rol Administrador.
+- **Aviso proactivo:** una insignia con el número de listos en la opción Despachos y una línea de la narración. Se descartó mover el orbe 3D hacia el encabezado.
+
 ## Risks / Trade-offs
 
 - **[Consecutivo repetido si el plan y la pantalla crean órdenes a la vez]** → El mecanismo es el mismo de la pantalla, lectura del máximo dentro de la transacción, así que el riesgo es igual al de hoy. La prueba de concurrencia lo mide. Si aparece, se cambia el contador en los dos caminos a la vez, en otra propuesta.

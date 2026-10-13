@@ -1,0 +1,29 @@
+<section class="dz-bloque" *ngIf="bloquesAutomaticos.length" aria-labelledby="dz-automatico">
+  <h3 class="dz-bloque__titulo" id="dz-automatico">Envío automático</h3>
+  <div class="dz-razon-fila" *ngFor="let b of bloquesAutomaticos; trackBy: trackBloque">
+    <p class="dz-razon-fila__nombre">
+      <span class="dz-razon-fila__texto">{{ b.razon }}</span>
+      <span class="dz-cuenta">{{ b.pedidos.length }}</span>
+    </p>
+    <div class="dz-numeros">
+      <button type="button" class="dz-numero" *ngFor="let p of b.pedidos" (click)="abrirPedido.emit(p.id)" [title]="p.detalle || ''">
+        <span class="dz-numero__texto">#{{ p.nroPedido }}</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="dz-bloque" *ngIf="bloques.length" aria-labelledby="dz-fuera">
+  <h3 class="dz-bloque__titulo" id="dz-fuera">No entra al plan</h3>
+  <div class="dz-razon-fila" *ngFor="let b of bloques; trackBy: trackBloque">
+    <p class="dz-razon-fila__nombre">
+      <span class="dz-razon-fila__texto">{{ b.razon }}</span>
+      <span class="dz-cuenta">{{ b.pedidos.length }}</span>
+    </p>
+    <div class="dz-numeros">
+      <button type="button" class="dz-numero" *ngFor="let p of b.pedidos" (click)="abrirPedido.emit(p.id)" [title]="p.detalle || ''">
+        <span class="dz-numero__texto">#{{ p.nroPedido }}</span>
+      </button>
+    </div>
+  </div>
+</section>

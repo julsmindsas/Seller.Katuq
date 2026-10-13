@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
+import { BehaviorSubject, combineLatest, Observable, Subscription } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 import type { MargenesEncuadre } from '../../../shared/escena-3d/escena-base';
+import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
 import { EnVivoInteraccionService, OpcionVista } from '../compartido/en-vivo-interaccion.service';
 import { EnVivoOrbeService } from '../escenas/opttia-guia.service';
 import { RespuestaParaEscena } from '../opttia/en-vivo-opttia.component';
@@ -14,6 +15,7 @@ import { EnVivoFichaService } from '../ficha/ficha.service';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { EtapaInfo, EventoEnVivo, PedidoEnVivo } from '../servicios/en-vivo.modelos';
 import { irAlTablero } from './navegacion';
+import { contarListos } from '../despachos/plan-despachos.reglas';
 import { sesionEsJulsmind } from './sesion-katuq';
 
 /** Las vistas del selector del comercio: dos escenas 3D (las enchufa otro módulo) y el tablero. */
@@ -22,6 +24,12 @@ const OPCIONES: ReadonlyArray<OpcionVista> = [
   { id: 'pais', etiqueta: 'Mi país' },
   { id: 'pedidos', etiqueta: 'Pedidos' },
 ];
+
+/** Plan de despachos con Opttia (D-410): solo con la bandera del comercio y una sesión que pueda verlo. */
+const OPCION_DESPACHOS: OpcionVista = { id: 'despachos', etiqueta: 'Despachos' };
+
+/** Vistas que no son escena 3D: llenan el recuadro como lista, sin paneles flotantes ni narración encima. */
+const SIN_ESCENA = new Set(['pedidos', 'despachos']);
 
 /** Lo que la página lee del estado para pintar lo suyo (la lista flotante de eventos y la vista elegida). */
 interface VistaPagina {
@@ -59,7 +67,7 @@ interface VistaPagina {
   styleUrls: ['./en-vivo-comercio-pagina.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class EnVivoComercioPaginaComponent implements OnInit {
+export class EnVivoComercioPaginaComponent implements OnInit, OnDestroy {
   /** Comercio que se mira (`?empresa=`, solo con una sesión de Katuq); el backend lo ignora para los demás. */
   readonly empresa$: Observable<string | undefined>;
   readonly vm$: Observable<VistaPagina>;
@@ -72,6 +80,7 @@ export class EnVivoComercioPaginaComponent implements OnInit {
   /** La vista elegida tiene escena 3D y esta sí se pudo montar (si no, Opttia no ofrece recorrido ni "Verlo en la escena"). */
   readonly conEscena$: Observable<boolean>;
   private readonly sin3d$ = new BehaviorSubject<boolean>(false);
+  private readonly subs = new Subscription();
 
   get ampliado(): boolean {
     return this.ampliadoSubject.value;
@@ -80,11 +89,12 @@ export class EnVivoComercioPaginaComponent implements OnInit {
   constructor(
     ruta: ActivatedRoute,
     private readonly router: Router,
-    estado: EnVivoEstadoService,
+    private readonly estado: EnVivoEstadoService,
     private readonly interaccion: EnVivoInteraccionService,
     private readonly ficha: EnVivoFichaService,
     private readonly orbe: EnVivoOrbeService,
-    private readonly host: ElementRef<HTMLElement>
+    private readonly host: ElementRef<HTMLElement>,
+    private readonly features: CompanyFeaturesService
   ) {
     this.empresa$ = ruta.queryParamMap.pipe(
       map((p) => p.get('empresa') ?? undefined),
@@ -100,23 +110,50 @@ export class EnVivoComercioPaginaComponent implements OnInit {
         opttiaActivo: e.opttiaActivo !== false,
         soloLectura: e.soloLectura,
         // "Lo próximo" y "Tu flota" flotan a la izquierda solo sobre la operación; los eventos, a la derecha.
-        margenes: margenesEscena({ izquierda: opcion === 'operacion', derecha: true }, ancho && !ampliado && opcion !== 'pedidos'),
+        margenes: margenesEscena({ izquierda: opcion === 'operacion', derecha: true }, ancho && !ampliado && !SIN_ESCENA.has(opcion ?? '')),
       }))
     );
     this.opttiaActivo$ = estado.estado$.pipe(map((e) => e.opttiaActivo !== false), distinctUntilChanged());
     this.conEscena$ = combineLatest([interaccion.opcionActiva$, this.sin3d$]).pipe(
-      map(([opcion, sin3d]) => opcion !== 'pedidos' && !sin3d)
+      map(([opcion, sin3d]) => !SIN_ESCENA.has(opcion ?? '') && !sin3d)
     );
   }
 
   ngOnInit(): void {
     // Antes de que el shell inicie: así su encabezado ya trae el selector y la vista guardada vuelve sola.
     this.interaccion.fijarOpciones(OPCIONES);
+    // "Despachos" se suma cuando se sabe que la bandera está prendida y que la sesión no es de solo
+    // lectura (Katuq mirando un comercio) ni de un vendedor que solo ve lo suyo (D-349).
+    this.subs.add(
+      combineLatest([
+        this.features.isEnabled$('despachosOpttia'),
+        this.estado.estado$.pipe(map((e) => !e.soloLectura && !e.soloPropias), distinctUntilChanged()),
+        this.estado.estado$.pipe(map((e) => contarListos(e.pedidos)), distinctUntilChanged()),
+      ])
+        .pipe(
+          map(([bandera, puedeVer, listos]) => (bandera && puedeVer ? listos : -1)),
+          distinctUntilChanged()
+        )
+        .subscribe((listos) =>
+          this.interaccion.fijarOpciones(
+            listos < 0 ? OPCIONES : [...OPCIONES, { ...OPCION_DESPACHOS, insignia: listos > 0 ? String(listos) : null }]
+          )
+        )
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
+  }
+
+  /** Pedidos y Despachos llenan el recuadro como lista (sin escena 3D). */
+  sinEscena(opcion: string | null | undefined): boolean {
+    return SIN_ESCENA.has(opcion ?? '');
   }
 
   /** Los paneles flotan (y la lista sale de la columna) salvo en "Ampliar" y en la vista "Pedidos". */
   flotando(opcion: string | null): boolean {
-    return !this.ampliado && opcion !== 'pedidos';
+    return !this.ampliado && !SIN_ESCENA.has(opcion ?? '');
   }
 
   alternarAmpliado(): void {
