@@ -9338,7 +9338,7 @@ Sin colecciones nuevas. Write-set: `shipping_orders`, campos de despacho de `ord
 
 **De paso (13-oct).** `tests/enVivo/writeset.contract.test.js` fallaba desde el 10-oct (D-403 lo registró como falla anterior). La causa era la prueba, no producción: usaba la fecha fija del 8-oct contra la instancia compartida, que mira ayer y hoy con el reloj real. Arreglada en el backend `933a925`; las 13 suites de En vivo pasan.
 
-## D-411 (2026-10-13) — Tickets de soporte con varios agentes: principal, apoyo y observador (backend openspec/changes/multi-asignacion-tickets-soporte) — IMPLEMENTADO en local, sin commit ni deploy
+## D-411 (2026-10-13) — Tickets de soporte con varios agentes: principal, apoyo y observador (backend openspec/changes/multi-asignacion-tickets-soporte) — IMPLEMENTADO y pusheado 13-oct; Support desplegado, backend pendiente de deploy
 
 **Disparador.** Santiago (13-oct): "que al asignar un ticket a alguno de los agentes de soporte se pueda asignar a más de una persona". En la definición agregó un tercer rol: "el observador es alguien que no es responsable del ticket pero desea que le lleguen los avances".
 
@@ -9362,3 +9362,27 @@ Sin colecciones nuevas. Write-set: `shipping_orders`, campos de despacho de `ord
 **Fuera de alcance (follow-up):** MCP (`update_support_ticket` solo asigna al principal y no aplica la unicidad; el backend deduplica al leer) y la vista del comercio en Seller.
 
 **Deploy:** primero el backend y después Support. Si sale Support primero, el PUT descarta los arreglos en silencio.
+
+## D-412 (2026-10-13) — Comercios afectados por un ticket de soporte, y campos internos fuera del alcance del comercio (backend openspec/changes/comercios-afectados-tickets) — IMPLEMENTADO en local, sin commit ni deploy
+
+**Disparador.** Santiago (13-oct): "abrir un segmento donde aparezca a qué comercios afecta un ticket", tocando backend, frontend y MCP.
+
+**Decisión.**
+- **`comerciosAfectados[]`** (`{ id, nomComercial, nit }`, tomados del maestro de empresas) y **`avisoAfectados`** (texto) en el mismo documento del ticket, sin colección nueva. Son **internos**:
+  - el comercio no los ve ni los escribe;
+  - un comercio afectado **no** gana acceso al ticket ajeno (el aislamiento entre comercios no cambia);
+  - el comercio que reportó no se repite como afectado.
+- **Aviso solo al cerrar** (Resuelto o Archivado): correo al contacto de cada afectado y aviso en la campana de su Seller Center. Lleva **únicamente el texto que escribe el equipo**, sin asunto, número ni nombre del comercio que reportó. Si el texto está vacío, no se avisa. Sale una vez por comercio y por cierre; reabrir y volver a cerrar avisa de nuevo.
+- **Endpoint nuevo aprobado:** `GET /v1/support/comercios`, la lista liviana de empresas activas para el buscador. Solo el equipo operador, validado por el tenant firmado en la sesión.
+- **Support:**
+  - el detalle tiene un bloque "Comercios afectados" con buscador, chips y el texto del aviso;
+  - el backlog muestra "+N afectados" y un filtro "Afecta a…", que trae lo que el comercio reportó y lo que lo afecta.
+- **MCP:**
+  - las lecturas devuelven los afectados solo al equipo;
+  - `get_support_tickets` acepta el filtro `afectaA`;
+  - `update_support_ticket` acepta `agregarComerciosAfectados`, `quitarComerciosAfectados` y `avisoAfectados`. Un comercio que no está en el maestro aborta el cambio completo.
+- **Corrección de fuga (también de D-411):** las lecturas del comercio (API REST de tickets y `get_support_ticket` del MCP) devolvían el documento crudo, con los apoyos y observadores del equipo. Ahora quitan todos los campos internos. El alta pública de tickets también los descarta.
+
+**Hallazgo aparte (no se corrige aquí):** en el módulo de empresas hay endpoints que deciden el acceso de operador con un criterio más débil que el de soporte. El detalle está en el change del backend; va en un cambio propio.
+
+**Deploy:** primero el backend y después Support. Antes de desplegar Support, verificar que `/v1/support/comercios` responda en producción.
