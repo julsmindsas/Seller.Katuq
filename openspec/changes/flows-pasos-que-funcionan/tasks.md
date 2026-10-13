@@ -54,7 +54,7 @@
 ### Desvíos registrados (2026-10-13)
 
 - **0.1:** la foto está en `tests/flows/fixtures/golden-webhooks-vivos.json`. Cubre pedido de una bodega y pedido repartido de OH MY STORE (v29), y el pedido de CAFE ESCOBAR. Se compara en `off`, `sombra` y `on`, y además exige `diferencias = []`.
-- **0.3:** el comando es `npm run test:flows` (`tests/flows/correrTodas.js`). Hoy da 22/23: falla `shopifyPrecioTachado.test.js`, que ya fallaba antes de D-411 y es de precios, fuera de alcance.
+- **0.3:** el comando es `npm run test:flows` (`tests/flows/correrTodas.js`). Hoy da 22/23: falla `shopifyPrecioTachado.test.js`, que ya fallaba antes de D-413 y es de precios, fuera de alcance.
 - **1.2:** el catálogo sale de `nodeRegistry.listSpecs()`. No se creó `contracts/node-catalog.js`: hacerlo activaría la validación del registry contra un catálogo desfasado y podría tumbar el registro de pasos.
 - **1.5:** `nodeCatalog.json` se regeneró. Entró `osmosis-stock-sweep` y se actualizaron los ajustes de 5 pasos. Los pasos sin ajustes llevan esquema vacío. Por eso `nodeCatalogCoverage` vuelve a pasar.
 - **2.4:** el campo quedó como `flow_runs.motor = { modo, diferencias }`, no `sombra`. En `off` no se escribe.
@@ -73,4 +73,4 @@
 - [ ] 6.3 Desplegar el front.
 - [ ] 6.4 Bandera en FLORECER: probar en el navegador los escenarios de la spec (webhook hecho a mano, Repetir, Elegir, rama vacía, Esperar 45 s, encender y mover, borrar, horario).
 - [ ] 6.5 Después de una semana de sombra, presentar a Daniel el reporte por comercio. Encender OH MY STORE solo con su visto bueno.
-- [ ] 6.6 Registrar D-411 en `specs/CONTRACT.md` con lo desplegado y lo verificado. Actualizar la bitácora.
+- [ ] 6.6 Registrar D-413 en `specs/CONTRACT.md` con lo desplegado y lo verificado. Actualizar la bitácora.

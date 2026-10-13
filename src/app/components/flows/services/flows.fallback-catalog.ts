@@ -15,7 +15,7 @@
  * un nodo, modificar su spec en el backend
  * (services/flows/nodes/<group>/<type>.<category>.js) y correr el script.
  *
- * D-411: se omiten los pasos que el backend marca "No disponible"
+ * D-413: se omiten los pasos que el backend marca "No disponible"
  * (nodeRegistry.NO_DISPONIBLES), igual que GET /v1/flows/nodes/catalog.
  */
 import { NodeSpec } from '../interfaces/flow.interface';

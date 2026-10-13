@@ -549,7 +549,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
     // Build triggers array, applying scheduleDraft if it changed.
     const triggers: FlowTriggerBinding[] = this.buildTriggersForSave();
 
-    // Sin `status`: guardar nunca enciende ni apaga (D-411). Antes el autoguardado
+    // Sin `status`: guardar nunca enciende ni apaga (D-413). Antes el autoguardado
     // mandaba su copia vieja y devolvía a borrador una automatización encendida.
     const payload: Partial<FlowSpec> = {
       name: this.flowName?.trim() || 'Sin nombre',
@@ -678,7 +678,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        // El servidor dice qué paso y qué campo faltan (D-411).
+        // El servidor dice qué paso y qué campo faltan (D-413).
         const delServidor = err?.error?.code === 'FLOW_INCOMPLETO' || err?.error?.code === 'SIN_PASO_DE_INICIO'
           ? err.error.message
           : '';
