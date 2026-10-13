@@ -9498,6 +9498,30 @@ Daniel pidió «conectalo al backend de katuq, osea haslo ya», después de apro
 
 Los pedidos y pagos de Kuvo siguen pendientes: crearPedido descuenta stock y no se reutiliza como cotización. No se prueban escrituras en producción ni se altera inventario, cron, flows, webhooks, autenticación de gestión o liquidaciones.
 
+### D-414 — Ampliación solicitada por Daniel: Almara y OH MY STORE (2026-10-13)
+
+La primera conexión exigía un sitio publicado y dejaba fuera a comercios reales. Daniel indicó «almara, oh my store etc». Se incorporan ALMARA FELICIDAD (slug almara, nombre Almara) y OH MY STORE (slug oh-my-store) mediante configuración explícita de comercios autorizados de Kuvo, independiente del constructor de Sitios. No se publican sus borradores ni se modifica companies/products/catalogos/inventory. Para estas incorporaciones solo se muestran productos activos, disponibles, con precio público de vitrina y `marketplace.paginaWeb === true`; no se aplica el fallback legacy que permite productos sin marca. Se conservan los límites de plan y la cadena canónica de precios. Datos devueltos limitados a la proyección pública; los nombres de empresa internos no viajan al cliente.
+
+Directorio inicial con hasta dos páginas por incorporación; `GET /v1/sites/public/directorio/:slug/catalogo?pagina=N` resuelve el comercio en servidor desde las incorporaciones autorizadas o sitios publicados, sin aceptar company del navegador, y conserva las reglas de publicación. Web, SwiftUI y Compose incorporan «Ver más productos». Sin colecciones nuevas, sin pruebas de pedido/pago en producción, sin cambios a flows/Shopify o inventario. Pruebas de publicación, aislamiento por slug, paginación y fuentes aprobadas, más compilación de los tres clientes.
+
+
+## D-415 (2026-10-13) — Kuvo: completar compra/pedido y capacidades de marketplace — AUTORIZADO por Daniel
+
+Objetivo explícito: «dejar funcional el marketplace que se puedan hacer pedidos, y lo que requiere un marketplace». Desarrollo bajo `backend/openspec/changes/kuvo-compra-completa`, conservando el alcance aprobado del marketplace de clientes: cotización íntegra en servidor, pedido idempotente, inventario canónico, pago verificado/seguimiento, consumidor independiente, publicación/retirada, cobertura y liquidación si recauda plataforma, con web Angular 21 y apps SwiftUI/Compose. Hitos parciales no acreditan terminación.
+
+No se escriben pedidos/pagos ni datos de QA en producción. Emulator demo local y datos aislados; sandbox real solo con ambiente de prueba identificado. Reutilizar siteOrden, siteConfiguracion, zonasCobroPackage, warehouseAllocation/orderSplit y ledger transaccional. Cada cambio sensible se aplica por separado y con diff/contratos antes de desplegar; se mantiene auth, multi-tenancy y write-set cerrado (inventario/efectos/movimientos, jamás products/precios/catálogos). Sin colecciones nuevas ni endpoints v2. Preservar cambios ajenos de notificaciones, flows y orders.
+
+**Entrega Git autorizada (13-oct).** Daniel pidió «sube cambios a git» y eligió
+el repositorio del backend para los clientes. Commits propios:
+`0bb95d1` (directorio), `af63f70` (base de cotización, sin montar rutas de compra)
+y `a749c7d` (fuentes web/iOS/Android en Marketplace). La copia iOS compila desde
+ese repositorio con sus tokens incluidos. Validación de esta entrega: 14 pruebas
+puras backend, 3 HTTP/Firestore en Emulator demo y 6 web; build iOS Simulator.
+El pedido completo, identidad, pago, conciliación y liquidación siguen pendientes.
+FLORECER fue propuesto para QA, pero su Wompi actual es producción; no se hicieron
+compras ni cobros reales. Los cambios de otras tareas permanecen fuera de estos
+commits y el push no despliega ni activa checkout.
+
 ## D-416 (2026-10-13) — Catálogos por link desde la web (openspec/changes/catalogos-por-link-web) — APROBADO por Daniel ("dale aprobado catalogo"), implementado en local
 
 **Disparador.** Los catálogos por link (D-141) solo se podían armar desde la app iOS; el backend y la vitrina `/cat/<link>` ya estaban en producción, pero el vendedor de la web no tenía dónde crearlos.
