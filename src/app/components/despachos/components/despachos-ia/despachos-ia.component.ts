@@ -46,6 +46,7 @@ export class DespachosIaComponent implements OnInit, OnDestroy {
     '¿Qué despacho primero hoy?',
     '¿Qué transportador tiene más plata por cobrar?',
     '¿Qué pedidos despachados no se han cerrado?',
+    '¿Qué transportador me cumple mejor?',
   ];
 
   constructor(private logistica: LogisticaServiceV2, private opttia: OpttiaChatService) {}
@@ -106,6 +107,12 @@ export class DespachosIaComponent implements OnInit, OnDestroy {
     const p = this.ia?.avisos?.[a.id]?.prioridad;
     if (p === 'alta' || a.tipo === 'problema_transportadora') return 'is-danger';
     return p === 'baja' ? 'is-slate' : 'is-warning';
+  }
+
+  claseCumple(pct: number | null): string {
+    if (pct === null) return 'is-slate';
+    if (pct >= 90) return 'is-success';
+    return pct >= 70 ? 'is-warning' : 'is-danger';
   }
 
   get paraHoy(): number {

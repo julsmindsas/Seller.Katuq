@@ -178,6 +178,19 @@
     </div>
   </div>
 
+  <div *ngIf="avisosGuardado.length" class="kf-avisos" role="status">
+    <i class="pi pi-exclamation-triangle kf-avisos__icono" aria-hidden="true"></i>
+    <div class="kf-avisos__texto">
+      <strong class="kf-avisos__titulo">Revisa esto antes de encenderla</strong>
+      <ul class="kf-avisos__lista">
+        <li *ngFor="let aviso of avisosGuardado">{{ aviso }}</li>
+      </ul>
+    </div>
+    <button type="button" class="kf-avisos__cerrar" (click)="avisosGuardado = []" aria-label="Ocultar avisos">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+
   <div *ngIf="loading" class="kf-loading">
     <i class="pi pi-spin pi-spinner"></i>
     Cargando la automatización…

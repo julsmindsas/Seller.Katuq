@@ -9408,3 +9408,85 @@ Sin colecciones nuevas. Write-set: `shipping_orders`, campos de despacho de `ord
 **Hallazgo aparte (no se corrige aquí):** en el módulo de empresas hay endpoints que deciden el acceso de operador con un criterio más débil que el de soporte. El detalle está en el change del backend; va en un cambio propio.
 
 **Deploy:** primero el backend y después Support. Antes de desplegar Support, verificar que `/v1/support/comercios` responda en producción.
+
+---
+
+## D-413 (2026-10-13) — Automatizaciones: que los pasos funcionen sin tocar los webhooks vivos (openspec/changes/flows-pasos-que-funcionan) — APROBADA por Daniel 2026-10-13 ("dale"), en implementación
+
+> Renumerada el 13-oct: nació como D-411, pero ese número ya lo usaba la entrada de tickets de soporte publicada antes. El código del backend y del front la cita como D-413.
+
+**Contexto.** Daniel: "/flows sigue siendo muy difícil de poner a funcionar estilo n8n, los nodos no funcionan bien". La auditoría del 11-oct (front + motor) encontró que el problema es del motor:
+- el catálogo no carga (`contracts/node-catalog` solo existe en `.ts`);
+- "Finalizado" del paso Repetir y "Otro caso" del paso Elegir caen en `main[0]`;
+- `$node` se indexa por notas;
+- las ramas vacías ejecutan igual;
+- los flows hechos a mano se guardan sin `triggers` y el webhook responde 404;
+- encender no refresca y el autoguardado devuelve el flow a borrador;
+- borrar no apaga los disparadores;
+- el horario se guarda en `cron` y el despachador lee `cronExpression`;
+- 6 pasos de proveedor llaman funciones inexistentes.
+
+Daniel aprobó arrancar el 13-oct con la condición de **no dañar los webhooks de Shopify de OH MY STORE**.
+
+**Propuesta.**
+1. El catálogo se carga desde el `spec` de cada módulo. En ejecución solo se valida la estructura, como hoy; los timeouts y la idempotencia quedan fijos como hoy. Avisa al guardar y bloquea solo al encender.
+2. Las reglas que cambian datos entre pasos (puertos `done`/`default` y saltar ramas vacías) van bajo la bandera de comercio `flowsMotorCorregido`, con sombra global (`FLOWS_MOTOR_MODO=sombra`) que anota diferencias en `flow_runs.sombra`.
+3. Cambios aditivos sin bandera:
+   - `$node` por id;
+   - Esperar con su propio límite;
+   - `triggers` derivados solo cuando el flow guardado no tiene ninguno;
+   - encender/apagar devuelven el flow;
+   - borrar apaga;
+   - el horario se sincroniza.
+4. Los pasos de proveedor rotos quedan "No disponible", con un mensaje de negocio.
+
+**Garantía para OH MY STORE.** Su flow de pedidos (`shopify-orders-to-cereza-7e6ab5a3`) depende de:
+- los `triggers` guardados;
+- el atajo que entrega el cuerpo crudo al primer paso;
+- `$node["persist"]` y `$node["trigger"]`;
+- el puerto `main`.
+
+Nada de eso cambia en ningún modo de la bandera. Lo protege una prueba de regresión con su grafo real, que debe salir idéntica en `off`, `sombra` y `on`.
+
+**No-goals:** el blindaje del webhook (D-350), el modo prueba sin efectos, el arreglo de los conectores SIIGO/WO/Aliaddo/Envíame/Wompi, la UI del panel, backfills y colecciones nuevas.
+
+**Implementación D-413 (2026-10-13), sin desplegar.** Está en el backend (`backend-aws-security`) y en el front (`feature/venta-asistida-mejorada`).
+
+- **Mapa de producción.** Hay 9 flows activos: 8 de OH MY STORE y 1 de CAFE ESCOBAR. Ninguno usa Repetir, Elegir, `$node` por notas, pasos no disponibles ni `triggers` vacíos.
+  - Hallazgo aparte: `fullpi-orders-status-pull-oms` figura `active` sin binding activo, así que no corre. Fullpi está dormido y no se tocó.
+- **Motor.**
+  - En ejecución solo valida la estructura, como antes; el timeout de 30 s y la no idempotencia quedan fijos.
+  - El catálogo (`nodeRegistry.getSpec`/`listSpecs`) se usa al guardar, como aviso, y al encender, como bloqueo con mensaje de negocio.
+  - Hay sombra por defecto (`FLOWS_MOTOR_MODO`, `off` la apaga) y la bandera de comercio `flowsMotorCorregido` para las salidas `done`/`default` y las ramas vacías. Las diferencias quedan en `flow_runs.motor`.
+  - `$node` funciona por id, con las notas como alias.
+  - Esperar tiene límite de 305 s.
+  - `paramsForItem(i)` queda disponible sin uso.
+  - 7 pasos de proveedor quedan "No disponible", con mensaje de negocio y fuera de la paleta.
+- **Controlador.**
+  - Los triggers se derivan solo si el flow no tiene ninguno; los huérfanos se quitan con aviso.
+  - `update` ignora `status`.
+  - `activate` y `deactivate` devuelven el flow.
+  - `remove` apaga los bindings.
+  - El horario se sincroniza con el binding si el flow está activo y cambió.
+- **Front.**
+  - El guardado no manda `status`.
+  - El horario se guarda en `cronExpression`.
+  - Los avisos del guardado salen en un recuadro de alerta; los errores al guardar y al encender, en lenguaje de negocio.
+  - El catálogo de respaldo se regeneró: 57 pasos.
+- **Pruebas** (`npm run test:flows`): 22/23. La que falla, `shopifyPrecioTachado`, ya fallaba antes y es de precios, fuera de alcance. Las nuevas:
+  - `webhooksVivosRegresion`: el grafo real de OH MY STORE v29 y el de CAFE ESCOBAR dan idéntica la foto previa en off, sombra y on, sin diferencias de sombra;
+  - `catalogoComoAviso`: los 9 flows vivos pasan al encender;
+  - `pasosDeInicio`: los 9 guardan sus triggers byte a byte, más los casos manual, huérfano, encender, borrar y horario;
+  - `motorCorregido`.
+- **Build.** El de producción del front pasa.
+- **Pendiente.** Desplegar backend y front (fuera del modo automático), verificar los siguientes pedidos de OH MY STORE con `motor.diferencias` vacía, encender en FLORECER y, después de una semana de sombra, pedir el visto bueno para OH MY STORE.
+
+---
+
+## D-414 (2026-10-13) — Kuvo: conectar los catálogos públicos existentes — APROBADO por Daniel
+
+> Renumerada el 13-oct: nació como D-412, que ya era la entrada de comercios afectados por un ticket de soporte.
+
+Daniel pidió «conectalo al backend de katuq, osea haslo ya», después de aprobar la propuesta de marketplace de clientes. Primera conexión aditiva y de solo lectura: `GET /v1/sites/public/directorio`, antes de la ruta de slug, reutiliza consultarCatalogo, marcaDeLaEmpresa y categorías ocultas de la copia publicada. Solo tiendas en estado publicado con `published.tienda.habilitada` y bloque catálogo visible con `permitirCompra=true`; no publica comercios ni productos. Los precios COP se formatean en servidor, identificadores públicos con namespace de slug; proyección de nombre, ciudad, fotografía, descripción y categorías, sin company, correos, credenciales, costos o inventario interno. Caché 60 segundos, dos tiendas concurrentes, máximo 40 tiendas y 20 páginas por tienda; truncamiento anunciado y enlace a la tienda pública. Sin nuevas colecciones, índices ni escrituras. CORS admite el origen exacto de Kuvo. Web Angular 21 y clientes SwiftUI/Compose leen el mismo contrato sin sesión del personal ni fallback ficticio.
+
+Los pedidos y pagos de Kuvo siguen pendientes: crearPedido descuenta stock y no se reutiliza como cotización. No se prueban escrituras en producción ni se altera inventario, cron, flows, webhooks, autenticación de gestión o liquidaciones.

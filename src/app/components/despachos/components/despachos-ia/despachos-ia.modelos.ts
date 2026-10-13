@@ -43,12 +43,36 @@ export interface AvisoDespacho {
   motivoBase: string;
 }
 
+export interface CumplimientoTransportador {
+  id: string;
+  transportador: string;
+  entregas: number;
+  conFecha: number;
+  coberturaPct: number;
+  calificado: boolean;
+  aTiempoPct: number | null;
+  diasMediana: number | null;
+  motivoBase: string;
+}
+
+export interface CumplimientoDespachos {
+  ventanaDias: number;
+  entregas: number;
+  conFecha: number;
+  coberturaPct: number;
+  calificados: number;
+  recortado: boolean;
+  transportadores: CumplimientoTransportador[];
+}
+
 export interface DispatchInsights {
   company: string;
   generadoAt: string;
   cola: { filas: FilaCola[]; total: number; porTramo: Record<TramoCola, number>; porCobrar: number; rutas: RutaCola[] };
   sinCerrar: { total: number; porCobrar: number; transportadores: TransportadorSinCerrar[] };
   avisos: { filas: AvisoDespacho[]; total: number; porTipo: Record<string, number> };
+  /** null si no se pudo calcular; el resto del panel sale igual. */
+  cumplimiento?: CumplimientoDespachos | null;
   totales: { activos: number; porDespachar: number; despachados: number; porCobrarDespachados: number };
 }
 
@@ -57,6 +81,7 @@ export interface ExplicacionDespachos {
   cola: Record<string, string>;
   transportadores: Record<string, string>;
   avisos: Record<string, { frase: string; prioridad: 'alta' | 'media' | 'baja' }>;
+  cumplimiento?: Record<string, string>;
 }
 
 export interface RespuestaDispatchInsights {

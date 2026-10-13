@@ -459,3 +459,35 @@
   max-width: 520px; text-align: center; border-radius: 16px; background: #FDECEC; border: 1px solid #f6d3d3;
   strong { color: #B83232; font-size: 15px; }
 }
+
+// D-413: avisos del guardado (par semántico de alerta del design system).
+.kf-avisos {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 12px 16px 0;
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: #FFF1DF;
+  border: 1px solid #f6dcb8;
+  color: #211F3A;
+
+  &__icono { color: #D9820A; font-size: 16px; margin-top: 2px; }
+  &__texto { flex: 1; min-width: 0; }
+  &__titulo { display: block; color: #D9820A; font-size: 13px; letter-spacing: normal; }
+  &__lista {
+    margin: 4px 0 0;
+    padding-left: 18px;
+    font-size: 13px;
+    li { color: #211F3A; letter-spacing: normal; }
+  }
+  &__cerrar {
+    border: 0;
+    background: transparent;
+    color: #8f8bab;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 6px;
+    &:focus-visible { outline: 3px solid #7C5CFF !important; }
+  }
+}

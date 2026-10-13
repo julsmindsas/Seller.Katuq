@@ -14,53 +14,13 @@
  * cambio manual se pierde en la próxima regeneración. Para agregar/editar
  * un nodo, modificar su spec en el backend
  * (services/flows/nodes/<group>/<type>.<category>.js) y correr el script.
+ *
+ * D-413: se omiten los pasos que el backend marca "No disponible"
+ * (nodeRegistry.NO_DISPONIBLES), igual que GET /v1/flows/nodes/catalog.
  */
 import { NodeSpec } from '../interfaces/flow.interface';
 
 export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
-  {
-    "type": "aliaddo-fulfillment-create",
-    "category": "action",
-    "group": "aliaddo",
-    "displayName": "Aliaddo · Crear remisión",
-    "description": "Genera remisión de venta en Aliaddo para fulfillment de una orden.",
-    "icon": "pi-truck",
-    "color": "#ff6600",
-    "version": 1,
-    "inputs": [
-      {
-        "name": "main"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "main"
-      },
-      {
-        "name": "error",
-        "isError": true
-      }
-    ],
-    "schema": {
-      "type": "object",
-      "properties": {
-        "orderIdSource": {
-          "type": "string",
-          "default": "{{ $json.nroPedido }}"
-        },
-        "terceroInternoId": {
-          "type": "string"
-        },
-        "bodegaCode": {
-          "type": "string",
-          "description": "Bodega Katuq business code"
-        }
-      },
-      "required": [
-        "orderIdSource"
-      ]
-    }
-  },
   {
     "type": "delay",
     "category": "flow-control",
@@ -110,49 +70,6 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
       "delay",
       "wait"
     ]
-  },
-  {
-    "type": "enviame-shipment-create",
-    "category": "action",
-    "group": "enviame",
-    "displayName": "Envíame · Crear envío",
-    "description": "Genera guía de envío en Envíame para una orden Katuq.",
-    "icon": "pi-truck",
-    "color": "#5e35b1",
-    "version": 1,
-    "inputs": [
-      {
-        "name": "main"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "main"
-      },
-      {
-        "name": "error",
-        "isError": true
-      }
-    ],
-    "schema": {
-      "type": "object",
-      "properties": {
-        "orderIdSource": {
-          "type": "string",
-          "default": "{{ $json.nroPedido }}"
-        },
-        "carrier": {
-          "type": "string",
-          "description": "Override carrier"
-        },
-        "warehouseCode": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "orderIdSource"
-      ]
-    }
   },
   {
     "type": "error-handler",
@@ -222,15 +139,23 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
     "schema": {
       "type": "object",
       "properties": {
+        "bodegaMap": {
+          "type": "object",
+          "title": "Mapa bodega WMS → bodega Katuq",
+          "description": "Rutea cada codigoBodega del WMS a su bodega espejo Katuq en un solo polling (ej {\"ECF1\":\"BOD-FULLPI-1\",\"ECF3\":\"BOD-FULLPI-3\"}). Filas cuya bodega WMS no esté en el mapa se omiten. Si se define, reemplaza a defaultBodegaCode/codigoBodegaWms.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "defaultBodegaCode": {
           "type": "string",
-          "title": "Bodega Katuq destino",
-          "description": "Business code de la bodega Katuq espejo del WMS (ej \"BOD-FULLPI-1\"). Recomendado: expression {{ $companyConfig.fullpi.bodegaCode }}."
+          "title": "Bodega Katuq destino (modo una-bodega)",
+          "description": "Business code de la bodega Katuq espejo del WMS (ej \"BOD-FULLPI-1\"). Requerido solo si NO se usa bodegaMap."
         },
         "codigoBodegaWms": {
           "type": "string",
-          "title": "Código de bodega en el WMS (filtro)",
-          "description": "Si se define (ej \"ECF1\"), solo se toman filas del inventario con ese codigoBodega. Recomendado: {{ $companyConfig.fullpi.codigoBodegaWms }}."
+          "title": "Código de bodega en el WMS (filtro, modo una-bodega)",
+          "description": "Si se define (ej \"ECF1\"), solo se toman filas del inventario con ese codigoBodega. Ignorado si se usa bodegaMap."
         },
         "reason": {
           "type": "string",
@@ -259,7 +184,6 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
         }
       },
       "required": [
-        "defaultBodegaCode",
         "reason"
       ]
     },
@@ -479,59 +403,6 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
     ]
   },
   {
-    "type": "kai-agent-invoke",
-    "category": "ai",
-    "group": "kai",
-    "displayName": "KAI: Invocar agente",
-    "description": "Llama a un agente Genkit/KAI vía A2A Protocol (JSON-RPC 2.0).",
-    "icon": "pi pi-sparkles",
-    "color": "#9C27B0",
-    "version": 1,
-    "inputs": [
-      {
-        "name": "main",
-        "dataType": "item[]"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "main",
-        "dataType": "item[]"
-      },
-      {
-        "name": "error",
-        "isError": true,
-        "dataType": "item[]"
-      }
-    ],
-    "schema": {
-      "type": "object",
-      "properties": {
-        "flowName": {
-          "type": "string",
-          "title": "Genkit flow name"
-        },
-        "inputJson": {
-          "type": "object"
-        },
-        "agentName": {
-          "type": "string"
-        },
-        "method": {
-          "type": "string"
-        },
-        "params": {
-          "type": "object"
-        }
-      }
-    },
-    "tags": [
-      "ai",
-      "kai",
-      "genkit"
-    ]
-  },
-  {
     "type": "katuq-canonical-mapper",
     "category": "transform",
     "group": "katuq",
@@ -678,6 +549,117 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
       "katuq",
       "inventory",
       "adjust"
+    ]
+  },
+  {
+    "type": "katuq-inventory-changed",
+    "category": "trigger",
+    "group": "internal",
+    "displayName": "Katuq: Inventario cambiado",
+    "description": "Polling Firestore: emite el stock total por producto cuando cambia el inventario (venta, ajuste, traslado). Camino solo-stock, no toca producto ni precio.",
+    "icon": "pi pi-box",
+    "color": "#5E72E4",
+    "version": 1,
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "main",
+        "label": "Stock por producto",
+        "dataType": "item[]"
+      }
+    ],
+    "schema": {
+      "type": "object",
+      "properties": {
+        "intervalMinutes": {
+          "type": "integer",
+          "title": "Intervalo de polling (min)",
+          "minimum": 1,
+          "maximum": 1440,
+          "default": 10
+        },
+        "maxPerRun": {
+          "type": "integer",
+          "title": "Máx filas por corrida",
+          "minimum": 1,
+          "maximum": 5000,
+          "default": 300
+        },
+        "bodegas": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Bodegas a publicar",
+          "description": "Códigos de bodega (BOD-001) cuyo stock se suma para publicar. Vacío = todas. Con una sola location en Shopify, lo correcto es sumar las bodegas que esa tienda despacha.",
+          "default": []
+        },
+        "publicar": {
+          "type": "boolean",
+          "title": "Publicar de verdad",
+          "description": "Apagado (default) = MODO SOMBRA: observa los cambios y registra cuánto publicaría, sin emitir nada. Encenderlo es la decisión explícita de publicar; apagarlo es el kill switch.",
+          "default": false
+        }
+      }
+    },
+    "defaults": {
+      "intervalMinutes": 10,
+      "maxPerRun": 300,
+      "bodegas": [],
+      "publicar": false
+    },
+    "tags": [
+      "katuq",
+      "inventario",
+      "stock",
+      "polling",
+      "trigger",
+      "solo-stock"
+    ]
+  },
+  {
+    "type": "katuq-inventory-observe",
+    "category": "action",
+    "group": "internal",
+    "displayName": "Katuq: Verificación diaria de inventario",
+    "description": "Observa los movimientos recientes (identidad canónica, sin duplicados, saldos no negativos, sombra sin divergencias) y guarda la evidencia en inventory_audit. Solo lectura.",
+    "icon": "pi pi-shield",
+    "color": "#5F3FE0",
+    "version": 1,
+    "inputs": [
+      {
+        "name": "main",
+        "label": "Tick",
+        "dataType": "item[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "main",
+        "label": "Resumen",
+        "dataType": "item[]"
+      }
+    ],
+    "schema": {
+      "type": "object",
+      "properties": {
+        "dias": {
+          "type": "integer",
+          "title": "Ventana (días hacia atrás)",
+          "minimum": 1,
+          "maximum": 30,
+          "default": 1
+        }
+      }
+    },
+    "defaults": {
+      "dias": 1
+    },
+    "tags": [
+      "inventario",
+      "observacion",
+      "sombra",
+      "auditoria"
     ]
   },
   {
@@ -835,6 +817,12 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
           "type": "boolean",
           "title": "Solo con stock",
           "default": false
+        },
+        "stockDesdeInventario": {
+          "type": "boolean",
+          "title": "Stock real desde inventario",
+          "description": "Publica el stock derivado de `inventory` en vez del campo `disponibilidad.cantidadDisponible` del producto, que quedó sin mantenimiento tras inventory-single-source-of-truth (2026-05-08). Apagado = modo sombra: publica el valor de siempre y solo registra en el log cuánto difiere. Apagarlo es el kill switch.",
+          "default": false
         }
       }
     },
@@ -844,7 +832,8 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
       "excludeProviders": [
         "osmosis"
       ],
-      "onlyWithStock": false
+      "onlyWithStock": false,
+      "stockDesdeInventario": false
     },
     "tags": [
       "katuq",
@@ -1344,6 +1333,56 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
           "title": "Solo productos con existencias",
           "description": "Si está activo, omite productos cuyo stock_available total sea 0 (no los emite ni los persiste).",
           "default": true
+        },
+        "diffPagesScan": {
+          "type": "integer",
+          "title": "Páginas de la ventana fresca",
+          "description": "Primeras páginas que se revisan en cada corrida. Cereza pagina por id descendente, así que los productos nuevos siempre caen acá.",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 3
+        },
+        "diffRotatePages": {
+          "type": "integer",
+          "title": "Páginas rotadas por corrida",
+          "description": "Además de la ventana fresca, cuántas páginas del resto del catálogo se barren por corrida, rotando en círculo. En 0 se apaga la rotación y solo se ve la ventana fresca — que es como quedaban invisibles los productos viejos que cambiaban.",
+          "minimum": 0,
+          "maximum": 10,
+          "default": 2
+        },
+        "pageDelayMs": {
+          "type": "integer",
+          "title": "Espera entre páginas (ms)",
+          "description": "Pausa entre llamadas a Cereza para no gatillar su rate limit. Bajarlo aumenta el riesgo de 429.",
+          "minimum": 0,
+          "maximum": 5000,
+          "default": 350
+        },
+        "retryMode": {
+          "type": "string",
+          "title": "Reintento de lo que no llegó a Shopify",
+          "description": "D-371. off: como siempre. shadow: solo mide qué se reintentaría. on: un producto emitido se da por sincronizado solo cuando Shopify y las listas de precios lo confirman; si no, se reemite (dentro del mismo límite por corrida). Exige límite por corrida > 0.",
+          "enum": [
+            "off",
+            "shadow",
+            "on"
+          ],
+          "default": "off"
+        },
+        "reintentoEsperaMinutos": {
+          "type": "integer",
+          "title": "Espera antes del primer reintento (min)",
+          "description": "Se duplica en cada intento (360 → 6 h, 12 h, 24 h).",
+          "minimum": 30,
+          "maximum": 2880,
+          "default": 360
+        },
+        "reintentoMaxIntentos": {
+          "type": "integer",
+          "title": "Intentos máximos por producto",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 3
         }
       },
       "required": [
@@ -1358,7 +1397,10 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
       ],
       "intervalMinutes": 5,
       "limit": 0,
-      "onlyWithStock": true
+      "onlyWithStock": true,
+      "diffPagesScan": 3,
+      "diffRotatePages": 2,
+      "pageDelayMs": 350
     },
     "tags": [
       "osmosis",
@@ -1502,6 +1544,50 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
       "polling",
       "trigger"
     ]
+  },
+  {
+    "type": "osmosis-stock-sweep",
+    "category": "action",
+    "group": "osmosis",
+    "displayName": "Cereza: Barrido de existencias (stock-only)",
+    "description": "Compara el stock por bodega del catálogo completo de Cereza contra inventory. Sombra por defecto.",
+    "icon": "pi pi-sync",
+    "color": "#E4405F",
+    "version": 1,
+    "inputs": [
+      {
+        "name": "main",
+        "dataType": "item[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "main",
+        "dataType": "item[]"
+      },
+      {
+        "name": "error",
+        "isError": true,
+        "dataType": "item[]"
+      }
+    ],
+    "defaults": {
+      "modo": "sombra",
+      "pageSize": 100,
+      "pageDelayMs": 900,
+      "maxPaginas": 120,
+      "maxDetallesAuditoria": 300
+    },
+    "tags": [
+      "osmosis",
+      "cereza",
+      "inventario",
+      "stock-only"
+    ],
+    "schema": {
+      "type": "object",
+      "properties": {}
+    }
   },
   {
     "type": "schedule-cron",
@@ -1964,97 +2050,6 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
     ]
   },
   {
-    "type": "siigo-customer-upsert",
-    "category": "action",
-    "group": "siigo",
-    "displayName": "SIIGO · Crear/actualizar cliente",
-    "description": "Sincroniza un cliente canónico Katuq al CRM de SIIGO.",
-    "icon": "pi-user",
-    "color": "#005689",
-    "version": 1,
-    "inputs": [
-      {
-        "name": "main"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "main"
-      },
-      {
-        "name": "error",
-        "isError": true
-      }
-    ],
-    "schema": {
-      "type": "object",
-      "properties": {
-        "mapping": {
-          "type": "object",
-          "description": "Custom field mapping"
-        }
-      }
-    }
-  },
-  {
-    "type": "siigo-invoice-create",
-    "category": "action",
-    "group": "siigo",
-    "displayName": "SIIGO · Crear factura electrónica",
-    "description": "Genera factura electrónica en SIIGO desde una orden Katuq.",
-    "icon": "pi-file",
-    "color": "#005689",
-    "version": 1,
-    "inputs": [
-      {
-        "name": "main",
-        "dataType": "item"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "main",
-        "dataType": "item"
-      },
-      {
-        "name": "error",
-        "isError": true,
-        "dataType": "item"
-      }
-    ],
-    "schema": {
-      "type": "object",
-      "properties": {
-        "mode": {
-          "type": "string",
-          "enum": [
-            "async",
-            "sync"
-          ],
-          "default": "async"
-        },
-        "orderIdSource": {
-          "type": "string",
-          "default": "{{ $json.nroPedido }}"
-        },
-        "documentType": {
-          "type": "number",
-          "description": "SIIGO document type id"
-        },
-        "sellerId": {
-          "type": "number",
-          "description": "SIIGO seller id"
-        }
-      },
-      "required": [
-        "orderIdSource"
-      ]
-    },
-    "defaults": {
-      "mode": "async"
-    }
-  },
-  {
     "type": "siigo-job-status",
     "category": "action",
     "group": "siigo",
@@ -2307,42 +2302,6 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
           ]
         }
       }
-    }
-  },
-  {
-    "type": "wompi-payment-status",
-    "category": "action",
-    "group": "wompi",
-    "displayName": "Wompi · Estado de pago",
-    "description": "Consulta el status de una transacción Wompi.",
-    "icon": "pi-credit-card",
-    "color": "#00b5d8",
-    "version": 1,
-    "inputs": [
-      {
-        "name": "main"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "main"
-      },
-      {
-        "name": "error",
-        "isError": true
-      }
-    ],
-    "schema": {
-      "type": "object",
-      "properties": {
-        "transactionIdSource": {
-          "type": "string",
-          "default": "{{ $json.transactionId }}"
-        }
-      },
-      "required": [
-        "transactionIdSource"
-      ]
     }
   },
   {
@@ -2929,45 +2888,6 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
           "description": "Si true, persiste cada renglón individual en accounting_document_lines (habilita reportes por producto). 3-4x más docs en Firestore."
         }
       }
-    }
-  },
-  {
-    "type": "worldoffice-invoice-create",
-    "category": "action",
-    "group": "worldoffice",
-    "displayName": "World Office · Crear factura",
-    "description": "Genera factura en World Office desde orden Katuq.",
-    "icon": "pi-file",
-    "color": "#0066cc",
-    "version": 1,
-    "inputs": [
-      {
-        "name": "main"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "main"
-      },
-      {
-        "name": "error",
-        "isError": true
-      }
-    ],
-    "schema": {
-      "type": "object",
-      "properties": {
-        "orderIdSource": {
-          "type": "string",
-          "default": "{{ $json.nroPedido }}"
-        },
-        "idTerceroInterno": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "orderIdSource"
-      ]
     }
   }
 ];

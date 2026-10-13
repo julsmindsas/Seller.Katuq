@@ -72,6 +72,23 @@
       </div>
     </div>
 
+    <div class="di-cumple" *ngIf="insights.cumplimiento as c">
+      <div class="di-cumple__head">
+        <span class="ins-label">Cumplimiento por transportador · últimos {{ c.ventanaDias }} días</span>
+        <span class="di-item__meta">{{ c.conFecha | number }} de {{ c.entregas | number }} entregas tienen fecha de entrega</span>
+      </div>
+      <div class="di-item" *ngFor="let t of c.transportadores | slice:0:6">
+        <div class="di-item__top">
+          <strong class="di-item__name">{{ t.transportador }}</strong>
+          <span class="ins-pill" [ngClass]="claseCumple(t.aTiempoPct)" *ngIf="t.calificado">{{ t.aTiempoPct }} % a tiempo</span>
+          <span class="ins-pill is-slate" *ngIf="!t.calificado">No se puede medir</span>
+        </div>
+        <span class="di-item__why"><ng-container *ngIf="ia?.cumplimiento?.[t.id]; else baseC"><span class="ins-row__ia">Opttia · </span>{{ ia?.cumplimiento?.[t.id] }}</ng-container><ng-template #baseC>{{ t.motivoBase }}</ng-template></span>
+      </div>
+      <div class="di-vacio" *ngIf="!c.transportadores.length"><span>No hubo entregas en los últimos {{ c.ventanaDias }} días.</span></div>
+      <span class="di-pie" *ngIf="c.entregas && !c.calificados">Para medirlo, la entrega tiene que quedar registrada: desde la app del mensajero o cerrando cada pedido el día que se entrega.</span>
+    </div>
+
     <div class="d-flex flex-wrap gap-2 px-3 pb-3">
       <button type="button" class="ins-chip" *ngFor="let p of preguntas" (click)="preguntar(p)">{{ p }}</button>
     </div>
