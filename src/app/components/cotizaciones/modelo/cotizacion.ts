@@ -61,6 +61,10 @@ export interface Cotizacion {
   vistaCliente?: boolean;
   fechaPrimeraVista?: string | null;
   vistasCount?: number;
+  /** Ticket 1202: margen (solo para roles autorizados; nunca va al cliente). */
+  margen?: { base: number; costoTotal: number; valor: number | null; pct: number | null; lineas: number; lineasConCosto: number; completo: boolean } | null;
+  /** Ticket 1202: última vez que el cliente abrió el enlace. */
+  fechaUltimaVista?: string | null;
   /** Ticket 1207: motivo del rechazo (lo escribe el servidor al rechazar). */
   rechazo?: RechazoCotizacion | null;
   /** Ticket 1207: texto del motivo, también para rechazos viejos desde el enlace. */
@@ -107,7 +111,18 @@ export interface CotizacionMetrics {
   variacion?: { [campo: string]: number | null } | null;
   periodoAnterior?: { desde: string; hasta: string } | null;
   /** Ticket 1206: cuántas cotizaciones hay en cada alerta. */
-  atencion?: { sinConvertir: number; porVencer: number; sinSeguimiento: number; borradoresViejos: number };
+  atencion?: { sinConvertir: number; porVencer: number; sinSeguimiento: number; borradoresViejos: number; noAbiertas?: number; bajoMargen?: number };
+  /** Ticket 1202: el usuario puede ver márgenes y el mínimo de la empresa. */
+  veMargen?: boolean;
+  margenMinimo?: number;
+  /** Ticket 1203: datos de las gráficas. */
+  analisis?: {
+    embudo: { etapa: string; cantidad: number; valor: number; paso: number }[];
+    tendencia: { mes: string; cotizado: number; convertido: number }[];
+    motivos: { motivo: string; cantidad: number; valor: number }[];
+    productos: { cd: string; nombre: string; valor: number; cotizaciones: number; conversion: number }[];
+    clientes: { grupo: string; cotizaciones: number; winRate: number }[];
+  };
   /** Ticket 1204: una fila por asesor (cuando se pide la comparativa). */
   porVendedor?: (IndicadoresComerciales & { email: string; nombre: string; participacion: number })[];
 }
@@ -126,6 +141,8 @@ export interface IndicadoresComerciales {
   cicloCierreDias: number | null;
   primeraRespuestaHoras: number | null;
   descuentoPromedio: number;
+  /** Ticket 1202: margen promedio ponderado (solo roles autorizados). */
+  margenPromedio?: number | null;
   meta: number;
   avanceMeta: number | null;
 }
@@ -148,6 +165,8 @@ export interface CotizacionConfig {
   motivosRechazo?: string[];
   /** Tickets 1204/1205: meta mensual de cada comercial { correo: pesos }. */
   metas?: { [email: string]: number };
+  /** Ticket 1202: margen mínimo (%) para la alerta. */
+  margenMinimo?: number;
 }
 
 /** Ticket 1207: por qué se perdió una cotización. */
@@ -186,6 +205,9 @@ export interface CotizacionListFilter {
   hasta?: string;
   /** Ticket 1206: alerta "Requieren atención". */
   atencion?: string;
+  /** Ticket 1203: clic en las gráficas. */
+  producto?: string;
+  clienteTipo?: string;
   page?: number;
   limit?: number;
 }

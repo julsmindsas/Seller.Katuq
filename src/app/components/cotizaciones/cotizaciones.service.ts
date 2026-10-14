@@ -45,7 +45,7 @@ export class CotizacionesService extends BaseService {
     if (filter.motivo) {
       url += `&motivo=${encodeURIComponent(filter.motivo)}`;
     }
-    for (const k of ["desde", "hasta", "atencion"] as const) {
+    for (const k of ["desde", "hasta", "atencion", "producto", "clienteTipo"] as const) {
       if (filter[k]) url += `&${k}=${encodeURIComponent(filter[k] as string)}`;
     }
     return this.get<CotizacionPaginatedResponse>(url);
@@ -81,12 +81,14 @@ export class CotizacionesService extends BaseService {
    * KPIs del listado (cotizado mes, pipeline, conversión, borradores). Tickets
    * 1200/1211/1212: respetan la búsqueda, el pedido y el comercial del listado.
    */
-  metrics(filter: Pick<CotizacionListFilter, "q" | "pedido" | "vendedor" | "desde" | "hasta"> & { comparativa?: boolean } = {}): Observable<CotizacionMetricsResponse> {
-    const params = (["q", "pedido", "vendedor", "desde", "hasta"] as const)
+  metrics(filter: Pick<CotizacionListFilter, "q" | "pedido" | "vendedor" | "desde" | "hasta" | "producto" | "clienteTipo"> & { comparativa?: boolean; analisis?: boolean } = {}): Observable<CotizacionMetricsResponse> {
+    const params = (["q", "pedido", "vendedor", "desde", "hasta", "producto", "clienteTipo"] as const)
       .filter((k) => filter[k])
       .map((k) => `${k}=${encodeURIComponent(filter[k] as string)}`);
     // Ticket 1204: la tabla comparativa por asesor solo se calcula si se pide.
     if (filter.comparativa) params.push("comparativa=1");
+    // Ticket 1203: el análisis solo se calcula con la sección abierta.
+    if (filter.analisis) params.push("analisis=1");
     return this.get<CotizacionMetricsResponse>("/v1/cotizaciones/metrics" + (params.length ? "?" + params.join("&") : ""));
   }
 
@@ -96,7 +98,7 @@ export class CotizacionesService extends BaseService {
   }
 
   /** Ticket 1081: términos de todas las cotizaciones nuevas y/o documento anexo (null lo quita). */
-  updateConfig(cambios: string | { terminosBase?: string; anexo?: { url: string; nombre: string } | null; valoresSinDecimales?: boolean; motivosRechazo?: string[]; metas?: { [email: string]: number } }): Observable<{ success: boolean; message?: string }> {
+  updateConfig(cambios: string | { terminosBase?: string; anexo?: { url: string; nombre: string } | null; valoresSinDecimales?: boolean; motivosRechazo?: string[]; metas?: { [email: string]: number }; margenMinimo?: number }): Observable<{ success: boolean; message?: string }> {
     const body = typeof cambios === "string" ? { terminosBase: cambios } : cambios;
     return this.put<{ success: boolean; message?: string }>("/v1/cotizaciones/config", body);
   }

@@ -59,6 +59,14 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   fechaHasta = "";
   /** Ticket 1206: alerta "Requieren atención" aplicada a la tabla. */
   filtroAtencion = "";
+  /** Ticket 1203: filtros que pone un clic en las gráficas. */
+  filtroProducto = "";
+  filtroProductoNombre = "";
+  filtroClienteTipo = "";
+  /** Ticket 1203: sección de análisis (contraída por defecto, recordada por usuario). */
+  analisisAbierto = false;
+  /** Ticket 1202: margen mínimo de la empresa (lo fija el administrador). */
+  margenMinimo = 0;
   /** Ticket 1204: orden de la tabla comparativa. */
   ordenComparativa: { campo: string; dir: 1 | -1 } = { campo: "cotizadoValor", dir: -1 };
   /** Tickets 1204/1205: metas mensuales por comercial (configuración de la empresa). */
@@ -107,6 +115,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.panelContraido = this.leerPreferenciaPanel();
+    try { this.analisisAbierto = localStorage.getItem(this.clavePreferencia.replace("panelContraido", "analisisAbierto")) === "1"; } catch { this.analisisAbierto = false; }
     this.cargarMetas();
     this.subs.push(
       this.searchSubject
@@ -145,13 +154,17 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
         vendedor: this.filtroVendedor || undefined,
         desde: this.fechaDesde || undefined,
         hasta: this.fechaHasta || undefined,
+        producto: this.filtroProducto || undefined,
+        clienteTipo: this.filtroClienteTipo || undefined,
         comparativa: this.mostrarComparativa,
+        analisis: this.analisisAbierto,
       })
       .subscribe({
         next: (res) => {
           if (seq !== this.metricsSeq) return; // llegó tarde: ya hay un filtro más nuevo
           this.metrics = (res && res.data) || null;
           if (this.metrics && this.metrics.vendedores) this.vendedores = this.metrics.vendedores;
+          this.armarGraficas();
         },
         error: () => {
           if (seq === this.metricsSeq) this.metrics = null;
@@ -181,6 +194,8 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
         desde: this.fechaDesde || undefined,
         hasta: this.fechaHasta || undefined,
         atencion: this.filtroAtencion || undefined,
+        producto: this.filtroProducto || undefined,
+        clienteTipo: this.filtroClienteTipo || undefined,
         page: this.page,
         limit: this.limit,
       })
@@ -290,12 +305,21 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
 
   // ---- Ticket 1206: requieren atención ----
 
-  readonly ALERTAS: { clave: string; texto: string; ayuda: string }[] = [
+  readonly ALERTAS_BASE: { clave: string; texto: string; ayuda: string }[] = [
     { clave: "sinConvertir", texto: "Aceptadas sin convertir", ayuda: "Negocio ganado que todavía no es pedido." },
     { clave: "porVencer", texto: "Por vencer", ayuda: "Enviadas que vencen en los próximos 3 días." },
     { clave: "sinSeguimiento", texto: "Sin seguimiento", ayuda: "Enviadas hace más de 5 días sin cambios." },
     { clave: "borradoresViejos", texto: "Borradores viejos", ayuda: "Borradores de hace más de 2 días sin enviar." },
+    // Ticket 1202: enviadas por enlace que el cliente no ha abierto.
+    { clave: "noAbiertas", texto: "No abiertas en 48 h", ayuda: "Enviadas por enlace hace más de 48 horas que el cliente no ha abierto." },
   ];
+
+  /** Ticket 1202: la alerta de margen bajo solo para quien ve márgenes y con un mínimo configurado. */
+  get ALERTAS(): { clave: string; texto: string; ayuda: string }[] {
+    const m = this.metrics;
+    if (!m || !m.veMargen || !(m.margenMinimo! > 0)) return this.ALERTAS_BASE;
+    return [...this.ALERTAS_BASE, { clave: "bajoMargen", texto: `Margen bajo (< ${m.margenMinimo}%)`, ayuda: "Borradores y enviadas con margen por debajo del mínimo de la empresa." }];
+  }
 
   conteoAlerta(clave: string): number {
     const a: any = this.metrics && this.metrics.atencion;
@@ -318,6 +342,121 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     }
     this.page = 1;
     this.cargar();
+  }
+
+  // ---- Ticket 1202: vistas del cliente ----
+
+  /** "Vista · 14 oct" / "No vista" para las enviadas por enlace. */
+  textoVista(c: Cotizacion): string {
+    if (!(c as any).publicToken) return "";
+    if (!c.vistaCliente) return c.estadoCotizacion === "enviada" ? "No vista" : "";
+    const f = c.fechaUltimaVista || c.fechaPrimeraVista;
+    const d = f ? new Date(f) : null;
+    const fecha = d && !isNaN(d.getTime()) ? d.toLocaleDateString("es-CO", { day: "2-digit", month: "short" }) : "";
+    return "Vista" + (c.vistasCount && c.vistasCount > 1 ? ` ${c.vistasCount} veces` : "") + (fecha ? " · " + fecha : "");
+  }
+
+  // ---- Ticket 1203: análisis ----
+
+  alternarAnalisis(): void {
+    this.analisisAbierto = !this.analisisAbierto;
+    try { localStorage.setItem(this.clavePreferencia.replace("panelContraido", "analisisAbierto"), this.analisisAbierto ? "1" : "0"); } catch { /* sin almacenamiento */ }
+    if (this.analisisAbierto) this.cargarMetrics();
+  }
+
+  private readonly ETAPAS: { [k: string]: string } = { borrador: "Creadas", enviada: "Enviadas", aceptada: "Aceptadas", convertida: "Convertidas" };
+
+  private armarEmbudo(): any {
+    const a = this.metrics && this.metrics.analisis;
+    if (!a) return null;
+    return {
+      tooltip: { trigger: "item", formatter: (p: any) => `${p.name}: ${p.data.cantidad} · ${this.money(p.data.valor)}<br>Paso: ${p.data.paso}%` },
+      color: ["#C9BDF7", "#9E8BF0", "#7B62E8", "#5F3FE0"],
+      series: [{ type: "funnel", sort: "none", left: "8%", width: "84%", minSize: "20%", gap: 3,
+        label: { formatter: (p: any) => `${p.name} · ${p.data.cantidad} (${p.data.paso}%)`, color: "#211F3A", fontSize: 12 },
+        data: a.embudo.map((e) => ({ name: this.ETAPAS[e.etapa] || e.etapa, value: Math.max(e.cantidad, 0.0001), cantidad: e.cantidad, valor: e.valor, paso: e.paso, etapa: e.etapa })) }],
+    };
+  }
+
+  private armarTendencia(): any {
+    const a = this.metrics && this.metrics.analisis;
+    if (!a || !a.tendencia.length) return null;
+    return {
+      tooltip: { trigger: "axis", valueFormatter: (v: number) => this.money(v) },
+      legend: { data: ["Cotizado", "Convertido"], bottom: 0 },
+      grid: { left: 70, right: 16, top: 16, bottom: 48 },
+      xAxis: { type: "category", data: a.tendencia.map((t) => t.mes) },
+      yAxis: { type: "value", axisLabel: { formatter: (v: number) => (v >= 1e6 ? Math.round(v / 1e6) + " M" : v.toLocaleString("es-CO")) } },
+      color: ["#C9BDF7", "#5F3FE0"],
+      series: [{ name: "Cotizado", type: "bar", data: a.tendencia.map((t) => t.cotizado) }, { name: "Convertido", type: "bar", data: a.tendencia.map((t) => t.convertido) }],
+    };
+  }
+
+  private armarMotivos(): any {
+    const a = this.metrics && this.metrics.analisis;
+    if (!a || !a.motivos.length) return null;
+    const lista = [...a.motivos].reverse();
+    return {
+      tooltip: { trigger: "item", formatter: (p: any) => `${p.name}: ${p.data.cantidad} · ${this.money(p.data.valor)}` },
+      grid: { left: 150, right: 30, top: 8, bottom: 8 },
+      xAxis: { type: "value", minInterval: 1 },
+      yAxis: { type: "category", data: lista.map((m) => m.motivo), axisLabel: { width: 140, overflow: "truncate" } },
+      color: ["#B42318"],
+      series: [{ type: "bar", data: lista.map((m) => ({ value: m.cantidad, cantidad: m.cantidad, valor: m.valor, motivo: m.motivo })) }],
+    };
+  }
+
+  private armarProductos(): any {
+    const a = this.metrics && this.metrics.analisis;
+    if (!a || !a.productos.length) return null;
+    const lista = [...a.productos].reverse();
+    return {
+      tooltip: { trigger: "item", formatter: (p: any) => `${p.data.nombre}<br>${this.money(p.data.valor)} cotizado · ${p.data.cotizaciones} cotizaciones · ${p.data.conversion}% convertidas` },
+      grid: { left: 180, right: 30, top: 8, bottom: 8 },
+      xAxis: { type: "value", axisLabel: { formatter: (v: number) => (v >= 1e6 ? Math.round(v / 1e6) + " M" : v.toLocaleString("es-CO")) } },
+      yAxis: { type: "category", data: lista.map((p) => p.nombre), axisLabel: { width: 170, overflow: "truncate" } },
+      series: [{ type: "bar", data: lista.map((p) => ({ value: p.valor, ...p, itemStyle: { color: p.conversion >= 50 ? "#137A3A" : p.conversion > 0 ? "#7B62E8" : "#C9BDF7" } })) }],
+    };
+  }
+
+  private armarClientes(): any {
+    const a = this.metrics && this.metrics.analisis;
+    if (!a) return null;
+    return {
+      tooltip: { trigger: "item", formatter: (p: any) => `${p.name}: win rate ${p.data.value}% · ${p.data.cotizaciones} cotizaciones` },
+      grid: { left: 40, right: 16, top: 16, bottom: 30 },
+      xAxis: { type: "category", data: a.clientes.map((c) => (c.grupo === "nuevos" ? "Nuevos" : "Recurrentes")) },
+      yAxis: { type: "value", max: 100, axisLabel: { formatter: "{value}%" } },
+      color: ["#5F3FE0"],
+      series: [{ type: "bar", barWidth: "40%", data: a.clientes.map((c) => ({ value: c.winRate, cotizaciones: c.cotizaciones, grupo: c.grupo })) }],
+    };
+  }
+
+  /** Ticket 1203: opciones de las gráficas, armadas una vez por respuesta (no en cada ciclo). */
+  graficas: { embudo: any; tendencia: any; motivos: any; productos: any; clientes: any } = { embudo: null, tendencia: null, motivos: null, productos: null, clientes: null };
+
+  private armarGraficas(): void {
+    this.graficas = this.metrics && this.metrics.analisis
+      ? { embudo: this.armarEmbudo(), tendencia: this.armarTendencia(), motivos: this.armarMotivos(), productos: this.armarProductos(), clientes: this.armarClientes() }
+      : { embudo: null, tendencia: null, motivos: null, productos: null, clientes: null };
+  }
+
+  /** Ticket 1203: un clic en una barra o etapa filtra la tabla. */
+  clicGrafica(tipo: string, ev: any): void {
+    const d = (ev && ev.data) || {};
+    if (tipo === "embudo" && d.etapa) { this.setEstado(d.etapa === "borrador" ? "" : d.etapa); return; }
+    if (tipo === "motivos" && d.motivo) { this.filtroEstado = "rechazada"; this.filtroSinConvertir = false; this.filtroAtencion = ""; this.setMotivo(d.motivo === "Sin motivo" ? "" : d.motivo); return; }
+    if (tipo === "tendencia" && ev && ev.name) {
+      const [y, m] = String(ev.name).split("-").map(Number);
+      const fin = new Date(y, m, 0).getDate();
+      this.periodo = "personalizado";
+      this.fechaDesde = `${ev.name}-01`;
+      this.fechaHasta = `${ev.name}-${String(fin).padStart(2, "0")}`;
+      this.aplicarFiltrosComerciales();
+      return;
+    }
+    if (tipo === "productos" && d.cd) { this.filtroProducto = d.cd; this.filtroProductoNombre = d.nombre || d.cd; this.aplicarFiltrosComerciales(); return; }
+    if (tipo === "clientes" && d.grupo) { this.filtroClienteTipo = d.grupo === "nuevos" ? "nuevo" : "recurrente"; this.aplicarFiltrosComerciales(); }
   }
 
   // ---- Ticket 1205: indicadores comerciales ----
@@ -361,9 +500,10 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     const filas = this.vendedores
       .map((v, i) => `<label style="display:flex;align-items:center;gap:10px;margin:0 0 8px;text-align:left"><span style="flex:1;font-size:13px">${esc(v.nombre)}</span><input id="meta-${i}" type="number" min="0" step="100000" value="${Math.round(Number(this.metas[v.email])) || ""}" placeholder="Sin meta" style="width:150px;padding:8px 10px;border:1px solid #dedbea;border-radius:11px"></label>`)
       .join("");
+    const margenCampo = `<label style="display:flex;align-items:center;gap:10px;margin:14px 0 0;padding-top:12px;border-top:1px solid #ecebf3;text-align:left"><span style="flex:1;font-size:13px"><strong>Margen mínimo (%)</strong><br><small style="color:#6b6880">Alerta de cotizaciones con poco margen. 0 = sin alerta.</small></span><input id="meta-margen" type="number" min="0" max="99" step="1" value="${Math.round(Number(this.margenMinimo)) || ""}" placeholder="0" style="width:150px;padding:8px 10px;border:1px solid #dedbea;border-radius:11px"></label>`;
     const r = await Swal.fire({
       title: "Meta mensual por comercial",
-      html: `<p style="font-size:13px;color:#6b6880;margin:0 0 12px">Pesos convertidos a pedido en el mes. Vacío = sin meta.</p>${filas}`,
+      html: `<p style="font-size:13px;color:#6b6880;margin:0 0 12px">Pesos convertidos a pedido en el mes. Vacío = sin meta.</p>${filas}${margenCampo}`,
       showCancelButton: true,
       confirmButtonText: "Guardar",
       cancelButtonText: "Cancelar",
@@ -374,15 +514,18 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
           const n = Math.round(Number((document.getElementById("meta-" + i) as HTMLInputElement | null)?.value || 0));
           if (n > 0) metas[v.email] = n;
         });
-        return metas;
+        const margen = Number((document.getElementById("meta-margen") as HTMLInputElement | null)?.value || 0);
+        if (!(margen >= 0 && margen < 100)) { Swal.showValidationMessage("El margen mínimo va de 0 a 99 %."); return false; }
+        return { metas, margen };
       },
     });
     if (!r.isConfirmed) return;
-    const metas = r.value as { [email: string]: number };
-    this.subs.push(this.service.updateConfig({ metas }).subscribe({
+    const { metas, margen } = r.value as { metas: { [email: string]: number }; margen: number };
+    this.subs.push(this.service.updateConfig({ metas, margenMinimo: margen }).subscribe({
       next: (res) => {
         if (res && res.success) {
           this.metas = metas;
+          this.margenMinimo = margen;
           this.toastr.success("Metas guardadas.");
           this.cargarMetrics();
         } else {
@@ -395,7 +538,10 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
 
   private cargarMetas(): void {
     this.subs.push(this.service.getConfig().subscribe({
-      next: (res) => { this.metas = (res && res.data && (res.data as any).metas) || {}; },
+      next: (res) => {
+        this.metas = (res && res.data && (res.data as any).metas) || {};
+        this.margenMinimo = Number(res && res.data && (res.data as any).margenMinimo) || 0;
+      },
       error: () => { this.metas = {}; },
     }));
   }
@@ -513,6 +659,8 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     if (this.fechaDesde || this.fechaHasta) lista.push({ clave: "periodo", texto: `Período: ${this.fechaDesde || "…"} a ${this.fechaHasta || "…"}` });
     const alerta = this.ALERTAS.find((a) => a.clave === this.filtroAtencion);
     if (alerta) lista.push({ clave: "atencion", texto: alerta.texto });
+    if (this.filtroProducto) lista.push({ clave: "producto", texto: "Producto: " + this.filtroProductoNombre });
+    if (this.filtroClienteTipo) lista.push({ clave: "clienteTipo", texto: this.filtroClienteTipo === "nuevo" ? "Clientes nuevos" : "Clientes recurrentes" });
     if (this.filtroSinConvertir) lista.push({ clave: "sinConvertir", texto: "Aceptadas sin convertir" });
     else if (this.filtroEstado) lista.push({ clave: "estado", texto: "Estado: " + this.estadoLabel(this.filtroEstado) });
     if (this.filtroMotivo) lista.push({ clave: "motivo", texto: "Motivo: " + this.filtroMotivo });
@@ -527,6 +675,8 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     if (clave === "pedido") { this.filtroPedido = ""; this.page = 1; this.cargar(); this.cargarMetrics(); }
     if (clave === "periodo") { this.setPeriodo(""); }
     if (clave === "atencion") { this.filtroAtencion = ""; this.page = 1; this.cargar(); }
+    if (clave === "producto") { this.filtroProducto = ""; this.filtroProductoNombre = ""; this.aplicarFiltrosComerciales(); }
+    if (clave === "clienteTipo") { this.filtroClienteTipo = ""; this.aplicarFiltrosComerciales(); }
   }
 
   /** Porcentaje con coma decimal (34,07 %). */

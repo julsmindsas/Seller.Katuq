@@ -35,6 +35,10 @@ interface DianDocument {
   cliente?: { nombre?: string; documento?: string; tipoDocumento?: string } | null;
   /** Ticket 1276: pedido del que salió la factura, con su número. */
   pedido?: { id?: string; numero?: string } | null;
+  /** Ticket 1262: enlace de consulta en la DIAN (es lo que codifica el QR del PDF). */
+  qrUrl?: string;
+  /** Ticket 1262: reenvíos por correo. */
+  emailResends?: { fecha: string; recipient: string; sent: boolean; error?: string }[];
 }
 
 interface OrderReadiness { ok: boolean; blocked: boolean; label: string; tone: 'success' | 'warning' | 'error' }
@@ -73,6 +77,15 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   valorMinimo: number | null = null;
   valorMaximo: number | null = null;
   private readonly COP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+  // Ticket 1266 (FE-13): indicadores en dinero del período.
+  periodoFe: 'hoy' | 'mes' | 'mesAnterior' | 'personalizado' = 'mes';
+  feDesde = '';
+  feHasta = '';
+  indicadoresFe: any = null;
+  cargandoIndicadores = false;
+  // Ticket 1262 (FE-05): documento abierto en el detalle.
+  detalle: DianDocument | null = null;
+  reenviando = false;
   openMenu = '';
 
   private destroy$ = new Subject<void>();
@@ -282,6 +295,141 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     return selectable.length > 0 && selectable.every((order) => this.selectedOrders.has(this.orderId(order)));
   }
 
+  // ---- Ticket 1266 (FE-13): indicadores en dinero por período ----
+
+  setPeriodoFe(valor: string): void {
+    this.periodoFe = valor as any;
+    const hoy = new Date();
+    const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    if (valor === 'hoy') { this.feDesde = iso(hoy); this.feHasta = iso(hoy); }
+    if (valor === 'mes') { this.feDesde = iso(new Date(hoy.getFullYear(), hoy.getMonth(), 1)); this.feHasta = iso(hoy); }
+    if (valor === 'mesAnterior') { this.feDesde = iso(new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1)); this.feHasta = iso(new Date(hoy.getFullYear(), hoy.getMonth(), 0)); }
+    if (valor !== 'personalizado' || (this.feDesde && this.feHasta)) this.cargarIndicadores();
+  }
+
+  setFechaFe(campo: 'feDesde' | 'feHasta', valor: string): void {
+    this[campo] = valor || '';
+    this.periodoFe = 'personalizado';
+    if (this.feDesde && this.feHasta) this.cargarIndicadores();
+  }
+
+  cargarIndicadores(): void {
+    if (!this.feDesde || !this.feHasta) this.setPeriodoFe(this.periodoFe === 'personalizado' ? 'mes' : this.periodoFe);
+    this.cargandoIndicadores = true;
+    this.integrationsService.getDianIndicadores(this.feDesde, this.feHasta).subscribe({
+      next: (res) => { this.cargandoIndicadores = false; this.indicadoresFe = (res && res.data) || null; },
+      error: () => { this.cargandoIndicadores = false; this.indicadoresFe = null; },
+    });
+  }
+
+  variacionFe(campo: string): string {
+    const v = this.indicadoresFe && this.indicadoresFe.variacion && this.indicadoresFe.variacion[campo];
+    if (v === null || v === undefined) return '';
+    return (v > 0 ? '▲ ' : v < 0 ? '▼ ' : '') + Math.abs(v).toLocaleString('es-CO', { maximumFractionDigits: 1 }) + '%';
+  }
+
+  claseVariacionFe(campo: string, bajarEsBueno = false): string {
+    const v = this.indicadoresFe && this.indicadoresFe.variacion && this.indicadoresFe.variacion[campo];
+    if (!v) return '';
+    return (v > 0) !== bajarEsBueno ? 'fe-var-buena' : 'fe-var-mala';
+  }
+
+  // ---- Ticket 1262 (FE-05): detalle del documento ----
+
+  abrirDetalle(document: DianDocument): void {
+    this.openMenu = '';
+    this.detalle = document;
+  }
+
+  cerrarDetalle(): void {
+    this.detalle = null;
+  }
+
+  @HostListener('document:keydown.escape')
+  cerrarDetalleConEscape(): void {
+    if (this.detalle) this.detalle = null;
+  }
+
+  copiarCufe(document: DianDocument): void {
+    const cufe = document.cufe || document.cude || '';
+    if (!cufe) return;
+    navigator.clipboard?.writeText(cufe).then(
+      () => Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'CUFE copiado', showConfirmButton: false, timer: 1800 }),
+      () => undefined,
+    );
+  }
+
+  /** Enlace de consulta en la DIAN: el del documento o el estándar con el CUFE. */
+  enlaceDian(document: DianDocument): string {
+    const cufe = document.cufe || document.cude || '';
+    return document.qrUrl || (cufe ? `https://catalogo-vpfe.dian.gov.co/document/searchqr?documentkey=${encodeURIComponent(cufe)}` : '');
+  }
+
+  /** WhatsApp con el número, el valor y el enlace de consulta (el comprador lo abre con su teléfono). */
+  enlaceWhatsApp(document: DianDocument): string {
+    const texto = `${this.documentTypeLabel(document.type)} ${document.number || ''} por ${this.money(document.amount)}. Consúltala en la DIAN: ${this.enlaceDian(document)}`;
+    return 'https://wa.me/?text=' + encodeURIComponent(texto);
+  }
+
+  async reenviarCorreo(document: DianDocument): Promise<void> {
+    if (!document.number || document.status !== 'accepted') return;
+    const r = await Swal.fire({
+      title: 'Reenviar por correo',
+      input: 'email',
+      inputLabel: 'Correo del comprador',
+      inputValue: document.emailDelivery?.recipient || '',
+      showCancelButton: true,
+      confirmButtonText: 'Reenviar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#5F3FE0',
+      validationMessage: 'Escribe un correo válido.',
+    });
+    if (!r.isConfirmed || !r.value) return;
+    this.reenviando = true;
+    this.integrationsService.resendDianDocument(document.number, String(r.value)).subscribe({
+      next: (res) => {
+        this.reenviando = false;
+        const envio = res && res.data;
+        if (envio) document.emailResends = [...(document.emailResends || []), envio];
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Documento reenviado a ' + r.value, showConfirmButton: false, timer: 2500 });
+      },
+      error: (e) => {
+        this.reenviando = false;
+        const envio = e?.error?.data;
+        if (envio) document.emailResends = [...(document.emailResends || []), envio];
+        Swal.fire({ icon: 'error', title: 'No se pudo reenviar', text: e?.error?.message || 'Intenta de nuevo.' });
+      },
+    });
+  }
+
+  /** Ticket 1262: línea de tiempo del documento con lo que guarda la auditoría. */
+  lineaDocumento(document: DianDocument): { texto: string; fecha: Date | null; tono: string; detalle?: string }[] {
+    const lista: { texto: string; fecha: Date | null; tono: string; detalle?: string }[] = [];
+    lista.push({ texto: 'Registrado en Katuq', fecha: this.asDate(document.createdAt), tono: 'neutro' });
+    if (document.issueDate) lista.push({ texto: 'Fecha de emisión', fecha: this.documentDate(document), tono: 'neutro' });
+    const g = this.statusGroup(document);
+    lista.push({
+      texto: g === 'accepted' ? 'Aceptado por la DIAN' : g === 'rejected' ? 'Rechazado por la DIAN' : 'En proceso en la DIAN',
+      fecha: this.asDate(document.createdAt), tono: g === 'accepted' ? 'ok' : g === 'rejected' ? 'error' : 'neutro',
+      detalle: g === 'rejected' ? this.rejectionMessage(document) : undefined,
+    });
+    const e = document.emailDelivery;
+    if (e && e.requested) {
+      lista.push({ texto: e.sent ? `Correo enviado a ${e.recipient || 'el comprador'}` : 'El correo al comprador no salió', fecha: this.asDate(document.createdAt), tono: e.sent ? 'ok' : 'error', detalle: e.sent ? undefined : ((e as any).error || '') });
+    }
+    for (const r of document.emailResends || []) {
+      lista.push({ texto: r.sent ? `Reenviado a ${r.recipient}` : `No se pudo reenviar a ${r.recipient}`, fecha: r.fecha ? new Date(r.fecha) : null, tono: r.sent ? 'ok' : 'error', detalle: r.error });
+    }
+    return lista;
+  }
+
+  /** Ticket 1262: el correo al comprador falló y no se ha reenviado con éxito. */
+  correoFallido(document: DianDocument): boolean {
+    const e = document.emailDelivery;
+    if (!e || !e.requested || e.sent) return false;
+    return !(document.emailResends || []).some((r) => r.sent);
+  }
+
   loadDashboard(): void {
     if (this.loading) return;
     this.loading = true;
@@ -330,6 +478,8 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         this.selectedOrders.forEach((id) => { if (!ids.has(id)) this.selectedOrders.delete(id); });
         this.lastSync = new Date();
       });
+    // Ticket 1266: los indicadores del período se cargan aparte (no frenan la bandeja).
+    this.cargarIndicadores();
   }
 
   selectTab(tab: DashboardTab): void {

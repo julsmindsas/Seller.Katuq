@@ -554,6 +554,13 @@
     <!-- ===================== COLUMNA LATERAL ===================== -->
     <div class="col-side">
       <!-- Tickets 1207 y 1208: por qué se perdió y la línea de tiempo de estados. -->
+      <!-- Ticket 1202: vistas del cliente en el enlace -->
+      <div class="cot-vistas" *ngIf="$any(cotizacion).publicToken">
+        <strong>{{ cotizacion.vistaCliente ? ('Vista ' + (cotizacion.vistasCount || 1) + (cotizacion.vistasCount === 1 ? ' vez' : ' veces')) : 'El cliente no ha abierto el enlace' }}</strong>
+        <small *ngIf="cotizacion.fechaPrimeraVista">Primera: {{ cotizacion.fechaPrimeraVista | date:'dd/MM/yyyy HH:mm' }}</small>
+        <small *ngIf="cotizacion.fechaUltimaVista">Última: {{ cotizacion.fechaUltimaVista | date:'dd/MM/yyyy HH:mm' }}</small>
+      </div>
+
       <div class="cot-historial" *ngIf="lineaDeTiempo.length || cotizacion.rechazo || cotizacion.motivoRechazoTexto">
         <div class="cot-historial-cabeza">
           <h3>Historial de estados</h3>
@@ -615,6 +622,13 @@
         <div class="sum-total">
           <span>Total</span>
           <strong>{{ total | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</strong>
+        </div>
+        <!-- Ticket 1202: margen (solo roles autorizados: el servidor no lo manda a los demás) -->
+        <div class="sum-margen" *ngIf="cotizacion.margen as m" [class.sum-margen--bajo]="margenBajo">
+          <span>Margen</span>
+          <strong *ngIf="m.completo">{{ m.valor | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }} · {{ m.pct }}%</strong>
+          <small *ngIf="!m.completo">Costo de {{ m.lineasConCosto }} de {{ m.lineas }} líneas: margen incompleto</small>
+          <small *ngIf="margenBajo">Por debajo del mínimo de la empresa ({{ margenMinimoEmpresa }}%)</small>
         </div>
         <p class="sum-foot">
           <!-- Ticket 1097: un combo cerrado cuenta como un ítem, como lo ve el cliente -->

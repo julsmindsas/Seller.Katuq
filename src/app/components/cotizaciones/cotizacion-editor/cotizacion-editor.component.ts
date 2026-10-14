@@ -2031,6 +2031,16 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     this.toastr.info("Guarda la cotización para registrar el rechazo.", "Motivo anotado");
   }
 
+  /** Ticket 1202: margen mínimo de la empresa y si esta cotización queda por debajo. */
+  get margenMinimoEmpresa(): number {
+    return Number(this.configCotizacion && (this.configCotizacion as any).margenMinimo) || 0;
+  }
+
+  get margenBajo(): boolean {
+    const m = this.cotizacion.margen;
+    return !!m && m.completo && m.pct !== null && this.margenMinimoEmpresa > 0 && m.pct < this.margenMinimoEmpresa;
+  }
+
   /** Motivos de la empresa (o los de siempre) para el rechazo. */
   get motivosRechazo(): string[] {
     const propios = (this.configCotizacion && this.configCotizacion.motivosRechazo) || [];

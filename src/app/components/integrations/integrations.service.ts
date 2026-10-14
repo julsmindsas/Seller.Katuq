@@ -1171,6 +1171,23 @@ export class IntegrationsService {
     );
   }
 
+  /** Ticket 1266 (FE-13): facturado, IVA, notas, neto, pendiente y rechazos del período. */
+  getDianIndicadores(desde: string, hasta: string): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/dian/indicadores?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /** Ticket 1262 (FE-05): reenvía PDF, XML y AttachedDocument de un documento aceptado. */
+  resendDianDocument(documentNumber: string, recipient: string): Observable<any> {
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/dian/documents/${encodeURIComponent(documentNumber)}/resend`,
+      { recipient },
+      { headers: this.getApiHeaders() }
+    );
+  }
+
   listDianDocuments(status?: string, limit = 50): Observable<any> {
     let params = `limit=${limit}`;
     if (status) params += `&status=${encodeURIComponent(status)}`;

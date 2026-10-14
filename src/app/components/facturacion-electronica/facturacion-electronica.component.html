@@ -60,6 +60,58 @@
     </div>
   </section>
 
+  <!-- ===== Ticket 1266 (FE-13): el período en dinero ===== -->
+  <section class="fe-card fe-periodo" aria-label="Facturación del período">
+    <div class="fe-periodo__cabeza">
+      <h2>Facturación del período</h2>
+      <label class="fe-filtro fe-periodo__selector">
+        <span class="fe-filtro__nombre">Período</span>
+        <select [ngModel]="periodoFe" (ngModelChange)="setPeriodoFe($event)">
+          <option value="hoy">Hoy</option>
+          <option value="mes">Este mes</option>
+          <option value="mesAnterior">Mes anterior</option>
+          <option value="personalizado">Personalizado</option>
+        </select>
+      </label>
+      <ng-container *ngIf="periodoFe === 'personalizado'">
+        <label class="fe-filtro"><span class="fe-filtro__nombre">Desde</span><input type="date" [ngModel]="feDesde" (ngModelChange)="setFechaFe('feDesde', $event)"></label>
+        <label class="fe-filtro"><span class="fe-filtro__nombre">Hasta</span><input type="date" [ngModel]="feHasta" (ngModelChange)="setFechaFe('feHasta', $event)"></label>
+      </ng-container>
+      <span class="fe-periodo__rango" *ngIf="indicadoresFe?.anterior">vs. {{ indicadoresFe.anterior.desde }} a {{ indicadoresFe.anterior.hasta }}</span>
+    </div>
+    <div class="fe-state" *ngIf="cargandoIndicadores && !indicadoresFe"><i class="pi pi-spin pi-spinner"></i><span>Calculando…</span></div>
+    <div class="fe-periodo__grid" *ngIf="indicadoresFe as i">
+      <div class="fe-cifra" title="Facturas aceptadas por la DIAN en el período.">
+        <span class="fe-cifra__nombre">Facturado</span><strong>{{ money(i.facturado) }}</strong>
+        <small>{{ i.facturas }} factura{{ i.facturas === 1 ? '' : 's' }} <em [class]="claseVariacionFe('facturado')">{{ variacionFe('facturado') }}</em></small>
+      </div>
+      <div class="fe-cifra" title="IVA de las facturas menos el de las notas crédito.">
+        <span class="fe-cifra__nombre">IVA generado</span><strong>{{ money(i.ivaGenerado) }}</strong>
+        <small>Retenciones: {{ i.retenciones === null ? 'no registradas' : money(i.retenciones) }}</small>
+      </div>
+      <div class="fe-cifra" title="Notas crédito aceptadas en el período.">
+        <span class="fe-cifra__nombre">Notas crédito</span><strong>{{ money(i.notasCredito) }}</strong>
+        <small><em [class]="claseVariacionFe('notasCredito', true)">{{ variacionFe('notasCredito') }}</em></small>
+      </div>
+      <div class="fe-cifra" title="Facturado − notas crédito + notas débito.">
+        <span class="fe-cifra__nombre">Neto</span><strong>{{ money(i.neto) }}</strong>
+        <small><em [class]="claseVariacionFe('neto')">{{ variacionFe('neto') }}</em></small>
+      </div>
+      <button type="button" class="fe-cifra fe-cifra--boton" (click)="selectTab('invoice')" title="Pedidos del período con productos y sin factura.">
+        <span class="fe-cifra__nombre">Pendiente por facturar</span><strong>{{ money(i.pendientePorFacturar?.valor) }}</strong>
+        <small>{{ i.pendientePorFacturar?.pedidos || 0 }} pedidos</small>
+      </button>
+      <div class="fe-cifra" title="Facturas rechazadas ÷ facturas enviadas en el período.">
+        <span class="fe-cifra__nombre">Tasa de rechazo</span><strong>{{ i.tasaRechazo }}%</strong>
+        <small>{{ i.rechazadas }} rechazada{{ i.rechazadas === 1 ? '' : 's' }} <em [class]="claseVariacionFe('tasaRechazo', true)">{{ variacionFe('tasaRechazo') }}</em></small>
+      </div>
+      <div class="fe-cifra" title="Días promedio entre el pedido y su factura (solo facturas que salen de un pedido).">
+        <span class="fe-cifra__nombre">Del pedido a la factura</span><strong>{{ i.diasPedidoAFactura === null ? '—' : (i.diasPedidoAFactura + ' días') }}</strong>
+        <small>{{ i.diasPedidoAFactura === null ? 'Sin facturas de pedidos' : 'promedio' }}</small>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== KPIs ===== -->
   <div class="fe-kpis" aria-label="Resumen de facturación">
     <button type="button" class="fe-kpi fe-kpi--accent" (click)="showDocuments('all')">
@@ -190,7 +242,8 @@
                     <i class="pi" [ngClass]="document.type === 'invoice' ? 'pi-file' : 'pi-replay'"></i>
                   </span>
                   <div>
-                    <strong>{{ document.number || 'Sin consecutivo' }}</strong>
+                    <button type="button" class="fe-link" (click)="abrirDetalle(document)" title="Ver el detalle del documento">{{ document.number || 'Sin consecutivo' }}</button>
+                    <span class="fe-alerta-correo" *ngIf="correoFallido(document)" title="El correo al comprador no salió">Correo no enviado</span>
                     <small>{{ documentTypeLabel(document.type) }} · {{ documentDate(document) ? (documentDate(document) | date:'dd/MM/yyyy') : 'sin fecha' }}</small>
                   </div>
                 </div>
@@ -229,6 +282,9 @@
                     <i class="pi pi-ellipsis-v"></i>
                   </button>
                   <div class="fe-menu" role="menu" *ngIf="isMenuOpen(document)">
+                    <button type="button" role="menuitem" class="fe-menu__item" (click)="abrirDetalle(document)">
+                      <i class="pi pi-eye"></i> Ver detalle
+                    </button>
                     <button type="button" role="menuitem" class="fe-menu__item fe-menu__item--accent" (click)="checkStatus(document)" [disabled]="!document.cufe && !document.cude">
                       <i class="pi pi-search"></i> Consultar en la DIAN
                     </button>
@@ -276,6 +332,58 @@
       <span class="fe-list__sync" *ngIf="lastSync"><i class="pi pi-clock"></i> Última consulta a la DIAN {{ lastSync | date:'HH:mm' }}</span>
     </div>
   </section>
+
+  <!-- ===== Ticket 1262 (FE-05): detalle del documento ===== -->
+  <div class="fe-detalle-velo" *ngIf="detalle as d" (click)="cerrarDetalle()">
+    <aside class="fe-detalle" role="dialog" aria-modal="true" [attr.aria-label]="'Detalle de ' + (d.number || 'documento')" (click)="$event.stopPropagation()">
+      <header class="fe-detalle__cabeza">
+        <div>
+          <span class="fe-detalle__tipo">{{ documentTypeLabel(d.type) }}</span>
+          <h2>{{ d.number || 'Sin consecutivo' }}</h2>
+          <span class="fe-pill fe-pill--{{ statusGroup(d) }}"><i class="pi" [ngClass]="statusIcon(d)"></i>{{ statusLabel(d.status) }}</span>
+        </div>
+        <button type="button" class="fe-iconbtn" (click)="cerrarDetalle()" aria-label="Cerrar"><i class="pi pi-times"></i></button>
+      </header>
+      <div class="fe-detalle__cuerpo">
+        <dl class="fe-datos">
+          <div><dt>Cliente</dt><dd>{{ documentCustomer(d) || '—' }}<small *ngIf="documentCustomerId(d)"> · {{ documentCustomerId(d) }}</small></dd></div>
+          <div><dt>Valor</dt><dd>{{ money(d.amount) }}</dd></div>
+          <div><dt>Emisión</dt><dd>{{ documentDate(d) ? (documentDate(d) | date:'dd/MM/yyyy') : '—' }}</dd></div>
+          <div *ngIf="d.pedido?.numero"><dt>Pedido</dt><dd><button type="button" class="fe-link" (click)="verPedido(d)">{{ d.pedido?.numero }}</button></dd></div>
+          <div class="fe-datos__cufe" *ngIf="d.cufe || d.cude">
+            <dt>{{ d.cufe ? 'CUFE' : 'CUDE' }}</dt>
+            <dd><code>{{ d.cufe || d.cude }}</code><button type="button" class="fe-link" (click)="copiarCufe(d)">Copiar</button></dd>
+          </div>
+          <div *ngIf="enlaceDian(d)"><dt>Consulta DIAN</dt><dd><a class="fe-link" [href]="enlaceDian(d)" target="_blank" rel="noopener">Abrir en la DIAN <i class="pi pi-external-link"></i></a><small> (es el mismo enlace del código QR del PDF)</small></dd></div>
+        </dl>
+
+        <div class="fe-alert fe-alert--error" *ngIf="correoFallido(d)">
+          <i class="pi pi-exclamation-triangle"></i>
+          <div><strong>El correo al comprador no salió</strong><span>{{ $any(d.emailDelivery)?.error || 'Reenvíalo desde aquí.' }}</span></div>
+        </div>
+
+        <div class="fe-detalle__acciones" *ngIf="d.status === 'accepted'">
+          <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="download(d, 'pdf')"><i class="pi pi-file-pdf fe-red"></i> PDF</button>
+          <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="download(d, 'xml')"><i class="pi pi-download"></i> XML firmado</button>
+          <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="download(d, 'attachedDocument')"><i class="pi pi-download"></i> AttachedDocument</button>
+          <button type="button" class="fe-btn fe-btn--sm fe-btn--primary" (click)="reenviarCorreo(d)" [disabled]="reenviando"><i class="pi pi-envelope"></i> {{ reenviando ? 'Reenviando…' : 'Reenviar por correo' }}</button>
+          <a class="fe-btn fe-btn--sm fe-btn--ghost" [href]="enlaceWhatsApp(d)" target="_blank" rel="noopener"><i class="pi pi-whatsapp"></i> WhatsApp</a>
+        </div>
+
+        <h3 class="fe-detalle__titulo">Línea de tiempo</h3>
+        <ol class="fe-linea">
+          <li *ngFor="let e of lineaDocumento(d)" class="fe-linea__item fe-linea__item--{{ e.tono }}">
+            <span class="fe-linea__punto"></span>
+            <div>
+              <strong>{{ e.texto }}</strong>
+              <small *ngIf="e.fecha">{{ e.fecha | date:'dd/MM/yyyy HH:mm' }}</small>
+              <small class="fe-linea__detalle" *ngIf="e.detalle">{{ e.detalle }}</small>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </aside>
+  </div>
 
   <!-- ===== Desde pedidos ===== -->
   <section class="fe-card fe-list" *ngIf="activeTab === 'invoice'">

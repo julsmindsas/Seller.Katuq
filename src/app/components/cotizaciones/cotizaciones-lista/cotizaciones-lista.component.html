@@ -283,6 +283,11 @@
         <strong>{{ pct(ind.descuentoPromedio) }}</strong>
         <small><em [class]="claseVariacion('descuentoPromedio')">{{ textoVariacion('descuentoPromedio') }}</em></small>
       </div>
+      <div class="indicador" *ngIf="metrics?.veMargen && ind.margenPromedio !== undefined" title="(Base sin IVA − costo) ÷ base, ponderado por valor. Solo cotizaciones con el costo de todas sus líneas. Solo lo ven administradores y gerencia.">
+        <span class="indicador-nombre">Margen cotizado</span>
+        <strong>{{ ind.margenPromedio === null ? '—' : pct(ind.margenPromedio) }}</strong>
+        <small>{{ ind.margenPromedio === null ? 'Sin costos cargados' : 'promedio ponderado' }}</small>
+      </div>
       <div class="indicador" title="$ convertido en el mes ÷ meta mensual de los comerciales filtrados.">
         <span class="indicador-nombre">Avance vs. meta</span>
         <strong>{{ ind.avanceMeta === null ? '—' : pct(ind.avanceMeta) }}</strong>
@@ -312,6 +317,7 @@
             <th role="button" class="num" (click)="ordenarComparativa('descuentoPromedio')">Desc. prom.</th>
             <th role="button" class="num" (click)="ordenarComparativa('pipelineAbierto')">Pipeline</th>
             <th role="button" class="num" (click)="ordenarComparativa('convertidoValor')">$ convertido</th>
+            <th role="button" class="num" *ngIf="metrics?.veMargen" (click)="ordenarComparativa('margenPromedio')">Margen</th>
             <th role="button" class="num" (click)="ordenarComparativa('avanceMeta')">Meta</th>
             <th role="button" class="num" (click)="ordenarComparativa('participacion')">Particip.</th>
           </tr>
@@ -327,6 +333,7 @@
             <td class="num">{{ pct(f.descuentoPromedio) }}</td>
             <td class="num">{{ money(f.pipelineAbierto) }}</td>
             <td class="num">{{ money(f.convertidoValor) }}</td>
+            <td class="num" *ngIf="metrics?.veMargen">{{ f.margenPromedio === null || f.margenPromedio === undefined ? '—' : pct(f.margenPromedio) }}</td>
             <td class="num">{{ f.avanceMeta === null ? '—' : pct(f.avanceMeta) }}</td>
             <td class="num">{{ pct(f.participacion) }}</td>
           </tr>
@@ -340,11 +347,44 @@
             <td class="num">{{ pct(ind.descuentoPromedio) }}</td>
             <td class="num">{{ money(ind.pipelineAbierto) }}</td>
             <td class="num">{{ money(ind.convertidoValor) }}</td>
+            <td class="num" *ngIf="metrics?.veMargen">{{ ind.margenPromedio === null || ind.margenPromedio === undefined ? '—' : pct(ind.margenPromedio) }}</td>
             <td class="num">{{ ind.avanceMeta === null ? '—' : pct(ind.avanceMeta) }}</td>
             <td class="num">100%</td>
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Ticket 1203: análisis (contraído por defecto) -->
+  <div class="cotz-card analisis-card" *ngIf="!panelContraido">
+    <button type="button" class="analisis-cabeza" (click)="alternarAnalisis()" [attr.aria-expanded]="analisisAbierto">
+      <span class="head-txt analisis-titulo">Análisis</span>
+      <span class="analisis-ayuda">Embudo, tendencia, motivos de pérdida, productos y clientes. Un clic en una barra filtra la tabla.</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path [attr.d]="analisisAbierto ? 'm18 15-6-6-6 6' : 'm6 9 6 6 6-6'"/></svg>
+    </button>
+    <div class="analisis-grid" *ngIf="analisisAbierto">
+      <div class="grafica" *ngIf="graficas.embudo as o">
+        <h4 class="grafica-titulo">Embudo</h4>
+        <div echarts [options]="o" class="grafica-lienzo" (chartClick)="clicGrafica('embudo', $event)"></div>
+      </div>
+      <div class="grafica" *ngIf="graficas.tendencia as o">
+        <h4 class="grafica-titulo">Cotizado vs. convertido por mes</h4>
+        <div echarts [options]="o" class="grafica-lienzo" (chartClick)="clicGrafica('tendencia', $event)"></div>
+      </div>
+      <div class="grafica" *ngIf="graficas.motivos as o">
+        <h4 class="grafica-titulo">Motivos de rechazo</h4>
+        <div echarts [options]="o" class="grafica-lienzo" (chartClick)="clicGrafica('motivos', $event)"></div>
+      </div>
+      <div class="grafica" *ngIf="graficas.productos as o">
+        <h4 class="grafica-titulo">Top 10 productos cotizados (color = % convertido)</h4>
+        <div echarts [options]="o" class="grafica-lienzo grafica-lienzo--alta" (chartClick)="clicGrafica('productos', $event)"></div>
+      </div>
+      <div class="grafica" *ngIf="graficas.clientes as o">
+        <h4 class="grafica-titulo">Win rate: clientes nuevos vs. recurrentes</h4>
+        <div echarts [options]="o" class="grafica-lienzo" (chartClick)="clicGrafica('clientes', $event)"></div>
+      </div>
+      <p class="analisis-vacio" *ngIf="!metrics?.analisis">Cargando el análisis…</p>
     </div>
   </div>
 
@@ -433,6 +473,8 @@
               <div class="num-wrap">
                 <span class="num-dot" [attr.data-estado]="c.estadoCotizacion"></span>
                 <span class="num-text">{{ c.nroCotizacion || "—" }}</span>
+                <!-- Ticket 1202: si el cliente abrió el enlace -->
+                <span class="vista-chip" *ngIf="textoVista(c)" [class.vista-chip--no]="!c.vistaCliente">{{ textoVista(c) }}</span>
                 <span
                   *ngIf="c.origen === 'whatsapp-bot'"
                   class="origen-chip origen-chip--bot"
