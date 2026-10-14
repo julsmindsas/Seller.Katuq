@@ -9761,4 +9761,6 @@ El detalle de seguridad está en el cambio privado del backend, sección "D-422 
 - **Publicado el 14-oct:** front 2026.10.14.2. Banderas `opttiaProduccion` y `opttiaCobroWhatsapp` encendidas en FLORECER, la empresa de prueba.
 - **Datos de prueba:** entrega de hoy en CER-000010, 11, 06 y 09, y CER-000005 en producción para que el perfil "usa producción" aplique. Se devuelven con los scripts de demo `--restaurar`.
 - **Con datos reales:** la cola trae el despacho de CER-000010 y la producción "on" de CER-000009 y CER-000006. El enlace de WhatsApp sale para CER-000010 y se niega a cancelados, inexistentes y otra empresa.
-- **Falta:** la prueba de Daniel con su sesión y luego los demás comercios, uno por uno.
+- **Prueba real (14-oct, autorizada por Daniel):** CER-000006 pasó a En producción con la marca de Opttia. Una segunda aprobación no cambió nada ("Ya estaba en producción"). CER-000009 quedó por fuera por la guarda de Tesorería.
+- **Hallazgo:** la fuente vuelve a proponer pedidos que esa guarda siempre deja por fuera. Se propone filtrarlos en la fuente con la misma cuenta.
+- **Falta:** los demás comercios, uno por uno con Daniel.

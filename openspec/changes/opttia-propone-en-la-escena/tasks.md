@@ -321,7 +321,17 @@ Orden: 8.2 va primero, porque la producción y el cobro dependen de las banderas
 
 - [x] 8.5.1 (14-oct, `9232464`, `katuq-api` en línea) Desplegar el backend: `git pull`, `--ff-only` en el servidor, `set -e`, HEAD verificado, `node --check` y las suites, y `pm2 restart katuq-api`. Si hay commits ajenos sin desplegar, preguntar antes. Sin banderas nuevas, nada cambia.
 - [x] 8.5.2 (14-oct, 2026.10.14.2, verificado en sellercenter.katuq.com) Publicar el front: `git pull`, `npm run build:prod`, `node scripts/verify-dist-prod.js`, `firebase deploy --only hosting` y commit de `src/assets/version.json`, con una versión mayor que la viva. `opttiaProduccion` no se prende antes de este paso: el front de la fase 1 no sabe aprobar la producción.
-- [ ] 8.5.3 (14-oct: banderas encendidas y verificadas. Con datos reales, la cola muestra la producción "on" de CER-000009 y CER-000006 y el enlace de CER-000010. Falta la prueba de Daniel con su sesión) Encender FLORECER primero, con `opttiaProduccion` y `opttiaCobroWhatsapp` (`scripts/set-company-feature.js`: simular y luego `--execute`). Antes, verificar otra vez `CUSTOMER_NOTIFY_STATES`. Con la sesión de Daniel y pedidos de prueba:
+- [x] 8.5.3 (14-oct, autorizado por Daniel) Banderas encendidas y verificadas. Prueba real con el ejecutor de la ruta y un Administrador de FLORECER:
+  - CER-000006 pasó a En producción, con la marca "hecho";
+  - la segunda aprobación respondió "Ya estaba en producción";
+  - CER-000009 quedó por fuera por el saldo con Tesorería, sin tocarlo;
+  - la cola se actualizó.
+
+  El enlace de WhatsApp de CER-000010 sale bien.
+
+  Pendiente aparte: la fuente vuelve a proponer pedidos que la guarda de Tesorería siempre deja por fuera.
+
+  Lo pedido: Encender FLORECER primero, con `opttiaProduccion` y `opttiaCobroWhatsapp` (`scripts/set-company-feature.js`: simular y luego `--execute`). Antes, verificar otra vez `CUSTOMER_NOTIFY_STATES`. Con la sesión de Daniel y pedidos de prueba:
   1. ver la producción encendida y aprobarla en dos toques;
   2. ver en el pedido la marca de Opttia, en el historial quién aprobó, la notificación interna y ningún aviso al cliente;
   3. aprobar otra vez y ver "Ya estaba en producción";
