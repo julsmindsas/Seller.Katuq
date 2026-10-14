@@ -9658,7 +9658,7 @@ commits y el push no despliega ni activa checkout.
 **No verificado.** 390 px; un caso "Falta la dirección" real.
 **Queda abierto (cambio A):** guardar en el pedido el punto encontrado, con diff y aprobación de módulo sensible.
 
-## D-422 (2026-10-13) — Opttia propone en la escena: despachos y dos operaciones más dentro de la animación de En vivo (openspec/changes/opttia-propone-en-la-escena) — APROBADA 13-oct ("dale, arranca con la fase 1"), fase 1 en implementación
+## D-422 (2026-10-13) — Opttia propone en la escena: despachos y dos operaciones más dentro de la animación de En vivo (openspec/changes/opttia-propone-en-la-escena) — APROBADA 13-oct ("dale, arranca con la fase 1"); fase 1 DESPLEGADA 13-oct (backend 482607a, front 2026.10.13.6)
 
 **Disparador.** Daniel (13-oct), al ver la pestaña de D-410:
 - "quiero tener un apartado aquí mismo donde Opttia tenga un poco más de autonomía, como organizar despachos automáticos ... y que el usuario solo apruebe";
