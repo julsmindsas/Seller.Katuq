@@ -1,0 +1,271 @@
+<p-dialog
+  [visible]="true"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="!ocupado"
+  [closeOnEscape]="!ocupado"
+  [dismissableMask]="false"
+  appendTo="body"
+  [style]="{ width: '880px', 'max-width': '96vw' }"
+  [breakpoints]="{ '640px': '100vw' }"
+  styleClass="mi-dialogo"
+  [header]="titulo"
+  (visibleChange)="alCambiarVisibilidad($event)"
+>
+  <div class="mi-detalle">
+    <!-- Cargando -->
+    <div class="mi-centrado" role="status" *ngIf="cargando">
+      <i class="pi pi-spin pi-spinner mi-centrado__icono" aria-hidden="true"></i>
+      <div class="mi-centrado__texto">Cargando la solicitud…</div>
+    </div>
+
+    <!-- Error al cargar -->
+    <div class="mi-centrado" role="alert" *ngIf="!cargando && errorCarga">
+      <div class="cfg-aviso cfg-aviso--error mi-aviso-bloque">
+        <i class="pi pi-exclamation-circle mi-aviso-bloque__icono" aria-hidden="true"></i>
+        <div class="mi-aviso-bloque__textos">
+          <strong class="mi-aviso-bloque__titulo">No pudimos cargar la solicitud</strong>
+          <div>{{ errorCarga }}</div>
+        </div>
+      </div>
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cargarDetalle()">Reintentar</button>
+    </div>
+
+    <ng-container *ngIf="!cargando && solicitud">
+      <!-- Estado -->
+      <div class="mi-resumen">
+        <span class="mi-etiqueta" [ngClass]="'mi-etiqueta--' + estadoTono">{{ estadoEtiqueta }}</span>
+        <div class="mi-resumen__dato" *ngIf="solicitud.reenvios">
+          {{ solicitud.reenvios === 1 ? 'Reenvió la solicitud 1 vez' : 'Reenvió la solicitud ' + solicitud.reenvios + ' veces' }}
+        </div>
+      </div>
+
+      <!-- Motivo y quién decidió -->
+      <div class="cfg-aviso mi-revision" [ngClass]="claseRevision" *ngIf="mostrarRevision && solicitud.revision as revision">
+        <div class="mi-revision__textos">
+          <strong class="mi-revision__titulo">{{ tituloRevision }}</strong>
+          <div class="mi-revision__motivo" *ngIf="revisionConMotivo">{{ revision.motivo || 'No quedó un motivo registrado.' }}</div>
+          <div class="mi-revision__pie">
+            Decidido por {{ revision.por || 'una persona no registrada' }}
+            <ng-container *ngIf="fechaRevision">el {{ fechaRevision | date: 'dd/MM/yyyy HH:mm' }}</ng-container>
+          </div>
+        </div>
+      </div>
+
+      <!-- Datos de la persona -->
+      <section class="mi-seccion" aria-labelledby="mi-titulo-datos">
+        <h3 class="mi-seccion__titulo" id="mi-titulo-datos">Datos de la persona</h3>
+        <div class="mi-datos">
+          <div class="mi-dato">
+            <div class="mi-dato__etiqueta">Nombre completo</div>
+            <div class="mi-dato__valor">{{ titulo }}</div>
+          </div>
+          <div class="mi-dato">
+            <div class="mi-dato__etiqueta">Cédula</div>
+            <div class="mi-dato__valor">{{ solicitud.cedula || '—' }}</div>
+          </div>
+          <div class="mi-dato">
+            <div class="mi-dato__etiqueta">Celular</div>
+            <div class="mi-dato__valor">{{ solicitud.celular || '—' }}</div>
+          </div>
+          <div class="mi-dato">
+            <div class="mi-dato__etiqueta">Correo</div>
+            <div class="mi-dato__valor">{{ solicitud.correo || '—' }}</div>
+          </div>
+          <div class="mi-dato">
+            <div class="mi-dato__etiqueta">Ciudad</div>
+            <div class="mi-dato__valor">{{ solicitud.ciudad || '—' }}</div>
+          </div>
+          <div class="mi-dato">
+            <div class="mi-dato__etiqueta">Vehículo</div>
+            <div class="mi-dato__valor">{{ vehiculo }}</div>
+          </div>
+          <div class="mi-dato" *ngIf="placa">
+            <div class="mi-dato__etiqueta">Placa</div>
+            <div class="mi-dato__valor">{{ placa }}</div>
+          </div>
+          <div class="mi-dato">
+            <div class="mi-dato__etiqueta">Se registró</div>
+            <div class="mi-dato__valor">{{ fechaRegistro ? (fechaRegistro | date: 'dd/MM/yyyy HH:mm') : '—' }}</div>
+          </div>
+          <div class="mi-dato">
+            <div class="mi-dato__etiqueta">Envió a revisión</div>
+            <div class="mi-dato__valor">{{ fechaEnvio ? (fechaEnvio | date: 'dd/MM/yyyy HH:mm') : '—' }}</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Documentos -->
+      <section class="mi-seccion" aria-labelledby="mi-titulo-documentos">
+        <div class="mi-seccion__cabeza">
+          <h3 class="mi-seccion__titulo" id="mi-titulo-documentos">Documentos</h3>
+          <button
+            type="button"
+            class="cfg-btn cfg-btn--sec mi-boton-chico"
+            (click)="recargarDocumentos()"
+            [disabled]="recargandoDocumentos || ocupado"
+          >
+            <i class="pi" [ngClass]="recargandoDocumentos ? 'pi-spin pi-spinner' : 'pi-refresh'" aria-hidden="true"></i>
+            <span>Recargar documentos</span>
+          </button>
+        </div>
+
+        <div class="cfg-aviso mi-vencimiento" [ngClass]="{ 'cfg-aviso--warn': enlacesVencidos }" role="status">
+          <i class="pi pi-clock mi-vencimiento__icono" aria-hidden="true"></i>
+          <div class="mi-vencimiento__textos">
+            <div>{{ textoVencimiento }}</div>
+            <div class="mi-vencimiento__nota">Por seguridad, los enlaces vencen a los 10 minutos de cargados.</div>
+          </div>
+        </div>
+
+        <div class="cfg-aviso cfg-aviso--error" role="alert" *ngIf="errorRecarga">
+          <div class="mi-vencimiento__textos">{{ errorRecarga }}</div>
+        </div>
+
+        <div class="mi-docs" *ngIf="documentos.length; else sinDocumentos">
+          <figure class="mi-doc" *ngFor="let doc of documentos; trackBy: trackPorTipo">
+            <div class="mi-doc__marco" [ngSwitch]="doc.modo">
+              <ng-container *ngSwitchCase="'imagen'">
+                <button
+                  *ngIf="!imagenConError(doc); else imagenRota"
+                  type="button"
+                  class="mi-doc__miniatura"
+                  (click)="abrirVisor(doc)"
+                  [attr.aria-label]="'Ampliar: ' + doc.etiqueta"
+                >
+                  <img
+                    class="mi-doc__img"
+                    [src]="doc.url"
+                    [alt]="doc.etiqueta"
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                    (error)="marcarImagenConError(doc)"
+                  />
+                  <span class="mi-doc__lupa" aria-hidden="true"><i class="pi pi-search-plus"></i></span>
+                </button>
+                <ng-template #imagenRota>
+                  <div class="mi-doc__nota mi-doc__nota--mala">No se pudo cargar la imagen. Recarga los documentos.</div>
+                </ng-template>
+              </ng-container>
+
+              <a
+                *ngSwitchCase="'archivo'"
+                class="mi-doc__archivo"
+                [href]="doc.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+              >
+                <i class="pi pi-file-pdf mi-doc__archivo-icono" aria-hidden="true"></i>
+                <span class="mi-doc__archivo-texto">Descargar {{ doc.formato }}</span>
+              </a>
+
+              <div *ngSwitchCase="'sin_enlace'" class="mi-doc__nota mi-doc__nota--mala">
+                Ya está subido, pero no hay enlace disponible. Recarga los documentos.
+              </div>
+
+              <div *ngSwitchCase="'faltante'" class="mi-doc__nota mi-doc__nota--falta">Todavía no lo sube</div>
+            </div>
+            <figcaption class="mi-doc__pie">
+              <div class="mi-doc__nombre">{{ doc.etiqueta }}</div>
+              <div class="mi-doc__fecha" *ngIf="doc.subidoAt">Subido el {{ doc.subidoAt | date: 'dd/MM/yyyy HH:mm' }}</div>
+            </figcaption>
+          </figure>
+        </div>
+        <ng-template #sinDocumentos>
+          <div class="mi-doc__nota">Esta solicitud todavía no tiene documentos.</div>
+        </ng-template>
+      </section>
+    </ng-container>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="mi-acciones">
+      <ng-container *ngIf="solicitud && !cargando">
+        <div class="cfg-aviso cfg-aviso--warn" id="mi-aprobar-bloqueo" *ngIf="acciones.aprobarBloqueadoPor">
+          <i class="pi pi-exclamation-triangle mi-vencimiento__icono" aria-hidden="true"></i>
+          <div class="mi-vencimiento__textos">{{ acciones.aprobarBloqueadoPor }}</div>
+        </div>
+
+        <div class="cfg-aviso cfg-aviso--error" role="alert" *ngIf="errorAccion">
+          <i class="pi pi-exclamation-circle mi-vencimiento__icono" aria-hidden="true"></i>
+          <div class="mi-vencimiento__textos">{{ errorAccion }}</div>
+        </div>
+
+        <!-- Motivo de rechazo o suspensión -->
+        <form class="mi-motivo" *ngIf="accionConMotivo" (ngSubmit)="confirmarMotivo()" novalidate>
+          <label class="mi-motivo__etiqueta" for="mi-motivo-texto">{{ tituloMotivo }}</label>
+          <textarea
+            id="mi-motivo-texto"
+            name="motivo"
+            class="mi-motivo__texto"
+            rows="3"
+            [attr.maxlength]="motivoMax"
+            [(ngModel)]="motivo"
+            [disabled]="ocupado"
+            [attr.aria-invalid]="errorMotivo ? 'true' : null"
+            aria-describedby="mi-motivo-ayuda"
+            placeholder="Explica en pocas palabras la razón. Se guarda en la solicitud."
+          ></textarea>
+          <div class="mi-motivo__pie" id="mi-motivo-ayuda">
+            <div class="mi-motivo__error" role="alert" *ngIf="errorMotivo; else ayudaMotivo">{{ errorMotivo }}</div>
+            <ng-template #ayudaMotivo><div class="mi-motivo__ayuda">Entre 5 y 300 caracteres.</div></ng-template>
+            <div class="mi-motivo__contador" [class.mi-motivo__contador--mal]="intentoEnvio && !validacionMotivo.valido">
+              {{ validacionMotivo.longitud }} / {{ motivoMax }}
+            </div>
+          </div>
+          <div class="mi-botones">
+            <button type="button" class="cfg-btn cfg-btn--sec" (click)="cancelarMotivo()" [disabled]="ocupado">Cancelar</button>
+            <button type="submit" class="cfg-btn cfg-btn--peligro" [disabled]="ocupado">
+              <i class="pi pi-spin pi-spinner" aria-hidden="true" *ngIf="enviando"></i>
+              <span>{{ enviando ? 'Enviando…' : textoBotonMotivo }}</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Botones según el estado -->
+        <div class="mi-botones" *ngIf="!accionConMotivo">
+          <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrar.emit()" [disabled]="ocupado">Cerrar</button>
+          <button
+            type="button"
+            class="cfg-btn cfg-btn--peligro"
+            *ngIf="acciones.rechazar"
+            (click)="iniciarAccion('rechazar')"
+            [disabled]="ocupado"
+          >
+            Rechazar
+          </button>
+          <button
+            type="button"
+            class="cfg-btn cfg-btn--peligro"
+            *ngIf="acciones.suspender"
+            (click)="iniciarAccion('suspender')"
+            [disabled]="ocupado"
+          >
+            Suspender
+          </button>
+          <button
+            type="button"
+            class="cfg-btn"
+            *ngIf="acciones.aprobar"
+            (click)="iniciarAccion('aprobar')"
+            [disabled]="!acciones.aprobarHabilitado || ocupado"
+            [attr.aria-describedby]="acciones.aprobarBloqueadoPor ? 'mi-aprobar-bloqueo' : null"
+          >
+            <i class="pi pi-spin pi-spinner" aria-hidden="true" *ngIf="enviando"></i>
+            <span>{{ enviando ? 'Enviando…' : 'Aprobar' }}</span>
+          </button>
+        </div>
+      </ng-container>
+
+      <div class="mi-botones" *ngIf="!solicitud || cargando">
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrar.emit()">Cerrar</button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Visor con zoom (se muestra por encima del diálogo) -->
+<app-visor-imagen *ngIf="visorVisible" [imagenes]="imagenes" [indiceInicial]="visorIndice" (cerrar)="cerrarVisor()">
+</app-visor-imagen>

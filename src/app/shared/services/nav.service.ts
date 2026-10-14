@@ -10,6 +10,7 @@ import { dropshippingHabilitadoEnLaSesion } from "./dropshipping-settings.servic
 import { npsDisponible } from "./nps/nps.service";
 import { esFamiliaAdministrador, esSuperAdministrador } from "../utils/roles";
 import { FUTURE_MESSAGE_CHANNELS } from "../data/future-message-channels";
+import { esSuperAdminOperadora } from "../../components/mensajeros-independientes/mensajeros-independientes.utils";
 
 // Menu
 export interface Menu {
@@ -52,6 +53,8 @@ export interface Menu {
   children?: Menu[];
   isOnlySuperAdministrador?: boolean;
   isOnlyAdmin?: boolean;
+  /** Solo el Super Administrador de la operadora (empresa Julsmind); el candado real es del backend. */
+  isOnlyOperadora?: boolean;
   /**
    * D-400: ruta vieja del permiso. Si el rol se guardó con ella, el ítem se sigue mostrando
    * aunque `path` haya cambiado (los roles guardan rutas, no ítems).
@@ -225,8 +228,13 @@ export class NavService implements OnDestroy {
 
   getMenuOriginal(): Menu[] {
     return this.ALLMENUITEMS.map((item) => {
-      if (item.isOnlySuperAdministrador || item.isOnlyAdmin) {
+      if (item.isOnlySuperAdministrador || item.isOnlyAdmin || item.isOnlyOperadora) {
         return null;
+      }
+
+      // Las entradas solo-operadora no se ofrecen en los roles: no las asigna ningún rol.
+      if (item.children?.some((child) => child.isOnlyOperadora)) {
+        return { ...item, children: item.children.filter((child) => !child.isOnlyOperadora) };
       }
 
       return item;
@@ -285,6 +293,8 @@ export class NavService implements OnDestroy {
     const isAdminKatuqEnVivo =
       user.company === "Julsmind" &&
       (user.rol === "Administrador" || user.rol === "Super Administrador");
+    // Entradas "solo operadora" (p. ej. Mensajeros independientes): Super Administrador de Julsmind.
+    const isOperadoraSuperAdmin = esSuperAdminOperadora(user);
     // Ticket 1177: el rol Administrador de cualquier comercio ve todo el menú
     // por defecto (salvo lo exclusivo de Katuq/Super Administrador), sin que
     // haya que marcar pantalla por pantalla en Roles. También se respeta el
@@ -330,7 +340,8 @@ export class NavService implements OnDestroy {
       // Omitir item si es solo para superadmin/admin y el usuario no lo es
       if (
         (item.isOnlySuperAdministrador && !isSuperAdmin) ||
-        (item.isOnlyAdmin && !isJulsmindAdmin)
+        (item.isOnlyAdmin && !isJulsmindAdmin) ||
+        (item.isOnlyOperadora && !isOperadoraSuperAdmin)
       ) {
         return null;
       }
@@ -379,7 +390,10 @@ export class NavService implements OnDestroy {
           return (
             (!child.isOnlySuperAdministrador || isSuperAdmin) &&
             (!child.isOnlyAdmin || isJulsmindAdmin) &&
+            (!child.isOnlyOperadora || isOperadoraSuperAdmin) &&
             (authorizedPaths.includes(child.path) ||
+              // Solo-operadora: basta ser el Super Administrador de Julsmind, igual que el guardia de la ruta.
+              child.isOnlyOperadora === true ||
               (!!child.permisoPrevio && authorizedPaths.includes(child.permisoPrevio)) ||
               (child.path === "facturacion-electronica" && canUseDianWorkspace) ||
               // D-386: "Katuq en vivo" no depende del menú del rol; basta ser Administrador o
@@ -706,6 +720,14 @@ export class NavService implements OnDestroy {
       active: false,
       children: [
         { path: "despachos", title: "Envíos", previousTitle: "Envíos y entregas", type: "link", icon: "send" },
+        // Solicitudes de quienes se inscriben solos como mensajeros: solo la operadora (Julsmind).
+        {
+          path: "mensajeros-independientes",
+          title: "Mensajeros independientes",
+          type: "link",
+          icon: "users",
+          isOnlyOperadora: true,
+        },
         // D-354: lo ve el rol que tenga esta entrada en sus menús (se agrega en Roles).
         { path: "centro-operaciones", title: "Centro operativo", previousTitle: "Centro de operaciones", type: "link", icon: "layers" },
       ],

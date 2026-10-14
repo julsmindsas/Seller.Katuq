@@ -4,6 +4,7 @@ import { AdminGuard } from "../guard/admin.guard"; // Importar AdminGuard
 import { SubscriptionGuard } from "../guards/subscription.guard"; // Importar SubscriptionGuard
 import { InicioJulsmindGuard } from "../guards/inicio-julsmind.guard";
 import { KuvoGuard } from "../../components/kuvo/kuvo.guard";
+import { MensajerosIndependientesGuard } from "../../components/mensajeros-independientes/mensajeros-independientes.guard";
 
 export const content: Routes = [
   {
@@ -230,6 +231,16 @@ export const content: Routes = [
         (m) => m.CentroOperacionesModule,
       ),
     canActivate: [AuthGuard],
+  },
+  {
+    // Solicitudes de mensajeros independientes: solo el Super Administrador de la operadora.
+    // El guardia evita mostrar la pantalla a los demás; el candado real es del backend (403).
+    path: "mensajeros-independientes",
+    loadChildren: () =>
+      import("../../components/mensajeros-independientes/mensajeros-independientes.module").then(
+        (m) => m.MensajerosIndependientesModule,
+      ),
+    canActivate: [AuthGuard, MensajerosIndependientesGuard],
   },
   {
     // D-381: sin "En vivo" en los menús del rol, la pantalla dice "no disponible".

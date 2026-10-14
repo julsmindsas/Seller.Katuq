@@ -1,0 +1,143 @@
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Logística</span>
+      <h1 class="cfg-titulo">Mensajeros independientes</h1>
+      <p class="cfg-sub">
+        Personas que se inscriben solas en la app de mensajeros. Revisa sus datos y documentos y decide si las
+        apruebas.
+      </p>
+    </div>
+    <div class="cfg-acciones">
+      <button class="cfg-btn cfg-btn--sec" type="button" (click)="cargar()" [disabled]="cargando">
+        <i class="pi" [ngClass]="cargando ? 'pi-spin pi-spinner' : 'pi-refresh'" aria-hidden="true"></i>
+        <span>Actualizar</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="cfg-aviso cfg-aviso--warn mi-aviso" role="status" *ngIf="aviso">
+    <i class="pi pi-info-circle mi-aviso__icono" aria-hidden="true"></i>
+    <div class="mi-aviso__textos">
+      <strong class="mi-aviso__titulo">{{ aviso.titulo }}</strong>
+      <div class="mi-aviso__detalle">{{ aviso.detalle }}</div>
+    </div>
+  </div>
+
+  <section class="cfg-card">
+    <div class="mi-filtro" role="group" aria-label="Filtrar solicitudes por estado">
+      <button
+        *ngFor="let estado of estados"
+        type="button"
+        class="mi-filtro__boton"
+        [class.mi-filtro__boton--activo]="estado === estadoActivo"
+        [attr.aria-pressed]="estado === estadoActivo"
+        (click)="cambiarEstado(estado)"
+      >
+        {{ etiquetaPestana(estado) }}
+      </button>
+    </div>
+
+    <!-- Cargando -->
+    <div class="mi-estado" role="status" *ngIf="cargando && !filas.length">
+      <i class="pi pi-spin pi-spinner mi-estado__icono" aria-hidden="true"></i>
+      <div class="mi-estado__texto">Cargando solicitudes…</div>
+    </div>
+
+    <!-- Error -->
+    <div class="mi-estado" role="alert" *ngIf="error">
+      <div class="cfg-aviso cfg-aviso--error mi-estado__aviso">
+        <i class="pi pi-exclamation-circle mi-aviso__icono" aria-hidden="true"></i>
+        <div class="mi-aviso__textos">
+          <strong class="mi-aviso__titulo">No pudimos cargar las solicitudes</strong>
+          <div class="mi-aviso__detalle">{{ error }}</div>
+        </div>
+      </div>
+      <button class="cfg-btn cfg-btn--sec" type="button" (click)="cargar()" [disabled]="cargando">Reintentar</button>
+    </div>
+
+    <!-- Vacío -->
+    <div class="cfg-vacio" *ngIf="!cargando && !error && !filas.length">
+      <div class="cfg-vacio__icono"><i class="pi pi-inbox" aria-hidden="true"></i></div>
+      <h2 class="cfg-vacio__titulo mi-vacio__titulo">{{ vacio.titulo }}</h2>
+      <p class="cfg-vacio__texto">{{ vacio.texto }}</p>
+    </div>
+
+    <!-- Tabla -->
+    <ng-container *ngIf="filas.length">
+      <div class="mi-total" aria-live="polite">
+        {{ total }} {{ total === 1 ? 'solicitud' : 'solicitudes' }}
+      </div>
+      <p-table
+        [value]="filas"
+        dataKey="id"
+        [paginator]="filas.length > 10"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [rowHover]="true"
+        styleClass="mi-tabla"
+        [showCurrentPageReport]="filas.length > 10"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="nombreCompleto">Nombre <p-sortIcon field="nombreCompleto"></p-sortIcon></th>
+            <th>Cédula</th>
+            <th>Celular</th>
+            <th pSortableColumn="ciudad">Ciudad <p-sortIcon field="ciudad"></p-sortIcon></th>
+            <th>Vehículo</th>
+            <th pSortableColumn="estadoEtiqueta">Estado <p-sortIcon field="estadoEtiqueta"></p-sortIcon></th>
+            <th pSortableColumn="marca">Fecha <p-sortIcon field="marca"></p-sortIcon></th>
+            <th><span class="mi-solo-lectores">Acciones</span></th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-fila>
+          <tr class="mi-fila" (click)="abrirDetalle(fila)">
+            <td class="mi-celda-nombre">{{ fila.nombreCompleto }}</td>
+            <td data-etiqueta="Cédula">{{ fila.cedula || '—' }}</td>
+            <td data-etiqueta="Celular">{{ fila.celular || '—' }}</td>
+            <td data-etiqueta="Ciudad">{{ fila.ciudad || '—' }}</td>
+            <td data-etiqueta="Vehículo">
+              <div class="mi-celda-principal">{{ fila.vehiculo }}</div>
+              <div class="mi-celda-detalle" *ngIf="fila.placa">{{ fila.placa }}</div>
+            </td>
+            <td data-etiqueta="Estado">
+              <span class="mi-etiqueta" [ngClass]="'mi-etiqueta--' + fila.estadoTono">{{ fila.estadoEtiqueta }}</span>
+              <div class="mi-celda-detalle" *ngIf="fila.faltantes">
+                {{ fila.faltantes === 1 ? 'Falta 1 documento' : 'Faltan ' + fila.faltantes + ' documentos' }}
+              </div>
+            </td>
+            <td data-etiqueta="Fecha">
+              <ng-container *ngIf="fila.fecha; else sinFecha">
+                <div class="mi-celda-principal">{{ fila.fecha | date: 'dd/MM/yyyy' }}</div>
+                <div class="mi-celda-detalle">{{ fila.fechaEtiqueta }} · {{ fila.fecha | date: 'HH:mm' }}</div>
+              </ng-container>
+              <ng-template #sinFecha>—</ng-template>
+            </td>
+            <td class="mi-celda-accion">
+              <button
+                type="button"
+                class="cfg-btn cfg-btn--sec mi-boton-chico"
+                (click)="$event.stopPropagation(); abrirDetalle(fila)"
+                [attr.aria-label]="'Ver detalle de ' + fila.nombreCompleto"
+              >
+                Ver detalle
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </ng-container>
+  </section>
+</div>
+
+<!-- Detalle: se crea al abrir una solicitud y se destruye al cerrar (los enlaces de los documentos no se conservan) -->
+<app-mensajeros-solicitud-detalle
+  *ngIf="seleccionada"
+  [solicitudId]="seleccionada.id"
+  [resumen]="seleccionada"
+  (cerrar)="alCerrarDetalle()"
+  (accionCompletada)="alCompletarAccion($event)"
+  (transicionObsoleta)="alTransicionObsoleta($event)"
+></app-mensajeros-solicitud-detalle>
