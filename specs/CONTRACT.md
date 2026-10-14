@@ -9618,7 +9618,7 @@ commits y el push no despliega ni activa checkout.
 
 **Estado (13-oct).** Implementado en local. Pruebas: utilidades del POS 12/12 y del servicio 8/8, backend 7/7 más contratos de POS y facturación en verde. Pendiente: prueba en navegador y una emisión en el entorno de pruebas del proveedor con permiso explícito.
 
-## D-420 (2026-10-13) — Mapa de mensajeros: panel lateral con Ver y Seguir, marcadores que se mueven, pines por estado y sin zonas de ejemplo (presentación; ESCRITO, sin publicar)
+## D-420 (2026-10-13) — Mapa de mensajeros: panel lateral con Ver y Seguir, marcadores que se mueven, pines por estado y sin zonas de ejemplo (presentación; PUBLICADO en 2026.10.13.6)
 
 **Disparador.** Daniel: "mejora el mapa de tracking de mensajeros, está medio chafa".
 
@@ -9638,7 +9638,7 @@ commits y el push no despliega ni activa checkout.
 **Verificado.** Build de producción sin errores. En `localhost:4200` con FLORECER (sin mensajeros reales): estado vacío; con 3 mensajeros y 3 pedidos simulados solo en memoria del componente (nada escrito en Firebase): panel, anillos, movimiento suave, recorrido, Seguir manteniendo al mensajero centrado, ficha del pedido con `<b>` mostrado como texto, sin zonas ni interruptor "Zonas". Gradientes del componente 1 → 0 en el TS (los 2 del SCSS son brillos animados permitidos); primarios prohibidos 4 → 0 (`#007bff`, `#2196F3`).
 **No verificado.** Vista a 390 px (Chrome no redimensionó la ventana); mapa con mensajeros reales (ALMARA). Pruebas nuevas en `ubicacion-mensajero.spec.ts` comprobadas compilando el util con `tsc` y ejecutándolo en Node; Karma no se corrió.
 
-## D-421 (2026-10-13) — Mapa de Despachos: ubicar pedidos con barrio y zona, sin puntos aproximados, lista "Sin ubicar" y carga Katuq (OpenSpec `mapa-despachos-ubicar-pedidos`; ESCRITO, sin publicar)
+## D-421 (2026-10-13) — Mapa de Despachos: ubicar pedidos con barrio y zona, sin puntos aproximados, lista "Sin ubicar" y carga Katuq (OpenSpec `mapa-despachos-ubicar-pedidos`; PUBLICADO en 2026.10.14.1)
 
 **Disparador.** Daniel: "mejora la geocodificación de los pedidos, y el loading y esa vaina más bonita". apoyodev hizo el diagnóstico y Daniel escogió "B+C+D ahora, A aparte" y aprobó la propuesta.
 
