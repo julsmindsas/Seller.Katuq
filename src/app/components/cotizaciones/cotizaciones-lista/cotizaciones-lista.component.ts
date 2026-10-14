@@ -370,7 +370,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     const a = this.metrics && this.metrics.analisis;
     if (!a) return null;
     return {
-      tooltip: { trigger: "item", formatter: (p: any) => `${p.name}: ${p.data.cantidad} · ${this.money(p.data.valor)}<br>Paso: ${p.data.paso}%` },
+      tooltip: { trigger: "item", formatter: (p: any) => `${escHtml(p.name)}: ${p.data.cantidad} · ${this.money(p.data.valor)}<br>Paso: ${p.data.paso}%` },
       color: ["#C9BDF7", "#9E8BF0", "#7B62E8", "#5F3FE0"],
       series: [{ type: "funnel", sort: "none", left: "8%", width: "84%", minSize: "20%", gap: 3,
         label: { formatter: (p: any) => `${p.name} · ${p.data.cantidad} (${p.data.paso}%)`, color: "#211F3A", fontSize: 12 },
@@ -397,7 +397,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     if (!a || !a.motivos.length) return null;
     const lista = [...a.motivos].reverse();
     return {
-      tooltip: { trigger: "item", formatter: (p: any) => `${p.name}: ${p.data.cantidad} · ${this.money(p.data.valor)}` },
+      tooltip: { trigger: "item", formatter: (p: any) => `${escHtml(p.name)}: ${p.data.cantidad} · ${this.money(p.data.valor)}` },
       grid: { left: 150, right: 30, top: 8, bottom: 8 },
       xAxis: { type: "value", minInterval: 1 },
       yAxis: { type: "category", data: lista.map((m) => m.motivo), axisLabel: { width: 140, overflow: "truncate" } },
@@ -411,7 +411,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     if (!a || !a.productos.length) return null;
     const lista = [...a.productos].reverse();
     return {
-      tooltip: { trigger: "item", formatter: (p: any) => `${p.data.nombre}<br>${this.money(p.data.valor)} cotizado · ${p.data.cotizaciones} cotizaciones · ${p.data.conversion}% convertidas` },
+      tooltip: { trigger: "item", formatter: (p: any) => `${escHtml(p.data.nombre)}<br>${this.money(p.data.valor)} cotizado · ${p.data.cotizaciones} cotizaciones · ${p.data.conversion}% convertidas` },
       grid: { left: 180, right: 30, top: 8, bottom: 8 },
       xAxis: { type: "value", axisLabel: { formatter: (v: number) => (v >= 1e6 ? Math.round(v / 1e6) + " M" : v.toLocaleString("es-CO")) } },
       yAxis: { type: "category", data: lista.map((p) => p.nombre), axisLabel: { width: 170, overflow: "truncate" } },
@@ -423,7 +423,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     const a = this.metrics && this.metrics.analisis;
     if (!a) return null;
     return {
-      tooltip: { trigger: "item", formatter: (p: any) => `${p.name}: win rate ${p.data.value}% · ${p.data.cotizaciones} cotizaciones` },
+      tooltip: { trigger: "item", formatter: (p: any) => `${escHtml(p.name)}: win rate ${p.data.value}% · ${p.data.cotizaciones} cotizaciones` },
       grid: { left: 40, right: 16, top: 16, bottom: 30 },
       xAxis: { type: "category", data: a.clientes.map((c) => (c.grupo === "nuevos" ? "Nuevos" : "Recurrentes")) },
       yAxis: { type: "value", max: 100, axisLabel: { formatter: "{value}%" } },
@@ -937,4 +937,9 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   trackById(_i: number, c: Cotizacion): string {
     return c.id || c.nroCotizacion || String(_i);
   }
+}
+
+/** Ticket 1203: los tooltips de echarts se pintan como HTML; nombres y motivos los escriben los usuarios. */
+function escHtml(v: any): string {
+  return String(v == null ? "" : v).replace(/[&<>"']/g, (c) => (({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" } as any)[c]));
 }
