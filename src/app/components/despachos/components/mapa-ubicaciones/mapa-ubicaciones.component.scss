@@ -270,6 +270,10 @@ $danger-color:  $em-red;
         background-color: $em-accent;
       }
 
+      &.otro-estado {
+        background-color: #5A6B78;
+      }
+
       &.mensajero {
         background-color: #fff;
         border: 3px solid $em-accent;

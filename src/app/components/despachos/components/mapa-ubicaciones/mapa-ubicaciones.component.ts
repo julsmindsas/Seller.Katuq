@@ -9,6 +9,9 @@ import {
   haceCuanto, marcaDeUbicacion, nombreDesdeClave, perteneceAEmpresa, senalMensajero, SenalMensajero, ubicacionVigente
 } from '../../../../shared/utils/ubicacion-mensajero';
 
+/** Pin y ficha de los estados que no tienen color propio en la leyenda. */
+const COLOR_OTRO_ESTADO = '#5A6B78';
+
 interface UbicacionPedido {
   nroPedido: string;
   estado: string;
@@ -173,6 +176,8 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   leafletCargado: boolean = false;
   marcadoresAnimandose: Set<string> = new Set();
   ultimosLocationsProcesados: number = 0;
+  /** Cada redibujo invalida los pines escalonados que el anterior aún no había puesto. */
+  private generacionMarcadores = 0;
   private companyName: string;
   private ubicacionUsuario: { lat: number; lng: number } | null = null;
   private usandoUbicacionUsuario: boolean = false;
@@ -217,6 +222,18 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
           this.avanceVisible = false;
           this.cd.detectChanges();
         }, RESUMEN_UBICACION_MS);
+      }
+    }
+    // D-421: los pedidos se pintan apenas se ubican, también con la pestaña del mapa ya abierta.
+    // Despachos entrega un objeto nuevo en cada detección de cambios; solo se redibuja si cambió la lista.
+    const cambioConfig = changes['configuracion'];
+    if (cambioConfig && !cambioConfig.firstChange && this.mapa) {
+      const antes: UbicacionPedido[] | undefined = cambioConfig.previousValue?.ubicaciones;
+      if (antes !== this.configuracion?.ubicaciones) {
+        const sinPinesAntes = !antes?.some(u => u.latitud && u.longitud);
+        this.agregarMarcadores();
+        // Encuadrar solo con los primeros pines: después, no mover el mapa mientras alguien lo usa
+        if (sinPinesAntes) this.ajustarVistaAMarcadores();
       }
     }
     if (changes['pedidosSinUbicar'] && !changes['pedidosSinUbicar'].firstChange) {
@@ -638,6 +655,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       this.mapa.removeLayer(marcador);
     });
     this.marcadores = [];
+    const generacion = ++this.generacionMarcadores;
 
     // Agregar nuevos marcadores con animación
     this.configuracion.ubicaciones.forEach((ubicacion, index) => {
@@ -645,7 +663,8 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         // Verificar si es un marcador nuevo (para animación)
         const isNewMarker = index >= this.ultimosLocationsProcesados;
         
-        const iconoConfig = this.iconosEstado[ubicacion.estado] || this.iconosEstado['ParaDespachar'];
+        // Los demás estados (en producción, sin producir…) van en gris, como "En preparación" en la leyenda
+        const iconoConfig = this.iconosEstado[ubicacion.estado] || { color: COLOR_OTRO_ESTADO };
 
         // Pin plano del color del estado (el mismo de la leyenda)
         const icono = L.divIcon({
@@ -672,15 +691,14 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
           this.onMarcadorClick(ubicacion);
         });
 
-        // Agregar al mapa con delay para animación escalonada
+        // Se registra ya (para encuadrar y para limpiarlo en el próximo redibujo) y entra al mapa escalonado
+        this.marcadores.push(marcador);
         if (isNewMarker) {
           setTimeout(() => {
-            marcador.addTo(this.mapa);
-            this.marcadores.push(marcador);
+            if (generacion === this.generacionMarcadores && this.mapa) marcador.addTo(this.mapa);
           }, Math.min(index * 40, 1200)); // escalonado corto: con cientos de pedidos no tarda medio minuto
         } else {
           marcador.addTo(this.mapa);
-          this.marcadores.push(marcador);
         }
       }
     });
@@ -892,7 +910,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   private crearContenidoPopup(ubicacion: UbicacionPedido): string {
     // cliente y dirección los escriben compradores en canales externos: todo se escapa
     const config = this.iconosEstado[ubicacion.estado];
-    const color = config?.color || '#5A6B78';
+    const color = config?.color || COLOR_OTRO_ESTADO;
     const fondo = config?.fondo || '#eef0f3';
     const etiqueta = config?.etiqueta || ubicacion.estado;
     const fila = (label: string, valor: any) =>
@@ -1030,6 +1048,13 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
 
   get contadorProducidos(): number {
     return this.metricas.producidos;
+  }
+
+  /** Pedidos en el mapa con un estado fuera de los cuatro de la leyenda (pin gris). */
+  get contadorOtrosEstados(): number {
+    return (this.configuracion?.ubicaciones || []).filter(
+      u => u.latitud && u.longitud && !this.iconosEstado[u.estado]
+    ).length;
   }
 
   get contadorPendientes(): number {

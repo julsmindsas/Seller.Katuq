@@ -75,6 +75,10 @@
       <i class="leyenda-item producido"></i>
       <b class="mapa-leyenda__label">{{ 'Producido' | translate }} <em>{{ contadorProducidos }}</em></b>
     </div>
+    <div class="mapa-leyenda__item" *ngIf="contadorOtrosEstados > 0">
+      <i class="leyenda-item otro-estado"></i>
+      <b class="mapa-leyenda__label">{{ 'En preparación' | translate }} <em>{{ contadorOtrosEstados }}</em></b>
+    </div>
     <div class="mapa-leyenda__item" *ngIf="mostrarMensajeros">
       <i class="leyenda-item mensajero"></i>
       <b class="mapa-leyenda__label">{{ 'Mensajero' | translate }} <em>{{ mensajeros.length }}</em></b>
