@@ -9638,7 +9638,27 @@ commits y el push no despliega ni activa checkout.
 **Verificado.** Build de producción sin errores. En `localhost:4200` con FLORECER (sin mensajeros reales): estado vacío; con 3 mensajeros y 3 pedidos simulados solo en memoria del componente (nada escrito en Firebase): panel, anillos, movimiento suave, recorrido, Seguir manteniendo al mensajero centrado, ficha del pedido con `<b>` mostrado como texto, sin zonas ni interruptor "Zonas". Gradientes del componente 1 → 0 en el TS (los 2 del SCSS son brillos animados permitidos); primarios prohibidos 4 → 0 (`#007bff`, `#2196F3`).
 **No verificado.** Vista a 390 px (Chrome no redimensionó la ventana); mapa con mensajeros reales (ALMARA). Pruebas nuevas en `ubicacion-mensajero.spec.ts` comprobadas compilando el util con `tsc` y ejecutándolo en Node; Karma no se corrió.
 
-## D-421 (2026-10-13) — Opttia propone en la escena: despachos y dos operaciones más dentro de la animación de En vivo (openspec/changes/opttia-propone-en-la-escena) — APROBADA 13-oct ("dale, arranca con la fase 1"), fase 1 en implementación
+## D-421 (2026-10-13) — Mapa de Despachos: ubicar pedidos con barrio y zona, sin puntos aproximados, lista "Sin ubicar" y carga Katuq (OpenSpec `mapa-despachos-ubicar-pedidos`; ESCRITO, sin publicar)
+
+**Disparador.** Daniel: "mejora la geocodificación de los pedidos, y el loading y esa vaina más bonita". apoyodev hizo el diagnóstico y Daniel escogió "B+C+D ahora, A aparte" y aprobó la propuesta.
+
+**Qué se encontró.**
+- `geocodificarPedido` llamaba `geocodeDireccion(direccion, ciudad)` sin barrio ni zona de cobro, en el modo histórico del servicio (si nada sirve devuelve el centro de la ciudad). Además, si fallaba, el componente pintaba otro centroide (`obtenerCoordenadasAproximadas`). Los dos puntos falsos se veían igual que los reales.
+- La carga eran tres capas: barra azul `bg-info` en el encabezado, velo morado con pulsos en el mapa y, encima, **el loader global de pantalla completa**, porque `LoaderInterceptor` lo enciende con cada consulta HTTP de ubicación.
+- **Corrección al diagnóstico:** Despachos no ubica al abrir. Solo ubica con "Geocodificar Todo" (menú) y al despachar un pedido. Lo ubicado vive en memoria y se pierde al recargar.
+
+**Decisión.**
+1. Modo estricto del servicio (`direccionEntrega: true`, ticket 1136) con `barrio` y `zonaCobro` del envío. Se elimina `obtenerCoordenadasAproximadas`: lo que no se encuentra no se pinta. Motivos de negocio: "No encontramos esta dirección en el mapa", "Falta la dirección", "Falta la ciudad de entrega".
+2. Los puntos protegidos (D-417) no se recalculan. Los fallos de una dirección se recuerdan durante la visita; un error de red no.
+3. Una tarjeta blanca sobre el mapa ("Ubicando pedidos en el mapa · N de M", barra morada) que deja el mapa usable; al terminar, "X ubicados · Y sin ubicar" por 4 s. El loader global se suprime mientras ubica (`suppressGlobalLoader`). Se quitan la barra del encabezado, el velo, los pulsos y los métodos `mostrarAnimacionGeocodificacion`, `mostrarEfectoBusqueda` y `actualizarProgresoGeocodificacion`, y el método sin uso `geocodificarPedidosDespachados`.
+4. Lista "Sin ubicar" en el panel lateral del mapa (número, cliente, dirección, motivo). El panel también aparece con mensajeros apagados si hay pedidos sin ubicar.
+5. **Write-set:** `orders` solo lectura. El servicio sigue escribiendo su caché de direcciones `geocoding_cache`, como ya lo hacía.
+
+**Verificado.** Build de producción sin errores. En `localhost:4200`, con la sesión que estaba abierta en Chrome (VERSATILIDAD E INNOVACIONES, usuario Jairo; no FLORECER), solo lectura: 26 pedidos, 4 sin punto → "3 ubicados · 1 sin ubicar" (DAD-014225, Carrera 58a #29A-99, Medellín). El pin de Bogotá es real (DAD-014202, Bogotá D.C.). Sin el velo global durante la ubicación. En la red, las únicas escrituras de Firestore fueron las de `geocoding_cache`. Gradientes del SCSS del mapa 2 → 0; primarios prohibidos sin cambio (1 preexistente en `despachos.component.ts`).
+**No verificado.** 390 px; un caso "Falta la dirección" real.
+**Queda abierto (cambio A):** guardar en el pedido el punto encontrado, con diff y aprobación de módulo sensible.
+
+## D-422 (2026-10-13) — Opttia propone en la escena: despachos y dos operaciones más dentro de la animación de En vivo (openspec/changes/opttia-propone-en-la-escena) — APROBADA 13-oct ("dale, arranca con la fase 1"), fase 1 en implementación
 
 **Disparador.** Daniel (13-oct), al ver la pestaña de D-410:
 - "quiero tener un apartado aquí mismo donde Opttia tenga un poco más de autonomía, como organizar despachos automáticos ... y que el usuario solo apruebe";
@@ -9699,13 +9719,13 @@ Aprobó la propuesta y el boceto (https://claude.ai/artifact/XVjArkR2s6cbpVXym7G
 - Leer las propuestas no escribe nada.
 - La aprobación lleva el canal `escena`.
 
-El detalle técnico vive en el cambio privado del backend: `opttia-despachos-con-aprobacion`, sección "D-421 fase 1".
+El detalle técnico vive en el cambio privado del backend: `opttia-despachos-con-aprobacion`, sección "D-422 fase 1".
 
 **Fases siguientes.**
 - **Fase 2:** aprobar la producción, en su propio cambio porque `orders` es un módulo sensible, y el cobro con WhatsApp.
 - **Fase 3:** el conteo cíclico y la orden de compra.
 - **Fase 4:** el reenvío a la integración logística y las propuestas por MCP y Telegram.
 
-**Numeración.** La propuesta la llamaba D-418 y la primera versión del registro D-419, pero otras sesiones publicaron D-418 (ticket 1206), D-419 (facturación POS) y D-420 (mapa de mensajeros) el mismo día. Queda como D-421, y así lo dicen el código y el cambio OpenSpec.
+**Numeración.** La propuesta la llamaba D-418 y la primera versión del registro D-419, pero otras sesiones publicaron D-418 (ticket 1206), D-419 (facturación POS) y D-420 (mapa de mensajeros) y D-421 (mapa de Despachos) el mismo día. Queda como D-422, y así lo dicen el código y el cambio OpenSpec.
 
 **Estado (13-oct).** La spec está escrita y validada con `openspec validate --strict`. La fase 1 está en implementación, sin commit ni despliegue.

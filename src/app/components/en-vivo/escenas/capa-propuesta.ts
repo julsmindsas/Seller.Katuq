@@ -26,7 +26,7 @@ import { ease } from './tweens';
 type V3 = ThreeNS.Vector3;
 
 /**
- * Capa del ENSAYO de una propuesta de Opttia sobre la escena "Mi operación" (D-421, fase 1).
+ * Capa del ENSAYO de una propuesta de Opttia sobre la escena "Mi operación" (D-422, fase 1).
  *
  * Se cuelga de la escena por los ganchos aditivos de `EscenaBase` (`raiz`, `alCuadro`, `alTocar`),
  * igual que el orbe, sin tocar el mundo. Con una propuesta dibuja:

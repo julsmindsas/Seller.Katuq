@@ -28,7 +28,7 @@ const OPCIONES: ReadonlyArray<OpcionVista> = [
 const SIN_ESCENA = new Set(['pedidos']);
 
 /**
- * Vistas con la tarjeta "Opttia propone" (D-421). La pestaña "Despachos" de D-410 ya no existe: el
+ * Vistas con la tarjeta "Opttia propone" (D-422). La pestaña "Despachos" de D-410 ya no existe: el
  * plan se propone y se aprueba aquí, en la escena. Quien tenía guardada esa vista cae en la primera.
  */
 const CON_PROPUESTAS = new Set(['operacion', 'pais', 'pedidos']);
@@ -46,7 +46,7 @@ interface VistaPagina {
   soloLectura: boolean;
   /** Espacio que la escena deja libre para los paneles flotantes y la tarjeta acoplada (null = ninguno). */
   margenes: Partial<MargenesEncuadre> | null;
-  /** La tarjeta "Opttia propone" va en esta vista (D-421): Opttia prendido, sesión propia y el servidor dijo que aplica. */
+  /** La tarjeta "Opttia propone" va en esta vista (D-422): Opttia prendido, sesión propia y el servidor dijo que aplica. */
   conPropuestas: boolean;
 }
 
@@ -58,7 +58,7 @@ interface VistaPagina {
  *   "Ampliar" (quita los paneles flotantes y la lista vuelve a su columna);
  * - escena: el recuadro `.ev-escena-slot` con las vistas "Mi operación", "Mi país" (escenas 3D por
  *   enchufar) y "Pedidos" (el tablero por etapas), la narración de Opttia, la tarjeta "Opttia
- *   propone" (D-421), la ficha y, flotando
+ *   propone" (D-422), la ficha y, flotando
  *   encima en >= 1181 px, "Lo próximo", "Tu flota" y la lista de eventos (si no, apilados debajo);
  * - abajo: atención ahora, Opttia, tiempos, logros y productos estrella.
  *
@@ -122,7 +122,7 @@ export class EnVivoComercioPaginaComponent implements OnInit, OnDestroy {
     ]).pipe(
       map(([e, prefs, opcion, ampliado, ancho, hayPropuestas, acoplada, empresa]): VistaPagina => {
         const opttiaActivo = e.opttiaActivo !== false;
-        // Opttia propone (D-421): Opttia prendido y sesión propia (ni Katuq mirando otro comercio ni solo lectura).
+        // Opttia propone (D-422): Opttia prendido y sesión propia (ni Katuq mirando otro comercio ni solo lectura).
         const conPropuestas = hayPropuestas && opttiaActivo && !e.soloLectura && !empresa && CON_PROPUESTAS.has(opcion ?? '');
         const conEscena = !SIN_ESCENA.has(opcion ?? '');
         return {
@@ -152,7 +152,7 @@ export class EnVivoComercioPaginaComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Antes de que el shell inicie: así su encabezado ya trae el selector y la vista guardada vuelve sola.
     this.interaccion.fijarOpciones(OPCIONES);
-    // Opttia propone en la escena (D-421). Katuq mirando otro comercio (?empresa=) no pide propuestas;
+    // Opttia propone en la escena (D-422). Katuq mirando otro comercio (?empresa=) no pide propuestas;
     // el servicio tampoco las pide con solo lectura, para el vendedor D-349 ni con Opttia apagado.
     this.subs.add(this.empresa$.subscribe((empresa) => this.propuestas.fijarAjena(!!empresa)));
     this.propuestas.iniciar();

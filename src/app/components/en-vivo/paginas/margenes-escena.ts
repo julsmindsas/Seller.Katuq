@@ -16,7 +16,7 @@ export const SEPARACION = 12;
 export const RESPIRO = 14;
 
 /**
- * Celular: la tarjeta de Opttia (D-421) va acoplada abajo, dentro de la escena (hasta el 45 % del
+ * Celular: la tarjeta de Opttia (D-422) va acoplada abajo, dentro de la escena (hasta el 45 % del
  * alto), desde `ANCHO_ACOPLADO` px hacia abajo. La escena encuadra las cajas por encima de ella.
  */
 export const ANCHO_ACOPLADO = 680;

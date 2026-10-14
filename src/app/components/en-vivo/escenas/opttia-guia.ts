@@ -11,7 +11,7 @@ import { ObjetivoOrbe, PuntoOrbe } from './opttia-puntos';
  *   tocar el orbe de nuevo o quitar la escena. En modo pantalla arranca solo cada `autoMs` (4 min).
  * - Un pedido "Con Opttia" lo lleva a donde llega, salvo con un recorrido o una señal en curso.
  * - La respuesta de una pregunta lo lleva a lo que menciona (corta el recorrido).
- * - Opttia propone (D-421): con una propuesta viva deja su ronda, va a lo que la propuesta toca y su
+ * - Opttia propone (D-422): con una propuesta viva deja su ronda, va a lo que la propuesta toca y su
  *   señal queda FIJA (sin vencer) hasta que se retire. La ronda de 16 s, el recorrido automático de
  *   la TV y los pedidos "Con Opttia" no la pisan; un recorrido pedido por la persona o la respuesta a
  *   una pregunta sí, y al terminar la propuesta vuelve. `cortar()` suelta la señal pero no la propuesta.

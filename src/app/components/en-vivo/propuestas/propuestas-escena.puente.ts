@@ -6,7 +6,7 @@ import { ContadorPropuestas, PropuestaEnEscena } from './propuestas.modelos';
 /**
  * Puente entre la tarjeta de Opttia (que escribe aquí) y la escena y el orbe (que solo leen).
  * Así ninguno depende del otro: la escena no sabe de HTTP ni de aprobar, y la tarjeta no sabe de
- * three.js. D-421, fase 1.
+ * three.js. D-422, fase 1.
  */
 @Injectable({ providedIn: 'root' })
 export class EnVivoPropuestaEscenaPuente {

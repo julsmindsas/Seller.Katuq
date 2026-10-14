@@ -52,7 +52,7 @@ const ACERCAR_PROPUESTA = 0.4;
  *   Opttia" y por respuestas de la tarjeta de Opttia;
  * - el tablero de pedidos y el muro de Katuq (sin 3D), que piden `usarMarcas(tipo)` y reciben por
  *   `marca$` la tarjeta que Opttia señala;
- * - las propuestas de Opttia (D-421): `proponer(p)` / `retirarPropuesta()` dejan la señal fija en lo
+ * - las propuestas de Opttia (D-422): `proponer(p)` / `retirarPropuesta()` dejan la señal fija en lo
  *   que la propuesta toca mientras la tarjeta la muestre (lo conecta la escena de la operación).
  *
  * Los textos salen del radar y del último resumen que ya llegaron (sin llamar al modelo) y respetan
@@ -246,7 +246,7 @@ export class EnVivoOrbeService implements OnDestroy {
   }
 
   /**
-   * Opttia propone (D-421): el orbe deja su ronda de 16 s, vuela a la primera caja de la propuesta
+   * Opttia propone (D-422): el orbe deja su ronda de 16 s, vuela a la primera caja de la propuesta
    * (o a su estación de respaldo) y su señal queda FIJA, con la etiqueta de la propuesta, mientras
    * siga viva (sin el auto-soltado). Una ronda normal no la pisa. Solo lectura.
    */

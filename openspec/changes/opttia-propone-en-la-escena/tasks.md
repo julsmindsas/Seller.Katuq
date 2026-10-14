@@ -1,8 +1,8 @@
 ## 0. Fase 0: spec y checkpoint
 
 - [x] 0.1 Crear este cambio con proposal, design, tasks y los deltas de `despachos-en-vivo`, `opttia-en-vivo`, `tablero-en-vivo` y `perfil-de-despacho`. Validarlo con `openspec validate opttia-propone-en-la-escena --strict`. → 13-oct, válido.
-- [x] 0.2 Registrar D-421 en `specs/CONTRACT.md`. Reemplaza la parte "pestaña" de D-410. → 13-oct: la propuesta la llamaba D-418 y luego D-419, pero otras sesiones publicaron D-418 (ticket 1206), D-419 (facturación POS) y D-420 (mapa de mensajeros) ese mismo día, así que quedó D-421.
-- [x] 0.3 En el repo privado del backend, agregar la sección "D-421 fase 1" con la seguridad del alcance a `openspec/changes/opttia-despachos-con-aprobacion/tasks.md`.
+- [x] 0.2 Registrar D-422 en `specs/CONTRACT.md`. Reemplaza la parte "pestaña" de D-410. → 13-oct: la propuesta la llamaba D-418 y luego D-419, pero otras sesiones publicaron D-418 (ticket 1206), D-419 (facturación POS), D-420 (mapa de mensajeros) y D-422 (mapa de Despachos) ese mismo día, así que quedó D-422.
+- [x] 0.3 En el repo privado del backend, agregar la sección "D-422 fase 1" con la seguridad del alcance a `openspec/changes/opttia-despachos-con-aprobacion/tasks.md`.
 - [ ] 0.4 Daniel revisa los deltas. La propuesta y el boceto ya están aprobados ("dale, arranca con la fase 1"), así que la fase 1 arranca en paralelo. Cualquier ajuste a los deltas entra antes de publicar.
 
 ## 1. Fase 1, backend: ruta de solo lectura y ajustes de D-410 (repo `katuq_admin_back_firebase`)
@@ -154,7 +154,7 @@
   - sin scroll horizontal ni texto invisible;
   - la tarjeta, los dos toques, Ajustar, TV, "Repetir el día", sin WebGL, "reducir movimiento" y "ocultar".
 - [ ] 6.4 Pruebas puras de `propuestas.reglas` y de la capa, en verde.
-- [ ] 6.5 Revisión de seguridad del alcance contra la sección "D-421 fase 1" del cambio privado del backend, sin escribir el detalle en este repo.
+- [ ] 6.5 Revisión de seguridad del alcance contra la sección "D-422 fase 1" del cambio privado del backend, sin escribir el detalle en este repo.
 
 ## 7. Fase 1: despliegue (con el OK de Daniel)
 
@@ -185,7 +185,7 @@
   La pestaña desaparece en este mismo despliegue.
 - [ ] 7.4 Seguir 2 días en OH MY STORE y ALMARA FELICIDAD: aprobaciones por canal "escena", grupos que quedaron fuera y errores.
 - [ ] 7.5 Borrar `EnVivoDespachosComponent` como vista completa y lo que quede sin uso.
-- [ ] 7.6 Bitácora de la fase 1 en D-421.
+- [ ] 7.6 Bitácora de la fase 1 en D-422.
 
 ## 8. Fase 2: primera escritura nueva y cobro con WhatsApp (cada uno en su propio cambio)
 
@@ -218,4 +218,4 @@
   - primero en sombra en OH MY STORE.
 - [ ] 10.2 Las mismas propuestas por MCP y Telegram, con un comprobante firmado de 10 min y canje por botón. Requiere pasar `OPTTIA_WRITE_MODE` a `dry_run` o `live`, con el visto bueno de Daniel.
 - [ ] 10.3 Señal barata `propuestas-version` en el canal en vivo, para pedir la cola solo cuando algo cambie.
-- [ ] 10.4 `openspec validate --strict`, cierre de D-421 y archivo del cambio. Se archiva después de `tablero-en-vivo` y `despachos-con-opttia`.
+- [ ] 10.4 `openspec validate --strict`, cierre de D-422 y archivo del cambio. Se archiva después de `tablero-en-vivo` y `despachos-con-opttia`.

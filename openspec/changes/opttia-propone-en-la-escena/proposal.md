@@ -98,5 +98,5 @@ Ninguna. La función se reparte en capacidades que ya existen en cambios abierto
 - **XI:** a Opttia no le llegan datos de clientes. La TV y "ocultar" no muestran montos ni nombres.
 - **XII:** la bandera tiene dueño (Daniel). El interruptor general se retira cuando exista la bandera por operación.
 - **XIII:** cada delta cabe en 3 páginas.
-- **XIV:** D-421, que reemplaza la parte "pestaña" de D-410.
+- **XIV:** D-422, que reemplaza la parte "pestaña" de D-410.
 - **XV:** no aplica.

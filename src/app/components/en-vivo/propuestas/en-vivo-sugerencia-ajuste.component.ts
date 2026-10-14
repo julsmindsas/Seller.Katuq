@@ -18,7 +18,7 @@ import { CONFIRMAR_MS } from './propuestas.reglas';
 let contadorDeHojas = 0;
 
 /**
- * Hoja "Ajustar" de la tarjeta de Opttia (D-421): el grupo de despacho de la propuesta a la vista,
+ * Hoja "Ajustar" de la tarjeta de Opttia (D-422): el grupo de despacho de la propuesta a la vista,
  * para cambiar el mensajero o la transportadora, sacar pedidos o pasarlos a otro grupo, y aprobar.
  * Usa el mismo lugar que la ficha (368 px al costado de la escena; en el celular, una hoja desde
  * abajo con velo), pero es una pieza propia: la ficha es de solo lectura y esta sí despacha.

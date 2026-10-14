@@ -1,5 +1,5 @@
 /**
- * Reglas PURAS de "Opttia propone en la escena" (D-421, fase 1). Sin Angular, sin reloj propio y
+ * Reglas PURAS de "Opttia propone en la escena" (D-422, fase 1). Sin Angular, sin reloj propio y
  * sin almacenamiento: la hora, lo guardado y el estado entran por parámetro, así que se prueban con
  * node suelto. `EnVivoPropuestasService` las conecta al estado de la pantalla y al servidor.
  *

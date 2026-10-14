@@ -257,7 +257,7 @@ export function entregaDeEvento(ev: EventoEnVivo, vista: 'comercio' | 'katuq', o
   };
 }
 
-// ── Opttia propone (D-421) ──────────────────────────────────────────────────
+// ── Opttia propone (D-422) ──────────────────────────────────────────────────
 
 /** Lo que dice el botón del orbe con propuestas: "Opttia tiene 3 ideas · 1 urgente". */
 export function textoIdeas(c: { ideas: number; urgentes: number }): string {

@@ -106,7 +106,7 @@ Leer la cola de propuestas MUST NOT escribir nada. Esto es la excepción al requ
 ## REMOVED Requirements
 
 ### Requirement: La vista Despachos
-**Reason**: Daniel pidió que Opttia organice los despachos "ahí mismo en la animación", no en otra pestaña (D-421).
+**Reason**: Daniel pidió que Opttia organice los despachos "ahí mismo en la animación", no en otra pestaña (D-422).
 
 **Migration**: el plan se propone en la escena ("Plan de despachos en la escena") y su detalle pasa a "Ajustar un grupo". Quien tenía guardada la vista "despachos" cae en "Mi operación". La insignia de pedidos listos pasa al contador del botón del orbe.
 

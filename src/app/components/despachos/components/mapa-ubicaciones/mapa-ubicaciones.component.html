@@ -85,7 +85,7 @@
     </div>
   </div>
 
-  <div class="mapa-cuerpo" [class.mapa-cuerpo--con-panel]="mostrarPanelMensajeros">
+  <div class="mapa-cuerpo" [class.mapa-cuerpo--con-panel]="mostrarPanel">
   <!-- Contenedor del mapa -->
   <div class="mapa-wrapper">
     <div #mapaContainer
@@ -103,56 +103,24 @@
       </div>
     </div>
 
-    <!-- Overlay de geocodificación -->
-    <div class="geocoding-overlay" *ngIf="geocodingInProgress && leafletCargado">
-      <div class="geocoding-content">
-        <div class="geocoding-animation-container">
-          <div class="geocoding-pulse-main"></div>
-          <div class="geocoding-icon-main">
-            <i class="pi pi-map-marker"></i>
-          </div>
+    <!-- Avance de "ubicar pedidos": tarjeta compacta, el mapa sigue usable debajo -->
+    <div class="ubicando" *ngIf="avanceVisible && avanceUbicacion && leafletCargado" role="status" aria-live="polite">
+      <ng-container *ngIf="!avanceUbicacion.terminado; else resumenUbicacion">
+        <div class="ubicando__texto">
+          {{ 'Ubicando pedidos en el mapa' | translate }}
+          <b class="ubicando__cuenta">· {{ avanceUbicacion.hechos }} {{ 'de' | translate }} {{ avanceUbicacion.total }}</b>
         </div>
-
-        <div class="geocoding-text mt-3">
-          <h6 class="text-white mb-2">
-            <i class="pi pi-spin pi-spinner me-2"></i>
-            {{ 'Geocodificando direcciones...' | translate }}
-          </h6>
-          <p class="text-white-50 small mb-3">
-            {{ 'Convirtiendo direcciones a coordenadas del mapa' | translate }}
-          </p>
-
-          <!-- Barra de progreso -->
-          <div class="progress geocoding-progress-bar">
-            <div class="progress-bar geocoding-progress bg-success"
-                 [style.width.%]="geocodingProgress"
-                 [attr.aria-valuenow]="geocodingProgress"
-                 aria-valuemin="0"
-                 aria-valuemax="100">
-              {{ geocodingProgress | number:'1.0-0' }}%
-            </div>
-          </div>
+        <div class="ubicando__barra"><i [style.width.%]="porcentajeUbicacion"></i></div>
+      </ng-container>
+      <ng-template #resumenUbicacion>
+        <div class="ubicando__texto" *ngIf="avanceUbicacion.total > 0; else nadaPorUbicar">
+          <b class="ubicando__ok">{{ avanceUbicacion.ubicados }} {{ 'ubicados' | translate }}</b>
+          <b class="ubicando__alerta" *ngIf="avanceUbicacion.sinUbicar > 0">&nbsp;· {{ avanceUbicacion.sinUbicar }} {{ 'sin ubicar' | translate }}</b>
         </div>
-
-        <!-- Efectos visuales adicionales -->
-        <div class="geocoding-effects">
-          <div class="geocoding-dot"
-               *ngFor="let dot of [1,2,3,4,5]; let i = index"
-               [style.animation-delay.s]="i * 0.2">
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Indicador de nuevos marcadores -->
-    <div class="new-markers-indicator"
-         *ngIf="!geocodingInProgress && leafletCargado && configuracion.ubicaciones.length > ultimosLocationsProcesados">
-      <div class="new-markers-content">
-        <i class="pi pi-check-circle text-success me-2"></i>
-        <span class="text-success">
-          {{ 'Nuevas ubicaciones agregadas' | translate }}
-        </span>
-      </div>
+        <ng-template #nadaPorUbicar>
+          <div class="ubicando__texto">{{ 'Todos los pedidos con dirección ya están en el mapa' | translate }}</div>
+        </ng-template>
+      </ng-template>
     </div>
 
     <!-- Mensaje de error si no se puede cargar -->
@@ -171,7 +139,8 @@
   </div>
 
   <!-- Panel de mensajeros: quién está en la calle, hace cuánto llegó su punto, Ver y Seguir -->
-  <aside class="mapa-panel" *ngIf="mostrarPanelMensajeros" [style.height]="altura">
+  <aside class="mapa-panel" *ngIf="mostrarPanel" [style.height]="altura">
+    <ng-container *ngIf="mostrarMensajeros">
     <div class="mapa-panel__cabeza">
       <div class="mapa-panel__eyebrow">{{ 'Mensajeros' | translate }}</div>
       <div class="mapa-panel__titulo">
@@ -222,12 +191,28 @@
         </div>
       </div>
     </ng-template>
-  </aside>
-  </div>
+    </ng-container>
 
-  <!-- Barra de progreso inferior durante geocodificación -->
-  <div class="geocoding-bottom-progress" *ngIf="geocodingInProgress">
-    <div class="progress-line" [style.width.%]="geocodingProgress"></div>
+    <!-- Pedidos que no se pudieron ubicar: nunca se pintan en un punto aproximado -->
+    <div class="sinubicar" *ngIf="pedidosSinUbicar.length > 0">
+      <div class="sinubicar__cabeza">
+        <div class="mapa-panel__eyebrow">{{ 'Sin ubicar' | translate }}</div>
+        <div class="sinubicar__titulo">
+          {{ pedidosSinUbicar.length }} {{ (pedidosSinUbicar.length === 1 ? 'pedido no está en el mapa' : 'pedidos no están en el mapa') | translate }}
+        </div>
+      </div>
+      <div class="sinubicar__lista">
+        <div class="sinubicar__fila" *ngFor="let p of pedidosSinUbicar; trackBy: porNroPedido">
+          <div class="sinubicar__arriba">
+            <b class="sinubicar__numero">#{{ p.nroPedido }}</b>
+            <b class="sinubicar__cliente" *ngIf="p.cliente">{{ p.cliente }}</b>
+          </div>
+          <div class="sinubicar__direccion">{{ p.direccion || ('Sin dirección' | translate) }}</div>
+          <div class="sinubicar__motivo">{{ p.motivo | translate }}</div>
+        </div>
+      </div>
+    </div>
+  </aside>
   </div>
 
   <!-- Panel de estadísticas rápidas -->

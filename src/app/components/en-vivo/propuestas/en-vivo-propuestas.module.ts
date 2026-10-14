@@ -6,7 +6,7 @@ import { EnVivoSugerenciaAjusteComponent } from './en-vivo-sugerencia-ajuste.com
 import { EnVivoSugerenciaComponent } from './en-vivo-sugerencia.component';
 
 /**
- * Opttia propone en la escena (D-421): la tarjeta (`app-en-vivo-sugerencia`) y su hoja "Ajustar"
+ * Opttia propone en la escena (D-422): la tarjeta (`app-en-vivo-sugerencia`) y su hoja "Ajustar"
  * (`app-en-vivo-sugerencia-ajuste`). Es el único módulo de En vivo que escribe, y solo cuando una
  * persona aprueba (dos toques) por la ruta de cada operación. La hoja reutiliza las tarjetas del
  * plan de despachos (grupo y "no entra al plan") que exporta `EnVivoDespachosModule`.

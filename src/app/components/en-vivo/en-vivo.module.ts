@@ -21,7 +21,7 @@ import { EnVivoPropuestasModule } from './propuestas/en-vivo-propuestas.module';
  * etapas, eventos...), `EnVivoFichaModule`, `EnVivoPlataformaModule` (toda Katuq),
  * `EnVivoComercioModule` (centro de mando del comercio), `EnVivoOpttiaModule`, `EnVivoEscenasModule`
  * (las cuatro escenas 3D con el orbe de Opttia; three baja aparte, al montar una escena) y
- * `EnVivoPropuestasModule` (la tarjeta "Opttia propone" de la escena, D-421, la única que escribe).
+ * `EnVivoPropuestasModule` (la tarjeta "Opttia propone" de la escena, D-422, la única que escribe).
  */
 @NgModule({
   imports: [

@@ -46,7 +46,7 @@ const LANE_BACK = 4.0;
 const EXIT_X = SALIDA_X;
 const TRUCK: Pos2 = CAMION;
 const CHAQUETAS: ReadonlyArray<string> = ['accent', 'info', 'pack', 'ok'];
-/** Opacidad de las cajas que no son de la propuesta que Opttia ensaya (D-421). */
+/** Opacidad de las cajas que no son de la propuesta que Opttia ensaya (D-422). */
 const OPACIDAD_ATENUADA = 0.4;
 
 // Nombres de Katuq. El color de cada estación es fijo para que las cinco se distingan en la
@@ -337,7 +337,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     return (out ?? new this.T.Vector3()).set(p.x, 0, p.z);
   }
 
-  // ---- lo que usa el ensayo de una propuesta de Opttia (D-421, `capa-propuesta.ts`)
+  // ---- lo que usa el ensayo de una propuesta de Opttia (D-422, `capa-propuesta.ts`)
 
   /**
    * Dónde está un pedido: su caja si se ve; si no, la estación donde está (las que pasan de 18 no se

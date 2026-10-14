@@ -1,5 +1,5 @@
 /**
- * Opttia propone en la escena (D-421, cambio `opttia-propone-en-la-escena`, fase 1).
+ * Opttia propone en la escena (D-422, cambio `opttia-propone-en-la-escena`, fase 1).
  *
  * Contrato compartido entre:
  *  - la tarjeta y su servicio (`propuestas/`), que piden la cola al servidor y aprueban;

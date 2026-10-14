@@ -7,7 +7,7 @@ import { CONFIRMAR_MS, ItemCola } from './propuestas.reglas';
 type Confirmacion = 'uno' | 'todos';
 
 /**
- * Tarjeta "Opttia propone" dentro de la escena de En vivo (D-421, fase 1). Una propuesta a la vez,
+ * Tarjeta "Opttia propone" dentro de la escena de En vivo (D-422, fase 1). Una propuesta a la vez,
  * con su razón y lo que pasa de verdad al aprobar. Va dentro de `.ev-escena-slot`, entre la
  * narración y la ficha: arriba al centro en pantallas anchas y acoplada abajo en el celular.
  *

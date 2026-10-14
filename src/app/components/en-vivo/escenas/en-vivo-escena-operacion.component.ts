@@ -47,7 +47,7 @@ const ESPERA_TEMA_MS = 60;
  * Tocar una caja, una estación o un mensajero avisa por `EnVivoInteraccionService` (la ficha lo
  * abre); la cámara sigue a lo que mire la ficha (`EnVivoFichaService.vistaActual$`).
  *
- * Opttia propone (D-421): la propuesta que muestra la tarjeta (`EnVivoPropuestaEscenaPuente.actual$`)
+ * Opttia propone (D-422): la propuesta que muestra la tarjeta (`EnVivoPropuestaEscenaPuente.actual$`)
  * se ensaya en la escena con la capa `CapaPropuesta` (copias fantasma, anillos y líneas; las cajas
  * reales no se mueven) y el orbe la señala fijo (`proponer`/`retirarPropuesta`). Tocar un montón
  * avisa a la tarjeta (`tocarGrupo`). Durante "Repetir el día" la capa se esconde.
@@ -87,7 +87,7 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
   private escena: OperacionEnVivoEscena | null = null;
   private three: Three | null = null;
   private quitarOrbe: (() => void) | null = null;
-  /** Ensayo de la propuesta de Opttia sobre la escena (D-421). */
+  /** Ensayo de la propuesta de Opttia sobre la escena (D-422). */
   private capa: CapaPropuesta | null = null;
   /** La propuesta que la tarjeta muestra ahora (la capa la esconde mientras se repite el día). */
   private propuesta: PropuestaEnEscena | null = null;
@@ -299,7 +299,7 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
         if (antes && !r.activa) this.sincronizar();
       })
     );
-    // Opttia propone (D-421): fuera de la zona de Angular (la capa y el orbe solo dibujan).
+    // Opttia propone (D-422): fuera de la zona de Angular (la capa y el orbe solo dibujan).
     this.subs.add(this.puente.actual$.subscribe((p) => this.zona.runOutsideAngular(() => this.alPropuesta(p))));
     this.actualizarPausa();
   }

@@ -8,9 +8,9 @@ import { EnVivoGrupoDespachoComponent } from './grupo-despacho/grupo-despacho.co
 
 /**
  * Piezas del plan de despachos de Opttia (D-410): la tarjeta de un grupo (`grupo-despacho`) y lo
- * que no entra al plan (`fuera-del-plan`). Desde D-421 las usa la hoja "Ajustar" de la tarjeta de
+ * que no entra al plan (`fuera-del-plan`). Desde D-422 las usa la hoja "Ajustar" de la tarjeta de
  * Opttia en la escena (`propuestas/`), que es la que aprueba. La vista completa "Despachos" ya no
- * está en el selector de En vivo; se borra cuando la fase 1 de D-421 esté verificada en producción.
+ * está en el selector de En vivo; se borra cuando la fase 1 de D-422 esté verificada en producción.
  */
 @NgModule({
   imports: [CommonModule, FormsModule, EnVivoCompartidoModule],

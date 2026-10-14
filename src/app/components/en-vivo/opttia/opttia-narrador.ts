@@ -200,7 +200,7 @@ function diaDe(estado: EstadoEnVivo): string {
 }
 
 /**
- * "Organicé 6 pedidos en 2 salidas; apruébalas aquí." (D-421). A quien no puede aprobar (su rol no
+ * "Organicé 6 pedidos en 2 salidas; apruébalas aquí." (D-422). A quien no puede aprobar (su rol no
  * tiene Despachos) no se le invita a aprobar: "Organicé 6 pedidos en 2 salidas."
  */
 export function textoPlanEnEscena(pedidos: number, salidas: number, aprobar = true): string {
@@ -216,9 +216,9 @@ export class NarradorOpttia {
   private readonly hitos = new Set<string>();
   private cursor = 0;
   private secuencia = 0;
-  /** Último plan que se avisó ("pedidos/salidas", D-421); vacío = ninguno todavía. */
+  /** Último plan que se avisó ("pedidos/salidas", D-422); vacío = ninguno todavía. */
   private ultimoAvisoPlan = '';
-  /** El saludo de las propuestas (D-421) sale una sola vez por visita. */
+  /** El saludo de las propuestas (D-422) sale una sola vez por visita. */
   private saludado = false;
   /** El saludo que espera turno (para soltarlo si la tarjeta de Opttia se abre antes). */
   private saludoEnCola: string | null = null;
@@ -251,7 +251,7 @@ export class NarradorOpttia {
   }
 
   /**
-   * Saludo al llegar (D-421): "Buenos días: 3 para hoy, 1 urgente", armado con los conteos de la
+   * Saludo al llegar (D-422): "Buenos días: 3 para hoy, 1 urgente", armado con los conteos de la
    * cola de propuestas. Una sola vez por visita y al frente de la cola; nunca durante la repetición.
    */
   saludar(texto: string | null, callar = false): void {
@@ -273,7 +273,7 @@ export class NarradorOpttia {
   }
 
   /**
-   * Plan de despachos en la escena (D-421): "Organicé N pedidos en M salidas; apruébalas aquí", con
+   * Plan de despachos en la escena (D-422): "Organicé N pedidos en M salidas; apruébalas aquí", con
    * plantilla y una sola vez cada vez que cambia el plan. Las salidas se aprueban en la tarjeta de
    * Opttia, en la misma escena (ya no hay pestaña Despachos).
    */

@@ -41,7 +41,7 @@ function vistaDe(hay: boolean, recorrido: RecorridoOrbe | null, c: ContadorPropu
 /**
  * Botón del orbe sobre la escena 3D (D-386, 5.14): el mismo recorrido que se empieza tocando al orbe
  * o con el botón de la tarjeta de Opttia; mientras dura dice "Detener · 2 de 5". Con propuestas de
- * Opttia (D-421) dice "Opttia tiene 3 ideas · 1 urgente", su halo late dos veces al aparecer y al
+ * Opttia (D-422) dice "Opttia tiene 3 ideas · 1 urgente", su halo late dos veces al aparecer y al
  * tocarlo pide la tarjeta. Solo se ve cuando la escena tiene su orbe (sin WebGL no hay orbe ni botón).
  */
 @Component({

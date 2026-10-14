@@ -100,7 +100,7 @@ interface OpcionesSenal {
   acercar?: number;
   titulo?: string;
   tono?: string;
-  /** Señal de una propuesta de Opttia (D-421): no vence sola; se quita con `soltar()`. */
+  /** Señal de una propuesta de Opttia (D-422): no vence sola; se quita con `soltar()`. */
   fija?: boolean;
 }
 

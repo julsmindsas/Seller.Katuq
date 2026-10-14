@@ -33,7 +33,7 @@ export class EnVivoPlanDespachosService extends BaseService {
   }
 
   /**
-   * `canal` dice desde dónde se aprobó (D-421): la tarjeta de Opttia en la escena manda `escena`;
+   * `canal` dice desde dónde se aprobó (D-422): la tarjeta de Opttia en la escena manda `escena`;
    * sin canal (la vista Despachos) el servidor anota `en-vivo`, como siempre. El servidor solo
    * acepta canales conocidos.
    */

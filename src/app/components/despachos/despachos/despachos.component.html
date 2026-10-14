@@ -25,23 +25,6 @@
                     <div class="loader-8"></div>
                 </div>
 
-                <!-- Indicador de progreso de geocodificación -->
-                <div class="px-3 py-1 bg-info text-white" *ngIf="geocodingInProgress">
-                    <div class="d-flex align-items-center">
-                        <i class="pi pi-spin pi-spinner me-2"></i>
-                        <div class="flex-grow-1">
-                            <small class="fw-bold">{{ 'Geocodificando direcciones...' | translate }}</small>
-                            <div class="progress bg-white bg-opacity-25 mt-1" style="height: 3px;">
-                                <div class="progress-bar bg-white"
-                                     [style.width.%]="geocodingProgress"
-                                     role="progressbar">
-                                </div>
-                            </div>
-                        </div>
-                        <small class="ms-2">{{ geocodingProgress | number:'1.0-1' }}%</small>
-                    </div>
-                </div>
-
                 <!-- IA de despachos (openspec/changes/despachos-ia-util) -->
                 <app-despachos-ia *ngIf="mostrarPanelIA" (cerrar)="mostrarPanelIA = false"></app-despachos-ia>
 
@@ -237,8 +220,8 @@
                                 [tiempoReal]="true"
                                 [verMensajeros]="true"
                                 [configuracionZonas]="obtenerConfiguracionZonas()"
-                                [geocodingInProgress]="geocodingInProgress"
-                                [geocodingProgress]="geocodingProgress"
+                                [avanceUbicacion]="avanceUbicacion"
+                                [pedidosSinUbicar]="pedidosSinUbicar"
                                 [metricas]="mapaMetricas"
                             ></app-mapa-ubicaciones>
                         </div>

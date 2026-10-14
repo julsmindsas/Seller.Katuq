@@ -205,7 +205,7 @@ const VISTA_VACIA: VistaPropuestas = {
 };
 
 /**
- * Opttia propone en la escena (D-421, fase 1). Pide la cola a `GET /v1/opttia/propuestas`, le suma
+ * Opttia propone en la escena (D-422, fase 1). Pide la cola a `GET /v1/opttia/propuestas`, le suma
  * las señales de cobro del radar del canal en vivo (sin backend), guarda qué propuesta está a la
  * vista y aprueba los despachos por la ruta de siempre (`POST /v1/logistica/plan/aprobar`, canal
  * `escena`). Es la ÚNICA pieza de En vivo que escribe, y solo cuando una persona toca Aprobar dos

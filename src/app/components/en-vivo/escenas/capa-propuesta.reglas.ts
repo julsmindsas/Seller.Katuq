@@ -6,7 +6,7 @@ import type {
 } from '../propuestas/propuestas.modelos';
 
 /**
- * Reglas puras del ENSAYO de una propuesta de Opttia en la escena "Mi operación" (D-421, fase 1):
+ * Reglas puras del ENSAYO de una propuesta de Opttia en la escena "Mi operación" (D-422, fase 1):
  * dónde se juntan los montones, cómo se pone la fila de producción, qué pedidos llevan la moneda,
  * de qué color va cada grupo, los topes y los puntos de la línea punteada. Sin three, sin Angular y
  * sin DOM: se prueba con node suelto. La capa 3D (`capa-propuesta.ts`) solo dibuja lo que esto decide.

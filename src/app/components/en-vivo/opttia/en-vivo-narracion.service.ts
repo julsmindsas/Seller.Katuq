@@ -17,7 +17,7 @@ import { mascaraDe } from './opttia-reglas';
  *
  * Solo lectura: mira el estado de la pantalla y no escribe nada. Se calla durante "Repetir el
  * día", con la pestaña oculta, mientras el rol no tenga acceso y mientras la tarjeta "Opttia
- * propone" (D-421) esté a la vista. Con "ocultar" no escribe montos
+ * propone" (D-422) esté a la vista. Con "ocultar" no escribe montos
  * ni nombres de comercios, y al activarlo quita al instante la línea que estuviera a la vista.
  *
  * Uso: quien la pinta (`<app-en-vivo-narracion>`) llama `iniciar()` al crearse y `detener()` al
@@ -66,7 +66,7 @@ export class EnVivoNarracionService implements OnDestroy {
         this.narrador.alEvento(evento, this.estado.estado, this.estado.preferencias.ocultar, this.interaccion.repitiendo);
       })
     );
-    // Plan de despachos en la escena (D-421): "Organicé N pedidos en M salidas; apruébalas aquí", con
+    // Plan de despachos en la escena (D-422): "Organicé N pedidos en M salidas; apruébalas aquí", con
     // lo que ya armó la cola de propuestas (no llama al servidor ni a Opttia). Sale solo sin tarjeta.
     // A quien no puede aprobar (su rol no tiene Despachos) no se le invita a aprobar.
     suscripciones.add(
