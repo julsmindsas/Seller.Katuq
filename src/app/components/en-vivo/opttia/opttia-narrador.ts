@@ -199,14 +199,29 @@ function diaDe(estado: EstadoEnVivo): string {
   return (estado.vista === 'katuq' ? estado.cifrasGlobal?.dia : estado.cifras?.dia) ?? '';
 }
 
+/**
+ * "Organicé 6 pedidos en 2 salidas; apruébalas aquí." (D-421). A quien no puede aprobar (su rol no
+ * tiene Despachos) no se le invita a aprobar: "Organicé 6 pedidos en 2 salidas."
+ */
+export function textoPlanEnEscena(pedidos: number, salidas: number, aprobar = true): string {
+  const p = `${pedidos} ${pedidos === 1 ? 'pedido' : 'pedidos'}`;
+  const s = `${salidas} ${salidas === 1 ? 'salida' : 'salidas'}`;
+  if (!aprobar) return `Organicé ${p} en ${s}.`;
+  return `Organicé ${p} en ${s}; ${salidas === 1 ? 'apruébala' : 'apruébalas'} aquí.`;
+}
+
 export class NarradorOpttia {
   private cola: LineaNarracion[] = [];
   private base: BaseDeLaVista | null = null;
   private readonly hitos = new Set<string>();
   private cursor = 0;
   private secuencia = 0;
-  /** Último número de pedidos listos que se avisó (D-410); -1 = ninguno todavía. */
-  private ultimoAvisoPlan = -1;
+  /** Último plan que se avisó ("pedidos/salidas", D-421); vacío = ninguno todavía. */
+  private ultimoAvisoPlan = '';
+  /** El saludo de las propuestas (D-421) sale una sola vez por visita. */
+  private saludado = false;
+  /** El saludo que espera turno (para soltarlo si la tarjeta de Opttia se abre antes). */
+  private saludoEnCola: string | null = null;
 
   constructor(private readonly maxCola: number = MAX_COLA_NARRACION) {}
 
@@ -230,18 +245,44 @@ export class NarradorOpttia {
     this.cola = [];
     this.base = null;
     this.cursor = 0;
-    this.ultimoAvisoPlan = -1;
+    this.ultimoAvisoPlan = '';
+    this.saludado = false;
+    this.saludoEnCola = null;
   }
 
   /**
-   * Plan de despachos (D-410): "Hay N pedidos listos; armo el plan en Despachos", con plantilla y
-   * una sola vez cada vez que cambia N. No cambia de vista: la persona escoge Despachos.
+   * Saludo al llegar (D-421): "Buenos días: 3 para hoy, 1 urgente", armado con los conteos de la
+   * cola de propuestas. Una sola vez por visita y al frente de la cola; nunca durante la repetición.
    */
-  avisarPlanDespachos(cantidad: number, callar = false): void {
-    if (callar || cantidad === this.ultimoAvisoPlan) return;
-    this.ultimoAvisoPlan = cantidad;
-    if (cantidad <= 0) return;
-    this.encolar('plan', `Hay ${cantidad} ${cantidad === 1 ? 'pedido listo' : 'pedidos listos'}; armo el plan en Despachos.`, false);
+  saludar(texto: string | null, callar = false): void {
+    if (this.saludado || callar || !texto) return;
+    this.saludado = true;
+    this.saludoEnCola = texto;
+    this.encolar('plan', texto, true);
+  }
+
+  /**
+   * La tarjeta "Opttia propone" se abrió antes de que el saludo alcanzara a salir: ya no se dice
+   * (saldría cuando la tarjeta se retire, con conteos viejos). Si ya salió, no hace nada.
+   */
+  descartarSaludo(): void {
+    const texto = this.saludoEnCola;
+    if (!texto) return;
+    this.saludoEnCola = null;
+    this.cola = this.cola.filter((l) => !(l.tipo === 'plan' && l.texto === texto));
+  }
+
+  /**
+   * Plan de despachos en la escena (D-421): "Organicé N pedidos en M salidas; apruébalas aquí", con
+   * plantilla y una sola vez cada vez que cambia el plan. Las salidas se aprueban en la tarjeta de
+   * Opttia, en la misma escena (ya no hay pestaña Despachos).
+   */
+  avisarPlanEnEscena(pedidos: number, salidas: number, callar = false, aprobar = true): void {
+    const clave = `${pedidos}/${salidas}/${aprobar ? 1 : 0}`;
+    if (callar || clave === this.ultimoAvisoPlan) return;
+    this.ultimoAvisoPlan = clave;
+    if (pedidos <= 0 || salidas <= 0) return;
+    this.encolar('plan', textoPlanEnEscena(pedidos, salidas, aprobar), false);
   }
 
   /**
@@ -279,7 +320,10 @@ export class NarradorOpttia {
    */
   siguiente(resumen: ResumenOpttia | null | undefined, mascara: OpcionesMascara): LineaNarracion | null {
     const primera = this.cola.shift();
-    if (primera) return primera;
+    if (primera) {
+      if (primera.texto === this.saludoEnCola) this.saludoEnCola = null;
+      return primera;
+    }
     const lineas = lineasDelResumen(resumen, mascara);
     if (lineas.length === 0) return null;
     const texto = lineas[this.cursor % lineas.length];

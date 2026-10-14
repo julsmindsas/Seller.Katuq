@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../compartido/en-vivo-interaccion.service';
 import { EnVivoFichaService } from '../ficha/ficha.service';
+import type { PropuestaEnEscena } from '../propuestas/propuestas.modelos';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { alCambiarMovimiento, prefiereMenosMovimiento } from '../utilidades/movimiento';
 import { ContextoGuia, FuentesGuia, GuiaOpttia, OrdenOrbe, OrdenSenalar } from './opttia-guia';
@@ -13,6 +14,7 @@ import {
   entregaDeEvento,
   lineasParaHablar,
   objetivoDeRespuesta,
+  propuestaParaOrbe,
   puntosDelOrbe,
   textoParaBurbuja,
 } from './opttia-puntos';
@@ -33,6 +35,12 @@ export interface RecorridoOrbe {
 const PERIODO_MARCAS_MS = 9000;
 const DURACION_MARCA_MS = 7000;
 const ESPERA_RETEMA_MS = 150;
+/**
+ * Con una propuesta la cámara se acerca menos que en el recorrido, y solo parte del camino hacia la
+ * caja: el ensayo (montón, moto, carril y casas) ocupa buena parte de la escena y debe seguir a la vista.
+ */
+const ZOOM_PROPUESTA = 1.1;
+const ACERCAR_PROPUESTA = 0.4;
 
 /**
  * El orbe de Opttia en las escenas (D-386, 5.14). Singleton que une tres cosas:
@@ -43,7 +51,9 @@ const ESPERA_RETEMA_MS = 150;
  *   siguiente de su lista), conduce el recorrido guiado y atiende las visitas por pedidos "Con
  *   Opttia" y por respuestas de la tarjeta de Opttia;
  * - el tablero de pedidos y el muro de Katuq (sin 3D), que piden `usarMarcas(tipo)` y reciben por
- *   `marca$` la tarjeta que Opttia señala.
+ *   `marca$` la tarjeta que Opttia señala;
+ * - las propuestas de Opttia (D-421): `proponer(p)` / `retirarPropuesta()` dejan la señal fija en lo
+ *   que la propuesta toca mientras la tarjeta la muestre (lo conecta la escena de la operación).
  *
  * Los textos salen del radar y del último resumen que ya llegaron (sin llamar al modelo) y respetan
  * "ocultar". El recorrido lo cortan: arrastrar la cámara, abrir una ficha, "Repetir el día", tocar
@@ -116,7 +126,7 @@ export class EnVivoOrbeService implements OnDestroy {
     const orbe = new OrbeOpttia(anfitrion, {
       alFrame: (ahoraMs) => this.alFrame(anfitrion, ahoraMs),
       alTocarOrbe: () => this.zona.run(() => this.alternarRecorrido()),
-      alArrastrarCamara: () => this.zona.run(() => this.cortar()),
+      alArrastrarCamara: () => this.zona.run(() => this.ejecutar(this.guia.arrastre())),
     });
     orbe.iniciar();
     this.anfitriones.set(anfitrion, orbe);
@@ -235,6 +245,22 @@ export class EnVivoOrbeService implements OnDestroy {
     return true;
   }
 
+  /**
+   * Opttia propone (D-421): el orbe deja su ronda de 16 s, vuela a la primera caja de la propuesta
+   * (o a su estación de respaldo) y su señal queda FIJA, con la etiqueta de la propuesta, mientras
+   * siga viva (sin el auto-soltado). Una ronda normal no la pisa. Solo lectura.
+   */
+  proponer(p: PropuestaEnEscena): void {
+    // Con la escena en pausa (abajo en la página o la pestaña oculta) no hay quién dibuje la señal:
+    // la guía no la da por puesta y la señala en el primer cuadro de cuando la escena vuelva.
+    this.ejecutar(this.guia.proponer(performance.now(), propuestaParaOrbe(p), this.contextoVisible()));
+  }
+
+  /** La propuesta ya no está en la tarjeta: el orbe la suelta y vuelve a su ronda. */
+  retirarPropuesta(): void {
+    this.ejecutar(this.guia.retirarPropuesta(performance.now()));
+  }
+
   // -------------------------------------------------------------- el cuadro
 
   private alFrame(h: AnfitrionOrbe, ahoraMs: number): void {
@@ -253,6 +279,11 @@ export class EnVivoOrbeService implements OnDestroy {
     };
   }
 
+  /** Como `contexto()`, pero solo cuenta una escena que esté corriendo (la que puede dibujar ya). */
+  private contextoVisible(): ContextoGuia {
+    return { ...this.contexto(), hayEscena: this.activo() !== null };
+  }
+
   private puntos() {
     return puntosDelOrbe(this.estado.estado, this.estado.preferencias.ocultar, Date.now());
   }
@@ -265,23 +296,44 @@ export class EnVivoOrbeService implements OnDestroy {
 
   private ejecutar(ordenes: ReadonlyArray<OrdenOrbe>): void {
     for (const o of ordenes) {
-      if (o.tipo === 'soltar') this.soltar();
-      else this.senalar(o);
+      switch (o.tipo) {
+        case 'soltar':
+          this.soltar();
+          break;
+        case 'soltar-camara':
+          this.anfitriones.forEach((orbe) => orbe.soltarCamara());
+          break;
+        default:
+          this.senalar(o);
+      }
     }
     this.publicarRecorrido();
   }
 
   private senalar(o: OrdenSenalar): void {
     if (this.anfitriones.size === 0) {
-      this.marcarTarjeta(o.obj, o.texto, o.ms);
+      // Una propuesta (señal fija) no marca tarjetas sueltas: esa marca vence y la ronda la pisaría.
+      if (!o.fija) this.marcarTarjeta(o.obj, o.texto, o.ms);
       return;
     }
     const h = this.activo();
     const orbe = h ? this.anfitriones.get(h) : undefined;
-    if (!h || !orbe) return;
+    if (!h || !orbe) {
+      // Ninguna escena corriendo: la señal fija de una propuesta no se dibujó. La guía no la da por
+      // puesta y vuelve a señalarla (con su cámara) en el primer cuadro de cuando la escena vuelva.
+      if (o.fija) this.guia.propuestaNoVista(o.camara);
+      return;
+    }
     let lugar = o.obj ? h.lugarDe(o.obj) : null;
     if (!lugar && o.alterno) lugar = h.lugarDe(o.alterno);
-    orbe.senalar(o.obj, lugar, o.texto, o.ms, { camara: o.camara, titulo: o.titulo, tono: o.tono });
+    orbe.senalar(o.obj, lugar, o.texto, o.ms, {
+      camara: o.camara,
+      titulo: o.titulo,
+      tono: o.tono,
+      fija: o.fija,
+      zoom: o.fija ? ZOOM_PROPUESTA : undefined,
+      acercar: o.fija ? ACERCAR_PROPUESTA : undefined,
+    });
     if (o.destello && lugar) orbe.destello(lugar);
   }
 

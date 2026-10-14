@@ -3,19 +3,18 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { BehaviorSubject, combineLatest, Observable, Subscription } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 import type { MargenesEncuadre } from '../../../shared/escena-3d/escena-base';
-import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
 import { EnVivoInteraccionService, OpcionVista } from '../compartido/en-vivo-interaccion.service';
 import { EnVivoOrbeService } from '../escenas/opttia-guia.service';
 import { RespuestaParaEscena } from '../opttia/en-vivo-opttia.component';
 import { prefiereMenosMovimiento } from '../utilidades/movimiento';
-import { anchoFlotante$, margenesEscena } from './margenes-escena';
+import { anchoAcoplado$, anchoFlotante$, margenesEscena } from './margenes-escena';
 import { EventoAbierto } from '../eventos/en-vivo-eventos.component';
 import { TableroSolicitado } from '../ficha/ficha.modelos';
 import { EnVivoFichaService } from '../ficha/ficha.service';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { EtapaInfo, EventoEnVivo, PedidoEnVivo } from '../servicios/en-vivo.modelos';
 import { irAlTablero } from './navegacion';
-import { contarListos } from '../despachos/plan-despachos.reglas';
+import { EnVivoPropuestasService } from '../propuestas/en-vivo-propuestas.service';
 import { sesionEsJulsmind } from './sesion-katuq';
 
 /** Las vistas del selector del comercio: dos escenas 3D (las enchufa otro módulo) y el tablero. */
@@ -25,11 +24,14 @@ const OPCIONES: ReadonlyArray<OpcionVista> = [
   { id: 'pedidos', etiqueta: 'Pedidos' },
 ];
 
-/** Plan de despachos con Opttia (D-410): solo con la bandera del comercio y una sesión que pueda verlo. */
-const OPCION_DESPACHOS: OpcionVista = { id: 'despachos', etiqueta: 'Despachos' };
-
 /** Vistas que no son escena 3D: llenan el recuadro como lista, sin paneles flotantes ni narración encima. */
-const SIN_ESCENA = new Set(['pedidos', 'despachos']);
+const SIN_ESCENA = new Set(['pedidos']);
+
+/**
+ * Vistas con la tarjeta "Opttia propone" (D-421). La pestaña "Despachos" de D-410 ya no existe: el
+ * plan se propone y se aprueba aquí, en la escena. Quien tenía guardada esa vista cae en la primera.
+ */
+const CON_PROPUESTAS = new Set(['operacion', 'pais', 'pedidos']);
 
 /** Lo que la página lee del estado para pintar lo suyo (la lista flotante de eventos y la vista elegida). */
 interface VistaPagina {
@@ -42,8 +44,10 @@ interface VistaPagina {
   opttiaActivo: boolean;
   /** Katuq mirando a un comercio ajeno ("Bodega" en vez de "Tu bodega"). */
   soloLectura: boolean;
-  /** Espacio que la escena deja libre para los paneles flotantes (null = ninguno). */
+  /** Espacio que la escena deja libre para los paneles flotantes y la tarjeta acoplada (null = ninguno). */
   margenes: Partial<MargenesEncuadre> | null;
+  /** La tarjeta "Opttia propone" va en esta vista (D-421): Opttia prendido, sesión propia y el servidor dijo que aplica. */
+  conPropuestas: boolean;
 }
 
 /**
@@ -53,13 +57,14 @@ interface VistaPagina {
  * - encabezado: "Toda Katuq" (solo si una sesión de Julsmind mira un comercio con `?empresa=`) y
  *   "Ampliar" (quita los paneles flotantes y la lista vuelve a su columna);
  * - escena: el recuadro `.ev-escena-slot` con las vistas "Mi operación", "Mi país" (escenas 3D por
- *   enchufar) y "Pedidos" (el tablero por etapas), la narración de Opttia, la ficha y, flotando
+ *   enchufar) y "Pedidos" (el tablero por etapas), la narración de Opttia, la tarjeta "Opttia
+ *   propone" (D-421), la ficha y, flotando
  *   encima en >= 1181 px, "Lo próximo", "Tu flota" y la lista de eventos (si no, apilados debajo);
  * - abajo: atención ahora, Opttia, tiempos, logros y productos estrella.
  *
  * El héroe, las cifras, las etapas, las ventas por hora y la flota los pinta el propio shell
  * (`cuerpoPorDefecto`); la página solo le quita la lista de eventos de su columna
- * (`eventosFlotantes`) para no repetirla. Solo lectura.
+ * (`eventosFlotantes`) para no repetirla. La página no escribe: solo la tarjeta de Opttia, al aprobar.
  */
 @Component({
   selector: 'app-en-vivo-comercio-pagina',
@@ -94,24 +99,49 @@ export class EnVivoComercioPaginaComponent implements OnInit, OnDestroy {
     private readonly ficha: EnVivoFichaService,
     private readonly orbe: EnVivoOrbeService,
     private readonly host: ElementRef<HTMLElement>,
-    private readonly features: CompanyFeaturesService
+    private readonly propuestas: EnVivoPropuestasService
   ) {
     this.empresa$ = ruta.queryParamMap.pipe(
       map((p) => p.get('empresa') ?? undefined),
       distinctUntilChanged()
     );
-    this.vm$ = combineLatest([estado.estado$, estado.preferencias$, interaccion.opcionActiva$, this.ampliadoSubject, anchoFlotante$()]).pipe(
-      map(([e, prefs, opcion, ampliado, ancho]) => ({
-        opcion,
-        eventos: e.eventos,
-        pedidos: e.pedidos,
-        etapas: e.etapas,
-        ocultar: prefs.ocultar,
-        opttiaActivo: e.opttiaActivo !== false,
-        soloLectura: e.soloLectura,
-        // "Lo próximo" y "Tu flota" flotan a la izquierda solo sobre la operación; los eventos, a la derecha.
-        margenes: margenesEscena({ izquierda: opcion === 'operacion', derecha: true }, ancho && !ampliado && !SIN_ESCENA.has(opcion ?? '')),
-      }))
+    // La tarjeta de Opttia acoplada abajo (celular) le pide a la escena dejar su alto libre.
+    const acoplada$ = combineLatest([anchoAcoplado$(), propuestas.tarjetaVisible$]).pipe(
+      map(([angosta, visible]) => angosta && visible),
+      distinctUntilChanged()
+    );
+    this.vm$ = combineLatest([
+      estado.estado$,
+      estado.preferencias$,
+      interaccion.opcionActiva$,
+      this.ampliadoSubject,
+      anchoFlotante$(),
+      propuestas.disponible$,
+      acoplada$,
+      this.empresa$,
+    ]).pipe(
+      map(([e, prefs, opcion, ampliado, ancho, hayPropuestas, acoplada, empresa]): VistaPagina => {
+        const opttiaActivo = e.opttiaActivo !== false;
+        // Opttia propone (D-421): Opttia prendido y sesión propia (ni Katuq mirando otro comercio ni solo lectura).
+        const conPropuestas = hayPropuestas && opttiaActivo && !e.soloLectura && !empresa && CON_PROPUESTAS.has(opcion ?? '');
+        const conEscena = !SIN_ESCENA.has(opcion ?? '');
+        return {
+          opcion,
+          eventos: e.eventos,
+          pedidos: e.pedidos,
+          etapas: e.etapas,
+          ocultar: prefs.ocultar,
+          opttiaActivo,
+          soloLectura: e.soloLectura,
+          // "Lo próximo" y "Tu flota" flotan a la izquierda solo sobre la operación; los eventos, a la derecha.
+          margenes: margenesEscena(
+            { izquierda: opcion === 'operacion', derecha: true },
+            ancho && !ampliado && conEscena,
+            conPropuestas && acoplada && conEscena
+          ),
+          conPropuestas,
+        };
+      })
     );
     this.opttiaActivo$ = estado.estado$.pipe(map((e) => e.opttiaActivo !== false), distinctUntilChanged());
     this.conEscena$ = combineLatest([interaccion.opcionActiva$, this.sin3d$]).pipe(
@@ -122,31 +152,21 @@ export class EnVivoComercioPaginaComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Antes de que el shell inicie: así su encabezado ya trae el selector y la vista guardada vuelve sola.
     this.interaccion.fijarOpciones(OPCIONES);
-    // "Despachos" se suma cuando se sabe que la bandera está prendida y que la sesión no es de solo
-    // lectura (Katuq mirando un comercio) ni de un vendedor que solo ve lo suyo (D-349).
-    this.subs.add(
-      combineLatest([
-        this.features.isEnabled$('despachosOpttia'),
-        this.estado.estado$.pipe(map((e) => !e.soloLectura && !e.soloPropias), distinctUntilChanged()),
-        this.estado.estado$.pipe(map((e) => contarListos(e.pedidos)), distinctUntilChanged()),
-      ])
-        .pipe(
-          map(([bandera, puedeVer, listos]) => (bandera && puedeVer ? listos : -1)),
-          distinctUntilChanged()
-        )
-        .subscribe((listos) =>
-          this.interaccion.fijarOpciones(
-            listos < 0 ? OPCIONES : [...OPCIONES, { ...OPCION_DESPACHOS, insignia: listos > 0 ? String(listos) : null }]
-          )
-        )
-    );
+    // Opttia propone en la escena (D-421). Katuq mirando otro comercio (?empresa=) no pide propuestas;
+    // el servicio tampoco las pide con solo lectura, para el vendedor D-349 ni con Opttia apagado.
+    this.subs.add(this.empresa$.subscribe((empresa) => this.propuestas.fijarAjena(!!empresa)));
+    this.propuestas.iniciar();
+    // El botón del orbe es el que vuelve a abrir la tarjeta; solo existe con una escena 3D con orbe.
+    // Sin él (vista "Pedidos" o sin WebGL) la tarjeta no se retira sola.
+    this.subs.add(this.orbe.hayOrbe$.pipe(distinctUntilChanged()).subscribe((hay) => this.propuestas.fijarBotonOrbe(hay)));
   }
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
+    this.propuestas.detener();
   }
 
-  /** Pedidos y Despachos llenan el recuadro como lista (sin escena 3D). */
+  /** "Pedidos" llena el recuadro como lista (sin escena 3D). */
   sinEscena(opcion: string | null | undefined): boolean {
     return SIN_ESCENA.has(opcion ?? '');
   }

@@ -22,6 +22,8 @@ export interface Letrero {
 export class KitEscena {
   readonly mats = new Map<string, ThreeNS.MeshLambertMaterial>();
   readonly vivos = new Set<ThreeNS.MeshBasicMaterial>();
+  /** Materiales translúcidos compartidos por token y opacidad (cajas atenuadas, copias fantasma del ensayo). */
+  readonly tenues = new Map<string, ThreeNS.MeshLambertMaterial>();
   readonly letreros: Letrero[] = [];
   tokens: Tokens;
 
@@ -42,6 +44,10 @@ export class KitEscena {
       const t = m.userData['token'] as string | undefined;
       if (t) m.color.set(this.tokens[t] ?? '#ff00ff');
     });
+    this.tenues.forEach((m) => {
+      const t = m.userData['token'] as string | undefined;
+      if (t) m.color.set(this.tokens[t] ?? '#ff00ff');
+    });
     this.letreros.forEach((l) => l.pintar());
   }
 
@@ -54,6 +60,22 @@ export class KitEscena {
     if (!m) {
       m = new this.T.MeshLambertMaterial({ color: this.tokens[token] ?? '#ff00ff' });
       this.mats.set(token, m);
+    }
+    return m;
+  }
+
+  /**
+   * Material con luz y translúcido, UNO por token y opacidad (se comparte entre todas las cajas que lo
+   * usen y se re-tiñe con el tema): cajas atenuadas y copias fantasma del ensayo de Opttia. No se
+   * clona por caja.
+   */
+  mtTenue(token: string, opacidad: number): ThreeNS.MeshLambertMaterial {
+    const k = `${token}|${opacidad}`;
+    let m = this.tenues.get(k);
+    if (!m) {
+      m = new this.T.MeshLambertMaterial({ color: this.tokens[token] ?? '#ff00ff', transparent: true, opacity: opacidad, depthWrite: false });
+      m.userData['token'] = token;
+      this.tenues.set(k, m);
     }
     return m;
   }

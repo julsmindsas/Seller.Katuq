@@ -7,13 +7,14 @@ import { EnVivoFueraDelPlanComponent } from './fuera-del-plan/fuera-del-plan.com
 import { EnVivoGrupoDespachoComponent } from './grupo-despacho/grupo-despacho.component';
 
 /**
- * Vista "Despachos" de En vivo (D-410): el plan de despachos de Opttia para ajustar y aprobar.
- * Módulo aparte para que el resto de En vivo siga sin escribir nada: esta es la única vista que
- * llama a una ruta que escribe, y solo cuando alguien toca Aprobar.
+ * Piezas del plan de despachos de Opttia (D-410): la tarjeta de un grupo (`grupo-despacho`) y lo
+ * que no entra al plan (`fuera-del-plan`). Desde D-421 las usa la hoja "Ajustar" de la tarjeta de
+ * Opttia en la escena (`propuestas/`), que es la que aprueba. La vista completa "Despachos" ya no
+ * está en el selector de En vivo; se borra cuando la fase 1 de D-421 esté verificada en producción.
  */
 @NgModule({
   imports: [CommonModule, FormsModule, EnVivoCompartidoModule],
   declarations: [EnVivoDespachosComponent, EnVivoGrupoDespachoComponent, EnVivoFueraDelPlanComponent],
-  exports: [EnVivoDespachosComponent],
+  exports: [EnVivoDespachosComponent, EnVivoGrupoDespachoComponent, EnVivoFueraDelPlanComponent],
 })
 export class EnVivoDespachosModule {}

@@ -9607,3 +9607,75 @@ commits y el push no despliega ni activa checkout.
 **No verificado:** crear un cliente real en el navegador con la cuenta de ALMACEN BOMBAS.
 
 **Queda abierto:** si ALMACEN BOMBAS empieza a usar el campo como identificador para enviar mensajes por WhatsApp, un nombre con espacios no sirve como número ni como @usuario: hoy es solo una etiqueta.
+
+## D-421 (2026-10-13) — Opttia propone en la escena: despachos y dos operaciones más dentro de la animación de En vivo (openspec/changes/opttia-propone-en-la-escena) — APROBADA 13-oct ("dale, arranca con la fase 1"), fase 1 en implementación
+
+**Disparador.** Daniel (13-oct), al ver la pestaña de D-410:
+- "quiero tener un apartado aquí mismo donde Opttia tenga un poco más de autonomía, como organizar despachos automáticos ... y que el usuario solo apruebe";
+- "era ahí mismo en la animación que se organizara automáticamente con Opttia, no otra pestaña";
+- "no solo pedí despachos, pedí también otras operaciones que demuestren el poder de Opttia".
+
+Aprobó la propuesta y el boceto (https://claude.ai/artifact/XVjArkR2s6cbpVXym7G6e2) con "dale, arranca con la fase 1".
+
+**Decisión.**
+- **Opttia propone dentro de la escena y la persona aprueba ahí mismo.**
+  - El código detecta y arma la propuesta: ids, cifras, efectos y huella.
+  - Opttia solo redacta.
+  - La persona aprueba con dos toques en el mismo botón.
+  - La escena ensaya con copias fantasma y anima el resultado solo con los eventos reales.
+- **Motor de propuestas:**
+  - fuentes intercambiables, una por operación y sin `if` por tipo;
+  - una ruta nueva de solo lectura, `GET /v1/opttia/propuestas`;
+  - la empresa sale de la sesión;
+  - responde siempre 200, y `{disponible:false}` si no aplica;
+  - sin colecciones nuevas.
+- **Seis operaciones en cuatro fases.** Cada operación que escriba entra en su propio cambio, con su spec, huella, id determinista, bandera y prueba de contrato del write-set.
+- **Excepción acotada a "sin cache extra":**
+  - caché en memoria por empresa y fuente (60 s para despachos y 5 min para producción);
+  - una sola llamada en vuelo, como `services/enVivo/ia.js`;
+  - se invalida al aprobar.
+
+  La razón: cada plan son unas 450 lecturas, y varias pantallas del mismo comercio lo multiplicarían.
+
+**Alcance de la fase 1.**
+- **La pestaña:** "Despachos" de En vivo desaparece en el mismo despliegue que trae la tarjeta.
+- **La tarjeta:** vive en Mi operación y también en Mi país y Pedidos.
+  - una tarjeta a la vez, con la cola ordenada por urgencia;
+  - un contador en el botón del orbe;
+  - el ensayo en la escena;
+  - "Ajustar" en una hoja lateral, que reutiliza las tarjetas de grupo y de "No entra al plan";
+  - TV y "Repetir el día" sin botones.
+- **Tres operaciones:**
+  1. **Despachar (se aprueba):** un grupo del plan de D-410 por tarjeta. Aprobar es `POST /v1/logistica/plan/aprobar` con canal `escena`.
+  2. **Arrancar producción (sombra):** pedidos sin producir que se entregan hoy o mañana. Dice "Así lo haría Opttia · pronto podrás aprobarlo", sin botón. La ve solo la familia Administrador y solo en comercios que producen.
+  3. **Cobrar pedidos sin pago (señal):** sale del radar del canal en vivo, sin backend, con "Abrir pedido".
+- **Backend:**
+  - la ruta nueva, con las fuentes de despachos y de producción;
+  - en D-410, el canal `escena` y el interruptor de Opttia (D-386) en `/explicar`.
+
+  No hay escrituras nuevas: despachar escribe lo mismo que D-410.
+- **Bandera:** en la fase 1, "Opttia propone" usa `despachosOpttia`, más el interruptor general `OPTTIA_PROPUESTAS_HABILITADO` (solo `"false"` apaga). La bandera por operación, con modos apagado, sombra y encendido, llega en la fase 2.
+- **Prueba:** con pedidos de prueba de FLORECER, antes de publicar. La bandera ya está encendida en OH MY STORE (pedidos reales a Cereza) y en ALMARA FELICIDAD.
+
+**Reemplaza la pestaña de D-410.** La vista "Despachos" de D-410 deja de existir: el plan, la aprobación y el ajuste pasan a la escena.
+- El backend de D-410 no cambia de comportamiento: plan, explicar, aprobar, canje por Telegram, huella, idempotencia y bandera.
+- La pantalla clásica de Despachos no se toca.
+- El componente de la vista se borra cuando la fase 1 esté verificada en producción.
+
+**Seguridad de esta función.**
+- La empresa sale del token.
+- El servidor decide quién ve y quién aprueba.
+- La sombra solo la ve la familia Administrador.
+- Leer las propuestas no escribe nada.
+- La aprobación lleva el canal `escena`.
+
+El detalle técnico vive en el cambio privado del backend: `opttia-despachos-con-aprobacion`, sección "D-421 fase 1".
+
+**Fases siguientes.**
+- **Fase 2:** aprobar la producción, en su propio cambio porque `orders` es un módulo sensible, y el cobro con WhatsApp.
+- **Fase 3:** el conteo cíclico y la orden de compra.
+- **Fase 4:** el reenvío a la integración logística y las propuestas por MCP y Telegram.
+
+**Numeración.** La propuesta la llamaba D-418 y la primera versión del registro D-419, pero otras sesiones publicaron D-418 (ticket 1206), D-419 (facturación POS) y D-420 (mapa de mensajeros) el mismo día. Queda como D-421, y así lo dicen el código y el cambio OpenSpec.
+
+**Estado (13-oct).** La spec está escrita y validada con `openspec validate --strict`. La fase 1 está en implementación, sin commit ni despliegue.

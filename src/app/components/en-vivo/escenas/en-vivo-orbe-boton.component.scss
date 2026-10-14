@@ -12,6 +12,7 @@
 
 .orb {
   @include ev-foco;
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -20,6 +21,7 @@
   font: inherit;
   font-size: ev-fs(12);
   font-weight: 800;
+  letter-spacing: normal;
   white-space: nowrap;
   color: var(--ev-pack);
   cursor: pointer;
@@ -33,18 +35,60 @@
     --ev-icono: 14px;
   }
 
+  span {
+    color: inherit;
+    font-size: inherit;
+  }
+
   &:hover {
     background: var(--ev-pack-soft);
+  }
+
+  &:focus-visible {
+    outline: 3px solid #7c5cff !important;
+    outline-offset: 2px;
   }
 
   &.is-on {
     color: var(--ev-on-accent);
     background: var(--ev-pack);
   }
+
+  // Opttia tiene propuestas (D-421): el halo late dos veces, una sola vez, al aparecer.
+  &.is-ideas {
+    background: var(--ev-pack-soft);
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border: 2px solid var(--ev-pack);
+      border-radius: 13px;
+      opacity: 0;
+      pointer-events: none;
+      animation: eve-orb-halo 0.9s ease-out 2;
+    }
+  }
+}
+
+@keyframes eve-orb-halo {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.18, 1.5);
+  }
 }
 
 @include ev-sin-movimiento {
   .orb {
     transition: none;
+  }
+
+  .orb.is-ideas::after {
+    animation: none;
   }
 }

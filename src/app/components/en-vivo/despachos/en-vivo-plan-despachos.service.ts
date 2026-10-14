@@ -7,6 +7,9 @@ import { ExplicacionPlan, GrupoParaAprobar, RespuestaAprobacion, RespuestaPlan }
 
 const RUTA = '/v1/logistica/plan';
 
+/** Desde dónde se aprueba: la vista Despachos (`en-vivo`) o la tarjeta de Opttia en la escena (`escena`). */
+export type CanalAprobacion = 'en-vivo' | 'escena';
+
 /** Más que el corte del proxy (60 s): si nada llega antes, la vista lo trata como "sin respuesta" (TimeoutError). */
 const ESPERA_APROBAR_MS = 75_000;
 
@@ -29,7 +32,13 @@ export class EnVivoPlanDespachosService extends BaseService {
     return this.postSinLoader(`${RUTA}/explicar`, { huella });
   }
 
-  aprobar(grupos: GrupoParaAprobar[]): Observable<RespuestaAprobacion> {
-    return this.postSinLoader<RespuestaAprobacion>(`${RUTA}/aprobar`, { grupos }).pipe(timeout(ESPERA_APROBAR_MS));
+  /**
+   * `canal` dice desde dónde se aprobó (D-421): la tarjeta de Opttia en la escena manda `escena`;
+   * sin canal (la vista Despachos) el servidor anota `en-vivo`, como siempre. El servidor solo
+   * acepta canales conocidos.
+   */
+  aprobar(grupos: GrupoParaAprobar[], canal?: CanalAprobacion): Observable<RespuestaAprobacion> {
+    const cuerpo = canal ? { grupos, canal } : { grupos };
+    return this.postSinLoader<RespuestaAprobacion>(`${RUTA}/aprobar`, cuerpo).pipe(timeout(ESPERA_APROBAR_MS));
   }
 }

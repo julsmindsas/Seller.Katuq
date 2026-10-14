@@ -1,3 +1,5 @@
+import type { PropuestaEnEscena } from '../propuestas/propuestas.modelos';
+import type { PropuestaGuia } from './opttia-guia';
 import { armarAtencion, conMayuscula } from '../comercio/utilidades/atencion';
 import { enmascarar, lineasDelResumen, mascaraDe, vendidoConOpttia } from '../opttia/opttia-reglas';
 import { comercioDelMomento, empresaDeEvento } from '../plataforma/utilidades/momento';
@@ -252,5 +254,30 @@ export function entregaDeEvento(ev: EventoEnVivo, vista: 'comercio' | 'katuq', o
     obj: { tipo: 'pedido', id: ev.pedidoId },
     alterno: ESTACION_LLEGADA,
     texto: `¡Este lo armé yo por WhatsApp!${ocultar || !monto ? '' : ` ${dinero(monto)}`}`,
+  };
+}
+
+// ── Opttia propone (D-421) ──────────────────────────────────────────────────
+
+/** Lo que dice el botón del orbe con propuestas: "Opttia tiene 3 ideas · 1 urgente". */
+export function textoIdeas(c: { ideas: number; urgentes: number }): string {
+  const ideas = `Opttia tiene ${c.ideas} ${c.ideas === 1 ? 'idea' : 'ideas'}`;
+  return c.urgentes > 0 ? `${ideas} · ${c.urgentes} ${c.urgentes === 1 ? 'urgente' : 'urgentes'}` : ideas;
+}
+
+/**
+ * Qué señala el orbe con una propuesta de la tarjeta: la primera caja de la propuesta (la del primer
+ * grupo) o, si no hay pedidos, su estación; la estación queda de respaldo si la caja no se ve. Dice
+ * la etiqueta de la propuesta ("Carlos · 4") con el tono de Opttia. Los textos los arma el código.
+ */
+export function propuestaParaOrbe(p: Pick<PropuestaEnEscena, 'pedidos' | 'grupos' | 'estacion' | 'etiqueta'>): PropuestaGuia {
+  const primero = (p.grupos ?? []).find((g) => g.pedidos?.length)?.pedidos[0] ?? (p.pedidos ?? [])[0] ?? null;
+  const estacion: ObjetivoOrbe | null = p.estacion ? { tipo: 'estacion', id: p.estacion } : null;
+  return {
+    obj: primero ? { tipo: 'pedido', id: primero } : estacion,
+    alterno: estacion,
+    texto: textoParaBurbuja(String(p.etiqueta ?? '').trim() || 'Tengo una idea para ti.'),
+    titulo: 'Opttia propone',
+    tono: 'pack',
   };
 }

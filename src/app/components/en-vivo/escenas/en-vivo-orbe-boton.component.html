@@ -4,9 +4,10 @@
   class="orb"
   [hidden]="!vm.visible"
   [class.is-on]="vm.enRecorrido"
-  [attr.aria-pressed]="vm.enRecorrido"
+  [class.is-ideas]="vm.conIdeas"
+  [attr.aria-pressed]="vm.conIdeas ? null : vm.enRecorrido"
   [attr.aria-label]="vm.aria"
-  (click)="alternar()"
+  (click)="alternar(vm)"
 >
   <app-en-vivo-icono nombre="ia"></app-en-vivo-icono>
   <span>{{ vm.texto }}</span>

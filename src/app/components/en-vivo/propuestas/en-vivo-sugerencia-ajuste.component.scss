@@ -1,0 +1,326 @@
+@import '../en-vivo-tema';
+
+// Hoja "Ajustar" (D-421): el mismo lugar que la ficha (368 px al costado de la escena; en el
+// celular, hoja desde abajo con velo). Plana, radio 16, sin gradientes. Ningún nombre de clase
+// lleva "p-" y todo texto lleva color y tamaño propios.
+
+@include ev-tonos;
+
+// El host no ocupa lugar: la hoja se ancla a la esquina del recuadro de la escena.
+:host {
+  display: contents;
+}
+
+@mixin ev-sug-foco {
+  &:focus-visible {
+    outline: 3px solid var(--ev-accent-2, #7c5cff) !important;
+    outline-offset: 2px;
+  }
+}
+
+.ev-sug-velo {
+  display: none;
+}
+
+.ev-sug-hoja {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 6;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: min(368px, calc(100% - 24px));
+  overflow: hidden;
+  color: var(--ev-ink);
+  letter-spacing: normal;
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-line);
+  border-radius: 16px;
+  box-shadow: var(--ev-sh-pop);
+  animation: ev-sug-hoja-entra 0.32s ease-out;
+}
+
+.ev-sug-hoja__cabeza {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px 10px 14px;
+  border-bottom: 1px solid var(--ev-line-soft);
+}
+
+.ev-sug-hoja__tit {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ev-sug-hoja__eyebrow {
+  @include ev-etiqueta;
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ev-sug-hoja__titulo {
+  @include ev-sug-foco;
+  margin: 2px 0 0;
+  overflow: hidden;
+  font-size: ev-fs(15);
+  font-weight: 800;
+  letter-spacing: normal;
+  color: var(--ev-ink);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border-radius: 6px;
+}
+
+.ev-sug-hoja__cerrar {
+  @include ev-sug-foco;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--ev-ink-2);
+  cursor: pointer;
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-chip-line);
+  border-radius: 11px;
+
+  app-en-vivo-icono {
+    --ev-icono: 16px;
+  }
+
+  &:hover {
+    color: var(--ev-accent);
+    background: var(--ev-accent-soft);
+  }
+}
+
+.ev-sug-hoja__cuerpo {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 12px 14px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.ev-sug-hoja__aviso {
+  margin: 0;
+  padding: 7px 10px;
+  letter-spacing: normal;
+  background: var(--tone-soft);
+  border-radius: 11px;
+}
+
+.ev-sug-hoja__aviso-texto {
+  font-size: ev-fs(12);
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--tone);
+}
+
+.ev-sug-hoja__confirmar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ev-sug-hoja__btn {
+  @include ev-sug-foco;
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 14px;
+  font: inherit;
+  letter-spacing: normal;
+  text-align: center;
+  cursor: pointer;
+  color: var(--ev-surface);
+  background: var(--ev-ink);
+  border: 1px solid var(--ev-ink);
+  border-radius: 11px;
+}
+
+.ev-sug-hoja__btn--sec {
+  flex: 0 0 auto;
+  color: var(--ev-ink);
+  background: var(--ev-surface);
+  border-color: var(--ev-line);
+
+  &:hover {
+    background: var(--ev-tile);
+  }
+}
+
+.ev-sug-hoja__btn-texto {
+  font-size: ev-fs(13);
+  font-weight: 800;
+  line-height: 1.25;
+  color: inherit;
+}
+
+.ev-sug-hoja__sacados {
+  display: grid;
+  gap: 8px;
+}
+
+.ev-sug-hoja__subtitulo {
+  @include ev-etiqueta;
+  margin: 0;
+}
+
+.ev-sug-hoja__lista {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ev-sug-hoja__fila {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--ev-tile);
+  border-radius: 11px;
+}
+
+.ev-sug-hoja__pedido {
+  @include ev-sug-foco;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  padding: 2px 4px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+}
+
+.ev-sug-hoja__nro {
+  flex: none;
+  font-size: ev-fs(12.5);
+  font-weight: 800;
+  color: var(--ev-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.ev-sug-hoja__zona {
+  overflow: hidden;
+  font-size: ev-fs(12);
+  font-weight: 600;
+  color: var(--ev-ink-2);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ev-sug-hoja__select {
+  @include ev-sug-foco;
+  flex: none;
+  width: 110px;
+  min-height: 30px;
+  padding: 4px 6px;
+  font: inherit;
+  font-size: ev-fs(12);
+  color: var(--ev-ink);
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-line);
+  border-radius: 11px;
+}
+
+.ev-sug-hoja__pie {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 14px;
+  border-top: 1px solid var(--ev-line-soft);
+}
+
+// En el celular la hoja sube desde abajo, con velo (como la ficha).
+@media (max-width: 620px) {
+  .ev-sug-velo {
+    position: fixed;
+    inset: 0;
+    z-index: 49;
+    display: block;
+    background: rgba(33, 31, 58, 0.35);
+  }
+
+  .ev-sug-hoja {
+    position: fixed;
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    width: auto;
+    max-height: 82vh;
+    border-radius: 20px 20px 0 0;
+    animation-name: ev-sug-hoja-sube;
+  }
+
+  .ev-sug-hoja__cabeza {
+    position: relative;
+    padding-top: 16px;
+  }
+
+  // Asa de la hoja.
+  .ev-sug-hoja__cabeza::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    width: 36px;
+    height: 4px;
+    background: var(--ev-line);
+    border-radius: 4px;
+    transform: translateX(-50%);
+  }
+
+  .ev-sug-hoja__pie {
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@keyframes ev-sug-hoja-entra {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ev-sug-hoja-sube {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@include ev-sin-movimiento {
+  .ev-sug-hoja {
+    animation: none;
+  }
+}
