@@ -74,6 +74,21 @@ export interface CotizacionMetrics {
   pipelineActivo: number;
   tasaConversion: number;
   borradores: number;
+  /** Ticket 1211: enviadas vigentes (no incluye aceptadas ni enviadas vencidas). */
+  pipelineAbierto?: number;
+  pipelineAbiertoCount?: number;
+  /** Ticket 1211: pipeline abierto × win rate por cantidad. */
+  pipelinePonderado?: number;
+  /** Ticket 1211: aceptadas que todavía no tienen pedido. */
+  aceptadasSinConvertir?: { cantidad: number; valor: number };
+  /** Ticket 1212: convertidas ÷ cerradas (convertidas + rechazadas + vencidas), en %. */
+  winRate?: number;
+  /** Ticket 1212: $ convertido ÷ $ cerrado, en %. */
+  winRateValor?: number;
+  convertidas?: number;
+  cerradas?: number;
+  /** Ticket 1200: true si las cifras vienen con búsqueda, pedido o comercial aplicados. */
+  filtrado?: boolean;
   total?: number;
   porEstado?: { [estado: string]: number };
   /** Ticket 1104: comerciales con cotizaciones (para el filtro del listado). */
@@ -102,6 +117,8 @@ export interface CotizacionListFilter {
   pedido?: string;
   /** Ticket 1104: correo del comercial (vendedor.email). */
   vendedor?: string;
+  /** Ticket 1211: solo aceptadas sin pedido asociado. */
+  sinConvertir?: boolean;
   page?: number;
   limit?: number;
 }

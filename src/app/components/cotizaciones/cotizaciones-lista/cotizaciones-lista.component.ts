@@ -34,7 +34,8 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   exporting = false;
   error = "";
 
-  // KPIs / métricas (globales por empresa, independientes del filtro)
+  // KPIs / métricas: respetan búsqueda, pedido y comercial (tickets 1200/1211/1212).
+  // El estado no las filtra: los chips cuentan cada estado con los demás filtros.
   metrics: CotizacionMetrics | null = null;
 
   // Filtros
@@ -47,6 +48,10 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   filtroPedido = "";
   /** Ticket 1104: filtrar por el comercial que hizo la cotización. */
   filtroVendedor = "";
+  /** Ticket 1211: la tabla muestra solo las aceptadas sin pedido (clic en la tarjeta). */
+  filtroSinConvertir = false;
+  /** Comerciales de toda la empresa: el filtro no se encoge al usarlo. */
+  vendedores: { email: string; nombre: string; total: number }[] = [];
 
   // Paginación (server-side)
   page = 1;
@@ -58,6 +63,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   sortKey = "fechaCreacion";
   sortDir: 1 | -1 = -1;
 
+  private metricsSeq = 0;
   private searchSubject = new Subject<string>();
   private pedidoSubject = new Subject<string>();
   private subs: Subscription[] = [];
@@ -83,6 +89,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
           this.q = value;
           this.page = 1;
           this.cargar();
+          this.cargarMetrics();
         })
     );
     this.subs.push(
@@ -92,6 +99,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
           this.filtroPedido = value;
           this.page = 1;
           this.cargar();
+          this.cargarMetrics();
         })
     );
     this.cargar();
@@ -103,14 +111,23 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   }
 
   cargarMetrics(): void {
-    const sub = this.service.metrics().subscribe({
-      next: (res) => {
-        this.metrics = (res && res.data) || null;
-      },
-      error: () => {
-        this.metrics = null;
-      },
-    });
+    const seq = ++this.metricsSeq;
+    const sub = this.service
+      .metrics({
+        q: this.q || undefined,
+        pedido: this.filtroPedido || undefined,
+        vendedor: this.filtroVendedor || undefined,
+      })
+      .subscribe({
+        next: (res) => {
+          if (seq !== this.metricsSeq) return; // llegó tarde: ya hay un filtro más nuevo
+          this.metrics = (res && res.data) || null;
+          if (this.metrics && this.metrics.vendedores) this.vendedores = this.metrics.vendedores;
+        },
+        error: () => {
+          if (seq === this.metricsSeq) this.metrics = null;
+        },
+      });
     this.subs.push(sub);
   }
 
@@ -130,6 +147,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
         q: this.q || undefined,
         pedido: this.filtroPedido || undefined,
         vendedor: this.filtroVendedor || undefined,
+        sinConvertir: this.filtroSinConvertir || undefined,
         page: this.page,
         limit: this.limit,
       })
@@ -160,12 +178,29 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     this.filtroVendedor = value || "";
     this.page = 1;
     this.cargar();
+    this.cargarMetrics();
   }
 
   setEstado(value: EstadoCotizacion | ""): void {
     this.filtroEstado = value;
+    this.filtroSinConvertir = false;
     this.page = 1;
     this.cargar();
+  }
+
+  /** Ticket 1211: clic en "Aceptadas sin convertir" filtra la tabla con esas cotizaciones. */
+  verAceptadasSinConvertir(): void {
+    const activo = this.filtroSinConvertir;
+    this.filtroEstado = activo ? "" : "aceptada";
+    this.filtroSinConvertir = !activo;
+    this.page = 1;
+    this.cargar();
+  }
+
+  /** Porcentaje con coma decimal (34,07 %). */
+  pct(n: number | undefined | null): string {
+    if (n === undefined || n === null) return "—";
+    return n.toLocaleString("es-CO", { maximumFractionDigits: 2 }) + "%";
   }
 
   onSearch(value: string): void {
@@ -263,6 +298,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
         q: this.q || undefined,
         pedido: this.filtroPedido || undefined,
         vendedor: this.filtroVendedor || undefined,
+        sinConvertir: this.filtroSinConvertir || undefined,
         page: 1,
         limit: 5000,
       })

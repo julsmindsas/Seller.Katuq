@@ -121,8 +121,17 @@
 // ===================== KPIs =====================
 .kpis-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 14px;
+}
+
+// Tickets 1200/1211/1212: aviso de que las cifras vienen filtradas.
+.kpis-filtro {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: var(--accent);
+  margin: 0 0 8px 2px;
 }
 
 .kpi-card {
@@ -198,6 +207,20 @@
     .kpi-bar { background: var(--orange); }
     .kpi-value { color: var(--orange); }
     .kpi-icon { background: var(--orange-bg); color: var(--orange); }
+  }
+  // Ticket 1211: tarjeta que filtra la tabla (es un botón).
+  &.kpi-aceptadas {
+    width: 100%;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    .kpi-main, .kpi-label, .kpi-value, .kpi-sub { display: block; }
+    .kpi-bar { background: var(--accent); }
+    .kpi-value { color: var(--accent); }
+    .kpi-icon { background: var(--accent-bg); color: var(--accent); }
+    &:hover { border-color: var(--accent); }
+    &.activa { border-color: var(--accent); background: var(--accent-bg); }
+    &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
   }
 }
 
@@ -700,8 +723,11 @@
 }
 
 // ===================== Responsivo =====================
+@media (max-width: 1360px) {
+  .kpis-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 @media (max-width: 1200px) {
-  .kpis-row { grid-template-columns: repeat(2, 1fr); }
+  .kpis-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 900px) {

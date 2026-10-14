@@ -21,7 +21,8 @@
     </ol>
   </div>
 
-  <!-- KPIs -->
+  <!-- KPIs: respetan búsqueda, pedido y comercial (tickets 1200, 1211, 1212) -->
+  <div class="kpis-filtro" *ngIf="metrics?.filtrado">Cifras con los filtros de búsqueda aplicados</div>
   <div class="kpis-row">
     <div class="kpi-card kpi-cotizado">
       <span class="kpi-bar"></span>
@@ -38,21 +39,47 @@
     <div class="kpi-card kpi-pipeline">
       <span class="kpi-bar"></span>
       <div class="kpi-main">
-        <div class="kpi-label">Pipeline activo</div>
-        <div class="kpi-value">{{ money(metrics?.pipelineActivo) }}</div>
-        <div class="kpi-sub">enviadas + aceptadas</div>
+        <div class="kpi-label">Pipeline abierto</div>
+        <div class="kpi-value">{{ money(metrics?.pipelineAbierto ?? metrics?.pipelineActivo) }}</div>
+        <div class="kpi-sub" title="Proyección: pipeline abierto × tasa de conversión">
+          {{ metrics?.pipelineAbiertoCount ?? 0 }} enviadas vigentes · ponderado {{ money(metrics?.pipelinePonderado) }}
+        </div>
       </div>
       <span class="kpi-icon">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
       </span>
     </div>
 
+    <button
+      type="button"
+      class="kpi-card kpi-aceptadas"
+      [class.activa]="filtroSinConvertir"
+      [attr.aria-pressed]="filtroSinConvertir"
+      title="Ver en la tabla las aceptadas que todavía no tienen pedido"
+      (click)="verAceptadasSinConvertir()"
+    >
+      <span class="kpi-bar"></span>
+      <span class="kpi-main">
+        <span class="kpi-label">Aceptadas sin convertir</span>
+        <span class="kpi-value">{{ metrics?.aceptadasSinConvertir?.cantidad ?? '—' }}</span>
+        <span class="kpi-sub">{{ money(metrics?.aceptadasSinConvertir?.valor) }} por pasar a pedido</span>
+      </span>
+      <span class="kpi-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      </span>
+    </button>
+
     <div class="kpi-card kpi-conversion">
       <span class="kpi-bar"></span>
       <div class="kpi-main">
         <div class="kpi-label">Tasa de conversión</div>
-        <div class="kpi-value">{{ metrics ? (metrics.tasaConversion + '%') : '—' }}</div>
-        <div class="kpi-sub">cotización → pedido</div>
+        <div class="kpi-value">{{ metrics ? pct(metrics.winRate ?? metrics.tasaConversion) : '—' }}</div>
+        <div
+          class="kpi-sub"
+          title="Convertidas ÷ cerradas (convertidas + rechazadas + vencidas). Borradores, enviadas vigentes y aceptadas sin convertir todavía están abiertas y no cuentan."
+        >
+          {{ metrics?.convertidas ?? 0 }} de {{ metrics?.cerradas ?? 0 }} cerradas · {{ pct(metrics?.winRateValor) }} en valor
+        </div>
       </div>
       <span class="kpi-icon">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
@@ -118,13 +145,13 @@
         </div>
       </div>
       <!-- Ticket 1104: filtrar por el comercial que hizo la cotización -->
-      <div class="filtro-field" *ngIf="(metrics?.vendedores?.length || 0) > 1">
+      <div class="filtro-field" *ngIf="vendedores.length > 1">
         <div class="filtro-label">Comercial</div>
         <div class="filtro-input">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA0B2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
           <select [value]="filtroVendedor" (change)="setVendedor($any($event.target).value)">
             <option value="">Todos</option>
-            <option *ngFor="let v of metrics?.vendedores" [value]="v.email">{{ v.nombre }} ({{ v.total }})</option>
+            <option *ngFor="let v of vendedores" [value]="v.email">{{ v.nombre }} ({{ v.total }})</option>
           </select>
         </div>
       </div>
@@ -135,7 +162,7 @@
             *ngFor="let chip of chips"
             type="button"
             class="chip"
-            [class.active]="filtroEstado === chip.value"
+            [class.active]="filtroEstado === chip.value && !filtroSinConvertir"
             (click)="setEstado(chip.value)"
           >
             {{ chip.label }}<span class="chip-count" *ngIf="chipCount(chip.value) !== null"> ({{ chipCount(chip.value) }})</span>

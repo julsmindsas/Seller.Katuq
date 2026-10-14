@@ -39,6 +39,9 @@ export class CotizacionesService extends BaseService {
     if (filter.vendedor) {
       url += `&vendedor=${encodeURIComponent(filter.vendedor)}`;
     }
+    if (filter.sinConvertir) {
+      url += "&sinConvertir=1";
+    }
     return this.get<CotizacionPaginatedResponse>(url);
   }
 
@@ -68,9 +71,15 @@ export class CotizacionesService extends BaseService {
     return this.delete<{ success: boolean; message?: string }>(`/v1/cotizaciones/delete?id=${encodeURIComponent(id)}`);
   }
 
-  /** KPIs del listado (cotizado mes, pipeline, conversión, borradores). */
-  metrics(): Observable<CotizacionMetricsResponse> {
-    return this.get<CotizacionMetricsResponse>("/v1/cotizaciones/metrics");
+  /**
+   * KPIs del listado (cotizado mes, pipeline, conversión, borradores). Tickets
+   * 1200/1211/1212: respetan la búsqueda, el pedido y el comercial del listado.
+   */
+  metrics(filter: Pick<CotizacionListFilter, "q" | "pedido" | "vendedor"> = {}): Observable<CotizacionMetricsResponse> {
+    const params = (["q", "pedido", "vendedor"] as const)
+      .filter((k) => filter[k])
+      .map((k) => `${k}=${encodeURIComponent(filter[k] as string)}`);
+    return this.get<CotizacionMetricsResponse>("/v1/cotizaciones/metrics" + (params.length ? "?" + params.join("&") : ""));
   }
 
   /** Términos base por empresa (default si no hay config). */
