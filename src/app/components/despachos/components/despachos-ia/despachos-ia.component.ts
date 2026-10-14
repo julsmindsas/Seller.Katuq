@@ -1,6 +1,7 @@
 import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { finalize, takeUntil } from 'rxjs/operators';
+import { LoaderService } from '../../../../shared/services/loader.service';
 import { LogisticaServiceV2 } from '../../../../shared/services/despachos/logistica.service.v2';
 import { OpttiaChatService } from '../../../../shared/services/opttia-chat.service';
 import { AvisoDespacho, DispatchInsights, ExplicacionDespachos, FilaCola, TramoCola } from './despachos-ia.modelos';
@@ -49,7 +50,11 @@ export class DespachosIaComponent implements OnInit, OnDestroy {
     '¿Qué transportador me cumple mejor?',
   ];
 
-  constructor(private logistica: LogisticaServiceV2, private opttia: OpttiaChatService) {}
+  constructor(
+    private logistica: LogisticaServiceV2,
+    private opttia: OpttiaChatService,
+    private loader: LoaderService
+  ) {}
 
   ngOnInit(): void {
     this.cargar();
@@ -63,7 +68,9 @@ export class DespachosIaComponent implements OnInit, OnDestroy {
   cargar(): void {
     this.cargando = true;
     this.error = null;
-    this.logistica.getDispatchInsights().pipe(takeUntil(this.destroy$)).subscribe({
+    // El panel muestra su propia carga: sin el velo de pantalla completa encima
+    this.loader.suppressGlobalLoader();
+    this.logistica.getDispatchInsights().pipe(finalize(() => this.loader.releaseGlobalLoader()), takeUntil(this.destroy$)).subscribe({
       next: (r) => { this.insights = r.insights; this.cargando = false; },
       error: (e) => {
         this.error = e?.error?.error || 'No pudimos revisar los despachos en este momento. Intente de nuevo en unos minutos.';
@@ -76,7 +83,8 @@ export class DespachosIaComponent implements OnInit, OnDestroy {
     if (this.explicando) return;
     this.explicando = true;
     this.avisoIA = null;
-    this.logistica.explicarDispatchInsights().pipe(takeUntil(this.destroy$)).subscribe({
+    this.loader.suppressGlobalLoader();
+    this.logistica.explicarDispatchInsights().pipe(finalize(() => this.loader.releaseGlobalLoader()), takeUntil(this.destroy$)).subscribe({
       next: (r) => { this.insights = r.insights; this.ia = r.ia || null; this.avisoIA = r.aviso || null; this.explicando = false; },
       error: (e) => {
         this.avisoIA = e?.status === 429 || e?.status === 403

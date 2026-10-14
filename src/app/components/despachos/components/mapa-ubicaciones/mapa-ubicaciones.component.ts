@@ -41,10 +41,22 @@ interface UbicacionMensajero {
   hace: string;
   velocidad?: number;
   bateria?: number;
+  /** Hacia dónde va, en grados (0 = norte). La app solo lo cambia si va a 1 m/s o más. */
+  rumbo?: number;
+  /** Precisión del GPS en metros. */
+  precision?: number;
 }
 
 /** Puntos del recorrido que se guardan por mensajero mientras el mapa está abierto. */
-const MAX_PUNTOS_RECORRIDO = 80;
+const MAX_PUNTOS_RECORRIDO = 240;
+/**
+ * La app manda un punto cada 2-4 s mientras el mensajero se mueve: el marcador se desliza durante ese
+ * mismo intervalo, en línea recta y a velocidad pareja, y así se ve continuo (como Uber). Con puntos más
+ * espaciados (app vieja, mensajero quieto) se usa un deslizamiento corto.
+ */
+const MIN_MS_DESLIZAR = 1000;
+const MAX_MS_DESLIZAR = 5000;
+const MS_DESLIZAR_CORTO = 900;
 /** Saltos más largos que esto no se animan: es un mensajero que reapareció lejos, no uno que se movió. */
 const MAX_METROS_ANIMACION = 3000;
 
@@ -158,7 +170,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   private purgaMensajerosSubscription: Subscription | null = null;
   private marcadorUbicacionUsuario: any = null;
   /** Un marcador por mensajero: se mueve con setLatLng en vez de borrarse y redibujarse en cada aviso. */
-  private marcadoresMensajeros = new Map<string, { marcador: any; firmaIcono: string }>();
+  private marcadoresMensajeros = new Map<string, { marcador: any; firmaIcono: string; marca: number | null; giro?: number }>();
   private recorridos = new Map<string, Array<[number, number]>>();
   private lineasRecorrido = new Map<string, any>();
   private animaciones = new Map<string, number>();
@@ -735,11 +747,14 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       const firma = this.firmaIconoMensajero(mensajero);
 
       if (existente) {
-        this.moverSuave(mensajero.id, existente.marcador, [mensajero.lat, mensajero.lng]);
+        const intervalo = existente.marca !== null && mensajero.marca !== null ? mensajero.marca - existente.marca : null;
+        existente.marca = mensajero.marca;
+        this.moverSuave(mensajero.id, existente.marcador, [mensajero.lat, mensajero.lng], intervalo);
         if (existente.firmaIcono !== firma) {
           existente.marcador.setIcon(this.iconoMensajero(mensajero));
           existente.firmaIcono = firma;
         }
+        this.aplicarRumbo(existente, mensajero.rumbo);
       } else {
         const marcador = L.marker([mensajero.lat, mensajero.lng], {
           icon: this.iconoMensajero(mensajero),
@@ -750,7 +765,9 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         // siempre está al día. El nombre sale de datos que escriben las apps: se escapa.
         marcador.bindPopup(() => this.popupMensajero(mensajero.id), { closeButton: false, offset: [0, -14] });
         this.capaMensajeros.addLayer(marcador);
-        this.marcadoresMensajeros.set(mensajero.id, { marcador, firmaIcono: firma });
+        const nuevo = { marcador, firmaIcono: firma, marca: mensajero.marca };
+        this.marcadoresMensajeros.set(mensajero.id, nuevo);
+        this.aplicarRumbo(nuevo, mensajero.rumbo);
       }
 
       if (this.siguiendoId === mensajero.id) {
@@ -815,8 +832,24 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     }
   }
 
-  /** Desliza el marcador al punto nuevo en ~0,9 s en vez de saltar. */
-  private moverSuave(id: string, marcador: any, destino: [number, number]): void {
+  /**
+   * Gira la flecha hacia donde va el mensajero por el camino corto (de 350° a 10° gira 20°, no 340°).
+   * Se aplica sobre el elemento, sin regenerar el ícono, para no cortar el deslizamiento.
+   */
+  private aplicarRumbo(entrada: { marcador: any; giro?: number }, rumbo: number | undefined): void {
+    if (rumbo === undefined) return;
+    const anterior = entrada.giro ?? rumbo;
+    const delta = ((rumbo - anterior) % 360 + 540) % 360 - 180;
+    entrada.giro = anterior + delta;
+    const flecha = entrada.marcador.getElement?.()?.querySelector('.mm__rumbo') as HTMLElement | null;
+    if (flecha) flecha.style.transform = `rotate(${entrada.giro}deg)`;
+  }
+
+  /**
+   * Desliza el marcador al punto nuevo. Si los puntos llegan seguido (2-5 s), dura lo mismo que el
+   * intervalo y avanza parejo, para que nunca se detenga entre un punto y el siguiente.
+   */
+  private moverSuave(id: string, marcador: any, destino: [number, number], intervaloMs: number | null = null): void {
     const L = (window as any).L;
     const origen = marcador.getLatLng();
     const anterior = this.animaciones.get(id);
@@ -829,11 +862,12 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       return;
     }
 
-    const duracion = 900;
+    const continuo = intervaloMs !== null && intervaloMs >= MIN_MS_DESLIZAR && intervaloMs <= MAX_MS_DESLIZAR;
+    const duracion = continuo ? intervaloMs! : MS_DESLIZAR_CORTO;
     const inicio = performance.now();
     const paso = (ahora: number) => {
       const t = Math.min(1, (ahora - inicio) / duracion);
-      const suave = 1 - Math.pow(1 - t, 3);
+      const suave = continuo ? t : 1 - Math.pow(1 - t, 3);
       marcador.setLatLng(L.latLng(
         origen.lat + (destino[0] - origen.lat) * suave,
         origen.lng + (destino[1] - origen.lng) * suave
@@ -849,7 +883,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
 
   /** El ícono solo se regenera si cambia algo visible (señal, nombre o seguimiento). */
   private firmaIconoMensajero(m: UbicacionMensajero): string {
-    return `${m.senal}|${m.nombre}|${this.siguiendoId === m.id}`;
+    return `${m.senal}|${m.nombre}|${this.siguiendoId === m.id}|${m.rumbo !== undefined}`;
   }
 
   private iconoMensajero(m: UbicacionMensajero): any {
@@ -860,6 +894,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       html: `
         <div class="mm mm--${m.senal} ${siguiendo ? 'mm--siguiendo' : ''}">
           ${m.senal === 'en-vivo' ? '<div class="mm__onda"></div>' : ''}
+          ${m.rumbo !== undefined ? '<div class="mm__rumbo"><div class="mm__flecha"></div></div>' : ''}
           <div class="mm__avatar">${escaparHtml(this.iniciales(m.nombre))}</div>
           <div class="mm__nombre">${escaparHtml(this.nombreCorto(m.nombre))}</div>
         </div>
@@ -1131,7 +1166,9 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       senal: senalMensajero(marca),
       hace: marca === null ? 'sin dato' : haceCuanto(marca),
       velocidad: numero(dato?.velocidad ?? dato?.speed),
-      bateria: numero(dato?.bateria ?? dato?.battery)
+      bateria: numero(dato?.bateria ?? dato?.battery),
+      rumbo: numero(dato?.rumbo),
+      precision: numero(dato?.precision ?? dato?.accuracy)
     };
   }
 

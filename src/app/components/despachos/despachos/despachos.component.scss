@@ -2463,6 +2463,67 @@ $border-radius: 8px;
 // =====================================================================
 :host ::ng-deep .metrics-actions-bar .actions-group {
 
+  // Opttia: botón propio (avatar + nombre), secundario lila para no competir con "Generar Orden".
+  // Abierto = fondo acento suave y borde acento. Sin gradientes (D-131/D-399).
+  .opttia-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 40px;
+    padding: 0 0.75rem 0 0.35rem;
+    border-radius: 12px;
+    border: 1px solid #d9cffb;
+    background: #f6f3ff;
+    color: #211F3A;
+    font-size: 0.84rem;
+    font-weight: 800;
+    letter-spacing: normal;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+
+    &:hover {
+      background: #efe9ff;
+      border-color: #5F3FE0;
+      box-shadow: 0 4px 12px rgba(95, 63, 224, 0.16);
+    }
+
+    &:focus-visible {
+      outline: 3px solid #7C5CFF !important;
+      outline-offset: 2px;
+    }
+
+    &--abierto {
+      background: #efe9ff;
+      border-color: #5F3FE0;
+      color: #5F3FE0;
+    }
+
+    &__avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 0 2px #fff, 0 0 0 3px #d9cffb;
+      flex-shrink: 0;
+    }
+
+    &__largo,
+    &__corto {
+      color: inherit;
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    &__corto { display: none; }
+
+    @media (max-width: 1699.98px) {
+      &__largo { display: none; }
+      &__corto { display: inline; }
+    }
+  }
+
   // Base: todos los botones más "chunky" y redondeados como el mockup
   .p-button {
     height: 40px;

@@ -9247,6 +9247,8 @@ Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.ser
 
 **Desplegado (11-oct).** Backend `e9fbb6b`, ADK `b8f6c2e`, front 2026.10.11.3. Probado en producción con ALMACEN BOMBAS. Fase 2 pendiente: cumplimiento por transportador con `order_status_history` (la fecha real de entrega no sirve).
 
+**Adenda (14-oct): botón de Opttia.** Daniel: "mejora el botón de opttia de despachos". El botón "⚡ IA", morado igual que "Generar Orden", pasa a ser el de Opttia: avatar de Tuki, "Pregúntale a Opttia" (o "Opttia" en pantallas de menos de 1700 px, para que las métricas no bajen de fila), estilo secundario lila y fondo acento suave cuando el panel está abierto (`aria-expanded`). El panel ya no deja salir el velo de pantalla completa mientras carga o mientras Opttia explica (`suppressGlobalLoader` solo durante esas dos llamadas): tiene su propia carga. Solo presentación.
+
 ## D-405 (2026-10-11) — IA en clientes, cartera y pedidos (openspec/changes/ia-modulos-principales)
 
 **Disparador.** /goal de Daniel: "permea de IA los principales módulos" (después de inventario D-401 y despachos D-404). Solo lectura.
@@ -9639,6 +9641,8 @@ commits y el push no despliega ni activa checkout.
 
 **Verificado.** Build de producción sin errores. En `localhost:4200` con FLORECER (sin mensajeros reales): estado vacío; con 3 mensajeros y 3 pedidos simulados solo en memoria del componente (nada escrito en Firebase): panel, anillos, movimiento suave, recorrido, Seguir manteniendo al mensajero centrado, ficha del pedido con `<b>` mostrado como texto, sin zonas ni interruptor "Zonas". Gradientes del componente 1 → 0 en el TS (los 2 del SCSS son brillos animados permitidos); primarios prohibidos 4 → 0 (`#007bff`, `#2196F3`).
 **No verificado.** Vista a 390 px (Chrome no redimensionó la ventana); mapa con mensajeros reales (ALMARA). Pruebas nuevas en `ubicacion-mensajero.spec.ts` comprobadas compilando el util con `tsc` y ejecutándolo en Node; Karma no se corrió.
+
+**Adenda (14-oct): movimiento tipo Uber.** Pedido de Daniel ("que la ubicación la reporte como Uber"), coordinado con la sesión de la app de mensajeros (Android v29, commit 40a53cf, sin publicar: un punto cada 2-4 s en movimiento con `rumbo`, `velocidad` en m/s y `precision`). El mapa gira una flecha alrededor del avatar con `rumbo` (camino corto, aplicada sobre el elemento sin regenerar el ícono) y desliza el marcador durante la diferencia de `lastUpdate` entre puntos (1 a 5 s, a velocidad pareja); con puntos más espaciados (app v28 o mensajero quieto) hace el deslizamiento corto de antes. La estela pasa de 80 a 240 puntos. Probado con un mensajero simulado en memoria (sin escribir en Firebase). Pendiente acordado con mensajeros para Daniel: filtrar `active_users` por empresa (hoy cada navegador baja los mensajeros de todas las empresas) con `.indexOn` y, en fase 2, ruta por empresa con reglas y token.
 
 ## D-421 (2026-10-13) — Mapa de Despachos: ubicar pedidos con barrio y zona, sin puntos aproximados, lista "Sin ubicar" y carga Katuq (OpenSpec `mapa-despachos-ubicar-pedidos`; PUBLICADO en 2026.10.14.1)
 

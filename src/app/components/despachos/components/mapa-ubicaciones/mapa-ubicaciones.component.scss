@@ -938,6 +938,32 @@ $danger-color:  $em-red;
       animation: mm-onda 2s ease-out infinite;
     }
 
+    // Flecha de rumbo: gira alrededor del avatar hacia donde va el mensajero
+    &__rumbo {
+      position: absolute;
+      z-index: 1;
+      inset: -11px;
+      pointer-events: none;
+      transition: transform .6s ease-out;
+    }
+
+    &__flecha {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-bottom: 10px solid $em-accent;
+      filter: drop-shadow(0 1px 1px rgba(33, 31, 58, .35));
+    }
+
+    &--reciente .mm__flecha {
+      border-bottom-color: #8A88A3;
+    }
+
     &__nombre {
       position: absolute;
       z-index: 3;
