@@ -6,6 +6,7 @@ import { ToastrService } from "ngx-toastr";
 import * as XLSX from "xlsx";
 import { CotizacionesService } from "../cotizaciones.service";
 import { CotizacionConvertService } from "../cotizacion-convert.service";
+import { nombreClienteCotizacion } from "../modelo/nombre-cliente";
 import {
   Cotizacion,
   CotizacionMetrics,
@@ -339,15 +340,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
 
   // ---- Helpers de presentación ----
   clienteNombre(c: Cotizacion): string {
-    const cli: any = c.cliente || {};
-    return (
-      cli.razonSocial ||
-      cli.nombre ||
-      [cli.nombres_completos, cli.apellidos_completos].filter(Boolean).join(" ") ||
-      cli.nombreComercial ||
-      cli.documento ||
-      "—"
-    );
+    return nombreClienteCotizacion(c.cliente) || "—";
   }
 
   /** Ticket 1176: nombre del comercial (o su correo si no tiene nombre). */

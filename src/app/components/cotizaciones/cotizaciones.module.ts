@@ -1,5 +1,6 @@
 import { NgModule } from "@angular/core";
-import { CommonModule } from "@angular/common";
+import { CommonModule, registerLocaleData } from "@angular/common";
+import localeEsCo from "@angular/common/locales/es-CO";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { SharedModule } from "../../shared/shared.module";
 import { CatalogoSharedModule } from "../ventas/catalogo/catalogo-shared.module";
@@ -11,6 +12,9 @@ import { AngularFireStorageModule } from "@angular/fire/compat/storage";
 
 import { CotizacionesListaComponent } from "./cotizaciones-lista/cotizaciones-lista.component";
 import { CotizacionEditorComponent } from "./cotizacion-editor/cotizacion-editor.component";
+
+// Ticket c9ZCSMj4: la vista y el PDF de la cotización muestran los pesos con punto de miles (es-CO).
+registerLocaleData(localeEsCo, "es-CO");
 
 @NgModule({
   declarations: [CotizacionesListaComponent, CotizacionEditorComponent],

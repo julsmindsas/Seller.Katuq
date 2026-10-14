@@ -30,6 +30,7 @@ import { LeadToSalesService } from "../../crm/services/lead-to-sales.service";
 import { resolverPrecioLinea } from "../../../shared/services/ventas/iva-canonico";
 import { environment } from "../../../../environments/environment";
 import { urlImagenAbsoluta } from "../../../shared/utils/imagen-producto";
+import { nombreClienteCotizacion } from "../modelo/nombre-cliente";
 import {
   ComboLinea,
   FilaAgrupada,
@@ -167,20 +168,25 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   guardandoCondiciones = false;
   guardandoDecimales = false;
 
-  // Ticket 1102: la empresa puede ver sus cotizaciones en pesos enteros
-  // (ALMACEN BOMBAS). Solo cambia cómo se muestran los valores; los cálculos
-  // siguen con sus centavos. Sin la opción, todo queda como antes.
+  // Ticket 1102: la empresa puede ver sus cotizaciones en pesos enteros.
+  // Solo cambia cómo se muestran los valores; los cálculos siguen con sus
+  // centavos. Desde el ticket c9ZCSMj4 los pesos enteros son lo normal y solo
+  // la empresa que desmarque la opción (valoresSinDecimales === false) ve centavos.
+  get sinDecimales(): boolean {
+    return this.configCotizacion?.valoresSinDecimales !== false;
+  }
+
   get digitosValor(): string {
-    return this.configCotizacion?.valoresSinDecimales ? "1.0-0" : "1.0-2";
+    return this.sinDecimales ? "1.0-0" : "1.0-2";
   }
 
   get digitosValorFijo(): string {
-    return this.configCotizacion?.valoresSinDecimales ? "1.0-0" : "1.2-2";
+    return this.sinDecimales ? "1.0-0" : "1.2-2";
   }
 
   /** Guarda para toda la empresa si las cotizaciones se ven sin decimales. */
   cambiarValoresSinDecimales(valor: boolean): void {
-    const anterior = !!this.configCotizacion?.valoresSinDecimales;
+    const anterior = this.sinDecimales;
     this.configCotizacion = { ...(this.configCotizacion || { terminosBase: "" }), valoresSinDecimales: valor };
     this.guardandoDecimales = true;
     this.subs.push(this.service.updateConfig({ valoresSinDecimales: valor }).subscribe({
@@ -1644,15 +1650,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
 
   // ---- Helpers de presentación de cliente ----
   clienteNombre(cli: any): string {
-    if (!cli) return "";
-    return (
-      cli.razonSocial ||
-      cli.nombre ||
-      [cli.nombres_completos, cli.apellidos_completos].filter(Boolean).join(" ") ||
-      cli.nombreComercial ||
-      cli.documento ||
-      ""
-    );
+    return nombreClienteCotizacion(cli);
   }
 
   clienteDocumento(cli: any): string {
