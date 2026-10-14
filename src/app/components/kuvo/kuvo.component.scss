@@ -1,0 +1,41 @@
+@import '../../shared/styles/config-pagina';
+@include config-pagina;
+
+:host { display: block; background: $cfg-tint; }
+.kuvo-section { padding: 22px; }
+.kuvo-heading { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px;
+  h2 { font-size: 17px; font-weight: 800; color: $cfg-ink; margin: 0 0 6px; }
+  p { font-size: 13px; color: $cfg-body; margin: 0; }
+}
+.kuvo-status { display: inline-flex; align-items: center; align-self: flex-start; padding: 6px 11px; font-size: 11px !important; font-weight: 700; color: $cfg-body !important; background: $cfg-chip-bg; border: 1px solid $cfg-chip-border; border-radius: 20px;
+  &--ok { color: $cfg-ok !important; background: $cfg-ok-soft; }
+}
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+h3 { color: $cfg-ink; font-size: 14px; font-weight: 800; margin: 24px 0 16px; }
+.kuvo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px;
+  label { display: flex; flex-direction: column; gap: 7px; font-size: 11px; text-transform: uppercase; color: $cfg-muted; font-weight: 800; }
+  input, select { width: 100%; min-width: 0; background: $cfg-chip-bg; border: 1px solid $cfg-chip-border; border-radius: 11px; padding: 12px; color: $cfg-ink; font-size: 14px; font-weight: 500; text-transform: none;
+    &[readonly] { color: $cfg-body; background: $cfg-tile; }
+  }
+  small { font-size: 12px; color: $cfg-body; font-weight: 400; text-transform: none; }
+}
+.kuvo-wide { grid-column: 1 / -1; }
+.kuvo-checks { display: flex; flex-wrap: wrap; gap: 18px; margin: 20px 0 12px;
+  label { display: inline-flex; gap: 9px; align-items: center; color: $cfg-ink; font-size: 13px; }
+  input { accent-color: $cfg-accent; width: 18px; height: 18px; }
+}
+.kuvo-help { color: $cfg-body; font-size: 12.5px; margin: 12px 0 18px;
+  a { color: $cfg-accent; text-decoration: underline; }
+}
+.kuvo-form-actions { margin-top: 22px; }
+.kuvo-withdraw { margin-top: 18px; }
+.kuvo-error { color: $cfg-err !important; background: $cfg-err-soft !important; }
+.kuvo-success { color: $cfg-ok !important; background: $cfg-ok-soft !important; }
+.kuvo-totals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px;
+  div { background: $cfg-tile; padding: 16px; border: 1px solid $cfg-line; border-radius: 11px; }
+  label { display: block; text-transform: uppercase; font-size: 10px; font-weight: 800; color: $cfg-muted; margin-bottom: 9px; }
+  strong { display: block; color: $cfg-accent; font-size: 21px; font-weight: 800; overflow-wrap: anywhere; }
+}
+.kuvo-bank-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 15px; background: $cfg-tile; border-radius: 11px; color: $cfg-ink; font-size: 13px; }
+@media (max-width: 900px) { .kuvo-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .kuvo-section { padding: 16px; } .kuvo-grid, .kuvo-totals { grid-template-columns: minmax(0, 1fr); } .kuvo-form-actions .cfg-btn { width: 100%; } }
