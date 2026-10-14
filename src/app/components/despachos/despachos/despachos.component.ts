@@ -1,4 +1,4 @@
-import { puntoEsProtegido } from "../../../shared/utils/client-delivery";
+import { puntoEsProtegido, tienePuntoValido } from "../../../shared/utils/client-delivery";
 import {
   Component,
   ElementRef,
@@ -14,7 +14,7 @@ import {
   ChangeDetectorRef,
 } from "@angular/core";
 import { trigger, state, style, transition, animate } from '@angular/animations';
-import { VentasService } from "../../../shared/services/ventas/ventas.service";
+import { VentasService, UbicacionEntregaGuardada } from "../../../shared/services/ventas/ventas.service";
 import {
   Carrito,
   Cliente,
@@ -64,7 +64,7 @@ import { ZonaGestionModalComponent } from "../components/zona-gestion-modal/zona
 import { ToastrService } from 'ngx-toastr';
 import { DispatchRulesService } from '../services/dispatch-rules.service';
 import { Subject, forkJoin } from 'rxjs';
-import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, finalize, takeUntil } from 'rxjs/operators';
 
 interface MapaMetricas {
   despachados: number;
@@ -338,6 +338,18 @@ export class DespachosComponent implements OnInit, OnDestroy {
   private sinUbicarPorPedido = new Map<string, PedidoSinUbicar>();
   /** Direcciones que el servicio ya rechazó en esta visita, con su motivo: no se vuelven a consultar. */
   private fallosUbicacion = new Map<string, string>();
+  /**
+   * Puntos encontrados en esta visita que el backend todavía no confirmó, por pedido.
+   * No se mezclan en `pedido.envio` hasta que quedan guardados: así ninguna edición
+   * de Despachos arrastra un punto sin confirmar.
+   */
+  private puntosSinGuardar = new Map<string, { latitud: string; longitud: string }>();
+  /** Pedidos cuyo punto guardado "Volver a ubicar" no pudo confirmar: no se pintan en esta visita. */
+  private puntosDescartados = new Set<string>();
+  /** Pedidos con un guardado en curso, para no mandarlo dos veces. */
+  private guardandoPunto = new Set<string>();
+  /** Llegó una lista nueva mientras se ubicaba: se ubica otra vez al terminar. */
+  private ubicarDeNuevoAlTerminar = false;
   filtroEstadoMapa: string | null = null;
   private intervaloBetweenAlertas: number = 5 * 60 * 1000; // 5 minutos en milisegundos
 
@@ -508,9 +520,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
         separator: true
       },
       {
-        label: 'Geocodificar Todo',
+        label: 'Volver a ubicar pedidos',
         icon: 'pi pi-map-marker',
-        command: () => this.forzarGeocodificacion()
+        command: () => this.volverAUbicarPedidos()
       },
      /* {
         label: 'Gestionar Zonas de Entrega',
@@ -670,6 +682,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
       this.calcularMetricas();
 
       this.loading = false;
+      this.ubicarPedidosAlCargar();
       });
     }
 
@@ -2603,8 +2616,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
           console.log(`🚚 Pedido ${order.nroPedido} cambió a Despachado - Verificando geocodificación...`);
 
           // Geocodificar específicamente este pedido si no tiene coordenadas
-          if (order.envio?.direccionEntrega && order.envio?.ciudad &&
-            (!order.envio?.latitud || !order.envio?.longitud)) {
+          if (order.envio?.direccionEntrega && order.envio?.ciudad && !this.puntoDePedido(order)) {
             console.log(`📍 Geocodificando pedido despachado: ${order.nroPedido}`);
             this.geocodificarPedido(order).then(() => {
               console.log(`🗺️ Actualizando mapa después de geocodificar pedido despachado: ${order.nroPedido}`);
@@ -2809,8 +2821,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
         // Calcular métricas para análisis KAI
         this.calcularMetricas();
 
-        // Actualizar mapa
-        this.actualizarConfiguracionMapa();
+        // Pintar lo guardado y ubicar los pedidos sin punto
+        this.ubicarPedidosAlCargar();
 
         this.loading = false;
       });
@@ -3595,8 +3607,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
               console.log(`🚚 Pedido ${pedido.nroPedido} despachado exitosamente - Verificando geocodificación...`);
 
               // Geocodificar automáticamente el pedido despachado si no tiene coordenadas
-              if (pedido.envio?.direccionEntrega && pedido.envio?.ciudad &&
-                (!pedido.envio?.latitud || !pedido.envio?.longitud)) {
+              if (pedido.envio?.direccionEntrega && pedido.envio?.ciudad && !this.puntoDePedido(pedido)) {
                 console.log(`📍 Geocodificando pedido recién despachado: ${pedido.nroPedido}`);
                 this.geocodificarPedido(pedido).then(() => {
                   console.log(`🗺️ Actualizando mapa después de geocodificar pedido despachado: ${pedido.nroPedido}`);
@@ -6120,10 +6131,13 @@ export class DespachosComponent implements OnInit, OnDestroy {
   // Métodos para geocodificación y mapa
 
   /**
-   * Geocodifica las direcciones de pedidos que no tienen coordenadas
+   * Ubica en el mapa los pedidos sin punto (o, con `forzar`, los candidatos de "Volver a ubicar").
+   * Lo encontrado se pinta de una vez y se guarda en el pedido en segundo plano.
    */
-  async geocodificarDireccionesPedidos(): Promise<void> {
+  async geocodificarDireccionesPedidos(candidatos?: Pedido[], forzar = false): Promise<void> {
     if (this.geocodingInProgress) {
+      // Llegó otra lista mientras se ubicaba: se repasa al terminar
+      if (!candidatos) this.ubicarDeNuevoAlTerminar = true;
       return;
     }
 
@@ -6135,9 +6149,10 @@ export class DespachosComponent implements OnInit, OnDestroy {
     this.publicarSinUbicar();
 
     // Pedidos con dirección y sin punto; los despachados primero (son los que se siguen en la calle)
-    const pendientes = this.orders.filter(pedido =>
+    const pendientes = candidatos ?? this.orders.filter(pedido =>
       pedido.envio?.direccionEntrega &&
-      (!pedido.envio.latitud || !pedido.envio.longitud)
+      !this.puntosDescartados.has(this.claveUbicacion(pedido)) &&
+      !this.puntoDePedido(pedido)
     );
     const priorizados = [
       ...pendientes.filter(p => p.estadoProceso === 'Despachado'),
@@ -6159,7 +6174,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
       const tamanoLote = 5;
       for (let i = 0; i < priorizados.length; i += tamanoLote) {
         const lote = priorizados.slice(i, i + tamanoLote);
-        const resultados = await Promise.allSettled(lote.map(pedido => this.geocodificarPedido(pedido)));
+        const resultados = await Promise.allSettled(lote.map(pedido => this.geocodificarPedido(pedido, forzar)));
         const ubicadosLote = resultados.filter(r => r.status === 'fulfilled' && r.value).length;
 
         this.avanceUbicacion = {
@@ -6184,16 +6199,32 @@ export class DespachosComponent implements OnInit, OnDestroy {
       this.avanceUbicacion = { ...this.avanceUbicacion!, terminado: true };
       this.actualizarConfiguracionMapa();
     }
+
+    if (this.ubicarDeNuevoAlTerminar) {
+      this.ubicarDeNuevoAlTerminar = false;
+      this.geocodificarDireccionesPedidos();
+    }
+  }
+
+  /**
+   * Al cargar la lista: pinta de una vez los puntos guardados y ubica solo los pedidos sin punto.
+   */
+  private ubicarPedidosAlCargar(): void {
+    this.actualizarConfiguracionMapa();
+    this.geocodificarDireccionesPedidos();
   }
 
   /**
    * Ubica un pedido con su dirección, ciudad, barrio y zona de cobro, en el modo estricto del servicio
    * (el de la venta asistida, ticket 1136): el resultado se valida contra esa área y, si nada sirve,
    * el pedido queda en "Sin ubicar". Nunca se pinta un punto aproximado (centro de la ciudad).
-   * Solo escribe en memoria: no guarda nada en el pedido.
+   * Lo encontrado se pinta en esta visita y se guarda en el pedido (solo el punto); el pedido
+   * en memoria no cambia hasta que el backend lo confirma.
+   * Con `forzar` ("Volver a ubicar") busca aunque el pedido ya tenga un punto geocodificado; si no
+   * lo confirma, ese punto no se pinta en esta visita y no se borra.
    * @returns true si el pedido quedó con punto en el mapa.
    */
-  private async geocodificarPedido(pedido: Pedido): Promise<boolean> {
+  private async geocodificarPedido(pedido: Pedido, forzar = false): Promise<boolean> {
     const envio = pedido.envio;
     if (!envio) {
       return false;
@@ -6202,13 +6233,25 @@ export class DespachosComponent implements OnInit, OnDestroy {
     if (puntoEsProtegido(envio)) {
       return true;
     }
-    if (!envio.direccionEntrega) {
-      this.marcarSinUbicar(pedido, 'Falta la dirección');
+    if (!forzar && this.puntoDePedido(pedido)) {
+      return true;
+    }
+    const clave = this.claveUbicacion(pedido);
+    const teniaPuntoGuardado = forzar && tienePuntoValido(envio);
+    const noUbicado = (motivo: string): boolean => {
+      if (teniaPuntoGuardado) {
+        this.puntosDescartados.add(clave);
+        motivo = 'No pudimos confirmar el punto guardado';
+      }
+      this.marcarSinUbicar(pedido, motivo);
       return false;
+    };
+
+    if (!envio.direccionEntrega) {
+      return noUbicado('Falta la dirección');
     }
     if (!envio.ciudad) {
-      this.marcarSinUbicar(pedido, 'Falta la ciudad de entrega');
-      return false;
+      return noUbicado('Falta la ciudad de entrega');
     }
 
     const barrio = envio.barrio || '';
@@ -6217,15 +6260,12 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
     const enCache = this.geocodingCache.get(cacheKey);
     if (enCache) {
-      this.aplicarCoordenadasAPedido(pedido, enCache);
-      this.sinUbicarPorPedido.delete(pedido.nroPedido || '');
-      this.publicarSinUbicar();
+      this.registrarPuntoEncontrado(pedido, enCache);
       return true;
     }
     const falloPrevio = this.fallosUbicacion.get(cacheKey);
     if (falloPrevio) {
-      this.marcarSinUbicar(pedido, falloPrevio);
-      return false;
+      return noUbicado(falloPrevio);
     }
 
     let motivo = 'No encontramos esta dirección en el mapa';
@@ -6238,9 +6278,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
       if (response?.latitud && response?.longitud) {
         this.geocodingCache.set(cacheKey, response);
-        this.aplicarCoordenadasAPedido(pedido, response);
-        this.sinUbicarPorPedido.delete(pedido.nroPedido || '');
-        this.publicarSinUbicar();
+        this.registrarPuntoEncontrado(pedido, response);
         return true;
       }
       this.fallosUbicacion.set(cacheKey, motivo);
@@ -6254,8 +6292,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
       }
     }
 
-    this.marcarSinUbicar(pedido, motivo);
-    return false;
+    return noUbicado(motivo);
   }
 
   private marcarSinUbicar(pedido: Pedido, motivo: string): void {
@@ -6274,14 +6311,103 @@ export class DespachosComponent implements OnInit, OnDestroy {
     this.pedidosSinUbicar = Array.from(this.sinUbicarPorPedido.values());
   }
 
+  /** Clave del pedido para los puntos de esta visita (sobrevive a recargar la lista). */
+  private claveUbicacion(pedido: Pedido): string {
+    return pedido._id || pedido.nroPedido || '';
+  }
+
   /**
-   * Aplica las coordenadas obtenidas al pedido
+   * Punto que se pinta: el encontrado en esta visita o, si no hay, el guardado en el pedido.
+   * Un punto guardado que "Volver a ubicar" no pudo confirmar no se pinta.
    */
-  private aplicarCoordenadasAPedido(pedido: Pedido, response: GeocodingResponse): void {
-    if (pedido.envio) {
-      pedido.envio.latitud = response.latitud;
-      pedido.envio.longitud = response.longitud;
+  private puntoDePedido(pedido: Pedido): { lat: number; lng: number } | null {
+    const clave = this.claveUbicacion(pedido);
+    if (this.puntosDescartados.has(clave)) {
+      return null;
     }
+    const enMemoria = this.puntosSinGuardar.get(clave);
+    if (enMemoria) {
+      return { lat: parseFloat(enMemoria.latitud), lng: parseFloat(enMemoria.longitud) };
+    }
+    const envio = pedido.envio;
+    if (!envio || !tienePuntoValido(envio)) {
+      return null;
+    }
+    let lat = envio.latitud;
+    let lng = envio.longitud;
+    if ((!lat || !lng) && envio.coordenadas) {
+      [lat, lng] = envio.coordenadas.split(',').map(c => c.trim());
+    }
+    return { lat: parseFloat(lat!), lng: parseFloat(lng!) };
+  }
+
+  /** Lo encontrado se pinta de una vez y se manda a guardar; el pedido no se toca todavía. */
+  private registrarPuntoEncontrado(pedido: Pedido, response: GeocodingResponse): void {
+    const clave = this.claveUbicacion(pedido);
+    const punto = { latitud: String(response.latitud), longitud: String(response.longitud) };
+    this.puntosSinGuardar.set(clave, punto);
+    this.puntosDescartados.delete(clave);
+    this.sinUbicarPorPedido.delete(pedido.nroPedido || '');
+    this.publicarSinUbicar();
+    this.guardarPuntoEnPedido(pedido, punto);
+  }
+
+  /**
+   * Guarda solo el punto en el pedido. Si falla, queda pintado en esta visita y se vuelve a
+   * guardar en la próxima; no se muestra error ni velo de carga.
+   */
+  private guardarPuntoEnPedido(pedido: Pedido, punto: { latitud: string; longitud: string }): void {
+    const id = pedido._id;
+    if (!id || this.guardandoPunto.has(id)) {
+      return;
+    }
+    this.guardandoPunto.add(id);
+    this.ventasService.guardarUbicacionEntrega(id, punto)
+      .pipe(takeUntil(this.destroy$), finalize(() => this.guardandoPunto.delete(id)))
+      .subscribe({
+        next: (respuesta) => {
+          if (respuesta?.data) {
+            this.adoptarPuntoGuardado(pedido, respuesta.data);
+          }
+        },
+        error: (err) => {
+          // D-417: el pedido ya tiene un punto puesto por una persona; se pinta ese
+          const protegido = err?.status === 409 && err?.error?.errorCode === 'PUNTO_PROTEGIDO' && err?.error?.punto;
+          if (protegido) {
+            const p = err.error.punto;
+            this.adoptarPuntoGuardado(pedido, {
+              latitud: p.latitud,
+              longitud: p.longitud,
+              coordenadas: `${p.latitud}, ${p.longitud}`,
+              fuenteUbicacion: p.fuenteUbicacion
+            });
+            this.actualizarConfiguracionMapa();
+          }
+        }
+      });
+  }
+
+  /**
+   * Copia al pedido en memoria exactamente lo que quedó guardado, para que las ediciones
+   * siguientes lo lleven igual. Si la lista se recargó mientras tanto, también al pedido nuevo.
+   */
+  private adoptarPuntoGuardado(
+    pedido: Pedido,
+    guardado: Partial<UbicacionEntregaGuardada> & { latitud: string; longitud: string; coordenadas: string; fuenteUbicacion: string }
+  ): void {
+    const actual = this.orders.find(o => o._id && o._id === pedido._id);
+    [pedido, actual].forEach(p => {
+      if (!p?.envio) return;
+      p.envio.latitud = guardado.latitud;
+      p.envio.longitud = guardado.longitud;
+      p.envio.coordenadas = guardado.coordenadas;
+      p.envio.fuenteUbicacion = guardado.fuenteUbicacion;
+      if (guardado.ubicacionGuardadaEn) {
+        p.envio.ubicacionGuardadaEn = guardado.ubicacionGuardadaEn;
+        p.envio.ubicacionGuardadaPor = guardado.ubicacionGuardadaPor ?? null;
+      }
+    });
+    this.puntosSinGuardar.delete(this.claveUbicacion(pedido));
   }
 
   /**
@@ -6290,9 +6416,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
   transformarPedidosAUbicaciones(): UbicacionPedido[] {
     let pedidosFiltrados = this.orders
       .filter(pedido =>
-        pedido.envio?.latitud &&
-        pedido.envio?.longitud &&
-        pedido.envio?.direccionEntrega
+        pedido.envio?.direccionEntrega &&
+        this.puntoDePedido(pedido)
       );
 
     // Aplicar filtro de estado si está activo
@@ -6302,19 +6427,22 @@ export class DespachosComponent implements OnInit, OnDestroy {
       );
     }
 
-    const ubicacionesFinales = pedidosFiltrados.map(pedido => ({
+    const ubicacionesFinales = pedidosFiltrados.map(pedido => {
+      const punto = this.puntoDePedido(pedido)!;
+      return {
       nroPedido: pedido.nroPedido || '',
       estado: pedido.estadoProceso,
       cliente: pedido.cliente?.nombres_completos || 'Cliente no especificado',
       direccion: `${pedido.envio!.direccionEntrega}, ${pedido.envio!.ciudad || ''}`,
-      latitud: parseFloat(pedido.envio!.latitud!),
-      longitud: parseFloat(pedido.envio!.longitud!),
+      latitud: punto.lat,
+      longitud: punto.lng,
       transportador: pedido.transportador?.nombre || '',
       fechaEntrega: pedido.fechaEntrega || '',
       horaEstimada: pedido.horarioEntrega || '',
       distanciaRestante: undefined, // Se puede calcular más tarde
       tiempoEstimado: undefined // Se puede calcular más tarde
-    }));
+      };
+    });
 
     return ubicacionesFinales;
   }
@@ -6387,26 +6515,25 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
 
   /**
-   * Fuerza la geocodificación de todos los pedidos
+   * "Volver a ubicar pedidos": busca de nuevo los puntos geocodificados (nunca los que puso una
+   * persona) y los que faltan. Lo que encuentra lo guarda en lugar del anterior; lo que no puede
+   * confirmar sale en "Sin ubicar" y no se pinta en esta visita. No borra ningún punto guardado.
    */
-  forzarGeocodificacion(): void {
-    // Limpiar caché para forzar nueva geocodificación
+  volverAUbicarPedidos(): void {
+    if (this.geocodingInProgress) {
+      return;
+    }
     this.geocodingCache.clear();
     this.fallosUbicacion.clear();
     this.sinUbicarPorPedido.clear();
+    this.puntosDescartados.clear();
+    this.puntosSinGuardar.clear();
     this.publicarSinUbicar();
 
-    // Limpiar coordenadas existentes. D-417 (ticket 1203): menos las que puso
-    // una persona (mapa, enlace o GPS), que no se recalculan.
-    this.orders.forEach(pedido => {
-      if (pedido.envio && !puntoEsProtegido(pedido.envio)) {
-        pedido.envio.latitud = undefined;
-        pedido.envio.longitud = undefined;
-      }
-    });
-
-    // Ejecutar geocodificación
-    this.geocodificarDireccionesPedidos();
+    const candidatos = this.orders.filter(pedido =>
+      pedido.envio?.direccionEntrega && !puntoEsProtegido(pedido.envio)
+    );
+    this.geocodificarDireccionesPedidos(candidatos, true);
   }
 
   /**
@@ -6432,7 +6559,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
       pedido.estadoProceso === 'Despachado' &&
       pedido.envio?.direccionEntrega &&
       pedido.envio?.ciudad &&
-      (!pedido.envio?.latitud || !pedido.envio?.longitud)
+      !this.puntoDePedido(pedido)
     ).length;
   }
 
@@ -6802,6 +6929,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
     this.aplicarAlgoritmoPriorizacion(false);
     this.calcularMetricas();
     this.loading = false;
+    this.ubicarPedidosAlCargar();
 
     console.log('✅ Despachos - Data processing completed, loading set to false');
   }

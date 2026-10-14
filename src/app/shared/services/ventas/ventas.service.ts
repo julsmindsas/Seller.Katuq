@@ -27,6 +27,18 @@ import { VentasNotificationInterceptor } from '../notifications/ventas-notificat
 import { FeatureFlagsService } from '../feature-flags.service';
 
 /** Una lista de precios de la empresa y qué tanto del catálogo cubre. */
+/** Punto de entrega que quedó guardado en el pedido (respuesta de `/ubicacion-entrega`). */
+export interface UbicacionEntregaGuardada {
+  orderId: string;
+  nroPedido: string | null;
+  latitud: string;
+  longitud: string;
+  coordenadas: string;
+  fuenteUbicacion: 'geocodificada';
+  ubicacionGuardadaEn: string;
+  ubicacionGuardadaPor: string | null;
+}
+
 export interface CoberturaDeLista {
   tipoClienteId: string;
   nombre: string;
@@ -76,6 +88,19 @@ export class VentasService extends BaseService {
   }
   deleteOrder(order: Pedido) {
     return this.post<any>('/v1/orders/delete', order);
+  }
+
+  /**
+   * Guarda en el pedido solo el punto de entrega que Despachos encontró en el mapa
+   * (seis campos de `envio`; no toca `date_upd`). Si el pedido ya tiene un punto
+   * puesto por una persona, responde 409 PUNTO_PROTEGIDO con ese punto.
+   * Sin el velo de carga: corre en segundo plano mientras se ubica.
+   */
+  guardarUbicacionEntrega(idPedido: string, punto: { latitud: string; longitud: string }) {
+    return this.postSinLoader<{ success: boolean; data: UbicacionEntregaGuardada }>(
+      `/v1/orders/${encodeURIComponent(idPedido)}/ubicacion-entrega`,
+      punto
+    );
   }
 
 
