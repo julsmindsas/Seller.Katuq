@@ -1,7 +1,8 @@
 ## ADDED Requirements
 
 ### Requirement: Opttia propone y la persona aprueba en la escena
-Cuando la empresa tiene encendido "Opttia propone" y hay trabajo pendiente, la pantalla del comercio SHALL mostrar las propuestas de Opttia dentro de la escena, en Mi operación, Mi país y Pedidos.
+Cuando el comercio tiene alguna operación de Opttia en sombra o encendida y hay trabajo pendiente, la pantalla del comercio SHALL mostrar las propuestas de Opttia dentro de la escena, en Mi operación, Mi país y Pedidos.
+- **Operaciones:** despachar está en `despachos-en-vivo`. Arrancar producción, cobrar pedidos sin pago y la bandera de cada operación están en `operaciones-de-opttia`.
 - **Cola:** SHALL ordenarse por prioridad (urgente, importante, cuando puedas), luego por hora límite y luego por valor. Se muestra una tarjeta a la vez.
 - **Contador:** el botón del orbe SHALL contar las ideas, por ejemplo "Opttia tiene 3 ideas · 1 urgente". Su halo late dos veces cuando llega algo nuevo.
 - **Arranque:** la primera propuesta SHALL arrancar sola, salvo que la persona esté arrastrando la cámara, tenga una ficha abierta o haya aprobado algo en los últimos 8 segundos.
@@ -45,38 +46,6 @@ Mientras haya propuestas en la cola, la pantalla SHALL evitar el ruido con estas
 #### Scenario: Llega algo urgente mientras la persona mira
 - **WHEN** la persona revisa una propuesta importante y llega una urgente
 - **THEN** el contador sube y la urgente queda de siguiente; la tarjeta abierta no cambia
-
-### Requirement: Arrancar producción, en sombra
-La cola SHALL incluir una propuesta de producción cuando se cumplen todas estas condiciones:
-- la empresa tiene encendido "Opttia propone";
-- la persona es de la familia Administrador;
-- el comercio produce, es decir, algún pedido pasó por producción en los últimos 90 días;
-- hay pedidos sin producir, no cancelados, que se entregan hoy o mañana, en hora de Colombia.
-
-La propuesta dice, por ejemplo, "5 pedidos se entregan mañana y nadie los ha empezado". Es urgente si alguno se entrega hoy. La escena los pone en fila numerada frente a la banda, con su hora de entrega, hasta 12.
-
-En esta fase va en sombra: SHALL decir "Así lo haría Opttia · pronto podrás aprobarlo", MUST NOT tener botón de aprobar y MUST NOT escribir nada.
-
-#### Scenario: Comercio que no produce
-- **WHEN** un comercio cuyos pedidos pasan de sin producir a despacho sin pasar por producción tiene pedidos para mañana
-- **THEN** no aparece la propuesta de producción
-
-#### Scenario: Persona que no es Administrador
-- **WHEN** una persona de ventas abre Mi operación en un comercio que produce
-- **THEN** no ve la propuesta en sombra; solo ve las que puede usar
-
-### Requirement: Cobrar pedidos sin pago, como señal
-Cuando el radar marca un pedido sin pago, la cola SHALL incluir una señal, por ejemplo "El #1045 lleva 2 h sin pago". El radar marca un pedido cuando lleva más de 90 minutos sin pago y sin salir. La señal:
-- tiene prioridad importante;
-- tiene como botón "Abrir pedido", que abre su ficha;
-- MUST NOT escribir nada;
-- se retira sola cuando llega el pago.
-
-El monto MUST NOT verse con "ocultar". En televisor MUST NOT verse nombre ni teléfono del cliente.
-
-#### Scenario: Llega el pago
-- **WHEN** la señal del #1045 está en la cola y llega el pago confirmado
-- **THEN** la señal sale de la cola y la escena muestra la confirmación con el evento real
 
 ### Requirement: Quién ve las propuestas
 Cuando la pantalla pide propuestas, el servidor y la pantalla SHALL limitarlas así:

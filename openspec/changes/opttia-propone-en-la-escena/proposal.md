@@ -26,19 +26,24 @@ Daniel aprobó la propuesta y el boceto el 13-oct ("dale, arranca con la fase 1"
 - **Narración:** deja de decir "armo el plan en Despachos" y dice "Organicé N pedidos en M salidas; apruébalas aquí". Se calla mientras haya tarjeta.
 - **TV y "Repetir el día":** se ve el ensayo, pero sin botones.
 - **Backend:** una ruta nueva de solo lectura que arma la cola con la empresa de la sesión. Además, dos ajustes pequeños en D-410: el canal "escena" al aprobar y el interruptor de Opttia revisado al explicar.
+- **Fase 2, en este mismo cambio** (Daniel, 13-oct: "sigue con la fase 2"; tareas 8.x y la sección "Fase 2" del design):
+  - aprobar la producción;
+  - una bandera por operación, con modos apagado, sombra y encendido;
+  - el cobro con "Abrir WhatsApp".
 - **Fases siguientes, cada una con su propio cambio y su spec:**
-  - fase 2: aprobar la producción y el cobro con WhatsApp;
   - fase 3: abrir un conteo cíclico y la orden de compra;
   - fase 4: reenviar a la integración logística, y las mismas propuestas por MCP y Telegram.
 
 ## Capabilities
 
 ### New Capabilities
-Ninguna. La función se reparte en capacidades que ya existen en cambios abiertos.
+- `operaciones-de-opttia` (fase 2): la bandera por operación, arrancar la producción y cobrar los pedidos sin pago. Estos dos requisitos nacieron en `opttia-en-vivo` y se movieron aquí para que cada delta quepa en 3 páginas (Artículo XIII).
+
+El resto de la función se reparte en capacidades que ya existen en cambios abiertos.
 
 ### Modified Capabilities
 - `despachos-en-vivo` (cambio `despachos-con-opttia`): se quita la vista Despachos, el plan pasa a la escena y "Ajustar" es una hoja. La narración del plan, los casos sin aprobar, el diseño y la excepción de escritura se reescriben.
-- `opttia-en-vivo` (cambio `tablero-en-vivo`): Opttia propone y la persona aprueba en la escena. Producción va en sombra y el cobro como señal. La señal del orbe queda fija mientras hay propuesta y la narración se calla con la tarjeta.
+- `opttia-en-vivo` (cambio `tablero-en-vivo`): Opttia propone y la persona aprueba en la escena. La señal del orbe queda fija mientras hay propuesta y la narración se calla con la tarjeta.
 - `tablero-en-vivo` (cambio `tablero-en-vivo`): "Solo lectura" nombra su única excepción, la tarjeta de Opttia al aprobar.
 - `perfil-de-despacho` (cambio `despachos-con-opttia`): la línea del perfil pasa de la vista Despachos a la hoja "Ajustar".
 
@@ -60,8 +65,14 @@ Ninguna. La función se reparte en capacidades que ya existen en cambios abierto
   - **Despachar** escribe lo mismo que D-410: `shipping_orders`, los campos de despacho de `orders` y `order_status_history`.
   - **Producción y cobro** no escriben en la fase 1.
   - **Nunca escribe:** productos, precios, inventario ni integraciones (D-134).
-- **Bandera:** en la fase 1, "Opttia propone" usa la misma bandera `despachosOpttia`, con un interruptor general aparte. La bandera por operación, con modos apagado, sombra y encendido, llega en la fase 2.
-- **Módulos sensibles:** `orders` y el consecutivo de órdenes de envío no cambian en la fase 1, porque la aprobación sigue por D-410.
+- **Datos en la fase 2:**
+  - aprobar la producción cambia en `orders` el estado a "En producción", por `updateOrderInternal`, y deja la marca de aprobación en el mismo pedido, más su historial;
+  - "Abrir WhatsApp" no escribe nada;
+  - no hay colecciones nuevas.
+- **Bandera:** en la fase 1, "Opttia propone" usa la misma bandera `despachosOpttia`, con un interruptor general aparte. En la fase 2, la producción (`opttiaProduccion`) y el cobro con WhatsApp (`opttiaCobroWhatsapp`) tienen su propia bandera para encenderse. Sin ella siguen como en la fase 1: la producción en sombra y el cobro como señal.
+- **Módulos sensibles:**
+  - en la fase 1, `orders` y el consecutivo de órdenes de envío no cambian, porque la aprobación sigue por D-410;
+  - en la fase 2, `orders` se toca un paso a la vez, con diff y aprobación, y con prueba de contrato del write-set y de que no se avisa al cliente. `controllers/orders.js` no cambia: la aprobación usa `updateOrderInternal` tal cual.
 
 ## No-goals
 

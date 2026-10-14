@@ -1,5 +1,6 @@
 @import '../en-vivo-tema';
 @import './orbe-etiqueta';
+@import './propuesta-etiqueta';
 
 // ==========================================================================
 // Escenas 3D del mapa del comercio, del país de Katuq y de la ciudad de Katuq (D-386, 5.3/5.10/5.12).
@@ -259,6 +260,9 @@ app-en-vivo-escena-ciudad {
   }
 
   @include eve-orbe-etiqueta;
+
+  // Etiqueta del grupo de transportadora sobre su arco fijo (Opttia propone, D-422).
+  @include eve-propuesta-etiqueta;
 
   // Al pasar el puntero (o desde la lista) por una ciudad o un comercio.
   .eve-lbl--hover .eve-lbl__in {

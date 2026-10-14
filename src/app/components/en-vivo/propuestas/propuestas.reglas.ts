@@ -10,6 +10,8 @@
  * - Cuándo pedir otra vez al servidor.
  * - Los textos de la tarjeta (eyebrow, confirmación, resultado) y la lógica de aprobar despachos
  *   que antes vivía dentro de la vista Despachos (paraAprobar, conQuien, sinRespuesta...).
+ * - Fase 2 (al final): aprobar producción (pedidos con huella, textos del botón y resultado en
+ *   palabras) y el cobro con "Abrir WhatsApp" (cuándo existe el botón y "Ya pagó / no aplica").
  */
 import type { AlertaRadar, PedidoEnVivo } from '../servicios/en-vivo.modelos';
 import type {
@@ -30,12 +32,16 @@ import type {
   ContadorPropuestas,
   EfectoEscena,
   EstacionEscena,
+  EstadoPedidoProduccion,
   GrupoEnEscena,
+  ItemAprobable,
   ModoPropuesta,
   PrioridadPropuesta,
   PropuestaEnEscena,
   PropuestaServidor,
+  RespuestaProduccion,
   RespuestaPropuestas,
+  ResultadoPedidoProduccion,
   TipoPropuesta,
 } from './propuestas.modelos';
 
@@ -151,8 +157,10 @@ export function desdeServidor(p: PropuestaServidor | null | undefined): ItemCola
     ? p.pedidos.filter((x) => x && typeof x.id === 'string').map((x) => ({ id: x.id, nroPedido: String(x.nroPedido ?? '') }))
     : [];
   const grupo = p.tipo === 'despachos' && p.grupo && typeof p.grupo === 'object' ? p.grupo : null;
-  // Despachos necesita su grupo del plan para aprobar: sin él, solo se puede mirar.
-  const puedeAprobar = modo === 'on' && p.puedeAprobar === true && (p.tipo !== 'despachos' || !!grupo);
+  // Despachos necesita su grupo del plan para aprobar y producción, sus pedidos con huella: sin
+  // eso, solo se puede mirar.
+  const puedeAprobar =
+    modo === 'on' && p.puedeAprobar === true && (p.tipo === 'despachos' ? !!grupo : limpiarItems(p.items).length > 0);
   return {
     id: p.id,
     clave: claveDePropuesta(p.tipo, grupo, p.id),
@@ -241,8 +249,8 @@ export function senalesDeCobro(
     const numero = a.numero || p?.numero || null;
     const tiempo = typeof a.minutos === 'number' && a.minutos > 0 ? ` lleva ${duracion(a.minutos * 60_000)}` : ' sigue';
     out.push({
-      id: `cobro:${a.pedidoId}`,
-      clave: `cobro:${a.pedidoId}`,
+      id: idCobro(a.pedidoId),
+      clave: idCobro(a.pedidoId),
       tipo: 'cobro',
       modo: 'senal',
       prioridad: 'importante',
@@ -604,9 +612,14 @@ export function razonVisible(it: ItemCola, ocultar: boolean): string {
   return ocultar ? sinMontos(it.razon) : it.razon;
 }
 
-/** Chips de lo que hace aprobar (efecto, par fuerte/suave) y cifras neutras ("$85.000 por cobrar" sin "ocultar"). */
+/**
+ * Chips de lo que hace aprobar (efecto, par fuerte/suave) y cifras neutras ("$85.000 por cobrar" sin
+ * "ocultar"). En producción encendida, "avisa a tu equipo, no al cliente" va en su propio aviso
+ * (`avisoEquipo`), no repetido como chip.
+ */
 export function chipsDe(it: ItemCola, ocultar: boolean): Array<{ texto: string; efecto: boolean }> {
-  const out = it.consecuencias.map((c) => ({ texto: ocultar ? sinMontos(c) : c, efecto: true }));
+  const consecuencias = avisoEquipo(it) ? it.consecuencias.filter((c) => !/no al cliente/i.test(c)) : it.consecuencias;
+  const out = consecuencias.map((c) => ({ texto: ocultar ? sinMontos(c) : c, efecto: true }));
   if (it.tipo !== 'cobro') {
     const n = it.pedidos.length;
     out.push({ texto: `${n} ${n === 1 ? 'pedido' : 'pedidos'}`, efecto: false });
@@ -630,6 +643,7 @@ function enMinuscula(t: string): string {
  * "Confirmar: salen 4 con Carlos · le avisa a Carlos en su app" · "Confirmar: 2 pedidos a Cereza".
  */
 export function textoConfirmar(it: ItemCola, g: GrupoEditable | null, nombre: string | null, ocultar = false): string {
+  if (it.tipo === 'produccion') return confirmacionProduccion(it);
   const n = g ? g.pedidos.length : it.pedidos.length;
   const pedidos = `${n} ${n === 1 ? 'pedido' : 'pedidos'}`;
   let base: string;
@@ -1014,4 +1028,225 @@ export function lecturasDe(r: RespuestaPropuestas | null | undefined, enviadoMs:
 /** ¿Lo leído ya incluye lo que se vio cambiar en vivo a esa hora (reloj de este navegador)? */
 export function incluyeCambio(l: LecturaFuente | null | undefined, cambioMs: number): boolean {
   return !!l && l.leidaMs > cambioMs;
+}
+
+// ── Fase 2: aprobar producción ──────────────────────────────────────────────
+
+/** Una aprobación lleva a lo sumo 50 pedidos (los demás salen en la siguiente propuesta). */
+export const MAX_ITEMS_PRODUCCION = 50;
+
+export const ETIQUETA_PRODUCCION = 'Pasar a En producción';
+export const APLICANDO_PRODUCCION = 'Pasando a En producción…';
+export const AVISO_EQUIPO = 'Avisa a tu equipo, no al cliente';
+
+/** Los pedidos con huella tal como llegaron, sin repetir y a lo sumo 50. Lo que no se reconoce se descarta. */
+function limpiarItems(crudo: unknown): ItemAprobable[] {
+  if (!Array.isArray(crudo)) return [];
+  const vistos = new Set<string>();
+  const out: ItemAprobable[] = [];
+  for (const x of crudo as Array<Partial<ItemAprobable> | null>) {
+    if (!x || typeof x.id !== 'string' || !x.id || typeof x.huella !== 'string' || !x.huella || vistos.has(x.id)) continue;
+    if (x.id.length > 200 || x.huella.length > 200) continue;
+    vistos.add(x.id);
+    out.push({ id: x.id, huella: x.huella });
+    if (out.length >= MAX_ITEMS_PRODUCCION) break;
+  }
+  return out;
+}
+
+/** Lo que el front manda al aprobar producción: los `items` tal cual los trajo la propuesta. */
+export function itemsDeProduccion(it: ItemCola | null | undefined): ItemAprobable[] {
+  return it && it.tipo === 'produccion' ? limpiarItems(it.servidor?.items) : [];
+}
+
+/** Producción encendida que esta sesión puede aprobar (permiso del servidor y pedidos con huella). */
+export function produccionAprobable(it: ItemCola | null | undefined): boolean {
+  return !!it && it.tipo === 'produccion' && it.modo === 'on' && it.puedeAprobar && itemsDeProduccion(it).length > 0;
+}
+
+/** El texto del botón en el primer toque: el del servidor en producción ("Pasar a En producción"); "Aprobar" en lo demás. */
+export function etiquetaAprobar(it: ItemCola | null | undefined): string {
+  if (!it || it.tipo !== 'produccion') return 'Aprobar';
+  return texto(it.servidor?.aprobar?.etiqueta, 60) || ETIQUETA_PRODUCCION;
+}
+
+/** El texto del botón mientras se aprueba. */
+export function textoAplicando(it: ItemCola | null | undefined): string {
+  return it && it.tipo === 'produccion' ? APLICANDO_PRODUCCION : 'Despachando…';
+}
+
+/** Segundo toque de producción: lo dice el servidor ("Confirmar: 3 pedidos pasan a En producción"). */
+export function confirmacionProduccion(it: ItemCola): string {
+  const delServidor = texto(it.servidor?.aprobar?.confirmacion, 120);
+  if (delServidor) return delServidor;
+  const n = itemsDeProduccion(it).length || it.pedidos.length;
+  return `Confirmar: ${n === 1 ? '1 pedido pasa' : `${n} pedidos pasan`} a En producción`;
+}
+
+/** Producción encendida: el aviso "Avisa a tu equipo, no al cliente". null en lo demás (y en sombra). */
+export function avisoEquipo(it: ItemCola | null | undefined): string | null {
+  return it && it.tipo === 'produccion' && it.modo === 'on' ? AVISO_EQUIPO : null;
+}
+
+/**
+ * Cómo quedó una aprobación de producción, ya en palabras:
+ * - `listo`: todos pasaron; `parcial`: algunos pasaron y otros quedaron por fuera;
+ * - `ya-estaba`: ninguno pasó porque ya habían cambiado (p. ej. "Ya estaba en producción");
+ * - `en-curso`: ninguno pasó porque otra persona los está aprobando;
+ * - `nada`: ninguno pasó, por razones mezcladas o porque quedaron fuera (cancelado...);
+ * - `error`: el servidor no lo hizo (pausada, sin permiso, sin respuesta...): se puede reintentar.
+ */
+export type EstadoProduccion = 'listo' | 'parcial' | 'ya-estaba' | 'en-curso' | 'nada' | 'error';
+
+export interface ResultadoProduccion {
+  estado: EstadoProduccion;
+  texto: string;
+  tono: TonoResultado;
+  /** Una línea por pedido que no pasó: "Dejé fuera el #1043: fue cancelado". */
+  fuera: Array<{ id: string; texto: string }>;
+  /** Ya no se aprueba otra vez desde esta tarjeta (sale de la cola); `error` sí se reintenta. */
+  final: boolean;
+  /** Ids de los pedidos que pasaron a En producción. */
+  pasaron: string[];
+}
+
+const ESTADOS_PEDIDO_PRODUCCION = new Set<string>(['en-produccion', 'ya-cambio', 'en-curso', 'fuera']);
+
+export const NO_PASO_PRODUCCION = 'No se pudo pasar a En producción. Inténtalo de nuevo.';
+export const SIN_RESPUESTA_PRODUCCION =
+  'Katuq no respondió a tiempo. Espera a que se actualice antes de volver a intentarlo: un pedido no cambia dos veces.';
+
+/** Termina en punto si no trae puntuación propia. */
+function conPunto(t: string): string {
+  return /[.!?…]$/.test(t) ? t : `${t}.`;
+}
+
+function pasaronTexto(n: number): string {
+  return n === 1 ? '1 pasó' : `${n} pasaron`;
+}
+
+/** La línea de un pedido que no pasó: fuera dice "Dejé fuera…"; lo demás, la razón del servidor. */
+function lineaProduccion(r: ResultadoPedidoProduccion, nro: string): string {
+  const razon = texto(r.razon, 200);
+  if (r.estado === 'fuera') return `Dejé fuera ${nro ? `el #${nro}` : 'un pedido'}: ${razon || 'no se pudo pasar'}`;
+  return `${nro ? `El #${nro}` : 'Un pedido'}: ${razon || defectoProduccion(r.estado)}`;
+}
+
+function defectoProduccion(estado: EstadoPedidoProduccion): string {
+  return estado === 'en-curso' ? 'Lo está aprobando otra persona' : 'Ya había cambiado';
+}
+
+function errorProduccion(textoError: string): ResultadoProduccion {
+  return { estado: 'error', texto: textoError, tono: 't-bad', fuera: [], final: false, pasaron: [] };
+}
+
+/**
+ * La respuesta de `POST /produccion/aprobar` en palabras ("Listo: 5 pasaron a En producción.",
+ * "Dejé fuera el #1043: fue cancelado", "Ya estaba en producción", "Lo está aprobando…"). Las razones
+ * del servidor se muestran tal cual. `nros` completa el número del pedido si el servidor no lo trae.
+ */
+export function resultadoProduccion(
+  r: RespuestaProduccion | null | undefined,
+  nros: ReadonlyMap<string, string> = new Map()
+): ResultadoProduccion {
+  if (!r || typeof r !== 'object') return errorProduccion('Katuq no devolvió el resultado. Actualiza la propuesta antes de volver a intentarlo.');
+  if (r.success !== true) return errorProduccion(conPunto(texto(r.message, 200) || NO_PASO_PRODUCCION));
+  const lista = (Array.isArray(r.resultados) ? r.resultados : []).filter(
+    (x): x is ResultadoPedidoProduccion => !!x && typeof x.id === 'string' && !!x.id && ESTADOS_PEDIDO_PRODUCCION.has(x.estado)
+  );
+  if (!lista.length) return errorProduccion('Katuq no devolvió el resultado de estos pedidos. Actualiza la propuesta antes de volver a intentarlo.');
+  const nro = (x: ResultadoPedidoProduccion): string => texto(x.nroPedido, 40) || nros.get(x.id) || '';
+  const pasaron = lista.filter((x) => x.estado === 'en-produccion');
+  const otros = lista.filter((x) => x.estado !== 'en-produccion');
+  const ids = pasaron.map((x) => x.id);
+  if (!otros.length) {
+    return { estado: 'listo', texto: `Listo: ${pasaronTexto(pasaron.length)} a En producción.`, tono: 't-ok', fuera: [], final: true, pasaron: ids };
+  }
+  const lineas = otros.map((x) => ({ id: x.id, texto: conPunto(lineaProduccion(x, nro(x))) }));
+  if (pasaron.length) {
+    const m = otros.length;
+    return {
+      estado: 'parcial',
+      texto: `${pasaronTexto(pasaron.length)} a En producción; ${m} ${m === 1 ? 'quedó' : 'quedaron'} por fuera.`,
+      tono: 't-warn',
+      fuera: lineas,
+      final: true,
+      pasaron: ids,
+    };
+  }
+  // Ninguno pasó.
+  const estados = new Set<EstadoPedidoProduccion>(otros.map((x) => x.estado));
+  const unico = estados.size === 1 ? otros[0].estado : null;
+  const estado: EstadoProduccion = unico === 'ya-cambio' ? 'ya-estaba' : unico === 'en-curso' ? 'en-curso' : 'nada';
+  const tono: TonoResultado = estado === 'nada' ? 't-bad' : 't-warn';
+  const razones = new Set(otros.map((x) => texto(x.razon, 200)));
+  if (unico && (otros.length === 1 || razones.size === 1)) {
+    // Una sola razón para todos: se dice una vez ("Ya estaba en producción", "Lo está aprobando ana@…").
+    const primero = otros[0];
+    const razon = texto(primero.razon, 200);
+    const principal =
+      unico === 'fuera'
+        ? otros.length === 1
+          ? lineaProduccion(primero, nro(primero))
+          : `Ninguno pasó a En producción: ${razon || 'quedaron fuera'}`
+        : razon || defectoProduccion(unico);
+    return { estado, texto: conPunto(principal), tono, fuera: [], final: true, pasaron: [] };
+  }
+  return { estado, texto: 'Ninguno pasó a En producción.', tono, fuera: lineas, final: true, pasaron: [] };
+}
+
+/** Un error HTTP al aprobar producción (400 PROPUESTA_INVALIDA, 423, red caída o se acabó el tiempo). */
+export function resultadoProduccionDeError(e: unknown): ResultadoProduccion {
+  if (sinRespuesta(e)) return errorProduccion(SIN_RESPUESTA_PRODUCCION);
+  return errorProduccion(conPunto(mensajeDe(e, NO_PASO_PRODUCCION)));
+}
+
+/** Cuánto esperar para pasar sola a la siguiente; null = no pasar (un error: la persona lo lee y reintenta). */
+export function esperaTrasProduccion(r: ResultadoProduccion): number | null {
+  if (r.estado === 'error') return null;
+  return r.estado === 'listo' ? PASAR_TRAS_EXITO_MS : PASAR_TRAS_PARCIAL_MS;
+}
+
+// ── Fase 2: cobro con "Abrir WhatsApp" ──────────────────────────────────────
+
+/** La huella de la señal de cobro de un pedido (también es lo que "Ya pagó / no aplica" descarta por hoy). */
+export function idCobro(pedidoId: string): string {
+  return `cobro:${pedidoId}`;
+}
+
+export interface CondicionWhatsapp {
+  /** Lo que dijo el servidor en la raíz de la cola (bandera, permiso de pedidos y sin D-349). */
+  cobroWhatsapp: boolean;
+  tv: boolean;
+  /** Preferencia "ocultar" (montos y datos sensibles). */
+  ocultar: boolean;
+  /** "Repetir el día". */
+  repitiendo: boolean;
+}
+
+/**
+ * ¿Existe "Abrir WhatsApp" en esta tarjeta? Solo en una señal de cobro, con el cobro encendido para
+ * la sesión, y NUNCA en modo pantalla, con "ocultar" ni durante "Repetir el día": ahí el botón no
+ * existe y el enlace (que lleva el teléfono) nunca se pide.
+ */
+export function muestraWhatsapp(it: ItemCola | null | undefined, c: CondicionWhatsapp): boolean {
+  if (!it || it.tipo !== 'cobro' || it.modo !== 'senal' || !it.pedidoId) return false;
+  return c.cobroWhatsapp === true && !c.tv && !c.ocultar && !c.repitiendo;
+}
+
+/**
+ * Solo se abre un enlace de WhatsApp (`https://wa.me/…` o `https://api.whatsapp.com/…`): cualquier
+ * otra cosa que llegara como `url` (otro dominio, `javascript:`) no se abre.
+ */
+export function esEnlaceWhatsapp(url: unknown): url is string {
+  if (typeof url !== 'string' || url.length > 4000) return false;
+  return /^https:\/\/(wa\.me|api\.whatsapp\.com)\//i.test(url);
+}
+
+/**
+ * "Ya pagó / no aplica": descarta la señal de ese pedido por hoy, para esta persona en este navegador
+ * (lo aplazado se guarda por empresa y usuario, con el día adentro: mañana vuelve si sigue sin pago).
+ */
+export function descartarCobroHoy(a: Aplazados, pedidoId: string): Aplazados {
+  return descartarHoy(a, idCobro(pedidoId));
 }

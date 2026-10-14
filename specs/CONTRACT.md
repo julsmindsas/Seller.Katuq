@@ -9737,3 +9737,25 @@ El detalle técnico vive en el cambio privado del backend: `opttia-despachos-con
 **Numeración.** La propuesta la llamaba D-418 y la primera versión del registro D-419, pero otras sesiones publicaron D-418 (ticket 1206), D-419 (facturación POS) y D-420 (mapa de mensajeros) y D-421 (mapa de Despachos) el mismo día. Queda como D-422, y así lo dicen el código y el cambio OpenSpec.
 
 **Estado (13-oct).** La spec está escrita y validada con `openspec validate --strict`. La fase 1 está en implementación, sin commit ni despliegue.
+
+**Fase 2 (13-oct, en implementación).** Daniel: "sigue con la fase 2".
+- **Dónde:** en el mismo cambio OpenSpec y no en uno aparte (tareas 8.x y sección "Fase 2" del design), para no partir la cola y la tarjeta en dos lugares. `orders` sigue como módulo sensible: un paso a la vez, con su diff y aprobación.
+- **Capacidad nueva:** `operaciones-de-opttia`. Producción y cobro salen de `opttia-en-vivo` para que cada delta quepa en 3 páginas (Artículo XIII).
+- **Bandera por operación:** una bandera del catálogo para encender cada operación: `opttiaProduccion` y `opttiaCobroWhatsapp`. Sin ella, la operación sigue como en la fase 1: la producción en sombra con `despachosOpttia` y el cobro como señal. Despachar sigue con `despachosOpttia`. Apagar la bandera de un comercio lo devuelve a la fase 1 sin desplegar.
+- **Arrancar producción:**
+  - pasa de "Sin producir" a "En producción" por `updateOrderInternal`, el mismo camino de la pantalla, con dos toques y la huella de D-410;
+  - deja la marca `propuestaOpttia` en el pedido, y una segunda aprobación no hace un segundo cambio;
+  - `controllers/orders.js` no cambia;
+  - aprueban la familia Administrador o un rol con Pedidos o Despachos en el menú;
+  - no avisa al cliente: verificado en producción, `CUSTOMER_NOTIFY_STATES=ProducidoTotalmente,Despachado,Entregado,Rechazado`.
+- **Cobro:** "Abrir WhatsApp" pide el enlace de un solo pedido al tocarlo. La persona envía y Katuq no envía nada. No existe en TV ni con "ocultar".
+- **Despliegue:** primero FLORECER, comercio por comercio con Daniel. `opttiaProduccion` se prende solo después de publicar el front nuevo.
+
+El detalle de seguridad está en el cambio privado del backend, sección "D-422 fase 2".
+
+**Fase 2, estado al 14-oct.**
+- **Backend `9232464`:** desplegado con las banderas apagadas. Trae la revisión adversarial (5 hallazgos corregidos: lock optimista, confirmación por WhatsApp de D-396, saldo con Tesorería y nombre saneado) y `cobroWhatsapp` en la cola.
+- **Front:** tarjeta con "Pasar a En producción" en dos toques, el aviso "Avisa a tu equipo, no al cliente", "Abrir WhatsApp" y "Ya pagó / no aplica". Build de producción y Playwright, a 1440 y 390 px, en verde.
+- **Cierre de la fase 1 en el mismo commit:** el arco fijo en Mi país, las marcas en Pedidos (4.6) y la vista vieja de Despachos borrada (7.5).
+- **Pendientes de la escena:** la caja por la banda al pasar a producción y la burbuja de WhatsApp tienda → casa.
+- **Falta:** publicar el front y prender las banderas en FLORECER.

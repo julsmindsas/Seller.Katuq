@@ -90,7 +90,11 @@ MUST NOT usar gradientes, primarios prohibidos ni bordes de acento a la izquierd
 - **THEN** va abajo dentro de la escena, a todo el ancho con 16 px de margen y hasta el 45 % del alto, con Aprobar a todo el ancho y 48 px de alto, sin scroll horizontal
 
 ### Requirement: Solo escribe la tarjeta de Opttia
-La única parte de En vivo que escribe SHALL ser la tarjeta de Opttia, con su hoja Ajustar. Escribe solo cuando una persona aprueba y por la ruta de cada operación. En la fase 1, la única operación que escribe es despachar, por la ruta de `aprobar-plan-de-despachos`.
+La única parte de En vivo que escribe SHALL ser la tarjeta de Opttia, con su hoja Ajustar. Escribe solo cuando una persona aprueba y por la ruta de cada operación:
+- despachar, por la ruta de `aprobar-plan-de-despachos`;
+- arrancar la producción, solo con esa operación encendida en el comercio (capacidad `operaciones-de-opttia`).
+
+"Abrir WhatsApp" en el cobro MUST NOT escribir nada en Katuq: solo abre WhatsApp con el mensaje listo y la persona decide si lo envía.
 
 MUST seguir sin cambiar pedidos ni datos:
 - las escenas, el orbe y el ensayo;

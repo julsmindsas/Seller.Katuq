@@ -1,5 +1,5 @@
 /**
- * Opttia propone en la escena (D-422, cambio `opttia-propone-en-la-escena`, fase 1).
+ * Opttia propone en la escena (D-422, cambio `opttia-propone-en-la-escena`, fases 1 y 2).
  *
  * Contrato compartido entre:
  *  - la tarjeta y su servicio (`propuestas/`), que piden la cola al servidor y aprueban;
@@ -48,6 +48,61 @@ export interface PropuestaServidor {
   puedeAprobar: boolean;
   /** Despachos: el grupo del plan tal cual, para aprobar y para "Ajustar". */
   grupo?: GrupoPlan;
+  /**
+   * Producción encendida (fase 2): los pedidos que se aprueban (los primeros N, hasta 50) con su
+   * huella, tal cual se devuelven en `POST /produccion/aprobar`. Solo con `modo:'on'` y `puedeAprobar`.
+   */
+  items?: ItemAprobable[];
+  /** Producción encendida: a dónde pasan y los textos del botón (primer y segundo toque). */
+  aprobar?: AprobarPropuesta;
+}
+
+/** Un pedido de la propuesta con la huella con la que el servidor lo vuelve a revisar al aprobar. */
+export interface ItemAprobable {
+  id: string;
+  huella: string;
+}
+
+/** Textos del botón que manda el servidor ("Pasar a En producción" / "Confirmar: 3 pedidos pasan a En producción"). */
+export interface AprobarPropuesta {
+  destino: string;
+  etiqueta: string;
+  confirmacion: string;
+}
+
+/**
+ * Resultado de cada pedido en `POST /v1/opttia/propuestas/produccion/aprobar`:
+ * - `en-produccion`: pasó;
+ * - `ya-cambio`: ya estaba en producción o cambió desde que se propuso (no se tocó);
+ * - `en-curso`: otra persona lo está aprobando;
+ * - `fuera`: cancelado, ya no se entrega hoy o mañana, cambiaría el saldo con Tesorería, etc.
+ */
+export type EstadoPedidoProduccion = 'en-produccion' | 'ya-cambio' | 'en-curso' | 'fuera';
+
+export interface ResultadoPedidoProduccion {
+  id: string;
+  nroPedido: string;
+  estado: EstadoPedidoProduccion;
+  razon?: string;
+}
+
+/** 200 `{success:true, resultados}` · 200 `{success:false, code, message}` · 400/423 con `{code, message}`. */
+export interface RespuestaProduccion {
+  success: boolean;
+  resultados?: ResultadoPedidoProduccion[];
+  code?: string;
+  message?: string;
+}
+
+/**
+ * `GET /v1/opttia/propuestas/pedido/:id/whatsapp`. La `url` (lleva el teléfono y el recordatorio) se
+ * usa al instante para abrir WhatsApp y se suelta: no va al estado, al almacenamiento ni a registros.
+ */
+export interface RespuestaWhatsapp {
+  success: boolean;
+  url?: string;
+  code?: string;
+  message?: string;
 }
 
 export interface RespuestaPropuestas {
@@ -65,6 +120,12 @@ export interface RespuestaPropuestas {
     envioAutomatico: PlanDespachos['envioAutomatico'];
   };
   propuestas: PropuestaServidor[];
+  /**
+   * Fase 2: el cobro con "Abrir WhatsApp" está encendido para esta sesión (bandera, permiso de
+   * pedidos y sin D-349). Llega en TODAS las respuestas, también con `disponible:false`, y NO entra
+   * en `version` (las señales de cobro salen del radar, no de la cola): se repinta si cambia.
+   */
+  cobroWhatsapp?: boolean;
   /**
    * Por fuente: cuándo se leyó lo que trae (`leidoEn`) y hasta cuándo el servidor lo sirve de su
    * memoria (`venceEn`), en ms del reloj del servidor. No entra en `version`. Con esto la tarjeta sabe
@@ -101,6 +162,12 @@ export interface PropuestaEnEscena {
   /** Texto corto que el orbe muestra al señalar ("Carlos · 4"). */
   etiqueta: string;
 }
+
+/**
+ * Lo que la tarjeta le cuenta a la escena para que lo anime (fase 2). No hay evento real cuando la
+ * persona abre WhatsApp (Katuq no envía nada), así que la burbuja tienda → casa sale de aquí.
+ */
+export type AvisoParaEscena = { tipo: 'whatsapp-abierto'; pedidoId: string };
 
 export interface ContadorPropuestas {
   ideas: number;

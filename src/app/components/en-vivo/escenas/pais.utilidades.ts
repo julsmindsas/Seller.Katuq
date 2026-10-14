@@ -247,6 +247,22 @@ export function contarPedidosDeHoy(
   return { porCiudad, porPedido, sinCiudad, total };
 }
 
+/**
+ * Ciudad (DANE) de CADA pedido de la foto, sin importar el día en que se creó: la foto trae también
+ * los activos de la ventana (un pedido de anoche que se empacó hoy). Solo para ubicar los pedidos de
+ * una propuesta de Opttia (D-422); el conteo de hoy sigue saliendo de `contarPedidosDeHoy`. Los
+ * cancelados y los que no se pueden ubicar no entran.
+ */
+export function ciudadesDeLaFoto(geo: GeoMinimo, pedidos: ReadonlyArray<PedidoParaMapa>): Map<string, string> {
+  const porPedido = new Map<string, string>();
+  for (const p of pedidos) {
+    if (p.cancelado) continue;
+    const dane = resolverDane(geo, p.dane, p.ciudad);
+    if (dane) porPedido.set(p.id, dane);
+  }
+  return porPedido;
+}
+
 /** La ciudad con más pedidos (la bodega, si nadie dice cuál es). Empata por código para que no cambie. */
 export function ciudadConMasPedidos(porCiudad: ReadonlyMap<string, number>): string | null {
   let mejor: string | null = null;

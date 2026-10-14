@@ -1,6 +1,6 @@
 ## Context
 
-- **Origen:** la motivación está en proposal.md. La propuesta completa (experiencia, las seis operaciones, arquitectura, seguridad y fases) se aprobó el 13-oct junto con el boceto interactivo: https://claude.ai/artifact/XVjArkR2s6cbpVXym7G6e2. Este design fija **solo la fase 1**. Las fases 2 a 4 tendrán su propio cambio y su design.
+- **Origen:** la motivación está en proposal.md. La propuesta completa (experiencia, las seis operaciones, arquitectura, seguridad y fases) se aprobó el 13-oct junto con el boceto interactivo: https://claude.ai/artifact/XVjArkR2s6cbpVXym7G6e2. Este design fija la fase 1 y, en la sección "Fase 2" del final, la fase 2: Daniel pidió el 13-oct "sigue con la fase 2". Las fases 3 y 4 tendrán su propio cambio y su design.
 - **Estado de partida:**
   - D-410 está desplegado (front 2026.10.13.4) y su bandera `despachosOpttia` está encendida en FLORECER, OH MY STORE y ALMARA FELICIDAD.
   - La pestaña vive en `paginas/en-vivo-comercio-pagina.component.ts`: `OPCION_DESPACHOS`, `SIN_ESCENA` y la suscripción de la insignia. En el html está el `ngSwitchCase 'despachos'`.
@@ -143,3 +143,137 @@
 3. Publicar el front. La tarjeta aparece y la pestaña desaparece en el mismo despliegue.
 4. **Rollback:** `OPTTIA_PROPUESTAS_HABILITADO=false` apaga la tarjeta. Para recuperar la pestaña, se vuelve a publicar la versión anterior del front.
 5. Con la fase 1 verificada en producción, se borra la vista `EnVivoDespachosComponent`.
+
+## Fase 2: aprobar la producción, bandera por operación y cobro con WhatsApp
+
+Daniel lo pidió el 13-oct ("sigue con la fase 2"). Se detalla aquí y no en un cambio aparte, para que la cola, la tarjeta y sus deltas sigan en un solo lugar. `orders` sigue siendo un módulo sensible: el cambio es mínimo, tiene prueba de contrato del write-set y se aplica con aprobación (tareas 8.x). La seguridad del alcance está en el cambio privado del backend, sección "D-422 fase 2".
+
+**Verificado el 13-oct, solo lectura:** en producción, `CUSTOMER_NOTIFY_STATES=ProducidoTotalmente,Despachado,Entregado,Rechazado`. "En producción" no le avisa al cliente. El correo y el SMS directos de la edición de pedidos tampoco tienen plantilla para ese estado. Solo sale la notificación interna `PRODUCTION_STARTED` al equipo.
+
+### Decisiones
+
+1. **Bandera por operación: una bandera booleana del catálogo de `companyFeatureFlags` para encender cada operación.** Sin ella, la operación sigue como en la fase 1.
+
+   | Operación | Fase 1 (sin la bandera nueva) | Encendido |
+   |-----------|-------------------------------|-----------|
+   | despachos | `despachosOpttia` (D-410) | la misma |
+   | produccion | sombra con `despachosOpttia`, solo Administrador | `opttiaProduccion` |
+   | cobro | señal con "Abrir pedido" | `opttiaCobroWhatsapp` |
+
+   - Una fuente puede declarar varias banderas (`banderas`). Aplica si alguna está encendida, y su `acceso` decide el modo. En producción, encendido gana sobre sombra.
+   - Solo el booleano `true` prende, que es la regla del catálogo. Las banderas se prenden con `scripts/set-company-feature.js`, que simula por omisión.
+   - No hace falta migrar banderas: quien hoy ve la sombra o la señal sigue igual.
+
+   *Alternativa descartada:* dos banderas por operación, "ver" y "aprobar". Obligaba a migrar las banderas de los comercios que ya tienen la fase 1, sin ganar nada.
+
+2. **Interruptores sin desplegar:**
+   - apagar la bandera de un comercio devuelve la operación a la fase 1;
+   - `OPTTIA_PROPUESTAS_HABILITADO` sigue apagando toda la función, también aprobar y pedir el enlace;
+   - el interruptor de Opttia por empresa (D-386) se revisa también en las dos acciones.
+
+   Los interruptores generales se retiran según el Artículo XII.
+
+3. **Aprobar la producción: `POST /v1/opttia/propuestas/produccion/aprobar`** (`services/opttiaPropuestas/ejecutores/produccion.js`). Despachar sigue por `POST /v1/logistica/plan/aprobar`. Por cada pedido, uno tras otro y hasta 50:
+   1. en una transacción relee el pedido y exige la empresa de la sesión, la misma huella de D-410 (`huellaDe`, compartida con la fuente), "Sin producir", sin cancelar y entrega hoy o mañana;
+   2. deja en el pedido la marca `propuestaOpttia` (`tipo`, `propuestaId`, `aprobadoPor`, `en`, `estado:'en-curso'`). La marca no toca `date_edit`, así que la huella no cambia;
+   3. fuera de la transacción llama `updateOrderInternal` con solo `{_id, estadoProceso:'EnProduccion'}` y el correo de la sesión. Es el mismo camino de la pantalla: transiciones, guard de tesorería, historial con quien aprueba y aviso interno;
+   4. deja la marca en `hecho`. Si `updateOrderInternal` falla, quita la marca y el pedido queda como estaba, listo para aprobarlo otra vez.
+
+   Sin duplicados:
+   - una segunda aprobación encuentra otra huella y responde `ya-cambio` ("Ya estaba en producción");
+   - dos personas a la vez: una aprueba y la otra recibe `en-curso` ("Lo está aprobando…").
+
+   Más reglas:
+   - hay un presupuesto de 40 s para empezar pedidos; lo que no alcanza queda `fuera` sin escribir;
+   - `controllers/orders.js` no cambia;
+   - no hay colecciones nuevas;
+   - al terminar se llama `invalidar(empresa)`.
+
+   *Alternativa descartada:* escribir `estadoProceso` directo. Se saltaría las transiciones, el guard de tesorería y el historial de la pantalla.
+
+4. **Fuente `produccion` encendida:**
+   - lleva `modo:'on'`, `puedeAprobar:true` e `items` con hasta 50 pedidos y su huella;
+   - `aprobar` trae `{destino, etiqueta, confirmacion}`;
+   - las consecuencias son "Pasan a En producción" (o "los primeros 50") y "Avisa a tu equipo, no al cliente".
+
+   La ven y la aprueban la familia Administrador o un rol con `ventas/pedidos` o `despachos` en el menú (`services/opttiaPropuestas/acceso.js`, el mismo criterio de `update_order_status` del MCP).
+
+5. **Cobro con WhatsApp: `GET /v1/opttia/propuestas/pedido/:id/whatsapp`** (`services/opttiaPropuestas/whatsapp.js`):
+   - lee un solo pedido de la empresa de la sesión;
+   - aplica el alcance de D-349;
+   - revisa que no esté cancelado y que tenga saldo;
+   - devuelve el enlace `wa.me` con el texto de una plantilla del servidor: primer nombre, comercio, número de pedido y saldo;
+   - el teléfono solo viaja dentro del enlace, con `Cache-Control: no-store`. No se guarda ni se registra.
+
+   *Alternativa descartada:* mandar el teléfono en la cola. Llegaría a todas las pantallas, también a la TV.
+
+6. **La cola le dice al front si el cobro con WhatsApp está encendido para esa persona.** Hoy no lo dice: falta en el backend (tarea 8.3.4). Se propone `cobroWhatsapp: boolean` en la raíz, verdadero solo con la bandera, el permiso de pedidos y sin D-349, y dentro de `version`.
+
+7. **Front, cuando el front esté libre** (otro trabajo lo está cambiando):
+   - los modelos nuevos en `propuestas.modelos.ts`;
+   - el ejecutor `produccion` en el mapa del servicio;
+   - "Abrir WhatsApp" como ejecutor de `cobro` encendido.
+
+   El enlace se abre en otra pestaña con `noopener` y no se guarda en el estado, el almacenamiento ni los reportes de errores. En TV, con "ocultar" y en "Repetir el día" no hay botón y no se pide el enlace.
+
+### Contrato nuevo para el front
+
+```ts
+// GET /v1/opttia/propuestas: lo que se suma (lo demás no cambia)
+interface PropuestaServidor {
+  // …
+  modo: 'on' | 'sombra';                 // produccion ahora puede venir 'on'
+  // solo con modo 'on':
+  items?: Array<{ id: string; huella: string }>;   // hasta 50, primero los de hoy y luego por franja
+  aprobar?: { destino: string; etiqueta: string; confirmacion: string };
+  // destino '/v1/opttia/propuestas/produccion/aprobar', etiqueta 'Pasar a En producción',
+  // confirmacion 'Confirmar: 5 pedidos pasan a En producción'
+}
+interface RespuestaPropuestas {
+  // …
+  cobroWhatsapp?: boolean; // PENDIENTE en el backend (tarea 8.3.4); sin el campo, el cobro es señal
+}
+
+// POST /v1/opttia/propuestas/produccion/aprobar   (sin el cargador global)
+// cuerpo: { propuestaId: string /* 'produccion-<24 hex>' */; items: Array<{ id: string; huella: string /* 16 hex */ }> } // 1 a 50
+type RespuestaAprobarProduccion =
+  | {
+      success: true;
+      resultados: Array<{
+        id: string;
+        nroPedido: string;
+        estado: 'en-produccion' | 'ya-cambio' | 'en-curso' | 'fuera';
+        razon?: string; // en palabras: "Ya estaba en producción", "Fue cancelado", "Lo está aprobando …"
+      }>;
+    }
+  | { success: false; code: 'PAUSADA' | 'OPTTIA_APAGADO' | 'FUNCION_APAGADA' | 'SIN_PERMISO' | 'SOLO_PROPIAS' | 'SIN_APROBADOR' | 'ERROR'; message: string }; // 200
+// 400 { success: false, code: 'PROPUESTA_INVALIDA', message } · 423 { success: false, code: 'TENANT_SOLO_LECTURA', message }
+// 401 sin sesión. Nunca 403.
+
+// GET /v1/opttia/propuestas/pedido/:id/whatsapp   (sin el cargador global; siempre 200, salvo 401)
+type RespuestaWhatsappCobro =
+  | { success: true; url: string } // https://wa.me/<dígitos>?text=<texto>; abrir y no guardar
+  | {
+      success: false;
+      code: 'PAUSADA' | 'OPTTIA_APAGADO' | 'FUNCION_APAGADA' | 'SIN_PERMISO' | 'ERROR'
+          | 'NO_ENCONTRADO' | 'SOLO_PROPIAS' | 'CANCELADO' | 'SIN_SALDO' | 'SIN_TELEFONO';
+      message: string; // ya en palabras para la tarjeta
+    };
+```
+
+### Riesgos de la fase 2
+
+- [Front viejo con la producción encendida] → El front de la fase 1 no tiene ejecutor de producción. `opttiaProduccion` se prende en un comercio solo después de publicar el front nuevo.
+- [Un comercio cambia la configuración de avisos] → Antes de encender cada comercio se vuelve a verificar `CUSTOMER_NOTIFY_STATES` en el servidor.
+- [Más de 50 pedidos] → Se aprueban los primeros 50 en el orden de la tarjeta, y el resto sale en la siguiente propuesta.
+- [Deshacer] → No hay deshacer automático. Lo aprobado se corrige desde la pantalla, como cualquier cambio de estado.
+- [Inventario] → El cambio de estado no lleva carrito. La prueba del write-set confirma que no hay movimientos con el efecto de inventario al día.
+- [El historial de estados no dice "Opttia"] → El historial guarda quién hizo el cambio, y el origen queda en la marca `propuestaOpttia` del pedido. Si Daniel quiere el origen también en el historial, se hace con un diff aparte de `controllers/orders.js` (tarea 8.1.9).
+
+### Migration Plan de la fase 2
+
+1. Desplegar el backend. Sin banderas nuevas nada cambia, y el front viejo sigue igual.
+2. Publicar el front.
+3. En FLORECER, simular y luego prender `opttiaProduccion` y `opttiaCobroWhatsapp`, y probar con pedidos de prueba.
+4. Seguir con los demás comercios uno por uno, con Daniel.
+5. **Rollback:** apagar la bandera del comercio, o `OPTTIA_PROPUESTAS_HABILITADO=false` para todos.

@@ -15,6 +15,9 @@ type Confirmacion = 'uno' | 'todos';
  *   efecto real y vuelve solo a los 5 s; el segundo aprueba ("Despachando…").
  * - Despachos: Aprobar, Ajustar (hoja lateral) y Después. Producción (sombra): "Así lo haría
  *   Opttia", sin botón. Cobro: "Abrir pedido" (no escribe nada).
+ * - Fase 2: producción encendida con "Pasar a En producción" (los mismos dos toques, con la
+ *   confirmación del servidor) y el aviso "Avisa a tu equipo, no al cliente". Cobro encendido con
+ *   "Abrir WhatsApp" de principal ("Abrir pedido" pasa a secundario) y "Ya pagó / no aplica".
  * - ← → recorren la cola y Esc es "Después". El lector de pantalla oye solo lo nuevo.
  * - En modo pantalla (TV) no hay botones (ocultos, no deshabilitados) y durante "Repetir el día"
  *   la tarjeta no se muestra.
@@ -114,6 +117,18 @@ export class EnVivoSugerenciaComponent implements OnDestroy {
     this.propuestas.abrirPedido(it.pedidoId);
   }
 
+  /** El enlace se pide al tocar y se abre en otra pestaña; la tarjeta nunca lo ve. */
+  abrirWhatsapp(vm: VistaPropuestas): void {
+    if (!vm.whatsapp || vm.whatsappAbriendo || vm.tv || vm.repitiendo) return;
+    this.soltarConfirmacion();
+    this.propuestas.abrirWhatsapp();
+  }
+
+  yaPago(): void {
+    this.soltarConfirmacion();
+    this.propuestas.yaPago();
+  }
+
   anterior(): void {
     this.soltarConfirmacion();
     this.propuestas.anterior();
@@ -188,9 +203,9 @@ export class EnVivoSugerenciaComponent implements OnDestroy {
   // ── Textos ────────────────────────────────────────────────────────────────
 
   textoAprobar(vm: VistaPropuestas): string {
-    if (vm.aplicando && !vm.aplicandoTodos) return 'Despachando…';
+    if (vm.aplicando && !vm.aplicandoTodos) return vm.textoAplicando;
     if (this.confirmando === 'uno' && this.confirmandoId === vm.item?.id) return vm.confirmar;
-    return 'Aprobar';
+    return vm.etiquetaAprobar;
   }
 
   textoTodos(vm: VistaPropuestas): string {
@@ -213,7 +228,7 @@ export class EnVivoSugerenciaComponent implements OnDestroy {
 
   /** El resultado ya está y no se puede aprobar otra vez: no se muestran los botones de aprobar. */
   conResultadoFinal(vm: VistaPropuestas): boolean {
-    return !!vm.resultado && vm.resultado.tono !== 't-bad';
+    return !!vm.resultado && vm.resultado.final;
   }
 
   trackChip(i: number): number {

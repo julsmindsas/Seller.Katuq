@@ -16,6 +16,7 @@ import { EtapaId, EtapaInfo, PedidoEnVivo } from '../../servicios/en-vivo.modelo
 import { cadaFueraDeZona, prefiereMenosMovimiento } from '../../utilidades/movimiento';
 import { mapaDeEtapas } from '../../utilidades/tonos';
 import { EnVivoOrbeService, MarcaOrbe } from '../../escenas/opttia-guia.service';
+import { MarcaPropuesta, tarjetasConTexto } from '../../escenas/propuesta-marcas.reglas';
 import { ocultarDe$ } from '../comercio-fuentes';
 import { FLIP_CURVA, FLIP_DURACION_MS, planearFlip, PosicionTarjeta } from '../utilidades/flip';
 import { armarColumnas, ColumnaTablero, TarjetaTablero, totalEnTablero } from '../utilidades/tablero';
@@ -59,6 +60,11 @@ const DURACION_MOVIDA_MS = 1400;
  *
  * Tocar una tarjeta avisa por `EnVivoInteraccionService` (`abrir-pedido`); la ficha la abre quien
  * escuche. Solo lectura.
+ *
+ * Opttia propone (D-422, 4.6): mientras la tarjeta de Opttia muestra una propuesta, las tarjetas de
+ * sus pedidos llevan el anillo del color de su grupo y, en cada columna, la de más arriba de cada
+ * grupo entre las pintadas dice qué propone (`EnVivoOrbeService.marcasPropuesta$`, con
+ * `usarMarcas('pedido')`). Al cambiar o quitar la propuesta, las marcas cambian o se van.
  */
 @Component({
   selector: 'app-en-vivo-tablero-pedidos',
@@ -86,6 +92,10 @@ export class EnVivoTableroPedidosComponent implements OnInit, OnDestroy {
   private soltarMarcas: (() => void) | null = null;
   /** La tarjeta que Opttia señala ahora (sobrevive al repintado: la plantilla la lee en cada pintado). */
   marca: MarcaOrbe | null = null;
+  /** Las tarjetas de la propuesta de Opttia a la vista (pedido → color de su grupo y lo que propone). */
+  marcasPropuesta: ReadonlyMap<string, MarcaPropuesta> = new Map();
+  /** De esas, las que lo dicen en texto: la de más arriba de cada grupo en cada columna, entre las pintadas. */
+  private conTextoPropuesta: ReadonlySet<string> = new Set();
 
   constructor(
     private readonly estado: EnVivoEstadoService,
@@ -136,6 +146,13 @@ export class EnVivoTableroPedidosComponent implements OnInit, OnDestroy {
         this.cambios.markForCheck();
       })
     );
+    this.suscripcion.add(
+      this.orbe.marcasPropuesta$.subscribe((marcas) => {
+        this.marcasPropuesta = marcas;
+        this.elegirTextoPropuesta();
+        this.cambios.markForCheck();
+      })
+    );
 
     // "Lo que lleva en la etapa" y la marca "tarde" suben solos, sin esperar un evento.
     this.pararReloj = cadaFueraDeZona(this.zona, ACTUALIZAR_MS, () => {
@@ -161,6 +178,24 @@ export class EnVivoTableroPedidosComponent implements OnInit, OnDestroy {
   /** "Opttia: …" si esta es la tarjeta que Opttia señala; null si no. */
   textoOpttia(id: string): string | null {
     return this.marca && this.marca.id === id ? `Opttia: ${this.marca.texto}` : null;
+  }
+
+  /** Clases de la marca de la propuesta: `is-sug` y el color de su grupo (`is-sug--info`...); '' si no es de la propuesta. */
+  claseOpttia(id: string): string {
+    const m = this.marcasPropuesta.get(id);
+    return m ? `is-sug is-sug--${m.color}` : '';
+  }
+
+  /** "Opttia propone: …" en la tarjeta pintada de más arriba de cada grupo, por columna; null en las demás. */
+  textoPropuesta(id: string): string | null {
+    const m = this.marcasPropuesta.get(id);
+    return m && this.conTextoPropuesta.has(id) ? `Opttia propone: ${m.etiqueta}` : null;
+  }
+
+  /** Lo que lee el lector de pantalla: la tarjeta y, si es de la propuesta, qué propone Opttia. */
+  ariaDe(t: TarjetaTablero): string {
+    const m = this.marcasPropuesta.get(t.id);
+    return m ? `${t.aria}. Opttia propone: ${m.etiqueta}` : t.aria;
   }
 
   porColumna(_: number, columna: ColumnaTablero): EtapaId {
@@ -200,6 +235,7 @@ export class EnVivoTableroPedidosComponent implements OnInit, OnDestroy {
     const reducir = prefiereMenosMovimiento();
     const antes = this.haPintado && !reducir ? this.medir() : null;
     this.vista = { cargado: true, columnas, total: totalEnTablero(columnas), soloPropias: entrada.soloPropias };
+    this.elegirTextoPropuesta();
     if (this.haPintado) {
       this.cambios.detectChanges();
       if (antes) this.animar(antes, reducir);
@@ -217,7 +253,18 @@ export class EnVivoTableroPedidosComponent implements OnInit, OnDestroy {
     this.movidas.clear();
     this.haPintado = false;
     this.vista = { cargado: false, columnas: [], total: 0, soloPropias: false };
+    this.elegirTextoPropuesta();
     this.cambios.markForCheck();
+  }
+
+  /**
+   * Qué tarjetas de la propuesta lo dicen en texto, con lo que el tablero pinta ahora (tope de
+   * tarjetas por columna y su orden). Se rehace al repintar y al cambiar la propuesta.
+   */
+  private elegirTextoPropuesta(): void {
+    this.conTextoPropuesta = this.marcasPropuesta.size
+      ? tarjetasConTexto(this.vista.columnas.map((c) => c.tarjetas.map((t) => t.id)), this.marcasPropuesta)
+      : new Set<string>();
   }
 
   /**

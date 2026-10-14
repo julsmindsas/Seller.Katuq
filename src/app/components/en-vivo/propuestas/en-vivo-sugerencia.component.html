@@ -97,19 +97,44 @@
               </div>
             </ng-container>
 
-            <!-- Cobro: abre el pedido; no cambia nada. -->
+            <!-- Cobro: no cambia nada. Encendido: "Abrir WhatsApp" de principal (el enlace se pide al tocar). -->
             <ng-container *ngSwitchCase="'senal'">
+              <p class="ev-sug-aviso t-warn" *ngIf="vm.whatsappAviso">
+                <span class="ev-sug-aviso__texto">{{ vm.whatsappAviso }}</span>
+              </p>
               <div class="ev-sug-acciones">
-                <button type="button" class="ev-sug-btn ev-sug-btn--principal" (click)="abrirPedido(it)"><span>Abrir pedido</span></button>
-                <button type="button" class="ev-sug-btn ev-sug-btn--texto" (click)="despues()"><span>Después</span></button>
-                <ng-container *ngTemplateOutlet="menuMas"></ng-container>
+                <button
+                  type="button"
+                  class="ev-sug-btn ev-sug-btn--principal ev-sug-btn--whatsapp"
+                  *ngIf="vm.whatsapp; else pedidoPrincipal"
+                  [class.ev-sug-btn--ocupado]="vm.whatsappAbriendo"
+                  [disabled]="vm.whatsappAbriendo"
+                  (click)="abrirWhatsapp(vm)"
+                >
+                  <span class="ev-sug-btn__giro" *ngIf="vm.whatsappAbriendo" aria-hidden="true"></span>
+                  <span class="ev-sug-btn__texto">{{ vm.whatsappAbriendo ? 'Abriendo WhatsApp…' : 'Abrir WhatsApp' }}</span>
+                </button>
+                <ng-template #pedidoPrincipal>
+                  <button type="button" class="ev-sug-btn ev-sug-btn--principal ev-sug-btn--pedido" (click)="abrirPedido(it)"><span>Abrir pedido</span></button>
+                </ng-template>
+                <div class="ev-sug-acciones__fila">
+                  <button type="button" class="ev-sug-btn ev-sug-btn--sec ev-sug-btn--pedido" *ngIf="vm.whatsapp" (click)="abrirPedido(it)">
+                    <span>Abrir pedido</span>
+                  </button>
+                  <button type="button" class="ev-sug-btn ev-sug-btn--texto" (click)="despues()"><span>Después</span></button>
+                  <button type="button" class="ev-sug-btn ev-sug-btn--texto ev-sug-btn--pagado" (click)="yaPago()"><span>Ya pagó / no aplica</span></button>
+                </div>
               </div>
             </ng-container>
 
-            <!-- Despachos: Aprobar en dos toques, Ajustar y Después. -->
+            <!-- Despachos: Aprobar en dos toques, Ajustar y Después. Producción encendida: "Pasar a En producción" en dos toques. -->
             <ng-container *ngSwitchDefault>
+              <p class="ev-sug-equipo" *ngIf="vm.avisoEquipo && !conResultadoFinal(vm)">
+                <app-en-vivo-icono nombre="check"></app-en-vivo-icono>
+                <span class="ev-sug-equipo__texto">{{ vm.avisoEquipo }}</span>
+              </p>
               <p class="ev-sug-aviso t-ink" *ngIf="vm.sinPermiso && !vm.tv && !conResultadoFinal(vm)">
-                <span class="ev-sug-aviso__texto">Puedes ver la propuesta. Aprobar es para quien tiene Despachos en su rol.</span>
+                <span class="ev-sug-aviso__texto">{{ vm.sinPermisoTexto }}</span>
               </p>
               <!-- Al grupo le falta algo (mensajero o pedidos): Aprobar queda deshabilitado y Ajustar lo resuelve. -->
               <p class="ev-sug-aviso t-warn" *ngIf="vm.falta && !vm.viejo && !conResultadoFinal(vm)">
@@ -120,6 +145,7 @@
                   type="button"
                   class="ev-sug-btn ev-sug-btn--principal ev-sug-btn--aprobar"
                   *ngIf="vm.aprobable"
+                  [class.ev-sug-btn--produccion]="it.tipo === 'produccion'"
                   [class.ev-sug-btn--confirmar]="esConfirmando('uno', vm)"
                   [class.ev-sug-btn--ocupado]="vm.aplicando && !vm.aplicandoTodos"
                   [disabled]="vm.bloqueado || !!vm.viejo || !!vm.falta || vm.ocupado"

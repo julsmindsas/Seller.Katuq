@@ -1,5 +1,6 @@
 @import '../en-vivo-tema';
 @import './orbe-etiqueta';
+@import './propuesta-etiqueta';
 
 // ==========================================================================
 // Escena 3D de la operación (D-386, 5.1/5.4). Plana, sin gradientes (design-system).
@@ -253,43 +254,8 @@ app-en-vivo-escena-operacion {
   }
 
   // Ensayo de una propuesta de Opttia (D-422): etiqueta del montón ("Carlos · 4"), "$" del cobro y
-  // número de cada copia de la fila de producción. Par color fuerte / fondo suave del grupo.
-  .eve-lbl--sug .eve-lbl__in {
-    display: flex;
-    align-items: center;
-    padding: 4px 10px;
-    margin-bottom: 4px;
-    border-radius: 20px;
-    background: var(--tone-soft);
-    border: 1px solid var(--tone);
-    box-shadow: var(--ev-sh-up);
-  }
-
-  .eve-lbl--sug b {
-    font-size: ev-fs(11.5);
-    font-weight: 800;
-    color: var(--tone);
-    letter-spacing: normal;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .eve-lbl--sugn .eve-lbl__in {
-    display: grid;
-    place-items: center;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--tone);
-    box-shadow: var(--ev-sh-up);
-  }
-
-  .eve-lbl--sugn b {
-    font-size: 11px;
-    font-weight: 800;
-    line-height: 1;
-    color: var(--ev-on-accent, #fff);
-    font-variant-numeric: tabular-nums;
-  }
+  // número de cada copia de la fila de producción (compartidas con el arco fijo de "Mi país").
+  @include eve-propuesta-etiqueta;
 
   @media (max-width: 520px) {
     .eve-lbl--st .eve-lbl__in {
@@ -301,22 +267,6 @@ app-en-vivo-escena-operacion {
       font-size: 13px;
     }
 
-    .eve-lbl--sug .eve-lbl__in {
-      padding: 2px 7px;
-    }
-
-    .eve-lbl--sug b {
-      font-size: 10px;
-    }
-
-    .eve-lbl--sugn .eve-lbl__in {
-      width: 16px;
-      height: 16px;
-    }
-
-    .eve-lbl--sugn b {
-      font-size: 9.5px;
-    }
   }
 
   // Con "reducir movimiento": las etiquetas aparecen sin salto.

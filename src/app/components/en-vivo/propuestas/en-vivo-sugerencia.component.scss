@@ -300,6 +300,31 @@
   color: var(--ev-ink-2);
 }
 
+// Producción encendida: a quién avisa (al equipo, nunca al cliente). Par fuerte / suave en verde.
+.ev-sug-equipo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 7px 10px;
+  letter-spacing: normal;
+  background: var(--ev-ok-soft);
+  border-radius: 11px;
+
+  app-en-vivo-icono {
+    --ev-icono: 14px;
+    flex: none;
+    color: var(--ev-ok);
+  }
+}
+
+.ev-sug-equipo__texto {
+  font-size: ev-fs(12);
+  font-weight: 800;
+  line-height: 1.4;
+  color: var(--ev-ok);
+}
+
 .ev-sug-sombra {
   margin: 0;
   padding: 7px 10px;

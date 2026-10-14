@@ -145,6 +145,38 @@
     }
   }
 
+  // De la propuesta de Opttia a la vista (D-422): anillo del color de su grupo; la de más arriba del
+  // grupo en cada columna dice qué propone, en par color fuerte / fondo suave. El texto y el borde
+  // van en `--ev-<color>-ink` (4,5:1 o más en letra pequeña; el borde, 3:1 o más sobre la tarjeta).
+  // Va después de `is-opt` para ganarle.
+  &.is-sug {
+    border-color: var(--sug-ink);
+    box-shadow: 0 0 0 3px var(--sug-soft), var(--ev-sh-up);
+
+    &[data-sug]::after {
+      content: attr(data-sug);
+      display: block;
+      margin-top: 4px;
+      padding: 5px 8px;
+      font-size: ev-fs(10.5);
+      font-weight: 800;
+      line-height: 1.3;
+      letter-spacing: normal;
+      white-space: normal;
+      color: var(--sug-ink);
+      background: var(--sug-soft);
+      border: 1px solid var(--sug-ink);
+      border-radius: 9px;
+    }
+  }
+
+  @each $color in accent, info, pack, ok, warn, bad {
+    &.is-sug--#{$color} {
+      --sug-ink: var(--ev-#{$color}-ink);
+      --sug-soft: var(--ev-#{$color}-soft);
+    }
+  }
+
   b {
     overflow: hidden;
     font-size: ev-fs(12.5);

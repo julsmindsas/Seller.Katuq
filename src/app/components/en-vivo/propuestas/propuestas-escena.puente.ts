@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { distinctUntilChanged } from 'rxjs/operators';
-import { ContadorPropuestas, PropuestaEnEscena } from './propuestas.modelos';
+import { AvisoParaEscena, ContadorPropuestas, PropuestaEnEscena } from './propuestas.modelos';
 
 /**
  * Puente entre la tarjeta de Opttia (que escribe aquí) y la escena y el orbe (que solo leen).
@@ -14,6 +14,7 @@ export class EnVivoPropuestaEscenaPuente {
   private readonly contadorSub = new BehaviorSubject<ContadorPropuestas>({ ideas: 0, urgentes: 0 });
   private readonly toquesSub = new Subject<string>();
   private readonly abrirSub = new Subject<void>();
+  private readonly avisosSub = new Subject<AvisoParaEscena>();
 
   /** La propuesta que la escena debe ensayar ahora (null = ninguna: limpiar la capa). */
   readonly actual$: Observable<PropuestaEnEscena | null> = this.actualSub.pipe(
@@ -27,6 +28,11 @@ export class EnVivoPropuestaEscenaPuente {
   readonly toques$: Observable<string> = this.toquesSub.asObservable();
   /** El botón del orbe pide mostrar (otra vez) la tarjeta. */
   readonly abrir$: Observable<void> = this.abrirSub.asObservable();
+  /**
+   * Fase 2: lo que la tarjeta hizo y que no trae evento real (abrir WhatsApp: Katuq no envía nada).
+   * La escena lo puede animar (la burbuja vuela de la tienda a la casa). Solo lleva el id del pedido.
+   */
+  readonly avisos$: Observable<AvisoParaEscena> = this.avisosSub.asObservable();
 
   get actual(): PropuestaEnEscena | null {
     return this.actualSub.value;
@@ -39,6 +45,10 @@ export class EnVivoPropuestaEscenaPuente {
 
   contar(c: ContadorPropuestas): void {
     this.contadorSub.next(c);
+  }
+
+  avisar(a: AvisoParaEscena): void {
+    this.avisosSub.next(a);
   }
 
   // ── Lo usan la escena y el botón del orbe ────────────────────────────────

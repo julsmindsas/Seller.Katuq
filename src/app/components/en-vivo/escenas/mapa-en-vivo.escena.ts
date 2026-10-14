@@ -2,6 +2,7 @@ import type * as ThreeNS from 'three';
 import { DEG, OpcionesEscena, RoundedBox, Three } from '../../../shared/escena-3d/escena-base';
 import { ALTO_MAPA, IdMapa, MapaColombiaEscena } from '../../../shared/escena-3d/mapa-colombia.scene';
 import { EtapaInfo, EventoEnVivo, EventoSalida, PedidoEnVivo } from '../servicios/en-vivo.modelos';
+import { ArcoFijoPedido, ArcosFijos } from './arcos-fijos';
 import { primerNombre } from '../servicios/en-vivo-reglas';
 import { dinero } from '../utilidades/formato';
 import { EtiquetaH, GestorEtiquetas, esc } from './etiquetas-html';
@@ -12,11 +13,13 @@ import {
   AgrupadorSalidas,
   alturaColumna,
   ciudadConMasPedidos,
+  ciudadesDeLaFoto,
   claveDeSalida,
   contarPedidosDeHoy,
   nombreDeLugar,
   resolverDane,
 } from './pais.utilidades';
+import { PropuestaArcos, arcosDePropuesta } from './propuesta-marcas.reglas';
 
 // ==========================================================================
 // "Mi país" del comercio (D-386, tarea 5.3): el mapa compartido de Colombia con una columna por
@@ -24,6 +27,11 @@ import {
 // arco desde la ciudad de la bodega hasta la del cliente cuando sale, y un pulso verde con confeti
 // cuando se entrega. Los pedidos sin ciudad cuentan en las cifras pero no se dibujan. Referencia
 // de look y movimiento: el prototipo publicado con la propuesta (`crearMapa`). Solo lectura.
+//
+// Opttia propone (D-422, 4.6): mientras la tarjeta muestra una propuesta con grupos de
+// transportadora, cada grupo lleva un arco FIJO de su color desde la bodega hasta la ciudad de sus
+// pedidos, con su etiqueta ("Cereza · 2"). Se borra al quitar la propuesta (al aprobar, la salida
+// real dibuja su arco con el evento del canal en vivo).
 // ==========================================================================
 
 type V3 = ThreeNS.Vector3;
@@ -46,6 +54,8 @@ export interface DiagnosticoMapa {
   origen: string | null;
   efectos: number;
   arcos: number;
+  /** Arcos (o anillos) fijos de la propuesta de Opttia a la vista. */
+  arcosFijos: number;
   tweens: number;
   etiquetas: number;
   tarjetas: number;
@@ -86,6 +96,11 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
   private readonly conteo = new Map<string, number>();
   /** Pedido de hoy → ciudad donde se dibuja (para descontarlo si se cancela y para ubicarlo). */
   private readonly ciudadDePedido = new Map<string, string>();
+  /**
+   * Pedido de la foto → ciudad, de CUALQUIER día (la foto trae los activos de la ventana). Solo para
+   * ubicar los pedidos de la propuesta de Opttia; el conteo de hoy no lo usa.
+   */
+  private readonly ciudadEnFoto = new Map<string, string>();
   private readonly textoCiudad = new Map<string, string>();
   private sinCiudad = 0;
   private origen: string | null = null;
@@ -99,6 +114,10 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
   private anillos: ThreeNS.Mesh[] = [];
   private resaltadas: string[] = [];
   private hoverDane: string | null = null;
+  /** La propuesta de Opttia a la vista (null = ninguna) y sus arcos fijos con sus etiquetas. */
+  private propuesta: PropuestaArcos | null = null;
+  private arcosFijos: ArcosFijos | null = null;
+  private readonly etqArcos = new Map<string, EtiquetaH>();
 
   private constructor(
     T: Three,
@@ -142,6 +161,17 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
     this.origenFijo = dane !== null;
     this.bodegaPropia = propia;
     this.ubicarBodega();
+    this.rehacerArcosFijos();
+  }
+
+  /**
+   * Opttia propone (D-422, 4.6): la propuesta que muestra la tarjeta (null = ninguna). Los grupos de
+   * transportadora quedan con un arco fijo hasta la ciudad de sus pedidos; lo demás no se dibuja
+   * aquí. Solo dibuja: no mueve nada real.
+   */
+  fijarPropuesta(p: PropuestaArcos | null): void {
+    this.propuesta = p;
+    this.rehacerArcosFijos();
   }
 
   /**
@@ -157,6 +187,8 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
     const r = contarPedidosDeHoy(this.cfg.geo, pedidos, dia);
     r.porCiudad.forEach((n, d) => this.conteo.set(d, n));
     r.porPedido.forEach((d, id) => this.ciudadDePedido.set(id, d));
+    this.ciudadEnFoto.clear();
+    ciudadesDeLaFoto(this.cfg.geo, pedidos).forEach((d, id) => this.ciudadEnFoto.set(id, d));
     this.sinCiudad = r.sinCiudad;
     pedidos.forEach((p) => {
       const d = this.ciudadDePedido.get(p.id);
@@ -165,6 +197,7 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
     this.refrescarColumnas();
     if (!this.origenFijo) this.origen = ciudadConMasPedidos(this.conteo);
     this.ubicarBodega();
+    this.rehacerArcosFijos();
     this.sucio = true;
   }
 
@@ -210,9 +243,11 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
     this.nucleo.limpiar();
     this.conteo.clear();
     this.ciudadDePedido.clear();
+    this.ciudadEnFoto.clear();
     this.sinCiudad = 0;
     this.refrescarColumnas();
     this.resaltadas = [];
+    this.rehacerArcosFijos();
     this.sucio = true;
   }
 
@@ -255,6 +290,7 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
       origen: this.origen,
       efectos: this.nucleo.fx.activos,
       arcos: this.nucleo.fx.arcosVivos,
+      arcosFijos: this.arcosFijos?.cantidad ?? 0,
       tweens: this.nucleo.tw.cantidad,
       etiquetas: this.nucleo.etq.cantidad,
       tarjetas: this.nucleo.etq.popsVivos,
@@ -267,6 +303,9 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
   }
 
   override destruir(): void {
+    this.arcosFijos?.destruir();
+    this.arcosFijos = null;
+    this.etqArcos.clear();
     this.nucleo.destruir();
     super.destruir();
   }
@@ -280,9 +319,11 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
     this.renderer.setClearColor(this.colorFondoMapa(), 1);
     this.crearBodega();
     this.crearAnillos();
+    this.arcosFijos = new ArcosFijos(this.T, this.nucleo.kit, this.geoCache, this.scene);
     this.ajustarAContenido(this.puntosDeEncuadre(3.4), (ancho) => margenesBase(ancho));
     this.refrescarColumnas();
     this.ubicarBodega();
+    this.rehacerArcosFijos();
   }
 
   protected override seleccionable(id: IdMapa): boolean {
@@ -328,13 +369,15 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
       c.ancla.y = ALTO_MAPA + (c.dane === this.origen ? Math.max(c.h + 0.9, 2.2) : c.h + 0.35);
     });
     this.moverAnillos(t);
+    if (this.arcosFijos?.paso(dt)) cambio = true;
     this.nucleo.camara.paso(t, ahora, this.opts.reducirMovimiento);
     if (this.nucleo.etq.expirar(ahora)) cambio = true;
     return cambio || this.salidas.cantidad > 0;
   }
 
   protected override *anclas(): Iterable<[IdMapa, V3]> {
-    yield* this.nucleo.etq.anclas();
+    // Del núcleo (no solo del gestor): incluye los lugares extra de la etiqueta del arco fijo.
+    yield* this.nucleo.anclas();
   }
 
   // ============================================================== mundo
@@ -398,6 +441,61 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
       a.scale.setScalar(1 + (this.opts.reducirMovimiento ? 0 : Math.sin(t * 6) * 0.08));
       a.visible = true;
     });
+  }
+
+  // ================================================== propuesta de Opttia
+
+  /**
+   * Pone los arcos fijos y sus etiquetas al día con la propuesta, la bodega y la ciudad conocida de
+   * cada pedido. Lo que no cambió no se rehace (la clave del arco es estable).
+   */
+  private rehacerArcosFijos(): void {
+    const fijos = this.arcosFijos;
+    if (!fijos) return;
+    // Los de hoy, y si no, los de la ventana que trae la foto (un pedido de anoche empacado hoy).
+    const plan = arcosDePropuesta(this.propuesta, (id) => this.ciudadDePedido.get(id) ?? this.ciudadEnFoto.get(id), this.origen);
+    const o = this.origen ? this.posDeCiudad(this.origen, 0) : null;
+    const lista: ArcoFijoPedido[] = [];
+    for (const a of plan.arcos) {
+      const h = this.posDeCiudad(a.dane, 0);
+      if (!h) continue;
+      lista.push({ clave: a.clave, desde: a.conArco && o ? this.alSuelo(o) : null, hasta: this.alSuelo(h), token: a.color });
+    }
+    let cambio = fijos.fijar(lista, ALTO_MAPA, this.opts.reducirMovimiento || this.opts.calidadBaja);
+
+    // Una etiqueta por grupo ("Cereza · 2") sobre su arco más largo (el de más aire). CEDE: nunca
+    // esconde "Tu bodega" ni los nombres de ciudad con su conteo (son datos reales); si su lugar está
+    // ocupado se corre sobre la curva (o alrededor del anillo), y si no cabe en ninguno se esconde.
+    const quedan = new Set<string>();
+    for (const e of plan.etiquetas) {
+      const arcoClave = this.arcoMasAlto(plan.arcos.filter((a) => a.grupo === e.grupo).map((a) => a.clave)) ?? e.clave;
+      if (!fijos.cima(arcoClave)) continue;
+      const clave = `${arcoClave}|${e.texto}`;
+      quedan.add(clave);
+      if (this.etqArcos.has(clave)) continue;
+      const html = `${svgEscena('camion')}<b>${esc(e.texto)}</b>`;
+      const lugares = fijos.lugares(arcoClave).map((_, k) => (): V3 | null => fijos.lugares(arcoClave)[k] ?? null);
+      this.etqArcos.set(clave, this.nucleo.fijaQueCede(html, lugares, e.color, 'eve-lbl--sug'));
+      cambio = true;
+    }
+    this.etqArcos.forEach((etq, clave) => {
+      if (quedan.has(clave)) return;
+      this.nucleo.quitarFija(etq);
+      this.etqArcos.delete(clave);
+      cambio = true;
+    });
+    if (cambio) this.sucio = true;
+  }
+
+  /** De estos arcos fijos, el de la cima más alta (el más largo); null si ninguno está dibujado. */
+  private arcoMasAlto(claves: ReadonlyArray<string>): string | null {
+    let mejor: string | null = null;
+    let alto = -Infinity;
+    for (const k of claves) {
+      const c = this.arcosFijos?.cima(k);
+      if (c && c.y > alto) { alto = c.y; mejor = k; }
+    }
+    return mejor;
   }
 
   // ============================================================== columnas
@@ -472,6 +570,7 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
     if (!dane) { this.sinCiudad++; return; }
     this.ciudadDePedido.set(ev.pedidoId, dane);
     this.contar(dane, 1);
+    if (this.propuesta) this.rehacerArcosFijos();
     const p = this.posDeCiudad(dane, 0);
     if (!p) return;
     const fx = this.nucleo.fx;
@@ -544,6 +643,7 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
     if (this.ciudadDePedido.has(ev.pedidoId)) {
       this.ciudadDePedido.delete(ev.pedidoId);
       if (d) this.contar(d, -1);
+      if (this.propuesta) this.rehacerArcosFijos();
     }
     const p = d ? this.posDeCiudad(d, 0) : null;
     if (p) this.nucleo.fx.pulso(this.alSuelo(p), 'bad', 1.4, 0.9);

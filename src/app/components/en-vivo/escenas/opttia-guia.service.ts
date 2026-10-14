@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../compartido/en-vivo-interaccion.service';
 import { EnVivoFichaService } from '../ficha/ficha.service';
+import { EnVivoPropuestaEscenaPuente } from '../propuestas/propuestas-escena.puente';
 import type { PropuestaEnEscena } from '../propuestas/propuestas.modelos';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { alCambiarMovimiento, prefiereMenosMovimiento } from '../utilidades/movimiento';
@@ -18,6 +19,7 @@ import {
   puntosDelOrbe,
   textoParaBurbuja,
 } from './opttia-puntos';
+import { MarcaPropuesta, marcasDePropuesta } from './propuesta-marcas.reglas';
 
 /** La tarjeta (pedido o comercio) que Opttia marca en el tablero de pedidos o en el muro, que no son 3D. */
 export interface MarcaOrbe {
@@ -25,6 +27,9 @@ export interface MarcaOrbe {
   id: string;
   texto: string;
 }
+
+/** Ninguna tarjeta de propuesta marcada. */
+const SIN_MARCAS_PROPUESTA: ReadonlyMap<string, MarcaPropuesta> = new Map();
 
 /** Dónde va el recorrido guiado: "2 de 5". */
 export interface RecorridoOrbe {
@@ -53,7 +58,9 @@ const ACERCAR_PROPUESTA = 0.4;
  * - el tablero de pedidos y el muro de Katuq (sin 3D), que piden `usarMarcas(tipo)` y reciben por
  *   `marca$` la tarjeta que Opttia señala;
  * - las propuestas de Opttia (D-422): `proponer(p)` / `retirarPropuesta()` dejan la señal fija en lo
- *   que la propuesta toca mientras la tarjeta la muestre (lo conecta la escena de la operación).
+ *   que la propuesta toca mientras la tarjeta la muestre (lo conectan las escenas de la operación y
+ *   de "Mi país"). Sin 3D, mientras el tablero de pedidos pida marcas, `marcasPropuesta$` trae las
+ *   tarjetas de los pedidos de la propuesta con el color de su grupo, y la ronda de marcas se pausa.
  *
  * Los textos salen del radar y del último resumen que ya llegaron (sin llamar al modelo) y respetan
  * "ocultar". El recorrido lo cortan: arrastrar la cámara, abrir una ficha, "Repetir el día", tocar
@@ -69,6 +76,9 @@ export class EnVivoOrbeService implements OnDestroy {
   private readonly marcaSubject = new BehaviorSubject<MarcaOrbe | null>(null);
   private readonly recorridoSubject = new BehaviorSubject<RecorridoOrbe | null>(null);
   private readonly hayOrbeSubject = new BehaviorSubject<boolean>(false);
+  private readonly marcasPropuestaSubject = new BehaviorSubject<ReadonlyMap<string, MarcaPropuesta>>(SIN_MARCAS_PROPUESTA);
+  /** La propuesta que muestra la tarjeta (la lee del puente; null = ninguna). */
+  private propuestaVigente: PropuestaEnEscena | null = null;
 
   /** La tarjeta que Opttia marca ahora (tablero y muro); null = ninguna. */
   readonly marca$: Observable<MarcaOrbe | null> = this.marcaSubject.asObservable();
@@ -76,6 +86,12 @@ export class EnVivoOrbeService implements OnDestroy {
   readonly recorrido$: Observable<RecorridoOrbe | null> = this.recorridoSubject.asObservable();
   /** Hay un orbe en una escena 3D a la vista. */
   readonly hayOrbe$: Observable<boolean> = this.hayOrbeSubject.asObservable();
+  /**
+   * Las tarjetas del tablero de pedidos que son de la propuesta a la vista (D-422, 4.6): pedido →
+   * color de su grupo y lo que propone. Vacío sin propuesta, con Opttia apagado o si ningún tablero
+   * pidió marcas. Solo marca: no escribe nada.
+   */
+  readonly marcasPropuesta$: Observable<ReadonlyMap<string, MarcaPropuesta>> = this.marcasPropuestaSubject.asObservable();
 
   /** "Reducir movimiento" vigente (se lee una vez y se actualiza al cambiar). */
   reducirMovimiento = prefiereMenosMovimiento();
@@ -97,7 +113,8 @@ export class EnVivoOrbeService implements OnDestroy {
     private readonly estado: EnVivoEstadoService,
     private readonly interaccion: EnVivoInteraccionService,
     private readonly ficha: EnVivoFichaService,
-    private readonly zona: NgZone
+    private readonly zona: NgZone,
+    private readonly puente: EnVivoPropuestaEscenaPuente
   ) {}
 
   ngOnDestroy(): void {
@@ -165,6 +182,7 @@ export class EnVivoOrbeService implements OnDestroy {
   usarMarcas(tipo: 'pedido' | 'comercio'): () => void {
     this.encender();
     this.marcasEn[tipo]++;
+    this.publicarMarcasPropuesta();
     if (!this.temporizadorMarcas) {
       this.zona.runOutsideAngular(() => {
         this.temporizadorMarcas = window.setInterval(() => this.turnoMarcas(), PERIODO_MARCAS_MS);
@@ -180,11 +198,14 @@ export class EnVivoOrbeService implements OnDestroy {
         this.temporizadorMarcas = 0;
         this.limpiarMarca();
       }
+      this.publicarMarcasPropuesta();
       this.apagarSiSobra();
     };
   }
 
   private turnoMarcas(): void {
+    // Con una propuesta a la vista, sus tarjetas mandan (como en 3D, la ronda se pausa).
+    if (this.propuestaVigente) return;
     if (!this.opttiaActivo || this.anfitriones.size > 0 || this.interaccion.repitiendo || this.ficha.abierta || (typeof document !== 'undefined' && document.hidden)) return;
     const puntos = this.puntos();
     for (let k = 0; k < puntos.length; k++) {
@@ -216,6 +237,17 @@ export class EnVivoOrbeService implements OnDestroy {
   private limpiarMarca(): void {
     window.clearTimeout(this.temporizadorMarcaFin);
     if (this.marcaSubject.value) this.zona.run(() => this.marcaSubject.next(null));
+  }
+
+  /**
+   * Publica las tarjetas de la propuesta a la vista para el tablero de pedidos: solo si un tablero
+   * pidió marcas y Opttia está prendido; si no, ninguna.
+   */
+  private publicarMarcasPropuesta(): void {
+    const p = this.opttiaActivo && this.marcasEn.pedido > 0 ? this.propuestaVigente : null;
+    const marcas = p ? marcasDePropuesta(p) : SIN_MARCAS_PROPUESTA;
+    if (marcas === this.marcasPropuestaSubject.value) return;
+    this.zona.run(() => this.marcasPropuestaSubject.next(marcas));
   }
 
   private resumido(texto: string): string {
@@ -392,7 +424,17 @@ export class EnVivoOrbeService implements OnDestroy {
             [...this.anfitriones.keys()].forEach((h) => this.desmontarOrbe(h));
             this.limpiarMarca();
           }
+          this.publicarMarcasPropuesta();
         })
+    );
+    // La propuesta que muestra la tarjeta (D-422): sus tarjetas se marcan en el tablero y la ronda de
+    // marcas se pausa. La tarjeta ya la suelta durante "Repetir el día", al aprobar y al irse.
+    s.add(
+      this.puente.actual$.subscribe((p) => {
+        this.propuestaVigente = p;
+        if (p) this.limpiarMarca();
+        this.publicarMarcasPropuesta();
+      })
     );
     // Abrir una ficha o repetir el día corta el recorrido.
     s.add(this.ficha.abierta$.subscribe((abierta) => { if (abierta) this.cortar(); }));
@@ -437,6 +479,8 @@ export class EnVivoOrbeService implements OnDestroy {
     this.anfitriones.clear();
     this.guia.cortar();
     this.limpiarMarca();
+    this.propuestaVigente = null;
+    this.publicarMarcasPropuesta();
     this.publicarRecorrido();
     this.publicarHayOrbe();
   }

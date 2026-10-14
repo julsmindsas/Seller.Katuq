@@ -139,13 +139,6 @@ export interface ExplicacionPlan {
   grupos: Record<string, string>;
 }
 
-export interface RespuestaPlan {
-  success: boolean;
-  plan: PlanDespachos;
-  puedeAprobar: boolean;
-  explicacion: ExplicacionPlan | null;
-}
-
 interface GrupoParaAprobarBase {
   planHuella: string;
   pedidos: Array<{ id: string; huella: string }>;
