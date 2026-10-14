@@ -80,9 +80,10 @@
                   </div>
 
                   <!-- Tipo de Cliente + Fecha Cumpleaños -->
-                  <div class="col-12 col-sm-6" *ngIf="clientTypes && clientTypes.length > 0">
+                  <!-- Ticket 1202: sin tipos activos el campo se escondía y parecía que no se podía configurar. -->
+                  <div class="col-12 col-sm-6">
                     <label class="form-label-modern">{{ "Tipo de Cliente" | translate }}</label>
-                    <p-dropdown formControlName="tipoCliente" [options]="clientTypes"
+                    <p-dropdown *ngIf="clientTypes.length > 0" formControlName="tipoCliente" [options]="clientTypes"
                       optionLabel="label" optionValue="value"
                       placeholder="{{ 'Seleccionar tipo...' | translate }}"
                       [showClear]="true" styleClass="w-100" panelStyleClass="buscar-por-panel"
@@ -90,8 +91,13 @@
                       [filter]="true" filterBy="label" filterMatchMode="contains"
                       filterPlaceholder="{{ 'Buscar tipo...' | translate }}">
                     </p-dropdown>
+                    <ng-container *ngIf="clientTypes.length === 0">
+                      <input pInputText type="text" class="w-100" disabled
+                        placeholder="{{ 'Sin tipos de cliente activos' | translate }}">
+                      <small class="text-muted d-block mt-1">{{ "Créalos o actívalos en Configuración → Producto → Tipos de Cliente." | translate }}</small>
+                    </ng-container>
                   </div>
-                  <div class="col-12" [class.col-sm-6]="clientTypes && clientTypes.length > 0">
+                  <div class="col-12 col-sm-6">
                     <label class="form-label-modern">
                       <i class="pi pi-gift me-1 label-icon"></i>{{ "Fecha de Cumpleaños" | translate }}
                     </label>
