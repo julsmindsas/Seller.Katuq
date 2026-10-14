@@ -72,6 +72,8 @@ export interface AnfitrionCapa {
   reducir(): boolean;
   /** Tocaron el montón (o la fila) de un grupo: el componente avisa a la tarjeta por el puente. */
   alTocarGrupo(grupoId: string): void;
+  /** Calidad baja (tableta, poca memoria): la burbuja de WhatsApp no vuela, aparece en la casa. */
+  calidadBaja?(): boolean;
 }
 
 /** Dónde caen los montones, el de la transportadora y la fila de producción (mundo de la operación). */
@@ -107,6 +109,25 @@ const ALTURA_ALTERNA = 1.2;
 const ARCO = 1.1;
 /** Cuánto tardan en irse las copias y las líneas al retirar la propuesta (s). */
 const SALIDA_S = 0.35;
+/** Burbuja de WhatsApp (fase 2, 8.3.6): vuelo de la caja a la casa, altura del salto y tope a la vez. */
+const VUELO_BURBUJA_S = 1.5;
+const QUIETA_BURBUJA_S = 1.2;
+const ARCO_BURBUJA = 2.4;
+const MAX_BURBUJAS = 4;
+/** El aro del cobro dice "$"; con el pago confirmado pasa a "✓". */
+const HTML_MONEDA = '<b>$</b>';
+const HTML_PAGADO = '<b>✓</b>';
+
+/** Una burbuja de chat en el aire: material propio (se libera al terminar) y geometrías del caché. */
+interface Burbuja {
+  t: number;
+  /** Sin vuelo ("reducir movimiento" o calidad baja): aparece quieta en la casa y se va. */
+  quieta: boolean;
+  desde: V3;
+  hasta: V3;
+  obj: ThreeNS.Group;
+  mat: ThreeNS.MeshBasicMaterial;
+}
 
 interface Paquete {
   /** Material del kit por token: el tema lo re-tiñe. */
@@ -180,6 +201,11 @@ export class CapaPropuesta {
   private pendiente = false;
   private salida: { t: number } | null = null;
   private destruida = false;
+  /** Burbujas de WhatsApp en vuelo y cuántas se lanzaron (diagnóstico). */
+  private readonly burbujas: Burbuja[] = [];
+  private lanzadas = 0;
+  /** Etiqueta "$" del aro de cada pedido del cobro (pasa a "✓" con el pago confirmado). */
+  private readonly etqMoneda = new Map<string, EtiquetaH>();
 
   constructor(private readonly h: AnfitrionCapa) {
     const T = h.T;
@@ -237,6 +263,7 @@ export class CapaPropuesta {
   destruir(): void {
     if (this.destruida) return;
     this.limpiar();
+    while (this.burbujas.length) this.soltarBurbuja(0);
     this.destruida = true;
     this.quitarGanchos.forEach((q) => q());
     this.quitarGanchos.length = 0;
@@ -255,6 +282,65 @@ export class CapaPropuesta {
     this.cintas.dispose();
     this.matGolpe.dispose();
     this.e.marcarSucio();
+  }
+
+  /** Burbujas de WhatsApp en el aire ahora. */
+  get burbujasVivas(): number {
+    return this.burbujas.length;
+  }
+
+  /** Burbujas de WhatsApp lanzadas desde que se montó la capa (para pruebas). */
+  get burbujasLanzadas(): number {
+    return this.lanzadas;
+  }
+
+  /**
+   * Abrieron WhatsApp desde la tarjeta de cobro (fase 2, 8.3.6): una burbuja de chat vuela de la
+   * caja del pedido a su casa. Solo si ese pedido está en la capa de moneda y su caja se ve; si no,
+   * no hace nada. Con "reducir movimiento" o calidad baja aparece quieta en la casa y se va.
+   * Solo dibuja: Katuq no envía nada. Devuelve true si la lanzó.
+   */
+  burbujaWhatsapp(pedidoId: string): boolean {
+    const plan = this.plan;
+    if (this.destruida || !plan || this.salida) return false;
+    const a = plan.anillados.find((x) => x.pedidoId === pedidoId && x.aro);
+    if (!a) return false;
+    const T = this.T;
+    const desde = new T.Vector3();
+    if (!this.e.posCaja(pedidoId, desde)) return false;
+    const hasta = new T.Vector3();
+    const gv = this.grupos[a.grupo];
+    if (gv && gv.hayCasa) hasta.copy(gv.casa);
+    else if (!this.e.posCasa(pedidoId, hasta)) return false;
+    desde.y += 1.3;
+    hasta.y += 1.6;
+    if (this.burbujas.length >= MAX_BURBUJAS) this.soltarBurbuja(0);
+    const quieta = this.h.reducir() || !!this.h.calidadBaja?.();
+    const mat = this.kit.basico('ok', 0.92);
+    const obj = new T.Group();
+    const cuerpo = new T.Mesh(this.geo('capa|burbuja', () => new T.SphereGeometry(0.42, 18, 12)), mat);
+    cuerpo.scale.set(1.3, 0.95, 1.3);
+    const cola = new T.Mesh(this.geo('capa|burbuja-cola', () => new T.ConeGeometry(0.16, 0.34, 10).rotateZ(Math.PI)), mat);
+    cola.position.set(-0.3, -0.42, 0);
+    cola.rotation.z = -0.5;
+    obj.add(cuerpo, cola);
+    obj.position.copy(quieta ? hasta : desde);
+    if (!quieta) obj.scale.setScalar(0.01);
+    this.e.raiz.add(obj);
+    this.burbujas.push({ t: 0, quieta, desde, hasta, obj, mat });
+    this.lanzadas++;
+    this.e.marcarSucio();
+    return true;
+  }
+
+  /** Llegó el pago confirmado (evento real) de un pedido del cobro: el "$" de su aro pasa a "✓". */
+  pagoConfirmado(pedidoId: string): boolean {
+    const etq = this.etqMoneda.get(pedidoId);
+    if (!etq || this.destruida) return false;
+    this.etiquetas.actualizarHtml(etq, HTML_PAGADO);
+    etq.el.className = etq.el.className.replace(/(^|\s)t-[\w-]+/g, '') + ' t-ok';
+    this.e.marcarSucio();
+    return true;
   }
 
   /** Posición viva (x, z) de una caja anillada (la usa la ruta del cobro); null si no se ve. */
@@ -318,16 +404,18 @@ export class CapaPropuesta {
     plan.anillados.forEach((a) => {
       if (!a.aro) return;
       const pos = new T.Vector3();
-      this.etqs.push(this.etiquetas.crear({
+      const etq = this.etiquetas.crear({
         clase: 'eve-lbl--sug',
         tono: plan.grupos[a.grupo]?.color ?? 'warn',
-        html: '<b>$</b>',
+        html: HTML_MONEDA,
         pos: () => {
           if (!this.e.posCaja(a.pedidoId, pos)) return null;
           pos.y += 0.95;
           return pos;
         },
-      }));
+      });
+      this.etqs.push(etq);
+      this.etqMoneda.set(a.pedidoId, etq);
     });
 
     // Lo que se puede tocar: el montón de cada grupo y la fila de producción.
@@ -358,8 +446,9 @@ export class CapaPropuesta {
 
   private cuadro(dt: number): boolean {
     if (this.destruida) return false;
-    if (this.salida) return this.pasoSalida(dt);
-    if (!this.plan) return false;
+    const vuela = this.burbujas.length > 0 && this.pasoBurbujas(dt);
+    if (this.salida) return this.pasoSalida(dt) || vuela;
+    if (!this.plan) return vuela;
     this.reloj += dt;
     let cambio = this.pendiente;
     this.pendiente = false;
@@ -371,7 +460,40 @@ export class CapaPropuesta {
       this.escribirTrazos();
       cambio = true;
     }
-    return cambio;
+    return cambio || vuela;
+  }
+
+  /** Mueve las burbujas de WhatsApp: salto de la caja a la casa; se apagan al llegar. */
+  private pasoBurbujas(dt: number): boolean {
+    for (let i = this.burbujas.length - 1; i >= 0; i--) {
+      const b = this.burbujas[i];
+      b.t += dt;
+      if (b.quieta) {
+        if (b.t >= QUIETA_BURBUJA_S) this.soltarBurbuja(i);
+        continue;
+      }
+      const k = Math.min(1, b.t / VUELO_BURBUJA_S);
+      const s = ease.inOut(k);
+      b.obj.position.set(
+        b.desde.x + (b.hasta.x - b.desde.x) * s,
+        b.desde.y + (b.hasta.y - b.desde.y) * s + Math.sin(Math.PI * k) * ARCO_BURBUJA,
+        b.desde.z + (b.hasta.z - b.desde.z) * s
+      );
+      b.obj.scale.setScalar(Math.max(0.01, ease.out(Math.min(1, k * 5))));
+      b.mat.opacity = 0.92 * (k > 0.85 ? (1 - k) / 0.15 : 1);
+      if (k >= 1) this.soltarBurbuja(i);
+    }
+    return true;
+  }
+
+  /** Quita una burbuja y libera su material (las geometrías son del caché de la escena). */
+  private soltarBurbuja(i: number): void {
+    const b = this.burbujas[i];
+    if (!b) return;
+    this.burbujas.splice(i, 1);
+    this.e.raiz.remove(b.obj);
+    b.mat.dispose();
+    this.kit.vivos.delete(b.mat);
   }
 
   private moverFantasmas(): void {
@@ -563,6 +685,7 @@ export class CapaPropuesta {
   private quitarEtiquetas(): void {
     this.etqs.forEach((e) => this.etiquetas.quitar(e));
     this.etqs.length = 0;
+    this.etqMoneda.clear();
   }
 
   // ------------------------------------------------------------- ayudas

@@ -126,6 +126,10 @@ export interface DiagnosticoOperacion {
   tweens: number;
   etiquetas: number;
   fallos: number;
+  /** Cajas viajando ahora por la banda por un cambio de etapa (el tope de 6 lo pone el director). */
+  cajasEnBanda: number;
+  /** Lo más alto que llegó `cajasEnBanda` (para comprobar el tope). */
+  picoBanda: number;
 }
 
 export class OperacionEnVivoEscena extends EscenaBase<string> {
@@ -192,6 +196,8 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
   private zoomSeguido = 1.5;
   private cargando = true;
   private fallos = 0;
+  private enBanda = 0;
+  private picoBanda = 0;
   private ultimoConteo = new Map<EstacionId, number>();
 
   private constructor(
@@ -417,6 +423,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
   reiniciar(): void {
     this.director.limpiar();
     this.tw.limpiar();
+    this.enBanda = 0;
     this.limpiarEfimeros();
     [...this.cajas.keys()].forEach((id) => this.borrarCaja(id));
     this.pedidos.clear();
@@ -460,6 +467,8 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
       tweens: this.tw.cantidad,
       etiquetas: this.etq.cantidad,
       fallos: this.fallos,
+      cajasEnBanda: this.enBanda,
+      picoBanda: this.picoBanda,
     };
   }
 
@@ -1148,8 +1157,13 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
       this.aparecer(c.g, fin);
       return;
     }
+    // Viaje por la banda: solo en modo `animado`, así que el tope de 6 a la vez lo pone el director
+    // (MAX_SIMULTANEAS); con más de 8 en cola, los demás pasan con desvanecido (saltan a su lugar).
+    // Cubre la aprobación de producción de Opttia (D-422, 8.1.11): llegan como `cambio_estado`.
     c.viajando = true;
     c.g.visible = true; // una caja que estaba fuera de las 18 visibles también se ve viajar
+    this.enBanda++;
+    this.picoBanda = Math.max(this.picoBanda, this.enBanda);
     this.acomodar(de, true);
     const enBanda = this.kit.v(c.g.position.x, BELT_Z, 0.8);
     this.saltar(c.g, enBanda, 0.42, 0.9, () => {
@@ -1161,6 +1175,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
       this.tw.agregar(dur, (k) => { c.g.position.lerpVectors(desde, fn, ease.inOut(k)); }, () => {
         this.saltar(c.g, dest, 0.42, 0.9, () => {
           c.viajando = false;
+          this.enBanda = Math.max(0, this.enBanda - 1);
           this.pulso(this.kit.v(PADS[nueva].x, PADS[nueva].z, 0.17), this.etapas[nueva].tono, 2.0, 0.9);
           this.pop(this.kit.v(dest.x, dest.z, 1.3), this.etapas[nueva].tono, this.etapas[nueva].corto,
             `<span class="eve-mono">#${esc(o?.numero ?? '')}</span><small>${esc(this.quien(o ?? { cliente: null }))}</small>`, 2600);

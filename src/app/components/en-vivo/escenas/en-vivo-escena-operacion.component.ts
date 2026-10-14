@@ -98,6 +98,8 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
   private interObs: IntersectionObserver | null = null;
   private soltarMovimiento: (() => void) | null = null;
   private temporizadorTema = 0;
+  /** "Ocultar clientes y montos" vigente (con él no se dibuja la burbuja de WhatsApp). */
+  private ocultar = false;
 
   private visibleEnPantalla = true;
   private pestanaVisible = true;
@@ -174,6 +176,16 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
     this.escena?.aplicarFoto([]);
   }
 
+  /**
+   * Para pruebas (Playwright): lo de la escena más las burbujas de WhatsApp de la capa de Opttia.
+   * null si la escena no está montada.
+   */
+  diagnostico() {
+    const d = this.escena?.diagnostico();
+    if (!d) return null;
+    return { ...d, burbujasWhatsapp: this.capa?.burbujasLanzadas ?? 0, burbujasVivas: this.capa?.burbujasVivas ?? 0 };
+  }
+
   /** Vuelve a dejar la escena igual al estado real. */
   sincronizar(): void {
     this.pendienteSync = false;
@@ -237,6 +249,7 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
         escena,
         reducir: () => this.reducirMovimiento,
         alTocarGrupo: (id) => this.zona.run(() => this.puente.tocarGrupo(id)),
+        calidadBaja: () => calidadBaja,
       });
       capa.iniciar();
       this.capa = capa;
@@ -281,7 +294,10 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
 
     this.subs.add(this.estado.estado$.subscribe((e) => this.alEstado(e)));
     this.subs.add(this.estado.nuevos$.subscribe((ev) => this.alEventoNuevo(ev)));
-    this.subs.add(this.estado.preferencias$.subscribe((p) => this.escena?.fijarPrivado(p.ocultar)));
+    this.subs.add(this.estado.preferencias$.subscribe((p) => {
+      this.ocultar = !!p.ocultar;
+      this.escena?.fijarPrivado(p.ocultar);
+    }));
     this.subs.add(this.ficha.vistaActual$.subscribe((v) => this.alFicha(v)));
     this.subs.add(
       this.interaccion.acciones$.subscribe((a) => {
@@ -301,6 +317,13 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
     );
     // Opttia propone (D-422): fuera de la zona de Angular (la capa y el orbe solo dibujan).
     this.subs.add(this.puente.actual$.subscribe((p) => this.zona.runOutsideAngular(() => this.alPropuesta(p))));
+    // Fase 2 (8.3.6): abrir WhatsApp desde la tarjeta no trae evento real; la escena lo dibuja.
+    this.subs.add(this.puente.avisos$.subscribe((a) => this.zona.runOutsideAngular(() => {
+      if (a.tipo !== 'whatsapp-abierto') return;
+      // La tarjeta no lo emite en TV, con "ocultar" ni en la repetición; se protege igual.
+      if (this.repitiendo || this.ocultar || this.pausada || this.interaccion.modoPantalla) return;
+      this.capa?.burbujaWhatsapp(a.pedidoId);
+    })));
     this.actualizarPausa();
   }
 
@@ -381,6 +404,8 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
 
   private alEventoNuevo(ev: EventoEnVivo): void {
     if (!this.escena) return;
+    // Cobro de Opttia (8.3.6): con el pago real, el "$" del aro de ese pedido pasa a "✓".
+    if (ev.tipo === 'pago_confirmado' && !this.repitiendo) this.capa?.pagoConfirmado(ev.pedidoId);
     if (this.pausada || this.repitiendo) { this.pendienteSync = true; return; }
     this.escena.aplicarEvento(ev);
   }
