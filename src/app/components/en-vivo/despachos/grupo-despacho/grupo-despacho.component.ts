@@ -42,7 +42,8 @@ export interface GrupoEditable {
  * Tarjeta de un grupo del plan de despachos (D-410): franja, zona, el mensajero sugerido con su
  * razón (y las alternativas para cambiarlo con un toque), los pedidos y el botón Aprobar. En un
  * grupo "Por <transportadora>" (fase 2) muestra la transportadora con su tarifa y cada pedido sale
- * con su propia orden de envío. No llama al servidor: avisa a la vista Despachos, que es la que aprueba.
+ * con su propia orden de envío. No llama al servidor: avisa a quien la contiene (la hoja "Ajustar" de
+ * la tarjeta de Opttia, D-422), que es la que aprueba.
  */
 @Component({
   selector: 'app-en-vivo-grupo-despacho',

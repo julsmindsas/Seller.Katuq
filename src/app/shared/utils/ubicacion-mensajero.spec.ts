@@ -1,4 +1,7 @@
-import { claveEmpresa, haceCuanto, marcaDeUbicacion, perteneceAEmpresa, ubicacionVigente, VIGENCIA_UBICACION_MS } from './ubicacion-mensajero';
+import {
+  claveEmpresa, esSaltoImposible, haceCuanto, minutosEstimados, marcaDeUbicacion, nombreDesdeClave, perteneceAEmpresa, senalMensajero, ubicacionVigente,
+  VIGENCIA_UBICACION_MS,
+} from './ubicacion-mensajero';
 
 /**
  * Ticket 1154 (ALMARA): datos reales de active_users del 2026-10-09 01:14 UTC.
@@ -93,6 +96,52 @@ describe('ubicacion-mensajero', () => {
 
     it('no da negativos si el reloj de la pantalla va atrasado', () => {
       expect(haceCuanto(AHORA + 5 * MIN, AHORA)).toBe('hace unos segundos');
+    });
+  });
+  describe('nombreDesdeClave', () => {
+    it('quita la empresa del final y deja el nombre con mayúscula inicial', () => {
+      expect(nombreDesdeClave('carlos_andres_lopez_almara_felicidad', 'ALMARA FELICIDAD')).toBe('Carlos Andres Lopez');
+      expect(nombreDesdeClave('juan_perez_caf__escobar', 'CAFÉ ESCOBAR')).toBe('Juan Perez');
+    });
+
+    it('si la clave no termina en la empresa, la deja entera', () => {
+      expect(nombreDesdeClave('ana_ruiz', 'ALMARA FELICIDAD')).toBe('Ana Ruiz');
+      expect(nombreDesdeClave('', 'ALMARA FELICIDAD')).toBe('');
+    });
+  });
+
+  describe('senalMensajero', () => {
+    it('en vivo hasta 3 min, reciente después', () => {
+      expect(senalMensajero(AHORA - 2 * MIN, AHORA)).toBe('en-vivo');
+      expect(senalMensajero(AHORA - 4 * MIN, AHORA)).toBe('reciente');
+      expect(senalMensajero(null, AHORA)).toBe('reciente');
+    });
+  });
+
+  describe('app v29: sin conexión, saltos y hora estimada', () => {
+    it('muestra en gris a quien se le cortó la conexión por sorpresa', () => {
+      const punto = { lastUpdate: AHORA - MIN, conectado: false, desconectadoEn: AHORA - 30000 };
+      expect(ubicacionVigente(punto, AHORA)).toBe(true);
+      expect(senalMensajero(AHORA - MIN, AHORA, punto)).toBe('sin-conexion');
+    });
+
+    it('lo esconde pasados los 15 minutos', () => {
+      const punto = { lastUpdate: AHORA - VIGENCIA_UBICACION_MS - 1, conectado: false, desconectadoEn: AHORA - 20 * MIN };
+      expect(ubicacionVigente(punto, AHORA)).toBe(false);
+    });
+
+    it('ignora un salto de 5 km en 3 s y acepta 30 m en 3 s', () => {
+      const a = { lat: 6.2442, lng: -75.565, marca: AHORA };
+      expect(esSaltoImposible(a, { lat: 6.2892, lng: -75.565, marca: AHORA + 3000 })).toBe(true);
+      expect(esSaltoImposible(a, { lat: 6.24447, lng: -75.565, marca: AHORA + 3000 })).toBe(false);
+      expect(esSaltoImposible(a, { lat: 6.2892, lng: -75.565, marca: null })).toBe(false);
+    });
+
+    it('estima minutos con la velocidad, o 22 km/h si va parado', () => {
+      const a = { lat: 6.2442, lng: -75.565 };
+      const b = { lat: 6.2532, lng: -75.565 }; // ~1 km
+      expect(minutosEstimados(a, b)).toBe(4);
+      expect(minutosEstimados(a, b, 12)).toBe(2);
     });
   });
 });

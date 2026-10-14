@@ -1,11 +1,14 @@
 import { Injectable, NgZone, OnDestroy } from '@angular/core';
-import { BehaviorSubject, combineLatest, Observable, Subscription } from 'rxjs';
-import { distinctUntilChanged, map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { distinctUntilChanged, filter, map } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../compartido/en-vivo-interaccion.service';
+import { EnVivoPropuestasService } from '../propuestas/en-vivo-propuestas.service';
+import { EnVivoPropuestaEscenaPuente } from '../propuestas/propuestas-escena.puente';
+import { saludo } from '../propuestas/propuestas.reglas';
+import { horaDeColombia } from '../utilidades/formato';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { LineaNarracion, NarradorOpttia, PERIODO_NARRACION_MS, PRIMERA_LINEA_MS } from './opttia-narrador';
 import { mascaraDe } from './opttia-reglas';
-import { contarListos } from '../despachos/plan-despachos.reglas';
 
 /**
  * Narración de Opttia sobre la escena (D-386, tarea 4.10, diseño 16): una línea que cambia cada
@@ -13,7 +16,8 @@ import { contarListos } from '../despachos/plan-despachos.reglas';
  * nunca llamando al modelo; cuando no hay nada notable recorre los puntos del último resumen.
  *
  * Solo lectura: mira el estado de la pantalla y no escribe nada. Se calla durante "Repetir el
- * día", con la pestaña oculta y mientras el rol no tenga acceso. Con "ocultar" no escribe montos
+ * día", con la pestaña oculta, mientras el rol no tenga acceso y mientras la tarjeta "Opttia
+ * propone" (D-422) esté a la vista. Con "ocultar" no escribe montos
  * ni nombres de comercios, y al activarlo quita al instante la línea que estuviera a la vista.
  *
  * Uso: quien la pinta (`<app-en-vivo-narracion>`) llama `iniciar()` al crearse y `detener()` al
@@ -35,6 +39,8 @@ export class EnVivoNarracionService implements OnDestroy {
   constructor(
     private readonly estado: EnVivoEstadoService,
     private readonly interaccion: EnVivoInteraccionService,
+    private readonly propuestas: EnVivoPropuestasService,
+    private readonly puente: EnVivoPropuestaEscenaPuente,
     private readonly zona: NgZone
   ) {}
 
@@ -60,12 +66,20 @@ export class EnVivoNarracionService implements OnDestroy {
         this.narrador.alEvento(evento, this.estado.estado, this.estado.preferencias.ocultar, this.interaccion.repitiendo);
       })
     );
-    // Plan de despachos (D-410): si la vista "Despachos" existe y no es la que se está mirando, avisa
-    // cuántos pedidos están listos (con lo que la pantalla ya tiene; no llama al servidor ni a Opttia).
+    // Plan de despachos en la escena (D-422): "Organicé N pedidos en M salidas; apruébalas aquí", con
+    // lo que ya armó la cola de propuestas (no llama al servidor ni a Opttia). Sale solo sin tarjeta.
+    // A quien no puede aprobar (su rol no tiene Despachos) no se le invita a aprobar.
     suscripciones.add(
-      combineLatest([this.estado.estado$, this.interaccion.opciones$, this.interaccion.opcionActiva$]).subscribe(([e, opciones, activa]) => {
-        if (!opciones.some((o) => o.id === 'despachos') || activa === 'despachos') return;
-        this.narrador.avisarPlanDespachos(contarListos(e.pedidos), this.interaccion.repitiendo);
+      this.propuestas.resumenPlan$.subscribe((r) => {
+        this.narrador.avisarPlanEnEscena(r.pedidos, r.salidas, this.interaccion.repitiendo, r.aprobar);
+      })
+    );
+    // Mientras la tarjeta "Opttia propone" está a la vista, la narración se calla (y suelta lo que
+    // mostraba); el saludo que no alcanzó a salir se descarta.
+    suscripciones.add(
+      this.puente.actual$.pipe(filter((p) => p !== null)).subscribe(() => {
+        this.narrador.descartarSaludo();
+        if (this.lineaSubject.value !== null) this.publicar(null);
       })
     );
     // Al activar "ocultar", lo que ya estaba armado (y a la vista) pudo traer montos o nombres: se descarta.
@@ -92,6 +106,18 @@ export class EnVivoNarracionService implements OnDestroy {
           this.narrador.vaciarCola();
           this.publicar(null);
         })
+    );
+    // Saludo de plantilla con los conteos de la cola: "Buenos días: 3 para hoy, 1 urgente". UNA vez por
+    // visita a En vivo (lo lleva el servicio de propuestas, que vive mientras la página: volver de
+    // "Pedidos", que monta otra vez la narración, no lo repite). Si la tarjeta ya está a la vista, el
+    // saludo sobra: ella misma dice lo que hay (y saldría tarde, con conteos viejos). Va después de
+    // las suscripciones que vacían la cola al empezar, para que un contador que ya había no se pierda.
+    suscripciones.add(
+      this.puente.contador$.subscribe((c) => {
+        const texto = saludo(c, horaDeColombia(Date.now()));
+        if (!texto || this.interaccion.repitiendo || !this.propuestas.reclamarSaludo()) return;
+        if (this.puente.actual === null) this.narrador.saludar(texto);
+      })
     );
 
     this.zona.runOutsideAngular(() => {
@@ -133,7 +159,8 @@ export class EnVivoNarracionService implements OnDestroy {
       this.interaccion.repitiendo ||
       (typeof document !== 'undefined' && document.hidden) ||
       !e.cargado ||
-      e.disponible === false;
+      e.disponible === false ||
+      this.puente.actual !== null;
     if (callar) {
       if (this.lineaSubject.value !== null) this.zona.run(() => this.publicar(null));
       return;

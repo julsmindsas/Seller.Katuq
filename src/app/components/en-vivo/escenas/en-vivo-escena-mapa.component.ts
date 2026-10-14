@@ -5,10 +5,14 @@ import {
   ElementRef,
   Input,
   NgZone,
+  OnDestroy,
   SimpleChanges,
   ViewEncapsulation,
 } from '@angular/core';
+import { distinctUntilChanged, map } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../compartido/en-vivo-interaccion.service';
+import { EnVivoPropuestaEscenaPuente } from '../propuestas/propuestas-escena.puente';
+import type { PropuestaEnEscena } from '../propuestas/propuestas.modelos';
 import { diaDeColombia } from '../servicios/en-vivo-reglas';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { EstadoEnVivo, EventoEnVivo, PedidoEnVivo } from '../servicios/en-vivo.modelos';
@@ -30,6 +34,12 @@ import { resolverDane } from './pais.utilidades';
  * abre la lista de sus pedidos (`abrir-lista` con `ciudad:<dane>`). Degrada sin romper: sin WebGL
  * muestra el aviso y deja las cifras y la lista en vivo; con "reducir movimiento" no hay arcos ni
  * confeti; con la pestaña oculta se pausa SIN perder eventos. Solo lectura.
+ *
+ * Opttia propone (D-422, 4.6): con la propuesta que muestra la tarjeta
+ * (`EnVivoPropuestaEscenaPuente.actual$`), los grupos de transportadora llevan un arco FIJO desde
+ * la bodega hasta la ciudad de sus pedidos (con "reducir movimiento" o calidad baja aparece quieto,
+ * sin dibujarse), y el orbe la señala fijo como en "Mi operación". Al quitar la propuesta el arco se
+ * borra; durante "Repetir el día" se esconde. No escribe ni mueve nada real.
  */
 @Component({
   selector: 'app-en-vivo-escena-mapa',
@@ -39,7 +49,7 @@ import { resolverDane } from './pais.utilidades';
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class EnVivoEscenaMapaComponent extends EnVivoEscenaBase<MapaEnVivoEscena> {
+export class EnVivoEscenaMapaComponent extends EnVivoEscenaBase<MapaEnVivoEscena> implements OnDestroy {
   /** Ciudad de la bodega (código DANE o nombre): de ahí salen los arcos. Sin ella se toma la ciudad con más pedidos hoy. */
   @Input() ciudadBodega: string | null = null;
   /** true = "Tu bodega" (el comercio mira lo suyo); false = "Bodega" (Katuq mira a un comercio). */
@@ -49,6 +59,8 @@ export class EnVivoEscenaMapaComponent extends EnVivoEscenaBase<MapaEnVivoEscena
     'Mapa 3D de Colombia con los pedidos de hoy: una columna por ciudad, un pulso con cada pedido nuevo y un arco por cada envío. Las cifras y la lista dicen lo mismo en texto.';
 
   private ultimaFoto: number | null = null;
+  /** La propuesta de Opttia que muestra la tarjeta (la escena la esconde mientras se repite el día). */
+  private propuesta: PropuestaEnEscena | null = null;
 
   constructor(
     zona: NgZone,
@@ -56,9 +68,17 @@ export class EnVivoEscenaMapaComponent extends EnVivoEscenaBase<MapaEnVivoEscena
     host: ElementRef<HTMLElement>,
     estado: EnVivoEstadoService,
     interaccion: EnVivoInteraccionService,
-    orbe: EnVivoOrbeService
+    orbe: EnVivoOrbeService,
+    private readonly puente: EnVivoPropuestaEscenaPuente
   ) {
     super(zona, cdr, host, estado, interaccion, orbe);
+  }
+
+  override ngOnDestroy(): void {
+    // El orbe es de toda la pantalla: la propuesta que esta escena le pasó se retira con ella.
+    if (this.propuesta) this.orbe.retirarPropuesta();
+    this.propuesta = null;
+    super.ngOnDestroy();
   }
 
   // ------------------------------------------------------ API para quien la integra
@@ -123,6 +143,23 @@ export class EnVivoEscenaMapaComponent extends EnVivoEscenaBase<MapaEnVivoEscena
     this.sincronizar();
     this.subs.add(this.estadoSvc.estado$.subscribe((e) => this.alEstado(e)));
     this.subs.add(this.estadoSvc.nuevos$.subscribe((ev) => this.alEventoNuevo(ev)));
+    // Opttia propone (D-422, 4.6), fuera de la zona de Angular: la escena y el orbe solo dibujan.
+    this.subs.add(this.puente.actual$.subscribe((p) => this.zona.runOutsideAngular(() => this.alPropuesta(p))));
+    // "Repetir el día" esconde el arco fijo; al volver, la propuesta vigente se dibuja de nuevo.
+    this.subs.add(
+      this.interaccion.repeticion$
+        .pipe(map((r) => r.activa), distinctUntilChanged())
+        .subscribe((activa) => this.zona.runOutsideAngular(() => this.escena?.fijarPropuesta(activa ? null : this.propuesta)))
+    );
+  }
+
+  /** La tarjeta cambió de propuesta (null = ninguna): arcos fijos de las transportadoras y el orbe la señala fijo. */
+  private alPropuesta(p: PropuestaEnEscena | null): void {
+    const habia = this.propuesta !== null;
+    this.propuesta = p;
+    this.escena?.fijarPropuesta(this.interaccion.repitiendo ? null : p);
+    if (p) this.orbe.proponer(p);
+    else if (habia) this.orbe.retirarPropuesta();
   }
 
   protected override alCambiarEntradas(cambios: SimpleChanges): void {

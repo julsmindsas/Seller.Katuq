@@ -1,5 +1,6 @@
 @import '../en-vivo-tema';
 @import './orbe-etiqueta';
+@import './propuesta-etiqueta';
 
 // ==========================================================================
 // Escena 3D de la operación (D-386, 5.1/5.4). Plana, sin gradientes (design-system).
@@ -252,6 +253,10 @@ app-en-vivo-escena-operacion {
     opacity: 0.75;
   }
 
+  // Ensayo de una propuesta de Opttia (D-422): etiqueta del montón ("Carlos · 4"), "$" del cobro y
+  // número de cada copia de la fila de producción (compartidas con el arco fijo de "Mi país").
+  @include eve-propuesta-etiqueta;
+
   @media (max-width: 520px) {
     .eve-lbl--st .eve-lbl__in {
       padding: 3px 7px;
@@ -261,6 +266,7 @@ app-en-vivo-escena-operacion {
     .eve-lbl--st b {
       font-size: 13px;
     }
+
   }
 
   // Con "reducir movimiento": las etiquetas aparecen sin salto.

@@ -28,8 +28,10 @@
             [class.is-tarde]="t.tarde"
             [class.is-ia]="t.ia"
             [class.is-opt]="marca?.id === t.id"
+            [ngClass]="claseOpttia(t.id)"
             [attr.data-opt]="textoOpttia(t.id)"
-            [attr.aria-label]="t.aria"
+            [attr.data-sug]="textoPropuesta(t.id)"
+            [attr.aria-label]="ariaDe(t)"
             (click)="abrir(t)"
           >
             <span class="kcard__top">

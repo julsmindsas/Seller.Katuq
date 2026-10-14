@@ -117,12 +117,22 @@ export class GestorEtiquetas {
     this.lista.forEach((e) => {
       const z = a[e.id];
       if (!z) { e.el.style.visibility = 'hidden'; return; }
-      const x = z.x;
-      const y = z.y - e.dy;
-      const visible = x > 8 && x < ancho - 8 && y > 40 && y < alto - 24;
-      e.el.style.visibility = visible ? 'visible' : 'hidden';
-      if (visible) e.el.style.transform = `translate3d(${Math.round(x)}px, ${Math.round(y)}px, 0) translate(-50%, -100%)`;
+      this.colocar(e, z, ancho, alto);
     });
+  }
+
+  /** ¿La etiqueta cabe en pantalla puesta en ese punto (px)? */
+  dentro(e: EtiquetaH, z: AnclaZona, ancho: number, alto: number): boolean {
+    const y = z.y - e.dy;
+    return z.x > 8 && z.x < ancho - 8 && y > 40 && y < alto - 24;
+  }
+
+  /** La pone en ese punto (px) o la esconde si queda fuera de la pantalla. Devuelve si se ve. */
+  colocar(e: EtiquetaH, z: AnclaZona, ancho: number, alto: number): boolean {
+    const visible = this.dentro(e, z, ancho, alto);
+    e.el.style.visibility = visible ? 'visible' : 'hidden';
+    if (visible) e.el.style.transform = `translate3d(${Math.round(z.x)}px, ${Math.round(z.y - e.dy)}px, 0) translate(-50%, -100%)`;
+    return visible;
   }
 
   limpiar(): void {

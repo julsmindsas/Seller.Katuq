@@ -21,6 +21,10 @@ export const COMPANY_FEATURE_FLAGS = [
   'pickingAlistamiento',
   // Opttia organiza los despachos y una persona aprueba, en En vivo (D-410).
   'despachosOpttia',
+  // Opttia propone en la escena, fase 2 (D-422): pasar a En producción con aprobación de una persona.
+  'opttiaProduccion',
+  // Opttia propone en la escena, fase 2 (D-422): "Abrir WhatsApp" en la señal de cobro (no envía nada).
+  'opttiaCobroWhatsapp',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

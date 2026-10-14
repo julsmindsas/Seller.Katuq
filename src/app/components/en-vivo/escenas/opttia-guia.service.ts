@@ -3,6 +3,8 @@ import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../compartido/en-vivo-interaccion.service';
 import { EnVivoFichaService } from '../ficha/ficha.service';
+import { EnVivoPropuestaEscenaPuente } from '../propuestas/propuestas-escena.puente';
+import type { PropuestaEnEscena } from '../propuestas/propuestas.modelos';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { alCambiarMovimiento, prefiereMenosMovimiento } from '../utilidades/movimiento';
 import { ContextoGuia, FuentesGuia, GuiaOpttia, OrdenOrbe, OrdenSenalar } from './opttia-guia';
@@ -13,9 +15,11 @@ import {
   entregaDeEvento,
   lineasParaHablar,
   objetivoDeRespuesta,
+  propuestaParaOrbe,
   puntosDelOrbe,
   textoParaBurbuja,
 } from './opttia-puntos';
+import { MarcaPropuesta, marcasDePropuesta } from './propuesta-marcas.reglas';
 
 /** La tarjeta (pedido o comercio) que Opttia marca en el tablero de pedidos o en el muro, que no son 3D. */
 export interface MarcaOrbe {
@@ -23,6 +27,9 @@ export interface MarcaOrbe {
   id: string;
   texto: string;
 }
+
+/** Ninguna tarjeta de propuesta marcada. */
+const SIN_MARCAS_PROPUESTA: ReadonlyMap<string, MarcaPropuesta> = new Map();
 
 /** Dónde va el recorrido guiado: "2 de 5". */
 export interface RecorridoOrbe {
@@ -33,6 +40,12 @@ export interface RecorridoOrbe {
 const PERIODO_MARCAS_MS = 9000;
 const DURACION_MARCA_MS = 7000;
 const ESPERA_RETEMA_MS = 150;
+/**
+ * Con una propuesta la cámara se acerca menos que en el recorrido, y solo parte del camino hacia la
+ * caja: el ensayo (montón, moto, carril y casas) ocupa buena parte de la escena y debe seguir a la vista.
+ */
+const ZOOM_PROPUESTA = 1.1;
+const ACERCAR_PROPUESTA = 0.4;
 
 /**
  * El orbe de Opttia en las escenas (D-386, 5.14). Singleton que une tres cosas:
@@ -43,7 +56,11 @@ const ESPERA_RETEMA_MS = 150;
  *   siguiente de su lista), conduce el recorrido guiado y atiende las visitas por pedidos "Con
  *   Opttia" y por respuestas de la tarjeta de Opttia;
  * - el tablero de pedidos y el muro de Katuq (sin 3D), que piden `usarMarcas(tipo)` y reciben por
- *   `marca$` la tarjeta que Opttia señala.
+ *   `marca$` la tarjeta que Opttia señala;
+ * - las propuestas de Opttia (D-422): `proponer(p)` / `retirarPropuesta()` dejan la señal fija en lo
+ *   que la propuesta toca mientras la tarjeta la muestre (lo conectan las escenas de la operación y
+ *   de "Mi país"). Sin 3D, mientras el tablero de pedidos pida marcas, `marcasPropuesta$` trae las
+ *   tarjetas de los pedidos de la propuesta con el color de su grupo, y la ronda de marcas se pausa.
  *
  * Los textos salen del radar y del último resumen que ya llegaron (sin llamar al modelo) y respetan
  * "ocultar". El recorrido lo cortan: arrastrar la cámara, abrir una ficha, "Repetir el día", tocar
@@ -59,6 +76,9 @@ export class EnVivoOrbeService implements OnDestroy {
   private readonly marcaSubject = new BehaviorSubject<MarcaOrbe | null>(null);
   private readonly recorridoSubject = new BehaviorSubject<RecorridoOrbe | null>(null);
   private readonly hayOrbeSubject = new BehaviorSubject<boolean>(false);
+  private readonly marcasPropuestaSubject = new BehaviorSubject<ReadonlyMap<string, MarcaPropuesta>>(SIN_MARCAS_PROPUESTA);
+  /** La propuesta que muestra la tarjeta (la lee del puente; null = ninguna). */
+  private propuestaVigente: PropuestaEnEscena | null = null;
 
   /** La tarjeta que Opttia marca ahora (tablero y muro); null = ninguna. */
   readonly marca$: Observable<MarcaOrbe | null> = this.marcaSubject.asObservable();
@@ -66,6 +86,12 @@ export class EnVivoOrbeService implements OnDestroy {
   readonly recorrido$: Observable<RecorridoOrbe | null> = this.recorridoSubject.asObservable();
   /** Hay un orbe en una escena 3D a la vista. */
   readonly hayOrbe$: Observable<boolean> = this.hayOrbeSubject.asObservable();
+  /**
+   * Las tarjetas del tablero de pedidos que son de la propuesta a la vista (D-422, 4.6): pedido →
+   * color de su grupo y lo que propone. Vacío sin propuesta, con Opttia apagado o si ningún tablero
+   * pidió marcas. Solo marca: no escribe nada.
+   */
+  readonly marcasPropuesta$: Observable<ReadonlyMap<string, MarcaPropuesta>> = this.marcasPropuestaSubject.asObservable();
 
   /** "Reducir movimiento" vigente (se lee una vez y se actualiza al cambiar). */
   reducirMovimiento = prefiereMenosMovimiento();
@@ -87,7 +113,8 @@ export class EnVivoOrbeService implements OnDestroy {
     private readonly estado: EnVivoEstadoService,
     private readonly interaccion: EnVivoInteraccionService,
     private readonly ficha: EnVivoFichaService,
-    private readonly zona: NgZone
+    private readonly zona: NgZone,
+    private readonly puente: EnVivoPropuestaEscenaPuente
   ) {}
 
   ngOnDestroy(): void {
@@ -116,7 +143,7 @@ export class EnVivoOrbeService implements OnDestroy {
     const orbe = new OrbeOpttia(anfitrion, {
       alFrame: (ahoraMs) => this.alFrame(anfitrion, ahoraMs),
       alTocarOrbe: () => this.zona.run(() => this.alternarRecorrido()),
-      alArrastrarCamara: () => this.zona.run(() => this.cortar()),
+      alArrastrarCamara: () => this.zona.run(() => this.ejecutar(this.guia.arrastre())),
     });
     orbe.iniciar();
     this.anfitriones.set(anfitrion, orbe);
@@ -155,6 +182,7 @@ export class EnVivoOrbeService implements OnDestroy {
   usarMarcas(tipo: 'pedido' | 'comercio'): () => void {
     this.encender();
     this.marcasEn[tipo]++;
+    this.publicarMarcasPropuesta();
     if (!this.temporizadorMarcas) {
       this.zona.runOutsideAngular(() => {
         this.temporizadorMarcas = window.setInterval(() => this.turnoMarcas(), PERIODO_MARCAS_MS);
@@ -170,11 +198,14 @@ export class EnVivoOrbeService implements OnDestroy {
         this.temporizadorMarcas = 0;
         this.limpiarMarca();
       }
+      this.publicarMarcasPropuesta();
       this.apagarSiSobra();
     };
   }
 
   private turnoMarcas(): void {
+    // Con una propuesta a la vista, sus tarjetas mandan (como en 3D, la ronda se pausa).
+    if (this.propuestaVigente) return;
     if (!this.opttiaActivo || this.anfitriones.size > 0 || this.interaccion.repitiendo || this.ficha.abierta || (typeof document !== 'undefined' && document.hidden)) return;
     const puntos = this.puntos();
     for (let k = 0; k < puntos.length; k++) {
@@ -208,6 +239,17 @@ export class EnVivoOrbeService implements OnDestroy {
     if (this.marcaSubject.value) this.zona.run(() => this.marcaSubject.next(null));
   }
 
+  /**
+   * Publica las tarjetas de la propuesta a la vista para el tablero de pedidos: solo si un tablero
+   * pidió marcas y Opttia está prendido; si no, ninguna.
+   */
+  private publicarMarcasPropuesta(): void {
+    const p = this.opttiaActivo && this.marcasEn.pedido > 0 ? this.propuestaVigente : null;
+    const marcas = p ? marcasDePropuesta(p) : SIN_MARCAS_PROPUESTA;
+    if (marcas === this.marcasPropuestaSubject.value) return;
+    this.zona.run(() => this.marcasPropuestaSubject.next(marcas));
+  }
+
   private resumido(texto: string): string {
     return texto.length > 70 ? `${texto.slice(0, 68)}…` : texto;
   }
@@ -235,6 +277,22 @@ export class EnVivoOrbeService implements OnDestroy {
     return true;
   }
 
+  /**
+   * Opttia propone (D-422): el orbe deja su ronda de 16 s, vuela a la primera caja de la propuesta
+   * (o a su estación de respaldo) y su señal queda FIJA, con la etiqueta de la propuesta, mientras
+   * siga viva (sin el auto-soltado). Una ronda normal no la pisa. Solo lectura.
+   */
+  proponer(p: PropuestaEnEscena): void {
+    // Con la escena en pausa (abajo en la página o la pestaña oculta) no hay quién dibuje la señal:
+    // la guía no la da por puesta y la señala en el primer cuadro de cuando la escena vuelva.
+    this.ejecutar(this.guia.proponer(performance.now(), propuestaParaOrbe(p), this.contextoVisible()));
+  }
+
+  /** La propuesta ya no está en la tarjeta: el orbe la suelta y vuelve a su ronda. */
+  retirarPropuesta(): void {
+    this.ejecutar(this.guia.retirarPropuesta(performance.now()));
+  }
+
   // -------------------------------------------------------------- el cuadro
 
   private alFrame(h: AnfitrionOrbe, ahoraMs: number): void {
@@ -253,6 +311,11 @@ export class EnVivoOrbeService implements OnDestroy {
     };
   }
 
+  /** Como `contexto()`, pero solo cuenta una escena que esté corriendo (la que puede dibujar ya). */
+  private contextoVisible(): ContextoGuia {
+    return { ...this.contexto(), hayEscena: this.activo() !== null };
+  }
+
   private puntos() {
     return puntosDelOrbe(this.estado.estado, this.estado.preferencias.ocultar, Date.now());
   }
@@ -265,23 +328,44 @@ export class EnVivoOrbeService implements OnDestroy {
 
   private ejecutar(ordenes: ReadonlyArray<OrdenOrbe>): void {
     for (const o of ordenes) {
-      if (o.tipo === 'soltar') this.soltar();
-      else this.senalar(o);
+      switch (o.tipo) {
+        case 'soltar':
+          this.soltar();
+          break;
+        case 'soltar-camara':
+          this.anfitriones.forEach((orbe) => orbe.soltarCamara());
+          break;
+        default:
+          this.senalar(o);
+      }
     }
     this.publicarRecorrido();
   }
 
   private senalar(o: OrdenSenalar): void {
     if (this.anfitriones.size === 0) {
-      this.marcarTarjeta(o.obj, o.texto, o.ms);
+      // Una propuesta (señal fija) no marca tarjetas sueltas: esa marca vence y la ronda la pisaría.
+      if (!o.fija) this.marcarTarjeta(o.obj, o.texto, o.ms);
       return;
     }
     const h = this.activo();
     const orbe = h ? this.anfitriones.get(h) : undefined;
-    if (!h || !orbe) return;
+    if (!h || !orbe) {
+      // Ninguna escena corriendo: la señal fija de una propuesta no se dibujó. La guía no la da por
+      // puesta y vuelve a señalarla (con su cámara) en el primer cuadro de cuando la escena vuelva.
+      if (o.fija) this.guia.propuestaNoVista(o.camara);
+      return;
+    }
     let lugar = o.obj ? h.lugarDe(o.obj) : null;
     if (!lugar && o.alterno) lugar = h.lugarDe(o.alterno);
-    orbe.senalar(o.obj, lugar, o.texto, o.ms, { camara: o.camara, titulo: o.titulo, tono: o.tono });
+    orbe.senalar(o.obj, lugar, o.texto, o.ms, {
+      camara: o.camara,
+      titulo: o.titulo,
+      tono: o.tono,
+      fija: o.fija,
+      zoom: o.fija ? ZOOM_PROPUESTA : undefined,
+      acercar: o.fija ? ACERCAR_PROPUESTA : undefined,
+    });
     if (o.destello && lugar) orbe.destello(lugar);
   }
 
@@ -340,7 +424,17 @@ export class EnVivoOrbeService implements OnDestroy {
             [...this.anfitriones.keys()].forEach((h) => this.desmontarOrbe(h));
             this.limpiarMarca();
           }
+          this.publicarMarcasPropuesta();
         })
+    );
+    // La propuesta que muestra la tarjeta (D-422): sus tarjetas se marcan en el tablero y la ronda de
+    // marcas se pausa. La tarjeta ya la suelta durante "Repetir el día", al aprobar y al irse.
+    s.add(
+      this.puente.actual$.subscribe((p) => {
+        this.propuestaVigente = p;
+        if (p) this.limpiarMarca();
+        this.publicarMarcasPropuesta();
+      })
     );
     // Abrir una ficha o repetir el día corta el recorrido.
     s.add(this.ficha.abierta$.subscribe((abierta) => { if (abierta) this.cortar(); }));
@@ -385,6 +479,8 @@ export class EnVivoOrbeService implements OnDestroy {
     this.anfitriones.clear();
     this.guia.cortar();
     this.limpiarMarca();
+    this.propuestaVigente = null;
+    this.publicarMarcasPropuesta();
     this.publicarRecorrido();
     this.publicarHayOrbe();
   }

@@ -25,23 +25,6 @@
                     <div class="loader-8"></div>
                 </div>
 
-                <!-- Indicador de progreso de geocodificación -->
-                <div class="px-3 py-1 bg-info text-white" *ngIf="geocodingInProgress">
-                    <div class="d-flex align-items-center">
-                        <i class="pi pi-spin pi-spinner me-2"></i>
-                        <div class="flex-grow-1">
-                            <small class="fw-bold">{{ 'Geocodificando direcciones...' | translate }}</small>
-                            <div class="progress bg-white bg-opacity-25 mt-1" style="height: 3px;">
-                                <div class="progress-bar bg-white"
-                                     [style.width.%]="geocodingProgress"
-                                     role="progressbar">
-                                </div>
-                            </div>
-                        </div>
-                        <small class="ms-2">{{ geocodingProgress | number:'1.0-1' }}%</small>
-                    </div>
-                </div>
-
                 <!-- IA de despachos (openspec/changes/despachos-ia-util) -->
                 <app-despachos-ia *ngIf="mostrarPanelIA" (cerrar)="mostrarPanelIA = false"></app-despachos-ia>
 
@@ -184,7 +167,15 @@
                             </div>
                             <div class="actions-group">
                                 <button pButton type="button" icon="pi pi-send" label="{{ 'Generar Orden' | translate }}" class="p-button-primary p-button-sm d-none d-md-flex" (click)="openModal(generarOrdenEnvioModal)"></button>
-                                <button pButton type="button" icon="pi pi-bolt" label="IA" class="p-button-primary p-button-sm" (click)="mostrarPanelIA = !mostrarPanelIA" pTooltip="Qué despachar hoy, despachados sin cerrar y avisos, explicado por Opttia" tooltipPosition="bottom"></button>
+                                <button type="button" class="opttia-btn" [class.opttia-btn--abierto]="mostrarPanelIA"
+                                        (click)="mostrarPanelIA = !mostrarPanelIA"
+                                        [attr.aria-expanded]="mostrarPanelIA"
+                                        aria-label="Pregúntale a Opttia: qué despachar hoy, despachados sin cerrar y avisos"
+                                        pTooltip="Qué despachar hoy, despachados sin cerrar y avisos" tooltipPosition="bottom">
+                                    <img class="opttia-btn__avatar" src="assets/images/opttia/tuki-avatar-v1.webp" alt="" width="24" height="24" decoding="async">
+                                    <span class="opttia-btn__largo">{{ 'Pregúntale a Opttia' | translate }}</span>
+                                    <span class="opttia-btn__corto">Opttia</span>
+                                </button>
                                 <p-splitButton label="{{ 'Acciones' | translate }}" icon="pi pi-cog" (onClick)="accionesSplit.onDropdownButtonClick($event)" #accionesSplit [model]="accionesMenu" styleClass="p-button-secondary p-button-sm p-button-outlined d-none d-md-flex"></p-splitButton>
                                 <div class="d-md-none">
                                     <button pButton type="button" icon="pi pi-ellipsis-v" class="p-button-text p-button-sm" (click)="menuAcciones.toggle($event)"></button>
@@ -237,8 +228,8 @@
                                 [tiempoReal]="true"
                                 [verMensajeros]="true"
                                 [configuracionZonas]="obtenerConfiguracionZonas()"
-                                [geocodingInProgress]="geocodingInProgress"
-                                [geocodingProgress]="geocodingProgress"
+                                [avanceUbicacion]="avanceUbicacion"
+                                [pedidosSinUbicar]="pedidosSinUbicar"
                                 [metricas]="mapaMetricas"
                             ></app-mapa-ubicaciones>
                         </div>

@@ -14,7 +14,7 @@ import {
 import { Director, describirEventoEnVivo, ModoTrabajo, Trabajo } from './director';
 import { EtiquetaH, GestorEtiquetas, esc } from './etiquetas-html';
 import { KitEscena } from './kit-escena';
-import { BELT_Z, MundoOperacion, PADS, PARQUEO_CASA, PICK, SLOTS } from './operacion.mundo';
+import { BELT_Z, CAMION, CARRIL_SALIDA, MundoOperacion, PADS, PARQUEO_CASA, PICK, SALIDA_X, SLOTS, TIENDA } from './operacion.mundo';
 import {
   CAJAS_VISIBLES,
   ESTACIONES,
@@ -41,11 +41,13 @@ import { Tweens, ease, limitar } from './tweens';
 
 interface Pos2 { x: number; z: number; }
 
-const LANE_OUT = 2.8;
+const LANE_OUT = CARRIL_SALIDA;
 const LANE_BACK = 4.0;
-const EXIT_X = 17.4;
-const TRUCK: Pos2 = { x: 12.6, z: -2.4 };
+const EXIT_X = SALIDA_X;
+const TRUCK: Pos2 = CAMION;
 const CHAQUETAS: ReadonlyArray<string> = ['accent', 'info', 'pack', 'ok'];
+/** Opacidad de las cajas que no son de la propuesta que Opttia ensaya (D-422). */
+const OPACIDAD_ATENUADA = 0.4;
 
 // Nombres de Katuq. El color de cada estación es fijo para que las cinco se distingan en la
 // banda (el servidor puede repetir tono entre Producido y Empacado); el nombre sí viene del servidor.
@@ -83,12 +85,16 @@ type V3 = ThreeNS.Vector3;
 interface Caja {
   g: ThreeNS.Group;
   cuerpo: ThreeNS.Mesh;
+  /** La cinta de la tapa (se atenúa junto con el cuerpo). */
+  cinta: ThreeNS.Mesh;
   viajando: boolean;
 }
 
 interface Vehiculo {
   clave: string;
   tipo: 'moto' | 'camion';
+  /** Token del color de la chaqueta del mensajero (null en el camión). */
+  chaqueta: string | null;
   nombre: string | null;
   slot: Pos2;
   obj: ThreeNS.Group;
@@ -120,6 +126,10 @@ export interface DiagnosticoOperacion {
   tweens: number;
   etiquetas: number;
   fallos: number;
+  /** Cajas viajando ahora por la banda por un cambio de etapa (el tope de 6 lo pone el director). */
+  cajasEnBanda: number;
+  /** Lo más alto que llegó `cajasEnBanda` (para comprobar el tope). */
+  picoBanda: number;
 }
 
 export class OperacionEnVivoEscena extends EscenaBase<string> {
@@ -176,6 +186,8 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
   private matAnillo: ThreeNS.MeshBasicMaterial | null = null;
 
   private privado = false;
+  /** Ensayo de una propuesta de Opttia: pedidos que NO se atenúan (null = ninguna caja atenuada). */
+  private noAtenuadas: ReadonlySet<string> | null = null;
   private resaltadas: string[] = [];
   private hoverPedido: string | null = null;
   private etqHover: EtiquetaH | null = null;
@@ -184,6 +196,8 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
   private zoomSeguido = 1.5;
   private cargando = true;
   private fallos = 0;
+  private enBanda = 0;
+  private picoBanda = 0;
   private ultimoConteo = new Map<EstacionId, number>();
 
   private constructor(
@@ -309,28 +323,107 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     return this.etq;
   }
 
-  posCaja(id: string): V3 | null {
+  /** Posición de la caja del pedido (null si no se ve). `out`: vector a reutilizar (sin crear uno por cuadro). */
+  posCaja(id: string, out?: V3): V3 | null {
     const c = this.cajas.get(id);
     if (!c || !c.g.visible || !c.g.parent) return null;
-    return c.g.getWorldPosition(new this.T.Vector3());
+    return c.g.getWorldPosition(out ?? new this.T.Vector3());
   }
 
   /** Posición del vehículo que lleva ese transportador (null si no se ve ahora). */
-  posVeh(nombre: string): V3 | null {
+  posVeh(nombre: string, out?: V3): V3 | null {
     const v = this.vehiculos.find((x) => this.mismoNombre(x.nombre, nombre));
-    return v && v.obj.visible ? v.obj.position.clone() : null;
+    if (!v || !v.obj.visible) return null;
+    return out ? out.copy(v.obj.position) : v.obj.position.clone();
   }
 
-  posEstacion(etapa: string): V3 | null {
+  posEstacion(etapa: string, out?: V3): V3 | null {
     if (!esEstacion(etapa)) return null;
     const p = PADS[etapa];
-    return new this.T.Vector3(p.x, 0, p.z);
+    return (out ?? new this.T.Vector3()).set(p.x, 0, p.z);
+  }
+
+  // ---- lo que usa el ensayo de una propuesta de Opttia (D-422, `capa-propuesta.ts`)
+
+  /**
+   * Dónde está un pedido: su caja si se ve; si no, la estación donde está (las que pasan de 18 no se
+   * ven) o el vehículo que lo lleva. null si la escena no lo conoce.
+   */
+  posPedido(id: string, out?: V3): V3 | null {
+    const caja = this.posCaja(id, out);
+    if (caja) return caja;
+    const o = this.pedidos.get(id);
+    if (!o) return null;
+    if (esEstacion(o.etapa)) return this.posEstacion(o.etapa, out);
+    const v = this.vehiculoDe(id);
+    if (!v || !v.obj.visible) return null;
+    return out ? out.copy(v.obj.position) : v.obj.position.clone();
+  }
+
+  /** Posición del camión de las transportadoras (null si salió de la escena). */
+  posCamion(out?: V3): V3 | null {
+    const v = this.vehiculos.find((x) => x.tipo === 'camion');
+    if (!v || !v.obj.visible) return null;
+    return out ? out.copy(v.obj.position) : v.obj.position.clone();
+  }
+
+  /** Centro de la casa simbólica del pedido en el barrio: la misma a la que va la moto al despacharlo. */
+  posCasa(pedidoId: string, out?: V3): V3 | null {
+    const casa = this.mundo.casas[this.indiceCasa({ id: pedidoId })];
+    if (!casa) return null;
+    return (out ?? new this.T.Vector3()).set(casa.x, 0, casa.z);
+  }
+
+  /** Centro de la tienda (para lo que Opttia proponga sobre el inventario). */
+  posTienda(out?: V3): V3 {
+    return (out ?? new this.T.Vector3()).set(TIENDA.x, 0, TIENDA.z);
+  }
+
+  /**
+   * Que exista la moto de ese mensajero aunque no haya salido hoy: si ninguna moto lleva su nombre,
+   * rotula una libre del garaje (quieta y vacía; primero las que no tienen nombre, luego la que lleva
+   * más tiempo sin salir, como `vehiculoPara`), de preferencia la de chaqueta `colorPreferido`, y sin
+   * tomar la de un mensajero de `respetar` (los otros grupos de la misma propuesta). Devuelve el token
+   * de la chaqueta de su moto, o null si no hay moto libre. No mueve nada ni cambia pedidos.
+   */
+  prepararVehiculo(nombre: string | null | undefined, colorPreferido?: string | null, respetar: ReadonlyArray<string> = []): string | null {
+    if (!nombre || !nombre.trim()) return null;
+    const motos = this.vehiculos.filter((v) => v.tipo === 'moto');
+    const propia = motos.find((v) => this.mismoNombre(v.nombre, nombre));
+    if (propia) return propia.chaqueta;
+    const libres = motos
+      .filter((v) => v.vis === 'base' && !v.pedidos.size && !respetar.some((r) => this.mismoNombre(v.nombre, r)))
+      .sort((a, b) => (a.nombre === null ? 0 : 1) - (b.nombre === null ? 0 : 1) || a.uso - b.uso);
+    const sinNombre = libres.filter((v) => v.nombre === null);
+    const libre = (sinNombre.length ? sinNombre : libres).find((v) => v.chaqueta === colorPreferido) ?? libres[0];
+    if (!libre) return null;
+    libre.nombre = nombre;
+    this.refrescarEtiquetaVeh(libre);
+    this.sucio = true;
+    return libre.chaqueta;
+  }
+
+  /**
+   * Ensayo de una propuesta: baja al 40 % todas las cajas MENOS las de esos pedidos (null = todas
+   * normales). Cambia la referencia a un material atenuado compartido por token (no clona uno por
+   * caja); las cajas que lleguen mientras dura el ensayo nacen ya atenuadas.
+   */
+  atenuarCajas(salvo: ReadonlyArray<string> | null): void {
+    this.noAtenuadas = salvo ? new Set(salvo) : null;
+    this.cajas.forEach((c, id) => this.pintarCaja(c, id));
+    this.sucio = true;
+  }
+
+  /** El kit de materiales y geometrías de la escena (la capa de propuestas usa sus materiales por token). */
+  get kitEscena(): KitEscena {
+    return this.kit;
   }
 
   /** Vacía la escena (cajas, vehículos, animaciones y tarjetas) sin tocar el mundo. */
   reiniciar(): void {
     this.director.limpiar();
     this.tw.limpiar();
+    this.enBanda = 0;
     this.limpiarEfimeros();
     [...this.cajas.keys()].forEach((id) => this.borrarCaja(id));
     this.pedidos.clear();
@@ -374,6 +467,8 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
       tweens: this.tw.cantidad,
       etiquetas: this.etq.cantidad,
       fallos: this.fallos,
+      cajasEnBanda: this.enBanda,
+      picoBanda: this.picoBanda,
     };
   }
 
@@ -390,6 +485,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     this.tw.limpiar();
     this.limpiarEfimeros();
     this.etq.limpiar();
+    this.kit?.tenues.forEach((m) => m.dispose());
     super.destruir();
   }
 
@@ -471,20 +567,21 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
 
   private crearVehiculos(): void {
     SLOTS.forEach((s, i) => {
-      const obj = this.mundo.crearMoto(CHAQUETAS[i % CHAQUETAS.length]);
-      this.registrarVehiculo({ clave: 'm' + (i + 1), tipo: 'moto', slot: s, obj, headT: Math.PI / 2 });
+      const chaqueta = CHAQUETAS[i % CHAQUETAS.length];
+      const obj = this.mundo.crearMoto(chaqueta);
+      this.registrarVehiculo({ clave: 'm' + (i + 1), tipo: 'moto', slot: s, obj, headT: Math.PI / 2, chaqueta });
     });
-    this.registrarVehiculo({ clave: 't1', tipo: 'camion', slot: TRUCK, obj: this.mundo.crearCamion(), headT: 0 });
+    this.registrarVehiculo({ clave: 't1', tipo: 'camion', slot: TRUCK, obj: this.mundo.crearCamion(), headT: 0, chaqueta: null });
   }
 
-  private registrarVehiculo(o: { clave: string; tipo: 'moto' | 'camion'; slot: Pos2; obj: ThreeNS.Group; headT: number }): void {
+  private registrarVehiculo(o: { clave: string; tipo: 'moto' | 'camion'; slot: Pos2; obj: ThreeNS.Group; headT: number; chaqueta: string | null }): void {
     o.obj.position.set(o.slot.x, 0, o.slot.z);
     o.obj.rotation.y = o.headT;
     o.obj.userData['zona'] = 'v:' + o.clave;
     this.scene.add(o.obj);
     this.pickables.push(o.obj);
     this.vehiculos.push({
-      clave: o.clave, tipo: o.tipo, nombre: null, slot: o.slot, obj: o.obj,
+      clave: o.clave, tipo: o.tipo, chaqueta: o.chaqueta, nombre: null, slot: o.slot, obj: o.obj,
       carga: o.obj.userData['carga'] as ThreeNS.Group, headT: o.headT, vis: 'base', pedidos: new Set(), etq: null, uso: 0,
       tmp: new this.T.Vector3(), casa: null,
     });
@@ -613,12 +710,25 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     g.userData['zona'] = 'p:' + id;
     g.userData['pedidoId'] = id;
     const cuerpo = this.kit.malla(this.kit.gRbox(0.86, 0.72, 0.86, 0.12), this.kit.mt('box'), g, 0, 0, 0);
-    this.kit.malla(this.kit.gCaja(0.2, 0.02, 0.88), this.kit.mt('box-tape'), g, 0, 0.37, 0, false);
+    const cinta = this.kit.malla(this.kit.gCaja(0.2, 0.02, 0.88), this.kit.mt('box-tape'), g, 0, 0.37, 0, false);
     this.scene.add(g);
     this.pickables.push(g);
-    const c: Caja = { g, cuerpo, viajando: false };
+    const c: Caja = { g, cuerpo, cinta, viajando: false };
     this.cajas.set(id, c);
+    if (this.noAtenuadas) this.pintarCaja(c, id);
     return c;
+  }
+
+  /**
+   * Material normal o atenuado de una caja según el ensayo en curso. Solo cambia una caja que está
+   * en su color de siempre (o ya atenuada): no pisa el rojo de un rechazo.
+   */
+  private pintarCaja(c: Caja, id: string): void {
+    const tenue = this.noAtenuadas !== null && !this.noAtenuadas.has(id);
+    const normal = this.kit.mt('box');
+    const bajo = this.kit.mtTenue('box', OPACIDAD_ATENUADA);
+    if (c.cuerpo.material === normal || c.cuerpo.material === bajo) c.cuerpo.material = tenue ? bajo : normal;
+    c.cinta.material = tenue ? this.kit.mtTenue('box-tape', OPACIDAD_ATENUADA) : this.kit.mt('box-tape');
   }
 
   private borrarCaja(id: string): void {
@@ -1047,8 +1157,13 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
       this.aparecer(c.g, fin);
       return;
     }
+    // Viaje por la banda: solo en modo `animado`, así que el tope de 6 a la vez lo pone el director
+    // (MAX_SIMULTANEAS); con más de 8 en cola, los demás pasan con desvanecido (saltan a su lugar).
+    // Cubre la aprobación de producción de Opttia (D-422, 8.1.11): llegan como `cambio_estado`.
     c.viajando = true;
     c.g.visible = true; // una caja que estaba fuera de las 18 visibles también se ve viajar
+    this.enBanda++;
+    this.picoBanda = Math.max(this.picoBanda, this.enBanda);
     this.acomodar(de, true);
     const enBanda = this.kit.v(c.g.position.x, BELT_Z, 0.8);
     this.saltar(c.g, enBanda, 0.42, 0.9, () => {
@@ -1060,6 +1175,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
       this.tw.agregar(dur, (k) => { c.g.position.lerpVectors(desde, fn, ease.inOut(k)); }, () => {
         this.saltar(c.g, dest, 0.42, 0.9, () => {
           c.viajando = false;
+          this.enBanda = Math.max(0, this.enBanda - 1);
           this.pulso(this.kit.v(PADS[nueva].x, PADS[nueva].z, 0.17), this.etapas[nueva].tono, 2.0, 0.9);
           this.pop(this.kit.v(dest.x, dest.z, 1.3), this.etapas[nueva].tono, this.etapas[nueva].corto,
             `<span class="eve-mono">#${esc(o?.numero ?? '')}</span><small>${esc(this.quien(o ?? { cliente: null }))}</small>`, 2600);
@@ -1289,7 +1405,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     g.visible = true;
   }
 
-  private indiceCasa(o: PedidoEscena): number {
+  private indiceCasa(o: Pick<PedidoEscena, 'id'>): number {
     let h = 2166136261;
     const t = o.id;
     for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); }

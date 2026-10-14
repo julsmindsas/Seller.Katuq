@@ -22,9 +22,12 @@ import { VistaFicha } from '../ficha/ficha.modelos';
 import { EnVivoRepeticionService } from '../repeticion/en-vivo-repeticion.service';
 import { EscenaRepetible } from '../repeticion/repeticion.tipos';
 import { EnVivoFichaService } from '../ficha/ficha.service';
+import { EnVivoPropuestaEscenaPuente } from '../propuestas/propuestas-escena.puente';
+import type { PropuestaEnEscena } from '../propuestas/propuestas.modelos';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { EstadoEnVivo, EventoEnVivo, PedidoEnVivo } from '../servicios/en-vivo.modelos';
 import { alCambiarMovimiento, prefiereMenosMovimiento } from '../utilidades/movimiento';
+import type { CapaPropuesta } from './capa-propuesta';
 import { leerTokens } from './escena-tokens';
 import { EnVivoOrbeService } from './opttia-guia.service';
 import type { AnfitrionOrbe } from './opttia-orbe';
@@ -43,6 +46,11 @@ const ESPERA_TEMA_MS = 60;
  * reconectar, al volver a la pestaña) y cada evento en vivo (`nuevos$`) se anima por el director.
  * Tocar una caja, una estación o un mensajero avisa por `EnVivoInteraccionService` (la ficha lo
  * abre); la cámara sigue a lo que mire la ficha (`EnVivoFichaService.vistaActual$`).
+ *
+ * Opttia propone (D-422): la propuesta que muestra la tarjeta (`EnVivoPropuestaEscenaPuente.actual$`)
+ * se ensaya en la escena con la capa `CapaPropuesta` (copias fantasma, anillos y líneas; las cajas
+ * reales no se mueven) y el orbe la señala fijo (`proponer`/`retirarPropuesta`). Tocar un montón
+ * avisa a la tarjeta (`tocarGrupo`). Durante "Repetir el día" la capa se esconde.
  *
  * Degrada sin romper: sin WebGL (o si la escena falla al arrancar) muestra el aviso y deja que las
  * cifras, las etapas y la lista sigan en vivo; con "reducir movimiento" quita el movimiento de
@@ -79,12 +87,19 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
   private escena: OperacionEnVivoEscena | null = null;
   private three: Three | null = null;
   private quitarOrbe: (() => void) | null = null;
+  /** Ensayo de la propuesta de Opttia sobre la escena (D-422). */
+  private capa: CapaPropuesta | null = null;
+  /** La propuesta que la tarjeta muestra ahora (la capa la esconde mientras se repite el día). */
+  private propuesta: PropuestaEnEscena | null = null;
+  private reducirMovimiento = prefiereMenosMovimiento();
   private destruido = false;
   private readonly subs = new Subscription();
   private resizeObs: ResizeObserver | null = null;
   private interObs: IntersectionObserver | null = null;
   private soltarMovimiento: (() => void) | null = null;
   private temporizadorTema = 0;
+  /** "Ocultar clientes y montos" vigente (con él no se dibuja la burbuja de WhatsApp). */
+  private ocultar = false;
 
   private visibleEnPantalla = true;
   private pestanaVisible = true;
@@ -104,7 +119,8 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
     private readonly zona: NgZone,
     private readonly cdr: ChangeDetectorRef,
     private readonly host: ElementRef<HTMLElement>,
-    private readonly orbe: EnVivoOrbeService
+    private readonly orbe: EnVivoOrbeService,
+    private readonly puente: EnVivoPropuestaEscenaPuente
   ) {}
 
   ngAfterViewInit(): void {
@@ -120,6 +136,11 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
 
   ngOnDestroy(): void {
     this.destruido = true;
+    // El orbe es de toda la pantalla: la propuesta que esta escena le pasó se retira con ella.
+    if (this.propuesta) this.orbe.retirarPropuesta();
+    this.propuesta = null;
+    this.capa?.destruir();
+    this.capa = null;
     this.quitarOrbe?.();
     this.quitarOrbe = null;
     this.repeticion.quitarEscena(this);
@@ -153,6 +174,16 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
   /** Vacía la escena: "Repetir el día" empieza de cero (la escena se vuelve a llenar con los eventos simulados). */
   reiniciar(): void {
     this.escena?.aplicarFoto([]);
+  }
+
+  /**
+   * Para pruebas (Playwright): lo de la escena más las burbujas de WhatsApp de la capa de Opttia.
+   * null si la escena no está montada.
+   */
+  diagnostico() {
+    const d = this.escena?.diagnostico();
+    if (!d) return null;
+    return { ...d, burbujasWhatsapp: this.capa?.burbujasLanzadas ?? 0, burbujasVivas: this.capa?.burbujasVivas ?? 0 };
   }
 
   /** Vuelve a dejar la escena igual al estado real. */
@@ -190,10 +221,11 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
     if (!this.soportaWebgl()) { this.marcarSin3d(); return; }
     try {
       // Carga diferida: three y la escena solo bajan cuando se muestra la pantalla.
-      const [T, rb, mod] = await Promise.all([
+      const [T, rb, mod, modCapa] = await Promise.all([
         import('three'),
         import('three/examples/jsm/geometries/RoundedBoxGeometry.js'),
         import('./operacion-en-vivo.escena'),
+        import('./capa-propuesta'),
       ]);
       if (this.destruido) return;
       this.three = T;
@@ -211,6 +243,16 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
       });
       escena.iniciar();
       this.escena = escena;
+      // La capa del ensayo de Opttia se cuelga antes de conectar: la propuesta vigente llega al suscribirse.
+      const capa = new modCapa.CapaPropuesta({
+        T,
+        escena,
+        reducir: () => this.reducirMovimiento,
+        alTocarGrupo: (id) => this.zona.run(() => this.puente.tocarGrupo(id)),
+        calidadBaja: () => calidadBaja,
+      });
+      capa.iniciar();
+      this.capa = capa;
       this.conectar(escena);
       // "Repetir el día" le manda los eventos simulados por aquí (EscenaRepetible).
       this.repeticion.registrarEscena(this);
@@ -222,6 +264,8 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
       });
     } catch {
       // La escena no arrancó (contexto WebGL perdido, memoria...): la pantalla sigue sin 3D.
+      this.capa?.destruir();
+      this.capa = null;
       this.escena?.destruir();
       this.escena = null;
       this.marcarSin3d();
@@ -240,14 +284,20 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
     this.interObs.observe(this.host.nativeElement);
     this.pestanaVisible = !document.hidden;
     document.addEventListener('visibilitychange', this.alCambiarVisibilidad);
-    this.soltarMovimiento = alCambiarMovimiento((menos) => escena.fijarReducirMovimiento(menos));
+    this.soltarMovimiento = alCambiarMovimiento((menos) => {
+      this.reducirMovimiento = menos;
+      escena.fijarReducirMovimiento(menos);
+    });
 
     this.sincronizar();
     this.alFicha(this.vistaFicha);
 
     this.subs.add(this.estado.estado$.subscribe((e) => this.alEstado(e)));
     this.subs.add(this.estado.nuevos$.subscribe((ev) => this.alEventoNuevo(ev)));
-    this.subs.add(this.estado.preferencias$.subscribe((p) => this.escena?.fijarPrivado(p.ocultar)));
+    this.subs.add(this.estado.preferencias$.subscribe((p) => {
+      this.ocultar = !!p.ocultar;
+      this.escena?.fijarPrivado(p.ocultar);
+    }));
     this.subs.add(this.ficha.vistaActual$.subscribe((v) => this.alFicha(v)));
     this.subs.add(
       this.interaccion.acciones$.subscribe((a) => {
@@ -259,11 +309,31 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
       this.interaccion.repeticion$.subscribe((r) => {
         const antes = this.repitiendo;
         this.repitiendo = r.activa;
+        // "Repetir el día" esconde el ensayo de Opttia; al volver, la propuesta vigente se ensaya de nuevo.
+        if (antes !== r.activa) this.capa?.fijar(r.activa ? null : this.propuesta);
         // Al terminar la repetición, la escena vuelve al estado real sin perder lo que llegó mientras tanto.
         if (antes && !r.activa) this.sincronizar();
       })
     );
+    // Opttia propone (D-422): fuera de la zona de Angular (la capa y el orbe solo dibujan).
+    this.subs.add(this.puente.actual$.subscribe((p) => this.zona.runOutsideAngular(() => this.alPropuesta(p))));
+    // Fase 2 (8.3.6): abrir WhatsApp desde la tarjeta no trae evento real; la escena lo dibuja.
+    this.subs.add(this.puente.avisos$.subscribe((a) => this.zona.runOutsideAngular(() => {
+      if (a.tipo !== 'whatsapp-abierto') return;
+      // La tarjeta no lo emite en TV, con "ocultar" ni en la repetición; se protege igual.
+      if (this.repitiendo || this.ocultar || this.pausada || this.interaccion.modoPantalla) return;
+      this.capa?.burbujaWhatsapp(a.pedidoId);
+    })));
     this.actualizarPausa();
+  }
+
+  /** La tarjeta cambió de propuesta (null = ninguna): la capa la ensaya y el orbe la señala fijo. */
+  private alPropuesta(p: PropuestaEnEscena | null): void {
+    const habia = this.propuesta !== null;
+    this.propuesta = p;
+    this.capa?.fijar(this.repitiendo ? null : p);
+    if (p) this.orbe.proponer(p);
+    else if (habia) this.orbe.retirarPropuesta();
   }
 
   /** Lo que el orbe de Opttia necesita de esta escena. */
@@ -334,6 +404,8 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
 
   private alEventoNuevo(ev: EventoEnVivo): void {
     if (!this.escena) return;
+    // Cobro de Opttia (8.3.6): con el pago real, el "$" del aro de ese pedido pasa a "✓".
+    if (ev.tipo === 'pago_confirmado' && !this.repitiendo) this.capa?.pagoConfirmado(ev.pedidoId);
     if (this.pausada || this.repitiendo) { this.pendienteSync = true; return; }
     this.escena.aplicarEvento(ev);
   }

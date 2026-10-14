@@ -18,6 +18,13 @@ export const PADS: Record<EstacionId, Pos2> = {
 export const PARQUEO_CASA = { dx: 1.55, z: 6.35 };
 export const BELT_Z = -2.2;
 export const PICK: Pos2 = { x: 8.7, z: -0.5 };
+/** Donde se estaciona el camión de las transportadoras. */
+export const CAMION: Pos2 = { x: 12.6, z: -2.4 };
+/** z del carril por donde salen las motos y x por donde se sale de la escena. */
+export const CARRIL_SALIDA = 2.8;
+export const SALIDA_X = 17.4;
+/** Centro de la tienda (fachada con su pantalla). */
+export const TIENDA: Pos2 = { x: -15, z: -4.8 };
 const CASAS: ReadonlyArray<number> = [-14.2, -9.6, -5.0, -0.4, 4.2, 8.8];
 export const SLOTS: ReadonlyArray<Pos2> = [10.4, 11.9, 13.4, 14.9].map((x) => ({ x, z: 0.9 }));
 
@@ -107,7 +114,7 @@ export class MundoOperacion {
     const k = this.k;
     const T = k.T;
     const tienda = new T.Group();
-    tienda.position.set(-15, 0, -4.8);
+    tienda.position.set(TIENDA.x, 0, TIENDA.z);
     this.ctx.scene.add(tienda);
     k.malla(k.gRbox(3.4, 3.2, 4.6, 0.2), k.mt('scene-wall'), tienda, 0, 1.6, 0);
     k.malla(k.gRbox(3.8, 0.32, 5.0, 0.12), k.mt('accent'), tienda, 0, 3.36, 0);

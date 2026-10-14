@@ -42,10 +42,11 @@
             (disponible3d)="alDisponible3d($event)"
           ></app-en-vivo-escena-mapa>
           <app-en-vivo-tablero-pedidos *ngSwitchCase="'pedidos'"></app-en-vivo-tablero-pedidos>
-          <app-en-vivo-despachos *ngSwitchCase="'despachos'"></app-en-vivo-despachos>
         </ng-container>
 
         <app-en-vivo-narracion *ngIf="!sinEscena(vm.opcion) && vm.opttiaActivo"></app-en-vivo-narracion>
+        <!-- Opttia propone y la persona aprueba aquí mismo (D-422): una propuesta a la vez. -->
+        <app-en-vivo-sugerencia *ngIf="vm.conPropuestas" [enLista]="sinEscena(vm.opcion)"></app-en-vivo-sugerencia>
         <app-en-vivo-ficha [empresa]="(empresa$ | async) || undefined" (abrirTablero)="alAbrirTablero($event)"></app-en-vivo-ficha>
       </div>
 

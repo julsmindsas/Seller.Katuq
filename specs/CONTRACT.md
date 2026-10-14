@@ -9247,6 +9247,8 @@ Front: `DropshippingSettingsService` (`shared/services/dropshipping-settings.ser
 
 **Desplegado (11-oct).** Backend `e9fbb6b`, ADK `b8f6c2e`, front 2026.10.11.3. Probado en producción con ALMACEN BOMBAS. Fase 2 pendiente: cumplimiento por transportador con `order_status_history` (la fecha real de entrega no sirve).
 
+**Adenda (14-oct): botón de Opttia.** Daniel: "mejora el botón de opttia de despachos". El botón "⚡ IA", morado igual que "Generar Orden", pasa a ser el de Opttia: avatar de Tuki, "Pregúntale a Opttia" (o "Opttia" en pantallas de menos de 1700 px, para que las métricas no bajen de fila), estilo secundario lila y fondo acento suave cuando el panel está abierto (`aria-expanded`). El panel ya no deja salir el velo de pantalla completa mientras carga o mientras Opttia explica (`suppressGlobalLoader` solo durante esas dos llamadas): tiene su propia carga. Solo presentación.
+
 ## D-405 (2026-10-11) — IA en clientes, cartera y pedidos (openspec/changes/ia-modulos-principales)
 
 **Disparador.** /goal de Daniel: "permea de IA los principales módulos" (después de inventario D-401 y despachos D-404). Solo lectura.
@@ -9581,6 +9583,8 @@ commits y el push no despliega ni activa checkout.
 
 **Estado.** DESPLEGADO el 2026-10-13 (front 2026.10.13.2, commit e1c4486f) por orden de Daniel («despliega»), compilado desde el repo principal con el `src` idéntico al commit. Build de producción sin errores; 0 gradientes y 0 primarios prohibidos en el módulo. Verificado en producción el mismo día en FLORECER (ticket 1259): crear, generar link, vitrina pública con fotos y sin el agotado, apagar (el link responde "ya no está disponible") y prender. Solo llamadas a `/v1/catalogos/*`; productos sin tocar. A 390 px la lista de productos del detalle se salía de la tarjeta: corregido en el SCSS, sale en la próxima publicación (no se republicó para no arrastrar D-417 sin probar).
 
+**Corrección tras publicar (14-oct, revisión con ALMARA).** En producción, con la pestaña "Mapa de Entregas" ya abierta, los pedidos que se ubicaban no aparecían hasta cambiar de pestaña: el mapa solo dibujaba pines al iniciar o al volver a la pestaña, no cuando Despachos le pasaba la lista nueva. Ahora `ngOnChanges` redibuja cuando cambia la lista de ubicaciones (encuadra solo con los primeros pines, para no mover el mapa mientras se usa) y un contador de generación evita pines duplicados de redibujos seguidos. Además, los pedidos en estados sin color propio (en producción, producción parcial, sin producir, entregado) salían naranja como "Para despachar" sin contarse en la leyenda: ahora van en gris y la leyenda los cuenta como "En preparación". Verificado en local contra producción con ALMARA (27 pedidos: los pines suben 2 → 6 → 10 → 14 → 18 → 19 a medida que ubica; leyenda 7 en ruta + 15 en preparación = 22 pines; 2 mensajeros en vivo con Seguir). Hallazgo: hay pedidos que ya traen un punto guardado equivocado (DAD-014257, Belén Rincón de Medellín, guardado en el Valle del Cauca) y Despachos lo pinta sin validarlo; va en la propuesta de guardar el punto.
+
 ## D-417 (2026-10-13) — Entrega por ubicación: dirección, punto en el mapa o ambos (openspec/changes/entrega-por-ubicacion)
 
 **Disparador.** Jairo, ticket 1203 (2026-10-13): Punto Verde Vidagas entrega en fincas y lugares de Cali y Yumbo sin nomenclatura; a veces solo tienen el punto en el mapa o el pin de WhatsApp, y Katuq no lo permitía.
@@ -9617,3 +9621,147 @@ commits y el push no despliega ni activa checkout.
 **Decisión.** Línea "Facturación" en la tarjeta del cliente del POS con un modal propio (perfiles de `datosFacturacionElectronica[]` con el predeterminado preseleccionado, Consumidor Final o "No requiere factura"; sin perfil predeterminado arranca en "No requiere factura"). Antes de cobrar se valida el perfil (razón social, tipo y número de documento, ciudad, correo). El pedido guarda `facturacion` y `generarFacturaElectronica`; al terminar el cobro se encola la factura con el proveedor contable de la empresa por la ruta asíncrona `/:provider/invoices/from-order-async` (candado `ALREADY_INVOICED` / `INVOICING_IN_PROGRESS`). Servicio compartido `FacturacionAutomaticaService` (POS y venta asistida; la venta asistida pasa a usar siempre la ruta asíncrona, también con DIAN y World Office). El POS deja de escribir `nroFactura`. Backend: la facturación automática al aprobar un pago (`orders.js`) salta si el pedido ya tiene factura o está en facturación (`pedidoYaFacturado`). Con pago Wompi no se factura al cobrar (el pago aún no está confirmado): queda para Pedidos. Fuera de alcance: documento equivalente POS (FE-09).
 
 **Estado (13-oct).** Implementado en local. Pruebas: utilidades del POS 12/12 y del servicio 8/8, backend 7/7 más contratos de POS y facturación en verde. Pendiente: prueba en navegador y una emisión en el entorno de pruebas del proveedor con permiso explícito.
+
+## D-420 (2026-10-13) — Mapa de mensajeros: panel lateral con Ver y Seguir, marcadores que se mueven, pines por estado y sin zonas de ejemplo (presentación; PUBLICADO en 2026.10.13.6)
+
+**Disparador.** Daniel: "mejora el mapa de tracking de mensajeros, está medio chafa".
+
+**Qué se encontró en producción (2026.10.13.5).**
+- Los interruptores "Mensajeros" y "Zonas" se veían siempre apagados aunque estuvieran encendidos: el SCSS `input:checked + &__track` compilaba a `input:checked + .mapa-ubicaciones-container .mapa-toggle__track`, que nunca coincide.
+- Cada aviso de `active_users` borraba y redibujaba todos los mensajeros: la ficha abierta se cerraba y los puntos saltaban.
+- Pedidos con emojis y colores (`green`, `blue`…) que no coincidían con la leyenda; ficha del mensajero con su clave técnica de Firebase; "Ajustar vista" no hacía nada si había mensajeros pero ningún pedido; ficha del pedido sin escapar (cliente y dirección vienen de canales externos).
+- Las 5 zonas de Medellín con estadísticas inventadas (`generarZonasEntregaEjemplo`) se pintaban en todas las empresas, y como el template llama `obtenerConfiguracionZonas()` en cada ciclo, volvían aunque se editaran en "Gestionar zonas". Las zonas nunca se guardan.
+
+**Decisión.**
+1. Panel "Mensajeros" junto al mapa (debajo en pantallas < 992 px): iniciales, en vivo (≤ 3 min) o sin señal, "hace X min"; clic vuela al mensajero y abre su ficha; **Seguir** mueve la cámara con cada punto nuevo y se suelta al arrastrar el mapa (mientras se sigue, la ficha queda cerrada: Leaflet re-encuadra una ficha abierta en cada paso y anula el seguimiento). Estado vacío explicado.
+2. Marcadores de mensajero persistentes que se deslizan al punto nuevo (~0,9 s; saltos de más de 3 km no se animan), con nombre corto y anillo verde/naranja; recorrido punteado desde que se abrió el mapa (máx. 80 puntos, solo en memoria).
+3. Pines planos por estado con los colores semánticos del design-system; mapa base OSM desaturado por CSS (mismas teselas); fichas con labels UPPERCASE; todo texto de datos escapado. El nodo de `active_users` ya no se esparce entero: solo se leen lat, lng, horas, `conectado`, `nombre`, velocidad y batería.
+4. Sin zonas de ejemplo: solo se ven las que se dibujen en la sesión; sin zonas no aparece el interruptor "Zonas".
+5. **Sin cambio en qué mensajeros se ven:** la misma escucha y los filtros de D-393/D-382 (empresa por final de clave, 15 min, `conectado`). Se agregan a `ubicacion-mensajero.ts` `senalMensajero` y `nombreDesdeClave` (respaldo del nombre cuando el nodo no trae `nombre`).
+
+**Verificado.** Build de producción sin errores. En `localhost:4200` con FLORECER (sin mensajeros reales): estado vacío; con 3 mensajeros y 3 pedidos simulados solo en memoria del componente (nada escrito en Firebase): panel, anillos, movimiento suave, recorrido, Seguir manteniendo al mensajero centrado, ficha del pedido con `<b>` mostrado como texto, sin zonas ni interruptor "Zonas". Gradientes del componente 1 → 0 en el TS (los 2 del SCSS son brillos animados permitidos); primarios prohibidos 4 → 0 (`#007bff`, `#2196F3`).
+**No verificado.** Vista a 390 px (Chrome no redimensionó la ventana); mapa con mensajeros reales (ALMARA). Pruebas nuevas en `ubicacion-mensajero.spec.ts` comprobadas compilando el util con `tsc` y ejecutándolo en Node; Karma no se corrió.
+
+**Adenda (14-oct): movimiento tipo Uber.** Pedido de Daniel ("que la ubicación la reporte como Uber"), coordinado con la sesión de la app de mensajeros (Android v29, commit 40a53cf, sin publicar: un punto cada 2-4 s en movimiento con `rumbo`, `velocidad` en m/s y `precision`). El mapa gira una flecha alrededor del avatar con `rumbo` (camino corto, aplicada sobre el elemento sin regenerar el ícono) y desliza el marcador durante la diferencia de `lastUpdate` entre puntos (1 a 5 s, a velocidad pareja); con puntos más espaciados (app v28 o mensajero quieto) hace el deslizamiento corto de antes. La estela pasa de 80 a 240 puntos. Probado con un mensajero simulado en memoria (sin escribir en Firebase). Pendiente acordado con mensajeros para Daniel: filtrar `active_users` por empresa (hoy cada navegador baja los mensajeros de todas las empresas) con `.indexOn` y, en fase 2, ruta por empresa con reglas y token.
+
+**Adenda (14-oct): datos de la app v29 en el mapa.** Daniel descartó la fase 2 (ruta por empresa, Firebase Auth, reglas, `.indexOn`) por riesgosa: el mapa sigue leyendo `active_users` igual. La app (commit 7de390c) agrega `seq`, `enRuta`, `pendientes`, `pedidoActual` (solo el número, al tocar "Navegar") y `desconectadoEn`. El mapa: ignora un punto con `seq` menor al último y un salto que exigiría más de 50 m/s (una sola vez seguida); círculo de incertidumbre si `precision` > 30 m; línea punteada verde a la entrega en curso, si ese pedido está en el mapa, con hora estimada aproximada (línea recta × 1,3 / velocidad, o 22 km/h si va parado); "Lleva DAD-… · llega en ~N min · N pendientes" en la lista y la ficha; y, si la conexión se cortó por sorpresa, el mensajero queda en gris "Sin conexión desde 10:42" hasta 15 min en vez de desaparecer (apagar a propósito borra el nodo). Las apps viejas no traen esos campos y se ven como antes. Utilidad con 4 pruebas nuevas (23/23 compilando el spec y corriéndolo en Node); probado con un mensajero simulado en memoria.
+
+## D-421 (2026-10-13) — Mapa de Despachos: ubicar pedidos con barrio y zona, sin puntos aproximados, lista "Sin ubicar" y carga Katuq (OpenSpec `mapa-despachos-ubicar-pedidos`; PUBLICADO en 2026.10.14.1)
+
+**Disparador.** Daniel: "mejora la geocodificación de los pedidos, y el loading y esa vaina más bonita". apoyodev hizo el diagnóstico y Daniel escogió "B+C+D ahora, A aparte" y aprobó la propuesta.
+
+**Qué se encontró.**
+- `geocodificarPedido` llamaba `geocodeDireccion(direccion, ciudad)` sin barrio ni zona de cobro, en el modo histórico del servicio (si nada sirve devuelve el centro de la ciudad). Además, si fallaba, el componente pintaba otro centroide (`obtenerCoordenadasAproximadas`). Los dos puntos falsos se veían igual que los reales.
+- La carga eran tres capas: barra azul `bg-info` en el encabezado, velo morado con pulsos en el mapa y, encima, **el loader global de pantalla completa**, porque `LoaderInterceptor` lo enciende con cada consulta HTTP de ubicación.
+- **Corrección al diagnóstico:** Despachos no ubica al abrir. Solo ubica con "Geocodificar Todo" (menú) y al despachar un pedido. Lo ubicado vive en memoria y se pierde al recargar.
+
+**Decisión.**
+1. Modo estricto del servicio (`direccionEntrega: true`, ticket 1136) con `barrio` y `zonaCobro` del envío. Se elimina `obtenerCoordenadasAproximadas`: lo que no se encuentra no se pinta. Motivos de negocio: "No encontramos esta dirección en el mapa", "Falta la dirección", "Falta la ciudad de entrega".
+2. Los puntos protegidos (D-417) no se recalculan. Los fallos de una dirección se recuerdan durante la visita; un error de red no.
+3. Una tarjeta blanca sobre el mapa ("Ubicando pedidos en el mapa · N de M", barra morada) que deja el mapa usable; al terminar, "X ubicados · Y sin ubicar" por 4 s. El loader global se suprime mientras ubica (`suppressGlobalLoader`). Se quitan la barra del encabezado, el velo, los pulsos y los métodos `mostrarAnimacionGeocodificacion`, `mostrarEfectoBusqueda` y `actualizarProgresoGeocodificacion`, y el método sin uso `geocodificarPedidosDespachados`.
+4. Lista "Sin ubicar" en el panel lateral del mapa (número, cliente, dirección, motivo). El panel también aparece con mensajeros apagados si hay pedidos sin ubicar.
+5. **Write-set:** `orders` solo lectura. El servicio sigue escribiendo su caché de direcciones `geocoding_cache`, como ya lo hacía.
+
+**Verificado.** Build de producción sin errores. En `localhost:4200`, con la sesión que estaba abierta en Chrome (VERSATILIDAD E INNOVACIONES, usuario Jairo; no FLORECER), solo lectura: 26 pedidos, 4 sin punto → "3 ubicados · 1 sin ubicar" (DAD-014225, Carrera 58a #29A-99, Medellín). El pin de Bogotá es real (DAD-014202, Bogotá D.C.). Sin el velo global durante la ubicación. En la red, las únicas escrituras de Firestore fueron las de `geocoding_cache`. Gradientes del SCSS del mapa 2 → 0; primarios prohibidos sin cambio (1 preexistente en `despachos.component.ts`).
+**No verificado.** 390 px; un caso "Falta la dirección" real.
+**Queda abierto (cambio A):** guardar en el pedido el punto encontrado, con diff y aprobación de módulo sensible.
+
+## D-422 (2026-10-13) — Opttia propone en la escena: despachos y dos operaciones más dentro de la animación de En vivo (openspec/changes/opttia-propone-en-la-escena) — APROBADA 13-oct ("dale, arranca con la fase 1"); fase 1 DESPLEGADA 13-oct (backend 482607a, front 2026.10.13.6)
+
+**Disparador.** Daniel (13-oct), al ver la pestaña de D-410:
+- "quiero tener un apartado aquí mismo donde Opttia tenga un poco más de autonomía, como organizar despachos automáticos ... y que el usuario solo apruebe";
+- "era ahí mismo en la animación que se organizara automáticamente con Opttia, no otra pestaña";
+- "no solo pedí despachos, pedí también otras operaciones que demuestren el poder de Opttia".
+
+Aprobó la propuesta y el boceto (https://claude.ai/artifact/XVjArkR2s6cbpVXym7G6e2) con "dale, arranca con la fase 1".
+
+**Decisión.**
+- **Opttia propone dentro de la escena y la persona aprueba ahí mismo.**
+  - El código detecta y arma la propuesta: ids, cifras, efectos y huella.
+  - Opttia solo redacta.
+  - La persona aprueba con dos toques en el mismo botón.
+  - La escena ensaya con copias fantasma y anima el resultado solo con los eventos reales.
+- **Motor de propuestas:**
+  - fuentes intercambiables, una por operación y sin `if` por tipo;
+  - una ruta nueva de solo lectura, `GET /v1/opttia/propuestas`;
+  - la empresa sale de la sesión;
+  - responde siempre 200, y `{disponible:false}` si no aplica;
+  - sin colecciones nuevas.
+- **Seis operaciones en cuatro fases.** Cada operación que escriba entra en su propio cambio, con su spec, huella, id determinista, bandera y prueba de contrato del write-set.
+- **Excepción acotada a "sin cache extra":**
+  - caché en memoria por empresa y fuente (60 s para despachos y 5 min para producción);
+  - una sola llamada en vuelo, como `services/enVivo/ia.js`;
+  - se invalida al aprobar.
+
+  La razón: cada plan son unas 450 lecturas, y varias pantallas del mismo comercio lo multiplicarían.
+
+**Alcance de la fase 1.**
+- **La pestaña:** "Despachos" de En vivo desaparece en el mismo despliegue que trae la tarjeta.
+- **La tarjeta:** vive en Mi operación y también en Mi país y Pedidos.
+  - una tarjeta a la vez, con la cola ordenada por urgencia;
+  - un contador en el botón del orbe;
+  - el ensayo en la escena;
+  - "Ajustar" en una hoja lateral, que reutiliza las tarjetas de grupo y de "No entra al plan";
+  - TV y "Repetir el día" sin botones.
+- **Tres operaciones:**
+  1. **Despachar (se aprueba):** un grupo del plan de D-410 por tarjeta. Aprobar es `POST /v1/logistica/plan/aprobar` con canal `escena`.
+  2. **Arrancar producción (sombra):** pedidos sin producir que se entregan hoy o mañana. Dice "Así lo haría Opttia · pronto podrás aprobarlo", sin botón. La ve solo la familia Administrador y solo en comercios que producen.
+  3. **Cobrar pedidos sin pago (señal):** sale del radar del canal en vivo, sin backend, con "Abrir pedido".
+- **Backend:**
+  - la ruta nueva, con las fuentes de despachos y de producción;
+  - en D-410, el canal `escena` y el interruptor de Opttia (D-386) en `/explicar`.
+
+  No hay escrituras nuevas: despachar escribe lo mismo que D-410.
+- **Bandera:** en la fase 1, "Opttia propone" usa `despachosOpttia`, más el interruptor general `OPTTIA_PROPUESTAS_HABILITADO` (solo `"false"` apaga). La bandera por operación, con modos apagado, sombra y encendido, llega en la fase 2.
+- **Prueba:** con pedidos de prueba de FLORECER, antes de publicar. La bandera ya está encendida en OH MY STORE (pedidos reales a Cereza) y en ALMARA FELICIDAD.
+
+**Reemplaza la pestaña de D-410.** La vista "Despachos" de D-410 deja de existir: el plan, la aprobación y el ajuste pasan a la escena.
+- El backend de D-410 no cambia de comportamiento: plan, explicar, aprobar, canje por Telegram, huella, idempotencia y bandera.
+- La pantalla clásica de Despachos no se toca.
+- El componente de la vista se borra cuando la fase 1 esté verificada en producción.
+
+**Seguridad de esta función.**
+- La empresa sale del token.
+- El servidor decide quién ve y quién aprueba.
+- La sombra solo la ve la familia Administrador.
+- Leer las propuestas no escribe nada.
+- La aprobación lleva el canal `escena`.
+
+El detalle técnico vive en el cambio privado del backend: `opttia-despachos-con-aprobacion`, sección "D-422 fase 1".
+
+**Fases siguientes.**
+- **Fase 2:** aprobar la producción, en su propio cambio porque `orders` es un módulo sensible, y el cobro con WhatsApp.
+- **Fase 3:** el conteo cíclico y la orden de compra.
+- **Fase 4:** el reenvío a la integración logística y las propuestas por MCP y Telegram.
+
+**Numeración.** La propuesta la llamaba D-418 y la primera versión del registro D-419, pero otras sesiones publicaron D-418 (ticket 1206), D-419 (facturación POS) y D-420 (mapa de mensajeros) y D-421 (mapa de Despachos) el mismo día. Queda como D-422, y así lo dicen el código y el cambio OpenSpec.
+
+**Estado (13-oct).** La spec está escrita y validada con `openspec validate --strict`. La fase 1 está en implementación, sin commit ni despliegue.
+
+**Fase 2 (13-oct, en implementación).** Daniel: "sigue con la fase 2".
+- **Dónde:** en el mismo cambio OpenSpec y no en uno aparte (tareas 8.x y sección "Fase 2" del design), para no partir la cola y la tarjeta en dos lugares. `orders` sigue como módulo sensible: un paso a la vez, con su diff y aprobación.
+- **Capacidad nueva:** `operaciones-de-opttia`. Producción y cobro salen de `opttia-en-vivo` para que cada delta quepa en 3 páginas (Artículo XIII).
+- **Bandera por operación:** una bandera del catálogo para encender cada operación: `opttiaProduccion` y `opttiaCobroWhatsapp`. Sin ella, la operación sigue como en la fase 1: la producción en sombra con `despachosOpttia` y el cobro como señal. Despachar sigue con `despachosOpttia`. Apagar la bandera de un comercio lo devuelve a la fase 1 sin desplegar.
+- **Arrancar producción:**
+  - pasa de "Sin producir" a "En producción" por `updateOrderInternal`, el mismo camino de la pantalla, con dos toques y la huella de D-410;
+  - deja la marca `propuestaOpttia` en el pedido, y una segunda aprobación no hace un segundo cambio;
+  - `controllers/orders.js` no cambia;
+  - aprueban la familia Administrador o un rol con Pedidos o Despachos en el menú;
+  - no avisa al cliente: verificado en producción, `CUSTOMER_NOTIFY_STATES=ProducidoTotalmente,Despachado,Entregado,Rechazado`.
+- **Cobro:** "Abrir WhatsApp" pide el enlace de un solo pedido al tocarlo. La persona envía y Katuq no envía nada. No existe en TV ni con "ocultar".
+- **Despliegue:** primero FLORECER, comercio por comercio con Daniel. `opttiaProduccion` se prende solo después de publicar el front nuevo.
+
+El detalle de seguridad está en el cambio privado del backend, sección "D-422 fase 2".
+
+**Fase 2, estado al 14-oct.**
+- **Backend `9232464`:** desplegado con las banderas apagadas. Trae la revisión adversarial (5 hallazgos corregidos: lock optimista, confirmación por WhatsApp de D-396, saldo con Tesorería y nombre saneado) y `cobroWhatsapp` en la cola.
+- **Front:** tarjeta con "Pasar a En producción" en dos toques, el aviso "Avisa a tu equipo, no al cliente", "Abrir WhatsApp" y "Ya pagó / no aplica". Build de producción y Playwright, a 1440 y 390 px, en verde.
+- **Cierre de la fase 1 en el mismo commit:** el arco fijo en Mi país, las marcas en Pedidos (4.6) y la vista vieja de Despachos borrada (7.5).
+- **Pendientes de la escena:** la caja por la banda al pasar a producción y la burbuja de WhatsApp tienda → casa.
+- **Publicado el 14-oct:** front 2026.10.14.2. Banderas `opttiaProduccion` y `opttiaCobroWhatsapp` encendidas en FLORECER, la empresa de prueba.
+- **Datos de prueba:** entrega de hoy en CER-000010, 11, 06 y 09, y CER-000005 en producción para que el perfil "usa producción" aplique. Se devuelven con los scripts de demo `--restaurar`.
+- **Con datos reales:** la cola trae el despacho de CER-000010 y la producción "on" de CER-000009 y CER-000006. El enlace de WhatsApp sale para CER-000010 y se niega a cancelados, inexistentes y otra empresa.
+- **Prueba real (14-oct, autorizada por Daniel):** CER-000006 pasó a En producción con la marca de Opttia. Una segunda aprobación no cambió nada ("Ya estaba en producción"). CER-000009 quedó por fuera por la guarda de Tesorería.
+- **Hallazgo arreglado:** backend `7629a50`, desplegado. La fuente usa la misma cuenta del ejecutor (`saldoCambiaria`) y, si el comercio tiene Tesorería, no propone lo que aprobar le cambiaría el saldo. Los montos se leen pero no salen de la lectura.
+- **Datos de prueba devueltos.** CER-000006 se queda en producción, como resultado de la prueba.
+- **Falta:** los demás comercios, uno por uno con Daniel.

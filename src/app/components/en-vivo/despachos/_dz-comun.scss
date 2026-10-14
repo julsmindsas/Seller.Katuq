@@ -1,9 +1,10 @@
-// Piezas comunes de la vista Despachos de En vivo (D-410). Tema de En vivo (D-131): plano,
-// acento morado, avisos en par color fuerte / fondo suave. Ningún nombre de clase lleva "p-"
-// (la regla global [class*="p-"] pisaría el tamaño de letra).
+// Piezas comunes de las tarjetas del plan de despachos de En vivo (D-410: `grupo-despacho` y
+// `fuera-del-plan`, que hoy usa la hoja "Ajustar" de Opttia, D-422). Tema de En vivo (D-131):
+// plano, acento morado, avisos en par color fuerte / fondo suave. Ningún nombre de clase lleva
+// "p-" (la regla global [class*="p-"] pisaría el tamaño de letra).
 @import '../en-vivo-tema';
 
-// Foco de teclado visible en todos los controles de la vista (regla de diseño Katuq): #7C5CFF en
+// Foco de teclado visible en todos los controles de las tarjetas (regla de diseño Katuq): #7C5CFF en
 // el tema normal; en el modo pantalla (oscuro) toma el morado claro de ese tema.
 @mixin dz-foco {
   &:focus-visible {
@@ -40,17 +41,6 @@
     opacity: 0.5;
     cursor: not-allowed;
     box-shadow: none;
-  }
-
-  &--sec {
-    background: var(--ev-surface);
-    color: var(--ev-ink);
-    border: 1px solid var(--ev-line);
-    box-shadow: none;
-
-    &:hover:not(:disabled) {
-      background: var(--ev-tile);
-    }
   }
 }
 

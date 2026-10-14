@@ -43,6 +43,15 @@
   --ev-info-soft: #e7f1ff;
   --ev-pack: #8e27b0;
   --ev-pack-soft: #f3e9fb;
+  // Texto (y borde) de un tono en letra pequeña sobre su fondo suave: el mismo matiz con menos luz
+  // donde el fuerte no llega a 4,5:1 (warn 2,6, bad 3,8, ok 4,1 e info 4,3 sobre su suave). Con
+  // estos, todos quedan entre 4,8 y 5,8 sobre el suave y sobre blanco. Marcas de Opttia (D-422).
+  --ev-accent-ink: #5f3fe0;
+  --ev-info-ink: #1c67c9;
+  --ev-ok-ink: #1b7a44;
+  --ev-warn-ink: #9a5c07;
+  --ev-bad-ink: #c62c2c;
+  --ev-pack-ink: #8e27b0;
   --ev-slate: #5a6b78;
   --ev-slate-soft: #eef0f3;
   --ev-sh-panel: 0 1px 3px rgba(30, 20, 80, 0.04);
@@ -82,6 +91,13 @@
   --ev-info-soft: #172a4a;
   --ev-pack: #d184f0;
   --ev-pack-soft: #341a42;
+  // En el televisor los tonos aclarados ya pasan 4,5:1 sobre su suave (de 4,7 a 6,6): son los mismos.
+  --ev-accent-ink: #9b85ff;
+  --ev-info-ink: #6ea8ff;
+  --ev-ok-ink: #4cc584;
+  --ev-warn-ink: #f0a43a;
+  --ev-bad-ink: #ff7b7b;
+  --ev-pack-ink: #d184f0;
   --ev-slate: #a9b7c2;
   --ev-slate-soft: #25303a;
   --ev-sh-panel: 0 1px 3px rgba(0, 0, 0, 0.35);

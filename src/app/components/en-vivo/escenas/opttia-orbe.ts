@@ -91,8 +91,17 @@ interface Efecto {
 
 interface OpcionesSenal {
   camara?: boolean;
+  /** Zoom de la cámara al acercarse (por defecto 1.4). */
+  zoom?: number;
+  /**
+   * Qué tanto se acerca la cámara al lugar, desde el centro de la escena (1 = hasta el lugar, por
+   * defecto). Una propuesta usa menos para que el ensayo (montón, moto y casas) siga a la vista.
+   */
+  acercar?: number;
   titulo?: string;
   tono?: string;
+  /** Señal de una propuesta de Opttia (D-422): no vence sola; se quita con `soltar()`. */
+  fija?: boolean;
 }
 
 const COLORES_CONFETI: ReadonlyArray<string> = ['accent', 'accent-2', 'ok', 'warn', 'info', 'pack'];
@@ -230,6 +239,7 @@ export class OrbeOpttia {
   /**
    * Vuela hasta `lugar` (si hay) y lo señala con anillo, rayo y burbuja `ms` milisegundos. Devuelve
    * true si había un lugar que señalar. `op.camara`: la cámara viaja al lugar (sin "reducir movimiento").
+   * `op.fija`: la señal se queda hasta `soltar()` (sin la red de seguridad de `ms`).
    */
   senalar(obj: ObjetivoOrbe | null, lugar: V3 | null, texto: string, ms: number, op: OpcionesSenal = {}): boolean {
     if (this.destruido) return false;
@@ -244,11 +254,12 @@ export class OrbeOpttia {
       this.rayo.visible = true;
       if (op.camara && !this.h.reducir() && this.h.visible()) {
         this.h.retenerCamara(true);
-        this.h.escena.enfocarPunto({ x: lugar.x, y: 0, z: lugar.z }, 1.4);
+        const f = op.acercar ?? 1;
+        this.h.escena.enfocarPunto({ x: c.cx + (lugar.x - c.cx) * f, y: 0, z: c.cz + (lugar.z - c.cz) * f }, op.zoom ?? 1.4);
         this.camaraPedida = true;
       }
     }
-    this.hastaMs = performance.now() + ms;
+    this.hastaMs = op.fija ? Infinity : performance.now() + ms;
     const html =
       `<span class="eve-opt__ico">${svgIa()}</span><small>${esc(op.titulo || 'Opttia')}</small><b>${esc(texto)}</b>`;
     this.burbuja = this.h.etiquetas.crear({ clase: 'eve-lbl--opt', html, pos: () => this.lblPos, tono: op.tono || 'pack' });
@@ -267,6 +278,15 @@ export class OrbeOpttia {
       this.h.escena.soltarFoco();
       this.h.retenerCamara(false);
     }
+    this.marcar();
+  }
+
+  /** Suelta solo la cámara (la persona la arrastra): la señal, la burbuja y la marca se quedan. */
+  soltarCamara(): void {
+    if (!this.camaraPedida) return;
+    this.camaraPedida = false;
+    this.h.escena.soltarFoco();
+    this.h.retenerCamara(false);
     this.marcar();
   }
 

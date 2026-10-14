@@ -1,9 +1,17 @@
-import { Component, Input, OnInit, AfterViewInit, OnDestroy, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
+import {
+  Component, Input, OnInit, AfterViewInit, OnDestroy, OnChanges, SimpleChanges, ElementRef, ViewChild, ChangeDetectorRef
+} from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { interval, Subscription } from 'rxjs';
 import { SecurityService } from '../../../../shared/services/security/security.service';
 import { escaparHtml } from '../../../../shared/utils/escapar-html';
-import { haceCuanto, marcaDeUbicacion, perteneceAEmpresa, ubicacionVigente } from '../../../../shared/utils/ubicacion-mensajero';
+import {
+  esSaltoImposible, haceCuanto, marcaDeUbicacion, marcaDesconexion, minutosEstimados, nombreDesdeClave,
+  perteneceAEmpresa, senalMensajero, SenalMensajero, ubicacionVigente
+} from '../../../../shared/utils/ubicacion-mensajero';
+
+/** Pin y ficha de los estados que no tienen color propio en la leyenda. */
+const COLOR_OTRO_ESTADO = '#5A6B78';
 
 interface UbicacionPedido {
   nroPedido: string;
@@ -21,13 +29,68 @@ interface UbicacionPedido {
 
 interface UbicacionMensajero {
   id: string;
+  nombre: string;
   lat: number;
   lng: number;
-  timestamp: string;
+  timestamp?: string;
   lastUpdate?: number;
   conectado?: boolean;
-  nombre?: string;
+  /** Momento (ms) del último punto; null si el nodo no trae hora. */
+  marca: number | null;
+  senal: SenalMensajero;
+  /** "hace 3 min", recalculado cada 30 s. */
+  hace: string;
+  velocidad?: number;
+  bateria?: number;
+  /** Hacia dónde va, en grados (0 = norte). La app solo lo cambia si va a 1 m/s o más. */
+  rumbo?: number;
+  /** Precisión del GPS en metros. */
+  precision?: number;
+  /** App v29+: contador que solo sube; un punto con `seq` menor llegó tarde y se ignora. */
+  seq?: number;
+  /** App v29+: lleva pedidos (va en modo rápido). */
+  enRuta?: boolean;
+  /** App v29+: pedidos de hoy que le quedan (con más de 20 es "al menos 20"). */
+  pendientes?: number;
+  /** App v29+: nroPedido al que tocó "Navegar"; sin él no hay línea al destino. */
+  pedidoActual?: string;
+  desconectadoEn?: number | string | null;
 }
+
+/** Con peor precisión que esta (m) se dibuja el círculo de incertidumbre alrededor del mensajero. */
+const PRECISION_VISIBLE_M = 30;
+
+/** Puntos del recorrido que se guardan por mensajero mientras el mapa está abierto. */
+const MAX_PUNTOS_RECORRIDO = 240;
+/**
+ * La app manda un punto cada 2-4 s mientras el mensajero se mueve: el marcador se desliza durante ese
+ * mismo intervalo, en línea recta y a velocidad pareja, y así se ve continuo (como Uber). Con puntos más
+ * espaciados (app vieja, mensajero quieto) se usa un deslizamiento corto.
+ */
+const MIN_MS_DESLIZAR = 1000;
+const MAX_MS_DESLIZAR = 5000;
+const MS_DESLIZAR_CORTO = 900;
+/** Saltos más largos que esto no se animan: es un mensajero que reapareció lejos, no uno que se movió. */
+const MAX_METROS_ANIMACION = 3000;
+
+/** Avance de la ubicación de pedidos que calcula Despachos (openspec mapa-despachos-ubicar-pedidos). */
+export interface AvanceUbicacion {
+  total: number;
+  hechos: number;
+  ubicados: number;
+  sinUbicar: number;
+  terminado: boolean;
+}
+
+export interface PedidoSinUbicar {
+  nroPedido: string;
+  cliente: string;
+  direccion: string;
+  motivo: string;
+}
+
+/** Cuánto se queda el resumen "X ubicados · Y sin ubicar" antes de ocultarse. */
+const RESUMEN_UBICACION_MS = 4000;
 
 interface MapaMetricas {
   despachados: number;
@@ -79,7 +142,7 @@ interface ConfiguracionMapa {
   templateUrl: './mapa-ubicaciones.component.html',
   styleUrls: ['./mapa-ubicaciones.component.scss']
 })
-export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestroy {
+export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @ViewChild('mapaContainer', { static: true }) mapaContainer!: ElementRef;
   
   @Input() configuracion: ConfiguracionMapa = {
@@ -91,8 +154,10 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   @Input() altura: string = '400px';
   @Input() mostrarControles: boolean = true;
   @Input() tiempoReal: boolean = false;
-  @Input() geocodingInProgress: boolean = false;
-  @Input() geocodingProgress: number = 0;
+  /** Avance de "ubicar pedidos": lo pinta una tarjeta sobre el mapa, sin taparlo. */
+  @Input() avanceUbicacion: AvanceUbicacion | null = null;
+  /** Pedidos que no se pudieron ubicar con confianza: van en el panel, nunca en un punto aproximado. */
+  @Input() pedidosSinUbicar: PedidoSinUbicar[] = [];
   @Input() verMensajeros: boolean = true;
   @Input() configuracionZonas: ConfiguracionZonas = {
     zonas: [],
@@ -117,41 +182,40 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   private mensajerosSubscription: Subscription | null = null;
   private purgaMensajerosSubscription: Subscription | null = null;
   private marcadorUbicacionUsuario: any = null;
+  /** Un marcador por mensajero: se mueve con setLatLng en vez de borrarse y redibujarse en cada aviso. */
+  private marcadoresMensajeros = new Map<string, { marcador: any; firmaIcono: string; marca: number | null; giro?: number }>();
+  private recorridos = new Map<string, Array<[number, number]>>();
+  private lineasRecorrido = new Map<string, any>();
+  private animaciones = new Map<string, number>();
+  /** Mensajero que la cámara sigue mientras se mueve; se suelta al arrastrar el mapa. */
+  public siguiendoId: string | null = null;
   
   public mostrarMensajeros: boolean = true;
   public mostrarZonasEntrega: boolean = true;
   public mensajeros: UbicacionMensajero[] = [];
 
   intervalTimer: any = null;
+  /** La tarjeta de avance se ve mientras ubica y unos segundos con el resumen al terminar. */
+  public avanceVisible = false;
+  private ocultarAvanceTimer: any = null;
   leafletCargado: boolean = false;
   marcadoresAnimandose: Set<string> = new Set();
   ultimosLocationsProcesados: number = 0;
+  /** Cada redibujo invalida los pines escalonados que el anterior aún no había puesto. */
+  private generacionMarcadores = 0;
+  private saltosDescartados = new Set<string>();
+  private circulosPrecision = new Map<string, any>();
+  private lineasDestino = new Map<string, any>();
   private companyName: string;
   private ubicacionUsuario: { lat: number; lng: number } | null = null;
   private usandoUbicacionUsuario: boolean = false;
 
-  // Configuración de íconos para diferentes estados
-  iconosEstado = {
-    'Despachado': {
-      color: 'green',
-      icon: '🚚',
-      animation: true
-    },
-    'ParaDespachar': {
-      color: 'orange',
-      icon: '📦',
-      animation: false
-    },
-    'Empacado': {
-      color: 'blue',
-      icon: '📋',
-      animation: false
-    },
-    'ProducidoTotalmente': {
-      color: 'purple',
-      icon: '✅',
-      animation: false
-    }
+  // Colores semánticos del design-system, los mismos de la leyenda
+  iconosEstado: Record<string, { color: string; fondo: string; etiqueta: string }> = {
+    'Despachado': { color: '#1E874B', fondo: '#E6F7EE', etiqueta: 'En ruta' },
+    'ParaDespachar': { color: '#D9820A', fondo: '#FFF1DF', etiqueta: 'Para despachar' },
+    'Empacado': { color: '#8E27B0', fondo: '#f3e9fb', etiqueta: 'Empacado' },
+    'ProducidoTotalmente': { color: '#5F3FE0', fondo: '#efe9ff', etiqueta: 'Producido' }
   };
 
   constructor(
@@ -176,6 +240,49 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     }
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['avanceUbicacion']) {
+      const avance = this.avanceUbicacion;
+      clearTimeout(this.ocultarAvanceTimer);
+      this.avanceVisible = !!avance;
+      if (avance?.terminado) {
+        this.ocultarAvanceTimer = setTimeout(() => {
+          this.avanceVisible = false;
+          this.cd.detectChanges();
+        }, RESUMEN_UBICACION_MS);
+      }
+    }
+    // D-421: los pedidos se pintan apenas se ubican, también con la pestaña del mapa ya abierta.
+    // Despachos entrega un objeto nuevo en cada detección de cambios; solo se redibuja si cambió la lista.
+    const cambioConfig = changes['configuracion'];
+    if (cambioConfig && !cambioConfig.firstChange && this.mapa) {
+      const antes: UbicacionPedido[] | undefined = cambioConfig.previousValue?.ubicaciones;
+      if (antes !== this.configuracion?.ubicaciones) {
+        const sinPinesAntes = !antes?.some(u => u.latitud && u.longitud);
+        this.agregarMarcadores();
+        // Encuadrar solo con los primeros pines: después, no mover el mapa mientras alguien lo usa
+        if (sinPinesAntes) this.ajustarVistaAMarcadores();
+      }
+    }
+    if (changes['pedidosSinUbicar'] && !changes['pedidosSinUbicar'].firstChange) {
+      // El panel puede aparecer o irse: el mapa cambia de ancho y Leaflet debe medirse otra vez
+      requestAnimationFrame(() => this.mapa?.invalidateSize());
+    }
+  }
+
+  get porcentajeUbicacion(): number {
+    const a = this.avanceUbicacion;
+    return a && a.total > 0 ? Math.round((a.hechos / a.total) * 100) : 0;
+  }
+
+  get mostrarPanel(): boolean {
+    return this.mostrarControles && (this.mostrarMensajeros || this.pedidosSinUbicar.length > 0);
+  }
+
+  public porNroPedido(_: number, p: PedidoSinUbicar): string {
+    return p.nroPedido;
+  }
+
   ngAfterViewInit(): void {
     // Inicializar el mapa después de que la vista esté lista
     setTimeout(() => {
@@ -189,6 +296,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     if (this.intervalTimer) {
       clearInterval(this.intervalTimer);
     }
+    clearTimeout(this.ocultarAvanceTimer);
     if (this.mapa) {
       this.mapa.remove();
       this.mapa = null;
@@ -197,6 +305,8 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       this.mensajerosSubscription.unsubscribe();
     }
     this.purgaMensajerosSubscription?.unsubscribe();
+    this.animaciones.forEach(id => cancelAnimationFrame(id));
+    this.animaciones.clear();
 
     // Limpiar referencias del contenedor de Leaflet
     if (this.mapaContainer?.nativeElement) {
@@ -229,6 +339,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     // Limpiar capas
     this.capaMensajeros = null;
     this.capaZonasEntrega = null;
+    this.limpiarCapaMensajeros();
 
     // Reinicializar si Leaflet está disponible
     if (this.leafletCargado) {
@@ -472,57 +583,20 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       this.mapa.removeLayer(this.marcadorUbicacionUsuario);
     }
 
-    // Crear nuevo marcador con ícono distintivo para el usuario
+    // Punto "tú estás aquí": el estilo vive en el SCSS (.user-location-marker)
     const iconoUsuario = L.divIcon({
       className: 'user-location-marker',
-      html: `
-        <div class="user-marker-container" style="
-          background: linear-gradient(45deg, #007bff, #0056b3);
-          border-radius: 50%;
-          width: 20px;
-          height: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-weight: bold;
-          font-size: 12px;
-          border: 3px solid white;
-          box-shadow: 0 2px 8px rgba(0,123,255,0.5);
-          animation: user-location-pulse 2s infinite;
-          position: relative;
-        ">
-          📍
-          <div style="
-            position: absolute;
-            top: -5px;
-            left: -5px;
-            right: -5px;
-            bottom: -5px;
-            border: 2px solid rgba(0,123,255,0.4);
-            border-radius: 50%;
-            animation: user-location-ring 2s infinite;
-          "></div>
-        </div>
-      `,
-      iconSize: [26, 26],
-      iconAnchor: [13, 13]
+      html: '<div class="user-marker"><div class="user-marker__halo"></div><div class="user-marker__punto"></div></div>',
+      iconSize: [22, 22],
+      iconAnchor: [11, 11]
     });
 
-    // Crear el marcador
     this.marcadorUbicacionUsuario = L.marker(
       [this.ubicacionUsuario.lat, this.ubicacionUsuario.lng],
-      { icon: iconoUsuario }
+      { icon: iconoUsuario, zIndexOffset: -100, keyboard: false }
     ).addTo(this.mapa);
 
-    // Agregar popup informativo
-    this.marcadorUbicacionUsuario.bindPopup(`
-      <div style="text-align: center;">
-        <strong>📍 Tu ubicación</strong><br>
-        <small>Lat: ${this.ubicacionUsuario.lat.toFixed(6)}<br>
-        Lng: ${this.ubicacionUsuario.lng.toFixed(6)}</small>
-      </div>
-    `);
+    this.marcadorUbicacionUsuario.bindPopup('<div class="mpop"><div class="mpop__nombre">Tu ubicación</div></div>');
 
     // console.log(`📍 Marcador de usuario agregado en: ${this.ubicacionUsuario.lat}, ${this.ubicacionUsuario.lng}`);
   }
@@ -560,11 +634,21 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         zoomControl: this.mostrarControles
       });
 
-      // Agregar capa de tiles (OpenStreetMap)
+      // Capa base OpenStreetMap; el SCSS la desatura (.mapa-base) para que resalten pedidos y mensajeros
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
-        maxZoom: 18
+        maxZoom: 19,
+        className: 'mapa-base'
       }).addTo(this.mapa);
+
+      // Arrastrar el mapa suelta el seguimiento: el despachador tomó el control de la cámara
+      this.mapa.on('dragstart', () => {
+        if (this.siguiendoId) {
+          this.siguiendoId = null;
+          this.refrescarIconosMensajeros();
+          this.cd.detectChanges();
+        }
+      });
 
       this.capaMensajeros = L.layerGroup().addTo(this.mapa);
       this.capaZonasEntrega = L.layerGroup().addTo(this.mapa);
@@ -599,6 +683,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       this.mapa.removeLayer(marcador);
     });
     this.marcadores = [];
+    const generacion = ++this.generacionMarcadores;
 
     // Agregar nuevos marcadores con animación
     this.configuracion.ubicaciones.forEach((ubicacion, index) => {
@@ -606,33 +691,20 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         // Verificar si es un marcador nuevo (para animación)
         const isNewMarker = index >= this.ultimosLocationsProcesados;
         
-        const iconoConfig = this.iconosEstado[ubicacion.estado] || this.iconosEstado['ParaDespachar'];
-        
-        // Crear ícono personalizado con animación condicional
+        // Los demás estados (en producción, sin producir…) van en gris, como "En preparación" en la leyenda
+        const iconoConfig = this.iconosEstado[ubicacion.estado] || { color: COLOR_OTRO_ESTADO };
+
+        // Pin plano del color del estado (el mismo de la leyenda)
         const icono = L.divIcon({
           className: 'custom-marker',
           html: `
-            <div class="marker-container ${isNewMarker ? 'marker-new' : ''}" style="
-              background-color: ${iconoConfig.color};
-              border-radius: 50%;
-              width: 30px;
-              height: 30px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: white;
-              font-weight: bold;
-              font-size: 12px;
-              border: 2px solid white;
-              box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-              ${iconoConfig.animation ? 'animation: pulse 2s infinite;' : ''}
-              ${isNewMarker ? 'animation: marker-drop 0.8s ease-out forwards;' : ''}
-            ">
-              ${iconoConfig.icon}
+            <div class="pedido-pin ${isNewMarker ? 'marker-new' : ''}" style="--pin: ${iconoConfig.color}">
+              <div class="pedido-pin__cabeza"><div class="pedido-pin__centro"></div></div>
             </div>
           `,
-          iconSize: [30, 30],
-          iconAnchor: [15, 15]
+          iconSize: [28, 36],
+          iconAnchor: [14, 34],
+          popupAnchor: [0, -30]
         });
 
         // Crear marcador
@@ -647,15 +719,14 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
           this.onMarcadorClick(ubicacion);
         });
 
-        // Agregar al mapa con delay para animación escalonada
+        // Se registra ya (para encuadrar y para limpiarlo en el próximo redibujo) y entra al mapa escalonado
+        this.marcadores.push(marcador);
         if (isNewMarker) {
           setTimeout(() => {
-            marcador.addTo(this.mapa);
-            this.marcadores.push(marcador);
-          }, index * 100); // 100ms de delay entre marcadores
+            if (generacion === this.generacionMarcadores && this.mapa) marcador.addTo(this.mapa);
+          }, Math.min(index * 40, 1200)); // escalonado corto: con cientos de pedidos no tarda medio minuto
         } else {
           marcador.addTo(this.mapa);
-          this.marcadores.push(marcador);
         }
       }
     });
@@ -664,141 +735,374 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     this.ultimosLocationsProcesados = this.configuracion.ubicaciones.length;
   }
 
+  /**
+   * Sincroniza los marcadores con `this.mensajeros`: mueve los que ya existen (con animación corta),
+   * crea los nuevos y quita los que dejaron de enviar. Así un popup abierto no se cierra en cada aviso.
+   */
   private actualizarMarcadoresMensajeros(): void {
-    // console.log('🗺️ [DEBUG] Actualizando marcadores de mensajeros...');
-    // console.log('🗺️ [DEBUG] Mapa cargado:', !!this.mapa);
-    // console.log('🗺️ [DEBUG] Leaflet cargado:', this.leafletCargado);
-    // console.log('🗺️ [DEBUG] Capa mensajeros:', !!this.capaMensajeros);
-    // console.log('🗺️ [DEBUG] Mostrar mensajeros:', this.mostrarMensajeros);
-
     if (!this.mapa || !this.leafletCargado || !this.capaMensajeros) {
-      // console.log('🗺️ [DEBUG] No se puede actualizar marcadores - falta inicialización');
       return;
     }
 
-    this.capaMensajeros.clearLayers();
-
     if (!this.mostrarMensajeros) {
-      // console.log('🗺️ [DEBUG] Mostrar mensajeros está desactivado');
+      this.limpiarCapaMensajeros();
       return;
     }
 
     const L = (window as any).L;
+    const vigentes = new Set<string>();
 
-    // console.log(`🗺️ [DEBUG] Procesando ${this.mensajeros.length} mensajeros para marcadores`);
+    this.mensajeros.forEach(mensajero => {
+      if (!Number.isFinite(mensajero.lat) || !Number.isFinite(mensajero.lng)) {
+        return;
+      }
+      vigentes.add(mensajero.id);
+      this.registrarPuntoRecorrido(mensajero);
 
-    this.mensajeros.forEach((mensajero, index) => {
-      // console.log(`🗺️ [DEBUG] Mensajero ${index + 1}:`, {
-      //   id: mensajero.id,
-      //   nombre: mensajero.nombre,
-      //   lat: mensajero.lat,
-      //   lng: mensajero.lng,
-      //   timestamp: mensajero.timestamp
-      // });
+      const existente = this.marcadoresMensajeros.get(mensajero.id);
+      const firma = this.firmaIconoMensajero(mensajero);
 
-      if (mensajero.lat && mensajero.lng) {
-        const iconoMensajero = L.divIcon({
-          className: 'custom-marker-mensajero',
-          html: `
-            <div class="marker-mensajero-content" title="Mensajero: ${escaparHtml(mensajero.nombre || mensajero.id)}">
-              <span class="marker-mensajero-icon">🛵</span>
-              <div class="marker-mensajero-pulse"></div>
-            </div>
-          `,
-          iconSize: [40, 40],
-          iconAnchor: [20, 40]
-        });
-
-        const marcador = L.marker([mensajero.lat, mensajero.lng], { icon: iconoMensajero });
-        
-        // Función y no texto armado: Leaflet la evalúa al abrir el popup, así el "hace X min"
-        // siempre está al día. La clave de Firebase y el nombre salen de datos que escriben las apps.
-        marcador.bindPopup(() => `
-          <div style="font-size: 12px; color: #333;">
-            <strong style="color: #007bff;">Mensajero</strong><br>
-            <strong>ID:</strong> ${escaparHtml(mensajero.id)}<br>
-            ${mensajero.nombre ? `<strong>Nombre:</strong> ${escaparHtml(mensajero.nombre)}<br>` : ''}
-            <strong>Actualizado:</strong> ${this.textoActualizacion(mensajero)}
-          </div>
-        `);
-        this.capaMensajeros.addLayer(marcador);
-
-        // console.log(`✅ [DEBUG] Marcador de mensajero creado exitosamente para: ${mensajero.nombre || mensajero.id} en [${mensajero.lat}, ${mensajero.lng}]`);
+      if (existente) {
+        const intervalo = existente.marca !== null && mensajero.marca !== null ? mensajero.marca - existente.marca : null;
+        existente.marca = mensajero.marca;
+        this.moverSuave(mensajero.id, existente.marcador, [mensajero.lat, mensajero.lng], intervalo);
+        if (existente.firmaIcono !== firma) {
+          existente.marcador.setIcon(this.iconoMensajero(mensajero));
+          existente.firmaIcono = firma;
+        }
+        this.aplicarRumbo(existente, mensajero.rumbo);
       } else {
-        // console.log(`❌ [DEBUG] Mensajero ${mensajero.nombre || mensajero.id} no tiene coordenadas válidas:`, {
-        //   lat: mensajero.lat,
-        //   lng: mensajero.lng
-        // });
+        const marcador = L.marker([mensajero.lat, mensajero.lng], {
+          icon: this.iconoMensajero(mensajero),
+          zIndexOffset: 1000,
+          riseOnHover: true
+        });
+        // Función y no texto armado: Leaflet la evalúa al abrir el popup, así el "hace X min"
+        // siempre está al día. El nombre sale de datos que escriben las apps: se escapa.
+        marcador.bindPopup(() => this.popupMensajero(mensajero.id), { closeButton: false, offset: [0, -14] });
+        this.capaMensajeros.addLayer(marcador);
+        const nuevo = { marcador, firmaIcono: firma, marca: mensajero.marca };
+        this.marcadoresMensajeros.set(mensajero.id, nuevo);
+        this.aplicarRumbo(nuevo, mensajero.rumbo);
+      }
+
+      this.actualizarPrecision(mensajero);
+      this.actualizarLineaDestino(mensajero);
+
+      if (this.siguiendoId === mensajero.id) {
+        this.marcadoresMensajeros.get(mensajero.id)?.marcador.closePopup();
+        this.mapa.panTo([mensajero.lat, mensajero.lng], { animate: true, duration: 0.9 });
       }
     });
 
-    // console.log(`🗺️ [DEBUG] Actualización de marcadores completada. Total marcadores activos: ${this.mensajeros.filter(m => m.lat && m.lng).length}`);
+    // Quitar a quien ya no está (desconectado o sin punto en 15 min)
+    Array.from(this.marcadoresMensajeros.keys()).forEach(id => {
+      if (vigentes.has(id)) return;
+      this.capaMensajeros.removeLayer(this.marcadoresMensajeros.get(id)!.marcador);
+      this.marcadoresMensajeros.delete(id);
+      const linea = this.lineasRecorrido.get(id);
+      if (linea) this.capaMensajeros.removeLayer(linea);
+      this.lineasRecorrido.delete(id);
+      this.quitarCapa(this.circulosPrecision, id);
+      this.quitarCapa(this.lineasDestino, id);
+      this.saltosDescartados.delete(id);
+      this.recorridos.delete(id);
+      const anim = this.animaciones.get(id);
+      if (anim) cancelAnimationFrame(anim);
+      this.animaciones.delete(id);
+      if (this.siguiendoId === id) this.siguiendoId = null;
+    });
   }
 
-  private crearContenidoPopup(ubicacion: UbicacionPedido): string {
-    const estadoClass = this.obtenerClaseEstado(ubicacion.estado);
-    
+  private limpiarCapaMensajeros(): void {
+    this.animaciones.forEach(id => cancelAnimationFrame(id));
+    this.animaciones.clear();
+    this.capaMensajeros?.clearLayers();
+    this.marcadoresMensajeros.clear();
+    this.lineasRecorrido.clear();
+    this.circulosPrecision.clear();
+    this.lineasDestino.clear();
+    this.recorridos.clear();
+    this.siguiendoId = null;
+  }
+
+  /** Recorrido desde que se abrió el mapa: solo se agregan puntos que de verdad cambiaron (≥ 8 m). */
+  private registrarPuntoRecorrido(mensajero: UbicacionMensajero): void {
+    const L = (window as any).L;
+    const puntos = this.recorridos.get(mensajero.id) || [];
+    const ultimo = puntos[puntos.length - 1];
+    if (ultimo && L.latLng(ultimo).distanceTo([mensajero.lat, mensajero.lng]) < 8) {
+      return;
+    }
+    puntos.push([mensajero.lat, mensajero.lng]);
+    if (puntos.length > MAX_PUNTOS_RECORRIDO) puntos.shift();
+    this.recorridos.set(mensajero.id, puntos);
+
+    if (puntos.length < 2) return;
+    const linea = this.lineasRecorrido.get(mensajero.id);
+    if (linea) {
+      linea.setLatLngs(puntos);
+    } else {
+      const nueva = L.polyline(puntos, {
+        color: '#5F3FE0',
+        weight: 3,
+        opacity: 0.55,
+        dashArray: '2 7',
+        lineCap: 'round',
+        interactive: false
+      });
+      this.capaMensajeros.addLayer(nueva);
+      this.lineasRecorrido.set(mensajero.id, nueva);
+    }
+  }
+
+  private quitarCapa(mapa: Map<string, any>, id: string): void {
+    const capa = mapa.get(id);
+    if (capa) this.capaMensajeros?.removeLayer(capa);
+    mapa.delete(id);
+  }
+
+  /** Círculo de incertidumbre cuando el GPS reporta más de 30 m de error. */
+  private actualizarPrecision(m: UbicacionMensajero): void {
+    if (m.precision === undefined || m.precision <= PRECISION_VISIBLE_M) {
+      this.quitarCapa(this.circulosPrecision, m.id);
+      return;
+    }
+    const L = (window as any).L;
+    const existente = this.circulosPrecision.get(m.id);
+    if (existente) {
+      existente.setLatLng([m.lat, m.lng]);
+      existente.setRadius(m.precision);
+      return;
+    }
+    const circulo = L.circle([m.lat, m.lng], {
+      radius: m.precision,
+      color: '#5F3FE0',
+      weight: 1,
+      opacity: 0.35,
+      fillColor: '#5F3FE0',
+      fillOpacity: 0.08,
+      interactive: false
+    });
+    this.capaMensajeros.addLayer(circulo);
+    this.circulosPrecision.set(m.id, circulo);
+  }
+
+  /** Pedido de destino en el mapa (el que tocó "Navegar"), si está entre los pedidos pintados. */
+  private destinoDe(m: UbicacionMensajero): UbicacionPedido | undefined {
+    if (!m.pedidoActual) return undefined;
+    return (this.configuracion?.ubicaciones || []).find(
+      u => u.nroPedido === m.pedidoActual && u.latitud && u.longitud
+    );
+  }
+
+  /** Línea punteada del mensajero a su entrega en curso. */
+  private actualizarLineaDestino(m: UbicacionMensajero): void {
+    const destino = this.destinoDe(m);
+    if (!destino || m.senal === 'sin-conexion') {
+      this.quitarCapa(this.lineasDestino, m.id);
+      return;
+    }
+    const L = (window as any).L;
+    const puntos = [[m.lat, m.lng], [destino.latitud, destino.longitud]];
+    const existente = this.lineasDestino.get(m.id);
+    if (existente) {
+      existente.setLatLngs(puntos);
+      return;
+    }
+    const linea = L.polyline(puntos, {
+      color: '#1E874B',
+      weight: 3,
+      opacity: 0.75,
+      dashArray: '6 8',
+      lineCap: 'round',
+      interactive: false
+    });
+    this.capaMensajeros.addLayer(linea);
+    this.lineasDestino.set(m.id, linea);
+  }
+
+  /** "Lleva DAD-014225 · llega en ~8 min · 3 pendientes" (solo lo que la app manda). */
+  public textoEntrega(m: UbicacionMensajero): string {
+    const partes: string[] = [];
+    if (m.pedidoActual) {
+      partes.push(`Lleva ${m.pedidoActual}`);
+      const destino = this.destinoDe(m);
+      if (destino && m.senal !== 'sin-conexion') {
+        const min = minutosEstimados(m, { lat: destino.latitud!, lng: destino.longitud! }, m.velocidad);
+        partes.push(min <= 1 ? 'llegando' : `llega en ~${min} min`);
+      }
+    }
+    if (m.pendientes !== undefined && m.pendientes > 0) {
+      partes.push(m.pendientes >= 20 ? '20+ pendientes' : `${m.pendientes} pendiente${m.pendientes === 1 ? '' : 's'}`);
+    }
+    return partes.join(' · ');
+  }
+
+  /** "En vivo", "Sin señal" o "Sin conexión desde 10:42". */
+  public textoSenal(m: UbicacionMensajero): string {
+    if (m.senal === 'en-vivo') return 'En vivo';
+    if (m.senal === 'sin-conexion') {
+      const corte = marcaDesconexion(m);
+      return corte === null
+        ? 'Sin conexión'
+        : `Sin conexión desde ${new Date(corte).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })}`;
+    }
+    return 'Sin señal';
+  }
+
+  /**
+   * Gira la flecha hacia donde va el mensajero por el camino corto (de 350° a 10° gira 20°, no 340°).
+   * Se aplica sobre el elemento, sin regenerar el ícono, para no cortar el deslizamiento.
+   */
+  private aplicarRumbo(entrada: { marcador: any; giro?: number }, rumbo: number | undefined): void {
+    if (rumbo === undefined) return;
+    const anterior = entrada.giro ?? rumbo;
+    const delta = ((rumbo - anterior) % 360 + 540) % 360 - 180;
+    entrada.giro = anterior + delta;
+    const flecha = entrada.marcador.getElement?.()?.querySelector('.mm__rumbo') as HTMLElement | null;
+    if (flecha) flecha.style.transform = `rotate(${entrada.giro}deg)`;
+  }
+
+  /**
+   * Desliza el marcador al punto nuevo. Si los puntos llegan seguido (2-5 s), dura lo mismo que el
+   * intervalo y avanza parejo, para que nunca se detenga entre un punto y el siguiente.
+   */
+  private moverSuave(id: string, marcador: any, destino: [number, number], intervaloMs: number | null = null): void {
+    const L = (window as any).L;
+    const origen = marcador.getLatLng();
+    const anterior = this.animaciones.get(id);
+    if (anterior) cancelAnimationFrame(anterior);
+
+    const distancia = origen.distanceTo(destino);
+    if (distancia < 1 || distancia > MAX_METROS_ANIMACION) {
+      marcador.setLatLng(destino);
+      this.animaciones.delete(id);
+      return;
+    }
+
+    const continuo = intervaloMs !== null && intervaloMs >= MIN_MS_DESLIZAR && intervaloMs <= MAX_MS_DESLIZAR;
+    const duracion = continuo ? intervaloMs! : MS_DESLIZAR_CORTO;
+    const inicio = performance.now();
+    const paso = (ahora: number) => {
+      const t = Math.min(1, (ahora - inicio) / duracion);
+      const suave = continuo ? t : 1 - Math.pow(1 - t, 3);
+      marcador.setLatLng(L.latLng(
+        origen.lat + (destino[0] - origen.lat) * suave,
+        origen.lng + (destino[1] - origen.lng) * suave
+      ));
+      if (t < 1) {
+        this.animaciones.set(id, requestAnimationFrame(paso));
+      } else {
+        this.animaciones.delete(id);
+      }
+    };
+    this.animaciones.set(id, requestAnimationFrame(paso));
+  }
+
+  /** El ícono solo se regenera si cambia algo visible (señal, nombre o seguimiento). */
+  private firmaIconoMensajero(m: UbicacionMensajero): string {
+    return `${m.senal}|${m.nombre}|${this.siguiendoId === m.id}|${m.rumbo !== undefined}`;
+  }
+
+  private iconoMensajero(m: UbicacionMensajero): any {
+    const L = (window as any).L;
+    const siguiendo = this.siguiendoId === m.id;
+    return L.divIcon({
+      className: 'custom-marker-mensajero',
+      html: `
+        <div class="mm mm--${m.senal} ${siguiendo ? 'mm--siguiendo' : ''}">
+          ${m.senal === 'en-vivo' ? '<div class="mm__onda"></div>' : ''}
+          ${m.rumbo !== undefined ? '<div class="mm__rumbo"><div class="mm__flecha"></div></div>' : ''}
+          <div class="mm__avatar">${escaparHtml(this.iniciales(m.nombre))}</div>
+          <div class="mm__nombre">${escaparHtml(this.nombreCorto(m.nombre))}</div>
+        </div>
+      `,
+      iconSize: [40, 40],
+      iconAnchor: [20, 20]
+    });
+  }
+
+  private refrescarIconosMensajeros(): void {
+    this.mensajeros.forEach(m => {
+      const existente = this.marcadoresMensajeros.get(m.id);
+      if (!existente) return;
+      const firma = this.firmaIconoMensajero(m);
+      if (existente.firmaIcono !== firma) {
+        existente.marcador.setIcon(this.iconoMensajero(m));
+        existente.firmaIcono = firma;
+      }
+    });
+  }
+
+  private popupMensajero(id: string): string {
+    const m = this.mensajeros.find(x => x.id === id);
+    if (!m) return '';
+    const filas: string[] = [
+      `<div class="mpop__fila"><span>Actualizado</span><b>${escaparHtml(this.textoActualizacion(m))}</b></div>`
+    ];
+    if (m.senal === 'sin-conexion') {
+      filas.unshift(`<div class="mpop__fila"><span>Estado</span><b>${escaparHtml(this.textoSenal(m))}</b></div>`);
+    }
+    const entrega = this.textoEntrega(m);
+    if (entrega) {
+      filas.push(`<div class="mpop__fila"><span>Entrega</span><b>${escaparHtml(entrega)}</b></div>`);
+    }
+    if (m.velocidad !== undefined && m.velocidad > 0.5) {
+      filas.push(`<div class="mpop__fila"><span>Velocidad</span><b>${Math.round(m.velocidad * 3.6)} km/h</b></div>`);
+    }
+    if (m.bateria !== undefined) {
+      filas.push(`<div class="mpop__fila"><span>Batería</span><b>${Math.round(m.bateria)}%</b></div>`);
+    }
     return `
-      <div class="popup-pedido" style="min-width: 200px; font-family: Arial, sans-serif;">
-        <div style="border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 8px;">
-          <h6 style="margin: 0; color: #333; font-size: 14px;">
-            <strong>Pedido #${ubicacion.nroPedido}</strong>
-          </h6>
-          <span class="badge ${estadoClass}" style="
-            font-size: 10px; 
-            padding: 2px 6px; 
-            border-radius: 12px;
-            margin-top: 4px;
-            display: inline-block;
-          ">${ubicacion.estado}</span>
-        </div>
-        
-        <div style="font-size: 12px; color: #666; line-height: 1.4;">
-          <div style="margin-bottom: 4px;">
-            <strong>Cliente:</strong> ${ubicacion.cliente}
+      <div class="mpop">
+        <div class="mpop__cabeza">
+          <div class="mpop__avatar mpop__avatar--${m.senal}">${escaparHtml(this.iniciales(m.nombre))}</div>
+          <div>
+            <div class="mpop__nombre">${escaparHtml(m.nombre)}</div>
+            <div class="mpop__estado mpop__estado--${m.senal}">${m.senal === 'en-vivo' ? 'En vivo' : 'Sin señal reciente'}</div>
           </div>
-          <div style="margin-bottom: 4px;">
-            <strong>Dirección:</strong> ${ubicacion.direccion}
-          </div>
-          ${ubicacion.transportador ? `
-            <div style="margin-bottom: 4px;">
-              <strong>Transportador:</strong> ${ubicacion.transportador}
-            </div>
-          ` : ''}
-          ${ubicacion.horaEstimada ? `
-            <div style="margin-bottom: 4px;">
-              <strong>Hora estimada:</strong> ${ubicacion.horaEstimada}
-            </div>
-          ` : ''}
-          ${ubicacion.tiempoEstimado ? `
-            <div style="margin-bottom: 4px;">
-              <strong>Tiempo estimado:</strong> ${ubicacion.tiempoEstimado} min
-            </div>
-          ` : ''}
         </div>
+        ${filas.join('')}
       </div>
     `;
   }
 
-  private obtenerClaseEstado(estado: string): string {
-    const clases = {
-      'Despachado': 'bg-success',
-      'ParaDespachar': 'bg-warning',
-      'Empacado': 'bg-info',
-      'ProducidoTotalmente': 'bg-primary'
-    };
-    return clases[estado] || 'bg-secondary';
+  private crearContenidoPopup(ubicacion: UbicacionPedido): string {
+    // cliente y dirección los escriben compradores en canales externos: todo se escapa
+    const config = this.iconosEstado[ubicacion.estado];
+    const color = config?.color || COLOR_OTRO_ESTADO;
+    const fondo = config?.fondo || '#eef0f3';
+    const etiqueta = config?.etiqueta || ubicacion.estado;
+    const fila = (label: string, valor: any) =>
+      `<div class="mpop__fila"><span>${label}</span><b>${escaparHtml(valor)}</b></div>`;
+
+    return `
+      <div class="mpop mpop--pedido">
+        <div class="mpop__cabeza">
+          <div>
+            <div class="mpop__numero">#${escaparHtml(ubicacion.nroPedido)}</div>
+            <div class="mpop__estado" style="color:${color};background:${fondo}">${escaparHtml(etiqueta)}</div>
+          </div>
+        </div>
+        ${fila('Cliente', ubicacion.cliente)}
+        ${fila('Dirección', ubicacion.direccion)}
+        ${ubicacion.transportador ? fila('Mensajero', ubicacion.transportador) : ''}
+        ${ubicacion.horaEstimada ? fila('Hora estimada', ubicacion.horaEstimada) : ''}
+        ${ubicacion.tiempoEstimado ? fila('Tiempo estimado', `${ubicacion.tiempoEstimado} min`) : ''}
+      </div>
+    `;
   }
 
   public ajustarVistaAMarcadores(): void {
-    if (!this.mapa || this.marcadores.length === 0) {
+    if (!this.mapa) {
       return;
     }
 
     const L = (window as any).L;
     const marcadoresTotales = [...this.marcadores];
-    if (this.mostrarMensajeros && this.capaMensajeros) {
-      marcadoresTotales.push(...this.capaMensajeros.getLayers());
+    if (this.mostrarMensajeros) {
+      this.marcadoresMensajeros.forEach(({ marcador }) => marcadoresTotales.push(marcador));
     }
 
     if (marcadoresTotales.length === 0) {
@@ -806,7 +1110,50 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     }
 
     const grupo = new L.featureGroup(marcadoresTotales);
-    this.mapa.fitBounds(grupo.getBounds().pad(0.1));
+    this.mapa.fitBounds(grupo.getBounds().pad(0.15), { maxZoom: 16 });
+  }
+
+  /** Clic en un mensajero de la lista: vuela hasta él y abre su ficha. */
+  public centrarEnMensajero(m: UbicacionMensajero): void {
+    const existente = this.marcadoresMensajeros.get(m.id);
+    if (!this.mapa || !existente) return;
+    this.mapa.flyTo(existente.marcador.getLatLng(), Math.max(this.mapa.getZoom(), 16), { duration: 0.8 });
+    existente.marcador.openPopup();
+  }
+
+  /** Seguir: la cámara acompaña al mensajero en cada punto nuevo, hasta que se arrastre el mapa. */
+  public alternarSeguir(m: UbicacionMensajero): void {
+    this.siguiendoId = this.siguiendoId === m.id ? null : m.id;
+    this.refrescarIconosMensajeros();
+    const existente = this.marcadoresMensajeros.get(m.id);
+    if (this.siguiendoId && existente && this.mapa) {
+      // Sin ficha abierta: Leaflet re-encuadra una ficha abierta en cada paso de la animación y
+      // le quita la cámara al seguimiento
+      existente.marcador.closePopup();
+      this.mapa.flyTo(existente.marcador.getLatLng(), Math.max(this.mapa.getZoom(), 16), { duration: 0.8 });
+    }
+  }
+
+  public iniciales(nombre: string): string {
+    const partes = String(nombre || '').trim().split(/\s+/).filter(Boolean);
+    return ((partes[0]?.[0] || '?') + (partes[1]?.[0] || '')).toUpperCase();
+  }
+
+  private nombreCorto(nombre: string): string {
+    const partes = String(nombre || '').trim().split(/\s+/).filter(Boolean);
+    return partes.length > 1 ? `${partes[0]} ${partes[1][0]}.` : (partes[0] || '');
+  }
+
+  public porId(_: number, m: UbicacionMensajero): string {
+    return m.id;
+  }
+
+  get mostrarPanelMensajeros(): boolean {
+    return this.mostrarControles && this.mostrarMensajeros;
+  }
+
+  get mensajerosEnVivo(): number {
+    return this.mensajeros.filter(m => m.senal === 'en-vivo').length;
   }
 
   // Ticket 1159: antes un temporizador movía al azar, cada 30 s, los marcadores de pedidos Despachado
@@ -820,77 +1167,6 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     if (this.mapa) {
       this.agregarMarcadores();
       this.ajustarVistaAMarcadores();
-    }
-  }
-
-  // Método para mostrar animación de geocodificación
-  mostrarAnimacionGeocodificacion(): void {
-    if (!this.mapa) return;
-    
-    const L = (window as any).L;
-    
-    // Crear marcador de geocodificación animado
-    const marcadorGeocoding = L.divIcon({
-      className: 'geocoding-marker',
-      html: `
-        <div class="geocoding-animation">
-          <div class="geocoding-pulse"></div>
-          <div class="geocoding-icon">
-            <i class="pi pi-map-marker"></i>
-          </div>
-        </div>
-      `,
-      iconSize: [40, 40],
-      iconAnchor: [20, 20]
-    });
-    
-    // Agregar marcador temporal en el centro del mapa
-    const centro = this.mapa.getCenter();
-    const marcadorTemporal = L.marker([centro.lat, centro.lng], { icon: marcadorGeocoding });
-    marcadorTemporal.addTo(this.mapa);
-    
-    // Remover después de 3 segundos
-    setTimeout(() => {
-      if (this.mapa) {
-        this.mapa.removeLayer(marcadorTemporal);
-      }
-    }, 3000);
-  }
-
-  // Método para simular efecto de búsqueda en el mapa
-  mostrarEfectoBusqueda(): void {
-    if (!this.mapa) return;
-    
-    const L = (window as any).L;
-    
-    // Crear círculo de búsqueda que se expande
-    const centro = this.mapa.getCenter();
-    const circulo = L.circle([centro.lat, centro.lng], {
-      color: '#2196F3',
-      fillColor: '#2196F3',
-      fillOpacity: 0.1,
-      radius: 100
-    }).addTo(this.mapa);
-    
-    // Animar expansión del círculo
-    let radius = 100;
-    const interval = setInterval(() => {
-      radius += 200;
-      circulo.setRadius(radius);
-      circulo.setStyle({ fillOpacity: Math.max(0.01, 0.1 - (radius / 5000)) });
-      
-      if (radius > 2000) {
-        clearInterval(interval);
-        this.mapa.removeLayer(circulo);
-      }
-    }, 100);
-  }
-
-  // Método para mostrar progreso de geocodificación
-  actualizarProgresoGeocodificacion(progreso: number): void {
-    const progressElement = document.querySelector('.geocoding-progress');
-    if (progressElement) {
-      (progressElement as HTMLElement).style.width = `${progreso}%`;
     }
   }
 
@@ -935,6 +1211,13 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     return this.metricas.producidos;
   }
 
+  /** Pedidos en el mapa con un estado fuera de los cuatro de la leyenda (pin gris). */
+  get contadorOtrosEstados(): number {
+    return (this.configuracion?.ubicaciones || []).filter(
+      u => u.latitud && u.longitud && !this.iconosEstado[u.estado]
+    ).length;
+  }
+
   get contadorPendientes(): number {
     return this.metricas.pendientes;
   }
@@ -971,93 +1254,89 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       this.mensajerosSubscription.unsubscribe();
     }
 
-    // console.log('🔍 [DEBUG] Iniciando escucha de ubicaciones de mensajeros...');
-    // console.log('🔍 [DEBUG] Nombre de empresa para filtrar:', this.companyName);
-
     this.iniciarPurgaMensajeros();
     const activeUsersRef = this.db.list('active_users');
     this.mensajerosSubscription = activeUsersRef.snapshotChanges().subscribe(snapshots => {
-      // console.log('🔍 [DEBUG] Snapshots recibidos desde Firebase:', snapshots.length);
-
-      // Log de todas las claves recibidas para debugging
-      const allKeys = snapshots.map(s => s.key);
-      // console.log('🔍 [DEBUG] Todas las claves en Firebase active_users:', allKeys);
-
       this.mensajeros = snapshots
-        .filter(snapshot => {
-          if (!this.companyName) {
-            // console.log('🔍 [DEBUG] No hay nombre de empresa configurado');
-            return false;
-          }
-          // Ticket 1159: solo los mensajeros de ESTA empresa (la clave termina en la de la empresa).
-          // El filtro anterior aceptaba cualquier parte del nombre contenida en la de la empresa.
-          return perteneceAEmpresa(snapshot.key, this.companyName);
-        })
-        .filter(snapshot => {
-          // Ticket 1154: solo se pintan ubicaciones de los últimos 15 minutos de quien no figura
-          // desconectado; el punto viejo de alguien que ya no envía no se muestra.
-          return ubicacionVigente(snapshot.payload.val() as any);
-        })
-        .map(snapshot => {
-          const key = snapshot.key as string;
-          const keyParts = key.split('_');
-
-          // Reconstruir el nombre del mensajero de manera más inteligente
-          // Tomar las primeras partes que parecen ser nombres propios
-          const nombreParts = keyParts.slice(0, -2); // Asumir que las últimas 2 partes son apellidos o empresa
-          const nombreMensajero = nombreParts.length > 0
-            ? nombreParts.join(' ').replace(/[_-]/g, ' ')
-            : key.replace(/[_-]/g, ' ');
-
-          const data = snapshot.payload.val() as any;
-          const mensajero = {
-            id: key,
-            nombre: nombreMensajero,
-            ...data
-          };
-
-          // console.log('🔍 [DEBUG] Mensajero encontrado:', mensajero);
-          return mensajero;
-        });
-
-      // console.log(`🔍 [DEBUG] ====== RESUMEN DE FILTROS ======`);
-      // console.log(`🔍 [DEBUG] - Total snapshots de Firebase: ${snapshots.length}`);
-      // console.log(`🔍 [DEBUG] - Después de filtro empresa: ${snapshots.filter(s => {
-      //   if (!this.companyName) return false;
-      //   const key = s.key as string;
-      //   const keyParts = key.split('_');
-      //   const keyUpperCase = key.toUpperCase();
-      //   const companyNameUpper = this.companyName.toUpperCase();
-      //   const hasCompanyMatch = keyParts.some(part => {
-      //     const partUpper = part.toUpperCase();
-      //     return partUpper.includes(companyNameUpper) || companyNameUpper.includes(partUpper);
-      //   });
-      //   const hasKeyMatch = keyUpperCase.includes(companyNameUpper) ||
-      //                      companyNameUpper.includes(keyUpperCase.replace(/_/g, ' '));
-      //   return hasCompanyMatch || hasKeyMatch;
-      // }).length}`);
-      // console.log(`🔍 [DEBUG] - Después de filtro timestamp (hoy): ${this.mensajeros.length}`);
-      // console.log('🔍 [DEBUG] - Mensajeros finales:', this.mensajeros);
+        // Ticket 1159: solo los mensajeros de ESTA empresa (la clave termina en la de la empresa).
+        .filter(snapshot => !!this.companyName && perteneceAEmpresa(snapshot.key, this.companyName))
+        // Ticket 1154: solo ubicaciones de los últimos 15 minutos de quien no figura desconectado.
+        .filter(snapshot => ubicacionVigente(snapshot.payload.val() as any))
+        .map(snapshot => this.filtrarPunto(this.aMensajero(snapshot.key as string, snapshot.payload.val() as any)))
+        .sort((a, b) => (b.marca || 0) - (a.marca || 0));
 
       this.actualizarMarcadoresMensajeros();
-      this.cd.detectChanges(); // Forzar detección de cambios para el contador
+      this.cd.detectChanges();
     }, error => {
       console.error('❌ [ERROR] Error escuchando ubicación de mensajeros:', error);
     });
   }
 
   /**
-   * Firebase solo avisa cuando alguien escribe: si un mensajero deja de enviar, nadie
-   * dispara el filtro. Cada minuto se quitan los puntos que ya pasaron de 15 minutos.
+   * App v29+: un punto con `seq` menor al último llegó tarde, y uno que exigiría ir a más de 180 km/h es un
+   * salto del GPS: en los dos casos se conserva el punto anterior. Un salto se descarta una sola vez seguida;
+   * si el siguiente punto confirma la posición nueva, se acepta (el mensajero de verdad está allá).
+   */
+  private filtrarPunto(nuevo: UbicacionMensajero): UbicacionMensajero {
+    const anterior = this.mensajeros.find(m => m.id === nuevo.id);
+    if (!anterior) return nuevo;
+    if (nuevo.seq !== undefined && anterior.seq !== undefined && nuevo.seq < anterior.seq) {
+      return anterior;
+    }
+    if (!this.saltosDescartados.has(nuevo.id) && esSaltoImposible(anterior, nuevo)) {
+      this.saltosDescartados.add(nuevo.id);
+      return anterior;
+    }
+    this.saltosDescartados.delete(nuevo.id);
+    return nuevo;
+  }
+
+  /**
+   * Solo se toman los campos que el mapa usa (no se esparce el nodo entero: un campo cualquiera de
+   * `active_users` no debe pisar el nombre ni la posición). Velocidad y batería, si la app las manda.
+   */
+  private aMensajero(clave: string, dato: any): UbicacionMensajero {
+    const marca = marcaDeUbicacion(dato);
+    const nombrePropio = typeof dato?.nombre === 'string' ? dato.nombre.trim() : '';
+    const numero = (v: any) => (v === null || v === undefined || v === '' || !Number.isFinite(Number(v)) ? undefined : Number(v));
+    return {
+      id: clave,
+      nombre: nombrePropio || nombreDesdeClave(clave, this.companyName) || 'Mensajero',
+      lat: Number(dato?.lat),
+      lng: Number(dato?.lng),
+      timestamp: dato?.timestamp,
+      lastUpdate: dato?.lastUpdate,
+      conectado: dato?.conectado,
+      marca,
+      senal: senalMensajero(marca, Date.now(), dato),
+      hace: marca === null ? 'sin dato' : haceCuanto(marca),
+      velocidad: numero(dato?.velocidad ?? dato?.speed),
+      bateria: numero(dato?.bateria ?? dato?.battery),
+      rumbo: numero(dato?.rumbo),
+      precision: numero(dato?.precision ?? dato?.accuracy),
+      seq: numero(dato?.seq),
+      enRuta: typeof dato?.enRuta === 'boolean' ? dato.enRuta : undefined,
+      pendientes: numero(dato?.pendientes),
+      pedidoActual: typeof dato?.pedidoActual === 'string' && dato.pedidoActual.trim() ? dato.pedidoActual.trim() : undefined,
+      desconectadoEn: dato?.desconectadoEn ?? null
+    };
+  }
+
+  /**
+   * Firebase solo avisa cuando alguien escribe: si un mensajero deja de enviar, nadie dispara el
+   * filtro. Cada 30 s se quitan los puntos de más de 15 minutos y se refrescan "hace X min" y la señal.
    */
   private iniciarPurgaMensajeros(): void {
     this.purgaMensajerosSubscription?.unsubscribe();
-    this.purgaMensajerosSubscription = interval(60000).subscribe(() => {
-      const vigentes = this.mensajeros.filter(m => ubicacionVigente(m));
-      if (vigentes.length === this.mensajeros.length) {
-        return;
-      }
-      this.mensajeros = vigentes;
+    this.purgaMensajerosSubscription = interval(30000).subscribe(() => {
+      const ahora = Date.now();
+      this.mensajeros = this.mensajeros
+        .filter(m => ubicacionVigente(m, ahora))
+        .map(m => ({
+          ...m,
+          senal: senalMensajero(m.marca, ahora, m),
+          hace: m.marca === null ? 'sin dato' : haceCuanto(m.marca, ahora)
+        }));
       this.actualizarMarcadoresMensajeros();
       this.cd.detectChanges();
     });
@@ -1065,7 +1344,9 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
 
   private textoActualizacion(mensajero: UbicacionMensajero): string {
     const marca = marcaDeUbicacion(mensajero);
-    return marca === null ? 'sin dato' : `${haceCuanto(marca)} (${new Date(marca).toLocaleTimeString()})`;
+    if (marca === null) return 'sin dato';
+    const hora = new Date(marca).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' });
+    return `${haceCuanto(marca)} · ${hora}`;
   }
 
   public toggleMensajeros(event: any): void {
@@ -1080,11 +1361,11 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       this.purgaMensajerosSubscription?.unsubscribe();
       this.purgaMensajerosSubscription = null;
       this.mensajeros = [];
-      if (this.capaMensajeros) {
-        this.capaMensajeros.clearLayers();
-      }
+      this.limpiarCapaMensajeros();
     }
     this.cd.detectChanges();
+    // El panel lateral aparece o se va: el mapa cambia de ancho y Leaflet debe medirse otra vez
+    requestAnimationFrame(() => this.mapa?.invalidateSize());
   }
 
   /**
@@ -1165,13 +1446,15 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
    * Obtiene el estilo para una zona específica
    */
   private obtenerEstiloZona(zona: ZonaEntrega): any {
-    const opacidad = zona.opacidad || 0.5;
+    // Relleno suave: la zona es contexto, lo que se sigue son pedidos y mensajeros
+    const opacidad = Math.min(zona.opacidad || 0.12, 0.18);
     const tipoVisualizacion = this.configuracionZonas.tipoVisualizacion;
 
     return {
       color: zona.colorBorde || zona.color,
-      weight: 2,
-      opacity: tipoVisualizacion === 'relleno' ? 0 : 0.8,
+      weight: 1.5,
+      opacity: tipoVisualizacion === 'relleno' ? 0 : 0.7,
+      dashArray: '6 4',
       fillColor: zona.color,
       fillOpacity: tipoVisualizacion === 'borde' ? 0 : opacidad,
       interactive: true
@@ -1182,34 +1465,25 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
    * Crea el contenido del popup para una zona
    */
   private crearContenidoPopupZona(zona: ZonaEntrega): string {
-    const restricciones = zona.restricciones;
-    const estadisticas = zona.estadisticas;
+    const r = zona.restricciones;
+    const e = zona.estadisticas;
+    const fila = (label: string, valor: any) =>
+      `<div class="mpop__fila"><span>${label}</span><b>${escaparHtml(valor)}</b></div>`;
 
     return `
-      <div style="font-size: 14px; line-height: 1.4;">
-        <h6 style="margin: 0 0 8px 0; color: ${zona.color};">
-          📍 ${zona.nombre}
-        </h6>
-        ${zona.descripcion ? `<p style="margin: 4px 0; color: #666;">${zona.descripcion}</p>` : ''}
-
-        ${restricciones ? `
-          <div style="margin: 8px 0;">
-            <strong>Restricciones:</strong>
-            ${restricciones.horarioMinimo && restricciones.horarioMaximo ?
-              `<br>🕐 Horario: ${restricciones.horarioMinimo} - ${restricciones.horarioMaximo}` : ''}
-            ${restricciones.costoAdicional ?
-              `<br>💰 Costo adicional: $${restricciones.costoAdicional.toLocaleString()}` : ''}
+      <div class="mpop">
+        <div class="mpop__cabeza">
+          <div class="mpop__zona" style="background:${escaparHtml(zona.color)}"></div>
+          <div>
+            <div class="mpop__nombre">${escaparHtml(zona.nombre)}</div>
+            ${zona.descripcion ? `<div class="mpop__desc">${escaparHtml(zona.descripcion)}</div>` : ''}
           </div>
-        ` : ''}
-
-        ${estadisticas ? `
-          <div style="margin: 8px 0; padding: 6px; background: #f8f9fa; border-radius: 4px;">
-            <strong>Estadísticas:</strong>
-            <br>📦 Pedidos entregados: ${estadisticas.pedidosEntregados}
-            <br>⏱️ Tiempo promedio: ${estadisticas.tiempoPromedioEntrega} min
-            <br>✅ Éxito: ${estadisticas.porcentajeExitoso}%
-          </div>
-        ` : ''}
+        </div>
+        ${r?.horarioMinimo && r?.horarioMaximo ? fila('Horario', `${r.horarioMinimo} – ${r.horarioMaximo}`) : ''}
+        ${r?.costoAdicional ? fila('Costo adicional', `$${r.costoAdicional.toLocaleString('es-CO')}`) : ''}
+        ${e ? fila('Entregados', e.pedidosEntregados) : ''}
+        ${e ? fila('Tiempo promedio', `${e.tiempoPromedioEntrega} min`) : ''}
+        ${e ? fila('Éxito', `${e.porcentajeExitoso}%`) : ''}
       </div>
     `;
   }

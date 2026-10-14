@@ -1,0 +1,80 @@
+<div class="ev-sug-velo" aria-hidden="true" (click)="cerrar()"></div>
+
+<aside class="ev-sug-hoja" role="dialog" aria-modal="false" [attr.aria-labelledby]="idTitulo" (keydown)="alTeclado($event)">
+  <header class="ev-sug-hoja__cabeza">
+    <div class="ev-sug-hoja__tit">
+      <span class="ev-sug-hoja__eyebrow">Ajustar la propuesta</span>
+      <h2 class="ev-sug-hoja__titulo" [id]="idTitulo" tabindex="-1" #titulo>{{ hoja.grupo.zona }}</h2>
+    </div>
+    <button type="button" class="ev-sug-hoja__cerrar" (click)="cerrar()" aria-label="Cerrar Ajustar">
+      <app-en-vivo-icono nombre="equis"></app-en-vivo-icono>
+    </button>
+  </header>
+
+  <div class="ev-sug-hoja__cuerpo">
+    <p class="ev-sug-hoja__aviso t-warn" *ngIf="hoja.bloqueado">
+      <span class="ev-sug-hoja__aviso-texto">{{ hoja.bloqueado }}</span>
+    </p>
+    <!-- El grupo cambió con la hoja abierta: se actualizó con lo último (se conserva el mensajero escogido). -->
+    <p class="ev-sug-hoja__aviso t-info" *ngIf="hoja.actualizada && !hoja.bloqueado" role="status">
+      <span class="ev-sug-hoja__aviso-texto">{{ hoja.actualizada }}</span>
+    </p>
+
+    <app-en-vivo-grupo-despacho
+      [grupo]="hoja.grupo"
+      [numero]="1"
+      [opciones]="hoja.opciones"
+      [otrosGrupos]="hoja.otros"
+      [puedeAprobar]="hoja.puedeAprobar"
+      [bloqueado]="hoja.bloqueado"
+      [aplicando]="hoja.aplicando"
+      [ocupado]="hoja.ocupado || confirmando"
+      [resultado]="hoja.resultado"
+      (cambiarMensajero)="cambiarMensajero($event)"
+      (cambiarTransportadora)="cambiarTransportadora($event)"
+      (sacar)="sacar($event)"
+      (mover)="mover($event.pedido, $event.destino)"
+      (aprobar)="pedirConfirmacion()"
+      (abrirPedido)="abrirPedido($event)"
+    ></app-en-vivo-grupo-despacho>
+
+    <!-- Segundo paso: dice el efecto real. Si no se toca en 5 s, se suelta. -->
+    <div class="ev-sug-hoja__confirmar" *ngIf="confirmando">
+      <button type="button" class="ev-sug-hoja__btn" #confirmacion (click)="confirmar()">
+        <span class="ev-sug-hoja__btn-texto">{{ hoja.confirmar }}</span>
+      </button>
+      <button type="button" class="ev-sug-hoja__btn ev-sug-hoja__btn--sec" (click)="soltar()">
+        <span class="ev-sug-hoja__btn-texto">Cancelar</span>
+      </button>
+    </div>
+
+    <section class="ev-sug-hoja__sacados" *ngIf="hoja.sacados.length" [attr.aria-labelledby]="idTitulo + '-sacados'">
+      <h3 class="ev-sug-hoja__subtitulo" [id]="idTitulo + '-sacados'">Sacados del plan</h3>
+      <ul class="ev-sug-hoja__lista">
+        <li class="ev-sug-hoja__fila" *ngFor="let s of hoja.sacados; trackBy: trackSacado">
+          <button type="button" class="ev-sug-hoja__pedido" (click)="abrirPedido(s.pedido.id)" [attr.aria-label]="'Abrir el pedido ' + s.pedido.nroPedido">
+            <span class="ev-sug-hoja__nro">#{{ s.pedido.nroPedido }}</span>
+            <span class="ev-sug-hoja__zona">{{ s.pedido.zona }}</span>
+          </button>
+          <select
+            class="ev-sug-hoja__select"
+            *ngIf="s.destinos.length"
+            [attr.aria-label]="'Pasar el pedido ' + s.pedido.nroPedido + ' a un grupo'"
+            (change)="devolver(s.pedido, $any($event.target).value); $any($event.target).value = ''"
+          >
+            <option value="">Pasar a…</option>
+            <option *ngFor="let d of s.destinos" [value]="d.id">{{ d.etiqueta }}</option>
+          </select>
+        </li>
+      </ul>
+    </section>
+
+    <app-en-vivo-fuera-del-plan [fuera]="hoja.fuera" [automaticos]="hoja.automaticos" (abrirPedido)="abrirPedido($event)"></app-en-vivo-fuera-del-plan>
+  </div>
+
+  <footer class="ev-sug-hoja__pie">
+    <button type="button" class="ev-sug-hoja__btn ev-sug-hoja__btn--sec" (click)="cerrar()">
+      <span class="ev-sug-hoja__btn-texto">Listo</span>
+    </button>
+  </footer>
+</aside>

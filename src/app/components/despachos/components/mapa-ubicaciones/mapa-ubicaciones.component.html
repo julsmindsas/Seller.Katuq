@@ -17,77 +17,79 @@
     </div>
 
     <div class="mapa-header__actions">
-      <!-- Indicador de tiempo real -->
-      <span class="mapa-pill mapa-pill--live" *ngIf="tiempoReal">
-        <span class="mapa-pill__dot"></span>{{ 'Tiempo Real' | translate }}
-      </span>
+      <!-- Indicador de tiempo real: solo cuando de verdad se escuchan mensajeros -->
+      <div class="mapa-pill mapa-pill--live" *ngIf="tiempoReal && mostrarMensajeros">
+        <i class="mapa-pill__dot"></i>{{ 'Tiempo Real' | translate }}
+      </div>
+
+      <!-- Toggle para mensajeros -->
+      <label class="mapa-toggle" [class.mapa-toggle--on]="mostrarMensajeros"
+        title="{{ 'Mostrar/Ocultar mensajeros' | translate }}">
+        <input type="checkbox" [checked]="mostrarMensajeros" (change)="toggleMensajeros($event)">
+        <i class="mapa-toggle__track"><i class="mapa-toggle__thumb"></i></i>
+        <b class="mapa-toggle__texto">{{ 'Mensajeros' | translate }}</b>
+      </label>
+
+      <!-- Toggle para zonas de entrega -->
+      <label class="mapa-toggle" [class.mapa-toggle--on]="mostrarZonasEntrega"
+        title="{{ 'Mostrar/Ocultar zonas de entrega' | translate }}"
+        *ngIf="configuracionZonas.zonas.length > 0">
+        <input type="checkbox" [checked]="mostrarZonasEntrega" (change)="toggleZonasEntrega($event)">
+        <i class="mapa-toggle__track"><i class="mapa-toggle__thumb"></i></i>
+        <b class="mapa-toggle__texto">{{ 'Zonas' | translate }}</b>
+      </label>
 
       <!-- Botón para ajustar vista -->
       <button type="button"
         class="mapa-iconbtn"
         (click)="ajustarVistaAMarcadores()"
-        title="{{ 'Ajustar vista a todas las ubicaciones' | translate }}">
+        title="{{ 'Ajustar vista a todas las ubicaciones' | translate }}"
+        [attr.aria-label]="'Ajustar vista a todas las ubicaciones' | translate">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-          stroke-linecap="round">
-          <circle cx="11" cy="11" r="7"></circle>
-          <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+          <path d="M21 8V5a2 2 0 0 0-2-2h-3"></path>
+          <path d="M3 16v3a2 2 0 0 0 2 2h3"></path>
+          <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
+          <circle cx="12" cy="12" r="2.5"></circle>
         </svg>
       </button>
-
-      <!-- Toggle para mensajeros -->
-      <label class="mapa-toggle" title="{{ 'Mostrar/Ocultar mensajeros' | translate }}">
-        <input type="checkbox" [checked]="mostrarMensajeros" (change)="toggleMensajeros($event)">
-        <span class="mapa-toggle__track"><span class="mapa-toggle__thumb"></span></span>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-      </label>
-
-      <!-- Toggle para zonas de entrega -->
-      <label class="mapa-toggle" title="{{ 'Mostrar/Ocultar zonas de entrega' | translate }}"
-        *ngIf="configuracionZonas.zonas.length > 0">
-        <input type="checkbox" [checked]="mostrarZonasEntrega" (change)="toggleZonasEntrega($event)">
-        <span class="mapa-toggle__track"><span class="mapa-toggle__thumb"></span></span>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-          <line x1="8" y1="2" x2="8" y2="18"></line>
-          <line x1="16" y1="6" x2="16" y2="22"></line>
-        </svg>
-      </label>
     </div>
   </div>
 
   <!-- Leyenda de estados -->
   <div class="mapa-leyenda" *ngIf="mostrarControles">
     <div class="mapa-leyenda__item">
-      <span class="leyenda-item despachado"></span>
-      <span class="mapa-leyenda__label">{{ 'En Ruta' | translate }} <b>({{ contadorDespachados }})</b></span>
+      <i class="leyenda-item despachado"></i>
+      <b class="mapa-leyenda__label">{{ 'En Ruta' | translate }} <em>{{ contadorDespachados }}</em></b>
     </div>
     <div class="mapa-leyenda__item">
-      <span class="leyenda-item para-despachar"></span>
-      <span class="mapa-leyenda__label">{{ 'Para Despachar' | translate }} <b>({{ contadorParaDespachar }})</b></span>
+      <i class="leyenda-item para-despachar"></i>
+      <b class="mapa-leyenda__label">{{ 'Para Despachar' | translate }} <em>{{ contadorParaDespachar }}</em></b>
     </div>
     <div class="mapa-leyenda__item">
-      <span class="leyenda-item empacado"></span>
-      <span class="mapa-leyenda__label">{{ 'Empacado' | translate }} <b>({{ contadorEmpacados }})</b></span>
+      <i class="leyenda-item empacado"></i>
+      <b class="mapa-leyenda__label">{{ 'Empacado' | translate }} <em>{{ contadorEmpacados }}</em></b>
     </div>
     <div class="mapa-leyenda__item">
-      <span class="leyenda-item producido"></span>
-      <span class="mapa-leyenda__label">{{ 'Producido' | translate }} <b>({{ contadorProducidos }})</b></span>
+      <i class="leyenda-item producido"></i>
+      <b class="mapa-leyenda__label">{{ 'Producido' | translate }} <em>{{ contadorProducidos }}</em></b>
     </div>
-    <div class="mapa-leyenda__item" *ngIf="mostrarMensajeros && mensajeros.length > 0">
-      <span class="leyenda-item mensajero"></span>
-      <span class="mapa-leyenda__label">{{ 'Mensajero' | translate }} <b>({{ mensajeros.length }})</b></span>
+    <div class="mapa-leyenda__item" *ngIf="contadorOtrosEstados > 0">
+      <i class="leyenda-item otro-estado"></i>
+      <b class="mapa-leyenda__label">{{ 'En preparación' | translate }} <em>{{ contadorOtrosEstados }}</em></b>
+    </div>
+    <div class="mapa-leyenda__item" *ngIf="mostrarMensajeros">
+      <i class="leyenda-item mensajero"></i>
+      <b class="mapa-leyenda__label">{{ 'Mensajero' | translate }} <em>{{ mensajeros.length }}</em></b>
     </div>
     <div class="mapa-leyenda__item" *ngIf="mostrarZonasEntrega && tieneZonasActivas">
-      <span class="leyenda-item zona-entrega"></span>
-      <span class="mapa-leyenda__label">{{ 'Zonas de Entrega' | translate }} <b>({{ contadorZonasActivas }})</b></span>
+      <i class="leyenda-item zona-entrega"></i>
+      <b class="mapa-leyenda__label">{{ 'Zonas de Entrega' | translate }} <em>{{ contadorZonasActivas }}</em></b>
     </div>
   </div>
 
+  <div class="mapa-cuerpo" [class.mapa-cuerpo--con-panel]="mostrarPanel">
   <!-- Contenedor del mapa -->
   <div class="mapa-wrapper">
     <div #mapaContainer
@@ -105,56 +107,24 @@
       </div>
     </div>
 
-    <!-- Overlay de geocodificación -->
-    <div class="geocoding-overlay" *ngIf="geocodingInProgress && leafletCargado">
-      <div class="geocoding-content">
-        <div class="geocoding-animation-container">
-          <div class="geocoding-pulse-main"></div>
-          <div class="geocoding-icon-main">
-            <i class="pi pi-map-marker"></i>
-          </div>
+    <!-- Avance de "ubicar pedidos": tarjeta compacta, el mapa sigue usable debajo -->
+    <div class="ubicando" *ngIf="avanceVisible && avanceUbicacion && leafletCargado" role="status" aria-live="polite">
+      <ng-container *ngIf="!avanceUbicacion.terminado; else resumenUbicacion">
+        <div class="ubicando__texto">
+          {{ 'Ubicando pedidos en el mapa' | translate }}
+          <b class="ubicando__cuenta">· {{ avanceUbicacion.hechos }} {{ 'de' | translate }} {{ avanceUbicacion.total }}</b>
         </div>
-
-        <div class="geocoding-text mt-3">
-          <h6 class="text-white mb-2">
-            <i class="pi pi-spin pi-spinner me-2"></i>
-            {{ 'Geocodificando direcciones...' | translate }}
-          </h6>
-          <p class="text-white-50 small mb-3">
-            {{ 'Convirtiendo direcciones a coordenadas del mapa' | translate }}
-          </p>
-
-          <!-- Barra de progreso -->
-          <div class="progress geocoding-progress-bar">
-            <div class="progress-bar geocoding-progress bg-success"
-                 [style.width.%]="geocodingProgress"
-                 [attr.aria-valuenow]="geocodingProgress"
-                 aria-valuemin="0"
-                 aria-valuemax="100">
-              {{ geocodingProgress | number:'1.0-0' }}%
-            </div>
-          </div>
+        <div class="ubicando__barra"><i [style.width.%]="porcentajeUbicacion"></i></div>
+      </ng-container>
+      <ng-template #resumenUbicacion>
+        <div class="ubicando__texto" *ngIf="avanceUbicacion.total > 0; else nadaPorUbicar">
+          <b class="ubicando__ok">{{ avanceUbicacion.ubicados }} {{ 'ubicados' | translate }}</b>
+          <b class="ubicando__alerta" *ngIf="avanceUbicacion.sinUbicar > 0">&nbsp;· {{ avanceUbicacion.sinUbicar }} {{ 'sin ubicar' | translate }}</b>
         </div>
-
-        <!-- Efectos visuales adicionales -->
-        <div class="geocoding-effects">
-          <div class="geocoding-dot"
-               *ngFor="let dot of [1,2,3,4,5]; let i = index"
-               [style.animation-delay.s]="i * 0.2">
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Indicador de nuevos marcadores -->
-    <div class="new-markers-indicator"
-         *ngIf="!geocodingInProgress && leafletCargado && configuracion.ubicaciones.length > ultimosLocationsProcesados">
-      <div class="new-markers-content">
-        <i class="pi pi-check-circle text-success me-2"></i>
-        <span class="text-success">
-          {{ 'Nuevas ubicaciones agregadas' | translate }}
-        </span>
-      </div>
+        <ng-template #nadaPorUbicar>
+          <div class="ubicando__texto">{{ 'Todos los pedidos con dirección ya están en el mapa' | translate }}</div>
+        </ng-template>
+      </ng-template>
     </div>
 
     <!-- Mensaje de error si no se puede cargar -->
@@ -172,9 +142,82 @@
     </div>
   </div>
 
-  <!-- Barra de progreso inferior durante geocodificación -->
-  <div class="geocoding-bottom-progress" *ngIf="geocodingInProgress">
-    <div class="progress-line" [style.width.%]="geocodingProgress"></div>
+  <!-- Panel de mensajeros: quién está en la calle, hace cuánto llegó su punto, Ver y Seguir -->
+  <aside class="mapa-panel" *ngIf="mostrarPanel" [style.height]="altura">
+    <ng-container *ngIf="mostrarMensajeros">
+    <div class="mapa-panel__cabeza">
+      <div class="mapa-panel__eyebrow">{{ 'Mensajeros' | translate }}</div>
+      <div class="mapa-panel__titulo">
+        {{ mensajeros.length }} {{ 'en la calle' | translate }}
+      </div>
+      <div class="mapa-panel__sub">
+        <i class="punto punto--en-vivo"></i>{{ mensajerosEnVivo }} {{ 'en vivo' | translate }}
+        <i class="punto punto--reciente"></i>{{ mensajeros.length - mensajerosEnVivo }} {{ 'sin señal reciente' | translate }}
+      </div>
+    </div>
+
+    <div class="mapa-panel__lista" *ngIf="mensajeros.length > 0; else sinMensajeros">
+      <div class="mensajero-fila" *ngFor="let m of mensajeros; trackBy: porId"
+        [class.mensajero-fila--siguiendo]="m.id === siguiendoId"
+        role="button" tabindex="0"
+        (click)="centrarEnMensajero(m)"
+        (keydown.enter)="centrarEnMensajero(m)">
+        <div class="mensajero-fila__avatar mensajero-fila__avatar--{{ m.senal }}">{{ iniciales(m.nombre) }}</div>
+        <div class="mensajero-fila__info">
+          <div class="mensajero-fila__nombre">{{ m.nombre }}</div>
+          <div class="mensajero-fila__meta">
+            <i class="punto punto--{{ m.senal }}"></i>{{ textoSenal(m) }} · {{ m.hace }}
+          </div>
+          <div class="mensajero-fila__entrega" *ngIf="textoEntrega(m) as entrega">{{ entrega }}</div>
+        </div>
+        <button type="button" class="mensajero-fila__seguir"
+          [class.mensajero-fila__seguir--on]="m.id === siguiendoId"
+          [attr.aria-pressed]="m.id === siguiendoId"
+          (click)="alternarSeguir(m); $event.stopPropagation()">
+          {{ (m.id === siguiendoId ? 'Siguiendo' : 'Seguir') | translate }}
+        </button>
+      </div>
+    </div>
+
+    <ng-template #sinMensajeros>
+      <div class="mapa-panel__vacio">
+        <div class="mapa-panel__vacio-icono">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="5.5" cy="17.5" r="3.5"></circle>
+            <circle cx="18.5" cy="17.5" r="3.5"></circle>
+            <path d="M15 6h2l3 8"></path>
+            <path d="M5.5 17.5 9 10h6l3.5 7.5"></path>
+          </svg>
+        </div>
+        <div class="mapa-panel__vacio-titulo">{{ 'Ningún mensajero en la calle' | translate }}</div>
+        <div class="mapa-panel__vacio-texto">
+          {{ 'Aparecen aquí cuando la app de mensajeros envía su ubicación. Se muestran los de los últimos 15 minutos.' | translate }}
+        </div>
+      </div>
+    </ng-template>
+    </ng-container>
+
+    <!-- Pedidos que no se pudieron ubicar: nunca se pintan en un punto aproximado -->
+    <div class="sinubicar" *ngIf="pedidosSinUbicar.length > 0">
+      <div class="sinubicar__cabeza">
+        <div class="mapa-panel__eyebrow">{{ 'Sin ubicar' | translate }}</div>
+        <div class="sinubicar__titulo">
+          {{ pedidosSinUbicar.length }} {{ (pedidosSinUbicar.length === 1 ? 'pedido no está en el mapa' : 'pedidos no están en el mapa') | translate }}
+        </div>
+      </div>
+      <div class="sinubicar__lista">
+        <div class="sinubicar__fila" *ngFor="let p of pedidosSinUbicar; trackBy: porNroPedido">
+          <div class="sinubicar__arriba">
+            <b class="sinubicar__numero">#{{ p.nroPedido }}</b>
+            <b class="sinubicar__cliente" *ngIf="p.cliente">{{ p.cliente }}</b>
+          </div>
+          <div class="sinubicar__direccion">{{ p.direccion || ('Sin dirección' | translate) }}</div>
+          <div class="sinubicar__motivo">{{ p.motivo | translate }}</div>
+        </div>
+      </div>
+    </div>
+  </aside>
   </div>
 
   <!-- Panel de estadísticas rápidas -->

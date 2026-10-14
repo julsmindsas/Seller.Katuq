@@ -1,0 +1,210 @@
+<ng-container *ngIf="vm$ | async as vm">
+  <!-- Solo lo nuevo se anuncia (una propuesta que llega o el resultado de aprobar). -->
+  <p class="ev-sug-sr" aria-live="polite">{{ vm.disponible && vm.visible && !vm.repitiendo ? vm.anuncio : '' }}</p>
+
+  <section
+    *ngIf="vm.disponible && vm.visible && !vm.repitiendo"
+    class="ev-sug"
+    [class.ev-sug--tv]="vm.tv"
+    [class.ev-sug--lista]="enLista"
+    [class.ev-sug--urgente]="vm.item?.prioridad === 'urgente'"
+    [class.ev-sug--razon]="razonAbierta"
+    role="region"
+    aria-label="Opttia propone"
+    (keydown)="alTeclado($event, vm)"
+    (pointerdown)="actividad()"
+    (focusin)="actividad()"
+  >
+    <!-- Cola vacía -->
+    <ng-container *ngIf="vm.alDia || !vm.item; else conPropuesta">
+      <div class="ev-sug-cabeza">
+        <p class="ev-sug-eyebrow">
+          <app-en-vivo-icono nombre="ia"></app-en-vivo-icono>
+          <span class="ev-sug-eyebrow__texto">Opttia propone</span>
+        </p>
+        <span class="ev-sug-pastilla t-ok"><span class="ev-sug-pastilla__texto">Al día</span></span>
+      </div>
+      <h2 class="ev-sug-titulo">Todo al día</h2>
+      <p class="ev-sug-razon ev-sug-razon--siempre">Te aviso aquí mismo si sale algo.</p>
+    </ng-container>
+
+    <ng-template #conPropuesta>
+      <ng-container *ngIf="vm.item as it">
+        <div class="ev-sug-cabeza">
+          <p class="ev-sug-eyebrow">
+            <app-en-vivo-icono nombre="ia"></app-en-vivo-icono>
+            <span class="ev-sug-eyebrow__texto">{{ vm.eyebrow }}</span>
+          </p>
+          <div class="ev-sug-cola" *ngIf="vm.total > 1 && !vm.tv">
+            <button type="button" class="ev-sug-flecha ev-sug-flecha--atras" [disabled]="vm.ocupado" (click)="anterior()" aria-label="Propuesta anterior">
+              <app-en-vivo-icono nombre="flecha"></app-en-vivo-icono>
+            </button>
+            <button type="button" class="ev-sug-flecha" [disabled]="vm.ocupado" (click)="siguiente()" aria-label="Propuesta siguiente">
+              <app-en-vivo-icono nombre="flecha"></app-en-vivo-icono>
+            </button>
+          </div>
+        </div>
+
+        <h2 class="ev-sug-titulo">{{ vm.titulo }}</h2>
+
+        <button type="button" class="ev-sug-porque" *ngIf="vm.razon && !vm.tv" [attr.aria-expanded]="razonAbierta" (click)="alternarRazon($event)">
+          <span class="ev-sug-porque__texto">{{ razonAbierta ? 'Ocultar la razón' : '¿Por qué?' }}</span>
+        </button>
+        <p class="ev-sug-razon" *ngIf="vm.razon">{{ vm.razon }}</p>
+
+        <p class="ev-sug-frase" *ngIf="vm.frase">
+          <span class="ev-sug-frase__marca">Opttia</span>
+          <span class="ev-sug-frase__texto">{{ vm.frase }}</span>
+        </p>
+
+        <ul class="ev-sug-datos" *ngIf="vm.chips.length">
+          <li class="ev-sug-dato" *ngFor="let c of vm.chips; let i = index; trackBy: trackChip" [class.ev-sug-dato--efecto]="c.efecto">
+            <span class="ev-sug-dato__texto">{{ c.texto }}</span>
+          </li>
+        </ul>
+
+        <p class="ev-sug-aviso t-warn" *ngIf="vm.viejo">
+          <span class="ev-sug-aviso__texto">{{ vm.viejo }}</span>
+        </p>
+
+        <div class="ev-sug-resultado" *ngIf="vm.resultado as r" [ngClass]="r.tono">
+          <p class="ev-sug-resultado__linea">
+            <app-en-vivo-icono [nombre]="r.tono === 't-ok' ? 'check' : 'alerta'"></app-en-vivo-icono>
+            <span class="ev-sug-resultado__texto">{{ r.texto }}</span>
+          </p>
+          <ul class="ev-sug-fuera" *ngIf="r.fuera.length">
+            <li class="ev-sug-fuera__fila" *ngFor="let f of r.fuera; trackBy: trackFuera">
+              <span class="ev-sug-fuera__texto">{{ f.texto }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Modo pantalla: sin botones (ocultos, no deshabilitados). -->
+        <p class="ev-sug-tv" *ngIf="vm.tv; else acciones">
+          <span class="ev-sug-tv__texto">{{ textoTv(it) }}</span>
+        </p>
+
+        <ng-template #acciones>
+          <ng-container [ngSwitch]="it.modo">
+            <!-- Producción en sombra: así lo haría Opttia, sin botón de aprobar. -->
+            <ng-container *ngSwitchCase="'sombra'">
+              <p class="ev-sug-sombra">
+                <span class="ev-sug-sombra__texto">Así lo haría Opttia · pronto podrás aprobarlo</span>
+              </p>
+              <div class="ev-sug-acciones">
+                <button type="button" class="ev-sug-btn ev-sug-btn--texto" (click)="despues()"><span>Después</span></button>
+                <ng-container *ngTemplateOutlet="menuMas"></ng-container>
+              </div>
+            </ng-container>
+
+            <!-- Cobro: no cambia nada. Encendido: "Abrir WhatsApp" de principal (el enlace se pide al tocar). -->
+            <ng-container *ngSwitchCase="'senal'">
+              <p class="ev-sug-aviso t-warn" *ngIf="vm.whatsappAviso">
+                <span class="ev-sug-aviso__texto">{{ vm.whatsappAviso }}</span>
+              </p>
+              <div class="ev-sug-acciones">
+                <button
+                  type="button"
+                  class="ev-sug-btn ev-sug-btn--principal ev-sug-btn--whatsapp"
+                  *ngIf="vm.whatsapp; else pedidoPrincipal"
+                  [class.ev-sug-btn--ocupado]="vm.whatsappAbriendo"
+                  [disabled]="vm.whatsappAbriendo"
+                  (click)="abrirWhatsapp(vm)"
+                >
+                  <span class="ev-sug-btn__giro" *ngIf="vm.whatsappAbriendo" aria-hidden="true"></span>
+                  <span class="ev-sug-btn__texto">{{ vm.whatsappAbriendo ? 'Abriendo WhatsApp…' : 'Abrir WhatsApp' }}</span>
+                </button>
+                <ng-template #pedidoPrincipal>
+                  <button type="button" class="ev-sug-btn ev-sug-btn--principal ev-sug-btn--pedido" (click)="abrirPedido(it)"><span>Abrir pedido</span></button>
+                </ng-template>
+                <div class="ev-sug-acciones__fila">
+                  <button type="button" class="ev-sug-btn ev-sug-btn--sec ev-sug-btn--pedido" *ngIf="vm.whatsapp" (click)="abrirPedido(it)">
+                    <span>Abrir pedido</span>
+                  </button>
+                  <button type="button" class="ev-sug-btn ev-sug-btn--texto" (click)="despues()"><span>Después</span></button>
+                  <button type="button" class="ev-sug-btn ev-sug-btn--texto ev-sug-btn--pagado" (click)="yaPago()"><span>Ya pagó / no aplica</span></button>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- Despachos: Aprobar en dos toques, Ajustar y Después. Producción encendida: "Pasar a En producción" en dos toques. -->
+            <ng-container *ngSwitchDefault>
+              <p class="ev-sug-equipo" *ngIf="vm.avisoEquipo && !conResultadoFinal(vm)">
+                <app-en-vivo-icono nombre="check"></app-en-vivo-icono>
+                <span class="ev-sug-equipo__texto">{{ vm.avisoEquipo }}</span>
+              </p>
+              <p class="ev-sug-aviso t-ink" *ngIf="vm.sinPermiso && !vm.tv && !conResultadoFinal(vm)">
+                <span class="ev-sug-aviso__texto">{{ vm.sinPermisoTexto }}</span>
+              </p>
+              <!-- Al grupo le falta algo (mensajero o pedidos): Aprobar queda deshabilitado y Ajustar lo resuelve. -->
+              <p class="ev-sug-aviso t-warn" *ngIf="vm.falta && !vm.viejo && !conResultadoFinal(vm)">
+                <span class="ev-sug-aviso__texto">{{ vm.falta }}</span>
+              </p>
+              <div class="ev-sug-acciones" *ngIf="!conResultadoFinal(vm); else soloSeguir">
+                <button
+                  type="button"
+                  class="ev-sug-btn ev-sug-btn--principal ev-sug-btn--aprobar"
+                  *ngIf="vm.aprobable"
+                  [class.ev-sug-btn--produccion]="it.tipo === 'produccion'"
+                  [class.ev-sug-btn--confirmar]="esConfirmando('uno', vm)"
+                  [class.ev-sug-btn--ocupado]="vm.aplicando && !vm.aplicandoTodos"
+                  [disabled]="vm.bloqueado || !!vm.viejo || !!vm.falta || vm.ocupado"
+                  (click)="tocarAprobar(vm)"
+                >
+                  <span class="ev-sug-btn__giro" *ngIf="vm.aplicando && !vm.aplicandoTodos" aria-hidden="true"></span>
+                  <span class="ev-sug-btn__texto">{{ textoAprobar(vm) }}</span>
+                </button>
+                <div class="ev-sug-acciones__fila">
+                  <button type="button" class="ev-sug-btn ev-sug-btn--sec" *ngIf="vm.ajustable" [disabled]="vm.ocupado" (click)="ajustar()">
+                    <span>Ajustar</span>
+                  </button>
+                  <button type="button" class="ev-sug-btn ev-sug-btn--texto" [disabled]="vm.aplicando" (click)="despues()"><span>Después</span></button>
+                  <ng-container *ngTemplateOutlet="menuMas"></ng-container>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="ev-sug-todos"
+                *ngIf="(vm.todos || vm.aplicandoTodos) && vm.aprobable && !conResultadoFinal(vm)"
+                [class.ev-sug-todos--confirmar]="esConfirmando('todos', vm)"
+                [disabled]="vm.bloqueado || vm.ocupado"
+                (click)="tocarAprobarTodos(vm)"
+              >
+                <span class="ev-sug-todos__texto">{{ textoTodos(vm) }}</span>
+              </button>
+            </ng-container>
+          </ng-container>
+
+          <ng-template #soloSeguir>
+            <div class="ev-sug-acciones">
+              <div class="ev-sug-acciones__fila">
+                <button type="button" class="ev-sug-btn ev-sug-btn--sec" *ngIf="vm.total > 0" (click)="siguiente()"><span>Siguiente</span></button>
+              </div>
+            </div>
+          </ng-template>
+        </ng-template>
+      </ng-container>
+    </ng-template>
+
+    <!-- "…" con "No hoy": la oculta hasta que cambie (o hasta mañana). -->
+    <ng-template #menuMas>
+      <div class="ev-sug-mas">
+        <button
+          type="button"
+          class="ev-sug-btn ev-sug-btn--icono"
+          [attr.aria-expanded]="masAbierto"
+          aria-label="Más opciones"
+          [disabled]="vm.aplicando"
+          (click)="alternarMas()"
+        >
+          <span class="ev-sug-mas__puntos" aria-hidden="true">···</span>
+        </button>
+        <button type="button" class="ev-sug-btn ev-sug-btn--texto ev-sug-mas__opcion" *ngIf="masAbierto" (click)="noHoy()">
+          <span>No hoy</span>
+        </button>
+      </div>
+    </ng-template>
+  </section>
+
+  <app-en-vivo-sugerencia-ajuste *ngIf="vm.hoja as hoja" [hoja]="hoja"></app-en-vivo-sugerencia-ajuste>
+</ng-container>
