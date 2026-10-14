@@ -9594,3 +9594,16 @@ commits y el push no despliega ni activa checkout.
 **Estado (13-oct).** Implementado sin commit. Pruebas: utilidad y regla de entrega 25/25 (Jasmine), backend 7/7, smoke de la guía, build del front en verde. Pendiente: pruebas en navegador y un despacho real por Enviame de un pedido solo por ubicación antes de cerrar el ticket 1203.
 
 **Renumerada (13-oct):** nació como D-415 y chocó con la D-415 de Kuvo, publicada al mismo tiempo por otra sesión; el commit `962b46e3` dice D-415 en el mensaje, pero se refiere a esta.
+
+## D-418 (2026-10-13) — El "Usuario de WhatsApp" del formulario único de cliente acepta el nombre del contacto con espacios y tildes (ticket 1206, ALMACEN BOMBAS; PUBLICADO 2026.10.13.4)
+
+**Disparador.** Ticket 1206 (Javier Hernán Sánchez, ALMACEN BOMBAS): al crear un cliente, el campo "Usuario de WhatsApp" daba error si el nombre llevaba espacios ("Nombre Apellido"). Daniel: "haz el 1206".
+
+**Causa.** El formulario único de cliente (ticket 1166, D-406, 2026.10.13.1) validaba el campo con /^[A-Za-z0-9._]{3,32}$/, pensado para un @usuario: sin espacios ni tildes. ALMACEN BOMBAS guarda ahí el nombre del contacto tal como aparece en WhatsApp.
+
+**Decisión.** El campo acepta de 2 a 60 caracteres: letras (con tildes y ñ), números, espacios, punto, guion, guion bajo y apóstrofo; debe empezar con letra o número. Al guardar se quita la @ inicial y se compactan los espacios. Es validación de formulario: no cambia el dato guardado (`whatsappUsername`), ni el backend, ni pedidos. Commit 21b933e6 (Santiago), publicado desde 2026.10.13.4.
+
+**Verificado:** la expresión con 14 casos (nombres con tildes y ñ, punto, guion, apóstrofo, 60 y 61 caracteres, vacío, emoji, espacio inicial, @ inicial); el código publicado en producción trae el mensaje nuevo ("De 2 a 60 caracteres…", fragmento 4153) y ya no el viejo ("3 a 32"); nada más lee ese campo (el backend no lo referencia y en el front solo lo usa este formulario).
+**No verificado:** crear un cliente real en el navegador con la cuenta de ALMACEN BOMBAS.
+
+**Queda abierto:** si ALMACEN BOMBAS empieza a usar el campo como identificador para enviar mensajes por WhatsApp, un nombre con espacios no sirve como número ni como @usuario: hoy es solo una etiqueta.
