@@ -334,7 +334,7 @@
   </section>
 
   <!-- ===== Ticket 1262 (FE-05): detalle del documento ===== -->
-  <div class="fe-detalle-velo" *ngIf="detalle as d" (click)="cerrarDetalle()">
+  <div class="fe-detalle-velo" appAlBody *ngIf="detalle as d" (click)="cerrarDetalle()">
     <aside class="fe-detalle" role="dialog" aria-modal="true" [attr.aria-label]="'Detalle de ' + (d.number || 'documento')" (click)="$event.stopPropagation()">
       <header class="fe-detalle__cabeza">
         <div>

@@ -372,7 +372,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     return {
       tooltip: { trigger: "item", formatter: (p: any) => `${escHtml(p.name)}: ${p.data.cantidad} · ${this.money(p.data.valor)}<br>Paso: ${p.data.paso}%` },
       color: ["#C9BDF7", "#9E8BF0", "#7B62E8", "#5F3FE0"],
-      series: [{ type: "funnel", sort: "none", left: "8%", width: "84%", minSize: "20%", gap: 3,
+      series: [{ type: "funnel", sort: "none", left: "4%", width: "58%", minSize: "20%", gap: 3,
         label: { formatter: (p: any) => `${p.name} · ${p.data.cantidad} (${p.data.paso}%)`, color: "#211F3A", fontSize: 12 },
         data: a.embudo.map((e) => ({ name: this.ETAPAS[e.etapa] || e.etapa, value: Math.max(e.cantidad, 0.0001), cantidad: e.cantidad, valor: e.valor, paso: e.paso, etapa: e.etapa })) }],
     };

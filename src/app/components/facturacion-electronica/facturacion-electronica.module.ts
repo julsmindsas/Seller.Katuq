@@ -1,3 +1,4 @@
+import { AlBodyModule } from '../../shared/directives/al-body.module';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -21,6 +22,8 @@ import { InvoiceDraftsComponent } from './composer/invoice-drafts.component';
     SharedModule,
     ClientesSharedModule,
     FacturacionElectronicaRoutingModule,
+    // Ticket 1262: el detalle del documento cuelga del <body> (si no, la barra superior lo tapa).
+    AlBodyModule,
   ],
 })
 export class FacturacionElectronicaModule {}
