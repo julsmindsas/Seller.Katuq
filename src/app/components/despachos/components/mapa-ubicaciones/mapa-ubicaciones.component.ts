@@ -1,4 +1,6 @@
-import { Component, Input, OnInit, AfterViewInit, OnDestroy, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
+import {
+  Component, Input, OnInit, AfterViewInit, OnDestroy, OnChanges, SimpleChanges, ElementRef, ViewChild, ChangeDetectorRef
+} from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { interval, Subscription } from 'rxjs';
 import { SecurityService } from '../../../../shared/services/security/security.service';
@@ -42,6 +44,25 @@ interface UbicacionMensajero {
 const MAX_PUNTOS_RECORRIDO = 80;
 /** Saltos más largos que esto no se animan: es un mensajero que reapareció lejos, no uno que se movió. */
 const MAX_METROS_ANIMACION = 3000;
+
+/** Avance de la ubicación de pedidos que calcula Despachos (openspec mapa-despachos-ubicar-pedidos). */
+export interface AvanceUbicacion {
+  total: number;
+  hechos: number;
+  ubicados: number;
+  sinUbicar: number;
+  terminado: boolean;
+}
+
+export interface PedidoSinUbicar {
+  nroPedido: string;
+  cliente: string;
+  direccion: string;
+  motivo: string;
+}
+
+/** Cuánto se queda el resumen "X ubicados · Y sin ubicar" antes de ocultarse. */
+const RESUMEN_UBICACION_MS = 4000;
 
 interface MapaMetricas {
   despachados: number;
@@ -93,7 +114,7 @@ interface ConfiguracionMapa {
   templateUrl: './mapa-ubicaciones.component.html',
   styleUrls: ['./mapa-ubicaciones.component.scss']
 })
-export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestroy {
+export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @ViewChild('mapaContainer', { static: true }) mapaContainer!: ElementRef;
   
   @Input() configuracion: ConfiguracionMapa = {
@@ -105,8 +126,10 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   @Input() altura: string = '400px';
   @Input() mostrarControles: boolean = true;
   @Input() tiempoReal: boolean = false;
-  @Input() geocodingInProgress: boolean = false;
-  @Input() geocodingProgress: number = 0;
+  /** Avance de "ubicar pedidos": lo pinta una tarjeta sobre el mapa, sin taparlo. */
+  @Input() avanceUbicacion: AvanceUbicacion | null = null;
+  /** Pedidos que no se pudieron ubicar con confianza: van en el panel, nunca en un punto aproximado. */
+  @Input() pedidosSinUbicar: PedidoSinUbicar[] = [];
   @Input() verMensajeros: boolean = true;
   @Input() configuracionZonas: ConfiguracionZonas = {
     zonas: [],
@@ -144,6 +167,9 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   public mensajeros: UbicacionMensajero[] = [];
 
   intervalTimer: any = null;
+  /** La tarjeta de avance se ve mientras ubica y unos segundos con el resumen al terminar. */
+  public avanceVisible = false;
+  private ocultarAvanceTimer: any = null;
   leafletCargado: boolean = false;
   marcadoresAnimandose: Set<string> = new Set();
   ultimosLocationsProcesados: number = 0;
@@ -181,6 +207,37 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     }
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['avanceUbicacion']) {
+      const avance = this.avanceUbicacion;
+      clearTimeout(this.ocultarAvanceTimer);
+      this.avanceVisible = !!avance;
+      if (avance?.terminado) {
+        this.ocultarAvanceTimer = setTimeout(() => {
+          this.avanceVisible = false;
+          this.cd.detectChanges();
+        }, RESUMEN_UBICACION_MS);
+      }
+    }
+    if (changes['pedidosSinUbicar'] && !changes['pedidosSinUbicar'].firstChange) {
+      // El panel puede aparecer o irse: el mapa cambia de ancho y Leaflet debe medirse otra vez
+      requestAnimationFrame(() => this.mapa?.invalidateSize());
+    }
+  }
+
+  get porcentajeUbicacion(): number {
+    const a = this.avanceUbicacion;
+    return a && a.total > 0 ? Math.round((a.hechos / a.total) * 100) : 0;
+  }
+
+  get mostrarPanel(): boolean {
+    return this.mostrarControles && (this.mostrarMensajeros || this.pedidosSinUbicar.length > 0);
+  }
+
+  public porNroPedido(_: number, p: PedidoSinUbicar): string {
+    return p.nroPedido;
+  }
+
   ngAfterViewInit(): void {
     // Inicializar el mapa después de que la vista esté lista
     setTimeout(() => {
@@ -194,6 +251,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     if (this.intervalTimer) {
       clearInterval(this.intervalTimer);
     }
+    clearTimeout(this.ocultarAvanceTimer);
     if (this.mapa) {
       this.mapa.remove();
       this.mapa = null;
@@ -930,77 +988,6 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     if (this.mapa) {
       this.agregarMarcadores();
       this.ajustarVistaAMarcadores();
-    }
-  }
-
-  // Método para mostrar animación de geocodificación
-  mostrarAnimacionGeocodificacion(): void {
-    if (!this.mapa) return;
-    
-    const L = (window as any).L;
-    
-    // Crear marcador de geocodificación animado
-    const marcadorGeocoding = L.divIcon({
-      className: 'geocoding-marker',
-      html: `
-        <div class="geocoding-animation">
-          <div class="geocoding-pulse"></div>
-          <div class="geocoding-icon">
-            <i class="pi pi-map-marker"></i>
-          </div>
-        </div>
-      `,
-      iconSize: [40, 40],
-      iconAnchor: [20, 20]
-    });
-    
-    // Agregar marcador temporal en el centro del mapa
-    const centro = this.mapa.getCenter();
-    const marcadorTemporal = L.marker([centro.lat, centro.lng], { icon: marcadorGeocoding });
-    marcadorTemporal.addTo(this.mapa);
-    
-    // Remover después de 3 segundos
-    setTimeout(() => {
-      if (this.mapa) {
-        this.mapa.removeLayer(marcadorTemporal);
-      }
-    }, 3000);
-  }
-
-  // Método para simular efecto de búsqueda en el mapa
-  mostrarEfectoBusqueda(): void {
-    if (!this.mapa) return;
-    
-    const L = (window as any).L;
-    
-    // Crear círculo de búsqueda que se expande
-    const centro = this.mapa.getCenter();
-    const circulo = L.circle([centro.lat, centro.lng], {
-      color: '#5F3FE0',
-      fillColor: '#5F3FE0',
-      fillOpacity: 0.1,
-      radius: 100
-    }).addTo(this.mapa);
-    
-    // Animar expansión del círculo
-    let radius = 100;
-    const interval = setInterval(() => {
-      radius += 200;
-      circulo.setRadius(radius);
-      circulo.setStyle({ fillOpacity: Math.max(0.01, 0.1 - (radius / 5000)) });
-      
-      if (radius > 2000) {
-        clearInterval(interval);
-        this.mapa.removeLayer(circulo);
-      }
-    }, 100);
-  }
-
-  // Método para mostrar progreso de geocodificación
-  actualizarProgresoGeocodificacion(progreso: number): void {
-    const progressElement = document.querySelector('.geocoding-progress');
-    if (progressElement) {
-      (progressElement as HTMLElement).style.width = `${progreso}%`;
     }
   }
 
