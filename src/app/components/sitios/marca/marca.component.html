@@ -59,7 +59,7 @@
           </div>
 
           <p class="grupo__pista" *ngIf="!sugeridos.length && kit.logo">
-            No pudimos leer los colores de tu logo. Elige una combinación de abajo.
+            No pudimos leer los colores de tu logo. Dejamos una combinación que se lee bien; cámbiala si quieres.
           </p>
 
           <div class="paletas">
@@ -88,6 +88,9 @@
               <input type="color" [(ngModel)]="kit.colorTexto" />
             </label>
           </div>
+          <!-- Ticket 1216: contraste mínimo entre texto y fondo (WCAG AA). -->
+          <p class="aviso-contraste" *ngIf="avisoContraste">{{ avisoContraste }}</p>
+          <p class="grupo__pista">Las páginas que usan los colores de tu marca se actualizan solas al guardar.</p>
         </section>
 
         <!-- Negocio -->

@@ -1,6 +1,8 @@
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import { ToastrService } from "ngx-toastr";
 import { KitDeMarca, SitiosService } from "../sitios.service";
+import Swal from "sweetalert2";
+import { avisoContraste, combinacionUsable } from "../contraste";
 
 /** Paletas de arranque, por si el logo no da colores utilizables. */
 const PALETAS_BASE = [
@@ -75,7 +77,15 @@ export class MarcaComponent implements OnInit {
   sectores = SECTORES;
   tonos = TONOS;
 
+  /** Ticket 1216: combinación que el comercio aceptó guardar con poco contraste. */
+  private contrasteAceptado = "";
+
   constructor(private service: SitiosService, private toastr: ToastrService) {}
+
+  /** Ticket 1216: aviso si el texto no se lee sobre el fondo, o "". */
+  get avisoContraste(): string {
+    return avisoContraste(this.kit.colorTexto, this.kit.colorSecundario);
+  }
 
   ngOnInit(): void {
     this.service.kitDeMarca().subscribe({
@@ -84,6 +94,8 @@ export class MarcaComponent implements OnInit {
         if (res && res.data) {
           this.kit = { ...this.kit, ...res.data };
           if (this.kit.logo) this.extraerColores(this.kit.logo);
+          // Ticket 1216: nunca tres colores iguales (tres negros = texto invisible).
+          if (!combinacionUsable(this.kit)) this.aplicarPaletaBase(PALETAS_BASE[0]);
         }
       },
       error: () => {
@@ -93,8 +105,12 @@ export class MarcaComponent implements OnInit {
     });
   }
 
+  /** Ticket 1220: "ALMARA FELICIDAD" se muestra "Almara Felicidad", sin mayúsculas sostenidas. */
   get nombreComercial(): string {
-    return this.kit.nombreComercial || "tu negocio";
+    const nombre = String(this.kit.nombreComercial || "").trim();
+    if (!nombre) return "tu negocio";
+    if (nombre !== nombre.toUpperCase()) return nombre;
+    return nombre.toLowerCase().replace(/(^|[\s\-/])(\p{L})/gu, (_m, sep, letra) => sep + letra.toUpperCase());
   }
 
   // ── Logo ───────────────────────────────────────────────────────────────────
@@ -214,6 +230,28 @@ export class MarcaComponent implements OnInit {
 
   guardar(): void {
     if (this.guardando) return;
+    // Ticket 1216: no se guardan tres colores iguales, y el poco contraste se advierte.
+    if (!combinacionUsable(this.kit)) {
+      this.toastr.warning("Elige tres colores distintos: con fondo y texto iguales, nada se lee.");
+      return;
+    }
+    const combinacion = `${this.kit.colorTexto}|${this.kit.colorSecundario}`.toLowerCase();
+    if (this.avisoContraste && this.contrasteAceptado !== combinacion) {
+      Swal.fire({
+        title: "El texto casi no se lee",
+        text: this.avisoContraste,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Guardar igual",
+        cancelButtonText: "Cambiar colores",
+        confirmButtonColor: "#5F3FE0",
+      }).then((r) => {
+        if (!r.isConfirmed) return;
+        this.contrasteAceptado = combinacion;
+        this.guardar();
+      });
+      return;
+    }
     this.guardando = true;
 
     this.service.guardarKitDeMarca(this.kit).subscribe({

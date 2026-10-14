@@ -27,6 +27,7 @@ import {
   validarInstruccion,
 } from "./editar-con-ia.logic";
 import { pdfAImagenes, reducirImagen } from "./editar-con-ia.archivos";
+import { avisoContraste, combinacionUsable, mismosColores } from "../contraste";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
 const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; icono: string }[] = [
@@ -500,7 +501,8 @@ const SECCIONES_LISTAS: {
 const BLOQUE_NUEVO: { [tipo: string]: any } = {
   // El logo no va aquí: sale del kit de marca de la empresa al renderizar.
   encabezado: { nombre: "", mostrarLogo: true, enlaces: [], ctaTexto: "", ctaUrl: "", fijo: false, mostrarCategorias: false },
-  anuncio: { texto: "Envíos a todo el país", url: "", marquesina: true },
+  // Ticket 1221: frase neutra; una promesa de envío la escribe el comercio.
+  anuncio: { texto: "Mira lo nuevo de la tienda", url: "", marquesina: true },
   categorias: { titulo: "Compra por categoría", maximo: 6 },
   promo: {
     etiqueta: "Nuevo",
@@ -821,6 +823,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
           next: (r) => { this.categorias = (r && r.success && r.data) || []; },
           error: () => { this.categorias = []; },
         });
+        // Ticket 1213: el checklist de publicación necesita zonas, pagos y datos legales.
+        this.cargarVentaConfig();
       },
       error: () => {
         this.cargando = false;
@@ -841,6 +845,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         if (!kit) return;
         this.logo = kit.logo || "";
         this.negocio = kit.nombreComercial || "";
+        // Ticket 1216: la paleta oficial es la de Mi marca (si está completa y se lee).
+        const colores = { colorPrimario: kit.colorPrimario, colorSecundario: kit.colorSecundario, colorTexto: kit.colorTexto };
+        this.coloresMarca = combinacionUsable(colores) ? colores : null;
       },
       error: () => undefined,
     });
@@ -1007,7 +1014,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   get avisoTienda(): string | null {
     const t = this.contenido && this.contenido.tienda;
     if (!t || !t.habilitada) return null;
-    if (!t.bodegaId) return "Elige la bodega desde donde despachas: sin ella la tienda no recibe pedidos.";
+    // Ticket 1213: los bloqueos salen del mismo checklist, para que nunca se contradigan.
+    const critico = this.pendientes.find((p) => p.critico);
+    if (critico) return `${critico.texto}: sin esto la tienda no puede recibir pedidos.`;
     const hayCompra = this.bloques.some(
       (b) => b.tipo === "productos" && b.datos && b.datos.permitirCompra === true
     );
@@ -1321,6 +1330,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       valor: 10,
       activo: true,
       minimoCompra: 0,
+      desde: "",
       vence: "",
       usosMaximos: 0,
       usos: 0,
@@ -1439,13 +1449,31 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    * echar de menos, y lleva a donde se arregla. Es la diferencia entre una
    * caja de piezas y una tienda que se termina.
    */
-  get pendientes(): { texto: string; ir: () => void }[] {
+  get pendientes(): PendienteSitio[] {
     const c = this.contenido;
     if (!c) return [];
-    const lista: { texto: string; ir: () => void }[] = [];
+    const lista: PendienteSitio[] = [];
     const bloques = c.bloques || [];
     const tiene = (tipo: string) => bloques.some((b) => b.tipo === tipo && b.visible !== false);
     const tienda = (c.tienda || {}) as TiendaSitio;
+
+    // Ticket 1213: primero lo que impide vender (bloquea Publicar). Las mismas
+    // reglas valida el servidor al publicar (utils/siteListoParaVender.js).
+    if (tienda.habilitada) {
+      if (!tienda.bodegaId) {
+        lista.push({ texto: "Elige la bodega desde donde despachas", critico: true, ir: () => this.irACampo("tienda", "campo-bodega") });
+      }
+      const retiro = tienda.retiroEnTienda;
+      const hayRetiro = !!(retiro && retiro.activo && retiro.puntos && retiro.puntos.length);
+      const sinZonas = !!(tienda.envio && tienda.envio.modo === "zonas" && this.ventaConfig && this.ventaConfig.zonas === 0);
+      if (sinZonas && !hayRetiro) {
+        lista.push({ texto: "Crea al menos una zona de envío o un punto de recogida", critico: true, ir: () => this.irACampo("tienda", "campo-envio") });
+      }
+      const otras = (tienda.otrasFormasPago || []).length;
+      if (!tienda.pagoEnLinea && !tienda.contraEntrega && !otras) {
+        lista.push({ texto: "Activa al menos un medio de pago", critico: true, ir: () => this.irACampo("tienda", "campo-pagos") });
+      }
+    }
 
     if (!this.logo) {
       lista.push({ texto: "Sube tu logo en Mi marca", ir: () => this.router.navigate(["/sitios/marca"]) });
@@ -1457,22 +1485,60 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       lista.push({ texto: "Escribe la descripción que verá Google", ir: () => (this.panel = "ajustes") });
     }
     if (tienda.habilitada) {
-      if (!tienda.bodegaId) {
-        lista.push({ texto: "Elige la bodega que despacha", ir: () => (this.panel = "tienda") });
-      }
       if (!tiene("catalogo") && !tiene("productos") && !tiene("destacado")) {
         lista.push({ texto: "Muestra productos: agrega catálogo o vitrina", ir: () => (this.panel = "bloques") });
       }
-      const rutas = new Set(this.paginas.map((p) => p.ruta));
-      if (!rutas.has("politica-de-privacidad") || !rutas.has("cambios-y-devoluciones")) {
-        lista.push({ texto: "Publica tus políticas (Meta y las pasarelas las piden)", ir: () => this.traerPaginasLegales() });
+      const legales = this.ventaConfig && this.ventaConfig.datosLegales;
+      if (legales && (!legales.razonSocial || !legales.nit)) {
+        lista.push({ texto: "Completa la razón social y el NIT de tu empresa", ir: () => this.router.navigate(["/empresas"]) });
       }
+    }
+    // Siempre, no solo con tienda: así el checklist y el aviso de políticas no se contradicen.
+    if (this.faltanPoliticas) {
+      lista.push({ texto: "Publica tus políticas: términos, privacidad y devoluciones", ir: () => this.traerPaginasLegales() });
     }
     return lista;
   }
 
+  /** Ticket 1213: faltan las páginas legales (privacidad y devoluciones; los términos van con ellas). */
+  get faltanPoliticas(): boolean {
+    const rutas = new Set(this.paginas.map((p) => p.ruta));
+    return !rutas.has("politica-de-privacidad") || !rutas.has("cambios-y-devoluciones");
+  }
+
+  /** Ticket 1213: lo que bloquea Publicar. */
+  get pendientesCriticos(): PendienteSitio[] {
+    return this.pendientes.filter((p) => p.critico);
+  }
+
+  /** Texto del botón Publicar bloqueado. */
+  get motivoBloqueo(): string {
+    const c = this.pendientesCriticos;
+    return c.length ? `No se puede publicar todavía: ${c.map((p) => p.texto.toLowerCase()).join("; ")}.` : "";
+  }
+
   irAPendiente(p: { ir: () => void }): void {
     p.ir();
+  }
+
+  /** Ticket 1213: el chip de la barra abre la lista de pendientes. */
+  verPendientes(): void {
+    this.panel = "bloques";
+    this.seleccionado = -1;
+  }
+
+  /** Ticket 1213: abre la pestaña y lleva al campo exacto donde se corrige. */
+  irACampo(panel: string, campoId: string): void {
+    this.panel = panel as any;
+    if (panel === "tienda") this.cargarBodegas();
+    // Espera a que la pestaña se pinte para ubicar el campo.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const el = document.getElementById(campoId);
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      const foco = el.matches("input, select, button, textarea") ? el : el.querySelector<HTMLElement>("input, select, button, textarea");
+      if (foco) (foco as HTMLElement).focus({ preventScroll: true });
+    }));
   }
 
   /** Rutas que una página propia no puede tomar: son del render. */
@@ -1762,9 +1828,35 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   /** Id de la paleta que coincide con los colores actuales, o "" si son a mano. */
+  // ── Colores de la marca (ticket 1216) ──────────────────────────────────────
+
+  /** Colores de Mi marca, o null si la marca no tiene una combinación usable. */
+  coloresMarca: { colorPrimario: string; colorSecundario: string; colorTexto: string } | null = null;
+  /** Combinación de colores que el comercio aceptó guardar con poco contraste. */
+  private contrasteAceptado = "";
+
+  /** ¿La página está usando los colores de Mi marca? */
+  get usaColoresDeMarca(): boolean {
+    return !!this.coloresMarca && mismosColores(this.contenido && this.contenido.tema, this.coloresMarca);
+  }
+
+  /** Vuelve a los colores de Mi marca. */
+  restaurarColoresDeMarca(): void {
+    if (!this.coloresMarca || !this.contenido) return;
+    this.contenido.tema = { ...this.contenido.tema, ...this.coloresMarca };
+    this.marcarSucio();
+  }
+
+  /** Aviso si el texto no se lee sobre el fondo (WCAG AA 4,5:1), o "". */
+  get avisoContrasteTema(): string {
+    const t = this.contenido && this.contenido.tema;
+    return t ? avisoContraste(t.colorTexto, t.colorSecundario) : "";
+  }
+
   get paletaActiva(): string {
     const t = this.contenido && this.contenido.tema;
     if (!t) return "";
+    if (this.usaColoresDeMarca) return "marca";
     const igual = PALETAS.find(
       (p) =>
         p.colorPrimario.toLowerCase() === (t.colorPrimario || "").toLowerCase() &&
@@ -2882,6 +2974,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       nuevo.colorPrimario = v.colorPrimario;
       nuevo.colorSecundario = v.colorSecundario;
       nuevo.colorTexto = v.colorTexto;
+    } else if (this.coloresMarca) {
+      // Ticket 1216: "mis colores" son los de Mi marca, no los que trajo la plantilla.
+      Object.assign(nuevo, this.coloresMarca);
     }
     this.contenido.tema = nuevo;
     this.marcarSucio();
@@ -3751,23 +3846,37 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    */
   /** Las que sí salen en el sitio (para la previa). */
   get categoriasVisibles(): CategoriaSitio[] {
-    const t: any = this.contenido && (this.contenido as any).tienda;
-    const ocultas = new Set(((t && t.categoriasOcultas) || []).map((c: string) => String(c).toLowerCase()));
-    return this.categorias.filter((c) => !ocultas.has(String(c.nombre).toLowerCase()));
+    return this.categorias.filter((c) => !this.categoriaOculta(c.nombre));
   }
 
+  /**
+   * Ticket 1214: oculta si el comercio la desmarcó o si su nombre es interno
+   * ("Listas internas") y no la mostró a propósito. La misma regla aplica el
+   * servidor (utils/siteListoParaVender.js).
+   */
   categoriaOculta(nombre: string): boolean {
     const t: any = this.contenido && (this.contenido as any).tienda;
-    return ((t && t.categoriasOcultas) || []).some((c: string) => String(c).toLowerCase() === String(nombre).toLowerCase());
+    const en = (lista: string[]) => (lista || []).some((c: string) => normalizarCategoria(c) === normalizarCategoria(nombre));
+    if (en(t && t.categoriasOcultas)) return true;
+    return esCategoriaInterna(nombre) && !en(t && t.categoriasMostradas);
+  }
+
+  esCategoriaInterna(nombre: string): boolean {
+    return esCategoriaInterna(nombre);
   }
 
   alternarCategoriaOculta(nombre: string): void {
     const t: any = this.contenido && (this.contenido as any).tienda;
     if (!t) return;
-    const lista: string[] = Array.isArray(t.categoriasOcultas) ? t.categoriasOcultas : [];
-    t.categoriasOcultas = this.categoriaOculta(nombre)
-      ? lista.filter((c) => String(c).toLowerCase() !== String(nombre).toLowerCase())
-      : [...lista, nombre].slice(0, 40);
+    const quitar = (lista: string[]) => (lista || []).filter((c) => normalizarCategoria(c) !== normalizarCategoria(nombre));
+    const oculta = this.categoriaOculta(nombre);
+    if (esCategoriaInterna(nombre)) {
+      // Una interna se muestra solo a propósito: la casilla escribe en las mostradas.
+      t.categoriasOcultas = quitar(t.categoriasOcultas);
+      t.categoriasMostradas = oculta ? [...quitar(t.categoriasMostradas), nombre].slice(0, 40) : quitar(t.categoriasMostradas);
+    } else {
+      t.categoriasOcultas = oculta ? quitar(t.categoriasOcultas) : [...quitar(t.categoriasOcultas), nombre].slice(0, 40);
+    }
     this.marcarSucio();
   }
 
@@ -3804,6 +3913,76 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.recalcularSucio();
     this.recalcularPrevia();
     this.guardarEnHistorial();
+    this.programarAutoguardado();
+  }
+
+  // ── Guardado automático del borrador (ticket 1219) ─────────────────────────
+  // El borrador se guarda solo, en todas las pestañas, un momento después del
+  // último cambio. Publicar sigue siendo explícito: lo publicado cambia solo al
+  // pulsar Publicar.
+
+  /** "" | guardando | guardado | pendiente (no se pudo por un dato) | error (sin conexión). */
+  estadoAutoguardado: "" | "guardando" | "guardado" | "pendiente" | "error" = "";
+  motivoAutoguardado = "";
+  private relojAutoguardado: any = null;
+  private readonly ESPERA_AUTOGUARDADO = 2500;
+  private readonly REINTENTO_AUTOGUARDADO = 10000;
+
+  private programarAutoguardado(espera = this.ESPERA_AUTOGUARDADO): void {
+    if (this.relojAutoguardado) clearTimeout(this.relojAutoguardado);
+    if (!this.sucio || this.restaurando) return;
+    this.relojAutoguardado = setTimeout(() => this.autoguardar(), espera);
+  }
+
+  private autoguardar(): void {
+    this.relojAutoguardado = null;
+    if (!this.contenido || !this.sucio) return;
+    // Algo en curso: se vuelve a intentar al terminar.
+    if (this.guardando || this.publicando || this.editandoIA) {
+      this.programarAutoguardado();
+      return;
+    }
+    // Una propuesta de diseño con IA espera que el comercio decida si la deja.
+    if (this.hayPropuestaIA) {
+      this.estadoAutoguardado = "pendiente";
+      this.motivoAutoguardado = "Decide si dejas el diseño de la IA para guardarlo.";
+      return;
+    }
+    const motivo = this.motivoParaNoAutoguardar();
+    if (motivo) {
+      this.estadoAutoguardado = "pendiente";
+      this.motivoAutoguardado = motivo;
+      return;
+    }
+    this.guardar(false, true);
+  }
+
+  /** Datos que el servidor rechazaría o borraría: mejor esperar a que se corrijan. */
+  private motivoParaNoAutoguardar(): string {
+    if (!this.slugValido) return "Corrige la dirección de la página.";
+    const pautaMala = CAMPOS_PAUTA.find((c) => this.errorPauta(c.campo));
+    if (pautaMala) return `Corrige ${pautaMala.nombre} en Pauta.`;
+    const t = this.contenido && this.contenido.tema;
+    const combinacion = t ? `${t.colorTexto}|${t.colorSecundario}`.toLowerCase() : "";
+    if (this.avisoContrasteTema && this.contrasteAceptado !== combinacion) return "El texto casi no se lee sobre el fondo: cambia los colores o pulsa Guardar.";
+    return "";
+  }
+
+  /** Texto del estado de guardado en la barra. */
+  get textoGuardado(): string {
+    if (this.guardando) return "Guardando…";
+    if (this.estadoAutoguardado === "error") return "Sin conexión: reintentando";
+    if (this.estadoAutoguardado === "pendiente" && this.sucio) return "Sin guardar";
+    if (this.sucio) return "Guardando…";
+    return this.estadoAutoguardado === "guardado" ? "Guardado hace un momento" : "Guardado";
+  }
+
+  /** Ticket 1219: avisar al cerrar o recargar la pestaña con cambios sin guardar. */
+  @HostListener("window:beforeunload", ["$event"])
+  avisarAntesDeSalir(evento: BeforeUnloadEvent): void {
+    if (!this.sucio) return;
+    evento.preventDefault();
+    evento.returnValue = "";
   }
 
   private firmaActual(): string {
@@ -3821,6 +4000,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   ngOnDestroy(): void {
+    if (this.relojAutoguardado) clearTimeout(this.relojAutoguardado);
     if (this.relojAvanceIA) clearInterval(this.relojAvanceIA);
     document.body.classList.remove("kq-editor-lleno");
     if (this.observadorLienzo) this.observadorLienzo.disconnect();
@@ -3917,6 +4097,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.recalcularSucio();
     this.recalcularPrevia();
     this.restaurando = false;
+    // Ticket 1219: deshacer y rehacer también se guardan solos.
+    this.programarAutoguardado();
   }
 
   /**
@@ -3974,10 +4156,41 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     });
   }
 
-  guardar(alPublicar = false): void {
+  guardar(alPublicar = false, automatico = false): void {
     if (!this.contenido || this.guardando) return;
+    if (this.relojAutoguardado) { clearTimeout(this.relojAutoguardado); this.relojAutoguardado = null; }
     if (!this.slugValido) {
       this.toastr.warning("Corrige la dirección antes de guardar.");
+      return;
+    }
+    // Ticket 1216: texto ilegible sobre el fondo se guarda solo con una advertencia aceptada.
+    const aviso = this.avisoContrasteTema;
+    const t = this.contenido.tema;
+    const combinacion = `${t.colorTexto}|${t.colorSecundario}`.toLowerCase();
+    if (aviso && this.contrasteAceptado !== combinacion) {
+      Swal.fire({
+        title: "El texto casi no se lee",
+        text: aviso,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Guardar igual",
+        cancelButtonText: "Cambiar colores",
+        confirmButtonColor: "#5F3FE0",
+      }).then((r) => {
+        if (r.isConfirmed) {
+          this.contrasteAceptado = combinacion;
+          this.guardar(alPublicar);
+        } else {
+          this.panel = "diseno";
+        }
+      });
+      return;
+    }
+    // Ticket 1218: un identificador de pauta mal puesto no se guarda (el servidor lo borraría en silencio).
+    const pautaMala = CAMPOS_PAUTA.find((c) => this.errorPauta(c.campo));
+    if (pautaMala) {
+      this.panel = "pauta";
+      this.toastr.warning(`${pautaMala.nombre}: ${this.errorPauta(pautaMala.campo)}`);
       return;
     }
 
@@ -3995,6 +4208,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     };
     const firmaEnviada = this.firmaActual();
     this.guardando = true;
+    this.estadoAutoguardado = "guardando";
+    this.motivoAutoguardado = "";
     this.service
       .guardar({
         id: this.id,
@@ -4007,6 +4222,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         next: (res) => {
           this.guardando = false;
           if (!res || !res.success) {
+            this.estadoAutoguardado = "pendiente";
+            this.motivoAutoguardado = (res && res.message) || "No pudimos guardar.";
             this.toastr.error((res && res.message) || "No pudimos guardar.");
             return;
           }
@@ -4019,20 +4236,32 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
           }
           this.aplicarLoGuardado(res.data, enviado, cambioDuranteGuardado);
           this.recalcularSucio();
+          this.estadoAutoguardado = "guardado";
           if (res.avisos) this.toastr.info(res.avisos);
           if (cambioDuranteGuardado) {
+            // Ticket 1219: lo escrito mientras se guardaba sale en el siguiente guardado automático.
+            if (automatico) { this.programarAutoguardado(); return; }
             this.toastr.warning(alPublicar
               ? "Hay cambios nuevos sin guardar. Revisa tu página y vuelve a pulsar Publicar."
               : "Se guardó la versión enviada. Los cambios nuevos siguen sin guardar.");
             return;
           }
-          if (!alPublicar) this.toastr.success("Cambios guardados");
+          if (!alPublicar && !automatico) this.toastr.success("Cambios guardados");
           if (alPublicar) this.publicarAhora();
         },
         error: (e) => {
           this.guardando = false;
           // Plan gratis (D-319): se explica con la opción de mejorar el plan.
-          if (this.plan.manejar(e)) return;
+          if (this.plan.manejar(e)) { this.estadoAutoguardado = "pendiente"; return; }
+          const sinConexion = !e || e.status === 0 || e.status >= 500;
+          if (automatico && sinConexion) {
+            // Ticket 1219: sin conexión se reintenta solo y se avisa en la barra.
+            this.estadoAutoguardado = "error";
+            this.programarAutoguardado(this.REINTENTO_AUTOGUARDADO);
+            return;
+          }
+          this.estadoAutoguardado = "pendiente";
+          this.motivoAutoguardado = (e && e.error && e.error.message) || "No pudimos guardar.";
           this.toastr.error((e && e.error && e.error.message) || "No pudimos guardar.");
         },
       });
@@ -4247,9 +4476,60 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     return avisos;
   }
 
+  /**
+   * Ticket 1218: error de formato de un identificador de pauta, o "". Mismos
+   * patrones que el servidor (utils/siteBlocks.js normalizarAnalitica).
+   */
+  errorPauta(campo: string): string {
+    const a: any = this.contenido && this.contenido.analitica;
+    const valor = String((a && a[campo]) || "").trim();
+    const regla = CAMPOS_PAUTA.find((c) => c.campo === campo);
+    if (!valor || !regla || regla.patron.test(valor)) return "";
+    if (/@/.test(valor)) return "Eso parece un correo. Aquí va " + regla.ejemplo + ".";
+    return "El formato no es válido. Debe verse así: " + regla.ejemplo + ".";
+  }
+
   /** Publicar guarda primero: nadie espera publicar una versión vieja. */
   publicar(): void {
     if (this.publicando) return;
+    // Ticket 1213: con un pendiente crítico no se publica; se lleva a corregirlo.
+    const critico = this.pendientesCriticos[0];
+    if (critico) {
+      this.toastr.warning(this.motivoBloqueo);
+      critico.ir();
+      return;
+    }
+    this.guardar(true);
+  }
+
+  /**
+   * Ticket 1221: la página promete condiciones de venta (envíos, entregas,
+   * garantías, descuentos) que Katuq no puede poner en boca del comercio. Se
+   * publica solo si el comercio confirma que las cumple; si no, las corrige.
+   */
+  private async confirmarPromesas(promesas: PromesaSitio[]): Promise<void> {
+    if (!promesas.length || !this.contenido) return;
+    const esc = (v: string) => String(v || "").replace(/[&<>"']/g, (ch) => (({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as any)[ch]));
+    const marcador = promesas.some((p) => p.marcador);
+    const items = promesas
+      .map((p) => `<li style="margin:0 0 8px"><strong>${esc(p.texto)}</strong><br><small style="color:#6b6880">${esc(p.donde)}</small></li>`)
+      .join("");
+    const r = await Swal.fire({
+      title: "Confirma lo que promete tu página",
+      html:
+        `<p style="text-align:left;margin:0 0 10px">Estas frases prometen condiciones de venta. Si no las cumples, el comprador puede reclamar. Publícalas solo si son ciertas en tu negocio:</p>` +
+        `<ul style="text-align:left;padding-left:18px;margin:0">${items}</ul>` +
+        (marcador ? `<p style="text-align:left;margin:10px 0 0;color:#B42318">Hay un texto entre corchetes: cámbialo por tus condiciones reales antes de publicar.</p>` : ""),
+      showCancelButton: true,
+      showConfirmButton: !marcador,
+      confirmButtonText: "Sí, las cumplo. Publicar",
+      cancelButtonText: "Las corrijo primero",
+      confirmButtonColor: "#5F3FE0",
+    });
+    if (!r.isConfirmed) return;
+    const t = this.contenido.tienda;
+    t.promesasConfirmadas = [...(t.promesasConfirmadas || []), ...promesas.map((p) => p.texto)].slice(-40);
+    this.marcarSucio();
     this.guardar(true);
   }
 
@@ -4269,7 +4549,18 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         this.publicando = false;
         // Plan gratis (D-319): se explica con la opción de mejorar el plan.
         if (this.plan.manejar(e)) return;
-        this.toastr.error((e && e.error && e.error.message) || "No pudimos publicar.");
+        const cuerpo = (e && e.error) || {};
+        // Ticket 1221: el servidor encontró promesas sin confirmar.
+        if (cuerpo.codigo === "PROMESAS_SIN_CONFIRMAR") {
+          this.confirmarPromesas(((cuerpo.data && cuerpo.data.promesas) || []) as PromesaSitio[]);
+          return;
+        }
+        // Ticket 1213: lo que falta para vender lleva al primer campo.
+        if (cuerpo.codigo === "TIENDA_INCOMPLETA") {
+          const p = this.pendientesCriticos[0];
+          if (p) p.ir();
+        }
+        this.toastr.error(cuerpo.message || "No pudimos publicar.");
       },
     });
   }
@@ -4338,3 +4629,41 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     });
   }
 }
+
+/** Un pendiente del checklist de publicación. `critico` = bloquea Publicar (ticket 1213). */
+interface PendienteSitio {
+  texto: string;
+  critico?: boolean;
+  ir: () => void;
+}
+
+/** Una promesa de venta que el servidor pide confirmar (ticket 1221). */
+interface PromesaSitio {
+  texto: string;
+  donde: string;
+  marcador?: boolean;
+}
+
+function normalizarCategoria(valor: string): string {
+  return String(valor || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+
+/**
+ * Ticket 1214: nombre que delata una categoría interna ("Listas internas",
+ * "No publicar"). Misma regla que utils/siteListoParaVender.js del servidor.
+ */
+function esCategoriaInterna(nombre: string): boolean {
+  return /\b(intern[oa]s?|uso interno|no (usar|publicar|vender|mostrar))\b/.test(normalizarCategoria(nombre));
+}
+
+/** Ticket 1218: formato de cada identificador de pauta (los mismos del servidor). */
+const CAMPOS_PAUTA: { campo: string; nombre: string; patron: RegExp; ejemplo: string }[] = [
+  { campo: "metaPixel", nombre: "Píxel de Meta", patron: /^[0-9]{8,20}$/, ejemplo: "solo números, como 123456789012345" },
+  { campo: "metaVerificacion", nombre: "Verificación del dominio de Meta", patron: /^[a-z0-9]{16,64}$/i, ejemplo: "el código de Meta Business, como abc123def456ghi789" },
+  { campo: "googleAds", nombre: "Google Ads", patron: /^AW-[0-9]{6,20}$/i, ejemplo: "AW-123456789" },
+  { campo: "googleAdsConversion", nombre: "Etiqueta de conversión", patron: /^AW-[0-9]{6,20}\/[\w-]{5,40}$/i, ejemplo: "AW-123456789/AbC-D_efGhi" },
+  { campo: "ga4", nombre: "Google Analytics 4", patron: /^G-[A-Z0-9]{4,20}$/i, ejemplo: "G-XXXXXXXXXX" },
+  { campo: "gtm", nombre: "Google Tag Manager", patron: /^GTM-[A-Z0-9]{4,15}$/i, ejemplo: "GTM-XXXXXX" },
+  { campo: "googleVerificacion", nombre: "Verificación de Search Console", patron: /^[\w-]{20,80}$/, ejemplo: "el código de la etiqueta HTML de Google" },
+  { campo: "tiktokPixel", nombre: "Píxel de TikTok", patron: /^[A-Z0-9]{10,30}$/i, ejemplo: "letras y números, como CQWERTY123456789" },
+];

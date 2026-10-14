@@ -13,7 +13,14 @@
         <span class="estado__punto"></span>
         {{ sitio?.estado === 'publicado' ? 'PUBLICADA' : 'BORRADOR' }}
       </span>
-      <span class="estado estado--sucio" *ngIf="sucio">CAMBIOS SIN GUARDAR</span>
+      <!-- Ticket 1219: el borrador se guarda solo; aquí se ve en qué va. -->
+      <span class="estado estado--sucio" *ngIf="sucio && estadoAutoguardado === 'pendiente'" [title]="motivoAutoguardado">SIN GUARDAR</span>
+      <!-- Ticket 1213: el checklist, a la vista desde cualquier pestaña. -->
+      <button type="button" class="estado estado--falta" *ngIf="pendientes.length"
+              [class.estado--bloquea]="pendientesCriticos.length" (click)="verPendientes()"
+              [title]="motivoBloqueo || 'Ver lo que le falta a tu página'">
+        {{ pendientesCriticos.length ? 'NO PUEDE VENDER' : 'TE FALTAN ' + pendientes.length }}
+      </button>
     </div>
 
     <div class="barra__relleno"></div>
@@ -38,10 +45,15 @@
       </button>
     </div>
 
-    <button class="btn-fantasma" (click)="guardar()" [disabled]="guardando || !sucio">
-      {{ guardando ? 'Guardando…' : (sucio ? 'Guardar cambios' : 'Guardado') }}
+    <!-- Ticket 1219: estado del guardado automático; tocarlo guarda ya. -->
+    <button class="btn-fantasma guardado-estado" (click)="guardar()" [disabled]="guardando || !sucio"
+            [class.guardado-estado--error]="estadoAutoguardado === 'error' || (sucio && estadoAutoguardado === 'pendiente')"
+            [title]="motivoAutoguardado || (sucio ? 'Guardar ahora' : 'Tu borrador está guardado')" aria-live="polite">
+      {{ textoGuardado }}
     </button>
-    <button class="btn-primario btn-primario--sm" (click)="publicar()" [disabled]="guardando || publicando">
+    <button class="btn-primario btn-primario--sm" (click)="publicar()" [disabled]="guardando || publicando"
+            [class.is-bloqueado]="pendientesCriticos.length" [attr.aria-disabled]="pendientesCriticos.length ? 'true' : null"
+            [title]="motivoBloqueo">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
       {{ publicando ? 'Publicando…' : (sitio?.estado === 'publicado' ? 'Publicar cambios' : 'Publicar') }}
     </button>
@@ -55,6 +67,13 @@
       <ng-container *ngIf="plan.pedidosRestantes >= 0"> · te quedan <b>{{ plan.pedidosRestantes }}</b> pedidos este mes (al llegar a 0, tu tienda recibe por WhatsApp)</ng-container>
     </span>
     <a routerLink="/pricing" class="plan-gratis__mejorar">Mejorar plan</a>
+  </div>
+
+  <!-- Ticket 1213: una página ya publicada que no puede vender avisa al comercio. -->
+  <div class="aviso-publicada" *ngIf="sitio?.estado === 'publicado' && pendientesCriticos.length" role="alert">
+    <strong>Tu página está en línea, pero no puede recibir pedidos.</strong>
+    <span>{{ pendientesCriticos[0].texto }}.</span>
+    <button type="button" (click)="pendientesCriticos[0].ir()">Corregir</button>
   </div>
 
   <div class="cuerpo">
@@ -230,7 +249,7 @@
                   (click)="traerPaginasLegales()">
             {{ generandoLegales ? 'Escribiendo…' : 'Crear las páginas legales que me faltan' }}
           </button>
-          <p class="nota" *ngIf="paginaActiva === -1 && !paginas.length">
+          <p class="nota" *ngIf="paginaActiva === -1 && faltanPoliticas">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.2-.9.8-.9 1.4v.3M12 17h.01"/></svg>
             Tu tienda todavía no tiene políticas publicadas. Meta las pide para aprobarte una
             cuenta publicitaria, y las pasarelas para dejarte cobrar.
@@ -245,11 +264,12 @@
             <strong>{{ pendientes.length ? 'Te falta' : 'Lista para publicar' }}</strong>
             <span *ngIf="pendientes.length">{{ pendientes.length }}</span>
           </div>
-          <button type="button" class="pendientes__item" *ngFor="let p of pendientes" (click)="irAPendiente(p)">
-            <span>{{ p.texto }}</span>
+          <button type="button" class="pendientes__item" *ngFor="let p of pendientes" (click)="irAPendiente(p)"
+                  [class.pendientes__item--critico]="p.critico">
+            <span>{{ p.texto }}<em class="pendientes__bloquea" *ngIf="p.critico"> · impide vender</em></span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m9 18 6-6-6-6"/></svg>
           </button>
-          <p class="pendientes__ok" *ngIf="!pendientes.length">Logo, contacto, políticas, descripción y productos: todo está.</p>
+          <p class="pendientes__ok" *ngIf="!pendientes.length">Bodega, envío, pagos, políticas, logo, contacto y productos: todo está.</p>
         </div>
 
         <p class="nota">
@@ -1860,7 +1880,7 @@
           <div class="campo">
             <label>Indicaciones (opcional)</label>
             <textarea rows="2" [(ngModel)]="indicacionesIA" maxlength="400"
-                      placeholder="Ej: más elegante, fondo claro, que la portada hable de entrega el mismo día"></textarea>
+                      placeholder="Ej: más elegante, fondo claro, que la portada hable de la nueva colección"></textarea>
           </div>
           <div class="ia-acciones">
             <button class="btn-primario btn-primario--sm" (click)="disenarConIA()" [disabled]="disenandoIA">
@@ -1901,7 +1921,8 @@
                   (click)="conservarMisColores = !conservarMisColores">
             <span class="opcion__texto">
               <strong>Conservar mis colores</strong>
-              <small>Solo cambian la letra y el estilo de página. Tu marca se queda.</small>
+              <small>Solo cambian la letra y el estilo de página.
+                {{ coloresMarca ? 'Quedan los colores de tu marca.' : 'Quedan los colores que tiene la página.' }}</small>
             </span>
             <span class="palanca"><span></span></span>
           </button>
@@ -1913,8 +1934,30 @@
 
         <div class="grupo">
           <h3>Colores</h3>
+          <!-- Ticket 1216: siempre se ve qué paleta tiene la página. -->
+          <p class="paleta-aplicada" [class.paleta-aplicada--marca]="usaColoresDeMarca">
+            <ng-container *ngIf="usaColoresDeMarca">Usando los colores de tu marca.</ng-container>
+            <ng-container *ngIf="!usaColoresDeMarca && coloresMarca">
+              Colores propios de esta página.
+              <button type="button" class="enlace-sutil" (click)="restaurarColoresDeMarca()">Restaurar los de mi marca</button>
+            </ng-container>
+            <ng-container *ngIf="!coloresMarca">Tu marca todavía no tiene colores: defínelos en Mi marca y se aplican aquí.</ng-container>
+          </p>
           <p>Combinaciones ya armadas. Toca una y mira la vista previa.</p>
           <div class="paletas">
+            <button class="paleta" *ngIf="coloresMarca"
+                    [class.is-active]="paletaActiva === 'marca'"
+                    (click)="restaurarColoresDeMarca()">
+              <span class="paleta__puntos">
+                <span [style.background]="coloresMarca.colorPrimario"></span>
+                <span [style.background]="coloresMarca.colorSecundario"></span>
+                <span [style.background]="coloresMarca.colorTexto"></span>
+              </span>
+              <span class="paleta__nombre">
+                Mi marca
+                <svg *ngIf="paletaActiva === 'marca'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4"><path d="M20 6 9 17l-5-5"/></svg>
+              </span>
+            </button>
             <button class="paleta" *ngFor="let p of paletas"
                     [class.is-active]="paletaActiva === p.id"
                     (click)="aplicarPaleta(p.id)">
@@ -1928,7 +1971,20 @@
                 <svg *ngIf="paletaActiva === p.id" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4"><path d="M20 6 9 17l-5-5"/></svg>
               </span>
             </button>
+            <!-- Ticket 1216: con colores sueltos, la combinación activa también se marca. -->
+            <button class="paleta is-active" *ngIf="!paletaActiva" type="button" (click)="0" title="Los colores que elegiste a mano">
+              <span class="paleta__puntos">
+                <span [style.background]="contenido.tema.colorPrimario"></span>
+                <span [style.background]="contenido.tema.colorSecundario"></span>
+                <span [style.background]="contenido.tema.colorTexto"></span>
+              </span>
+              <span class="paleta__nombre">
+                Personalizada
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4"><path d="M20 6 9 17l-5-5"/></svg>
+              </span>
+            </button>
           </div>
+          <p class="aviso" *ngIf="avisoContrasteTema">{{ avisoContrasteTema }}</p>
         </div>
 
         <div class="grupo">
@@ -1961,7 +2017,7 @@
                     (click)="aplicarPareja(p.id)">
               <span class="pareja__muestra">
                 <span class="pareja__titulo" [style.font-family]="familiaDe(p.titulo)">{{ fraseDeMuestra() }}</span>
-                <span class="pareja__cuerpo" [style.font-family]="familiaDe(p.cuerpo)">Pide antes de las 2 pm y llega hoy.</span>
+                <span class="pareja__cuerpo" [style.font-family]="familiaDe(p.cuerpo)">Gracias por elegirnos. Te contamos cada paso de tu pedido.</span>
               </span>
               <span class="pareja__nombre">{{ p.nombre }}</span>
               <svg *ngIf="parejaActiva === p.id" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2"><path d="M20 6 9 17l-5-5"/></svg>
@@ -2058,6 +2114,7 @@
               </span>
             </label>
           </div>
+          <p class="aviso" *ngIf="avisoContrasteTema">{{ avisoContrasteTema }}</p>
         </div>
       </div>
 
@@ -2074,7 +2131,8 @@
         </button>
 
         <ng-container *ngIf="contenido.tienda.habilitada">
-          <div class="campo">
+          <p class="aviso" *ngIf="avisoTienda">{{ avisoTienda }}</p>
+          <div class="campo" id="campo-bodega">
             <label>Bodega desde donde despachas</label>
             <select [(ngModel)]="contenido.tienda.bodegaId" (ngModelChange)="marcarSucio()">
               <option value="">Elige una bodega…</option>
@@ -2085,7 +2143,7 @@
               Inventarios antes de vender.</small>
           </div>
 
-          <div class="grupo">
+          <div class="grupo" id="campo-envio">
             <h3>Envío</h3>
             <div class="campo">
               <label>Cómo cobras el domicilio</label>
@@ -2177,30 +2235,60 @@
             <div class="repetible" *ngFor="let c of cupones; let i = index" cdkDrag>
               <div class="repetible__hueco" *cdkDragPlaceholder></div>
               <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+              <!-- Ticket 1218: cada campo con su etiqueta y su ayuda. -->
               <div class="campo-doble">
-                <input type="text" maxlength="24" [(ngModel)]="c.codigo"
-                       (ngModelChange)="c.codigo = normalizarCodigoCupon(c.codigo); marcarSucio()"
-                       placeholder="BIENVENIDO" />
-                <select [(ngModel)]="c.tipo" (ngModelChange)="marcarSucio()">
-                  <option value="porcentaje">% de descuento</option>
-                  <option value="monto">Pesos fijos</option>
-                </select>
+                <label class="cupon-campo">
+                  <span class="cupon-campo__nombre">Código</span>
+                  <input type="text" maxlength="24" [(ngModel)]="c.codigo" autocomplete="off"
+                         (ngModelChange)="c.codigo = normalizarCodigoCupon(c.codigo); marcarSucio()"
+                         placeholder="BIENVENIDO" />
+                  <small>Lo que escribe el comprador.</small>
+                </label>
+                <label class="cupon-campo">
+                  <span class="cupon-campo__nombre">Tipo de descuento</span>
+                  <select [(ngModel)]="c.tipo" (ngModelChange)="marcarSucio()">
+                    <option value="porcentaje">% de descuento</option>
+                    <option value="monto">Pesos fijos</option>
+                  </select>
+                  <small>Porcentaje (hasta 90 %) o pesos.</small>
+                </label>
               </div>
               <div class="campo-doble">
-                <input type="number" min="1" [max]="c.tipo === 'porcentaje' ? 90 : null"
-                       [(ngModel)]="c.valor" (ngModelChange)="marcarSucio()"
-                       [placeholder]="c.tipo === 'porcentaje' ? '10' : '20000'" />
-                <input type="number" min="0" [(ngModel)]="c.minimoCompra" (ngModelChange)="marcarSucio()"
-                       placeholder="Compra mínima" />
+                <label class="cupon-campo">
+                  <span class="cupon-campo__nombre">{{ c.tipo === 'porcentaje' ? 'Porcentaje' : 'Valor en pesos' }}</span>
+                  <input type="number" min="1" [max]="c.tipo === 'porcentaje' ? 90 : null"
+                         [(ngModel)]="c.valor" (ngModelChange)="marcarSucio()"
+                         [placeholder]="c.tipo === 'porcentaje' ? '10' : '20000'" />
+                  <small>Cuánto rebaja.</small>
+                </label>
+                <label class="cupon-campo">
+                  <span class="cupon-campo__nombre">Compra mínima</span>
+                  <input type="number" min="0" [(ngModel)]="c.minimoCompra" (ngModelChange)="marcarSucio()" placeholder="0" />
+                  <small>En pesos, con IVA. 0 = sin mínimo.</small>
+                </label>
               </div>
               <div class="campo-doble">
-                <input type="date" [(ngModel)]="c.vence" (ngModelChange)="marcarSucio()" />
-                <input type="number" min="0" [(ngModel)]="c.usosMaximos" (ngModelChange)="marcarSucio()"
-                       placeholder="Usos máximos (0 = sin tope)" />
+                <label class="cupon-campo">
+                  <span class="cupon-campo__nombre">Válido desde</span>
+                  <input type="date" [(ngModel)]="c.desde" (ngModelChange)="marcarSucio()" />
+                  <small>Vacío = desde ya.</small>
+                </label>
+                <label class="cupon-campo">
+                  <span class="cupon-campo__nombre">Vence</span>
+                  <input type="date" [(ngModel)]="c.vence" (ngModelChange)="marcarSucio()" />
+                  <small>Sirve hasta el final de ese día. Vacío = no vence.</small>
+                </label>
+              </div>
+              <div class="campo-doble">
+                <label class="cupon-campo">
+                  <span class="cupon-campo__nombre">Usos máximos en total</span>
+                  <input type="number" min="0" [(ngModel)]="c.usosMaximos" (ngModelChange)="marcarSucio()" placeholder="0" />
+                  <small>Entre todos los compradores. 0 = sin tope.</small>
+                </label>
               </div>
               <label class="paginas__check">
                 <input type="checkbox" [(ngModel)]="c.soloPrimeraCompra" (ngModelChange)="marcarSucio()" />
-                Solo para la primera compra
+                Solo para la primera compra (un uso por cliente nuevo)
               </label>
               <label class="paginas__check">
                 <input type="checkbox" [(ngModel)]="c.aplicaAEnvio" (ngModelChange)="marcarSucio()" />
@@ -2341,7 +2429,30 @@
             </div>
           </div>
 
+          <!-- Ticket 1214: las categorías tienen su sección; casilla marcada = sale en el sitio. -->
           <div class="grupo">
+            <h3>Catálogo</h3>
+            <div class="campo">
+              <label>Categorías visibles en el sitio</label>
+              <small>Marcada, la categoría sale en el menú, las baldosas, el pie, los filtros y el buscador.
+                Desmarcada, no sale, y un producto que solo esté en categorías ocultas tampoco.
+                Las de uso interno (como «Listas internas») vienen ocultas.</small>
+              <div class="casillas" *ngIf="categorias.length; else sinCategorias">
+                <label class="casilla" *ngFor="let c of categorias">
+                  <input type="checkbox" [checked]="!categoriaOculta(c.nombre)" (change)="alternarCategoriaOculta(c.nombre)" />
+                  <span class="casilla__nombre">{{ c.nombre }}<em class="casilla__interna" *ngIf="esCategoriaInterna(c.nombre)"> · interna</em></span>
+                  <span class="casilla__total">{{ c.total }}</span>
+                </label>
+              </div>
+              <ng-template #sinCategorias>
+                <label class="casilla__sub">Categorías que NO salen (sepáralas con coma)</label>
+                <input type="text" [ngModel]="categoriasOcultasTexto()" (ngModelChange)="ponerCategoriasOcultas($event)"
+                       placeholder="Listas internas, Insumos" />
+              </ng-template>
+            </div>
+          </div>
+
+          <div class="grupo" id="campo-pagos">
             <h3>Cómo te pagan</h3>
             <button class="opcion" [class.is-active]="contenido.tienda.pagoEnLinea"
                     (click)="contenido.tienda.pagoEnLinea = !contenido.tienda.pagoEnLinea; marcarSucio()">
@@ -2381,22 +2492,6 @@
               <span class="palanca"><span></span></span>
             </button>
 
-            <div class="campo">
-              <label>Categorías que no salen en el sitio</label>
-              <small>Desmarca las que no quieres en el menú, las baldosas, el pie ni los filtros
-                (por ejemplo «Listas internas»). Un producto que solo esté en ellas tampoco sale.</small>
-              <div class="casillas" *ngIf="categorias.length; else sinCategorias">
-                <label class="casilla" *ngFor="let c of categorias">
-                  <input type="checkbox" [checked]="!categoriaOculta(c.nombre)" (change)="alternarCategoriaOculta(c.nombre)" />
-                  <span class="casilla__nombre">{{ c.nombre }}</span>
-                  <span class="casilla__total">{{ c.total }}</span>
-                </label>
-              </div>
-              <ng-template #sinCategorias>
-                <input type="text" [ngModel]="categoriasOcultasTexto()" (ngModelChange)="ponerCategoriasOcultas($event)"
-                       placeholder="Listas internas, Insumos" />
-              </ng-template>
-            </div>
 
             <ng-container *ngIf="ventaConfig && ventaConfig.formasPago.length">
               <div class="campo">
@@ -2425,7 +2520,6 @@
             </div>
           </div>
 
-          <p class="aviso" *ngIf="avisoTienda">{{ avisoTienda }}</p>
         </ng-container>
 
       </div>
@@ -2483,13 +2577,17 @@
           <h3>Meta — Facebook e Instagram</h3>
           <div class="campo">
             <label>Píxel de Meta</label>
-            <input type="text" [(ngModel)]="contenido.analitica.metaPixel" (ngModelChange)="marcarSucio()" placeholder="123456789012345" />
+            <input type="text" [(ngModel)]="contenido.analitica.metaPixel" (ngModelChange)="marcarSucio()" placeholder="123456789012345"
+                   name="katuq-pauta-meta-pixel" autocomplete="off" spellcheck="false" inputmode="numeric" [class.is-error]="errorPauta('metaPixel')" />
+            <small class="error-campo" *ngIf="errorPauta('metaPixel')">{{ errorPauta('metaPixel') }}</small>
             <small>Con el píxel puesto, tu página reporta quién te escribe, quién deja sus datos y
               quién compra. Sin eso, Meta no puede buscar más gente como ellos.</small>
           </div>
           <div class="campo">
             <label>Verificación del dominio</label>
-            <input type="text" [(ngModel)]="contenido.analitica.metaVerificacion" (ngModelChange)="marcarSucio()" placeholder="abc123def456…" />
+            <input type="text" [(ngModel)]="contenido.analitica.metaVerificacion" (ngModelChange)="marcarSucio()" placeholder="abc123def456…"
+                   name="katuq-pauta-meta-verificacion" autocomplete="off" spellcheck="false" [class.is-error]="errorPauta('metaVerificacion')" />
+            <small class="error-campo" *ngIf="errorPauta('metaVerificacion')">{{ errorPauta('metaVerificacion') }}</small>
             <small>Sale en Meta Business, en Seguridad de la marca → Dominios. Sin esto no puedes
               pautar contra tu propio enlace.</small>
           </div>
@@ -2513,11 +2611,15 @@
           <h3>Google Ads</h3>
           <div class="campo">
             <label>Identificador de Google Ads</label>
-            <input type="text" [(ngModel)]="contenido.analitica.googleAds" (ngModelChange)="marcarSucio()" placeholder="AW-123456789" />
+            <input type="text" [(ngModel)]="contenido.analitica.googleAds" (ngModelChange)="marcarSucio()" placeholder="AW-123456789"
+                   name="katuq-pauta-google-ads" autocomplete="off" spellcheck="false" [class.is-error]="errorPauta('googleAds')" />
+            <small class="error-campo" *ngIf="errorPauta('googleAds')">{{ errorPauta('googleAds') }}</small>
           </div>
           <div class="campo">
             <label>Etiqueta de conversión</label>
-            <input type="text" [(ngModel)]="contenido.analitica.googleAdsConversion" (ngModelChange)="marcarSucio()" placeholder="AW-123456789/AbC-D_efGhi" />
+            <input type="text" [(ngModel)]="contenido.analitica.googleAdsConversion" (ngModelChange)="marcarSucio()" placeholder="AW-123456789/AbC-D_efGhi"
+                   name="katuq-pauta-google-conversion" autocomplete="off" spellcheck="false" [class.is-error]="errorPauta('googleAdsConversion')" />
+            <small class="error-campo" *ngIf="errorPauta('googleAdsConversion')">{{ errorPauta('googleAdsConversion') }}</small>
             <small>Va con la barra y el código de la etiqueta. Es lo que le dice a Google cuáles
               clics terminaron en cliente — sin ella la campaña no aprende.</small>
           </div>
@@ -2527,7 +2629,9 @@
           <h3>Analítica</h3>
           <div class="campo">
             <label>Google Analytics 4</label>
-            <input type="text" [(ngModel)]="contenido.analitica.ga4" (ngModelChange)="marcarSucio()" placeholder="G-XXXXXXXXXX" />
+            <input type="text" [(ngModel)]="contenido.analitica.ga4" (ngModelChange)="marcarSucio()" placeholder="G-XXXXXXXXXX"
+                   name="katuq-pauta-ga4" autocomplete="off" spellcheck="false" [class.is-error]="errorPauta('ga4')" />
+            <small class="error-campo" *ngIf="errorPauta('ga4')">{{ errorPauta('ga4') }}</small>
           </div>
           <div class="campo" *ngIf="contenido.analitica.ga4">
             <label>
@@ -2545,7 +2649,9 @@
           </div>
           <div class="campo">
             <label>Google Tag Manager</label>
-            <input type="text" [(ngModel)]="contenido.analitica.gtm" (ngModelChange)="marcarSucio()" placeholder="GTM-XXXXXX" />
+            <input type="text" [(ngModel)]="contenido.analitica.gtm" (ngModelChange)="marcarSucio()" placeholder="GTM-XXXXXX"
+                   name="katuq-pauta-gtm" autocomplete="off" spellcheck="false" [class.is-error]="errorPauta('gtm')" />
+            <small class="error-campo" *ngIf="errorPauta('gtm')">{{ errorPauta('gtm') }}</small>
             <small><strong>Ojo:</strong> aquí solo funcionan las etiquetas propias de Google
               (Analytics, Ads, Floodlight). Una etiqueta de HTML personalizado, o de otro
               proveedor, no se ejecuta: tu página bloquea el código que no armamos nosotros, y esa
@@ -2554,7 +2660,9 @@
           </div>
           <div class="campo">
             <label>Verificación de Search Console</label>
-            <input type="text" [(ngModel)]="contenido.analitica.googleVerificacion" (ngModelChange)="marcarSucio()" placeholder="AbCdEf-123456789_ghij…" />
+            <input type="text" [(ngModel)]="contenido.analitica.googleVerificacion" (ngModelChange)="marcarSucio()" placeholder="AbCdEf-123456789_ghij…"
+                   name="katuq-pauta-google-verificacion" autocomplete="off" spellcheck="false" [class.is-error]="errorPauta('googleVerificacion')" />
+            <small class="error-campo" *ngIf="errorPauta('googleVerificacion')">{{ errorPauta('googleVerificacion') }}</small>
             <small>Para ver en qué búsquedas apareces. Google te lo da al agregar la propiedad, en
               la opción de etiqueta HTML.</small>
           </div>
@@ -2564,7 +2672,9 @@
           <h3>TikTok</h3>
           <div class="campo">
             <label>Píxel de TikTok</label>
-            <input type="text" [(ngModel)]="contenido.analitica.tiktokPixel" (ngModelChange)="marcarSucio()" placeholder="CQWERTY123456789" />
+            <input type="text" [(ngModel)]="contenido.analitica.tiktokPixel" (ngModelChange)="marcarSucio()" placeholder="CQWERTY123456789"
+                   name="katuq-pauta-tiktok" autocomplete="off" spellcheck="false" [class.is-error]="errorPauta('tiktokPixel')" />
+            <small class="error-campo" *ngIf="errorPauta('tiktokPixel')">{{ errorPauta('tiktokPixel') }}</small>
           </div>
         </div>
 

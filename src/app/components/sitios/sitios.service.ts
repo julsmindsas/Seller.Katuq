@@ -28,6 +28,10 @@ export interface TiendaSitio {
   abrirCarritoAlAgregar?: boolean;
   /** Categorías del maestro que no salen en el sitio (menú, baldosas, pie, filtros). */
   categoriasOcultas?: string[];
+  /** Ticket 1214: categorías de nombre interno que el comercio decidió mostrar (por defecto, ocultas). */
+  categoriasMostradas?: string[];
+  /** Ticket 1221: frases con condiciones de venta que el comercio confirmó que cumple. */
+  promesasConfirmadas?: string[];
   minimoCompra: number;
   mensajeConfirmacion: string;
 
@@ -108,6 +112,8 @@ export interface CuponSitio {
   valor: number;
   activo: boolean;
   minimoCompra: number;
+  /** Ticket 1218: fecha ISO desde la que sirve. Vacío = desde ya. */
+  desde?: string;
   /** Fecha ISO "2026-12-31". Vacío = no vence. */
   vence: string;
   /** 0 = sin tope. */
@@ -139,6 +145,8 @@ export interface VentaConfig {
   pasarela: { configurada: boolean; proveedor: string | null };
   zonas: number;
   formasPago: { cd: string; nombre: string; categoria: string }[];
+  /** Ticket 1213: si la empresa tiene razón social y NIT (solo si están, no los valores). */
+  datosLegales?: { razonSocial: boolean; nit: boolean } | null;
 }
 
 /**
