@@ -875,6 +875,8 @@
   gap: 8px 12px;
   margin-bottom: 12px;
 }
+// El span global queda en 11 px: el título del bloque lleva su tamaño.
+.indicadores-cabeza .head-txt { font-size: 15px !important; font-weight: 800; color: #211f3a; letter-spacing: normal; }
 .indicadores-periodo { font-size: 12px; color: var(--muted2); letter-spacing: normal; }
 .indicadores-relleno { flex: 1; }
 .btn-sm { padding: 6px 12px !important; font-size: 12.5px !important; }
