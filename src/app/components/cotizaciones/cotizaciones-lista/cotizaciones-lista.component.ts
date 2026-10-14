@@ -50,6 +50,10 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   filtroVendedor = "";
   /** Ticket 1211: la tabla muestra solo las aceptadas sin pedido (clic en la tarjeta). */
   filtroSinConvertir = false;
+  /** Ticket 1207: rechazadas por este motivo. */
+  filtroMotivo = "";
+  /** Ticket 1201: métricas y filtros contraídos (preferencia guardada en el navegador). */
+  panelContraido = false;
   /** Comerciales de toda la empresa: el filtro no se encoge al usarlo. */
   vendedores: { email: string; nombre: string; total: number }[] = [];
 
@@ -82,6 +86,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.panelContraido = this.leerPreferenciaPanel();
     this.subs.push(
       this.searchSubject
         .pipe(debounceTime(350), distinctUntilChanged())
@@ -148,6 +153,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
         pedido: this.filtroPedido || undefined,
         vendedor: this.filtroVendedor || undefined,
         sinConvertir: this.filtroSinConvertir || undefined,
+        motivo: this.filtroMotivo || undefined,
         page: this.page,
         limit: this.limit,
       })
@@ -184,6 +190,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   setEstado(value: EstadoCotizacion | ""): void {
     this.filtroEstado = value;
     this.filtroSinConvertir = false;
+    if (value !== "rechazada") this.filtroMotivo = "";
     this.page = 1;
     this.cargar();
   }
@@ -195,6 +202,73 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     this.filtroSinConvertir = !activo;
     this.page = 1;
     this.cargar();
+  }
+
+  /** Ticket 1207: filtrar las rechazadas por motivo. */
+  setMotivo(value: string): void {
+    this.filtroMotivo = value || "";
+    this.page = 1;
+    this.cargar();
+  }
+
+  /** Motivos que aparecen en las rechazadas (con los filtros actuales), de más a menos. */
+  get motivosDisponibles(): { motivo: string; total: number }[] {
+    const m = (this.metrics && this.metrics.motivosRechazo) || {};
+    return Object.keys(m).map((motivo) => ({ motivo, total: m[motivo] })).sort((a, b) => b.total - a.total);
+  }
+
+  motivoRechazo(c: Cotizacion): string {
+    if (c.estadoCotizacion !== "rechazada") return "";
+    return (c.rechazo && c.rechazo.motivo) || ((c as any).motivoRechazo ? "Rechazada por el cliente desde el enlace" : "");
+  }
+
+  // ---- Ticket 1201: panel contraíble ----
+
+  private get clavePreferencia(): string {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      return "cotizaciones.panelContraido." + (u.email || "anon");
+    } catch {
+      return "cotizaciones.panelContraido.anon";
+    }
+  }
+
+  private leerPreferenciaPanel(): boolean {
+    try {
+      return localStorage.getItem(this.clavePreferencia) === "1";
+    } catch {
+      return false;
+    }
+  }
+
+  alternarPanel(): void {
+    this.panelContraido = !this.panelContraido;
+    try {
+      localStorage.setItem(this.clavePreferencia, this.panelContraido ? "1" : "0");
+    } catch {
+      /* sin almacenamiento, la preferencia dura hasta recargar */
+    }
+  }
+
+  /** Filtros puestos, como chips que se pueden quitar desde la barra compacta. */
+  get filtrosActivos(): { clave: string; texto: string }[] {
+    const lista: { clave: string; texto: string }[] = [];
+    if (this.filtroVendedor) {
+      const v = this.vendedores.find((x) => x.email === this.filtroVendedor);
+      lista.push({ clave: "vendedor", texto: "Comercial: " + ((v && v.nombre) || this.filtroVendedor) });
+    }
+    if (this.filtroSinConvertir) lista.push({ clave: "sinConvertir", texto: "Aceptadas sin convertir" });
+    else if (this.filtroEstado) lista.push({ clave: "estado", texto: "Estado: " + this.estadoLabel(this.filtroEstado) });
+    if (this.filtroMotivo) lista.push({ clave: "motivo", texto: "Motivo: " + this.filtroMotivo });
+    if (this.filtroPedido) lista.push({ clave: "pedido", texto: "Pedido: " + this.filtroPedido });
+    return lista;
+  }
+
+  quitarFiltro(clave: string): void {
+    if (clave === "vendedor") { this.setVendedor(""); return; }
+    if (clave === "sinConvertir" || clave === "estado") { this.setEstado(""); return; }
+    if (clave === "motivo") { this.setMotivo(""); return; }
+    if (clave === "pedido") { this.filtroPedido = ""; this.page = 1; this.cargar(); this.cargarMetrics(); }
   }
 
   /** Porcentaje con coma decimal (34,07 %). */
@@ -299,6 +373,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
         pedido: this.filtroPedido || undefined,
         vendedor: this.filtroVendedor || undefined,
         sinConvertir: this.filtroSinConvertir || undefined,
+        motivo: this.filtroMotivo || undefined,
         page: 1,
         limit: 5000,
       })
@@ -313,6 +388,8 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
             "Válida hasta": this.fecha(c.fechaVencimiento),
             "Total": c.total || 0,
             "Estado": this.estadoLabel(c.estadoCotizacion),
+            // Ticket 1207: el motivo del rechazo también sale en el Excel.
+            "Motivo de rechazo": this.motivoRechazo(c),
             "Pedido": c.pedidoGenerado || "",
           }));
           const ws = XLSX.utils.json_to_sheet(rows);

@@ -21,6 +21,14 @@
     </ol>
   </div>
 
+  <!-- Ticket 1201: métricas y filtros se pueden contraer; la preferencia se recuerda. -->
+  <div class="panel-control">
+    <button type="button" class="btn-ghost" (click)="alternarPanel()" [attr.aria-expanded]="!panelContraido">
+      {{ panelContraido ? 'Mostrar métricas y filtros' : 'Ocultar métricas y filtros' }}
+    </button>
+  </div>
+
+  <ng-container *ngIf="!panelContraido; else panelCompacto">
   <!-- KPIs: respetan búsqueda, pedido y comercial (tickets 1200, 1211, 1212) -->
   <div class="kpis-filtro" *ngIf="metrics?.filtrado">Cifras con los filtros de búsqueda aplicados</div>
   <div class="kpis-row">
@@ -169,8 +177,43 @@
           </button>
         </div>
       </div>
+      <!-- Ticket 1207: las rechazadas se pueden filtrar por motivo. -->
+      <div class="filtro-field" *ngIf="filtroEstado === 'rechazada' && motivosDisponibles.length">
+        <div class="filtro-label">Motivo de rechazo</div>
+        <div class="filtro-input">
+          <select [value]="filtroMotivo" (change)="setMotivo($any($event.target).value)">
+            <option value="">Todos los motivos</option>
+            <option *ngFor="let m of motivosDisponibles" [value]="m.motivo">{{ m.motivo }} ({{ m.total }})</option>
+          </select>
+        </div>
+      </div>
     </div>
   </div>
+  </ng-container>
+
+  <!-- Ticket 1201: barra compacta de una línea con los filtros activos como chips. -->
+  <ng-template #panelCompacto>
+    <div class="cotz-card barra-compacta">
+      <div class="barra-compacta-cifras" *ngIf="metrics">
+        <span>Pipeline <b>{{ money(metrics.pipelineAbierto ?? metrics.pipelineActivo) }}</b></span>
+        <span>Conversión <b>{{ pct(metrics.winRate ?? metrics.tasaConversion) }}</b></span>
+        <span>Sin convertir <b>{{ metrics.aceptadasSinConvertir?.cantidad ?? 0 }}</b></span>
+      </div>
+      <div class="filtro-input barra-compacta-buscar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA0B2" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg>
+        <input type="text" placeholder="Número, cliente, documento o pedido" [value]="q" (input)="onSearch($any($event.target).value)" />
+      </div>
+      <div class="barra-compacta-chips">
+        <button type="button" class="filtro-activo" *ngFor="let f of filtrosActivos" (click)="quitarFiltro(f.clave)" [title]="'Quitar ' + f.texto">
+          {{ f.texto }} <span aria-hidden="true">✕</span>
+        </button>
+      </div>
+      <div class="barra-compacta-acciones">
+        <button type="button" class="btn-ghost" (click)="exportar()" [disabled]="exporting">{{ exporting ? "Exportando…" : "Exportar" }}</button>
+        <button type="button" class="btn-accent" (click)="nuevaCotizacion()">Nueva Cotización</button>
+      </div>
+    </div>
+  </ng-template>
 
   <!-- Tabla -->
   <div class="cotz-card tabla-card">

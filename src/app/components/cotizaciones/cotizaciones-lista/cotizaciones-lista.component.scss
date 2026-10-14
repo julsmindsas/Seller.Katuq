@@ -763,3 +763,45 @@
     color: #5f3fe0;
   }
 }
+
+// ── Ticket 1201: panel contraíble ──
+.panel-control {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 8px;
+}
+.barra-compacta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+.barra-compacta-cifras {
+  display: flex;
+  gap: 14px;
+  font-size: 12.5px;
+  color: var(--muted2);
+  letter-spacing: normal;
+  b { color: var(--accent); font-weight: 800; }
+}
+.barra-compacta-buscar { flex: 1 1 240px; min-width: 200px; }
+.barra-compacta-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.filtro-activo {
+  border: 1px solid var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  &:focus-visible { outline: 3px solid #7C5CFF !important; }
+}
+.barra-compacta-acciones { display: flex; gap: 8px; margin-left: auto; }
+
+@media (max-width: 620px) {
+  .barra-compacta-acciones { margin-left: 0; width: 100%; }
+  .barra-compacta-cifras { flex-wrap: wrap; }
+}

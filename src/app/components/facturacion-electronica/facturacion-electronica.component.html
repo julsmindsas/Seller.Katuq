@@ -111,7 +111,7 @@
       <div class="fe-list__tools">
         <label class="fe-search" [class.is-active]="search">
           <i class="pi pi-search"></i>
-          <input type="search" [(ngModel)]="search" placeholder="Número, pedido o correo" aria-label="Buscar documentos">
+          <input type="search" [(ngModel)]="search" placeholder="Número, CUFE, pedido, cliente o NIT" aria-label="Buscar documentos">
         </label>
         <div class="fe-segment" role="group" aria-label="Filtrar por estado">
           <button type="button" [class.is-active]="statusFilter === 'all'" (click)="statusFilter = 'all'">Todos <b>{{ documents.length }}</b></button>
@@ -122,7 +122,41 @@
         <button type="button" class="fe-filterchip" *ngIf="typeFilter === 'notes'" (click)="typeFilter = 'all'" title="Quitar filtro">
           Solo notas <i class="pi pi-times"></i>
         </button>
+        <!-- Ticket 1276: filtros por fecha, valor y tipo de documento. -->
+        <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="masFiltros = !masFiltros" [attr.aria-expanded]="masFiltros">
+          <i class="pi pi-filter"></i> Más filtros<ng-container *ngIf="filtrosExtraActivos"> ({{ filtrosExtraActivos }})</ng-container>
+        </button>
       </div>
+    </div>
+
+    <div class="fe-filtros" *ngIf="masFiltros">
+      <label class="fe-filtro">
+        <span class="fe-filtro__nombre">Tipo</span>
+        <select [(ngModel)]="typeFilter">
+          <option value="all">Todos</option>
+          <option value="invoice">Facturas</option>
+          <option value="creditNote">Notas crédito</option>
+          <option value="debitNote">Notas débito</option>
+          <option value="notes">Todas las notas</option>
+        </select>
+      </label>
+      <label class="fe-filtro">
+        <span class="fe-filtro__nombre">Desde</span>
+        <input type="date" [(ngModel)]="fechaDesde">
+      </label>
+      <label class="fe-filtro">
+        <span class="fe-filtro__nombre">Hasta</span>
+        <input type="date" [(ngModel)]="fechaHasta">
+      </label>
+      <label class="fe-filtro">
+        <span class="fe-filtro__nombre">Valor desde</span>
+        <input type="number" min="0" [(ngModel)]="valorMinimo" placeholder="0">
+      </label>
+      <label class="fe-filtro">
+        <span class="fe-filtro__nombre">Valor hasta</span>
+        <input type="number" min="0" [(ngModel)]="valorMaximo" placeholder="Sin tope">
+      </label>
+      <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost fe-filtros__limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
     </div>
 
     <div class="fe-alert fe-alert--error" *ngIf="documentsError">
@@ -164,15 +198,25 @@
               <td>
                 <div class="fe-client" *ngIf="documentCustomer(document); else noClient">
                   <span class="fe-avatar" [style.background]="avatarColor(documentCustomer(document))">{{ initial(documentCustomer(document)) }}</span>
-                  <span class="fe-client__name" [title]="documentCustomer(document)">{{ documentCustomer(document) }}</span>
+                  <div class="fe-client__copy">
+                    <strong class="fe-client__name" [title]="documentCustomer(document)">{{ documentCustomer(document) }}</strong>
+                    <small class="fe-client__doc" *ngIf="documentCustomerId(document)">{{ documentCustomerId(document) }}</small>
+                  </div>
                 </div>
                 <ng-template #noClient><span class="fe-dim">—</span></ng-template>
               </td>
-              <td class="fe-mono" [class.fe-dim]="!(document.type === 'invoice' ? document.orderId : document.reference?.number)">
-                {{ document.type === 'invoice' ? (document.orderId || '—') : (document.reference?.number || '—') }}
+              <td class="fe-mono" [class.fe-dim]="!(document.type === 'invoice' ? document.pedido?.numero : document.reference?.number)">
+                <!-- Ticket 1276: el pedido con enlace; una factura libre no tiene pedido. -->
+                <ng-container *ngIf="document.type === 'invoice'; else notaRef">
+                  <button type="button" class="fe-link" *ngIf="document.pedido?.numero; else sinPedido" (click)="verPedido(document)" title="Abrir el pedido">
+                    {{ document.pedido?.numero }} <i class="pi pi-external-link"></i>
+                  </button>
+                  <ng-template #sinPedido><span title="Factura libre, sin pedido">—</span></ng-template>
+                </ng-container>
+                <ng-template #notaRef>{{ document.reference?.number || '—' }}</ng-template>
                 <small class="fe-cellnote" *ngIf="document.correction?.description">{{ document.correction?.description }}</small>
               </td>
-              <td class="text-end fe-amount">{{ document.amount != null ? (document.amount | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</td>
+              <td class="text-end fe-amount">{{ money(document.amount) }}</td>
               <td class="text-center">
                 <span class="fe-pill fe-pill--{{ statusGroup(document) }}"><i class="pi" [ngClass]="statusIcon(document)"></i>{{ statusLabel(document.status) }}</span>
               </td>
@@ -299,7 +343,7 @@
               </div>
             </td>
             <td class="fe-dim">{{ orderDate(order) ? (orderDate(order) | date:'dd/MM/yyyy') : '—' }}</td>
-            <td class="text-end fe-amount">{{ orderTotal(order) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td class="text-end fe-amount">{{ money(orderTotal(order)) }}</td>
             <td class="text-center">
               <span class="fe-pill fe-pill--{{ orderReadiness(order).tone }}" *ngIf="!isQueued(order); else queuedPill">
                 <i class="pi" [ngClass]="orderReadiness(order).ok ? (orderReadiness(order).tone === 'success' ? 'pi-check' : 'pi-clock') : 'pi-exclamation-triangle'"></i>{{ orderReadiness(order).label }}

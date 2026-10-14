@@ -19,9 +19,10 @@
     <div class="estado-wrap">
       <span class="estado-badge estado-{{ estado }}">{{ estadoLabel(estado) }}</span>
       <select
+        #estadoSel
         class="form-select form-select-sm estado-select"
         [ngModel]="estado"
-        (ngModelChange)="cambiarEstado($event)"
+        (ngModelChange)="cambiarEstado($event, estadoSel)"
         title="Cambiar estado"
       >
         <option *ngFor="let e of estadosEditables" [ngValue]="e.value">{{ e.label }}</option>
@@ -552,6 +553,30 @@
 
     <!-- ===================== COLUMNA LATERAL ===================== -->
     <div class="col-side">
+      <!-- Tickets 1207 y 1208: por qué se perdió y la línea de tiempo de estados. -->
+      <div class="cot-historial" *ngIf="lineaDeTiempo.length || cotizacion.rechazo || cotizacion.motivoRechazoTexto">
+        <div class="cot-historial-cabeza">
+          <h3>Historial de estados</h3>
+          <button type="button" class="cot-historial-ajuste" *ngIf="esAdminCotizaciones" (click)="editarMotivosRechazo()" title="Ajustar la lista de motivos de rechazo de la empresa">Motivos de rechazo</button>
+        </div>
+        <div class="cot-rechazo" *ngIf="estado === 'rechazada' && (cotizacion.rechazo?.motivo || cotizacion.motivoRechazoTexto)">
+          <strong>Motivo: {{ cotizacion.rechazo?.motivo || cotizacion.motivoRechazoTexto }}</strong>
+          <span *ngIf="cotizacion.rechazo?.detalle">{{ cotizacion.rechazo?.detalle }}</span>
+          <span *ngIf="cotizacion.rechazo?.competidor">Competidor: {{ cotizacion.rechazo?.competidor }}</span>
+          <span *ngIf="cotizacion.rechazo?.comentario">{{ cotizacion.rechazo?.comentario }}</span>
+        </div>
+        <ol class="cot-linea">
+          <li *ngFor="let e of lineaDeTiempo" [class.cot-linea-inferido]="e.inferido">
+            <span class="cot-linea-punto estado-{{ e.a }}"></span>
+            <div class="cot-linea-texto">
+              <strong>{{ etiquetaEvento(e) }}</strong>
+              <small>{{ fechaEvento(e.fecha) }}<ng-container *ngIf="e.usuario"> · {{ e.usuario }}</ng-container></small>
+              <small class="cot-linea-origen" *ngIf="e.origen">{{ e.origen }}{{ e.inferido ? ' (deducido)' : '' }}</small>
+            </div>
+          </li>
+        </ol>
+      </div>
+
       <div class="cot-summary">
         <div class="sum-row">
           <span>Subtotal</span>

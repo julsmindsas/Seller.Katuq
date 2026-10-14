@@ -279,3 +279,64 @@ $head: var(--kc-font-head);
   .fe-tabs { grid-template-columns: 1fr; }
   .fe-header__actions { flex-direction: column; align-items: stretch; .fe-iconbtn { width: 100%; } }
 }
+
+// ── Ticket 1276 (FE-04) ──────────────────────────────────────────────────────
+// Espacio al final para que el botón flotante de Opttia no tape las acciones de la última fila.
+.fe-page { padding-bottom: 96px; }
+
+.fe-client__copy { display: flex; flex-direction: column; min-width: 0; }
+.fe-client__copy .fe-client__name { font-weight: 700; }
+.fe-client__doc { font-size: 11.5px; color: #6b6880; letter-spacing: normal; white-space: nowrap; }
+
+.fe-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: #5F3FE0;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  i { font-size: 11px; margin-left: 2px; }
+  &:hover { text-decoration: underline; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+
+.fe-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid #ecebf3;
+  border-radius: 14px;
+  background: #faf9ff;
+}
+.fe-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+
+  input, select {
+    height: 36px;
+    border: 1px solid #dedbea;
+    border-radius: 11px;
+    padding: 0 10px;
+    font-size: 13px;
+    background: #fff;
+  }
+}
+.fe-filtro__nombre {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #6b6880;
+}
+.fe-filtros__limpiar { margin-left: auto; }
+
+@media (max-width: 620px) {
+  .fe-filtro { min-width: calc(50% - 6px); }
+  .fe-filtros__limpiar { margin-left: 0; }
+}

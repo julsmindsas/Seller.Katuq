@@ -61,6 +61,12 @@ export interface Cotizacion {
   vistaCliente?: boolean;
   fechaPrimeraVista?: string | null;
   vistasCount?: number;
+  /** Ticket 1207: motivo del rechazo (lo escribe el servidor al rechazar). */
+  rechazo?: RechazoCotizacion | null;
+  /** Ticket 1207: texto del motivo, también para rechazos viejos desde el enlace. */
+  motivoRechazoTexto?: string;
+  /** Ticket 1208: línea de tiempo de estados (solo lectura, la arma el servidor). */
+  lineaDeTiempo?: EventoEstadoCotizacion[];
   // De dónde salió: vacío = venta asistida, "catalogo-digital" = carrito del
   // catálogo por link (D-141), "whatsapp-bot" = bot de pedidos por WhatsApp.
   origen?: string | null;
@@ -93,6 +99,8 @@ export interface CotizacionMetrics {
   porEstado?: { [estado: string]: number };
   /** Ticket 1104: comerciales con cotizaciones (para el filtro del listado). */
   vendedores?: { email: string; nombre: string; total: number }[];
+  /** Ticket 1207: rechazadas por motivo. */
+  motivosRechazo?: { [motivo: string]: number };
 }
 
 /** Ticket 1081: documento anexo (PDF) de las condiciones comerciales. */
@@ -109,6 +117,29 @@ export interface CotizacionConfig {
   anexo?: AnexoCondiciones | null;
   /** Ticket 1102: la empresa ve los valores de sus cotizaciones en pesos enteros. */
   valoresSinDecimales?: boolean;
+  /** Ticket 1207: motivos de rechazo de la empresa ("Otro" siempre al final). */
+  motivosRechazo?: string[];
+}
+
+/** Ticket 1207: por qué se perdió una cotización. */
+export interface RechazoCotizacion {
+  motivo: string;
+  detalle?: string;
+  competidor?: string;
+  comentario?: string;
+  fecha?: string;
+  usuario?: string;
+}
+
+/** Ticket 1208: un cambio de estado de la línea de tiempo. */
+export interface EventoEstadoCotizacion {
+  de: string | null;
+  a: string;
+  fecha: string;
+  usuario?: string;
+  origen?: string;
+  /** true = deducido de datos de antes del historial. */
+  inferido?: boolean;
 }
 
 export interface CotizacionListFilter {
@@ -119,6 +150,8 @@ export interface CotizacionListFilter {
   vendedor?: string;
   /** Ticket 1211: solo aceptadas sin pedido asociado. */
   sinConvertir?: boolean;
+  /** Ticket 1207: rechazadas por este motivo. */
+  motivo?: string;
   page?: number;
   limit?: number;
 }

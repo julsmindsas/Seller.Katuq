@@ -31,6 +31,10 @@ interface DianDocument {
   error?: { code?: string; message?: string };
   emailDelivery?: { requested?: boolean; sent?: boolean; recipient?: string };
   dianResponse?: any;
+  /** Ticket 1276: cliente resuelto por el servidor (nombre o razón social y documento). */
+  cliente?: { nombre?: string; documento?: string; tipoDocumento?: string } | null;
+  /** Ticket 1276: pedido del que salió la factura, con su número. */
+  pedido?: { id?: string; numero?: string } | null;
 }
 
 interface OrderReadiness { ok: boolean; blocked: boolean; label: string; tone: 'success' | 'warning' | 'error' }
@@ -61,7 +65,14 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   ordersError = '';
   search = '';
   statusFilter: 'all' | DianStatusGroup = 'all';
-  typeFilter: 'all' | 'notes' = 'all';
+  typeFilter: 'all' | 'notes' | DianDocumentType = 'all';
+  // Ticket 1276: más filtros de la bandeja (fecha, valor y tipo), además del estado y la búsqueda.
+  masFiltros = false;
+  fechaDesde = '';
+  fechaHasta = '';
+  valorMinimo: number | null = null;
+  valorMaximo: number | null = null;
+  private readonly COP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
   openMenu = '';
 
   private destroy$ = new Subject<void>();
@@ -210,20 +221,56 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
 
   get filteredDocuments(): DianDocument[] {
     const term = this.search.trim().toLowerCase();
+    const desde = this.fechaDesde ? new Date(this.fechaDesde + 'T00:00:00') : null;
+    const hasta = this.fechaHasta ? new Date(this.fechaHasta + 'T23:59:59') : null;
     return this.documents.filter((document) => {
       const matchesStatus = this.statusFilter === 'all' || this.statusGroup(document) === this.statusFilter;
-      const matchesType = this.typeFilter === 'all' || document.type !== 'invoice';
+      const matchesType = this.typeFilter === 'all'
+        || (this.typeFilter === 'notes' ? document.type !== 'invoice' : document.type === this.typeFilter);
+      const fecha = this.documentDate(document);
+      const matchesDate = (!desde || (!!fecha && fecha >= desde)) && (!hasta || (!!fecha && fecha <= hasta));
+      const valor = Number(document.amount);
+      const matchesAmount = (this.valorMinimo == null || valor >= this.valorMinimo) && (this.valorMaximo == null || valor <= this.valorMaximo);
       const haystack = [
         document.number,
         document.orderId,
+        document.pedido?.numero,
         document.reference?.number,
         document.cufe,
         document.cude,
         document.correction?.description,
         document.emailDelivery?.recipient,
+        document.cliente?.nombre,
+        document.cliente?.documento,
       ].filter(Boolean).join(' ').toLowerCase();
-      return matchesStatus && matchesType && (!term || haystack.includes(term));
+      return matchesStatus && matchesType && matchesDate && matchesAmount && (!term || haystack.includes(term));
     });
+  }
+
+  /** Ticket 1276: cuántos filtros extra hay puestos (para el botón "Más filtros"). */
+  get filtrosExtraActivos(): number {
+    return [this.fechaDesde, this.fechaHasta, this.valorMinimo != null, this.valorMaximo != null, this.typeFilter !== 'all'].filter(Boolean).length;
+  }
+
+  limpiarFiltros(): void {
+    this.fechaDesde = '';
+    this.fechaHasta = '';
+    this.valorMinimo = null;
+    this.valorMaximo = null;
+    this.typeFilter = 'all';
+    this.statusFilter = 'all';
+    this.search = '';
+  }
+
+  /** Ticket 1276: pesos con punto de miles, como en Colombia ($ 12.738.346). */
+  money(value: number | null | undefined): string {
+    return value == null || isNaN(Number(value)) ? '—' : this.COP.format(Math.round(Number(value)));
+  }
+
+  /** Ticket 1276: abre el pedido de la factura en la lista de pedidos. */
+  verPedido(document: DianDocument): void {
+    const numero = document.pedido?.numero;
+    if (numero) this.router.navigate(['/ventas/pedidos'], { queryParams: { nroPedido: numero } });
   }
 
   get selectableOrders(): any[] {
@@ -583,8 +630,16 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
       || 'La DIAN no aceptó el documento. Consulta el detalle y corrige los datos antes de reintentar.';
   }
 
+  /** Ticket 1276: razón social o nombre del cliente; el correo solo si no se pudo resolver. */
   documentCustomer(document: DianDocument): string {
-    return document.emailDelivery?.recipient || '';
+    return document.cliente?.nombre || document.emailDelivery?.recipient || '';
+  }
+
+  /** Ticket 1276: "NIT 901072822-4" o "CC 1039449871". */
+  documentCustomerId(document: DianDocument): string {
+    const c = document.cliente;
+    if (!c || !c.documento) return '';
+    return [c.tipoDocumento || '', c.documento].filter(Boolean).join(' ');
   }
 
   historyLabel(entry: any): string {

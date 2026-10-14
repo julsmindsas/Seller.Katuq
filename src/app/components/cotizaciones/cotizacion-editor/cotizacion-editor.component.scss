@@ -1682,3 +1682,73 @@
   color: #5F3FE0;
   font-weight: 600;
 }
+
+// ── Tickets 1207 y 1208: historial de estados y motivo de rechazo ──
+.cot-historial {
+  background: #fff;
+  border: 1px solid #ecebf3;
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+.cot-historial-cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+
+  h3 { margin: 0; font-size: 12px !important; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: #6b6880; }
+}
+.cot-historial-ajuste {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: #5F3FE0;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  &:focus-visible { outline: 3px solid #7C5CFF !important; }
+}
+.cot-rechazo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: #fdecea;
+  color: #7a271a;
+  font-size: 12.5px;
+  strong { color: #b42318; font-size: 13px; }
+  span { font-size: 12.5px; color: #7a271a; }
+}
+.cot-linea {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li { display: flex; gap: 10px; position: relative; padding: 0 0 12px; }
+  li:not(:last-child)::before { content: ""; position: absolute; left: 5px; top: 14px; bottom: 0; width: 2px; background: #ecebf3; }
+  li.cot-linea-inferido .cot-linea-punto { opacity: 0.55; }
+}
+.cot-linea-punto {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  margin-top: 3px;
+  border-radius: 50%;
+  background: #5F3FE0;
+  &.estado-aceptada, &.estado-convertida { background: #137a3a; }
+  &.estado-rechazada { background: #b42318; }
+  &.estado-vencida { background: #c47a00; }
+  &.estado-borrador, &.estado-creada { background: #9a97ad; }
+}
+.cot-linea-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  strong { font-size: 13px; color: #211F3A; }
+  small { font-size: 11.5px; color: #6b6880; letter-spacing: normal; overflow-wrap: anywhere; }
+}
+.cot-linea-origen { font-style: italic; }
