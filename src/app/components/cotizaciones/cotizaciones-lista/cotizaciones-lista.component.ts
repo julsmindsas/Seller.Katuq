@@ -359,7 +359,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   async editarMetas(): Promise<void> {
     const esc = (v: string) => String(v || "").replace(/[&<>"']/g, (ch) => (({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as any)[ch]));
     const filas = this.vendedores
-      .map((v, i) => `<label style="display:flex;align-items:center;gap:10px;margin:0 0 8px;text-align:left"><span style="flex:1;font-size:13px">${esc(v.nombre)}</span><input id="meta-${i}" type="number" min="0" step="100000" value="${this.metas[v.email] || ""}" placeholder="Sin meta" style="width:150px;padding:8px 10px;border:1px solid #dedbea;border-radius:11px"></label>`)
+      .map((v, i) => `<label style="display:flex;align-items:center;gap:10px;margin:0 0 8px;text-align:left"><span style="flex:1;font-size:13px">${esc(v.nombre)}</span><input id="meta-${i}" type="number" min="0" step="100000" value="${Math.round(Number(this.metas[v.email])) || ""}" placeholder="Sin meta" style="width:150px;padding:8px 10px;border:1px solid #dedbea;border-radius:11px"></label>`)
       .join("");
     const r = await Swal.fire({
       title: "Meta mensual por comercial",
