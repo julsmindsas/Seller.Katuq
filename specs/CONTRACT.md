@@ -9771,7 +9771,7 @@ El detalle de seguridad está en el cambio privado del backend, sección "D-422 
   - La producción solo aparece donde el perfil detecta uso de producción. Aprobar en un comercio real pasa pedidos de verdad a En producción, sin avisar al cliente.
 - **Falta:** seguir ALMARA unos días (8.5.4) y el cierre de la fase 2 (8.5.6).
 
-## D-423 (2026-10-14) — Despachos guarda el punto de entrega que encuentra en el mapa (OpenSpec `despachos-guardar-punto-entrega`) — APROBADA 14-oct ("sii claro aprobado todo"; diff aprobado con "dale aprobado")
+## D-423 (2026-10-14) — Despachos guarda el punto de entrega que encuentra en el mapa (OpenSpec `despachos-guardar-punto-entrega`) — APROBADA 14-oct ("sii claro aprobado todo"; diff aprobado con "dale aprobado") — PUBLICADO: front 2026.10.14.4, backend 452f590 (14-oct)
 
 **Decisión.** Lo que el mapa de Despachos ubica (modo estricto de D-421) se guarda en el pedido, y solo el punto: `envio.latitud`, `envio.longitud`, `envio.coordenadas`, `envio.fuenteUbicacion = 'geocodificada'`, `envio.ubicacionGuardadaEn` y `envio.ubicacionGuardadaPor`. Lo guarda una ruta propia del backend, `POST /v1/orders/:orderId/ubicacion-entrega` (backend `452f590`), que no pasa por la edición de pedidos, no cambia `date_upd` y nunca pisa un punto puesto por una persona (D-417).
 
@@ -9785,4 +9785,4 @@ El detalle de seguridad está en el cambio privado del backend, sección "D-422 
 
 **Fuera de alcance.** Sin backfill de los puntos guardados por accidente (iría aparte, con `--dry-run`); sin marcar en el mapa desde Despachos.
 
-**Verificado (14-oct, ALMARA en localhost contra producción, sin escrituras en pedidos):** 31 pedidos → 25 pintados con su punto guardado sin buscarlos, 2 ubicados en la visita, 4 en "Sin ubicar"; "Volver a ubicar" confirmó 22 y dejó fuera 5 sin tocar los datos. Build de producción sin errores. **Pendiente:** desplegar el backend y probar el guardado real.
+**Verificado (14-oct, ALMARA en localhost contra producción, sin escrituras en pedidos):** 31 pedidos → 25 pintados con su punto guardado sin buscarlos, 2 ubicados en la visita, 4 en "Sin ubicar"; "Volver a ubicar" confirmó 22 y dejó fuera 5 sin tocar los datos. Build de producción sin errores. **En producción (14-oct, ~15:20 COT):** al abrir Despachos de ALMARA se guardaron 4 pedidos (DAD-014274, 014254, 014224, 014203) con `fuenteUbicacion` geocodificada, hora y autor; al recargar se pintaron desde el pedido sin buscarlos ni volver a guardar. **Pendiente:** "Volver a ubicar" sobre DAD-014257.
