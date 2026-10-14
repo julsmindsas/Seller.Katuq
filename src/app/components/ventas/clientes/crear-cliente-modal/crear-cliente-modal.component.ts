@@ -592,6 +592,32 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     this.zonasParaCiudad = [];
   }
 
+  /** Ticket 1209: quien recibe coincide con el contacto del cliente (nombres, apellidos, celular). */
+  get entregaIgualCliente(): boolean {
+    const e = this.entregaEditando;
+    if (!e) return false;
+    const fv = this.formulario.getRawValue();
+    const igual = (a: any, b: any) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+    return !!String(e.nombres || '').trim()
+      && igual(e.nombres, fv.nombres_completos)
+      && igual(e.apellidos, fv.apellidos_completos)
+      && igual(e.celular, fv.numero_celular_comprador);
+  }
+
+  /** Marcar copia el contacto del cliente en quien recibe; desmarcar lo deja en blanco para escribir otro. */
+  usarDatosClienteEnEntrega(usar: boolean): void {
+    if (!this.entregaEditando) return;
+    const fv = this.formulario.getRawValue();
+    Object.assign(this.entregaEditando, usar
+      ? {
+          nombres: this.toTitleCase(fv.nombres_completos || ''),
+          apellidos: this.toTitleCase(fv.apellidos_completos || ''),
+          indicativoCel: String(fv.indicativo_celular_comprador || '57'),
+          celular: String(fv.numero_celular_comprador || ''),
+        }
+      : { nombres: '', apellidos: '', celular: '' });
+  }
+
   editarEntrega(i: number): void {
     this.entregaIndex = i;
     this.entregaEditando = normalizarEntrega(this.entregas[i]);

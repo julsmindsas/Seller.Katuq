@@ -322,7 +322,16 @@
                 <i class="pi" [ngClass]="entregaIndex >= 0 ? 'pi-pencil' : 'pi-plus'"></i>
                 {{ (entregaIndex >= 0 ? "Editar dirección" : "Nueva dirección") | translate }}
               </div>
+              <!-- Ticket 1209: el editor muestra los mismos datos que el modal de entrega de
+                   pedidos (unidad, torre/apto, apellidos, otro número, ciudad DANE). -->
               <div class="row g-3">
+                <div class="col-12">
+                  <label class="check-inline">
+                    <input type="checkbox" class="form-check-input mt-0"
+                      [checked]="entregaIgualCliente" (change)="usarDatosClienteEnEntrega($any($event.target).checked)">
+                    <span>{{ "Los datos de quien recibe son los del cliente" | translate }}</span>
+                  </label>
+                </div>
                 <div class="col-12 col-md-8">
                   <label class="form-label-modern" for="entrega-direccion">{{ "Dirección" | translate }} <span class="required">*</span></label>
                   <div class="d-flex gap-2">
@@ -333,9 +342,6 @@
                     <button pButton type="button" icon="pi pi-map-marker" class="p-button-outlined"
                       [attr.aria-label]="'Escribir dirección' | translate" (click)="abrirModalDireccion()"></button>
                   </div>
-                  <small *ngIf="entregaEditando.ciudad" class="text-muted d-block mt-1">
-                    {{ entregaEditando.ciudad }}<span *ngIf="entregaEditando.departamento">, {{ entregaEditando.departamento }}</span>
-                  </small>
                 </div>
                 <div class="col-12 col-md-4">
                   <label class="form-label-modern" for="entrega-alias">{{ "Alias" | translate }}</label>
@@ -343,9 +349,27 @@
                     [(ngModel)]="entregaEditando.alias" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-4">
+                  <!-- La ciudad sale del modal de dirección (municipios DANE); se abre desde acá también. -->
+                  <label class="form-label-modern" for="entrega-ciudad">{{ "Ciudad (DANE)" | translate }} <span class="required">*</span></label>
+                  <input id="entrega-ciudad" pInputText type="text" readonly class="w-100 input-clickable"
+                    [value]="entregaEditando.ciudad ? entregaEditando.ciudad + (entregaEditando.departamento ? ', ' + entregaEditando.departamento : '') : ''"
+                    placeholder="{{ 'Se elige al escribir la dirección' | translate }}"
+                    (click)="abrirModalDireccion()" (keydown.enter)="abrirModalDireccion()">
+                </div>
+                <div class="col-12 col-md-4">
                   <label class="form-label-modern" for="entrega-barrio">{{ "Barrio" | translate }}</label>
                   <input id="entrega-barrio" pInputText type="text" class="w-100"
                     [(ngModel)]="entregaEditando.barrio" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label-modern" for="entrega-unidad">{{ "Unidad o edificio" | translate }}</label>
+                  <input id="entrega-unidad" pInputText type="text" class="w-100"
+                    [(ngModel)]="entregaEditando.nombreUnidad" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label-modern" for="entrega-especificaciones">{{ "Torre, apto, oficina" | translate }}</label>
+                  <input id="entrega-especificaciones" pInputText type="text" class="w-100"
+                    [(ngModel)]="entregaEditando.especificacionesInternas" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-8">
                   <label class="form-label-modern" for="entrega-indicaciones">{{ "Indicaciones para la entrega" | translate }}</label>
@@ -354,9 +378,14 @@
                     [(ngModel)]="entregaEditando.observaciones" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label-modern" for="entrega-nombres">{{ "Quién recibe" | translate }}</label>
+                  <label class="form-label-modern" for="entrega-nombres">{{ "Nombres de quien recibe" | translate }}</label>
                   <input id="entrega-nombres" pInputText type="text" class="w-100"
                     [(ngModel)]="entregaEditando.nombres" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label-modern" for="entrega-apellidos">{{ "Apellidos de quien recibe" | translate }}</label>
+                  <input id="entrega-apellidos" pInputText type="text" class="w-100"
+                    [(ngModel)]="entregaEditando.apellidos" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-4">
                   <label class="form-label-modern" for="entrega-celular">{{ "Celular de quien recibe" | translate }}</label>
@@ -367,6 +396,17 @@
                     <input id="entrega-celular" pInputText type="text" class="flex-grow-1" maxlength="10"
                       (keypress)="validarSoloNumeros($event)"
                       [(ngModel)]="entregaEditando.celular" [ngModelOptions]="{ standalone: true }">
+                  </div>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label-modern" for="entrega-otro-numero">{{ "Otro número" | translate }}</label>
+                  <div class="phone-input-group">
+                    <p-dropdown [options]="indicativos" optionLabel="phone_code" optionValue="phone_code"
+                      [(ngModel)]="entregaEditando.indicativoOtroNumero" [ngModelOptions]="{ standalone: true }"
+                      styleClass="country-code" panelStyleClass="buscar-por-panel"></p-dropdown>
+                    <input id="entrega-otro-numero" pInputText type="text" class="flex-grow-1" maxlength="10"
+                      (keypress)="validarSoloNumeros($event)"
+                      [(ngModel)]="entregaEditando.otroNumero" [ngModelOptions]="{ standalone: true }">
                   </div>
                 </div>
                 <div class="col-12 col-md-4" *ngIf="zonasParaCiudad.length">
