@@ -9758,4 +9758,7 @@ El detalle de seguridad está en el cambio privado del backend, sección "D-422 
 - **Front:** tarjeta con "Pasar a En producción" en dos toques, el aviso "Avisa a tu equipo, no al cliente", "Abrir WhatsApp" y "Ya pagó / no aplica". Build de producción y Playwright, a 1440 y 390 px, en verde.
 - **Cierre de la fase 1 en el mismo commit:** el arco fijo en Mi país, las marcas en Pedidos (4.6) y la vista vieja de Despachos borrada (7.5).
 - **Pendientes de la escena:** la caja por la banda al pasar a producción y la burbuja de WhatsApp tienda → casa.
-- **Falta:** publicar el front y prender las banderas en FLORECER.
+- **Publicado el 14-oct:** front 2026.10.14.2. Banderas `opttiaProduccion` y `opttiaCobroWhatsapp` encendidas en FLORECER, la empresa de prueba.
+- **Datos de prueba:** entrega de hoy en CER-000010, 11, 06 y 09, y CER-000005 en producción para que el perfil "usa producción" aplique. Se devuelven con los scripts de demo `--restaurar`.
+- **Con datos reales:** la cola trae el despacho de CER-000010 y la producción "on" de CER-000009 y CER-000006. El enlace de WhatsApp sale para CER-000010 y se niega a cancelados, inexistentes y otra empresa.
+- **Falta:** la prueba de Daniel con su sesión y luego los demás comercios, uno por uno.
