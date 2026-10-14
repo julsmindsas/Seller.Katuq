@@ -65,12 +65,29 @@
 
 ## 6. Despliegue y verificación
 
-- [ ] 6.1 Diff de la rama del backend contra producción. Avisar si arrastra cambios de otras sesiones.
-- [ ] 6.2 Desplegar el backend en `sombra`, sin bandera en ningún comercio. Verificar los siguientes pedidos de OH MY STORE:
+- [x] 6.1 Diff de la rama del backend contra producción. Avisar si arrastra cambios de otras sesiones.
+- [x] 6.2 Desplegar el backend en `sombra`, sin bandera en ningún comercio. Verificar los siguientes pedidos de OH MY STORE:
   - ejecución `success` como antes;
   - `sombra.diferencias` vacía;
   - mismo pedido en Katuq y en Cereza.
-- [ ] 6.3 Desplegar el front.
-- [ ] 6.4 Bandera en FLORECER: probar en el navegador los escenarios de la spec (webhook hecho a mano, Repetir, Elegir, rama vacía, Esperar 45 s, encender y mover, borrar, horario).
+- [x] 6.3 Desplegar el front.
+- [~] 6.4 Bandera en FLORECER: probar en el navegador los escenarios de la spec (webhook hecho a mano, Repetir, Elegir, rama vacía, Esperar 45 s, encender y mover, borrar, horario).
 - [ ] 6.5 Después de una semana de sombra, presentar a Daniel el reporte por comercio. Encender OH MY STORE solo con su visto bueno.
-- [ ] 6.6 Registrar D-413 en `specs/CONTRACT.md` con lo desplegado y lo verificado. Actualizar la bitácora.
+- [x] 6.6 Registrar D-413 en `specs/CONTRACT.md` con lo desplegado y lo verificado. Actualizar la bitácora.
+
+### Verificación (13-oct)
+
+- **6.1:** el backend desplegado (`6c0a820`) solo traía D-413; lo de otras sesiones ya estaba en producción. Otra sesión tenía Kuvo puesto a mano en el servidor sin commit; el pull no tocaba esos archivos y Kuvo siguió respondiendo.
+- **6.2:** en sombra, entre las 19:49 UTC del 13-oct y las 00:30 del 14-oct, hubo 101 corridas de OH MY STORE, todas `success`.
+  - El webhook de pedidos de Shopify corrió sin diferencias.
+  - En los flows de revisión periódica (productos y existencias a Shopify, inventario Fullpi), la sombra anota `rama_vacia` en pasos que hoy corren con 0 registros. Los 5 pasos afectados (`katuq-canonical-mapper`, `katuq-product-upsert`, `shopify-product-upsert`, `shopify-inventory-adjust`, `katuq-inventory-adjust`) no hacen nada con 0 registros, así que saltarlos no cambia ningún resultado.
+- **6.3:** front 2026.10.13.1. Lo publicó la sesión de D-410 desde la misma carpeta y con el mismo código; se verificaron los avisos en el paquete servido.
+- **6.4, parcial:** bandera encendida en FLORECER y probada en el navegador:
+  - webhook hecho a mano, que deriva su paso de inicio;
+  - Repetir, donde «Al terminar» entrega 1 registro de cierre y «Cada uno» 3;
+  - encender bloqueado con el motivo, y al encender el botón cambia sin recargar;
+  - apagar con confirmación;
+  - borrar, que deja el binding `inactive`.
+  - Faltan Elegir, Esperar 45 s y horario. La vista a 390 px no se pudo revisar porque Chrome no achicó la ventana.
+- **Hallazgo corregido (`1522b08`, desplegado):** los avisos del servidor decían «IF» y «condition». Ahora usan los nombres del editor (`services/flows/nombresDeNegocio.js`, copia de `Sg`, `wc` y `ZS` de `flow-canvas.js`).
+

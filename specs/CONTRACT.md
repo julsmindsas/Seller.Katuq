@@ -9516,7 +9516,20 @@ Nada de eso cambia en ningún modo de la bandera. Lo protege una prueba de regre
   - `pasosDeInicio`: los 9 guardan sus triggers byte a byte, más los casos manual, huérfano, encender, borrar y horario;
   - `motorCorregido`.
 - **Build.** El de producción del front pasa.
-- **Pendiente.** Desplegar backend y front (fuera del modo automático), verificar los siguientes pedidos de OH MY STORE con `motor.diferencias` vacía, encender en FLORECER y, después de una semana de sombra, pedir el visto bueno para OH MY STORE.
+- **Desplegado (13-oct).**
+  - Backend `6c0a820`, a las 19:49 UTC. El arreglo de los avisos sin jerga (`1522b08`) salió a las 00:30 UTC.
+  - Front 2026.10.13.1, publicado junto con D-410.
+- **Verificado.**
+  - Hubo 101 corridas de OH MY STORE en sombra, todas `success`. El webhook de pedidos de Shopify corrió sin diferencias.
+  - La sombra anota `rama_vacia` en los flows de revisión periódica cuando no hay cambios. Los pasos afectados no hacen nada con 0 registros, así que encender la bandera no cambiaría resultados.
+- **FLORECER.** Bandera `flowsMotorCorregido` encendida el 13-oct. Probado en el navegador:
+  - webhook hecho a mano;
+  - Repetir, que entrega 1 registro de cierre en «Al terminar»;
+  - encender bloqueado con el motivo en lenguaje de negocio;
+  - apagar y borrar, que apagan el disparador.
+- **Pendiente.**
+  - Probar Elegir, Esperar y horario en FLORECER.
+  - Después de una semana de sombra (alrededor del 20-oct), pedir el visto bueno para encender OH MY STORE.
 
 ---
 
