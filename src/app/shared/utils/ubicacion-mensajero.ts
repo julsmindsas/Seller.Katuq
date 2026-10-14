@@ -60,6 +60,33 @@ export function ubicacionVigente(
   return ahora - marca <= vigenciaMs;
 }
 
+/** Un punto de hace 3 min o menos se muestra "en vivo": la app nativa publica cada 1–2 min mientras está abierta. */
+export const EN_VIVO_MS = 3 * 60 * 1000;
+
+export type SenalMensajero = 'en-vivo' | 'reciente';
+
+export function senalMensajero(marca: number | null, ahora: number = Date.now()): SenalMensajero {
+  return marca !== null && ahora - marca <= EN_VIVO_MS ? 'en-vivo' : 'reciente';
+}
+
+/**
+ * Nombre legible desde la clave `nombre_apellidos_<empresa>`: se quita la empresa del final y los `_` pasan a
+ * espacio. Las tildes y la ñ ya llegan perdidas (las apps las cambian por `_`), así que es un respaldo cuando
+ * el nodo no trae su propio nombre.
+ */
+export function nombreDesdeClave(clave: string | null | undefined, nombreEmpresa: string | null | undefined): string {
+  let propia = String(clave || '').toLowerCase().replace(/_+/g, '_');
+  const empresa = claveEmpresa(nombreEmpresa);
+  if (empresa && propia.endsWith('_' + empresa)) {
+    propia = propia.slice(0, -(empresa.length + 1));
+  }
+  return propia
+    .split('_')
+    .filter(Boolean)
+    .map(parte => parte.charAt(0).toUpperCase() + parte.slice(1))
+    .join(' ');
+}
+
 /** "hace unos segundos", "hace 7 min", "hace 1 h 5 min". */
 export function haceCuanto(marca: number, ahora: number = Date.now()): string {
   const minutos = Math.max(0, Math.floor((ahora - marca) / 60000));

@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+import { BodegaService } from "../bodegas/bodega.service";
 import { BaseService } from "../base.service";
 import { HttpClient } from "@angular/common/http";
 import { environment } from "../../../../environments/environment";
@@ -66,6 +67,55 @@ export class PaymentService extends BaseService {
     } catch (_) { /* sin celular el PDF sale igual, con nombre y correo */ }
   }
 
+  // Ticket 1207: el pedido guarda la bodega como código (BOD-001); el nombre
+  // vive en warehouses. Se carga una vez por sesión para el PDF y el correo.
+  private nombresBodega: Map<string, string> | null = null;
+
+  private async cargarNombresBodega(): Promise<void> {
+    if (this.nombresBodega) return;
+    try {
+      const bodegas: any = await firstValueFrom(this.bodegaService.getBodegas().pipe(take(1)));
+      const mapa = new Map<string, string>();
+      (Array.isArray(bodegas) ? bodegas : []).forEach((b: any) => {
+        const codigo = String(b?.idBodega || '').trim();
+        if (codigo) mapa.set(codigo, String(b?.nombre || '').trim());
+      });
+      this.nombresBodega = mapa;
+    } catch (_) { /* sin nombres se muestra el código */ }
+  }
+
+  /**
+   * Ticket 1207 (ALMACEN BOMBAS): bodega de donde sale cada producto. Por
+   * orden de precisión: la de la línea (pedido repartido por bodega), la que
+   * registró el descuento de inventario para ese producto y la del pedido.
+   */
+  private bodegaDeLinea(pedido: any, item: any): string {
+    const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const nombre = (codigo: string) => {
+      const n = this.nombresBodega?.get(codigo);
+      return n ? `${n} (${codigo})` : codigo;
+    };
+    const valido = (c: any) => { const v = String(c ?? '').trim(); return v && v !== '-1' ? v : ''; };
+
+    const deLinea = valido(item?.idBodega || item?.bodegaId);
+    if (deLinea) return esc(nombre(deLinea));
+
+    const productoId = String(item?.producto?.cd || item?.producto?.id || '');
+    const asignaciones = Array.isArray(pedido?.inventoryEffect?.appliedAllocations)
+      ? pedido.inventoryEffect.appliedAllocations
+      : [];
+    const deInventario = Array.from(new Set<string>(
+      asignaciones
+        .filter((a: any) => productoId && String(a?.productoId || '') === productoId)
+        .map((a: any) => valido(a?.idBodega))
+        .filter(Boolean),
+    ));
+    if (deInventario.length) return esc(deInventario.map(nombre).join(', '));
+
+    const delPedido = valido(pedido?.bodegaId);
+    return delPedido ? esc(nombre(delPedido)) : '';
+  }
+
   /** Ticket 1106: "correo · Cel. 300..." del asesor, o '' si no hay nada que mostrar. */
   private contactoAsesor(asesor: any): string {
     const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -83,6 +133,7 @@ export class PaymentService extends BaseService {
     httpClient: HttpClient,
     private sanitizer: DomSanitizer,
     private authService: AuthService,
+    private bodegaService: BodegaService,
   ) {
     super(httpClient);
 
@@ -977,6 +1028,8 @@ export class PaymentService extends BaseService {
     return this.pedidoUtilService.waitUntilLoaded().pipe(
       // Ticket 1106: celular del asesor; si falla, el PDF sale igual.
       switchMap(() => from(this.cargarCelularesAsesor())),
+      // Ticket 1207: nombres de bodega para la línea de cada producto.
+      switchMap(() => from(this.cargarNombresBodega())),
       switchMap(() => {
         // Asegurarse que allBillingZone esté cargado
         if (!this.allBillingZone) {
@@ -1022,6 +1075,7 @@ export class PaymentService extends BaseService {
     }
     // Ticket 1106: el correo al cliente también lleva el contacto del asesor.
     await this.cargarCelularesAsesor();
+    await this.cargarNombresBodega();
   }
 
   async getHtmlContentAsync(pedido: Pedido, isComanda: boolean = false): Promise<SafeHtml | null> {
@@ -1545,6 +1599,7 @@ export class PaymentService extends BaseService {
             <td style="padding: 4px; font-size: 10px; vertical-align: top;">
               <div style="font-weight: bold; color: #000; margin-bottom: 2px;">${tituloProducto}</div>
               <div style="font-size: 9px; color: #666; margin-bottom: 2px;">Ref: ${referenciaProducto}</div>
+              ${this.bodegaDeLinea(pedido, item) ? `<div style="font-size: 9px; color: #666; margin-bottom: 2px;">Bodega: ${this.bodegaDeLinea(pedido, item)}</div>` : ''}
               <div style="font-size: 8px; color: #888;">Precio Unit: ${this.formatCurrency(precioUnitarioConIva)}${descLineaPct > 0 ? ` (-${descLineaPct}% dcto)` : ""}</div>
               ${producto?.crearProducto?.descripcion ? `<div style="font-size: 9px; font-style: italic; color: #666; line-height: 1.3; margin-top: 2px;">${producto.crearProducto.descripcion}</div>` : ''}
             </td>
@@ -1797,7 +1852,7 @@ export class PaymentService extends BaseService {
                   ${tituloProducto}
                 </div>
                 <div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray}; margin-top: ${styles.spacing.xs}; line-height: 1.4;">
-                  Ref: ${referenciaProducto} • Cantidad: ${cantidad}${descLineaPct > 0 ? ` <span style="display: inline-block; margin-left: 6px; padding: 2px 6px; border-radius: 10px; background-color: #E6F4EA; color: #0B8A4B; font-weight: 700; font-size: 11px;">-${descLineaPct}%</span>` : ""}
+                  Ref: ${referenciaProducto} • Cantidad: ${cantidad}${this.bodegaDeLinea(pedido, item) ? ` • Bodega: ${this.bodegaDeLinea(pedido, item)}` : ""}${descLineaPct > 0 ? ` <span style="display: inline-block; margin-left: 6px; padding: 2px 6px; border-radius: 10px; background-color: #E6F4EA; color: #0B8A4B; font-weight: 700; font-size: 11px;">-${descLineaPct}%</span>` : ""}
                 </div>
               </div>
             </td>

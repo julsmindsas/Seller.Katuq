@@ -9608,6 +9608,36 @@ commits y el push no despliega ni activa checkout.
 
 **Queda abierto:** si ALMACEN BOMBAS empieza a usar el campo como identificador para enviar mensajes por WhatsApp, un nombre con espacios no sirve como número ni como @usuario: hoy es solo una etiqueta.
 
+## D-419 (2026-10-13) — Facturación de la venta POS: perfil, Consumidor Final o sin factura, y factura automática (openspec/changes/facturacion-pos)
+
+**Disparador.** Jairo, ticket 1171 (2026-10-10): en el POS no se podía elegir a quién se factura ni si se factura; la venta POS debía facturarse sola en Siigo, como la venta asistida, y quedar en Pedidos como las demás. Aprobado por Santiago el 2026-10-13 (Daniel quedó como observador del ticket).
+
+**Hallazgo.** La facturación del POS no funcionaba: nunca se marcaba `generarFacturaElectronica`, el camino de respaldo usaba un mapeo viejo con datos de prueba fijos (documento 27391, nombre con " prueba") y el POS escribía `nroFactura = nroPedido` (también en el camino de Wompi, que lo persistía), así que Pedidos, Facturación electrónica y la vista previa del backend trataban la venta como "ya facturada" sin factura.
+
+**Decisión.** Línea "Facturación" en la tarjeta del cliente del POS con un modal propio (perfiles de `datosFacturacionElectronica[]` con el predeterminado preseleccionado, Consumidor Final o "No requiere factura"; sin perfil predeterminado arranca en "No requiere factura"). Antes de cobrar se valida el perfil (razón social, tipo y número de documento, ciudad, correo). El pedido guarda `facturacion` y `generarFacturaElectronica`; al terminar el cobro se encola la factura con el proveedor contable de la empresa por la ruta asíncrona `/:provider/invoices/from-order-async` (candado `ALREADY_INVOICED` / `INVOICING_IN_PROGRESS`). Servicio compartido `FacturacionAutomaticaService` (POS y venta asistida; la venta asistida pasa a usar siempre la ruta asíncrona, también con DIAN y World Office). El POS deja de escribir `nroFactura`. Backend: la facturación automática al aprobar un pago (`orders.js`) salta si el pedido ya tiene factura o está en facturación (`pedidoYaFacturado`). Con pago Wompi no se factura al cobrar (el pago aún no está confirmado): queda para Pedidos. Fuera de alcance: documento equivalente POS (FE-09).
+
+**Estado (13-oct).** Implementado en local. Pruebas: utilidades del POS 12/12 y del servicio 8/8, backend 7/7 más contratos de POS y facturación en verde. Pendiente: prueba en navegador y una emisión en el entorno de pruebas del proveedor con permiso explícito.
+
+## D-420 (2026-10-13) — Mapa de mensajeros: panel lateral con Ver y Seguir, marcadores que se mueven, pines por estado y sin zonas de ejemplo (presentación; ESCRITO, sin publicar)
+
+**Disparador.** Daniel: "mejora el mapa de tracking de mensajeros, está medio chafa".
+
+**Qué se encontró en producción (2026.10.13.5).**
+- Los interruptores "Mensajeros" y "Zonas" se veían siempre apagados aunque estuvieran encendidos: el SCSS `input:checked + &__track` compilaba a `input:checked + .mapa-ubicaciones-container .mapa-toggle__track`, que nunca coincide.
+- Cada aviso de `active_users` borraba y redibujaba todos los mensajeros: la ficha abierta se cerraba y los puntos saltaban.
+- Pedidos con emojis y colores (`green`, `blue`…) que no coincidían con la leyenda; ficha del mensajero con su clave técnica de Firebase; "Ajustar vista" no hacía nada si había mensajeros pero ningún pedido; ficha del pedido sin escapar (cliente y dirección vienen de canales externos).
+- Las 5 zonas de Medellín con estadísticas inventadas (`generarZonasEntregaEjemplo`) se pintaban en todas las empresas, y como el template llama `obtenerConfiguracionZonas()` en cada ciclo, volvían aunque se editaran en "Gestionar zonas". Las zonas nunca se guardan.
+
+**Decisión.**
+1. Panel "Mensajeros" junto al mapa (debajo en pantallas < 992 px): iniciales, en vivo (≤ 3 min) o sin señal, "hace X min"; clic vuela al mensajero y abre su ficha; **Seguir** mueve la cámara con cada punto nuevo y se suelta al arrastrar el mapa (mientras se sigue, la ficha queda cerrada: Leaflet re-encuadra una ficha abierta en cada paso y anula el seguimiento). Estado vacío explicado.
+2. Marcadores de mensajero persistentes que se deslizan al punto nuevo (~0,9 s; saltos de más de 3 km no se animan), con nombre corto y anillo verde/naranja; recorrido punteado desde que se abrió el mapa (máx. 80 puntos, solo en memoria).
+3. Pines planos por estado con los colores semánticos del design-system; mapa base OSM desaturado por CSS (mismas teselas); fichas con labels UPPERCASE; todo texto de datos escapado. El nodo de `active_users` ya no se esparce entero: solo se leen lat, lng, horas, `conectado`, `nombre`, velocidad y batería.
+4. Sin zonas de ejemplo: solo se ven las que se dibujen en la sesión; sin zonas no aparece el interruptor "Zonas".
+5. **Sin cambio en qué mensajeros se ven:** la misma escucha y los filtros de D-393/D-382 (empresa por final de clave, 15 min, `conectado`). Se agregan a `ubicacion-mensajero.ts` `senalMensajero` y `nombreDesdeClave` (respaldo del nombre cuando el nodo no trae `nombre`).
+
+**Verificado.** Build de producción sin errores. En `localhost:4200` con FLORECER (sin mensajeros reales): estado vacío; con 3 mensajeros y 3 pedidos simulados solo en memoria del componente (nada escrito en Firebase): panel, anillos, movimiento suave, recorrido, Seguir manteniendo al mensajero centrado, ficha del pedido con `<b>` mostrado como texto, sin zonas ni interruptor "Zonas". Gradientes del componente 1 → 0 en el TS (los 2 del SCSS son brillos animados permitidos); primarios prohibidos 4 → 0 (`#007bff`, `#2196F3`).
+**No verificado.** Vista a 390 px (Chrome no redimensionó la ventana); mapa con mensajeros reales (ALMARA). Pruebas nuevas en `ubicacion-mensajero.spec.ts` comprobadas compilando el util con `tsc` y ejecutándolo en Node; Karma no se corrió.
+
 ## D-421 (2026-10-13) — Opttia propone en la escena: despachos y dos operaciones más dentro de la animación de En vivo (openspec/changes/opttia-propone-en-la-escena) — APROBADA 13-oct ("dale, arranca con la fase 1"), fase 1 en implementación
 
 **Disparador.** Daniel (13-oct), al ver la pestaña de D-410:

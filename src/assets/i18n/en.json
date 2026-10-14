@@ -872,6 +872,17 @@
   "Porcentaje:": "Percentage:",
   "Envío gratis": "Free shipping",
   "Valor del descuento:": "Discount amount:",
+  "Facturación de la venta": "Sale invoicing",
+  "¿A quién se le factura esta venta? La factura electrónica se genera sola al terminar el cobro.": "Who is this sale invoiced to? The e-invoice is generated automatically when payment is completed.",
+  "Le falta": "Missing",
+  "Este cliente no tiene datos de facturación guardados.": "This customer has no saved billing details.",
+  "Consumidor Final": "Final Consumer",
+  "Factura sin datos del comprador (CC 222222222222)": "Invoice without buyer details (ID 222222222222)",
+  "No requiere factura": "No invoice needed",
+  "Se puede facturar después desde Pedidos": "It can be invoiced later from Orders",
+  "Agregar o corregir datos de facturación del cliente": "Add or fix the customer's billing details",
+  "Usar esta opción": "Use this option",
+  "Cambiar": "Change",
   "ej: maria.flores o María Flores": "e.g.: maria.flores or María Flores",
   "De 2 a 60 caracteres: letras, números, espacios, punto o guion": "2 to 60 characters: letters, numbers, spaces, period or hyphen"
 }

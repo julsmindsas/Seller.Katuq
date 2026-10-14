@@ -205,14 +205,11 @@ export class PosCheckoutComponent implements OnInit, OnDestroy {
           // ✅ Guardar pedido SIN enviar email (email se enviará después de aprobar pago)
           this.ventasService.createOrder({ order: pedido }).subscribe({
             next: (res: any) => {
-              // Transformar el pedido para facturación electrónica si es necesario
-              const orderSiigo = this.facturacionElectronicaService.transformarPedidoLite(pedido);
-
               // Actualizar la información de pago del pedido si está disponible
               if (res.order) {
                 // Asegurar que tenemos el número de pedido correcto del backend
                 if (res.order.referencia) {
-                  res.order.nroFactura = res.order.referencia;
+                  // D-419: no se copia el número de pedido como número de factura.
                   res.order.nroPedido = res.order.referencia;
                 }
 

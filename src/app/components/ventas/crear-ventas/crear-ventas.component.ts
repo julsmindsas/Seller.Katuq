@@ -1,3 +1,4 @@
+import { FacturacionAutomaticaService, ProveedorContable } from "../../../shared/services/facturacion/facturacion-automatica.service";
 import {
   Component,
   Input,
@@ -9,6 +10,7 @@ import {
   OnChanges,
   SimpleChanges,
   OnDestroy,
+  inject,
 } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import {
@@ -320,6 +322,10 @@ export class CrearVentasComponent
   /**
    * Configuración de facturación electrónica (Siigo, World Office, etc.)
    */
+  // D-419 (ticket 1171): proveedor contable y encolado compartidos con el POS.
+  // Con inject() para no cambiar el constructor (VentaAsistidaUnicaComponent lo extiende).
+  private facturacionAutomatica = inject(FacturacionAutomaticaService);
+  private proveedorContable: ProveedorContable | null = null;
   public siigoConfig: any = null;
   public siigoEnabled: boolean = false;
   public activeAccountingProvider: string = null;
@@ -856,67 +862,23 @@ export class CrearVentasComponent
    * Verifica proveedores contables (Siigo, World Office) en orden de prioridad.
    */
   cargarConfiguracionSiigo(): void {
-    const accountingProviders = ['dian', 'siigo', 'world_office'];
-    let found = false;
-
-    const checkProvider = (index: number) => {
-      if (index >= accountingProviders.length) {
-        if (!found) {
-          this.siigoConfig = null;
-          this.siigoEnabled = false;
-          this.activeAccountingProvider = null;
-          this.accountingProviderName = 'Sistema Contable';
-          console.log('ℹ️ No hay integración de facturación configurada para esta empresa');
-        }
+    // D-419: misma regla de siempre (DIAN directo, Siigo, World Office), ahora
+    // en FacturacionAutomaticaService para que el POS use exactamente la misma.
+    this.facturacionAutomatica.resolverProveedor().subscribe((proveedor) => {
+      this.proveedorContable = proveedor;
+      if (!proveedor) {
+        this.siigoConfig = null;
+        this.siigoEnabled = false;
+        this.activeAccountingProvider = null;
+        this.accountingProviderName = 'Sistema Contable';
+        console.log('ℹ️ No hay integración de facturación configurada para esta empresa');
         return;
       }
-
-      const provider = accountingProviders[index];
-      this.integrationsService.getIntegration(provider).subscribe({
-        next: (response: any) => {
-          const providerConfig = response?.config || response?.credentials;
-          const isActive = response?.enabled || response?.config?.status === 'active';
-
-          // Verificar credenciales válidas según el proveedor
-          let isConfigured = false;
-          let hasAutoInvoicing = false;
-
-          if (provider === 'siigo') {
-            isConfigured = isActive && !!providerConfig?.username;
-            hasAutoInvoicing = providerConfig?.enableAutoInvoicing === true ||
-                               providerConfig?.facturacionAutomatica === true;
-          } else if (provider === 'world_office') {
-            isConfigured = isActive && !!(providerConfig?.apiToken || providerConfig?.idEmpresa);
-            hasAutoInvoicing = providerConfig?.enableAutoInvoicing === true ||
-                               providerConfig?.facturacionAutomatica === true;
-          } else if (provider === 'dian') {
-            isConfigured = isActive && !!providerConfig?.issuer?.nit && !!providerConfig?.environment;
-            hasAutoInvoicing = providerConfig?.enableAutoInvoicing === true;
-          }
-
-          if (isConfigured && !found) {
-            found = true;
-            this.siigoConfig = providerConfig;
-            this.siigoEnabled = hasAutoInvoicing;
-            this.activeAccountingProvider = provider;
-            this.accountingProviderName = this.getAccountingProviderDisplayName(provider);
-
-            if (this.siigoEnabled) {
-              console.log(`✅ ${this.accountingProviderName} habilitado con facturación automática`);
-            } else {
-              console.log(`ℹ️ ${this.accountingProviderName} configurado pero facturación automática deshabilitada`);
-            }
-          } else {
-            checkProvider(index + 1);
-          }
-        },
-        error: () => {
-          checkProvider(index + 1);
-        }
-      });
-    };
-
-    checkProvider(0);
+      this.siigoConfig = proveedor.config;
+      this.siigoEnabled = proveedor.autoFacturacion;
+      this.activeAccountingProvider = proveedor.provider;
+      this.accountingProviderName = this.getAccountingProviderDisplayName(proveedor.provider);
+    });
   }
 
   /**
@@ -944,48 +906,30 @@ export class CrearVentasComponent
     if (!orderId || (!this.siigoEnabled && !this.generarFacturaElectronica)) {
       return;
     }
+    if (!this.proveedorContable) {
+      console.warn('⚠️ No hay proveedor contable configurado; la venta se puede facturar desde Pedidos.');
+      return;
+    }
 
     const providerName = this.accountingProviderName || 'Sistema Contable';
-    const provider = this.activeAccountingProvider || 'siigo';
-
     console.log(`📄 Encolando facturación ${providerName} para pedido ${nroPedido}...`);
 
-    // Obtener opciones de facturación de la configuración
-    const options: any = {};
-    if (this.siigoConfig?.documentTypeId) {
-      options.documentTypeId = this.siigoConfig.documentTypeId;
-    }
-    if (this.siigoConfig?.defaultPaymentTypeId) {
-      options.paymentTypeId = this.siigoConfig.defaultPaymentTypeId;
-    }
-    if (this.siigoConfig?.costCenterId) {
-      options.costCenterId = this.siigoConfig.costCenterId;
-    }
-    if (this.siigoConfig?.sellerId) {
-      options.sellerId = this.siigoConfig.sellerId;
-    }
-
-    // Usar endpoint async de Siigo o genérico para otros proveedores
-    const invoiceCall = provider === 'siigo'
-      ? this.integrationsService.createSiigoInvoiceFromOrderAsync(orderId, options)
-      : this.integrationsService.createAccountingInvoiceFromOrder(provider, orderId, options);
-
-    invoiceCall.subscribe({
-        next: (response: any) => {
-          console.log(`🔄 Facturación ${providerName} encolada - Job ID: ${response.jobId || response.id || 'N/A'}`);
-          // Mostrar mensaje informativo al usuario
-          this.toastrService.info(
-            'La factura se generará en segundo plano. Recibirás una notificación cuando esté lista.',
-            `Facturación ${providerName} en proceso`,
-            { timeOut: 5000 }
-          );
-        },
-        error: (error) => {
-          console.warn(`⚠️ No se pudo encolar facturación ${providerName}:`, error?.message || error);
-          // No bloquear el flujo - solo advertir
-          // El usuario puede facturar manualmente después
-        }
-      });
+    // D-419: siempre por la ruta asíncrona (antes DIAN y World Office iban por
+    // la síncrona y hacían esperar), con candado contra doble factura.
+    this.facturacionAutomatica.encolar(this.proveedorContable, orderId).subscribe({
+      next: (response: any) => {
+        console.log(`🔄 Facturación ${providerName} encolada - Job ID: ${response?.jobId || response?.id || 'N/A'}`);
+        this.toastrService.info(
+          'La factura se generará en segundo plano. Recibirás una notificación cuando esté lista.',
+          `Facturación ${providerName} en proceso`,
+          { timeOut: 5000 }
+        );
+      },
+      error: (error) => {
+        // No bloquear el flujo: el usuario puede facturar manualmente después.
+        console.warn(`⚠️ No se pudo encolar facturación ${providerName}:`, error?.message || error);
+      }
+    });
   }
 
   /**
