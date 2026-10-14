@@ -9,7 +9,8 @@
 .container-fluid {
   padding: $clientes-spacing-lg;
   background-color: $clientes-bg-lighter;
-  min-height: 100vh;
+  // Ticket 1208: sin min-height. El formulario único (D-404) va fuera de este
+  // contenedor, así que una altura mínima de pantalla lo empujaba hacia abajo.
 
   @include clientes-responsive('tablet') {
     padding: $clientes-spacing-md;
