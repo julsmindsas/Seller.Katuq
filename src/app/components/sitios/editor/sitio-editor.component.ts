@@ -977,6 +977,16 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       next: (res) => {
         this.cargandoVentaConfig = false;
         this.ventaConfig = (res && res.data) || null;
+        // Ticket 1215: las formas encendidas toman el nombre público y las instrucciones vigentes
+        // del maestro (salen en el próximo guardado).
+        const t = this.contenido && this.contenido.tienda;
+        const maestro = (this.ventaConfig && this.ventaConfig.formasPago) || [];
+        if (t && Array.isArray(t.otrasFormasPago)) {
+          t.otrasFormasPago = t.otrasFormasPago.map((f) => {
+            const m = maestro.find((x) => x.cd === f.cd);
+            return m && (m.nombrePublico || m.instrucciones) ? this.formaParaTienda(m) : f;
+          });
+        }
       },
       error: () => {
         this.cargandoVentaConfig = false;
@@ -992,7 +1002,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   /** Enciende o apaga una forma de pago manual del maestro. */
-  alternarFormaPago(forma: { cd: string; nombre: string }): void {
+  alternarFormaPago(forma: { cd: string; nombre: string; nombrePublico?: string; instrucciones?: string }): void {
     const t = this.contenido && this.contenido.tienda;
     if (!t) return;
     if (this.formaPagoActiva(forma.cd)) {
@@ -1001,9 +1011,29 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       this.toastr.warning("Hasta 6 formas de pago adicionales: más opciones confunden al comprador.");
       return;
     } else {
-      t.otrasFormasPago = [...t.otrasFormasPago, { cd: forma.cd, nombre: forma.nombre }];
+      // Ticket 1215: la tienda guarda el nombre público y las instrucciones del maestro.
+      t.otrasFormasPago = [...t.otrasFormasPago, this.formaParaTienda(forma)];
     }
     this.marcarSucio();
+  }
+
+  private formaParaTienda(forma: { cd: string; nombre: string; nombrePublico?: string; instrucciones?: string }): { cd: string; nombre: string; instrucciones?: string } {
+    const nombre = (forma.nombrePublico || forma.nombre || "").slice(0, 60);
+    return forma.instrucciones ? { cd: forma.cd, nombre, instrucciones: forma.instrucciones } : { cd: forma.cd, nombre };
+  }
+
+  /**
+   * Ticket 1215: las formas que se pueden encender en la web. Una que ya estaba
+   * encendida sigue en la lista aunque no esté marcada, para poder apagarla.
+   */
+  get formasPagoWeb(): VentaConfig["formasPago"] {
+    const lista = (this.ventaConfig && this.ventaConfig.formasPago) || [];
+    return lista.filter((f) => f.disponibleWeb !== false || this.formaPagoActiva(f.cd));
+  }
+
+  /** Encendida en la tienda pero el maestro dice que no es para la web (o es interna). */
+  formaNoWeb(f: { disponibleWeb?: boolean; interna?: boolean }): boolean {
+    return f.disponibleWeb === false;
   }
 
   /**

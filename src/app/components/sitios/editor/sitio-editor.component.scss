@@ -3255,3 +3255,6 @@ input.is-error { border-color: #b42318 !important; }
     &:hover { text-decoration: underline; }
   }
 }
+
+// Ticket 1215: forma de pago encendida que el maestro no marca para la web.
+.forma-aviso { color: #b42318 !important; font-weight: 600; }

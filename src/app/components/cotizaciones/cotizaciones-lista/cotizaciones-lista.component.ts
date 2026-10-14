@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy } from "@angular/core";
+import { Component, HostListener, OnInit, OnDestroy } from "@angular/core";
+import Swal from "sweetalert2";
 import { Router } from "@angular/router";
 import { Subject, Subscription } from "rxjs";
 import { debounceTime, distinctUntilChanged } from "rxjs/operators";
@@ -46,8 +47,27 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   filtroEstado: EstadoCotizacion | "" = "";
   q = "";
   filtroPedido = "";
-  /** Ticket 1104: filtrar por el comercial que hizo la cotización. */
-  filtroVendedor = "";
+  /** Tickets 1104/1204: comerciales elegidos (vacío = todos). */
+  vendedoresSel: string[] = [];
+  /** Ticket 1204: menú de comerciales abierto. */
+  menuComerciales = false;
+  /** Ticket 1204: con "Todos" también se puede pedir la comparativa del equipo. */
+  compararTodos = false;
+  /** Ticket 1205: período ("" = todo, mes, mesAnterior, trimestre, personalizado). */
+  periodo: "" | "mes" | "mesAnterior" | "trimestre" | "personalizado" = "";
+  fechaDesde = "";
+  fechaHasta = "";
+  /** Ticket 1206: alerta "Requieren atención" aplicada a la tabla. */
+  filtroAtencion = "";
+  /** Ticket 1204: orden de la tabla comparativa. */
+  ordenComparativa: { campo: string; dir: 1 | -1 } = { campo: "cotizadoValor", dir: -1 };
+  /** Tickets 1204/1205: metas mensuales por comercial (configuración de la empresa). */
+  metas: { [email: string]: number } = {};
+
+  /** Ticket 1204: correos separados por coma, como los espera el servidor. */
+  get filtroVendedor(): string {
+    return this.vendedoresSel.join(",");
+  }
   /** Ticket 1211: la tabla muestra solo las aceptadas sin pedido (clic en la tarjeta). */
   filtroSinConvertir = false;
   /** Ticket 1207: rechazadas por este motivo. */
@@ -87,6 +107,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.panelContraido = this.leerPreferenciaPanel();
+    this.cargarMetas();
     this.subs.push(
       this.searchSubject
         .pipe(debounceTime(350), distinctUntilChanged())
@@ -122,6 +143,9 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
         q: this.q || undefined,
         pedido: this.filtroPedido || undefined,
         vendedor: this.filtroVendedor || undefined,
+        desde: this.fechaDesde || undefined,
+        hasta: this.fechaHasta || undefined,
+        comparativa: this.mostrarComparativa,
       })
       .subscribe({
         next: (res) => {
@@ -154,6 +178,9 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
         vendedor: this.filtroVendedor || undefined,
         sinConvertir: this.filtroSinConvertir || undefined,
         motivo: this.filtroMotivo || undefined,
+        desde: this.fechaDesde || undefined,
+        hasta: this.fechaHasta || undefined,
+        atencion: this.filtroAtencion || undefined,
         page: this.page,
         limit: this.limit,
       })
@@ -180,16 +207,243 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   }
 
   // ---- Filtros ----
+  /** Ticket 1204: uno solo (desde la comparativa o al quitar el chip) o "" = todos. */
   setVendedor(value: string): void {
-    this.filtroVendedor = value || "";
+    this.vendedoresSel = value ? [value] : [];
+    this.compararTodos = false;
+    this.aplicarFiltrosComerciales();
+  }
+
+  alternarVendedor(email: string): void {
+    this.vendedoresSel = this.vendedoresSel.includes(email)
+      ? this.vendedoresSel.filter((e) => e !== email)
+      : [...this.vendedoresSel, email];
+    this.aplicarFiltrosComerciales();
+  }
+
+  elegirTodos(): void {
+    this.vendedoresSel = [];
+    this.aplicarFiltrosComerciales();
+  }
+
+  get textoComerciales(): string {
+    if (!this.vendedoresSel.length) return "Todos";
+    if (this.vendedoresSel.length === 1) {
+      const v = this.vendedores.find((x) => x.email === this.vendedoresSel[0]);
+      return (v && v.nombre) || this.vendedoresSel[0];
+    }
+    return `${this.vendedoresSel.length} comerciales`;
+  }
+
+  /** Ticket 1204: la comparativa sale con 2 o más comerciales, o con "Comparar todos". */
+  get mostrarComparativa(): boolean {
+    return this.vendedoresSel.length >= 2 || (this.compararTodos && this.vendedores.length > 1);
+  }
+
+  alternarComparativa(): void {
+    this.compararTodos = !this.compararTodos;
+    this.cargarMetrics();
+  }
+
+  private aplicarFiltrosComerciales(): void {
     this.page = 1;
     this.cargar();
     this.cargarMetrics();
   }
 
+  @HostListener("document:click", ["$event"])
+  cerrarMenuComerciales(ev: Event): void {
+    if (!this.menuComerciales) return;
+    const t = ev.target as HTMLElement;
+    if (t && t.closest && t.closest(".comerciales-menu")) return;
+    this.menuComerciales = false;
+  }
+
+  // ---- Ticket 1205: período ----
+
+  setPeriodo(valor: string): void {
+    this.periodo = valor as any;
+    const hoy = new Date();
+    const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    if (valor === "mes") {
+      this.fechaDesde = iso(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+      this.fechaHasta = iso(new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0));
+    } else if (valor === "mesAnterior") {
+      this.fechaDesde = iso(new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1));
+      this.fechaHasta = iso(new Date(hoy.getFullYear(), hoy.getMonth(), 0));
+    } else if (valor === "trimestre") {
+      const ini = Math.floor(hoy.getMonth() / 3) * 3;
+      this.fechaDesde = iso(new Date(hoy.getFullYear(), ini, 1));
+      this.fechaHasta = iso(new Date(hoy.getFullYear(), ini + 3, 0));
+    } else if (valor === "") {
+      this.fechaDesde = "";
+      this.fechaHasta = "";
+    }
+    if (valor !== "personalizado" || (this.fechaDesde && this.fechaHasta)) this.aplicarFiltrosComerciales();
+  }
+
+  setFecha(campo: "fechaDesde" | "fechaHasta", valor: string): void {
+    this[campo] = valor || "";
+    this.periodo = "personalizado";
+    this.aplicarFiltrosComerciales();
+  }
+
+  // ---- Ticket 1206: requieren atención ----
+
+  readonly ALERTAS: { clave: string; texto: string; ayuda: string }[] = [
+    { clave: "sinConvertir", texto: "Aceptadas sin convertir", ayuda: "Negocio ganado que todavía no es pedido." },
+    { clave: "porVencer", texto: "Por vencer", ayuda: "Enviadas que vencen en los próximos 3 días." },
+    { clave: "sinSeguimiento", texto: "Sin seguimiento", ayuda: "Enviadas hace más de 5 días sin cambios." },
+    { clave: "borradoresViejos", texto: "Borradores viejos", ayuda: "Borradores de hace más de 2 días sin enviar." },
+  ];
+
+  conteoAlerta(clave: string): number {
+    const a: any = this.metrics && this.metrics.atencion;
+    return (a && a[clave]) || 0;
+  }
+
+  alertaActiva(clave: string): boolean {
+    return clave === "sinConvertir" ? this.filtroSinConvertir : this.filtroAtencion === clave;
+  }
+
+  aplicarAlerta(clave: string): void {
+    const activa = this.alertaActiva(clave);
+    this.filtroAtencion = "";
+    this.filtroSinConvertir = false;
+    this.filtroEstado = "";
+    this.filtroMotivo = "";
+    if (!activa) {
+      if (clave === "sinConvertir") { this.filtroSinConvertir = true; this.filtroEstado = "aceptada"; }
+      else this.filtroAtencion = clave;
+    }
+    this.page = 1;
+    this.cargar();
+  }
+
+  // ---- Ticket 1205: indicadores comerciales ----
+
+  variacion(campo: string): number | null {
+    const v = this.metrics && this.metrics.variacion;
+    return v && v[campo] !== undefined ? v[campo] : null;
+  }
+
+  /** "+12,5 %" / "−3 %". En ciclo y respuesta, bajar es bueno. */
+  textoVariacion(campo: string): string {
+    const v = this.variacion(campo);
+    if (v === null) return "";
+    return (v > 0 ? "▲ " : v < 0 ? "▼ " : "") + Math.abs(v).toLocaleString("es-CO", { maximumFractionDigits: 1 }) + "%";
+  }
+
+  claseVariacion(campo: string): string {
+    const v = this.variacion(campo);
+    if (v === null || v === 0) return "";
+    const bajarEsBueno = campo === "cicloCierreDias" || campo === "primeraRespuestaHoras" || campo === "descuentoPromedio";
+    return (v > 0) !== bajarEsBueno ? "var-buena" : "var-mala";
+  }
+
+  numero(n: number | null | undefined, sufijo = ""): string {
+    if (n === null || n === undefined) return "—";
+    return n.toLocaleString("es-CO", { maximumFractionDigits: 1 }) + sufijo;
+  }
+
+  get esAdmin(): boolean {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      return /admin/i.test(String(u.rol || ""));
+    } catch {
+      return false;
+    }
+  }
+
+  /** Tickets 1204/1205: el administrador fija la meta mensual de cada comercial. */
+  async editarMetas(): Promise<void> {
+    const esc = (v: string) => String(v || "").replace(/[&<>"']/g, (ch) => (({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as any)[ch]));
+    const filas = this.vendedores
+      .map((v, i) => `<label style="display:flex;align-items:center;gap:10px;margin:0 0 8px;text-align:left"><span style="flex:1;font-size:13px">${esc(v.nombre)}</span><input id="meta-${i}" type="number" min="0" step="100000" value="${this.metas[v.email] || ""}" placeholder="Sin meta" style="width:150px;padding:8px 10px;border:1px solid #dedbea;border-radius:11px"></label>`)
+      .join("");
+    const r = await Swal.fire({
+      title: "Meta mensual por comercial",
+      html: `<p style="font-size:13px;color:#6b6880;margin:0 0 12px">Pesos convertidos a pedido en el mes. Vacío = sin meta.</p>${filas}`,
+      showCancelButton: true,
+      confirmButtonText: "Guardar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#5F3FE0",
+      preConfirm: () => {
+        const metas: { [email: string]: number } = {};
+        this.vendedores.forEach((v, i) => {
+          const n = Math.round(Number((document.getElementById("meta-" + i) as HTMLInputElement | null)?.value || 0));
+          if (n > 0) metas[v.email] = n;
+        });
+        return metas;
+      },
+    });
+    if (!r.isConfirmed) return;
+    const metas = r.value as { [email: string]: number };
+    this.subs.push(this.service.updateConfig({ metas }).subscribe({
+      next: (res) => {
+        if (res && res.success) {
+          this.metas = metas;
+          this.toastr.success("Metas guardadas.");
+          this.cargarMetrics();
+        } else {
+          this.toastr.error((res && res.message) || "No se pudieron guardar las metas.");
+        }
+      },
+      error: (e) => this.toastr.error(e?.error?.message || "No se pudieron guardar las metas."),
+    }));
+  }
+
+  private cargarMetas(): void {
+    this.subs.push(this.service.getConfig().subscribe({
+      next: (res) => { this.metas = (res && res.data && (res.data as any).metas) || {}; },
+      error: () => { this.metas = {}; },
+    }));
+  }
+
+  // ---- Ticket 1204: tabla comparativa ----
+
+  get filasComparativa(): any[] {
+    const filas = [...((this.metrics && this.metrics.porVendedor) || [])];
+    const { campo, dir } = this.ordenComparativa;
+    return filas.sort((a, b) => {
+      const x = a[campo] ?? -Infinity;
+      const y = b[campo] ?? -Infinity;
+      return (typeof x === "string" ? x.localeCompare(y, "es") : x - y) * dir;
+    });
+  }
+
+  ordenarComparativa(campo: string): void {
+    this.ordenComparativa = this.ordenComparativa.campo === campo
+      ? { campo, dir: this.ordenComparativa.dir === 1 ? -1 : 1 }
+      : { campo, dir: campo === "nombre" ? 1 : -1 };
+  }
+
+  exportarComparativa(): void {
+    const ind: any = (this.metrics && this.metrics.indicadores) || {};
+    const fila = (f: any) => ({
+      "Asesor": f.nombre,
+      "Cotizaciones": f.cotizaciones,
+      "$ cotizado": Math.round(f.cotizadoValor),
+      "Win rate (cantidad) %": f.winRate,
+      "Win rate (valor) %": f.winRateValor,
+      "Ticket promedio": f.ticketPromedio,
+      "Ciclo de cierre (días)": f.cicloCierreDias ?? "",
+      "Descuento promedio %": f.descuentoPromedio,
+      "Pipeline abierto": Math.round(f.pipelineAbierto),
+      "$ convertido": Math.round(f.convertidoValor),
+      "Avance vs. meta %": f.avanceMeta ?? "",
+      "Participación %": f.participacion ?? 100,
+    });
+    const ws = XLSX.utils.json_to_sheet([...this.filasComparativa.map(fila), fila({ ...ind, nombre: "Equipo", participacion: 100 })]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Comparativa");
+    XLSX.writeFile(wb, `comparativa-asesores-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }
+
   setEstado(value: EstadoCotizacion | ""): void {
     this.filtroEstado = value;
     this.filtroSinConvertir = false;
+    this.filtroAtencion = "";
     if (value !== "rechazada") this.filtroMotivo = "";
     this.page = 1;
     this.cargar();
@@ -253,10 +507,12 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   /** Filtros puestos, como chips que se pueden quitar desde la barra compacta. */
   get filtrosActivos(): { clave: string; texto: string }[] {
     const lista: { clave: string; texto: string }[] = [];
-    if (this.filtroVendedor) {
-      const v = this.vendedores.find((x) => x.email === this.filtroVendedor);
-      lista.push({ clave: "vendedor", texto: "Comercial: " + ((v && v.nombre) || this.filtroVendedor) });
+    if (this.vendedoresSel.length) {
+      lista.push({ clave: "vendedor", texto: "Comercial: " + this.textoComerciales });
     }
+    if (this.fechaDesde || this.fechaHasta) lista.push({ clave: "periodo", texto: `Período: ${this.fechaDesde || "…"} a ${this.fechaHasta || "…"}` });
+    const alerta = this.ALERTAS.find((a) => a.clave === this.filtroAtencion);
+    if (alerta) lista.push({ clave: "atencion", texto: alerta.texto });
     if (this.filtroSinConvertir) lista.push({ clave: "sinConvertir", texto: "Aceptadas sin convertir" });
     else if (this.filtroEstado) lista.push({ clave: "estado", texto: "Estado: " + this.estadoLabel(this.filtroEstado) });
     if (this.filtroMotivo) lista.push({ clave: "motivo", texto: "Motivo: " + this.filtroMotivo });
@@ -269,6 +525,8 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     if (clave === "sinConvertir" || clave === "estado") { this.setEstado(""); return; }
     if (clave === "motivo") { this.setMotivo(""); return; }
     if (clave === "pedido") { this.filtroPedido = ""; this.page = 1; this.cargar(); this.cargarMetrics(); }
+    if (clave === "periodo") { this.setPeriodo(""); }
+    if (clave === "atencion") { this.filtroAtencion = ""; this.page = 1; this.cargar(); }
   }
 
   /** Porcentaje con coma decimal (34,07 %). */
@@ -374,6 +632,9 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
         vendedor: this.filtroVendedor || undefined,
         sinConvertir: this.filtroSinConvertir || undefined,
         motivo: this.filtroMotivo || undefined,
+        desde: this.fechaDesde || undefined,
+        hasta: this.fechaHasta || undefined,
+        atencion: this.filtroAtencion || undefined,
         page: 1,
         limit: 5000,
       })

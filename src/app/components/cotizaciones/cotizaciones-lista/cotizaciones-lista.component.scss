@@ -805,3 +805,119 @@
   .barra-compacta-acciones { margin-left: 0; width: 100%; }
   .barra-compacta-cifras { flex-wrap: wrap; }
 }
+
+// ── Ticket 1204: comerciales (varios a la vez) y tabla comparativa ──
+.comerciales-menu { position: relative; }
+.comerciales-boton {
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  .comerciales-texto { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; color: var(--ink, #211f3a); }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; }
+}
+.comerciales-lista {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(33, 31, 58, 0.12);
+  padding: 6px;
+}
+.comerciales-opcion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  &:hover { background: var(--accent-bg); }
+}
+.comerciales-nombre { flex: 1; font-size: 13px; color: #211f3a; }
+.comerciales-total { font-size: 12px; color: var(--muted2); }
+.periodo-fechas {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  input { flex: 1; min-width: 0; height: 36px; border: 1px solid var(--line); border-radius: 11px; padding: 0 8px; font-size: 13px; }
+}
+.comparativa-card { margin-bottom: 14px; }
+.comparativa-tabla {
+  .num { text-align: right; white-space: nowrap; }
+  small { color: var(--muted2); font-size: 11px; }
+  th[role="button"] { cursor: pointer; }
+}
+.comparativa-asesor {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  font-weight: 700;
+  font: inherit;
+  cursor: pointer;
+  &:hover { text-decoration: underline; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; }
+}
+.comparativa-total td { font-weight: 800; background: #faf9ff; }
+
+// ── Ticket 1205: indicadores comerciales ──
+.indicadores-card { padding: 16px 20px; margin-bottom: 14px; }
+.indicadores-cabeza {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+.indicadores-periodo { font-size: 12px; color: var(--muted2); letter-spacing: normal; }
+.indicadores-relleno { flex: 1; }
+.btn-sm { padding: 6px 12px !important; font-size: 12.5px !important; }
+.indicadores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+.indicador {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  strong { font-size: 17px; color: #211f3a; }
+  small { font-size: 11.5px; color: var(--muted2); letter-spacing: normal; }
+  em { font-style: normal; font-weight: 700; margin-left: 4px; }
+}
+.indicador-nombre { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: var(--muted2); }
+.var-buena { color: #137a3a; }
+.var-mala { color: #b42318; }
+
+// ── Ticket 1206: requieren atención ──
+.atencion {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.atencion-titulo { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted2); margin-right: 4px; }
+.atencion-item {
+  border: 1px solid #f6c9a8;
+  background: #fff4e5;
+  color: #8a4b00;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  b { font-weight: 800; }
+  &.vacia { border-color: var(--line); background: #fff; color: var(--muted2); }
+  &.activa { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; }
+}

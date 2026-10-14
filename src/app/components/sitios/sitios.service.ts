@@ -21,7 +21,7 @@ export interface TiendaSitio {
   pagoEnLinea: boolean;
   contraEntrega: boolean;
   /** Formas de pago manuales del maestro (transferencia, Nequi...). */
-  otrasFormasPago: { cd: string; nombre: string }[];
+  otrasFormasPago: { cd: string; nombre: string; instrucciones?: string }[];
   /** Venta cruzada (afines + sugerencias del carrito). Encendida por defecto. */
   ventaCruzada?: boolean;
   /** Al agregar: abrir el cajón (true) o solo confirmar con un aviso (por defecto). */
@@ -144,7 +144,8 @@ export interface CategoriaSitio {
 export interface VentaConfig {
   pasarela: { configurada: boolean; proveedor: string | null };
   zonas: number;
-  formasPago: { cd: string; nombre: string; categoria: string }[];
+  /** Ticket 1215: nombre público, instrucciones y si se puede ofrecer en la web. */
+  formasPago: { cd: string; nombre: string; categoria: string; nombrePublico?: string; instrucciones?: string; disponibleWeb?: boolean; interna?: boolean }[];
   /** Ticket 1213: si la empresa tiene razón social y NIT (solo si están, no los valores). */
   datosLegales?: { razonSocial: boolean; nit: boolean } | null;
 }

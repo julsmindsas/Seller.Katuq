@@ -31,6 +31,11 @@ export class CrearFormasPagoComponent implements OnInit {
       activo: [false, Validators.required],
       descripcionCorreoElectronico: ['', Validators.required],
       recordatorioCobro: ['', Validators.required],
+      // Ticket 1215: si se ofrece en la tienda web, con qué nombre y qué instrucciones ve el comprador.
+      // Una forma nueva nace apagada para la web.
+      disponibleWeb: [false],
+      nombrePublico: [''],
+      instruccionesComprador: [''],
     });
   }
   
@@ -39,6 +44,11 @@ export class CrearFormasPagoComponent implements OnInit {
     if(this.payEditData) {
       this.editando = true;
       this.fomrasPagoForm.patchValue(this.payEditData);
+      // Ticket 1215: una forma de antes (sin la marca) conserva lo que ya hacía en la tienda web:
+      // salía, salvo que fuera un concepto interno. Así editarla no la saca de la web por sorpresa.
+      if (this.payEditData.disponibleWeb === undefined) {
+        this.fomrasPagoForm.patchValue({ disponibleWeb: !esConceptoInterno(this.payEditData) });
+      }
     }
   }
   
@@ -71,4 +81,11 @@ export class CrearFormasPagoComponent implements OnInit {
       });
     });
   }
+}
+
+/** Ticket 1215: misma regla del servidor (utils/siteFormasPago.js) para conceptos internos. */
+function esConceptoInterno(forma: any): boolean {
+  const norm = (v: any) => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const re = /\b(ajuste|cxc|cuentas? por cobrar|cartera|marketplace|anticipo|nota credito|cruce de cuentas|uso interno)\b/;
+  return re.test(norm(forma && forma.nombre));
 }

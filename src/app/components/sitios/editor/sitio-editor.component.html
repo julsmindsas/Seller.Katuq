@@ -2493,17 +2493,21 @@
             </button>
 
 
-            <ng-container *ngIf="ventaConfig && ventaConfig.formasPago.length">
+            <ng-container *ngIf="ventaConfig && formasPagoWeb.length">
               <div class="campo">
                 <label>Otras formas de pago</label>
-                <small>Las de tu maestro de formas de pago. El pedido queda pendiente y el
-                  comprador ve tu mensaje de confirmación con las instrucciones — ponle ahí los
-                  datos de la cuenta.</small>
+                <!-- Ticket 1215: solo las marcadas "Disponible en la tienda web" en el maestro. -->
+                <small>Las de tu maestro marcadas como disponibles en la tienda web. El pedido queda
+                  pendiente y el comprador ve el nombre y las instrucciones que pusiste en el maestro.</small>
               </div>
-              <button class="opcion" *ngFor="let f of ventaConfig.formasPago"
+              <button class="opcion" *ngFor="let f of formasPagoWeb"
                       [class.is-active]="formaPagoActiva(f.cd)"
                       (click)="alternarFormaPago(f)">
-                <span class="opcion__texto"><strong>{{ f.nombre }}</strong></span>
+                <span class="opcion__texto">
+                  <strong>{{ f.nombrePublico || f.nombre }}</strong>
+                  <small *ngIf="f.instrucciones">{{ f.instrucciones }}</small>
+                  <small class="forma-aviso" *ngIf="formaNoWeb(f)">No está marcada para la tienda web en el maestro: apágala si es un concepto interno.</small>
+                </span>
                 <span class="palanca"><span></span></span>
               </button>
             </ng-container>

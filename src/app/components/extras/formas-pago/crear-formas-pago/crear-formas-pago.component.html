@@ -97,6 +97,31 @@
                             </div>
                         </div>
 
+                        <!-- Ticket 1215: la tienda web solo ofrece las formas marcadas aquí -->
+                        <div class="row web-pago">
+                            <div class="col-12">
+                                <div class="form-group web-pago-marca">
+                                    <input type="checkbox" id="disponibleWeb" formControlName="disponibleWeb">
+                                    <label for="disponibleWeb">Disponible en la tienda web</label>
+                                    <small class="web-pago-ayuda">Márcala solo si es un medio de pago para el comprador (Nequi, transferencia, efectivo). Los conceptos internos, como "Ajuste al peso" o cuentas por cobrar, no se marcan.</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6" *ngIf="fomrasPagoForm.value.disponibleWeb">
+                                <div class="form-group">
+                                    <label for="nombrePublico">Nombre para el comprador</label>
+                                    <input class="form-control" type="text" id="nombrePublico" formControlName="nombrePublico" maxlength="60" placeholder="Ej: Transferencia Bancolombia">
+                                    <small class="web-pago-ayuda">Vacío = el nombre de arriba.</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6" *ngIf="fomrasPagoForm.value.disponibleWeb">
+                                <div class="form-group">
+                                    <label for="instruccionesComprador">Instrucciones para el comprador</label>
+                                    <textarea class="form-control" id="instruccionesComprador" formControlName="instruccionesComprador" rows="3" maxlength="300" placeholder="Ej: Cuenta de ahorros 123-456 a nombre de… Envía el comprobante al WhatsApp 300…"></textarea>
+                                    <small class="web-pago-ayuda">Las ve al elegir esta forma de pago y en el correo de su pedido.</small>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">

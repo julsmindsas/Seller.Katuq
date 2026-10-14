@@ -101,6 +101,33 @@ export interface CotizacionMetrics {
   vendedores?: { email: string; nombre: string; total: number }[];
   /** Ticket 1207: rechazadas por motivo. */
   motivosRechazo?: { [motivo: string]: number };
+  /** Ticket 1205: indicadores del comercial o del equipo con los filtros. */
+  indicadores?: IndicadoresComerciales;
+  /** Ticket 1205: variación % de cada indicador frente al período anterior. */
+  variacion?: { [campo: string]: number | null } | null;
+  periodoAnterior?: { desde: string; hasta: string } | null;
+  /** Ticket 1206: cuántas cotizaciones hay en cada alerta. */
+  atencion?: { sinConvertir: number; porVencer: number; sinSeguimiento: number; borradoresViejos: number };
+  /** Ticket 1204: una fila por asesor (cuando se pide la comparativa). */
+  porVendedor?: (IndicadoresComerciales & { email: string; nombre: string; participacion: number })[];
+}
+
+/** Tickets 1204/1205: indicadores de un comercial o de un grupo. */
+export interface IndicadoresComerciales {
+  cotizaciones: number;
+  cotizadoValor: number;
+  ticketPromedio: number;
+  winRate: number;
+  winRateValor: number;
+  convertidas: number;
+  convertidoValor: number;
+  convertidoMes: number;
+  pipelineAbierto: number;
+  cicloCierreDias: number | null;
+  primeraRespuestaHoras: number | null;
+  descuentoPromedio: number;
+  meta: number;
+  avanceMeta: number | null;
 }
 
 /** Ticket 1081: documento anexo (PDF) de las condiciones comerciales. */
@@ -119,6 +146,8 @@ export interface CotizacionConfig {
   valoresSinDecimales?: boolean;
   /** Ticket 1207: motivos de rechazo de la empresa ("Otro" siempre al final). */
   motivosRechazo?: string[];
+  /** Tickets 1204/1205: meta mensual de cada comercial { correo: pesos }. */
+  metas?: { [email: string]: number };
 }
 
 /** Ticket 1207: por qué se perdió una cotización. */
@@ -152,6 +181,11 @@ export interface CotizacionListFilter {
   sinConvertir?: boolean;
   /** Ticket 1207: rechazadas por este motivo. */
   motivo?: string;
+  /** Ticket 1205: rango de fechas (emisión), "AAAA-MM-DD". */
+  desde?: string;
+  hasta?: string;
+  /** Ticket 1206: alerta "Requieren atención". */
+  atencion?: string;
   page?: number;
   limit?: number;
 }
