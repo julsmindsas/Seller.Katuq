@@ -9764,4 +9764,9 @@ El detalle de seguridad está en el cambio privado del backend, sección "D-422 
 - **Prueba real (14-oct, autorizada por Daniel):** CER-000006 pasó a En producción con la marca de Opttia. Una segunda aprobación no cambió nada ("Ya estaba en producción"). CER-000009 quedó por fuera por la guarda de Tesorería.
 - **Hallazgo arreglado:** backend `7629a50`, desplegado. La fuente usa la misma cuenta del ejecutor (`saldoCambiaria`) y, si el comercio tiene Tesorería, no propone lo que aprobar le cambiaría el saldo. Los montos se leen pero no salen de la lectura.
 - **Datos de prueba devueltos.** CER-000006 se queda en producción, como resultado de la prueba.
-- **Falta:** los demás comercios, uno por uno con Daniel.
+- **Probado con el botón (14-oct, 12:53):** sesión real de un Administrador de FLORECER en sellercenter.katuq.com. "Pasar a En producción" y "Confirmar" dejaron CER-000005 en producción con la marca "hecho" y el usuario de la sesión. CER-000009 quedó por fuera por Tesorería. Fechas devueltas.
+- **Encendido en ALMARA FELICIDAD (14-oct, ~1 p. m., Daniel: "Dale enciendelo"):** es el primer comercio real que produce. Al encender proponía 13 pedidos a producción.
+- **Encendido para todas (14-oct, ~1:30 p. m., Daniel: "Préndalo para todos"):** `opttiaProduccion` y `opttiaCobroWhatsapp` en las 128 empresas, con simulación primero: 252 escritas, 0 errores. Reemplaza el "uno por uno".
+  - `despachosOpttia` no cambió: sigue solo en FLORECER, OH MY STORE y ALMARA.
+  - La producción solo aparece donde el perfil detecta uso de producción. Aprobar en un comercio real pasa pedidos de verdad a En producción, sin avisar al cliente.
+- **Falta:** seguir ALMARA unos días (8.5.4) y el cierre de la fase 2 (8.5.6).
