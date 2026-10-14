@@ -329,7 +329,9 @@ Orden: 8.2 va primero, porque la producción y el cobro dependen de las banderas
 
   El enlace de WhatsApp de CER-000010 sale bien.
 
-  Pendiente aparte: la fuente vuelve a proponer pedidos que la guarda de Tesorería siempre deja por fuera.
+  Arreglado el mismo día (backend `7629a50`, desplegado): la fuente ya no propone pedidos que la guarda de Tesorería siempre deja por fuera.
+
+  Datos de prueba devueltos: fechas originales y CER-000005 otra vez en "Sin producir". CER-000006 se queda en producción, como resultado de la prueba.
 
   Lo pedido: Encender FLORECER primero, con `opttiaProduccion` y `opttiaCobroWhatsapp` (`scripts/set-company-feature.js`: simular y luego `--execute`). Antes, verificar otra vez `CUSTOMER_NOTIFY_STATES`. Con la sesión de Daniel y pedidos de prueba:
   1. ver la producción encendida y aprobarla en dos toques;

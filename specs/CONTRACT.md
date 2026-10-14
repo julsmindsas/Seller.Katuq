@@ -9762,5 +9762,6 @@ El detalle de seguridad está en el cambio privado del backend, sección "D-422 
 - **Datos de prueba:** entrega de hoy en CER-000010, 11, 06 y 09, y CER-000005 en producción para que el perfil "usa producción" aplique. Se devuelven con los scripts de demo `--restaurar`.
 - **Con datos reales:** la cola trae el despacho de CER-000010 y la producción "on" de CER-000009 y CER-000006. El enlace de WhatsApp sale para CER-000010 y se niega a cancelados, inexistentes y otra empresa.
 - **Prueba real (14-oct, autorizada por Daniel):** CER-000006 pasó a En producción con la marca de Opttia. Una segunda aprobación no cambió nada ("Ya estaba en producción"). CER-000009 quedó por fuera por la guarda de Tesorería.
-- **Hallazgo:** la fuente vuelve a proponer pedidos que esa guarda siempre deja por fuera. Se propone filtrarlos en la fuente con la misma cuenta.
+- **Hallazgo arreglado:** backend `7629a50`, desplegado. La fuente usa la misma cuenta del ejecutor (`saldoCambiaria`) y, si el comercio tiene Tesorería, no propone lo que aprobar le cambiaría el saldo. Los montos se leen pero no salen de la lectura.
+- **Datos de prueba devueltos.** CER-000006 se queda en producción, como resultado de la prueba.
 - **Falta:** los demás comercios, uno por uno con Daniel.
