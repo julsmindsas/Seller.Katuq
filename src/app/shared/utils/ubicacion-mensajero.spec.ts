@@ -1,4 +1,7 @@
-import { claveEmpresa, haceCuanto, marcaDeUbicacion, perteneceAEmpresa, ubicacionVigente, VIGENCIA_UBICACION_MS } from './ubicacion-mensajero';
+import {
+  claveEmpresa, haceCuanto, marcaDeUbicacion, nombreDesdeClave, perteneceAEmpresa, senalMensajero, ubicacionVigente,
+  VIGENCIA_UBICACION_MS,
+} from './ubicacion-mensajero';
 
 /**
  * Ticket 1154 (ALMARA): datos reales de active_users del 2026-10-09 01:14 UTC.
@@ -93,6 +96,25 @@ describe('ubicacion-mensajero', () => {
 
     it('no da negativos si el reloj de la pantalla va atrasado', () => {
       expect(haceCuanto(AHORA + 5 * MIN, AHORA)).toBe('hace unos segundos');
+    });
+  });
+  describe('nombreDesdeClave', () => {
+    it('quita la empresa del final y deja el nombre con mayúscula inicial', () => {
+      expect(nombreDesdeClave('carlos_andres_lopez_almara_felicidad', 'ALMARA FELICIDAD')).toBe('Carlos Andres Lopez');
+      expect(nombreDesdeClave('juan_perez_caf__escobar', 'CAFÉ ESCOBAR')).toBe('Juan Perez');
+    });
+
+    it('si la clave no termina en la empresa, la deja entera', () => {
+      expect(nombreDesdeClave('ana_ruiz', 'ALMARA FELICIDAD')).toBe('Ana Ruiz');
+      expect(nombreDesdeClave('', 'ALMARA FELICIDAD')).toBe('');
+    });
+  });
+
+  describe('senalMensajero', () => {
+    it('en vivo hasta 3 min, reciente después', () => {
+      expect(senalMensajero(AHORA - 2 * MIN, AHORA)).toBe('en-vivo');
+      expect(senalMensajero(AHORA - 4 * MIN, AHORA)).toBe('reciente');
+      expect(senalMensajero(null, AHORA)).toBe('reciente');
     });
   });
 });
