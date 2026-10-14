@@ -551,3 +551,34 @@
   text-transform: none !important;
   letter-spacing: normal !important;
 }
+
+/* D-419 (ticket 1171): línea de facturación de la venta. */
+.cliente-facturacion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 4px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #f7f6fd;
+  font-size: 12px;
+  color: #1f2433;
+
+  i { color: #5f3fe0; }
+  .cf-label { font-weight: 700; }
+  .cf-valor { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .cf-cambiar {
+    border: none;
+    background: transparent;
+    color: #5f3fe0;
+    font-weight: 800;
+    font-size: 12px;
+    padding: 0 2px;
+  }
+
+  &.incompleta {
+    background: #fff7e6;
+    .cf-valor { color: #b45309; }
+  }
+}

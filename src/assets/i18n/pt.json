@@ -852,6 +852,17 @@
   "Porcentaje:": "Porcentagem:",
   "Envío gratis": "Frete grátis",
   "Valor del descuento:": "Valor do desconto:",
+  "Facturación de la venta": "Faturamento da venda",
+  "¿A quién se le factura esta venta? La factura electrónica se genera sola al terminar el cobro.": "Para quem esta venda é faturada? A fatura eletrônica é gerada automaticamente ao concluir o pagamento.",
+  "Le falta": "Falta",
+  "Este cliente no tiene datos de facturación guardados.": "Este cliente não tem dados de faturamento salvos.",
+  "Consumidor Final": "Consumidor Final",
+  "Factura sin datos del comprador (CC 222222222222)": "Fatura sem dados do comprador (CC 222222222222)",
+  "No requiere factura": "Não requer fatura",
+  "Se puede facturar después desde Pedidos": "Pode ser faturado depois em Pedidos",
+  "Agregar o corregir datos de facturación del cliente": "Adicionar ou corrigir os dados de faturamento do cliente",
+  "Usar esta opción": "Usar esta opção",
+  "Cambiar": "Alterar",
   "ej: maria.flores o María Flores": "ex.: maria.flores ou María Flores",
   "De 2 a 60 caracteres: letras, números, espacios, punto o guion": "De 2 a 60 caracteres: letras, números, espaços, ponto ou hífen"
 }

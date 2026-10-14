@@ -9607,3 +9607,13 @@ commits y el push no despliega ni activa checkout.
 **No verificado:** crear un cliente real en el navegador con la cuenta de ALMACEN BOMBAS.
 
 **Queda abierto:** si ALMACEN BOMBAS empieza a usar el campo como identificador para enviar mensajes por WhatsApp, un nombre con espacios no sirve como número ni como @usuario: hoy es solo una etiqueta.
+
+## D-419 (2026-10-13) — Facturación de la venta POS: perfil, Consumidor Final o sin factura, y factura automática (openspec/changes/facturacion-pos)
+
+**Disparador.** Jairo, ticket 1171 (2026-10-10): en el POS no se podía elegir a quién se factura ni si se factura; la venta POS debía facturarse sola en Siigo, como la venta asistida, y quedar en Pedidos como las demás. Aprobado por Santiago el 2026-10-13 (Daniel quedó como observador del ticket).
+
+**Hallazgo.** La facturación del POS no funcionaba: nunca se marcaba `generarFacturaElectronica`, el camino de respaldo usaba un mapeo viejo con datos de prueba fijos (documento 27391, nombre con " prueba") y el POS escribía `nroFactura = nroPedido` (también en el camino de Wompi, que lo persistía), así que Pedidos, Facturación electrónica y la vista previa del backend trataban la venta como "ya facturada" sin factura.
+
+**Decisión.** Línea "Facturación" en la tarjeta del cliente del POS con un modal propio (perfiles de `datosFacturacionElectronica[]` con el predeterminado preseleccionado, Consumidor Final o "No requiere factura"; sin perfil predeterminado arranca en "No requiere factura"). Antes de cobrar se valida el perfil (razón social, tipo y número de documento, ciudad, correo). El pedido guarda `facturacion` y `generarFacturaElectronica`; al terminar el cobro se encola la factura con el proveedor contable de la empresa por la ruta asíncrona `/:provider/invoices/from-order-async` (candado `ALREADY_INVOICED` / `INVOICING_IN_PROGRESS`). Servicio compartido `FacturacionAutomaticaService` (POS y venta asistida; la venta asistida pasa a usar siempre la ruta asíncrona, también con DIAN y World Office). El POS deja de escribir `nroFactura`. Backend: la facturación automática al aprobar un pago (`orders.js`) salta si el pedido ya tiene factura o está en facturación (`pedidoYaFacturado`). Con pago Wompi no se factura al cobrar (el pago aún no está confirmado): queda para Pedidos. Fuera de alcance: documento equivalente POS (FE-09).
+
+**Estado (13-oct).** Implementado en local. Pruebas: utilidades del POS 12/12 y del servicio 8/8, backend 7/7 más contratos de POS y facturación en verde. Pendiente: prueba en navegador y una emisión en el entorno de pruebas del proveedor con permiso explícito.

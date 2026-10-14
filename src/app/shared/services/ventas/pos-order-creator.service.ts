@@ -5,8 +5,10 @@ import { CartService } from '../cart.service';
 import { VentasService } from './ventas.service';
 import { PaymentService } from './payment.service';
 import { UserLite } from '../../models/User/UserLite';
-import { FacturacionIntegracionService } from '../integraciones/facturas/facturacion.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { ToastrService } from 'ngx-toastr';
+import { FacturacionAutomaticaService } from '../facturacion/facturacion-automatica.service';
+import { camposPedido, FacturacionPos } from '../../utils/facturacion-pos';
 import { FacturaTirillaComponent } from '../../../components/pos/factura-tirilla/factura-tirilla.component';
 import Swal from 'sweetalert2';
 
@@ -19,14 +21,15 @@ export class PosOrderCreatorService {
     private cartService: CartService,
     private ventasService: VentasService,
     private paymentService: PaymentService,
-    private facturacionElectronicaService: FacturacionIntegracionService,
+    private facturacionAutomatica: FacturacionAutomaticaService,
+    private toastr: ToastrService,
     private modal: NgbModal
   ) { }
 
   /**
    * Crea un objeto pedido a partir de los datos básicos
    */
-  createPedidoObject(customer: any, paymentMethod: string, warehouse: any): Pedido {
+  createPedidoObject(customer: any, paymentMethod: string, warehouse: any, facturacion?: FacturacionPos): Pedido {
     const company = JSON.parse(localStorage.getItem('currentCompany') || '{}').nomComercial || '';
     const texto = company.toString() || '';
     const ultimasLetras = texto.substring(texto.length - 3);
@@ -75,7 +78,9 @@ export class PosOrderCreatorService {
       totalDescuento: 0,
       anticipo: 0,
       faltaPorPagar: 0,
-      typeOrder: 'POS'
+      typeOrder: 'POS',
+      // D-419 (ticket 1171): a quién se factura y si se factura.
+      ...camposPedido(facturacion),
     };
 
     return pedido;
@@ -146,18 +151,21 @@ export class PosOrderCreatorService {
             // Usar la referencia que viene en res.order.referencia
             const orderFromResponse = res.order;
             if (orderFromResponse && orderFromResponse.referencia) {
-              orderFromResponse.nroFactura = orderFromResponse.referencia;
+              // D-419: el número de factura solo lo escribe el sistema contable al
+              // emitirla; antes se copiaba el del pedido y la venta quedaba como
+              // "ya facturada" sin factura.
               orderFromResponse.nroPedido = orderFromResponse.referencia;
             }
 
             // AHORA generar y enviar el email con el número de pedido CORRECTO
             this.sendConfirmationEmail(orderFromResponse);
 
-            // Procesar factura electrónica si es necesario
+            this.handleSuccessfulOrder(orderFromResponse);
+
+            // D-419 (ticket 1171): factura electrónica en segundo plano con el
+            // proveedor contable de la empresa; el cobro no la espera.
             if (pedido.generarFacturaElectronica) {
-              this.processElectronicInvoice(pedido, orderFromResponse);
-            } else {
-              this.handleSuccessfulOrder(orderFromResponse);
+              this.encolarFactura(orderFromResponse);
             }
           },
           error: (err: any) => {
@@ -226,42 +234,39 @@ export class PosOrderCreatorService {
   }
 
   /**
-   * Procesa la factura electrónica
+   * D-419 (ticket 1171): encola la factura electrónica de la venta POS con el
+   * proveedor contable configurado (ruta asíncrona con candado contra doble
+   * factura). Si no se puede, la venta queda para facturar desde Pedidos.
    */
-  private processElectronicInvoice(originalPedido: Pedido, savedPedido: any): void {
-    const orderSiigo = this.facturacionElectronicaService.transformarPedidoCompletoParaCrearUsuarioDesdeLaVenta(originalPedido);
-    
-    this.facturacionElectronicaService.createFacturaSiigo(orderSiigo).subscribe({
-      next: (value: any) => {
-        if (value.isSuccess) {
-          // Si la factura electrónica fue exitosa, usar el número de factura de Siigo
-          savedPedido.nroFactura = value.result.name;
-          savedPedido.pdfUrlInvoice = value.result.public_url;
-          
-          // Mantener la referencia original del pedido
-          if (!savedPedido.nroPedido && savedPedido.referencia) {
-            savedPedido.nroPedido = savedPedido.referencia;
-          }
-          
-          // Actualizar el pedido con la información de la factura
-          this.ventasService.editOrder(savedPedido).subscribe();
-          
-          // Limpiar el carrito y datos del cliente después de una venta exitosa
-          this.cartService.clearCart();
-          this.clearCustomerData();
-          
-          // Mostrar la factura
-          this.modal.open(FacturaTirillaComponent, { size: 'xl', fullscreen: true }).componentInstance.pedido = savedPedido;
-          
-          // Mostrar mensaje de éxito
-          this.showSuccessAlert('Pedido creado con éxito y factura ' + value.result.name + ' creada');
-        } else {
-          this.showErrorAlert('Error al crear el pedido y generar la factura: ' + value.result.error[0].message);
+  private encolarFactura(order: any): void {
+    const orderId = order?._id || order?.id || order?.cd;
+    const nro = order?.nroPedido || order?.referencia || '';
+    const avisarPendiente = (detalle: string) =>
+      this.toastr.warning(
+        `${detalle} Puedes facturar la venta ${nro} desde Pedidos.`,
+        'Factura no generada',
+        { timeOut: 10000 },
+      );
+    if (!orderId) {
+      avisarPendiente('No se recibió el id del pedido.');
+      return;
+    }
+    this.facturacionAutomatica.resolverProveedor().subscribe({
+      next: (proveedor) => {
+        if (!proveedor) {
+          avisarPendiente('La empresa no tiene un sistema de facturación configurado.');
+          return;
         }
+        this.facturacionAutomatica.encolar(proveedor, orderId).subscribe({
+          next: () => this.toastr.info(
+            `La factura de ${nro} se está generando en ${proveedor.nombre}. Te avisaremos cuando esté lista.`,
+            'Factura en proceso',
+            { timeOut: 6000 },
+          ),
+          error: (err) => avisarPendiente(err?.error?.message || 'No se pudo enviar a facturar.'),
+        });
       },
-      error: () => {
-        this.showErrorAlert('Error al crear el pedido y generar la factura');
-      }
+      error: () => avisarPendiente('No se pudo consultar el sistema de facturación.'),
     });
   }
 

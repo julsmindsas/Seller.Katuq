@@ -17,6 +17,7 @@ import {
 } from "../../../components/ventas/modelo/pedido";
 import { IntegrationsService } from "../../../components/integrations/integrations.service";
 import { environment } from "../../../../environments/environment";
+import { FacturacionPos, facturacionInicial, SIN_FACTURA } from "../../utils/facturacion-pos";
 
 // Crear un token para PosCheckoutService
 export const POS_CHECKOUT_SERVICE = new InjectionToken<PosCheckoutService>(
@@ -34,6 +35,9 @@ export class PosCheckoutService {
   paymentMethod$ = new BehaviorSubject<string>("");
   warehouse$ = new BehaviorSubject<any>(null);
   pedido$ = new BehaviorSubject<Pedido | null>(null);
+  // D-419 (ticket 1171): a quién se factura la venta (perfil del cliente,
+  // Consumidor Final o "No requiere factura").
+  facturacion$ = new BehaviorSubject<FacturacionPos>(SIN_FACTURA);
 
   // Observable para manejar solicitudes de pago con Wompi
   wompiPaymentRequested$ = new Subject<{ pedido: any; options?: any }>();
@@ -83,6 +87,8 @@ export class PosCheckoutService {
   setCustomer(customer: any): void {
     console.log("🔗 PosCheckoutService - setCustomer llamado con:", customer);
     this.customer$.next(customer);
+    // D-419: cada cliente arranca con su perfil de facturación predeterminado.
+    this.facturacion$.next(facturacionInicial(customer));
     console.log("✅ PosCheckoutService - customer$ actualizado");
 
     // Verificar que realmente se actualizó
@@ -99,7 +105,13 @@ export class PosCheckoutService {
   clearCustomer(): void {
     console.log("🧹 PosCheckoutService - clearCustomer llamado");
     this.customer$.next(null);
+    this.facturacion$.next(SIN_FACTURA);
     console.log("✅ PosCheckoutService - customer$ limpiado");
+  }
+
+  /** D-419: el cajero cambia la opción de facturación de la venta en curso. */
+  setFacturacion(f: FacturacionPos): void {
+    this.facturacion$.next(f || SIN_FACTURA);
   }
 
   /**
@@ -218,11 +230,12 @@ export class PosCheckoutService {
     const paymentMethod = this.paymentMethod$.getValue();
     const warehouse = this.warehouse$.getValue();
 
-    // Crear el pedido
+    // Crear el pedido (D-419: con la facturación elegida)
     const pedido = this.orderCreatorService.createPedidoObject(
       customer,
       paymentMethod,
       warehouse,
+      this.facturacion$.getValue(),
     );
 
     // Actualizar campos específicos del pago
@@ -239,7 +252,7 @@ export class PosCheckoutService {
     pedido.estadoProceso = EstadoProceso.Entregado;
     pedido.formaEntrega = paymentMethod;
     pedido.formaDePago = paymentMethod;
-    pedido.nroFactura = pedido.nroPedido;
+    // D-419: no se copia el número de pedido como número de factura.
 
     // Asegurar fechaEntrega para que aparezca en la lista de pedidos (filtro por fechaEntrega)
     if (!pedido.fechaEntrega) {
@@ -257,11 +270,13 @@ export class PosCheckoutService {
     const customer = this.customer$.getValue();
     const warehouse = this.warehouse$.getValue();
 
-    // Crear el pedido con estado pendiente
+    // Crear el pedido con estado pendiente. D-419: lleva la facturación
+    // elegida, pero no se factura hasta confirmar el pago (desde Pedidos).
     const pedido = this.orderCreatorService.createPedidoObject(
       customer,
       paymentMethod,
       warehouse,
+      this.facturacion$.getValue(),
     );
 
     // Establecer estado inicial como pendiente
@@ -433,6 +448,7 @@ export class PosCheckoutService {
   resetCheckout(): void {
     this.cartService.clearCart();
     this.clearCustomer();
+    this.facturacion$.next(SIN_FACTURA);
     this.setPaymentMethod("");
     this.pedido$.next(null);
 

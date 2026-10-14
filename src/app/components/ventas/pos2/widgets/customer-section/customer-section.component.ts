@@ -8,6 +8,8 @@ import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { PosCheckoutService } from "../../../../../shared/services/ventas/pos-checkout.service";
 import { MaestroService } from "../../../../../shared/services/maestros/maestro.service";
 import { CrearClienteModalComponent } from "../../../clientes/crear-cliente-modal/crear-cliente-modal.component";
+import { PosFacturacionComponent } from "../pos-facturacion/pos-facturacion.component";
+import { FacturacionPos, faltantesFacturacion, resumenFacturacion, SIN_FACTURA } from "../../../../../shared/utils/facturacion-pos";
 import Swal from "sweetalert2";
 import { Subject, Subscription } from "rxjs";
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from "rxjs/operators";
@@ -20,6 +22,8 @@ import { of } from "rxjs";
 })
 export class CustomerSectionComponent implements OnInit, OnDestroy {
   datosCliente: any = "";
+  // D-419 (ticket 1171): a quién se factura la venta en curso.
+  facturacion: FacturacionPos = SIN_FACTURA;
   documentoCliente: string = "";
 
   // Autocompletado
@@ -47,6 +51,10 @@ export class CustomerSectionComponent implements OnInit, OnDestroy {
         this.datosCliente = "";
         console.log("❌ Cliente limpiado");
       }
+    });
+
+    this.checkoutService.facturacion$.subscribe((f) => {
+      this.facturacion = f || SIN_FACTURA;
     });
 
     // Configurar búsqueda con debounce para autocompletado
@@ -356,6 +364,37 @@ export class CustomerSectionComponent implements OnInit, OnDestroy {
   /**
    * Muestra una alerta con SweetAlert2
    */
+  // ── D-419 (ticket 1171): facturación de la venta ─────────────────────
+  get resumenFacturacion(): string {
+    return resumenFacturacion(this.facturacion);
+  }
+
+  get facturacionIncompleta(): boolean {
+    return faltantesFacturacion(this.facturacion).length > 0;
+  }
+
+  abrirFacturacion(): void {
+    if (!this.datosCliente) return;
+    const ref = this.modal.open(PosFacturacionComponent, {
+      centered: true,
+      size: "md",
+      modalDialogClass: "katuq-modal",
+    });
+    ref.componentInstance.cliente = this.datosCliente;
+    ref.componentInstance.actual = this.facturacion;
+    ref.result.then(
+      (r: any) => {
+        if (!r) return;
+        if (r.accion === "editarCliente") {
+          this.editarCliente();
+          return;
+        }
+        this.checkoutService.setFacturacion(r as FacturacionPos);
+      },
+      () => {},
+    );
+  }
+
   private showAlert(title: string, text: string, icon: any = "warning"): void {
     Swal.fire({
       title,

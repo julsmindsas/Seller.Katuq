@@ -4,6 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 import { CartService } from '../cart.service';
 // Importamos solo el token
 import { POS_CHECKOUT_SERVICE } from './pos-checkout.service';
+import { faltantesFacturacion } from '../../utils/facturacion-pos';
 
 @Injectable({
   providedIn: 'root'
@@ -48,7 +49,33 @@ export class PosValidationService {
       return false;
     }
 
+    // D-419: si la venta se factura, el perfil elegido debe servir para la factura.
+    if (!this.validateFacturacion()) {
+      return false;
+    }
+
     return true;
+  }
+
+  /**
+   * D-419 (ticket 1171): con un perfil de facturación elegido, que tenga lo
+   * mínimo para emitir la factura. Consumidor Final y "No requiere factura"
+   * no se validan.
+   */
+  validateFacturacion(): boolean {
+    const checkoutService = this.getCheckoutService();
+    const faltan = faltantesFacturacion(checkoutService.facturacion$?.getValue());
+    if (!faltan.length) return true;
+    Swal.fire({
+      icon: 'warning',
+      title: 'Revisa los datos de facturación',
+      html: `<b>Al perfil elegido le falta:</b><ul style="text-align:left;margin:8px 0 0 18px">${faltan.map((f) => `<li>${f}</li>`).join('')}</ul>`,
+      footer: 'Corrígelo en Facturación, elige Consumidor Final o marca "No requiere factura".',
+      confirmButtonText: 'Entendido',
+      confirmButtonColor: '#5F3FE0',
+    });
+    this.lastError$.next('Datos de facturación incompletos');
+    return false;
   }
 
   /**

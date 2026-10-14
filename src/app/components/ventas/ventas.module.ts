@@ -75,6 +75,7 @@ import { CashClosingComponent } from "./pos2/widgets/cash-closing/cash-closing.c
 import { CashClosingHistoryComponent } from "./pos2/widgets/cash-closing-history/cash-closing-history.component";
 import { DireccionEstructuradaComponent } from "./entrega/direccion-estructurada/direccion-estructurada.component";
 import { CustomerSectionComponent } from "./pos2/widgets/customer-section/customer-section.component";
+import { PosFacturacionComponent } from "./pos2/widgets/pos-facturacion/pos-facturacion.component";
 import { CartSummaryComponent } from "./pos2/widgets/cart-summary/cart-summary.component";
 import { PaymentSelectorComponent } from "./pos2/widgets/payment-selector/payment-selector.component";
 import {
@@ -174,6 +175,7 @@ import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-im
     ReporteCierreComponent,
     DireccionEstructuradaComponent,
     CustomerSectionComponent,
+    PosFacturacionComponent,
     CartSummaryComponent,
     OrderHistoryTimelineComponent, // NUEVO: 2025-10-21 - Componente de timeline de historial
     PaymentSelectorComponent,

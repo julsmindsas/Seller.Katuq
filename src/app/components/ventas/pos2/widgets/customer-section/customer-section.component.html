@@ -87,6 +87,13 @@
                             </div>
                         </div>
                     </div>
+                    <!-- D-419 (ticket 1171): a quién se factura la venta -->
+                    <div class="cliente-facturacion" [class.incompleta]="facturacionIncompleta">
+                        <i class="fa fa-file-invoice"></i>
+                        <span class="cf-label">{{ 'Facturación' | translate }}:</span>
+                        <span class="cf-valor">{{ resumenFacturacion }}</span>
+                        <button type="button" class="cf-cambiar" (click)="abrirFacturacion()">{{ 'Cambiar' | translate }}</button>
+                    </div>
                     <div class="cliente-contact">
                         <div class="contact-item" *ngIf="datosCliente?.numero_celular_comprador">
                             <i class="fa fa-phone"></i>
