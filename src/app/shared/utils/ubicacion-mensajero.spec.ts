@@ -1,5 +1,5 @@
 import {
-  claveEmpresa, haceCuanto, marcaDeUbicacion, nombreDesdeClave, perteneceAEmpresa, senalMensajero, ubicacionVigente,
+  claveEmpresa, esSaltoImposible, haceCuanto, minutosEstimados, marcaDeUbicacion, nombreDesdeClave, perteneceAEmpresa, senalMensajero, ubicacionVigente,
   VIGENCIA_UBICACION_MS,
 } from './ubicacion-mensajero';
 
@@ -115,6 +115,33 @@ describe('ubicacion-mensajero', () => {
       expect(senalMensajero(AHORA - 2 * MIN, AHORA)).toBe('en-vivo');
       expect(senalMensajero(AHORA - 4 * MIN, AHORA)).toBe('reciente');
       expect(senalMensajero(null, AHORA)).toBe('reciente');
+    });
+  });
+
+  describe('app v29: sin conexión, saltos y hora estimada', () => {
+    it('muestra en gris a quien se le cortó la conexión por sorpresa', () => {
+      const punto = { lastUpdate: AHORA - MIN, conectado: false, desconectadoEn: AHORA - 30000 };
+      expect(ubicacionVigente(punto, AHORA)).toBe(true);
+      expect(senalMensajero(AHORA - MIN, AHORA, punto)).toBe('sin-conexion');
+    });
+
+    it('lo esconde pasados los 15 minutos', () => {
+      const punto = { lastUpdate: AHORA - VIGENCIA_UBICACION_MS - 1, conectado: false, desconectadoEn: AHORA - 20 * MIN };
+      expect(ubicacionVigente(punto, AHORA)).toBe(false);
+    });
+
+    it('ignora un salto de 5 km en 3 s y acepta 30 m en 3 s', () => {
+      const a = { lat: 6.2442, lng: -75.565, marca: AHORA };
+      expect(esSaltoImposible(a, { lat: 6.2892, lng: -75.565, marca: AHORA + 3000 })).toBe(true);
+      expect(esSaltoImposible(a, { lat: 6.24447, lng: -75.565, marca: AHORA + 3000 })).toBe(false);
+      expect(esSaltoImposible(a, { lat: 6.2892, lng: -75.565, marca: null })).toBe(false);
+    });
+
+    it('estima minutos con la velocidad, o 22 km/h si va parado', () => {
+      const a = { lat: 6.2442, lng: -75.565 };
+      const b = { lat: 6.2532, lng: -75.565 }; // ~1 km
+      expect(minutosEstimados(a, b)).toBe(4);
+      expect(minutosEstimados(a, b, 12)).toBe(2);
     });
   });
 });

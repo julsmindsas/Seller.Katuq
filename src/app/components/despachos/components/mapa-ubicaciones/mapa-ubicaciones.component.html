@@ -166,8 +166,9 @@
         <div class="mensajero-fila__info">
           <div class="mensajero-fila__nombre">{{ m.nombre }}</div>
           <div class="mensajero-fila__meta">
-            <i class="punto punto--{{ m.senal }}"></i>{{ (m.senal === 'en-vivo' ? 'En vivo' : 'Sin señal') | translate }} · {{ m.hace }}
+            <i class="punto punto--{{ m.senal }}"></i>{{ textoSenal(m) }} · {{ m.hace }}
           </div>
+          <div class="mensajero-fila__entrega" *ngIf="textoEntrega(m) as entrega">{{ entrega }}</div>
         </div>
         <button type="button" class="mensajero-fila__seguir"
           [class.mensajero-fila__seguir--on]="m.id === siguiendoId"

@@ -477,6 +477,7 @@ $danger-color:  $em-red;
 
     &--en-vivo { background: $em-green-dot; }
     &--reciente { background: $em-orange; }
+    &--sin-conexion { background: #8A88A3; }
   }
 
   .mensajero-fila {
@@ -513,11 +514,22 @@ $danger-color:  $em-red;
 
       &--en-vivo { box-shadow: 0 0 0 2px $em-green-dot; }
       &--reciente { box-shadow: 0 0 0 2px $em-orange; }
+      &--sin-conexion { box-shadow: 0 0 0 2px #8A88A3; color: #5A6B78; background: #eef0f3; }
     }
 
     &__info {
       flex: 1;
       min-width: 0;
+    }
+
+    // "Lleva DAD-014225 · llega en ~8 min · 3 pendientes" (app v29+)
+    &__entrega {
+      margin-top: 3px;
+      font-size: 11.5px;
+      font-weight: 700;
+      line-height: 1.35;
+      color: $em-green;
+      letter-spacing: normal;
     }
 
     &__nombre {
@@ -923,6 +935,15 @@ $danger-color:  $em-red;
       background: #8A88A3;
     }
 
+    &--sin-conexion .mm__avatar {
+      background: #B9B7C9;
+      box-shadow: 0 0 0 3px #8A88A3, 0 4px 12px rgba(33, 31, 58, .3);
+    }
+
+    &--sin-conexion .mm__flecha {
+      border-bottom-color: #8A88A3;
+    }
+
     &--siguiendo .mm__avatar {
       transform: scale(1.12);
     }
@@ -1107,6 +1128,7 @@ $danger-color:  $em-red;
 
       &--en-vivo { color: $em-green; background: $em-green-soft; }
       &--reciente { color: $em-orange; background: $em-orange-soft; }
+      &--sin-conexion { color: #5A6B78; background: #eef0f3; }
     }
 
     &__fila {

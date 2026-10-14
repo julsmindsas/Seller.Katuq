@@ -6,7 +6,8 @@ import { interval, Subscription } from 'rxjs';
 import { SecurityService } from '../../../../shared/services/security/security.service';
 import { escaparHtml } from '../../../../shared/utils/escapar-html';
 import {
-  haceCuanto, marcaDeUbicacion, nombreDesdeClave, perteneceAEmpresa, senalMensajero, SenalMensajero, ubicacionVigente
+  esSaltoImposible, haceCuanto, marcaDeUbicacion, marcaDesconexion, minutosEstimados, nombreDesdeClave,
+  perteneceAEmpresa, senalMensajero, SenalMensajero, ubicacionVigente
 } from '../../../../shared/utils/ubicacion-mensajero';
 
 /** Pin y ficha de los estados que no tienen color propio en la leyenda. */
@@ -45,7 +46,19 @@ interface UbicacionMensajero {
   rumbo?: number;
   /** Precisión del GPS en metros. */
   precision?: number;
+  /** App v29+: contador que solo sube; un punto con `seq` menor llegó tarde y se ignora. */
+  seq?: number;
+  /** App v29+: lleva pedidos (va en modo rápido). */
+  enRuta?: boolean;
+  /** App v29+: pedidos de hoy que le quedan (con más de 20 es "al menos 20"). */
+  pendientes?: number;
+  /** App v29+: nroPedido al que tocó "Navegar"; sin él no hay línea al destino. */
+  pedidoActual?: string;
+  desconectadoEn?: number | string | null;
 }
+
+/** Con peor precisión que esta (m) se dibuja el círculo de incertidumbre alrededor del mensajero. */
+const PRECISION_VISIBLE_M = 30;
 
 /** Puntos del recorrido que se guardan por mensajero mientras el mapa está abierto. */
 const MAX_PUNTOS_RECORRIDO = 240;
@@ -190,6 +203,9 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   ultimosLocationsProcesados: number = 0;
   /** Cada redibujo invalida los pines escalonados que el anterior aún no había puesto. */
   private generacionMarcadores = 0;
+  private saltosDescartados = new Set<string>();
+  private circulosPrecision = new Map<string, any>();
+  private lineasDestino = new Map<string, any>();
   private companyName: string;
   private ubicacionUsuario: { lat: number; lng: number } | null = null;
   private usandoUbicacionUsuario: boolean = false;
@@ -770,6 +786,9 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         this.aplicarRumbo(nuevo, mensajero.rumbo);
       }
 
+      this.actualizarPrecision(mensajero);
+      this.actualizarLineaDestino(mensajero);
+
       if (this.siguiendoId === mensajero.id) {
         this.marcadoresMensajeros.get(mensajero.id)?.marcador.closePopup();
         this.mapa.panTo([mensajero.lat, mensajero.lng], { animate: true, duration: 0.9 });
@@ -784,6 +803,9 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       const linea = this.lineasRecorrido.get(id);
       if (linea) this.capaMensajeros.removeLayer(linea);
       this.lineasRecorrido.delete(id);
+      this.quitarCapa(this.circulosPrecision, id);
+      this.quitarCapa(this.lineasDestino, id);
+      this.saltosDescartados.delete(id);
       this.recorridos.delete(id);
       const anim = this.animaciones.get(id);
       if (anim) cancelAnimationFrame(anim);
@@ -798,6 +820,8 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     this.capaMensajeros?.clearLayers();
     this.marcadoresMensajeros.clear();
     this.lineasRecorrido.clear();
+    this.circulosPrecision.clear();
+    this.lineasDestino.clear();
     this.recorridos.clear();
     this.siguiendoId = null;
   }
@@ -830,6 +854,101 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       this.capaMensajeros.addLayer(nueva);
       this.lineasRecorrido.set(mensajero.id, nueva);
     }
+  }
+
+  private quitarCapa(mapa: Map<string, any>, id: string): void {
+    const capa = mapa.get(id);
+    if (capa) this.capaMensajeros?.removeLayer(capa);
+    mapa.delete(id);
+  }
+
+  /** Círculo de incertidumbre cuando el GPS reporta más de 30 m de error. */
+  private actualizarPrecision(m: UbicacionMensajero): void {
+    if (m.precision === undefined || m.precision <= PRECISION_VISIBLE_M) {
+      this.quitarCapa(this.circulosPrecision, m.id);
+      return;
+    }
+    const L = (window as any).L;
+    const existente = this.circulosPrecision.get(m.id);
+    if (existente) {
+      existente.setLatLng([m.lat, m.lng]);
+      existente.setRadius(m.precision);
+      return;
+    }
+    const circulo = L.circle([m.lat, m.lng], {
+      radius: m.precision,
+      color: '#5F3FE0',
+      weight: 1,
+      opacity: 0.35,
+      fillColor: '#5F3FE0',
+      fillOpacity: 0.08,
+      interactive: false
+    });
+    this.capaMensajeros.addLayer(circulo);
+    this.circulosPrecision.set(m.id, circulo);
+  }
+
+  /** Pedido de destino en el mapa (el que tocó "Navegar"), si está entre los pedidos pintados. */
+  private destinoDe(m: UbicacionMensajero): UbicacionPedido | undefined {
+    if (!m.pedidoActual) return undefined;
+    return (this.configuracion?.ubicaciones || []).find(
+      u => u.nroPedido === m.pedidoActual && u.latitud && u.longitud
+    );
+  }
+
+  /** Línea punteada del mensajero a su entrega en curso. */
+  private actualizarLineaDestino(m: UbicacionMensajero): void {
+    const destino = this.destinoDe(m);
+    if (!destino || m.senal === 'sin-conexion') {
+      this.quitarCapa(this.lineasDestino, m.id);
+      return;
+    }
+    const L = (window as any).L;
+    const puntos = [[m.lat, m.lng], [destino.latitud, destino.longitud]];
+    const existente = this.lineasDestino.get(m.id);
+    if (existente) {
+      existente.setLatLngs(puntos);
+      return;
+    }
+    const linea = L.polyline(puntos, {
+      color: '#1E874B',
+      weight: 3,
+      opacity: 0.75,
+      dashArray: '6 8',
+      lineCap: 'round',
+      interactive: false
+    });
+    this.capaMensajeros.addLayer(linea);
+    this.lineasDestino.set(m.id, linea);
+  }
+
+  /** "Lleva DAD-014225 · llega en ~8 min · 3 pendientes" (solo lo que la app manda). */
+  public textoEntrega(m: UbicacionMensajero): string {
+    const partes: string[] = [];
+    if (m.pedidoActual) {
+      partes.push(`Lleva ${m.pedidoActual}`);
+      const destino = this.destinoDe(m);
+      if (destino && m.senal !== 'sin-conexion') {
+        const min = minutosEstimados(m, { lat: destino.latitud!, lng: destino.longitud! }, m.velocidad);
+        partes.push(min <= 1 ? 'llegando' : `llega en ~${min} min`);
+      }
+    }
+    if (m.pendientes !== undefined && m.pendientes > 0) {
+      partes.push(m.pendientes >= 20 ? '20+ pendientes' : `${m.pendientes} pendiente${m.pendientes === 1 ? '' : 's'}`);
+    }
+    return partes.join(' · ');
+  }
+
+  /** "En vivo", "Sin señal" o "Sin conexión desde 10:42". */
+  public textoSenal(m: UbicacionMensajero): string {
+    if (m.senal === 'en-vivo') return 'En vivo';
+    if (m.senal === 'sin-conexion') {
+      const corte = marcaDesconexion(m);
+      return corte === null
+        ? 'Sin conexión'
+        : `Sin conexión desde ${new Date(corte).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })}`;
+    }
+    return 'Sin señal';
   }
 
   /**
@@ -922,6 +1041,13 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     const filas: string[] = [
       `<div class="mpop__fila"><span>Actualizado</span><b>${escaparHtml(this.textoActualizacion(m))}</b></div>`
     ];
+    if (m.senal === 'sin-conexion') {
+      filas.unshift(`<div class="mpop__fila"><span>Estado</span><b>${escaparHtml(this.textoSenal(m))}</b></div>`);
+    }
+    const entrega = this.textoEntrega(m);
+    if (entrega) {
+      filas.push(`<div class="mpop__fila"><span>Entrega</span><b>${escaparHtml(entrega)}</b></div>`);
+    }
     if (m.velocidad !== undefined && m.velocidad > 0.5) {
       filas.push(`<div class="mpop__fila"><span>Velocidad</span><b>${Math.round(m.velocidad * 3.6)} km/h</b></div>`);
     }
@@ -1136,7 +1262,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         .filter(snapshot => !!this.companyName && perteneceAEmpresa(snapshot.key, this.companyName))
         // Ticket 1154: solo ubicaciones de los últimos 15 minutos de quien no figura desconectado.
         .filter(snapshot => ubicacionVigente(snapshot.payload.val() as any))
-        .map(snapshot => this.aMensajero(snapshot.key as string, snapshot.payload.val() as any))
+        .map(snapshot => this.filtrarPunto(this.aMensajero(snapshot.key as string, snapshot.payload.val() as any)))
         .sort((a, b) => (b.marca || 0) - (a.marca || 0));
 
       this.actualizarMarcadoresMensajeros();
@@ -1144,6 +1270,25 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     }, error => {
       console.error('❌ [ERROR] Error escuchando ubicación de mensajeros:', error);
     });
+  }
+
+  /**
+   * App v29+: un punto con `seq` menor al último llegó tarde, y uno que exigiría ir a más de 180 km/h es un
+   * salto del GPS: en los dos casos se conserva el punto anterior. Un salto se descarta una sola vez seguida;
+   * si el siguiente punto confirma la posición nueva, se acepta (el mensajero de verdad está allá).
+   */
+  private filtrarPunto(nuevo: UbicacionMensajero): UbicacionMensajero {
+    const anterior = this.mensajeros.find(m => m.id === nuevo.id);
+    if (!anterior) return nuevo;
+    if (nuevo.seq !== undefined && anterior.seq !== undefined && nuevo.seq < anterior.seq) {
+      return anterior;
+    }
+    if (!this.saltosDescartados.has(nuevo.id) && esSaltoImposible(anterior, nuevo)) {
+      this.saltosDescartados.add(nuevo.id);
+      return anterior;
+    }
+    this.saltosDescartados.delete(nuevo.id);
+    return nuevo;
   }
 
   /**
@@ -1163,12 +1308,17 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       lastUpdate: dato?.lastUpdate,
       conectado: dato?.conectado,
       marca,
-      senal: senalMensajero(marca),
+      senal: senalMensajero(marca, Date.now(), dato),
       hace: marca === null ? 'sin dato' : haceCuanto(marca),
       velocidad: numero(dato?.velocidad ?? dato?.speed),
       bateria: numero(dato?.bateria ?? dato?.battery),
       rumbo: numero(dato?.rumbo),
-      precision: numero(dato?.precision ?? dato?.accuracy)
+      precision: numero(dato?.precision ?? dato?.accuracy),
+      seq: numero(dato?.seq),
+      enRuta: typeof dato?.enRuta === 'boolean' ? dato.enRuta : undefined,
+      pendientes: numero(dato?.pendientes),
+      pedidoActual: typeof dato?.pedidoActual === 'string' && dato.pedidoActual.trim() ? dato.pedidoActual.trim() : undefined,
+      desconectadoEn: dato?.desconectadoEn ?? null
     };
   }
 
@@ -1184,7 +1334,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         .filter(m => ubicacionVigente(m, ahora))
         .map(m => ({
           ...m,
-          senal: senalMensajero(m.marca, ahora),
+          senal: senalMensajero(m.marca, ahora, m),
           hace: m.marca === null ? 'sin dato' : haceCuanto(m.marca, ahora)
         }));
       this.actualizarMarcadoresMensajeros();
