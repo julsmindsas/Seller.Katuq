@@ -9971,3 +9971,13 @@ El detalle de seguridad está en el cambio privado del backend, sección "D-422 
 **Verificado.** 5 pruebas nuevas (`tests/sitios/encabezadoPortada.test.js`). `test-sitios-publicacion` y las demás pruebas de sitios quedan con las mismas fallas previas, sin regresiones.
 
 **No verificado.** La vista previa dentro del editor: el arnés con API simulada no la pinta, tampoco con el sitio original. Falta revisarla con sesión real.
+
+## D-432 (2026-10-15) — Una cotización no se sella con el pedido de otro cliente (ticket ALMARA FELICIDAD 1214) — PUBLICADO: backend 1f749b39; corrección de datos PENDIENTE de aprobación
+
+**Disparador.** ALMARA: al convertir dos cotizaciones aceptadas, el 14-oct, quedaron enlazadas a pedidos de otro cliente con otros productos (COT-2026-1014-0109 → DAD-014286, COT-2026-1009-0107 → DAD-014278).
+
+**Causa (verificada con datos).** "Convertir a pedido" deja `cotizacionOrigen` en el sessionStorage, y `crear-ventas` sella la cotización con el PRIMER pedido que se cree después en esa pestaña. La comercial dejó la conversión a medias y creó otro pedido en el mismo minuto (mismo asesor): ese pedido se llevó la marca. Los pedidos correctos los hizo después, por aparte (DAD-014291 y DAD-014297).
+
+**Decisión.** `services/cotizaciones/pedidoDeLaCotizacion.js` + `marcarConvertida`: antes de sellar se busca el pedido (misma empresa) y se rechaza con 409 `PEDIDO_DE_OTRO_CLIENTE` si es de otro cliente (documento sin DV) Y no comparte ningún producto. Así sigue pasando facturar la cotización a otra razón social con los mismos productos (caso real de julio). La cotización queda aceptada para convertirla de nuevo. No se tocó `crear-ventas` (módulo de pedidos). Contra las 45 conversiones reales rechaza exactamente las 2 reportadas.
+
+**Pendiente.** Reenlazar las dos cotizaciones (escritura en Firestore de producción, requiere aprobación): COT-0109 → DAD-014291 (Keikaku; la comercial la duplicó como COT-0110, ya enlazada a ese pedido) y COT-0107 → DAD-014297 (Grupo Bios, 100 galletas frente a las 80 cotizadas). El script se probó en dry-run y deja `correccionPedido` como rastro.
