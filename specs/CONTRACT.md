@@ -10012,3 +10012,12 @@ Spec: `katuq_admin_back_firebase/openspec/changes/confirmacion-pagos-opttia/`.
 **Publicado y verificado (15-oct):** receptor Katuq `7a8dfbba`, ADK `9a066e0`, llaves de producción y catálogo de cobros habilitados. Dos rutas públicas aceptaron un aviso firmado para una referencia inexistente; firma inválida y checkout anónimo rechazados con 401. Tres registros de auditoría verificados, sin crear intentos ni planes. Respaldos privados antes de publicar. 61 pruebas Python, seis contratos de reenvío y regresiones de Wompi de Katuq.
 
 **Respaldo al regresar:** Opttia conserva el ID de Wompi al ingresar de nuevo y confirma con una consulta privada autenticada por empresa. Compara referencia, importe, moneda y ambiente; ignora cualquier estado de la URL y usa la misma acreditación idempotente. Sandbox real comprobó rechazo y aprobación sin webhook previo y duplicado posterior sin ampliar vigencia, con almacenamiento aislado en memoria. No se hizo un cobro real ni una compra completa sobre Firestore productivo. Los avisos recientes no certificaron con su firma la URL configurada para el comercio de suscripciones; el receptor está preparado y la consulta directa cubre el regreso del comprador.
+
+## D-436 (2026-10-15) — Todos los pedidos: editar y eliminar productos también desde la vista de panel (ticket 1186) — PUBLICADO: front 2026.10.15.6
+
+Daniel: «cierra los de soporte de julsmind». Lo tomó como aprobación del cambio en `orders` (solo presentación).
+
+- **Qué pasaba:** en la vista de tabla, cada producto del pedido expandido tiene "Configurar" y "Eliminar". En la vista de panel (por defecto, `modoVista = 'split'`) la lista de productos del detalle solo los mostraba.
+- **Qué cambia:** cada `.pedido-prod` del detalle trae los mismos dos botones con las mismas funciones y reglas que la tabla: `confProductToCart(confProductToCartModal, item, pedidoDetalle, i)` y `eliminarProductoDelPedido(item, pedidoDetalle)`, habilitados por `canModifyProducts`, `canDeleteProducts` e `isGhostProduct`, con los mismos títulos. Se ocultan desde producción (`isFromProduction`). Al guardar se sigue el camino de las demás acciones del panel (`editOrder` → `refrescarDatos`).
+- **Sin cambios** en servicios, validaciones, inventario ni backend.
+- **Verificado** con el bundle de producción y pedidos simulados a 1440 y 390 px. En un pedido despachado, "Configurar" sale bloqueado con el motivo, y el configurador abre desde el panel. A 390 px los botones quedan dentro de la tarjeta; el panel de detalle ya desbordaba unos 10 px antes de este cambio.
