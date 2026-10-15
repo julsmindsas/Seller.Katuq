@@ -140,6 +140,15 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   mostrandoSelector = false;
 
   nombre = "";
+  /**
+   * Ticket 1218: dirección pública que va a quedar (antes de crear). Sale del
+   * nombre hasta que el comercio la escriba a mano.
+   */
+  slugNuevo = "";
+  slugEditado = false;
+  slugEstado: "" | "revisando" | "libre" | "ocupada" | "invalida" = "";
+  private slugTimer: any = null;
+  private slugConsulta = 0;
   /** Descripción en una línea. Va al SEO de la página, no a ningún modelo. */
   objetivo = "";
   conIA = false;
@@ -228,6 +237,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.slugTimer) clearTimeout(this.slugTimer);
     if (this.vigilancia) {
       clearInterval(this.vigilancia);
       this.vigilancia = null;
@@ -457,6 +467,9 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
     this.objetivoId = "";
     this.productoIds = [];
     this.nombre = "";
+    this.slugNuevo = "";
+    this.slugEditado = false;
+    this.slugEstado = "";
     this.objetivo = "";
     this.descripcionIA = "";
     this.nombreIA = "";
@@ -589,11 +602,50 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
     this.mostrandoSelector = false;
   }
 
+  /** Ticket 1218: al escribir el nombre se arma la dirección (si no la escribieron a mano). */
+  cambiarNombre(valor: string): void {
+    this.nombre = valor;
+    if (!this.slugEditado) this.revisarSlug(normalizarSlug(valor));
+  }
+
+  cambiarSlug(valor: string): void {
+    this.slugEditado = !!String(valor || "").trim();
+    this.revisarSlug(normalizarSlug(this.slugEditado ? valor : this.nombre));
+  }
+
+  /** Revisa en el servidor si la dirección está libre (con espera, sin ráfagas). */
+  private revisarSlug(slug: string): void {
+    this.slugNuevo = slug;
+    if (this.slugTimer) clearTimeout(this.slugTimer);
+    if (!slug) {
+      this.slugEstado = String(this.nombre || "").trim() ? "invalida" : "";
+      return;
+    }
+    this.slugEstado = "revisando";
+    const consulta = ++this.slugConsulta;
+    this.slugTimer = setTimeout(() => {
+      this.service.slugDisponible(slug).subscribe({
+        next: (r) => {
+          if (consulta !== this.slugConsulta) return;
+          const d = r && r.data;
+          this.slugEstado = !d || !d.slug ? "invalida" : d.disponible ? "libre" : "ocupada";
+        },
+        error: () => { if (consulta === this.slugConsulta) this.slugEstado = ""; },
+      });
+    }, 350);
+  }
+
   crear(): void {
     if (this.creando) return;
-    const nombre = this.nombre.trim();
+    // Ticket 1218: el nombre visible se guarda con mayúscula inicial y tildes, tal cual.
+    const escrito = this.nombre.trim();
+    const nombre = escrito && escrito === escrito.toLowerCase() ? escrito.charAt(0).toUpperCase() + escrito.slice(1) : escrito;
     if (!nombre) {
       this.toastr.warning("Ponle un nombre a tu página.");
+      return;
+    }
+    if (this.slugEstado === "ocupada" || this.slugEstado === "invalida") {
+      this.toastr.warning(this.slugEstado === "ocupada" ? "Esa dirección ya está ocupada: escribe otra." : "Escribe una dirección con letras o números.");
       return;
     }
     if (!this.plantillaElegida) {
@@ -616,6 +668,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
         productoIds: this.productoIds,
         tipo: this.tipoElegido,
         nombre,
+        slug: this.slugNuevo || undefined,
         guardar: true,
       })
       .subscribe({
@@ -711,4 +764,16 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   colorPlantilla(p: PlantillaSitio): string {
     return (p.tema && p.tema.colorPrimario) || "#6a4dfb";
   }
+}
+
+/** Misma regla del servidor (utils/siteBlocks.js normalizarSlug): sin tildes, minúsculas y guiones. */
+function normalizarSlug(valor: string): string {
+  return String(valor || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 60);
 }

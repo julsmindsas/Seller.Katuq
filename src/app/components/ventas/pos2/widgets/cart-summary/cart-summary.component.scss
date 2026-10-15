@@ -578,6 +578,25 @@
   max-width: 230px;
 }
 
+// Ticket 1173: márgenes heredados de las reglas viejas de arriba (10 px por fila
+// de totales, 15 px bajo la lista y sobre el cupón) sumaban ~80 px que no se
+// ven pero empujaban los totales encima de la lista en un portátil de 768 px.
+.cart-summary-sticky .total-item .item-number {
+  margin-bottom: 0 !important;
+}
+
+.cart-summary-sticky .total-item .item-number.border-bottom {
+  padding-bottom: 6px !important;
+}
+
+.cart-summary-sticky .cart-items-container {
+  margin-bottom: 0 !important;
+}
+
+.cart-summary-sticky .coupon-code {
+  margin-top: 0 !important;
+}
+
 // En la hoja de móvil hay pantalla completa: la lista puede mostrar más
 // líneas antes de scrollear y los toques son más grandes.
 @media (max-width: 1000px) {

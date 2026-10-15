@@ -21,13 +21,17 @@ export interface TiendaSitio {
   pagoEnLinea: boolean;
   contraEntrega: boolean;
   /** Formas de pago manuales del maestro (transferencia, Nequi...). */
-  otrasFormasPago: { cd: string; nombre: string }[];
+  otrasFormasPago: { cd: string; nombre: string; instrucciones?: string }[];
   /** Venta cruzada (afines + sugerencias del carrito). Encendida por defecto. */
   ventaCruzada?: boolean;
   /** Al agregar: abrir el cajón (true) o solo confirmar con un aviso (por defecto). */
   abrirCarritoAlAgregar?: boolean;
   /** Categorías del maestro que no salen en el sitio (menú, baldosas, pie, filtros). */
   categoriasOcultas?: string[];
+  /** Ticket 1214: categorías de nombre interno que el comercio decidió mostrar (por defecto, ocultas). */
+  categoriasMostradas?: string[];
+  /** Ticket 1221: frases con condiciones de venta que el comercio confirmó que cumple. */
+  promesasConfirmadas?: string[];
   minimoCompra: number;
   mensajeConfirmacion: string;
 
@@ -108,6 +112,8 @@ export interface CuponSitio {
   valor: number;
   activo: boolean;
   minimoCompra: number;
+  /** Ticket 1218: fecha ISO desde la que sirve. Vacío = desde ya. */
+  desde?: string;
   /** Fecha ISO "2026-12-31". Vacío = no vence. */
   vence: string;
   /** 0 = sin tope. */
@@ -138,7 +144,10 @@ export interface CategoriaSitio {
 export interface VentaConfig {
   pasarela: { configurada: boolean; proveedor: string | null };
   zonas: number;
-  formasPago: { cd: string; nombre: string; categoria: string }[];
+  /** Ticket 1215: nombre público, instrucciones y si se puede ofrecer en la web. */
+  formasPago: { cd: string; nombre: string; categoria: string; nombrePublico?: string; instrucciones?: string; disponibleWeb?: boolean; interna?: boolean }[];
+  /** Ticket 1213: si la empresa tiene razón social y NIT (solo si están, no los valores). */
+  datosLegales?: { razonSocial: boolean; nit: boolean } | null;
 }
 
 /**

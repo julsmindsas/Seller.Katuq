@@ -129,6 +129,55 @@
     color: var(--kb-warn);
     background: var(--kb-warn-wash);
   }
+
+  // Ticket 1213: el checklist a la vista; rojo si impide vender.
+  &--falta {
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+    color: var(--kb-warn);
+    background: var(--kb-warn-wash);
+  }
+  &--bloquea {
+    color: #b42318;
+    background: #fdecea;
+  }
+  &--falta:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+
+// Ticket 1219: el estado del guardado automático; en rojo si no se pudo guardar.
+.guardado-estado--error { color: #b42318 !important; }
+
+// Ticket 1213: Publicar con un pendiente crítico se ve apagado y explica por qué al tocarlo.
+.btn-primario.is-bloqueado { opacity: 0.55; }
+
+// Ticket 1213: aviso de una página publicada que no puede vender.
+.aviso-publicada {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 9px 16px;
+  background: #fdecea;
+  border-bottom: 1px solid #f6c9c4;
+  color: #b42318;
+  font-size: 12.5px;
+  letter-spacing: normal;
+
+  strong { font-weight: 800; }
+  span { color: #7a271a; font-size: 12.5px; }
+  button {
+    margin-left: auto;
+    border: 1px solid #b42318;
+    border-radius: 11px;
+    background: #fff;
+    color: #b42318;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 4px 12px;
+    cursor: pointer;
+  }
+  button:focus-visible { outline: 3px solid #7C5CFF !important; }
 }
 
 .dispositivos {
@@ -161,6 +210,8 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    // Ticket 1220: el panel nunca se desplaza a lo ancho.
+    overflow-x: hidden;
     padding: 18px 16px 28px;
   }
 }
@@ -1603,6 +1654,8 @@
 
   &__pagina {
     min-height: 300px;
+    // Ticket 1220: la vista previa no muestra barra a lo ancho.
+    overflow-x: hidden;
   }
 }
 
@@ -2813,10 +2866,55 @@
 }
 
 /* Dos campos en una fila: sirve para código+tipo, valor+mínimo, fecha+usos. */
+// Ticket 1216: qué paleta tiene la página.
+.paleta-aplicada {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: var(--kb-muted);
+
+  &--marca { color: #137a3a; }
+  .enlace-sutil { margin-left: 4px; }
+}
+
 .campo-doble {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
+
+  // Ticket 1220: un input en una grilla no se encoge por debajo de su ancho
+  // natural; era lo que empujaba el panel a lo ancho.
+  > *, input, select { min-width: 0; max-width: 100%; }
+}
+
+// Ticket 1218: cada campo del cupón con etiqueta y ayuda.
+.cupon-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  margin: 0 0 6px;
+
+  input, select { width: 100%; }
+  small { font-size: 11.5px; color: var(--kb-muted); letter-spacing: normal; }
+}
+.cupon-campo__nombre {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--kb-muted);
+}
+
+// Ticket 1218: identificador de pauta con formato inválido.
+input.is-error { border-color: #b42318 !important; }
+.error-campo {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b42318 !important;
 }
 
 /* ── Editor fácil ──────────────────────────────────────────────────────────
@@ -2926,6 +3024,31 @@
   &:hover {
     color: var(--kb-accent);
   }
+}
+
+// Ticket 1213: lo que impide vender, en rojo.
+.pendientes__item--critico {
+  color: #b42318;
+  font-weight: 700;
+}
+.pendientes__bloquea {
+  font-style: normal;
+  font-weight: 600;
+  font-size: 11.5px;
+  color: #b42318;
+}
+
+// Ticket 1214: marca de categoría interna y etiqueta del campo de texto.
+.casilla__interna {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--kb-muted);
+}
+.casilla__sub {
+  display: block;
+  font-size: 12px;
+  color: var(--kb-muted);
+  margin-bottom: 4px;
 }
 
 .pendientes__ok {
@@ -3132,3 +3255,6 @@
     &:hover { text-decoration: underline; }
   }
 }
+
+// Ticket 1215: forma de pago encendida que el maestro no marca para la web.
+.forma-aviso { color: #b42318 !important; font-weight: 600; }

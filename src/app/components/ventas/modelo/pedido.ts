@@ -448,6 +448,11 @@ export interface Envio {
   latitud?: string;
   longitud?: string;
   coordenadas?: string;
+  /** De dónde salió el punto (D-417): 'geocodificada' | 'manual' | 'enlace' | 'gps'. */
+  fuenteUbicacion?: string;
+  /** Cuándo y quién guardó el punto que Despachos encontró en el mapa. */
+  ubicacionGuardadaEn?: string;
+  ubicacionGuardadaPor?: string | null;
 }
 
 //Configuracion de producto

@@ -19,9 +19,10 @@
     <div class="estado-wrap">
       <span class="estado-badge estado-{{ estado }}">{{ estadoLabel(estado) }}</span>
       <select
+        #estadoSel
         class="form-select form-select-sm estado-select"
         [ngModel]="estado"
-        (ngModelChange)="cambiarEstado($event)"
+        (ngModelChange)="cambiarEstado($event, estadoSel)"
         title="Cambiar estado"
       >
         <option *ngFor="let e of estadosEditables" [ngValue]="e.value">{{ e.label }}</option>
@@ -229,7 +230,7 @@
                   <span class="cot-sugg-name">{{ productoTitulo(p) }}</span>
                   <span class="cot-sugg-sub">
                     <ng-container *ngIf="productoReferencia(p)">Ref: {{ productoReferencia(p) }} · </ng-container>
-                    {{ productoPrecio(p) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                    {{ productoPrecio(p) | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}
                     <span class="cot-sugg-tag" *ngIf="requiereConfiguracion(p)">configurable</span>
                   </span>
                 </span>
@@ -298,7 +299,7 @@
             <span class="cl-precio">
               <div class="cl-price-edit">
                 <div class="cl-price-row">
-                  <span class="cl-price-value">{{ comboPrecio(fila) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
+                  <span class="cl-price-value">{{ comboPrecio(fila) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</span>
                   <span class="cl-combo-iva">IVA {{ ivaCombo(fila) !== null ? ivaCombo(fila) + '%' : 'varios' }}</span>
                 </div>
               </div>
@@ -319,18 +320,18 @@
                 </div>
               </div>
             </span>
-            <span class="cl-bruto">{{ comboValorBruto(fila) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
+            <span class="cl-bruto">{{ comboValorBruto(fila) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</span>
             <span class="cl-desc-monto">
-              {{ comboTieneDescuento(fila) ? (comboDescuentoUnitario(fila) | currency:'COP':'symbol-narrow':digitosValorFijo) : '—' }}
+              {{ comboTieneDescuento(fila) ? (comboDescuentoUnitario(fila) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO') : '—' }}
             </span>
-            <span class="cl-sin-iva">{{ comboPrecioSinIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
+            <span class="cl-sin-iva">{{ comboPrecioSinIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</span>
             <span class="cl-pct-iva">{{ ivaCombo(fila) !== null ? ivaCombo(fila) + '%' : 'Varios' }}</span>
-            <span class="cl-valor-iva">{{ comboValorIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
-            <span class="cl-total-iva">{{ comboPrecioTotalConIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
+            <span class="cl-valor-iva">{{ comboValorIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</span>
+            <span class="cl-total-iva">{{ comboPrecioTotalConIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</span>
             <span class="cl-sub">
-              <span class="cl-sub-net">{{ comboSubtotal(fila) | currency:'COP':'symbol-narrow':digitosValor }}</span>
+              <span class="cl-sub-net">{{ comboSubtotal(fila) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span>
               <s class="cl-sub-orig" *ngIf="comboTieneDescuento(fila)">
-                {{ comboSubtotalBruto(fila) | currency:'COP':'symbol-narrow':digitosValor }}
+                {{ comboSubtotalBruto(fila) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}
               </s>
             </span>
             <span class="cl-acc">
@@ -373,7 +374,7 @@
                           [class.cl-seg-aplicado]="s.aplicado"
                           [title]="(s.aplicado ? 'Precio aplicado a este cliente — ' : '') + (s.descripcion || s.nombre)">
                       <span class="cl-seg-nombre">{{ s.nombre }}</span>
-                      <span class="cl-seg-precio">{{ s.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                      <span class="cl-seg-precio">{{ s.precio | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</span>
                     </span>
                   </div>
                 </span>
@@ -431,7 +432,7 @@
                     </select>
                   </div>
                   <div class="cl-price-orig" *ngIf="mostrarPrecioOriginal(item)">
-                    <s>{{ itemPrecioOriginal(item) | currency:'COP':'symbol-narrow':digitosValorFijo }}</s>
+                    <s>{{ itemPrecioOriginal(item) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</s>
                     <span class="cl-price-orig-iva">(IVA {{ itemIvaOriginal(item) }}%)</span>
                   </div>
                 </div>
@@ -440,7 +441,7 @@
                 <!-- Precio fijo + IVA editable -->
                 <div class="cl-price-edit">
                   <div class="cl-price-row">
-                    <span class="cl-price-value">{{ itemPrecio(item) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
+                    <span class="cl-price-value">{{ itemPrecio(item) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</span>
                     <select
                       class="form-select form-select-sm cl-iva-select"
                       [ngModel]="getIvaActual(item)"
@@ -453,7 +454,7 @@
                     </select>
                   </div>
                   <div class="cl-price-orig" *ngIf="mostrarPrecioOriginal(item)">
-                    <s>{{ itemPrecioOriginal(item) | currency:'COP':'symbol-narrow':digitosValorFijo }}</s>
+                    <s>{{ itemPrecioOriginal(item) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</s>
                   </div>
                 </div>
               </ng-template>
@@ -474,18 +475,18 @@
                 </div>
               </div>
             </span>
-            <span class="cl-bruto">{{ getValorBruto(item) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
+            <span class="cl-bruto">{{ getValorBruto(item) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</span>
             <span class="cl-desc-monto">
-              {{ descLineaPct(item) > 0 ? (getDescuentoUnitario(item) | currency:'COP':'symbol-narrow':digitosValorFijo) : '—' }}
+              {{ descLineaPct(item) > 0 ? (getDescuentoUnitario(item) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO') : '—' }}
             </span>
-            <span class="cl-sin-iva">{{ getPrecioSinIvaNeto(item) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
+            <span class="cl-sin-iva">{{ getPrecioSinIvaNeto(item) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</span>
             <span class="cl-pct-iva">{{ getIvaActual(item) }}%</span>
-            <span class="cl-valor-iva">{{ getValorIvaNeto(item) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
-            <span class="cl-total-iva">{{ getPrecioTotalConIvaNeto(item) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
+            <span class="cl-valor-iva">{{ getValorIvaNeto(item) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</span>
+            <span class="cl-total-iva">{{ getPrecioTotalConIvaNeto(item) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</span>
             <span class="cl-sub">
-              <span class="cl-sub-net">{{ itemSubtotal(item) | currency:'COP':'symbol-narrow':digitosValor }}</span>
+              <span class="cl-sub-net">{{ itemSubtotal(item) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span>
               <s class="cl-sub-orig" *ngIf="descLineaPct(item) > 0">
-                {{ itemSubtotalBruto(item) | currency:'COP':'symbol-narrow':digitosValor }}
+                {{ itemSubtotalBruto(item) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}
               </s>
             </span>
             <span class="cl-acc">
@@ -542,7 +543,7 @@
           <!-- Ticket 1102: pesos enteros en todas las cotizaciones de la empresa -->
           <span class="cot-sep">·</span>
           <label class="cot-check mb-0" [class.disabled]="guardandoDecimales">
-            <input type="checkbox" [checked]="!!configCotizacion?.valoresSinDecimales" [disabled]="guardandoDecimales"
+            <input type="checkbox" [checked]="sinDecimales" [disabled]="guardandoDecimales"
                    (change)="cambiarValoresSinDecimales($any($event.target).checked)">
             Mostrar valores sin decimales
           </label>
@@ -552,26 +553,57 @@
 
     <!-- ===================== COLUMNA LATERAL ===================== -->
     <div class="col-side">
+      <!-- Tickets 1207 y 1208: por qué se perdió y la línea de tiempo de estados. -->
+      <!-- Ticket 1202: vistas del cliente en el enlace -->
+      <div class="cot-vistas" *ngIf="$any(cotizacion).publicToken">
+        <strong>{{ cotizacion.vistaCliente ? ('Vista ' + (cotizacion.vistasCount || 1) + (cotizacion.vistasCount === 1 ? ' vez' : ' veces')) : 'El cliente no ha abierto el enlace' }}</strong>
+        <small *ngIf="cotizacion.fechaPrimeraVista">Primera: {{ cotizacion.fechaPrimeraVista | date:'dd/MM/yyyy HH:mm' }}</small>
+        <small *ngIf="cotizacion.fechaUltimaVista">Última: {{ cotizacion.fechaUltimaVista | date:'dd/MM/yyyy HH:mm' }}</small>
+      </div>
+
+      <div class="cot-historial" *ngIf="lineaDeTiempo.length || cotizacion.rechazo || cotizacion.motivoRechazoTexto">
+        <div class="cot-historial-cabeza">
+          <h3>Historial de estados</h3>
+          <button type="button" class="cot-historial-ajuste" *ngIf="esAdminCotizaciones" (click)="editarMotivosRechazo()" title="Ajustar la lista de motivos de rechazo de la empresa">Motivos de rechazo</button>
+        </div>
+        <div class="cot-rechazo" *ngIf="estado === 'rechazada' && (cotizacion.rechazo?.motivo || cotizacion.motivoRechazoTexto)">
+          <strong>Motivo: {{ cotizacion.rechazo?.motivo || cotizacion.motivoRechazoTexto }}</strong>
+          <span *ngIf="cotizacion.rechazo?.detalle">{{ cotizacion.rechazo?.detalle }}</span>
+          <span *ngIf="cotizacion.rechazo?.competidor">Competidor: {{ cotizacion.rechazo?.competidor }}</span>
+          <span *ngIf="cotizacion.rechazo?.comentario">{{ cotizacion.rechazo?.comentario }}</span>
+        </div>
+        <ol class="cot-linea">
+          <li *ngFor="let e of lineaDeTiempo" [class.cot-linea-inferido]="e.inferido">
+            <span class="cot-linea-punto estado-{{ e.a }}"></span>
+            <div class="cot-linea-texto">
+              <strong>{{ etiquetaEvento(e) }}</strong>
+              <small>{{ fechaEvento(e.fecha) }}<ng-container *ngIf="e.usuario"> · {{ e.usuario }}</ng-container></small>
+              <small class="cot-linea-origen" *ngIf="e.origen">{{ e.origen }}{{ e.inferido ? ' (deducido)' : '' }}</small>
+            </div>
+          </li>
+        </ol>
+      </div>
+
       <div class="cot-summary">
         <div class="sum-row">
           <span>Subtotal</span>
-          <span>{{ subtotal | currency:'COP':'symbol-narrow':digitosValor }}</span>
+          <span>{{ subtotal | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span>
         </div>
         <div class="sum-row muted" *ngIf="totalDescuentoLineas > 0">
           <span>Desc. por producto</span>
-          <span>− {{ totalDescuentoLineas | currency:'COP':'symbol-narrow':digitosValor }}</span>
+          <span>− {{ totalDescuentoLineas | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span>
         </div>
         <div class="sum-row muted" *ngIf="totalDescuentoGlobal > 0">
           <span>Desc. global</span>
-          <span>− {{ totalDescuentoGlobal | currency:'COP':'symbol-narrow':digitosValor }}</span>
+          <span>− {{ totalDescuentoGlobal | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span>
         </div>
         <div class="sum-row">
           <span>Base gravable</span>
-          <span>{{ baseGravable | currency:'COP':'symbol-narrow':digitosValor }}</span>
+          <span>{{ baseGravable | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span>
         </div>
         <div class="sum-row">
           <span>IVA</span>
-          <span>{{ totalImpuesto | currency:'COP':'symbol-narrow':digitosValor }}</span>
+          <span>{{ totalImpuesto | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span>
         </div>
         <div class="sum-global">
           <span class="muted">Descuento global</span>
@@ -589,7 +621,14 @@
         </div>
         <div class="sum-total">
           <span>Total</span>
-          <strong>{{ total | currency:'COP':'symbol-narrow':digitosValor }}</strong>
+          <strong>{{ total | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</strong>
+        </div>
+        <!-- Ticket 1202: margen (solo roles autorizados: el servidor no lo manda a los demás) -->
+        <div class="sum-margen" *ngIf="cotizacion.margen as m" [class.sum-margen--bajo]="margenBajo">
+          <span>Margen</span>
+          <strong *ngIf="m.completo">{{ m.valor | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }} · {{ m.pct }}%</strong>
+          <small *ngIf="!m.completo">Costo de {{ m.lineasConCosto }} de {{ m.lineas }} líneas: margen incompleto</small>
+          <small *ngIf="margenBajo">Por debajo del mínimo de la empresa ({{ margenMinimoEmpresa }}%)</small>
         </div>
         <p class="sum-foot">
           <!-- Ticket 1097: un combo cerrado cuenta como un ítem, como lo ve el cliente -->
@@ -703,13 +742,13 @@
               </div>
             </td>
             <td>{{ fila.cantidad }}</td>
-            <td>{{ comboValorBruto(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
-            <td>{{ comboTieneDescuento(fila) ? (comboDescuentoUnitario(fila) | currency:'COP':'symbol-narrow':digitosValor) : '—' }}</td>
-            <td>{{ comboPrecioSinIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+            <td>{{ comboValorBruto(fila) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</td>
+            <td>{{ comboTieneDescuento(fila) ? (comboDescuentoUnitario(fila) | currency:'COP':'symbol-narrow':digitosValor:'es-CO') : '—' }}</td>
+            <td>{{ comboPrecioSinIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</td>
             <td>{{ ivaCombo(fila) !== null ? ivaCombo(fila) + '%' : 'Varios' }}</td>
-            <td>{{ comboValorIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
-            <td>{{ comboPrecioTotalConIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
-            <td>{{ comboSubtotal(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+            <td>{{ comboValorIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</td>
+            <td>{{ comboPrecioTotalConIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</td>
+            <td>{{ comboSubtotal(fila) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</td>
           </tr>
           <tr *ngIf="!esComboFila(fila) && fila.item as it">
             <td>
@@ -732,7 +771,7 @@
                        quedan en el editor: este documento lo recibe el cliente y
                        listarlas le mostraría al mayorista lo que paga público general. -->
                   <span class="doc-lista" *ngIf="segmentoAplicado(it)">
-                    {{ segmentoAplicado(it) }}<ng-container *ngIf="segmentoAplicadoPrecio(it) > 0">: {{ segmentoAplicadoPrecio(it) | currency:'COP':'symbol-narrow':'1.0-0' }}</ng-container>
+                    {{ segmentoAplicado(it) }}<ng-container *ngIf="segmentoAplicadoPrecio(it) > 0">: {{ segmentoAplicadoPrecio(it) | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</ng-container>
                   </span>
                 </span>
               </div>
@@ -741,30 +780,30 @@
                  cifra sumaba ~25px por columna y era parte de lo que empujaba la
                  tabla fuera de la hoja. Los centavos siguen saliendo cuando los hay. -->
             <td>{{ it.cantidad }}</td>
-            <td>{{ getValorBruto(it) | currency:'COP':'symbol-narrow':digitosValor }}</td>
-            <td>{{ descLineaPct(it) > 0 ? (getDescuentoUnitario(it) | currency:'COP':'symbol-narrow':digitosValor) : '—' }}</td>
-            <td>{{ getPrecioSinIvaNeto(it) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+            <td>{{ getValorBruto(it) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</td>
+            <td>{{ descLineaPct(it) > 0 ? (getDescuentoUnitario(it) | currency:'COP':'symbol-narrow':digitosValor:'es-CO') : '—' }}</td>
+            <td>{{ getPrecioSinIvaNeto(it) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</td>
             <td>{{ getIvaActual(it) }}%</td>
-            <td>{{ getValorIvaNeto(it) | currency:'COP':'symbol-narrow':digitosValor }}</td>
-            <td>{{ getPrecioTotalConIvaNeto(it) | currency:'COP':'symbol-narrow':digitosValor }}</td>
-            <td>{{ itemSubtotal(it) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+            <td>{{ getValorIvaNeto(it) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</td>
+            <td>{{ getPrecioTotalConIvaNeto(it) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</td>
+            <td>{{ itemSubtotal(it) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</td>
           </tr>
           </ng-container>
         </tbody>
       </table>
 
       <div class="doc-totals">
-        <div><span>Subtotal</span><span>{{ subtotal | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
+        <div><span>Subtotal</span><span>{{ subtotal | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span></div>
         <div *ngIf="totalDescuentoLineas > 0">
           <span>Descuento por producto</span>
-          <span>– {{ totalDescuentoLineas | currency:'COP':'symbol-narrow':digitosValor }}</span>
+          <span>– {{ totalDescuentoLineas | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span>
         </div>
         <div *ngIf="descGlobalPct > 0">
           <span>Descuento global ({{ descGlobalPct }}%)</span>
-          <span>– {{ totalDescuentoGlobal | currency:'COP':'symbol-narrow':digitosValor }}</span>
+          <span>– {{ totalDescuentoGlobal | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span>
         </div>
-        <div><span>IVA</span><span>{{ totalImpuesto | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
-        <div class="doc-total"><span>Total</span><span>{{ total | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
+        <div><span>IVA</span><span>{{ totalImpuesto | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span></div>
+        <div class="doc-total"><span>Total</span><span>{{ total | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span></div>
       </div>
 
       <!-- ANEXO: precios sugeridos por tipo de cliente.
@@ -796,7 +835,7 @@
                 *ngFor="let s of preciosSugeridos(it)"
                 [title]="s.descripcion">
                 <span class="doc-sug-tipo">{{ s.nombre }}</span>
-                <span class="doc-sug-val">{{ s.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                <span class="doc-sug-val">{{ s.precio | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</span>
                 <span class="doc-sug-tag" *ngIf="s.aplicado">precio aplicado</span>
               </span>
             </div>

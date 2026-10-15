@@ -297,9 +297,9 @@
 
 // Aviso lila de ayuda ("tu página está hecha de secciones…").
 @mixin kb-nota {
-  display: flex;
-  align-items: flex-start;
-  gap: 11px;
+  // Ticket 1220: párrafo continuo con el ícono flotando. Con flex, cada
+  // palabra en negrita quedaba como una columna aparte.
+  display: flow-root;
   background: var(--kb-accent-wash-2);
   border: 1px solid var(--kb-accent-line);
   border-radius: 14px;
@@ -310,8 +310,8 @@
   line-height: 1.45;
 
   svg {
-    flex: none;
-    margin-top: 1px;
+    float: left;
+    margin: 1px 11px 0 0;
     color: var(--kb-accent);
   }
 }

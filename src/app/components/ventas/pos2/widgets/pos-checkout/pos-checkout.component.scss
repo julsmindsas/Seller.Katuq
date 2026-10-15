@@ -23,6 +23,19 @@
   gap: 0;
   max-width: 100%;
   font-family: var(--kc-font-body);
+  // Ticket 1173: en una pantalla baja (portátil de 768 px o menos) el ticket no
+  // cabe: la lista quedaba en una franja, los totales se pintaban encima y el
+  // pago se salía por abajo. Con este piso, cuando no cabe, la columna del
+  // ticket (.pos-ticket) hace scroll en vez de encimar las piezas.
+  // Medido (bundle de producción): cliente 148 + encabezado 35 + lista mínima 70
+  // + 18 + cupón 50 + totales 182 + pago 151 = 654 px.
+  min-height: 660px;
+
+  // Hoja de móvil: la lista tiene piso de 140 px y los toques son más grandes
+  // (cliente 161 + 36 + 140 + 18 + cupón 61 + totales 182 + pago 166 = 764 px).
+  @media (max-width: 1000px) {
+    min-height: 770px;
+  }
 }
 
 // Cliente: alto fijo. Carrito: se estira y scrollea. Pago: alto fijo abajo.

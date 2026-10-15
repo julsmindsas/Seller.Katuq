@@ -213,7 +213,10 @@ h3 {
   }
 
   &__nombre {
-    font-size: 1.1rem;
+    // Ticket 1217: es un span creado por *ngIf y la regla global
+    // span.ng-star-inserted lo pintaba de violeta. Toma el texto de la paleta.
+    color: var(--sitio-texto, inherit) !important;
+    font-size: 1.1rem !important;
     font-weight: 700;
     white-space: nowrap;
     overflow: hidden;

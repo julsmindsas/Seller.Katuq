@@ -1,3 +1,14 @@
 input[type="checkbox"] {
     transform: scale(2);
   }
+
+// Ticket 1215: forma de pago disponible en la tienda web.
+.web-pago { margin-top: 6px; }
+.web-pago-marca {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  label { margin: 0; font-weight: 700; }
+}
+.web-pago-ayuda { display: block; width: 100%; font-size: 12px; color: #6b6880; letter-spacing: normal; }

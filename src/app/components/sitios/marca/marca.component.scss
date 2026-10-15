@@ -16,6 +16,13 @@
 
   &__cabecera {
     @include kb-modal-cabecera;
+    // Ticket 1220: la X en la esquina superior derecha, no en una línea aparte.
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+
+    h5 { margin: 0 0 4px; }
   }
 
   &__cuerpo {
@@ -207,6 +214,18 @@
 }
 
 // ── Campos ───────────────────────────────────────────────────────────────────
+// Ticket 1216: aviso de contraste.
+.aviso-contraste {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: #fff4e5;
+  color: #8a4b00;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: normal;
+}
+
 .campo {
   display: grid;
   gap: 5px;
@@ -219,6 +238,20 @@
   input[type="text"],
   select {
     @include kb-input;
+  }
+
+  // Ticket 1220: el selector con la misma cara del resto, no el nativo del navegador.
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 40px;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235F3FE0' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 14px;
+
+    &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; }
   }
 
   small {

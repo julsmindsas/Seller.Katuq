@@ -340,8 +340,23 @@ Orden: 8.2 va primero, porque la producción y el cobro dependen de las banderas
   4. tocar "Abrir WhatsApp" en un pedido de prueba sin pago y confirmar que no aparece en TV ni con "ocultar";
   5. ver el inventario de los pedidos de prueba sin cambios;
   6. cancelar los pedidos de prueba.
-- [ ] 8.5.4 Seguir 2 días en FLORECER: aprobaciones de producción con la marca de Opttia, pedidos que quedaron fuera, errores y ningún aviso al cliente por "En producción".
-- [ ] 8.5.5 Los demás comercios, uno por uno con Daniel. OH MY STORE no produce, así que su perfil no muestra la producción. Rollback: apagar la bandera del comercio, o `OPTTIA_PROPUESTAS_HABILITADO=false` para todos.
+
+  Probado también con el botón (14-oct, 12:53, autorizado por Daniel). Se usó la sesión real de un Administrador de FLORECER en sellercenter.katuq.com:
+  - la escena mostró dos tarjetas: el despacho de CER-000010 y "1 pedido se entrega hoy y nadie lo ha empezado" (CER-000005);
+  - "Pasar a En producción" y luego "Confirmar" dejaron CER-000005 en En producción, con la marca "hecho" y el usuario de la sesión en `aprobadoPor`;
+  - CER-000009 quedó por fuera por la guarda de Tesorería;
+  - el panel "Ajustar" de despachos se cerró sin aprobar;
+  - fechas devueltas; CER-000005 y CER-000006 quedan en producción, como resultado de las pruebas.
+
+  Dos comportamientos esperados para quien pruebe:
+  - la fuente de producción guarda la lectura 5 minutos por empresa (la de despachos, 60 s), así que después de preparar datos hay que esperar;
+  - la confirmación de dos toques dura 5 s.
+- [ ] 8.5.4 Seguir 2 días en FLORECER: aprobaciones de producción con la marca de Opttia, pedidos que quedaron fuera, errores y ningún aviso al cliente por "En producción". Desde el 14-oct, el seguimiento se hace en ALMARA FELICIDAD, el primer comercio real que produce.
+- [x] 8.5.5 (14-oct) Los demás comercios. OH MY STORE no produce, así que su perfil no muestra la producción. Rollback: apagar la bandera del comercio, o `OPTTIA_PROPUESTAS_HABILITADO=false` para todos.
+  - ALMARA FELICIDAD, alrededor de la 1 p. m. (Daniel: "Dale enciendelo"): `opttiaProduccion` y `opttiaCobroWhatsapp` encendidas con `set-company-feature.js`, primero simulado. Al encender proponía 13 pedidos a producción.
+  - Todas las empresas, alrededor de la 1:30 p. m. (Daniel: "Préndalo para todos"; reemplaza el "uno por uno"): las dos banderas en las 128 empresas. La simulación dio 252 cambios; la ejecución escribió 252, 4 ya estaban encendidas y hubo 0 errores. Al revisar, ninguna quedó apagada.
+  - `despachosOpttia` no se tocó: sigue solo en FLORECER, OH MY STORE y ALMARA.
+  - La producción solo se propone donde el perfil detecta uso de producción (pedidos En producción o Producido en 90 días). Las sesiones abiertas lo ven al volver a iniciar sesión.
 - [ ] 8.5.6 Cierre de la fase 2 en la bitácora de D-422.
 
 ## 9. Fase 3: inventario y compras, una operación a la vez

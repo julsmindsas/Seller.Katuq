@@ -91,7 +91,7 @@
           <div class="cabecera__marca">
             <img *ngIf="bloque.datos.mostrarLogo !== false && logo"
                  class="cabecera__logo" [src]="logo" [alt]="nombreDeMarca(bloque.datos)" />
-            <span class="cabecera__nombre" *ngIf="nombreDeMarca(bloque.datos)">
+            <span class="cabecera__nombre" *ngIf="conNombreDeMarca(bloque.datos) && nombreDeMarca(bloque.datos)">
               {{ nombreDeMarca(bloque.datos) }}
             </span>
           </div>
@@ -125,7 +125,7 @@
           </div>
           <span class="cabecera__carrito" *ngIf="bloque.datos.mostrarCarrito">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 7h14l-1.5 9h-11z"/><path d="M6 7 5 3H2"/><circle cx="9.5" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg>
-            <b>2</b>
+            <!-- Ticket 1220: el carrito de la previa está vacío (antes mostraba un "2" fijo). -->
           </span>
 
           <!-- Las categorías reales las resuelve el servidor al publicar. -->
@@ -171,17 +171,17 @@
                  (click)="registrarClic('cta', bloque.id, $event)">{{ bloque.datos.ctaTexto }}</a>
             </div>
             <div class="hero__fotos" [ngClass]="'hero__fotos--' + bloque.datos.mosaico.length">
-              <span class="hero__foto" *ngFor="let u of bloque.datos.mosaico"><img [src]="u" alt="" /></span>
+              <span class="hero__foto" *ngFor="let u of bloque.datos.mosaico"><img [src]="u" alt="" [ngStyle]="estiloFotoPortada(bloque.datos)" /></span>
             </div>
           </div>
 
           <ng-template #heroClasico>
             <ng-container *ngIf="slidesDeHero(bloque.datos).length; else fondoFijo">
               <img *ngFor="let u of slidesDeHero(bloque.datos); let k = index" class="hero__slide"
-                   [class.is-activa]="k === activo(slidesDeHero(bloque.datos).length)" [src]="u" alt="" />
+                   [class.is-activa]="k === activo(slidesDeHero(bloque.datos).length)" [src]="u" alt="" [ngStyle]="estiloFotoPortada(bloque.datos)" />
             </ng-container>
             <ng-template #fondoFijo>
-              <img *ngIf="fondoDeHero(bloque.datos)" class="hero__fondo" [src]="fondoDeHero(bloque.datos)" [alt]="bloque.datos.titulo" />
+              <img *ngIf="fondoDeHero(bloque.datos)" class="hero__fondo" [src]="fondoDeHero(bloque.datos)" [alt]="bloque.datos.titulo" [ngStyle]="estiloFotoPortada(bloque.datos)" />
             </ng-template>
             <span *ngIf="opacidadVelo(bloque.datos)" class="hero__velo"
                   [style.opacity]="opacidadVelo(bloque.datos)"></span>

@@ -738,6 +738,8 @@
   "Tipo de Cliente": "Tipo de Cliente",
   "Seleccionar tipo...": "Selecionar tipo...",
   "Buscar tipo...": "Buscar tipo...",
+  "Sin tipos de cliente activos": "Sem tipos de cliente ativos",
+  "Créalos o actívalos en Configuración → Producto → Tipos de Cliente.": "Crie-os ou ative-os em Configuração → Produto → Tipos de Cliente.",
   "Fecha de Cumpleaños": "Data de Aniversário",
   "Cupo de crédito": "Limite de crédito",
   "0 = sin cupo. Se usa en Cartera (CxC).": "0 = sem limite. Usado em Contas a Receber.",

@@ -21,6 +21,7 @@ import {
   EstadoCotizacion,
   ESTADOS_COTIZACION,
   VendedorCotizacion,
+  EventoEstadoCotizacion,
 } from "../modelo/cotizacion";
 import { Carrito, Cliente } from "../../ventas/modelo/pedido";
 import { Producto } from "../../../shared/models/productos/Producto";
@@ -30,6 +31,7 @@ import { LeadToSalesService } from "../../crm/services/lead-to-sales.service";
 import { resolverPrecioLinea } from "../../../shared/services/ventas/iva-canonico";
 import { environment } from "../../../../environments/environment";
 import { urlImagenAbsoluta } from "../../../shared/utils/imagen-producto";
+import { nombreClienteCotizacion } from "../modelo/nombre-cliente";
 import {
   ComboLinea,
   FilaAgrupada,
@@ -162,25 +164,30 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   ) {}
 
   // ---- Ticket 1081: condiciones fijas de la empresa y documento anexo ----
-  configCotizacion: { terminosBase: string; personalizados?: boolean; anexo?: { url: string; nombre: string } | null; valoresSinDecimales?: boolean } | null = null;
+  configCotizacion: { terminosBase: string; personalizados?: boolean; anexo?: { url: string; nombre: string } | null; valoresSinDecimales?: boolean; motivosRechazo?: string[] } | null = null;
   subiendoAnexo = false;
   guardandoCondiciones = false;
   guardandoDecimales = false;
 
-  // Ticket 1102: la empresa puede ver sus cotizaciones en pesos enteros
-  // (ALMACEN BOMBAS). Solo cambia cómo se muestran los valores; los cálculos
-  // siguen con sus centavos. Sin la opción, todo queda como antes.
+  // Ticket 1102: la empresa puede ver sus cotizaciones en pesos enteros.
+  // Solo cambia cómo se muestran los valores; los cálculos siguen con sus
+  // centavos. Desde el ticket c9ZCSMj4 los pesos enteros son lo normal y solo
+  // la empresa que desmarque la opción (valoresSinDecimales === false) ve centavos.
+  get sinDecimales(): boolean {
+    return this.configCotizacion?.valoresSinDecimales !== false;
+  }
+
   get digitosValor(): string {
-    return this.configCotizacion?.valoresSinDecimales ? "1.0-0" : "1.0-2";
+    return this.sinDecimales ? "1.0-0" : "1.0-2";
   }
 
   get digitosValorFijo(): string {
-    return this.configCotizacion?.valoresSinDecimales ? "1.0-0" : "1.2-2";
+    return this.sinDecimales ? "1.0-0" : "1.2-2";
   }
 
   /** Guarda para toda la empresa si las cotizaciones se ven sin decimales. */
   cambiarValoresSinDecimales(valor: boolean): void {
-    const anterior = !!this.configCotizacion?.valoresSinDecimales;
+    const anterior = this.sinDecimales;
     this.configCotizacion = { ...(this.configCotizacion || { terminosBase: "" }), valoresSinDecimales: valor };
     this.guardandoDecimales = true;
     this.subs.push(this.service.updateConfig({ valoresSinDecimales: valor }).subscribe({
@@ -467,6 +474,14 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
       next: (res) => {
         const base = res && res.data ? res.data.terminosBase : "";
         if (res && res.data) this.configCotizacion = res.data;
+        // Ticket 1213: una cotización nueva muestra el celular de quien la hace desde
+        // la vista previa; al guardar, el servidor lo vuelve a tomar de su ficha.
+        const contacto = res && res.data && res.data.contactoVendedor;
+        const v = this.cotizacion.vendedor;
+        if (contacto && contacto.celular && v && !v.celular &&
+            String(v.email || "").toLowerCase() === String(contacto.email || "").toLowerCase()) {
+          this.cotizacion.vendedor = { ...v, celular: contacto.celular };
+        }
         if (base && !this.cotizacion.terminos) {
           this.cotizacion.terminos = base;
         }
@@ -505,7 +520,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   get vendedorMetaDoc(): string {
     const v = this.cotizacion.vendedor;
     if (!v) return "";
-    return [v.nombre, v.email].filter(Boolean).join(" · ");
+    return [v.nombre, v.email, v.celular].filter(Boolean).join(" · ");
   }
 
   /**
@@ -1644,15 +1659,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
 
   // ---- Helpers de presentación de cliente ----
   clienteNombre(cli: any): string {
-    if (!cli) return "";
-    return (
-      cli.razonSocial ||
-      cli.nombre ||
-      [cli.nombres_completos, cli.apellidos_completos].filter(Boolean).join(" ") ||
-      cli.nombreComercial ||
-      cli.documento ||
-      ""
-    );
+    return nombreClienteCotizacion(cli);
   }
 
   clienteDocumento(cli: any): string {
@@ -2012,8 +2019,114 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     );
   }
 
-  cambiarEstado(value: EstadoCotizacion): void {
+  /**
+   * Ticket 1207: pasar a "Rechazada" pide el motivo (obligatorio). Si se cancela,
+   * el estado no cambia y el selector vuelve a mostrar el anterior.
+   */
+  async cambiarEstado(value: EstadoCotizacion, selector?: HTMLSelectElement): Promise<void> {
+    if (value !== "rechazada" || this.estado === "rechazada") {
+      this.cotizacion.estadoCotizacion = value;
+      return;
+    }
+    const rechazo = await this.pedirMotivoRechazo();
+    if (!rechazo) {
+      const i = this.estadosEditables.findIndex((e) => e.value === this.estado);
+      if (selector && i >= 0) selector.selectedIndex = i;
+      return;
+    }
+    this.cotizacion.rechazo = rechazo;
     this.cotizacion.estadoCotizacion = value;
+    this.toastr.info("Guarda la cotización para registrar el rechazo.", "Motivo anotado");
+  }
+
+  /** Ticket 1202: margen mínimo de la empresa y si esta cotización queda por debajo. */
+  get margenMinimoEmpresa(): number {
+    return Number(this.configCotizacion && (this.configCotizacion as any).margenMinimo) || 0;
+  }
+
+  get margenBajo(): boolean {
+    const m = this.cotizacion.margen;
+    return !!m && m.completo && m.pct !== null && this.margenMinimoEmpresa > 0 && m.pct < this.margenMinimoEmpresa;
+  }
+
+  /** Motivos de la empresa (o los de siempre) para el rechazo. */
+  get motivosRechazo(): string[] {
+    const propios = (this.configCotizacion && this.configCotizacion.motivosRechazo) || [];
+    return propios.length ? propios : ["Precio alto", "Tiempo de entrega", "Eligió a la competencia", "Sin respuesta del cliente", "Sin presupuesto", "Producto no disponible", "Otro"];
+  }
+
+  private async pedirMotivoRechazo(): Promise<{ motivo: string; detalle: string; competidor: string; comentario: string } | null> {
+    const esc = (v: string) => String(v || "").replace(/[&<>"']/g, (ch) => (({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as any)[ch]));
+    const opciones = this.motivosRechazo.map((m) => `<option value="${esc(m)}">${esc(m)}</option>`).join("");
+    const campo = "display:block;width:100%;margin:4px 0 12px;padding:9px 11px;border:1px solid #dedbea;border-radius:11px;font-size:14px";
+    const etiqueta = "display:block;text-align:left;font-size:12px;font-weight:700;color:#6b6880;text-transform:uppercase";
+    const r = await Swal.fire({
+      title: "¿Por qué se perdió esta cotización?",
+      html:
+        `<label style="${etiqueta}">Motivo</label><select id="rch-motivo" style="${campo}"><option value="">Escoge uno</option>${opciones}</select>` +
+        `<label style="${etiqueta}">Cuál (si es "Otro")</label><input id="rch-detalle" maxlength="300" style="${campo}">` +
+        `<label style="${etiqueta}">Competidor (opcional)</label><input id="rch-competidor" maxlength="120" style="${campo}">` +
+        `<label style="${etiqueta}">Comentario (opcional)</label><textarea id="rch-comentario" maxlength="500" rows="2" style="${campo}"></textarea>`,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Marcar como rechazada",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#5F3FE0",
+      preConfirm: () => {
+        const val = (id: string) => ((document.getElementById(id) as HTMLInputElement | null)?.value || "").trim();
+        const motivo = val("rch-motivo");
+        const detalle = val("rch-detalle");
+        if (!motivo) { Swal.showValidationMessage("Escoge el motivo del rechazo."); return false; }
+        if (motivo.toLowerCase() === "otro" && !detalle) { Swal.showValidationMessage("Escribe cuál fue el motivo."); return false; }
+        return { motivo, detalle, competidor: val("rch-competidor"), comentario: val("rch-comentario") };
+      },
+    });
+    return r.isConfirmed && r.value ? (r.value as any) : null;
+  }
+
+  /** Ticket 1207: el administrador ajusta la lista de motivos de la empresa. */
+  async editarMotivosRechazo(): Promise<void> {
+    const actuales = this.motivosRechazo.filter((m) => m.toLowerCase() !== "otro");
+    const r = await Swal.fire({
+      title: "Motivos de rechazo",
+      input: "textarea",
+      inputValue: actuales.join("\n"),
+      inputLabel: "Uno por línea. \"Otro\" se agrega siempre al final.",
+      showCancelButton: true,
+      confirmButtonText: "Guardar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#5F3FE0",
+      inputValidator: (v) => (String(v || "").split("\n").map((x) => x.trim()).filter(Boolean).length ? null : "Escribe al menos un motivo."),
+    });
+    if (!r.isConfirmed) return;
+    const lista = String(r.value || "").split("\n").map((x) => x.trim()).filter(Boolean);
+    this.subs.push(this.service.updateConfig({ motivosRechazo: lista }).subscribe({
+      next: (res) => {
+        if (res && res.success) {
+          this.configCotizacion = { ...(this.configCotizacion || { terminosBase: "" }), motivosRechazo: [...lista.filter((m) => m.toLowerCase() !== "otro"), "Otro"] };
+          this.toastr.success("Motivos de rechazo guardados.");
+        } else {
+          this.toastr.error((res && res.message) || "No se pudieron guardar los motivos.");
+        }
+      },
+      error: (e) => this.toastr.error(e?.error?.message || "No se pudieron guardar los motivos."),
+    }));
+  }
+
+  // ---- Ticket 1208: línea de tiempo de estados ----
+
+  get lineaDeTiempo(): EventoEstadoCotizacion[] {
+    return this.cotizacion.lineaDeTiempo || [];
+  }
+
+  etiquetaEvento(e: EventoEstadoCotizacion): string {
+    if (e.a === "creada") return "Creada";
+    return this.estadoLabel(e.a as EstadoCotizacion);
+  }
+
+  fechaEvento(iso: string): string {
+    const d = new Date(iso);
+    return isNaN(d.getTime()) ? "" : d.toLocaleString("es-CO", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
   }
 
   // ---- T-22: guardar (create/edit) + validaciones ----
@@ -2085,9 +2198,10 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
         );
         this.router.navigate(["/cotizaciones"]);
       },
-      error: () => {
+      error: (e: any) => {
         this.saving = false;
-        this.toastr.error("No se pudo guardar la cotización.");
+        // Ticket 1207: el servidor explica qué falta (por ejemplo, el motivo del rechazo).
+        this.toastr.error(e?.error?.message || "No se pudo guardar la cotización.");
       },
     });
     this.subs.push(sub);

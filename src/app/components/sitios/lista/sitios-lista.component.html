@@ -375,9 +375,28 @@
       <div class="caja__cuerpo">
         <div class="campo">
           <label for="nombre-pagina">Nombre de la página</label>
-          <input id="nombre-pagina" type="text" [(ngModel)]="nombre" maxlength="80"
+          <input id="nombre-pagina" type="text" [ngModel]="nombre" (ngModelChange)="cambiarNombre($event)" maxlength="80"
                  placeholder="Ej: Colección primavera" />
-          <small>Se usa para la dirección pública. Puedes cambiarla luego.</small>
+          <small>Escríbelo como quieres que se vea, con mayúsculas y tildes.</small>
+        </div>
+        <!-- Ticket 1218: la dirección final y si está libre, antes de crear. -->
+        <div class="campo">
+          <label for="slug-pagina">Dirección de la página</label>
+          <div class="slug-campo">
+            <input id="slug-pagina" type="text" maxlength="60" autocomplete="off" spellcheck="false"
+                   [ngModel]="slugEditado ? slugNuevo : ''" (ngModelChange)="cambiarSlug($event)"
+                   [placeholder]="slugNuevo || 'se arma con el nombre'" />
+            <span class="slug-campo__dominio">.{{ dominioSitios }}</span>
+          </div>
+          <small class="slug-estado" [class.slug-estado--libre]="slugEstado === 'libre'"
+                 [class.slug-estado--ocupada]="slugEstado === 'ocupada' || slugEstado === 'invalida'" *ngIf="slugEstado">
+            <ng-container [ngSwitch]="slugEstado">
+              <ng-container *ngSwitchCase="'revisando'">Revisando {{ slugNuevo }}.{{ dominioSitios }}…</ng-container>
+              <ng-container *ngSwitchCase="'libre'">Disponible: {{ slugNuevo }}.{{ dominioSitios }}</ng-container>
+              <ng-container *ngSwitchCase="'ocupada'">{{ slugNuevo }}.{{ dominioSitios }} ya está ocupada. Escribe otra.</ng-container>
+              <ng-container *ngSwitchCase="'invalida'">Usa letras o números (sin tildes ni símbolos).</ng-container>
+            </ng-container>
+          </small>
         </div>
 
         <!-- El objetivo ya quedó decidido con la intención del paso 1: no se

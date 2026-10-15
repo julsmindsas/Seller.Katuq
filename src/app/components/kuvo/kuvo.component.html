@@ -1,0 +1,75 @@
+<main class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos"><span class="cfg-eyebrow">Canal de venta</span><h1 class="cfg-titulo">Tu comercio en Kuvo</h1><p class="cfg-sub">Ofrece tus productos a nuevos clientes y atiende sus pedidos desde Katuq.</p></div>
+    <div class="cfg-acciones" *ngIf="authorized"><button type="button" class="cfg-btn cfg-btn--sec" (click)="load()" [disabled]="loadingPublication || loadingStatement || loadingBank || savingPublication || savingBank"><i class="pi pi-refresh" aria-hidden="true"></i> Actualizar</button></div>
+  </header>
+  <section *ngIf="!authorized" class="cfg-vacio"><i class="pi pi-lock" aria-hidden="true"></i><h2>Acceso de administrador</h2><p>La publicación y cuenta de Kuvo las administra el responsable del comercio.</p></section>
+  <ng-container *ngIf="authorized">
+    <section class="cfg-card kuvo-section">
+      <div class="kuvo-heading"><div><h2>Publicación</h2><p>Retirar el comercio bloquea nuevas compras y conserva los pedidos anteriores.</p></div><span *ngIf="publication" class="kuvo-status" [class.kuvo-status--ok]="publication.activo">{{ publication.activo ? 'Publicado' : 'Retirado' }}</span></div>
+      <p *ngIf="loadingPublication" class="cfg-aviso" role="status">Cargando configuración…</p>
+      <p *ngIf="publicationError" class="cfg-aviso kuvo-error" role="alert">{{ publicationError }}</p>
+      <p *ngIf="publicationNotice" class="cfg-aviso kuvo-success" role="status">{{ publicationNotice }}</p>
+      <p *ngIf="publication?.activo && publication?.checkoutEnabled" class="cfg-aviso" [class.kuvo-success]="publication?.checkoutAvailable" role="status">{{ publication?.checkoutAvailable ? 'Tu comercio está disponible para recibir compras en Kuvo.' : 'Las compras siguen en preparación. Completa los medios de pago y la cuenta de liquidación antes de recibir pedidos.' }}</p>
+      <form *ngIf="draft as form" #publicationForm="ngForm" (ngSubmit)="savePublication()">
+        <fieldset [disabled]="savingPublication || loadingPublication">
+          <div class="kuvo-grid">
+            <label>Nombre público<input name="nombrePublico" [(ngModel)]="form.nombrePublico" required maxlength="120" autocomplete="organization" /></label>
+            <label>Enlace del comercio<input name="slug" [(ngModel)]="form.slug" [readOnly]="form.slugLocked" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="80" /><small>{{ form.slugLocked ? 'Este enlace ya está vinculado a tu comercio.' : 'Usa letras minúsculas, números y guiones.' }}</small></label>
+          </div>
+          <div class="kuvo-checks"><label><input type="checkbox" name="habilitada" [(ngModel)]="form.habilitada" /> Preparar tienda para recibir pedidos</label><label><input type="checkbox" name="checkoutEnabled" [(ngModel)]="form.checkoutEnabled" /> Permitir compras en Kuvo</label></div>
+          <p class="kuvo-help">Guardar valida tus medios de pago. La configuración de compras no se activa si falta completar los pagos de Kuvo.</p>
+          <h3>Entrega y medios de pago</h3>
+          <p *ngIf="warehouseError" class="cfg-aviso kuvo-error" role="alert">{{ warehouseError }}</p>
+          <div class="kuvo-grid">
+            <label>Bodega de despacho<select name="bodegaId" [(ngModel)]="form.bodegaId" [required]="form.habilitada || form.checkoutEnabled"><option value="">Selecciona una bodega</option><option *ngFor="let warehouse of warehouses" [value]="warehouse.code">{{ warehouse.name }} · {{ warehouse.code }}</option></select></label>
+            <label>Cobro de envío<select name="envioModo" [(ngModel)]="form.envioModo"><option value="fijo">Tarifa fija</option><option value="zonas">Por zonas de cobro</option></select></label>
+            <label *ngIf="form.envioModo === 'fijo'">Tarifa fija (COP)<input type="number" name="envioCosto" [(ngModel)]="form.envioCosto" required min="0" max="100000000" step="1" /></label>
+            <label>Envío gratis desde (COP)<input type="number" name="envioGratisDesde" [(ngModel)]="form.envioGratisDesde" required min="0" max="100000000" step="1" /><small>Escribe 0 para conservar el cobro de envío.</small></label>
+            <label class="kuvo-wide">Mensaje de entrega<input name="envioTexto" [(ngModel)]="form.envioTexto" maxlength="160" /></label>
+          </div>
+          <p *ngIf="form.envioModo === 'zonas'" class="kuvo-help">Kuvo utiliza las tarifas y cobertura de tus <a routerLink="/extras/zonasCobro">zonas de cobro</a>.</p>
+          <div class="kuvo-checks"><label><input type="checkbox" name="contraEntrega" [(ngModel)]="form.contraEntrega" /> Contraentrega</label><label><input type="checkbox" name="pagoEnLinea" [(ngModel)]="form.pagoEnLinea" /> Pago en línea por Kuvo</label></div>
+          <p class="kuvo-help">Para el pago en línea, Kuvo debe tener los pagos configurados y tu cuenta de liquidación verificada.</p>
+          <div class="cfg-acciones kuvo-form-actions"><button class="cfg-btn" type="submit" [disabled]="publicationForm.invalid || !!warehouseError">{{ savingPublication ? 'Guardando…' : 'Guardar configuración' }}</button><button *ngIf="!publication?.activo" class="cfg-btn cfg-btn--sec" type="button" (click)="savePublication(true)" [disabled]="publicationForm.invalid || !!warehouseError">Publicar en Kuvo</button></div>
+        </fieldset>
+      </form>
+      <button *ngIf="publication?.activo" type="button" class="cfg-btn cfg-btn--peligro kuvo-withdraw" (click)="withdraw()" [disabled]="savingPublication" data-testid="kuvo-withdraw">Retirar mi comercio de Kuvo</button>
+    </section>
+    <section class="cfg-card kuvo-section">
+      <div class="kuvo-heading"><div><h2>Saldo de Kuvo</h2><p>Recaudo de tus compras en línea, con sus devoluciones y liquidaciones.</p></div><span class="kuvo-status">Producción</span></div>
+      <p *ngIf="loadingStatement" class="cfg-aviso" role="status">Consultando saldo…</p><p *ngIf="statementError" class="cfg-aviso kuvo-error" role="alert">{{ statementError }}</p>
+      <div *ngIf="statement as account" class="kuvo-totals">
+        <div><label>Disponible para liquidar</label><strong>{{ account.availableDisplay }}</strong></div><div><label>En liquidación</label><strong>{{ account.reservedDisplay }}</strong></div><div><label>Ya liquidado</label><strong>{{ account.paidOutDisplay }}</strong></div><div><label>Saldo del comercio</label><strong>{{ account.balanceDisplay }}</strong></div>
+        <div><label>Ventas recaudadas</label><strong>{{ account.capturedDisplay }}</strong></div><div><label>Devoluciones</label><strong>{{ account.refundedDisplay }}</strong></div><div><label>Pagos por devolver</label><strong>{{ account.heldRefundDueDisplay }}</strong></div>
+        <div *ngIf="account.refundReservedDisplay"><label>Devoluciones en proceso</label><strong>{{ account.refundReservedDisplay }}</strong></div>
+      </div>
+      <p class="kuvo-help">Las liquidaciones incluyen el saldo elegible de semanas cerradas. Un pago pendiente de conciliación conserva su reserva. El saldo retenido por una devolución queda fuera de nuevas liquidaciones.</p>
+    </section>
+    <section class="cfg-card kuvo-section">
+      <div class="kuvo-heading"><div><h2>Cuenta de liquidación</h2><p>Registra una cuenta del comercio para recibir las ventas recaudadas por Kuvo.</p></div><span *ngIf="bank" class="kuvo-status">Comisión piloto {{ bank.commissionPercent }}% · {{ bank.frequency === 'weekly' ? 'Semanal' : bank.frequency }}</span></div>
+      <p *ngIf="loadingBank" class="cfg-aviso" role="status">Consultando cuenta…</p><p *ngIf="bankError" class="cfg-aviso kuvo-error" role="alert">{{ bankError }}</p><p *ngIf="bankNotice" class="cfg-aviso kuvo-success" role="status">{{ bankNotice }}</p>
+      <ng-container *ngIf="bank as configuration">
+        <div *ngIf="configuration.destination as destination" class="kuvo-bank-summary"><strong>{{ destination.bankName || 'Cuenta registrada' }} · •••• {{ destination.lastFour }}</strong><span class="kuvo-status" [class.kuvo-status--ok]="destination.status === 'verified'">{{ destination.status === 'verified' ? 'Verificada por Kuvo' : 'Pendiente de revisión' }}</span></div>
+        <p *ngIf="configuration.nextRun" class="kuvo-help">Próximo corte programado: {{ configuration.nextRun | date:'dd MMM yyyy, h:mm a':'-0500' }} (Colombia).</p>
+        <p *ngIf="!configuration.banks?.length" class="cfg-aviso" role="status">{{ configuration.banksUnavailable ? 'No pudimos consultar los bancos de Kuvo. Actualiza para volver a intentarlo.' : 'Kuvo está preparando la configuración bancaria. Podrás enviar tu cuenta cuando aparezcan los bancos disponibles.' }}</p>
+        <form #bankForm="ngForm" (ngSubmit)="saveBank()" *ngIf="configuration.banks?.length">
+          <fieldset [disabled]="savingBank">
+            <h3>{{ configuration.destination ? 'Solicitar cambio de cuenta' : 'Enviar cuenta a revisión' }}</h3>
+            <div class="kuvo-grid">
+              <label>Tipo de documento<select name="legalIdType" [(ngModel)]="bankDraft.legalIdType"><option *ngFor="let type of documentTypes" [value]="type">{{ type }}</option></select></label>
+              <label>Documento del titular<input name="legalId" [(ngModel)]="bankDraft.legalId" required maxlength="64" autocomplete="off" /></label>
+              <label>Banco<select name="bankId" [(ngModel)]="bankDraft.bankId" required><option value="">Selecciona el banco</option><option *ngFor="let item of configuration.banks" [value]="item.id">{{ item.name }}</option></select></label>
+              <label>Tipo de cuenta<select name="accountType" [(ngModel)]="bankDraft.accountType"><option *ngFor="let type of accountTypes" [value]="type.value">{{ type.label }}</option></select></label>
+              <label>Número de cuenta<input name="accountNumber" [(ngModel)]="bankDraft.accountNumber" required pattern="[0-9]{5,40}" maxlength="40" inputmode="numeric" autocomplete="off" /></label>
+              <label>Nombre del titular<input name="name" [(ngModel)]="bankDraft.name" required maxlength="200" autocomplete="organization" /></label>
+              <label class="kuvo-wide">Correo del titular<input type="email" name="email" [(ngModel)]="bankDraft.email" required email maxlength="254" autocomplete="email" /></label>
+            </div>
+            <p class="kuvo-help">Al cambiar la cuenta se requiere una nueva revisión. Las liquidaciones que ya estén en trámite mantienen su destino original.</p>
+            <button type="submit" class="cfg-btn" [disabled]="bankForm.invalid">{{ savingBank ? 'Enviando…' : 'Enviar a revisión' }}</button>
+          </fieldset>
+        </form>
+      </ng-container>
+    </section>
+  </ng-container>
+</main>

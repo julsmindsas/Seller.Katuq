@@ -87,6 +87,13 @@
   div { display: flex; flex-direction: column; }
 }
 .cp-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; }
+.cp-asesor-link {
+  color: #5F3FE0;
+  font-size: 14px;
+  letter-spacing: normal;
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}
 
 .cp-result {
   border-radius: 8px;

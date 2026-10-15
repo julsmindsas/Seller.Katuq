@@ -21,7 +21,16 @@
     </ol>
   </div>
 
-  <!-- KPIs -->
+  <!-- Ticket 1201: métricas y filtros se pueden contraer; la preferencia se recuerda. -->
+  <div class="panel-control">
+    <button type="button" class="btn-ghost" (click)="alternarPanel()" [attr.aria-expanded]="!panelContraido">
+      {{ panelContraido ? 'Mostrar métricas y filtros' : 'Ocultar métricas y filtros' }}
+    </button>
+  </div>
+
+  <ng-container *ngIf="!panelContraido; else panelCompacto">
+  <!-- KPIs: respetan búsqueda, pedido y comercial (tickets 1200, 1211, 1212) -->
+  <div class="kpis-filtro" *ngIf="metrics?.filtrado">Cifras con los filtros de búsqueda aplicados</div>
   <div class="kpis-row">
     <div class="kpi-card kpi-cotizado">
       <span class="kpi-bar"></span>
@@ -38,21 +47,47 @@
     <div class="kpi-card kpi-pipeline">
       <span class="kpi-bar"></span>
       <div class="kpi-main">
-        <div class="kpi-label">Pipeline activo</div>
-        <div class="kpi-value">{{ money(metrics?.pipelineActivo) }}</div>
-        <div class="kpi-sub">enviadas + aceptadas</div>
+        <div class="kpi-label">Pipeline abierto</div>
+        <div class="kpi-value">{{ money(metrics?.pipelineAbierto ?? metrics?.pipelineActivo) }}</div>
+        <div class="kpi-sub" title="Proyección: pipeline abierto × tasa de conversión">
+          {{ metrics?.pipelineAbiertoCount ?? 0 }} enviadas vigentes · ponderado {{ money(metrics?.pipelinePonderado) }}
+        </div>
       </div>
       <span class="kpi-icon">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
       </span>
     </div>
 
+    <button
+      type="button"
+      class="kpi-card kpi-aceptadas"
+      [class.activa]="filtroSinConvertir"
+      [attr.aria-pressed]="filtroSinConvertir"
+      title="Ver en la tabla las aceptadas que todavía no tienen pedido"
+      (click)="verAceptadasSinConvertir()"
+    >
+      <span class="kpi-bar"></span>
+      <span class="kpi-main">
+        <span class="kpi-label">Aceptadas sin convertir</span>
+        <span class="kpi-value">{{ metrics?.aceptadasSinConvertir?.cantidad ?? '—' }}</span>
+        <span class="kpi-sub">{{ money(metrics?.aceptadasSinConvertir?.valor) }} por pasar a pedido</span>
+      </span>
+      <span class="kpi-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      </span>
+    </button>
+
     <div class="kpi-card kpi-conversion">
       <span class="kpi-bar"></span>
       <div class="kpi-main">
         <div class="kpi-label">Tasa de conversión</div>
-        <div class="kpi-value">{{ metrics ? (metrics.tasaConversion + '%') : '—' }}</div>
-        <div class="kpi-sub">cotización → pedido</div>
+        <div class="kpi-value">{{ metrics ? pct(metrics.winRate ?? metrics.tasaConversion) : '—' }}</div>
+        <div
+          class="kpi-sub"
+          title="Convertidas ÷ cerradas (convertidas + rechazadas + vencidas). Borradores, enviadas vigentes y aceptadas sin convertir todavía están abiertas y no cuentan."
+        >
+          {{ metrics?.convertidas ?? 0 }} de {{ metrics?.cerradas ?? 0 }} cerradas · {{ pct(metrics?.winRateValor) }} en valor
+        </div>
       </div>
       <span class="kpi-icon">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
@@ -118,14 +153,42 @@
         </div>
       </div>
       <!-- Ticket 1104: filtrar por el comercial que hizo la cotización -->
-      <div class="filtro-field" *ngIf="(metrics?.vendedores?.length || 0) > 1">
+      <!-- Ticket 1204: varios comerciales a la vez -->
+      <div class="filtro-field comerciales-menu" *ngIf="vendedores.length > 1">
         <div class="filtro-label">Comercial</div>
-        <div class="filtro-input">
+        <button type="button" class="filtro-input comerciales-boton" (click)="menuComerciales = !menuComerciales" [attr.aria-expanded]="menuComerciales">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA0B2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          <select [value]="filtroVendedor" (change)="setVendedor($any($event.target).value)">
-            <option value="">Todos</option>
-            <option *ngFor="let v of metrics?.vendedores" [value]="v.email">{{ v.nombre }} ({{ v.total }})</option>
+          <span class="comerciales-texto">{{ textoComerciales }}</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="comerciales-lista" *ngIf="menuComerciales" role="listbox" aria-multiselectable="true">
+          <label class="comerciales-opcion">
+            <input type="checkbox" [checked]="!vendedoresSel.length" (change)="elegirTodos()" />
+            <span class="comerciales-nombre">Todos</span>
+          </label>
+          <label class="comerciales-opcion" *ngFor="let v of vendedores">
+            <input type="checkbox" [checked]="vendedoresSel.includes(v.email)" (change)="alternarVendedor(v.email)" />
+            <span class="comerciales-nombre">{{ v.nombre }}</span>
+            <span class="comerciales-total">{{ v.total }}</span>
+          </label>
+        </div>
+      </div>
+      <!-- Ticket 1205: período -->
+      <div class="filtro-field">
+        <div class="filtro-label">Período</div>
+        <div class="filtro-input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA0B2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+          <select [value]="periodo" (change)="setPeriodo($any($event.target).value)">
+            <option value="">Todo</option>
+            <option value="mes">Este mes</option>
+            <option value="mesAnterior">Mes anterior</option>
+            <option value="trimestre">Este trimestre</option>
+            <option value="personalizado">Personalizado</option>
           </select>
+        </div>
+        <div class="periodo-fechas" *ngIf="periodo === 'personalizado'">
+          <input type="date" [value]="fechaDesde" (change)="setFecha('fechaDesde', $any($event.target).value)" aria-label="Desde" />
+          <input type="date" [value]="fechaHasta" (change)="setFecha('fechaHasta', $any($event.target).value)" aria-label="Hasta" />
         </div>
       </div>
       <div class="filtro-field filtro-estado">
@@ -135,14 +198,204 @@
             *ngFor="let chip of chips"
             type="button"
             class="chip"
-            [class.active]="filtroEstado === chip.value"
+            [class.active]="filtroEstado === chip.value && !filtroSinConvertir"
             (click)="setEstado(chip.value)"
           >
             {{ chip.label }}<span class="chip-count" *ngIf="chipCount(chip.value) !== null"> ({{ chipCount(chip.value) }})</span>
           </button>
         </div>
       </div>
+      <!-- Ticket 1207: las rechazadas se pueden filtrar por motivo. -->
+      <div class="filtro-field" *ngIf="filtroEstado === 'rechazada' && motivosDisponibles.length">
+        <div class="filtro-label">Motivo de rechazo</div>
+        <div class="filtro-input">
+          <select [value]="filtroMotivo" (change)="setMotivo($any($event.target).value)">
+            <option value="">Todos los motivos</option>
+            <option *ngFor="let m of motivosDisponibles" [value]="m.motivo">{{ m.motivo }} ({{ m.total }})</option>
+          </select>
+        </div>
+      </div>
     </div>
+  </div>
+  </ng-container>
+
+  <!-- Ticket 1201: barra compacta de una línea con los filtros activos como chips. -->
+  <ng-template #panelCompacto>
+    <div class="cotz-card barra-compacta">
+      <div class="barra-compacta-cifras" *ngIf="metrics">
+        <span>Pipeline <b>{{ money(metrics.pipelineAbierto ?? metrics.pipelineActivo) }}</b></span>
+        <span>Conversión <b>{{ pct(metrics.winRate ?? metrics.tasaConversion) }}</b></span>
+        <span>Sin convertir <b>{{ metrics.aceptadasSinConvertir?.cantidad ?? 0 }}</b></span>
+      </div>
+      <div class="filtro-input barra-compacta-buscar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA0B2" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg>
+        <input type="text" placeholder="Número, cliente, documento o pedido" [value]="q" (input)="onSearch($any($event.target).value)" />
+      </div>
+      <div class="barra-compacta-chips">
+        <button type="button" class="filtro-activo" *ngFor="let f of filtrosActivos" (click)="quitarFiltro(f.clave)" [title]="'Quitar ' + f.texto">
+          {{ f.texto }} <span aria-hidden="true">✕</span>
+        </button>
+      </div>
+      <div class="barra-compacta-acciones">
+        <button type="button" class="btn-ghost" (click)="exportar()" [disabled]="exporting">{{ exporting ? "Exportando…" : "Exportar" }}</button>
+        <button type="button" class="btn-accent" (click)="nuevaCotizacion()">Nueva Cotización</button>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Ticket 1205: indicadores del comercial o del equipo, con variación vs. el período anterior -->
+  <div class="cotz-card indicadores-card" *ngIf="!panelContraido && metrics?.indicadores as ind">
+    <div class="indicadores-cabeza">
+      <span class="head-txt">Indicadores {{ vendedoresSel.length === 1 ? 'de ' + textoComerciales : 'del equipo' }}</span>
+      <span class="indicadores-periodo" *ngIf="metrics?.periodoAnterior">vs. {{ metrics?.periodoAnterior?.desde }} a {{ metrics?.periodoAnterior?.hasta }}</span>
+      <span class="indicadores-relleno"></span>
+      <button type="button" class="btn-ghost btn-sm" *ngIf="vendedores.length > 1" (click)="alternarComparativa()">{{ compararTodos ? 'Ocultar comparativa' : 'Comparar asesores' }}</button>
+      <button type="button" class="btn-ghost btn-sm" *ngIf="esAdmin" (click)="editarMetas()">Metas del equipo</button>
+    </div>
+    <div class="indicadores-grid">
+      <div class="indicador" title="Cotizaciones emitidas en el período y su valor.">
+        <span class="indicador-nombre">Cotizado</span>
+        <strong>{{ money(ind.cotizadoValor) }}</strong>
+        <small>{{ ind.cotizaciones }} cotizaciones <em [class]="claseVariacion('cotizadoValor')">{{ textoVariacion('cotizadoValor') }}</em></small>
+      </div>
+      <div class="indicador" title="$ cotizado ÷ número de cotizaciones.">
+        <span class="indicador-nombre">Ticket promedio</span>
+        <strong>{{ money(ind.ticketPromedio) }}</strong>
+        <small><em [class]="claseVariacion('ticketPromedio')">{{ textoVariacion('ticketPromedio') }}</em></small>
+      </div>
+      <div class="indicador" title="Convertidas ÷ cerradas (convertidas + rechazadas + vencidas).">
+        <span class="indicador-nombre">Win rate</span>
+        <strong>{{ pct(ind.winRate) }}</strong>
+        <small>{{ pct(ind.winRateValor) }} en valor <em [class]="claseVariacion('winRate')">{{ textoVariacion('winRate') }}</em></small>
+      </div>
+      <div class="indicador" title="Días promedio entre el envío (o la emisión) y la conversión a pedido.">
+        <span class="indicador-nombre">Ciclo de cierre</span>
+        <strong>{{ numero(ind.cicloCierreDias, ' días') }}</strong>
+        <small><em [class]="claseVariacion('cicloCierreDias')">{{ textoVariacion('cicloCierreDias') }}</em></small>
+      </div>
+      <div class="indicador" title="Horas promedio entre crear la cotización y enviarla. Solo cuenta las que tienen la fecha de envío registrada.">
+        <span class="indicador-nombre">Primera respuesta</span>
+        <strong>{{ numero(ind.primeraRespuestaHoras, ' h') }}</strong>
+        <small><em [class]="claseVariacion('primeraRespuestaHoras')">{{ textoVariacion('primeraRespuestaHoras') }}</em></small>
+      </div>
+      <div class="indicador" title="Descuento otorgado ÷ subtotal antes de descuento, ponderado por valor.">
+        <span class="indicador-nombre">Descuento promedio</span>
+        <strong>{{ pct(ind.descuentoPromedio) }}</strong>
+        <small><em [class]="claseVariacion('descuentoPromedio')">{{ textoVariacion('descuentoPromedio') }}</em></small>
+      </div>
+      <div class="indicador" *ngIf="metrics?.veMargen && ind.margenPromedio !== undefined" title="(Base sin IVA − costo) ÷ base, ponderado por valor. Solo cotizaciones con el costo de todas sus líneas. Solo lo ven administradores y gerencia.">
+        <span class="indicador-nombre">Margen cotizado</span>
+        <strong>{{ ind.margenPromedio === null ? '—' : pct(ind.margenPromedio) }}</strong>
+        <small>{{ ind.margenPromedio === null ? 'Sin costos cargados' : 'promedio ponderado' }}</small>
+      </div>
+      <div class="indicador" title="$ convertido en el mes ÷ meta mensual de los comerciales filtrados.">
+        <span class="indicador-nombre">Avance vs. meta</span>
+        <strong>{{ ind.avanceMeta === null ? '—' : pct(ind.avanceMeta) }}</strong>
+        <small>{{ ind.meta ? money(ind.convertidoMes) + ' de ' + money(ind.meta) : 'Sin meta configurada' }}</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ticket 1204: tabla comparativa por asesor -->
+  <div class="cotz-card comparativa-card" *ngIf="mostrarComparativa && filasComparativa.length">
+    <div class="cotz-card-head">
+      <div class="cotz-card-head-title"><span class="head-txt">Comparativa por asesor</span></div>
+      <div class="cotz-card-head-actions">
+        <button type="button" class="btn-ghost btn-sm" (click)="exportarComparativa()">Exportar</button>
+      </div>
+    </div>
+    <div class="tabla-scroll">
+      <table class="cotz-table comparativa-tabla">
+        <thead>
+          <tr>
+            <th role="button" (click)="ordenarComparativa('nombre')">Asesor</th>
+            <th role="button" class="num" (click)="ordenarComparativa('cotizaciones')">Cotiz.</th>
+            <th role="button" class="num" (click)="ordenarComparativa('cotizadoValor')">$ cotizado</th>
+            <th role="button" class="num" (click)="ordenarComparativa('winRate')">Win rate</th>
+            <th role="button" class="num" (click)="ordenarComparativa('ticketPromedio')">Ticket prom.</th>
+            <th role="button" class="num" (click)="ordenarComparativa('cicloCierreDias')">Ciclo</th>
+            <th role="button" class="num" (click)="ordenarComparativa('descuentoPromedio')">Desc. prom.</th>
+            <th role="button" class="num" (click)="ordenarComparativa('pipelineAbierto')">Pipeline</th>
+            <th role="button" class="num" (click)="ordenarComparativa('convertidoValor')">$ convertido</th>
+            <th role="button" class="num" *ngIf="metrics?.veMargen" (click)="ordenarComparativa('margenPromedio')">Margen</th>
+            <th role="button" class="num" (click)="ordenarComparativa('avanceMeta')">Meta</th>
+            <th role="button" class="num" (click)="ordenarComparativa('participacion')">Particip.</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let f of filasComparativa">
+            <td><button type="button" class="comparativa-asesor" (click)="setVendedor(f.email)" [title]="'Ver solo a ' + f.nombre">{{ f.nombre }}</button></td>
+            <td class="num">{{ f.cotizaciones }}</td>
+            <td class="num">{{ money(f.cotizadoValor) }}</td>
+            <td class="num">{{ pct(f.winRate) }} <small>· {{ pct(f.winRateValor) }}</small></td>
+            <td class="num">{{ money(f.ticketPromedio) }}</td>
+            <td class="num">{{ numero(f.cicloCierreDias, ' d') }}</td>
+            <td class="num">{{ pct(f.descuentoPromedio) }}</td>
+            <td class="num">{{ money(f.pipelineAbierto) }}</td>
+            <td class="num">{{ money(f.convertidoValor) }}</td>
+            <td class="num" *ngIf="metrics?.veMargen">{{ f.margenPromedio === null || f.margenPromedio === undefined ? '—' : pct(f.margenPromedio) }}</td>
+            <td class="num">{{ f.avanceMeta === null ? '—' : pct(f.avanceMeta) }}</td>
+            <td class="num">{{ pct(f.participacion) }}</td>
+          </tr>
+          <tr class="comparativa-total" *ngIf="metrics?.indicadores as ind">
+            <td>Equipo</td>
+            <td class="num">{{ ind.cotizaciones }}</td>
+            <td class="num">{{ money(ind.cotizadoValor) }}</td>
+            <td class="num">{{ pct(ind.winRate) }} <small>· {{ pct(ind.winRateValor) }}</small></td>
+            <td class="num">{{ money(ind.ticketPromedio) }}</td>
+            <td class="num">{{ numero(ind.cicloCierreDias, ' d') }}</td>
+            <td class="num">{{ pct(ind.descuentoPromedio) }}</td>
+            <td class="num">{{ money(ind.pipelineAbierto) }}</td>
+            <td class="num">{{ money(ind.convertidoValor) }}</td>
+            <td class="num" *ngIf="metrics?.veMargen">{{ ind.margenPromedio === null || ind.margenPromedio === undefined ? '—' : pct(ind.margenPromedio) }}</td>
+            <td class="num">{{ ind.avanceMeta === null ? '—' : pct(ind.avanceMeta) }}</td>
+            <td class="num">100%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Ticket 1203: análisis (contraído por defecto) -->
+  <div class="cotz-card analisis-card" *ngIf="!panelContraido">
+    <button type="button" class="analisis-cabeza" (click)="alternarAnalisis()" [attr.aria-expanded]="analisisAbierto">
+      <span class="head-txt analisis-titulo">Análisis</span>
+      <span class="analisis-ayuda">Embudo, tendencia, motivos de pérdida, productos y clientes. Un clic en una barra filtra la tabla.</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path [attr.d]="analisisAbierto ? 'm18 15-6-6-6 6' : 'm6 9 6 6 6-6'"/></svg>
+    </button>
+    <div class="analisis-grid" *ngIf="analisisAbierto">
+      <div class="grafica" *ngIf="graficas.embudo as o">
+        <h4 class="grafica-titulo">Embudo</h4>
+        <div echarts [options]="o" class="grafica-lienzo" (chartClick)="clicGrafica('embudo', $event)"></div>
+      </div>
+      <div class="grafica" *ngIf="graficas.tendencia as o">
+        <h4 class="grafica-titulo">Cotizado vs. convertido por mes</h4>
+        <div echarts [options]="o" class="grafica-lienzo" (chartClick)="clicGrafica('tendencia', $event)"></div>
+      </div>
+      <div class="grafica" *ngIf="graficas.motivos as o">
+        <h4 class="grafica-titulo">Motivos de rechazo</h4>
+        <div echarts [options]="o" class="grafica-lienzo" (chartClick)="clicGrafica('motivos', $event)"></div>
+      </div>
+      <div class="grafica" *ngIf="graficas.productos as o">
+        <h4 class="grafica-titulo">Top 10 productos cotizados (color = % convertido)</h4>
+        <div echarts [options]="o" class="grafica-lienzo grafica-lienzo--alta" (chartClick)="clicGrafica('productos', $event)"></div>
+      </div>
+      <div class="grafica" *ngIf="graficas.clientes as o">
+        <h4 class="grafica-titulo">Win rate: clientes nuevos vs. recurrentes</h4>
+        <div echarts [options]="o" class="grafica-lienzo" (chartClick)="clicGrafica('clientes', $event)"></div>
+      </div>
+      <p class="analisis-vacio" *ngIf="!metrics?.analisis">Cargando el análisis…</p>
+    </div>
+  </div>
+
+  <!-- Ticket 1206: requieren atención (contadores que filtran la tabla) -->
+  <div class="atencion" *ngIf="metrics?.atencion">
+    <span class="atencion-titulo">Requieren atención</span>
+    <button type="button" class="atencion-item" *ngFor="let a of ALERTAS"
+            [class.activa]="alertaActiva(a.clave)" [class.vacia]="!conteoAlerta(a.clave)"
+            [title]="a.ayuda" (click)="aplicarAlerta(a.clave)" [attr.aria-pressed]="alertaActiva(a.clave)">
+      <b>{{ conteoAlerta(a.clave) }}</b> {{ a.texto }}
+    </button>
   </div>
 
   <!-- Tabla -->
@@ -220,6 +473,8 @@
               <div class="num-wrap">
                 <span class="num-dot" [attr.data-estado]="c.estadoCotizacion"></span>
                 <span class="num-text">{{ c.nroCotizacion || "—" }}</span>
+                <!-- Ticket 1202: si el cliente abrió el enlace -->
+                <span class="vista-chip" *ngIf="textoVista(c)" [class.vista-chip--no]="!c.vistaCliente">{{ textoVista(c) }}</span>
                 <span
                   *ngIf="c.origen === 'whatsapp-bot'"
                   class="origen-chip origen-chip--bot"

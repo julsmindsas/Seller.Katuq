@@ -645,6 +645,27 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   /**
+   * Ticket 1217: ¿va el nombre junto al logo? Espejo de `encabezado` en
+   * utils/siteHtml.js: con logo, solo si el comerciante lo pide (casi todos los
+   * logos ya traen el nombre); sin logo, el nombre es la marca.
+   */
+  conNombreDeMarca(datos: any): boolean {
+    const hayLogo = !!this.logo && (!datos || datos.mostrarLogo !== false);
+    if (datos && datos.mostrarNombre === true) return true;
+    if (datos && datos.mostrarNombre === false) return false;
+    return !hayLogo;
+  }
+
+  /** Ticket 1217: cómo entra la foto de portada en su marco (espejo de cssDeSecciones). */
+  estiloFotoPortada(datos: any): { [k: string]: string } {
+    const foco: { [k: string]: string } = { arriba: "center top", abajo: "center bottom", izquierda: "left center", derecha: "right center" };
+    const estilo: { [k: string]: string } = {};
+    if (datos && datos.ajusteFoto === "encajar") estilo["object-fit"] = "contain";
+    if (datos && foco[datos.foco]) estilo["object-position"] = foco[datos.foco];
+    return estilo;
+  }
+
+  /**
    * Texto con formato para la vista previa.
    *
    * Es el espejo de `textoConFormato` del servidor (`utils/siteHtml.js`): se

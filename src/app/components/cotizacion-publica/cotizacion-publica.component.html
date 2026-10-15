@@ -31,6 +31,13 @@
       <div><span class="cp-label">Cliente</span><span>{{ cot.clienteNombre || "—" }}</span></div>
       <div><span class="cp-label">Emisión</span><span>{{ fecha(cot.fechaEmision) }}</span></div>
       <div><span class="cp-label">Válida hasta</span><span>{{ fecha(cot.fechaVencimiento) }}</span></div>
+      <!-- Ticket 1213: a quién llamar si el cliente tiene dudas. -->
+      <div *ngIf="cot.asesor" class="cp-asesor">
+        <span class="cp-label">Te atiende</span>
+        <span>{{ cot.asesor.nombre || cot.asesor.email }}</span>
+        <a *ngIf="cot.asesor.celular" class="cp-asesor-link" [href]="'tel:' + telefonoMarcable(cot.asesor.celular)">{{ cot.asesor.celular }}</a>
+        <a *ngIf="cot.asesor.email && cot.asesor.nombre" class="cp-asesor-link" [href]="'mailto:' + cot.asesor.email">{{ cot.asesor.email }}</a>
+      </div>
     </section>
 
     <!-- Resultado tras responder -->

@@ -64,7 +64,7 @@
 
       <!-- Resumen General -->
       <div class="card summary-card mb-4 shadow-sm">
-        <div class="card-header bg-primary text-white">
+        <div class="card-header">
           <h3 class="mb-0">Resumen General del Periodo</h3>
         </div>
         <div class="card-body">
@@ -188,7 +188,8 @@
                           <strong class="d-block payment-amount">{{ formatCurrency(formaPago.total) }}</strong>
                         </div>
                       </div>
-                      <div class="col-md-3 col-6 mb-3">
+                      <!-- Ticket 1173: los cierres nuevos no guardan descuentos; no se muestra un $0 inventado. -->
+                      <div class="col-md-3 col-6 mb-3" *ngIf="item.totalDescuentos !== undefined && item.totalDescuentos !== null">
                         <div class="payment-total-item">
                           <i class="fa fa-tags me-2 text-danger"></i>
                           <span class="d-block payment-method-label">Descuentos</span>
@@ -210,7 +211,7 @@
                           <span class="count-value">{{ formatNumber(item.cantidadProductos) }}</span>
                         </div>
                       </div>
-                      <div class="col-md-4">
+                      <div class="col-md-4" *ngIf="item.totalImpuestos !== undefined && item.totalImpuestos !== null">
                         <div class="count-box">
                           <span class="count-label">Total Impuestos</span>
                           <span class="count-value">{{ formatCurrency(item.totalImpuestos) }}</span>
@@ -220,8 +221,9 @@
                   </div>
                 </div>
                 
-                <!-- Pedidos del Cierre -->
-                <div class="card orders-card">
+                <!-- Pedidos del Cierre. Ticket 1173: el formato nuevo no trae la lista (solo el
+                     total, que ya sale en "Total Pedidos"); se muestra solo si llega. -->
+                <div class="card orders-card" *ngIf="item.pedidos">
                   <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 section-subtitle">Pedidos del Cierre</h5>
                     <span class="badge bg-primary rounded-pill">{{ item.pedidos?.length || 0 }}</span>

@@ -758,6 +758,8 @@
   "Tipo de Cliente": "Customer Type",
   "Seleccionar tipo...": "Select type...",
   "Buscar tipo...": "Search type...",
+  "Sin tipos de cliente activos": "No active customer types",
+  "Créalos o actívalos en Configuración → Producto → Tipos de Cliente.": "Create or activate them in Settings → Product → Customer Types.",
   "Fecha de Cumpleaños": "Birthday",
   "Cupo de crédito": "Credit limit",
   "0 = sin cupo. Se usa en Cartera (CxC).": "0 = no credit. Used in Receivables (AR).",

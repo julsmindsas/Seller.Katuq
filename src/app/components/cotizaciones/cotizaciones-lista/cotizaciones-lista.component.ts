@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy } from "@angular/core";
+import { Component, HostListener, OnInit, OnDestroy } from "@angular/core";
+import Swal from "sweetalert2";
 import { Router } from "@angular/router";
 import { Subject, Subscription } from "rxjs";
 import { debounceTime, distinctUntilChanged } from "rxjs/operators";
@@ -6,6 +7,7 @@ import { ToastrService } from "ngx-toastr";
 import * as XLSX from "xlsx";
 import { CotizacionesService } from "../cotizaciones.service";
 import { CotizacionConvertService } from "../cotizacion-convert.service";
+import { nombreClienteCotizacion } from "../modelo/nombre-cliente";
 import {
   Cotizacion,
   CotizacionMetrics,
@@ -33,7 +35,8 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   exporting = false;
   error = "";
 
-  // KPIs / métricas (globales por empresa, independientes del filtro)
+  // KPIs / métricas: respetan búsqueda, pedido y comercial (tickets 1200/1211/1212).
+  // El estado no las filtra: los chips cuentan cada estado con los demás filtros.
   metrics: CotizacionMetrics | null = null;
 
   // Filtros
@@ -44,8 +47,43 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   filtroEstado: EstadoCotizacion | "" = "";
   q = "";
   filtroPedido = "";
-  /** Ticket 1104: filtrar por el comercial que hizo la cotización. */
-  filtroVendedor = "";
+  /** Tickets 1104/1204: comerciales elegidos (vacío = todos). */
+  vendedoresSel: string[] = [];
+  /** Ticket 1204: menú de comerciales abierto. */
+  menuComerciales = false;
+  /** Ticket 1204: con "Todos" también se puede pedir la comparativa del equipo. */
+  compararTodos = false;
+  /** Ticket 1205: período ("" = todo, mes, mesAnterior, trimestre, personalizado). */
+  periodo: "" | "mes" | "mesAnterior" | "trimestre" | "personalizado" = "";
+  fechaDesde = "";
+  fechaHasta = "";
+  /** Ticket 1206: alerta "Requieren atención" aplicada a la tabla. */
+  filtroAtencion = "";
+  /** Ticket 1203: filtros que pone un clic en las gráficas. */
+  filtroProducto = "";
+  filtroProductoNombre = "";
+  filtroClienteTipo = "";
+  /** Ticket 1203: sección de análisis (contraída por defecto, recordada por usuario). */
+  analisisAbierto = false;
+  /** Ticket 1202: margen mínimo de la empresa (lo fija el administrador). */
+  margenMinimo = 0;
+  /** Ticket 1204: orden de la tabla comparativa. */
+  ordenComparativa: { campo: string; dir: 1 | -1 } = { campo: "cotizadoValor", dir: -1 };
+  /** Tickets 1204/1205: metas mensuales por comercial (configuración de la empresa). */
+  metas: { [email: string]: number } = {};
+
+  /** Ticket 1204: correos separados por coma, como los espera el servidor. */
+  get filtroVendedor(): string {
+    return this.vendedoresSel.join(",");
+  }
+  /** Ticket 1211: la tabla muestra solo las aceptadas sin pedido (clic en la tarjeta). */
+  filtroSinConvertir = false;
+  /** Ticket 1207: rechazadas por este motivo. */
+  filtroMotivo = "";
+  /** Ticket 1201: métricas y filtros contraídos (preferencia guardada en el navegador). */
+  panelContraido = false;
+  /** Comerciales de toda la empresa: el filtro no se encoge al usarlo. */
+  vendedores: { email: string; nombre: string; total: number }[] = [];
 
   // Paginación (server-side)
   page = 1;
@@ -57,6 +95,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   sortKey = "fechaCreacion";
   sortDir: 1 | -1 = -1;
 
+  private metricsSeq = 0;
   private searchSubject = new Subject<string>();
   private pedidoSubject = new Subject<string>();
   private subs: Subscription[] = [];
@@ -75,6 +114,9 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.panelContraido = this.leerPreferenciaPanel();
+    try { this.analisisAbierto = localStorage.getItem(this.clavePreferencia.replace("panelContraido", "analisisAbierto")) === "1"; } catch { this.analisisAbierto = false; }
+    this.cargarMetas();
     this.subs.push(
       this.searchSubject
         .pipe(debounceTime(350), distinctUntilChanged())
@@ -82,6 +124,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
           this.q = value;
           this.page = 1;
           this.cargar();
+          this.cargarMetrics();
         })
     );
     this.subs.push(
@@ -91,6 +134,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
           this.filtroPedido = value;
           this.page = 1;
           this.cargar();
+          this.cargarMetrics();
         })
     );
     this.cargar();
@@ -102,14 +146,30 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   }
 
   cargarMetrics(): void {
-    const sub = this.service.metrics().subscribe({
-      next: (res) => {
-        this.metrics = (res && res.data) || null;
-      },
-      error: () => {
-        this.metrics = null;
-      },
-    });
+    const seq = ++this.metricsSeq;
+    const sub = this.service
+      .metrics({
+        q: this.q || undefined,
+        pedido: this.filtroPedido || undefined,
+        vendedor: this.filtroVendedor || undefined,
+        desde: this.fechaDesde || undefined,
+        hasta: this.fechaHasta || undefined,
+        producto: this.filtroProducto || undefined,
+        clienteTipo: this.filtroClienteTipo || undefined,
+        comparativa: this.mostrarComparativa,
+        analisis: this.analisisAbierto,
+      })
+      .subscribe({
+        next: (res) => {
+          if (seq !== this.metricsSeq) return; // llegó tarde: ya hay un filtro más nuevo
+          this.metrics = (res && res.data) || null;
+          if (this.metrics && this.metrics.vendedores) this.vendedores = this.metrics.vendedores;
+          this.armarGraficas();
+        },
+        error: () => {
+          if (seq === this.metricsSeq) this.metrics = null;
+        },
+      });
     this.subs.push(sub);
   }
 
@@ -129,6 +189,13 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
         q: this.q || undefined,
         pedido: this.filtroPedido || undefined,
         vendedor: this.filtroVendedor || undefined,
+        sinConvertir: this.filtroSinConvertir || undefined,
+        motivo: this.filtroMotivo || undefined,
+        desde: this.fechaDesde || undefined,
+        hasta: this.fechaHasta || undefined,
+        atencion: this.filtroAtencion || undefined,
+        producto: this.filtroProducto || undefined,
+        clienteTipo: this.filtroClienteTipo || undefined,
         page: this.page,
         limit: this.limit,
       })
@@ -155,16 +222,467 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   }
 
   // ---- Filtros ----
+  /** Ticket 1204: uno solo (desde la comparativa o al quitar el chip) o "" = todos. */
   setVendedor(value: string): void {
-    this.filtroVendedor = value || "";
+    this.vendedoresSel = value ? [value] : [];
+    this.compararTodos = false;
+    this.aplicarFiltrosComerciales();
+  }
+
+  alternarVendedor(email: string): void {
+    this.vendedoresSel = this.vendedoresSel.includes(email)
+      ? this.vendedoresSel.filter((e) => e !== email)
+      : [...this.vendedoresSel, email];
+    this.aplicarFiltrosComerciales();
+  }
+
+  elegirTodos(): void {
+    this.vendedoresSel = [];
+    this.aplicarFiltrosComerciales();
+  }
+
+  get textoComerciales(): string {
+    if (!this.vendedoresSel.length) return "Todos";
+    if (this.vendedoresSel.length === 1) {
+      const v = this.vendedores.find((x) => x.email === this.vendedoresSel[0]);
+      return (v && v.nombre) || this.vendedoresSel[0];
+    }
+    return `${this.vendedoresSel.length} comerciales`;
+  }
+
+  /** Ticket 1204: la comparativa sale con 2 o más comerciales, o con "Comparar todos". */
+  get mostrarComparativa(): boolean {
+    return this.vendedoresSel.length >= 2 || (this.compararTodos && this.vendedores.length > 1);
+  }
+
+  alternarComparativa(): void {
+    this.compararTodos = !this.compararTodos;
+    this.cargarMetrics();
+  }
+
+  private aplicarFiltrosComerciales(): void {
+    this.page = 1;
+    this.cargar();
+    this.cargarMetrics();
+  }
+
+  @HostListener("document:click", ["$event"])
+  cerrarMenuComerciales(ev: Event): void {
+    if (!this.menuComerciales) return;
+    const t = ev.target as HTMLElement;
+    if (t && t.closest && t.closest(".comerciales-menu")) return;
+    this.menuComerciales = false;
+  }
+
+  // ---- Ticket 1205: período ----
+
+  setPeriodo(valor: string): void {
+    this.periodo = valor as any;
+    const hoy = new Date();
+    const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    if (valor === "mes") {
+      this.fechaDesde = iso(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+      this.fechaHasta = iso(new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0));
+    } else if (valor === "mesAnterior") {
+      this.fechaDesde = iso(new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1));
+      this.fechaHasta = iso(new Date(hoy.getFullYear(), hoy.getMonth(), 0));
+    } else if (valor === "trimestre") {
+      const ini = Math.floor(hoy.getMonth() / 3) * 3;
+      this.fechaDesde = iso(new Date(hoy.getFullYear(), ini, 1));
+      this.fechaHasta = iso(new Date(hoy.getFullYear(), ini + 3, 0));
+    } else if (valor === "") {
+      this.fechaDesde = "";
+      this.fechaHasta = "";
+    }
+    if (valor !== "personalizado" || (this.fechaDesde && this.fechaHasta)) this.aplicarFiltrosComerciales();
+  }
+
+  setFecha(campo: "fechaDesde" | "fechaHasta", valor: string): void {
+    this[campo] = valor || "";
+    this.periodo = "personalizado";
+    this.aplicarFiltrosComerciales();
+  }
+
+  // ---- Ticket 1206: requieren atención ----
+
+  readonly ALERTAS_BASE: { clave: string; texto: string; ayuda: string }[] = [
+    { clave: "sinConvertir", texto: "Aceptadas sin convertir", ayuda: "Negocio ganado que todavía no es pedido." },
+    { clave: "porVencer", texto: "Por vencer", ayuda: "Enviadas que vencen en los próximos 3 días." },
+    { clave: "sinSeguimiento", texto: "Sin seguimiento", ayuda: "Enviadas hace más de 5 días sin cambios." },
+    { clave: "borradoresViejos", texto: "Borradores viejos", ayuda: "Borradores de hace más de 2 días sin enviar." },
+    // Ticket 1202: enviadas por enlace que el cliente no ha abierto.
+    { clave: "noAbiertas", texto: "No abiertas en 48 h", ayuda: "Enviadas por enlace hace más de 48 horas que el cliente no ha abierto." },
+  ];
+
+  /** Ticket 1202: la alerta de margen bajo solo para quien ve márgenes y con un mínimo configurado. */
+  get ALERTAS(): { clave: string; texto: string; ayuda: string }[] {
+    const m = this.metrics;
+    if (!m || !m.veMargen || !(m.margenMinimo! > 0)) return this.ALERTAS_BASE;
+    return [...this.ALERTAS_BASE, { clave: "bajoMargen", texto: `Margen bajo (< ${m.margenMinimo}%)`, ayuda: "Borradores y enviadas con margen por debajo del mínimo de la empresa." }];
+  }
+
+  conteoAlerta(clave: string): number {
+    const a: any = this.metrics && this.metrics.atencion;
+    return (a && a[clave]) || 0;
+  }
+
+  alertaActiva(clave: string): boolean {
+    return clave === "sinConvertir" ? this.filtroSinConvertir : this.filtroAtencion === clave;
+  }
+
+  aplicarAlerta(clave: string): void {
+    const activa = this.alertaActiva(clave);
+    this.filtroAtencion = "";
+    this.filtroSinConvertir = false;
+    this.filtroEstado = "";
+    this.filtroMotivo = "";
+    if (!activa) {
+      if (clave === "sinConvertir") { this.filtroSinConvertir = true; this.filtroEstado = "aceptada"; }
+      else this.filtroAtencion = clave;
+    }
     this.page = 1;
     this.cargar();
   }
 
+  // ---- Ticket 1202: vistas del cliente ----
+
+  /** "Vista · 14 oct" / "No vista" para las enviadas por enlace. */
+  textoVista(c: Cotizacion): string {
+    if (!(c as any).publicToken) return "";
+    if (!c.vistaCliente) return c.estadoCotizacion === "enviada" ? "No vista" : "";
+    const f = c.fechaUltimaVista || c.fechaPrimeraVista;
+    const d = f ? new Date(f) : null;
+    const fecha = d && !isNaN(d.getTime()) ? d.toLocaleDateString("es-CO", { day: "2-digit", month: "short" }) : "";
+    return "Vista" + (c.vistasCount && c.vistasCount > 1 ? ` ${c.vistasCount} veces` : "") + (fecha ? " · " + fecha : "");
+  }
+
+  // ---- Ticket 1203: análisis ----
+
+  alternarAnalisis(): void {
+    this.analisisAbierto = !this.analisisAbierto;
+    try { localStorage.setItem(this.clavePreferencia.replace("panelContraido", "analisisAbierto"), this.analisisAbierto ? "1" : "0"); } catch { /* sin almacenamiento */ }
+    if (this.analisisAbierto) this.cargarMetrics();
+  }
+
+  private readonly ETAPAS: { [k: string]: string } = { borrador: "Creadas", enviada: "Enviadas", aceptada: "Aceptadas", convertida: "Convertidas" };
+
+  private armarEmbudo(): any {
+    const a = this.metrics && this.metrics.analisis;
+    if (!a) return null;
+    return {
+      tooltip: { trigger: "item", formatter: (p: any) => `${escHtml(p.name)}: ${p.data.cantidad} · ${this.money(p.data.valor)}<br>Paso: ${p.data.paso}%` },
+      color: ["#C9BDF7", "#9E8BF0", "#7B62E8", "#5F3FE0"],
+      series: [{ type: "funnel", sort: "none", left: "4%", width: "58%", minSize: "20%", gap: 3,
+        label: { formatter: (p: any) => `${p.name} · ${p.data.cantidad} (${p.data.paso}%)`, color: "#211F3A", fontSize: 12 },
+        data: a.embudo.map((e) => ({ name: this.ETAPAS[e.etapa] || e.etapa, value: Math.max(e.cantidad, 0.0001), cantidad: e.cantidad, valor: e.valor, paso: e.paso, etapa: e.etapa })) }],
+    };
+  }
+
+  private armarTendencia(): any {
+    const a = this.metrics && this.metrics.analisis;
+    if (!a || !a.tendencia.length) return null;
+    return {
+      tooltip: { trigger: "axis", valueFormatter: (v: number) => this.money(v) },
+      legend: { data: ["Cotizado", "Convertido"], bottom: 0 },
+      grid: { left: 70, right: 16, top: 16, bottom: 48 },
+      xAxis: { type: "category", data: a.tendencia.map((t) => t.mes) },
+      yAxis: { type: "value", axisLabel: { formatter: (v: number) => (v >= 1e6 ? Math.round(v / 1e6) + " M" : v.toLocaleString("es-CO")) } },
+      color: ["#C9BDF7", "#5F3FE0"],
+      series: [{ name: "Cotizado", type: "bar", data: a.tendencia.map((t) => t.cotizado) }, { name: "Convertido", type: "bar", data: a.tendencia.map((t) => t.convertido) }],
+    };
+  }
+
+  private armarMotivos(): any {
+    const a = this.metrics && this.metrics.analisis;
+    if (!a || !a.motivos.length) return null;
+    const lista = [...a.motivos].reverse();
+    return {
+      tooltip: { trigger: "item", formatter: (p: any) => `${escHtml(p.name)}: ${p.data.cantidad} · ${this.money(p.data.valor)}` },
+      grid: { left: 150, right: 30, top: 8, bottom: 8 },
+      xAxis: { type: "value", minInterval: 1 },
+      yAxis: { type: "category", data: lista.map((m) => m.motivo), axisLabel: { width: 140, overflow: "truncate" } },
+      color: ["#B42318"],
+      series: [{ type: "bar", data: lista.map((m) => ({ value: m.cantidad, cantidad: m.cantidad, valor: m.valor, motivo: m.motivo })) }],
+    };
+  }
+
+  private armarProductos(): any {
+    const a = this.metrics && this.metrics.analisis;
+    if (!a || !a.productos.length) return null;
+    const lista = [...a.productos].reverse();
+    return {
+      tooltip: { trigger: "item", formatter: (p: any) => `${escHtml(p.data.nombre)}<br>${this.money(p.data.valor)} cotizado · ${p.data.cotizaciones} cotizaciones · ${p.data.conversion}% convertidas` },
+      grid: { left: 180, right: 30, top: 8, bottom: 8 },
+      xAxis: { type: "value", axisLabel: { formatter: (v: number) => (v >= 1e6 ? Math.round(v / 1e6) + " M" : v.toLocaleString("es-CO")) } },
+      yAxis: { type: "category", data: lista.map((p) => p.nombre), axisLabel: { width: 170, overflow: "truncate" } },
+      series: [{ type: "bar", data: lista.map((p) => ({ value: p.valor, ...p, itemStyle: { color: p.conversion >= 50 ? "#137A3A" : p.conversion > 0 ? "#7B62E8" : "#C9BDF7" } })) }],
+    };
+  }
+
+  private armarClientes(): any {
+    const a = this.metrics && this.metrics.analisis;
+    if (!a) return null;
+    return {
+      tooltip: { trigger: "item", formatter: (p: any) => `${escHtml(p.name)}: win rate ${p.data.value}% · ${p.data.cotizaciones} cotizaciones` },
+      grid: { left: 40, right: 16, top: 16, bottom: 30 },
+      xAxis: { type: "category", data: a.clientes.map((c) => (c.grupo === "nuevos" ? "Nuevos" : "Recurrentes")) },
+      yAxis: { type: "value", max: 100, axisLabel: { formatter: "{value}%" } },
+      color: ["#5F3FE0"],
+      series: [{ type: "bar", barWidth: "40%", data: a.clientes.map((c) => ({ value: c.winRate, cotizaciones: c.cotizaciones, grupo: c.grupo })) }],
+    };
+  }
+
+  /** Ticket 1203: opciones de las gráficas, armadas una vez por respuesta (no en cada ciclo). */
+  graficas: { embudo: any; tendencia: any; motivos: any; productos: any; clientes: any } = { embudo: null, tendencia: null, motivos: null, productos: null, clientes: null };
+
+  private armarGraficas(): void {
+    this.graficas = this.metrics && this.metrics.analisis
+      ? { embudo: this.armarEmbudo(), tendencia: this.armarTendencia(), motivos: this.armarMotivos(), productos: this.armarProductos(), clientes: this.armarClientes() }
+      : { embudo: null, tendencia: null, motivos: null, productos: null, clientes: null };
+  }
+
+  /** Ticket 1203: un clic en una barra o etapa filtra la tabla. */
+  clicGrafica(tipo: string, ev: any): void {
+    const d = (ev && ev.data) || {};
+    if (tipo === "embudo" && d.etapa) { this.setEstado(d.etapa === "borrador" ? "" : d.etapa); return; }
+    if (tipo === "motivos" && d.motivo) { this.filtroEstado = "rechazada"; this.filtroSinConvertir = false; this.filtroAtencion = ""; this.setMotivo(d.motivo === "Sin motivo" ? "" : d.motivo); return; }
+    if (tipo === "tendencia" && ev && ev.name) {
+      const [y, m] = String(ev.name).split("-").map(Number);
+      const fin = new Date(y, m, 0).getDate();
+      this.periodo = "personalizado";
+      this.fechaDesde = `${ev.name}-01`;
+      this.fechaHasta = `${ev.name}-${String(fin).padStart(2, "0")}`;
+      this.aplicarFiltrosComerciales();
+      return;
+    }
+    if (tipo === "productos" && d.cd) { this.filtroProducto = d.cd; this.filtroProductoNombre = d.nombre || d.cd; this.aplicarFiltrosComerciales(); return; }
+    if (tipo === "clientes" && d.grupo) { this.filtroClienteTipo = d.grupo === "nuevos" ? "nuevo" : "recurrente"; this.aplicarFiltrosComerciales(); }
+  }
+
+  // ---- Ticket 1205: indicadores comerciales ----
+
+  variacion(campo: string): number | null {
+    const v = this.metrics && this.metrics.variacion;
+    return v && v[campo] !== undefined ? v[campo] : null;
+  }
+
+  /** "+12,5 %" / "−3 %". En ciclo y respuesta, bajar es bueno. */
+  textoVariacion(campo: string): string {
+    const v = this.variacion(campo);
+    if (v === null) return "";
+    return (v > 0 ? "▲ " : v < 0 ? "▼ " : "") + Math.abs(v).toLocaleString("es-CO", { maximumFractionDigits: 1 }) + "%";
+  }
+
+  claseVariacion(campo: string): string {
+    const v = this.variacion(campo);
+    if (v === null || v === 0) return "";
+    const bajarEsBueno = campo === "cicloCierreDias" || campo === "primeraRespuestaHoras" || campo === "descuentoPromedio";
+    return (v > 0) !== bajarEsBueno ? "var-buena" : "var-mala";
+  }
+
+  numero(n: number | null | undefined, sufijo = ""): string {
+    if (n === null || n === undefined) return "—";
+    return n.toLocaleString("es-CO", { maximumFractionDigits: 1 }) + sufijo;
+  }
+
+  get esAdmin(): boolean {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      return /admin/i.test(String(u.rol || ""));
+    } catch {
+      return false;
+    }
+  }
+
+  /** Tickets 1204/1205: el administrador fija la meta mensual de cada comercial. */
+  async editarMetas(): Promise<void> {
+    const esc = (v: string) => String(v || "").replace(/[&<>"']/g, (ch) => (({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as any)[ch]));
+    const filas = this.vendedores
+      .map((v, i) => `<label style="display:flex;align-items:center;gap:10px;margin:0 0 8px;text-align:left"><span style="flex:1;font-size:13px">${esc(v.nombre)}</span><input id="meta-${i}" type="number" min="0" step="100000" value="${Math.round(Number(this.metas[v.email])) || ""}" placeholder="Sin meta" style="width:150px;padding:8px 10px;border:1px solid #dedbea;border-radius:11px"></label>`)
+      .join("");
+    const margenCampo = `<label style="display:flex;align-items:center;gap:10px;margin:14px 0 0;padding-top:12px;border-top:1px solid #ecebf3;text-align:left"><span style="flex:1;font-size:13px"><strong>Margen mínimo (%)</strong><br><small style="color:#6b6880">Alerta de cotizaciones con poco margen. 0 = sin alerta.</small></span><input id="meta-margen" type="number" min="0" max="99" step="1" value="${Math.round(Number(this.margenMinimo)) || ""}" placeholder="0" style="width:150px;padding:8px 10px;border:1px solid #dedbea;border-radius:11px"></label>`;
+    const r = await Swal.fire({
+      title: "Meta mensual por comercial",
+      html: `<p style="font-size:13px;color:#6b6880;margin:0 0 12px">Pesos convertidos a pedido en el mes. Vacío = sin meta.</p>${filas}${margenCampo}`,
+      showCancelButton: true,
+      confirmButtonText: "Guardar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#5F3FE0",
+      preConfirm: () => {
+        const metas: { [email: string]: number } = {};
+        this.vendedores.forEach((v, i) => {
+          const n = Math.round(Number((document.getElementById("meta-" + i) as HTMLInputElement | null)?.value || 0));
+          if (n > 0) metas[v.email] = n;
+        });
+        const margen = Number((document.getElementById("meta-margen") as HTMLInputElement | null)?.value || 0);
+        if (!(margen >= 0 && margen < 100)) { Swal.showValidationMessage("El margen mínimo va de 0 a 99 %."); return false; }
+        return { metas, margen };
+      },
+    });
+    if (!r.isConfirmed) return;
+    const { metas, margen } = r.value as { metas: { [email: string]: number }; margen: number };
+    this.subs.push(this.service.updateConfig({ metas, margenMinimo: margen }).subscribe({
+      next: (res) => {
+        if (res && res.success) {
+          this.metas = metas;
+          this.margenMinimo = margen;
+          this.toastr.success("Metas guardadas.");
+          this.cargarMetrics();
+        } else {
+          this.toastr.error((res && res.message) || "No se pudieron guardar las metas.");
+        }
+      },
+      error: (e) => this.toastr.error(e?.error?.message || "No se pudieron guardar las metas."),
+    }));
+  }
+
+  private cargarMetas(): void {
+    this.subs.push(this.service.getConfig().subscribe({
+      next: (res) => {
+        this.metas = (res && res.data && (res.data as any).metas) || {};
+        this.margenMinimo = Number(res && res.data && (res.data as any).margenMinimo) || 0;
+      },
+      error: () => { this.metas = {}; },
+    }));
+  }
+
+  // ---- Ticket 1204: tabla comparativa ----
+
+  get filasComparativa(): any[] {
+    const filas = [...((this.metrics && this.metrics.porVendedor) || [])];
+    const { campo, dir } = this.ordenComparativa;
+    return filas.sort((a, b) => {
+      const x = a[campo] ?? -Infinity;
+      const y = b[campo] ?? -Infinity;
+      return (typeof x === "string" ? x.localeCompare(y, "es") : x - y) * dir;
+    });
+  }
+
+  ordenarComparativa(campo: string): void {
+    this.ordenComparativa = this.ordenComparativa.campo === campo
+      ? { campo, dir: this.ordenComparativa.dir === 1 ? -1 : 1 }
+      : { campo, dir: campo === "nombre" ? 1 : -1 };
+  }
+
+  exportarComparativa(): void {
+    const ind: any = (this.metrics && this.metrics.indicadores) || {};
+    const fila = (f: any) => ({
+      "Asesor": f.nombre,
+      "Cotizaciones": f.cotizaciones,
+      "$ cotizado": Math.round(f.cotizadoValor),
+      "Win rate (cantidad) %": f.winRate,
+      "Win rate (valor) %": f.winRateValor,
+      "Ticket promedio": f.ticketPromedio,
+      "Ciclo de cierre (días)": f.cicloCierreDias ?? "",
+      "Descuento promedio %": f.descuentoPromedio,
+      "Pipeline abierto": Math.round(f.pipelineAbierto),
+      "$ convertido": Math.round(f.convertidoValor),
+      "Avance vs. meta %": f.avanceMeta ?? "",
+      "Participación %": f.participacion ?? 100,
+    });
+    const ws = XLSX.utils.json_to_sheet([...this.filasComparativa.map(fila), fila({ ...ind, nombre: "Equipo", participacion: 100 })]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Comparativa");
+    XLSX.writeFile(wb, `comparativa-asesores-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }
+
   setEstado(value: EstadoCotizacion | ""): void {
     this.filtroEstado = value;
+    this.filtroSinConvertir = false;
+    this.filtroAtencion = "";
+    if (value !== "rechazada") this.filtroMotivo = "";
     this.page = 1;
     this.cargar();
+  }
+
+  /** Ticket 1211: clic en "Aceptadas sin convertir" filtra la tabla con esas cotizaciones. */
+  verAceptadasSinConvertir(): void {
+    const activo = this.filtroSinConvertir;
+    this.filtroEstado = activo ? "" : "aceptada";
+    this.filtroSinConvertir = !activo;
+    this.page = 1;
+    this.cargar();
+  }
+
+  /** Ticket 1207: filtrar las rechazadas por motivo. */
+  setMotivo(value: string): void {
+    this.filtroMotivo = value || "";
+    this.page = 1;
+    this.cargar();
+  }
+
+  /** Motivos que aparecen en las rechazadas (con los filtros actuales), de más a menos. */
+  get motivosDisponibles(): { motivo: string; total: number }[] {
+    const m = (this.metrics && this.metrics.motivosRechazo) || {};
+    return Object.keys(m).map((motivo) => ({ motivo, total: m[motivo] })).sort((a, b) => b.total - a.total);
+  }
+
+  motivoRechazo(c: Cotizacion): string {
+    if (c.estadoCotizacion !== "rechazada") return "";
+    return (c.rechazo && c.rechazo.motivo) || ((c as any).motivoRechazo ? "Rechazada por el cliente desde el enlace" : "");
+  }
+
+  // ---- Ticket 1201: panel contraíble ----
+
+  private get clavePreferencia(): string {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      return "cotizaciones.panelContraido." + (u.email || "anon");
+    } catch {
+      return "cotizaciones.panelContraido.anon";
+    }
+  }
+
+  private leerPreferenciaPanel(): boolean {
+    try {
+      return localStorage.getItem(this.clavePreferencia) === "1";
+    } catch {
+      return false;
+    }
+  }
+
+  alternarPanel(): void {
+    this.panelContraido = !this.panelContraido;
+    try {
+      localStorage.setItem(this.clavePreferencia, this.panelContraido ? "1" : "0");
+    } catch {
+      /* sin almacenamiento, la preferencia dura hasta recargar */
+    }
+  }
+
+  /** Filtros puestos, como chips que se pueden quitar desde la barra compacta. */
+  get filtrosActivos(): { clave: string; texto: string }[] {
+    const lista: { clave: string; texto: string }[] = [];
+    if (this.vendedoresSel.length) {
+      lista.push({ clave: "vendedor", texto: "Comercial: " + this.textoComerciales });
+    }
+    if (this.fechaDesde || this.fechaHasta) lista.push({ clave: "periodo", texto: `Período: ${this.fechaDesde || "…"} a ${this.fechaHasta || "…"}` });
+    const alerta = this.ALERTAS.find((a) => a.clave === this.filtroAtencion);
+    if (alerta) lista.push({ clave: "atencion", texto: alerta.texto });
+    if (this.filtroProducto) lista.push({ clave: "producto", texto: "Producto: " + this.filtroProductoNombre });
+    if (this.filtroClienteTipo) lista.push({ clave: "clienteTipo", texto: this.filtroClienteTipo === "nuevo" ? "Clientes nuevos" : "Clientes recurrentes" });
+    if (this.filtroSinConvertir) lista.push({ clave: "sinConvertir", texto: "Aceptadas sin convertir" });
+    else if (this.filtroEstado) lista.push({ clave: "estado", texto: "Estado: " + this.estadoLabel(this.filtroEstado) });
+    if (this.filtroMotivo) lista.push({ clave: "motivo", texto: "Motivo: " + this.filtroMotivo });
+    if (this.filtroPedido) lista.push({ clave: "pedido", texto: "Pedido: " + this.filtroPedido });
+    return lista;
+  }
+
+  quitarFiltro(clave: string): void {
+    if (clave === "vendedor") { this.setVendedor(""); return; }
+    if (clave === "sinConvertir" || clave === "estado") { this.setEstado(""); return; }
+    if (clave === "motivo") { this.setMotivo(""); return; }
+    if (clave === "pedido") { this.filtroPedido = ""; this.page = 1; this.cargar(); this.cargarMetrics(); }
+    if (clave === "periodo") { this.setPeriodo(""); }
+    if (clave === "atencion") { this.filtroAtencion = ""; this.page = 1; this.cargar(); }
+    if (clave === "producto") { this.filtroProducto = ""; this.filtroProductoNombre = ""; this.aplicarFiltrosComerciales(); }
+    if (clave === "clienteTipo") { this.filtroClienteTipo = ""; this.aplicarFiltrosComerciales(); }
+  }
+
+  /** Porcentaje con coma decimal (34,07 %). */
+  pct(n: number | undefined | null): string {
+    if (n === undefined || n === null) return "—";
+    return n.toLocaleString("es-CO", { maximumFractionDigits: 2 }) + "%";
   }
 
   onSearch(value: string): void {
@@ -262,6 +780,11 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
         q: this.q || undefined,
         pedido: this.filtroPedido || undefined,
         vendedor: this.filtroVendedor || undefined,
+        sinConvertir: this.filtroSinConvertir || undefined,
+        motivo: this.filtroMotivo || undefined,
+        desde: this.fechaDesde || undefined,
+        hasta: this.fechaHasta || undefined,
+        atencion: this.filtroAtencion || undefined,
         page: 1,
         limit: 5000,
       })
@@ -276,6 +799,8 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
             "Válida hasta": this.fecha(c.fechaVencimiento),
             "Total": c.total || 0,
             "Estado": this.estadoLabel(c.estadoCotizacion),
+            // Ticket 1207: el motivo del rechazo también sale en el Excel.
+            "Motivo de rechazo": this.motivoRechazo(c),
             "Pedido": c.pedidoGenerado || "",
           }));
           const ws = XLSX.utils.json_to_sheet(rows);
@@ -339,15 +864,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
 
   // ---- Helpers de presentación ----
   clienteNombre(c: Cotizacion): string {
-    const cli: any = c.cliente || {};
-    return (
-      cli.razonSocial ||
-      cli.nombre ||
-      [cli.nombres_completos, cli.apellidos_completos].filter(Boolean).join(" ") ||
-      cli.nombreComercial ||
-      cli.documento ||
-      "—"
-    );
+    return nombreClienteCotizacion(c.cliente) || "—";
   }
 
   /** Ticket 1176: nombre del comercial (o su correo si no tiene nombre). */
@@ -420,4 +937,9 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   trackById(_i: number, c: Cotizacion): string {
     return c.id || c.nroCotizacion || String(_i);
   }
+}
+
+/** Ticket 1203: los tooltips de echarts se pintan como HTML; nombres y motivos los escriben los usuarios. */
+function escHtml(v: any): string {
+  return String(v == null ? "" : v).replace(/[&<>"']/g, (c) => (({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" } as any)[c]));
 }

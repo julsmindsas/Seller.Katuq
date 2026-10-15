@@ -3,6 +3,7 @@ import { AuthGuard } from "../guards/auth.guard"; // Importar el guard
 import { AdminGuard } from "../guard/admin.guard"; // Importar AdminGuard
 import { SubscriptionGuard } from "../guards/subscription.guard"; // Importar SubscriptionGuard
 import { InicioJulsmindGuard } from "../guards/inicio-julsmind.guard";
+import { KuvoGuard } from "../../components/kuvo/kuvo.guard";
 
 export const content: Routes = [
   {
@@ -180,6 +181,11 @@ export const content: Routes = [
         (m) => m.EcommeceModule,
       ),
     canActivate: [AuthGuard], // Agregar el guard
+  },
+  {
+    path: "kuvo",
+    loadComponent: () => import("../../components/kuvo/kuvo.component").then((m) => m.KuvoComponent),
+    canActivate: [AuthGuard, KuvoGuard],
   },
   {
     // Builder de landings y tiendas (D-173/D-174). La página que se publica es

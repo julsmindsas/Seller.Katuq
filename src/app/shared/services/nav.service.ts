@@ -285,6 +285,9 @@ export class NavService implements OnDestroy {
       // Si tiene hijos, filtrar los hijos
       if (item.children) {
         const filteredChildren = item.children.filter((child) => {
+          // La adhesión/cuenta Kuvo usa el rol administrador existente; no aparece
+          // para un rol operativo aunque tenga el comodín de rutas.
+          if (child.path === "kuvo" && !isCompanyAdmin && !isSuperAdmin) return false;
           // Filtrar rutas de dropshipping si no está habilitado
           if (
             child.path &&
@@ -875,6 +878,7 @@ export class NavService implements OnDestroy {
       active: false,
       children: [
         { path: "empresas", title: "Mi Empresa", type: "link", icon: "home" },
+        { path: "kuvo", title: "Mi comercio en Kuvo", type: "link", icon: "shopping-bag" },
         {
           // D-400: "empresas/planes" no existía (404); la página de planes es /pricing.
           path: "pricing",
