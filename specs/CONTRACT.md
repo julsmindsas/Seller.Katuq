@@ -9957,3 +9957,17 @@ El detalle de seguridad está en el cambio privado del backend, sección "D-422 
 **Verificado.** Datos reales de ALMARA (solo lectura): en octubre, 7 cierres por $ 1.285.050, con la suma de formas de pago igual a las ventas. Bundle de producción: el POS sin traslapes en 1147×607, 1366×768, 1440×900 y 390×844; el historial con la respuesta en el formato real.
 
 **No verificado.** Con sesión real en el POS. "Mejorar el cierre de caja" quedó sin detalle: el modal de cierre se revisó y no tiene errores visibles.
+
+## D-431 (2026-10-15) — Constructor web: la marca no se duplica en el encabezado; fotos de portada encajadas o recortadas con punto focal (ticket Julsmind 1217, F0-05) — PUBLICADO: backend bde6aa62, front 2026.10.15.3
+
+**Disparador.** Ticket 1217 (diagnóstico del constructor, 12-oct): logo "Almara" + texto "ALMARA FELICIDAD" en violeta, portada con espacio vacío e imágenes recortadas.
+
+**Decisión.**
+1. **Encabezado.** `mostrarNombre` con tres estados: true, false o null (automático). En automático el nombre solo va si no hay logo, porque casi todos los logos ya traen el nombre. El alt del logo conserva el nombre. La regla es la misma en el servidor (`siteHtml.encabezado`) y en la vista previa (`sitio-render.conNombreDeMarca`). Cambio visible: los sitios publicados con logo dejan de repetir el nombre (el HTML se guarda 60 s). Panel: "Mostrar el nombre junto al logo".
+2. **Violeta.** En la vista previa, el nombre era un `span` de `*ngIf` y la regla global `span.ng-star-inserted` lo pintaba de violeta. Ahora usa `--sitio-texto`. En la página publicada ya usaba el color de la paleta.
+3. **Fotos de portada.** `ajusteFoto` ("cubrir" llena el marco, "encajar" muestra la foto completa) y `foco` (centro, arriba, abajo, izquierda o derecha) para fondo, carrusel y mosaico. Se aplican como regla por sección en `cssDeSecciones` (sin `style`, por la CSP) y solo con valores de lista. Una foto del mosaico que no carga se esconde y queda el fondo neutro; antes se veía el ícono roto.
+4. **Primera pantalla.** Medida con el render real del servidor sobre el borrador de ALMARA (solo lectura): el botón de la portada queda dentro de la primera pantalla en 360×640, 390×844, 768×1024, 1366×768 y 1920×1080. También a pantalla completa con foto (en 360×640: 601 de 640 px). No hizo falta cambiar alturas.
+
+**Verificado.** 5 pruebas nuevas (`tests/sitios/encabezadoPortada.test.js`). `test-sitios-publicacion` y las demás pruebas de sitios quedan con las mismas fallas previas, sin regresiones.
+
+**No verificado.** La vista previa dentro del editor: el arnés con API simulada no la pinta, tampoco con el sitio original. Falta revisarla con sesión real.
