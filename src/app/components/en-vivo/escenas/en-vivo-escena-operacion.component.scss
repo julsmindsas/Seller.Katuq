@@ -8,7 +8,7 @@
 //    (no llevan el atributo de Angular). Por eso todo cuelga de `app-en-vivo-escena-operacion` y
 //    las clases llevan el prefijo `eve-`.
 //  · Los tokens de la escena (`--scene-*`, `--box`) viven aquí; los semánticos son los `--ev-*`
-//    del tema de la pantalla. En el modo pantalla (`.ev-tv`) la escena toma su variante oscura.
+//    del tema de la pantalla. El modo pantalla (`.ev-tv`) usa los mismos (D-433).
 // ==========================================================================
 
 app-en-vivo-escena-operacion {
@@ -281,28 +281,6 @@ app-en-vivo-escena-operacion {
       transition: none;
     }
   }
-}
-
-// Modo pantalla (televisor): variante oscura de la escena.
-.ev-tv app-en-vivo-escena-operacion {
-  --scene-bg: #15122b;
-  --scene-plat: #231f47;
-  --scene-plat-side: #19163a;
-  --scene-yard: #292452;
-  --scene-road: #36325f;
-  --scene-mark: #9c94d0;
-  --scene-walk: #2b2656;
-  --scene-belt: #0f0d22;
-  --scene-belt-2: #1f1b44;
-  --scene-wall: #2e2959;
-  --scene-trim: #3a3470;
-  --scene-tree: #2f7a55;
-  --scene-trunk: #6b5240;
-  --scene-wheel: #0b0a18;
-  --scene-glass: #2b4a7a;
-  --box: #c08d5b;
-  --box-tape: #9b85ff;
-  --dark: 1;
 }
 
 @keyframes eve-pop-in {

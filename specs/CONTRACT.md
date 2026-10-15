@@ -9981,3 +9981,12 @@ El detalle de seguridad está en el cambio privado del backend, sección "D-422 
 **Decisión.** `services/cotizaciones/pedidoDeLaCotizacion.js` + `marcarConvertida`: antes de sellar se busca el pedido (misma empresa) y se rechaza con 409 `PEDIDO_DE_OTRO_CLIENTE` si es de otro cliente (documento sin DV) Y no comparte ningún producto. Así sigue pasando facturar la cotización a otra razón social con los mismos productos (caso real de julio). La cotización queda aceptada para convertirla de nuevo. No se tocó `crear-ventas` (módulo de pedidos). Contra las 45 conversiones reales rechaza exactamente las 2 reportadas.
 
 **Pendiente.** Reenlazar las dos cotizaciones (escritura en Firestore de producción, requiere aprobación): COT-0109 → DAD-014291 (Keikaku; la comercial la duplicó como COT-0110, ya enlazada a ese pedido) y COT-0107 → DAD-014297 (Grupo Bios, 100 galletas frente a las 80 cotizadas). El script se probó en dry-run y deja `correccionPedido` como rastro.
+
+
+## D-433 (2026-10-15) — En vivo: el modo pantalla (televisor) usa el tema claro
+
+Daniel, al ver el modo pantalla: "Lo quiero claro". Reemplaza el desvío justificado de D-386, que lo ponía en una variante oscura.
+
+- **Qué cambia:** `.ev-tv` ya no redefine los colores. Solo agranda la letra (`--ev-fs: 1.2`), y las escenas 3D (operación, mapa, país y ciudad) usan sus colores claros. Se mantienen la pantalla completa, la pantalla sin apagarse, la cámara automática y "ocultar".
+- **Dónde:** `_en-vivo-tema.scss` (`ev-tokens-tv`), `en-vivo-escena-operacion.component.scss` y `en-vivo-escenas-mapa.component.scss` (se quitan los bloques oscuros), y la spec `tablero-en-vivo` (modo pantalla: el mismo tema claro).
+- **Solo presentación.** El código de las escenas que sabe pintar en oscuro queda sin uso (`--dark: 0`), sin cambios de comportamiento.

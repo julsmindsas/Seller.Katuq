@@ -1,5 +1,5 @@
 // ==========================================================================
-// Tablero "En vivo" — tema canónico (openspec/specs/design-system) + modo pantalla oscuro.
+// Tablero "En vivo" — tema canónico (openspec/specs/design-system) + modo pantalla con letra grande.
 // Los tokens `--ev-*` se definen AQUÍ y bajan a todas las piezas (ver `_en-vivo-tema.scss`).
 // ==========================================================================
 @import './en-vivo-tema';
@@ -25,7 +25,7 @@
   font-size: ev-fs(13);
   line-height: 1.4;
 
-  // Modo pantalla (televisor): variante oscura y letra grande, solo en esta pantalla.
+  // Modo pantalla (televisor): el mismo tema claro con letra grande (D-433).
   &.ev-tv {
     @include ev-tokens-tv;
     max-width: none;
