@@ -10021,3 +10021,27 @@ Daniel: «cierra los de soporte de julsmind». Lo tomó como aprobación del cam
 - **Qué cambia:** cada `.pedido-prod` del detalle trae los mismos dos botones con las mismas funciones y reglas que la tabla: `confProductToCart(confProductToCartModal, item, pedidoDetalle, i)` y `eliminarProductoDelPedido(item, pedidoDetalle)`, habilitados por `canModifyProducts`, `canDeleteProducts` e `isGhostProduct`, con los mismos títulos. Se ocultan desde producción (`isFromProduction`). Al guardar se sigue el camino de las demás acciones del panel (`editOrder` → `refrescarDatos`).
 - **Sin cambios** en servicios, validaciones, inventario ni backend.
 - **Verificado** con el bundle de producción y pedidos simulados a 1440 y 390 px. En un pedido despachado, "Configurar" sale bloqueado con el motivo, y el configurador abre desde el panel. A 390 px los botones quedan dentro de la tarjeta; el panel de detalle ya desbordaba unos 10 px antes de este cambio.
+
+
+## D-437 (2026-10-15) — WhatsApp con varios números por comercio, asignados a vendedores (openspec/changes/whatsapp-varios-numeros) — PROPUESTA, espera aprobación
+
+Daniel: «con kapso necesitamos conectar n cantidades de whatsapp y que se pueda asignar a un vendedor y que no se pisen los chats, averigua cómo y hazlo». Escogió **número y chat** como forma de asignar y **Katuq le paga a Meta, descontando del saldo prepago** (D-044).
+
+- **Situación medida el 15-oct, en solo lectura:**
+  - Hay un número por comercio (`ownCredentials`), pero ningún comercio lo usa: todos salen por el número compartido de Katuq.
+  - Los chats no tienen dueño, y el mismo cliente con dos números quedaría en un solo chat.
+  - Desde el 23-ago no entra ningún mensaje, porque desde el 27-ago no hay conversaciones en Kapso. Los envíos recientes están todos omitidos: ALMARA tiene las notificaciones apagadas (`WHATSAPP_PREF_OFF`) y los demás no tienen opt-in. El canal está quieto, no roto.
+- **Propuesta:**
+  - El comercio conecta N números por su cuenta con el enlace de conexión de Kapso, con coexistencia con el celular o dedicado.
+  - Cada número se registra con un único dueño (`whatsapp_phone_numbers/{phoneNumberId}`) y se asigna a uno o varios vendedores.
+  - Un chat es la conversación de un cliente con un número, y tiene un solo dueño (`whatsapp_threads`), fijado por transacción: solo el dueño escribe; tomar, soltar y pasar.
+  - Cada vendedor ve solo sus números y sus chats, filtrado en el servidor.
+  - La salida y la ventana de 24 h van por el número del chat.
+  - Los mensajes enviados desde el celular se ven en el chat sin descontar saldo.
+  - El número compartido, las notificaciones y el bot piloto de ALMARA no cambian.
+  - Banderas global y por comercio.
+- **Requiere aprobación:**
+  - las dos colecciones nuevas;
+  - el plan Platform de Kapso para más de 3 números;
+  - `meta_billing_mode: partner_managed`.
+- **Hallazgo aparte:** en el buzón, `bot/sesiones`, `viewed` y `bot` responden 401 en producción. Usan llamados sin interceptor y se corrigen dentro de este cambio (tarea 4.4).
