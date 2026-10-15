@@ -9999,3 +9999,16 @@ Daniel: en `/en-vivo/katuq` "no está mostrando los pulsos o los eventos bien de
 - **Servidor:** el listener de plataforma usa la misma ventana de 7 días del tablero del comercio, y desaparece la lectura periódica de "antiguas". Las cifras de hoy y ayer siguen filtrando por creación. En régimen lee menos: antes eran ~5 días de pedidos cada 5 minutos; ahora 7 días una vez por apertura (307 pedidos, ~14 MB en memoria, medido). Se actualizan la spec `tablero-en-vivo-plataforma` ("Un solo observador") y el non-goal del design. Quedan fuera los pedidos de más de 7 días, como en el comercio (6 de los 116).
 - **Lista:** en toda Katuq cada evento lleva el número del pedido y el monto también en cambios, salidas y entregas (antes: "un pedido pasó a…" sin cifras). Con "ocultar" no va el número, porque su prefijo delata al comercio.
 - **Pulsos:** el cambio de etapa en Comercios y Colombia es un anillo del doble de tamaño y más largo; en Comercios el edificio además da un salto.
+
+
+## D-435 (2026-10-15) — Confirmación compartida de Wompi para Opttia
+
+**Autorizada por Daniel:** «conecta la confirmación de wompi y habilita los pagos para que ya puedan registrarse pagar y usar opttia». La autorización incluye publicación y habilitación operativa.
+
+El receptor de Wompi existente envía exclusivamente las referencias `OPTTIA-` al confirmador nativo de Opttia, con destino interno fijo y el aviso firmado íntegro. Conserva auditoría antes de reenviar y devuelve fallos temporales como reintento. Los pagos de Katuq conservan su controlador, empresa y credenciales actuales. No se cambian pedidos, inventario ni la URL de eventos del comercio. Opttia verifica firma, ambiente, referencia, importe, moneda y transacción consultada con llave privada; la aprobación se aplica una sola vez por recibo. Sandbox usa almacenamiento aislado; no se realizan cargos reales de prueba.
+
+Spec: `katuq_admin_back_firebase/openspec/changes/confirmacion-pagos-opttia/`.
+
+**Publicado y verificado (15-oct):** receptor Katuq `7a8dfbba`, ADK `9a066e0`, llaves de producción y catálogo de cobros habilitados. Dos rutas públicas aceptaron un aviso firmado para una referencia inexistente; firma inválida y checkout anónimo rechazados con 401. Tres registros de auditoría verificados, sin crear intentos ni planes. Respaldos privados antes de publicar. 61 pruebas Python, seis contratos de reenvío y regresiones de Wompi de Katuq.
+
+**Respaldo al regresar:** Opttia conserva el ID de Wompi al ingresar de nuevo y confirma con una consulta privada autenticada por empresa. Compara referencia, importe, moneda y ambiente; ignora cualquier estado de la URL y usa la misma acreditación idempotente. Sandbox real comprobó rechazo y aprobación sin webhook previo y duplicado posterior sin ampliar vigencia, con almacenamiento aislado en memoria. No se hizo un cobro real ni una compra completa sobre Firestore productivo. Los avisos recientes no certificaron con su firma la URL configurada para el comercio de suscripciones; el receptor está preparado y la consulta directa cubre el regreso del comprador.
