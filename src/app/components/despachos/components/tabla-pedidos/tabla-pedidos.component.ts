@@ -67,15 +67,16 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   private filterSubject = new Subject<{ value: string, filterCallback: Function }>();
   private filterSubscription: any;
   
-  displayedColumns: ColumnDefinition[] = [
+  // Ticket 1212: Cliente va junto al número de pedido para verlo sin desplazar la tabla.
+  private static readonly COLUMNAS_POR_DEFECTO: ColumnDefinition[] = [
     { field: 'detalles', header: 'Detalles', visible: true },
     { field: 'opciones', header: 'Opciones', visible: true },
     { field: 'nroPedido', header: 'Número de Pedido', visible: true },
+    { field: 'cliente', header: 'Cliente', visible: true },
     { field: 'nroFactura', header: 'Número de Factura', visible: true },
     { field: 'shippingOrder', header: 'Número orden de envío', visible: true },
     { field: 'estadoPago', header: 'Estado de Pago', visible: true },
     { field: 'estadoProceso', header: 'Estado de Proceso', visible: true },
-    { field: 'cliente', header: 'Cliente', visible: true },
     { field: 'totalEnvio', header: 'Domicilio', visible: true },
     { field: 'faltaPorPagar', header: 'Falta por Pagar', visible: true },
     { field: 'fechaCreacion', header: 'Fecha de Compra', visible: true },
@@ -94,7 +95,9 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
     { field: 'seguimiento', header: 'Seguimiento', visible: true },
     { field: 'entregado', header: 'Entregado', visible: false }
   ];
-  
+
+  displayedColumns: ColumnDefinition[] = TablaPedidosComponent.COLUMNAS_POR_DEFECTO.map(c => ({ ...c }));
+
   selectedColumns: ColumnDefinition[] = [];
   public rowMenuItems: MenuItem[];
 
@@ -146,18 +149,13 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
       try {
         const parsed = JSON.parse(savedColumns);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Fusionar columnas guardadas con columnas por defecto (para agregar nuevas columnas)
-          const defaultColumns = [...this.displayedColumns];
-          const savedFields = parsed.map((col: any) => col.field);
-
-          // Agregar columnas nuevas que no existen en las guardadas
-          const newColumns = defaultColumns.filter(col => !savedFields.includes(col.field));
-          if (newColumns.length > 0) {
-            console.log('📋 [Despachos] Nuevas columnas detectadas:', newColumns.map(c => c.field).join(', '));
-            this.displayedColumns = [...parsed, ...newColumns];
-          } else {
-            this.displayedColumns = parsed;
-          }
+          // Ticket 1212: el orden sale siempre de las columnas por defecto (el arrastre de
+          // columnas no se guarda); de lo guardado solo se respeta qué columnas están visibles.
+          // Las columnas nuevas, que no están en lo guardado, entran con su visibilidad por defecto.
+          const visiblePorCampo = new Map<string, boolean>(parsed.map((col: any) => [col.field, !!col.visible]));
+          this.displayedColumns = this.displayedColumns.map(col =>
+            visiblePorCampo.has(col.field) ? { ...col, visible: visiblePorCampo.get(col.field) as boolean } : col
+          );
         }
       } catch (e) {
         console.error('Error parsing saved columns configuration', e);
@@ -254,32 +252,7 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   }
   
   resetColumnConfig(): void {
-    this.displayedColumns = [
-      { field: 'detalles', header: 'Detalles', visible: true },
-      { field: 'opciones', header: 'Opciones', visible: true },
-      { field: 'nroPedido', header: 'Número de Pedido', visible: true },
-      { field: 'nroFactura', header: 'Número de Factura', visible: true },
-      { field: 'shippingOrder', header: 'Número orden de envío', visible: true },
-      { field: 'estadoPago', header: 'Estado de Pago', visible: true },
-      { field: 'estadoProceso', header: 'Estado de Proceso', visible: true },
-      { field: 'cliente', header: 'Cliente', visible: true },
-      { field: 'totalEnvio', header: 'Domicilio', visible: true },
-      { field: 'faltaPorPagar', header: 'Falta por Pagar', visible: true },
-      { field: 'fechaCreacion', header: 'Fecha de Compra', visible: true },
-      { field: 'ciudad', header: 'Ciudad', visible: true },
-      { field: 'zonaCobro', header: 'Zona de Entrega', visible: true },
-      { field: 'observaciones', header: 'Observaciones de Entrega', visible: false },
-      { field: 'fechaEntrega', header: 'Fecha de Entrega', visible: true },
-      { field: 'formaEntrega', header: 'Forma de Entrega', visible: true },
-      { field: 'horarioEntrega', header: 'Horario de Entrega', visible: true },
-      { field: 'fechaHoraEmpacado', header: 'Fecha y Horario de Empacado', visible: false },
-      { field: 'fechaYHorarioDespachado', header: 'Fecha y Horario de Despachado', visible: false },
-      { field: 'asesorAsignado', header: 'Vendedor', visible: false },
-      { field: 'empacador', header: 'Empacador', visible: false },
-      { field: 'despachador', header: 'Despachador', visible: false },
-      { field: 'transportador', header: 'Transportador', visible: false },
-      { field: 'entregado', header: 'Entregado', visible: false }
-    ];
+    this.displayedColumns = TablaPedidosComponent.COLUMNAS_POR_DEFECTO.map(c => ({ ...c }));
     this.selectedColumns = this.displayedColumns.filter(col => col.visible);
     localStorage.setItem('despachosColumns', JSON.stringify(this.displayedColumns));
   }
