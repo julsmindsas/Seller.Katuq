@@ -416,6 +416,17 @@
               <span class="palanca"><span></span></span>
             </button>
 
+            <!-- Ticket 1217: casi todos los logos ya traen el nombre; por defecto no se repite. -->
+            <button class="opcion" *ngIf="logo && b.datos.mostrarLogo !== false"
+                    [class.is-active]="b.datos.mostrarNombre === true"
+                    (click)="b.datos.mostrarNombre = b.datos.mostrarNombre !== true; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Mostrar el nombre junto al logo</strong>
+                <small>Déjalo apagado si tu logo ya dice el nombre del negocio.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+
             <div class="campo campo--avanzado">
               <label>Nombre visible</label>
               <input type="text" [(ngModel)]="b.datos.nombre" (ngModelChange)="marcarSucio()"
@@ -596,6 +607,28 @@
               <small>La pantalla completa hace que la foto se sienta de marca. Va bien de primera
                 sección.</small>
             </div>
+
+            <!-- Ticket 1217: la foto llena el marco (y recorta) o se muestra entera; con
+                 recorte, el comerciante elige qué parte se conserva. -->
+            <ng-container *ngIf="b.datos.imagen || b.datos.imagenes?.length || b.datos.mosaico?.length">
+              <div class="campo">
+                <label>Cómo se ven las fotos</label>
+                <div class="segmentado">
+                  <button [class.is-active]="b.datos.ajusteFoto !== 'encajar'"
+                          (click)="b.datos.ajusteFoto = 'cubrir'; marcarSucio()">Llenar el espacio</button>
+                  <button [class.is-active]="b.datos.ajusteFoto === 'encajar'"
+                          (click)="b.datos.ajusteFoto = 'encajar'; marcarSucio()">Mostrar completa</button>
+                </div>
+                <small>"Llenar el espacio" recorta lo que sobra; "Mostrar completa" no corta nada de la foto.</small>
+              </div>
+              <div class="campo" *ngIf="b.datos.ajusteFoto !== 'encajar'">
+                <label>Qué parte de la foto se conserva</label>
+                <div class="segmentado">
+                  <button *ngFor="let f of focosFoto" [class.is-active]="(b.datos.foco || 'centro') === f.valor"
+                          (click)="b.datos.foco = f.valor; marcarSucio()">{{ f.etiqueta }}</button>
+                </div>
+              </div>
+            </ng-container>
 
             <!-- El velo y su color solo tienen sentido si hay foto (de fondo o
                  de carrusel): sin ella oscurecerían el fondo del sitio. -->

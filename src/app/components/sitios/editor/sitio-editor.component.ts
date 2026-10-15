@@ -749,6 +749,14 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    * igual que la página publicada. No son del sitio: viven en el kit de marca.
    */
   logo = "";
+  /** Ticket 1217: punto focal de las fotos de portada cuando se recortan. */
+  readonly focosFoto = [
+    { valor: "centro", etiqueta: "Centro" },
+    { valor: "arriba", etiqueta: "Arriba" },
+    { valor: "abajo", etiqueta: "Abajo" },
+    { valor: "izquierda", etiqueta: "Izquierda" },
+    { valor: "derecha", etiqueta: "Derecha" },
+  ];
   negocio = "";
   slugMensaje: string | null = null;
   slugValido = true;
