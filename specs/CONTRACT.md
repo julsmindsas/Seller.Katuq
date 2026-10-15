@@ -9945,3 +9945,15 @@ El detalle de seguridad está en el cambio privado del backend, sección "D-422 
 **Verificado.** 6 pruebas de `contactoVendedor`. Datos reales (solo lectura): los 7 asesores con cotizaciones en ALMACEN BOMBAS resuelven celular. Bundle de producción con datos simulados: el enlace público muestra el bloque a 1366 y 390 px, sin desborde.
 
 **No verificado.** Con sesión real de un asesor del comercio.
+
+## D-430 (2026-10-15) — POS: el ticket no encima los totales y el cobro siempre se alcanza; historial de cierres con el formato real del servidor (ticket Julsmind 1173) — PUBLICADO: front 2026.10.15.2
+
+**Disparador.** Ticket 1173 (captura de Jairo): el resumen lateral del POS no mostraba los productos ni el botón de cobrar; pedían mejorar también el cierre de caja y su historial.
+
+**Decisión.**
+1. **Ticket del POS.** Medido en el bundle de producción. En 1366×768 y en pantallas más bajas, los totales (220 px) se pintaban encima de la lista y del cupón, y el pago se salía por abajo. En la hoja de móvil pasaba lo mismo con el pago. Se quitan ~80 px de márgenes heredados de reglas viejas (10 px por fila de totales, 15 px bajo la lista y sobre el cupón). La columna del ticket hace scroll cuando no cabe: piso de 660 px en escritorio y de 770 px en la hoja de móvil, medidos. En 1440×900 se ve igual que antes, sin scroll. Solo presentación.
+2. **Historial de cierres.** El servidor responde el formato nuevo (`cashClosings`): formas de pago como `{ tipo, valor, cantidadTransacciones }`, `usuarioEmail`, `fechaCierre`, sin `totalDias`, promedio, usuarios ni lista de pedidos. El historial se pintó para el formato viejo y mostraba "$NaN" con el resumen en blanco; ALMARA FELICIDAD tiene 178 cierres. `historial-cierres.normalizar.ts` (puro) normaliza ambos formatos. El front pide `limit: 500`, porque el servidor paginaba de a 10 y el resumen del período sumaba solo esos 10; no cuesta lecturas extra, ya que el conteo ya leía todo el rango. Además: pesos colombianos (estaba en formato de Chile), fechas de día en hora local (antes el 14 salía 13) y encabezado plano (era azul `#1E6FD9`). Descuentos, impuestos y la tabla de pedidos se muestran solo si el cierre los trae.
+
+**Verificado.** Datos reales de ALMARA (solo lectura): en octubre, 7 cierres por $ 1.285.050, con la suma de formas de pago igual a las ventas. Bundle de producción: el POS sin traslapes en 1147×607, 1366×768, 1440×900 y 390×844; el historial con la respuesta en el formato real.
+
+**No verificado.** Con sesión real en el POS. "Mejorar el cierre de caja" quedó sin detalle: el modal de cierre se revisó y no tiene errores visibles.
