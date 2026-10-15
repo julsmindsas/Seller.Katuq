@@ -124,6 +124,11 @@ export class CotizacionPublicaComponent implements OnInit {
     return m ? `${m[3]}/${m[2]}/${m[1]}` : String(iso);
   }
 
+  /** "+57 300 123 4567" → "+573001234567" para el enlace tel:. */
+  telefonoMarcable(celular: string): string {
+    return String(celular || "").replace(/[^\d+]/g, "");
+  }
+
   estadoLabel(estado: string): string {
     const map: { [k: string]: string } = {
       borrador: "Borrador",

@@ -41,6 +41,8 @@ export interface CotizacionPublicaView {
   fechaEmision: string;
   fechaVencimiento: string;
   validezDias: number | null;
+  /** Ticket 1213: asesor que atiende la cotización (para que el cliente lo llame). */
+  asesor?: { nombre: string | null; celular: string | null; email: string | null } | null;
   /** Banners del documento: encabezado/pie de la empresa + publicidad Katuq. */
   branding?: {
     encabezado: string;

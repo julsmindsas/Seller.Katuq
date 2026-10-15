@@ -28,6 +28,8 @@ export const ESTADOS_COTIZACION: { value: EstadoCotizacion; label: string }[] = 
 export interface VendedorCotizacion {
   email: string;
   nombre?: string;
+  /** Ticket 1213: celular del asesor; lo pone el servidor desde la ficha del usuario. */
+  celular?: string;
 }
 
 export interface Cotizacion {
@@ -167,6 +169,8 @@ export interface CotizacionConfig {
   metas?: { [email: string]: number };
   /** Ticket 1202: margen mínimo (%) para la alerta. */
   margenMinimo?: number;
+  /** Ticket 1213: celular de quien está en sesión, para la vista previa antes de guardar. */
+  contactoVendedor?: { email: string; celular: string };
 }
 
 /** Ticket 1207: por qué se perdió una cotización. */

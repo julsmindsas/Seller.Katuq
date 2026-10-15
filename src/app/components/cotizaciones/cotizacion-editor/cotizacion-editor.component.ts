@@ -474,6 +474,14 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
       next: (res) => {
         const base = res && res.data ? res.data.terminosBase : "";
         if (res && res.data) this.configCotizacion = res.data;
+        // Ticket 1213: una cotización nueva muestra el celular de quien la hace desde
+        // la vista previa; al guardar, el servidor lo vuelve a tomar de su ficha.
+        const contacto = res && res.data && res.data.contactoVendedor;
+        const v = this.cotizacion.vendedor;
+        if (contacto && contacto.celular && v && !v.celular &&
+            String(v.email || "").toLowerCase() === String(contacto.email || "").toLowerCase()) {
+          this.cotizacion.vendedor = { ...v, celular: contacto.celular };
+        }
         if (base && !this.cotizacion.terminos) {
           this.cotizacion.terminos = base;
         }
@@ -512,7 +520,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   get vendedorMetaDoc(): string {
     const v = this.cotizacion.vendedor;
     if (!v) return "";
-    return [v.nombre, v.email].filter(Boolean).join(" · ");
+    return [v.nombre, v.email, v.celular].filter(Boolean).join(" · ");
   }
 
   /**
