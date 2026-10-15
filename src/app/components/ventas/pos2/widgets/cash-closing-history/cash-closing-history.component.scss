@@ -116,14 +116,15 @@
       transform: translateY(-5px);
     }
 
+    // Ticket 1173: encabezado plano (era azul #1E6FD9, de la plantilla vieja).
     .card-header {
-      background: #1E6FD9;
-      padding: 15px 20px;
-      
+      background: #fff;
+      padding: 14px 18px;
+
       h3 {
-        color: white;
-        font-weight: 500;
-        font-size: 1.3rem;
+        color: var(--kc-ink);
+        font-weight: 800;
+        font-size: 15px;
       }
     }
 
