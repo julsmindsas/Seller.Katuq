@@ -352,6 +352,9 @@ $calc-radius:     16px;
   border-left: 1px solid var(--kc-line);
   display: flex;
   flex-direction: column;
+  // Ticket 1173: si el ticket no cabe en la ventana, se desplaza la columna.
+  overflow-y: auto;
+  overscroll-behavior: contain;
 
 }
 
@@ -510,6 +513,10 @@ $calc-radius:     16px;
     app-pos-checkout {
       flex: 1;
       min-height: 0;
+      // Ticket 1173: la hoja recorta (overflow: hidden); si el ticket no cabe,
+      // se desplaza el checkout bajo el encabezado fijo de la hoja.
+      overflow-y: auto;
+      overscroll-behavior: contain;
     }
   }
 

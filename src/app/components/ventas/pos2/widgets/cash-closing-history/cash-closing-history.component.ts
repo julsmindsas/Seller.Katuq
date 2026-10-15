@@ -3,6 +3,7 @@ import { NgbActiveModal, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
 import { VentasService } from '../../../../../shared/services/ventas/ventas.service';
 import swal from 'sweetalert2';
 import { FormBuilder, FormGroup } from '@angular/forms';
+import { formasPagoComoNumeros, normalizarHistorialCierres } from './historial-cierres.normalizar';
 
 // Interfaz para un pedido individual dentro del historial
 interface Pedido {
@@ -131,13 +132,15 @@ export class CashClosingHistoryComponent implements OnInit {
       origenConsulta: 'POS',
       fechaInicio: fechaInicioStr + 'T00:00:00.000Z',
       fechaFin: fechaFinStr + 'T23:59:59.999Z',
-      fechaFinal: fechaFinStr + 'T23:59:59.999Z'
+      fechaFinal: fechaFinStr + 'T23:59:59.999Z',
+      // Ticket 1173: el servidor pagina de a 10; el resumen del período debe sumar todos.
+      limit: 500
     };
 
     // Realizar la consulta
     this.ventasService.getCashClosingHistory(filter).subscribe({
       next: (data: CashClosingHistoryResponse) => {
-        this.historyData = this.procesarRespuestaHistorial(data);
+        this.historyData = this.procesarRespuestaHistorial(data, { fechaInicio: fechaInicioStr, fechaFin: fechaFinStr });
         this.loading = false;
       },
       error: (error) => {
@@ -156,47 +159,17 @@ export class CashClosingHistoryComponent implements OnInit {
   /**
    * Procesa la respuesta del historial para asegurar que tenga todas las propiedades necesarias
    */
-  procesarRespuestaHistorial(data: CashClosingHistoryResponse): CashClosingHistoryResponse {
-    // Inicializar formasPago en el resumen general si no existe
-    if (!data.resumenGeneral.formasPago) {
-      data.resumenGeneral.formasPago = {};
-    }
-    
-    // Procesar cada item del historial
-    if (data.historial) {
-      data.historial.forEach(item => {
-        // Inicializar formasPago si no existe
-        if (!item.formasPago) {
-          item.formasPago = {};
-        }
-        
-        // Calcular formas de pago a partir de los pedidos
-        const formasPagoCalculadas = this.obtenerFormasPagoPorCierre(item.pedidos);
-        
-        // Fusionar con las formas de pago existentes
-        item.formasPago = { ...item.formasPago, ...formasPagoCalculadas };
-      });
-      
-      // Calcular el resumen general de formas de pago
-      const todasLasFormasPago: { [key: string]: number } = {};
-      
-      // Acumular totales de todas las formas de pago
-      data.historial.forEach(item => {
-        Object.keys(item.formasPago).forEach(formaPago => {
-          if (!todasLasFormasPago[formaPago]) {
-            todasLasFormasPago[formaPago] = 0;
-          }
-          todasLasFormasPago[formaPago] += item.formasPago[formaPago];
-        });
-      });
-      
-      // Asignar el resumen general
-      data.resumenGeneral.formasPago = todasLasFormasPago;
-    }
-    
-    return data;
+  procesarRespuestaHistorial(data: CashClosingHistoryResponse, periodo: { fechaInicio: string; fechaFin: string }): CashClosingHistoryResponse {
+    // Formato viejo: las formas de pago se calculan con los pedidos del cierre.
+    (data?.historial || []).forEach(item => {
+      if (Array.isArray(item.pedidos) && item.pedidos.length) {
+        item.formasPago = { ...formasPagoComoNumeros(item.formasPago), ...this.obtenerFormasPagoPorCierre(item.pedidos) };
+      }
+    });
+    // Ticket 1173: el formato nuevo (cashClosings) trae otra forma; se normalizan ambos.
+    return normalizarHistorialCierres(data, periodo);
   }
-  
+
   /**
    * Obtiene un objeto que contiene todas las formas de pago y sus totales
    * a partir de una lista de pedidos.
@@ -209,11 +182,11 @@ export class CashClosingHistoryComponent implements OnInit {
     const formasPago: { [key: string]: number } = {};
     
     pedidos.forEach(pedido => {
-      const formaPago = pedido.formaDePago.toLowerCase();
+      const formaPago = (pedido.formaDePago || 'Sin especificar').toLowerCase();
       if (!formasPago[formaPago]) {
         formasPago[formaPago] = 0;
       }
-      formasPago[formaPago] += pedido.total;
+      formasPago[formaPago] += Number(pedido.total) || 0;
     });
     
     return formasPago;
@@ -318,24 +291,30 @@ export class CashClosingHistoryComponent implements OnInit {
   }
 
   // Funciones de formato (mantener las que aún se necesiten)
+  // Ticket 1173: pesos colombianos (antes salía en formato de Chile) y nunca "$NaN".
   formatCurrency(value: number): string {
-    // Puedes ajustar la moneda si es necesario
-    return new Intl.NumberFormat('es-CL', {
+    return new Intl.NumberFormat('es-CO', {
       style: 'currency',
-      currency: 'CLP'
-    }).format(value);
+      currency: 'COP',
+      maximumFractionDigits: 0
+    }).format(Number(value) || 0);
   }
 
   formatNumber(value: number): string {
-    return new Intl.NumberFormat('es-CL').format(value);
+    return new Intl.NumberFormat('es-CO').format(Number(value) || 0);
+  }
+
+  /** "2026-10-14" es un día, no una hora UTC: se lee en hora local (si no, sale el 13). */
+  private aFecha(dateString: string): Date {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateString || ''));
+    return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(dateString);
   }
 
   formatDate(dateString: string | undefined): string {
     if (!dateString) return 'N/A';
     try {
-      const date = new Date(dateString);
-      // Ajusta las opciones según el formato deseado
-      return date.toLocaleDateString('es-CL', {
+      const date = this.aFecha(dateString);
+      return date.toLocaleDateString('es-CO', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -351,8 +330,8 @@ export class CashClosingHistoryComponent implements OnInit {
   formatShortDate(dateString: string | undefined): string {
     if (!dateString) return 'N/A';
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('es-CL', {
+      const date = this.aFecha(dateString);
+      return date.toLocaleDateString('es-CO', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
