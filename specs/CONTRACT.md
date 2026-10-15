@@ -9931,3 +9931,17 @@ El detalle de seguridad está en el cambio privado del backend, sección "D-422 
 **Verificado.** Pruebas: margen 6, análisis 5, indicadores DIAN 5 (más las de cotizaciones 10/8/8 y bandeja 5); emisión DIAN 60/60 y sitios sin regresión. Datos reales (solo lectura): análisis de ALMACEN BOMBAS (49 cotizaciones, embudo 87,8 % → 32,6 % → 78,6 %); facturación de Julsmind octubre $ 15.018.046 en 4 facturas, septiembre con 25 % de rechazo (JULS22). Bundle de producción con datos simulados a 1366 px: cinco gráficas, alertas nuevas, período de facturación, detalle con descargas y reenvío, sin errores JS.
 
 **No verificado.** Con sesión real; el reenvío real de un correo; la visibilidad del margen con un usuario vendedor real.
+
+## D-429 (2026-10-15) — Celular del asesor en la cotización y en el enlace del cliente (ticket ALMACEN BOMBAS 1213) — PUBLICADO: backend 1a91045e, front 2026.10.15.1
+
+**Disparador.** Daniel: "cerremos más tickets, la prioridad siempre es el comercio". Propuesta de la nota interna del ticket (Santiago), tomada con nota para no duplicar.
+
+**Decisión.**
+1. `services/cotizaciones/contactoVendedor.js`: el celular sale de la ficha del usuario (`users.cel` + `indicativoCel`, misma empresa, por correo) y se guarda en `vendedor.celular` al crear y al editar. No se confía en el celular que mande el navegador. Las cotizaciones de antes lo completan al leerse (`getById` y enlace público) sin reescribirse. Si la consulta falla, la cotización se guarda igual, sin celular.
+2. Documento y PDF: "Atendido por: nombre · correo · celular". En una cotización nueva la vista previa ya lo trae: `/config` devuelve el celular de quien está en sesión (correo del token, no del header).
+3. Enlace público: bloque "Te atiende" con nombre, celular (enlace `tel:`) y correo. `asesorPublico` solo deja pasar esos tres campos.
+4. El #1212 del mismo comercio (nombre del cliente en Envíos y entregas) no se tocó: lo tiene Santiago con commit propio (4326aa71) sin integrar.
+
+**Verificado.** 6 pruebas de `contactoVendedor`. Datos reales (solo lectura): los 7 asesores con cotizaciones en ALMACEN BOMBAS resuelven celular. Bundle de producción con datos simulados: el enlace público muestra el bloque a 1366 y 390 px, sin desborde.
+
+**No verificado.** Con sesión real de un asesor del comercio.
