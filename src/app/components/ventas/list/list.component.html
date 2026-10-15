@@ -535,13 +535,30 @@
                                                         <!-- productos -->
                                                         <div class="pedido-detail__sectionlabel">{{ 'PRODUCTOS' | translate }} · {{ pedidoDetalle.carrito?.length || 0 }}</div>
                                                         <div class="pedido-detail__productos">
-                                                            <div *ngFor="let item of pedidoDetalle.carrito; trackBy: trackByCartItem" class="pedido-prod">
+                                                            <div *ngFor="let item of pedidoDetalle.carrito; let i = index; trackBy: trackByCartItem" class="pedido-prod">
                                                                 <img class="pedido-prod__img"
                                                                      [src]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto: 'assets/images/placeholders/product-not-found.svg'"
                                                                      [alt]="item.producto?.crearProducto?.titulo || 'Producto'" />
                                                                 <div class="pedido-prod__info">
                                                                     <div class="pedido-prod__name">{{ item.producto?.crearProducto?.titulo }}</div>
                                                                     <div class="pedido-prod__qty">{{ 'Cantidad' | translate }}: {{ item.cantidad }}</div>
+                                                                </div>
+                                                                <!-- Ticket 1186: mismos botones y reglas que la vista de tabla -->
+                                                                <div class="pedido-prod__acciones" *ngIf="!isFromProduction">
+                                                                    <button type="button" class="pedido-prod__btn"
+                                                                            [disabled]="!canModifyProducts(pedidoDetalle)"
+                                                                            [title]="canModifyProducts(pedidoDetalle) ? 'Configurar producto' : 'No se puede modificar - Pedido congelado: ' + pedidoDetalle.estadoProceso"
+                                                                            [attr.aria-label]="'Configurar ' + (item.producto?.crearProducto?.titulo || 'producto')"
+                                                                            (click)="confProductToCart(confProductToCartModal, item, pedidoDetalle, i)">
+                                                                        <i class="fa fa-cogs"></i>
+                                                                    </button>
+                                                                    <button type="button" class="pedido-prod__btn pedido-prod__btn--peligro"
+                                                                            [disabled]="!canDeleteProducts(pedidoDetalle) && !isGhostProduct(item)"
+                                                                            [title]="getDeleteButtonTitle(item, pedidoDetalle)"
+                                                                            [attr.aria-label]="'Eliminar ' + (item.producto?.crearProducto?.titulo || 'producto')"
+                                                                            (click)="eliminarProductoDelPedido(item, pedidoDetalle)">
+                                                                        <i class="fa fa-trash"></i>
+                                                                    </button>
                                                                 </div>
                                                             </div>
                                                         </div>
