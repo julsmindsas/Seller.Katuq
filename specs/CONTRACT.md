@@ -9990,3 +9990,12 @@ Daniel, al ver el modo pantalla: "Lo quiero claro". Reemplaza el desvío justifi
 - **Qué cambia:** `.ev-tv` ya no redefine los colores. Solo agranda la letra (`--ev-fs: 1.2`), y las escenas 3D (operación, mapa, país y ciudad) usan sus colores claros. Se mantienen la pantalla completa, la pantalla sin apagarse, la cámara automática y "ocultar".
 - **Dónde:** `_en-vivo-tema.scss` (`ev-tokens-tv`), `en-vivo-escena-operacion.component.scss` y `en-vivo-escenas-mapa.component.scss` (se quitan los bloques oscuros), y la spec `tablero-en-vivo` (modo pantalla: el mismo tema claro).
 - **Solo presentación.** El código de las escenas que sabe pintar en oscuro queda sin uso (`--dark: 0`), sin cambios de comportamiento.
+
+## D-434 (2026-10-15) — En vivo de Katuq: la lista y los pulsos muestran todos los cambios del día y se entienden — PUBLICADO: backend f0dfaff8, front 2026.10.15.5
+
+Daniel: en `/en-vivo/katuq` "no está mostrando los pulsos o los eventos bien de los pedidos"; la lista no se actualiza y lo que sale es poco o confuso.
+
+- **Causa medida (solo lectura, 15-oct):** el observador de toda Katuq escuchaba solo los pedidos creados desde ayer. Los de antes se releían cada 5 minutos sin emitir eventos. Ese día, 47 de 116 cambios de estado no salieron ni en la lista ni en las escenas; en ALMARA fueron 44 de 99, porque entrega pedidos creados días antes.
+- **Servidor:** el listener de plataforma usa la misma ventana de 7 días del tablero del comercio, y desaparece la lectura periódica de "antiguas". Las cifras de hoy y ayer siguen filtrando por creación. En régimen lee menos: antes eran ~5 días de pedidos cada 5 minutos; ahora 7 días una vez por apertura (307 pedidos, ~14 MB en memoria, medido). Se actualizan la spec `tablero-en-vivo-plataforma` ("Un solo observador") y el non-goal del design. Quedan fuera los pedidos de más de 7 días, como en el comercio (6 de los 116).
+- **Lista:** en toda Katuq cada evento lleva el número del pedido y el monto también en cambios, salidas y entregas (antes: "un pedido pasó a…" sin cifras). Con "ocultar" no va el número, porque su prefijo delata al comercio.
+- **Pulsos:** el cambio de etapa en Comercios y Colombia es un anillo del doble de tamaño y más largo; en Comercios el edificio además da un salto.

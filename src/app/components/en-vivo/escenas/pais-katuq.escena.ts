@@ -188,7 +188,7 @@ export class PaisKatuqEscena extends MapaColombiaEscena {
     const fx = this.nucleo.fx;
     switch (ev.tipo) {
       case 'pedido_nuevo': this.hacerLlegada(t, ev, ligero); break;
-      case 'cambio_estado': fx.pulso(this.alSuelo(t.p), this.nucleo.tonoDeEtapa(ev.etapaNueva), 0.9, 0.8); break;
+      case 'cambio_estado': fx.pulso(this.alSuelo(t.p), this.nucleo.tonoDeEtapa(ev.etapaNueva), 1.8, 1.1); break;
       case 'salida': this.hacerSalida(t, ev, ligero); break;
       case 'entregado': this.hacerEntrega(t, ev, ligero); break;
       case 'rechazado':

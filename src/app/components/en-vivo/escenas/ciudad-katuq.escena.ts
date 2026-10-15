@@ -189,7 +189,12 @@ export class CiudadKatuqEscena extends EscenaBase<string> {
     if (!l || !l.c) { this.sucio = true; return; }
     switch (ev.tipo) {
       case 'pedido_nuevo': this.hacerLlegada(l, ev, ligero); break;
-      case 'cambio_estado': this.nucleo.fx.pulso(this.kit.v(l.cx, l.cz + 1.6, 0.16), this.nucleo.tonoDeEtapa(ev.etapaNueva), 1.0, 0.8); break;
+      case 'cambio_estado': {
+        // Un cambio de etapa se ve: anillo amplio del color de la etapa y el edificio da un salto.
+        this.nucleo.fx.pulso(this.kit.v(l.cx, l.cz + 1.6, 0.16), this.nucleo.tonoDeEtapa(ev.etapaNueva), 2.2, 1.2);
+        l.bump = 1;
+        break;
+      }
       case 'salida': this.salidas.agregar(claveDeSalida(empresa, ev.tipoTransportador, ev.transportador), ev, ahora); break;
       case 'entregado':
         this.nucleo.fx.pulso(this.kit.v(l.cx, l.cz, 0.16), 'ok', 2.6, 1.1);

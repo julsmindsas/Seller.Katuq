@@ -32,7 +32,7 @@ Motivación en `proposal.md`. Hechos del código que condicionan el diseño (inf
 
 **Non-Goals:**
 - Historial completo de transiciones (no existe una fuente completa).
-- Cambios de pedidos de más de 7 días en el tablero del comercio, ni de antes de ayer en la vista de toda Katuq.
+- Cambios de pedidos de más de 7 días, en el tablero del comercio y en la vista de toda Katuq (D-434: antes, en toda Katuq, de antes de ayer).
 - GPS de mensajeros.
 - Varias instancias del backend: si un día se pasa a cluster, el reparto por empresa necesita un bus. Queda anotado, no se construye.
 
