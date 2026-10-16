@@ -10326,3 +10326,11 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
   - Editor: "Enlace para una campaña" con UTM que mide "Cómo va", y "Duplicar" en la lista.
   - Fuera: enlace corto, QR (no hay librería en el proyecto; agregarla toca los `node_modules` compartidos) y pruebas A/B.
 - **Candado (D-454):** hizo su primera revisión completa (la viva ya traía su commit). Este build incluyó un arreglo de otra sesión (`bef5233d`, rótulo de despacho, ticket 1224 de comercio).
+
+## D-457 (2026-10-16) — Creación guiada: la página real antes de crearla y aviso de tienda vacía (ticket 1224) — PUBLICADO: front 2026.10.16.10
+
+- **"Ver cómo queda" en el último paso del asistente:** llama a `generar` sin `guardar` y sin IA, con la plantilla, la marca y los productos reales. Resuelve los productos con `productosPorIds` y pinta la página con `app-sitio-render`, mostrando "Entran N productos".
+- **Tienda vacía:** crear una tienda que quedaría sin productos pide confirmación.
+- **No se enciende la IA por defecto:** gasta el cupo de Opttia del plan gratis.
+- **Fuera:** plantillas por tamaño de catálogo, más objetivos y etiquetas en lenguaje del cliente.
+- **Este build incluyó** `bcc23421` (otra sesión: PDF del pedido, tickets 1225 y 1226 de ALMARA). El candado verificó que contenía la .16.9.
