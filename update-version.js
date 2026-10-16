@@ -46,6 +46,35 @@ function getLatestBuildNumber(currentVersion) {
   return 1;
 }
 
+// Versión de src/assets/version.json (la última publicada que trae git)
+function versionPublicadaEnGit() {
+  try {
+    const json = JSON.parse(fs.readFileSync(path.join(__dirname, 'src', 'assets', 'version.json'), 'utf8'));
+    return json && json.version ? String(json.version) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Mayor versión de hoy en los commits "chore(release): AAAA.MM.DD.N" de todas
+// las ramas: una publicación hecha desde otra copia no siempre deja su
+// version.json en esta rama.
+function ultimoReleaseDeHoyEnGit() {
+  try {
+    const { execFileSync } = require('child_process');
+    const hoy = generateVersionNumber(0).replace(/\.0$/, '');
+    const salida = execFileSync('git', ['log', '--all', '--since=36 hours ago', '--format=%s', '--grep=^chore(release): ' + hoy.replace(/\./g, '\\.')], { cwd: __dirname, encoding: 'utf8' });
+    let mayor = 0;
+    salida.split('\n').forEach((linea) => {
+      const m = linea.match(/^chore\(release\): (\d{4})\.(\d{2})\.(\d{2})\.(\d+)/);
+      if (m && `${m[1]}.${m[2]}.${m[3]}` === hoy) mayor = Math.max(mayor, parseInt(m[4], 10));
+    });
+    return mayor ? `${hoy}.${mayor}` : null;
+  } catch (e) {
+    return null;
+  }
+}
+
 // Función para actualizar la versión en un archivo
 function updateVersion(filePath, isBeta = true) {
   const content = fs.readFileSync(filePath, 'utf8');
@@ -59,8 +88,15 @@ function updateVersion(filePath, isBeta = true) {
     currentVersion = match[1];
   }
 
-  // Obtener el último buildNumber
-  const buildNumber = getLatestBuildNumber(currentVersion);
+  // Obtener el último buildNumber. Los environments no se versionan (cada copia
+  // del repo lleva su propio contador), así que también se mira
+  // src/assets/version.json, que sí viaja con git: si otra copia ya publicó la
+  // .10, aquí no se vuelve a la .4.
+  const buildNumber = Math.max(
+    getLatestBuildNumber(currentVersion),
+    getLatestBuildNumber(versionPublicadaEnGit()),
+    getLatestBuildNumber(ultimoReleaseDeHoyEnGit())
+  );
   
   // Generar la nueva versión con formato año.mes.día.buildNumber
   const versionNumber = generateVersionNumber(buildNumber);
