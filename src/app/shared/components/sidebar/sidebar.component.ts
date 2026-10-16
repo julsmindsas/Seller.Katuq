@@ -2149,6 +2149,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       fav.path === item.path && fav.title === item.title
     );
 
+    // Ticket 1222: solo se agrega lo que lleva a una pantalla (quitar sí se permite).
+    if (index === -1 && !item.path) return;
+
     if (index > -1) {
       this.favoriteItems.splice(index, 1);
     } else {
@@ -2188,7 +2191,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
     try {
-      const parsed: Menu[] = JSON.parse(savedFavorites);
+      // Ticket 1222: un favorito sin ruta (una sección con submenú) no lleva a ninguna
+      // pantalla; se descarta aunque el menú todavía no haya cargado.
+      const parsed: Menu[] = (JSON.parse(savedFavorites) || []).filter((fav: Menu) => !!fav?.path);
 
       // SEGURIDAD DE ROLES: descartar favoritos cuya ruta ya no esté en el menú
       // autorizado del usuario (el menú ya viene filtrado por NavService).

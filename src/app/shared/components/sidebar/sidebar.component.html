@@ -282,15 +282,9 @@
               <span class="menu-badge menu-badge--dot" *ngIf="!item.active && hasNewChild(item) && (!collapseMenu || isTemporarilyExpanded)" title="Hay opciones nuevas"></span>
               <i class="fa fa-chevron-down submenu-chevron"
                  *ngIf="!collapseMenu || isTemporarilyExpanded"
-                 [class.rotated]="item.active" 
+                 [class.rotated]="item.active"
                  aria-hidden="true"></i>
-              <button class="favorite-btn"
-                      *ngIf="!collapseMenu || isTemporarilyExpanded"
-                      (click)="toggleFavorite(item, $event)"
-                      [class.active]="isFavorite(item)"
-                      [attr.aria-label]="isFavorite(item) ? 'Quitar de favoritos' : 'Añadir a favoritos'">
-                <i class="fa fa-star" aria-hidden="true"></i>
-              </button>
+              <!-- Ticket 1222: una sección que abre submenú no tiene ruta; sin estrella de favorito. -->
               <div class="tooltip" *ngIf="isCompactMode || collapseMenu">{{item.title | translate}}</div>
             </button>
 
