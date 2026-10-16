@@ -10374,3 +10374,19 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
 - **Después:** las mismas 8 páginas pasan axe con 0 fallas, con la hoja nueva aplicada a su HTML real.
 - **Editor:** se suma un aviso informativo cuando el color principal no deja leer los botones con texto blanco. No bloquea: la página lo corrige sola. El de texto contra fondo ya existía (ticket 1216).
 - **Fuera:** texto alternativo generado con IA a partir de la foto (cuesta llamadas a Bedrock). Hoy las fotos de producto usan el nombre del producto y las decorativas van con `alt=""`.
+
+## D-461 (2026-10-16) — Compra en celular sin zoom y portada precargada (ticket 1249, TX-34, avance) — PUBLICADO: backend dd49e067 + 53b43b2b
+
+- **Compra en celular** (portada → ficha → carrito → checkout a 390 px, en 5 sitios publicados):
+  - No había desplazamiento horizontal en ningún paso.
+  - Los campos medían 13,6 a 14,4 px, y el iPhone amplía la página al tocar un campo de menos de 16 px. Ahora miden 16 px en pantallas de hasta 767 px (`!important`, porque cada formulario fija su tamaño con selectores más específicos).
+- **Portada precargada:** si la página abre con una portada de foto (o carrusel), esa foto, que es el LCP, se pide desde la cabecera. Igual que ya se hacía en la ficha.
+- **Probado y revertido:** activar la hoja de Google Fonts solo al llegar (`load`). Después, con 5 corridas por sitio, el código anterior dio la misma mediana (atelier-90: 77 contra 78). El cambio no era la causa. Volvió el original.
+- **Medición (Lighthouse 12.2.1 móvil, local, balizas bloqueadas):**
+  - Buenas prácticas: 96 a 100 en todos los sitios.
+  - Rendimiento: bimodal en el mismo código. O 97–100, o ~78–86 porque el primer pintado espera ~2,4 s. Pasa también sin fuentes, y en Playwright con CPU 4x y red 4G no aparece (el pintado llega ~0,6 s después del documento).
+  - No se da por cumplido el criterio de 90 hasta medir en un entorno estable.
+- **Pendiente, con spec propia:**
+  - El render en frío de catálogos grandes: FLORECER, con 2.166 productos, tarda de 1,5 a 7,6 s sin caché. El índice tarda ~3,9 s en cargar y los documentos completos pesan ~14 KB cada uno.
+  - Imágenes de producto sin variantes de tamaño (originales de Storage).
+- **Escalado:** la baliza `/vista` no descarta robots ni Chrome headless. Lighthouse, PageSpeed y cualquier navegador automatizado suman visitas al tablero del comercio. No se usó PageSpeed por eso.
