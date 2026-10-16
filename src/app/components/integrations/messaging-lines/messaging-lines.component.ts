@@ -33,6 +33,8 @@ interface EdicionLinea {
 }
 
 const PROVEEDOR = 'kapso';
+/** Clave del código de un solo uso de la conexión en curso. */
+const CLAVE_ESTADO_CONEXION = 'katuq_conexion_kapso';
 
 /**
  * Números de WhatsApp del comercio (D-437), dentro de la tarjeta de WhatsApp.
@@ -138,7 +140,7 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
     }
     this.conectando = true;
     this.servicio
-      .conectar(PROVEEDOR)
+      .conectar(PROVEEDOR, this.nuevoEstadoConexion())
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: ({ url }) => {
@@ -200,7 +202,43 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
     this.procesarRegreso(params);
   }
 
+  /**
+   * Código de un solo uso de la conexión en curso. Vive en localStorage (no en
+   * sessionStorage) porque el regreso puede caer en la ventana emergente sin
+   * vínculo con esta. Vence a los 30 minutos.
+   */
+  private nuevoEstadoConexion(): string {
+    const bytes = new Uint8Array(16);
+    window.crypto.getRandomValues(bytes);
+    const estado = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+    try {
+      localStorage.setItem(CLAVE_ESTADO_CONEXION, JSON.stringify({ estado, vence: Date.now() + 30 * 60 * 1000 }));
+    } catch {
+      // Sin almacenamiento el regreso no se podrá validar y se pedirá reintentar.
+    }
+    return estado;
+  }
+
+  /** ¿El regreso trae el código que se generó aquí? Lo consume en cualquier caso. */
+  private consumirEstadoConexion(recibido: string | undefined): boolean {
+    let guardado: { estado?: string; vence?: number } | null = null;
+    try {
+      guardado = JSON.parse(localStorage.getItem(CLAVE_ESTADO_CONEXION) || 'null');
+      localStorage.removeItem(CLAVE_ESTADO_CONEXION);
+    } catch {
+      guardado = null;
+    }
+    return !!(recibido && guardado && guardado.estado === recibido && (guardado.vence || 0) > Date.now());
+  }
+
   private procesarRegreso(params: Record<string, string>): void {
+    if (!this.consumirEstadoConexion(params['estado'])) {
+      this.terminarConexion({
+        tipo: 'error',
+        texto: 'Esta conexión no se inició desde esta pantalla o ya venció. Pulsa "Conectar número" para empezar de nuevo.',
+      });
+      return;
+    }
     const config = getConnectorConfig(PROVEEDOR);
     if (!config || !config.esExitoso(params)) {
       const codigo = params['error_code'];

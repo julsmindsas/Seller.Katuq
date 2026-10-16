@@ -33,9 +33,13 @@ export class MessagingLinesService extends BaseService {
     );
   }
 
-  /** Pide el enlace de conexión del proveedor; se abre en una ventana emergente. */
-  conectar(provider: string): Observable<{ url: string; expiresAt?: string }> {
-    return this.post<{ url: string; expiresAt?: string }>(`${this.base}/connect`, { provider });
+  /**
+   * Pide el enlace de conexión del proveedor; se abre en una ventana emergente.
+   * `estado` es un código de un solo uso que el servidor devuelve en la URL de
+   * regreso: solo se confirma un regreso que traiga el código generado aquí.
+   */
+  conectar(provider: string, estado: string): Observable<{ url: string; expiresAt?: string }> {
+    return this.post<{ url: string; expiresAt?: string }>(`${this.base}/connect`, { provider, estado });
   }
 
   /** El servidor confirma el número con el proveedor; no se fía de los datos del regreso. */
