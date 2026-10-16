@@ -766,6 +766,38 @@
               <span class="opcion__texto"><strong>Burbuja flotante</strong><small>Siempre visible, abajo a la izquierda</small></span>
               <span class="palanca"><span></span></span>
             </button>
+
+            <!-- Ticket 1222: horario de atención -->
+            <button class="opcion" [class.is-active]="b.datos.horario?.activo"
+                    (click)="alternarHorarioWhatsapp(b)">
+              <span class="opcion__texto"><strong>Horario de atención</strong><small>Fuera de horario llega otro mensaje (hora de Colombia)</small></span>
+              <span class="palanca"><span></span></span>
+            </button>
+            <ng-container *ngIf="b.datos.horario?.activo">
+              <div class="campo">
+                <label>Días</label>
+                <div class="wa-dias">
+                  <button type="button" class="wa-dia" *ngFor="let d of diasSemana"
+                          [class.is-activo]="b.datos.horario.dias.includes(d.valor)"
+                          (click)="alternarDiaWhatsapp(b, d.valor)">{{ d.corto }}</button>
+                </div>
+              </div>
+              <div class="fechas-programacion">
+                <div class="campo">
+                  <label>Desde</label>
+                  <input type="time" [(ngModel)]="b.datos.horario.desde" (ngModelChange)="marcarSucio()" />
+                </div>
+                <div class="campo">
+                  <label>Hasta</label>
+                  <input type="time" [(ngModel)]="b.datos.horario.hasta" (ngModelChange)="marcarSucio()" />
+                </div>
+              </div>
+              <div class="campo">
+                <label>Mensaje fuera de horario</label>
+                <input type="text" [(ngModel)]="b.datos.mensajeFuera" (ngModelChange)="marcarSucio()" maxlength="240"
+                       placeholder="Hola, vi su tienda. Quedo atento a su respuesta mañana." />
+              </div>
+            </ng-container>
           </ng-container>
 
           <!-- Popup de bienvenida -->

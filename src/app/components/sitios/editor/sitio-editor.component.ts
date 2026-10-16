@@ -4754,6 +4754,27 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     return `https://${this.slug}.${environment.dominioSitios || "katuq.com"}`;
   }
 
+  // ── Ticket 1222: horario de atención del botón de WhatsApp ──
+  diasSemana = [
+    { valor: 1, corto: "Lun" }, { valor: 2, corto: "Mar" }, { valor: 3, corto: "Mié" }, { valor: 4, corto: "Jue" },
+    { valor: 5, corto: "Vie" }, { valor: 6, corto: "Sáb" }, { valor: 0, corto: "Dom" },
+  ];
+
+  alternarHorarioWhatsapp(b: BloqueSitio): void {
+    const h = b.datos.horario;
+    b.datos.horario = h && h.activo
+      ? { ...h, activo: false }
+      : { activo: true, dias: (h && h.dias && h.dias.length) ? h.dias : [1, 2, 3, 4, 5], desde: (h && h.desde) || "08:00", hasta: (h && h.hasta) || "18:00" };
+    this.marcarSucio();
+  }
+
+  alternarDiaWhatsapp(b: BloqueSitio, dia: number): void {
+    const h = b.datos.horario;
+    if (!h) return;
+    h.dias = h.dias.includes(dia) ? h.dias.filter((x: number) => x !== dia) : [...h.dias, dia];
+    this.marcarSucio();
+  }
+
   /** Ticket 1229: dirección del catálogo para Google Merchant Center y Meta. */
   copiarFeed(): void {
     const url = `${this.enlacePublico}/feed.xml`;

@@ -3387,3 +3387,20 @@ input.is-error { border-color: #b42318 !important; }
     &:focus-visible { outline: 3px solid #7c5cff !important; }
   }
 }
+
+// ── Ticket 1222: días del horario de WhatsApp ──
+.wa-dias { display: flex; flex-wrap: wrap; gap: 6px; }
+.wa-dia {
+  @include kb-btn-base;
+  min-width: 44px;
+  padding: 6px 8px;
+  border: 1.5px solid var(--kb-line-3);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--kb-ink-2);
+  &.is-activo { border-color: #5f3fe0; background: #f1edff; color: #5f3fe0; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; }
+}
+.fechas-programacion input[type="time"] { @include kb-input; }
