@@ -10165,3 +10165,33 @@ Daniel: «arreglalo y te autorizo a corregir los pedidos». Sigue a D-438.
 - **Prueba:** `tests/sitios/detalleComercialProducto.test.js` (7). Las 4 fallas previas de `tests/sitios` siguen igual.
 
 **Incidente de publicación (16-oct):** la .16.2 se compiló desde `f3be22f3` mientras otra sesión publicaba la .16.3, y la pisó unos 15 minutos. Se perdieron en vivo los tickets 1217, 1218, 1222 y 1223. Se recompiló desde `95019ac8`, que incluye la .16.3, y se publicó la .16.4. Se verificó en el bundle vivo ("Excede el total" del 1218). Lección: justo antes de `firebase deploy`, comparar la versión viva y la punta de la rama con la base de compilación.
+
+## D-446 (2026-10-16) — Sitio: estrellas en la tarjeta y la opinión se pide en todos los canales (ticket 1231) — PUBLICADO: backend 090913cd, front 2026.10.16.6
+
+- **Tarjetas** (bloques, catálogo pintado en el servidor y API, más la tarjeta que arma el script): estrellas, promedio y total con `AggregateRating`, solo con reseñas publicadas reales (`conCalificaciones`). Una consulta por cada 30 productos; en el plan gratis no se lee nada. La consulta (dos igualdades más `in`) no pide índice compuesto.
+- **Bug corregido:** la invitación a calificar solo salía cuando el "Entregado" llegaba por los webhooks de Fullpi, Osmosis o Enviame. El entregado marcado en Katuq o por el mensajero no la pedía; en producción hay 0 reseñas. Ahora `updateOrderInternal` la dispara, con la misma marca idempotente.
+- **Opción de tienda `resenasOtrosCanales`** (apagada por defecto; en el editor: Opiniones → "Pedir opinión también en otros canales"): los pedidos de venta asistida, POS y WhatsApp reciben el enlace a la tienda publicada, solo si traen correo.
+- **Fuera:** fotos en las opiniones, recordatorio por WhatsApp, filtro y orden por valoración, reportar, regla de moderación automática, importar opiniones y testimonios con opiniones reales.
+
+## D-447 (2026-10-16) — Sitio: modo temporada (ticket 1232) — PUBLICADO: backend 8128e8f3, front 2026.10.16.6
+
+- **Programación por sección:** cualquier sección acepta `programacion {desde, hasta, temporada}` (`normalizarBloques`). `siteTemporadas.filtrarVigentes` la aplica en el render, en las páginas propias y en la API pública, con el día de Colombia.
+- **`GET /v1/sites/temporadas`:** calendario comercial colombiano calculado por año, con ventana sugerida (Día de la Madre y del Padre, Amor y Amistad, Halloween, Black Friday, Cyber Monday, Navidad, primas, San Valentín, Día de la Mujer).
+- **Vista en una fecha futura:** `GET /v1/sites/:id/vista-en-fecha` (tenant del JWT) devuelve la vista previa firmada del borrador con `&fecha=`. El público nunca puede pedir otra fecha.
+- **Editor:** "Cuándo se muestra" por sección, con temporada, fechas y "Ver el sitio como se verá el…". El arnés no pinta el editor, así que este panel no se verificó en el navegador.
+- **Fuera:** recordatorio previo con sugerencias de KAI.
+
+## D-448 (2026-10-16) — DIAN: avisos preventivos de rango, resolución y certificado (ticket 1271, FE-14) — PUBLICADO: backend f888e562
+
+- **Cron diario 7 AM COT** (`initDianAlertasJob`): revisa las empresas con DIAN directa en producción y avisa por correo al administrador y al contador, y en la campana del Seller (`ActualizacionTicket{empresa}`, tipo `FACTURACION_DIAN`):
+  - rango de numeración al 80, 90 o 95 %, o agotado;
+  - resolución que vence en 30, 15 o 5 días, o vencida;
+  - certificado (leído del .p12 descifrado) que vence en 30, 15 o 5 días, o vencido.
+- **Un aviso por umbral:** la marca vive en `dian_alertas` y se crea con `create()`.
+- **Hoy:** solo Julsmind; el rango va en 48 de 1000, la resolución vence en 2028 y el certificado el 2027-08-14, así que no hay avisos.
+- **Fuera, a propósito:** cola con reintento automático y modo contingencia. Reenviar sin la idempotencia de FE-03 puede duplicar facturas ante la DIAN.
+
+## D-449 (2026-10-16) — DIAN: auditoría de anulaciones, ajustes y emisión (ticket 1270, FE-16) — PUBLICADO: backend e7732afc
+
+- **`dian_auditoria` (append-only):** las notas crédito y débito y el envío de facturas desde Nueva factura registran usuario y rol del JWT firmado, fecha, documento y resultado, incluidos los fallidos. Los cambios de configuración ya quedaban en `config_audit`.
+- **Escalado sin tocar:** `POST /v1/accounting/:provider/notes/:noteType` no exige rol ni tenant del JWT (la empresa sale del header). Corregirlo puede afectar el cambio de empresa del superadmin y requiere decisión. Roles de facturador y consulta, conservación legal y cifrado del certificado (ya cifrado en `integration_secrets`) quedan para su spec.
