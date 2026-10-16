@@ -114,13 +114,29 @@
               priority class="product-image" [class.loaded]="imageLoaded[product._id]"
               (load)="handleImageLoad($event, product._id)" (error)="handleImageError($event)">
 
+            <!-- Ticket 1172: al pasar el mouse o tocar, existencias en todas las
+                 bodegas (como en venta asistida). Solo informa: no cambia la bodega del POS. -->
             <span class="cat-stock"
                   [ngClass]="{
                     'cat-stock--ok': product.disponibilidad?.inventariable && product.disponibilidad?.cantidadDisponible > 10,
                     'cat-stock--low': product.disponibilidad?.inventariable && product.disponibilidad?.cantidadDisponible > 0 && product.disponibilidad?.cantidadDisponible <= 10,
                     'cat-stock--out': product.disponibilidad?.inventariable && (!product.disponibilidad?.cantidadDisponible || product.disponibilidad?.cantidadDisponible <= 0),
-                    'cat-stock--na': !product.disponibilidad?.inventariable
-                  }">
+                    'cat-stock--na': !product.disponibilidad?.inventariable,
+                    'cat-stock--clic': product.disponibilidad?.inventariable
+                  }"
+                  [ngbPopover]="stockBodegasTpl"
+                  #popStock="ngbPopover"
+                  popoverTitle="Existencias por bodega"
+                  popoverClass="pos-stock-bodegas"
+                  triggers="manual"
+                  container="body"
+                  [autoClose]="'outside'"
+                  [disablePopover]="!product.disponibilidad?.inventariable"
+                  [attr.role]="product.disponibilidad?.inventariable ? 'button' : null"
+                  [attr.title]="product.disponibilidad?.inventariable ? 'Ver existencias en las demás bodegas' : null"
+                  (mouseenter)="abrirStockPopover(popStock, product)"
+                  (mouseleave)="cerrarStockPopoverConGracia()"
+                  (click)="abrirStockPopover(popStock, product)">
               {{ product.disponibilidad?.inventariable ?
                  (product.disponibilidad?.cantidadDisponible || 0) + ' disp.' :
                  'No inventariable' }}
@@ -279,3 +295,23 @@
     </div>
   </div>
 </div>
+
+<!-- Contenido del popover "Existencias por bodega" (ticket 1172; uno abierto a la vez) -->
+<ng-template #stockBodegasTpl>
+  <div class="ebx-caja" (mouseenter)="cancelarCierreStockPopover()" (mouseleave)="cerrarStockPopoverConGracia()">
+    <div *ngIf="stockBodegasActual?.cargando" class="ebx-aviso">Consultando…</div>
+    <div *ngIf="stockBodegasActual && !stockBodegasActual.cargando && stockBodegasActual.error" class="ebx-aviso">
+      No se pudo consultar el inventario. Intenta de nuevo en un momento.
+    </div>
+    <ng-container *ngIf="stockBodegasActual && !stockBodegasActual.cargando && !stockBodegasActual.error">
+      <div *ngFor="let b of stockBodegasActual.bodegas" class="ebx-fila" [class.ebx-actual]="esBodegaActual(b.idBodega)">
+        <span class="ebx-nombre">
+          {{ b.nombre }}
+          <small *ngIf="esBodegaActual(b.idBodega)" class="ebx-tag">esta caja</small>
+        </span>
+        <span class="ebx-cant">{{ b.cantidad }}</span>
+      </div>
+      <div *ngIf="!stockBodegasActual.bodegas.length" class="ebx-aviso">Sin existencias en ninguna bodega.</div>
+    </ng-container>
+  </div>
+</ng-template>

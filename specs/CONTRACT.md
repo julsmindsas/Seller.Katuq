@@ -10091,3 +10091,15 @@ Daniel: «hay un tiket nuevo de almara cerrarlo de pagos». Lo tomó como aproba
 - **Lo que sigue abierto: dos reglas de anticipo conviviendo.** Tesorería cuenta solo los aprobados; `calculateOrderTotals` cuenta también los pendientes, y gana porque corre de último. Se probó aplicar la regla de Tesorería al final de crear y editar, y se **revirtió sin desplegar**. La medición (solo lectura) dio que 1.217 pedidos de ALMARA cambiarían de anticipo: 916 son pedidos viejos (DAD-000xxx, entregados y "Aprobado") con pagos en "Pendiente" que nunca se revisaron porque son de antes de encender Tesorería. Con esa regla quedarían debiendo el total.
 - **Para unificar** hace falta una decisión de Daniel: qué hacer con los pagos pendientes históricos, por ejemplo marcarlos "Aprobado (histórico)" en los pedidos entregados y pagados. Después, la regla de Tesorería al final de crear y editar, más una prueba de contrato que exija el orden.
 - **Riesgo latente medido:** el guard de Tesorería (`orders.js`, `computeApprovedAnticipo`) aplica la regla en las ediciones sin carrito. Ya hay 3 pedidos con el anticipo por debajo de lo pagado.
+
+## D-439 (2026-10-16) — Editar un cliente exige que la ficha sea de la empresa que edita
+
+`POST /v1/clients/edit` con `cd` actualizaba el documento sin mirar de quién era: un `cd` de otra empresa se reescribía y quedaba con la `company` del que editaba. Ahora se lee la ficha antes y, si no existe o es de otra empresa, responde 404 `client_not_found` sin escribir.
+
+Salió revisando el ticket Julsmind 1201 (editar la cédula), que Daniel archivó sin cambio: la cédula sigue sin poder editarse. Prueba: `tests/clients/editarClienteOtraEmpresa.test.js`.
+
+## D-440 (2026-10-16) — Catálogo del POS: existencias en todas las bodegas, como en venta asistida (ticket Julsmind 1172)
+
+La etiqueta de unidades de cada producto del POS (`pos2/widgets/product`) abre, con el mouse o al tocarla, el globo "Existencias por bodega": la bodega de la caja marcada como "esta caja" y las demás con existencias. Usa el mismo endpoint de venta asistida (`GET /v1/inventory/producto-bodegas/:productoId`, solo lectura, con la deduplicación docId/referencia) y caché por producto mientras el catálogo está abierto.
+
+A diferencia de venta asistida, el globo solo informa: no cambia la bodega de la caja en medio de una venta. Sin cambios de servidor, carrito ni inventario. Estilos con los tokens del design system (sin el `#7366ff` del globo de venta asistida).

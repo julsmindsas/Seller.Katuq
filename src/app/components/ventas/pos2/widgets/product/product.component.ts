@@ -711,6 +711,79 @@ export class ProductComponent implements OnInit, OnDestroy {
     this.goToPage(this.currentPage + 1);
   }
 
+  // ====== Existencias por bodega (ticket 1172, igual que venta asistida) ======
+  /** Popover abierto: solo uno a la vez. */
+  stockBodegasActual: {
+    productoId: string;
+    cargando: boolean;
+    error: boolean;
+    bodegas: { idBodega: string; nombre: string; cantidad: number }[];
+  } | null = null;
+  private stockBodegasCache = new Map<string, { idBodega: string; nombre: string; cantidad: number }[]>();
+  private popoverStockAbierto: any = null;
+  private cierreStockTimer: any = null;
+
+  /** Carga (con caché por sesión del catálogo) las existencias del producto en todas las bodegas. */
+  private cargarStockPorBodegas(product: any): void {
+    // En el catálogo del POS `productoId` es el docId normalizado del inventario.
+    const id = product?.productoId || product?.id || product?.cd;
+    if (!id || !product?.disponibilidad?.inventariable) return;
+    const cacheado = this.stockBodegasCache.get(id);
+    if (cacheado) {
+      this.stockBodegasActual = { productoId: id, cargando: false, error: false, bodegas: cacheado };
+      return;
+    }
+    this.stockBodegasActual = { productoId: id, cargando: true, error: false, bodegas: [] };
+    this.inventarioService.getStockProductoEnBodegas(id).subscribe({
+      next: (resp) => {
+        const bodegas = (resp?.bodegas || []).filter((b) => b.cantidad > 0 || this.esBodegaActual(b.idBodega));
+        this.stockBodegasCache.set(id, bodegas);
+        if (this.stockBodegasActual?.productoId === id) {
+          this.stockBodegasActual = { productoId: id, cargando: false, error: false, bodegas };
+        }
+      },
+      error: () => {
+        if (this.stockBodegasActual?.productoId === id) {
+          this.stockBodegasActual = { productoId: id, cargando: false, error: true, bodegas: [] };
+        }
+      },
+    });
+  }
+
+  /** Abre el popover a mano: con hover en escritorio y con toque en tableta. */
+  abrirStockPopover(popover: any, product: any): void {
+    if (!product?.disponibilidad?.inventariable) return;
+    this.cancelarCierreStockPopover();
+    if (this.popoverStockAbierto && this.popoverStockAbierto !== popover) this.popoverStockAbierto.close();
+    if (this.popoverStockAbierto === popover && popover.isOpen()) return;
+    this.cargarStockPorBodegas(product);
+    this.popoverStockAbierto = popover;
+    popover.open();
+  }
+
+  /** Cierra tras un respiro, para poder pasar del badge al popover sin perderlo. */
+  cerrarStockPopoverConGracia(): void {
+    this.cancelarCierreStockPopover();
+    this.cierreStockTimer = setTimeout(() => {
+      this.popoverStockAbierto?.close();
+      this.popoverStockAbierto = null;
+      this.cierreStockTimer = null;
+    }, 220);
+  }
+
+  cancelarCierreStockPopover(): void {
+    if (this.cierreStockTimer) {
+      clearTimeout(this.cierreStockTimer);
+      this.cierreStockTimer = null;
+    }
+  }
+
+  /** true si la fila es la bodega de esta caja. */
+  esBodegaActual(idBodega: string): boolean {
+    const actual = this.obtenerBodegaActiva();
+    return !!actual && actual === idBodega;
+  }
+
   /**
    * Obtiene la URL de la imagen del producto de forma segura
    * @param product El producto del cual obtener la imagen
