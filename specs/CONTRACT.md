@@ -10334,3 +10334,12 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
 - **No se enciende la IA por defecto:** gasta el cupo de Opttia del plan gratis.
 - **Fuera:** plantillas por tamaño de catálogo, más objetivos y etiquetas en lenguaje del cliente.
 - **Este build incluyó** `bcc23421` (otra sesión: PDF del pedido, tickets 1225 y 1226 de ALMARA). El candado verificó que contenía la .16.9.
+
+## D-458 (2026-10-16) — El comercio no lee notas internas ni reescribe sus tickets (ticket 1285)
+
+- **Problema:** por la API REST de tickets, el comercio recibía las notas internas del equipo (el Seller solo las escondía en pantalla). Además, su PUT le aceptaba estado, responsable, número, asunto y el arreglo completo de comentarios, y su DELETE le dejaba borrar el ticket.
+- **Decisión** (propuesta `openspec/changes/proteger-tickets-del-comercio` del backend, aprobada por Daniel el 16-oct):
+  - **Lectura:** `GET /v1/support/ticket/all` y `/:id` le entregan al comercio `paraComercio(ticket)`: sin campos internos y sin notas ni respuestas internas. Usa la misma regla que el MCP. El equipo sigue recibiendo el ticket completo.
+  - **Escritura:** el PUT del comercio corre en una transacción. Solo agrega sus comentarios nuevos (un comentario es nuevo si no coinciden id y fecha a la vez) y los guarda con id y fecha del servidor, siempre públicos y con el correo de la sesión, máximo 5 por petición. De las tareas solo cambia `hecha`. El resto del cuerpo se ignora sin error. Si no hay nada nuevo responde 200 con `sinCambios`.
+  - **Borrado:** `DELETE` solo para el equipo; el comercio recibe 403. En el comentario legado, el autor del comercio sale de su sesión.
+- **Sin cambios en el Seller ni en Support.** Backend con 16 pruebas nuevas, y las suites de soporte en verde.
