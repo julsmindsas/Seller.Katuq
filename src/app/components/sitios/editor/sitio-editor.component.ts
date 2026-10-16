@@ -4163,7 +4163,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   private recalcularSucio(): void {
     this.sucio = this.firmaActual() !== this.firmaGuardada ||
-      !!this.tokenMetaNuevo.trim() || !!this.secretoGa4Nuevo.trim() || this.quitarMeta || this.quitarGa4;
+      !!this.tokenMetaNuevo.trim() || !!this.secretoGa4Nuevo.trim() || this.quitarMeta || this.quitarGa4 ||
+      !!this.tokenTiktokNuevo.trim() || this.quitarTiktok;
   }
 
   ngOnDestroy(): void {
@@ -4372,6 +4373,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       secretoGa4Nuevo: this.secretoGa4Nuevo,
       quitarMeta: this.quitarMeta,
       quitarGa4: this.quitarGa4,
+      tokenTiktokNuevo: this.tokenTiktokNuevo,
+      quitarTiktok: this.quitarTiktok,
     };
     const firmaEnviada = this.firmaActual();
     this.guardando = true;
@@ -4396,7 +4399,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
           }
           const cambioDuranteGuardado = this.firmaActual() !== firmaEnviada ||
             this.tokenMetaNuevo !== enviado.tokenMetaNuevo || this.secretoGa4Nuevo !== enviado.secretoGa4Nuevo ||
-            this.quitarMeta !== enviado.quitarMeta || this.quitarGa4 !== enviado.quitarGa4;
+            this.quitarMeta !== enviado.quitarMeta || this.quitarGa4 !== enviado.quitarGa4 ||
+            this.tokenTiktokNuevo !== enviado.tokenTiktokNuevo || this.quitarTiktok !== enviado.quitarTiktok;
           if (!res.data || !res.data.draft) {
             this.toastr.error("No pudimos confirmar el contenido guardado. Vuelve a guardar antes de publicar.");
             return;
@@ -4444,6 +4448,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   tokenMetaNuevo = "";
   /** Clave nueva del protocolo de medición de GA4. */
   secretoGa4Nuevo = "";
+  /** Ticket 1240: token nuevo de la Events API de TikTok. */
+  tokenTiktokNuevo = "";
   /** Código del Administrador de eventos para el disparo de prueba. */
   codigoPrueba = "";
   probandoMedicion = false;
@@ -4465,12 +4471,25 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     if (this.quitarMeta && !this.tokenMetaNuevo.trim()) analitica.metaConversionsToken = "";
     if (this.secretoGa4Nuevo.trim()) analitica.ga4ApiSecret = this.secretoGa4Nuevo.trim();
     if (this.quitarGa4 && !this.secretoGa4Nuevo.trim()) analitica.ga4ApiSecret = "";
+    delete analitica.tiktokEventsToken;
+    if (this.tokenTiktokNuevo.trim()) analitica.tiktokEventsToken = this.tokenTiktokNuevo.trim();
+    if (this.quitarTiktok && !this.tokenTiktokNuevo.trim()) analitica.tiktokEventsToken = "";
     contenido.analitica = analitica;
     return contenido;
   }
 
   private quitarMeta = false;
   private quitarGa4 = false;
+  private quitarTiktok = false;
+
+  quitarTokenTiktok(): void {
+    this.quitarTiktok = true;
+    this.tokenTiktokNuevo = "";
+    if (this.contenido && this.contenido.analitica) {
+      (this.contenido.analitica as any).tiktokEventsPuesto = false;
+    }
+    this.marcarSucio();
+  }
 
   quitarTokenMeta(): void {
     this.quitarMeta = true;
@@ -4542,6 +4561,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     enviado: {
       nombre: string; slug: string; dominioPropio: string; contenido: ContenidoSitio;
       tokenMetaNuevo: string; secretoGa4Nuevo: string; quitarMeta: boolean; quitarGa4: boolean;
+      tokenTiktokNuevo: string; quitarTiktok: boolean;
     },
     conservarLocal: boolean
   ): void {
@@ -4559,6 +4579,11 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     if (ga4Confirmada) {
       this.secretoGa4Nuevo = "";
       this.quitarGa4 = false;
+    }
+    const tiktokConfirmado = this.tokenTiktokNuevo === enviado.tokenTiktokNuevo && this.quitarTiktok === enviado.quitarTiktok;
+    if (tiktokConfirmado) {
+      this.tokenTiktokNuevo = "";
+      this.quitarTiktok = false;
     }
 
     const perdidos = this.camposPerdidos(enviado.contenido, data.draft);
@@ -4581,6 +4606,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       }
       if (ga4Confirmada && typeof guardado.analitica.ga4SecretoPuesto === "boolean") {
         this.contenido.analitica.ga4SecretoPuesto = guardado.analitica.ga4SecretoPuesto;
+      }
+      if (tiktokConfirmado && typeof guardado.analitica.tiktokEventsPuesto === "boolean") {
+        this.contenido.analitica.tiktokEventsPuesto = guardado.analitica.tiktokEventsPuesto;
       }
     }
     // La referencia siempre corresponde al saneamiento confirmado, aunque

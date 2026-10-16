@@ -10402,3 +10402,20 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
 - **Fuera:**
   - Costo por venta: necesita conectar la pauta (ticket 1240).
   - Embudo por pasos (ficha, carrito, checkout), búsquedas sin resultado y modelo de atribución elegible: no hay eventos de esos pasos todavía.
+
+## D-463 (2026-10-16) — Pauta: TikTok desde el servidor, aviso de cookies y GA4 con datos resumidos (ticket 1240, F3-26)
+
+- **TikTok Events API** (`services/medicionServidor.js`, nuevo proveedor del Strategy existente):
+  - Al aprobarse el pago se manda `CompletePayment` a `business-api.tiktok.com/open_api/v1.3/event/track/` con el token en `Access-Token`. Lleva el mismo `event_id` del píxel; el píxel ahora lo manda en `ttq.track(..., {event_id})`, así que la venta no se duplica.
+  - Correo y teléfono van en SHA-256 (teléfono en E.164 con «+»), con el `ttclid` capturado en la visita.
+  - TikTok responde 200 aunque rechace; el éxito se lee del `code` del cuerpo.
+  - La prueba de conexión no se le manda a TikTok sin su propio código de prueba, para no ensuciar las métricas reales.
+  - El token es un secreto: no vuelve al editor, se conserva al guardar y es del plan pagado.
+- **GA4 desde el servidor:** lleva `user_data` con correo (en Gmail, sin puntos) y teléfono en SHA-256: conversiones mejoradas. La importación de clics fuera de línea a Google Ads necesita su API con token de desarrollador; queda fuera.
+- **Aviso de cookies generado por Katuq:**
+  - Aparece si el sitio pide consentimiento y tiene etiquetas de terceros. Hasta que el visitante acepta, Google queda en «denegado» (también con Tag Manager solo), Meta revocado y TikTok en espera.
+  - La elección se recuerda en el navegador. El enlace va a la política de cookies o de privacidad solo si la página existe.
+  - En computador va centrado abajo, entre la burbuja de WhatsApp y el carrito; en celular, encima de las dos.
+- **Sitios nuevos:** nacen con el consentimiento encendido (`analiticaDeSitioNuevo`, en los 5 puntos de creación). Los existentes conservan lo que tenían.
+- **Fuentes:** volver de una pasarela de pago (Wompi, Addi, Sistecrédito, PSE, PlacetoPay, PayU, Mercado Pago) cuenta como «directo», no como otro sitio.
+- **Fuera:** Clarity, Hotjar, Pinterest y LinkedIn. La llegada real a TikTok y GA4 se verifica con las credenciales del comercio: en pruebas, la red fue simulada.

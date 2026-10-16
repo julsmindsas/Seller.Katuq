@@ -198,6 +198,10 @@ export interface AnaliticaSitio {
   ga4ApiSecret?: string;
   /** Código del Administrador de eventos para que la prueba no ensucie datos. */
   metaTestEventCode?: string;
+  /** Ticket 1240: Events API de TikTok (el token no vuelve del servidor). */
+  tiktokEventsPuesto?: boolean;
+  tiktokEventsToken?: string;
+  tiktokTestCode?: string;
 }
 
 /**
