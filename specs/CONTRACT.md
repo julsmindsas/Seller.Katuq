@@ -10278,3 +10278,36 @@ Daniel: «arreglalo y te autorizo a corregir los pedidos». Sigue a D-438.
 - **Verificado en solo lectura:** lino-y-lona sale con 1.000 artículos (15 con GTIN y 890 con foto adicional) y atelier-90 con 10.
 - **Fuera:** reporte de productos rechazados (requiere la API de Merchant).
 - **Despliegue:** salió junto con el backend Fase 1 de proyectos ágiles (D-450, otra sesión), con autorización de Daniel.
+
+## D-454 (2026-10-16) — Candado de publicación del front (incidente .16.2/.16.3) — PUBLICADO con 2026.10.16.8
+
+Daniel: «asegurate que no dañaste nada y no va volver a pasar».
+
+- **Verificación de producción (16-oct):**
+  - Bundle vivo: tiene un texto de cada cambio publicado ese día, de todas las sesiones.
+  - Backend: sin caídas y sin errores nuevos.
+  - Sitios públicos: responden bien.
+  - Pruebas: las 429 del backend en `c2421ff6` (antes del primer cambio del día) contra la punta dieron 0 regresiones, 10 pruebas arregladas y 22 nuevas que pasan. Se corrieron con `FIRESTORE_EMULATOR_HOST` hacia un puerto vacío, sin tocar producción.
+- **Candado:** `firebase.json` corre en predeploy `scripts/guard-publicacion.js`, después de `verify-dist-prod.js`, en cualquier sesión. Bloquea si:
+  1. la versión viva es mayor o igual;
+  2. la viva salió de un commit que el build no contiene;
+  3. la rama tiene commits de código que el build no incluye;
+  4. la viva se publicó con cambios sin commitear;
+  5. el build no dice su commit.
+- **Detalles:** `update-version.js` escribe `commit` y `cambiosSinCommit` en `version.json`. Usa `execFileSync`, sin shell. Se forza con `KATUQ_PUBLICAR_FORZADO=1` solo en una emergencia.
+- **Probado:** en 8 escenarios y en la publicación real de la .16.8. Volver a publicar el mismo build queda bloqueado.
+- El backend no tenía el riesgo: se despliega con `--ff-only` y verificando el HEAD previo.
+
+## D-455 (2026-10-16) — Lote de constructor web y DIAN (tickets 1263, 1223, 1228, 1230) — PUBLICADO: backend c4421f27, front 2026.10.16.8
+
+- **1263 (FE-07):** `validacionesPrevias.validarAntesDeEnviar` corre antes de `numbering.takeNext`, con el mismo mapeo del XML.
+  - Un NIT (31) con dígito de verificación equivocado o un documento no numérico devuelve `DIAN_PREVALIDATION` (422), con el dígito correcto y sin prefijo técnico.
+  - Un correo inválido solo avisa.
+  - En Nueva factura cuenta como fallo seguro. `dianReviewedEmission` admite la dependencia pura en su sandbox.
+- **1223:**
+  - El pie muestra razón social y NIT (`marca.legal`).
+  - `whatsappColombia`: el pie anteponía 57 siempre (quedaba 5757…) y el botón de WhatsApp no lo agregaba a un celular de 10 dígitos.
+  - El asistente ya no pide la descripción si existe la frase de Mi marca (el backend ya caía en ella, `sites.js:6487`).
+- **1228:** la biblioteca de secciones muestra la sección real, renderizada con el tema, y un selector "¿Dónde va?". `agregarSeccionLista` ignoraba la posición y agregaba siempre al final. Cerrar el modal limpia la posición.
+- **1230:** `carrito_recuperado` guarda el `canal` (correo o WhatsApp) y cuenta también el carrito que solo recibió WhatsApp. Las métricas muestran `recuperado.porCanal`.
+- **Fuera:** miniaturas estáticas en la biblioteca (se muestra la sección real); SMS y "volvió a estar disponible" del 1230.
