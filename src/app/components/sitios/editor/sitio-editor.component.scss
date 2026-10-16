@@ -3302,3 +3302,43 @@ input.is-error { border-color: #b42318 !important; }
     &:focus-visible { outline: 3px solid #7c5cff !important; }
   }
 }
+
+// ── Ticket 1229: catálogo para Google Shopping y Meta ──
+.feed-url {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 10px;
+  padding: 8px 10px;
+  border: 1.5px solid var(--kb-line-3);
+  border-radius: 11px;
+  background: var(--kb-surface-2);
+
+  code { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 12px; color: var(--kb-ink-2); }
+  &__copiar {
+    @include kb-btn-ghost(6px, 12px, 12.5px);
+    &:focus-visible { outline: 3px solid #7c5cff !important; }
+  }
+}
+.feed-pasos {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--kb-ink-2);
+  li { margin-bottom: 4px; letter-spacing: normal; }
+}
+.feed-cats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.feed-cat {
+  @include kb-btn-base;
+  padding: 5px 10px;
+  border: 1.5px solid var(--kb-line-3);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kb-ink-2);
+  &.is-fuera { border-color: #f3c7c7; background: #fdf3f3; color: #a12020; text-decoration: line-through; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; }
+}
+.feed-cats__ayuda { display: block; margin-top: 6px; font-size: 12px; color: var(--kb-ink-3, #6b6685); }

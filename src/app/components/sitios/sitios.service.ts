@@ -26,6 +26,8 @@ export interface TiendaSitio {
   ventaCruzada?: boolean;
   /** Ticket 1231: pedir opinión también a pedidos de venta asistida, POS y WhatsApp. Apagado por defecto. */
   resenasOtrosCanales?: boolean;
+  /** Ticket 1229: categorías que no van al catálogo de Google Shopping y Meta. */
+  feedCategoriasExcluidas?: string[];
   /** Al agregar: abrir el cajón (true) o solo confirmar con un aviso (por defecto). */
   abrirCarritoAlAgregar?: boolean;
   /** Categorías del maestro que no salen en el sitio (menú, baldosas, pie, filtros). */

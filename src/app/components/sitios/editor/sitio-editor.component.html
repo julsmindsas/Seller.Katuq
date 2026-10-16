@@ -2671,6 +2671,34 @@
           falta; pegar código suelto no funcionaría.
         </p>
 
+        <!-- Ticket 1229: catálogo para Google Shopping y Meta -->
+        <div class="grupo" *ngIf="contenido?.tienda">
+          <h3>Catálogo para Google Shopping y Meta</h3>
+          <p class="nota nota--simple">
+            Tus productos, precios, ofertas, fotos y existencias, siempre al día. Google y Meta leen esta
+            dirección solos; un cambio de precio o un agotado se ve en su siguiente lectura.
+          </p>
+          <div class="feed-url">
+            <code>{{ enlacePublico }}/feed.xml</code>
+            <button type="button" class="feed-url__copiar" (click)="copiarFeed()">Copiar</button>
+          </div>
+          <ol class="feed-pasos">
+            <li><b>Google Merchant Center:</b> Productos → Fuentes de datos → Agregar fuente → «Agregar productos desde un archivo» → pega la dirección y elige actualización diaria.</li>
+            <li><b>Meta (Commerce Manager):</b> Catálogo → Fuentes de datos → Agregar artículos → «Feed de datos» → «Programado» → pega la dirección y elige cada hora.</li>
+          </ol>
+          <div class="campo" *ngIf="categorias.length">
+            <label>Categorías que NO quieres anunciar</label>
+            <div class="feed-cats">
+              <button type="button" class="feed-cat" *ngFor="let c of categorias"
+                      [class.is-fuera]="categoriaFueraDelFeed(c.nombre)"
+                      (click)="alternarCategoriaFeed(c.nombre)">
+                {{ c.nombre }}
+              </button>
+            </div>
+            <small class="feed-cats__ayuda">La tienda las sigue mostrando; solo no salen en Google ni en Meta.</small>
+          </div>
+        </div>
+
         <div class="grupo">
           <h3>Meta — Facebook e Instagram</h3>
           <div class="campo">

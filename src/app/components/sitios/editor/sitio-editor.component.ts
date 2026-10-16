@@ -4709,6 +4709,30 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     return `https://${this.slug}.${environment.dominioSitios || "katuq.com"}`;
   }
 
+  /** Ticket 1229: dirección del catálogo para Google Merchant Center y Meta. */
+  copiarFeed(): void {
+    const url = `${this.enlacePublico}/feed.xml`;
+    navigator.clipboard.writeText(url).then(
+      () => this.toastr.success("Dirección del catálogo copiada"),
+      () => this.toastr.info(url, "Copia la dirección")
+    );
+  }
+
+  categoriaFueraDelFeed(nombre: string): boolean {
+    const lista = (this.contenido?.tienda as any)?.feedCategoriasExcluidas || [];
+    return lista.some((c: string) => String(c).toLowerCase() === String(nombre).toLowerCase());
+  }
+
+  alternarCategoriaFeed(nombre: string): void {
+    const t: any = this.contenido?.tienda;
+    if (!t) return;
+    const lista: string[] = (t.feedCategoriasExcluidas || []).filter(
+      (c: string) => String(c).toLowerCase() !== String(nombre).toLowerCase()
+    );
+    t.feedCategoriasExcluidas = this.categoriaFueraDelFeed(nombre) ? lista : [...lista, nombre].slice(0, 40);
+    this.marcarSucio();
+  }
+
   copiarEnlace(): void {
     navigator.clipboard.writeText(this.enlacePublico).then(
       () => this.toastr.success("Enlace copiado"),
