@@ -162,6 +162,17 @@
 
   <!-- ===== Nueva factura ===== -->
   <section #composerPanel class="fe-composer" tabindex="-1" aria-label="Preparar nueva factura" [hidden]="activeTab !== 'compose'">
+    <!-- Ticket 1279: nota desde afuera, citando una factura aceptada. -->
+    <div class="fe-notabar">
+      <div class="fe-notabar__copy">
+        <strong>¿Vas a corregir una factura ya aceptada?</strong>
+        <small>Haz una nota que la cite: búscala por número, cliente o CUFE.</small>
+      </div>
+      <div class="fe-notabar__acciones">
+        <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="notaDesdeAfuera('credit')"><i class="pi pi-replay"></i> Nota crédito</button>
+        <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="notaDesdeAfuera('debit')"><i class="pi pi-plus-circle"></i> Nota débito</button>
+      </div>
+    </div>
     <app-invoice-composer *ngIf="composerOpened" [integration]="integration" (issued)="loadDashboard()" (documentsRequested)="selectTab('documents')"></app-invoice-composer>
   </section>
 
@@ -281,7 +292,11 @@
                 <ng-template #notaRef>{{ document.reference?.number || '—' }}</ng-template>
                 <small class="fe-cellnote" *ngIf="document.correction?.description">{{ document.correction?.description }}</small>
               </td>
-              <td class="text-end fe-amount">{{ money(document.amount) }}</td>
+              <td class="text-end fe-amount">
+                {{ money(document.amount) }}
+                <!-- Ticket 1279: saldo después de las notas aceptadas. -->
+                <small class="fe-saldo" *ngIf="document.saldo?.notas" title="Valor de la factura menos notas crédito, más notas débito">Saldo {{ money(document.saldo?.saldo) }}</small>
+              </td>
               <td class="text-center">
                 <span class="fe-pill fe-pill--{{ statusGroup(document) }}"><i class="pi" [ngClass]="statusIcon(document)"></i>{{ statusLabel(document.status) }}</span>
               </td>
@@ -305,8 +320,12 @@
                     </button>
                     <ng-container *ngIf="document.type === 'invoice'">
                       <div class="fe-menu__sep"></div>
-                      <button type="button" role="menuitem" class="fe-menu__item fe-menu__item--orange" (click)="createNote(document)" [disabled]="document.status !== 'accepted'">
-                        <i class="pi pi-replay"></i> Crear nota de crédito
+                      <!-- Ticket 1279: nota crédito o débito citando esta factura. -->
+                      <button type="button" role="menuitem" class="fe-menu__item fe-menu__item--orange" (click)="iniciarNota(document, 'credit')" [disabled]="document.status !== 'accepted'">
+                        <i class="pi pi-replay"></i> Nota crédito
+                      </button>
+                      <button type="button" role="menuitem" class="fe-menu__item" (click)="iniciarNota(document, 'debit')" [disabled]="document.status !== 'accepted'">
+                        <i class="pi pi-plus-circle"></i> Nota débito
                       </button>
                     </ng-container>
                   </div>
@@ -360,6 +379,15 @@
         <dl class="fe-datos">
           <div><dt>Cliente</dt><dd>{{ documentCustomer(d) || '—' }}<small *ngIf="documentCustomerId(d)"> · {{ documentCustomerId(d) }}</small></dd></div>
           <div><dt>Valor</dt><dd>{{ money(d.amount) }}</dd></div>
+          <!-- Ticket 1279: saldo y notas de la factura; factura que cita la nota. -->
+          <div *ngIf="d.saldo as sd"><dt>Saldo</dt><dd>{{ money(sd.saldo) }}<small *ngIf="sd.notas"> · {{ sd.notas }} {{ sd.notas === 1 ? 'nota' : 'notas' }}</small></dd></div>
+          <div *ngIf="notasDeFactura(d).length"><dt>Notas</dt><dd class="fe-notas-factura">
+            <button type="button" class="fe-link" *ngFor="let n of notasDeFactura(d)" (click)="abrirDetalle(n)">{{ n.number || 'Sin consecutivo' }} · {{ documentTypeLabel(n.type) }} · {{ money(n.amount) }} · {{ statusLabel(n.status) }}</button>
+          </dd></div>
+          <div *ngIf="d.type !== 'invoice' && d.reference?.number"><dt>Factura</dt><dd>
+            <button type="button" class="fe-link" *ngIf="facturaDeNota(d) as f; else sinFactura" (click)="abrirDetalle(f)">{{ d.reference?.number }}</button>
+            <ng-template #sinFactura>{{ d.reference?.number }}</ng-template>
+          </dd></div>
           <div><dt>Emisión</dt><dd>{{ documentDate(d) ? (documentDate(d) | date:'dd/MM/yyyy') : '—' }}</dd></div>
           <div *ngIf="d.pedido?.numero"><dt>Pedido</dt><dd><button type="button" class="fe-link" (click)="verPedido(d)">{{ d.pedido?.numero }}</button></dd></div>
           <div class="fe-datos__cufe" *ngIf="d.cufe || d.cude">
@@ -380,6 +408,10 @@
           <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="download(d, 'attachedDocument')"><i class="pi pi-download"></i> AttachedDocument</button>
           <button type="button" class="fe-btn fe-btn--sm fe-btn--primary" (click)="reenviarCorreo(d)" [disabled]="reenviando"><i class="pi pi-envelope"></i> {{ reenviando ? 'Reenviando…' : 'Reenviar por correo' }}</button>
           <a class="fe-btn fe-btn--sm fe-btn--ghost" [href]="enlaceWhatsApp(d)" target="_blank" rel="noopener"><i class="pi pi-whatsapp"></i> WhatsApp</a>
+          <ng-container *ngIf="d.type === 'invoice'">
+            <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="cerrarDetalle(); iniciarNota(d, 'credit')"><i class="pi pi-replay"></i> Nota crédito</button>
+            <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="cerrarDetalle(); iniciarNota(d, 'debit')"><i class="pi pi-plus-circle"></i> Nota débito</button>
+          </ng-container>
         </div>
 
         <h3 class="fe-detalle__titulo">Línea de tiempo</h3>

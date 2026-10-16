@@ -10343,3 +10343,20 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
   - **Escritura:** el PUT del comercio corre en una transacción. Solo agrega sus comentarios nuevos (un comentario es nuevo si no coinciden id y fecha a la vez) y los guarda con id y fecha del servidor, siempre públicos y con el correo de la sesión, máximo 5 por petición. De las tareas solo cambia `hecha`. El resto del cuerpo se ignora sin error. Si no hay nada nuevo responde 200 con `sinCambios`.
   - **Borrado:** `DELETE` solo para el equipo; el comercio recibe 403. En el comentario legado, el autor del comercio sale de su sesión.
 - **Sin cambios en el Seller ni en Support.** Backend con 16 pruebas nuevas, y las suites de soporte en verde.
+
+## D-459 (2026-10-16) — Notas crédito y débito sobre facturas libres, por línea y con saldo (ticket 1279, FE-20)
+
+- **Problema:** una nota exigía `orderId`. Las 7 facturas DIAN aceptadas de Julsmind (JULS41–47) son libres (sin pedido), así que ninguna admitía nota.
+- **Factura libre:** sin `orderId`, el servidor reconstruye la factura desde su solicitud (`dian_invoice_requests.selection`). Usa el mismo camino de la emisión (`getInvoiceCustomer` + `mapRegisteredCustomer` + `manualInvoiceToOrder`) y verifica número y CUFE contra el documento aceptado de la misma empresa.
+  - **Candados:** no hay nota si el total reconstruido difiere del aceptado por la DIAN (±1) o si el documento del comprador cambió desde la factura.
+  - **Vencimiento:** el de una factura a crédito ya vencida se conserva; "de hoy en adelante" es regla de emisión.
+  - Las 7 reales se reconstruyen exactas (lectura en producción, sin escribir).
+  - Las notas se acumulan en `dian_documents.notes` de la factura, con las mismas validaciones del pedido: tope del total y sin anulación total si ya hay créditos.
+- **Por línea:** `GET /v1/accounting/dian/documents/:n/lineas` (tenant del JWT, solo lectura). En la nota se elige línea y cantidad, y eso llena el valor neto sin IVA (con el descuento de la línea), la tarifa y la descripción.
+- **Saldo:** calculado en el servidor en el listado: total − notas crédito aceptadas + notas débito aceptadas, por `reference.number`. Se ve en la fila y en el detalle; la nota crédito no deja pasarlo.
+- **Enlaces:** el detalle de la factura lista sus notas y el de la nota abre su factura. Hay botones «Nota crédito» y «Nota débito» en la fila y en el detalle. Desde «Nueva factura» se busca la factura a citar por número, cliente o CUFE.
+- **Seguridad del alcance:** `POST /:provider/notes/:noteType` ahora exige `requireJwtTenant` y el pedido debe ser de la empresa. Antes confiaba en el header `company`.
+- **Arreglos de paso, en código propio:**
+  - El libro de ventas (D-451) mostraba `[object Object]` como referencia de las notas.
+  - La auditoría de notas (D-449) no guardaba la factura ni el motivo, porque leía campos que el front no envía.
+- **Fuera de este cambio:** cartera del cliente, devolver mercancía al inventario, registrar la devolución de dinero, Siigo y notas sin factura con rol Contador.

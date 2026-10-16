@@ -1144,8 +1144,9 @@ export class IntegrationsService {
     );
   }
 
+  /** Ticket 1279: sin `orderId` la nota cita una factura libre por número y CUFE. */
   createDianNote(noteType: 'credit' | 'debit', payload: {
-    orderId: string;
+    orderId?: string;
     reference: { number: string; cufe: string; issueDate: string };
     correction: { code: string; description: string };
     adjustment?: { description: string; baseAmount: number; taxRate: number };
@@ -1153,6 +1154,14 @@ export class IntegrationsService {
     return this.http.post<any>(
       `${environment.urlApi}/v1/accounting/dian/notes/${noteType}`,
       payload,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /** Ticket 1279: líneas de una factura aceptada para hacer la nota por línea (solo lectura). */
+  getDianInvoiceLines(documentNumber: string): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/dian/documents/${encodeURIComponent(documentNumber)}/lineas`,
       { headers: this.getApiHeaders() }
     );
   }

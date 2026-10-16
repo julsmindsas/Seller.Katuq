@@ -39,7 +39,12 @@ interface DianDocument {
   qrUrl?: string;
   /** Ticket 1262: reenvíos por correo. */
   emailResends?: { fecha: string; recipient: string; sent: boolean; error?: string }[];
+  /** Ticket 1279: saldo de la factura después de sus notas aceptadas (calculado en el servidor). */
+  saldo?: { total: number; notasCredito: number; notasDebito: number; notas: number; saldo: number };
 }
+
+/** Ticket 1279: línea de la factura para la nota por línea. */
+interface LineaFactura { linea: number; descripcion: string; cantidad: number; valorUnitario: number; valorLinea: number; tarifaIva: number }
 
 interface OrderReadiness { ok: boolean; blocked: boolean; label: string; tone: 'success' | 'warning' | 'error' }
 
@@ -741,36 +746,96 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     });
   }
 
-  createNote(document: DianDocument): void {
-    this.openMenu = '';
-    if (document.type !== 'invoice' || document.status !== 'accepted') return;
-    if (!document.orderId || !document.number || !document.cufe) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Factura incompleta',
-        text: 'No se encontró el pedido o el CUFE de la factura original.',
+  /**
+   * Ticket 1279: nota "desde afuera". Busca la factura aceptada a citar por
+   * número, cliente o CUFE entre las de la bandeja y sigue con la misma nota.
+   */
+  notaDesdeAfuera(tipo: 'credit' | 'debit'): void {
+    const facturas = this.documents.filter((d) => d.type === 'invoice' && d.status === 'accepted' && d.number && d.cufe);
+    Swal.fire({
+      title: tipo === 'credit' ? 'Nota crédito: ¿qué factura corriges?' : 'Nota débito: ¿qué factura corriges?',
+      input: 'text',
+      inputLabel: 'Número de la factura, nombre o documento del cliente, o CUFE',
+      inputPlaceholder: 'Ejemplo: JULS41',
+      showCancelButton: true,
+      confirmButtonText: 'Buscar',
+      cancelButtonText: 'Cancelar',
+      inputValidator: (value) => (value || '').trim() ? null : 'Escribe qué factura buscas',
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+      const texto = String(result.value || '').trim().toLowerCase();
+      const exacta = facturas.find((d) => (d.number || '').toLowerCase() === texto || (d.cufe || '').toLowerCase() === texto);
+      const encontradas = exacta ? [exacta] : facturas.filter((d) =>
+        (d.number || '').toLowerCase().includes(texto)
+        || (d.cliente?.nombre || '').toLowerCase().includes(texto)
+        || (d.cliente?.documento || '').toLowerCase().includes(texto));
+      if (!encontradas.length) {
+        Swal.fire({ icon: 'info', title: 'No la encontramos', text: 'Solo se citan facturas aceptadas por la DIAN. Revisa el número o búscala en «Facturas y notas».' });
+        return;
+      }
+      if (encontradas.length === 1) {
+        this.iniciarNota(encontradas[0], tipo);
+        return;
+      }
+      const opciones: Record<string, string> = {};
+      encontradas.slice(0, 30).forEach((d) => {
+        opciones[d.number || ''] = `${d.number} · ${d.cliente?.nombre || 'sin cliente'} · ${this.money(d.saldo ? d.saldo.saldo : d.amount)}`;
       });
+      Swal.fire({
+        title: 'Elige la factura',
+        input: 'select',
+        inputOptions: opciones,
+        showCancelButton: true,
+        confirmButtonText: 'Continuar',
+        cancelButtonText: 'Cancelar',
+      }).then((r) => {
+        const elegida = r.isConfirmed ? encontradas.find((d) => d.number === r.value) : null;
+        if (elegida) this.iniciarNota(elegida, tipo);
+      });
+    });
+  }
+
+  /** Ticket 1279: nota crédito o débito directa sobre una factura (fila y detalle). */
+  iniciarNota(document: DianDocument, tipo: 'credit' | 'debit'): void {
+    this.openMenu = '';
+    if (!this.facturaCitable(document)) return;
+    if (tipo === 'debit') {
+      this.openAdjustmentForm(document, 'debit');
       return;
     }
-
     Swal.fire({
-      title: '¿Qué necesitas corregir?',
+      title: '¿La nota crédito es por toda la factura?',
       input: 'select',
-      inputOptions: {
-        credit_adjust: 'Disminuir un valor (nota crédito)',
-        debit: 'Aumentar un valor (nota débito)',
-        credit_full: 'Anular toda la factura (nota crédito)',
-      },
-      inputPlaceholder: 'Selecciona una opción',
+      inputOptions: { credit_adjust: 'No: una parte (por línea o por valor)', credit_full: 'Sí: anular toda la factura' },
       showCancelButton: true,
       confirmButtonText: 'Continuar',
       cancelButtonText: 'Cancelar',
-      inputValidator: (value) => value ? null : 'Selecciona lo que necesitas hacer',
     }).then((result) => {
-      if (!result.isConfirmed || !result.value) return;
+      if (!result.isConfirmed) return;
       if (result.value === 'credit_full') this.confirmFullCreditNote(document);
-      else this.openAdjustmentForm(document, result.value === 'debit' ? 'debit' : 'credit');
+      else this.openAdjustmentForm(document, 'credit');
     });
+  }
+
+  /** Ticket 1279: notas de la bandeja que citan esta factura. */
+  notasDeFactura(document: DianDocument): DianDocument[] {
+    if (document.type !== 'invoice' || !document.number) return [];
+    return this.documents.filter((n) => n.type !== 'invoice' && n.reference?.number === document.number);
+  }
+
+  /** Ticket 1279: la factura que cita una nota, si está en la bandeja. */
+  facturaDeNota(document: DianDocument): DianDocument | null {
+    if (document.type === 'invoice' || !document.reference?.number) return null;
+    return this.documents.find((f) => f.type === 'invoice' && f.number === document.reference?.number) || null;
+  }
+
+  private facturaCitable(document: DianDocument): boolean {
+    if (document.type !== 'invoice' || document.status !== 'accepted') return false;
+    if (!document.number || !document.cufe) {
+      Swal.fire({ icon: 'error', title: 'Factura incompleta', text: 'No se encontró el número o el CUFE de la factura original.' });
+      return false;
+    }
+    return true;
   }
 
   documentTypeLabel(type: DianDocumentType): string {
@@ -933,16 +998,41 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Ticket 1279: carga las líneas de la factura (si se puede) y abre la nota. */
   private openAdjustmentForm(document: DianDocument, noteType: 'credit' | 'debit'): void {
+    Swal.fire({ title: 'Cargando la factura…', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    this.integrationsService.getDianInvoiceLines(document.number || '').subscribe({
+      next: (response: any) => this.mostrarFormularioNota(document, noteType, response?.data?.lineas || []),
+      // Sin líneas la nota sigue disponible por valor.
+      error: () => this.mostrarFormularioNota(document, noteType, []),
+    });
+  }
+
+  private mostrarFormularioNota(document: DianDocument, noteType: 'credit' | 'debit', lineas: LineaFactura[]): void {
     const causes = noteType === 'credit'
       ? [['1', 'Devolución parcial'], ['3', 'Rebaja o descuento'], ['4', 'Ajuste de precio'], ['5', 'Otro motivo']]
       : [['1', 'Intereses'], ['2', 'Gastos por cobrar'], ['3', 'Cambio del valor'], ['4', 'Otro motivo']];
     const options = causes.map(([code, label]) => `<option value="${code}">${code} — ${label}</option>`).join('');
+    const saldo = document.saldo ? document.saldo.saldo : Number(document.amount || 0);
+    const opcionesLinea = lineas.map((l) =>
+      `<option value="${l.linea}">${l.linea} — ${this.escapeHtml(l.descripcion)} · ${l.cantidad} × ${this.escapeHtml(this.money(l.valorUnitario))} + IVA ${l.tarifaIva}%</option>`).join('');
+    const bloqueLinea = lineas.length ? `
+          <label for="dian-note-line">¿Sobre qué línea de la factura?</label>
+          <select id="dian-note-line" class="swal2-select"><option value="">Ninguna: escribo el valor</option>${opcionesLinea}</select>
+          <div id="dian-note-qty-box" style="display:none">
+            <label for="dian-note-qty">Cantidad</label>
+            <input id="dian-note-qty" type="number" min="0.001" step="any" class="swal2-input">
+          </div>` : '';
+    const textoSaldo = noteType === 'credit'
+      ? `<p class="dian-note-saldo">Saldo disponible de ${this.escapeHtml(document.number || 'la factura')}: <strong>${this.escapeHtml(this.money(saldo))}</strong></p>`
+      : '';
 
     Swal.fire({
       title: noteType === 'credit' ? 'Nueva nota crédito' : 'Nueva nota débito',
       html: `
         <div class="dian-note-form">
+          ${textoSaldo}
+          ${bloqueLinea}
           <label for="dian-note-cause">Motivo</label>
           <select id="dian-note-cause" class="swal2-select">${options}</select>
           <label for="dian-note-description">Explica el ajuste</label>
@@ -955,25 +1045,70 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
       showCancelButton: true,
       confirmButtonText: 'Revisar y enviar',
       cancelButtonText: 'Cancelar',
+      didOpen: (popup) => this.conectarLineaDeNota(popup, lineas, noteType),
       preConfirm: () => {
         const popup = Swal.getPopup();
         const code = (popup?.querySelector('#dian-note-cause') as HTMLSelectElement)?.value;
         const description = (popup?.querySelector('#dian-note-description') as HTMLInputElement)?.value.trim();
         const baseAmount = Number((popup?.querySelector('#dian-note-base') as HTMLInputElement)?.value);
         const taxRate = Number((popup?.querySelector('#dian-note-tax') as HTMLSelectElement)?.value);
+        const linea = lineas.find((l) => String(l.linea) === (popup?.querySelector('#dian-note-line') as HTMLSelectElement)?.value);
+        const cantidad = Number((popup?.querySelector('#dian-note-qty') as HTMLInputElement)?.value);
+        if (linea && (!Number.isFinite(cantidad) || cantidad <= 0 || cantidad > linea.cantidad)) {
+          return Swal.showValidationMessage(`La cantidad debe estar entre 0 y ${linea.cantidad}`);
+        }
         if (!description) return Swal.showValidationMessage('Escribe por qué necesitas el ajuste');
         if (!Number.isFinite(baseAmount) || baseAmount <= 0) return Swal.showValidationMessage('Ingresa un valor mayor que cero');
+        const total = Math.round(baseAmount * (1 + taxRate / 100) * 100) / 100;
+        if (noteType === 'credit' && total > saldo + 1) {
+          return Swal.showValidationMessage(`Con IVA son ${this.money(total)} y el saldo de la factura es ${this.money(saldo)}`);
+        }
         return { code, description, baseAmount, taxRate };
       },
     }).then((result) => {
       if (!result.isConfirmed || !result.value) return;
       const value = result.value as { code: string; description: string; baseAmount: number; taxRate: number };
-      this.sendNote(document, noteType, value, {
+      this.sendNote(document, noteType, { code: value.code, description: value.description }, {
         description: value.description,
         baseAmount: value.baseAmount,
         taxRate: value.taxRate,
       });
     });
+  }
+
+  /**
+   * Ticket 1279: al elegir una línea y su cantidad se llenan el valor sin IVA,
+   * la tarifa y la descripción; siguen editables.
+   */
+  private conectarLineaDeNota(popup: HTMLElement, lineas: LineaFactura[], noteType: 'credit' | 'debit'): void {
+    const linea = popup.querySelector('#dian-note-line') as HTMLSelectElement | null;
+    if (!linea) return;
+    const caja = popup.querySelector('#dian-note-qty-box') as HTMLElement;
+    const cantidad = popup.querySelector('#dian-note-qty') as HTMLInputElement;
+    const base = popup.querySelector('#dian-note-base') as HTMLInputElement;
+    const iva = popup.querySelector('#dian-note-tax') as HTMLSelectElement;
+    const descripcion = popup.querySelector('#dian-note-description') as HTMLInputElement;
+    let descripcionAutomatica = '';
+    const llenar = () => {
+      const l = lineas.find((x) => String(x.linea) === linea.value);
+      caja.style.display = l ? '' : 'none';
+      if (!l) return;
+      const n = Number(cantidad.value);
+      if (!Number.isFinite(n) || n <= 0) return;
+      // La línea completa usa su valor exacto; una parte, el unitario neto por la cantidad.
+      base.value = String(n === l.cantidad ? l.valorLinea : Math.round(l.valorUnitario * n * 100) / 100);
+      iva.value = String(l.tarifaIva);
+      if (!descripcion.value.trim() || descripcion.value === descripcionAutomatica) {
+        descripcionAutomatica = `${noteType === 'credit' ? 'Devolución' : 'Ajuste'} de ${n} × ${l.descripcion}`.slice(0, 200);
+        descripcion.value = descripcionAutomatica;
+      }
+    };
+    linea.addEventListener('change', () => {
+      const l = lineas.find((x) => String(x.linea) === linea.value);
+      if (l) cantidad.value = String(l.cantidad);
+      llenar();
+    });
+    cantidad.addEventListener('input', llenar);
   }
 
   private sendNote(
@@ -983,13 +1118,14 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     adjustment?: { description: string; baseAmount: number; taxRate: number },
   ): void {
     const issueDate = document.issueDate || this.dateOnly(document.createdAt);
-    if (!document.orderId || !document.number || !document.cufe || !issueDate) {
+    if (!document.number || !document.cufe || !issueDate) {
       Swal.fire({ icon: 'error', title: 'Faltan datos fiscales', text: 'No se pudo identificar completamente la factura original.' });
       return;
     }
     Swal.fire({ title: 'Transmitiendo a la DIAN…', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     this.integrationsService.createDianNote(noteType, {
-      orderId: document.orderId,
+      // Ticket 1279: una factura libre no tiene pedido; el servidor la ubica por número y CUFE.
+      ...(document.orderId ? { orderId: document.orderId } : {}),
       reference: { number: document.number, cufe: document.cufe, issueDate },
       correction,
       adjustment,
