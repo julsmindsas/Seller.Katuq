@@ -1799,7 +1799,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       html:
         "<div style='text-align:left;font-size:13.5px;line-height:1.6'>" +
         "Vamos a crear los borradores de <b>quiénes somos, privacidad, cambios y devoluciones, " +
-        "envíos y términos</b>, escritos con tu tarifa de envío, tus formas de pago y tu contacto." +
+        "envíos, términos, cookies y PQRS</b>, escritos con tu tarifa de envío, tus formas de pago, " +
+        "tu contacto y tus datos legales (razón social y NIT)." +
         "<br /><br />Léelos y ajústalos antes de publicar: son un punto de partida, no asesoría legal. " +
         "Donde falte un dato que solo tú puedes decidir, queda marcado.</div>",
       showCancelButton: true,
