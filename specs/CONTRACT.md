@@ -10249,3 +10249,32 @@ Daniel: «arreglalo y te autorizo a corregir los pedidos». Sigue a D-438.
    3. un usuario de comercio entra a support.katuq.com con la interfaz completa del agente;
    4. el alta pública acepta empresa, número y responsable desde el cuerpo de la petición;
    5. RTDB y Storage de tickets sin autenticación.
+
+## D-451 (2026-10-16) — DIAN: libro de ventas para el contador (ticket 1267, FE-15) — PUBLICADO: backend 8f1ed8e4, front 2026.10.16.7
+
+- **Endpoints:** `GET /v1/accounting/dian/libro-ventas`, `/excel` y `/zip` (tenant del JWT, solo lectura, tope de 500 documentos en el ZIP).
+- **Contenido:** documentos aceptados de producción del período, con cliente (`clients`), base, IVA y total; las notas crédito restan.
+  - El Excel (SheetJS) lleva fila de totales.
+  - El ZIP lleva el libro, `xml/` y `pdf/` desde los artefactos guardados (`getDianArtifact`), y `faltantes.txt` si alguno no está.
+- **Front:** en Facturación electrónica, "Para tu contador" con el mismo período de los indicadores.
+- **Verificado en solo lectura:** con Julsmind (septiembre y octubre) salen 7 documentos y el XML de JULS41 se descarga.
+- **Fuera:** conciliación Katuq vs Siigo y usuario de solo lectura para el contador externo (roles de FE-16).
+
+## D-452 (2026-10-16) — Sitio: paquete legal completo y LocalBusiness (ticket 1255) — PUBLICADO: backend 55598241, front 2026.10.16.7
+
+- **Páginas legales:** se agregan cookies y PQRS (identificación del vendedor y plazo de 15 días hábiles). El generador recibe por fin NIT y razón social (`marca.legal`); lo que falta queda como `[COMPLETA: …]`.
+- **SEO:** con dirección física, la organización es además `LocalBusiness` con `PostalAddress` y `taxID`.
+- **Ya existían:** SSR, URLs amigables, meta editable, sitemap y robots, Product/Offer/Breadcrumb/Organization y WebP con carga diferida.
+- **Fuera:** Core Web Vitals por página y blog.
+
+## D-453 (2026-10-16) — Sitio: catálogo para Google Shopping y Meta (ticket 1229) — PUBLICADO: backend f67f222b, front 2026.10.16.7
+
+- **El feed ya existía** (`feed.xml`, RSS de Merchant, que también sirve para Meta). Se le agregan:
+  - `sale_price` con vigencia cuando hay oferta;
+  - `g:gtin` solo si el código de barras es un GTIN válido (`utils/feedCatalogo.js`);
+  - `additional_image_link`;
+  - exclusión de categorías (`tienda.feedCategoriasExcluidas`).
+- **Editor (Pauta):** URL del catálogo con botón de copiar, pasos para conectarlo en Merchant Center y Meta, y elección de las categorías a no anunciar.
+- **Verificado en solo lectura:** lino-y-lona sale con 1.000 artículos (15 con GTIN y 890 con foto adicional) y atelier-90 con 10.
+- **Fuera:** reporte de productos rechazados (requiere la API de Merchant).
+- **Despliegue:** salió junto con el backend Fase 1 de proyectos ágiles (D-450, otra sesión), con autorización de Daniel.
