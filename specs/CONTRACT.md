@@ -10391,7 +10391,7 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
   - Imágenes de producto sin variantes de tamaño (originales de Storage).
 - **Escalado:** la baliza `/vista` no descarta robots ni Chrome headless. Lighthouse, PageSpeed y cualquier navegador automatizado suman visitas al tablero del comercio. No se usó PageSpeed por eso.
 
-## D-462 (2026-10-16) — «¿De dónde vienen tus ventas?» en Cómo va (ticket 1239, F3-25)
+## D-462 (2026-10-16) — «¿De dónde vienen tus ventas?» en Cómo va (ticket 1239, F3-25) — PUBLICADO: backend c8dba149 (en producción con c8066ea5), front 2026.10.16.13
 
 - **Problema:** el panel de la página contaba las visitas por fuente, pero no las ventas. El evento de pedido no guardaba de dónde venía el comprador, aunque el pedido sí guardaba su campaña (`campana`).
 - **Decisión:**
