@@ -10135,3 +10135,33 @@ Daniel: «arreglalo y te autorizo a corregir los pedidos». Sigue a D-438.
 - **Por qué a pedido y no al crear el envío:** Enviame agrupa en un mismo manifiesto los envíos de un transportador. Crear uno por envío en el momento de crearlo partiría el manifiesto del día. Al pedirlo, primero se usa el que ya existe.
 - **Verificado:** con la API real de ALMACEN BOMBAS, solo lectura: BAS-000046 devuelve su manifiesto cerrado con PDF y BAS-000043 no tiene ninguno, así que se generaría. El filtro por entrega funciona (un id inexistente devuelve 0).
 - **De paso (seguridad):** `/v1/logistica/guia` cargaba el pedido por id sin revisar la empresa. Ahora pasa por `requireJwtTenant` y `esDeLaEmpresa` (404 y rastro en `audit_log_access` si es ajeno), igual que D-439.
+
+## D-444 (2026-10-16) — Consola de plataforma: pestaña "Constructor web" con las métricas del constructor (ticket 1246) — PUBLICADO: backend 6e8ed4f9, front 2026.10.16.4
+
+- **Backend:**
+  - `GET /v1/companies/constructor-metricas` (`auth` + `requireJwtTenant` + admin; el tenant Julsmind sale del JWT, no del header). Solo lee.
+  - El cálculo puro está en `services/sites/metricasConstructor.js`, con la prueba `tests/sitios/metricasConstructor.test.js` (5).
+  - Fuentes: `sites`, pedidos con `siteId` (sin caídos; los `kuvo:` aparte) y `site_events` `opttia_pagina`. El registro de la empresa sale de `date_add`/`fechaCreacion` o, si no hay, del `createTime` del documento.
+- **Front:** pestaña "Constructor web" en `/empresas` (consola Julsmind), con el componente `consola/constructor-metricas` y el servicio `constructor-metricas.service`. Muestra:
+  - Cifras de la semana.
+  - Embudo por empresa: con sitio → publicado → con pedidos. Los pasos del asistente no se registran uno a uno.
+  - Uso de funciones (Opttia/KAI, cupones, pauta, dominio, medios de pago).
+  - Alertas: publicado hace más de 30 días sin pedidos y tienda publicada sin forma de cobro.
+  - Tablas por empresa y por sitio.
+- **Datos reales (16-oct):** 14 sitios, 6 publicados, 1 activo, 7 pedidos web por $2.370.218, 4 diseños con Opttia.
+- **Verificado** con el bundle de producción a 1440 y 390 px, sin scroll horizontal.
+
+## D-445 (2026-10-16) — Sitio: detalle comercial del producto desde los datos de Katuq (ticket 1237) — PUBLICADO: backend 7e47b0d1
+
+- **Bug corregido:** `preciosDeVitrina` no miraba `descuentoHasta`. Al vencer la oferta, la tienda seguía mostrando —y cobrando, porque `crearPedido` usa la vitrina— el precio rebajado. Ahora usa `esCampaniaVigente` (D-219).
+- **Ficha:**
+  - "Ahorras $X · oferta hasta el DD/MM".
+  - "Precio con IVA incluido", solo si el producto lleva IVA.
+  - El plazo de entrega que configuró el comercio (`disponibilidad.tiempoEntrega`, normalizado: días, texto del comercio, sin "seleccione").
+  - "Quedan pocas unidades" (umbral 5, sin publicar la cantidad).
+- **Tarjeta:** el plazo de entrega. Un producto agotado no promete entrega.
+- **Ya existían:** precio tachado y %, Agotado y Nuevo, garantía y "Comprar ahora".
+- **Fuera de este cambio:** "más vendido" (requiere agregar ventas en cada render o una caché, que las reglas no permiten) y el plazo por bodega y zona del comprador.
+- **Prueba:** `tests/sitios/detalleComercialProducto.test.js` (7). Las 4 fallas previas de `tests/sitios` siguen igual.
+
+**Incidente de publicación (16-oct):** la .16.2 se compiló desde `f3be22f3` mientras otra sesión publicaba la .16.3, y la pisó unos 15 minutos. Se perdieron en vivo los tickets 1217, 1218, 1222 y 1223. Se recompiló desde `95019ac8`, que incluye la .16.3, y se publicó la .16.4. Se verificó en el bundle vivo ("Excede el total" del 1218). Lección: justo antes de `firebase deploy`, comparar la versión viva y la punta de la rama con la base de compilación.
