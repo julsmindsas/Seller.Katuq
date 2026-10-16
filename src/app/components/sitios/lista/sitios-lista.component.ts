@@ -3,6 +3,7 @@ import Swal from "sweetalert2";
 import { ActivatedRoute, Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 import { PlantillaSitio, Sitio, SitiosService } from "../sitios.service";
+import { BloqueSitio } from "../../sitio-render/sitio-render.component";
 import { environment } from "../../../../environments/environment";
 import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
 import { EstadoDeTarjeta, estadoDeTarjeta, sitioSinTerminar } from "../tienda-en-un-paso/tienda-en-un-paso.logic";
@@ -502,6 +503,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
     this.slugEstado = "";
     this.objetivo = "";
     this.objetivoPropio = false;
+    this.limpiarVistaCreacion();
     this.descripcionIA = "";
     this.nombreIA = "";
     // El sector del kit filtra las plantillas de entrada: quien ya dijo a qué
@@ -578,6 +580,84 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   atras(): void {
     if (this.creando || this.creandoConIA) return;
     this.paso = this.paso === "datos" ? "plantilla" : "tipo";
+    this.limpiarVistaCreacion();
+  }
+
+  // ── Ticket 1224: ver la página real antes de crearla ──
+  vistaCreacion: BloqueSitio[] | null = null;
+  temaCreacion: any = null;
+  /** Productos que entran a la página; null mientras no se ha armado la vista. */
+  productosEnVista: number | null = null;
+  cargandoVista = false;
+  private avisoTiendaVaciaAceptado = false;
+
+  private limpiarVistaCreacion(): void {
+    this.vistaCreacion = null;
+    this.temaCreacion = null;
+    this.productosEnVista = null;
+    this.avisoTiendaVaciaAceptado = false;
+  }
+
+  /**
+   * Arma la página con la plantilla, la marca y los productos reales, SIN
+   * guardarla (`generar` sin `guardar`), y resuelve los productos para verla.
+   * Devuelve cuántos productos entran (o null si no se pudo armar).
+   */
+  verComoQueda(): Promise<number | null> {
+    if (!this.plantillaElegida || this.cargandoVista) return Promise.resolve(this.productosEnVista);
+    this.cargandoVista = true;
+    return new Promise((listo) => {
+      this.service.generar({
+        templateId: this.plantillaElegida!.id,
+        sector: this.plantillaElegida!.sector,
+        objetivo: this.objetivo.trim(),
+        objetivoId: this.objetivoId,
+        productoIds: this.productoIds,
+        tipo: this.tipoElegido,
+      }).subscribe({
+        next: (res: any) => {
+          const contenido = res && res.data && res.data.contenido;
+          if (!contenido) { this.cargandoVista = false; listo(null); return; }
+          const bloques: BloqueSitio[] = contenido.bloques || [];
+          const ids = [...new Set(bloques.filter((b) => b.tipo === "productos").flatMap((b) => b.datos.productoIds || []))] as string[];
+          const terminar = (mapa: Map<string, any>) => {
+            this.vistaCreacion = bloques.map((b) => b.tipo !== "productos" ? b : {
+              ...b,
+              datos: { ...b.datos, productos: (b.datos.productoIds || []).map((id: string) => mapa.get(id)).filter((p: any) => p && p.disponible) },
+            });
+            this.temaCreacion = contenido.tema || null;
+            this.productosEnVista = [...mapa.values()].filter((p) => p.disponible).length;
+            this.cargandoVista = false;
+            listo(this.productosEnVista);
+          };
+          if (!ids.length) { terminar(new Map()); return; }
+          this.service.productosPorIds(ids).subscribe({
+            next: (r) => {
+              const mapa = new Map<string, any>();
+              for (const p of (r && r.products) || []) {
+                const crear = p.crearProducto || {};
+                const disp = p.disponibilidad || {};
+                const img = (crear.imagenesPrincipales || [])[0];
+                mapa.set(p.cd, {
+                  productoId: p.cd,
+                  titulo: crear.titulo || "Producto",
+                  imagen: typeof img === "string" ? img : (img && img.urls) || null,
+                  precioConIva: Number((p.precio || {}).precioUnitarioConIva || 0),
+                  disponible: disp.inventariable === false ? true : Number(disp.cantidadDisponible || 0) > 0,
+                });
+              }
+              terminar(mapa);
+            },
+            error: () => terminar(new Map()),
+          });
+        },
+        error: () => {
+          this.cargandoVista = false;
+          this.toastr.error("No pudimos armar la vista previa.");
+          listo(null);
+        },
+      });
+    });
   }
 
   // ── Página con IA desde una descripción (bandera landingPrompt) ─────────────
@@ -666,7 +746,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
     }, 350);
   }
 
-  crear(): void {
+  async crear(): Promise<void> {
     if (this.creando) return;
     // Ticket 1218: el nombre visible se guarda con mayúscula inicial y tildes, tal cual.
     const escrito = this.nombre.trim();
@@ -682,6 +762,25 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
     if (!this.plantillaElegida) {
       this.toastr.warning("Elige una plantilla.");
       return;
+    }
+
+    // Ticket 1224: una tienda no nace vacía sin avisar.
+    if (this.tipoElegido === "tienda" && !this.avisoTiendaVaciaAceptado) {
+      const cuantos = this.productosEnVista ?? (await this.verComoQueda());
+      if (cuantos === 0) {
+        const r = await Swal.fire({
+          title: "Tu tienda va a nacer sin productos",
+          html: "Ningún producto tiene marcada <b>Página Web</b> en «Canales de Venta», así que la tienda se vería vacía. " +
+            "Puedes marcarlos ahora en tus productos, o crearla igual y agregarlos después.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Crearla igual",
+          cancelButtonText: "Volver",
+          focusCancel: true,
+        });
+        if (!r.isConfirmed) return;
+        this.avisoTiendaVaciaAceptado = true;
+      }
     }
 
     this.creando = true;

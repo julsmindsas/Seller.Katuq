@@ -10311,3 +10311,18 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
 - **1228:** la biblioteca de secciones muestra la sección real, renderizada con el tema, y un selector "¿Dónde va?". `agregarSeccionLista` ignoraba la posición y agregaba siempre al final. Cerrar el modal limpia la posición.
 - **1230:** `carrito_recuperado` guarda el `canal` (correo o WhatsApp) y cuenta también el carrito que solo recibió WhatsApp. Las métricas muestran `recuperado.porCanal`.
 - **Fuera:** miniaturas estáticas en la biblioteca (se muestra la sección real); SMS y "volvió a estar disponible" del 1230.
+
+## D-456 (2026-10-16) — Sitio: WhatsApp con horario, redes en correos, landing en modo conversión y duplicar (tickets 1222 y 1254) — PUBLICADO: backend eeee1de3, front 2026.10.16.9
+
+- **1222:**
+  - El bloque WhatsApp tiene `horario` (días 0-6 y horas, hora de Colombia, validado en `horarioWhatsapp`) y `mensajeFuera`. El script base cambia el mensaje precargado al tocar fuera de horario, y el botón muestra "Te atendemos …".
+  - Las páginas propias heredan el WhatsApp flotante.
+  - Los correos de la tienda llevan las redes de la empresa (`redesParaCorreo`, solo https).
+  - Ya existían: menú y pie heredados en todas las páginas, y categorías ocultas fuera del menú.
+  - Fuera: submenús y megamenú, rotación de asesores, Mailrelay.
+- **1254:**
+  - `tienda.modoConversion`: encabezado con marca, botón y carrito; pie mínimo con las páginas legales y quién vende.
+  - `POST /v1/sites/:id/duplicar` (tenant del JWT): copia en borrador, sin contadores ni dominio, con dirección `-copia[-n]` libre.
+  - Editor: "Enlace para una campaña" con UTM que mide "Cómo va", y "Duplicar" en la lista.
+  - Fuera: enlace corto, QR (no hay librería en el proyecto; agregarla toca los `node_modules` compartidos) y pruebas A/B.
+- **Candado (D-454):** hizo su primera revisión completa (la viva ya traía su commit). Este build incluyó un arreglo de otra sesión (`bef5233d`, rótulo de despacho, ticket 1224 de comercio).
