@@ -1,14 +1,8 @@
-// Service real con fallback graceful al mock. Si endpoint no existe (404) o
-// retorna vacío, cae al demo data. Mantiene el demo funcional aunque los
-// endpoints reales del backend (spec 009.1/009.2/009.4) todavía no estén
-// desplegados, y migra automáticamente cuando empiecen a responder.
-
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Observable, of } from "rxjs";
-import { catchError, delay, map, retry } from "rxjs/operators";
+import { catchError, map, retry } from "rxjs/operators";
 
-import { environment } from "../../../../environments/environment";
 import { BaseService } from "../../../shared/services/base.service";
 import {
   BotSesionResumen,
@@ -17,297 +11,227 @@ import {
   MessagesPage,
   Order,
   ThreadsPage,
+  WhatsappMessage,
   WhatsappThread,
 } from "./models/whatsapp-thread.model";
-import {
-  DEMO_MESSAGES,
-  DEMO_ORDERS,
-  DEMO_PROFILES,
-  DEMO_THREADS,
-} from "./data/demo-threads.data";
+
+/** Plantilla aprobada del WABA (modal "Iniciar nueva conversación"). */
+export interface KapsoTemplate {
+  id: string;
+  name: string;
+  language: string;
+  category: string;
+  status: string;
+  bodyText: string;
+  variables: number[];
+  /** Título en español para gente no técnica (el backend lo trae). */
+  titulo?: string;
+  descripcion?: string;
+  uso?: string;
+}
 
 /**
  * Servicio del módulo WhatsApp Inbox (spec 009).
  *
- * Extiende `BaseService` para que el interceptor HTTP del proyecto
- * (`HttpInterceptor2`) adjunte automáticamente `Authorization`, `company` y
- * `usage-code` en cada request. No usa `HttpClient` directo — Art IX.
+ * Todo pasa por `BaseService`, así el interceptor HTTP del proyecto
+ * (`HttpInterceptor2`) adjunta `Authorization`, `company`, `user` y
+ * `usage-code` en cada request. Ni el servicio ni los componentes del buzón
+ * usan `fetch` ni `HttpClient` directo: sin el interceptor, el servidor
+ * respondía 401 (D-437).
  *
- * Estrategia de fallback graceful:
- *   1. Intenta llamar al endpoint real.
- *   2. Si retorna 404/500/cualquier error, cae al mock con `catchError`.
- *   3. Si responde 200 pero con lista vacía, cae al mock vía `map`.
+ * Sin datos de demostración: si el servidor falla, la pantalla muestra el
+ * error o el estado vacío reales.
  *
- * Endpoints reales:
- *   GET    /v1/whatsapp/conversations
- *   GET    /v1/whatsapp/conversations/:phoneHash/messages
- *   GET    /v1/whatsapp/conversations/:phoneHash/profile
- *   GET    /v1/whatsapp/conversations/:phoneHash/orders
- *   PATCH  /v1/whatsapp/conversations/:phoneHash/viewed
- *   PATCH  /v1/whatsapp/conversations/:phoneHash/rating  { score }
+ * [D-437] Las rutas de un chat aceptan `lineId`: el mismo cliente en dos
+ * números del comercio son dos chats. Sin `lineId` el chat es del número
+ * compartido de Katuq, como siempre.
+ *
+ * Endpoints:
+ *   GET    /v1/whatsapp/conversations                    ?search=&status=&page=&lineId=
+ *   GET    /v1/whatsapp/conversations/:phoneHash/messages ?lineId=
+ *   GET    /v1/whatsapp/conversations/:phoneHash/profile  ?lineId=
+ *   GET    /v1/whatsapp/conversations/:phoneHash/orders   ?lineId=
+ *   PATCH  /v1/whatsapp/conversations/:phoneHash/viewed   ?lineId=
+ *   PATCH  /v1/whatsapp/conversations/:phoneHash/rating   ?lineId=  { score }
+ *   PATCH  /v1/whatsapp/conversations/:phoneHash/optout   ?lineId=  { optedOut }
+ *   POST   /v1/whatsapp/conversations/:phoneHash/reply    ?lineId=  { text, clientMessageId }
+ *   GET    /v1/whatsapp/conversations/:phoneHash/bot      ?lineId=
+ *   POST   /v1/whatsapp/conversations/:phoneHash/bot/{tomar,devolver} ?lineId=
+ *   GET    /v1/whatsapp/conversations/bot/sesiones
+ *   POST   /v1/whatsapp/sync-inbound
+ *   GET    /v1/whatsapp/kapso-templates
+ *   POST   /v1/whatsapp/start-conversation
  */
 @Injectable()
 export class WhatsappInboxService extends BaseService {
-  /** Latencia simulada para que el fallback al mock muestre los spinners. */
-  private readonly MOCK_DELAY_MS = 180;
+  private readonly base = "/v1/whatsapp/conversations";
 
   constructor(http: HttpClient) {
     super(http);
   }
 
-  /**
-   * Listado paginado de hilos.
-   *
-   * Real: `GET /v1/whatsapp/conversations?search=&status=&page=`.
-   * Fallback: filtra `DEMO_THREADS` en memoria por `search` y `status`,
-   * pagina por bloques de 20.
-   */
+  /** Listado de hilos. Con `lineId`, solo los chats de ese número. */
   getThreads(
-    opts: { search?: string; status?: "all" | "unread"; page?: number } = {},
+    opts: {
+      search?: string;
+      status?: "all" | "unread";
+      page?: number;
+      lineId?: string | null;
+    } = {},
   ): Observable<ThreadsPage> {
-    const search = (opts.search || "").trim().toLowerCase();
-    const status = opts.status || "all";
-    const page = Math.max(1, opts.page || 1);
-
-    const mock = this.buildMockThreadsPage(search, status, page);
-    const params: string[] = [];
-    if (search) params.push(`search=${encodeURIComponent(search)}`);
-    if (status !== "all") params.push(`status=${status}`);
-    params.push(`page=${page}`);
-    const qs = params.length ? `?${params.join("&")}` : "";
-
-    // eslint-disable-next-line no-console
-    console.log('[WA-INBOX] getThreads CALLED with qs=', qs);
-    return this.get<ThreadsPage>(`/v1/whatsapp/conversations${qs}`).pipe(
+    const search = (opts.search || "").trim();
+    const params: Record<string, string | null | undefined> = {
+      search: search || null,
+      status: opts.status && opts.status !== "all" ? opts.status : null,
+      page: opts.page && opts.page > 1 ? String(opts.page) : null,
+      lineId: opts.lineId || null,
+    };
+    return this.get<any>(`${this.base}${this.query(params)}`).pipe(
       map((response: any) => {
-        // eslint-disable-next-line no-console
-        console.log('[WA-INBOX] getThreads RAW response:', response);
-        const items = response?.items || [];
-        if (items.length === 0) return mock;
-        // Adaptador: el backend retorna shape distinto al ThreadsPage del frontend.
-        const adapted: ThreadsPage = {
-          items: items.map((it: any) => ({
-            phoneHash: it.phoneHash,
-            phoneMasked: it.phoneMasked,
-            contactName: it.clienteNombre || it.profileName || "Sin nombre",
-            lastMessageAt: it.lastMessageAt,
-            lastMessageSnippet: it.lastMessagePreview || it.lastMessageSnippet || "",
-            unreadCount: it.unreadCount || 0,
-            lastDirection: it.lastMessageDirection || it.lastDirection || "outbound",
-            messageCount: it.totalMessages || it.messageCount || 0,
-            flags: it.flags,
-          })),
-          totalCount: response.totalCount ?? items.length,
-          hasMore: response.hasMore ?? false,
-          nextCursor: response.nextCursor,
-        };
-        return adapted;
-      }),
-      catchError((err) => {
-        // eslint-disable-next-line no-console
-        console.warn('[WA-INBOX] getThreads ERROR → fallback mock:', err?.status, err?.message);
-        return of(mock).pipe(delay(this.MOCK_DELAY_MS));
+        const items: any[] = response?.items || [];
+        return {
+          items: items.map((it) => this.adaptarHilo(it)),
+          totalCount: response?.totalCount ?? items.length,
+          hasMore: response?.hasMore ?? false,
+          nextCursor: response?.nextCursor,
+        } as ThreadsPage;
       }),
     );
   }
 
-  /**
-   * Mensajes de un hilo.
-   *
-   * Real: `GET /v1/whatsapp/conversations/:phoneHash/messages`.
-   * Fallback: `DEMO_MESSAGES[phoneHash]` ordenado ascendente.
-   */
-  getMessages(phoneHash: string): Observable<MessagesPage> {
-    const mock = this.buildMockMessagesPage(phoneHash);
-
-    return this.get<any>(
-      `/v1/whatsapp/conversations/${encodeURIComponent(phoneHash)}/messages`,
-    ).pipe(
+  /** Mensajes de un hilo, en orden ascendente. */
+  getMessages(phoneHash: string, lineId?: string | null): Observable<MessagesPage> {
+    return this.get<any>(this.rutaChat(phoneHash, "/messages", lineId)).pipe(
       map((response: any) => {
-        const raw = response?.items || [];
-        if (raw.length === 0) return mock;
-        // Adapter: el backend devuelve shape distinto al frontend (templateName,
-        // textPreview, timestamp, wamid). Mapeamos a WhatsappMessage del modelo.
+        const raw: any[] = response?.items || [];
         const items = raw
           .slice()
-          .sort((a: any, b: any) => {
+          .sort((a, b) => {
             const am = new Date(a.timestamp || a.sentAt || 0).getTime();
             const bm = new Date(b.timestamp || b.sentAt || 0).getTime();
             return am - bm;
           })
-          .map((m: any) => ({
-            id: m.id,
-            direction: m.direction === "inbound" ? "inbound" : "outbound",
-            // El tipo de consumo del backend distingue quién escribió: los del
-            // bot de pedidos llegan como BOT_REPLY y el chat les pinta la marca.
-            esBot: String(m.type || "") === "BOT_REPLY",
-            type: (m.type || "text").toString().toLowerCase().includes("text")
-              ? "text"
-              : "text",
-            body:
-              m.text ||
-              m.body ||
-              m.textPreview ||
-              (m.templateName ? `[${m.templateName}]` : ""),
-            snippet:
-              m.textPreview || m.text || m.body ||
-              (m.templateName ? `[${m.templateName}]` : ""),
-            sentAt: m.timestamp || m.sentAt || m.receivedAt || new Date().toISOString(),
-            status: m.status || (m.direction === "inbound" ? "delivered" : "sent"),
-            mediaPlaceholder: false,
-          }));
-        return { items, hasMore: response.hasMore || false } as MessagesPage;
+          .map((m) => this.adaptarMensaje(m));
+        return { items, hasMore: !!response?.hasMore };
       }),
-      catchError(() => of(mock).pipe(delay(this.MOCK_DELAY_MS))),
     );
   }
 
-  /**
-   * Perfil de contacto (panel derecho — 009.5.1).
-   *
-   * Real: `GET /v1/whatsapp/conversations/:phoneHash/profile`.
-   * Fallback: `DEMO_PROFILES[phoneHash]` o perfil vacío con phoneHash.
-   */
-  getContactProfile(phoneHash: string): Observable<ContactProfile> {
-    const mock = this.buildMockProfile(phoneHash);
-
-    return this.get<ContactProfile>(
-      `/v1/whatsapp/conversations/${encodeURIComponent(phoneHash)}/profile`,
-    ).pipe(
-      map((response: ContactProfile) =>
-        response && response.phoneHash ? response : mock,
-      ),
-      catchError(() => of(mock).pipe(delay(this.MOCK_DELAY_MS))),
+  /** Perfil del contacto (cabecera del chat y panel derecho). */
+  getContactProfile(phoneHash: string, lineId?: string | null): Observable<ContactProfile> {
+    return this.get<any>(this.rutaChat(phoneHash, "/profile", lineId)).pipe(
+      map((p: any) => ({
+        phoneHash: p?.phoneHash || phoneHash,
+        phoneMasked: p?.phoneMasked || "+??***????",
+        clienteNombre: p?.clienteNombre || undefined,
+        profileName: p?.profileName || undefined,
+        isClienteRegistrado: !!p?.isClienteRegistrado,
+        hasOrderHistory: !!p?.hasOrderHistory,
+        lead: p?.lead || null,
+        ratingDraft: p?.ratingDraft || null,
+        optedOut: !!p?.optedOut,
+      })),
     );
   }
 
-  /**
-   * Pedidos del contacto (panel derecho — 009.5.1).
-   *
-   * Real: `GET /v1/whatsapp/conversations/:phoneHash/orders`.
-   * Fallback: `DEMO_ORDERS[phoneHash]`.
-   *
-   * El backend puede responder como `Order[]` directo o como `{ items: Order[] }`.
-   * Toleramos ambos shapes para no romper la migración futura.
-   */
-  getContactOrders(phoneHash: string): Observable<Order[]> {
-    const mock: Order[] = DEMO_ORDERS[phoneHash] || [];
-
-    return this.get<Order[] | { items: Order[] }>(
-      `/v1/whatsapp/conversations/${encodeURIComponent(phoneHash)}/orders`,
-    ).pipe(
-      map((response: Order[] | { items: Order[] }) => {
-        const items: Order[] = Array.isArray(response)
+  /** Pedidos del contacto (panel derecho). Acepta `{ items }` o un arreglo. */
+  getContactOrders(phoneHash: string, lineId?: string | null): Observable<Order[]> {
+    return this.get<any>(this.rutaChat(phoneHash, "/orders", lineId)).pipe(
+      map((response: any) => {
+        const items: any[] = Array.isArray(response)
           ? response
           : Array.isArray(response?.items)
           ? response.items
           : [];
-        return items.length > 0 ? items : mock;
+        return items.map((o) => ({
+          orderId: o.id || o.orderId,
+          nroPedido: o.numero || o.nroPedido || "S/N",
+          estado: o.estado || o.estadoProceso || "—",
+          total: o.total || 0,
+          fechaCreacion: o.fechaCreacion,
+          currency: "COP",
+          deepLink: `/ventas/detalle/${o.id || o.orderId}`,
+        }));
       }),
-      catchError(() => of(mock).pipe(delay(this.MOCK_DELAY_MS))),
     );
   }
 
   /**
-   * Marcar hilo como visto por el operador.
-   *
-   * Real: `PATCH /v1/whatsapp/conversations/:phoneHash/viewed`.
-   *
-   * [D-105] SIN fallback mock: el mock fingía éxito y enmascaró fallos reales
-   * (el CORS sin PATCH de D-095 vivió semanas gracias a esto). Ahora: 1 retry
-   * a los 2s y si aún falla se loguea FUERTE en consola — el badge se
-   * "resucita" en el próximo poll de la lista, que es el comportamiento
-   * honesto (el hilo sigue sin leer en el servidor).
-   *
-   * Usamos `http.patch` directo porque `BaseService` no expone `patch`, pero
-   * el `HttpClient` inyectado ya pasa por el interceptor del proyecto.
+   * Marca el hilo como visto. [D-105] Sin respuesta fingida: un reintento a
+   * los 2 s y, si aún falla, `{ updated: 0 }`; el badge vuelve en el próximo
+   * refresco de la lista, que es lo honesto (sigue sin leer en el servidor).
    */
-  markThreadViewed(phoneHash: string): Observable<{ updated: number }> {
-    const url = `${environment.urlApi}/v1/whatsapp/conversations/${encodeURIComponent(
-      phoneHash,
-    )}/viewed`;
-
-    return this.http.patch<{ updated: number }>(url, {}).pipe(
+  markThreadViewed(phoneHash: string, lineId?: string | null): Observable<{ updated: number }> {
+    return this.patch<{ updated: number }>(this.rutaChat(phoneHash, "/viewed", lineId), {}).pipe(
       retry({ count: 1, delay: 2000 }),
-      map((response: { updated: number }) =>
-        response && typeof response.updated === "number"
-          ? response
-          : { updated: 0 },
+      map((response) =>
+        response && typeof response.updated === "number" ? response : { updated: 0 },
       ),
-      catchError((err) => {
-        // eslint-disable-next-line no-console
-        console.error(
-          `[whatsapp-inbox] markThreadViewed FALLÓ para ${phoneHash.slice(0, 12)}… — el hilo seguirá como no-leído`,
-          err?.status || err?.message || err,
-        );
-        return of({ updated: 0 });
-      }),
+      catchError(() => of({ updated: 0 })),
     );
   }
 
   /**
-   * Enviar respuesta al hilo (composer del comercio).
-   *
-   * Real: `POST /v1/whatsapp/conversations/:phoneHash/reply` body `{ text }`.
-   *
-   * Usamos `fetch` directo (no `BaseService.post`) por el mismo motivo que
-   * `getThreads` del thread-list: el HttpInterceptor cacheado por el HMR de
-   * Angular 14 puede no inyectar headers correctamente en endpoints nuevos
-   * agregados en caliente. Adjuntamos manualmente todos los headers que
-   * `HttpInterceptor2` agregaría (Authorization, company, user, email, usage-code).
+   * Responde en el hilo. [D-118] `clientMessageId` lo genera el componente y
+   * se reusa en reintentos del mismo texto, así el servidor no lo envía dos
+   * veces. [D-437] Si el chat lo atiende otra persona responde 409
+   * `CHAT_CON_DUENO` (ver `esErrorChatConDueno`).
    */
   sendReply(
     phoneHash: string,
     text: string,
     clientMessageId?: string,
-  ): Promise<{ id?: string; sentAt?: string; status?: string }> {
-    const userStr = localStorage.getItem("user") || "{}";
-    let token = "";
-    let company = "";
-    let nit = "";
-    let email = "";
-    let authCode = "";
-    try {
-      const u = JSON.parse(userStr);
-      token = u.token || "";
-      company = u.company || "";
-      nit = u.nit || "";
-      email = u.email || "";
-      authCode = u.authorizationCode || "";
-    } catch {
-      // ignore — fallback a strings vacías; el backend rechazará con 401
-    }
-    const headers: HeadersInit = {
-      Authorization: "Bearer " + token,
-      company,
-      user: nit,
-      "usage-code": authCode,
-      email,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    };
-    const url =
-      `${environment.urlApi}/v1/whatsapp/conversations/` +
-      `${encodeURIComponent(phoneHash)}/reply`;
-    // [D-118] Id idempotente: lo genera el componente (estable por mensaje
-    // lógico, se reusa en reintentos del mismo texto). Fallback por-llamada
-    // para otros callers.
-    const msgId = clientMessageId ||
+    lineId?: string | null,
+  ): Observable<{ id?: string; sentAt?: string; status?: string }> {
+    const msgId =
+      clientMessageId ||
       `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-    return fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ text, clientMessageId: msgId }),
-    }).then((r) => {
-      if (!r.ok) {
-        return r
-          .text()
-          .then((body) =>
-            Promise.reject(new Error(`HTTP ${r.status}: ${body || r.statusText}`)),
-          );
-      }
-      return r.json().catch(() => ({}));
-    });
+    return this.post<{ id?: string; sentAt?: string; status?: string }>(
+      this.rutaChat(phoneHash, "/reply", lineId),
+      { text, clientMessageId: msgId },
+    );
+  }
+
+  /** [D-098] Marca o quita "no contactar" (opt-out de marketing). */
+  setOptOut(phoneHash: string, optedOut: boolean, lineId?: string | null): Observable<unknown> {
+    return this.patch<unknown>(this.rutaChat(phoneHash, "/optout", lineId), { optedOut });
+  }
+
+  /** Califica al contacto (1-5). */
+  rateContact(phoneHash: string, score: number, lineId?: string | null): Observable<{ score: number }> {
+    return this.patch<{ score: number }>(this.rutaChat(phoneHash, "/rating", lineId), { score }).pipe(
+      map((response) => (response && typeof response.score === "number" ? response : { score })),
+    );
+  }
+
+  /**
+   * Pide al servidor que traiga los entrantes de Kapso (por si el cron no
+   * alcanzó). Mejor esfuerzo: un fallo no cambia nada en pantalla.
+   */
+  syncInbound(): Observable<unknown> {
+    return this.post<unknown>("/v1/whatsapp/sync-inbound", {}).pipe(catchError(() => of(null)));
+  }
+
+  /** Guarda el contacto como lead en el CRM de Katuq. */
+  guardarLeadEnCrm(body: Record<string, unknown>): Observable<any> {
+    return this.post<any>("/v1/crm/leads/import", body);
+  }
+
+  /** Plantillas aprobadas para escribirle a un cliente (sin las del sistema). */
+  getKapsoTemplates(): Observable<KapsoTemplate[]> {
+    return this.get<any>("/v1/whatsapp/kapso-templates").pipe(
+      map((resp: any) => (resp?.items || []).filter((t: any) => t.uso !== "sistema")),
+    );
+  }
+
+  /** Envía una plantilla a un número para abrir conversación fuera de la ventana de 24 h. */
+  startConversation(body: {
+    phone: string;
+    templateName: string;
+    languageCode: string;
+    variables: string[];
+  }): Observable<{ balanceAfter?: number }> {
+    return this.post<{ balanceAfter?: number }>("/v1/whatsapp/start-conversation", body);
   }
 
   // ============================================================
@@ -315,136 +239,84 @@ export class WhatsappInboxService extends BaseService {
   // ============================================================
 
   /**
-   * Conversaciones del bot de pedidos (vista "Pedidos" del buzón): carritos en
-   * curso, traspasadas a un vendedor y cerradas con su cotización.
-   *
-   * Real: `GET /v1/whatsapp/conversations/bot/sesiones`.
-   * Fallback: lista vacía — la vista muestra su estado vacío.
+   * Conversaciones del bot de pedidos (vista "Pedidos" del buzón).
+   * Si falla, lista vacía: la vista muestra su estado vacío.
    */
   getBotSesiones(): Observable<BotSesionResumen[]> {
-    return this.get<{ items: BotSesionResumen[] }>(
-      `/v1/whatsapp/conversations/bot/sesiones`,
-    ).pipe(
+    return this.get<{ items: BotSesionResumen[] }>(`${this.base}/bot/sesiones`).pipe(
       map((res: any) => (Array.isArray(res?.items) ? res.items : [])),
       catchError(() => of([] as BotSesionResumen[])),
     );
   }
 
   /**
-   * Estado del bot de pedidos para un hilo: si lo está atendiendo, quién lo
-   * tomó, el carrito en curso y la cotización creada si cerró.
-   *
-   * Real: `GET /v1/whatsapp/conversations/:phoneHash/bot`.
-   * Fallback: `null` — sin estado, el buzón se comporta como siempre.
+   * Estado del bot de pedidos para un hilo. Si falla, `null`: sin estado, el
+   * buzón se comporta como siempre.
    */
-  getBotState(phoneHash: string): Observable<BotThreadState | null> {
-    return this.get<BotThreadState>(
-      `/v1/whatsapp/conversations/${encodeURIComponent(phoneHash)}/bot`,
-    ).pipe(
+  getBotState(phoneHash: string, lineId?: string | null): Observable<BotThreadState | null> {
+    return this.get<BotThreadState>(this.rutaChat(phoneHash, "/bot", lineId)).pipe(
       map((res: any) => (res && typeof res === "object" ? (res as BotThreadState) : null)),
       catchError(() => of(null)),
     );
   }
 
-  /**
-   * El vendedor se queda con la conversación: el bot se calla en este hilo.
-   * Real: `POST /v1/whatsapp/conversations/:phoneHash/bot/tomar`.
-   */
-  tomarConversacion(phoneHash: string): Observable<{ success: boolean }> {
-    return this.post<{ success: boolean }>(
-      `/v1/whatsapp/conversations/${encodeURIComponent(phoneHash)}/bot/tomar`,
-      {},
-    );
+  /** El vendedor se queda con la conversación: el bot se calla en este hilo. */
+  tomarConversacion(phoneHash: string, lineId?: string | null): Observable<{ success: boolean }> {
+    return this.post<{ success: boolean }>(this.rutaChat(phoneHash, "/bot/tomar", lineId), {});
   }
 
-  /**
-   * Le devuelve la conversación al bot (reinicia su cuenta de turnos).
-   * Real: `POST /v1/whatsapp/conversations/:phoneHash/bot/devolver`.
-   */
-  devolverAlBot(phoneHash: string): Observable<{ success: boolean }> {
-    return this.post<{ success: boolean }>(
-      `/v1/whatsapp/conversations/${encodeURIComponent(phoneHash)}/bot/devolver`,
-      {},
-    );
-  }
-
-  /**
-   * Calificar contacto (1-5).
-   *
-   * Real: `PATCH /v1/whatsapp/conversations/:phoneHash/rating` body `{ score }`.
-   * Fallback: devuelve el `score` recibido para que la UI optimista quede igual.
-   */
-  rateContact(
-    phoneHash: string,
-    score: number,
-  ): Observable<{ score: number }> {
-    const url = `${environment.urlApi}/v1/whatsapp/conversations/${encodeURIComponent(
-      phoneHash,
-    )}/rating`;
-    const mock: { score: number } = { score };
-
-    return this.http.patch<{ score: number }>(url, { score }).pipe(
-      map((response: { score: number }) =>
-        response && typeof response.score === "number" ? response : mock,
-      ),
-      catchError(() => of(mock).pipe(delay(this.MOCK_DELAY_MS))),
-    );
+  /** Le devuelve la conversación al bot (reinicia su cuenta de turnos). */
+  devolverAlBot(phoneHash: string, lineId?: string | null): Observable<{ success: boolean }> {
+    return this.post<{ success: boolean }>(this.rutaChat(phoneHash, "/bot/devolver", lineId), {});
   }
 
   // ------------------------------------------------------------------
-  // Helpers privados para construir los payloads de fallback (mock).
-  // ------------------------------------------------------------------
 
-  private buildMockThreadsPage(
-    search: string,
-    status: "all" | "unread",
-    page: number,
-  ): ThreadsPage {
-    const pageSize = 20;
-    let items: WhatsappThread[] = [...DEMO_THREADS];
+  private rutaChat(phoneHash: string, sufijo: string, lineId?: string | null): string {
+    return `${this.base}/${encodeURIComponent(phoneHash)}${sufijo}${this.query({ lineId })}`;
+  }
 
-    if (search) {
-      items = items.filter(
-        (t) =>
-          t.contactName.toLowerCase().includes(search) ||
-          t.lastMessageSnippet.toLowerCase().includes(search) ||
-          t.phoneMasked.toLowerCase().includes(search),
-      );
-    }
-    if (status === "unread") {
-      items = items.filter((t) => t.unreadCount > 0);
-    }
+  private query(params: Record<string, string | null | undefined>): string {
+    const partes = Object.keys(params)
+      .filter((k) => !!params[k])
+      .map((k) => `${k}=${encodeURIComponent(params[k] as string)}`);
+    return partes.length ? `?${partes.join("&")}` : "";
+  }
 
-    items.sort((a, b) => (a.lastMessageAt < b.lastMessageAt ? 1 : -1));
-
-    const totalCount = items.length;
-    const start = (page - 1) * pageSize;
-    const pageItems = items.slice(start, start + pageSize);
-    const hasMore = start + pageItems.length < totalCount;
-
+  private adaptarHilo(it: any): WhatsappThread {
     return {
-      items: pageItems,
-      totalCount,
-      hasMore,
-      nextCursor: hasMore ? String(page + 1) : undefined,
+      phoneHash: it.phoneHash,
+      phoneMasked: it.phoneMasked,
+      contactName: it.clienteNombre || it.profileName || "Sin nombre",
+      lastMessageAt: it.lastMessageAt,
+      lastMessageSnippet: it.lastMessagePreview || it.lastMessageSnippet || "",
+      unreadCount: it.unreadCount || 0,
+      lastDirection: it.lastMessageDirection || it.lastDirection || "outbound",
+      messageCount: it.totalMessages || it.messageCount || 0,
+      flags: it.flags,
+      threadId: it.threadId || null,
+      line: it.line && it.line.id ? it.line : null,
+      owner: it.owner && it.owner.email ? it.owner : null,
     };
   }
 
-  private buildMockMessagesPage(phoneHash: string): MessagesPage {
-    const items = DEMO_MESSAGES[phoneHash] || [];
-    const sorted = [...items].sort((a, b) => (a.sentAt < b.sentAt ? -1 : 1));
-    return { items: sorted, hasMore: false };
-  }
-
-  private buildMockProfile(phoneHash: string): ContactProfile {
-    return (
-      DEMO_PROFILES[phoneHash] || {
-        phoneHash,
-        phoneMasked: "+??***????",
-        isClienteRegistrado: false,
-        lead: null,
-        ratingDraft: null,
-      }
-    );
+  /**
+   * El backend devuelve otra forma (templateName, textPreview, timestamp); se
+   * pasa a `WhatsappMessage`. Los del bot de pedidos llegan como BOT_REPLY y el
+   * chat les pinta la marca.
+   */
+  private adaptarMensaje(m: any): WhatsappMessage {
+    const plantilla = m.templateName ? `[${m.templateName}]` : "";
+    return {
+      id: m.id,
+      direction: m.direction === "inbound" ? "inbound" : "outbound",
+      esBot: String(m.type || "") === "BOT_REPLY",
+      type: "text",
+      body: m.text || m.body || m.textPreview || plantilla,
+      snippet: m.textPreview || m.text || m.body || plantilla,
+      sentAt: m.timestamp || m.sentAt || m.receivedAt || new Date().toISOString(),
+      status: m.status || (m.direction === "inbound" ? "delivered" : "sent"),
+      mediaPlaceholder: false,
+    };
   }
 }

@@ -50,6 +50,11 @@ import { WhatsappBotConfigComponent } from './whatsapp-kapso-config/whatsapp-bot
 import { MetaChannelsComponent } from './meta-channels/meta-channels.component';
 import { MetaOauthReturnComponent } from './meta-channels/meta-oauth-return.component';
 
+// Mensajería (D-437): números del comercio y regreso genérico de conexiones por ventana emergente
+import { MessagingLinesComponent } from './messaging-lines/messaging-lines.component';
+import { IntegrationConnectReturnComponent } from './connectors/integration-connect-return.component';
+import { SelectorEquipoModule } from '../../shared/components/selector-equipo/selector-equipo.module';
+
 const routes: Routes = [
   // Vista principal de listado
   { path: '', component: IntegrationsListComponent, pathMatch: 'full' },
@@ -79,6 +84,9 @@ const routes: Routes = [
   // Canales de mensajería de Meta (buzones de Instagram y Messenger)
   { path: 'meta', component: MetaChannelsComponent },
   { path: 'meta/retorno', component: MetaOauthReturnComponent },
+  // Regreso genérico de las conexiones por ventana emergente (connectors/connector-registry.ts).
+  // DEBE ir antes del catch-all '**'.
+  { path: ':provider/retorno', component: IntegrationConnectReturnComponent },
   { path: '**', redirectTo: '' }
 ];
 
@@ -86,6 +94,8 @@ const routes: Routes = [
   declarations: [
     MetaChannelsComponent,
     MetaOauthReturnComponent,
+    MessagingLinesComponent,
+    IntegrationConnectReturnComponent,
     IntegrationsComponent,
     IntegrationsListComponent,
     IntegrationNotificationsComponent,
@@ -126,7 +136,8 @@ const routes: Routes = [
     ConfirmDialogModule,
     RouterModule.forChild(routes),
     NgbModule,
-    SharedModule
+    SharedModule,
+    SelectorEquipoModule
   ],
   providers: [
     IntegrationStateService,

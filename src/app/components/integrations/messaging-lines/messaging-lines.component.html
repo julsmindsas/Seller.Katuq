@@ -1,0 +1,140 @@
+<section class="cfg-card lineas" *ngIf="habilitada">
+  <header class="lineas__cabeza">
+    <div class="lineas__textos">
+      <span class="cfg-eyebrow">Varios números</span>
+      <h4 class="lineas__titulo">Números de WhatsApp del comercio</h4>
+      <p class="cfg-sub">
+        Conecta el número de cada vendedor. Cada chat queda en el número por el que te escribió el cliente
+        y lo atiende una sola persona.
+      </p>
+    </div>
+    <div class="cfg-acciones" *ngIf="puedeAdministrar">
+      <button type="button" class="cfg-btn" (click)="conectar()" [disabled]="conectando || cargando">
+        <i class="fa" [ngClass]="conectando ? 'fa-spinner fa-spin' : 'fa-plus'" aria-hidden="true"></i>
+        <span class="lineas__btn-texto">{{ conectando ? 'Conectando…' : 'Conectar número' }}</span>
+      </button>
+    </div>
+  </header>
+
+  <p class="cfg-aviso" *ngIf="aviso" role="status"
+     [class.cfg-aviso--ok]="aviso.tipo === 'ok'" [class.cfg-aviso--error]="aviso.tipo === 'error'">
+    <i class="fa" [ngClass]="aviso.tipo === 'ok' ? 'fa-check-circle' : 'fa-exclamation-circle'" aria-hidden="true"></i>
+    <span class="lineas__aviso-texto">{{ aviso.texto }}</span>
+  </p>
+
+  <p class="cfg-aviso" *ngIf="!cargando && !errorCarga && !puedeAdministrar && lineas.length > 0">
+    <i class="fa fa-info-circle" aria-hidden="true"></i>
+    <span class="lineas__aviso-texto">Solo un administrador puede conectar números o cambiar sus vendedores.</span>
+  </p>
+
+  <div class="lineas__cargando" *ngIf="cargando">
+    <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+    <span class="lineas__cargando-texto">Cargando números…</span>
+  </div>
+
+  <div class="cfg-aviso cfg-aviso--error lineas__error" *ngIf="errorCarga && !cargando">
+    <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+    <span class="lineas__aviso-texto">{{ errorCarga }}</span>
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="cargar()">Reintentar</button>
+  </div>
+
+  <div class="cfg-vacio" *ngIf="!cargando && !errorCarga && lineas.length === 0">
+    <span class="cfg-vacio__icono"><i class="fa fa-whatsapp" aria-hidden="true"></i></span>
+    <h5 class="cfg-vacio__titulo">Aún no hay números conectados</h5>
+    <p class="cfg-vacio__texto" *ngIf="puedeAdministrar">
+      Pulsa "Conectar número" e inicia sesión con la cuenta de WhatsApp Business del vendedor.
+    </p>
+    <p class="cfg-vacio__texto" *ngIf="!puedeAdministrar">
+      Cuando un administrador conecte un número, aparecerá aquí.
+    </p>
+  </div>
+
+  <ul class="lineas__lista" *ngIf="!cargando && !errorCarga && lineas.length > 0">
+    <li class="lineas__item" *ngFor="let linea of lineas; trackBy: trackLinea"
+        [class.is-off]="linea.status !== 'connected'">
+      <div class="lineas__fila">
+        <div class="lineas__identidad">
+          <span class="lineas__nombre">{{ linea.displayName || linea.verifiedName || 'Número sin nombre' }}</span>
+          <span class="lineas__tel">{{ linea.displayPhone }}</span>
+        </div>
+        <div class="lineas__marcas">
+          <span class="lineas__estado"
+                [class.lineas__estado--ok]="linea.status === 'connected'"
+                [class.lineas__estado--off]="linea.status !== 'connected'">
+            {{ linea.status === 'connected' ? 'Conectado' : 'Desconectado' }}
+          </span>
+          <span class="lineas__marca">{{ tipoConexion(linea) }}</span>
+        </div>
+      </div>
+
+      <p class="lineas__dato" *ngIf="fechaConexion(linea)">
+        <span class="lineas__dato-texto">Conectado el {{ fechaConexion(linea) }}</span>
+      </p>
+
+      <!-- Edición (familia Administrador, número conectado) -->
+      <div class="lineas__campos" *ngIf="puedeAdministrar && linea.status === 'connected' && ediciones[linea.id] as ed">
+        <label class="lineas__campo">
+          <span class="cfg-label">Nombre del número</span>
+          <input type="text" class="lineas__input" [(ngModel)]="ed.nombre" maxlength="60"
+                 [disabled]="ocupada === linea.id" placeholder="Ej: WhatsApp de Ana" />
+        </label>
+        <div class="lineas__campo">
+          <span class="cfg-label">Vendedores que lo atienden</span>
+          <app-selector-equipo
+            [equipo]="equipo"
+            [multiple]="true"
+            [emails]="ed.vendedores"
+            (emailsChange)="ed.vendedores = $event"
+            [disabled]="ocupada === linea.id"
+            placeholder="Elige los vendedores"
+          ></app-selector-equipo>
+        </div>
+      </div>
+
+      <!-- Lectura -->
+      <div class="lineas__campos" *ngIf="!puedeAdministrar || linea.status !== 'connected'">
+        <div class="lineas__campo">
+          <span class="cfg-label">Vendedores</span>
+          <span class="lineas__valor">{{ nombresVendedores(linea) }}</span>
+        </div>
+      </div>
+
+      <div class="lineas__pie">
+        <div class="lineas__bot">
+          <button type="button" role="switch" class="lineas__interruptor"
+                  *ngIf="puedeAdministrar && linea.status === 'connected'"
+                  [class.is-on]="linea.botEnabled"
+                  [attr.aria-checked]="linea.botEnabled"
+                  [attr.aria-label]="'Asistente de pedidos en ' + (linea.displayName || linea.displayPhone)"
+                  [disabled]="ocupada === linea.id || (!linea.botEnabled && botBloqueado(linea))"
+                  (click)="cambiarBot(linea, !linea.botEnabled)">
+            <span class="lineas__perilla" aria-hidden="true"></span>
+          </button>
+          <div class="lineas__bot-textos">
+            <span class="lineas__bot-titulo">
+              Asistente de pedidos {{ linea.botEnabled ? 'encendido' : 'apagado' }}
+            </span>
+            <span class="lineas__bot-ayuda" *ngIf="puedeAdministrar && !linea.botEnabled && botBloqueado(linea)">
+              Ya está en {{ lineaConBot()?.displayName || lineaConBot()?.displayPhone }}. Solo puede estar en un número.
+            </span>
+          </div>
+        </div>
+
+        <div class="lineas__acciones" *ngIf="puedeAdministrar && linea.status === 'connected'">
+          <ng-container *ngIf="hayCambios(linea)">
+            <button type="button" class="cfg-btn cfg-btn--sec" (click)="descartar(linea)" [disabled]="ocupada === linea.id">
+              Descartar
+            </button>
+            <button type="button" class="cfg-btn" (click)="guardar(linea)" [disabled]="ocupada === linea.id">
+              <i class="fa" [ngClass]="ocupada === linea.id ? 'fa-spinner fa-spin' : 'fa-check'" aria-hidden="true"></i>
+              <span class="lineas__btn-texto">Guardar cambios</span>
+            </button>
+          </ng-container>
+          <button type="button" class="cfg-btn cfg-btn--peligro" (click)="desconectar(linea)" [disabled]="ocupada === linea.id">
+            Desconectar
+          </button>
+        </div>
+      </div>
+    </li>
+  </ul>
+</section>

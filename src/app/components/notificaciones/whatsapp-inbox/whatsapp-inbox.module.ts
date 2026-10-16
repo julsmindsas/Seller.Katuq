@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 
 import { SharedModule } from "../../../shared/shared.module";
+import { InboxCoreModule } from "../inbox-core/inbox-core.module";
 import { WhatsappInboxRoutingModule } from "./whatsapp-inbox-routing.module";
 import { WhatsappInboxService } from "./whatsapp-inbox.service";
 
@@ -42,6 +43,7 @@ import { PhoneMaskPipe } from "./pipes/phone-mask.pipe";
     FormsModule,
     ReactiveFormsModule,
     SharedModule,
+    InboxCoreModule,
     WhatsappInboxRoutingModule,
   ],
   providers: [WhatsappInboxService],

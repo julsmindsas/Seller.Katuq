@@ -545,3 +545,27 @@
     opacity: 0.35;
   }
 }
+
+// [D-437] Redactor en solo lectura cuando el chat lo atiende otra persona (par fuerte / suave).
+.thread-detail__lectura {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 9px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: #FFF1DF;
+  color: #D9820A;
+
+  i { margin-top: 2px; font-size: 13px; color: #D9820A; }
+}
+
+.thread-detail__lectura-texto {
+  font-size: 12.5px !important;
+  line-height: 1.45;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: #D9820A !important;
+}
+
+.thread-detail__header-info app-linea-chip { margin-top: 3px; }

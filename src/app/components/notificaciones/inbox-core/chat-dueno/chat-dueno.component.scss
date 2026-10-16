@@ -1,0 +1,131 @@
+// Franja de dueño del chat (D-437). Plana, pares color fuerte / fondo suave.
+// Ninguna clase lleva "p-" y cada span tiene color y tamaño propios.
+$ink: #211F3A;
+$body: #5b5878;
+$muted: #8f8bab;
+$accent: #5F3FE0;
+$accent-hover: #4a2fc0;
+$accent-2: #7C5CFF;
+$accent-soft: #efe9ff;
+$line: #ececf4;
+$tint: #faf9fe;
+$ok: #1E874B;
+$ok-soft: #E6F7EE;
+$warn: #D9820A;
+$warn-soft: #FFF1DF;
+
+:host { display: block; }
+
+.dueno-franja {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 14px;
+  background: $tint;
+  border-bottom: 1px solid $line;
+  color: $ink;
+
+  span, button { letter-spacing: normal; }
+}
+
+.dueno-franja--mio { background: $ok-soft; }
+.dueno-franja--ajeno { background: $warn-soft; }
+
+.dueno-franja__fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dueno-franja__info {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 240px;
+}
+
+.dueno-franja__icono {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 11px;
+  background: #fff;
+  color: $accent !important;
+  font-size: 16px !important;
+
+  .dueno-franja--mio & { color: $ok !important; }
+  .dueno-franja--ajeno & { color: $warn !important; }
+}
+
+.dueno-franja__textos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dueno-franja__titulo {
+  font-size: 13px !important;
+  font-weight: 800;
+  color: $ink !important;
+}
+
+.dueno-franja__motivo {
+  font-size: 12px !important;
+  line-height: 1.4;
+  color: $body !important;
+}
+
+.dueno-franja__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dueno-franja__btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid $accent;
+  border-radius: 11px;
+  background: $accent;
+  color: #fff !important;
+  font-size: 12.5px !important;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+
+  &:hover:not(:disabled) { background: $accent-hover; border-color: $accent-hover; }
+  &:disabled { background: #d8d4ea; border-color: #d8d4ea; cursor: not-allowed; }
+  &:focus-visible { outline: 3px solid $accent-2 !important; outline-offset: 2px; }
+}
+
+.dueno-franja__btn--sec {
+  background: #fff;
+  border-color: #e4e2ef;
+  color: $body !important;
+
+  &:hover:not(:disabled) { background: $accent-soft; border-color: #d9cffb; color: $accent !important; }
+  &:disabled { background: #fff; color: $muted !important; }
+}
+
+.dueno-franja__pasar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.dueno-franja__selector {
+  flex: 1 1 220px;
+  min-width: 0;
+}

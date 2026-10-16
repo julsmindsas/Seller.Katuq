@@ -219,11 +219,19 @@ Administrador de `requireRole`. Para los demás, las líneas visibles son las su
 Las rutas del buzón de WhatsApp que ya existen (`/v1/whatsapp/conversations*`) aceptan
 `?lineId=`:
 
-- **Con `lineId`:** se aplica el alcance (403 si no corresponde) y se agrupa por
-  `(lineId, contacto)`.
-- **Sin `lineId`:** el comportamiento de hoy, que es el número compartido.
-- **En la lista:** cada chat trae `line {id, displayName, displayPhone}` y `owner`. Se
-  corrige `status`/`statusFilter` y se respeta `page`.
+- **Lista (`GET /conversations`).** Siempre agrupa por `(lineId, contacto)`.
+  - Cada chat trae `threadId`, `line {id, displayName, displayPhone}` (`null` si es del
+    número compartido) y `owner {email, nombre, desde}` o `null`.
+  - Los chats de una línea se filtran por el alcance del usuario. Los del número
+    compartido conservan la visibilidad de hoy.
+  - Con `?lineId=` muestra solo esa línea.
+  - Se corrige `status`/`statusFilter` y se respeta `page`.
+- **Rutas de un chat** (`messages`, `reply`, `viewed`, `profile`, `orders`, `bot*`).
+  - El `?lineId=` dice de qué línea es el chat. Sin él, el chat es del número compartido,
+    como hoy.
+  - Con `lineId` se valida el alcance y, si no corresponde, responde 403.
+- **Respuesta en un chat con dueño ajeno:** 409
+  `{error:'CHAT_CON_DUENO', owner:{email, nombre}, message:'Este chat lo atiende <nombre>'}`.
 
 ### D9. Bandera
 

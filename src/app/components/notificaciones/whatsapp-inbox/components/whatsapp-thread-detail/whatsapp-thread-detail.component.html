@@ -20,6 +20,7 @@
       <p class="thread-detail__phone" *ngIf="profile">
         {{ profile.phoneMasked }}
       </p>
+      <app-linea-chip [linea]="chat?.line"></app-linea-chip>
     </div>
 
     <!-- Quién atiende: pill del bot + acción (mockup) -->
@@ -58,6 +59,19 @@
       </button>
     </div>
   </header>
+
+  <!-- [D-437] Quién atiende el chat (solo chats de un número del comercio) -->
+  <app-chat-dueno
+    *ngIf="mostrarDueno"
+    [dueno]="dueno"
+    [miEmail]="miEmail"
+    [esAdministrador]="esAdministrador"
+    [equipo]="equipo"
+    [ocupado]="duenoOcupado"
+    (tomar)="tomarChat()"
+    (soltar)="soltarChat()"
+    (pasar)="pasarChat($event)"
+  ></app-chat-dueno>
 
   <!-- Franja secundaria del bot: traspaso / devolver (solo si aplica) -->
   <div
@@ -194,7 +208,13 @@
 
       <!-- Composer: chips de respuesta rápida + textarea + botón enviar -->
       <div class="thread-detail__composer-wrap" *ngIf="canShowComposer">
-        <div class="thread-detail__quick-replies">
+        <!-- [D-437] Solo lectura: el chat lo atiende otra persona -->
+        <div class="thread-detail__lectura" *ngIf="soloLectura" role="status">
+          <i class="fa fa-lock" aria-hidden="true"></i>
+          <span class="thread-detail__lectura-texto">{{ motivoLectura }}</span>
+        </div>
+
+        <div class="thread-detail__quick-replies" *ngIf="!soloLectura">
           <button
             type="button"
             class="thread-detail__quick-chip"
@@ -213,13 +233,13 @@
             name="composerText"
             placeholder="Escribe un mensaje..."
             (keydown.enter)="onEnterPress($event)"
-            [disabled]="sending"
+            [disabled]="sending || soloLectura"
             rows="1"
           ></textarea>
           <button
             type="submit"
             class="thread-detail__composer-send"
-            [disabled]="!composerText.trim() || sending"
+            [disabled]="!composerText.trim() || sending || soloLectura"
           >
             <i class="fa fa-paper-plane" aria-hidden="true"></i>
             {{ sending ? "Enviando..." : "Enviar" }}
@@ -234,6 +254,7 @@
     >
       <app-whatsapp-contact-panel
         [phoneHash]="phoneHash"
+        [lineId]="lineId"
       ></app-whatsapp-contact-panel>
     </aside>
   </div>

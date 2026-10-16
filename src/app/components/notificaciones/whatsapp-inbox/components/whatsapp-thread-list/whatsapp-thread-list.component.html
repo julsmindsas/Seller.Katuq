@@ -22,6 +22,22 @@
       </button>
     </div>
 
+    <!-- [D-437] Filtro por número del comercio (solo si hay números conectados) -->
+    <label class="thread-list__linea" *ngIf="opcionesLinea.length > 0">
+      <span class="thread-list__linea-label">Número</span>
+      <select
+        class="thread-list__linea-select"
+        [ngModel]="lineaFiltro"
+        (ngModelChange)="onLineaFiltroChange($event)"
+        aria-label="Filtrar por número"
+      >
+        <option value="">Todos los números</option>
+        <option *ngFor="let l of opcionesLinea" [value]="l.id">
+          {{ l.displayName || l.displayPhone }}{{ l.displayName ? " · " + l.displayPhone : "" }}
+        </option>
+      </select>
+    </label>
+
     <div class="thread-list__chips">
       <button
         type="button"
@@ -62,8 +78,13 @@
   <div class="thread-list__body">
     <div *ngIf="loading" class="thread-list__state">Cargando…</div>
 
+    <div *ngIf="!loading && errorCarga" class="thread-list__state thread-list__state--error" role="alert">
+      <span class="thread-list__state-texto">No pudimos cargar las conversaciones.</span>
+      <button type="button" class="thread-list__retry" (click)="fetchThreads()">Reintentar</button>
+    </div>
+
     <div
-      *ngIf="!loading && visibleThreads.length === 0"
+      *ngIf="!loading && !errorCarga && visibleThreads.length === 0"
       class="thread-list__state"
     >
       No hay conversaciones para este filtro.
@@ -73,7 +94,7 @@
       type="button"
       *ngFor="let thread of visibleThreads; trackBy: trackByHash"
       class="thread-list__item"
-      [class.is-active]="thread.phoneHash === selectedPhoneHash"
+      [class.is-active]="isSelected(thread)"
       [class.is-unread]="thread.unreadCount > 0"
       (click)="onSelect(thread)"
     >
@@ -91,6 +112,7 @@
 
         <div class="thread-list__row-phone">
           <span class="thread-list__phone">{{ thread.phoneMasked }}</span>
+          <app-linea-chip [linea]="thread.line" [compacta]="true"></app-linea-chip>
           <span
             *ngIf="thread.flags?.inboundTruncatedAt90d"
             class="thread-list__badge thread-list__badge--warn"

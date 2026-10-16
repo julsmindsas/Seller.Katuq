@@ -6,20 +6,8 @@ import {
   Output,
   SimpleChanges,
 } from "@angular/core";
-import { environment } from "../../../../../../environments/environment";
 
-interface KapsoTemplate {
-  id: string;
-  name: string;
-  language: string;
-  category: string;
-  status: string;
-  bodyText: string;
-  variables: number[];
-  /** [fase 2] Título en español para gente no técnica (el backend lo trae). */
-  titulo?: string;
-  descripcion?: string;
-}
+import { KapsoTemplate, WhatsappInboxService } from "../../whatsapp-inbox.service";
 
 /**
  * Modal "Iniciar nueva conversación" — fuera de ventana 24h.
@@ -27,7 +15,8 @@ interface KapsoTemplate {
  * Lista templates APPROVED del WABA del comercio, deja elegir uno, llenar las
  * variables {{1}}, {{2}}... y envía el template a un número arbitrario.
  *
- * Fetch directo (sin servicio) para evitar el bug del HMR singleton.
+ * Todo por `WhatsappInboxService` (BaseService + interceptor): el `fetch`
+ * directo de antes salía sin la sesión y el servidor respondía 401 (D-437).
  */
 @Component({
   selector: "app-whatsapp-new-conversation-dialog",
@@ -48,6 +37,8 @@ export class WhatsappNewConversationDialogComponent implements OnChanges {
   variableValues: string[] = [];
   errorMsg = "";
   successMsg = "";
+
+  constructor(private readonly inbox: WhatsappInboxService) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["visible"] && this.visible) {
@@ -107,60 +98,50 @@ export class WhatsappNewConversationDialogComponent implements OnChanges {
     this.errorMsg = "";
     this.successMsg = "";
 
-    const headers = this._authHeaders();
     const phoneNorm = this._normalizePhone(this.phone);
 
-    // Fix: apuntaba a http://localhost:3300 hardcodeado — roto en producción.
-    fetch(`${environment.urlApi}/v1/whatsapp/start-conversation`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
+    this.inbox
+      .startConversation({
         phone: phoneNorm,
         templateName: t.name,
         languageCode: t.language,
         variables: this.variableValues.slice(0, t.variables.length),
-      }),
-    })
-      .then((r) => r.json().then((body) => ({ ok: r.ok, body })))
-      .then(({ ok, body }) => {
-        this.sending = false;
-        if (!ok) {
-          this.errorMsg =
-            (body && body.message) || "No se pudo enviar el mensaje.";
-          return;
-        }
-        this.successMsg = `Mensaje enviado a +${phoneNorm}. Saldo: $${(
-          body.balanceAfter || 0
-        ).toLocaleString("es-CO")}.`;
-        this.sent.emit({ phone: phoneNorm, templateName: t.name });
-        setTimeout(() => this.onCancel(), 1500);
       })
-      .catch((err) => {
-        this.sending = false;
-        this.errorMsg = err.message || "Error de red al enviar.";
+      .subscribe({
+        next: (body) => {
+          this.sending = false;
+          this.successMsg = `Mensaje enviado a +${phoneNorm}. Saldo: $${(
+            body?.balanceAfter || 0
+          ).toLocaleString("es-CO")}.`;
+          this.sent.emit({ phone: phoneNorm, templateName: t.name });
+          setTimeout(() => this.onCancel(), 1500);
+        },
+        error: (err: any) => {
+          this.sending = false;
+          this.errorMsg =
+            err?.error?.message ||
+            (err?.status ? "No se pudo enviar el mensaje." : "Error de red al enviar.");
+        },
       });
   }
 
   private fetchTemplates(): void {
     this.loadingTemplates = true;
     this.templates = [];
-    const headers = this._authHeaders();
-    fetch(`${environment.urlApi}/v1/whatsapp/kapso-templates`, { headers })
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((resp: any) => {
-        // Solo mensajes para escribirle a un cliente: las plantillas del
-        // SISTEMA (pedido creado, despachado...) las envía Katuq solo y
-        // ofrecerlas acá era confuso — la gente las mandaba a mano.
-        this.templates = (resp.items || []).filter(
-          (t: any) => t.uso !== "sistema",
-        );
+    // Solo mensajes para escribirle a un cliente: las plantillas del
+    // SISTEMA (pedido creado, despachado...) las envía Katuq solo y
+    // ofrecerlas acá era confuso — la gente las mandaba a mano.
+    this.inbox.getKapsoTemplates().subscribe({
+      next: (templates) => {
+        this.templates = templates;
         this.loadingTemplates = false;
-      })
-      .catch((err) => {
+      },
+      error: () => {
         this.loadingTemplates = false;
         this.errorMsg =
           "No se pudieron cargar las plantillas. Verifica config Kapso del comercio.";
-      });
+      },
+    });
   }
 
   private resetState(): void {
@@ -170,28 +151,6 @@ export class WhatsappNewConversationDialogComponent implements OnChanges {
     this.errorMsg = "";
     this.successMsg = "";
     this.sending = false;
-  }
-
-  private _authHeaders(): HeadersInit {
-    const userStr = localStorage.getItem("user") || "{}";
-    let token = "", company = "", nit = "", email = "", authCode = "";
-    try {
-      const u = JSON.parse(userStr);
-      token = u.token || "";
-      company = u.company || "";
-      nit = u.nit || "";
-      email = u.email || "";
-      authCode = u.authorizationCode || "";
-    } catch {}
-    return {
-      "Authorization": "Bearer " + token,
-      "company": company,
-      "user": nit,
-      "usage-code": authCode,
-      "email": email,
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-    };
   }
 
   /** Acepta +57 300, 57300..., 0300... — devuelve solo dígitos sin '+'. */

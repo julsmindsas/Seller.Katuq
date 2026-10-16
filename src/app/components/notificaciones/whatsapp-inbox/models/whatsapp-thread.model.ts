@@ -5,6 +5,8 @@
  * El frontend nunca recibe el teléfono completo, solo `phoneMasked`.
  */
 
+import { DuenoChat, LineaResumen } from "../../../../shared/services/messaging/messaging.models";
+
 export type WhatsappMessageDirection = "outbound" | "inbound";
 
 export type WhatsappMessageStatus = "sent" | "delivered" | "read" | "failed";
@@ -46,6 +48,17 @@ export interface WhatsappThread {
   messageCount: number;
   /** Banderas operativas (retención, etc.). */
   flags?: WhatsappThreadFlags;
+  /** [D-437] Id del chat en `messaging_threads` (para tomar, soltar y pasar). */
+  threadId?: string | null;
+  /** [D-437] Número del comercio por el que va el chat; `null` = número compartido de Katuq. */
+  line?: LineaResumen | null;
+  /** [D-437] Quién atiende el chat; `null` = sin asignar. */
+  owner?: DuenoChat | null;
+}
+
+/** [D-437] Clave de un chat: el mismo cliente en dos números son dos chats. */
+export function claveChat(phoneHash: string, lineId?: string | null): string {
+  return `${lineId || ""}|${phoneHash}`;
 }
 
 /**
@@ -169,6 +182,7 @@ export interface ContactProfile {
   ratingDraft?: ContactProfileRatingDraft | null;
   /** [D-098] true = el contacto pidió no recibir mensajes de marketing. */
   optedOut?: boolean;
+  hasOrderHistory?: boolean;
 }
 
 /**

@@ -41,6 +41,11 @@ export class BaseService {
         return this.http.put<T>(urlComplete, body);
     }
 
+    protected patch<T>(url: string, body: any, options?: HttpParams): Observable<T> {
+        const urlComplete = this.urlBase + url;
+        return this.http.patch<T>(urlComplete, body);
+    }
+
     protected delete<T>(url: string, options?: HttpParams): Observable<T> {
         const urlComplete = this.urlBase + url;
         return this.http.delete<T>(urlComplete);
