@@ -5,7 +5,7 @@ import { ToastrService } from "ngx-toastr";
 import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
-import { CategoriaSitio, ContenidoSitio, CorreosTienda, CuponSitio, PaginaSitio, PromocionSitio, PropuestaDiseno, ResenaSitio, Sitio, SitiosService, TextoCorreo, TiendaSitio, VentaConfig } from "../sitios.service";
+import { CategoriaSitio, ContenidoSitio, CorreosTienda, CuponSitio, PaginaSitio, PromocionSitio, PropuestaDiseno, ResenaSitio, Sitio, SitiosService, TemporadaComercial, TextoCorreo, TiendaSitio, VentaConfig } from "../sitios.service";
 import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
@@ -677,6 +677,83 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   /** El panel de estilo de sección arranca plegado: es para afinar, no para empezar. */
   mostrandoEstilo = false;
+
+  // ── Ticket 1232: cuándo se muestra la sección (temporadas) ──
+  mostrandoProgramacion = false;
+  temporadas: TemporadaComercial[] = [];
+  private temporadasPedidas = false;
+  /** Fecha para "ver el sitio como se verá" (YYYY-MM-DD). */
+  fechaVista = "";
+  abriendoVista = false;
+
+  alternarProgramacion(): void {
+    this.mostrandoProgramacion = !this.mostrandoProgramacion;
+    if (this.mostrandoProgramacion && !this.temporadasPedidas) {
+      this.temporadasPedidas = true;
+      this.service.temporadas().subscribe({
+        next: (r) => (this.temporadas = (r && r.data) || []),
+        error: () => (this.temporadasPedidas = false),
+      });
+    }
+  }
+
+  /** Programa la sección con la ventana sugerida de una temporada. */
+  aplicarTemporada(b: BloqueSitio, id: string): void {
+    const t = this.temporadas.find((x) => `${x.id}-${x.anio}` === id);
+    if (!t) return;
+    b.programacion = { desde: t.desde, hasta: t.hasta, temporada: t.id };
+    if (!this.fechaVista) this.fechaVista = t.desde;
+    this.marcarSucio();
+  }
+
+  fijarFechaProgramacion(b: BloqueSitio, campo: "desde" | "hasta", valor: string): void {
+    const p = { ...(b.programacion || {}) };
+    if (valor) p[campo] = valor; else delete p[campo];
+    delete p.temporada;
+    b.programacion = p.desde || p.hasta ? p : undefined;
+    this.marcarSucio();
+  }
+
+  quitarProgramacion(b: BloqueSitio): void {
+    b.programacion = undefined;
+    this.marcarSucio();
+  }
+
+  /** "Del 01/12 al 24/12" para la etiqueta de la sección programada. */
+  textoProgramacion(b: BloqueSitio): string {
+    const p = b && b.programacion;
+    if (!p || (!p.desde && !p.hasta)) return "";
+    const f = (iso?: string) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : "");
+    if (p.desde && p.hasta) return `Del ${f(p.desde)} al ${f(p.hasta)}`;
+    return p.desde ? `Desde el ${f(p.desde)}` : `Hasta el ${f(p.hasta)}`;
+  }
+
+  /**
+   * Abre el borrador tal como se verá en `fechaVista`. La vista previa sale del
+   * borrador GUARDADO: con cambios pendientes se espera al autoguardado.
+   */
+  verSitioEnFecha(): void {
+    if (!this.fechaVista || !this.id || this.abriendoVista) return;
+    if (this.sucio) {
+      this.toastr.info("Estamos guardando tus cambios. Vuelve a tocar el botón en unos segundos.");
+      return;
+    }
+    const ventana = window.open("", "_blank");
+    this.abriendoVista = true;
+    this.service.vistaEnFecha(this.id, this.fechaVista).subscribe({
+      next: (r) => {
+        this.abriendoVista = false;
+        const url = r && r.data && r.data.url;
+        if (url && ventana) ventana.location.href = url;
+        else if (ventana) ventana.close();
+      },
+      error: () => {
+        this.abriendoVista = false;
+        if (ventana) ventana.close();
+        this.toastr.error("No pudimos abrir la vista en esa fecha.");
+      },
+    });
+  }
 
   /**
    * Fondos de franja sugeridos. Son grises y cremas muy claros a propósito:

@@ -143,6 +143,15 @@ export interface CategoriaSitio {
 }
 
 /** Lo que el panel de tienda necesita saber de la empresa para configurarse. */
+/** Ticket 1232: temporada del calendario comercial colombiano. */
+export interface TemporadaComercial {
+  id: string;
+  nombre: string;
+  desde: string;
+  hasta: string;
+  anio: number;
+}
+
 export interface VentaConfig {
   pasarela: { configurada: boolean; proveedor: string | null };
   zonas: number;
@@ -616,6 +625,16 @@ export class SitiosService extends BaseService {
    */
   ventaConfig(): Observable<Respuesta<VentaConfig>> {
     return this.get<Respuesta<VentaConfig>>("/v1/sites/venta-config");
+  }
+
+  /** Ticket 1232: próximas temporadas comerciales de Colombia con su ventana sugerida. */
+  temporadas(): Observable<Respuesta<TemporadaComercial[]>> {
+    return this.get<Respuesta<TemporadaComercial[]>>("/v1/sites/temporadas");
+  }
+
+  /** Ticket 1232: enlace a la vista previa del borrador tal como se verá en una fecha. */
+  vistaEnFecha(id: string, fecha: string): Observable<Respuesta<{ url: string }>> {
+    return this.get<Respuesta<{ url: string }>>(`/v1/sites/${encodeURIComponent(id)}/vista-en-fecha?fecha=${encodeURIComponent(fecha)}`);
   }
 
   /**

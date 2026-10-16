@@ -1784,6 +1784,56 @@
             <small *ngIf="!masOpciones.has(b.id)">{{ avanzadosDe(b) }} más</small>
           </button>
 
+          <!-- ── Cuándo se muestra ESTA sección (ticket 1232, modo temporada) ── -->
+          <div class="estilo-seccion">
+            <button class="estilo-seccion__cabeza" (click)="alternarProgramacion()">
+              <span>Cuándo se muestra
+                <em class="programada" *ngIf="textoProgramacion(b)">{{ textoProgramacion(b) }}</em>
+              </span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+                   [style.transform]="mostrandoProgramacion ? 'rotate(90deg)' : ''"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+
+            <div class="estilo-seccion__cuerpo" *ngIf="mostrandoProgramacion">
+              <p class="nota nota--simple">
+                Para temporadas: la sección aparece y desaparece sola en estas fechas (hora de Colombia).
+                Sin fechas se muestra siempre.
+              </p>
+              <div class="campo">
+                <label>Temporada</label>
+                <select (change)="aplicarTemporada(b, $any($event.target).value); $any($event.target).value = ''">
+                  <option value="">Elegir una temporada…</option>
+                  <option *ngFor="let t of temporadas" [value]="t.id + '-' + t.anio">{{ t.nombre }} {{ t.anio }}</option>
+                </select>
+              </div>
+              <div class="fechas-programacion">
+                <div class="campo">
+                <label>Desde</label>
+                  <input type="date" [value]="b.programacion?.desde || ''"
+                         (change)="fijarFechaProgramacion(b, 'desde', $any($event.target).value)" />
+                </div>
+                <div class="campo">
+                <label>Hasta</label>
+                  <input type="date" [value]="b.programacion?.hasta || ''"
+                         (change)="fijarFechaProgramacion(b, 'hasta', $any($event.target).value)" />
+                </div>
+              </div>
+              <button type="button" class="enlace-quitar" *ngIf="b.programacion" (click)="quitarProgramacion(b)">
+                Mostrar siempre
+              </button>
+
+              <div class="ver-en-fecha">
+                <label class="ver-en-fecha__titulo">Ver el sitio como se verá el</label>
+                <div class="ver-en-fecha__fila">
+                  <input type="date" [(ngModel)]="fechaVista" aria-label="Fecha para ver el sitio" />
+                  <button type="button" class="ver-en-fecha__boton" (click)="verSitioEnFecha()" [disabled]="!fechaVista || abriendoVista">
+                    {{ abriendoVista ? 'Abriendo…' : 'Ver' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- ── Estilo de ESTA sección ── -->
           <div class="estilo-seccion">
             <button class="estilo-seccion__cabeza" (click)="mostrandoEstilo = !mostrandoEstilo">

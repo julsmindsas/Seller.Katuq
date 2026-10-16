@@ -3258,3 +3258,47 @@ input.is-error { border-color: #b42318 !important; }
 
 // Ticket 1215: forma de pago encendida que el maestro no marca para la web.
 .forma-aviso { color: #b42318 !important; font-weight: 600; }
+
+// ── Ticket 1232: cuándo se muestra la sección (temporadas) ──
+.programada {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fff4dd;
+  color: #8a5a00;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+.fechas-programacion {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.fechas-programacion input[type="date"],
+.ver-en-fecha input[type="date"] {
+  @include kb-input;
+}
+.enlace-quitar {
+  @include kb-btn-base;
+  margin: -6px 0 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--kb-accent);
+  font-size: 12.5px;
+  font-weight: 700;
+  &:focus-visible { outline: 3px solid #7c5cff !important; }
+}
+.ver-en-fecha {
+  padding-top: 12px;
+  border-top: 1px dashed var(--kb-line);
+
+  &__titulo { @include kb-label; }
+  &__fila { display: flex; gap: 8px; align-items: center; }
+  &__fila input { flex: 1; min-width: 0; }
+  &__boton {
+    @include kb-btn-ghost(9px, 14px, 13px);
+    &:focus-visible { outline: 3px solid #7c5cff !important; }
+  }
+}

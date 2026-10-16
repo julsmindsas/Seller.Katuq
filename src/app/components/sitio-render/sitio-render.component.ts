@@ -11,6 +11,8 @@ export interface BloqueSitio {
   elementos?: any[];
   /** Si está, los elementos van donde los soltaron y no apilados. */
   lienzo?: { alto: number };
+  /** Ticket 1232: solo se muestra entre estas fechas (YYYY-MM-DD, hora de Colombia). */
+  programacion?: { desde?: string; hasta?: string; temporada?: string };
 }
 
 export interface TemaSitio {
