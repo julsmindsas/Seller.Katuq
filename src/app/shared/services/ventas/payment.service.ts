@@ -1849,10 +1849,12 @@ export class PaymentService extends BaseService {
               <img src="${imagenUrl}" onerror="this.src='assets/images/default-product.png'" width="60" height="60" style="border-radius: ${styles.borderRadius.md}; vertical-align: middle; margin-right: ${styles.spacing.md};">
               <div style="display: inline-block; vertical-align: middle;">
                 <div style="font-size: ${styles.typography.body}; color: ${styles.colors.black}; font-weight: ${styles.typography.semibold}; line-height: 1.4;">
-                  ${tituloProducto}
+                  <!-- Ticket 1226: la cantidad va al lado del producto y grande, para no despachar de más o de menos -->
+                  <span style="display: inline-block; min-width: 28px; padding: 1px 8px; margin-right: 6px; border-radius: 6px; background-color: ${styles.colors.black}; color: #ffffff; font-size: 16px; font-weight: 800; text-align: center; vertical-align: middle;">${cantidad} ×</span>
+                  <span style="vertical-align: middle;">${tituloProducto}</span>
                 </div>
                 <div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray}; margin-top: ${styles.spacing.xs}; line-height: 1.4;">
-                  Ref: ${referenciaProducto} • Cantidad: ${cantidad}${this.bodegaDeLinea(pedido, item) ? ` • Bodega: ${this.bodegaDeLinea(pedido, item)}` : ""}${descLineaPct > 0 ? ` <span style="display: inline-block; margin-left: 6px; padding: 2px 6px; border-radius: 10px; background-color: #E6F4EA; color: #0B8A4B; font-weight: 700; font-size: 11px;">-${descLineaPct}%</span>` : ""}
+                  Ref: ${referenciaProducto}${this.bodegaDeLinea(pedido, item) ? ` • Bodega: ${this.bodegaDeLinea(pedido, item)}` : ""}${descLineaPct > 0 ? ` <span style="display: inline-block; margin-left: 6px; padding: 2px 6px; border-radius: 10px; background-color: #E6F4EA; color: #0B8A4B; font-weight: 700; font-size: 11px;">-${descLineaPct}%</span>` : ""}
                 </div>
               </div>
             </td>
@@ -1895,14 +1897,20 @@ export class PaymentService extends BaseService {
             // ✅ FIX: Validar y normalizar URL de imagen para PDFs
             const imagenUrl = this.getValidImageUrl(pref.imagen);
             const imagenFinal = imagenUrl || this.getDefaultImageUrl();
+            // Ticket 1225: la imagen que adjunta la asesora (referencia, foto para la
+            // tarjeta) se ve grande y completa, debajo del texto; el ícono de las demás
+            // preferencias sigue en 32 px.
+            const textoPref = this.textoPreferenciaCliente(pref);
+            const esImagenAdjunta = !!imagenUrl && textoPref === 'imagen adjunta';
 
             carritoHtml += `
               <tr style="border-bottom: 1px solid ${styles.colors.divider};">
                 <td style="padding: ${styles.spacing.md} ${styles.spacing.md} ${styles.spacing.md} 40px;">
-                  ${imagenUrl ? `<img src="${imagenFinal}" alt="${pref.titulo || 'Preferencia'}" width="32" height="32" style="border-radius: ${styles.borderRadius.sm}; vertical-align: middle; margin-right: ${styles.spacing.md};">` : ''}
+                  ${imagenUrl && !esImagenAdjunta ? `<img src="${imagenFinal}" alt="${pref.titulo || 'Preferencia'}" width="32" height="32" style="border-radius: ${styles.borderRadius.sm}; vertical-align: middle; margin-right: ${styles.spacing.md};">` : ''}
                   <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; vertical-align: middle; word-break: break-word; overflow-wrap: anywhere;">
-                    ${pref.titulo || ''}: ${this.textoPreferenciaCliente(pref)}
+                    ${pref.titulo || ''}: ${textoPref}
                   </span>
+                  ${esImagenAdjunta ? `<div style="margin-top: ${styles.spacing.sm};"><img src="${imagenFinal}" alt="${pref.titulo || 'Imagen adjunta'}" style="display: block; max-width: 180px; max-height: 220px; width: auto; height: auto; object-fit: contain; border-radius: ${styles.borderRadius.sm}; border: 1px solid ${styles.colors.divider};"></div>` : ''}
                 </td>
                 <td style="padding: ${styles.spacing.md}; text-align: right; font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black};">
                   ${this.formatCurrency(precioTotalConIvaPrefTotal)} COP
@@ -1942,7 +1950,9 @@ export class PaymentService extends BaseService {
                 <td style="padding: ${styles.spacing.md} ${styles.spacing.md} ${styles.spacing.md} 40px;">
                   ${imagenUrl ? `<img src="${imagenFinal}" alt="${adic.titulo || 'Adición'}" width="32" height="32" style="border-radius: ${styles.borderRadius.sm}; vertical-align: middle; margin-right: ${styles.spacing.md};">` : ''}
                   <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; vertical-align: middle; word-break: break-word; overflow-wrap: anywhere;">
-                    ${adic.titulo || ''}: ${adic.subtitulo || ''} ${cantidadTotalAdicion > 1 ? `(x${cantidadTotalAdicion})` : ''}
+                    <!-- Ticket 1226: la cantidad de la adición siempre visible y en negrita -->
+                    <strong style="font-size: 14px; font-weight: 800; margin-right: 4px;">${cantidadTotalAdicion} ×</strong>
+                    ${adic.titulo || ''}: ${adic.subtitulo || ''}
                   </span>
                 </td>
                 <td style="padding: ${styles.spacing.md}; text-align: right; font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black};">
