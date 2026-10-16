@@ -10120,3 +10120,10 @@ Daniel: «arreglalo y te autorizo a corregir los pedidos». Sigue a D-438.
   - Simulación: después de migrar, ningún pedido queda por debajo de lo que muestra hoy. El único que baja con la regla es DAD-014091, que tiene $80.900 realmente en revisión.
   - El entorno bloqueó la escritura masiva: la corre Daniel. Después se aplica el parche, se despliega y se mide de nuevo.
 - **Anomalía aparte:** DAD-004604 tiene cientos de pagos aprobados y un anticipo de 91 M con un total de 46.200. Es dato corrupto y no se toca aquí.
+
+## D-442 (2026-10-16) — Rótulo de despacho con marca y datos completos (ticket 1219, ALMACEN BOMBAS)
+
+- **Qué:** el rótulo que imprime Despachos (`descargarRotulo`) deja de ser un cuadro con nombre, dirección y valor. Ahora trae el logo de la empresa, el remitente (dirección, ciudad, teléfono de logística y correo de contacto), y los campos destinatario, dirección, ciudad/departamento, contacto y teléfono, pedido/factura, entrega, bulto "___ de ___" para llenar a mano, contiene (cantidad × producto) y el pie "Este lado arriba · Manipular con cuidado".
+- **Se conserva:** el tamaño de 10 × 10 cm (impresoras térmicas de otros comercios), la zona y las observaciones. El valor por cobrar ahora solo aparece cuando hay saldo; si no hay, el pie muestra el número de pedido.
+- **Por qué:** ALMACEN BOMBAS pegaba su propio rótulo encima del de Katuq porque este no tenía su marca ni los datos que piden las transportadoras. Es un cambio de presentación del documento impreso, sin tocar datos ni flujos.
+- **De paso:** en Empresas, las imágenes de encabezado y pie del correo se guardaban en la carpeta `Otros` por un nombre de tipo mal escrito (`imagenEmail` contra `imageEmail`). Corregido; las URL ya guardadas no cambian.

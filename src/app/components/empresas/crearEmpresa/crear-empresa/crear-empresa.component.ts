@@ -837,7 +837,7 @@ export class CrearEmpresaComponent implements OnInit {
             folderPath = `/Empresas/${nombreEmpresa}/Imagenes/Logo/`;
           } else if (type === 'banner') {
             folderPath = `/Empresas/${nombreEmpresa}/Imagenes/Banner/`;
-          } else if (type === 'imagenEmail.encabezado' || type === 'imagenEmail.piepagina') {
+          } else if (type === 'imageEmail.encabezado' || type === 'imageEmail.piepagina') {
             folderPath = `/Empresas/${nombreEmpresa}/Imagenes/Email/`;
           } else {
             folderPath = `/Empresas/${nombreEmpresa}/Imagenes/Otros/`;

@@ -4628,48 +4628,97 @@ export class DespachosComponent implements OnInit, OnDestroy {
   }
 
   descargarRotulo(pedido: any): void {
-    const escapeHtml = (text: string) => (text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const escapeHtml = (text: any) => String(text ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const recibe = `${pedido.envio?.nombres || ''} ${pedido.envio?.apellidos || ''}`.trim() || pedido.cliente?.nombres_completos || '-';
     const direccion = [pedido.envio?.direccionEntrega, pedido.envio?.nombreUnidad, pedido.envio?.especificacionesInternas, pedido.envio?.barrio].filter(Boolean).join(', ') || '-';
+    const ciudad = [pedido.envio?.ciudad, pedido.envio?.departamento].filter(Boolean).join(' / ') || '-';
     const zona = pedido.envio?.zonaCobro || '';
     const obs = pedido.envio?.observaciones?.trim() || '';
     const telefono = pedido.envio?.celular || pedido.cliente?.numero_celular_comprador || '';
     const fechaEntrega = pedido.fechaEntrega ? pedido.fechaEntrega.split('T')[0] : 'N/A';
-    const valorCobrar = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(pedido.faltaPorPagar || 0);
+    const porCobrar = Number(pedido.faltaPorPagar) || 0;
+    const valorCobrar = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(porCobrar);
+    const referencia = [pedido.nroPedido ? `#${pedido.nroPedido}` : '', pedido.nroFactura ? `Factura ${pedido.nroFactura}` : ''].filter(Boolean).join(' · ') || '-';
+    const contiene = (pedido.carrito || [])
+      .map((item: any) => {
+        const nombre = item?.producto?.crearProducto?.titulo || '';
+        return nombre ? `${item.cantidad || 1} × ${nombre}` : '';
+      })
+      .filter(Boolean)
+      .join(', ') || '-';
 
-    // Obtener nombre empresa
-    let companyName = '';
-    try { companyName = JSON.parse(localStorage.getItem('currentCompany') || '{}').nomComercial || ''; } catch (e) { /* ignore */ }
+    // Remitente: la empresa activa
+    let empresa: any = {};
+    try { empresa = JSON.parse(localStorage.getItem('currentCompany') || '{}') || {}; } catch (e) { /* ignore */ }
+    const companyName = empresa.nomComercial || '';
+    const logo = typeof empresa.logo === 'string' && empresa.logo.startsWith('https://') ? empresa.logo : '';
+    const remitente = [
+      [empresa.direccion, empresa.ciudad].filter(Boolean).join(', '),
+      empresa.telefonoLogisticaContacto || empresa.telContacto || empresa.celular || '',
+    ].filter(Boolean).join(' · ');
+    const correoRemitente = empresa.emailContacto || '';
+
+    const campo = (etiqueta: string, valor: string, extra = '') =>
+      `<div class="campo ${extra}"><div class="lbl">${etiqueta}</div><div class="val">${valor}</div></div>`;
 
     const html = `<!DOCTYPE html>
-<html><head><title>Rotulo #${pedido.nroPedido}</title>
+<html><head><title>Rotulo #${escapeHtml(pedido.nroPedido)}</title>
 <style>
   @page { size: 10cm 10cm; margin: 2mm; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: Arial, sans-serif; font-size: 11px; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { height:100%; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 10px; color: #211F3A; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .rotulo { border:1.5px solid #211F3A; border-radius:6px; height:100%; display:flex; flex-direction:column; overflow:hidden; }
+  .cabeza { display:flex; align-items:center; gap:6px; padding:5px 7px; border-bottom:1.5px solid #211F3A; }
+  .cabeza img { max-height:30px; max-width:34%; object-fit:contain; }
+  .empresa { font-size:12px; font-weight:800; }
+  .remite { flex:1; min-width:0; text-align:right; line-height:1.25; }
+  .titulo { font-size:9px; font-weight:800; letter-spacing:1.5px; }
+  .remite div { font-size:7.5px; color:#444; }
+  .cuerpo { flex:1; padding:4px 7px; display:flex; flex-direction:column; gap:3px; }
+  .fila { display:flex; gap:8px; }
+  .fila .campo { flex:1; min-width:0; }
+  .fila .bulto { flex:0 0 auto; }
+  .campo { border-bottom:1px solid #9a98ad; padding-bottom:2px; }
+  .lbl { font-size:6.5px; font-weight:700; letter-spacing:1px; color:#555; text-transform:uppercase; }
+  .val { font-size:10px; line-height:1.25; word-break:break-word; }
+  .destino .val { font-size:13px; font-weight:800; }
+  .contiene { flex:1; border-bottom:0; }
+  .contiene .val { font-size:10px; max-height:7.5em; overflow:hidden; }
+  .obs { font-size:8.5px; font-style:italic; color:#444; }
+  .pie { display:flex; justify-content:space-between; align-items:center; gap:6px; padding:4px 7px; border-top:1.5px solid #211F3A; background:#f1f0f6; }
+  .cuidado { font-size:7.5px; font-weight:800; letter-spacing:.8px; }
+  .cobrar { font-size:12px; font-weight:900; font-family:monospace; }
+  .nro { font-size:12px; font-weight:900; font-family:monospace; }
 </style></head><body>
-<div style="border:2px solid #333;padding:6px;height:100%;display:flex;flex-direction:column;">
-  <!-- Header rotulo -->
-  <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #333;padding-bottom:4px;margin-bottom:4px;">
-    <div style="font-size:9px;color:#555;">${escapeHtml(companyName)}</div>
-    <div style="font-size:18px;font-weight:900;font-family:monospace;letter-spacing:1px;">#${escapeHtml(pedido.nroPedido || '-')}</div>
-  </div>
-
-  <!-- Datos -->
-  <div style="flex:1;line-height:1.4;">
-    <div style="font-size:13px;font-weight:700;margin-bottom:2px;">${escapeHtml(recibe)}</div>
-    ${telefono ? `<div style="font-size:11px;margin-bottom:2px;"><b>Tel:</b> ${escapeHtml(telefono)}</div>` : ''}
-    <div style="font-size:11px;margin-bottom:2px;">${escapeHtml(direccion)}</div>
-    ${zona ? `<div style="font-size:10px;color:#555;margin-bottom:2px;"><b>Zona:</b> ${escapeHtml(zona)}</div>` : ''}
-    ${obs ? `<div style="font-size:10px;color:#0891b2;font-style:italic;margin-bottom:2px;">${escapeHtml(obs)}</div>` : ''}
-  </div>
-
-  <!-- Footer rotulo -->
-  <div style="display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid #ccc;padding-top:3px;margin-top:auto;">
-    <div style="font-size:10px;">
-      <div><b>Entrega:</b> ${escapeHtml(fechaEntrega)} ${pedido.horarioEntrega ? '/ ' + escapeHtml(pedido.horarioEntrega) : ''}</div>
+<div class="rotulo">
+  <div class="cabeza">
+    ${logo ? `<img src="${escapeHtml(logo)}" alt="">` : `<div class="empresa">${escapeHtml(companyName)}</div>`}
+    <div class="remite">
+      <div class="titulo">RÓTULO DE DESPACHO</div>
+      ${remitente ? `<div>Remite: ${escapeHtml(remitente)}</div>` : ''}
+      ${correoRemitente ? `<div>${escapeHtml(correoRemitente)}</div>` : ''}
     </div>
-    <div style="font-size:13px;font-weight:800;font-family:monospace;color:#c62828;">${valorCobrar}</div>
+  </div>
+  <div class="cuerpo">
+    ${campo('Destinatario', escapeHtml(recibe), 'destino')}
+    ${campo('Dirección', escapeHtml(direccion))}
+    <div class="fila">
+      ${campo('Ciudad / Departamento', escapeHtml(ciudad))}
+      ${campo('Contacto y teléfono', escapeHtml(telefono || '-'))}
+    </div>
+    <div class="fila">
+      ${campo('Pedido / Factura', escapeHtml(referencia))}
+      ${campo('Entrega', escapeHtml(fechaEntrega + (pedido.horarioEntrega ? ' / ' + pedido.horarioEntrega : '')))}
+      ${campo('Bulto', '___ de ___', 'bulto')}
+    </div>
+    ${campo('Contiene', escapeHtml(contiene), 'contiene')}
+    ${zona ? `<div class="obs"><b>Zona:</b> ${escapeHtml(zona)}</div>` : ''}
+    ${obs ? `<div class="obs">${escapeHtml(obs)}</div>` : ''}
+  </div>
+  <div class="pie">
+    <div class="cuidado">↑↑ ESTE LADO ARRIBA · MANIPULAR CON CUIDADO</div>
+    ${porCobrar > 0 ? `<div class="cobrar">Cobrar ${valorCobrar}</div>` : `<div class="nro">#${escapeHtml(pedido.nroPedido || '-')}</div>`}
   </div>
 </div>
 </body></html>`;
