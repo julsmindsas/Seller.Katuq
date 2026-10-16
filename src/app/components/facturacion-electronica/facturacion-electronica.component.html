@@ -332,7 +332,20 @@
                 </div>
               </td>
             </tr>
-            <tr class="fe-reject" *ngIf="statusGroup(document) === 'rejected'">
+            <!-- Ticket 1269: rechazo cerrado como reemplazado -->
+            <tr class="fe-reemplazo" *ngIf="statusGroup(document) === 'rejected' && document.reemplazadaPor">
+              <td colspan="6">
+                <div class="fe-reemplazo__body">
+                  <i class="pi pi-check-circle"></i>
+                  <strong class="fe-reemplazo__texto">Reemplazada por
+                    <button type="button" class="fe-link" *ngIf="facturaQueReemplaza(document) as f; else sinEnlace" (click)="abrirDetalle(f)">{{ document.reemplazadaPor }}</button>
+                    <ng-template #sinEnlace>{{ document.reemplazadaPor }}</ng-template>
+                  </strong>
+                  <small class="fe-reemplazo__nota">No hay que reenviarla: la DIAN aceptó la factura que la reemplazó.</small>
+                </div>
+              </td>
+            </tr>
+            <tr class="fe-reject" *ngIf="statusGroup(document) === 'rejected' && !document.reemplazadaPor">
               <td colspan="6">
                 <div class="fe-reject__body">
                   <span class="fe-reject__icon"><i class="pi pi-times"></i></span>
@@ -340,6 +353,10 @@
                     <span class="fe-reject__title">Respuesta de la DIAN<ng-container *ngIf="rejectionCode(document)"> · {{ rejectionCode(document) }}</ng-container></span>
                     <span class="fe-reject__msg">{{ rejectionMessage(document) }}</span>
                   </div>
+                  <!-- Ticket 1269: KAI explica el rechazo -->
+                  <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="explicarRechazo(document)">
+                    <i class="pi pi-comments"></i> Explicar con KAI
+                  </button>
                   <button type="button" class="fe-btn fe-btn--sm fe-btn--danger" (click)="retryDocument(document)">
                     <i class="pi pi-pencil"></i> Corregir y reenviar
                   </button>

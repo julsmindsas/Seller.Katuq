@@ -10419,3 +10419,15 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
 - **Sitios nuevos:** nacen con el consentimiento encendido (`analiticaDeSitioNuevo`, en los 5 puntos de creación). Los existentes conservan lo que tenían.
 - **Fuentes:** volver de una pasarela de pago (Wompi, Addi, Sistecrédito, PSE, PlacetoPay, PayU, Mercado Pago) cuenta como «directo», no como otro sitio.
 - **Fuera:** Clarity, Hotjar, Pinterest y LinkedIn. La llegada real a TikTok y GA4 se verifica con las credenciales del comercio: en pruebas, la red fue simulada.
+
+## D-464 (2026-10-16) — KAI explica los rechazos de la DIAN y propone cerrarlos como reemplazados (ticket 1269, FE-18)
+
+- **Problema:** un rechazo como el de JULS22 («Regla: 90, Rechazo: Documento procesado anteriormente») quedaba en rojo para siempre, sin explicación, aunque el comercio ya lo había resuelto emitiendo JULS41.
+- **Decisión** (`services/accounting/dian/explicarRechazo.js`):
+  - Lo determinista va primero. Se toman los mensajes de la DIAN y se busca una factura aceptada, posterior, del mismo cliente y el mismo valor (±1), en la misma empresa.
+  - Opttia (`pedirJsonAOpttia`) solo redacta la explicación y la corrección. Si falla, sale un respaldo sin IA (Regla 90 = envío duplicado).
+  - `POST /dian/documents/:n/explicar` no escribe nada.
+  - `POST /dian/documents/:n/reemplazada` exige el rol de facturación y la empresa del token. Solo marca el documento rechazado (`reemplazadaPor`, `reemplazadaEn`, `reemplazadaPorUsuario`); no toca numeración ni la factura aceptada. Queda en la auditoría como `marcar_reemplazada`.
+- **Bandeja:** botón «Explicar con KAI» en cada rechazo. Al confirmar el reemplazo, la fila roja pasa a «Reemplazada por JULS41», con enlace a la factura.
+- **Verificado con datos reales** (lectura, sin IA): JULS22 → reemplazada por JULS41.
+- **Fuera:** facturar o hacer notas por texto o voz, y preguntas de facturación a KAI. Eso es de Opttia con herramientas MCP de escritura, que siempre piden confirmación.

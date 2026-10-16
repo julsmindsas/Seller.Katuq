@@ -39,6 +39,9 @@ interface DianDocument {
   qrUrl?: string;
   /** Ticket 1262: reenvíos por correo. */
   emailResends?: { fecha: string; recipient: string; sent: boolean; error?: string }[];
+  /** Ticket 1269: el rechazo se cerró como reemplazado por esta factura aceptada. */
+  reemplazadaPor?: string;
+  reemplazadaEn?: string;
   /** Ticket 1279: saldo de la factura después de sus notas aceptadas (calculado en el servidor). */
   saldo?: { total: number; notasCredito: number; notasDebito: number; notas: number; saldo: number };
 }
@@ -613,6 +616,51 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
       if (!confirmation.isConfirmed) return;
       this.queueInvoice(order, true);
     });
+  }
+
+  /**
+   * Ticket 1269 (FE-18): KAI explica el rechazo en lenguaje simple. Si ya hay
+   * una factura aceptada del mismo cliente y valor, ofrece cerrarlo como
+   * reemplazado (con confirmación; no reenvía ni anula nada).
+   */
+  explicarRechazo(document: DianDocument): void {
+    if (!document.number) return;
+    Swal.fire({ title: 'KAI está revisando el rechazo…', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    this.integrationsService.explicarRechazoDian(document.number).subscribe({
+      next: (response: any) => {
+        const r = response?.data || {};
+        const reemplazo = r.reemplazo?.numero ? String(r.reemplazo.numero) : '';
+        Swal.fire({
+          title: `Por qué la DIAN rechazó ${this.escapeHtml(document.number || '')}`,
+          html: `<div class="kai-rechazo"><p>${this.escapeHtml(r.explicacion || '')}</p>`
+            + `<p><strong>Qué hacer:</strong> ${this.escapeHtml(r.correccion || '')}</p>`
+            + (r.mensajes?.length ? `<p class="kai-rechazo__dian">DIAN: ${this.escapeHtml(r.mensajes.join(' · '))}</p>` : '')
+            + '</div>',
+          showCancelButton: !!reemplazo,
+          confirmButtonText: reemplazo ? `Marcar como reemplazada por ${this.escapeHtml(reemplazo)}` : 'Entendido',
+          cancelButtonText: 'Ahora no',
+        }).then((res) => {
+          if (res.isConfirmed && reemplazo) this.marcarReemplazada(document, reemplazo);
+        });
+      },
+      error: (error) => Swal.fire({ icon: 'error', title: 'KAI no pudo revisarlo', text: this.errorMessage(error, 'Intenta de nuevo en un momento.') }),
+    });
+  }
+
+  private marcarReemplazada(document: DianDocument, por: string): void {
+    this.integrationsService.marcarRechazoReemplazado(document.number || '', por).subscribe({
+      next: () => {
+        Swal.fire({ icon: 'success', title: 'Listo', text: `${document.number} quedó cerrada como reemplazada por ${por}.` });
+        this.loadDashboard();
+      },
+      error: (error) => Swal.fire({ icon: 'error', title: 'No se pudo marcar', text: this.errorMessage(error, 'Revisa que tengas permiso de facturación.') }),
+    });
+  }
+
+  /** Ticket 1269: la factura aceptada que reemplazó a este rechazo, si está en la bandeja. */
+  facturaQueReemplaza(document: DianDocument): DianDocument | null {
+    if (!document.reemplazadaPor) return null;
+    return this.documents.find((d) => d.type === 'invoice' && d.number === document.reemplazadaPor) || null;
   }
 
   retryDocument(document: DianDocument): void {
