@@ -24,6 +24,8 @@ export interface TiendaSitio {
   otrasFormasPago: { cd: string; nombre: string; instrucciones?: string }[];
   /** Venta cruzada (afines + sugerencias del carrito). Encendida por defecto. */
   ventaCruzada?: boolean;
+  /** Ticket 1231: pedir opinión también a pedidos de venta asistida, POS y WhatsApp. Apagado por defecto. */
+  resenasOtrosCanales?: boolean;
   /** Al agregar: abrir el cajón (true) o solo confirmar con un aviso (por defecto). */
   abrirCarritoAlAgregar?: boolean;
   /** Categorías del maestro que no salen en el sitio (menú, baldosas, pie, filtros). */

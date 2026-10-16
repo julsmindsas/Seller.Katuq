@@ -2570,6 +2570,17 @@
           y eso es justo lo que hace que tus clientes les crean.
         </p>
 
+        <!-- Ticket 1231 -->
+        <button class="opcion" *ngIf="contenido?.tienda" [class.is-active]="contenido.tienda.resenasOtrosCanales === true"
+                (click)="contenido.tienda.resenasOtrosCanales = contenido.tienda.resenasOtrosCanales !== true; marcarSucio()">
+          <span class="opcion__texto">
+            <strong>Pedir opinión también en otros canales</strong>
+            <small>Cuando entregues un pedido de venta asistida, punto de venta o WhatsApp, le llega al
+              cliente el mismo enlace para calificar en esta tienda. Solo si el pedido tiene su correo.</small>
+          </span>
+          <span class="palanca"><span></span></span>
+        </button>
+
         <p class="nota nota--simple" *ngIf="cargandoResenas">Buscando opiniones…</p>
         <p class="nota nota--simple" *ngIf="!cargandoResenas && !resenas.length">
           Todavía no hay opiniones. Aparecen solas cuando marques un pedido como entregado.
