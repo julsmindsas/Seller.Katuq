@@ -212,6 +212,16 @@ export class CheckOutComponent implements OnInit, OnChanges {
   }
   
   /**
+   * Ticket 1223: clave única de una forma de pago para el radio. El campo `id` que se
+   * guarda en cada forma viene vacío o repetido en muchas empresas (p. ej. dos con
+   * id ""), y los radios con la misma clave no se pueden elegir. `cd` es el id del
+   * documento y siempre es único; `id` queda solo de respaldo.
+   */
+  claveFormaPago(formaPago: any): string {
+    return String(formaPago?.cd ?? formaPago?.id ?? '');
+  }
+
+  /**
    * Carga las formas de pago disponibles
    */
   private cargarFormasPago(): void {
@@ -229,7 +239,7 @@ export class CheckOutComponent implements OnInit, OnChanges {
         
         // Establecer una opción por defecto si hay disponible
         if (this.formasPago && this.formasPago.length > 0) {
-          this.form.get('opcionSeleccionada')?.setValue(this.formasPago[0].id);
+          this.form.get('opcionSeleccionada')?.setValue(this.claveFormaPago(this.formasPago[0]));
         }
         
         this.ref.detectChanges();
@@ -878,7 +888,7 @@ export class CheckOutComponent implements OnInit, OnChanges {
 
       // Asignar forma de pago
       let opcionSeleccionadaId = this.form.value.opcionSeleccionada;
-      let opcionSeleccionada = this.formasPago?.filter(formaPago => formaPago.id === opcionSeleccionadaId);
+      let opcionSeleccionada = this.formasPago?.filter(formaPago => this.claveFormaPago(formaPago) === opcionSeleccionadaId);
 
       if (opcionSeleccionada && opcionSeleccionada.length > 0) {
         this.pedido.formaDePago = opcionSeleccionada[0].nombre;
