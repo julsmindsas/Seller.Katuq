@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "predeploy": "node scripts/verify-dist-prod.js",
+    "predeploy": ["node scripts/verify-dist-prod.js", "node scripts/guard-publicacion.js"],
     "public": "dist/cuba",
     "ignore": [
       "firebase.json",

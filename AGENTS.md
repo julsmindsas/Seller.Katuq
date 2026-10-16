@@ -88,6 +88,15 @@ npm run lint
 
 Tanto `npm run build` como `npm run build:prod` incrementan la versión mediante `prebuild` y `prebuild:prod`. `npm run release` ejecuta `update-version`, compila producción y ejecuta `firebase deploy`. Revisar el diff de ambos environments después de compilar.
 
+**Candado de publicación:** varias sesiones publican en paralelo. `firebase deploy --only hosting` corre en predeploy `verify-dist-prod.js` y `guard-publicacion.js`. El candado bloquea el despliegue si:
+
+- la versión viva es igual o más nueva que la del build;
+- la versión viva salió de un commit que el build no contiene;
+- la rama tiene commits de código que el build no incluye;
+- la versión viva se publicó con cambios sin commitear.
+
+Para que funcione, `update-version.js` guarda en `assets/version.json` el commit y si había cambios sin commitear. Siempre: `git pull`, compilar desde la punta y desplegar enseguida. Si el candado bloquea, recompilar desde la punta nueva; no forzar (`KATUQ_PUBLICAR_FORZADO=1`) salvo emergencia autorizada.
+
 ## Arquitectura
 
 ### Stack principal

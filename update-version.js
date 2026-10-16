@@ -93,6 +93,25 @@ function updateVersion(filePath, isBeta = true) {
  * `notas` es opcional: si se llena a mano antes de publicar, el aviso de
  * actualización muestra el detalle de novedades.
  */
+/**
+ * Commit de HEAD y archivos de código con cambios sin commitear (sin contar la
+ * versión ni los environments, que cambian en cada build). Sin git, vacío.
+ */
+function origenDelBuild() {
+  try {
+    const { execFileSync } = require('child_process');
+    const opts = { cwd: __dirname, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] };
+    const commit = execFileSync('git', ['rev-parse', 'HEAD'], opts).trim();
+    const sucios = execFileSync('git', ['status', '--porcelain', '--untracked-files=no'], opts)
+      .split('\n')
+      .map((l) => l.slice(3).trim())
+      .filter((f) => f && !/^src\/assets\/version\.json$|^src\/environments\//.test(f));
+    return { commit, cambiosSinCommit: sucios.length };
+  } catch (e) {
+    return {};
+  }
+}
+
 function writeVersionJson(version) {
   const outPath = path.join(__dirname, 'src', 'assets', 'version.json');
 
@@ -109,6 +128,10 @@ function writeVersionJson(version) {
     version,
     publicada: new Date().toISOString(),
     notas,
+    // Desde qué código se compiló. Lo usa scripts/guard-publicacion.js (predeploy
+    // de Firebase) para que una publicación no pise otra más nueva o con código
+    // que este build no tiene (incidente 2026-10-16: la .16.2 pisó la .16.3).
+    ...origenDelBuild(),
   };
 
   fs.writeFileSync(outPath, JSON.stringify(payload, null, 2) + '\n');
