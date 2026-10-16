@@ -47,7 +47,7 @@
 
 ## 6. Piloto y encendido
 
-- [ ] 6.1 Encender `whatsappMultiNumero` en Julsmind.
+- [x] 6.1 Encender `whatsappMultiNumero` en Julsmind (2026-10-16, `set-company-feature.js` con simulación previa; verificado).
 - [ ] 6.2 Daniel conecta dos números de prueba (el inicio de sesión en Meta lo hace él).
 - [ ] 6.3 Prueba completa con capturas: un cliente que escribe a los dos números (dos chats); una línea con dos vendedores y carrera entre ellos; pasar y soltar; eco desde el celular sin cobro; saldo descontado por envío; plantilla fuera de la ventana; 403 por enlace directo. Completar los fixtures pendientes de 1.1.
 - [ ] 6.4 Encender en el primer comercio que indique Daniel.
