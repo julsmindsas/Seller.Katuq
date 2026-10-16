@@ -47,7 +47,16 @@
     <div class="tk-resumen-col"><span class="tk-resumen-label">Total del pedido</span><span class="tk-resumen-num">{{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
     <div class="tk-resumen-col"><span class="tk-resumen-label">Ya aprobado</span><span class="tk-resumen-num">{{ yaAprobado | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
     <div class="tk-resumen-col tk-resumen-hl"><span class="tk-resumen-label">Este pago</span><span class="tk-resumen-num">{{ estePago | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
-    <div class="tk-resumen-col"><span class="tk-resumen-label">Quedaría faltando</span><span class="tk-resumen-num" [class.text-danger]="quedariaFaltando > 0">{{ quedariaFaltando | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+    <div class="tk-resumen-col" *ngIf="!excedente"><span class="tk-resumen-label">Quedaría faltando</span><span class="tk-resumen-num" [class.text-danger]="quedariaFaltando > 0">{{ quedariaFaltando | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+    <div class="tk-resumen-col" *ngIf="excedente"><span class="tk-resumen-label">Excede el total</span><span class="tk-resumen-num text-danger">{{ excedente | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+  </div>
+
+  <!-- Ticket 1218: este pago deja el pedido pagado por encima de su total -->
+  <div class="tk-alert-warning mb-3" *ngIf="excedente">
+    <i class="pi pi-exclamation-triangle me-1"></i>
+    Con este pago el pedido quedaría pagado por <strong>{{ (yaAprobado + estePago) | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>,
+    <strong>{{ excedente | currency:'COP':'symbol-narrow':'1.0-0' }}</strong> más que su total. Revisa que no sea un pago repetido
+    o un valor mal escrito antes de aprobarlo.
   </div>
 
   <!-- Aviso de pago parcial -->

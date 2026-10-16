@@ -30,6 +30,8 @@ export class RevisarPagoComponent implements OnInit {
   estePago = 0;
   quedariaFaltando = 0;
   esParcial = false;
+  /** Ticket 1218: lo que este pago dejaría por encima del total del pedido. */
+  excedente = 0;
 
   aiFlag = '';
   aiDetails: any = null;
@@ -50,6 +52,7 @@ export class RevisarPagoComponent implements OnInit {
 
     this.quedariaFaltando = Math.max(0, this.total - this.yaAprobado - this.estePago);
     this.esParcial = this.quedariaFaltando > 0;
+    this.excedente = Math.max(0, this.yaAprobado + this.estePago - this.total);
 
     this.aiFlag = this.pago?.aiFlag || '';
     this.aiDetails = this.pago?.aiDetails || null;
