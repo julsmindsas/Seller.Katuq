@@ -327,3 +327,17 @@
 
   a { color: #5f3fe0; font-weight: 800; }
 }
+
+// Ticket 1230: lo recuperado por canal. Los span llevan color y tamaño propios
+// (span.ng-star-inserted pinta de azul los que crea un *ngIf).
+.recuperado__canales { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.recuperado__canal {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #e4e0f5;
+  color: #211f3a;
+  font-size: 12px;
+  font-weight: 600;
+}

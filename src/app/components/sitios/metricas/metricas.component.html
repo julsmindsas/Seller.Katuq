@@ -64,6 +64,11 @@
           <div class="recuperado" *ngIf="datos.recuperado && (datos.recuperado.pagos + datos.recuperado.carritos) > 0">
             <strong>{{ dinero(datos.recuperado.valor) }}</strong> recuperados por los recordatorios:
             {{ datos.recuperado.pagos }} pago(s) y {{ datos.recuperado.carritos }} carrito(s) que se iban a perder.
+            <!-- Ticket 1230: cuánto trajo cada aviso -->
+            <span class="recuperado__canales" *ngIf="datos.recuperado.porCanal">
+              <span class="recuperado__canal" *ngIf="datos.recuperado.porCanal.correo">Por correo: {{ datos.recuperado.porCanal.correo.ventas }} · {{ dinero(datos.recuperado.porCanal.correo.valor) }}</span>
+              <span class="recuperado__canal" *ngIf="datos.recuperado.porCanal.whatsapp">Por WhatsApp: {{ datos.recuperado.porCanal.whatsapp.ventas }} · {{ dinero(datos.recuperado.porCanal.whatsapp.valor) }}</span>
+            </span>
           </div>
 
           <p class="conversion" *ngIf="datos.conversion !== null">

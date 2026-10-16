@@ -318,7 +318,13 @@ export interface MetricasSitio {
   historico: { vistas: number; leads: number; pedidos: number };
   truncado: boolean;
   /** Lo que trajeron de vuelta los recordatorios de pago y de carrito. */
-  recuperado?: { pagos: number; carritos: number; valor: number };
+  recuperado?: {
+    pagos: number;
+    carritos: number;
+    valor: number;
+    /** Ticket 1230: lo recuperado por cada aviso. */
+    porCanal?: { correo?: { ventas: number; valor: number }; whatsapp?: { ventas: number; valor: number } };
+  };
 }
 
 /** Alguien que le dejó sus datos a la tienda. */
