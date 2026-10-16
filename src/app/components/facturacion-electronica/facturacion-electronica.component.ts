@@ -778,8 +778,9 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         return;
       }
       const opciones: Record<string, string> = {};
+      // SweetAlert pinta las opciones como HTML: todo dato del comercio va escapado.
       encontradas.slice(0, 30).forEach((d) => {
-        opciones[d.number || ''] = `${d.number} · ${d.cliente?.nombre || 'sin cliente'} · ${this.money(d.saldo ? d.saldo.saldo : d.amount)}`;
+        opciones[d.number || ''] = this.escapeHtml(`${d.number} · ${d.cliente?.nombre || 'sin cliente'} · ${this.money(d.saldo ? d.saldo.saldo : d.amount)}`);
       });
       Swal.fire({
         title: 'Elige la factura',
@@ -1015,7 +1016,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     const options = causes.map(([code, label]) => `<option value="${code}">${code} — ${label}</option>`).join('');
     const saldo = document.saldo ? document.saldo.saldo : Number(document.amount || 0);
     const opcionesLinea = lineas.map((l) =>
-      `<option value="${l.linea}">${l.linea} — ${this.escapeHtml(l.descripcion)} · ${l.cantidad} × ${this.escapeHtml(this.money(l.valorUnitario))} + IVA ${l.tarifaIva}%</option>`).join('');
+      `<option value="${Number(l.linea)}">${Number(l.linea)} — ${this.escapeHtml(String(l.descripcion || ''))} · ${Number(l.cantidad)} × ${this.escapeHtml(this.money(l.valorUnitario))} + IVA ${Number(l.tarifaIva)}%</option>`).join('');
     const bloqueLinea = lineas.length ? `
           <label for="dian-note-line">¿Sobre qué línea de la factura?</label>
           <select id="dian-note-line" class="swal2-select"><option value="">Ninguna: escribo el valor</option>${opcionesLinea}</select>
