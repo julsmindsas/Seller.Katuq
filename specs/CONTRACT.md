@@ -10071,3 +10071,12 @@ Daniel: «con kapso necesitamos conectar n cantidades de whatsapp y que se pueda
     - los toques Confirmar/Cancelar no se procesan si llegan por una línea;
     - la sesión del bot sigue por contacto;
     - el barrido puede repetir trabajo idempotente.
+
+## D-438 (2026-10-16) — Los pagos rechazados o cancelados no suman al anticipo (ticket 1221, ALMARA) — PUBLICADO: backend 15cbb5ab
+
+Daniel: «hay un tiket nuevo de almara cerrarlo de pagos». Lo tomó como aprobación del arreglo mínimo en `orders`.
+
+- **Causa (solo lectura, 16-oct):** `calculateOrderTotals` (`services/orderCalculationService.js`) corre en cada creación y en cada edición con carrito. Recalculaba el anticipo con TODOS los `PagosAsentados`, también los rechazados. El listado del front sí los excluía, pero el servidor guardaba el valor inflado. Ejemplo: DAD-013737, total 83.200, con un rechazado de 83.200 y pagos de 80.000 + 3.000, quedó con anticipo 166.200, saldo 0 y "Aprobado".
+- **Arreglo:** `sumarPagosVigentes` excluye Rechazado y Cancelado (y Wompi Pendiente, como antes) y suma como número (antes un valor en texto se concatenaba). Los demás pagos pendientes siguen sumando, sin cambio. Prueba: `tests/orders/anticipoSinPagosRechazados.test.js` (5). `preciosPorTipoFase0` ya fallaba antes, por redondeo.
+- **Datos (medido sobre 18.583 pedidos):** 30 con anticipo distinto de la suma vigente y algún pago rechazado o cancelado: 29 de ALMARA y CER-000009 de la demo FLORECER. Se corrigen los 29 con anticipo inflado; DAD-014291 queda fuera porque sigue el criterio de Tesorería (anticipo 0 con pagos pendientes). Cuatro están en "Aprobado" con saldo real: DAD-013845 (118.800), DAD-012914 (63.600), DAD-014010 (2.900) y DAD-013737 (200). La corrección (`corregir-1221.js`, en dry-run) espera la aprobación de Daniel, incluido si esos cuatro pasan a PreAprobado.
+- **Pendiente sin tocar:** con Tesorería encendida, el anticipo debería contar solo los aprobados, pero `calculateOrderTotals` (función pura, sin bandera de empresa) cuenta los pendientes al editar con carrito. Es una inconsistencia previa que se escala aparte.
