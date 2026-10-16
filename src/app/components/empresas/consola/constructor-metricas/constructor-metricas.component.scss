@@ -1,0 +1,75 @@
+// Ticket 1246. Tema canónico (D-131): acento #5F3FE0, tinta #211F3A, plano, radios 16/11.
+// Ninguna clase contiene "p-" (trampa de [class*="p-"] en _reset.scss) y todo span
+// con texto lleva color propio (span.ng-star-inserted).
+$tinta: #211f3a;
+$muted: #6b6685;
+$borde: #e4e0f5;
+$acento: #5f3fe0;
+
+.cw { padding: 8px 0; color: $tinta; display: flex; flex-direction: column; gap: 16px; }
+.cw__head { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: flex-end; }
+.cw__titulo { margin: 0 0 4px; font-weight: 800; color: $tinta; }
+.cw__sub { margin: 0; color: $muted; font-size: 0.9rem; max-width: 680px; letter-spacing: normal; }
+.cw__btn {
+  display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid $borde;
+  border-radius: 11px; background: #fff; color: $tinta; font-weight: 600; cursor: pointer;
+  &:disabled { opacity: 0.6; cursor: default; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; }
+}
+.cw__error { margin: 0; padding: 10px 12px; border-radius: 11px; background: #fdecec; color: #c62828; letter-spacing: normal; }
+.cw__vacio { margin: 0; color: $muted; }
+
+.cw__kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.cw__kpi { background: #fff; border: 1px solid $borde; border-radius: 16px; padding: 14px 16px; min-width: 0; }
+.cw__kpi-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: $muted; }
+.cw__kpi-valor { font-size: 1.6rem; font-weight: 800; color: $tinta; margin-top: 4px; overflow-wrap: anywhere;
+  &--texto { font-size: 1.15rem; }
+}
+.cw__kpi-nota { font-size: 0.78rem; color: $muted; margin-top: 2px; }
+
+.cw__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.cw__card { background: #fff; border: 1px solid $borde; border-radius: 16px; padding: 16px; min-width: 0; }
+.cw__card-titulo { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: $muted; margin-bottom: 12px; }
+.cw__txt { color: inherit; font-size: inherit; }
+.cw__muted { color: $muted; }
+.cw__nota { margin: 10px 0 0; font-size: 0.8rem; color: $muted; letter-spacing: normal; }
+.cw__capital { text-transform: capitalize; }
+
+.cw__embudo { display: flex; flex-direction: column; gap: 12px; }
+.cw__fila-texto { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 4px; color: $tinta; }
+.cw__barra { height: 8px; border-radius: 99px; background: #f1eefb; overflow: hidden; }
+.cw__barra-relleno { height: 100%; border-radius: 99px; background: $acento; }
+
+.cw__uso { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column;
+  li { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid #f1eefb; font-size: 0.9rem; color: $tinta; }
+  li:last-child { border-bottom: 0; }
+}
+
+.cw__vacio-card { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 12px; color: $muted;
+  i { font-size: 1.6rem; color: #1e9e6a; }
+  strong { color: $tinta; }
+}
+.cw__alertas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.cw__alerta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; border-radius: 11px; background: #fff8e6; color: $tinta; font-size: 0.9rem;
+  &--grave { background: #fdecec; }
+}
+.cw__chip { display: inline-block; padding: 3px 9px; border-radius: 99px; font-size: 0.72rem; font-weight: 700; background: #ffe7b3; color: #8a5a00;
+  &--grave { background: #f9c9c9; color: #a12020; }
+}
+
+.cw__tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 11px; background: #f4f2fc; margin-bottom: 12px;
+  button { border: 0; background: transparent; padding: 7px 14px; border-radius: 8px; font-weight: 600; color: $muted; cursor: pointer; }
+  button.activa { background: #fff; color: $acento; box-shadow: 0 1px 4px rgba(95, 63, 224, 0.12); }
+  button:focus-visible { outline: 3px solid #7c5cff !important; }
+}
+.cw__tabla-wrap { overflow-x: auto; }
+.cw__tabla { width: 100%; border-collapse: collapse; font-size: 0.9rem;
+  th { text-align: left; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: $muted; padding: 9px 10px; border-bottom: 1px solid $borde; white-space: nowrap; }
+  td { padding: 9px 10px; border-bottom: 1px solid #f1eefb; white-space: nowrap; color: $tinta; }
+  .num { text-align: right; }
+  &--chica td, &--chica th { padding: 7px 6px; }
+}
+.cw__slug { display: block; font-size: 0.75rem; }
+.cw__estado { display: inline-block; padding: 3px 9px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; background: #f1eefb; color: $muted;
+  &--ok { background: #e3f6ec; color: #13774f; }
+}

@@ -69,7 +69,10 @@ export function describirEvento(evento: EventoEnVivo, contexto: ContextoDescripc
       ? `Comercio en ${ciudadComercio || 'Colombia'}`
       : evento.nombreComercio ?? 'Comercio'
     : null;
-  const numero = global ? null : evento.numero;
+  // En toda Katuq también va el número: distingue un pedido de otro. Con "ocultar" no, porque su prefijo delata al comercio.
+  const numero = global && ocultar ? null : evento.numero ?? null;
+  // En toda Katuq, sin número la frase dice "un pedido"; con número, el número ya es el sujeto.
+  const sujeto = (conNumero: string, sinNumero: string): string => (numero ? conNumero : sinNumero);
   const quien = global ? '' : cliente;
   const nombreEtapa = (id: EtapaId): string => (etapas.get(id)?.nombre ?? id).toLowerCase();
   // Con el nombre del comercio oculto la ciudad ya va en la negrita: no se repite.
@@ -110,8 +113,9 @@ export function describirEvento(evento: EventoEnVivo, contexto: ContextoDescripc
         tono: etapa?.tono ?? 'neutro',
         icono: 'flecha',
         pastilla: etapa?.nombre ?? 'Cambio de estado',
-        texto: global ? `· un pedido ${accion}` : accion,
-        meta: unir([global ? '' : quien, ciudad]),
+        monto: global ? monto : null,
+        texto: global ? sujeto(accion, `· un pedido ${accion}`) : accion,
+        meta: global ? (ciudad ? `Cliente en ${ciudad}` : '') : unir([quien, ciudad]),
       };
     }
 
@@ -122,7 +126,7 @@ export function describirEvento(evento: EventoEnVivo, contexto: ContextoDescripc
         tono: 'ok',
         icono: 'tarjeta',
         pastilla: 'Pago confirmado',
-        texto: global ? '· pago confirmado' : conSeparador(quien),
+        texto: global ? sujeto('pago confirmado', '· pago confirmado') : conSeparador(quien),
         meta: global ? (ciudad ? `Cliente en ${ciudad}` : '') : canal,
       };
 
@@ -134,7 +138,8 @@ export function describirEvento(evento: EventoEnVivo, contexto: ContextoDescripc
         tono: 'info',
         icono: iconoDeTransporte(tipoTransporte),
         pastilla: enMoto ? 'Salió en moto' : enCamion ? 'Salió en camión' : 'Salió',
-        texto: global ? '· despachó un pedido' : transportador ? `con ${transportador}` : 'salió a entrega',
+        monto: global ? monto : null,
+        texto: global ? sujeto('salió a entrega', '· despachó un pedido') : transportador ? `con ${transportador}` : 'salió a entrega',
         meta: global
           ? enCamion
             ? `Transportadora${ciudad ? ` hacia ${ciudad}` : ''}`
@@ -153,7 +158,7 @@ export function describirEvento(evento: EventoEnVivo, contexto: ContextoDescripc
         tono: 'info',
         icono: iconoDeTransporte(tipoTransporte),
         pastilla: 'Asignado',
-        texto: global ? '· un pedido asignado' : transportador ? `asignado a ${transportador}` : 'asignado',
+        texto: global ? sujeto('asignado', '· un pedido asignado') : transportador ? `asignado a ${transportador}` : 'asignado',
         meta: unir([global ? '' : quien, ciudad]),
       };
 
@@ -163,7 +168,8 @@ export function describirEvento(evento: EventoEnVivo, contexto: ContextoDescripc
         tono: 'ok',
         icono: 'check',
         pastilla: 'Entregado',
-        texto: global ? '· entregó un pedido' : conSeparador(quien),
+        monto: global ? monto : null,
+        texto: global ? sujeto('entregado', '· entregó un pedido') : conSeparador(quien),
         meta: global ? (ciudad ? `En ${ciudad}` : '') : unir([ciudad, transportador]),
       };
 

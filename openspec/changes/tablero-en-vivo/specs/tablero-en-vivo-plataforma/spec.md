@@ -88,7 +88,7 @@ La vista SHALL tener modo pantalla con cámara automática: recorre el mapa y se
 - **THEN** las cifras, la carrera y las escenas quedan iguales al estado actual
 
 ### Requirement: Un solo observador de la plataforma
-El servidor SHALL observar con un solo observador los pedidos de todos los comercios creados desde ayer (hora de Colombia). El observador MUST encenderse con la primera pantalla de toda Katuq y apagarse 2 minutos después de la última.
+El servidor SHALL observar con un solo observador los pedidos de todos los comercios creados en los últimos 7 días, la misma ventana del tablero de cada comercio (D-434): un pedido de hace varios días que hoy se entrega MUST salir en la lista y en las escenas. El observador MUST encenderse con la primera pantalla de toda Katuq y apagarse 2 minutos después de la última.
 
 Cada evento de toda Katuq MUST llevar el comercio (id y nombre comercial), la ciudad del comercio y la del cliente, el canal, el monto, los estados y el tipo de transportador. MUST NOT llevar el nombre ni otros datos del cliente.
 

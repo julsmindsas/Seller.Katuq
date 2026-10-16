@@ -7,6 +7,17 @@ import {
 } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 
+import { CompanyFeaturesService } from "../../../../../shared/services/company-features.service";
+import { LoaderService } from "../../../../../shared/services/loader.service";
+import { MessagingLinesService } from "../../../../../shared/services/messaging/messaging-lines.service";
+import {
+  DuenoChat,
+  MessagingLine,
+  MiembroEquipo,
+} from "../../../../../shared/services/messaging/messaging.models";
+import { esFamiliaAdministrador } from "../../../../../shared/utils/roles";
+import { WhatsappThread, claveChat } from "../../models/whatsapp-thread.model";
+
 /**
  * Shell del inbox de WhatsApp — layout Master-Detail responsive (spec 009 UI).
  *
@@ -15,6 +26,13 @@ import { ActivatedRoute } from "@angular/router";
  *
  * El componente mantiene el estado de selección y lo propaga a la lista y al
  * detalle por @Input/@Output, sin tocar el `WhatsappInboxService` directamente.
+ *
+ * [D-437] Con la bandera `whatsappMultiNumero` carga las líneas del comercio
+ * (filtro de la lista) y el equipo (para pasar un chat). Un chat se identifica
+ * por número + cliente: el mismo cliente en dos números son dos chats.
+ *
+ * La pantalla muestra su propio "Cargando…" y refresca cada pocos segundos,
+ * así que suprime el overlay global de carga mientras está montada (D-072).
  *
  * Layout hack: el wrapper `.page-body` global tiene min-height fijo (~682px)
  * que genera overflow cuando montamos un componente full-height. Mientras el
@@ -30,6 +48,17 @@ export class WhatsappInboxShellComponent
 {
   /** Hash del teléfono del hilo seleccionado (deep-link o click en lista). */
   selectedPhoneHash: string | null = null;
+  /** [D-437] Línea del chat abierto (`null` = número compartido de Katuq). */
+  selectedLineId: string | null = null;
+  /** [D-437] Datos del chat abierto que trae la lista (línea y dueño). */
+  seleccion: WhatsappThread | null = null;
+
+  /** [D-437] Varios números por comercio encendido para la empresa. */
+  readonly multiNumero: boolean;
+  readonly esAdministrador: boolean;
+  readonly miEmail: string;
+  lineas: MessagingLine[] = [];
+  equipo: MiembroEquipo[] = [];
 
   /**
    * Vista activa del panel izquierdo: los hilos de siempre o los pedidos que
@@ -46,16 +75,48 @@ export class WhatsappInboxShellComponent
   constructor(
     private readonly route: ActivatedRoute,
     private readonly host: ElementRef<HTMLElement>,
-  ) {}
+    private readonly loader: LoaderService,
+    private readonly lineasService: MessagingLinesService,
+    features: CompanyFeaturesService,
+  ) {
+    this.multiNumero = features.isEnabled("whatsappMultiNumero");
+    const usuario = this.leerUsuario();
+    this.esAdministrador = esFamiliaAdministrador(usuario["rol"]);
+    this.miEmail = String(usuario["email"] || "");
+  }
 
   ngOnInit(): void {
-    // Deep-link: `/whatsapp-inbox/inbox/:phoneHash`.
+    this.loader.suppressGlobalLoader();
+    // Deep-link: `/whatsapp-inbox/inbox/:phoneHash?lineId=`.
     this.route.paramMap.subscribe((params) => {
       const hash = params.get("phoneHash");
       if (hash) {
         this.selectedPhoneHash = hash;
+        this.selectedLineId = this.route.snapshot.queryParamMap.get("lineId") || null;
+        this.seleccion = null;
       }
     });
+    if (this.multiNumero) this.cargarLineas();
+  }
+
+  /** Líneas y equipo del comercio. Si falla, el buzón sigue sin filtro por número. */
+  private cargarLineas(): void {
+    this.lineasService.listar().subscribe({
+      next: (res) => {
+        this.lineas = res.lines;
+        this.equipo = res.equipo;
+      },
+      error: () => undefined,
+    });
+  }
+
+  private leerUsuario(): Record<string, unknown> {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      return u && typeof u === "object" ? u : {};
+    } catch {
+      return {};
+    }
   }
 
   ngAfterViewInit(): void {
@@ -87,6 +148,7 @@ export class WhatsappInboxShellComponent
   }
 
   ngOnDestroy(): void {
+    this.loader.releaseGlobalLoader();
     if (this.pageBodyEl) {
       this.pageBodyEl.style.removeProperty("min-height");
       this.pageBodyEl.style.removeProperty("height");
@@ -105,8 +167,33 @@ export class WhatsappInboxShellComponent
     }
   }
 
-  onThreadSelected(phoneHash: string): void {
+  onThreadSelected(thread: WhatsappThread): void {
+    this.selectedPhoneHash = thread.phoneHash;
+    this.selectedLineId = thread.line?.id || null;
+    this.seleccion = thread;
+  }
+
+  /** Vista "Pedidos": las sesiones del bot son del número compartido. */
+  onSesionSelected(phoneHash: string): void {
     this.selectedPhoneHash = phoneHash;
+    this.selectedLineId = null;
+    this.seleccion = null;
+  }
+
+  /** La lista se refrescó y trae datos nuevos del chat abierto (por ejemplo, otro dueño). */
+  onSeleccionRefrescada(thread: WhatsappThread): void {
+    if (this.claveSeleccion === claveChat(thread.phoneHash, thread.line?.id)) {
+      this.seleccion = thread;
+    }
+  }
+
+  /** El detalle cambió el dueño del chat abierto (tomar, soltar, pasar o un 409). */
+  onDuenoCambiado(owner: DuenoChat | null): void {
+    if (this.seleccion) this.seleccion = { ...this.seleccion, owner };
+  }
+
+  get claveSeleccion(): string | null {
+    return this.selectedPhoneHash ? claveChat(this.selectedPhoneHash, this.selectedLineId) : null;
   }
 
   setVista(vista: "conversaciones" | "pedidos"): void {
@@ -116,5 +203,7 @@ export class WhatsappInboxShellComponent
   /** Mobile: volver al listado cuando el usuario cierra el detalle. */
   onBackToList(): void {
     this.selectedPhoneHash = null;
+    this.selectedLineId = null;
+    this.seleccion = null;
   }
 }

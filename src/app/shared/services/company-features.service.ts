@@ -25,6 +25,9 @@ export const COMPANY_FEATURE_FLAGS = [
   'opttiaProduccion',
   // Opttia propone en la escena, fase 2 (D-422): "Abrir WhatsApp" en la señal de cobro (no envía nada).
   'opttiaCobroWhatsapp',
+  // Varios números de WhatsApp por comercio, asignados a vendedores, y dueño del chat (D-437).
+  // Dueño: Daniel. Se retira 30 días después de tenerla encendida para todos.
+  'whatsappMultiNumero',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

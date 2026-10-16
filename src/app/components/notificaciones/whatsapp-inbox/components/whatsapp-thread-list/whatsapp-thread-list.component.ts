@@ -1,7 +1,7 @@
-import { environment } from "../../../../../../environments/environment";
 import {
   Component,
   EventEmitter,
+  Input,
   OnDestroy,
   OnInit,
   Output,
@@ -13,7 +13,12 @@ import { WhatsappInboxService } from "../../whatsapp-inbox.service";
 import {
   BotSesionResumen,
   WhatsappThread,
+  claveChat,
 } from "../../models/whatsapp-thread.model";
+import {
+  LineaResumen,
+  MessagingLine,
+} from "../../../../../shared/services/messaging/messaging.models";
 
 /** Etiqueta de estado de un hilo en la lista (mockup Marketing y WhatsApp). */
 interface ThreadTag {
@@ -25,12 +30,14 @@ interface ThreadTag {
  * Listado de hilos (columna izquierda del shell).
  *
  * El componente es autosuficiente: carga sus propios datos desde
- * `WhatsappInboxService.getThreads({})` en `ngOnInit` y emite `threadSelected`
- * con el `phoneHash` al hacer click en un item.
+ * `WhatsappInboxService.getThreads` en `ngOnInit` y emite `threadSelected`
+ * con el hilo al hacer click en un item.
  *
  * Funciones soportadas:
  *  - Búsqueda con debounce 350ms.
  *  - Filtro toggle "Solo con respuesta entrante".
+ *  - [D-437] Filtro por número del comercio (solo si hay números conectados) y
+ *    etiqueta del número en cada fila.
  *  - Marcado visual de leído en cliente (no espera al backend).
  *  - Banner amarillo si algún hilo tiene `flags.inboundTruncatedAt90d`.
  */
@@ -40,14 +47,26 @@ interface ThreadTag {
   styleUrls: ["./whatsapp-thread-list.component.scss"],
 })
 export class WhatsappThreadListComponent implements OnInit, OnDestroy {
-  @Output() threadSelected = new EventEmitter<string>();
+  /** [D-437] Líneas del comercio (vacío con la bandera apagada). */
+  @Input() lineas: MessagingLine[] = [];
+  @Input() esAdministrador = false;
+  @Input() miEmail = "";
+  /** [D-437] Clave (número + cliente) del chat abierto en el detalle. */
+  @Input() claveSeleccion: string | null = null;
+
+  @Output() threadSelected = new EventEmitter<WhatsappThread>();
+  /** [D-437] El refresco trajo datos nuevos del chat abierto (por ejemplo, otro dueño). */
+  @Output() seleccionRefrescada = new EventEmitter<WhatsappThread>();
 
   threads: WhatsappThread[] = [];
   loading = false;
+  /** El último intento de cargar la lista falló (sin datos de demostración). */
+  errorCarga = false;
   searchQuery = "";
   /** Filtro activo de la lista (chips del mockup). */
   filtro: "pendientes" | "todas" | "bot" = "todas";
-  selectedPhoneHash: string | null = null;
+  /** [D-437] Número elegido en el filtro ("" = todos). */
+  lineaFiltro = "";
   newConversationOpen = false;
 
   /**
@@ -56,12 +75,15 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
    * Best-effort: si falla, la lista se ve como siempre.
    */
   private botPorHash = new Map<string, BotSesionResumen>();
+  /** [D-437] Números vistos en los chats (para el filtro de quien no administra). */
+  private lineasVistas = new Map<string, LineaResumen>();
 
   /** Stream de búsqueda con debounce para no disparar getThreads por cada tecla. */
   private readonly searchSubject = new Subject<string>();
   private searchSub?: Subscription;
   /** Polling cada 10s para refrescar la lista (sin spinner) con inbounds nuevos. */
   private refreshSub?: Subscription;
+  private fetchSub?: Subscription;
 
   constructor(private readonly inbox: WhatsappInboxService) {}
 
@@ -123,6 +145,7 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.searchSub?.unsubscribe();
     this.refreshSub?.unsubscribe();
+    this.fetchSub?.unsubscribe();
   }
 
   /**
@@ -132,50 +155,17 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
    * backend no está corriendo).
    */
   private fetchThreadsSilent(): void {
-    const userStr = localStorage.getItem("user") || "{}";
-    let token = "", company = "", nit = "", email = "", authCode = "";
-    try {
-      const u = JSON.parse(userStr);
-      token = u.token || "";
-      company = u.company || "";
-      nit = u.nit || "";
-      email = u.email || "";
-      authCode = u.authorizationCode || "";
-    } catch {}
-    const headers: HeadersInit = {
-      "Authorization": "Bearer " + token,
-      "company": company,
-      "user": nit,
-      "usage-code": authCode,
-      "email": email,
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-    };
-    // Best-effort sync (ignoramos error).
-    fetch(environment.urlApi + "/v1/whatsapp/sync-inbound", {
-      method: "POST",
-      headers,
-    }).catch(() => undefined);
-    // Refresh de threads.
-    const qs = this.searchQuery ? `?search=${encodeURIComponent(this.searchQuery)}` : "";
-    fetch(environment.urlApi + "/v1/whatsapp/conversations" + qs, { headers })
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((resp: any) => {
-        const items = resp?.items || [];
-        if (items.length === 0) return;
-        this.threads = items.map((it: any) => ({
-          phoneHash: it.phoneHash,
-          phoneMasked: it.phoneMasked,
-          contactName: it.clienteNombre || it.profileName || "Sin nombre",
-          lastMessageAt: it.lastMessageAt,
-          lastMessageSnippet: it.lastMessagePreview || "",
-          unreadCount: it.unreadCount || 0,
-          lastDirection: it.lastMessageDirection || "outbound",
-          messageCount: it.totalMessages || 0,
-          flags: it.flags,
-        }));
-      })
-      .catch(() => undefined);
+    // Best-effort sync (el servicio ignora el error).
+    this.inbox.syncInbound().subscribe();
+    this.inbox
+      .getThreads({ search: this.searchQuery, lineId: this.lineaFiltro || null })
+      .subscribe({
+        next: (page) => {
+          if (page.items.length === 0) return;
+          this.ponerHilos(page.items);
+        },
+        error: () => undefined,
+      });
   }
 
   onSearchChange(value: string): void {
@@ -185,6 +175,32 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
 
   setFiltro(filtro: "pendientes" | "todas" | "bot"): void {
     this.filtro = filtro;
+  }
+
+  /** [D-437] Cambio del filtro por número: recarga desde el servidor. */
+  onLineaFiltroChange(lineId: string): void {
+    this.lineaFiltro = lineId || "";
+    this.fetchThreads();
+  }
+
+  /**
+   * [D-437] Números del filtro. La familia Administrador ve todos; los demás,
+   * los que tienen asignados más los que aparecen en sus chats. Sin números,
+   * no hay filtro.
+   */
+  get opcionesLinea(): LineaResumen[] {
+    const mapa = new Map<string, LineaResumen>();
+    const yo = (this.miEmail || "").toLowerCase();
+    for (const l of this.lineas || []) {
+      const mia = (l.sellers || []).some((s) => (s.email || "").toLowerCase() === yo);
+      if (this.esAdministrador || mia) {
+        mapa.set(l.id, { id: l.id, displayName: l.displayName, displayPhone: l.displayPhone });
+      }
+    }
+    this.lineasVistas.forEach((l, id) => {
+      if (!mapa.has(id)) mapa.set(id, l);
+    });
+    return Array.from(mapa.values());
   }
 
   /** Hilos sin responder (badge del chip "Sin responder"). */
@@ -222,13 +238,16 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
   }
 
   onSelect(thread: WhatsappThread): void {
-    this.selectedPhoneHash = thread.phoneHash;
     // Marcado visual de "leído" en el cliente. El backend confirma cuando se
     // abre el detalle (markThreadViewed desde thread-detail).
     if (thread.unreadCount > 0) {
       thread.unreadCount = 0;
     }
-    this.threadSelected.emit(thread.phoneHash);
+    this.threadSelected.emit(thread);
+  }
+
+  isSelected(thread: WhatsappThread): boolean {
+    return this.claveSeleccion === this.claveDe(thread);
   }
 
   /** Texto enmascarado del snippet (máx 60 chars). */
@@ -284,55 +303,42 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
     return new Date(iso).toLocaleDateString();
   }
 
+  /** [D-437] El mismo cliente en dos números son dos filas. */
   trackByHash(_: number, thread: WhatsappThread): string {
-    return thread.phoneHash;
+    return claveChat(thread.phoneHash, thread.line?.id);
   }
 
-  private fetchThreads(): void {
+  fetchThreads(): void {
     this.loading = true;
-    const userStr = localStorage.getItem('user') || '{}';
-    let token = '', company = '', nit = '', email = '', authCode = '';
-    try {
-      const u = JSON.parse(userStr);
-      token = u.token || '';
-      company = u.company || '';
-      nit = u.nit || '';
-      email = u.email || '';
-      authCode = u.authorizationCode || '';
-    } catch {}
-    const headers: HeadersInit = {
-      'Authorization': 'Bearer ' + token,
-      'company': company,
-      'user': nit,
-      'usage-code': authCode,
-      'email': email,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    };
-    const qs = this.searchQuery ? `?search=${encodeURIComponent(this.searchQuery)}` : '';
-    fetch(environment.urlApi + '/v1/whatsapp/conversations' + qs, { headers })
-      .then((r) => r.ok ? r.json() : Promise.reject(r))
-      .then((resp: any) => {
-        const items = resp?.items || [];
-        this.threads = items.map((it: any) => ({
-          phoneHash: it.phoneHash,
-          phoneMasked: it.phoneMasked,
-          contactName: it.clienteNombre || it.profileName || 'Sin nombre',
-          lastMessageAt: it.lastMessageAt,
-          lastMessageSnippet: it.lastMessagePreview || '',
-          unreadCount: it.unreadCount || 0,
-          lastDirection: it.lastMessageDirection || 'outbound',
-          messageCount: it.totalMessages || 0,
-          flags: it.flags,
-        }));
-        this.loading = false;
-      })
-      .catch((err) => {
-        // Fallback al service (que cae al mock) si el endpoint falla.
-        this.inbox.getThreads({ search: this.searchQuery }).subscribe({
-          next: (page) => { this.threads = page.items; this.loading = false; },
-          error: () => { this.threads = []; this.loading = false; },
-        });
+    this.errorCarga = false;
+    this.fetchSub?.unsubscribe();
+    this.fetchSub = this.inbox
+      .getThreads({ search: this.searchQuery, lineId: this.lineaFiltro || null })
+      .subscribe({
+        next: (page) => {
+          this.ponerHilos(page.items);
+          this.loading = false;
+        },
+        error: () => {
+          this.threads = [];
+          this.errorCarga = true;
+          this.loading = false;
+        },
       });
+  }
+
+  /** Guarda los hilos y avisa si el chat abierto cambió (por ejemplo, de dueño). */
+  private ponerHilos(items: WhatsappThread[]): void {
+    this.threads = items;
+    for (const t of items) {
+      if (t.line?.id) this.lineasVistas.set(t.line.id, t.line);
+    }
+    if (!this.claveSeleccion) return;
+    const abierto = items.find((t) => this.claveDe(t) === this.claveSeleccion);
+    if (abierto) this.seleccionRefrescada.emit(abierto);
+  }
+
+  private claveDe(thread: WhatsappThread): string {
+    return claveChat(thread.phoneHash, thread.line?.id);
   }
 }

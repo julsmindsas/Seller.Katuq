@@ -20,6 +20,9 @@
         <button type="button" role="tab" [class.activa]="vista === 'pauta'"
                 (click)="cambiarVista('pauta')"
                 title="Registros y vendedores activos por campaña de pauta">Pauta</button>
+        <button type="button" role="tab" [class.activa]="vista === 'constructor'"
+                (click)="cambiarVista('constructor')"
+                title="Sitios, ventas de las webs y comercios para acompañar">Constructor web</button>
       </div>
 
       <button type="button" class="btn-refrescar" (click)="refrescar()" [disabled]="cargando"
@@ -1575,6 +1578,8 @@
   </ng-container>
 
   <app-pauta-campanas *ngIf="vista === 'pauta'"></app-pauta-campanas>
+  <!-- Ticket 1246 -->
+  <app-constructor-metricas *ngIf="vista === 'constructor'"></app-constructor-metricas>
 
 
 </div>

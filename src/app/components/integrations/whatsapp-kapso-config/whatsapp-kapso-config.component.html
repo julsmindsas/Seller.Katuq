@@ -323,4 +323,7 @@
 
   <!-- Bot de pedidos: tarjeta independiente con su propia carga/guardado -->
   <app-whatsapp-bot-config *ngIf="!loading"></app-whatsapp-bot-config>
+
+  <!-- Varios números del comercio (D-437): solo se pinta con la bandera whatsappMultiNumero -->
+  <app-messaging-lines *ngIf="!loading"></app-messaging-lines>
 </div>

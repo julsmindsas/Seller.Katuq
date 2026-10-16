@@ -229,7 +229,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
    * empresas y cobrarles. Comparten los mismos datos, así que viven en la misma
    * pantalla en vez de en dos módulos que se desincronizan.
    */
-  vista: 'empresas' | 'cobros' | 'pauta' = 'empresas';
+  vista: 'empresas' | 'cobros' | 'pauta' | 'constructor' = 'empresas';
 
   // ── Sugerencias de los clientes ─────────────────────────────────────────
   //
@@ -403,7 +403,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
 
   // ── Cobros ────────────────────────────────────────────────────────────────
 
-  cambiarVista(vista: 'empresas' | 'cobros' | 'pauta'): void {
+  cambiarVista(vista: 'empresas' | 'cobros' | 'pauta' | 'constructor'): void {
     this.vista = vista;
     if (vista === 'cobros' && !this.cobros && !this.cargandoCobros) this.cargarCobros();
   }

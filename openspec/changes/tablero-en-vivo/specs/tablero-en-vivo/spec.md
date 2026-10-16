@@ -87,7 +87,7 @@ La pantalla SHALL celebrar una sola vez por día cada hito, con un aviso y confe
 - **THEN** aparece "¡40 pedidos hoy!" con confeti, y no se repite si la pantalla se recarga
 
 ### Requirement: Modo pantalla y privacidad
-La pantalla SHALL tener un modo pantalla para televisor: pantalla completa, tema oscuro, letra grande y sin apagar la pantalla mientras esté abierta. MUST permitir ocultar nombres de clientes y montos, y esa preferencia MUST quedar guardada en el navegador.
+La pantalla SHALL tener un modo pantalla para televisor: pantalla completa, el mismo tema claro, letra grande y sin apagar la pantalla mientras esté abierta. MUST permitir ocultar nombres de clientes y montos, y esa preferencia MUST quedar guardada en el navegador.
 
 #### Scenario: Televisor en el local
 - **WHEN** el comercio activa el modo pantalla con "ocultar clientes y montos"

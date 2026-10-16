@@ -1,0 +1,277 @@
+// Números de WhatsApp del comercio (D-437). Plano, tema canónico (config-pagina).
+// Ninguna clase lleva "p-" (trampa [class*="p-"] del CSS global) y cada span tiene
+// color y tamaño propios (trampa span.ng-star-inserted).
+@import '../../../shared/styles/config-pagina';
+
+@include config-pagina;
+
+:host {
+  display: block;
+  margin-top: 16px;
+}
+
+.lineas {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: $cfg-ink;
+
+  p, a, li, label, span, button { letter-spacing: normal; }
+  button:focus-visible,
+  input:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+}
+
+.lineas__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lineas__textos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  max-width: 620px;
+}
+
+.lineas__titulo {
+  margin: 0;
+  font-size: 16px !important;
+  line-height: 1.3;
+  font-weight: 800;
+  color: $cfg-ink;
+}
+
+.lineas__btn-texto,
+.lineas__aviso-texto {
+  color: inherit !important;
+  font-size: inherit !important;
+}
+
+.lineas__cargando {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  color: $cfg-muted;
+
+  i { color: $cfg-accent; }
+}
+
+.lineas__cargando-texto {
+  color: $cfg-muted !important;
+  font-size: 13px !important;
+}
+
+.lineas__error {
+  flex-wrap: wrap;
+  align-items: center;
+
+  .cfg-btn { margin-left: auto; min-height: 34px; }
+}
+
+.lineas .cfg-vacio__titulo { font-size: 15px !important; }
+
+.lineas__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lineas__item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  background: $cfg-tint;
+
+  &.is-off { background: #fff; opacity: .85; }
+}
+
+.lineas__fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lineas__identidad {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lineas__nombre {
+  font-size: 14.5px !important;
+  font-weight: 800;
+  color: $cfg-ink !important;
+  overflow-wrap: anywhere;
+}
+
+.lineas__tel {
+  font-size: 13px !important;
+  color: $cfg-body !important;
+}
+
+.lineas__marcas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.lineas__estado,
+.lineas__marca {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11.5px !important;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.lineas__estado--ok { background: $cfg-ok-soft; color: $cfg-ok !important; }
+.lineas__estado--off { background: $cfg-err-soft; color: $cfg-err !important; }
+
+.lineas__marca {
+  background: $cfg-chip-bg;
+  border: 1px solid $cfg-chip-border;
+  color: $cfg-body !important;
+}
+
+.lineas__dato { margin: 0; }
+
+.lineas__dato-texto {
+  font-size: 12px !important;
+  color: $cfg-muted !important;
+}
+
+.lineas__campos {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+
+  @media (min-width: 768px) { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); }
+}
+
+.lineas__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+}
+
+.lineas .cfg-label {
+  font-size: 10.5px !important;
+  color: $cfg-muted !important;
+}
+
+.lineas__valor {
+  font-size: 13.5px !important;
+  color: $cfg-ink !important;
+}
+
+.lineas__input {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #e4e2ef;
+  border-radius: 11px;
+  background: #fff;
+  font-size: 13.5px;
+  color: $cfg-ink;
+  box-sizing: border-box;
+
+  &:hover:not(:disabled) { border-color: #d9cffb; }
+  &:focus { border-color: $cfg-accent; box-shadow: 0 0 0 3px $cfg-accent-soft; outline: none; }
+  &:disabled { background: $cfg-chip-bg; }
+}
+
+.lineas__pie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lineas__bot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.lineas__bot-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lineas__bot-titulo {
+  font-size: 13px !important;
+  font-weight: 700;
+  color: $cfg-ink !important;
+}
+
+.lineas__bot-ayuda {
+  font-size: 12px !important;
+  color: $cfg-muted !important;
+}
+
+// Interruptor propio: se pinta solo desde el dato del servidor (sin estado interno).
+.lineas__interruptor {
+  position: relative;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  background: #d8d4ea;
+  cursor: pointer;
+  transition: background .15s ease;
+
+  &.is-on { background: $cfg-accent; }
+  &:disabled { cursor: not-allowed; opacity: .55; }
+}
+
+.lineas__perilla {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(30, 20, 80, .2);
+  transition: transform .15s ease;
+
+  .is-on > & { transform: translateX(18px); }
+}
+
+.lineas__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+
+  .cfg-btn { min-height: 36px; }
+}
+
+@media (max-width: 480px) {
+  .lineas__acciones { width: 100%; margin-left: 0; }
+  .lineas__acciones .cfg-btn { flex: 1 1 auto; }
+}

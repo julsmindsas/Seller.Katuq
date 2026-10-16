@@ -1,4 +1,3 @@
-import { environment } from "../../../../../../environments/environment";
 import { Component, Input, OnChanges, SimpleChanges } from "@angular/core";
 import { forkJoin } from "rxjs";
 import { ToastrService } from "ngx-toastr";
@@ -26,6 +25,8 @@ import {
 })
 export class WhatsappContactPanelComponent implements OnChanges {
   @Input() phoneHash: string | null = null;
+  /** [D-437] Número del comercio del chat; `null` = número compartido de Katuq. */
+  @Input() lineId: string | null = null;
 
   /** [D-098] Guardando el cambio de "no contactar". */
   togglingOptOut = false;
@@ -49,7 +50,7 @@ export class WhatsappContactPanelComponent implements OnChanges {
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes["phoneHash"]) {
+    if (changes["phoneHash"] || changes["lineId"]) {
       this.loadAll();
     }
   }
@@ -137,42 +138,21 @@ export class WhatsappContactPanelComponent implements OnChanges {
     const nuevo = !this.profile.optedOut;
     this.togglingOptOut = true;
 
-    const userStr = localStorage.getItem("user") || "{}";
-    let token = "", company = "", nit = "", email = "", authCode = "";
-    try {
-      const u = JSON.parse(userStr);
-      token = u.token || ""; company = u.company || ""; nit = u.nit || "";
-      email = u.email || ""; authCode = u.authorizationCode || "";
-    } catch {}
-    fetch(
-      environment.urlApi + "/v1/whatsapp/conversations/" +
-        encodeURIComponent(this.phoneHash) + "/optout",
-      {
-        method: "PATCH",
-        headers: {
-          "Authorization": "Bearer " + token,
-          "company": company,
-          "user": nit,
-          "usage-code": authCode,
-          "email": email,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ optedOut: nuevo }),
-      },
-    )
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then(() => {
+    this.inbox.setOptOut(this.phoneHash, nuevo, this.lineId).subscribe({
+      next: () => {
+        this.togglingOptOut = false;
         if (this.profile) this.profile = { ...this.profile, optedOut: nuevo };
-      })
-      .catch(() => {
+      },
+      error: () => {
+        this.togglingOptOut = false;
         this.toastr.error(
           nuevo
             ? "No se pudo marcar el contacto como 'No contactar'. Intenta de nuevo."
             : "No se pudo quitar la marca de 'No contactar'. Intenta de nuevo.",
           "No contactar",
         );
-      })
-      .finally(() => (this.togglingOptOut = false));
+      },
+    });
   }
 
   /**
@@ -239,7 +219,7 @@ export class WhatsappContactPanelComponent implements OnChanges {
       return;
     }
     this.ratingScore = score;
-    this.inbox.rateContact(this.phoneHash, score).subscribe({
+    this.inbox.rateContact(this.phoneHash, score, this.lineId).subscribe({
       next: () => {
         // Actualiza el ratingDraft local para que la UI sea consistente al
         // colapsar/expandir la sección.
@@ -272,26 +252,10 @@ export class WhatsappContactPanelComponent implements OnChanges {
       this.profile.profileName ||
       `Contacto WhatsApp ${phone || ""}`.trim();
 
-    const userStr = localStorage.getItem("user") || "{}";
-    let token = "", company = "", nit = "", email = "", authCode = "";
+    let email = "";
     try {
-      const u = JSON.parse(userStr);
-      token = u.token || "";
-      company = u.company || "";
-      nit = u.nit || "";
-      email = u.email || "";
-      authCode = u.authorizationCode || "";
+      email = JSON.parse(localStorage.getItem("user") || "{}").email || "";
     } catch {}
-
-    const headers: HeadersInit = {
-      "Authorization": "Bearer " + token,
-      "company": company,
-      "user": nit,
-      "usage-code": authCode,
-      "email": email,
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-    };
 
     const body = {
       name,
@@ -304,13 +268,8 @@ export class WhatsappContactPanelComponent implements OnChanges {
       whatsappPhoneHash: this.profile.phoneHash,
     };
 
-    fetch(environment.urlApi + "/v1/crm/leads/import", {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-    })
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((resp: any) => {
+    this.inbox.guardarLeadEnCrm(body).subscribe({
+      next: (resp: any) => {
         this.savingToCrm = false;
         const leadId =
           resp?.data?.id || resp?.data?.leadId || resp?.id || "new-lead";
@@ -332,16 +291,14 @@ export class WhatsappContactPanelComponent implements OnChanges {
             } as any,
           };
         }
-      })
-      .catch(async (err) => {
+      },
+      error: (err: any) => {
         this.savingToCrm = false;
-        let message = "No se pudo guardar el lead. Intenta de nuevo.";
-        try {
-          const j = err && err.json ? await err.json() : null;
-          if (j?.error) message = j.error;
-        } catch {}
+        const message =
+          err?.error?.error || "No se pudo guardar el lead. Intenta de nuevo.";
         this.toastr.error(message, "Guardar en CRM");
-      });
+      },
+    });
   }
 
   private loadAll(): void {
@@ -353,65 +310,22 @@ export class WhatsappContactPanelComponent implements OnChanges {
     }
     this.loading = true;
     const hash = this.phoneHash;
-    // Fetch directo (workaround del HMR singleton cacheado).
-    const userStr = localStorage.getItem("user") || "{}";
-    let token = "", company = "", nit = "", email = "", authCode = "";
-    try {
-      const u = JSON.parse(userStr);
-      token = u.token || "";
-      company = u.company || "";
-      nit = u.nit || "";
-      email = u.email || "";
-      authCode = u.authorizationCode || "";
-    } catch {}
-    const headers: HeadersInit = {
-      "Authorization": "Bearer " + token,
-      "company": company,
-      "user": nit,
-      "usage-code": authCode,
-      "email": email,
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-    };
-    const base = environment.urlApi + "/v1/whatsapp/conversations/" +
-      encodeURIComponent(hash);
-    Promise.all([
-      fetch(base + "/profile", { headers }).then((r) =>
-        r.ok ? r.json() : Promise.reject(r),
-      ),
-      fetch(base + "/orders", { headers }).then((r) =>
-        r.ok ? r.json() : Promise.reject(r),
-      ),
-    ])
-      .then(([profResp, ordersResp]: any[]) => {
-        const profile: any = {
-          phoneHash: profResp?.phoneHash || hash,
-          phoneMasked: profResp?.phoneMasked || "+??***????",
-          clienteNombre: profResp?.clienteNombre || null,
-          profileName: profResp?.profileName || null,
-          isClienteRegistrado: !!profResp?.isClienteRegistrado,
-          hasOrderHistory: !!profResp?.hasOrderHistory,
-          lead: profResp?.lead || null,
-          ratingDraft: profResp?.ratingDraft || null,
-          optedOut: !!profResp?.optedOut,
-        };
-        const orders = (ordersResp?.items || []).map((o: any) => ({
-          orderId: o.id,
-          nroPedido: o.numero || "S/N",
-          estado: o.estado || o.estadoProceso || "—",
-          total: o.total || 0,
-          fechaCreacion: o.fechaCreacion,
-          currency: "COP",
-          deepLink: `/ventas/detalle/${o.id}`,
-        }));
+    const lineId = this.lineId;
+    forkJoin([
+      this.inbox.getContactProfile(hash, lineId),
+      this.inbox.getContactOrders(hash, lineId),
+    ]).subscribe({
+      next: ([profile, orders]) => {
+        if (this.phoneHash !== hash || this.lineId !== lineId) return;
         this.profile = profile;
         this.orders = orders;
         this.ratingScore =
           profile.lead?.score ?? profile.ratingDraft?.score ?? 0;
         this.loading = false;
-      })
-      .catch(() => {
+      },
+      error: () => {
         this.loading = false;
-      });
+      },
+    });
   }
 }

@@ -5941,6 +5941,27 @@ $pd-chip-border: #e9e7f3;
   &__info { flex: 1; min-width: 0; }
   &__name { font-size: 13px; font-weight: 700; color: #2b2846; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   &__qty { font-size: 11px; color: $pd-muted-2; margin-top: 2px; }
+  &__acciones { display: flex; gap: 6px; flex: none; }
+  &__btn {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e4dff7;
+    border-radius: 9px;
+    background: #fff;
+    color: #5F3FE0;
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color .12s ease, background .12s ease;
+
+    &:hover:not(:disabled) { border-color: #d9cffb; background: #faf9ff; }
+    &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; }
+    &:disabled { opacity: .4; cursor: not-allowed; }
+    &--peligro { color: #D64545; }
+    &--peligro:hover:not(:disabled) { border-color: #f3c7c7; background: #fdf3f3; }
+  }
 }
 
 /* ---- Grid de acciones ---- */

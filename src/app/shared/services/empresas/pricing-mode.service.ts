@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map, shareReplay, tap } from 'rxjs/operators';
 import { BaseService } from '../base.service';
+import { esFamiliaAdministrador } from '../../utils/roles';
 
 /**
  * Modo de precios de la empresa. Se maneja UNO, nunca varios a la vez.
@@ -108,13 +109,7 @@ export class PricingModeService extends BaseService {
 
   /** Normaliza acentos/mayúsculas y acepta la familia "Administrador". */
   static esRolAdministrador(rol: any): boolean {
-    const normalizado = String(rol || '')
-      .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
-      .toLowerCase()
-      .replace(/\s+/g, ' ')
-      .trim();
-    return /(^|[^a-z0-9])administrador([^a-z0-9]|$)/.test(normalizado);
+    return esFamiliaAdministrador(rol);
   }
 
   private normalizar(data: any): ConfigPrecios {

@@ -273,3 +273,66 @@
     }
   }
 }
+
+// [D-437] Filtro por número del comercio y estado de error real (sin datos de demostración).
+.thread-list__linea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+}
+
+.thread-list__linea-label {
+  flex: none;
+  font-size: 10.5px !important;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: var(--km-muted) !important;
+}
+
+.thread-list__linea-select {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+  border: 1.5px solid var(--km-line2);
+  border-radius: 11px;
+  background: #fbfaff;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--km-ink);
+  cursor: pointer;
+
+  &:focus { outline: none; border-color: var(--km-accent); background: var(--km-surface); }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+
+.thread-list__row-phone { min-width: 0; }
+
+.thread-list__state--error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.thread-list__state-texto {
+  font-size: 13px !important;
+  color: #D64545 !important;
+}
+
+.thread-list__retry {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid #e4e2ef;
+  border-radius: 11px;
+  background: #fff;
+  color: #5b5878;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover { border-color: #d9cffb; color: #5F3FE0; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}

@@ -4,9 +4,8 @@
 //     radios 16/11/20, sombras violeta difusas, PLANO y SIN GRADIENTES.
 //   · Los tokens viven como variables CSS `--ev-*` en el elemento raíz del shell (`.ev-app`) y
 //     bajan solos a todos los componentes (las variables heredan aunque haya encapsulación).
-//   · DESVÍO JUSTIFICADO: el modo pantalla (`.ev-tv`) usa una variante oscura derivada de la
-//     tinta #211F3A, con los mismos tonos aclarados para contraste AA en un televisor. Vive
-//     solo en esta pantalla.
+//   · El modo pantalla (`.ev-tv`) usa el mismo tema claro, solo con la letra más grande
+//     (D-433: Daniel lo quiere claro; antes era una variante oscura).
 // Uso en un componente:  @import '../en-vivo-tema';  y luego  @include ev-tonos;  si usa tonos.
 // ==========================================================================
 
@@ -62,50 +61,9 @@
   --ev-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 }
 
-// Variante oscura del modo pantalla (televisor): mismos nombres, valores aclarados.
+// Modo pantalla (televisor): el mismo tema claro, con la letra más grande.
 @mixin ev-tokens-tv {
-  --ev-bg: #110f24;
-  --ev-surface: #1a1734;
-  --ev-surface-2: #201c3f;
-  --ev-tile: #252049;
-  --ev-ink: #f1eefc;
-  --ev-ink-2: #c7c2e6;
-  --ev-muted: #a39fc6;
-  --ev-muted-2: #8d88b3;
-  --ev-line: #2c2850;
-  --ev-line-soft: #252147;
-  --ev-chip: #221e43;
-  --ev-chip-line: #332e5e;
-  --ev-accent: #9b85ff;
-  --ev-accent-2: #b4a3ff;
-  --ev-accent-soft: #2d2560;
-  --ev-accent-hover: #b4a3ff;
-  --ev-on-accent: #14112b;
-  --ev-ok: #4cc584;
-  --ev-ok-soft: #163626;
-  --ev-warn: #f0a43a;
-  --ev-warn-soft: #3a2a12;
-  --ev-bad: #ff7b7b;
-  --ev-bad-soft: #3d1d24;
-  --ev-info: #6ea8ff;
-  --ev-info-soft: #172a4a;
-  --ev-pack: #d184f0;
-  --ev-pack-soft: #341a42;
-  // En el televisor los tonos aclarados ya pasan 4,5:1 sobre su suave (de 4,7 a 6,6): son los mismos.
-  --ev-accent-ink: #9b85ff;
-  --ev-info-ink: #6ea8ff;
-  --ev-ok-ink: #4cc584;
-  --ev-warn-ink: #f0a43a;
-  --ev-bad-ink: #ff7b7b;
-  --ev-pack-ink: #d184f0;
-  --ev-slate: #a9b7c2;
-  --ev-slate-soft: #25303a;
-  --ev-sh-panel: 0 1px 3px rgba(0, 0, 0, 0.35);
-  --ev-sh-up: 0 8px 18px -10px rgba(0, 0, 0, 0.7);
-  --ev-sh-btn: 0 8px 18px -8px rgba(155, 133, 255, 0.55);
-  --ev-sh-pop: 0 12px 26px -12px rgba(0, 0, 0, 0.8);
   --ev-fs: 1.2;
-  color-scheme: dark;
 }
 
 // Un tono: fija `--tone` (fuerte) y `--tone-soft` (fondo suave) para el elemento que lleve la clase.

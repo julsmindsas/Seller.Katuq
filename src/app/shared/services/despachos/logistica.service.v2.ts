@@ -406,6 +406,14 @@ export class LogisticaServiceV2 extends BaseService {
         return this.http.post(`${this.apiUrl}/v1/logistica/guia`, { orderId, provider });
     }
 
+    /**
+     * Manifiesto de Enviame del pedido (el documento que piden los transportadores
+     * al recoger). El backend lo busca o lo genera en Enviame y devuelve `manifestUrl`.
+     */
+    obtenerManifiesto(orderId: string): Observable<any> {
+        return this.http.get(`${this.apiUrl}/v1/logistica/guia/${encodeURIComponent(orderId)}/manifiesto`);
+    }
+
     // ========== MÉTRICAS AGREGADAS ==========
 
     /**

@@ -9981,3 +9981,157 @@ El detalle de seguridad está en el cambio privado del backend, sección "D-422 
 **Decisión.** `services/cotizaciones/pedidoDeLaCotizacion.js` + `marcarConvertida`: antes de sellar se busca el pedido (misma empresa) y se rechaza con 409 `PEDIDO_DE_OTRO_CLIENTE` si es de otro cliente (documento sin DV) Y no comparte ningún producto. Así sigue pasando facturar la cotización a otra razón social con los mismos productos (caso real de julio). La cotización queda aceptada para convertirla de nuevo. No se tocó `crear-ventas` (módulo de pedidos). Contra las 45 conversiones reales rechaza exactamente las 2 reportadas.
 
 **Pendiente.** Reenlazar las dos cotizaciones (escritura en Firestore de producción, requiere aprobación): COT-0109 → DAD-014291 (Keikaku; la comercial la duplicó como COT-0110, ya enlazada a ese pedido) y COT-0107 → DAD-014297 (Grupo Bios, 100 galletas frente a las 80 cotizadas). El script se probó en dry-run y deja `correccionPedido` como rastro.
+
+
+## D-433 (2026-10-15) — En vivo: el modo pantalla (televisor) usa el tema claro
+
+Daniel, al ver el modo pantalla: "Lo quiero claro". Reemplaza el desvío justificado de D-386, que lo ponía en una variante oscura.
+
+- **Qué cambia:** `.ev-tv` ya no redefine los colores. Solo agranda la letra (`--ev-fs: 1.2`), y las escenas 3D (operación, mapa, país y ciudad) usan sus colores claros. Se mantienen la pantalla completa, la pantalla sin apagarse, la cámara automática y "ocultar".
+- **Dónde:** `_en-vivo-tema.scss` (`ev-tokens-tv`), `en-vivo-escena-operacion.component.scss` y `en-vivo-escenas-mapa.component.scss` (se quitan los bloques oscuros), y la spec `tablero-en-vivo` (modo pantalla: el mismo tema claro).
+- **Solo presentación.** El código de las escenas que sabe pintar en oscuro queda sin uso (`--dark: 0`), sin cambios de comportamiento.
+
+## D-434 (2026-10-15) — En vivo de Katuq: la lista y los pulsos muestran todos los cambios del día y se entienden — PUBLICADO: backend f0dfaff8, front 2026.10.15.5
+
+Daniel: en `/en-vivo/katuq` "no está mostrando los pulsos o los eventos bien de los pedidos"; la lista no se actualiza y lo que sale es poco o confuso.
+
+- **Causa medida (solo lectura, 15-oct):** el observador de toda Katuq escuchaba solo los pedidos creados desde ayer. Los de antes se releían cada 5 minutos sin emitir eventos. Ese día, 47 de 116 cambios de estado no salieron ni en la lista ni en las escenas; en ALMARA fueron 44 de 99, porque entrega pedidos creados días antes.
+- **Servidor:** el listener de plataforma usa la misma ventana de 7 días del tablero del comercio, y desaparece la lectura periódica de "antiguas". Las cifras de hoy y ayer siguen filtrando por creación. En régimen lee menos: antes eran ~5 días de pedidos cada 5 minutos; ahora 7 días una vez por apertura (307 pedidos, ~14 MB en memoria, medido). Se actualizan la spec `tablero-en-vivo-plataforma` ("Un solo observador") y el non-goal del design. Quedan fuera los pedidos de más de 7 días, como en el comercio (6 de los 116).
+- **Lista:** en toda Katuq cada evento lleva el número del pedido y el monto también en cambios, salidas y entregas (antes: "un pedido pasó a…" sin cifras). Con "ocultar" no va el número, porque su prefijo delata al comercio.
+- **Pulsos:** el cambio de etapa en Comercios y Colombia es un anillo del doble de tamaño y más largo; en Comercios el edificio además da un salto.
+
+
+## D-435 (2026-10-15) — Confirmación compartida de Wompi para Opttia
+
+**Autorizada por Daniel:** «conecta la confirmación de wompi y habilita los pagos para que ya puedan registrarse pagar y usar opttia». La autorización incluye publicación y habilitación operativa.
+
+El receptor de Wompi existente envía exclusivamente las referencias `OPTTIA-` al confirmador nativo de Opttia, con destino interno fijo y el aviso firmado íntegro. Conserva auditoría antes de reenviar y devuelve fallos temporales como reintento. Los pagos de Katuq conservan su controlador, empresa y credenciales actuales. No se cambian pedidos, inventario ni la URL de eventos del comercio. Opttia verifica firma, ambiente, referencia, importe, moneda y transacción consultada con llave privada; la aprobación se aplica una sola vez por recibo. Sandbox usa almacenamiento aislado; no se realizan cargos reales de prueba.
+
+Spec: `katuq_admin_back_firebase/openspec/changes/confirmacion-pagos-opttia/`.
+
+**Publicado y verificado (15-oct):** receptor Katuq `7a8dfbba`, ADK `9a066e0`, llaves de producción y catálogo de cobros habilitados. Dos rutas públicas aceptaron un aviso firmado para una referencia inexistente; firma inválida y checkout anónimo rechazados con 401. Tres registros de auditoría verificados, sin crear intentos ni planes. Respaldos privados antes de publicar. 61 pruebas Python, seis contratos de reenvío y regresiones de Wompi de Katuq.
+
+**Respaldo al regresar:** Opttia conserva el ID de Wompi al ingresar de nuevo y confirma con una consulta privada autenticada por empresa. Compara referencia, importe, moneda y ambiente; ignora cualquier estado de la URL y usa la misma acreditación idempotente. Sandbox real comprobó rechazo y aprobación sin webhook previo y duplicado posterior sin ampliar vigencia, con almacenamiento aislado en memoria. No se hizo un cobro real ni una compra completa sobre Firestore productivo. Los avisos recientes no certificaron con su firma la URL configurada para el comercio de suscripciones; el receptor está preparado y la consulta directa cubre el regreso del comprador.
+
+## D-436 (2026-10-15) — Todos los pedidos: editar y eliminar productos también desde la vista de panel (ticket 1186) — PUBLICADO: front 2026.10.15.6
+
+Daniel: «cierra los de soporte de julsmind». Lo tomó como aprobación del cambio en `orders` (solo presentación).
+
+- **Qué pasaba:** en la vista de tabla, cada producto del pedido expandido tiene "Configurar" y "Eliminar". En la vista de panel (por defecto, `modoVista = 'split'`) la lista de productos del detalle solo los mostraba.
+- **Qué cambia:** cada `.pedido-prod` del detalle trae los mismos dos botones con las mismas funciones y reglas que la tabla: `confProductToCart(confProductToCartModal, item, pedidoDetalle, i)` y `eliminarProductoDelPedido(item, pedidoDetalle)`, habilitados por `canModifyProducts`, `canDeleteProducts` e `isGhostProduct`, con los mismos títulos. Se ocultan desde producción (`isFromProduction`). Al guardar se sigue el camino de las demás acciones del panel (`editOrder` → `refrescarDatos`).
+- **Sin cambios** en servicios, validaciones, inventario ni backend.
+- **Verificado** con el bundle de producción y pedidos simulados a 1440 y 390 px. En un pedido despachado, "Configurar" sale bloqueado con el motivo, y el configurador abre desde el panel. A 390 px los botones quedan dentro de la tarjeta; el panel de detalle ya desbordaba unos 10 px antes de este cambio.
+
+
+## D-437 (2026-10-15) — WhatsApp con varios números por comercio, asignados a vendedores (openspec/changes/whatsapp-varios-numeros) — PUBLICADA con la bandera apagada; falta piloto
+
+Daniel: «con kapso necesitamos conectar n cantidades de whatsapp y que se pueda asignar a un vendedor y que no se pisen los chats, averigua cómo y hazlo». Escogió **número y chat** como forma de asignar y **Katuq le paga a Meta, descontando del saldo prepago** (D-044).
+
+- **Situación medida el 15-oct, en solo lectura:**
+  - Hay un número por comercio (`ownCredentials`), pero ningún comercio lo usa: todos salen por el número compartido de Katuq.
+  - Los chats no tienen dueño, y el mismo cliente con dos números quedaría en un solo chat.
+  - Desde el 23-ago no entra ningún mensaje, porque desde el 27-ago no hay conversaciones en Kapso. Los envíos recientes están todos omitidos: ALMARA tiene las notificaciones apagadas (`WHATSAPP_PREF_OFF`) y los demás no tienen opt-in. El canal está quieto, no roto.
+- **Propuesta:**
+  - El comercio conecta N números por su cuenta con el enlace de conexión de Kapso, con coexistencia con el celular o dedicado.
+  - Cada número se registra con un único dueño (`whatsapp_phone_numbers/{phoneNumberId}`) y se asigna a uno o varios vendedores.
+  - Un chat es la conversación de un cliente con un número, y tiene un solo dueño (`whatsapp_threads`), fijado por transacción: solo el dueño escribe; tomar, soltar y pasar.
+  - Cada vendedor ve solo sus números y sus chats, filtrado en el servidor.
+  - La salida y la ventana de 24 h van por el número del chat.
+  - Los mensajes enviados desde el celular se ven en el chat sin descontar saldo.
+  - El número compartido, las notificaciones y el bot piloto de ALMARA no cambian.
+  - Banderas global y por comercio.
+- **Requiere aprobación:**
+  - las dos colecciones nuevas;
+  - el plan Platform de Kapso para más de 3 números;
+  - `meta_billing_mode: partner_managed`.
+- **Hallazgo aparte:** en el buzón, `bot/sesiones`, `viewed` y `bot` responden 401 en producción. Usan llamados sin interceptor y se corrigen dentro de este cambio (tarea 3.6).
+- **APROBADA con revisión de arquitectura (15-oct).** Daniel: «hazlo pero de una manera estratégica, usando la arquitectura de Katuq, que todo lo estás haciendo suelto». El diseño se rehízo como **dominio Mensajería con Strategy** (`services/messaging/`), con el mismo molde que `accountingManager` y el provider delgado de Fullpi:
+  - `kapsoWhatsappProvider` es el primer provider. Meta entra después sin tocar el manager (Art. VI).
+  - Una sola resolución de credenciales reemplaza las seis copias que tiene `kapsoService`.
+  - La **línea** no depende del canal: `messaging_lines/{provider}_{externalId}`, con el dueño único dado por el id.
+  - El dueño de cada chat queda en `messaging_threads`, fijado por transacción.
+  - El webhook nuevo, `/v1/messaging/webhook/:provider`, sigue el molde de WooCommerce. Reutiliza `integration-core/idempotency` y `integrationRawEvents` y falla cerrado.
+  - La bandera es `whatsappMultiNumero` en `companies.featureFlags`.
+  - El equipo comercial sale de `crmAcceso.listarComerciales`.
+  - En el front: una ruta genérica `/integrations/:provider/retorno` con su registro de conectores, `inbox-core` para que las piezas del buzón no dependan del canal, `selector-equipo` y `roles.ts` como única utilidad de familia Administrador.
+  - Quedan para un cambio aparte: migrar Meta a provider, unificar los buzones y pasar `{company}_kapso` a `integrationConfigService`.
+- **PUBLICADO con la bandera apagada (15-oct, noche).** Backend `c2421ff6` (fases 1-3: `87af3713`, `dbcaa15e`, `c2421ff6`), ff-only y `pm2 restart katuq-api`, online. Sin sesión ni firma, `/v1/messaging/lines`, `/v1/messaging/webhook/kapso` y `/v1/whatsapp/conversations` responden 401. Pasados 4 minutos, sin errores del barrido. Front **2026.10.15.7**, con `verify-dist-prod` OK y `firebase deploy --only hosting`.
+  - **Índices** (`messaging_threads`, `integrationRawEvents`, `messaging_lines`): el CLI no deja desplegar un archivo parcial sin `--force`, y `--force` borraría 393 índices. Se exportaron los vivos con `firebase firestore:indexes`, se sumaron los 3 nuevos (396) y se desplegó sin `--force`. No se borró nada.
+  - **Pruebas:** 9 de mensajería, que incluyen golden de 126 escenarios del número compartido, webhook, dueño único, alcance, candado de tenant, bot en línea y bajas; además 23/23 de notificaciones y banderas.
+  - **Sumado en implementación:**
+    - candado `requireJwtTenant` en todo `/v1/whatsapp` autenticado (el buzón aceptaba la empresa que mandaba el cliente);
+    - código de un solo uso (`estado`) al conectar un número;
+    - el bot se enciende con número propio **o** con una línea con bot;
+    - las bajas por palabra clave también aplican en las líneas.
+  - **Falta:**
+    - `MESSAGING_KAPSO_WEBHOOK_SECRET` en el `.env` de producción (Daniel; sin ella el webhook nuevo rechaza todo);
+    - plan Platform de Kapso para más de 3 números;
+    - encender `whatsappMultiNumero` en Julsmind y la prueba con dos números reales (tareas 6.x), que incluye la revisión en navegador (3.8).
+  - **Riesgos conocidos:**
+    - los toques Confirmar/Cancelar no se procesan si llegan por una línea;
+    - la sesión del bot sigue por contacto;
+    - el barrido puede repetir trabajo idempotente.
+
+## D-438 (2026-10-16) — Los pagos rechazados o cancelados no suman al anticipo (ticket 1221, ALMARA) — PUBLICADO: backend 15cbb5ab
+
+Daniel: «hay un tiket nuevo de almara cerrarlo de pagos». Lo tomó como aprobación del arreglo mínimo en `orders`.
+
+- **Causa (solo lectura, 16-oct):** `calculateOrderTotals` (`services/orderCalculationService.js`) corre en cada creación y en cada edición con carrito. Recalculaba el anticipo con TODOS los `PagosAsentados`, también los rechazados. El listado del front sí los excluía, pero el servidor guardaba el valor inflado. Ejemplo: DAD-013737, total 83.200, con un rechazado de 83.200 y pagos de 80.000 + 3.000, quedó con anticipo 166.200, saldo 0 y "Aprobado".
+- **Arreglo:** `sumarPagosVigentes` excluye Rechazado y Cancelado (y Wompi Pendiente, como antes) y suma como número (antes un valor en texto se concatenaba). Los demás pagos pendientes siguen sumando, sin cambio. Prueba: `tests/orders/anticipoSinPagosRechazados.test.js` (5). `preciosPorTipoFase0` ya fallaba antes, por redondeo.
+- **Datos (medido sobre 18.583 pedidos):** 30 con anticipo distinto de la suma vigente y algún pago rechazado o cancelado: 29 de ALMARA y CER-000009 de la demo FLORECER. Se corrigen los 29 con anticipo inflado; DAD-014291 queda fuera porque sigue el criterio de Tesorería (anticipo 0 con pagos pendientes). Cuatro están en "Aprobado" con saldo real: DAD-013845 (118.800), DAD-012914 (63.600), DAD-014010 (2.900) y DAD-013737 (200). La corrección (`corregir-1221.js`, en dry-run) espera la aprobación de Daniel, incluido si esos cuatro pasan a PreAprobado.
+- **Pendiente sin tocar:** con Tesorería encendida, el anticipo debería contar solo los aprobados, pero `calculateOrderTotals` (función pura, sin bandera de empresa) cuenta los pendientes al editar con carrito. Es una inconsistencia previa que se escala aparte.
+
+**Adenda D-438 (16-oct) — por qué pasó y qué falta para que no vuelva a pasar.** Daniel: «la idea no es solucionar, sino que no vuelva a pasar».
+
+- **Cadena confirmada con `treasury_audit` (DAD-013737 y DAD-013845):**
+  1. El vendedor sube un comprobante equivocado y Tesorería lo rechaza ("no es el comprobante"). Es la operación normal: 30 rechazos con esos motivos.
+  2. Tesorería guarda el pedido con `applyOrderUpdate` → `updateOrderInternal(skipTreasuryGuard)`, enviando el pedido completo con carrito y el anticipo correcto (`computeApprovedAnticipo`).
+  3. Como trae carrito, `calculateOrderTotals` recalcula y **pisa** ese anticipo con su propia suma, que incluía los rechazados (corregido en `15cbb5ab`).
+  4. Con el saldo en 0, la siguiente edición deja el pedido en "Aprobado". La auditoría muestra que Tesorería lo había dejado en PreAprobado.
+- **Lo que sigue abierto: dos reglas de anticipo conviviendo.** Tesorería cuenta solo los aprobados; `calculateOrderTotals` cuenta también los pendientes, y gana porque corre de último. Se probó aplicar la regla de Tesorería al final de crear y editar, y se **revirtió sin desplegar**. La medición (solo lectura) dio que 1.217 pedidos de ALMARA cambiarían de anticipo: 916 son pedidos viejos (DAD-000xxx, entregados y "Aprobado") con pagos en "Pendiente" que nunca se revisaron porque son de antes de encender Tesorería. Con esa regla quedarían debiendo el total.
+- **Para unificar** hace falta una decisión de Daniel: qué hacer con los pagos pendientes históricos, por ejemplo marcarlos "Aprobado (histórico)" en los pedidos entregados y pagados. Después, la regla de Tesorería al final de crear y editar, más una prueba de contrato que exija el orden.
+- **Riesgo latente medido:** el guard de Tesorería (`orders.js`, `computeApprovedAnticipo`) aplica la regla en las ediciones sin carrito. Ya hay 3 pedidos con el anticipo por debajo de lo pagado.
+
+## D-439 (2026-10-16) — Editar un cliente exige que la ficha sea de la empresa que edita
+
+`POST /v1/clients/edit` con `cd` actualizaba el documento sin mirar de quién era: un `cd` de otra empresa se reescribía y quedaba con la `company` del que editaba. Ahora se lee la ficha antes y, si no existe o es de otra empresa, responde 404 `client_not_found` sin escribir.
+
+Salió revisando el ticket Julsmind 1201 (editar la cédula), que Daniel archivó sin cambio: la cédula sigue sin poder editarse. Prueba: `tests/clients/editarClienteOtraEmpresa.test.js`.
+
+## D-440 (2026-10-16) — Catálogo del POS: existencias en todas las bodegas, como en venta asistida (ticket Julsmind 1172)
+
+La etiqueta de unidades de cada producto del POS (`pos2/widgets/product`) abre, con el mouse o al tocarla, el globo "Existencias por bodega": la bodega de la caja marcada como "esta caja" y las demás con existencias. Usa el mismo endpoint de venta asistida (`GET /v1/inventory/producto-bodegas/:productoId`, solo lectura, con la deduplicación docId/referencia) y caché por producto mientras el catálogo está abierto.
+
+A diferencia de venta asistida, el globo solo informa: no cambia la bodega de la caja en medio de una venta. Sin cambios de servidor, carrito ni inventario. Estilos con los tokens del design system (sin el `#7366ff` del globo de venta asistida).
+
+## D-441 (2026-10-16) — Una sola regla de anticipo con Tesorería: solo pagos aprobados, aplicada de último (ticket 1221) — CÓDIGO LISTO, despliegue tras la migración
+
+Daniel: «arreglalo y te autorizo a corregir los pedidos». Sigue a D-438.
+
+- **Corrección aplicada (16-oct):** los 29 pedidos con anticipo inflado por pagos rechazados. Los 4 en "Aprobado" con saldo pasaron a PreAprobado. Cada uno guarda el rastro en `correccionAnticipo`. Ticket cerrado con aviso a ALMARA.
+- **Código** (parche `regla-unica-1221.patch`, probado y sin desplegar):
+  - `treasuryService.aplicarAnticipoAprobado`, función pura.
+  - `fijarAnticipoDeTesoreria` en `orders.js`, después de `calculateOrderTotals` al editar y al crear, solo si la empresa tiene `treasuryEnabled`. Si el flag no se puede leer, deja lo calculado.
+  - `computeApprovedAnticipo` lee `valor` o, si no viene, `valorRegistrado`. El POS solo guarda `valorRegistrado`, y para Tesorería cada venta POS pagada valía 0 (951 pedidos POS de ALMARA tienen anticipo 0 estando pagados).
+  - Prueba de contrato del orden: nada recalcula totales entre la regla y la escritura.
+- **Migración previa obligatoria** (`migrar-pendientes-historicos.js`, en dry-run):
+  - 1.019 pagos "Pendiente" sin `paymentId`, de 2024-07 a 2025-08, en 916 pedidos. Nunca entraron a la cola de Tesorería, que trabaja sobre `payments`.
+  - Pasan a "Aprobado" con `aprobacionHistorica`, pero solo hasta el anticipo que el pedido ya mostraba. 10 duplicados que exceden quedan iguales.
+  - Simulación: después de migrar, ningún pedido queda por debajo de lo que muestra hoy. El único que baja con la regla es DAD-014091, que tiene $80.900 realmente en revisión.
+  - El entorno bloqueó la escritura masiva: la corre Daniel. Después se aplica el parche, se despliega y se mide de nuevo.
+- **Anomalía aparte:** DAD-004604 tiene cientos de pagos aprobados y un anticipo de 91 M con un total de 46.200. Es dato corrupto y no se toca aquí.
+
+## D-442 (2026-10-16) — Rótulo de despacho con marca y datos completos (ticket 1219, ALMACEN BOMBAS)
+
+- **Qué:** el rótulo que imprime Despachos (`descargarRotulo`) deja de ser un cuadro con nombre, dirección y valor. Ahora trae el logo de la empresa, el remitente (dirección, ciudad, teléfono de logística y correo de contacto), y los campos destinatario, dirección, ciudad/departamento, contacto y teléfono, pedido/factura, entrega, bulto "___ de ___" para llenar a mano, contiene (cantidad × producto) y el pie "Este lado arriba · Manipular con cuidado".
+- **Se conserva:** el tamaño de 10 × 10 cm (impresoras térmicas de otros comercios), la zona y las observaciones. El valor por cobrar ahora solo aparece cuando hay saldo; si no hay, el pie muestra el número de pedido.
+- **Por qué:** ALMACEN BOMBAS pegaba su propio rótulo encima del de Katuq porque este no tenía su marca ni los datos que piden las transportadoras. Es un cambio de presentación del documento impreso, sin tocar datos ni flujos.
+- **De paso:** en Empresas, las imágenes de encabezado y pie del correo se guardaban en la carpeta `Otros` por un nombre de tipo mal escrito (`imagenEmail` contra `imageEmail`). Corregido; las URL ya guardadas no cambian.
+
+## D-443 (2026-10-16) — Manifiesto de Enviame desde Despachos (ticket 1216, ALMACEN BOMBAS)
+
+- **Qué:** en Despachos, los pedidos con envío en Enviame tienen la opción "Manifiesto" junto a "Guía de envío". Abre el PDF del manifiesto (lo que los transportadores llaman IRIS o manifiesto al recoger).
+- **Cómo:** `GET /v1/logistica/guia/:orderId/manifiesto` (back `8f3a0d8`). Si el pedido ya tiene `shippment.manifestUrl`, lo devuelve. Si no, busca en Enviame el manifiesto que contiene la entrega (`summaries-new-endpoint?delivery_ids[]=`). Si no hay ninguno, lo genera con `POST /summary`, en un solo intento para no duplicar. El enlace queda guardado en `shippment.manifestUrl` / `manifestId`. Al imprimir la guía por `/labels` también se guarda el manifiesto que devuelve Enviame.
+- **Por qué a pedido y no al crear el envío:** Enviame agrupa en un mismo manifiesto los envíos de un transportador. Crear uno por envío en el momento de crearlo partiría el manifiesto del día. Al pedirlo, primero se usa el que ya existe.
+- **Verificado:** con la API real de ALMACEN BOMBAS, solo lectura: BAS-000046 devuelve su manifiesto cerrado con PDF y BAS-000043 no tiene ninguno, así que se generaría. El filtro por entrega funciona (un id inexistente devuelve 0).
+- **De paso (seguridad):** `/v1/logistica/guia` cargaba el pedido por id sin revisar la empresa. Ahora pasa por `requireJwtTenant` y `esDeLaEmpresa` (404 y rastro en `audit_log_access` si es ajeno), igual que D-439.

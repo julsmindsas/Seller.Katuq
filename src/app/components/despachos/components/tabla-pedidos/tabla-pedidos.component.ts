@@ -49,6 +49,7 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   @Output() onEnviameCancelShipment = new EventEmitter<Pedido>();
   @Output() onEnviameDownloadLabel = new EventEmitter<Pedido>();
   @Output() onGenerarGuia = new EventEmitter<Pedido>();
+  @Output() onManifiesto = new EventEmitter<Pedido>();
 
   // NEW - Evidencia empacado action
   @Output() onUploadEvidenciaEmpacado = new EventEmitter<Pedido>();
@@ -434,6 +435,11 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
       { label: 'Guía de envío', icon: 'pi pi-send', command: () => this.generarGuia(pedido) }
     ];
 
+    // Manifiesto de Enviame: lo piden los transportadores al recoger.
+    if (this.tieneEnvioEnviame(pedido)) {
+      items.push({ label: 'Manifiesto', icon: 'pi pi-list', command: () => this.onManifiesto.emit(pedido) });
+    }
+
     if (this.hasTags(pedido)) {
       items.push({ label: 'Tarjeta', icon: 'pi pi-tag', command: () => this.viewTags(pedido) });
     }
@@ -614,6 +620,12 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
    */
   isEnviameShipment(pedido: Pedido): boolean {
     return this.enviameHelper.isEnviameShipment(pedido);
+  }
+
+  /** Pedido con envío creado en Enviame (tiene el id de la entrega). */
+  tieneEnvioEnviame(pedido: Pedido): boolean {
+    const envio: any = (pedido as any).shippment || {};
+    return this.isEnviameShipment(pedido) && !!envio.shipmentId;
   }
 
   /**

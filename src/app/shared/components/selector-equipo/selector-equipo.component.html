@@ -1,0 +1,40 @@
+<div class="equipo-selector">
+  <p-multiSelect
+    *ngIf="multiple; else uno"
+    [inputId]="inputId"
+    [options]="opciones"
+    [ngModel]="valorMultiple"
+    (ngModelChange)="alCambiarVarios($event)"
+    [filter]="true"
+    filterBy="label"
+    [disabled]="disabled"
+    [defaultLabel]="placeholder"
+    [selectedItemsLabel]="'{0} personas'"
+    [maxSelectedLabels]="3"
+    [showToggleAll]="false"
+    appendTo="body"
+    [overlayOptions]="overlay"
+    emptyFilterMessage="No hay nadie con ese nombre"
+    emptyMessage="No hay personas para elegir"
+    [style]="{ width: '100%' }"
+  ></p-multiSelect>
+
+  <ng-template #uno>
+    <p-dropdown
+      [inputId]="inputId"
+      [options]="opciones"
+      [ngModel]="valorUnico"
+      (ngModelChange)="alCambiarUno($event)"
+      [filter]="true"
+      filterBy="label"
+      [disabled]="disabled"
+      [placeholder]="placeholder"
+      [showClear]="false"
+      appendTo="body"
+      [overlayOptions]="overlay"
+      emptyFilterMessage="No hay nadie con ese nombre"
+      emptyMessage="No hay personas para elegir"
+      [style]="{ width: '100%' }"
+    ></p-dropdown>
+  </ng-template>
+</div>

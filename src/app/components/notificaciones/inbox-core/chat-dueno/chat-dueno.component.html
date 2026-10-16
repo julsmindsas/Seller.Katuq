@@ -1,0 +1,44 @@
+<div class="dueno-franja" [class.dueno-franja--mio]="esMio" [class.dueno-franja--ajeno]="dueno && !esMio">
+  <div class="dueno-franja__fila">
+    <div class="dueno-franja__info">
+      <span class="dueno-franja__icono" aria-hidden="true"><i class="fa fa-user-circle-o"></i></span>
+      <div class="dueno-franja__textos">
+        <span class="dueno-franja__titulo">{{ titulo }}</span>
+        <span class="dueno-franja__motivo" *ngIf="motivo">{{ motivo }}</span>
+      </div>
+    </div>
+
+    <div class="dueno-franja__acciones">
+      <button type="button" class="dueno-franja__btn" *ngIf="!dueno"
+              (click)="tomar.emit()" [disabled]="ocupado">
+        Tomar
+      </button>
+      <button type="button" class="dueno-franja__btn dueno-franja__btn--sec" *ngIf="dueno && (esMio || esAdministrador)"
+              (click)="soltar.emit()" [disabled]="ocupado">
+        {{ esMio ? 'Soltar' : 'Quitar dueño' }}
+      </button>
+      <button type="button" class="dueno-franja__btn dueno-franja__btn--sec" *ngIf="esAdministrador && !modoPasar"
+              (click)="abrirPasar()" [disabled]="ocupado">
+        Pasar
+      </button>
+    </div>
+  </div>
+
+  <div class="dueno-franja__pasar" *ngIf="modoPasar">
+    <div class="dueno-franja__selector">
+      <app-selector-equipo
+        [equipo]="equipo"
+        [emails]="destino"
+        (emailsChange)="destino = $event"
+        [excluir]="dueno ? [dueno.email] : []"
+        placeholder="¿A quién se lo pasas?"
+      ></app-selector-equipo>
+    </div>
+    <button type="button" class="dueno-franja__btn" (click)="confirmarPasar()" [disabled]="!destino.length || ocupado">
+      Pasar chat
+    </button>
+    <button type="button" class="dueno-franja__btn dueno-franja__btn--sec" (click)="cancelarPasar()">
+      Cancelar
+    </button>
+  </div>
+</div>

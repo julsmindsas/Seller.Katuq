@@ -46,18 +46,30 @@
     <aside class="wa-shell__list">
       <app-whatsapp-thread-list
         *ngIf="vista === 'conversaciones'"
+        [lineas]="lineas"
+        [esAdministrador]="esAdministrador"
+        [miEmail]="miEmail"
+        [claveSeleccion]="claveSeleccion"
         (threadSelected)="onThreadSelected($event)"
+        (seleccionRefrescada)="onSeleccionRefrescada($event)"
       ></app-whatsapp-thread-list>
       <app-whatsapp-pedidos-list
         *ngIf="vista === 'pedidos'"
         [selectedPhoneHash]="selectedPhoneHash"
-        (sesionSelected)="onThreadSelected($event)"
+        (sesionSelected)="onSesionSelected($event)"
       ></app-whatsapp-pedidos-list>
     </aside>
 
     <section class="wa-shell__detail">
       <app-whatsapp-thread-detail
         [phoneHash]="selectedPhoneHash"
+        [lineId]="selectedLineId"
+        [chat]="seleccion"
+        [multiNumero]="multiNumero"
+        [equipo]="equipo"
+        [esAdministrador]="esAdministrador"
+        [miEmail]="miEmail"
+        (duenoCambiado)="onDuenoCambiado($event)"
         (backToList)="onBackToList()"
       ></app-whatsapp-thread-detail>
     </section>

@@ -1,13 +1,13 @@
 /**
- * Modo pantalla de "En vivo" (televisor): pantalla completa, sin apagar la pantalla y tema
- * oscuro. Todo con try/catch: el navegador puede negar la pantalla completa o el bloqueo
+ * Modo pantalla de "En vivo" (televisor): pantalla completa, sin apagar la pantalla y letra
+ * grande. Todo con try/catch: el navegador puede negar la pantalla completa o el bloqueo
  * (iframe, permisos, equipo sin soporte) y la pantalla debe seguir funcionando.
  *
- * El tema oscuro es un desvío JUSTIFICADO del tema canónico y vive solo en esta pantalla:
- * la clase `CLASE_TV` redefine las variables `--ev-*` (ver `_en-vivo-tema.scss`).
+ * El tema es el mismo claro del resto de la pantalla (D-433): la clase `CLASE_TV` solo agranda
+ * la letra (ver `_en-vivo-tema.scss`).
  */
 
-/** Clase que activa la variante oscura y la letra grande en el elemento raíz de la pantalla. */
+/** Clase que activa la letra grande en el elemento raíz de la pantalla. */
 export const CLASE_TV = 'ev-tv';
 
 interface BloqueoDePantalla {
@@ -47,7 +47,7 @@ export class ControlPantalla {
     return this.activo;
   }
 
-  /** Entra al modo: tema oscuro, pantalla completa (si deja) y pantalla encendida (si deja). */
+  /** Entra al modo: letra grande, pantalla completa (si deja) y pantalla encendida (si deja). */
   async entrar(elemento: HTMLElement): Promise<void> {
     this.elemento = elemento;
     this.activo = true;
@@ -58,7 +58,7 @@ export class ControlPantalla {
         this.enPantallaCompleta = true;
       }
     } catch {
-      // El visor no deja pantalla completa: queda el modo oscuro y de letra grande.
+      // El visor no deja pantalla completa: queda el modo de letra grande.
       this.enPantallaCompleta = false;
     }
     await this.pedirBloqueo();

@@ -29,6 +29,7 @@ import {
 } from "../../shared/services/notifications/whatsapp-integration-config.service";
 import { MetaInboxService } from "../notificaciones/meta-inbox/meta-inbox.service";
 import { MetaConexiones } from "../notificaciones/meta-inbox/models/meta-thread.model";
+import { PARAM_CONEXION_PENDIENTE, getConnectorConfig } from "./connectors/connector-registry";
 
 /**
  * Estado que ve el comercio en cada tarjeta.
@@ -128,6 +129,24 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     // Cargar integraciones al final
     this.loadIntegrations();
     this.cargarEstadosExternos();
+    this.abrirConexionPendiente();
+  }
+
+  /**
+   * D-437: el regreso de una conexión por ventana emergente llegó sin ventana de
+   * origen (el navegador cortó el vínculo). Se abre la tarjeta del proveedor, que
+   * lee los datos de la URL y confirma con el servidor.
+   */
+  private abrirConexionPendiente(): void {
+    const provider = this.router.parseUrl(this.router.url).queryParams[PARAM_CONEXION_PENDIENTE];
+    const tipo = getConnectorConfig(provider)?.tipoIntegracion;
+    if (!tipo) return;
+    const entradas = this.directorio.reduce(
+      (todas, g) => todas.concat(g.entradas),
+      [] as EntradaDirectorio[],
+    );
+    const entrada = entradas.find((e) => e.id === tipo);
+    if (entrada) this.abrirEntrada(entrada);
   }
 
   ngOnDestroy(): void {

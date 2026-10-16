@@ -1,4 +1,3 @@
-import { environment } from "../../../../../../environments/environment";
 import {
   AfterViewChecked,
   Component,
@@ -14,11 +13,19 @@ import {
 import { Subscription, forkJoin, interval } from "rxjs";
 import { ToastrService } from "ngx-toastr";
 
+import { MessagingThreadsService } from "../../../../../shared/services/messaging/messaging-threads.service";
+import {
+  DuenoChat,
+  MiembroEquipo,
+  esErrorChatConDueno,
+} from "../../../../../shared/services/messaging/messaging.models";
+
 import { WhatsappInboxService } from "../../whatsapp-inbox.service";
 import {
   BotThreadState,
   ContactProfile,
   WhatsappMessage,
+  WhatsappThread,
 } from "../../models/whatsapp-thread.model";
 
 /**
@@ -61,6 +68,10 @@ type FeedItem = DateSeparatorItem | MessageItem;
  *  - Auto-scroll al último mensaje al renderizar.
  *  - Marcar el hilo como visto (botón explícito + onLoad).
  *  - Toggle del panel de contacto (renderizado al lado, no modal).
+ *  - [D-437] Chats de un número del comercio (`lineId`): etiqueta del número,
+ *    franja de dueño (tomar, soltar, pasar) y redactor en solo lectura cuando
+ *    el chat lo atiende otra persona. Quien decide es el servidor (409
+ *    `CHAT_CON_DUENO`).
  */
 @Component({
   selector: "app-whatsapp-thread-detail",
@@ -71,9 +82,20 @@ export class WhatsappThreadDetailComponent
   implements OnChanges, AfterViewChecked, OnDestroy
 {
   @Input() phoneHash: string | null = null;
+  /** [D-437] Número del comercio del chat; `null` = número compartido de Katuq. */
+  @Input() lineId: string | null = null;
+  /** [D-437] Datos del chat que trae la lista (línea, dueño y threadId). */
+  @Input() chat: WhatsappThread | null = null;
+  /** [D-437] Bandera `whatsappMultiNumero` del comercio. */
+  @Input() multiNumero = false;
+  @Input() equipo: MiembroEquipo[] = [];
+  @Input() esAdministrador = false;
+  @Input() miEmail = "";
 
   /** Emitido cuando el usuario quiere volver a la lista (mobile). */
   @Output() backToList = new EventEmitter<void>();
+  /** [D-437] Cambió el dueño del chat abierto. */
+  @Output() duenoCambiado = new EventEmitter<DuenoChat | null>();
 
   @ViewChild("messagesContainer") messagesContainer?: ElementRef<HTMLElement>;
 
@@ -88,6 +110,12 @@ export class WhatsappThreadDetailComponent
   botState: BotThreadState | null = null;
   /** Lock del botón tomar/devolver mientras responde el backend. */
   botActionBusy = false;
+
+  // ─── Dueño del chat (D-437) ─────────────────────────────────────────────
+  /** Quién atiende el chat; `null` = sin asignar. */
+  dueno: DuenoChat | null = null;
+  /** Lock de tomar / soltar / pasar mientras responde el servidor. */
+  duenoOcupado = false;
 
   // ─── Composer ──────────────────────────────────────────────────────────
   /** Texto en edición del composer. Two-way binding con el textarea. */
@@ -148,10 +176,14 @@ export class WhatsappThreadDetailComponent
   constructor(
     private readonly inbox: WhatsappInboxService,
     private readonly toastr: ToastrService,
+    private readonly hilos: MessagingThreadsService,
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes["phoneHash"]) {
+    if (changes["chat"] || changes["phoneHash"] || changes["lineId"]) {
+      this.dueno = this.chat?.owner || null;
+    }
+    if (changes["phoneHash"] || changes["lineId"]) {
       this.contactPanelOpen = false;
       this.composerText = "";
       this.templatesOpen = false;
@@ -180,7 +212,7 @@ export class WhatsappThreadDetailComponent
     if (!this.phoneHash) {
       return;
     }
-    this.inbox.markThreadViewed(this.phoneHash).subscribe({
+    this.inbox.markThreadViewed(this.phoneHash, this.lineId).subscribe({
       error: () => undefined,
     });
   }
@@ -297,6 +329,10 @@ export class WhatsappThreadDetailComponent
     if (!text || this.sending) {
       return;
     }
+    // [D-437] Chat de otra persona: el servidor lo rechazaría (409).
+    if (this.soloLectura) {
+      return;
+    }
     const hash = this.phoneHash;
     // [D-118] Id estable por mensaje lógico: si el envío falla (o el operador
     // no sabe si salió) y reintenta el MISMO texto, se reusa el id y el
@@ -308,23 +344,32 @@ export class WhatsappThreadDetailComponent
     }
     this.sending = true;
     this.inbox
-      .sendReply(hash, text, this.pendingClientMessageId)
-      .then(() => {
-        this.pendingClientMessageId = null;
-        this.pendingForText = null;
-        this.composerText = "";
-        this.sending = false;
-        this.toastr.success("Mensaje enviado", "WhatsApp");
-        // Recargar para ver el saliente en el feed.
-        this.refreshMessages();
-        // Responder a mano le quita el hilo al bot (lo marca el backend);
-        // refrescar el estado para que la franja cambie de una.
-        this.cargarEstadoBot(hash);
-      })
-      .catch((err: Error) => {
-        this.sending = false;
-        const message = err?.message || "No se pudo enviar el mensaje";
-        this.toastr.error(message, "Error al enviar");
+      .sendReply(hash, text, this.pendingClientMessageId, this.lineId)
+      .subscribe({
+        next: () => {
+          this.pendingClientMessageId = null;
+          this.pendingForText = null;
+          this.composerText = "";
+          this.sending = false;
+          this.toastr.success("Mensaje enviado", "WhatsApp");
+          // Recargar para ver el saliente en el feed.
+          this.refreshMessages();
+          // Responder a mano le quita el hilo al bot (lo marca el backend);
+          // refrescar el estado para que la franja cambie de una.
+          this.cargarEstadoBot(hash);
+        },
+        error: (err: any) => {
+          this.sending = false;
+          // [D-437] El chat lo atiende otra persona: se pinta su nombre y el redactor queda en lectura.
+          if (esErrorChatConDueno(err)) {
+            this.ponerDueno(err.error.owner || null);
+            this.toastr.warning(err.error.message || "Este chat lo atiende otra persona.", "Chat con dueño");
+            return;
+          }
+          const message =
+            err?.error?.message || err?.error?.error || err?.message || "No se pudo enviar el mensaje";
+          this.toastr.error(message, "Error al enviar");
+        },
       });
   }
 
@@ -370,87 +415,32 @@ export class WhatsappThreadDetailComponent
       return;
     }
     const hash = this.phoneHash;
-    // Fetch directo (mismo workaround del HMR singleton cacheado).
-    const userStr = localStorage.getItem("user") || "{}";
-    let token = "", company = "", nit = "", email = "", authCode = "";
-    try {
-      const u = JSON.parse(userStr);
-      token = u.token || "";
-      company = u.company || "";
-      nit = u.nit || "";
-      email = u.email || "";
-      authCode = u.authorizationCode || "";
-    } catch {}
-    const headers: HeadersInit = {
-      "Authorization": "Bearer " + token,
-      "company": company,
-      "user": nit,
-      "usage-code": authCode,
-      "email": email,
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-    };
+    const lineId = this.lineId;
     // Antes del refresh, pedir al backend que sincronice inbounds desde Kapso
-    // (best-effort, ignoramos errores). Sandbox local sin webhook expuesto.
-    fetch(environment.urlApi + "/v1/whatsapp/sync-inbound", {
-      method: "POST",
-      headers,
-    }).catch(() => undefined);
-    fetch(
-      environment.urlApi + "/v1/whatsapp/conversations/" +
-        encodeURIComponent(hash) +
-        "/messages",
-      { headers },
-    )
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((resp: any) => {
-        const raw = resp?.items || [];
-        if (raw.length === 0) return; // mantener estado anterior si vacío
-        const items = raw
-          .slice()
-          .sort((a: any, b: any) => {
-            const am = new Date(a.timestamp || a.sentAt || 0).getTime();
-            const bm = new Date(b.timestamp || b.sentAt || 0).getTime();
-            return am - bm;
-          })
-          .map((m: any) => ({
-            id: m.id,
-            direction: m.direction === "inbound" ? "inbound" : "outbound",
-            esBot: String(m.type || "") === "BOT_REPLY",
-            type: "text" as any,
-            body:
-              m.text ||
-              m.body ||
-              m.textPreview ||
-              (m.templateName ? `[${m.templateName}]` : ""),
-            snippet:
-              m.textPreview ||
-              m.text ||
-              m.body ||
-              (m.templateName ? `[${m.templateName}]` : ""),
-            sentAt:
-              m.timestamp ||
-              m.sentAt ||
-              m.receivedAt ||
-              new Date().toISOString(),
-            status: m.status || (m.direction === "inbound" ? "delivered" : "sent"),
-            mediaPlaceholder: false,
-          }));
+    // (best-effort, el servicio ignora el error).
+    this.inbox.syncInbound().subscribe();
+    this.inbox.getMessages(hash, lineId).subscribe({
+      next: (page) => {
+        // Si el chat cambió mientras respondía, se descarta.
+        if (this.phoneHash !== hash || this.lineId !== lineId) return;
+        const items = page.items;
+        if (items.length === 0) return; // mantener estado anterior si vacío
         const prevCount = this.messages.length;
-        this.messages = items as any;
-        this.feedItems = this.buildFeedItems(items as any);
+        this.messages = items;
+        this.feedItems = this.buildFeedItems(items);
         this.needsScroll = true;
         // Si llegaron ENTRANTES nuevos con el chat abierto, marcarlos vistos
         // de una — antes el badge de la lista crecía aunque el operador
         // estuviera leyendo el hilo ("abro el chat y no se quitan").
-        const nuevosInbound = (items as any[])
+        const nuevosInbound = items
           .slice(prevCount)
-          .some((m: any) => m.direction === "inbound");
+          .some((m) => m.direction === "inbound");
         if (items.length > prevCount && nuevosInbound) {
           this.markAsRead();
         }
-      })
-      .catch(() => undefined);
+      },
+      error: () => undefined,
+    });
   }
 
   /**
@@ -483,7 +473,7 @@ export class WhatsappThreadDetailComponent
 
   /** Carga (o refresca) el estado del bot para el hilo. Nunca bloquea el chat. */
   private cargarEstadoBot(hash: string): void {
-    this.inbox.getBotState(hash).subscribe({
+    this.inbox.getBotState(hash, this.lineId).subscribe({
       next: (estado) => {
         // Si el hilo cambió mientras respondía, se descarta.
         if (this.phoneHash === hash) this.botState = estado;
@@ -497,7 +487,7 @@ export class WhatsappThreadDetailComponent
     if (!this.phoneHash || this.botActionBusy) return;
     const hash = this.phoneHash;
     this.botActionBusy = true;
-    this.inbox.tomarConversacion(hash).subscribe({
+    this.inbox.tomarConversacion(hash, this.lineId).subscribe({
       next: () => {
         this.botActionBusy = false;
         this.toastr.success("La conversación quedó a tu cargo. El bot no vuelve a responder acá.");
@@ -515,7 +505,7 @@ export class WhatsappThreadDetailComponent
     if (!this.phoneHash || this.botActionBusy) return;
     const hash = this.phoneHash;
     this.botActionBusy = true;
-    this.inbox.devolverAlBot(hash).subscribe({
+    this.inbox.devolverAlBot(hash, this.lineId).subscribe({
       next: () => {
         this.botActionBusy = false;
         this.toastr.success("El bot vuelve a atender esta conversación.");
@@ -538,92 +528,94 @@ export class WhatsappThreadDetailComponent
     }
     this.loading = true;
     const hash = this.phoneHash;
+    const lineId = this.lineId;
     this.cargarEstadoBot(hash);
-    // Fetch directo para evitar el bug del provider singleton cacheado por HMR
-    // (mismo patrón que thread-list.fetchThreads).
-    const userStr = localStorage.getItem("user") || "{}";
-    let token = "", company = "", nit = "", email = "", authCode = "";
-    try {
-      const u = JSON.parse(userStr);
-      token = u.token || "";
-      company = u.company || "";
-      nit = u.nit || "";
-      email = u.email || "";
-      authCode = u.authorizationCode || "";
-    } catch {}
-    const headers: HeadersInit = {
-      "Authorization": "Bearer " + token,
-      "company": company,
-      "user": nit,
-      "usage-code": authCode,
-      "email": email,
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-    };
-    const base = environment.urlApi + "/v1/whatsapp/conversations/" +
-      encodeURIComponent(hash);
-    Promise.all([
-      fetch(base + "/messages", { headers }).then((r) =>
-        r.ok ? r.json() : Promise.reject(r),
-      ),
-      fetch(base + "/profile", { headers }).then((r) =>
-        r.ok ? r.json() : Promise.reject(r),
-      ),
-    ])
-      .then(([msgResp, profResp]) => {
-        const rawMsgs = msgResp?.items || [];
-        const items = rawMsgs
-          .slice()
-          .sort((a: any, b: any) => {
-            const am = new Date(a.timestamp || a.sentAt || 0).getTime();
-            const bm = new Date(b.timestamp || b.sentAt || 0).getTime();
-            return am - bm;
-          })
-          .map((m: any) => ({
-            id: m.id,
-            direction: m.direction === "inbound" ? "inbound" : "outbound",
-            esBot: String(m.type || "") === "BOT_REPLY",
-            type: "text" as any,
-            body:
-              m.text ||
-              m.body ||
-              m.textPreview ||
-              (m.templateName ? `[${m.templateName}]` : ""),
-            snippet:
-              m.textPreview ||
-              m.text ||
-              m.body ||
-              (m.templateName ? `[${m.templateName}]` : ""),
-            sentAt:
-              m.timestamp ||
-              m.sentAt ||
-              m.receivedAt ||
-              new Date().toISOString(),
-            status: m.status || (m.direction === "inbound" ? "delivered" : "sent"),
-            mediaPlaceholder: false,
-          }));
-        this.messages = items as any;
-        this.feedItems = this.buildFeedItems(items as any);
-        this.profile = {
-          phoneHash: profResp?.phoneHash || hash,
-          phoneMasked: profResp?.phoneMasked || "+??***????",
-          clienteNombre: profResp?.clienteNombre,
-          profileName: profResp?.profileName,
-          isClienteRegistrado: !!profResp?.isClienteRegistrado,
-          lead: profResp?.lead || null,
-          ratingDraft: profResp?.ratingDraft || null,
-        } as any;
+    forkJoin([
+      this.inbox.getMessages(hash, lineId),
+      this.inbox.getContactProfile(hash, lineId),
+    ]).subscribe({
+      next: ([page, profile]) => {
+        if (this.phoneHash !== hash || this.lineId !== lineId) return;
+        this.messages = page.items;
+        this.feedItems = this.buildFeedItems(page.items);
+        this.profile = profile;
         this.loading = false;
         this.needsScroll = true;
         this.inbox
-          .markThreadViewed(hash)
+          .markThreadViewed(hash, lineId)
           .subscribe({ error: () => undefined });
-      })
-      .catch((err) => {
-        // eslint-disable-next-line no-console
-        console.warn("[thread-detail] loadAll error — manteniendo estado anterior", err);
+      },
+      // Si falla, se mantiene el estado anterior (como antes de D-437).
+      error: () => {
         this.loading = false;
-      });
+      },
+    });
+  }
+
+  // ─── Dueño del chat (D-437) ───────────────────────────────────────────
+
+  /** La franja de dueño se ve en chats de un número del comercio, con la bandera encendida. */
+  get mostrarDueno(): boolean {
+    return this.multiNumero && !!this.lineId && !!this.chat?.threadId;
+  }
+
+  /** El chat lo atiende otra persona: el redactor queda en lectura. */
+  get soloLectura(): boolean {
+    if (!this.dueno) return false;
+    return (this.dueno.email || "").toLowerCase() !== (this.miEmail || "").toLowerCase();
+  }
+
+  get motivoLectura(): string {
+    const nombre = this.dueno?.nombre || this.dueno?.email || "otra persona";
+    return this.esAdministrador
+      ? `Este chat lo atiende ${nombre}. Para escribir, pásatelo a ti.`
+      : `Este chat lo atiende ${nombre}. Solo esa persona puede escribir aquí.`;
+  }
+
+  tomarChat(): void {
+    const threadId = this.chat?.threadId;
+    if (!threadId) return;
+    this.accionDueno(this.hilos.tomar(threadId), "El chat quedó a tu cargo.");
+  }
+
+  soltarChat(): void {
+    const threadId = this.chat?.threadId;
+    if (!threadId) return;
+    this.accionDueno(this.hilos.soltar(threadId), "El chat quedó sin asignar.");
+  }
+
+  pasarChat(email: string): void {
+    const threadId = this.chat?.threadId;
+    if (!threadId || !email) return;
+    this.accionDueno(this.hilos.asignar(threadId, email), "Listo, le pasaste el chat.");
+  }
+
+  private accionDueno(peticion: ReturnType<MessagingThreadsService["tomar"]>, exito: string): void {
+    if (this.duenoOcupado) return;
+    this.duenoOcupado = true;
+    peticion.subscribe({
+      next: (owner) => {
+        this.duenoOcupado = false;
+        this.ponerDueno(owner);
+        this.toastr.success(exito);
+      },
+      error: (err: any) => {
+        this.duenoOcupado = false;
+        if (esErrorChatConDueno(err)) {
+          this.ponerDueno(err.error.owner || null);
+          this.toastr.warning(err.error.message || "Este chat ya lo atiende otra persona.", "Chat con dueño");
+          return;
+        }
+        // Los 403 ya los avisa el interceptor con el mensaje del servidor.
+        if (err?.status === 403) return;
+        this.toastr.error(err?.error?.message || "No se pudo cambiar quién atiende el chat. Intenta de nuevo.");
+      },
+    });
+  }
+
+  private ponerDueno(owner: DuenoChat | null): void {
+    this.dueno = owner && owner.email ? owner : null;
+    this.duenoCambiado.emit(this.dueno);
   }
 
   /**

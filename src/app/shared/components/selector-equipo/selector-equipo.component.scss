@@ -1,0 +1,44 @@
+// Selector de equipo (D-437): borde lila, radio 11 y foco morado del tema canónico.
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.equipo-selector {
+  width: 100%;
+  min-width: 0;
+
+  ::ng-deep .p-multiselect,
+  ::ng-deep .p-dropdown {
+    min-height: 40px;
+    border: 1px solid #e4e2ef;
+    border-radius: 11px;
+    background: #fff;
+    font-size: 13.5px;
+    color: #211F3A;
+    box-shadow: none;
+  }
+
+  ::ng-deep .p-multiselect:not(.p-disabled):hover,
+  ::ng-deep .p-dropdown:not(.p-disabled):hover {
+    border-color: #d9cffb;
+  }
+
+  ::ng-deep .p-multiselect.p-focus,
+  ::ng-deep .p-dropdown.p-focus {
+    border-color: #5F3FE0;
+    box-shadow: 0 0 0 3px #efe9ff;
+  }
+
+  ::ng-deep .p-multiselect-label,
+  ::ng-deep .p-dropdown-label {
+    padding: 10px 12px;
+    font-size: 13.5px !important;
+    color: #211F3A;
+    letter-spacing: normal;
+  }
+
+  ::ng-deep .p-placeholder {
+    color: #8f8bab;
+  }
+}

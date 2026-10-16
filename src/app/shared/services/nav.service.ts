@@ -7,6 +7,7 @@ import { UtilsService } from "./utils.service";
 import { CompanyFeaturesService } from "./company-features.service";
 import { SecurityService } from "./security/security.service";
 import { dropshippingHabilitadoEnLaSesion } from "./dropshipping-settings.service";
+import { esFamiliaAdministrador, esSuperAdministrador } from "../utils/roles";
 
 // Menu
 export interface Menu {
@@ -189,14 +190,9 @@ export class NavService implements OnDestroy {
 
   /** Normaliza acentos/mayúsculas y acepta la familia "Administrador" (p. ej. "Administrador LT"). */
   static esRolAdministrador(rol: any): boolean {
-    const normalizado = String(rol || "")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/\s+/g, " ")
-      .trim();
-    if (normalizado === "super administrador") return false;
-    return /(^|[^a-z0-9])administrador([^a-z0-9]|$)/.test(normalizado);
+    // El menú trata a "Super Administrador" aparte (isSuperAdmin), por eso se excluye acá.
+    if (esSuperAdministrador(rol)) return false;
+    return esFamiliaAdministrador(rol);
   }
 
   /** Todos los paths declarados en el menú (ítems, hijos y nietos). */
