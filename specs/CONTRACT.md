@@ -10103,3 +10103,20 @@ Salió revisando el ticket Julsmind 1201 (editar la cédula), que Daniel archiv�
 La etiqueta de unidades de cada producto del POS (`pos2/widgets/product`) abre, con el mouse o al tocarla, el globo "Existencias por bodega": la bodega de la caja marcada como "esta caja" y las demás con existencias. Usa el mismo endpoint de venta asistida (`GET /v1/inventory/producto-bodegas/:productoId`, solo lectura, con la deduplicación docId/referencia) y caché por producto mientras el catálogo está abierto.
 
 A diferencia de venta asistida, el globo solo informa: no cambia la bodega de la caja en medio de una venta. Sin cambios de servidor, carrito ni inventario. Estilos con los tokens del design system (sin el `#7366ff` del globo de venta asistida).
+
+## D-440 (2026-10-16) — Una sola regla de anticipo con Tesorería: solo pagos aprobados, aplicada de último (ticket 1221) — CÓDIGO LISTO, despliegue tras la migración
+
+Daniel: «arreglalo y te autorizo a corregir los pedidos». Sigue a D-438.
+
+- **Corrección aplicada (16-oct):** los 29 pedidos con anticipo inflado por pagos rechazados. Los 4 en "Aprobado" con saldo pasaron a PreAprobado. Cada uno guarda el rastro en `correccionAnticipo`. Ticket cerrado con aviso a ALMARA.
+- **Código** (parche `regla-unica-1221.patch`, probado y sin desplegar):
+  - `treasuryService.aplicarAnticipoAprobado`, función pura.
+  - `fijarAnticipoDeTesoreria` en `orders.js`, después de `calculateOrderTotals` al editar y al crear, solo si la empresa tiene `treasuryEnabled`. Si el flag no se puede leer, deja lo calculado.
+  - `computeApprovedAnticipo` lee `valor` o, si no viene, `valorRegistrado`. El POS solo guarda `valorRegistrado`, y para Tesorería cada venta POS pagada valía 0 (951 pedidos POS de ALMARA tienen anticipo 0 estando pagados).
+  - Prueba de contrato del orden: nada recalcula totales entre la regla y la escritura.
+- **Migración previa obligatoria** (`migrar-pendientes-historicos.js`, en dry-run):
+  - 1.019 pagos "Pendiente" sin `paymentId`, de 2024-07 a 2025-08, en 916 pedidos. Nunca entraron a la cola de Tesorería, que trabaja sobre `payments`.
+  - Pasan a "Aprobado" con `aprobacionHistorica`, pero solo hasta el anticipo que el pedido ya mostraba. 10 duplicados que exceden quedan iguales.
+  - Simulación: después de migrar, ningún pedido queda por debajo de lo que muestra hoy. El único que baja con la regla es DAD-014091, que tiene $80.900 realmente en revisión.
+  - El entorno bloqueó la escritura masiva: la corre Daniel. Después se aplica el parche, se despliega y se mide de nuevo.
+- **Anomalía aparte:** DAD-004604 tiene cientos de pagos aprobados y un anticipo de 91 M con un total de 46.200. Es dato corrupto y no se toca aquí.
