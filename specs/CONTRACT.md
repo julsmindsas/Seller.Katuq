@@ -10344,7 +10344,7 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
   - **Borrado:** `DELETE` solo para el equipo; el comercio recibe 403. En el comentario legado, el autor del comercio sale de su sesión.
 - **Sin cambios en el Seller ni en Support.** Backend con 16 pruebas nuevas, y las suites de soporte en verde.
 
-## D-459 (2026-10-16) — Notas crédito y débito sobre facturas libres, por línea y con saldo (ticket 1279, FE-20)
+## D-459 (2026-10-16) — Notas crédito y débito sobre facturas libres, por línea y con saldo (ticket 1279, FE-20) — PUBLICADO: backend 47394498, front 2026.10.16.11
 
 - **Problema:** una nota exigía `orderId`. Las 7 facturas DIAN aceptadas de Julsmind (JULS41–47) son libres (sin pedido), así que ninguna admitía nota.
 - **Factura libre:** sin `orderId`, el servidor reconstruye la factura desde su solicitud (`dian_invoice_requests.selection`). Usa el mismo camino de la emisión (`getInvoiceCustomer` + `mapRegisteredCustomer` + `manualInvoiceToOrder`) y verifica número y CUFE contra el documento aceptado de la misma empresa.
