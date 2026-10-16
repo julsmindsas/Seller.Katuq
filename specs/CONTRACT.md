@@ -10403,7 +10403,7 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
   - Costo por venta: necesita conectar la pauta (ticket 1240).
   - Embudo por pasos (ficha, carrito, checkout), búsquedas sin resultado y modelo de atribución elegible: no hay eventos de esos pasos todavía.
 
-## D-463 (2026-10-16) — Pauta: TikTok desde el servidor, aviso de cookies y GA4 con datos resumidos (ticket 1240, F3-26)
+## D-463 (2026-10-16) — Pauta: TikTok desde el servidor, aviso de cookies y GA4 con datos resumidos (ticket 1240, F3-26) — PUBLICADO: backend 4703c1a2, front 2026.10.16.14
 
 - **TikTok Events API** (`services/medicionServidor.js`, nuevo proveedor del Strategy existente):
   - Al aprobarse el pago se manda `CompletePayment` a `business-api.tiktok.com/open_api/v1.3/event/track/` con el token en `Access-Token`. Lleva el mismo `event_id` del píxel; el píxel ahora lo manda en `ttq.track(..., {event_id})`, así que la venta no se duplica.
