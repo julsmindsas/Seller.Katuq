@@ -204,6 +204,10 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   logoMarca = "";
   /** Sector del kit, para preseleccionar el filtro de plantillas. */
   sectorMarca = "";
+  /** Ticket 1223: la frase de Mi marca; con ella el asistente no vuelve a pedir la descripción. */
+  fraseMarca = "";
+  /** El comerciante quiere otra descripción solo para esta página. */
+  objetivoPropio = false;
 
   ngOnInit(): void {
     this.leerEnlaceDelChat();
@@ -255,6 +259,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
         const kit = res && res.data;
         this.logoMarca = (kit && kit.logo) || "";
         this.sectorMarca = (kit && kit.sector) || "";
+        this.fraseMarca = String((kit && kit.eslogan) || "").trim();
       },
       error: () => undefined,
     });
@@ -263,6 +268,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   alGuardarMarca(kit: any): void {
     this.logoMarca = (kit && kit.logo) || "";
     this.sectorMarca = (kit && kit.sector) || "";
+    this.fraseMarca = String((kit && kit.eslogan) || "").trim();
     this.mostrandoMarca = false;
     // Si venía del asistente, se sigue donde estaba en vez de devolverlo al
     // principio: configurar la marca es un desvío, no un reinicio.
@@ -471,6 +477,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
     this.slugEditado = false;
     this.slugEstado = "";
     this.objetivo = "";
+    this.objetivoPropio = false;
     this.descripcionIA = "";
     this.nombreIA = "";
     // El sector del kit filtra las plantillas de entrada: quien ya dijo a qué

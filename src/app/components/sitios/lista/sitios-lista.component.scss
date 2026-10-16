@@ -984,3 +984,27 @@
     color: var(--kb-ink-2);
   }
 }
+
+// Ticket 1223: la frase de Mi marca, sin volver a pedirla.
+.frase-marca {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: #f4f2fc;
+  font-size: 13px;
+}
+.frase-marca__txt { color: #211f3a; }
+.frase-marca__otra {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #5f3fe0;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  &:focus-visible { outline: 3px solid #7c5cff !important; }
+}

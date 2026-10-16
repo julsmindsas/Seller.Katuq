@@ -427,7 +427,12 @@
           </span>
         </div>
 
-        <div class="campo">
+        <!-- Ticket 1223: con la frase de Mi marca no se vuelve a pedir la descripción. -->
+        <p class="frase-marca" *ngIf="fraseMarca && !objetivoPropio">
+          <span class="frase-marca__txt">Usamos tu frase de Mi marca: «{{ fraseMarca }}».</span>
+          <button type="button" class="frase-marca__otra" (click)="objetivoPropio = true">Escribir otra solo para esta página</button>
+        </p>
+        <div class="campo" *ngIf="!fraseMarca || objetivoPropio">
           <label for="objetivo-pagina">¿Cómo describirías tu negocio en una línea?</label>
           <input id="objetivo-pagina" type="text" [(ngModel)]="objetivo" maxlength="200"
                  placeholder="Ej: ramos y arreglos florales con entrega el mismo día" />
