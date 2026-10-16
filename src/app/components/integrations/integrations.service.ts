@@ -1179,6 +1179,14 @@ export class IntegrationsService {
     );
   }
 
+  /** Ticket 1267 (FE-15): libro de ventas del período en Excel, o ZIP con el libro y los XML y PDF. */
+  descargarLibroVentas(desde: string, hasta: string, formato: 'excel' | 'zip'): Observable<Blob> {
+    return this.http.get(
+      `${environment.urlApi}/v1/accounting/dian/libro-ventas/${formato}?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}`,
+      { headers: this.getApiHeaders(), responseType: 'blob' }
+    );
+  }
+
   /** Ticket 1262 (FE-05): reenvía PDF, XML y AttachedDocument de un documento aceptado. */
   resendDianDocument(documentNumber: string, recipient: string): Observable<any> {
     return this.http.post<any>(

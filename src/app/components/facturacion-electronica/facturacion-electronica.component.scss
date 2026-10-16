@@ -444,3 +444,39 @@ $head: var(--kc-font-head);
 @media (max-width: 620px) {
   .fe-datos div { grid-template-columns: 1fr; gap: 2px; }
 }
+
+// Ticket 1267 (FE-15): descargas para el contador del período. Clases sin "p-".
+.fe-contador {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #ece8fb;
+}
+.fe-contador__texto {
+  flex: 1 1 200px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b6685;
+}
+.fe-contador__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid #e4e0f5;
+  border-radius: 11px;
+  background: #fff;
+  color: #211f3a;
+  font-weight: 600;
+  cursor: pointer;
+  i { color: #5f3fe0; }
+  &:hover:not(:disabled) { border-color: #d9cffb; background: #faf9ff; }
+  &:disabled { opacity: 0.6; cursor: default; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; }
+}
+.fe-contador__txt { color: inherit; font-size: 0.88rem; }

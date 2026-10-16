@@ -110,6 +110,18 @@
         <small>{{ i.diasPedidoAFactura === null ? 'Sin facturas de pedidos' : 'promedio' }}</small>
       </div>
     </div>
+    <!-- Ticket 1267 (FE-15): lo que pide el contador, del mismo período -->
+    <div class="fe-contador" *ngIf="feDesde && feHasta">
+      <span class="fe-contador__texto">Para tu contador · {{ feDesde }} a {{ feHasta }}</span>
+      <button type="button" class="fe-contador__btn" (click)="descargarParaContador('excel')" [disabled]="descargandoContador !== null">
+        <i class="pi" [ngClass]="descargandoContador === 'excel' ? 'pi-spin pi-spinner' : 'pi-file-excel'"></i>
+        <span class="fe-contador__txt">Libro de ventas (Excel)</span>
+      </button>
+      <button type="button" class="fe-contador__btn" (click)="descargarParaContador('zip')" [disabled]="descargandoContador !== null">
+        <i class="pi" [ngClass]="descargandoContador === 'zip' ? 'pi-spin pi-spinner' : 'pi-download'"></i>
+        <span class="fe-contador__txt">XML y PDF del período (ZIP)</span>
+      </button>
+    </div>
   </section>
 
   <!-- ===== KPIs ===== -->

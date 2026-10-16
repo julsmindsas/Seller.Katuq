@@ -710,6 +710,37 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Ticket 1267 (FE-15): descarga lo que pide el contador del período elegido. */
+  descargandoContador: 'excel' | 'zip' | null = null;
+
+  descargarParaContador(formato: 'excel' | 'zip'): void {
+    if (!this.feDesde || !this.feHasta || this.descargandoContador) return;
+    this.descargandoContador = formato;
+    this.integrationsService.descargarLibroVentas(this.feDesde, this.feHasta, formato).subscribe({
+      next: (blob: Blob) => {
+        this.descargandoContador = null;
+        const url = URL.createObjectURL(blob);
+        const link = window.document.createElement('a');
+        link.href = url;
+        link.download = formato === 'excel'
+          ? `libro-ventas-${this.feDesde}-a-${this.feHasta}.xlsx`
+          : `facturacion-${this.feDesde}-a-${this.feHasta}.zip`;
+        link.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.descargandoContador = null;
+        Swal.fire({
+          icon: 'error',
+          title: 'No pudimos descargarlo',
+          text: formato === 'zip'
+            ? 'Si el período tiene muchos documentos, prueba con uno más corto.'
+            : 'Intenta de nuevo en un momento.',
+        });
+      },
+    });
+  }
+
   createNote(document: DianDocument): void {
     this.openMenu = '';
     if (document.type !== 'invoice' || document.status !== 'accepted') return;
