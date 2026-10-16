@@ -190,7 +190,7 @@ export class NavService implements OnDestroy {
 
   /** Normaliza acentos/mayúsculas y acepta la familia "Administrador" (p. ej. "Administrador LT"). */
   static esRolAdministrador(rol: any): boolean {
-    // El men\u00fa trata a "Super Administrador" aparte (isSuperAdmin), por eso se excluye ac\u00e1.
+    // El menú trata a "Super Administrador" aparte (isSuperAdmin), por eso se excluye acá.
     if (esSuperAdministrador(rol)) return false;
     return esFamiliaAdministrador(rol);
   }
