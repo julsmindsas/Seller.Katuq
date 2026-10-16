@@ -1,268 +1,309 @@
 ## Context
 
-Lo que hay hoy en el código, medido el 2026-10-15:
+**Lo que hay hoy en el canal** (medido el 2026-10-15):
 
-- **Un número por comercio.** La configuración vive en
-  `integration_configs/{company}_kapso`. El número propio es un solo objeto
-  (`ownCredentials`) y `whatsappCompanyConfig.resolveCredentials(company)` devuelve una
-  sola pareja `{apiKey, phoneNumberId}`; si no hay, usa el número compartido de Katuq
-  (`KAPSO_API_KEY` y `KAPSO_PHONE_NUMBER_ID`). Ningún comercio tiene número propio:
-  ALMARA y los demás usan el compartido, y el bot piloto de ALMARA entra por variables
-  de entorno.
-- **Entrada.** El webhook (`controllers/whatsappWebhook.js`) llega en formato Meta
-  (`kind: "meta"`) y se verifica con `KAPSO_WEBHOOK_SECRET`. `persistInbound` decide la
-  empresa por número propio (D-116), por reparto a quien le escribió hace poco (D-094) o
-  por piloto. `whatsapp_inbound` ya guarda `metadata.phoneNumberId`, pero nadie lo lee.
-- **Chats.** No hay colección de chats. `getThreads` agrupa en memoria `whatsapp_inbound`
-  y `whatsapp_usage` de 90 días por teléfono canónico. `phoneHash` es
-  `sha256(phone|company)`: no incluye el número.
-- **Salida.** `whatsappOutboundService.enviarTexto` siempre envía por el número de
-  `resolveCredentials`. La ventana de 24 horas se mide por `(company, phone)`. El envío
-  descuenta $80 del saldo.
-- **Tomar un chat.** Solo existe `tomadaPor` en la sesión del bot, que caduca a los 7
-  días y no bloquea a nadie.
-- **Buzón del front.** La lista y la respuesta usan `fetch` con encabezados armados a
-  mano. Algunos llamados responden 401 en producción (`bot/sesiones`, `viewed`); se
-  arreglan en este cambio porque se tocan.
-- **Kapso.** Ofrece un customer por comercio, enlaces de conexión (`setup_links`), un
-  webhook **por número**, coexistencia con el celular y API de asignación de
-  conversaciones. Pero esa API asigna a usuarios de Kapso, no de Katuq.
+- **Un solo número por comercio.** El número propio vive en `ownCredentials` dentro de
+  `integration_configs/{company}_kapso` y ningún comercio lo usa: todos salen por el número
+  compartido de Katuq (`KAPSO_API_KEY` y `KAPSO_PHONE_NUMBER_ID` en el entorno). El bot
+  piloto de ALMARA también corre sobre ese número compartido, habilitado por variables de
+  entorno.
+- **Credenciales resueltas seis veces.** `kapsoService` arma "credencial propia o global"
+  en seis métodos distintos.
+- **Webhook sin evento crudo ni cierre.** El webhook (`controllers/whatsappWebhook.js`) no
+  guarda el evento crudo antes de procesarlo (Art. V) y, si falta el secreto, no verifica
+  la firma.
+- **La empresa se adivina.** Se deduce por número propio, por reparto (D-094) o por la
+  regla del piloto.
+- **Chats sin dueño.** Se arman en memoria a partir de `whatsapp_inbound` y
+  `whatsapp_usage`, y su clave es `phoneHash = sha256(tel|company)`. Lo único parecido a
+  "tomar" un chat es la sesión del bot: dura 7 días y no bloquea a nadie.
+- **Canales en paralelo, sin abstracción común.** WhatsApp y Meta (Instagram y Messenger)
+  repiten por separado la identidad, la configuración, los chats, el envío, la ventana de
+  24 h y el webhook.
+- **Buzón del front.** Usa `fetch` sin interceptor en unos diez sitios, y de ahí salen los
+  401 que hay en producción.
+
+**Moldes de Katuq que este cambio sigue:**
+
+| Pieza | Molde | Dónde está |
+|---|---|---|
+| Strategy por proveedor | manager con descubrimiento de providers y provider delgado que delega en un cliente | `services/accounting/accountingManager.js`, `providers/_baseAccountingProvider.js`, `shippingProviders/fullpiProvider.js` → `services/integrations/fullpi/` |
+| Webhook | firma, reserva atómica, evento crudo, 200 y proceso aparte, con reintento | `routers/woocommerce.js` + `webhookDedup` / `webhookQueue` / `webhookWorker` |
+| Idempotencia | se reutiliza `services/integration-core/idempotency.js` (`integration_idempotency`, `create()` atómico) | — |
+| Evento crudo | se reutiliza la colección `integrationRawEvents` | ya la usa Wompi |
+| Bandera por comercio | `companies.featureFlags` + `requireFeature` (catálogo cerrado, dueño y retiro, Art. XII) | `services/companyFeatureFlags.js` |
+| Equipo y alcance | `listarComerciales`, `esRolComercial` y la familia Administrador | `services/crm/crmAcceso.js`, `middleware/requireRole.js` |
+| Dueño único | transacción con la semántica de `tomadaPor` y de "un agente, un rol" | `whatsappBotSessionService.mutarSesion`, `services/soporte/equipoTicket.js` |
+| Módulo HTTP | router delgado, controller y servicio de dominio, montados en `index.js` | `routers/insights.js`, `routers/analyticsEnVivo.js` (`crearRouter(deps)` con prueba de contrato) |
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Tratar cada número conectado como entidad propia con dueño único: entrada, salida,
-  ventana y chats separados por número.
-- Que el dueño del chat y la visibilidad se decidan en el servidor.
-- Dejar intacto todo lo que hoy corre sobre el número compartido.
+
+- Crear el **dominio Mensajería**: un manager de canales con Strategy, en el que Kapso
+  WhatsApp es el primer provider. Meta (Instagram y Messenger) debe poder entrar después
+  como provider **sin tocar el manager** (Art. VI).
+- Hacer de la **línea** (número de WhatsApp, más adelante una cuenta de Instagram o una
+  página) la unidad de dueño, de asignación a vendedores y de envío. Representar el número
+  compartido de Katuq como una línea más, para que exista un solo camino que resuelva las
+  credenciales.
+- Que el dueño del chat y la visibilidad se resuelvan en el servidor, con transacción.
+- Dejar intacto, sin regresiones, todo lo que corre hoy sobre el número compartido:
+  notificaciones, buzón de ALMARA y bot piloto.
 
 **Non-Goals:**
-- Reemplazar el modelo del número compartido o `ownCredentials`.
-- Cambiar la llave de sesión del bot.
-- Usar el inbox o las asignaciones de Kapso.
+
+- Migrar Meta a provider de mensajería y unificar los buzones de WhatsApp y Meta. Es el
+  siguiente cambio; este deja las piezas compartidas listas.
+- Migrar `{company}_kapso` a `integrationConfigService` / `integration_secrets`. Es deuda
+  registrada; las líneas nuevas no guardan secretos (ver D3).
+- Cambiar la clave de la sesión del bot.
 
 ## Decisions
 
-### D1. Registro global de números: `whatsapp_phone_numbers/{phoneNumberId}`
+### D1. Dominio `services/messaging/`, con Strategy
 
-Colección nueva, con un documento por número y el `phoneNumberId` como id del documento.
+```
+services/messaging/
+  messagingManager.js            # singleton; descubre providers/*Provider.js; resuelve {strategy, line}
+  providers/_baseMessagingProvider.js
+  providers/kapsoWhatsappProvider.js   # delgado: delega en services/integrations/kapso/*
+  lines/linesService.js          # registro, asignación de vendedores, alcance
+  threads/threadOwnership.js     # dueño único por transacción
+  inbound/inboundProcessor.js    # evento normalizado → persistir → dueño → bot
+  access/messagingAccess.js      # alcance del usuario (familia Administrador / vendedor)
+services/integrations/kapso/
+  kapsoPlatformClient.js         # API Platform: customers, setup_links, phone_numbers, webhooks
+```
 
-- **Campos:** `company`, `displayPhoneNumber`, `verifiedName`, `label`, `wabaId`,
-  `kapsoCustomerId`, `connectionType` (`coexistence` | `dedicated`), `status`
-  (`connected` | `disconnected`), `sellers[]` (emails), `botEnabled`, `connectedAt`,
-  `connectedBy`, `updatedAt`.
-- **Por qué el id es el `phoneNumberId`:** la exclusividad sale gratis. El registro se
-  hace con `create()`, que falla si el documento ya existe, así que un número no puede
-  quedar en dos comercios. Al llegar un mensaje, la empresa se resuelve con una lectura
-  directa por id, sin consulta.
-- **Alternativas descartadas:**
-  - Un arreglo en `integration_configs/{company}_kapso`: obliga a consultar todos los
-    comercios para saber de quién es un número y no garantiza la exclusividad.
-  - Una subcolección: necesita un índice de collection group.
+**Contrato del provider** (`_baseMessagingProvider`, cada método lanza error si el
+provider no lo implementa):
 
-### D2. Dueño de cada chat: `whatsapp_threads/{phoneNumberId}_{phoneHash}`
+- Conexión y webhooks: `providerName`, `channel`, `createConnectLink(company, opts)`,
+  `confirmLine(company, params)`, `refreshLine(line)`, `registerLineWebhook(line)` y
+  `disableLineWebhook(line)`.
+- Webhook entrante: `verifyWebhook(rawBody, headers)` y `parseWebhook(payload)`. Este
+  último devuelve eventos normalizados:
+  `{type: 'message.inbound'|'message.echo'|'message.status', lineExternalId, contact:{id, name}, message:{id, type, text, timestamp}, raw}`.
+- Envío: `sendText`, `sendTemplate`, `sendInteractive`, `sendImage` y `markRead`, todos
+  con la forma `(line, payload)`.
+- Plantillas: `listTemplates(line)` y `registerBaseTemplates(line)`.
 
-Colección nueva, solo para chats de números registrados en D1.
+**El manager** sigue a `accountingManager`: carga `providers/*Provider.js` con
+`readdirSync`, aísla cada `require` y resuelve con `#strategies.get(line.provider)`, sin
+`if/else` por proveedor.
 
-- **Campos:** `company`, `phoneNumberId`, `phoneHash`, `ownerEmail`, `ownerName`,
-  `ownerSince`, y `assignmentLog[]` (las últimas 20 entradas con `{accion, por, a, en}`).
-- El `phoneHash` ya incluye el comercio y el `phoneNumberId` es de un solo comercio, así
-  que el id no choca entre comercios.
-- **Los mensajes no se copian.** Siguen en `whatsapp_inbound` y `whatsapp_usage`; esta
-  colección guarda solo el dueño.
-- **Alternativas descartadas:**
-  - Reutilizar la sesión del bot: caduca a los 7 días y es de otro dominio.
-  - Las asignaciones de Kapso: piden usuarios de Kapso.
+**Por qué este molde:** es el más reciente y el más mantenido del código (DIAN entró así
+en julio y Fullpi en agosto). **Alternativa descartada:** seguir creciendo
+`kapsoService`, que ya tiene 1.000 líneas y seis resoluciones de credenciales copiadas.
 
-### D3. Un solo dueño, por transacción
+### D2. `kapsoService` se queda como cliente de mensajes y deja de decidir credenciales
 
-`tomar`, `responder` (cuando el chat no tiene dueño), `soltar` y `pasar` son
-transacciones de Firestore sobre el documento del chat.
+Los seis bloques "credencial propia o global" se cambian por una sola resolución:
+`messagingManager.resolveSendLine({company, lineId})`.
 
-- Responder a un chat sin dueño lo toma dentro de la misma transacción, antes de
-  enviar. El que llega segundo recibe 409 con el nombre del dueño.
-- Si el número tiene un solo vendedor, el chat se crea a su nombre al llegar el primer
-  mensaje del cliente.
-- El chequeo de dueño está en el servidor, en la ruta de respuesta; el front solo lo
-  refleja.
+- **Con `lineId`:** la línea registrada del comercio, que debe estar conectada.
+- **Sin `lineId`:** la regla de hoy, en el mismo orden (`ownCredentials` y luego el número
+  compartido).
 
-### D4. El número viaja en el chat
+`kapsoService` recibe la línea ya resuelta, y sus firmas públicas solo suman el parámetro
+opcional `lineId`, así que quienes lo llaman no cambian. `kapsoWhatsappProvider` delega
+los envíos en `kapsoService` y la parte Platform en `kapsoPlatformClient`. Es el mismo
+reparto de `fullpiProvider`: el adaptador es delgado y la plomería vive en el cliente.
 
-El chat se identifica en la API con `phoneHash` más el parámetro `numero` (el
-`phoneNumberId`).
+### D3. Línea: `messaging_lines/{provider}_{externalId}` (colección nueva, aprobada)
 
-- Sin `numero`, la API se comporta como hoy: número compartido, sin dueño y con la
-  visibilidad actual. Esto evita duplicar rutas y conserva los enlaces existentes.
-- **Agrupación en `getThreads`:** en lugar de agrupar solo por teléfono canónico, agrupa
-  por `(número, teléfono canónico)`. El número sale de:
-  - `metadata.phoneNumberId` en los mensajes que entran;
-  - el campo nuevo `phoneNumberId` en `whatsapp_usage` para los que salen.
-  - Los documentos viejos, sin número, se tratan como del número compartido.
+El id del documento es, por ejemplo, `kapso_1113367011867331`.
 
-### D5. Entrada: la empresa sale primero del registro D1
+- **Campos:** `provider`, `channel` (`whatsapp`), `externalId` (el `phoneNumberId`),
+  `company`, `displayName` (lo pone el comercio), `displayPhone`, `verifiedName`,
+  `accountId` (WABA), `connectionType` (`coexistence` | `dedicated`), `status`
+  (`connected` | `disconnected`), `sellers[]` (`{email, nombre}`), `botEnabled`,
+  `connectedAt/By` y `updatedAt`.
+- **El id del documento da la exclusividad.** El registro se hace con `create()`, y Kapso
+  además confirma que el número pertenece al customer del comercio. Al llegar un mensaje,
+  la empresa sale de leer un solo documento.
+- **Por qué es channel-agnostic:** el mismo documento sirve mañana para una cuenta de
+  Instagram (`meta_ig_<id>`).
+- **Las líneas no guardan secretos.** Los números conectados por enlace viven en el
+  proyecto Kapso de Katuq y se operan con la llave de la plataforma. El
+  `kapsoCustomerId` del comercio se guarda en el documento que ya existe,
+  `integration_configs/{company}_kapso`.
+- **Alternativa descartada:** una subcolección bajo `integration_configs`. Exige un índice
+  de collection group para el webhook y deja la línea atada a un proveedor.
 
-En `persistInbound`, se busca primero `whatsapp_phone_numbers/{metadata.phone_number_id}`.
+### D4. Dueño del chat: `messaging_threads/{lineDocId}__{contactHash}` (colección nueva, aprobada)
 
-- **Si existe y está `connected`:** la empresa es la del documento, sin reparto y sin
-  inferencia. Si el número tiene un solo vendedor, se crea el chat a su nombre (D3).
-- **Si no existe:** el camino actual (D-116, D-094, piloto) sigue igual.
-- **Webhooks:** cada número nuevo recibe su webhook en Kapso al confirmarse
-  (`POST /platform/v1/whatsapp/phone_numbers/{id}/webhooks`):
-  - misma URL y mismo formato (`kind: "meta"`) que el actual;
-  - el `secret_key` es el mismo `KAPSO_WEBHOOK_SECRET`. Lo genera Katuq, así que no hace
-    falta buscar la clave de cada número antes de verificar la firma.
-- **Idempotencia:** es la de hoy, por id de mensaje.
+- **Campos:** `company`, `lineId`, `channel`, `contactHash`, `owner {email, nombre, desde}`
+  o `null`, y `log[]` con las 20 últimas entradas `{accion, por, a, en}`.
+- **`contactHash` es el `phoneHash` actual de WhatsApp** (`sha256(tel|company)`), para no
+  romper hashes ni enlaces existentes. En el dominio vive un helper de identidad
+  (`messaging/identity.js`) que hoy envuelve `whatsappPhoneHash` y mañana `metaIdentityHash`.
+- **No se copian mensajes.** Siguen en `whatsapp_inbound` y `whatsapp_usage`, que reciben
+  el campo nuevo `lineId`.
+- **Reglas en `threadOwnership`** (todas por `runTransaction`):
+  - `tomar`: solo si el chat no tiene dueño y el usuario es vendedor de la línea o de la
+    familia Administrador.
+  - `soltar`: solo el dueño o la familia Administrador.
+  - `asignar`: solo la familia Administrador, y el destino debe ser un usuario del
+    comercio (`listarComerciales`).
+  - `reclamarParaResponder`: toma el chat dentro de la misma transacción del envío si no
+    tiene dueño. Si el dueño es otra persona, devuelve 409 con su nombre.
+  - Al primer entrante de una línea con **un solo** vendedor, el chat se crea a su nombre.
+- **Por qué con transacción:** soporte asigna con PUT y gana el último que escribe (está
+  aceptado en su diseño), y aquí eso es justamente lo que hay que evitar.
 
-### D6. Mensajes desde el celular (coexistencia)
+### D5. Webhook nuevo de mensajería, con el molde de WooCommerce
 
-Los ecos de los mensajes que salen de la app del celular se guardan como salientes:
+Ruta `POST /v1/messaging/webhook/:provider`, con router y controller delgados:
 
-- en `whatsapp_usage`, con `origin: "business_app"`, `phoneNumberId` y `costoCOP: 0`;
-- **sin descontar saldo.**
+1. `strategy.verifyWebhook(rawBody, headers)` **falla cerrado**: sin secreto o con firma
+   mala responde 401.
+2. Reserva por id de mensaje con `idempotency.checkAndReserve(sha256(provider:messageId))`
+   (Art. IV).
+3. Guarda el evento crudo en `integrationRawEvents` con
+   `{proveedor:'KAPSO', tipo, datos, procesado:false, intentos:0}`. Los encabezados se
+   filtran y se guardan sin la firma (Art. V).
+4. Responde 200. Kapso exige respuesta en menos de 10 s.
+5. `inboundProcessor` procesa en segundo plano y marca el evento `procesado` o `error`.
+6. Un barrido en `cronService`, cada minuto, reintenta los pendientes de más de 60 s con
+   un máximo de 5 intentos; después los marca `dead`.
 
-El formato del eco en `kind: "meta"` (campo `smb_message_echoes`) se confirma con un
-número real antes de cerrar la tarea (Art. VIII). Si no llega en ese formato, se usa un
-segundo webhook `kind: "kapso"` solo para `whatsapp.message.sent` con
-`origin = business_app`.
+**Qué hace `inboundProcessor`:**
 
-### D7. Salida por el número del chat
+- `message.inbound`: busca la línea, escribe en `whatsapp_inbound` con la forma de hoy más
+  `lineId` (para que el buzón y el bot lo lean igual), asegura el chat (D4) y, si la línea
+  tiene `botEnabled` y el chat no tiene dueño, despacha al bot existente.
+- `message.echo` (coexistencia): lo escribe en `whatsapp_usage` como saliente con
+  `origin:'business_app'`, `lineId` y `costoCOP:0`, sin descontar saldo.
 
-`resolveCredentials(company, phoneNumberId)`:
+**El webhook viejo (`/v1/whatsapp/webhook`) no cambia.** Sigue atendiendo el número
+compartido. Las líneas nuevas registran su webhook en Kapso hacia la URL nueva, con un
+secreto de mensajería propio de la plataforma (`MESSAGING_KAPSO_WEBHOOK_SECRET`).
 
-- **Con número:** se exige que el documento D1 sea del comercio y esté `connected`. Se
-  usa la llave de la plataforma (`KAPSO_API_KEY`), porque el número vive en el proyecto
-  Kapso de Katuq.
-- **Sin número:** el comportamiento actual.
+### D6. Salida por la línea del chat
 
-En `enviarTexto`:
+`whatsappOutboundService.enviarTexto` recibe `lineId`.
 
-- recibe `phoneNumberId`;
-- mide la ventana con los mensajes del cliente a ese número;
-- guarda en `whatsapp_usage` el `phoneNumberId` y `sentBy` (el email);
-- descuenta como hoy.
+- **Dentro de la misma transacción:** con `reclamarParaResponder` (D4) decide quién es el
+  dueño.
+- **Ventana de 24 h:** se calcula con los entrantes de ese contacto en esa línea.
+- **Envío:** sale por `kapsoService` con `lineId` (D2).
+- **Registro:** `whatsapp_usage` guarda `lineId` y `sentBy`.
+- **Cobro:** descuenta el saldo como hoy (D-044, decisión de Daniel: Katuq paga a Meta).
+- **Plantillas:** se leen del WABA de la línea. Al conectarla, el provider registra la
+  plantilla UTILITY "retomar conversación" (`registerBaseTemplates`).
 
-**Plantillas:** se leen del WABA del número. Al conectar se registra una plantilla
-UTILITY de retomar conversación en ese WABA, con el mismo mecanismo de
-`scripts/kapso-registrar-plantillas.js`.
+### D7. Conexión de líneas
 
-### D8. Conexión del número
+Endpoints en `routers/messaging.js` → `controllers/messaging.js`, con
+`auth + requireJwtTenant + requireFeature('whatsappMultiNumero')`. Los que escriben exigen
+además `requireRole(['Administrador'])` (familia Administrador).
 
-Endpoints, todos solo para la familia Administrador:
+| Ruta | Qué hace |
+|---|---|
+| `GET /v1/messaging/lines` | Líneas del comercio, más el equipo asignable (`listarComerciales`) y `puedeAdministrar` |
+| `POST /v1/messaging/lines/connect` | `strategy.createConnectLink`. Crea el customer de Kapso la primera vez y el enlace con `language:'es'`, `meta_billing_mode:'partner_managed'`, conexiones `coexistence` y `dedicated`, y regreso a `/integrations/kapso/retorno` |
+| `POST /v1/messaging/lines/confirm` | `strategy.confirmLine` **consulta a Kapso** (`phone_numbers?customer_id&phone_number_id`); no confía en el regreso del navegador. Luego hace `create()` de la línea, registra el webhook y la plantilla base |
+| `PATCH /v1/messaging/lines/:lineId` | Cambia `displayName`, `sellers` y `botEnabled` (como máximo una línea con bot por comercio) |
+| `DELETE /v1/messaging/lines/:lineId` | Pasa la línea a `disconnected` y apaga su webhook. No la borra de Kapso ni de Meta |
+| `POST /v1/messaging/threads/:threadId/{tomar,soltar,asignar}` | Cambios de dueño del chat (D4) |
 
-- `POST /v1/whatsapp/numbers/setup-link`:
-  - crea el customer de Kapso del comercio la primera vez (`external_customer_id` igual
-    al comercio) y lo guarda en `integration_configs/{company}_kapso.kapsoCustomerId`;
-  - crea el enlace con `language: "es"`, `meta_billing_mode: "partner_managed"` (Katuq
-    paga a Meta, decisión de Daniel), las conexiones `coexistence` y `dedicated`, y el
-    regreso a `/integrations/whatsapp/numeros/retorno`.
-- `POST /v1/whatsapp/numbers/confirm`:
-  - consulta `GET /platform/v1/whatsapp/phone_numbers?customer_id=…&phone_number_id=…`;
-  - solo si Kapso lo confirma, crea D1, el webhook (D5) y la plantilla (D7);
-  - los datos del regreso del navegador nunca se usan directamente.
-- `GET /v1/whatsapp/numbers`: la lista del comercio. Disponible para cualquier usuario
-  del comercio, con `habilitado` según las banderas.
-- `PATCH /v1/whatsapp/numbers/:id`: `label`, `sellers` y `botEnabled`. Solo un número
-  por comercio puede tener `botEnabled`.
-- `DELETE /v1/whatsapp/numbers/:id`: pasa el número a `disconnected` y desactiva su
-  webhook. **No** lo borra de Kapso ni de Meta; eso queda manual.
+### D8. Alcance y buzón
 
-### D9. Visibilidad y rutas del chat
+`messagingAccess.alcance(req, tenant)` devuelve
+`{esAdmin, email, lineasVisibles:Set, chatsPropios:Set}`. `esAdmin` usa la familia
+Administrador de `requireRole`. Para los demás, las líneas visibles son las suyas en
+`sellers`, más los chats D4 que tiene a su nombre.
 
-**Quién ve qué:**
-- La familia Administrador se determina con el mismo criterio de
-  `middleware/requireRole.js`.
-- Para los demás usuarios, los números visibles son los D1 del comercio con su email en
-  `sellers`, más los chats D2 con `ownerEmail` igual al suyo.
-- `getThreads` filtra después de agrupar.
-- `getMessages`, `reply`, `viewed`, `profile`, `orders` y las rutas del bot validan el
-  mismo alcance cuando llega `numero`, y responden 403 si no corresponde.
+Las rutas del buzón de WhatsApp que ya existen (`/v1/whatsapp/conversations*`) aceptan
+`?lineId=`:
 
-**Rutas nuevas:**
-- `POST /v1/whatsapp/conversations/:phoneHash/tomar?numero=`
-- `POST /v1/whatsapp/conversations/:phoneHash/soltar?numero=`
-- `POST /v1/whatsapp/conversations/:phoneHash/asignar?numero=`, con body `{email}` y
-  solo para la familia Administrador.
+- **Con `lineId`:** se aplica el alcance (403 si no corresponde) y se agrupa por
+  `(lineId, contacto)`.
+- **Sin `lineId`:** el comportamiento de hoy, que es el número compartido.
+- **En la lista:** cada chat trae `line {id, displayName, displayPhone}` y `owner`. Se
+  corrige `status`/`statusFilter` y se respeta `page`.
 
-### D10. Bot
+### D9. Bandera
 
-- Para los números D1, `porNumeroPropio` es `true` solo si `botEnabled`.
-- El despachador agrega una compuerta: si el chat D2 tiene `ownerEmail`, el bot no
-  responde.
-- La llave de sesión sigue siendo `phoneHash`. Es seguro porque el bot está en un solo
-  número por comercio.
+`whatsappMultiNumero` en `companyFeatureFlags.FEATURE_FLAG_NAMES` y en
+`COMPANY_FEATURE_FLAGS` del front. Dueño: Daniel. Se retira 30 días después de tenerla
+encendida para todos (Art. XII). Se prende con `scripts/set-company-feature.js`.
 
-### D11. Front
+**La entrada de una línea registrada no depende de la bandera.** Si un número ya está
+registrado, su empresa queda fija aunque la bandera esté apagada. La bandera solo cierra
+la pantalla y las rutas de administración.
 
-En la configuración (`whatsapp-kapso-config`):
-- tarjeta "Números" (`cfg-card`) con la lista, el estado, el número y el nombre;
-- el botón "Conectar número", que sale al enlace de Kapso en la misma pestaña;
-- un selector múltiple de vendedores tomado de los usuarios del comercio, y los
-  interruptores de bot y desconectar;
-- una ruta de regreso que llama a `confirm` y vuelve a la lista con el resultado.
+### D10. Front
 
-En el buzón:
-- un chip con el número en cada chat, la línea "Atiende: …" y los botones Tomar, Soltar
-  y Pasar (este solo para administradores);
-- el redactor en solo lectura si el usuario no es el dueño;
-- un filtro por número;
-- `sendReply` y la lista pasan a `WhatsappInboxService` sobre `BaseService`, con
-  interceptor y sin `fetch` directo.
-
-Todo con el design-system: plano, acento #5F3FE0, sin clases con "p-" y con cada
-`span` de un `*ngIf` con color y tamaño propios.
-
-### D12. Banderas (Art. XII)
-
-- Global: `WHATSAPP_MULTINUMBER_ENABLED`.
-- Por comercio: `integration_configs/{company}_kapso.multiNumber.enabled`.
-- Con cualquiera de las dos apagada, la pantalla y los endpoints D8 responden
-  `habilitado: false`: no se conectan ni se editan números.
-- La entrada sí consulta D1 siempre (ver riesgos): un número ya registrado nunca vuelve
-  al reparto D-094.
-- Se retiran 30 días después de abrirlo a todos los comercios.
+- **Conectar y volver, genérico.** Una ruta `/integrations/:provider/retorno` con
+  `IntegrationConnectReturnComponent`, que se saca del `MetaOauthReturnComponent`: avisa
+  por `postMessage` (`{tipo:'integration_connect', provider, params}`) y se cierra.
+  - Más un `connector-registry.ts` al estilo de `provider-registry.ts`, con la
+    descripción de cómo se conecta cada provider.
+  - Kapso lo usa desde ya. Meta conserva `meta/retorno`, que está registrada en Meta, y
+    se pasa al registro cuando se toque.
+- **Líneas.** Un componente `messaging-lines/` dentro de `IntegrationsModule`, montado en
+  la tarjeta de WhatsApp con `cfg-card` y sobre `MessagingLinesService extends BaseService`.
+  - Lleva la lista, "Conectar número", el selector de vendedores, el bot y el botón de
+    desconectar.
+  - Se ve solo con `CompanyFeaturesService.isEnabled('whatsappMultiNumero')`.
+- **Equipo compartido.** `shared/components/selector-equipo` (`p-multiSelect` o
+  `p-dropdown` con filtro) recibe el equipo del endpoint de líneas. El CRM lo adopta
+  cuando se toque.
+- **Rol.** `shared/utils/roles.ts` reúne en una sola utilidad las tres copias de
+  `esRolAdministrador`, siguiendo `requireRole.js`. `NavService` y `PricingModeService`
+  delegan en ella.
+- **Buzón.** Componentes de presentación compartidos en
+  `components/notificaciones/inbox-core/`, que no dependen del canal:
+  - `chat-dueno`: "Atiende: …", Tomar, Soltar, Pasar y el motivo del modo lectura.
+  - `chip-linea`.
+  - WhatsApp los usa ya; Meta los adopta en el cambio de unificación.
+- **Servicio del buzón.** `WhatsappInboxService` deja `fetch` y `HttpClient` directos, pasa
+  todo por `BaseService` (que suma `patch`) y agrega `lineId` a las rutas del chat. Se
+  quitan la caída a datos de demostración y los `console.log`.
+- **Diseño.** `config-pagina`, pares semánticos, ninguna clase con "p-", y cada span de un
+  `*ngIf` con color y tamaño propios.
 
 ## Risks / Trade-offs
 
-- **[El número aparece con la bandera apagada y su mensaje cae al reparto D-094]** →
-  En el webhook, D1 se consulta siempre, sin depender de la bandera: es solo una lectura
-  por id, y si el número está registrado su empresa queda fija. La bandera solo apaga la
-  pantalla y la conexión.
-- **[Coexistencia menos estable: desconexiones y ecos que llegan tarde]** → Se muestra
-  el estado del número, que se refresca contra Kapso al abrir la pantalla. El comercio
-  elige `dedicated` si necesita estabilidad.
-- **[Meta rechaza o reclasifica la plantilla de retomar conversación]** → El chat sigue
-  funcionando dentro de la ventana de 24 horas. La pantalla avisa que el número aún no
-  tiene plantilla aprobada.
-- **[Costo: Katuq paga a Meta y Kapso cobra el 5% de facturación administrada]** → La
-  tarifa D-044 ($80) cubre de sobra la tarifa de servicio de Meta. Se revisa con el
-  primer mes de datos.
-- **[Plan Kapso: el Pro admite 3 números]** → Antes de abrir a comercios hay que pasar
-  al plan Platform. Es una tarea de Daniel en la consola de Kapso.
-- **[Pocos permisos para el administrador en pleno trabajo]** → El administrador no
-  escribe en un chat con dueño sin pasárselo primero, a propósito: es la regla de
-  "no pisarse". Pasárselo es un clic.
-- **[Escala del filtro en memoria de `getThreads`]** → Ya tiene una ventana de 90 días
-  (D-117). Con varios números el volumen por comercio crece, pero en la misma colección
-  y con los mismos índices. Se mide en el piloto.
+- **Tocar `kapsoService` puede afectar las notificaciones y el bot del número
+  compartido.** Mitigación: sin `lineId`, la resolución es la misma de hoy y en el mismo
+  orden. Además, la suite completa `tests/notifications` y una prueba de contrato nueva
+  ("sin lineId sale por el mismo número que antes") deben pasar antes de desplegar.
+- **Dos webhooks conviven (el viejo y el de mensajería).** Mitigación: cada número tiene
+  un solo webhook en Kapso. El compartido sigue en el viejo y las líneas nuevas usan el
+  nuevo. El viejo se migra cuando el número compartido pase a ser una línea (cambio
+  aparte).
+- **El eco de coexistencia puede no llegar en el formato documentado.** Mitigación: hay
+  fixture y prueba de contrato. Lo que no se pueda confirmar se valida con un número real
+  en el piloto (tarea 6.3). El provider normaliza ambos formatos de Kapso (`kind: kapso`
+  v2 con `origin`).
+- **Meta puede rechazar la plantilla base.** Mitigación: dentro de la ventana el chat
+  funciona igual, y la pantalla avisa si la línea no tiene plantilla.
+- **Costos.** Katuq paga a Meta, Kapso cobra el 5 % de facturación administrada y hace
+  falta el plan Platform para pasar de 3 números. Mitigación: la tarifa D-044 cubre el
+  servicio, y se revisa con el primer mes de datos.
+- **Al administrador le toma un paso más.** No escribe en un chat ajeno sin pasárselo a sí
+  mismo. Es a propósito: es la regla de "no pisarse".
 
 ## Migration Plan
 
-1. Backend con las banderas apagadas: registro D1, entrada, salida y rutas. Las pruebas
-   de contrato pasan con payloads reales de Kapso guardados como fixtures.
-2. Índices nuevos: `whatsapp_phone_numbers (company)` y
-   `whatsapp_threads (company, ownerEmail)`. Se crean con Firebase CLI y un archivo que
-   contenga solo los nuevos.
-3. Front con las banderas apagadas: se ve igual que antes.
-4. Piloto en Julsmind con un número de prueba de Daniel. **Daniel hace el inicio de
-   sesión en Meta.** Se prueba: conectar dos números, asignar, un cliente que escribe a
-   los dos, la carrera entre dos vendedores, pasar un chat, el eco desde el celular, el
-   descuento de saldo y el 403 por enlace directo.
-5. Encender en el primer comercio que Daniel indique.
-6. **Reversa:** apagar la bandera del comercio. Los números siguen registrados y sus
-   mensajes siguen entrando a su comercio. Para soltarlos del todo, desconectarlos.
+1. Backend con la bandera apagada en todos los comercios. Las pruebas de contrato pasan
+   con fixtures de Kapso.
+2. Índices nuevos en un archivo con solo los nuevos, sin `--force`:
+   `messaging_lines (company)`, `messaging_threads (company, owner.email)`,
+   `integrationRawEvents (proveedor, procesado, timestamp)`.
+3. Front: con la bandera apagada se ve igual que antes.
+4. Piloto en Julsmind. Daniel conecta dos números de prueba (el inicio de sesión en Meta lo
+   hace él) y se corre la prueba completa.
+5. Encender en el primer comercio que indique Daniel.
+6. Reversa: apagar la bandera. Las líneas siguen registradas y sus mensajes siguen
+   llegando a su comercio. Para soltarlas del todo, desconectarlas.
 
 ## Open Questions
 
-- Si `X-Idempotency-Key` de Kapso se mantiene entre reintentos. No cambia el diseño,
-  porque la idempotencia es por id de mensaje.
-- Cuántos números caben por WABA. Lo limita Meta, no Katuq.
+- ¿El `X-Idempotency-Key` de Kapso se mantiene igual entre reintentos? No cambia el
+  diseño, porque la reserva es por id de mensaje.
+- Cuántos números caben por WABA lo define Meta, no Katuq.

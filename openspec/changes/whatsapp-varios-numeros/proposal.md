@@ -41,7 +41,7 @@ pisen los chats".
 - **El número compartido de Katuq sigue igual.** Las notificaciones, el bot piloto
   de ALMARA, el reparto de entrantes D-094 y la visibilidad actual de sus chats no
   cambian.
-- **Todo se enciende con una bandera global y una por comercio** (Art. XII).
+- **Todo se enciende con una bandera por comercio** (`whatsappMultiNumero`, Art. XII).
 
 ## Capabilities
 
@@ -68,6 +68,18 @@ históricas y siguen describiendo el número compartido, que no cambia)_
 - Migrar la configuración antigua `ownCredentials`. Hoy ningún comercio la usa
   (medido el 2026-10-15) y se deja intacta.
 - No toca pedidos, inventario ni consecutivos.
+
+## Arquitectura (revisión del 2026-10-15)
+
+Daniel aprobó el cambio con una condición: «hazlo, pero de manera estratégica, usando la arquitectura de Katuq». Por eso se arma como **dominio Mensajería con Strategy**, siguiendo el mismo molde que contabilidad y logística: un manager y providers que delegan en clientes.
+
+- Kapso WhatsApp es el primer provider. Meta (Instagram y Messenger) puede entrar después sin tocar el manager.
+- La **línea** es la unidad de dueño y de envío, y no depende del canal.
+- El webhook sigue el molde de WooCommerce: firma que falla cerrado, reserva atómica y evento crudo guardado antes de procesar.
+- Se reutilizan la bandera por comercio (`companies.featureFlags`) y el equipo comercial del CRM.
+- En el front, el regreso de una conexión usa una ruta genérica y las piezas del buzón no dependen del canal.
+
+El detalle está en `design.md`. Por esta revisión, los nombres de colección y de campo que aparecen abajo cambian: las colecciones pasan a ser `messaging_lines` y `messaging_threads`, y los campos nuevos quedan como `lineId` y `sentBy`.
 
 ## Impact
 

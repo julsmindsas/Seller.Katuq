@@ -10023,7 +10023,7 @@ Daniel: «cierra los de soporte de julsmind». Lo tomó como aprobación del cam
 - **Verificado** con el bundle de producción y pedidos simulados a 1440 y 390 px. En un pedido despachado, "Configurar" sale bloqueado con el motivo, y el configurador abre desde el panel. A 390 px los botones quedan dentro de la tarjeta; el panel de detalle ya desbordaba unos 10 px antes de este cambio.
 
 
-## D-437 (2026-10-15) — WhatsApp con varios números por comercio, asignados a vendedores (openspec/changes/whatsapp-varios-numeros) — PROPUESTA, espera aprobación
+## D-437 (2026-10-15) — WhatsApp con varios números por comercio, asignados a vendedores (openspec/changes/whatsapp-varios-numeros) — APROBADA, en implementación
 
 Daniel: «con kapso necesitamos conectar n cantidades de whatsapp y que se pueda asignar a un vendedor y que no se pisen los chats, averigua cómo y hazlo». Escogió **número y chat** como forma de asignar y **Katuq le paga a Meta, descontando del saldo prepago** (D-044).
 
@@ -10044,4 +10044,14 @@ Daniel: «con kapso necesitamos conectar n cantidades de whatsapp y que se pueda
   - las dos colecciones nuevas;
   - el plan Platform de Kapso para más de 3 números;
   - `meta_billing_mode: partner_managed`.
-- **Hallazgo aparte:** en el buzón, `bot/sesiones`, `viewed` y `bot` responden 401 en producción. Usan llamados sin interceptor y se corrigen dentro de este cambio (tarea 4.4).
+- **Hallazgo aparte:** en el buzón, `bot/sesiones`, `viewed` y `bot` responden 401 en producción. Usan llamados sin interceptor y se corrigen dentro de este cambio (tarea 3.6).
+- **APROBADA con revisión de arquitectura (15-oct).** Daniel: «hazlo pero de una manera estratégica, usando la arquitectura de Katuq, que todo lo estás haciendo suelto». El diseño se rehízo como **dominio Mensajería con Strategy** (`services/messaging/`), con el mismo molde que `accountingManager` y el provider delgado de Fullpi:
+  - `kapsoWhatsappProvider` es el primer provider. Meta entra después sin tocar el manager (Art. VI).
+  - Una sola resolución de credenciales reemplaza las seis copias que tiene `kapsoService`.
+  - La **línea** no depende del canal: `messaging_lines/{provider}_{externalId}`, con el dueño único dado por el id.
+  - El dueño de cada chat queda en `messaging_threads`, fijado por transacción.
+  - El webhook nuevo, `/v1/messaging/webhook/:provider`, sigue el molde de WooCommerce. Reutiliza `integration-core/idempotency` y `integrationRawEvents` y falla cerrado.
+  - La bandera es `whatsappMultiNumero` en `companies.featureFlags`.
+  - El equipo comercial sale de `crmAcceso.listarComerciales`.
+  - En el front: una ruta genérica `/integrations/:provider/retorno` con su registro de conectores, `inbox-core` para que las piezas del buzón no dependan del canal, `selector-equipo` y `roles.ts` como única utilidad de familia Administrador.
+  - Quedan para un cambio aparte: migrar Meta a provider, unificar los buzones y pasar `{company}_kapso` a `integrationConfigService`.

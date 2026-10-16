@@ -1,49 +1,54 @@
 ## 1. Contratos y fixtures (antes del código, Art. VIII)
 
-- [ ] 1.1 Guardar como fixtures (sin teléfonos reales) los payloads de Kapso: `phone_numbers` (listado por customer), respuesta de `setup_links`, creación de webhook por número, mensaje entrante `kind: "meta"` con `metadata.phone_number_id`, y eco de coexistencia (`smb_message_echoes`). Los que no se puedan capturar todavía, marcados como pendientes de confirmar en 6.3.
-- [ ] 1.2 Prueba de contrato del registro: `create()` de un número ya registrado falla; un número de otro comercio no cambia de dueño.
-- [ ] 1.3 Prueba de contrato de la entrada: un mensaje a un número D1 se atribuye solo a su comercio, aunque otro comercio le haya escrito antes al mismo cliente (sin pasar por el reparto D-094); un mensaje al número compartido sigue el camino actual.
-- [ ] 1.4 Prueba de contrato del dueño: dos respuestas simultáneas a un chat sin dueño → una sale y la otra recibe 409 con el nombre del dueño; un no dueño (incluida la familia Administrador) recibe 409.
-- [ ] 1.5 Prueba de contrato de visibilidad: un vendedor no ve ni abre por enlace directo chats de números que no tiene asignados (403), y la familia Administrador ve todos.
+- [ ] 1.1 Fixtures de Kapso en `tests/messaging/fixtures/`, sin teléfonos reales: listado de `phone_numbers` por customer, respuesta de `setup_links`, creación de webhook por número, mensaje entrante y eco de coexistencia en los formatos `meta` y `kapso` v2. Lo que no se pueda capturar se marca como pendiente para 6.3.
+- [ ] 1.2 Prueba de contrato del manager: carga los providers por descubrimiento; un provider que no implementa el contrato lanza error; sin `if` por proveedor.
+- [ ] 1.3 Prueba de contrato de `kapsoService`: sin `lineId`, cada método sale con las mismas credenciales y el mismo número que antes (`ownCredentials` y luego el compartido); con `lineId` de otro comercio o desconectada, rechaza.
+- [ ] 1.4 Prueba de contrato del webhook de mensajería: firma mala o secreto ausente responden 401 sin escribir nada; un reintento del mismo mensaje no duplica; el evento crudo queda antes de procesar; un número registrado se atribuye solo a su comercio.
+- [ ] 1.5 Prueba de contrato del dueño: dos respuestas simultáneas a un chat sin dueño hacen que salga una y la otra reciba 409 con el nombre; quien no es dueño (incluida la familia Administrador) recibe 409; solo la familia Administrador asigna.
+- [ ] 1.6 Prueba de contrato del alcance: un vendedor no lista ni abre por enlace chats de líneas ajenas (403); la familia Administrador ve todo; sin `lineId` todo sigue como antes.
 
-## 2. Backend: números
+## 2. Backend: dominio de mensajería
 
-- [ ] 2.1 `services/whatsappNumbers.js`: leer, registrar (`create`), actualizar (`label`, `sellers`, `botEnabled` con máximo uno por comercio) y desconectar en `whatsapp_phone_numbers`; banderas global y por comercio.
-- [ ] 2.2 `kapsoService`: `crearCustomer`, `crearSetupLink`, `buscarNumero(customerId, phoneNumberId)`, `crearWebhookNumero` y `desactivarWebhookNumero`. Las llaves solo van en encabezados; nunca se registran en el log.
-- [ ] 2.3 Rutas `GET/POST/PATCH/DELETE /v1/whatsapp/numbers*` (D8), con `auth`, tenant del JWT y la familia Administrador para escribir. `confirm` verifica contra Kapso antes de registrar.
-- [ ] 2.4 Al confirmar: registrar la plantilla UTILITY de retomar conversación en el WABA del número (mecanismo de `scripts/kapso-registrar-plantillas.js`).
-- [ ] 2.5 Índices nuevos (`whatsapp_phone_numbers.company`, `whatsapp_threads (company, ownerEmail)`) en un archivo con solo los nuevos, sin `--force`.
+- [ ] 2.1 `services/messaging/providers/_baseMessagingProvider.js` y `messagingManager.js` (molde `accountingManager`), con `resolveSendLine` y `messaging/identity.js`.
+- [ ] 2.2 `services/integrations/kapso/kapsoPlatformClient.js`: customers, setup_links, phone_numbers y webhooks por número, con la llave de plataforma. Las llaves solo van en encabezados y nunca al log.
+- [ ] 2.3 `providers/kapsoWhatsappProvider.js`, delgado: conexión y confirmación (con verificación contra Kapso), webhooks, `verifyWebhook` y `parseWebhook` en los dos formatos, envíos delegados en `kapsoService` y plantillas base.
+- [ ] 2.4 `kapsoService`: los seis bloques de credenciales pasan a `messagingManager.resolveSendLine({company, lineId})`, y se agrega `lineId` opcional a sus firmas.
+- [ ] 2.5 `lines/linesService.js`: registro con `create()`, edición (vendedores, nombre y bot, con un solo bot por comercio) y desconexión; `messagingAccess.js`.
+- [ ] 2.6 `threads/threadOwnership.js`: `tomar`, `soltar`, `asignar`, `reclamarParaResponder` y `asegurarChat` por transacción, con `log` de 20 entradas.
+- [ ] 2.7 `inbound/inboundProcessor.js`: entrante → `whatsapp_inbound` con `lineId` → asegurar chat → bot si aplica; eco → `whatsapp_usage` sin cobro.
+- [ ] 2.8 Webhook `POST /v1/messaging/webhook/:provider`: verificar, reservar (`integration-core/idempotency`), guardar el crudo en `integrationRawEvents`, responder 200 y procesar; barrido de reintentos en `cronService`.
+- [ ] 2.9 `routers/messaging.js` + `controllers/messaging.js` (D7), montados en `index.js`, con `auth`, `requireJwtTenant`, `requireFeature('whatsappMultiNumero')` y `requireRole` para escribir.
+- [ ] 2.10 Bandera `whatsappMultiNumero` en `FEATURE_FLAG_NAMES`, con dueño y retiro.
+- [ ] 2.11 Buzón de WhatsApp con `?lineId=`: `getThreads`, `getMessages`, `reply`, `viewed`, `profile`, `orders` y rutas del bot con alcance; agrupación por `(lineId, contacto)`; `line` y `owner` en la lista; corrección de `statusFilter` y `page`. `enviarTexto` con `lineId`, ventana por línea y `sentBy`.
+- [ ] 2.12 Bot: en líneas registradas, `porNumeroPropio` sale de `botEnabled`; un chat con dueño no lo atiende el bot.
+- [ ] 2.13 Índices nuevos en un archivo con solo los nuevos, sin `--force`.
+- [ ] 2.14 Toda la sección 1 y la suite `tests/notifications` completa, en verde.
 
-## 3. Backend: entrada, salida y chats
+## 3. Front
 
-- [ ] 3.1 `persistInbound`: buscar primero D1 por `metadata.phone_number_id` (siempre, sin depender de la bandera) y, si existe y está conectado, fijar la empresa. Si el número tiene un solo vendedor, crear el chat D2 a su nombre.
-- [ ] 3.2 Ecos de coexistencia: guardarlos como salientes en `whatsapp_usage` con `origin: "business_app"`, `phoneNumberId` y `costoCOP: 0`, sin descontar saldo.
-- [ ] 3.3 `resolveCredentials(company, phoneNumberId)`: con número, exige D1 del comercio y conectado; sin número, el comportamiento actual. Propagar el parámetro a `sendText`, `sendTemplate`, `sendInteractive`, `sendImage` y `marcarLeídoYEscribiendo`.
-- [ ] 3.4 `enviarTexto`: recibir `phoneNumberId`, medir la ventana por número, guardar `phoneNumberId` y `sentBy` en `whatsapp_usage`, y descontar como hoy.
-- [ ] 3.5 `services/whatsappThreads.js`: transacciones `tomar`, `tomarAlResponder`, `soltar` y `pasar`, con `assignmentLog` (máximo 20 entradas).
-- [ ] 3.6 `getThreads` y `getMessages`: agrupar por `(número, teléfono)`; los documentos sin número van al compartido. Devolver el número, su nombre y el dueño, y filtrar por alcance (D9). Corregir el filtro `status` frente a `statusFilter` y la paginación.
-- [ ] 3.7 Rutas del chat con `?numero=`: `reply` (dueño en la transacción), `tomar`, `soltar`, `asignar`, más el chequeo de alcance en `viewed`, `profile`, `orders` y las rutas del bot.
-- [ ] 3.8 Bot: para los números D1, `porNumeroPropio` sale de `botEnabled`, y si D2 tiene dueño el bot no responde.
-- [ ] 3.9 Pruebas de la sección 1 en verde, más la suite de `tests/notifications` completa en verde (que el número compartido y el bot piloto no cambien).
+- [ ] 3.1 `BaseService.patch`; `shared/utils/roles.ts` (familia Administrador) con `NavService` y `PricingModeService` delegando en ella.
+- [ ] 3.2 Bandera `whatsappMultiNumero` en `COMPANY_FEATURE_FLAGS`.
+- [ ] 3.3 `connector-registry.ts` y la ruta genérica `/integrations/:provider/retorno` con `IntegrationConnectReturnComponent` (antes de `**`).
+- [ ] 3.4 `MessagingLinesService extends BaseService` y el componente `messaging-lines/` en la tarjeta de WhatsApp: lista, conectar (ventana y aviso de regreso), confirmar, vendedores con `selector-equipo`, bot y desconectar.
+- [ ] 3.5 `shared/components/selector-equipo`.
+- [ ] 3.6 `WhatsappInboxService`: todo pasa por `BaseService` (sin `fetch` ni `HttpClient` directos en el servicio ni en los componentes del buzón), `lineId` en las rutas del chat, sin datos de demostración ni `console.log`.
+- [ ] 3.7 `inbox-core/` con `chat-dueno` y `chip-linea`; el buzón de WhatsApp los usa, agrega el filtro por línea y el modo lectura con su motivo.
+- [ ] 3.8 `npm run build` de producción sin errores; el conteo de gradientes y primarios prohibidos no sube; revisión a 1440 y 390 px.
 
-## 4. Front
+## 4. Despliegue con la bandera apagada
 
-- [ ] 4.1 `WhatsappNumbersService` (`BaseService`): lista, enlace de conexión, confirmar, actualizar y desconectar.
-- [ ] 4.2 Tarjeta "Números" en `whatsapp-kapso-config`: lista con estado, "Conectar número", selector múltiple de vendedores, bot (uno solo) y desconectar con confirmación. Solo se ve con `habilitado`.
-- [ ] 4.3 Ruta de regreso `/integrations/whatsapp/numeros/retorno`: llama a `confirm` y vuelve a la lista con el resultado en lenguaje humano.
-- [ ] 4.4 `WhatsappInboxService`: pasar `sendReply`, la lista y los llamados que hoy dan 401 a `BaseService` (interceptor), y agregar `numero` a todas las rutas del chat.
-- [ ] 4.5 Buzón: chip del número en cada chat, "Atiende: …", Tomar, Soltar y Pasar (solo administradores), redactor en solo lectura para quien no es dueño (con el motivo) y filtro por número.
-- [ ] 4.6 `npm run build` de producción sin errores. Conteo de gradientes y primarios prohibidos sin aumento. Revisión a 1440 y 390 px.
+- [ ] 4.1 Backend: `ff-only`, HEAD verificado y `pm2 restart katuq-api`. Comprobar que el buzón de ALMARA responde como antes, que `GET /v1/messaging/lines` da 403 de función apagada y que el webhook nuevo responde 401 sin firma.
+- [ ] 4.2 Front: `git pull`, versión mayor que la viva, `verify-dist-prod` y publicar.
 
-## 5. Despliegue con banderas apagadas
+## 5. Kapso (Daniel)
 
-- [ ] 5.1 Backend: `ff-only`, verificar HEAD, `pm2 restart katuq-api`. Confirmar que ALMARA ve su buzón igual y que `GET /numbers` responde `habilitado: false`.
-- [ ] 5.2 Front: `git pull`, versión mayor que la viva, `verify-dist-prod`, publicar.
+- [ ] 5.1 Plan Platform si se van a superar 3 números, y confirmar que el proyecto admite `meta_billing_mode: partner_managed`.
+- [ ] 5.2 Poner `MESSAGING_KAPSO_WEBHOOK_SECRET` en el `.env` de producción (lo genera Daniel o se deja el comando).
 
 ## 6. Piloto y encendido
 
-- [ ] 6.1 Daniel: pasar Kapso al plan Platform si se van a superar 3 números, y confirmar que el proyecto admite `meta_billing_mode: partner_managed`.
-- [ ] 6.2 Encender en Julsmind. Daniel conecta dos números de prueba (él hace el inicio de sesión en Meta).
-- [ ] 6.3 Prueba completa con capturas: cliente que escribe a los dos números (dos chats), un número con dos vendedores y carrera, pasar y soltar, eco desde el celular sin descuento, saldo descontado por envío, plantilla fuera de la ventana y 403 por enlace directo. Completar los fixtures pendientes de 1.1.
+- [ ] 6.1 Encender `whatsappMultiNumero` en Julsmind.
+- [ ] 6.2 Daniel conecta dos números de prueba (el inicio de sesión en Meta lo hace él).
+- [ ] 6.3 Prueba completa con capturas: un cliente que escribe a los dos números (dos chats); una línea con dos vendedores y carrera entre ellos; pasar y soltar; eco desde el celular sin cobro; saldo descontado por envío; plantilla fuera de la ventana; 403 por enlace directo. Completar los fixtures pendientes de 1.1.
 - [ ] 6.4 Encender en el primer comercio que indique Daniel.
-- [ ] 6.5 Registrar el cierre en `specs/CONTRACT.md`. Retirar las banderas 30 días después de abrirlo a todos (Art. XII).
+- [ ] 6.5 Cierre en `specs/CONTRACT.md`; retiro de la bandera 30 días después de tenerla encendida para todos.

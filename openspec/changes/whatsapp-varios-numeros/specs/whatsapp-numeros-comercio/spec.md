@@ -111,9 +111,9 @@ para la familia Administrador.
 
 ### Requirement: El encendido es por comercio y reversible
 
-La función SHALL quedar detrás de una bandera global y de una bandera por comercio. Con
-cualquiera de las dos apagada, el comercio SHALL seguir funcionando exactamente como
-antes de este cambio.
+La función SHALL quedar detrás de una bandera por comercio. Con la bandera apagada, el
+comercio SHALL seguir funcionando exactamente como antes de este cambio; los números ya
+registrados SHALL seguir llegando solo a su comercio.
 
 #### Scenario: Bandera apagada
 
