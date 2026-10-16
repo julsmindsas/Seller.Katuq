@@ -104,6 +104,32 @@
             </p>
           </section>
 
+          <!-- Ticket 1239: ¿de dónde vienen tus ventas? -->
+          <section class="origenes" *ngIf="filasOrigen.length">
+            <div class="origenes__cabeza">
+              <h6>¿De dónde vienen tus ventas?</h6>
+              <button type="button" class="origenes__bajar" (click)="descargarOrigenes()">Descargar para Excel</button>
+            </div>
+            <div class="origenes__marco">
+              <table class="origenes__tabla">
+                <thead>
+                  <tr><th scope="col">Fuente</th><th scope="col" class="num">Ventas</th><th scope="col" class="num">Pedidos</th><th scope="col" class="num">Visitas</th><th scope="col" class="num">Conversión</th><th scope="col" class="num">Ticket promedio</th></tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let f of filasOrigen">
+                    <th scope="row">{{ etiquetaFuente(f.fuente || '') }}</th>
+                    <td class="num">{{ dinero(f.ventas) }}</td>
+                    <td class="num">{{ f.pedidos }}</td>
+                    <td class="num">{{ f.vistas }}</td>
+                    <td class="num">{{ porcentaje(f.conversion) }}</td>
+                    <td class="num">{{ f.ticketPromedio === null ? '—' : dinero(f.ticketPromedio) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="grafica__pie">Cuenta los pedidos hechos en esta página según por dónde llegó el comprador. Los pedidos de antes del 16 de octubre de 2026 salen como «Sin dato».</p>
+          </section>
+
           <!-- Dispositivo y campañas, lado a lado cuando hay de ambos -->
           <div class="dos-columnas">
             <section class="clics" *ngIf="datos.dispositivos && datos.dispositivos.length">
@@ -120,7 +146,7 @@
               <ul>
                 <li *ngFor="let c of datos.campanas">
                   <span>{{ c.campana }}</span>
-                  <strong>{{ c.vistas }}</strong>
+                  <strong>{{ c.vistas }}<small class="campana__ventas" *ngIf="ventasDeCampana(c.campana) as v"> · {{ v.pedidos }} pedido(s), {{ dinero(v.ventas) }}</small></strong>
                 </li>
               </ul>
             </section>

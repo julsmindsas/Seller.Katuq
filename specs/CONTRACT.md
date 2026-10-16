@@ -10390,3 +10390,15 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
   - El render en frío de catálogos grandes: FLORECER, con 2.166 productos, tarda de 1,5 a 7,6 s sin caché. El índice tarda ~3,9 s en cargar y los documentos completos pesan ~14 KB cada uno.
   - Imágenes de producto sin variantes de tamaño (originales de Storage).
 - **Escalado:** la baliza `/vista` no descarta robots ni Chrome headless. Lighthouse, PageSpeed y cualquier navegador automatizado suman visitas al tablero del comercio. No se usó PageSpeed por eso.
+
+## D-462 (2026-10-16) — «¿De dónde vienen tus ventas?» en Cómo va (ticket 1239, F3-25)
+
+- **Problema:** el panel de la página contaba las visitas por fuente, pero no las ventas. El evento de pedido no guardaba de dónde venía el comprador, aunque el pedido sí guardaba su campaña (`campana`).
+- **Decisión:**
+  - El evento `pedido` de la tienda guarda `fuente`, `fuenteDetalle` y `utm_campaign`. Se clasifican con las mismas reglas de la visita (`utils/siteAnalitica.clasificarFuente`), a partir de lo que el navegador guarda en `katuq_origen`: primer referrer y UTM de la sesión.
+  - `GET /v1/sites/:id/metricas` devuelve `porFuente` y `porCampana`: visitas, pedidos, ventas, conversión y ticket promedio del período (`resumenPorOrigen`, puro). La ruta ahora exige `requireJwtTenant`.
+  - «Cómo va» muestra la tabla con «Descargar para Excel» (CSV con BOM y punto y coma) y suma pedidos y ventas a «Tus campañas».
+- **Cuenta pedidos creados**, como el resto del panel, no pagados. Los de antes de hoy no traen fuente y salen como «Sin dato».
+- **Fuera:**
+  - Costo por venta: necesita conectar la pauta (ticket 1240).
+  - Embudo por pasos (ficha, carrito, checkout), búsquedas sin resultado y modelo de atribución elegible: no hay eventos de esos pasos todavía.
