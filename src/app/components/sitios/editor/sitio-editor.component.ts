@@ -2190,7 +2190,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    * contenido puesto: el comerciante edita encima en vez de mirar una caja
    * vacía sin saber qué escribir.
    */
-  agregarSeccionLista(id: string): void {
+  agregarSeccionLista(id: string, en?: number): void {
     const preset = this.seccionesListas.find((s) => s.id === id);
     if (!preset || !this.contenido) return;
 
@@ -2202,11 +2202,57 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     };
     if (preset.estilo) bloque.estilo = JSON.parse(JSON.stringify(preset.estilo));
 
-    this.fijarBloques([...this.bloques, bloque]);
-    this.seleccionado = this.bloques.length - 1;
+    // Ticket 1228: entra donde se eligió (el "+" de la vista previa, el
+    // selector "¿Dónde va?" o después de la sección elegida), no siempre al
+    // final como antes.
+    const nuevos = [...this.bloques];
+    const pos = Math.max(0, Math.min(en ?? this.posicionPorDefecto(), nuevos.length));
+    nuevos.splice(pos, 0, bloque);
+    this.fijarBloques(nuevos);
+    this.seleccionado = pos;
+    this.cerrarAgregar();
+    this.marcarSucio();
+    this.resolverProductosDePrevia();
+  }
+
+  // ── Ticket 1228: ver la sección antes de agregarla y elegir dónde va ──
+  seccionVista: (typeof SECCIONES_LISTAS)[number] | null = null;
+  bloqueVista: BloqueSitio[] = [];
+  posicionNueva = 0;
+
+  /** Dónde entra por defecto: el "+" usado, después de la elegida, o al final. */
+  posicionPorDefecto(): number {
+    if (this.insercionEn !== null) return this.insercionEn;
+    return this.seleccionado >= 0 ? this.seleccionado + 1 : this.bloques.length;
+  }
+
+  verSeccionLista(id: string): void {
+    const preset = this.seccionesListas.find((s) => s.id === id);
+    if (!preset) return;
+    this.seccionVista = preset;
+    this.bloqueVista = [{
+      id: "vista-previa-seccion",
+      tipo: preset.tipo,
+      visible: true,
+      datos: JSON.parse(JSON.stringify(preset.datos)),
+      ...(preset.estilo ? { estilo: JSON.parse(JSON.stringify(preset.estilo)) } : {}),
+    } as BloqueSitio];
+    this.posicionNueva = this.posicionPorDefecto();
+  }
+
+  get opcionesPosicion(): { valor: number; texto: string }[] {
+    return [
+      { valor: 0, texto: "Al principio de la página" },
+      ...this.bloques.map((b, i) => ({ valor: i + 1, texto: `Después de «${this.nombreDeTipo(b.tipo)}» (${i + 1})` })),
+    ];
+  }
+
+  cerrarAgregar(): void {
     this.mostrandoAgregar = false;
     this.mostrandoTiposCrudos = false;
-    this.marcarSucio();
+    this.seccionVista = null;
+    this.bloqueVista = [];
+    this.insercionEn = null;
   }
 
   /**
@@ -2304,8 +2350,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     nuevos.splice(en, 0, { id, tipo, visible: true, datos });
     this.fijarBloques(nuevos);
     this.seleccionado = en;
-    this.insercionEn = null;
-    this.mostrandoAgregar = false;
+    this.cerrarAgregar();
     this.marcarSucio();
     this.resolverProductosDePrevia();
   }
@@ -4225,7 +4270,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   atajos(evento: KeyboardEvent): void {
     // Escape cierra lo que esté abierto encima del editor.
     if (evento.key === "Escape") {
-      if (this.mostrandoAgregar) { this.mostrandoAgregar = false; evento.preventDefault(); return; }
+      if (this.mostrandoAgregar) { this.cerrarAgregar(); evento.preventDefault(); return; }
       if (this.seleccionado >= 0 && !(evento.target as HTMLElement)?.isContentEditable) { this.cerrarSeccion(); return; }
     }
     if (!(evento.ctrlKey || evento.metaKey)) return;

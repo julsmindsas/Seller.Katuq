@@ -3342,3 +3342,48 @@ input.is-error { border-color: #b42318 !important; }
   &:focus-visible { outline: 3px solid #7c5cff !important; }
 }
 .feed-cats__ayuda { display: block; margin-top: 6px; font-size: 12px; color: var(--kb-ink-3, #6b6685); }
+
+// ── Ticket 1228: ver la sección antes de agregarla ──
+.vista-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  > .btn-fantasma { align-self: flex-start; }
+  &__titulo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    strong { font-size: 15px; color: var(--kb-ink); }
+    small { font-size: 12.5px; color: var(--kb-ink-3, #6b6685); }
+  }
+  // La sección se ve tal cual, pero sin que un clic navegue fuera del editor.
+  &__marco {
+    max-height: 380px;
+    overflow: auto;
+    border: 1.5px solid var(--kb-line-3);
+    border-radius: 14px;
+    background: #fff;
+    pointer-events: none;
+  }
+  &__nota { margin: 0; font-size: 12px; color: var(--kb-ink-3, #6b6685); }
+  &__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px;
+    .campo { flex: 1 1 240px; margin-bottom: 0; }
+  }
+  &__agregar {
+    @include kb-btn-base;
+    padding: 11px 18px;
+    border: 0;
+    border-radius: 12px;
+    background: #5f3fe0;
+    color: #fff;
+    font-weight: 800;
+    font-size: 14px;
+    &:hover { background: #4f31cc; }
+    &:focus-visible { outline: 3px solid #7c5cff !important; }
+  }
+}

@@ -3068,14 +3068,14 @@
 <!-- ═══ Agregar sección ═════════════════════════════════════════════════════
      Con `appAlBody`: dentro de `.page-body` el velo quedaría por debajo del
      menú lateral. Ver al-body.directive.ts. -->
-<div class="velo" *ngIf="mostrandoAgregar" appAlBody (click)="mostrandoAgregar = false; insercionEn = null">
+<div class="velo" *ngIf="mostrandoAgregar" appAlBody (click)="cerrarAgregar()">
   <div class="caja" (click)="$event.stopPropagation()">
     <header class="caja__cabecera">
       <div>
         <h2>Agregar una sección</h2>
-        <p>Se añade al final de tu página. Puedes moverla después.</p>
+        <p>Toca una para verla con tus colores antes de agregarla, y elige dónde va.</p>
       </div>
-      <button class="cerrar" (click)="mostrandoAgregar = false" aria-label="Cerrar">
+      <button class="cerrar" (click)="cerrarAgregar()" aria-label="Cerrar">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </header>
@@ -3083,12 +3083,45 @@
     <div class="caja__cuerpo">
       <!-- Secciones ya armadas: es lo que se ofrece primero, porque una caja
            vacía no le dice a nadie qué escribir. -->
-      <ng-container *ngIf="!mostrandoTiposCrudos">
+      <!-- Ticket 1228: la sección tal como se verá, con el tema del sitio, y dónde entra. -->
+      <div class="vista-seccion" *ngIf="!mostrandoTiposCrudos && seccionVista">
+        <button type="button" class="btn-fantasma btn-fantasma--sm" (click)="seccionVista = null">← Ver todas las secciones</button>
+        <div class="vista-seccion__titulo">
+          <strong>{{ seccionVista.nombre }}</strong>
+          <small>{{ seccionVista.pista }}</small>
+        </div>
+        <div class="vista-seccion__marco" aria-hidden="true">
+          <app-sitio-render
+            [bloques]="bloqueVista"
+            [tema]="contenido?.tema"
+            [logo]="logo"
+            [negocio]="negocio"
+            [categorias]="categoriasVisibles"
+            [tiendaActiva]="contenido?.tienda?.habilitada === true"
+            dispositivo="escritorio">
+          </app-sitio-render>
+        </div>
+        <p class="vista-seccion__nota">Los textos y las fotos son de ejemplo: los cambias después de agregarla.</p>
+        <div class="vista-seccion__acciones">
+          <div class="campo">
+            <label>¿Dónde va?</label>
+            <select [(ngModel)]="posicionNueva">
+              <option *ngFor="let o of opcionesPosicion" [ngValue]="o.valor">{{ o.texto }}</option>
+            </select>
+          </div>
+          <button type="button" class="vista-seccion__agregar" (click)="agregarSeccionLista(seccionVista.id, posicionNueva)">
+            Agregar esta sección
+          </button>
+        </div>
+      </div>
+
+      <ng-container *ngIf="!mostrandoTiposCrudos && !seccionVista">
         <div class="grupo-secciones" *ngFor="let g of gruposDeSecciones">
           <h3>{{ g }}</h3>
           <div class="listas">
             <button class="lista-sec" *ngFor="let s of seccionesDelGrupo(g)"
-                    (click)="agregarSeccionLista(s.id)">
+                    (click)="verSeccionLista(s.id)" (dblclick)="agregarSeccionLista(s.id)"
+                    [title]="'Ver ' + s.nombre + ' (doble clic para agregarla de una)'">
               <span class="lista-sec__muestra" [attr.data-tipo]="s.tipo">
                 <span></span><span></span><span></span>
               </span>
