@@ -4775,6 +4775,29 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.marcarSucio();
   }
 
+  // ── Ticket 1254: enlace de campaña con UTM ──
+  utmFuente = "instagram";
+  utmMedio = "pauta";
+  utmCampana = "";
+
+  /** La dirección de la página con los UTM que mide «Cómo va» (fuente, medio, campaña). */
+  get enlaceCampana(): string {
+    const limpio = (v: string) => String(v || "").trim().toLowerCase()
+      .normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+    const p = new URLSearchParams({ utm_source: limpio(this.utmFuente), utm_medium: limpio(this.utmMedio) });
+    const campana = limpio(this.utmCampana);
+    if (campana) p.set("utm_campaign", campana);
+    return `${this.enlacePublico}/?${p.toString()}`;
+  }
+
+  copiarEnlaceCampana(): void {
+    const url = this.enlaceCampana;
+    navigator.clipboard.writeText(url).then(
+      () => this.toastr.success("Enlace de campaña copiado"),
+      () => this.toastr.info(url, "Copia el enlace")
+    );
+  }
+
   /** Ticket 1229: dirección del catálogo para Google Merchant Center y Meta. */
   copiarFeed(): void {
     const url = `${this.enlacePublico}/feed.xml`;

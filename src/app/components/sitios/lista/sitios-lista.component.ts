@@ -439,6 +439,30 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Ticket 1254: copia en borrador, y se abre para cambiar producto y textos. */
+  duplicando = "";
+
+  duplicarSitio(s: Sitio): void {
+    if (this.duplicando) return;
+    this.duplicando = s.id;
+    this.service.duplicar(s.id).subscribe({
+      next: (res) => {
+        this.duplicando = "";
+        const data = res && res.data;
+        if (!res || !res.success || !data) {
+          this.toastr.error((res && res.message) || "No pudimos duplicar la página.");
+          return;
+        }
+        this.toastr.success(`Copia creada: ${data.nombre}. Cambia el producto y los textos y publícala.`);
+        this.router.navigate(["/sitios/editor", data.id]);
+      },
+      error: (err) => {
+        this.duplicando = "";
+        this.toastr.error(err?.error?.message || "No pudimos duplicar la página.");
+      },
+    });
+  }
+
   private confirmarEliminacion(s: Sitio): void {
     this.eliminando = s.id;
     this.service.eliminar(s.id).subscribe({
