@@ -10195,3 +10195,57 @@ Daniel: «arreglalo y te autorizo a corregir los pedidos». Sigue a D-438.
 
 - **`dian_auditoria` (append-only):** las notas crédito y débito y el envío de facturas desde Nueva factura registran usuario y rol del JWT firmado, fecha, documento y resultado, incluidos los fallidos. Los cambios de configuración ya quedaban en `config_audit`.
 - **Escalado sin tocar:** `POST /v1/accounting/:provider/notes/:noteType` no exige rol ni tenant del JWT (la empresa sale del header). Corregirlo puede afectar el cambio de empresa del superadmin y requiere decisión. Roles de facturador y consulta, conservación legal y cifrado del certificado (ya cifrado en `integration_secrets`) quedan para su spec.
+
+## D-450 (2026-10-16) — Support: módulo de proyectos con metodología ágil (backlog, sprints, tablero y métricas), multiempresa desde el primer día (ticket Julsmind 1284) — SUBIDO sin publicar: backend 91746a7 (merge cf2f4f6), Support eeb1f83; pendiente el despliegue que autoriza Daniel
+
+> Se registró primero como "D-442". Otra sesión usó ese número el mismo día (rótulo de despacho, ticket 1219), así que se renumeró a D-450. Los commits 91746a7, 8af7b1d y eeb1f83 y el código dicen "D-442": se refieren a esta entrada.
+
+**Disparador.** Ticket 1284 (Daniel): administrar proyectos en Support (support.katuq.com) y no solo tickets. Hay tres etapas: 1) el equipo interno, 2) acceso de los clientes a sus proyectos, 3) cada cliente con su propia mesa de ayuda. Se construyó la 1. La 2 y la 3 quedan diseñadas en `openspec/changes/acceso-clientes-support` (Fase 3, sin código). El detalle de la etapa 1 está en `katuq_admin_back_firebase/openspec/changes/proyectos-agiles-support/`.
+
+**Decisión** (de Santiago, 2026-10-16; Daniel aprobó la Fase 0).
+1. **Colecciones nuevas, aprobadas.**
+   - `supportProjects`, con miembros y rol embebidos.
+   - `supportSprints`, con la foto de inicio y la de cierre.
+   - `supportWorkItems`, con `supportComments` y `supportHistory` como subcolecciones.
+   - No se mezcla nada con `support`.
+   - Todo documento lleva `ownerCompany`/`ownerCompanyKey` (sale de la sesión y no cambia) y `clientCompany` opcional.
+2. **Visibilidad.** Todo Julsmind lee todos los proyectos, igual que en tickets. Para editar cuenta el rol en el proyecto: admin, miembro u observador (el rol cliente queda reservado). Lo ajeno responde 404.
+3. **Crear proyectos.** Cualquier usuario de Julsmind. Primero se decidió "familia Administrador" con un conteo hecho sobre el campo viejo `company`, que dice "Julsmind" en 24 usuarios de comercios. Por `empresa` (la del JWT), Julsmind tiene 7 usuarios y solo Daniel es administrador. El buscador de miembros también usa `empresa`.
+4. **Dominio.**
+   - Tipos: historia, tarea y error.
+   - Subtareas de un nivel, sin puntos.
+   - Columnas fijas: Por hacer, Haciendo, En revisión y Hecho.
+   - Puntos Fibonacci.
+   - Un solo sprint activo. Al cerrar, lo pendiente va al backlog o al siguiente sprint, y la velocidad es lo que estaba en Hecho.
+   - Orden por claves fraccionarias: reordenar escribe un documento.
+   - La clave del proyecto (FE) no se edita.
+5. **Vínculo con tickets.** Vive solo en el elemento; no se escribe en `support`. Cuando el elemento llega a Hecho, el ticket no cambia solo.
+6. **Sin avisos** en esta etapa.
+7. **Seguridad.**
+   - `/v1/support/projects`, con `auth` y `requireJwtTenant` en las 34 rutas (un test de contrato lo vigila).
+   - Permisos en `services/soporte/proyectos/acceso.js`.
+   - Transacciones con historial y `version`: dos personas moviendo la misma tarjeta dan 409.
+   - Tope de 200 elementos por sprint.
+   - Adjuntos con URL firmada.
+   - Lo de hoy nace interno (`internal: true`, `clientVisible: false`).
+8. **Front.** Módulo `proyectos/` en diferido, con acento `#5F3FE0` y chart.js directo. En el detalle del ticket hay "Llevar a proyecto".
+
+**Verificado.**
+- 129 pruebas (`npm run test:soporte-proyectos`) y la suite de tickets en verde.
+- Contra el emulador de Firestore:
+  - flujo de la API 25/25;
+  - 6 interacciones de la UI;
+  - 9 pantallas a 1440 y a 390 px sin scroll horizontal.
+- Contra producción, solo lecturas.
+
+**No verificado.** Que los 16 índices nuevos alcancen (el emulador no los exige), la subida de adjuntos contra Storage real y la navegación con teclado.
+
+**Pendiente.**
+1. Despliegue en orden: índices (`firebase deploy --only firestore:indexes`), luego el backend y luego Support.
+2. Prueba en producción con un proyecto real.
+3. **Riesgos de tickets que ya existían**, encontrados en el inventario de la Fase 3 (recomendado: tickets aparte, antes de abrir algo a clientes):
+   1. las notas internas (`esNota`) le llegan al comercio por la API;
+   2. el comercio puede reescribir estado, responsable, comentarios y número de sus tickets, y borrarlos;
+   3. un usuario de comercio entra a support.katuq.com con la interfaz completa del agente;
+   4. el alta pública acepta empresa, número y responsable desde el cuerpo de la petición;
+   5. RTDB y Storage de tickets sin autenticación.
