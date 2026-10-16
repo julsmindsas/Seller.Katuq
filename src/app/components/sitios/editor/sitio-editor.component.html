@@ -2703,6 +2703,44 @@
           falta; pegar código suelto no funcionaría.
         </p>
 
+        <!-- Ticket 1254: enlace de campaña con UTM -->
+        <div class="grupo">
+          <h3>Enlace para una campaña</h3>
+          <p class="nota nota--simple">
+            Úsalo en tu pauta, en Instagram o en un correo: las visitas, los contactos y las ventas que lleguen por
+            él quedan marcados con esa campaña en «Cómo va».
+          </p>
+          <div class="fechas-programacion">
+            <div class="campo">
+              <label>Dónde lo vas a usar</label>
+              <select [(ngModel)]="utmFuente">
+                <option value="instagram">Instagram</option>
+                <option value="facebook">Facebook</option>
+                <option value="tiktok">TikTok</option>
+                <option value="google">Google</option>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="correo">Correo</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label>Tipo</label>
+              <select [(ngModel)]="utmMedio">
+                <option value="pauta">Pauta (pagada)</option>
+                <option value="organico">Publicación</option>
+                <option value="mensaje">Mensaje directo</option>
+              </select>
+            </div>
+          </div>
+          <div class="campo">
+            <label>Nombre de la campaña</label>
+            <input type="text" [(ngModel)]="utmCampana" maxlength="60" placeholder="dia-de-la-madre" />
+          </div>
+          <div class="feed-url">
+            <code>{{ enlaceCampana }}</code>
+            <button type="button" class="feed-url__copiar" (click)="copiarEnlaceCampana()">Copiar</button>
+          </div>
+        </div>
+
         <!-- Ticket 1229: catálogo para Google Shopping y Meta -->
         <div class="grupo" *ngIf="contenido?.tienda">
           <h3>Catálogo para Google Shopping y Meta</h3>
@@ -2876,6 +2914,17 @@
 
       <!-- ── Ajustes ── -->
       <div class="panel__contenido" *ngIf="panel === 'ajustes'">
+        <!-- Ticket 1254: landing con un solo objetivo -->
+        <button class="opcion" *ngIf="contenido?.tienda" [class.is-active]="contenido.tienda.modoConversion === true"
+                (click)="contenido.tienda.modoConversion = contenido.tienda.modoConversion !== true; marcarSucio()">
+          <span class="opcion__texto">
+            <strong>Modo conversión</strong>
+            <small>Para landings de campaña: sin menú ni pie completo, para que el visitante solo vea tu
+              oferta y el botón principal. Las páginas legales siguen abajo.</small>
+          </span>
+          <span class="palanca"><span></span></span>
+        </button>
+
         <div class="campo">
           <label>Nombre de la página</label>
           <input type="text" [(ngModel)]="nombre" (ngModelChange)="marcarSucio()" maxlength="80" />

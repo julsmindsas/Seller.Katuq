@@ -30,6 +30,8 @@ export interface TiendaSitio {
   feedCategoriasExcluidas?: string[];
   /** Al agregar: abrir el cajón (true) o solo confirmar con un aviso (por defecto). */
   abrirCarritoAlAgregar?: boolean;
+  /** Ticket 1254: landing sin menú ni pie completo, un solo objetivo. */
+  modoConversion?: boolean;
   /** Categorías del maestro que no salen en el sitio (menú, baldosas, pie, filtros). */
   categoriasOcultas?: string[];
   /** Ticket 1214: categorías de nombre interno que el comercio decidió mostrar (por defecto, ocultas). */
@@ -543,6 +545,11 @@ export class SitiosService extends BaseService {
   /** Borra la página para siempre (borrador y publicado). */
   eliminar(id: string): Observable<Respuesta<null>> {
     return this.delete<Respuesta<null>>(`/v1/sites/${id}`);
+  }
+
+  /** Ticket 1254: copia en borrador de una página, con dirección propia. */
+  duplicar(id: string): Observable<Respuesta<{ id: string; nombre: string; slug: string }>> {
+    return this.post<Respuesta<{ id: string; nombre: string; slug: string }>>(`/v1/sites/${encodeURIComponent(id)}/duplicar`, {});
   }
 
   despublicar(id: string): Observable<Respuesta<null>> {
