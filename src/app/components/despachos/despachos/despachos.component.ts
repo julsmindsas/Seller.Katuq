@@ -4757,10 +4757,38 @@ export class DespachosComponent implements OnInit, OnDestroy {
     if (printWindow) {
       printWindow.document.write(html);
       printWindow.document.close();
-      printWindow.onload = () => { printWindow.print(); };
+      this.imprimirCuandoCargue(printWindow);
     } else {
       this.toastr.error('No se pudo abrir la ventana de impresion. Revisa que no este bloqueada por el navegador.');
     }
+  }
+
+  /**
+   * Imprime una ventana escrita con document.write cuando terminan de cargar sus
+   * imágenes. No depende de `onload`: si la ventana ya cargó al engancharlo, ese
+   * evento no vuelve a dispararse y el botón "no hacía nada" (ticket 1224).
+   * Una imagen que no carga se oculta; a los 3 s imprime de todos modos.
+   */
+  private imprimirCuandoCargue(win: Window): void {
+    let impreso = false;
+    const imprimir = () => {
+      if (impreso || win.closed) return;
+      impreso = true;
+      win.focus();
+      win.print();
+    };
+    const pendientes = Array.from(win.document.images).filter(img => !img.complete);
+    if (!pendientes.length) {
+      setTimeout(imprimir, 100);
+      return;
+    }
+    let faltan = pendientes.length;
+    const listo = () => { if (--faltan <= 0) imprimir(); };
+    pendientes.forEach(img => {
+      img.addEventListener('load', listo);
+      img.addEventListener('error', () => { img.style.display = 'none'; listo(); });
+    });
+    setTimeout(imprimir, 3000);
   }
 
   imprimirOrderToAction(orderId: any) {
