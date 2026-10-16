@@ -22,7 +22,7 @@ $acento: #5f3fe0;
 .cw__kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
 .cw__kpi { background: #fff; border: 1px solid $borde; border-radius: 16px; padding: 14px 16px; min-width: 0; }
 .cw__kpi-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: $muted; }
-.cw__kpi-valor { font-size: 1.6rem; font-weight: 800; color: $tinta; margin-top: 4px; overflow-wrap: anywhere;
+.cw__kpi-valor { font-size: clamp(1.2rem, 5vw, 1.6rem); font-weight: 800; color: $tinta; margin-top: 4px; white-space: nowrap;
   &--texto { font-size: 1.15rem; }
 }
 .cw__kpi-nota { font-size: 0.78rem; color: $muted; margin-top: 2px; }
