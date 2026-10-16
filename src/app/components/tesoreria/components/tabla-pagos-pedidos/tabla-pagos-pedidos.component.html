@@ -78,6 +78,10 @@
               </span>
               / {{ pedido?.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}
             </div>
+            <!-- Ticket 1217: el pago subido que todavía no se aprueba -->
+            <div class="tk-progress-label text-muted" *ngIf="montoEnRevision(pedido) as enRevision">
+              + {{ enRevision | currency:'COP':'symbol-narrow':'1.0-0' }} en revisión
+            </div>
           </div>
         </td>
 

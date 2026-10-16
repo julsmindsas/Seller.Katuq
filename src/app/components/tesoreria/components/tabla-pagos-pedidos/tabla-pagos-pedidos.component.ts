@@ -232,6 +232,20 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
     return pct >= 100 ? 'is-full' : 'is-partial';
   }
 
+  /**
+   * Ticket 1217: valor del pago que espera revisión, para que la fila no diga solo
+   * "$0 / $total" mientras hay un comprobante subido. Se limita a lo que falta por
+   * cubrir: hay pedidos cuyo `anticipo` ya incluye ese pago y no se debe contar dos veces.
+   */
+  montoEnRevision(pedido: any): number {
+    const pago = this.pagoPendiente(pedido);
+    if (!pago) return 0;
+    const valor = Number(pago?.valor ?? pago?.valorRegistrado) || 0;
+    const total = Number(pedido?.totalPedididoConDescuento) || 0;
+    const anticipo = Number(pedido?.anticipo) || 0;
+    return Math.max(0, Math.min(valor, total - anticipo));
+  }
+
   /** Inicial del cliente para el avatar de la fila (solo presentación). */
   inicialCliente(pedido: any): string {
     const nombre = this.clienteNombre(pedido).trim();
