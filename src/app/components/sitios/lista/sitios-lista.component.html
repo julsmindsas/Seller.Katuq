@@ -453,11 +453,28 @@
             </span>
             <span class="palanca"><span></span></span>
           </button>
+
+        <!-- Ticket 1224: la página real (tu marca y tus productos) antes de crearla -->
+        <div class="vista-creacion" *ngIf="vistaCreacion">
+          <div class="vista-creacion__cab">
+            <strong class="vista-creacion__titulo">Así se verá tu página</strong>
+            <span class="vista-creacion__productos" [class.is-cero]="productosEnVista === 0">
+              {{ productosEnVista === 0 ? 'Sin productos: márcalos con «Página Web» en su ficha' : ('Entran ' + productosEnVista + ' productos') }}
+            </span>
+          </div>
+          <div class="vista-creacion__marco" aria-hidden="true">
+            <app-sitio-render [bloques]="vistaCreacion" [tema]="temaCreacion" [logo]="logoMarca" dispositivo="escritorio"></app-sitio-render>
+          </div>
+          <small class="vista-creacion__nota">Los textos son de ejemplo y los cambias en el editor.</small>
+        </div>
       </div>
 
       <footer class="caja__pie">
         <span class="caja__pista">Puedes cambiar todo esto después desde el editor.</span>
         <button class="btn-fantasma" (click)="atras()" [disabled]="creando">Atrás</button>
+        <button class="btn-fantasma" (click)="verComoQueda()" [disabled]="creando || cargandoVista">
+          {{ cargandoVista ? 'Armando…' : (vistaCreacion ? 'Actualizar vista' : 'Ver cómo queda') }}
+        </button>
         <button class="btn-primario btn-primario--sm" (click)="crear()" [disabled]="creando">
           {{ creando ? 'Creando…' : 'Crear página' }}
         </button>
