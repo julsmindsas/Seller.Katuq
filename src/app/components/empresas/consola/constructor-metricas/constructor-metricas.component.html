@@ -1,0 +1,173 @@
+<section class="cw">
+  <header class="cw__head">
+    <div>
+      <h5 class="cw__titulo">Constructor web</h5>
+      <p class="cw__sub">Cómo usan los comercios el constructor: sitios, tiempo hasta publicar, ventas de las webs y a quién acompañar.</p>
+    </div>
+    <button type="button" class="cw__btn" (click)="cargar()" [disabled]="cargando">
+      <i class="fa" [ngClass]="cargando ? 'fa-spinner fa-spin' : 'fa-refresh'"></i>
+      {{ cargando ? 'Cargando…' : 'Actualizar' }}
+    </button>
+  </header>
+
+  <p class="cw__error" *ngIf="error" role="alert">{{ error }}</p>
+  <p class="cw__vacio" *ngIf="cargando && !datos">Cargando…</p>
+
+  <ng-container *ngIf="datos">
+    <!-- Cifras clave -->
+    <div class="cw__kpis">
+      <div class="cw__kpi">
+        <div class="cw__kpi-label">Sitios creados</div>
+        <div class="cw__kpi-valor">{{ datos.resumen.creados }}</div>
+        <div class="cw__kpi-nota">+{{ datos.resumen.creados7 }} esta semana</div>
+      </div>
+      <div class="cw__kpi">
+        <div class="cw__kpi-label">Publicados</div>
+        <div class="cw__kpi-valor">{{ datos.resumen.publicados }}</div>
+        <div class="cw__kpi-nota">+{{ datos.resumen.publicados7 }} esta semana</div>
+      </div>
+      <div class="cw__kpi">
+        <div class="cw__kpi-label">Activos</div>
+        <div class="cw__kpi-valor">{{ datos.resumen.activos }}</div>
+        <div class="cw__kpi-nota">publicados con pedidos en 30 días</div>
+      </div>
+      <div class="cw__kpi">
+        <div class="cw__kpi-label">Tiempo hasta publicar</div>
+        <div class="cw__kpi-valor cw__kpi-valor--texto">{{ dias(datos.tiempoHastaPublicar.medianaDias) }}</div>
+        <div class="cw__kpi-nota">mediana de {{ datos.tiempoHastaPublicar.empresasMedidas }} empresas, desde su registro</div>
+      </div>
+      <div class="cw__kpi">
+        <div class="cw__kpi-label">Ventas por las webs</div>
+        <div class="cw__kpi-valor">{{ moneda(datos.ventasWeb.ventas) }}</div>
+        <div class="cw__kpi-nota">{{ datos.ventasWeb.pedidos }} pedidos · {{ datos.ventasWeb.pedidos7 }} esta semana</div>
+      </div>
+    </div>
+
+    <div class="cw__grid">
+      <!-- Embudo por empresa -->
+      <div class="cw__card">
+        <div class="cw__card-titulo">Embudo por empresa</div>
+        <div class="cw__embudo">
+          <div class="cw__fila">
+            <div class="cw__fila-texto"><span class="cw__txt">Con algún sitio</span><strong>{{ datos.embudo.conSitio }}</strong></div>
+            <div class="cw__barra"><div class="cw__barra-relleno" [style.width.%]="pctEmbudo(datos.embudo.conSitio)"></div></div>
+          </div>
+          <div class="cw__fila">
+            <div class="cw__fila-texto"><span class="cw__txt">Con sitio publicado</span><strong>{{ datos.embudo.conPublicado }}</strong></div>
+            <div class="cw__barra"><div class="cw__barra-relleno" [style.width.%]="pctEmbudo(datos.embudo.conPublicado)"></div></div>
+          </div>
+          <div class="cw__fila">
+            <div class="cw__fila-texto"><span class="cw__txt">Con pedidos de la web</span><strong>{{ datos.embudo.conPedidos }}</strong></div>
+            <div class="cw__barra"><div class="cw__barra-relleno" [style.width.%]="pctEmbudo(datos.embudo.conPedidos)"></div></div>
+          </div>
+        </div>
+        <p class="cw__nota" *ngIf="estadosTiendaEnUnPaso.length">
+          Tienda en un paso:
+          <span class="cw__txt" *ngFor="let e of estadosTiendaEnUnPaso; let ultimo = last">{{ e.total }} {{ e.estado }}{{ ultimo ? '' : ' · ' }}</span>
+        </p>
+        <p class="cw__nota">Los pasos del asistente no se registran uno a uno; el embudo va por empresa.</p>
+      </div>
+
+      <!-- Por tipo -->
+      <div class="cw__card">
+        <div class="cw__card-titulo">Por tipo de sitio</div>
+        <table class="cw__tabla cw__tabla--chica">
+          <thead><tr><th>Tipo</th><th class="num">Creados</th><th class="num">Publicados</th><th class="num">Activos</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let t of tipos">
+              <td class="cw__capital">{{ t.tipo }}</td>
+              <td class="num">{{ t.creados }}</td>
+              <td class="num">{{ t.publicados }}</td>
+              <td class="num">{{ t.activos }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Uso de funciones -->
+      <div class="cw__card">
+        <div class="cw__card-titulo">Uso de funciones</div>
+        <ul class="cw__uso">
+          <li><span class="cw__txt">Diseños con Opttia (KAI)</span><strong>{{ datos.uso.opttia }}</strong></li>
+          <li><span class="cw__txt">Sitios con cupones activos</span><strong>{{ datos.uso.cupones }}</strong></li>
+          <li><span class="cw__txt">Sitios con pauta conectada</span><strong>{{ datos.uso.pauta }}</strong></li>
+          <li><span class="cw__txt">Sitios con dominio propio</span><strong>{{ datos.uso.dominioPropio }}</strong></li>
+          <li><span class="cw__txt">Publicados con pago en línea</span><strong>{{ datos.uso.pagoEnLinea }}</strong></li>
+          <li><span class="cw__txt">Publicados con contra entrega</span><strong>{{ datos.uso.contraEntrega }}</strong></li>
+          <li><span class="cw__txt">Publicados con otras formas de pago</span><strong>{{ datos.uso.otrasFormasPago }}</strong></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Alertas -->
+    <div class="cw__card">
+      <div class="cw__card-titulo">Comercios para acompañar</div>
+      <div class="cw__vacio-card" *ngIf="!datos.alertas.length">
+        <i class="fa fa-check-circle" aria-hidden="true"></i>
+        <strong>Sin alertas</strong>
+        <span class="cw__txt">Ningún sitio publicado lleva más de 30 días sin pedidos ni hay tiendas sin forma de cobro.</span>
+      </div>
+      <ul class="cw__alertas" *ngIf="datos.alertas.length">
+        <li *ngFor="let a of datos.alertas" class="cw__alerta" [class.cw__alerta--grave]="a.tipo === 'sin-cobro'">
+          <span class="cw__chip" [class.cw__chip--grave]="a.tipo === 'sin-cobro'">{{ a.tipo === 'sin-cobro' ? 'Sin forma de cobro' : 'Sin pedidos' }}</span>
+          <span class="cw__txt"><strong>{{ a.empresa }}</strong> · {{ a.sitio }}</span>
+          <span class="cw__txt cw__muted">{{ a.detalle }}</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Tablas -->
+    <div class="cw__card">
+      <div class="cw__tabs" role="tablist">
+        <button type="button" role="tab" [class.activa]="tabla === 'empresas'" (click)="tabla = 'empresas'">Por empresa</button>
+        <button type="button" role="tab" [class.activa]="tabla === 'sitios'" (click)="tabla = 'sitios'">Sitios</button>
+      </div>
+
+      <div class="cw__tabla-wrap" *ngIf="tabla === 'empresas'">
+        <table class="cw__tabla">
+          <thead>
+            <tr>
+              <th>Empresa</th><th class="num">Sitios</th><th class="num">Publicados</th>
+              <th class="num">Hasta publicar</th><th class="num">Pedidos web</th><th class="num">Ventas web</th><th class="num">Opttia</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let e of datos.empresas; trackBy: trackEmpresa">
+              <td>{{ e.empresa }}</td>
+              <td class="num">{{ e.sitios }}</td>
+              <td class="num">{{ e.publicados }}</td>
+              <td class="num">{{ dias(e.diasHastaPublicar) }}</td>
+              <td class="num">{{ e.pedidos }}</td>
+              <td class="num">{{ moneda(e.ventas) }}</td>
+              <td class="num">{{ e.opttia }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cw__tabla-wrap" *ngIf="tabla === 'sitios'">
+        <table class="cw__tabla">
+          <thead>
+            <tr>
+              <th>Sitio</th><th>Empresa</th><th>Tipo</th><th>Estado</th><th>Creado</th>
+              <th class="num">Vistas</th><th class="num">Leads</th><th class="num">Pedidos</th><th class="num">Ventas</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of datos.sitios; trackBy: trackSitio">
+              <td>{{ s.nombre }}<span class="cw__txt cw__muted cw__slug">{{ s.slug }}</span></td>
+              <td>{{ s.empresa }}</td>
+              <td class="cw__capital">{{ s.tipo }}</td>
+              <td><span class="cw__estado" [class.cw__estado--ok]="s.estado === 'publicado'">{{ s.estado === 'publicado' ? 'Publicado' : 'Borrador' }}</span></td>
+              <td>{{ s.creado ? (s.creado | date:'dd/MM/yyyy') : '—' }}</td>
+              <td class="num">{{ s.vistas }}</td>
+              <td class="num">{{ s.leads }}</td>
+              <td class="num">{{ s.pedidos }}</td>
+              <td class="num">{{ moneda(s.ventas) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+</section>
