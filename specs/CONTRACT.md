@@ -10023,7 +10023,7 @@ Daniel: «cierra los de soporte de julsmind». Lo tomó como aprobación del cam
 - **Verificado** con el bundle de producción y pedidos simulados a 1440 y 390 px. En un pedido despachado, "Configurar" sale bloqueado con el motivo, y el configurador abre desde el panel. A 390 px los botones quedan dentro de la tarjeta; el panel de detalle ya desbordaba unos 10 px antes de este cambio.
 
 
-## D-437 (2026-10-15) — WhatsApp con varios números por comercio, asignados a vendedores (openspec/changes/whatsapp-varios-numeros) — APROBADA, en implementación
+## D-437 (2026-10-15) — WhatsApp con varios números por comercio, asignados a vendedores (openspec/changes/whatsapp-varios-numeros) — PUBLICADA con la bandera apagada; falta piloto
 
 Daniel: «con kapso necesitamos conectar n cantidades de whatsapp y que se pueda asignar a un vendedor y que no se pisen los chats, averigua cómo y hazlo». Escogió **número y chat** como forma de asignar y **Katuq le paga a Meta, descontando del saldo prepago** (D-044).
 
@@ -10055,3 +10055,19 @@ Daniel: «con kapso necesitamos conectar n cantidades de whatsapp y que se pueda
   - El equipo comercial sale de `crmAcceso.listarComerciales`.
   - En el front: una ruta genérica `/integrations/:provider/retorno` con su registro de conectores, `inbox-core` para que las piezas del buzón no dependan del canal, `selector-equipo` y `roles.ts` como única utilidad de familia Administrador.
   - Quedan para un cambio aparte: migrar Meta a provider, unificar los buzones y pasar `{company}_kapso` a `integrationConfigService`.
+- **PUBLICADO con la bandera apagada (15-oct, noche).** Backend `c2421ff6` (fases 1-3: `87af3713`, `dbcaa15e`, `c2421ff6`), ff-only y `pm2 restart katuq-api`, online. Sin sesión ni firma, `/v1/messaging/lines`, `/v1/messaging/webhook/kapso` y `/v1/whatsapp/conversations` responden 401. Pasados 4 minutos, sin errores del barrido. Front **2026.10.15.7**, con `verify-dist-prod` OK y `firebase deploy --only hosting`.
+  - **Índices** (`messaging_threads`, `integrationRawEvents`, `messaging_lines`): el CLI no deja desplegar un archivo parcial sin `--force`, y `--force` borraría 393 índices. Se exportaron los vivos con `firebase firestore:indexes`, se sumaron los 3 nuevos (396) y se desplegó sin `--force`. No se borró nada.
+  - **Pruebas:** 9 de mensajería, que incluyen golden de 126 escenarios del número compartido, webhook, dueño único, alcance, candado de tenant, bot en línea y bajas; además 23/23 de notificaciones y banderas.
+  - **Sumado en implementación:**
+    - candado `requireJwtTenant` en todo `/v1/whatsapp` autenticado (el buzón aceptaba la empresa que mandaba el cliente);
+    - código de un solo uso (`estado`) al conectar un número;
+    - el bot se enciende con número propio **o** con una línea con bot;
+    - las bajas por palabra clave también aplican en las líneas.
+  - **Falta:**
+    - `MESSAGING_KAPSO_WEBHOOK_SECRET` en el `.env` de producción (Daniel; sin ella el webhook nuevo rechaza todo);
+    - plan Platform de Kapso para más de 3 números;
+    - encender `whatsappMultiNumero` en Julsmind y la prueba con dos números reales (tareas 6.x), que incluye la revisión en navegador (3.8).
+  - **Riesgos conocidos:**
+    - los toques Confirmar/Cancelar no se procesan si llegan por una línea;
+    - la sesión del bot sigue por contacto;
+    - el barrido puede repetir trabajo idempotente.
