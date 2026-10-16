@@ -10104,7 +10104,7 @@ La etiqueta de unidades de cada producto del POS (`pos2/widgets/product`) abre, 
 
 A diferencia de venta asistida, el globo solo informa: no cambia la bodega de la caja en medio de una venta. Sin cambios de servidor, carrito ni inventario. Estilos con los tokens del design system (sin el `#7366ff` del globo de venta asistida).
 
-## D-440 (2026-10-16) — Una sola regla de anticipo con Tesorería: solo pagos aprobados, aplicada de último (ticket 1221) — CÓDIGO LISTO, despliegue tras la migración
+## D-441 (2026-10-16) — Una sola regla de anticipo con Tesorería: solo pagos aprobados, aplicada de último (ticket 1221) — CÓDIGO LISTO, despliegue tras la migración
 
 Daniel: «arreglalo y te autorizo a corregir los pedidos». Sigue a D-438.
 
