@@ -10361,7 +10361,7 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
   - La auditoría de notas (D-449) no guardaba la factura ni el motivo, porque leía campos que el front no envía.
 - **Fuera de este cambio:** cartera del cliente, devolver mercancía al inventario, registrar la devolución de dinero, Siigo y notas sin factura con rol Contador.
 
-## D-460 (2026-10-16) — Páginas web legibles con cualquier color de marca: WCAG 2.1 AA (ticket 1250, TX-35)
+## D-460 (2026-10-16) — Páginas web legibles con cualquier color de marca: WCAG 2.1 AA (ticket 1250, TX-35) — PUBLICADO: backend 605329a8, front 2026.10.16.12
 
 - **Medición antes:** axe-core 4.11 (reglas WCAG 2.1 A/AA) sobre los 6 sitios publicados, más fichas, carrito y checkout, en escritorio y celular. Solo había fallas de contraste:
   - Texto atenuado con `opacity` (pie, «quién vende», sello, «Elige cómo lo quieres»): 3,7 a 4,4 a 1.
