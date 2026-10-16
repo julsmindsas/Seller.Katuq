@@ -4627,6 +4627,36 @@ export class DespachosComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Abre el manifiesto de Enviame del pedido; si no existe, Enviame lo genera. */
+  descargarManifiesto(pedido: any): void {
+    const orderId = pedido?._id || pedido?.id;
+    if (!orderId) {
+      this.toastr.warning('No se pudo identificar el pedido.', 'Sin ID');
+      return;
+    }
+
+    this.toastr.info('Buscando el manifiesto en Enviame…', 'Manifiesto');
+
+    this.logisticaService.obtenerManifiesto(orderId).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (resp: any) => {
+        if (resp?.success && resp.manifestUrl) {
+          const win = window.open(resp.manifestUrl, '_blank');
+          if (!win) {
+            this.toastr.error('No se pudo abrir el manifiesto. Revisa que las ventanas emergentes no estén bloqueadas.', 'Ventana bloqueada');
+          }
+        } else {
+          this.toastr.warning(resp?.error || 'Enviame no devolvió el manifiesto. Intenta de nuevo en unos minutos.', 'Manifiesto no disponible');
+        }
+      },
+      error: (err) => {
+        this.toastr.error(
+          err?.error?.error || 'No se pudo obtener el manifiesto. Intenta de nuevo en unos minutos.',
+          'Manifiesto no disponible'
+        );
+      }
+    });
+  }
+
   descargarRotulo(pedido: any): void {
     const escapeHtml = (text: any) => String(text ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const recibe = `${pedido.envio?.nombres || ''} ${pedido.envio?.apellidos || ''}`.trim() || pedido.cliente?.nombres_completos || '-';

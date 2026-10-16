@@ -10127,3 +10127,11 @@ Daniel: «arreglalo y te autorizo a corregir los pedidos». Sigue a D-438.
 - **Se conserva:** el tamaño de 10 × 10 cm (impresoras térmicas de otros comercios), la zona y las observaciones. El valor por cobrar ahora solo aparece cuando hay saldo; si no hay, el pie muestra el número de pedido.
 - **Por qué:** ALMACEN BOMBAS pegaba su propio rótulo encima del de Katuq porque este no tenía su marca ni los datos que piden las transportadoras. Es un cambio de presentación del documento impreso, sin tocar datos ni flujos.
 - **De paso:** en Empresas, las imágenes de encabezado y pie del correo se guardaban en la carpeta `Otros` por un nombre de tipo mal escrito (`imagenEmail` contra `imageEmail`). Corregido; las URL ya guardadas no cambian.
+
+## D-443 (2026-10-16) — Manifiesto de Enviame desde Despachos (ticket 1216, ALMACEN BOMBAS)
+
+- **Qué:** en Despachos, los pedidos con envío en Enviame tienen la opción "Manifiesto" junto a "Guía de envío". Abre el PDF del manifiesto (lo que los transportadores llaman IRIS o manifiesto al recoger).
+- **Cómo:** `GET /v1/logistica/guia/:orderId/manifiesto` (back `8f3a0d8`). Si el pedido ya tiene `shippment.manifestUrl`, lo devuelve. Si no, busca en Enviame el manifiesto que contiene la entrega (`summaries-new-endpoint?delivery_ids[]=`). Si no hay ninguno, lo genera con `POST /summary`, en un solo intento para no duplicar. El enlace queda guardado en `shippment.manifestUrl` / `manifestId`. Al imprimir la guía por `/labels` también se guarda el manifiesto que devuelve Enviame.
+- **Por qué a pedido y no al crear el envío:** Enviame agrupa en un mismo manifiesto los envíos de un transportador. Crear uno por envío en el momento de crearlo partiría el manifiesto del día. Al pedirlo, primero se usa el que ya existe.
+- **Verificado:** con la API real de ALMACEN BOMBAS, solo lectura: BAS-000046 devuelve su manifiesto cerrado con PDF y BAS-000043 no tiene ninguno, así que se generaría. El filtro por entrega funciona (un id inexistente devuelve 0).
+- **De paso (seguridad):** `/v1/logistica/guia` cargaba el pedido por id sin revisar la empresa. Ahora pasa por `requireJwtTenant` y `esDeLaEmpresa` (404 y rastro en `audit_log_access` si es ajeno), igual que D-439.
