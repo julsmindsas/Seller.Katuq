@@ -27,7 +27,7 @@ import {
   validarInstruccion,
 } from "./editar-con-ia.logic";
 import { pdfAImagenes, reducirImagen } from "./editar-con-ia.archivos";
-import { avisoContraste, combinacionUsable, mismosColores } from "../contraste";
+import { avisoContraste, avisoContrastePrincipal, combinacionUsable, mismosColores } from "../contraste";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
 const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; icono: string }[] = [
@@ -1964,6 +1964,12 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   /** Aviso si el texto no se lee sobre el fondo (WCAG AA 4,5:1), o "". */
+  /** Ticket 1250: los botones con el color principal y texto blanco no se leen (la página lo corrige sola). */
+  get avisoContrastePrincipal(): string {
+    const t = this.contenido && this.contenido.tema;
+    return t ? avisoContrastePrincipal(t.colorPrimario) : "";
+  }
+
   get avisoContrasteTema(): string {
     const t = this.contenido && this.contenido.tema;
     return t ? avisoContraste(t.colorTexto, t.colorSecundario) : "";

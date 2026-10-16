@@ -10360,3 +10360,17 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
   - El libro de ventas (D-451) mostraba `[object Object]` como referencia de las notas.
   - La auditoría de notas (D-449) no guardaba la factura ni el motivo, porque leía campos que el front no envía.
 - **Fuera de este cambio:** cartera del cliente, devolver mercancía al inventario, registrar la devolución de dinero, Siigo y notas sin factura con rol Contador.
+
+## D-460 (2026-10-16) — Páginas web legibles con cualquier color de marca: WCAG 2.1 AA (ticket 1250, TX-35)
+
+- **Medición antes:** axe-core 4.11 (reglas WCAG 2.1 A/AA) sobre los 6 sitios publicados, más fichas, carrito y checkout, en escritorio y celular. Solo había fallas de contraste:
+  - Texto atenuado con `opacity` (pie, «quién vende», sello, «Elige cómo lo quieres»): 3,7 a 4,4 a 1.
+  - Texto blanco fijo sobre el color principal: `#8b7355` daba 4,48 a 1.
+  - El checkout ya pasaba (etiquetas y nombres accesibles).
+- **Decisión** (`utils/contrasteColor.js`, puro; calculado al servir en `variablesTema`):
+  - **Botones:** si el blanco no llega a 4,5:1, el primario se oscurece apenas (hasta 12 puntos de luminosidad; `#8b7355` → `#897254`). Si haría falta más, el color de marca se conserva y el texto encima va oscuro (`--sitio-sobre-primario`). Lo mismo con el secundario sobre el primario.
+  - **Texto atenuado:** `opacity:max(<la de diseño>, var(--sitio-suave))`, donde `--sitio-suave` es la menor opacidad con la que el texto del comercio sigue a 4,5:1 sobre su fondo. Si el diseño ya cumplía, no cambia nada.
+  - **Foco visible** para teclado (`:focus-visible`), que no existía; el buscador lo recupera con `:focus-within`.
+- **Después:** las mismas 8 páginas pasan axe con 0 fallas, con la hoja nueva aplicada a su HTML real.
+- **Editor:** se suma un aviso informativo cuando el color principal no deja leer los botones con texto blanco. No bloquea: la página lo corrige sola. El de texto contra fondo ya existía (ticket 1216).
+- **Fuera:** texto alternativo generado con IA a partir de la foto (cuesta llamadas a Bedrock). Hoy las fotos de producto usan el nombre del producto y las decorativas van con `alt=""`.
