@@ -46,6 +46,11 @@ export interface KapsoTemplate {
  * números del comercio son dos chats. Sin `lineId` el chat es del número
  * compartido de Katuq, como siempre.
  *
+ * Va en `providedIn: "root"`, no en los providers del módulo lazy: SharedModule
+ * importa HttpClientModule, y un servicio provisto en el módulo recibe un
+ * HttpClient sin los interceptores del root (las peticiones salían sin
+ * Authorization y el backend respondía 401). Mismo caso que ImagenService.
+ *
  * Endpoints:
  *   GET    /v1/whatsapp/conversations                    ?search=&status=&page=&lineId=
  *   GET    /v1/whatsapp/conversations/:phoneHash/messages ?lineId=
@@ -62,7 +67,7 @@ export interface KapsoTemplate {
  *   GET    /v1/whatsapp/kapso-templates
  *   POST   /v1/whatsapp/start-conversation
  */
-@Injectable()
+@Injectable({ providedIn: "root" })
 export class WhatsappInboxService extends BaseService {
   private readonly base = "/v1/whatsapp/conversations";
 

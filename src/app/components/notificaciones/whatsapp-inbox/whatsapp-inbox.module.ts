@@ -5,7 +5,6 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { SharedModule } from "../../../shared/shared.module";
 import { InboxCoreModule } from "../inbox-core/inbox-core.module";
 import { WhatsappInboxRoutingModule } from "./whatsapp-inbox-routing.module";
-import { WhatsappInboxService } from "./whatsapp-inbox.service";
 
 import { WhatsappInboxShellComponent } from "./components/whatsapp-inbox-shell/whatsapp-inbox-shell.component";
 import { WhatsappThreadListComponent } from "./components/whatsapp-thread-list/whatsapp-thread-list.component";
@@ -25,8 +24,9 @@ import { PhoneMaskPipe } from "./pipes/phone-mask.pipe";
  *   - ThreadDetail (centro) ── stream de mensajes
  *   - ContactPanel (derecha) ── perfil + lead + pedidos + rating
  *
- * El servicio se provee aquí (no `providedIn: "root"`) para que el módulo
- * sea autocontenido y el bundle no se cargue hasta entrar a la ruta.
+ * El servicio va en `providedIn: "root"` y NO en `providers` de este módulo:
+ * provisto aquí recibía el HttpClient del módulo lazy (SharedModule importa
+ * HttpClientModule), que no pasa por HttpInterceptor2, y el buzón daba 401.
  */
 @NgModule({
   declarations: [
@@ -46,7 +46,6 @@ import { PhoneMaskPipe } from "./pipes/phone-mask.pipe";
     InboxCoreModule,
     WhatsappInboxRoutingModule,
   ],
-  providers: [WhatsappInboxService],
   exports: [PhoneMaskPipe],
 })
 export class WhatsappInboxModule {}
