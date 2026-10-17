@@ -6,6 +6,7 @@ import { NgxDatatableModule } from "@swimlane/ngx-datatable";
 import { VentasRoutingModule } from "./ventas-routing.module";
 import { CrearVentasComponent } from "./crear-ventas/crear-ventas.component";
 import { VentaAsistidaUnicaComponent } from "./venta-asistida-unica/venta-asistida-unica.component";
+import { BorradoresVentaComponent } from "./borradores-venta/borradores-venta.component";
 import { TabViewModule } from "primeng/tabview";
 import { NgSelectModule } from "@ng-select/ng-select";
 import { ArchwizardModule } from "angular-archwizard";
@@ -153,6 +154,7 @@ import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-im
     ListOrdersComponent,
     CrearVentasComponent,
     VentaAsistidaUnicaComponent,
+    BorradoresVentaComponent,
     ClientesComponent,
     QuickViewComponent,
     EcomerceProductsComponent,

@@ -38,6 +38,7 @@ import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import * as XLSX from "xlsx";
 import Swal from "sweetalert2";
 import { CarritoComponent } from "../carrito/carrito.component";
+import { SalesDraftsService, CLAVE_CONTEXTO_BORRADOR, EntradaBorrador } from "../../../shared/services/ventas/sales-drafts.service";
 import {
   EstadoPago,
   EstadoProceso,
@@ -94,6 +95,18 @@ export class CrearVentasComponent
   implements OnInit, AfterViewChecked, OnChanges, OnDestroy
 {
   @ViewChild("quickView") QuickView: QuickViewComponent;
+
+  /**
+   * Borrador de venta (ticket 1169, D-466). `borradorId` es el borrador que se
+   * retomó: guardar de nuevo lo actualiza y crear el pedido lo borra.
+   * `borradorPendiente` guarda envío, facturación y notas hasta que las
+   * direcciones del cliente terminan de cargar, porque esa carga limpia el envío.
+   */
+  borradorId: string | null = null;
+  borradorNombre = "";
+  guardandoBorrador = false;
+  private borradorPendiente: { envio: any; facturacion: any; notasPedido: any } | null = null;
+  private readonly salesDrafts = inject(SalesDraftsService);
   @ViewChild("carrito") carrito: CarritoComponent;
   @ViewChild("products", { static: false })
   productos: EcomerceProductsComponent;
@@ -419,17 +432,46 @@ export class CrearVentasComponent
    * pasar por los handlers públicos (que limpian el carrito) y salta directo al
    * paso del Carrito. El carrito ya viene pre-cargado desde la cotización.
    */
-  private aplicarContextoConversionSiAplica(): void {
+  private aplicarContextoConversionSiAplica(soloBorradorSinCliente = false): void {
     let ctx: any = null;
+    let clave = "cotizacionVentaCtx";
     try {
-      const raw = sessionStorage.getItem("cotizacionVentaCtx");
-      if (raw) ctx = JSON.parse(raw);
+      const raw = soloBorradorSinCliente ? null : sessionStorage.getItem("cotizacionVentaCtx");
+      if (raw) {
+        ctx = JSON.parse(raw);
+      } else {
+        // Ticket 1169: retomar un borrador usa este mismo camino.
+        const rawBorrador = sessionStorage.getItem(CLAVE_CONTEXTO_BORRADOR);
+        if (rawBorrador) {
+          ctx = JSON.parse(rawBorrador);
+          clave = CLAVE_CONTEXTO_BORRADOR;
+        }
+      }
     } catch {
       ctx = null;
     }
     if (!ctx) return;
+    if (clave === CLAVE_CONTEXTO_BORRADOR) {
+      // Un borrador con cliente se aplica solo cuando aparece ESE cliente; el
+      // que no tiene cliente, solo al abrir la pantalla sin cliente.
+      const documentoActual = String(this.pedidoGral?.cliente?.documento || "");
+      const documentoBorrador = String(ctx.documento || "");
+      if (soloBorradorSinCliente ? !!documentoBorrador : documentoBorrador !== documentoActual) {
+        if (!soloBorradorSinCliente) {
+          try { sessionStorage.removeItem(clave); } catch { /* noop */ }
+        }
+        return;
+      }
+      this.borradorId = ctx.id || null;
+      this.borradorNombre = ctx.nombre || "";
+      this.borradorPendiente = {
+        envio: ctx.envio || null,
+        facturacion: ctx.facturacion || null,
+        notasPedido: ctx.notasPedido || null,
+      };
+    }
     // Consumir el contexto una sola vez.
-    try { sessionStorage.removeItem("cotizacionVentaCtx"); } catch { /* noop */ }
+    try { sessionStorage.removeItem(clave); } catch { /* noop */ }
 
     // Cargar el carrito con las líneas de la cotización AQUÍ (newPedido ya limpió el
     // carrito al iniciar). La suscripción de ngOnInit sincroniza a pedidoGral.carrito
@@ -463,6 +505,119 @@ export class CrearVentasComponent
         }, 80);
       } catch { /* noop */ }
     }, 0);
+  }
+
+  /**
+   * Ticket 1169: envío, facturación y notas del borrador retomado. Se aplican
+   * cuando ya cargaron las direcciones del cliente (esa carga limpia el envío).
+   */
+  private aplicarPendientesDelBorrador(): void {
+    const pendiente = this.borradorPendiente;
+    if (!pendiente || !this.pedidoGral) return;
+    this.borradorPendiente = null;
+    if (pendiente.envio && !this.esRecogeEnTienda) this.pedidoGral.envio = pendiente.envio;
+    if (pendiente.facturacion) this.pedidoGral.facturacion = pendiente.facturacion;
+    if (pendiente.notasPedido) this.pedidoGral.notasPedido = pendiente.notasPedido;
+    this.pedidoGral = { ...this.pedidoGral };
+  }
+
+  /** El botón "Guardar borrador" se ve con cliente o con al menos un producto. */
+  get puedeGuardarBorrador(): boolean {
+    if (this.showPedidoConfirm) return false;
+    const lineas = this.cartService.productInCart.value || [];
+    return !!this.pedidoGral?.cliente || lineas.length > 0;
+  }
+
+  /**
+   * Ticket 1169: guarda la venta en curso como borrador y deja la pantalla
+   * limpia. Si la venta salió de un borrador, actualiza ese mismo.
+   */
+  async guardarBorrador(): Promise<void> {
+    if (this.guardandoBorrador || !this.puedeGuardarBorrador) return;
+    const respuesta = await Swal.fire({
+      title: this.borradorId ? "Actualizar borrador" : "Guardar borrador",
+      text: "La venta queda guardada y la pantalla se limpia para la siguiente.",
+      input: "text",
+      inputLabel: "Nombre (opcional)",
+      inputValue: this.borradorNombre,
+      inputPlaceholder: "Por ejemplo: Keikaku, falta la dirección",
+      inputAttributes: { maxlength: "80" },
+      showCancelButton: true,
+      confirmButtonText: "Guardar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#5F3FE0",
+    });
+    if (!respuesta.isConfirmed) return;
+
+    const copia = (valor: any) => (valor ? JSON.parse(JSON.stringify(valor)) : null);
+    const items = copia(this.cartService.productInCart.value) || [];
+    const cliente = copia(this.pedidoGral?.cliente);
+    const nombreCliente = cliente
+      ? [cliente.nombres_completos, cliente.apellidos_completos].filter(Boolean).join(" ").trim()
+      : "";
+    const totalEstimado = items.reduce(
+      (total: number, item: any) =>
+        total + (Number(item?.producto?.precio?.precioUnitarioConIva) || 0) * (Number(item?.cantidad) || 0),
+      0,
+    );
+    const entrada: EntradaBorrador = {
+      nombre: String(respuesta.value || "").trim().slice(0, 80),
+      estado: {
+        items,
+        bodega: copia(this.bodega),
+        ciudad: this.selectedCity || "",
+        cliente,
+        envio: copia(this.pedidoGral?.envio),
+        facturacion: copia(this.pedidoGral?.facturacion),
+        notasPedido: copia(this.pedidoGral?.notasPedido),
+      },
+      resumen: {
+        clienteNombre: nombreCliente,
+        documento: cliente?.documento ? String(cliente.documento) : "",
+        lineas: items.length,
+        totalEstimado,
+      },
+    };
+
+    this.guardandoBorrador = true;
+    const enviar = (id: string | null) => (id ? this.salesDrafts.actualizar(id, entrada) : this.salesDrafts.crear(entrada));
+    const alGuardar = () => {
+      Swal.fire({
+        icon: "success",
+        title: "Borrador guardado",
+        text: "Lo encuentra en Borradores para retomarlo cuando quiera.",
+        timer: 1800,
+        showConfirmButton: false,
+      }).then(() => this.nuevoPedido());
+    };
+    const alFallar = (err: any) => {
+      this.guardandoBorrador = false;
+      Swal.fire({
+        icon: "error",
+        title: "No se guardó el borrador",
+        text: err?.error?.error || "Revise su conexión e intente de nuevo. La venta sigue en pantalla.",
+        confirmButtonColor: "#5F3FE0",
+      });
+    };
+    enviar(this.borradorId).subscribe({
+      next: alGuardar,
+      error: (err) => {
+        // El borrador retomado ya no existe (venció o lo borraron): se guarda como uno nuevo.
+        if (err?.status === 404 && this.borradorId) {
+          enviar(null).subscribe({ next: alGuardar, error: alFallar });
+          return;
+        }
+        alFallar(err);
+      },
+    });
+  }
+
+  /** Ticket 1169: el pedido salió de un borrador → el borrador ya no hace falta. */
+  private borrarBorradorSiAplica(): void {
+    const id = this.borradorId;
+    if (!id) return;
+    this.borradorId = null;
+    this.salesDrafts.eliminar(id).subscribe({ error: () => { /* vence solo a los 30 días */ } });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -611,6 +766,12 @@ export class CrearVentasComponent
   ngOnInit(): void {
     // Inicializar estado de recoge en tienda
     this.esRecogeEnTienda = false;
+
+    // Ticket 1169: un borrador retomado SIN cliente se aplica al abrir (el que
+    // tiene cliente espera a que buscar() lo encuentre, como la cotización).
+    if (!this.pedidoPrm && !this.route.snapshot.queryParamMap.get("documento")) {
+      this.aplicarContextoConversionSiAplica(true);
+    }
 
     // Cargar zonas de cobro
     this.cargarZonasCobro();
@@ -2877,6 +3038,8 @@ export class CrearVentasComponent
         // Cargar datos de entrega (solo si NO es recoge en tienda)
         if (!this.esRecogeEnTienda) {
           this.cargarDatosEntregaCliente();
+        } else {
+          this.aplicarPendientesDelBorrador();
         }
 
         // Cargar datos de facturación
@@ -3436,6 +3599,7 @@ export class CrearVentasComponent
                 // ante un 2xx vacío o un success:false.
                 if (orderId || res.order) {
                   this.marcarCotizacionConvertidaSiAplica(nroPedido);
+                  this.borrarBorradorSiAplica();
                 }
                 this.mywizard.goToNextStep();
 
@@ -4549,6 +4713,7 @@ export class CrearVentasComponent
                   // (la respuesta trae order/orderId). Evita asociar un pedido inexistente.
                   if (orderId || res.order) {
                     context.marcarCotizacionConvertidaSiAplica(nroPedido);
+                    context.borrarBorradorSiAplica();
                   }
 
                   resolve(true); // Pedido guardado exitosamente
@@ -5030,6 +5195,7 @@ export class CrearVentasComponent
       this.datosEntregas = [];
       this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
     }
+    this.aplicarPendientesDelBorrador();
     this.ref.detectChanges();
   }
 

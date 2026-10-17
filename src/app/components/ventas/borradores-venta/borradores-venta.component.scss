@@ -1,0 +1,161 @@
+// Borradores de venta asistida (ticket 1169, D-466): base config-pagina (D-400),
+// plano, acento #5F3FE0. Ninguna clase lleva "p-" (trampa del reset global).
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+:host { display: inline-flex; }
+
+.bv-acciones {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  .cfg-btn { min-height: 36px; padding: 0 12px; }
+}
+
+.bv-txt { color: inherit !important; font-size: inherit; letter-spacing: normal; }
+
+.bv-contador {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: $cfg-accent-soft;
+  color: $cfg-accent !important;
+  font-size: 11.5px !important;
+  font-weight: 800;
+}
+
+.bv-cuerpo { display: flex; flex-direction: column; gap: 12px; }
+
+.bv-sub {
+  margin: 0;
+  font-size: 13px;
+  color: $cfg-body;
+  letter-spacing: normal;
+}
+
+.bv-estado { padding: 24px 0; text-align: center; }
+
+.bv-muted {
+  display: block;
+  font-size: 12px !important;
+  color: $cfg-muted !important;
+}
+
+.bv-link {
+  margin-left: auto;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.bv-lista {
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  overflow: hidden;
+}
+
+.bv-fila {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) 90px 130px minmax(0, 1.4fr) 100px 150px;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border-top: 1px solid $cfg-line-soft;
+  background: #fff;
+
+  &:hover { background: $cfg-row-hover; }
+}
+
+.bv-fila--cabeza {
+  border-top: 0;
+  background: $cfg-tint;
+
+  &:hover { background: $cfg-tint; }
+
+  .bv-col {
+    font-size: 10.5px !important;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $cfg-muted !important;
+  }
+}
+
+.bv-col { min-width: 0; }
+.bv-col--num { text-align: right; }
+.bv-col--acc { display: flex; justify-content: flex-end; gap: 6px; }
+.bv-col--acc .cfg-btn { min-height: 34px; padding: 0 12px; box-shadow: none; }
+
+.bv-nombre {
+  display: block;
+  font-size: 14px !important;
+  font-weight: 700;
+  color: $cfg-ink !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bv-dato {
+  display: block;
+  font-size: 13.5px !important;
+  color: $cfg-ink !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bv-vence {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid $cfg-chip-border;
+  background: $cfg-chip-bg;
+  color: $cfg-body !important;
+  font-size: 12px !important;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.bv-vence--pronto {
+  border-color: transparent;
+  background: $cfg-warn-soft;
+  color: $cfg-warn !important;
+}
+
+button:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+
+// En el celular cada borrador es una tarjeta.
+@media (max-width: 767px) {
+  .bv-fila--cabeza { display: none; }
+
+  .bv-fila {
+    grid-template-columns: 1fr auto;
+    gap: 6px 12px;
+  }
+
+  .bv-col--cliente { grid-column: 1 / -1; }
+  .bv-col--num { text-align: left; }
+  .bv-col--acc { grid-column: 1 / -1; justify-content: stretch; }
+  .bv-col--acc .cfg-btn:first-child { flex: 1; }
+}
+
+::ng-deep .bv-dialogo {
+  border-radius: 16px;
+  overflow: hidden;
+
+  .p-dialog-header {
+    padding: 18px 20px 8px;
+    background: #fff;
+    color: $cfg-ink;
+    font-weight: 800;
+  }
+
+  .p-dialog-content { padding: 0 20px 20px; background: #fff; }
+}

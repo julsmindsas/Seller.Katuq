@@ -10444,3 +10444,17 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
   - **La pantalla se queda con el pedido actual** (`Object.assign`) y la versión nueva, para que la siguiente edición no vuelva a chocar.
 - **Sin backend, sin endpoint acotado** (queda como opción si el reintento no alcanza). Afecta solo `cambiarEstado` en `despachos.component.ts`: el botón de estado de la lista y quitar un pedido de la orden.
 - **Pruebas:** `tests/despachos/estado-despacho.test.js`, 10/10 (tabla por código, campos intactos, "ya quedó así", flujo con un rechazo, segundo rechazo sin tercer intento, error distinto no relee). Sin probar aún con un pedido real: pendiente con ALMARA tras publicar.
+
+## D-466 (2026-10-17) — Borrador de venta asistida (ticket 1169)
+
+- **Problema:** el vendedor que armaba una venta a medias (faltaba la dirección, el cliente no confirmaba) no tenía cómo dejarla guardada y atender a otro cliente: "Descartar" la perdía.
+- **Decisión** (propuesta `openspec/changes/borrador-venta-asistida`, aprobada por Daniel el 2026-10-16, design y tasks el 2026-10-17):
+  - **Backend `/v1/sales-drafts`** (`controllers/salesDrafts.js`, reglas puras en `services/ventas/borradoresVenta.js`) con `auth` + `requireJwtTenant`. Colección nueva `salesDrafts` (`company`, `ownerId`, `ownerEmail`, `ownerName`, `nombre`, `resumen`, `estadoJson`, `createdAt`, `updatedAt`). Empresa y dueño salen de la sesión. Un vendedor ve los suyos; la familia Administrador, los de la empresa. Ajeno = 404 + `audit_log_access`.
+  - **El estado se guarda como texto JSON** (`estadoJson`, máximo 900 KB → 413): evita las restricciones de Firestore con `undefined` y arreglos anidados de los productos. La lista no lo devuelve.
+  - **Vencen a los 30 días sin cambios** y se borran al listar o abrir; sin cron. **Sin índice compuesto:** la lista filtra por `company` y ordena en memoria (son pocos por empresa).
+  - **Retomar usa el camino de "Convertir a pedido"**: `aplicarContextoConversionSiAplica` lee también `sessionStorage['borradorVentaCtx']` y solo lo aplica cuando aparece el cliente del borrador (el borrador sin cliente se aplica en `ngOnInit`). Envío, facturación y notas esperan a que carguen las direcciones del cliente (`aplicarPendientesDelBorrador`), porque esa carga limpia el envío. La pantalla se recarga al retomar y al guardar, igual que "Descartar".
+  - **Al retomar se ponen al día los productos** (`refrescarLineas`, `POST /v1/productos/by-ids`): sale el que ya no existe o está inactivo, el vigente entra con el precio de la lista del cliente, y se avisan cambios de precio (sin precio manual) y existencias que no alcanzan en la bodega.
+  - **El borrador se borra al crear el pedido**, junto a `marcarCotizacionConvertidaSiAplica`; si falla, vence solo.
+  - **Interfaz:** `app-borradores-venta` (base D-400) en la cabecera de las dos pantallas de venta asistida: "Guardar borrador"/"Actualizar borrador" y "Borradores (N)" con modal (Retomar, Eliminar con Swal).
+- **No toca** pedidos, consecutivos, inventario ni precios.
+- **Pruebas:** backend `npm run test:borradores-venta` 7/7 (empresa y dueño de la sesión, campos inventados, 400/413, visibilidad vendedor/administrador/otra empresa, actualizar, vencidos, orden); front `sales-drafts.service.spec.ts` 6/6 (refresco de líneas). Build de producción sin errores.

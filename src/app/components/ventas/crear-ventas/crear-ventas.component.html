@@ -24,6 +24,14 @@
                   </div>
                 </div>
               </div>
+              <div class="mt-2" *ngIf="!showPedidoConfirm">
+                <app-borradores-venta
+                  [puedeGuardar]="puedeGuardarBorrador"
+                  [guardando]="guardandoBorrador"
+                  [borradorActivo]="borradorId"
+                  (guardar)="guardarBorrador()"
+                ></app-borradores-venta>
+              </div>
             </div>
 
             <!-- Columna derecha: Wizard minimalista -->
