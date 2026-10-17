@@ -466,6 +466,53 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Ticket 1256: une esta página al sitio principal de la marca como una ruta
+   * (almara.katuq.com/coleccion-amarilla). La dirección vieja redirige (301).
+   */
+  uniendo = "";
+
+  unirSitio(s: Sitio): void {
+    if (this.uniendo) return;
+    const opciones: { [id: string]: string } = {};
+    this.sitios.filter((x) => x.id !== s.id && !x.redirigeA).forEach((x) => (opciones[x.id] = `${x.nombre} (${x.slug})`));
+    if (!Object.keys(opciones).length) return;
+    Swal.fire({
+      title: "Unir a tu sitio principal",
+      html: `<div style="font-size:14px;line-height:1.5;text-align:left">«${this.textoSeguro(s.nombre)}» pasará a ser una página de tu sitio principal, en la ruta <b>/${this.textoSeguro(s.slug)}</b>. Quien entre por su dirección vieja llega ahí solo. No se borra nada.</div>`,
+      input: "select",
+      inputOptions: opciones,
+      inputPlaceholder: "Elige tu sitio principal",
+      showCancelButton: true,
+      confirmButtonText: "Unir",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#5F3FE0",
+      inputValidator: (v) => (v ? null : "Elige el sitio principal"),
+    }).then((r) => {
+      if (!r.isConfirmed || !r.value) return;
+      this.uniendo = s.id;
+      this.service.unir(s.id, String(r.value)).subscribe({
+        next: (res) => {
+          this.uniendo = "";
+          if (!res || !res.success) {
+            this.toastr.error((res && res.message) || "No pudimos unir la página.");
+            return;
+          }
+          this.toastr.success(res.message || "Página unida a tu sitio principal.");
+          s.redirigeA = { siteId: String(r.value), ruta: (res.data && res.data.ruta) || s.slug };
+        },
+        error: (err) => {
+          this.uniendo = "";
+          this.toastr.error(err?.error?.message || "No pudimos unir la página.");
+        },
+      });
+    });
+  }
+
+  private textoSeguro(v: string): string {
+    return String(v || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as any)[c]);
+  }
+
   private confirmarEliminacion(s: Sitio): void {
     this.eliminando = s.id;
     this.service.eliminar(s.id).subscribe({
@@ -718,12 +765,30 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   /** Ticket 1218: al escribir el nombre se arma la dirección (si no la escribieron a mano). */
   cambiarNombre(valor: string): void {
     this.nombre = valor;
-    if (!this.slugEditado) this.revisarSlug(normalizarSlug(valor));
+    if (!this.slugEditado) this.revisarSlug(normalizarSlug(this.baseDeDireccion(valor)));
   }
 
   cambiarSlug(valor: string): void {
     this.slugEditado = !!String(valor || "").trim();
-    this.revisarSlug(normalizarSlug(this.slugEditado ? valor : this.nombre));
+    this.revisarSlug(normalizarSlug(this.slugEditado ? valor : this.baseDeDireccion(this.nombre)));
+  }
+
+  /**
+   * Ticket 1256: el PRIMER sitio toma la dirección de la marca (almara.katuq.com),
+   * no la del nombre de la página. Los siguientes, el nombre que escriban.
+   */
+  get esPrimerSitio(): boolean {
+    return !this.sitios.length;
+  }
+
+  private baseDeDireccion(nombrePagina: string): string {
+    if (!this.esPrimerSitio) return nombrePagina;
+    try {
+      const marca = (JSON.parse(localStorage.getItem("currentCompany") || "{}") || {}).nomComercial;
+      return String(marca || "").trim() || nombrePagina;
+    } catch (e) {
+      return nombrePagina;
+    }
   }
 
   /** Revisa en el servidor si la dirección está libre (con espera, sin ráfagas). */

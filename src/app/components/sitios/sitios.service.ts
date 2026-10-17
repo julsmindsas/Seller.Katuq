@@ -287,6 +287,8 @@ export interface Sitio {
   fechaCreacion: string;
   origen?: string;
   plantillaId?: string;
+  /** Ticket 1256: página unida al sitio principal de la marca; su dirección redirige ahí. */
+  redirigeA?: { siteId: string; ruta: string };
 }
 
 export interface PlantillaSitio {
@@ -582,6 +584,11 @@ export class SitiosService extends BaseService {
   }
 
   /** Ticket 1254: copia en borrador de una página, con dirección propia. */
+  /** Ticket 1256: une la página `id` al sitio `destinoId` de la misma marca (301 desde la dirección vieja). */
+  unir(id: string, destinoId: string): Observable<Respuesta<{ url: string; ruta: string }>> {
+    return this.post<Respuesta<{ url: string; ruta: string }>>(`/v1/sites/${encodeURIComponent(id)}/unir`, { destinoId });
+  }
+
   duplicar(id: string): Observable<Respuesta<{ id: string; nombre: string; slug: string }>> {
     return this.post<Respuesta<{ id: string; nombre: string; slug: string }>>(`/v1/sites/${encodeURIComponent(id)}/duplicar`, {});
   }

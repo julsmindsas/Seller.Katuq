@@ -10661,3 +10661,26 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - De punta a punta con Firestore falso: COT-…-0001 para ana@ y COT-…-0002 para luis@, en borrador, con origen y campaña; un producto no marcado da 404.
   - Navegador a 390 y 1440 px: botón convertido, formulario, envío y confirmación, con 0 errores de JS.
 - **Parte 2, pendiente:** productos por suscripción con cobro recurrente (Wompi con tarjeta tokenizada, renovación, cancelación y aviso). Toca pagos y va con propuesta. Sigue: KAI completa la cotización (F4-40).
+
+## D-476 (2026-10-17) — Una sola dirección por marca: redirección 301 al cambiar la dirección, «Unir a mi sitio principal» y cookie de Google aislada (ticket 1256, F1-13)
+
+- **Ya existía:** asistente de dominio propio con los registros DNS paso a paso, comprobador y SSL automático (Caddy on-demand + `host-permitido`). Las páginas propias son rutas del sitio.
+- **Cambiar la dirección no rompe enlaces:**
+  - Al cambiar el `slug` de un sitio publicado, el viejo queda en `slugsAnteriores` (hasta 10).
+  - Visitar la dirección vieja da 301 a la nueva, con la misma ruta y la consulta (utm incluidos).
+  - `slugOcupado` reserva las direcciones viejas de OTRO sitio; su dueño sí las recupera.
+- **«Unir a mi sitio principal»** (lista de Sitios; `POST /v1/sites/:id/unir`, con auth + `requireJwtTenant`, solo dentro de la misma empresa):
+  - La página entra como ruta (`/coleccion-amarilla`) al borrador del principal y, si está publicado, también a lo publicado, porque ese contenido ya era público. Va sin su encabezado ni su pie.
+  - El sitio viejo queda `redirigeA` y su portada da 301 a `marca.katuq.com/<ruta>`; fichas, categorías y marcas van a la misma ruta en la marca.
+  - Nada se borra; no se repite y no pisa una página existente (409).
+- **Crear:** el PRIMER sitio sugiere la dirección con el nombre de la marca (`nomComercial`). En los siguientes, el formulario recomienda crearlos como página del sitio principal.
+- **Aislamiento entre comercios:**
+  - Los sitios no ponen cookies propias, y `localStorage` y `sessionStorage` ya son por subdominio.
+  - Google Analytics y Ads ahora fijan su cookie en el host del comercio (`cookie_domain: location.hostname`); con «auto» quedaba en `.katuq.com` y dos tiendas compartían el mismo `_ga`.
+- **Verificado:**
+  - 5 pruebas de punta a punta con Firestore falso (`tests/sitios/direccionPorMarca.test.js`): 301 con ruta y utm, unir (ruta, sin encabezado, publicado, 301 de portada y de ficha), sin cruzar empresas, dirección vieja reservada y cookie de Google.
+  - La suite de sitios queda con los mismos 4 fallos previos, y el build del front pasa.
+  - Hoy hay 15 sitios, 3 marcas con varios y 0 dominios propios: la mudanza la hace cada comercio con el botón, sin migración masiva.
+- **Pendiente:**
+  - Meta y TikTok siguen poniendo su cookie (`_fbp`, `_ttp`) en `.katuq.com`, y no se configura desde el píxel. Cerrarlo de verdad exige inscribir `katuq.com` en la Public Suffix List: decisión de Daniel, porque afecta a todos los subdominios.
+  - Comprar el dominio desde Katuq.

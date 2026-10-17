@@ -146,6 +146,13 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
               {{ duplicando === s.id ? 'Duplicando…' : 'Duplicar' }}
             </button>
+            <!-- Ticket 1256: una sola dirección por marca. -->
+            <button class="btn-fantasma" *ngIf="sitios.length > 1 && !s.redirigeA" (click)="unirSitio(s)" [disabled]="uniendo === s.id"
+                    title="Convierte esta página en una ruta de tu sitio principal; su dirección vieja redirige ahí">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M8 7h8M8 12h8M8 17h5"/><path d="M4 4h16v16H4z"/></svg>
+              {{ uniendo === s.id ? 'Uniendo…' : 'Unir a mi sitio principal' }}
+            </button>
+            <span class="pagina__unida" *ngIf="s.redirigeA">Unida a otro sitio: su dirección redirige a /{{ s.redirigeA.ruta }}</span>
             <!-- Borrar va aparte y discreto: no es una acción del mismo rango que editar. -->
             <button class="icono-peligro" (click)="eliminarSitio(s)"
                     [disabled]="eliminando === s.id" title="Eliminar esta página para siempre" aria-label="Eliminar esta página para siempre">
@@ -403,6 +410,9 @@
               <ng-container *ngSwitchCase="'invalida'">Usa letras o números (sin tildes ni símbolos).</ng-container>
             </ng-container>
           </small>
+          <!-- Ticket 1256: una sola dirección por marca -->
+          <small class="slug-marca" *ngIf="esPrimerSitio">Es la dirección de tu marca: las demás páginas pueden vivir dentro de ella (marca.{{ dominioSitios }}/coleccion).</small>
+          <small class="slug-marca" *ngIf="!esPrimerSitio">¿Es otra página de tu misma marca? Mejor créala dentro de tu sitio (Editar página → Páginas) para que todo quede en una sola dirección.</small>
         </div>
 
         <!-- El objetivo ya quedó decidido con la intención del paso 1: no se
