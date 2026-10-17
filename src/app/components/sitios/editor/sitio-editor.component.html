@@ -1198,20 +1198,117 @@
               <label>Título (opcional)</label>
               <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="90" />
             </div>
-            <div class="miniaturas" *ngIf="b.datos.logos?.length">
-              <div class="miniatura" *ngFor="let l of b.datos.logos; let i = index">
+            <!-- Ticket 1236: cada logo lleva a la página de su marca y guarda la constancia de autorización -->
+            <div class="repetible logo-marca" *ngFor="let l of b.datos.logos; let i = index">
+              <div class="logo-marca__fila">
                 <img [src]="l.url" alt="" />
-                <button (click)="quitarLogoMarcas(b, i)" title="Quitar">×</button>
+                <input type="text" maxlength="60" [(ngModel)]="l.marca" (ngModelChange)="marcarSucio()"
+                       placeholder="Marca, como en tus productos (TP-Link)" />
               </div>
+              <label class="logo-marca__autoriza">
+                <input type="checkbox" [(ngModel)]="l.autorizado" (ngModelChange)="marcarSucio()" />
+                Tengo autorización de la marca para usar este logo
+              </label>
+              <button class="enlace-sutil" (click)="quitarLogoMarcas(b, i)">Quitar este logo</button>
             </div>
+            <p class="aviso" *ngIf="logosSinAutorizacion(b)">
+              {{ logosSinAutorizacion(b) }} logo(s) sin constancia de autorización. Úsalos solo si el fabricante te lo permite.
+            </p>
             <div class="campo">
               <label class="archivo">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M7 9l5-5 5 5M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>
                 {{ subiendo ? 'Subiendo…' : 'Agregar un logo' }}
                 <input type="file" accept="image/*" (change)="subirImagen($event, 'marcas')" [disabled]="subiendo" />
               </label>
-              <small>Se ven en gris y toman color al pasar el mouse. Hasta 8.</small>
+              <small>Se ven en gris y toman color al pasar el mouse. Hasta 8. Con la marca escrita, el logo lleva a su página.</small>
             </div>
+            <button class="opcion" [class.is-active]="b.datos.desdeCatalogo"
+                    (click)="b.datos.desdeCatalogo = !b.datos.desdeCatalogo; marcarSucio()">
+              <span class="opcion__texto"><strong>Mostrar las marcas de mis productos</strong>
+                <small>Cada marca con su página y sus productos filtrables. Sale sola del campo «Marca» de tus productos.</small></span>
+              <span class="palanca"><span></span></span>
+            </button>
+          </ng-container>
+
+          <!-- Ticket 1236: sucursales -->
+          <ng-container *ngIf="b.tipo === 'sucursales'">
+            <div class="campo">
+              <label>Título</label>
+              <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
+            </div>
+            <div class="campo">
+              <label>Texto corto (opcional)</label>
+              <input type="text" [(ngModel)]="b.datos.descripcion" (ngModelChange)="marcarSucio()" maxlength="300" />
+            </div>
+            <button class="opcion" [class.is-active]="b.datos.usarPuntosDeRetiro !== false"
+                    (click)="b.datos.usarPuntosDeRetiro = b.datos.usarPuntosDeRetiro === false; marcarSucio()">
+              <span class="opcion__texto"><strong>Incluir mis puntos de «Recoger en tienda»</strong>
+                <small>Salen solos de la pestaña Tienda. En la ficha de cada producto se dice en cuáles hay existencias.</small></span>
+              <span class="palanca"><span></span></span>
+            </button>
+            <div class="repetible" *ngFor="let s of b.datos.sedes; let i = index">
+              <input type="text" maxlength="80" [(ngModel)]="s.nombre" (ngModelChange)="marcarSucio()" placeholder="Nombre de la sede (Experience Center)" />
+              <input type="text" maxlength="200" [(ngModel)]="s.direccion" (ngModelChange)="marcarSucio()" placeholder="Dirección" />
+              <div class="campo-doble">
+                <input type="text" maxlength="80" [(ngModel)]="s.ciudad" (ngModelChange)="marcarSucio()" placeholder="Ciudad" />
+                <input type="text" maxlength="160" [(ngModel)]="s.horario" (ngModelChange)="marcarSucio()" placeholder="Horario" />
+              </div>
+              <div class="campo-doble">
+                <input type="tel" maxlength="30" [(ngModel)]="s.telefono" (ngModelChange)="marcarSucio()" placeholder="Teléfono" />
+                <input type="tel" maxlength="30" [(ngModel)]="s.whatsapp" (ngModelChange)="marcarSucio()" placeholder="WhatsApp" />
+              </div>
+              <button class="enlace-sutil" (click)="quitarSede(b, i)">Quitar esta sede</button>
+            </div>
+            <button class="boton-secundario" (click)="agregarSede(b)" *ngIf="(b.datos.sedes?.length || 0) < 12">Agregar una sede</button>
+            <p class="nota">«Cómo llegar» abre la app de mapas del cliente con la dirección.</p>
+          </ng-container>
+
+          <!-- Ticket 1236: agenda de visitas -->
+          <ng-container *ngIf="b.tipo === 'agenda'">
+            <div class="campo">
+              <label>Título</label>
+              <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
+            </div>
+            <div class="campo">
+              <label>Texto corto (opcional)</label>
+              <input type="text" [(ngModel)]="b.datos.descripcion" (ngModelChange)="marcarSucio()" maxlength="300" />
+            </div>
+            <div class="campo">
+              <label>Días de atención</label>
+              <div class="dias-agenda">
+                <button type="button" *ngFor="let d of DIAS_AGENDA" class="dia-agenda"
+                        [class.is-active]="(b.datos.dias || []).includes(d.n)" (click)="alternarDiaAgenda(b, d.n)">{{ d.corto }}</button>
+              </div>
+            </div>
+            <div class="campo">
+              <label>Horarios (uno por línea)</label>
+              <textarea rows="5" [value]="lineasAgenda(b, 'franjas')"
+                        (change)="cambiarLineasAgenda(b, 'franjas', $any($event.target).value)"></textarea>
+              <small>Hasta 12. Ej.: 9:00 a 10:00</small>
+            </div>
+            <div class="campo-doble">
+              <div class="campo">
+                <label>Citas por horario</label>
+                <input type="number" min="1" max="50" [(ngModel)]="b.datos.cupoPorFranja" (ngModelChange)="marcarSucio()" />
+              </div>
+              <div class="campo">
+                <label>Días hacia adelante</label>
+                <input type="number" min="1" max="90" [(ngModel)]="b.datos.anticipacionDias" (ngModelChange)="marcarSucio()" />
+              </div>
+            </div>
+            <div class="campo campo--avanzado">
+              <label>Motivos (opcional, uno por línea)</label>
+              <textarea rows="3" [value]="lineasAgenda(b, 'motivos')"
+                        (change)="cambiarLineasAgenda(b, 'motivos', $any($event.target).value)"></textarea>
+            </div>
+            <div class="campo campo--avanzado">
+              <label>Texto del botón</label>
+              <input type="text" [(ngModel)]="b.datos.textoBoton" (ngModelChange)="marcarSucio()" maxlength="40" />
+            </div>
+            <p class="nota">
+              Se agenda desde mañana. Cada cita llega a tu CRM como prospecto, con el día, la hora y de qué campaña vino.
+              Al reservar, el cliente puede confirmarte por WhatsApp con el mensaje ya escrito.
+            </p>
           </ng-container>
 
           <!-- Compra por categoría -->

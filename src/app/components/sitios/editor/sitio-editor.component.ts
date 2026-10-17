@@ -204,6 +204,18 @@ const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; ico
     icono: "M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z M12 10h.01",
   },
   {
+    tipo: "sucursales",
+    nombre: "Sucursales",
+    descripcion: "Tus sedes con horario, WhatsApp y cómo llegar",
+    icono: "M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6",
+  },
+  {
+    tipo: "agenda",
+    nombre: "Agenda de visitas",
+    descripcion: "Que reserven día y hora; la cita llega a tu CRM",
+    icono: "M4 5h16v15H4zM4 9h16M8 3v4M16 3v4M8 13h3",
+  },
+  {
     tipo: "footer",
     nombre: "Pie de página",
     descripcion: "Horarios, redes y datos de contacto",
@@ -569,6 +581,17 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
     items: [{ texto: "", autor: "", estrellas: 5 }],
   },
   ubicacion: { titulo: "Dónde estamos", direccion: "", ciudad: "", referencia: "", horario: "" },
+  sucursales: { titulo: "Nuestras sucursales", descripcion: "", usarPuntosDeRetiro: true, sedes: [] },
+  agenda: {
+    titulo: "Agenda tu visita",
+    descripcion: "Elige el día y la hora; te esperamos.",
+    dias: [1, 2, 3, 4, 5, 6],
+    franjas: ["9:00 a 10:00", "10:00 a 11:00", "11:00 a 12:00", "2:00 a 3:00", "3:00 a 4:00"],
+    cupoPorFranja: 1,
+    anticipacionDias: 30,
+    motivos: [],
+    textoBoton: "Agendar",
+  },
   footer: { texto: "", mostrarRedes: true, enlaces: [] },
 };
 
@@ -772,7 +795,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   readonly FAMILIAS_BLOQUE: { nombre: string; tipos: string[] }[] = [
     { nombre: "Para vender", tipos: ["catalogo", "productos", "destacado", "categorias", "buscador", "promo", "contador"] },
     { nombre: "Para contarles", tipos: ["hero", "texto", "columnas", "seccion", "galeria", "imagen", "video", "banner", "resenas", "faq", "marcas", "instagram"] },
-    { nombre: "Para que te escriban", tipos: ["whatsapp", "formulario", "suscripcion", "ubicacion", "popup"] },
+    { nombre: "Para que te escriban", tipos: ["whatsapp", "formulario", "suscripcion", "ubicacion", "sucursales", "agenda", "popup"] },
     { nombre: "Estructura", tipos: ["encabezado", "anuncio", "botones", "separador", "footer"] },
   ];
   get catalogoPorFamilia(): { nombre: string; bloques: typeof CATALOGO_BLOQUES }[] {
@@ -2509,6 +2532,50 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   quitarLogoMarcas(bloque: any, i: number): void {
     bloque.datos.logos.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  // ── Ticket 1236: sucursales y agenda ─────────────────────────────────────
+  readonly DIAS_AGENDA = [
+    { n: 1, corto: "Lun" }, { n: 2, corto: "Mar" }, { n: 3, corto: "Mié" }, { n: 4, corto: "Jue" },
+    { n: 5, corto: "Vie" }, { n: 6, corto: "Sáb" }, { n: 7, corto: "Dom" },
+  ];
+
+  /** Logos con constancia pendiente: el aviso pide confirmarla antes de publicar. */
+  logosSinAutorizacion(bloque: any): number {
+    return (bloque.datos.logos || []).filter((l: any) => l && !l.autorizado).length;
+  }
+
+  agregarSede(bloque: any): void {
+    const sedes = bloque.datos.sedes || (bloque.datos.sedes = []);
+    if (sedes.length >= 12) return;
+    sedes.push({ nombre: "", direccion: "", ciudad: "", horario: "", telefono: "", whatsapp: "" });
+    this.marcarSucio();
+  }
+
+  quitarSede(bloque: any, i: number): void {
+    bloque.datos.sedes.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  alternarDiaAgenda(bloque: any, n: number): void {
+    const dias: number[] = bloque.datos.dias || (bloque.datos.dias = []);
+    bloque.datos.dias = dias.includes(n) ? dias.filter((d) => d !== n) : [...dias, n].sort();
+    this.marcarSucio();
+  }
+
+  /** Franjas o motivos de la agenda como una línea cada uno (se edita como texto). */
+  lineasAgenda(bloque: any, campo: "franjas" | "motivos"): string {
+    return (bloque.datos[campo] || []).join("\n");
+  }
+
+  cambiarLineasAgenda(bloque: any, campo: "franjas" | "motivos", texto: string): void {
+    const max = campo === "franjas" ? 12 : 8;
+    bloque.datos[campo] = String(texto || "")
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .slice(0, max);
     this.marcarSucio();
   }
 

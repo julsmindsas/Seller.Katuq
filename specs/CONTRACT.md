@@ -10556,3 +10556,31 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - 5 pruebas nuevas (`tests/treasury/pagoNoSaleDelPedido.test.js`), y las de cola y duplicados siguen en verde.
   - Después de la corrección quedan 0 pagos Pendiente fuera de su pedido en todo Katuq; antes había 1, este.
 - **Abierto:** que los pedidos nazcan con `date_upd` cerraría el hueco del candado para todos los campos. Toca sincronizaciones que leen `date_upd`, así que va con propuesta propia.
+
+## D-472 (2026-10-17) — Marcas con página, sucursales con existencias y agenda de visitas en la web (ticket 1236, F2-44)
+
+- **Marcas:**
+  - La marca sale del campo `identificacion.marca` del producto; el índice de búsqueda suma `marcaOriginal`, sin cambiar los productos.
+  - El catálogo trae el filtro «Marca» con conteo cuando hay dos o más, agrupando sin tildes ni mayúsculas y mostrando la forma más usada.
+  - Cada marca tiene su página `/marca/<nombre>`, con H1, título, canónica y los demás filtros adentro. Una marca que no está da 404.
+  - El bloque Marcas suma por logo la marca (el logo lleva a su página) y la constancia «Tengo autorización de la marca». Sin constancia, el editor avisa; no se ocultan los logos que ya existían. También puede listar solas las marcas del catálogo.
+  - De paso: tocar una ocasión del catálogo ya no borra la categoría elegida. El selector `.chip` agarraba todos los chips.
+- **Sucursales (bloque nuevo):**
+  - Sedes con dirección, horario, «Cómo llegar» (app de mapas, sin iframe), WhatsApp y teléfono.
+  - Por defecto salen de los puntos de «Recoger en tienda»; el bloque suma sedes propias.
+  - La ficha del producto dice «Disponible en: Local Centro (Medellín)…» sin cantidades. Lee el inventario solo con `getRealStockMap`, que normaliza y deduplica, por la `bodegaId` de cada punto. Si falla, la ficha sale sin la línea.
+- **Agenda de visitas (bloque nuevo):**
+  - El comercio define días de atención, horarios (franjas), citas por horario, días hacia adelante (1 a 90) y motivos.
+  - El visitante agenda desde mañana: `GET /public/:slug/agenda` da los días y las franjas con cupo, sin decir cuántas quedan, y `POST /public/:slug/cita` (leadLimiter) valida fecha, franja, motivo y cupo ANTES de escribir.
+  - La cita entra a `prospects` (el CRM) con `tipo: "cita"`, `cita {fecha, franja, motivo}`, nota legible y `campana` de origen.
+  - El cupo no es transaccional, mismo criterio que D-470.
+  - Confirmación: mensaje en la página y botón «Confirmar por WhatsApp» con el texto ya escrito al número del comercio (bloque WhatsApp o contacto de la empresa).
+- **Verificado:**
+  - 9 pruebas (`tests/sitios/marcasSucursalesAgenda.test.js`), y la suite de sitios queda con los mismos 4 fallos previos.
+  - Navegador con API simulada a 390 y 1440 px: 0 errores de JS y sin scroll horizontal. La franja llena sale deshabilitada, la cita se envía y se ve la confirmación con WhatsApp, y el chip de marca pide `marca=` al catálogo.
+  - La consulta del cupo corre en Firestore sin índice compuesto.
+- **Sin verificar:** el editor solo se compiló, no se vio en navegador.
+- **Pendiente:**
+  - Confirmación y recordatorio AUTOMÁTICOS por WhatsApp: requieren registrar una plantilla en Meta (Kapso), y es decisión de Daniel.
+  - Logo y descripción como ficha propia de cada marca: hoy la página de marca es el catálogo filtrado con su H1.
+  - Vista de citas en un calendario dentro de Katuq: hoy se ven en el CRM.

@@ -48,6 +48,8 @@ const NOMBRE_BLOQUE: { [tipo: string]: string } = {
   video: "Video",
   resenas: "Reseñas",
   ubicacion: "Ubicación",
+  sucursales: "Sucursales",
+  agenda: "Agenda de visitas",
   footer: "Pie de página",
 };
 

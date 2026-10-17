@@ -2894,6 +2894,49 @@
   > *, input, select { min-width: 0; max-width: 100%; }
 }
 
+// Ticket 1236: logo de marca con su nombre y constancia; días de la agenda.
+.logo-marca__fila {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  img { width: 56px; height: 34px; object-fit: contain; flex: none; }
+  input { flex: 1; min-width: 0; }
+}
+
+.logo-marca__autoriza {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--kb-ink);
+  letter-spacing: normal;
+  text-transform: none;
+
+  input { width: auto; margin-top: 2px; }
+}
+
+.dias-agenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dia-agenda {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1.5px solid var(--kb-line-4);
+  background: var(--kb-surface-3);
+  color: var(--kb-ink);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &.is-active { background: var(--kb-accent); border-color: var(--kb-accent); color: #fff; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; }
+}
+
 // Ticket 1225: días sin entregas. El span sale de *ngFor (ng-star-inserted):
 // lleva color y tamaño propios para que el CSS global no lo pinte de azul.
 .dias-cerrados {
