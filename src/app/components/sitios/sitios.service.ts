@@ -45,6 +45,8 @@ export interface TiendaSitio {
   minimoCompra: number;
   /** Ticket 1244: pedido mínimo de quien compra con su lista de precios. */
   minimoMayorista?: number;
+  /** Ticket 1242: cuánto se encarga KAI de la web. */
+  kai?: { autonomia: "sugerir" | "aprobar" | "automatico"; pausado: boolean; reporteSemanal: boolean };
   /** Ticket 1235: productos que se cotizan con un asesor en vez de ir al carrito. */
   cotizables?: { id: string; titulo: string }[];
   textoCotizar?: string;

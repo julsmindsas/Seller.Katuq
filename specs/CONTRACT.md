@@ -10745,3 +10745,22 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - El origen se compara sin mayúsculas ni barra final y no se repite.
 - **Verificado:** un caso más en `tests/sitios/direccionPorMarca.test.js` (normalización y 301 con la consulta, de punta a punta con Firestore falso); el build del front pasa.
 - **Parte 2, pendiente:** el importador desde Shopify, WooCommerce y Wix con variantes, fotos, precios, existencias y clientes, más el mapa de redirecciones generado solo. Cambia el modelo de productos (variantes) y escribe existencias, así que va con propuesta. La vía es reutilizar el producto canónico y `katuq-product-upsert` de flows y el importador de existencias del onboarding.
+
+## D-480 (2026-10-17) — KAI administra la web: autonomía con pausa, vitrina sin agotados en automático y reporte semanal opcional (ticket 1242, F4-39)
+
+- **Marca visible:** en Sitios, el comercio ve «KAI» (Opttia es el motor): «KAI crea la página», «KAI está armando…» y el límite del plan «páginas con KAI».
+- **Autonomía** (`tienda.kai`, en Tienda → «KAI administra tu web»):
+  - `sugerir` (por defecto), `aprobar` o `automatico`, más `pausado`.
+  - En automático y sin pausa, el render saca los agotados de las secciones de productos y del destacado. El catálogo ya los excluía, y temporadas (1232) y ofertas (1237) ya vencían solas.
+  - KAI no toca precios, descuentos ni condiciones.
+- **Reporte semanal** (`tienda.kai.reporteSemanal`, apagado de fábrica):
+  - Los lunes desde las 8 a. m. (Bogotá), una vez por semana y por sitio (`kaiReporteSemana`, marcado antes de enviar).
+  - Visitas, contactos (lead, cita, cotización), pedidos y ventas frente a la semana anterior, más los cambios publicados del historial (D-478).
+  - Va al correo de quien creó el sitio o al de la empresa, con todo escapado.
+- **Job propio `sitios`** (cada 5 min, siempre encendido; `SITIOS_CRON_ENABLED=false` lo apaga): publicaciones programadas (D-478) y reporte de KAI. Antes iban colgados del job de pago pendiente, que tiene su propia bandera.
+- **Criterios:**
+  - Publicar conversando ya funciona por las herramientas MCP `create_katuq_site` y `publish_katuq_site` de Opttia, más la edición con IA.
+  - En automático no se ven agotados ni temporadas vencidas.
+  - El reporte semanal está listo.
+- **Verificado:** 4 pruebas (`tests/sitios/kaiAdministra.test.js`, Firestore falso y correo simulado: envía una vez, solo a quien lo encendió, solo el lunes). La consulta anidada corre en producción sin índice, la suite de sitios queda con los mismos 4 fallos previos y el build del front pasa.
+- **Fuera de esta entrega:** pruebas A/B y optimización con datos, detectar enlaces rotos y fotos de mala calidad, mantenimiento automático de SEO y texto alternativo, y aprobar sugerencias de KAI desde una bandeja.

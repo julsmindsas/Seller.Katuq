@@ -2410,6 +2410,29 @@
             </span>
             <span class="palanca"><span></span></span>
           </button>
+          <!-- Ticket 1242: cuánto se encarga KAI de la web -->
+          <div class="grupo" id="campo-kai" *ngIf="kaiTienda as k">
+            <h3>KAI administra tu web</h3>
+            <div class="campo">
+              <label>Qué tanto hace solo</label>
+              <select [(ngModel)]="k.autonomia" (ngModelChange)="marcarSucio()">
+                <option value="sugerir">Solo sugerir: tú decides todo</option>
+                <option value="aprobar">Aplicar lo que tú apruebes</option>
+                <option value="automatico">Automático en lo de bajo riesgo</option>
+              </select>
+              <small *ngIf="k.autonomia === 'automatico'">Tu vitrina deja de mostrar productos agotados apenas se agotan.
+                Las temporadas y ofertas vencidas ya salen solas. KAI nunca cambia precios, descuentos ni condiciones.</small>
+            </div>
+            <button class="opcion" [class.is-active]="k.pausado" (click)="k.pausado = !k.pausado; marcarSucio()">
+              <span class="opcion__texto"><strong>Pausar a KAI</strong><small>Detiene todo lo automático hasta que lo vuelvas a encender.</small></span>
+              <span class="palanca"><span></span></span>
+            </button>
+            <button class="opcion" [class.is-active]="k.reporteSemanal" (click)="k.reporteSemanal = !k.reporteSemanal; marcarSucio()">
+              <span class="opcion__texto"><strong>Reporte semanal por correo</strong>
+                <small>Los lunes: visitas, contactos, pedidos y ventas frente a la semana anterior, y qué cambió en tu web.</small></span>
+              <span class="palanca"><span></span></span>
+            </button>
+          </div>
           <p class="aviso" *ngIf="avisoTienda">{{ avisoTienda }}</p>
           <div class="campo" id="campo-bodega">
             <label>Bodega desde donde despachas</label>

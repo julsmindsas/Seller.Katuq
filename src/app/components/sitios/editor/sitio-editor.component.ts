@@ -1818,6 +1818,14 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     }));
   }
 
+  /** Ticket 1242: autonomía de KAI, pausa y reporte semanal (sitios viejos llegan sin esto). */
+  get kaiTienda(): { autonomia: string; pausado: boolean; reporteSemanal: boolean } | null {
+    const t: any = this.contenido && this.contenido.tienda;
+    if (!t) return null;
+    if (!t.kai || typeof t.kai !== "object") t.kai = { autonomia: "sugerir", pausado: false, reporteSemanal: false };
+    return t.kai;
+  }
+
   // ── Ticket 1245: redirecciones 301 desde la página anterior ──
   get redireccionesTexto(): string {
     return ((this.contenido as any)?.redirecciones || []).map((r: any) => `${r.desde} ${r.hacia}`).join("\n");

@@ -200,7 +200,7 @@
                 (click)="abrirDescribe()">
           <span class="opcion-grande__texto">
             <strong>Descríbela y la armamos con IA</strong>
-            <small>Cuéntanos tu negocio con tus palabras y Opttia crea la página: diseño, textos y secciones.</small>
+            <small>Cuéntanos tu negocio con tus palabras y KAI crea la página: diseño, textos y secciones.</small>
           </span>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m9 18 6-6-6-6"/></svg>
         </button>
@@ -247,7 +247,7 @@
         <div class="caja__titulo">
           <div>
             <h2>Cuéntanos de tu negocio</h2>
-            <p>Escribe como se lo contarías a un amigo. Opttia arma la página y tú la ajustas en el editor.</p>
+            <p>Escribe como se lo contarías a un amigo. KAI arma la página y tú la ajustas en el editor.</p>
           </div>
           <button class="cerrar" (click)="cerrarAsistente()" [disabled]="creandoConIA" aria-label="Cerrar">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -280,11 +280,11 @@
         <div class="campo">
           <label for="nombre-ia">Nombre de la página <span class="opcional">(opcional)</span></label>
           <input id="nombre-ia" type="text" [(ngModel)]="nombreIA" [maxlength]="nombreMax" [disabled]="creandoConIA"
-                 placeholder="Si lo dejas vacío, Opttia lo propone" />
+                 placeholder="Si lo dejas vacío, KAI lo propone" />
         </div>
 
         <div class="nota-ia" *ngIf="creandoConIA" role="status" aria-live="polite">
-          <strong>Opttia está armando tu página…</strong>
+          <strong>KAI está armando tu página…</strong>
           <span>Tarda unos segundos. No cierres esta ventana.</span>
         </div>
       </div>
