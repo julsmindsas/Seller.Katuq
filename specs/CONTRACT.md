@@ -10734,7 +10734,7 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - Opttia no publica si el comercio definió quién publica.
   - Hay una prueba más en `versionesYPermisos.test.js`. Desplegado en el backend e3cf0c60.
 
-## D-479 (2026-10-17) — Redirecciones 301 desde la página anterior (ticket 1245, F5-30, parte 1)
+## D-479 (2026-10-17) — Redirecciones 301 desde la página anterior (ticket 1245, F5-30, parte 1) — PUBLICADO: backend b847e6f8, front 2026.10.17.12
 
 - **Qué hace:** quien viene de Shopify, WooCommerce o Wix pega en Ajustes → «Redirecciones desde tu página anterior» una línea por dirección: la vieja y la nueva.
   - Se guardan en `contenido.redirecciones` (hasta 500) y se activan al publicar.
