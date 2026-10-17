@@ -1790,6 +1790,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     { texto: "Tu propio dominio", donde: "Ajustes", panel: "ajustes", claves: "dominio dns direccion" },
     { texto: "Cómo se ve al compartir", donde: "Ajustes", panel: "ajustes", claves: "seo google descripcion titulo imagen" },
     { texto: "Publicación", donde: "Ajustes", panel: "ajustes", claves: "programar publicar" },
+    { texto: "Redirecciones desde tu página anterior", donde: "Ajustes", panel: "ajustes", claves: "301 shopify woocommerce wix migrar seo" },
+    { texto: "Historial de versiones", donde: "Ajustes", panel: "ajustes", claves: "restaurar revertir version" },
+    { texto: "Programar la publicación", donde: "Ajustes", panel: "ajustes", claves: "fecha hora programar" },
   ];
 
   get ajustesEncontrados(): { texto: string; donde: string; panel: string }[] {
@@ -1813,6 +1816,27 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       destino.classList.add("ajuste-encontrado");
       setTimeout(() => destino.classList.remove("ajuste-encontrado"), 1800);
     }));
+  }
+
+  // ── Ticket 1245: redirecciones 301 desde la página anterior ──
+  get redireccionesTexto(): string {
+    return ((this.contenido as any)?.redirecciones || []).map((r: any) => `${r.desde} ${r.hacia}`).join("\n");
+  }
+
+  cambiarRedirecciones(texto: string): void {
+    const c: any = this.contenido;
+    if (!c) return;
+    const filas = String(texto || "").split("\n").map((l) => l.trim()).filter(Boolean);
+    const lista: { desde: string; hacia: string }[] = [];
+    let malas = 0;
+    for (const fila of filas) {
+      const partes = fila.split(/\s*(?:->|→|,|;|\t|\s)\s*/).filter(Boolean);
+      if (partes.length !== 2) { malas++; continue; }
+      lista.push({ desde: partes[0], hacia: partes[1] });
+    }
+    c.redirecciones = lista.slice(0, 500);
+    this.marcarSucio();
+    if (malas) this.toastr.warning(`${malas} línea(s) no tienen la forma «vieja nueva» y no se guardaron.`);
   }
 
   // ── Ticket 1253: historial de versiones, programar y quién publica ──

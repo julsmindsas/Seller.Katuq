@@ -10733,3 +10733,15 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - La dirección o el dominio de un sitio publicado, comparados con la misma normalización: el autoguardado sin cambios pasa.
   - Opttia no publica si el comercio definió quién publica.
   - Hay una prueba más en `versionesYPermisos.test.js`. Desplegado en el backend e3cf0c60.
+
+## D-479 (2026-10-17) — Redirecciones 301 desde la página anterior (ticket 1245, F5-30, parte 1)
+
+- **Qué hace:** quien viene de Shopify, WooCommerce o Wix pega en Ajustes → «Redirecciones desde tu página anterior» una línea por dirección: la vieja y la nueva.
+  - Se guardan en `contenido.redirecciones` (hasta 500) y se activan al publicar.
+  - El render responde 301 a la nueva, con la consulta que traía (utm de Google incluidos); así no se pierde posicionamiento.
+- **Seguridad:**
+  - Las dos rutas son SIEMPRE internas.
+  - Una dirección completa pegada se reduce a su ruta, de modo que un destino externo queda como ruta del propio sitio, y `//host` se rechaza: no hay redirección abierta.
+  - El origen se compara sin mayúsculas ni barra final y no se repite.
+- **Verificado:** un caso más en `tests/sitios/direccionPorMarca.test.js` (normalización y 301 con la consulta, de punta a punta con Firestore falso); el build del front pasa.
+- **Parte 2, pendiente:** el importador desde Shopify, WooCommerce y Wix con variantes, fotos, precios, existencias y clientes, más el mapa de redirecciones generado solo. Cambia el modelo de productos (variantes) y escribe existencias, así que va con propuesta. La vía es reutilizar el producto canónico y `katuq-product-upsert` de flows y el importador de existencias del onboarding.

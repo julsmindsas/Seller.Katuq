@@ -3383,6 +3383,18 @@
           </div>
         </div>
 
+        <!-- Ticket 1245: redirecciones 301 desde la página anterior -->
+        <div class="grupo" id="campo-redirecciones">
+          <h3>Redirecciones desde tu página anterior</h3>
+          <div class="campo">
+            <textarea rows="5" [value]="redireccionesTexto" (change)="cambiarRedirecciones($any($event.target).value)"
+                      placeholder="/products/ramo-de-rosas /p/ramo-de-rosas-abc123&#10;/collections/cumpleanos /c/cumpleanos"></textarea>
+            <small>Si vienes de Shopify, WooCommerce o Wix, pega una por línea: la dirección vieja y la nueva, separadas
+              por un espacio. Quien entre por la vieja (o desde Google) llega a la nueva y no pierdes posicionamiento.
+              Se activan al publicar. Llevas {{ (contenido?.redirecciones || []).length }} de 500.</small>
+          </div>
+        </div>
+
         <!-- Ticket 1253: programar, historial con restaurar y quién publica -->
         <div class="grupo" id="campo-versiones">
           <h3>Programar la publicación</h3>

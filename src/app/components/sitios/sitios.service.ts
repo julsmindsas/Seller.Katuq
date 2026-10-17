@@ -269,6 +269,8 @@ export interface ContenidoSitio {
   seo: { titulo: string; descripcion: string; imagen: string; favicon?: string };
   tienda: TiendaSitio;
   analitica: AnaliticaSitio;
+  /** Ticket 1245: redirecciones 301 desde la página anterior (rutas del sitio). */
+  redirecciones?: { desde: string; hacia: string }[];
   /** Ticket 1238: enlaces cortos de campaña (`/r/<codigo>`) con sus utm. */
   enlaces?: { codigo: string; nombre: string; destino: string; utm_source: string; utm_medium: string; utm_campaign: string; utm_content: string }[];
 }
