@@ -10586,7 +10586,7 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - Logo y descripción como ficha propia de cada marca: hoy la página de marca es el catálogo filtrado con su H1.
   - Vista de citas en un calendario dentro de Katuq: hoy se ven en el CRM.
 
-## D-473 (2026-10-17) — Portal mayorista: mínimo propio, volver a pedir, lo que más pide y estado de cuenta (ticket 1244, F5-28)
+## D-473 (2026-10-17) — Portal mayorista: mínimo propio, volver a pedir, lo que más pide y estado de cuenta (ticket 1244, F5-28) — PUBLICADO: backend 90afabb8, front 2026.10.17.7
 
 - **Ya existía:**
   - Acceso del cliente aprobado: link del CRM o cuenta con código por correo.
