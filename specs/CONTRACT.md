@@ -10488,7 +10488,7 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - La narración de Opttia sobre la escena solo en modo pantalla (TV). En la TV la tarjeta sigue abriendo sola y rotando, con 380 px y a la derecha.
   - Solo presentación y apertura: no cambian la cola, las propuestas, los permisos ni la aprobación. Katuq en vivo no se tocó.
 
-## D-469 (2026-10-17) — KAI, asesor de compra dentro de la tienda (ticket 1241, F4-27, etapas 1 y 2)
+## D-469 (2026-10-17) — KAI, asesor de compra dentro de la tienda (ticket 1241, F4-27, etapas 1 y 2) — PUBLICADO: backend 1ac2d0ae (su mensaje dice D-468 por error), front 2026.10.17.4
 
 - **Regla de oro:** KAI no inventa productos ni precios.
   - El servidor busca en el catálogo VENDIBLE, con la misma regla del catálogo (`esVendibleEnTienda`: publicado, con existencias y precio de vitrina) y el tope del plan.
