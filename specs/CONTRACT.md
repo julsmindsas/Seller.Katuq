@@ -10662,7 +10662,7 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - Navegador a 390 y 1440 px: botón convertido, formulario, envío y confirmación, con 0 errores de JS.
 - **Parte 2, pendiente:** productos por suscripción con cobro recurrente (Wompi con tarjeta tokenizada, renovación, cancelación y aviso). Toca pagos y va con propuesta. Sigue: KAI completa la cotización (F4-40).
 
-## D-476 (2026-10-17) — Una sola dirección por marca: redirección 301 al cambiar la dirección, «Unir a mi sitio principal» y cookie de Google aislada (ticket 1256, F1-13)
+## D-476 (2026-10-17) — Una sola dirección por marca: redirección 301 al cambiar la dirección, «Unir a mi sitio principal» y cookie de Google aislada (ticket 1256, F1-13) — PUBLICADO: backend 9536ac52 (incluye certificado para la dirección vieja), front 2026.10.17.10
 
 - **Ya existía:** asistente de dominio propio con los registros DNS paso a paso, comprobador y SSL automático (Caddy on-demand + `host-permitido`). Las páginas propias son rutas del sitio.
 - **Cambiar la dirección no rompe enlaces:**
@@ -10685,7 +10685,7 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - Meta y TikTok siguen poniendo su cookie (`_fbp`, `_ttp`) en `.katuq.com`, y no se configura desde el píxel. Cerrarlo de verdad exige inscribir `katuq.com` en la Public Suffix List: decisión de Daniel, porque afecta a todos los subdominios.
   - Comprar el dominio desde Katuq.
 
-## D-477 (2026-10-17) — Editor: vista previa privada con QR, panel redimensionable, buscador de ajustes y avance hacia publicar (ticket 1247, TX-32, parte 1)
+## D-477 (2026-10-17) — Editor: vista previa privada con QR, panel redimensionable, buscador de ajustes y avance hacia publicar (ticket 1247, TX-32, parte 1) — PUBLICADO: backend de1287e6, front 2026.10.17.10
 
 - **Vista previa para compartir:**
   - Botón «Compartir vista previa» en la barra del editor.
