@@ -10461,7 +10461,7 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
 - **No toca** pedidos, consecutivos, inventario ni precios.
 - **Pruebas:** backend `npm run test:borradores-venta` 7/7 (empresa y dueño de la sesión, campos inventados, 400/413, visibilidad vendedor/administrador/otra empresa, actualizar, vencidos, orden); front `sales-drafts.service.spec.ts` 6/6 (refresco de líneas). Build de producción sin errores.
 
-## D-467 (2026-10-17) — KAI en el editor: «¿por qué no puedo publicar?» y secciones por dispositivo (ticket 1248, TX-33)
+## D-467 (2026-10-17) — KAI en el editor: «¿por qué no puedo publicar?» y secciones por dispositivo (ticket 1248, TX-33) — PUBLICADO: backend 0cb06b7d, front 2026.10.17.2
 
 - **Ya existía:** «Editar con IA» (bandera `landingPrompt`), con textos, colores, mostrar, ocultar, reordenar y agregar secciones, «Esto cambié» y deshacer. Se cubre con 18 escenarios.
   - Está encendida en las empresas nuevas (D-395) y en Pucky y Cookie Clean, FLORECER y Sueve.
