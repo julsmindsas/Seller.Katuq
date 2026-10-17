@@ -10611,7 +10611,7 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - Condiciones de pago elegibles al pagar.
   - Solicitud de cotización para proyectos (F2-43).
 
-## D-474 (2026-10-17) — Atribución: origen completo de cada contacto y venta, WhatsApp con rastro, enlaces cortos con QR y cupones como fuente (ticket 1238, F3-24)
+## D-474 (2026-10-17) — Atribución: origen completo de cada contacto y venta, WhatsApp con rastro, enlaces cortos con QR y cupones como fuente (ticket 1238, F3-24) — PUBLICADO: backend 4b1a0095, front 2026.10.17.8
 
 - **Ya existía:** `campana` (último toque) en lead, cita, pedido y carrito por WhatsApp; métricas por fuente y campaña (D-462); `adReferral` guardado en `whatsapp_inbound`, pero sin usar.
 - **Captura** (`utils/siteAtribucion.js`, vocabulario cerrado):
