@@ -10641,7 +10641,7 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - Devolver a Meta (Conversions API) y a Google (conversión fuera de línea) las ventas cerradas por WhatsApp o venta asistida.
   - Medir el prospecto de WhatsApp en el número compartido (allí la empresa se infiere).
 
-## D-475 (2026-10-17) — Productos cotizables: «Cotiza con un asesor» crea la cotización en borrador (ticket 1235, F2-43, parte 1 de 2)
+## D-475 (2026-10-17) — Productos cotizables: «Cotiza con un asesor» crea la cotización en borrador (ticket 1235, F2-43, parte 1 de 2) — PUBLICADO: backend c77744c4, front 2026.10.17.9
 
 - **Configuración** (Tienda → «Productos que se cotizan»):
   - `tienda.cotizables` `[{id, titulo}]`; el título es solo para el editor.
