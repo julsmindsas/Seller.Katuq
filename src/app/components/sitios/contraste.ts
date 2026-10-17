@@ -34,6 +34,17 @@ export function avisoContraste(texto: string, fondo: string): string {
   return `El texto casi no se lee sobre el fondo (contraste ${valor} a 1; lo mínimo es 4,5 a 1). Elige un texto más oscuro o un fondo más claro.`;
 }
 
+/**
+ * Ticket 1250: aviso si el texto blanco de los botones no se lee sobre el color
+ * principal. No bloquea: la página publicada lo corrige sola (un tono apenas más
+ * oscuro o el texto encima en oscuro), igual que `primarioAccesible` del servidor.
+ */
+export function avisoContrastePrincipal(primario: string): string {
+  const r = contraste("#ffffff", primario);
+  if (r === null || r >= CONTRASTE_MINIMO) return "";
+  return "Tu color principal es claro para botones con texto blanco. En la página publicada lo ajustamos solos (un tono un poco más oscuro o el texto en oscuro) para que todos puedan leerlos.";
+}
+
 /** ¿Dos ternas de colores son la misma (sin importar mayúsculas)? */
 export function mismosColores(
   a: { colorPrimario?: string; colorSecundario?: string; colorTexto?: string } | null | undefined,

@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
-import { ContactoSitio, MetricasSitio, SitiosService } from "../sitios.service";
+import { ContactoSitio, FilaOrigen, MetricasSitio, SitiosService } from "../sitios.service";
 
 /**
  * Qué está pasando en una página publicada.
@@ -156,7 +156,7 @@ export class MetricasComponent implements OnInit {
       directo: "Directo (link o favorito)",
       "campaña": "Tus campañas",
       "otro-sitio": "Otros sitios",
-      "sin dato": "Sin dato (visitas antiguas)",
+      "sin dato": "Sin dato (de antes de medir)",
     };
     return nombres[fuente] || fuente;
   }
@@ -189,6 +189,43 @@ export class MetricasComponent implements OnInit {
     if (!this.datos) return false;
     const cada = this.datos.serie.length > 45 ? 15 : this.datos.serie.length > 14 ? 7 : 2;
     return i % cada === 0 || i === this.datos.serie.length - 1;
+  }
+
+  /** Ticket 1239: fuentes con visitas o pedidos en el período. */
+  get filasOrigen(): FilaOrigen[] {
+    return ((this.datos && this.datos.porFuente) || []).filter((f) => f.vistas > 0 || f.pedidos > 0);
+  }
+
+  /** Ticket 1239: hay al menos un pedido con fuente en el período. */
+  get hayVentasConFuente(): boolean {
+    return this.filasOrigen.some((f) => f.pedidos > 0);
+  }
+
+  /** Ticket 1239: pedidos y ventas de una campaña, si los hay. */
+  ventasDeCampana(campana: string): FilaOrigen | null {
+    return ((this.datos && this.datos.porCampana) || []).find((c) => c.utm_campaign === campana && c.pedidos > 0) || null;
+  }
+
+  porcentaje(valor: number | null): string {
+    return valor === null ? "—" : `${valor.toLocaleString("es-CO", { maximumFractionDigits: 1 })} %`;
+  }
+
+  /** Ticket 1239: la tabla para abrir en Excel (CSV con BOM, separado por punto y coma). */
+  descargarOrigenes(): void {
+    const celda = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+    const filas = [["Fuente", "Ventas", "Pedidos", "Visitas", "Conversión %", "Ticket promedio"]].concat(
+      this.filasOrigen.map((f) => [
+        this.etiquetaFuente(f.fuente || ""), String(f.ventas), String(f.pedidos), String(f.vistas),
+        f.conversion === null ? "" : String(f.conversion).replace(".", ","), f.ticketPromedio === null ? "" : String(f.ticketPromedio),
+      ])
+    );
+    const csv = "﻿" + filas.map((r) => r.map(celda).join(";")).join("\r\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ventas-por-fuente-${(this.datos && this.datos.sitio.slug) || "pagina"}-${this.rango}-dias.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   dinero(valor: number): string {

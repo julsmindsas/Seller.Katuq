@@ -198,6 +198,10 @@ export interface AnaliticaSitio {
   ga4ApiSecret?: string;
   /** Código del Administrador de eventos para que la prueba no ensucie datos. */
   metaTestEventCode?: string;
+  /** Ticket 1240: Events API de TikTok (el token no vuelve del servidor). */
+  tiktokEventsPuesto?: boolean;
+  tiktokEventsToken?: string;
+  tiktokTestCode?: string;
 }
 
 /**
@@ -292,6 +296,17 @@ export interface DiaMetricas {
   ingresos: number;
 }
 
+/** Ticket 1239: una fila de "¿De dónde vienen tus ventas?". */
+export interface FilaOrigen {
+  fuente?: string;
+  utm_campaign?: string;
+  vistas: number;
+  pedidos: number;
+  ventas: number;
+  conversion: number | null;
+  ticketPromedio: number | null;
+}
+
 export interface MetricasSitio {
   /** Cuántos días deja ver el plan (D-319): 1 en el plan gratis. */
   diasPermitidos?: number;
@@ -313,6 +328,10 @@ export interface MetricasSitio {
   fuentes: { fuente: string; vistas: number }[];
   dispositivos: { dispositivo: string; vistas: number }[];
   campanas: { campana: string; vistas: number }[];
+  /** Ticket 1239: visitas, pedidos y ventas por fuente ("sin dato": pedidos de antes de medir la fuente). */
+  porFuente?: FilaOrigen[];
+  /** Ticket 1239: lo mismo por campaña (utm_campaign). */
+  porCampana?: FilaOrigen[];
   visitantesUnicos: number;
   /** Null cuando todavía no hay visitas: no es 0%, es que no hay dato. */
   conversion: number | null;

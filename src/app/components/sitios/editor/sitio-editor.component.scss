@@ -888,6 +888,12 @@
   font-weight: 600;
   line-height: 1.4;
 }
+/* Ticket 1250: informativo, la página lo corrige sola. */
+.aviso--info {
+  background: var(--kb-accent-wash);
+  border-color: #dcd3fb;
+  color: #3d2a99;
+}
 
 .repetible {
   display: grid;

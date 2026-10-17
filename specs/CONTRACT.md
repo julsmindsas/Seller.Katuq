@@ -10361,7 +10361,80 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
   - La auditoría de notas (D-449) no guardaba la factura ni el motivo, porque leía campos que el front no envía.
 - **Fuera de este cambio:** cartera del cliente, devolver mercancía al inventario, registrar la devolución de dinero, Siigo y notas sin factura con rol Contador.
 
-## D-460 (2026-10-16) — Despachos cambia el estado sobre el pedido actual, no sobre la copia vieja (ticket 1224)
+## D-460 (2026-10-16) — Páginas web legibles con cualquier color de marca: WCAG 2.1 AA (ticket 1250, TX-35) — PUBLICADO: backend 605329a8, front 2026.10.16.12
+
+- **Medición antes:** axe-core 4.11 (reglas WCAG 2.1 A/AA) sobre los 6 sitios publicados, más fichas, carrito y checkout, en escritorio y celular. Solo había fallas de contraste:
+  - Texto atenuado con `opacity` (pie, «quién vende», sello, «Elige cómo lo quieres»): 3,7 a 4,4 a 1.
+  - Texto blanco fijo sobre el color principal: `#8b7355` daba 4,48 a 1.
+  - El checkout ya pasaba (etiquetas y nombres accesibles).
+- **Decisión** (`utils/contrasteColor.js`, puro; calculado al servir en `variablesTema`):
+  - **Botones:** si el blanco no llega a 4,5:1, el primario se oscurece apenas (hasta 12 puntos de luminosidad; `#8b7355` → `#897254`). Si haría falta más, el color de marca se conserva y el texto encima va oscuro (`--sitio-sobre-primario`). Lo mismo con el secundario sobre el primario.
+  - **Texto atenuado:** `opacity:max(<la de diseño>, var(--sitio-suave))`, donde `--sitio-suave` es la menor opacidad con la que el texto del comercio sigue a 4,5:1 sobre su fondo. Si el diseño ya cumplía, no cambia nada.
+  - **Foco visible** para teclado (`:focus-visible`), que no existía; el buscador lo recupera con `:focus-within`.
+- **Después:** las mismas 8 páginas pasan axe con 0 fallas, con la hoja nueva aplicada a su HTML real.
+- **Editor:** se suma un aviso informativo cuando el color principal no deja leer los botones con texto blanco. No bloquea: la página lo corrige sola. El de texto contra fondo ya existía (ticket 1216).
+- **Fuera:** texto alternativo generado con IA a partir de la foto (cuesta llamadas a Bedrock). Hoy las fotos de producto usan el nombre del producto y las decorativas van con `alt=""`.
+
+## D-461 (2026-10-16) — Compra en celular sin zoom y portada precargada (ticket 1249, TX-34, avance) — PUBLICADO: backend dd49e067 + 53b43b2b
+
+- **Compra en celular** (portada → ficha → carrito → checkout a 390 px, en 5 sitios publicados):
+  - No había desplazamiento horizontal en ningún paso.
+  - Los campos medían 13,6 a 14,4 px, y el iPhone amplía la página al tocar un campo de menos de 16 px. Ahora miden 16 px en pantallas de hasta 767 px (`!important`, porque cada formulario fija su tamaño con selectores más específicos).
+- **Portada precargada:** si la página abre con una portada de foto (o carrusel), esa foto, que es el LCP, se pide desde la cabecera. Igual que ya se hacía en la ficha.
+- **Probado y revertido:** activar la hoja de Google Fonts solo al llegar (`load`). Después, con 5 corridas por sitio, el código anterior dio la misma mediana (atelier-90: 77 contra 78). El cambio no era la causa. Volvió el original.
+- **Medición (Lighthouse 12.2.1 móvil, local, balizas bloqueadas):**
+  - Buenas prácticas: 96 a 100 en todos los sitios.
+  - Rendimiento: bimodal en el mismo código. O 97–100, o ~78–86 porque el primer pintado espera ~2,4 s. Pasa también sin fuentes, y en Playwright con CPU 4x y red 4G no aparece (el pintado llega ~0,6 s después del documento).
+  - No se da por cumplido el criterio de 90 hasta medir en un entorno estable.
+- **Pendiente, con spec propia:**
+  - El render en frío de catálogos grandes: FLORECER, con 2.166 productos, tarda de 1,5 a 7,6 s sin caché. El índice tarda ~3,9 s en cargar y los documentos completos pesan ~14 KB cada uno.
+  - Imágenes de producto sin variantes de tamaño (originales de Storage).
+- **Escalado:** la baliza `/vista` no descarta robots ni Chrome headless. Lighthouse, PageSpeed y cualquier navegador automatizado suman visitas al tablero del comercio. No se usó PageSpeed por eso.
+
+## D-462 (2026-10-16) — «¿De dónde vienen tus ventas?» en Cómo va (ticket 1239, F3-25) — PUBLICADO: backend c8dba149 (en producción con c8066ea5), front 2026.10.16.13
+
+- **Problema:** el panel de la página contaba las visitas por fuente, pero no las ventas. El evento de pedido no guardaba de dónde venía el comprador, aunque el pedido sí guardaba su campaña (`campana`).
+- **Decisión:**
+  - El evento `pedido` de la tienda guarda `fuente`, `fuenteDetalle` y `utm_campaign`. Se clasifican con las mismas reglas de la visita (`utils/siteAnalitica.clasificarFuente`), a partir de lo que el navegador guarda en `katuq_origen`: primer referrer y UTM de la sesión.
+  - `GET /v1/sites/:id/metricas` devuelve `porFuente` y `porCampana`: visitas, pedidos, ventas, conversión y ticket promedio del período (`resumenPorOrigen`, puro). La ruta ahora exige `requireJwtTenant`.
+  - «Cómo va» muestra la tabla con «Descargar para Excel» (CSV con BOM y punto y coma) y suma pedidos y ventas a «Tus campañas».
+- **Cuenta pedidos creados**, como el resto del panel, no pagados. Los de antes de hoy no traen fuente y salen como «Sin dato».
+- **Fuera:**
+  - Costo por venta: necesita conectar la pauta (ticket 1240).
+  - Embudo por pasos (ficha, carrito, checkout), búsquedas sin resultado y modelo de atribución elegible: no hay eventos de esos pasos todavía.
+
+## D-463 (2026-10-16) — Pauta: TikTok desde el servidor, aviso de cookies y GA4 con datos resumidos (ticket 1240, F3-26) — PUBLICADO: backend 4703c1a2, front 2026.10.16.14
+
+- **TikTok Events API** (`services/medicionServidor.js`, nuevo proveedor del Strategy existente):
+  - Al aprobarse el pago se manda `CompletePayment` a `business-api.tiktok.com/open_api/v1.3/event/track/` con el token en `Access-Token`. Lleva el mismo `event_id` del píxel; el píxel ahora lo manda en `ttq.track(..., {event_id})`, así que la venta no se duplica.
+  - Correo y teléfono van en SHA-256 (teléfono en E.164 con «+»), con el `ttclid` capturado en la visita.
+  - TikTok responde 200 aunque rechace; el éxito se lee del `code` del cuerpo.
+  - La prueba de conexión no se le manda a TikTok sin su propio código de prueba, para no ensuciar las métricas reales.
+  - El token es un secreto: no vuelve al editor, se conserva al guardar y es del plan pagado.
+- **GA4 desde el servidor:** lleva `user_data` con correo (en Gmail, sin puntos) y teléfono en SHA-256: conversiones mejoradas. La importación de clics fuera de línea a Google Ads necesita su API con token de desarrollador; queda fuera.
+- **Aviso de cookies generado por Katuq:**
+  - Aparece si el sitio pide consentimiento y tiene etiquetas de terceros. Hasta que el visitante acepta, Google queda en «denegado» (también con Tag Manager solo), Meta revocado y TikTok en espera.
+  - La elección se recuerda en el navegador. El enlace va a la política de cookies o de privacidad solo si la página existe.
+  - En computador va centrado abajo, entre la burbuja de WhatsApp y el carrito; en celular, encima de las dos.
+- **Sitios nuevos:** nacen con el consentimiento encendido (`analiticaDeSitioNuevo`, en los 5 puntos de creación). Los existentes conservan lo que tenían.
+- **Fuentes:** volver de una pasarela de pago (Wompi, Addi, Sistecrédito, PSE, PlacetoPay, PayU, Mercado Pago) cuenta como «directo», no como otro sitio.
+- **Fuera:** Clarity, Hotjar, Pinterest y LinkedIn. La llegada real a TikTok y GA4 se verifica con las credenciales del comercio: en pruebas, la red fue simulada.
+
+## D-464 (2026-10-16) — KAI explica los rechazos de la DIAN y propone cerrarlos como reemplazados (ticket 1269, FE-18)
+
+- **Problema:** un rechazo como el de JULS22 («Regla: 90, Rechazo: Documento procesado anteriormente») quedaba en rojo para siempre, sin explicación, aunque el comercio ya lo había resuelto emitiendo JULS41.
+- **Decisión** (`services/accounting/dian/explicarRechazo.js`):
+  - Lo determinista va primero. Se toman los mensajes de la DIAN y se busca una factura aceptada, posterior, del mismo cliente y el mismo valor (±1), en la misma empresa.
+  - Opttia (`pedirJsonAOpttia`) solo redacta la explicación y la corrección. Si falla, sale un respaldo sin IA (Regla 90 = envío duplicado).
+  - `POST /dian/documents/:n/explicar` no escribe nada.
+  - `POST /dian/documents/:n/reemplazada` exige el rol de facturación y la empresa del token. Solo marca el documento rechazado (`reemplazadaPor`, `reemplazadaEn`, `reemplazadaPorUsuario`); no toca numeración ni la factura aceptada. Queda en la auditoría como `marcar_reemplazada`.
+- **Bandeja:** botón «Explicar con KAI» en cada rechazo. Al confirmar el reemplazo, la fila roja pasa a «Reemplazada por JULS41», con enlace a la factura.
+- **Verificado con datos reales** (lectura, sin IA): JULS22 → reemplazada por JULS41.
+- **Fuera:** facturar o hacer notas por texto o voz, y preguntas de facturación a KAI. Eso es de Opttia con herramientas MCP de escritura, que siempre piden confirmación.
+
+## D-465 (2026-10-16) — Despachos cambia el estado sobre el pedido actual, no sobre la copia vieja (ticket 1224)
+
+> Registrada primero como D-460 en la misma tarde; otra sesión usó D-460 (WCAG, ticket 1250) antes de subir esta. El commit `93b6bb0b` y la nota interna del ticket 1224 dicen "D-460" y se refieren a esta decisión.
 
 - **Problema (ALMARA, orden #3629, DAD-014323/014337/014328):** los pedidos entraron a la orden de envío en producción; mientras el editor estuvo abierto, empaque los marcó y a uno le asentaron un pago. Al quitarlos de la orden, `cambiarEstado` mandó la copia vieja con `_baseVersion` viejo y el backend respondió 409 `STALE_WRITE` (correcto: habría pisado el empaque y el pago). La pantalla solo mostraba el error; la salida era despachar a mano. El rótulo que "no hacía nada" era otra cosa y ya salió en `bef5233d` (2026.10.16.4).
 - **Decisión** (propuesta `openspec/changes/despachos-estado-con-pedido-fresco`):

@@ -1158,6 +1158,24 @@ export class IntegrationsService {
     );
   }
 
+  /** Ticket 1269: KAI explica un rechazo de la DIAN (no escribe nada). */
+  explicarRechazoDian(documentNumber: string): Observable<any> {
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/dian/documents/${encodeURIComponent(documentNumber)}/explicar`,
+      {},
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /** Ticket 1269: cierra un rechazo como reemplazado por una factura aceptada. */
+  marcarRechazoReemplazado(documentNumber: string, por: string): Observable<any> {
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/dian/documents/${encodeURIComponent(documentNumber)}/reemplazada`,
+      { por },
+      { headers: this.getApiHeaders() }
+    );
+  }
+
   /** Ticket 1279: líneas de una factura aceptada para hacer la nota por línea (solo lectura). */
   getDianInvoiceLines(documentNumber: string): Observable<any> {
     return this.http.get<any>(

@@ -2100,6 +2100,7 @@
             </button>
           </div>
           <p class="aviso" *ngIf="avisoContrasteTema">{{ avisoContrasteTema }}</p>
+          <p class="aviso aviso--info" *ngIf="avisoContrastePrincipal">{{ avisoContrastePrincipal }}</p>
         </div>
 
         <div class="grupo">
@@ -2872,6 +2873,28 @@
                    name="katuq-pauta-tiktok" autocomplete="off" spellcheck="false" [class.is-error]="errorPauta('tiktokPixel')" />
             <small class="error-campo" *ngIf="errorPauta('tiktokPixel')">{{ errorPauta('tiktokPixel') }}</small>
           </div>
+          <!-- Ticket 1240: Events API de TikTok desde el servidor -->
+          <div class="campo" *ngIf="contenido.analitica.tiktokPixel">
+            <label>
+              Token de la Events API
+              <span class="pastilla" *ngIf="contenido.analitica.tiktokEventsPuesto">Configurado</span>
+            </label>
+            <input type="password" autocomplete="off"
+                   [(ngModel)]="tokenTiktokNuevo" (ngModelChange)="marcarSucio()"
+                   [placeholder]="contenido.analitica.tiktokEventsPuesto ? 'Escribe uno nuevo para reemplazarlo' : 'Pégalo aquí'" />
+            <small>Con esto tus ventas pagadas le llegan a TikTok desde nuestro servidor, sin
+              contarse dos veces con las del píxel. Lo generas en el Administrador de eventos de
+              TikTok → tu píxel → Configuración → Generar token de acceso.</small>
+            <button type="button" class="enlace-sutil" *ngIf="contenido.analitica.tiktokEventsPuesto"
+                    (click)="quitarTokenTiktok()">Quitar el token</button>
+          </div>
+          <div class="campo" *ngIf="contenido.analitica.tiktokPixel">
+            <label>Código de prueba de TikTok</label>
+            <input type="text" [(ngModel)]="contenido.analitica.tiktokTestCode" (ngModelChange)="marcarSucio()" placeholder="TEST12345"
+                   name="katuq-pauta-tiktok-prueba" autocomplete="off" spellcheck="false" maxlength="25" />
+            <small>Mientras lo tengas puesto, tus ventas van a la pestaña «Probar eventos» de TikTok y
+              no a tus métricas. Bórralo cuando compruebes que llegan.</small>
+          </div>
         </div>
 
         <div class="grupo">
@@ -2880,20 +2903,21 @@
                   (click)="contenido.analitica.consentimiento = !contenido.analitica.consentimiento; marcarSucio()">
             <span class="opcion__texto">
               <strong>Pedir consentimiento antes de medir</strong>
-              <small>Las etiquetas arrancan apagadas hasta que el visitante acepte. Enciéndelo solo
-                si tu página muestra un aviso de cookies: sin aviso, dejarías de medir todo.</small>
+              <small>Tu página muestra un aviso de cookies y Google, Meta y TikTok solo miden a
+                quien acepta (Ley 1581 de 2012). Viene encendido en las páginas nuevas.</small>
             </span>
             <span class="palanca"><span></span></span>
           </button>
         </div>
 
-        <div class="grupo" *ngIf="contenido.analitica.metaConversionsPuesto || contenido.analitica.ga4SecretoPuesto">
+        <div class="grupo" *ngIf="contenido.analitica.metaConversionsPuesto || contenido.analitica.ga4SecretoPuesto || contenido.analitica.tiktokEventsPuesto">
           <h3>Comprobar que llega</h3>
           <div class="campo">
             <label>Código de prueba</label>
             <input type="text" [(ngModel)]="codigoPrueba" placeholder="TEST12345" maxlength="25" />
             <small>Lo ves en Meta, en Administrador de eventos → Probar eventos. Con él puesto, la
-              prueba entra a esa pestaña y no ensucia tus métricas reales.</small>
+              prueba entra a esa pestaña y no ensucia tus métricas reales. TikTok usa su propio
+              código, el del campo de TikTok de arriba: sin él, la prueba no se le manda.</small>
           </div>
           <button type="button" class="boton-secundario" [disabled]="probandoMedicion"
                   (click)="probarMedicion()">

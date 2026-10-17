@@ -324,6 +324,8 @@ export class VentasService extends BaseService {
     // Lock optimista: enviar en `_baseVersion` la versión (date_upd) con la que se cargó el
     // pedido. Si en el servidor la BD ya avanzó, responde 409 (otra persona editó en medio).
     const payload: any = { ...order, _baseVersion: (order as any).date_upd || null };
+    // "Facturando..." es solo de pantalla: guardado en el pedido lo dejaba sin botón de Facturar (ticket 1227).
+    delete payload._facturando;
 
     return this.post<any>('/v1/orders/edit', payload).pipe(
       tap((response) => {
