@@ -45,6 +45,10 @@ export interface TiendaSitio {
   minimoCompra: number;
   /** Ticket 1244: pedido mínimo de quien compra con su lista de precios. */
   minimoMayorista?: number;
+  /** Ticket 1235: productos que se cotizan con un asesor en vez de ir al carrito. */
+  cotizables?: { id: string; titulo: string }[];
+  textoCotizar?: string;
+  asesoresCotizacion?: string[];
   mensajeConfirmacion: string;
 
   /**

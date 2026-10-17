@@ -2522,6 +2522,61 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     });
   }
 
+  // ── Ticket 1235: productos cotizables (tienda.cotizables) ──
+  busquedaCotizable = "";
+  buscandoCotizable = false;
+  resultadosCotizable: { cd: string; titulo: string }[] = [];
+
+  get cotizables(): { id: string; titulo: string }[] {
+    const t: any = this.contenido && this.contenido.tienda;
+    if (!t) return [];
+    if (!Array.isArray(t.cotizables)) t.cotizables = [];
+    return t.cotizables;
+  }
+
+  buscarCotizable(): void {
+    const termino = this.busquedaCotizable.trim();
+    if (termino.length < 2) return;
+    this.buscandoCotizable = true;
+    this.service.buscarProductos(termino).subscribe({
+      next: (res) => {
+        this.buscandoCotizable = false;
+        this.resultadosCotizable = (res.products || []).slice(0, 8).map((p) => ({
+          cd: p.cd,
+          titulo: (p.crearProducto && p.crearProducto.titulo) || p.cd,
+        }));
+      },
+      error: () => {
+        this.buscandoCotizable = false;
+        this.resultadosCotizable = [];
+      },
+    });
+  }
+
+  agregarCotizable(p: { cd: string; titulo: string }): void {
+    const lista = this.cotizables;
+    if (!lista.some((c) => c.id === p.cd) && lista.length < 200) lista.push({ id: p.cd, titulo: p.titulo });
+    this.resultadosCotizable = [];
+    this.busquedaCotizable = "";
+    this.marcarSucio();
+  }
+
+  quitarCotizable(i: number): void {
+    this.cotizables.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  get asesoresCotizacionTexto(): string {
+    return (((this.contenido && this.contenido.tienda) as any)?.asesoresCotizacion || []).join("\n");
+  }
+
+  cambiarAsesoresCotizacion(texto: string): void {
+    const t: any = this.contenido && this.contenido.tienda;
+    if (!t) return;
+    t.asesoresCotizacion = String(texto || "").split(/[\n,;]/).map((x) => x.trim().toLowerCase()).filter(Boolean).slice(0, 10);
+    this.marcarSucio();
+  }
+
   elegirDestacado(bloque: any, p: { cd: string; titulo: string }): void {
     bloque.datos.productoId = p.cd;
     this.nombreDestacado[p.cd] = p.titulo;

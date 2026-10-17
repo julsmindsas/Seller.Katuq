@@ -10640,3 +10640,24 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
 - **Fuera (acordado con Daniel):**
   - Devolver a Meta (Conversions API) y a Google (conversión fuera de línea) las ventas cerradas por WhatsApp o venta asistida.
   - Medir el prospecto de WhatsApp en el número compartido (allí la empresa se infiere).
+
+## D-475 (2026-10-17) — Productos cotizables: «Cotiza con un asesor» crea la cotización en borrador (ticket 1235, F2-43, parte 1 de 2)
+
+- **Configuración** (Tienda → «Productos que se cotizan»):
+  - `tienda.cotizables` `[{id, titulo}]`; el título es solo para el editor.
+  - `textoCotizar` (por defecto «Cotiza con un asesor») y `asesoresCotizacion` (hasta 10 correos).
+  - Se conservan si un editor viejo no los manda.
+  - No se escribe en productos.
+- **En la página:**
+  - Si hay cotizables, `scriptCotizar` cambia el botón «Agregar» por el de cotizar, también en el catálogo que pinta al paginar (MutationObserver).
+  - Lo agrega en tarjetas y fichas donde no se vende: la tarjeta ahora lleva `data-kq-producto`.
+  - El formulario corto pide necesidad, cantidad, ciudad, nombre, celular y correo opcional; se ve el mensaje de confirmación y el botón de WhatsApp al comercio.
+- **`POST /public/:slug/cotizar-producto`** (leadLimiter):
+  - Solo productos marcados y de la empresa del sitio.
+  - Crea la cotización por el MISMO camino del bot de WhatsApp (`cotizaciones.create` con petición simulada: consecutivo, totales del servidor, historial, contacto del asesor), en `borrador`, con `origen: "sitio-web"`, `siteId`, `campana` y la nota con la necesidad.
+  - Asesor por turno (contador `cotizacionesTurno` en el sitio, en transacción) y correo de aviso al asesor.
+- **Verificado:**
+  - 4 pruebas (`tests/sitios/productosCotizables.test.js`); la suite de sitios y cotizaciones queda con los mismos fallos previos.
+  - De punta a punta con Firestore falso: COT-…-0001 para ana@ y COT-…-0002 para luis@, en borrador, con origen y campaña; un producto no marcado da 404.
+  - Navegador a 390 y 1440 px: botón convertido, formulario, envío y confirmación, con 0 errores de JS.
+- **Parte 2, pendiente:** productos por suscripción con cobro recurrente (Wompi con tarjeta tokenizada, renovación, cancelación y aviso). Toca pagos y va con propuesta. Sigue: KAI completa la cotización (F4-40).

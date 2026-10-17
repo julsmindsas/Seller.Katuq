@@ -2801,6 +2801,34 @@
               <input type="number" min="0" [(ngModel)]="contenido.tienda.minimoCompra" (ngModelChange)="marcarSucio()" />
               <small>Deja 0 si no exiges un mínimo.</small>
             </div>
+            <!-- Ticket 1235: productos que se cotizan con un asesor -->
+            <div class="grupo" id="campo-cotizables">
+              <h3>Productos que se cotizan</h3>
+              <p class="nota nota--simple">En vez de «Agregar», muestran un botón para pedir cotización. La solicitud
+                llega a Cotizaciones en borrador, con su asesor y la campaña de la que vino.</p>
+              <div class="campo-doble">
+                <input type="text" [(ngModel)]="busquedaCotizable" (keyup.enter)="buscarCotizable()" placeholder="Busca el producto" />
+                <button type="button" class="boton-secundario" (click)="buscarCotizable()" [disabled]="buscandoCotizable">Buscar</button>
+              </div>
+              <div class="dias-cerrados" *ngIf="resultadosCotizable.length">
+                <button type="button" class="dia-agenda" *ngFor="let p of resultadosCotizable" (click)="agregarCotizable(p)">+ {{ p.titulo }}</button>
+              </div>
+              <div class="dias-cerrados" *ngIf="cotizables.length">
+                <span class="dia-cerrado" *ngFor="let c of cotizables; let i = index">
+                  {{ c.titulo || c.id }}
+                  <button type="button" (click)="quitarCotizable(i)" [attr.aria-label]="'Quitar ' + (c.titulo || c.id)">×</button>
+                </span>
+              </div>
+              <div class="campo" *ngIf="cotizables.length">
+                <label>Texto del botón</label>
+                <input type="text" maxlength="40" [(ngModel)]="contenido.tienda.textoCotizar" (ngModelChange)="marcarSucio()" placeholder="Cotiza con un asesor" />
+              </div>
+              <div class="campo" *ngIf="cotizables.length">
+                <label>Asesores (correos, uno por línea)</label>
+                <textarea rows="3" [value]="asesoresCotizacionTexto" (change)="cambiarAsesoresCotizacion($any($event.target).value)"></textarea>
+                <small>Las solicitudes se reparten por turnos y a cada uno le llega un correo. Sin asesores, quedan sin asignar.</small>
+              </div>
+            </div>
             <!-- Ticket 1244 -->
             <div class="campo">
               <label>Pedido mínimo para mayoristas</label>
