@@ -2267,6 +2267,16 @@
         </button>
 
         <ng-container *ngIf="contenido.tienda.habilitada">
+          <!-- Ticket 1241: KAI, asesor de compra -->
+          <button class="opcion" [class.is-active]="contenido.tienda.asesorKai === true"
+                  (click)="contenido.tienda.asesorKai = !contenido.tienda.asesorKai; marcarSucio()">
+            <span class="opcion__texto">
+              <strong>KAI, asesor de compra</strong>
+              <small>Un botón «Pregúntale a KAI» en tu tienda: recomienda productos tuyos con
+                existencias y precio real, los agrega al carrito conversando y lleva al pago.</small>
+            </span>
+            <span class="palanca"><span></span></span>
+          </button>
           <p class="aviso" *ngIf="avisoTienda">{{ avisoTienda }}</p>
           <div class="campo" id="campo-bodega">
             <label>Bodega desde donde despachas</label>

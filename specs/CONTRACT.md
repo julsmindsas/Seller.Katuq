@@ -10487,3 +10487,22 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - Sin uso se retira a los 15 s (`RETIRAR_SIN_USO_MS`), también sin orbe, porque ahora siempre hay botón para volver.
   - La narración de Opttia sobre la escena solo en modo pantalla (TV). En la TV la tarjeta sigue abriendo sola y rotando, con 380 px y a la derecha.
   - Solo presentación y apertura: no cambian la cola, las propuestas, los permisos ni la aprobación. Katuq en vivo no se tocó.
+
+## D-468 (2026-10-17) — KAI, asesor de compra dentro de la tienda (ticket 1241, F4-27, etapas 1 y 2)
+
+- **Regla de oro:** KAI no inventa productos ni precios.
+  - El servidor busca en el catálogo VENDIBLE, con la misma regla del catálogo (`esVendibleEnTienda`: publicado, con existencias y precio de vitrina) y el tope del plan.
+  - La búsqueda es por palabras (título, marca, categoría, descripción, características y etiquetas) y por rango de precio («menos de 200 mil», «entre 50 y 100 mil»).
+  - A Opttia le pasa solo esos candidatos, con su precio de catálogo.
+  - Cada id que devuelve se valida contra los candidatos o el carrito. Precios, fotos y nombres de las tarjetas salen del catálogo.
+- **`POST /v1/sites/public/:slug/asesor`:**
+  - Solo con `tienda.asesorKai` (interruptor del comercio en Tienda, apagado de fábrica).
+  - Freno por visitante de 30 mensajes cada 10 min y tope por tienda de 500 al día: cada mensaje cuesta una llamada a Opttia.
+  - Si la IA falla, sale un respaldo con lo disponible, sin redactar promesas.
+  - Deja la métrica `kai_mensaje`.
+- **Widget «Pregúntale a KAI»:**
+  - Conversación con tarjetas que usan el mismo botón «Agregar» de la rejilla. Lo que llega se pinta con `textContent`.
+  - Las órdenes («agrega 2 de esas», «quita el…», «vamos a pagar») van por la API del carrito del puente WebMCP, que suma `quitarProducto` e `irAlCheckout`.
+- **Verificado:** prueba de navegador con la IA simulada; la cámara recomendada, 2 al carrito ($378.000) y checkout abierto, a 1440 y 390 px. Lo determinista lo cubren 8 pruebas.
+- **Sin verificar:** la respuesta real de Opttia; no se llamó a Bedrock en pruebas.
+- **Fuera (etapas 3 y 4):** compra completa y voz; postventa y paso a humano.

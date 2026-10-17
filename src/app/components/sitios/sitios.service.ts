@@ -32,6 +32,8 @@ export interface TiendaSitio {
   abrirCarritoAlAgregar?: boolean;
   /** Ticket 1254: landing sin menú ni pie completo, un solo objetivo. */
   modoConversion?: boolean;
+  /** Ticket 1241: KAI, asesor de compra en la tienda. */
+  asesorKai?: boolean;
   /** Categorías del maestro que no salen en el sitio (menú, baldosas, pie, filtros). */
   categoriasOcultas?: string[];
   /** Ticket 1214: categorías de nombre interno que el comercio decidió mostrar (por defecto, ocultas). */
