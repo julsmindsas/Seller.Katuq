@@ -10534,3 +10534,25 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - Anticipo o link de pago parcial.
   - Texto de retracto (Ley 1480).
   - Medir con personas reales los 2 minutos de compra.
+
+## D-471 (2026-10-17) — Un pago que está en Tesorería no sale del pedido por una edición (ticket 1228, ALMARA) — DESPLEGADO: backend de062d9e
+
+- **Incidente (DAD-014367):**
+  - El pago 0479 por $111.200 quedó Pendiente en Tesorería. Era el pago real de la clienta y cubría el total.
+  - Minutos después, una edición del pedido con la copia de ANTES del pago guardó `PagosAsentados` sin él. El pago quedó huérfano en `payments`, y la pantalla de Tesorería no lo dejaba aprobar ni rechazar.
+  - El candado `_baseVersion` no actuó: un pedido recién creado no tiene `date_upd` hasta su primera edición.
+  - `sanitizeTreasuryFields` protegía los campos de cada pago, pero no impedía sacarlo.
+- **Regla:** con Tesorería activa, el edit genérico ya no puede sacar del pedido un pago con `paymentId`.
+  - El guard lo vuelve a poner, y `orders.js` deja fila en `treasury_audit` (`CONSERVADO`).
+  - Los pagos viejos sin `paymentId` se siguen pudiendo quitar.
+  - El anticipo ya se calculaba en el servidor con la lista final.
+  - Solo `/v1/treasury` decide sobre esos pagos.
+- **Datos corregidos con aprobación de Daniel:**
+  - El 0479 volvió al pedido como Pendiente, para que tesorería lo decida.
+  - El 2826 por $96.900 era de otro pagador y del pedido DAD-014364, donde sigue aprobado. En DAD-014367 quedó Rechazado con ese motivo: anticipo 0 y estado Pospendiente.
+  - Todo quedó con fila en `treasury_audit` y nada se borró.
+  - El borrador contable CO-2026-002377 (2826 en DAD-014367) no se tocó: lo descarta el contador.
+- **Verificado:**
+  - 5 pruebas nuevas (`tests/treasury/pagoNoSaleDelPedido.test.js`), y las de cola y duplicados siguen en verde.
+  - Después de la corrección quedan 0 pagos Pendiente fuera de su pedido en todo Katuq; antes había 1, este.
+- **Abierto:** que los pedidos nazcan con `date_upd` cerraría el hueco del candado para todos los campos. Toca sincronizaciones que leen `date_upd`, así que va con propuesta propia.
