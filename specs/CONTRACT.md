@@ -10704,7 +10704,7 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - Edición básica desde el celular, con la app nativa.
   - La medición de «primera página en menos de 15 minutos» es de TX-38. La creación con IA solo con el objetivo ya existe con la bandera `landingPrompt` (D-385), encendida en las empresas nuevas.
 
-## D-478 (2026-10-17) — Sitios: quién puede publicar, historial de versiones con restaurar en un clic y publicación programada (ticket 1253, F5-29, parte 1)
+## D-478 (2026-10-17) — Sitios: quién puede publicar, historial de versiones con restaurar en un clic y publicación programada (ticket 1253, F5-29, parte 1) — PUBLICADO: backend e3cf0c60, front 2026.10.17.11
 
 - **Núcleo único `publicarContenido`:** lo comparten Publicar, la restauración y lo programado, con las mismas revisiones de siempre (vacío, bloqueos de venta D-1213/1221, límites del plan). Además limpia `publicacionProgramada` y guarda la versión.
 - **Quién publica (`sitio.rolesPublicar`):**
@@ -10728,3 +10728,8 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
 - **Pendiente (parte 2):**
   - Comentarios internos para aprobar cambios.
   - **Modo agencia** (un usuario con acceso a varios comercios que cada uno otorga y revoca). Toca autenticación y aislamiento entre empresas: va con propuesta y aprobación.
+- **Ajuste de seguridad** (la revisión automática del commit lo marcó): sin permiso de publicar tampoco se cambia lo público por otros caminos.
+  - «Quitar de línea» y «Unir», que exige permiso en los dos sitios.
+  - La dirección o el dominio de un sitio publicado, comparados con la misma normalización: el autoguardado sin cambios pasa.
+  - Opttia no publica si el comercio definió quién publica.
+  - Hay una prueba más en `versionesYPermisos.test.js`. Desplegado en el backend e3cf0c60.
