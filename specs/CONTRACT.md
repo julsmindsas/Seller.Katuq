@@ -10764,3 +10764,12 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - El reporte semanal está listo.
 - **Verificado:** 4 pruebas (`tests/sitios/kaiAdministra.test.js`, Firestore falso y correo simulado: envía una vez, solo a quien lo encendió, solo el lunes). La consulta anidada corre en producción sin índice, la suite de sitios queda con los mismos 4 fallos previos y el build del front pasa.
 - **Fuera de esta entrega:** pruebas A/B y optimización con datos, detectar enlaces rotos y fotos de mala calidad, mantenimiento automático de SEO y texto alternativo, y aprobar sugerencias de KAI desde una bandeja.
+
+## D-481 (2026-10-17) — Las cotizaciones del bot de WhatsApp salen con el asesor KAI (ticket 1243, F4-40, parte 1) — backend f648ab2a, SIN DESPLEGAR
+
+- **Antes:** el bot dejaba `vendedor.email` vacío y sus cotizaciones caían en «Sin comercial» en las métricas por asesor.
+- **Ahora:** `whatsappBotCierre.js` firma con `vendedor: { email: "kai", nombre: "KAI" }`. El identificador `kai` agrupa en métricas y filtros como un asesor más.
+- **Cuidados:** `completarVendedor` no busca celular para un identificador sin «@», y `asesorPublico` no muestra `kai` como correo en el enlace público.
+- **Verificado:** `tests/cotizaciones/asesorKai.test.js` (3 casos, sin red).
+- **Parte 2, con propuesta** (`openspec/changes/pedido-whatsapp-con-link-de-pago/`): pedido y link de pago desde WhatsApp sin humano. Toca pedidos, inventario y pagos, así que espera aprobación. Hallazgos: aceptar por el link exige el documento del cliente (el bot no lo manda) y `convertir-pedido` no puede pasar (estado `aceptada` contra `"Aprobada"`); la vía es extraer el núcleo de `sites.crearPedido` a un servicio, con bandera apagada y solo con pasarela propia del comercio.
+- **Choque de número:** el commit ajeno `03aae0fe` (empresas solo desde Julsmind) se rotuló D-476, que ya es la dirección por marca. Quien lo registre en este contrato debe tomar un número libre.
