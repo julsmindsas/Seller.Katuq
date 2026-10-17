@@ -10585,3 +10585,28 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - Confirmación y recordatorio AUTOMÁTICOS por WhatsApp: requieren registrar una plantilla en Meta (Kapso), y es decisión de Daniel.
   - Logo y descripción como ficha propia de cada marca: hoy la página de marca es el catálogo filtrado con su H1.
   - Vista de citas en un calendario dentro de Katuq: hoy se ven en el CRM.
+
+## D-473 (2026-10-17) — Portal mayorista: mínimo propio, volver a pedir, lo que más pide y estado de cuenta (ticket 1244, F5-28)
+
+- **Ya existía:**
+  - Acceso del cliente aprobado: link del CRM o cuenta con código por correo.
+  - Precios de SU lista, tanto en la página como en el pedido (`precioParaCliente`).
+  - Precios de lista nunca visibles sin sesión.
+  - Historial de pedidos con estado y guía.
+- **Pedido mínimo para mayoristas** (`tienda.minimoMayorista`, en Tienda):
+  - Aplica a quien compra con lista de precios, sea por sesión o porque el CRM lo reconoce, y se cobra el mayor de los dos mínimos.
+  - El servidor lo valida en `crearPedido`; el carrito lo muestra solo si la sesión trae lista.
+- **«Mis pedidos»** (`pedidosDeCuenta`, solo lectura y solo del cliente de la sesión):
+  - **Estado de cuenta:** saldo de sus pedidos vigentes no pagados (`carteraService.resolveSaldo`) y, si el comercio se los puso en el CRM, cupo (`creditLimit`), disponible y plazo (`payTermDays`).
+  - **Lo que más pides:** productos que aparecen en 2 o más pedidos vigentes y se siguen vendiendo, con «Agregar».
+  - **Volver a pedir:** agrega al carrito las líneas que se siguen vendiendo, al precio de HOY de su lista. Las que tenían opción (talla, color) o ya no se venden quedan por fuera y se cuentan.
+  - **Factura:** se muestra el número de la factura electrónica si ya salió.
+  - El servidor vuelve a calcular todo al crear el pedido.
+- **Verificado:**
+  - 6 pruebas (`tests/sitios/portalMayorista.test.js`), y la suite de sitios queda con los mismos 4 fallos previos.
+  - Navegador a 390 px con sesión y API simuladas: estado de cuenta, frecuentes y factura visibles. «Volver a pedir» deja 20 × Cable UTP a $8.500 y el mínimo aplicable pasa a $300.000, con 0 errores de JS.
+- **Incidente evitado:** al crear el módulo, el primer nombre (`utils/siteCuenta.js`) ya existía y se sobrescribió. Se restauró de git antes de cualquier commit, y el módulo nuevo quedó en `utils/siteCuentaMayorista.js`.
+- **Pendiente** (cambia el flujo de pedidos y pagos; va con propuesta propia):
+  - Compra a crédito con control de cupo.
+  - Condiciones de pago elegibles al pagar.
+  - Solicitud de cotización para proyectos (F2-43).

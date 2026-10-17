@@ -2801,6 +2801,12 @@
               <input type="number" min="0" [(ngModel)]="contenido.tienda.minimoCompra" (ngModelChange)="marcarSucio()" />
               <small>Deja 0 si no exiges un mínimo.</small>
             </div>
+            <!-- Ticket 1244 -->
+            <div class="campo">
+              <label>Pedido mínimo para mayoristas</label>
+              <input type="number" min="0" [(ngModel)]="contenido.tienda.minimoMayorista" (ngModelChange)="marcarSucio()" />
+              <small>Para los clientes que compran con su lista de precios (link o cuenta). 0 = el mismo de todos.</small>
+            </div>
             <div class="campo">
               <label>Mensaje al terminar la compra</label>
               <textarea rows="2" maxlength="300" [(ngModel)]="contenido.tienda.mensajeConfirmacion"

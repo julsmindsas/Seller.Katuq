@@ -43,6 +43,8 @@ export interface TiendaSitio {
   /** Ticket 1221: frases con condiciones de venta que el comercio confirmó que cumple. */
   promesasConfirmadas?: string[];
   minimoCompra: number;
+  /** Ticket 1244: pedido mínimo de quien compra con su lista de precios. */
+  minimoMayorista?: number;
   mensajeConfirmacion: string;
 
   /**
