@@ -1013,6 +1013,15 @@
               </span>
               <span class="palanca"><span></span></span>
             </button>
+            <!-- Ticket 1236 -->
+            <button class="opcion campo--avanzado" [class.is-active]="b.datos.mostrarMarcas === true"
+                    (click)="b.datos.mostrarMarcas = !b.datos.mostrarMarcas; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Filtro por marca</strong>
+                <small>Sale del campo «Marca» de tus productos. Enciéndelo solo si lo tienes bien llenado.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
             <button class="opcion" [class.is-active]="b.datos.permitirCompra"
                     (click)="b.datos.permitirCompra = !b.datos.permitirCompra; marcarSucio()">
               <span class="opcion__texto">

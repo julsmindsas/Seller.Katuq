@@ -10562,6 +10562,7 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
 - **Marcas:**
   - La marca sale del campo `identificacion.marca` del producto; el índice de búsqueda suma `marcaOriginal`, sin cambiar los productos.
   - El catálogo trae el filtro «Marca» con conteo cuando hay dos o más, agrupando sin tildes ni mayúsculas y mostrando la forma más usada.
+  - El filtro va apagado de fábrica (`catalogo.mostrarMarcas`). En vivo, un catálogo real mostraba «Katuq» y «ALM-3908» como marcas: el campo suele estar mal llenado. El comercio lo enciende en el bloque Catálogo.
   - Cada marca tiene su página `/marca/<nombre>`, con H1, título, canónica y los demás filtros adentro. Una marca que no está da 404.
   - El bloque Marcas suma por logo la marca (el logo lleva a su página) y la constancia «Tengo autorización de la marca». Sin constancia, el editor avisa; no se ocultan los logos que ya existían. También puede listar solas las marcas del catálogo.
   - De paso: tocar una ocasión del catálogo ya no borra la categoría elegida. El selector `.chip` agarraba todos los chips.
