@@ -10476,7 +10476,7 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
   - Historial de versiones con comparar y restaurar (ticket 1253).
   - Renombrar el botón «Opttia» a «KAI»: es una decisión de marca.
 
-## D-468 (2026-10-17) — En vivo por comercio: Opttia deja de abrirse sola y la tarjeta va a un lado (ajuste de D-422)
+## D-468 (2026-10-17) — En vivo por comercio: Opttia deja de abrirse sola y la tarjeta va a un lado (ajuste de D-422) — PUBLICADO: front 2026.10.17.3
 
 Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito** (nada se abre solo) y **narración solo en modo pantalla**.
 
