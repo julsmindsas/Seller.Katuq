@@ -112,7 +112,7 @@
           <span class="pestana-aviso" *ngIf="resenasPendientes">{{ resenasPendientes }}</span>
         </button>
         <button [class.is-active]="panel === 'pauta'" (click)="panel = 'pauta'">Pauta</button>
-        <button [class.is-active]="panel === 'ajustes'" (click)="panel = 'ajustes'">Ajustes</button>
+        <button [class.is-active]="panel === 'ajustes'" (click)="panel = 'ajustes'; versionesCargadas || cargarVersiones()">Ajustes</button>
       </nav>
 
       <!-- ── Con IA: pedirle cambios a la página conversando ──
@@ -3380,6 +3380,42 @@
             <button class="btn-fantasma btn-fantasma--sm btn-fantasma--peligro"
                     *ngIf="sitio?.estado === 'publicado'"
                     (click)="despublicar()" [disabled]="publicando">Quitar de línea</button>
+          </div>
+        </div>
+
+        <!-- Ticket 1253: programar, historial con restaurar y quién publica -->
+        <div class="grupo" id="campo-versiones">
+          <h3>Programar la publicación</h3>
+          <div class="campo-doble">
+            <input type="datetime-local" [(ngModel)]="fechaProgramada" />
+            <button type="button" class="boton-secundario" (click)="programarPublicacion()" [disabled]="!fechaProgramada">Programar</button>
+          </div>
+          <small *ngIf="programada">Se publicará sola el {{ programada.fecha | date: 'dd/MM/yyyy HH:mm' }}.
+            <button type="button" class="enlace-sutil" (click)="cancelarProgramada()">Cancelar</button></small>
+          <small *ngIf="!programada">Tu borrador sale solo en esa fecha y hora (revisamos cada 5 minutos).</small>
+        </div>
+
+        <div class="grupo">
+          <h3>Historial de versiones</h3>
+          <button type="button" class="boton-secundario" *ngIf="!versionesCargadas" (click)="cargarVersiones()">Ver versiones publicadas</button>
+          <p class="nota nota--simple" *ngIf="versionesCargadas && !versiones.length">Todavía no hay versiones guardadas: se guardan desde la próxima publicación.</p>
+          <div class="version" *ngFor="let v of versiones; let i = index">
+            <div class="version__datos">
+              <strong>{{ v.publicadaEn | date: 'dd/MM/yyyy HH:mm' }}</strong>
+              <small>{{ v.motivo }} · {{ v.por || 'sin autor' }} · {{ v.secciones }} secciones</small>
+            </div>
+            <button type="button" class="enlace-sutil" *ngIf="i > 0 && puedePublicarVersiones" (click)="restaurarVersion(v)">Restaurar</button>
+            <small class="version__actual" *ngIf="i === 0">Publicada ahora</small>
+          </div>
+        </div>
+
+        <div class="grupo" *ngIf="esAdministrador">
+          <h3>Quién puede publicar</h3>
+          <div class="campo">
+            <input type="text" [value]="rolesPublicarTexto" (change)="cambiarRolesPublicar($any($event.target).value)"
+                   placeholder="Vacío = todos. Ej.: Administrador, Marketing" />
+            <small>Escribe los roles separados por coma. Los demás pueden editar el borrador, pero no publicar
+              ni revertir. Los administradores siempre pueden.</small>
           </div>
         </div>
       </div>

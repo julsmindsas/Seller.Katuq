@@ -1815,6 +1815,108 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     }));
   }
 
+  // ── Ticket 1253: historial de versiones, programar y quién publica ──
+  versiones: any[] = [];
+  versionesCargadas = false;
+  programada: { fecha: string; por: string } | null = null;
+  puedePublicarVersiones = true;
+  rolesPublicar: string[] = [];
+  fechaProgramada = "";
+
+  get esAdministrador(): boolean {
+    try {
+      const rol = String((JSON.parse(localStorage.getItem("user") || "{}") || {}).rol || "");
+      return /admin/i.test(rol);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  get rolesPublicarTexto(): string {
+    return this.rolesPublicar.join(", ");
+  }
+
+  cargarVersiones(): void {
+    if (!this.id) return;
+    this.service.versiones(this.id).subscribe({
+      next: (res) => {
+        this.versionesCargadas = true;
+        this.versiones = (res && res.data) || [];
+        this.programada = (res && res.programada) || null;
+        this.puedePublicarVersiones = !res || res.puedePublicar !== false;
+        this.rolesPublicar = (res && res.rolesPublicar) || [];
+      },
+      error: () => { this.versionesCargadas = true; },
+    });
+  }
+
+  restaurarVersion(v: { id: string; publicadaEn: string }): void {
+    Swal.fire({
+      title: "¿Restaurar esta versión?",
+      text: "Vuelve a quedar publicada y también en tu borrador. Lo que está publicado ahora queda en el historial: no se pierde.",
+      showCancelButton: true,
+      confirmButtonText: "Restaurar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#5F3FE0",
+    }).then((r) => {
+      if (!r.isConfirmed) return;
+      this.service.restaurarVersion(this.id, v.id).subscribe({
+        next: (res) => {
+          if (!res || !res.success) {
+            this.toastr.error((res && res.message) || "No pudimos restaurar esa versión.");
+            return;
+          }
+          this.toastr.success("Versión restaurada y publicada.");
+          // El borrador cambió en el servidor: se recarga para no pisarlo con la copia de esta pantalla.
+          setTimeout(() => location.reload(), 600);
+        },
+        error: (err) => this.toastr.error(err?.error?.message || "No pudimos restaurar esa versión."),
+      });
+    });
+  }
+
+  programarPublicacion(): void {
+    const fecha = new Date(this.fechaProgramada);
+    if (isNaN(fecha.getTime())) return;
+    if (this.sucio) this.guardar(false, true);
+    this.service.programarPublicacion(this.id, { fecha: fecha.toISOString() }).subscribe({
+      next: (res) => {
+        if (!res || !res.success) {
+          this.toastr.error((res && res.message) || "No pudimos programar.");
+          return;
+        }
+        this.programada = res.data || null;
+        this.fechaProgramada = "";
+        this.toastr.success(res.message || "Publicación programada.");
+      },
+      error: (err) => this.toastr.error(err?.error?.message || "No pudimos programar."),
+    });
+  }
+
+  cancelarProgramada(): void {
+    this.service.programarPublicacion(this.id, { cancelar: true }).subscribe({
+      next: (res) => {
+        if (res && res.success) { this.programada = null; this.toastr.success("Publicación programada cancelada."); }
+      },
+      error: (err) => this.toastr.error(err?.error?.message || "No pudimos cancelar."),
+    });
+  }
+
+  cambiarRolesPublicar(texto: string): void {
+    const roles = String(texto || "").split(",").map((r) => r.trim()).filter(Boolean).slice(0, 10);
+    this.service.guardarRolesPublicar(this.id, roles).subscribe({
+      next: (res) => {
+        if (!res || !res.success) {
+          this.toastr.error((res && res.message) || "No pudimos guardar quién publica.");
+          return;
+        }
+        this.rolesPublicar = roles;
+        this.toastr.success(roles.length ? `Ahora publican: ${roles.join(", ")} (y los administradores).` : "Ahora cualquiera puede publicar.");
+      },
+      error: (err) => this.toastr.error(err?.error?.message || "No pudimos guardar quién publica."),
+    });
+  }
+
   /** Ticket 1213: faltan las páginas legales (privacidad y devoluciones; los términos van con ellas). */
   get faltanPoliticas(): boolean {
     const rutas = new Set(this.paginas.map((p) => p.ruta));

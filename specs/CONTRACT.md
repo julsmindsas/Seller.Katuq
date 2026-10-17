@@ -10703,3 +10703,28 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - Acordeones en Estilo y Tienda.
   - Edición básica desde el celular, con la app nativa.
   - La medición de «primera página en menos de 15 minutos» es de TX-38. La creación con IA solo con el objetivo ya existe con la bandera `landingPrompt` (D-385), encendida en las empresas nuevas.
+
+## D-478 (2026-10-17) — Sitios: quién puede publicar, historial de versiones con restaurar en un clic y publicación programada (ticket 1253, F5-29, parte 1)
+
+- **Núcleo único `publicarContenido`:** lo comparten Publicar, la restauración y lo programado, con las mismas revisiones de siempre (vacío, bloqueos de venta D-1213/1221, límites del plan). Además limpia `publicacionProgramada` y guarda la versión.
+- **Quién publica (`sitio.rolesPublicar`):**
+  - Vacío = todos, como hasta hoy.
+  - Con roles, Publicar, Restaurar y Programar responden 403 `SIN_PERMISO_PUBLICAR` a los demás (`isRoleAllowed` con el rol del JWT; la familia administrador siempre puede).
+  - Solo un administrador lo cambia: `PUT /edit` con `rolesPublicar`; un editor no se da permiso.
+- **Historial:**
+  - Cada publicación (editor, Opttia, programada o restaurada) queda en `sites/{id}/versiones` con fecha, autor y motivo; se conservan las últimas 20 y no se guardan contenidos de más de 900 KB.
+  - `GET /:id/versiones` lista sin el contenido.
+  - `POST /:id/versiones/:vid/restaurar` revierte en un clic: la versión vuelve a lo publicado y al borrador, y queda como otra entrada del historial.
+- **Programar:**
+  - `POST /:id/programar {fecha}` (de 5 min a 90 días) o `{cancelar:true}`.
+  - El barrido `publicarProgramados` corre en el job de 5 minutos de tiendas (`pagoPendienteTiendas`), sin job nuevo.
+  - Si no puede publicar (bloqueo o plan), limpia la programación y deja `ultimaProgramacionFallida` con el motivo.
+- **Editor (Ajustes):**
+  - «Programar la publicación» y «Historial de versiones» con «Restaurar»; el editor se recarga al restaurar.
+  - «Quién puede publicar», solo visible para administradores.
+- **Pruebas:**
+  - 4 de punta a punta con Firestore falso (`tests/sitios/versionesYPermisos.test.js`). El falso compartido de `tests/messaging` ganó subcolecciones (`ref.collection`), sin romper sus pruebas.
+  - La suite de sitios y mensajería queda con los mismos 4 fallos previos, y el build del front pasa.
+- **Pendiente (parte 2):**
+  - Comentarios internos para aprobar cambios.
+  - **Modo agencia** (un usuario con acceso a varios comercios que cada uno otorga y revoca). Toca autenticación y aislamiento entre empresas: va con propuesta y aprobación.

@@ -311,6 +311,16 @@ export interface DiaMetricas {
 }
 
 /** Ticket 1239: una fila de "¿De dónde vienen tus ventas?". */
+/** Ticket 1253: una versión publicada del sitio (sin su contenido). */
+export interface VersionSitio {
+  id: string;
+  publicadaEn: string;
+  por: string;
+  motivo: string;
+  secciones: number;
+  paginas: number;
+}
+
 export interface FilaOrigen {
   fuente?: string;
   utm_campaign?: string;
@@ -691,6 +701,23 @@ export class SitiosService extends BaseService {
   /** Ticket 1232: enlace a la vista previa del borrador tal como se verá en una fecha. */
   vistaEnFecha(id: string, fecha: string): Observable<Respuesta<{ url: string }>> {
     return this.get<Respuesta<{ url: string }>>(`/v1/sites/${encodeURIComponent(id)}/vista-en-fecha?fecha=${encodeURIComponent(fecha)}`);
+  }
+
+  /** Ticket 1253: historial de versiones publicadas, publicación programada y quién publica. */
+  versiones(id: string): Observable<Respuesta<VersionSitio[]> & { programada?: { fecha: string; por: string } | null; puedePublicar?: boolean; rolesPublicar?: string[] }> {
+    return this.get<any>(`/v1/sites/${encodeURIComponent(id)}/versiones`);
+  }
+
+  restaurarVersion(id: string, vid: string): Observable<Respuesta<{ slug: string; publishedAt: string }>> {
+    return this.post<any>(`/v1/sites/${encodeURIComponent(id)}/versiones/${encodeURIComponent(vid)}/restaurar`, {});
+  }
+
+  programarPublicacion(id: string, cuerpo: { fecha?: string; cancelar?: boolean }): Observable<Respuesta<{ fecha: string; por: string }>> {
+    return this.post<any>(`/v1/sites/${encodeURIComponent(id)}/programar`, cuerpo);
+  }
+
+  guardarRolesPublicar(id: string, rolesPublicar: string[]): Observable<Respuesta<any>> {
+    return this.put<any>("/v1/sites/edit", { id, rolesPublicar });
   }
 
   /** Ticket 1247: enlace privado del borrador (72 h) para verlo en el celular o compartirlo. */
