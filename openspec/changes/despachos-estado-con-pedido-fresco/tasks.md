@@ -16,5 +16,5 @@
 ## 3. Verificación y registro
 
 - [x] 3.1 Nota interna en el ticket 1224 con lo hecho y lo que falta probar
-- [ ] 3.2 (D-460 registrado) Commit solo con los archivos del cambio, con el OK de Santiago
+- [x] 3.2 (Registrada como **D-465**: el número D-460 lo tomó otra sesión el mismo día; el commit `93b6bb0b` dice D-460 y se refiere a esta. Commit y push con el OK de Santiago el 16-oct.) Commit solo con los archivos del cambio, con el OK de Santiago
 - [ ] 3.3 Tras la publicación (Daniel): probar con ALMARA quitar de una orden un pedido que empaque marcó entretanto; avisar a Yulie y cerrar el ticket
