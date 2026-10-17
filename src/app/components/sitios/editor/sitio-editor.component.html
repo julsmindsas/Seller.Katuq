@@ -45,6 +45,13 @@
       </button>
     </div>
 
+    <!-- Ticket 1247: enlace privado de vista previa, para revisar desde el celular. -->
+    <button class="btn-fantasma" (click)="compartirVistaPrevia()" [disabled]="armandoVistaPrevia"
+            title="Enlace privado de tu borrador para verlo en el celular o mandárselo a alguien">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+      <span class="dispositivos__texto">{{ armandoVistaPrevia ? 'Armando…' : 'Compartir vista previa' }}</span>
+    </button>
+
     <!-- Ticket 1219: estado del guardado automático; tocarlo guarda ya. -->
     <button class="btn-fantasma guardado-estado" (click)="guardar()" [disabled]="guardando || !sucio"
             [class.guardado-estado--error]="estadoAutoguardado === 'error' || (sucio && estadoAutoguardado === 'pendiente')"
@@ -79,7 +86,21 @@
   <div class="cuerpo">
 
     <!-- ═══ Panel de trabajo ═══════════════════════════════════════════════ -->
-    <aside class="panel">
+    <aside class="panel" #panelEl>
+      <!-- Ticket 1247: arrastra el borde para ensanchar el panel (se recuerda en este navegador). -->
+      <div class="panel__asa" role="separator" aria-orientation="vertical" tabindex="0"
+           aria-label="Ancho del panel: arrastra o usa las flechas" (mousedown)="empezarAncho($event)"
+           (keydown.arrowleft)="cambiarAncho(-24)" (keydown.arrowright)="cambiarAncho(24)"></div>
+      <!-- Ticket 1247: buscador de ajustes, para no recorrer pestañas. -->
+      <div class="buscador-ajustes">
+        <input type="search" [(ngModel)]="busquedaAjuste" placeholder="Buscar un ajuste (envío, cupones, dominio…)"
+               aria-label="Buscar un ajuste" autocomplete="off" />
+        <div class="buscador-ajustes__lista" *ngIf="ajustesEncontrados.length">
+          <button type="button" *ngFor="let a of ajustesEncontrados" (click)="irAAjuste(a)">
+            {{ a.texto }} <small>{{ a.donde }}</small>
+          </button>
+        </div>
+      </div>
       <nav class="pestanas">
         <!-- Editar la página conversando con la IA (bandera landingPrompt). -->
         <button *ngIf="puedeEditarConIA" class="pestana-ia" [class.is-active]="panel === 'ia'" (click)="abrirChatIA()">✨ Con IA</button>
@@ -272,6 +293,12 @@
             <strong>{{ pendientes.length ? 'Te falta' : 'Lista para publicar' }}</strong>
             <span *ngIf="pendientes.length">{{ pendientes.length }}</span>
           </div>
+          <!-- Ticket 1247: avance hacia «lista para publicar». -->
+          <div class="avance" role="progressbar" [attr.aria-valuenow]="avancePublicar.pct" aria-valuemin="0" aria-valuemax="100"
+               [attr.aria-label]="'Avance para publicar: ' + avancePublicar.hechos + ' de ' + avancePublicar.total">
+            <div class="avance__barra" [style.width.%]="avancePublicar.pct"></div>
+          </div>
+          <small class="avance__texto">{{ avancePublicar.hechos }} de {{ avancePublicar.total }} listos</small>
           <button type="button" class="pendientes__item" *ngFor="let p of pendientes" (click)="irAPendiente(p)"
                   [class.pendientes__item--critico]="p.critico">
             <span>{{ p.texto }}<em class="pendientes__bloquea" *ngIf="p.critico"> · impide vender</em></span>

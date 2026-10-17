@@ -693,6 +693,11 @@ export class SitiosService extends BaseService {
     return this.get<Respuesta<{ url: string }>>(`/v1/sites/${encodeURIComponent(id)}/vista-en-fecha?fecha=${encodeURIComponent(fecha)}`);
   }
 
+  /** Ticket 1247: enlace privado del borrador (72 h) para verlo en el celular o compartirlo. */
+  vistaCompartible(id: string): Observable<Respuesta<{ url: string; horas: number }>> {
+    return this.get<Respuesta<{ url: string; horas: number }>>(`/v1/sites/${encodeURIComponent(id)}/vista-compartible`);
+  }
+
   /**
    * Genera (o rota, que es la forma de revocar) el link de acceso personal de
    * un cliente a las tiendas publicadas: con él, el cliente ve los precios de

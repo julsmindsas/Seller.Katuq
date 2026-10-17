@@ -1,4 +1,4 @@
-import { AfterViewChecked, ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit } from "@angular/core";
+import { AfterViewChecked, ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 import { ToastrService } from "ngx-toastr";
@@ -1673,6 +1673,146 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       lista.push({ texto: "Publica tus políticas: términos, privacidad y devoluciones", ir: () => this.traerPaginasLegales() });
     }
     return lista;
+  }
+
+  /** Ticket 1247: cuánto lleva hacia «lista para publicar», con las mismas reglas del checklist. */
+  get avancePublicar(): { hechos: number; total: number; pct: number } {
+    const tienda = ((this.contenido && this.contenido.tienda) || {}) as TiendaSitio;
+    // logo, contacto, descripción y políticas; con tienda, además bodega, envío, pagos, productos y datos legales.
+    const total = 4 + (tienda.habilitada ? 5 : 0);
+    const hechos = Math.max(0, total - this.pendientes.length);
+    return { hechos, total, pct: Math.round((hechos / total) * 100) };
+  }
+
+  // ── Ticket 1247: vista previa para compartir, panel más ancho y buscador de ajustes ──
+  armandoVistaPrevia = false;
+
+  compartirVistaPrevia(): void {
+    if (this.armandoVistaPrevia || !this.id) return;
+    this.armandoVistaPrevia = true;
+    this.service.vistaCompartible(this.id).subscribe({
+      next: async (res) => {
+        this.armandoVistaPrevia = false;
+        const url = res && res.success && res.data && res.data.url;
+        if (!url) {
+          this.toastr.error((res && res.message) || "No pudimos armar el enlace.");
+          return;
+        }
+        let qr = "";
+        try {
+          const QRCode = await import("qrcode");
+          qr = await QRCode.toDataURL(url, { width: 220, margin: 1, color: { dark: "#211F3A", light: "#FFFFFF" } });
+        } catch (e) {
+          qr = "";
+        }
+        const r = await Swal.fire({
+          title: "Vista previa privada",
+          html:
+            `<div style="font-size:14px;line-height:1.5">` +
+            (qr ? `<img src="${qr}" alt="Código QR de la vista previa" width="200" height="200" style="display:block;margin:0 auto 10px" />` : "") +
+            `Escanéalo con el celular o manda el enlace. Muestra lo último guardado${this.sucio ? " (tienes cambios sin guardar)" : ""} y vence en ${res.data!.horas} horas. Google no lo ve.</div>`,
+          showCancelButton: true,
+          confirmButtonText: "Copiar enlace",
+          cancelButtonText: "Cerrar",
+          confirmButtonColor: "#5F3FE0",
+        });
+        if (r.isConfirmed) this.copiarTexto(url, "Enlace de vista previa copiado");
+      },
+      error: (err) => {
+        this.armandoVistaPrevia = false;
+        this.toastr.error(err?.error?.message || "No pudimos armar el enlace.");
+      },
+    });
+  }
+
+  private panelEl?: ElementRef<HTMLElement>;
+  @ViewChild("panelEl") set panelRef(el: ElementRef<HTMLElement> | undefined) {
+    this.panelEl = el;
+    if (el) this.aplicarAncho(this.anchoGuardado());
+  }
+  private anchoActual = 392;
+
+  private anchoGuardado(): number {
+    try {
+      const n = Number(localStorage.getItem("kq_editor_ancho_panel"));
+      return n >= 340 && n <= 640 ? n : 392;
+    } catch (e) {
+      return 392;
+    }
+  }
+
+  private aplicarAncho(ancho: number): void {
+    this.anchoActual = Math.max(340, Math.min(640, Math.round(ancho)));
+    if (this.panelEl) this.panelEl.nativeElement.style.setProperty("--ancho-panel", `${this.anchoActual}px`);
+  }
+
+  private guardarAncho(): void {
+    try { localStorage.setItem("kq_editor_ancho_panel", String(this.anchoActual)); } catch (e) { /* es una comodidad */ }
+  }
+
+  cambiarAncho(delta: number): void {
+    this.aplicarAncho(this.anchoActual + delta);
+    this.guardarAncho();
+  }
+
+  empezarAncho(ev: MouseEvent): void {
+    ev.preventDefault();
+    const inicioX = ev.clientX;
+    const inicioAncho = this.anchoActual;
+    const mover = (e: MouseEvent) => this.aplicarAncho(inicioAncho + (e.clientX - inicioX));
+    const soltar = () => {
+      document.removeEventListener("mousemove", mover);
+      document.removeEventListener("mouseup", soltar);
+      this.guardarAncho();
+    };
+    document.addEventListener("mousemove", mover);
+    document.addEventListener("mouseup", soltar);
+  }
+
+  busquedaAjuste = "";
+  private static readonly AJUSTES: { texto: string; donde: string; panel: string; claves: string }[] = [
+    { texto: "Envío", donde: "Tienda", panel: "tienda", claves: "domicilio zonas costo gratis" },
+    { texto: "Entregas", donde: "Tienda", panel: "tienda", claves: "cupo hora corte dias festivos" },
+    { texto: "Recoger en tienda", donde: "Tienda", panel: "tienda", claves: "retiro punto local sucursal" },
+    { texto: "Cupones de descuento", donde: "Tienda", panel: "tienda", claves: "codigo descuento" },
+    { texto: "Promociones automáticas", donde: "Tienda", panel: "tienda", claves: "oferta 2x1 descuento" },
+    { texto: "Correos de tu tienda", donde: "Tienda", panel: "tienda", claves: "email confirmacion carrito" },
+    { texto: "Cómo te pagan", donde: "Tienda", panel: "tienda", claves: "pagos wompi contra entrega transferencia nequi" },
+    { texto: "Productos que se cotizan", donde: "Tienda", panel: "tienda", claves: "cotizar asesor cotizacion" },
+    { texto: "Pedido mínimo", donde: "Tienda", panel: "tienda", claves: "minimo mayorista" },
+    { texto: "Enlace para una campaña", donde: "Pauta", panel: "pauta", claves: "utm qr enlace corto influenciador" },
+    { texto: "Catálogo para Google Shopping y Meta", donde: "Pauta", panel: "pauta", claves: "feed merchant" },
+    { texto: "Meta — Facebook e Instagram", donde: "Pauta", panel: "pauta", claves: "pixel conversions api" },
+    { texto: "Google Ads", donde: "Pauta", panel: "pauta", claves: "conversion anuncios" },
+    { texto: "Analítica", donde: "Pauta", panel: "pauta", claves: "ga4 google analytics tag manager" },
+    { texto: "TikTok", donde: "Pauta", panel: "pauta", claves: "pixel" },
+    { texto: "Privacidad", donde: "Pauta", panel: "pauta", claves: "cookies consentimiento" },
+    { texto: "Tu propio dominio", donde: "Ajustes", panel: "ajustes", claves: "dominio dns direccion" },
+    { texto: "Cómo se ve al compartir", donde: "Ajustes", panel: "ajustes", claves: "seo google descripcion titulo imagen" },
+    { texto: "Publicación", donde: "Ajustes", panel: "ajustes", claves: "programar publicar" },
+  ];
+
+  get ajustesEncontrados(): { texto: string; donde: string; panel: string }[] {
+    const limpio = (v: string) => String(v || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    const q = limpio(this.busquedaAjuste).trim();
+    if (q.length < 2) return [];
+    return SitioEditorComponent.AJUSTES.filter((a) => limpio(`${a.texto} ${a.claves}`).includes(q)).slice(0, 8);
+  }
+
+  irAAjuste(a: { texto: string; panel: string }): void {
+    this.busquedaAjuste = "";
+    this.panel = a.panel as any;
+    if (a.panel === "tienda") this.cargarBodegas();
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const raiz = this.panelEl && this.panelEl.nativeElement;
+      if (!raiz) return;
+      const destino = Array.from(raiz.querySelectorAll<HTMLElement>("h3, label"))
+        .find((el) => (el.textContent || "").trim().startsWith(a.texto));
+      if (!destino) return;
+      destino.scrollIntoView({ behavior: "smooth", block: "start" });
+      destino.classList.add("ajuste-encontrado");
+      setTimeout(() => destino.classList.remove("ajuste-encontrado"), 1800);
+    }));
   }
 
   /** Ticket 1213: faltan las páginas legales (privacidad y devoluciones; los términos van con ellas). */

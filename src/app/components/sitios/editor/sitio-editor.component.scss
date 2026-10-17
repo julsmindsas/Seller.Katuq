@@ -198,13 +198,27 @@
 }
 
 .panel {
-  width: 392px;
+  // Ticket 1247: el ancho lo ajusta el comercio arrastrando el borde (340 a 640 px).
+  width: var(--ancho-panel, 392px);
+  position: relative;
   flex: none;
   display: flex;
   flex-direction: column;
   min-height: 0;
   background: #fff;
   border-right: 1px solid var(--kb-line-2);
+
+  &__asa {
+    position: absolute;
+    top: 0;
+    right: -4px;
+    width: 8px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 3;
+
+    &:hover, &:focus-visible { background: rgba(95, 63, 224, .18); outline: none; }
+  }
 
   &__contenido {
     flex: 1;
@@ -1683,6 +1697,8 @@
     &__contenido {
       overflow: visible;
     }
+
+    &__asa { display: none; }
   }
 }
 
@@ -2892,6 +2908,70 @@
   // Ticket 1220: un input en una grilla no se encoge por debajo de su ancho
   // natural; era lo que empujaba el panel a lo ancho.
   > *, input, select { min-width: 0; max-width: 100%; }
+}
+
+// Ticket 1247: buscador de ajustes, avance hacia publicar y ajuste encontrado.
+.buscador-ajustes {
+  flex: none;
+  position: relative;
+  padding: 10px 12px 4px;
+
+  input {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 11px;
+    border: 1.5px solid var(--kb-line-4);
+    font-size: 13px;
+    color: var(--kb-ink);
+    background: #fff;
+  }
+
+  &__lista {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: calc(100% - 2px);
+    z-index: 5;
+    background: #fff;
+    border: 1px solid var(--kb-line-4);
+    border-radius: 11px;
+    box-shadow: 0 12px 30px rgba(33, 31, 58, .14);
+    overflow: hidden;
+
+    button {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+      padding: 9px 12px;
+      border: 0;
+      background: #fff;
+      text-align: left;
+      font-size: 13px;
+      color: var(--kb-ink);
+      cursor: pointer;
+
+      small { color: var(--kb-muted); font-size: 11.5px; }
+      &:hover, &:focus-visible { background: var(--kb-surface-3); outline: none; }
+    }
+  }
+}
+
+.avance {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--kb-line-2);
+  overflow: hidden;
+  margin: 6px 0 2px;
+
+  &__barra { height: 100%; background: var(--kb-accent); border-radius: 999px; transition: width .3s ease; }
+}
+.avance__texto { display: block; font-size: 11.5px; color: var(--kb-muted); margin-bottom: 6px; letter-spacing: normal; }
+
+.ajuste-encontrado {
+  background: rgba(95, 63, 224, .12);
+  border-radius: 6px;
+  transition: background .4s ease;
 }
 
 // Ticket 1238: enlaces cortos de campaña.

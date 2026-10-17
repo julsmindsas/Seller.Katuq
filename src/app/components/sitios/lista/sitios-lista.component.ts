@@ -428,7 +428,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
         ? `<br /><br />Está <b>publicada</b>: <code>${s.slug}.katuq.com</code> dejará de existir.`
         : "";
     Swal.fire({
-      title: `¿Eliminar "${s.nombre}"?`,
+      title: `¿Eliminar "${this.textoSeguro(s.nombre)}"?`,
       html: `Esta acción no se puede deshacer.${publicada}`,
       icon: "warning",
       showCancelButton: true,
@@ -475,7 +475,9 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   unirSitio(s: Sitio): void {
     if (this.uniendo) return;
     const opciones: { [id: string]: string } = {};
-    this.sitios.filter((x) => x.id !== s.id && !x.redirigeA).forEach((x) => (opciones[x.id] = `${x.nombre} (${x.slug})`));
+    // SweetAlert2 pinta las etiquetas de inputOptions como HTML: van escapadas.
+    this.sitios.filter((x) => x.id !== s.id && !x.redirigeA)
+      .forEach((x) => (opciones[x.id] = this.textoSeguro(`${x.nombre} (${x.slug})`)));
     if (!Object.keys(opciones).length) return;
     Swal.fire({
       title: "Unir a tu sitio principal",

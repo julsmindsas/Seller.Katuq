@@ -10684,3 +10684,22 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
 - **Pendiente:**
   - Meta y TikTok siguen poniendo su cookie (`_fbp`, `_ttp`) en `.katuq.com`, y no se configura desde el píxel. Cerrarlo de verdad exige inscribir `katuq.com` en la Public Suffix List: decisión de Daniel, porque afecta a todos los subdominios.
   - Comprar el dominio desde Katuq.
+
+## D-477 (2026-10-17) — Editor: vista previa privada con QR, panel redimensionable, buscador de ajustes y avance hacia publicar (ticket 1247, TX-32, parte 1)
+
+- **Vista previa para compartir:**
+  - Botón «Compartir vista previa» en la barra del editor.
+  - `GET /v1/sites/:id/vista-compartible` (auth + `requireJwtTenant`) firma un enlace del BORRADOR por 72 horas, con la misma firma de la vista previa de Opttia (`tokenVistaPrevia(id, horas)`). Nunca se indexa.
+  - Se muestra con QR para abrirlo en el celular y botón «Copiar enlace»; avisa si hay cambios sin guardar.
+- **Panel:**
+  - Se ensancha arrastrando su borde o con las flechas del teclado (340 a 640 px, `--ancho-panel`), y el ancho se recuerda en el navegador.
+  - En celular sigue a lo ancho y sin el borde para arrastrar.
+- **Buscador de ajustes:** busca entre 19 ajustes de Tienda, Pauta y Ajustes, con palabras clave («wompi», «cookies», «qr», «mayorista»…). Al elegir uno, cambia de pestaña, baja hasta el ajuste y lo resalta.
+- **Avance hacia publicar:** barra «N de M listos» en el checklist, con las mismas reglas de `pendientes` (4 siempre y 5 más con tienda).
+- **Seguridad:** al revisar este cambio se escaparon los nombres de sitio en los diálogos de la lista. SweetAlert2 pinta como HTML el `title` y `inputOptions` de «Unir» y «Eliminar».
+- **Verificado:** 2 pruebas (`tests/sitios/vistaCompartible.test.js`: 72 horas, firma del sitio y 404 a otra empresa); el build del front pasa. El editor no se vio en navegador, porque necesita sesión.
+- **Pendiente (parte 2):**
+  - Glosario único sitio / página / tienda en toda la interfaz.
+  - Acordeones en Estilo y Tienda.
+  - Edición básica desde el celular, con la app nativa.
+  - La medición de «primera página en menos de 15 minutos» es de TX-38. La creación con IA solo con el objetivo ya existe con la bandera `landingPrompt` (D-385), encendida en las empresas nuevas.
