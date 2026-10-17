@@ -169,6 +169,11 @@ export class EnVivoSugerenciaComponent implements OnDestroy {
     this.propuestas.actividad();
   }
 
+  /** El botón propio (sin orbe a la vista) abre la tarjeta con la primera propuesta. */
+  abrir(): void {
+    this.propuestas.abrir();
+  }
+
   /** ← → recorren la cola; Esc suelta la confirmación o, si no hay, es "Después". */
   alTeclado(ev: KeyboardEvent, vm: VistaPropuestas): void {
     const destino = ev.target as HTMLElement | null;

@@ -24,18 +24,20 @@
   margin: 0;
 }
 
+// A un lado y del ancho de una columna de paneles (D-468): no tapa el centro de la escena. Con los
+// paneles flotando queda justo encima de "Eventos de hoy" mientras está abierta.
 .ev-sug {
-  --ev-sug-x: -50%;
+  --ev-sug-x: 0;
   position: absolute;
-  top: 56px;
-  left: 50%;
+  top: 12px;
+  right: 12px;
   z-index: 5;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: min(420px, calc(100% - 24px));
-  max-height: calc(100% - 68px);
+  width: min(320px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 14px 16px;
@@ -526,8 +528,61 @@
 
 // ── Modo pantalla (TV): más grande, sin botones ────────────────────────────
 .ev-sug--tv {
-  width: min(560px, calc(100% - 24px));
+  width: min(380px, calc(100% - 24px));
   padding: 18px 20px;
+}
+
+// ── Botón propio (D-468): sin orbe a la vista, la tarjeta cerrada deja "Opttia tiene N ideas" ──
+.ev-sug-boton {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: ev-fs(12);
+  font-weight: 800;
+  letter-spacing: normal;
+  white-space: nowrap;
+  color: var(--ev-pack);
+  cursor: pointer;
+  background: var(--ev-pack-soft);
+  border: 1px solid var(--ev-pack);
+  border-radius: 10px;
+  box-shadow: var(--ev-sh-up);
+  transform: translateX(-50%);
+
+  app-en-vivo-icono {
+    --ev-icono: 14px;
+  }
+
+  &:hover {
+    background: var(--ev-surface);
+  }
+
+  @include ev-sug-foco;
+}
+
+.ev-sug-boton__texto {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+// En "Pedidos" (lista que se desplaza) va pegado abajo, como la tarjeta.
+.ev-sug-boton.ev-sug-boton--lista {
+  position: sticky;
+  top: auto;
+  bottom: 0;
+  left: auto;
+  display: flex;
+  width: fit-content;
+  margin: 12px 0 0 auto;
+  transform: none;
 }
 
 // ── Celular: acoplada abajo dentro de la escena ────────────────────────────

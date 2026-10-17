@@ -10475,3 +10475,15 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
 - **Fuera:**
   - Historial de versiones con comparar y restaurar (ticket 1253).
   - Renombrar el botón «Opttia» a «KAI»: es una decisión de marca.
+
+## D-468 (2026-10-17) — En vivo por comercio: Opttia deja de abrirse sola y la tarjeta va a un lado (ajuste de D-422)
+
+Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito** (nada se abre solo) y **narración solo en modo pantalla**.
+
+- **Antes:** la primera propuesta abría sola la tarjeta «Opttia propone» (420 px) centrada arriba de la escena y se quitaba a los 45 s sin uso; sin orbe (vista Pedidos o sin WebGL) se volvía a abrir sola con cada propuesta y nunca se retiraba. La narración salía siempre sobre la escena.
+- **Ahora:**
+  - Fuera de la TV nada se abre solo: la tarjeta espera el botón «Opttia tiene N ideas · N urgentes». Es el del orbe y, sin orbe, uno propio de la tarjeta, arriba al centro o pegado abajo en Pedidos.
+  - La tarjeta abre a la derecha, de 320 px (el ancho de la columna de paneles): con los paneles flotando queda encima de «Eventos de hoy» y no tapa el centro de la escena. En el celular sigue acoplada abajo.
+  - Sin uso se retira a los 15 s (`RETIRAR_SIN_USO_MS`), también sin orbe, porque ahora siempre hay botón para volver.
+  - La narración de Opttia sobre la escena solo en modo pantalla (TV). En la TV la tarjeta sigue abriendo sola y rotando, con 380 px y a la derecha.
+  - Solo presentación y apertura: no cambian la cola, las propuestas, los permisos ni la aprobación. Katuq en vivo no se tocó.

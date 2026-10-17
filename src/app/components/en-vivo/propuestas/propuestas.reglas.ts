@@ -61,14 +61,10 @@ export const MINIMO_ENTRE_PEDIDOS_MS = 15_000;
 export const BLOQUEO_AL_PASAR_MS = 1500;
 /** El primer toque de Aprobar pide confirmar; si no se confirma en este tiempo, vuelve solo. */
 export const CONFIRMAR_MS = 5000;
-/** Sin tocar nada este tiempo, el ensayo se retira y queda solo el contador del orbe. */
-export const RETIRAR_SIN_USO_MS = 45_000;
+/** Sin tocar nada este tiempo, la tarjeta se retira y queda el botón "Opttia tiene N ideas" (D-468: era 45 s). */
+export const RETIRAR_SIN_USO_MS = 15_000;
 /** En modo pantalla, cada propuesta se queda a la vista este tiempo. */
 export const TV_POR_PROPUESTA_MS = 20_000;
-/** No arranca sola si la persona acaba de aprobar algo. */
-export const PAUSA_TRAS_APROBAR_MS = 8000;
-/** Se considera que la persona está interactuando si tocó algo hace menos de esto. */
-export const INTERACCION_RECIENTE_MS = 4000;
 /** Tras un resultado bueno, la tarjeta pasa sola a la siguiente. */
 export const PASAR_TRAS_EXITO_MS = 2000;
 /** Con pedidos que quedaron por fuera se deja más tiempo para leer la razón. */
@@ -304,6 +300,15 @@ export function armarCola(
     out.push(it);
   }
   return ordenarCola(out);
+}
+
+/**
+ * Lo que dice el botón con propuestas (el del orbe o, sin orbe, el de la tarjeta):
+ * "Opttia tiene 3 ideas · 1 urgente".
+ */
+export function textoIdeas(c: { ideas: number; urgentes: number }): string {
+  const ideas = `Opttia tiene ${c.ideas} ${c.ideas === 1 ? 'idea' : 'ideas'}`;
+  return c.urgentes > 0 ? `${ideas} · ${c.urgentes} ${c.urgentes === 1 ? 'urgente' : 'urgentes'}` : ideas;
 }
 
 /** El contador del botón del orbe. La sombra no cuenta como idea: no se puede aprobar. */

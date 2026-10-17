@@ -48,6 +48,8 @@ interface VistaPagina {
   margenes: Partial<MargenesEncuadre> | null;
   /** La tarjeta "Opttia propone" va en esta vista (D-422): Opttia prendido, sesión propia y el servidor dijo que aplica. */
   conPropuestas: boolean;
+  /** Modo pantalla (TV): solo ahí va la narración de Opttia sobre la escena (D-468). */
+  tv: boolean;
 }
 
 /**
@@ -119,8 +121,9 @@ export class EnVivoComercioPaginaComponent implements OnInit, OnDestroy {
       propuestas.disponible$,
       acoplada$,
       this.empresa$,
+      interaccion.modoPantalla$,
     ]).pipe(
-      map(([e, prefs, opcion, ampliado, ancho, hayPropuestas, acoplada, empresa]): VistaPagina => {
+      map(([e, prefs, opcion, ampliado, ancho, hayPropuestas, acoplada, empresa, tv]): VistaPagina => {
         const opttiaActivo = e.opttiaActivo !== false;
         // Opttia propone (D-422): Opttia prendido y sesión propia (ni Katuq mirando otro comercio ni solo lectura).
         const conPropuestas = hayPropuestas && opttiaActivo && !e.soloLectura && !empresa && CON_PROPUESTAS.has(opcion ?? '');
@@ -140,6 +143,7 @@ export class EnVivoComercioPaginaComponent implements OnInit, OnDestroy {
             conPropuestas && acoplada && conEscena
           ),
           conPropuestas,
+          tv,
         };
       })
     );

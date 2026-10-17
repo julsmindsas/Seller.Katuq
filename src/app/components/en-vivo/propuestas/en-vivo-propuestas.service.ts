@@ -31,6 +31,7 @@ import {
   conQuien,
   conservarAjustes,
   contar,
+  textoIdeas,
   descartarCobroHoy,
   descartarHoy,
   desdeServidor,
@@ -45,7 +46,6 @@ import {
   faltaParaAprobar,
   firmaParaPedir,
   incluyeCambio,
-  INTERACCION_RECIENTE_MS,
   ItemCola,
   itemsDelPedido,
   itemsDeProduccion,
@@ -60,7 +60,6 @@ import {
   NO_SALIO_TODAVIA,
   nombreDe,
   opcionesDe,
-  PAUSA_TRAS_APROBAR_MS,
   paraAprobar,
   paraEscena,
   produccionAprobable,
@@ -107,8 +106,6 @@ const NO_WHATSAPP = 'No pude armar el mensaje de WhatsApp. Abre el pedido para r
 const PREFIJO_APLAZADOS = 'katuq.enVivo.propuestas.v1';
 /** El texto de Opttia del plan (`/explicar`) se pide a lo sumo una vez cada 10 min (el servidor también lo limita). */
 const EXPLICAR_CADA_MS = 10 * 60_000;
-/** Si la persona está interactuando, la primera propuesta espera y lo vuelve a intentar. */
-const REINTENTO_ARRANQUE_MS = 3000;
 /** Cuando lo que llegó salió de la memoria del servidor, se vuelve a pedir un poco después de que vence. */
 const MARGEN_VENCE_MS = 1000;
 
@@ -209,6 +206,11 @@ export interface VistaPropuestas {
   /** Texto para lectores de pantalla (solo cambia cuando llega algo nuevo). */
   anuncio: string;
   hoja: HojaAjuste | null;
+  /**
+   * Con la tarjeta cerrada y sin botón del orbe a la vista (vista Pedidos o sin WebGL): el botón
+   * propio de la tarjeta, "Opttia tiene N ideas", que la abre (D-468). null = no se muestra.
+   */
+  boton: { texto: string; aria: string } | null;
 }
 
 const VISTA_VACIA: VistaPropuestas = {
@@ -246,6 +248,7 @@ const VISTA_VACIA: VistaPropuestas = {
   todos: null,
   anuncio: '',
   hoja: null,
+  boton: null,
 };
 
 /**
@@ -350,8 +353,6 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
   private ultimaExplicacionMs = 0;
 
   // Tiempos.
-  private ultimaInteraccionMs = 0;
-  private ultimaAprobacionMs = 0;
   private temporizadores = new Map<string, number>();
   private pararRespaldo: (() => void) | null = null;
   private pararTv: (() => void) | null = null;
@@ -468,18 +469,11 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
 
   /**
    * La página avisa si hay botón del orbe a la vista (una escena 3D con su orbe). Sin él (vista
-   * Pedidos o sin WebGL) no habría cómo volver a pedir la tarjeta: no se retira por falta de uso y se
-   * vuelve a abrir sola cuando hay algo que proponer.
+   * Pedidos o sin WebGL) la tarjeta pone su propio botón "Opttia tiene N ideas" (`vista.boton`).
    */
   fijarBotonOrbe(hay: boolean): void {
     if (this.conBotonOrbe === hay) return;
     this.conBotonOrbe = hay;
-    if (!hay) {
-      this.cancelar('retiro');
-      this.reabrirSinBoton();
-    } else if (this.abierta) {
-      this.programarRetiro();
-    }
     this.publicar();
   }
 
@@ -879,19 +873,6 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
       this.publicar();
     });
     if (!this.yaArrancoSola) this.intentarArrancar();
-    else this.reabrirSinBoton();
-  }
-
-  /**
-   * Sin botón del orbe (vista Pedidos o sin WebGL) no hay cómo volver a pedir la tarjeta: si se
-   * cerró ("Todo al día") y llega algo que proponer, se abre sola.
-   */
-  private reabrirSinBoton(): void {
-    if (this.conBotonOrbe || this.abierta || !this.yaArrancoSola || this.repitiendo || !this.respuestaDisponible || !this.cola.length) return;
-    this.abierta = true;
-    this.alDia = false;
-    if (!this.actual) this.cambiarActual(this.cola[0]);
-    else this.anuncio = `Opttia propone: ${tituloVisible(this.actual, this.ocultar)}`;
   }
 
   /** Lo ya aprobado (aquí, o en otro lado mientras la TV miraba y ya se avisó) no vuelve a la cola. */
@@ -966,38 +947,27 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     this.programarRetiro();
   }
 
-  /** La primera propuesta arranca sola si la persona no está arrastrando, mirando una ficha ni acaba de aprobar. */
+  /**
+   * Solo en la TV la tarjeta arranca sola (ahí nadie toca nada). En el computador nada se abre solo
+   * (D-468): la tarjeta espera el botón "Opttia tiene N ideas" del orbe o el suyo propio.
+   */
   private intentarArrancar(): void {
-    if (this.yaArrancoSola || this.abierta || !this.cola.length || !this.respuestaDisponible || this.repitiendo) return;
-    const ahora = Date.now();
-    const ocupada =
-      ahora - this.ultimaInteraccionMs < INTERACCION_RECIENTE_MS ||
-      ahora - this.ultimaAprobacionMs < PAUSA_TRAS_APROBAR_MS ||
-      this.ficha.abierta;
-    if (ocupada && !this.tv) {
-      if (this.temporizadores.has('arranque')) return;
-      this.programar('arranque', REINTENTO_ARRANQUE_MS, () => {
-        this.intentarArrancar();
-        this.publicar();
-      });
-      return;
-    }
+    if (!this.tv || this.yaArrancoSola || this.abierta || !this.cola.length || !this.respuestaDisponible || this.repitiendo) return;
     this.yaArrancoSola = true;
     this.abierta = true;
-    this.programarRetiro();
   }
 
   /**
-   * Sin tocar nada 45 s, el ensayo se retira; queda el contador del orbe, que la vuelve a abrir.
-   * Nunca en la TV, ni sin botón del orbe (vista Pedidos o sin WebGL): no habría cómo volver.
+   * Sin tocar nada `RETIRAR_SIN_USO_MS`, la tarjeta se retira; queda el botón "Opttia tiene N ideas"
+   * (el del orbe o, sin orbe, el de la tarjeta), que la vuelve a abrir. Nunca en la TV.
    */
   private programarRetiro(): void {
-    if (this.tv || !this.conBotonOrbe) {
+    if (this.tv) {
       this.cancelar('retiro');
       return;
     }
     this.programar('retiro', RETIRAR_SIN_USO_MS, () => {
-      if (this.tv || !this.abierta || !this.conBotonOrbe) return;
+      if (this.tv || !this.abierta) return;
       if (this.aplicando.size || this.hojaAbierta || this.confirmando) {
         this.programarRetiro();
         return;
@@ -1059,7 +1029,6 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
 
   /** Cualquier toque o tecla en la tarjeta: aplaza el retiro por falta de uso. */
   actividad(): void {
-    this.ultimaInteraccionMs = Date.now();
     if (this.abierta) this.programarRetiro();
   }
 
@@ -1448,7 +1417,6 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
   }
 
   private alTerminarSerie(aprobando: Aprobando[], ok: number, detenida: boolean, ultimoError: string | null): void {
-    this.ultimaAprobacionMs = Date.now();
     // Se soltó porque la página se fue: no se pide ni se programa nada más.
     if (!this.subs || !this.habilitado) return;
     const a = this.actual;
@@ -1516,7 +1484,6 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
   }
 
   private alTerminarProduccion(it: ItemCola, res: ResultadoProduccion): void {
-    this.ultimaAprobacionMs = Date.now();
     // Se soltó porque la página se fue: no se pide ni se programa nada más.
     if (!this.subs || !this.habilitado) return;
     this.anuncio = res.texto;
@@ -1618,6 +1585,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
       todos: todos && pendientes.length >= 2 ? { ...todos, confirmar: textoConfirmarTodos(todos.grupos, todos.pedidos) } : null,
       anuncio: this.anuncio,
       hoja: this.hojaAbierta && it && g ? this.armarHoja(it, g, opciones, res, viejo, confirmar, permisoDespachos) : null,
+      boton: this.botonPropio(disponible, visible),
     };
     this.vistaSub.next(vista);
 
@@ -1704,24 +1672,27 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     this.temporizadores.delete(nombre);
   }
 
-  /** Toques y teclas en cualquier parte: si la persona está moviendo la cámara o escribiendo, no se le pone la tarjeta encima. */
+  /** Nada se abre solo (D-468): sin orbe a la vista, la tarjeta cerrada deja su botón con el contador. */
+  private botonPropio(disponible: boolean, visible: boolean): VistaPropuestas['boton'] {
+    if (!disponible || visible || this.conBotonOrbe || this.tv || this.repitiendo) return null;
+    const c = contar(this.cola);
+    if (!c.ideas) return null;
+    const texto = textoIdeas(c);
+    return { texto, aria: `${texto.replace(' · ', ', ')}. Ver la propuesta` };
+  }
+
+  /** Al volver a la pestaña, si hace rato no se pide, se pide de respaldo. */
   private escucharInteraccion(): () => void {
     if (typeof document === 'undefined') return () => undefined;
-    const marcar = (): void => {
-      this.ultimaInteraccionMs = Date.now();
-    };
     const visible = (): void => {
       if (!document.hidden && this.habilitado && (this.ultimaPedidaMs === null || Date.now() - this.ultimaPedidaMs >= RESPALDO_MS)) {
         this.zona.run(() => this.pedir('respaldo'));
       }
     };
-    const eventos = ['pointerdown', 'wheel', 'keydown', 'touchstart'];
     this.zona.runOutsideAngular(() => {
-      eventos.forEach((ev) => document.addEventListener(ev, marcar, { capture: true, passive: true }));
       document.addEventListener('visibilitychange', visible);
     });
     return () => {
-      eventos.forEach((ev) => document.removeEventListener(ev, marcar, { capture: true }));
       document.removeEventListener('visibilitychange', visible);
     };
   }

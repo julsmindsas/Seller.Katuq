@@ -2,6 +2,19 @@
   <!-- Solo lo nuevo se anuncia (una propuesta que llega o el resultado de aprobar). -->
   <p class="ev-sug-sr" aria-live="polite">{{ vm.disponible && vm.visible && !vm.repitiendo ? vm.anuncio : '' }}</p>
 
+  <!-- Nada se abre solo (D-468): sin orbe a la vista, este botón abre la tarjeta. -->
+  <button
+    *ngIf="vm.boton as b"
+    type="button"
+    class="ev-sug-boton"
+    [class.ev-sug-boton--lista]="enLista"
+    [attr.aria-label]="b.aria"
+    (click)="abrir()"
+  >
+    <app-en-vivo-icono nombre="ia"></app-en-vivo-icono>
+    <span class="ev-sug-boton__texto">{{ b.texto }}</span>
+  </button>
+
   <section
     *ngIf="vm.disponible && vm.visible && !vm.repitiendo"
     class="ev-sug"

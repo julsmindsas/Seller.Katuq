@@ -259,11 +259,8 @@ export function entregaDeEvento(ev: EventoEnVivo, vista: 'comercio' | 'katuq', o
 
 // ── Opttia propone (D-422) ──────────────────────────────────────────────────
 
-/** Lo que dice el botón del orbe con propuestas: "Opttia tiene 3 ideas · 1 urgente". */
-export function textoIdeas(c: { ideas: number; urgentes: number }): string {
-  const ideas = `Opttia tiene ${c.ideas} ${c.ideas === 1 ? 'idea' : 'ideas'}`;
-  return c.urgentes > 0 ? `${ideas} · ${c.urgentes} ${c.urgentes === 1 ? 'urgente' : 'urgentes'}` : ideas;
-}
+/** Lo que dice el botón del orbe con propuestas (vive con las reglas de propuestas, D-468). */
+export { textoIdeas } from '../propuestas/propuestas.reglas';
 
 /**
  * Qué señala el orbe con una propuesta de la tarjeta: la primera caja de la propuesta (la del primer
