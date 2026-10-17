@@ -56,6 +56,7 @@ import {
   AvanceUbicacion, MapaUbicacionesComponent, PedidoSinUbicar
 } from "../components/mapa-ubicaciones/mapa-ubicaciones.component";
 import { OrdenesDespachoV2Component } from "../components/ordenes-despacho-v2/ordenes-despacho-v2.component";
+import { aplicarCambioDeEstado, estadoDestino, yaQuedoAsi } from "./estado-despacho";
 import { AnalisisDespachosComponent } from '../components/analisis-despachos/analisis-despachos.component';
 import { SeguimientoModalComponent } from "../components/seguimiento-modal/seguimiento-modal.component";
 import { Integration, IntegrationCategory, IntegrationsService } from "../../integrations/integrations.service";
@@ -2512,29 +2513,11 @@ export class DespachosComponent implements OnInit, OnDestroy {
   }
 
   cambiarEstado(order: Pedido, estado: number) {
-    // Determinar el nuevo estado basado en el código
-    let nuevoEstado: EstadoProceso;
-    switch (estado) {
-      case 0:
-        nuevoEstado = EstadoProceso.ProducidoTotalmente;
-        break;
-      case 1:
-        nuevoEstado = EstadoProceso.Empacado;
-        break;
-      case 2:
-        nuevoEstado = EstadoProceso.ProducidoTotalmente;
-        break;
-      case 3:
-        nuevoEstado = EstadoProceso.Empacado;
-        break;
-      case 4:
-        nuevoEstado = EstadoProceso.Despachado;
-        break;
-      case 5:
-        nuevoEstado = EstadoProceso.Entregado;
-        break;
-      default:
-        return; // Estado no reconocido
+    // Ticket 1224: la tabla de lo que hace cada botón vive en estado-despacho.ts, para
+    // aplicarla igual en el primer intento y en el reintento con el pedido fresco.
+    const nuevoEstado = estadoDestino(estado);
+    if (!nuevoEstado) {
+      return; // Estado no reconocido
     }
 
     // Verificar si el pedido puede cambiar al nuevo estado
@@ -2554,100 +2537,114 @@ export class DespachosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    switch (estado) {
-      case 0:
-        order.estadoProceso = EstadoProceso.ProducidoTotalmente;
-        break;
-      case 1:
-        order.estadoProceso = EstadoProceso.Empacado;
-        order.fechaHoraEmpacado = new Date().toISOString();
-        order.empacador = userLite.name;
-        break;
-      case 2:
-        order.estadoProceso = EstadoProceso.ProducidoTotalmente;
-        order.fechaHoraEmpacado = undefined;
-        order.empacador = undefined;
-        order.shippingOrder = undefined;
-        order.nroShippingOrder = undefined;
-        order.despachador = undefined;
-        order.fechaYHorarioDespachado = undefined;
-        order.transportador = undefined;
-        // Retroceso deliberado desde el tablero: el backend lo honra solo si va declarado.
-        (order as any)._estadoProcesoExplicitlyChanged = true;
-        break;
-      case 3:
-        // Ticket 1026 (ALMARA): al retirar un pedido de una planilla ya despachada
-        // este retroceso Despachado → Empacado llegaba sin declarar y el backend lo
-        // bloquea siempre como "retroceso crítico" (posible escritura obsoleta). Como
-        // además no había manejo de error, la planilla quedaba sin el pedido pero el
-        // pedido seguía Despachado y atado a esa planilla: no se podía reasignar.
-        order.estadoProceso = EstadoProceso.Empacado;
-        order.shippingOrder = undefined;
-        order.nroShippingOrder = undefined;
-        order.despachador = undefined;
-        order.fechaYHorarioDespachado = undefined;
-        order.transportador = undefined;
-        (order as any)._estadoProcesoExplicitlyChanged = true;
-        break;
-      case 4:
-        order.estadoProceso = EstadoProceso.Despachado;
-        order.fechaYHorarioDespachado = new Date().toISOString();
-        order.despachador = userLite;
-        order.transportador = userLite.name;
-        order.nroShippingOrder = "00";
-        order.shippingOrder = "00";
-        break;
-      case 5:
-        order.estadoProceso = EstadoProceso.Entregado;
-        order.despachador = userLite;
-        order.entregado = userLite;
-        order.fechaYHorarioDespachado = new Date().toISOString();
-        break;
-    }
+    // Ticket 1026 (ALMARA): los retrocesos (códigos 2 y 3, p. ej. al retirar un pedido de
+    // una planilla ya despachada) van con la marca `_estadoProcesoExplicitlyChanged`, que el
+    // backend exige para no bloquearlos como "retroceso crítico". La pone aplicarCambioDeEstado.
+    aplicarCambioDeEstado(order, estado, userLite);
+    this.guardarCambioDeEstado(order, estado, userLite, true);
+  }
 
+  /**
+   * Guarda el cambio de estado. Con `conReintento`, un conflicto de versión (409 STALE_WRITE)
+   * se resuelve releyendo el pedido; cualquier otro error sale directo al aviso.
+   */
+  private guardarCambioDeEstado(order: Pedido, estado: number, userLite: UserLite, conReintento: boolean) {
     this.ventasService.editOrder(order)
       .pipe(takeUntil(this.destroy$))
-      .subscribe((data) => {
-        delete (order as any)._estadoProcesoExplicitlyChanged; // flag de transporte, no se guarda
-        this.refrescarDatos(false); // No mostrar alertas al cambiar estado
-
-        // Si el pedido se cambió a "Despachado", intentar geocodificarlo automáticamente
-        if (order.estadoProceso === EstadoProceso.Despachado) {
-          console.log(`🚚 Pedido ${order.nroPedido} cambió a Despachado - Verificando geocodificación...`);
-
-          // Geocodificar específicamente este pedido si no tiene coordenadas
-          if (order.envio?.direccionEntrega && order.envio?.ciudad && !this.puntoDePedido(order)) {
-            console.log(`📍 Geocodificando pedido despachado: ${order.nroPedido}`);
-            this.geocodificarPedido(order).then(() => {
-              console.log(`🗺️ Actualizando mapa después de geocodificar pedido despachado: ${order.nroPedido}`);
-              this.actualizarConfiguracionMapa();
-            }).catch(error => {
-              console.error(`❌ Error geocodificando pedido ${order.nroPedido}:`, error);
-            });
-          } else {
-            // Si ya tiene coordenadas, solo actualizar el mapa
-            this.actualizarConfiguracionMapa();
+      .subscribe({
+        next: () => this.cambioDeEstadoGuardado(order),
+        error: (error) => {
+          delete (order as any)._estadoProcesoExplicitlyChanged;
+          if (conReintento && error?.isStaleWrite) {
+            this.reintentarConPedidoFresco(order, estado, userLite, error);
+            return;
           }
-        }
-
-        Swal.fire({
-          icon: "success",
-          title: "Pedido actualizado correctamente",
-          showConfirmButton: false,
-          timer: 1500,
-        });
-      }, (error) => {
-        delete (order as any)._estadoProcesoExplicitlyChanged;
-        // Antes este error se perdía en consola y la pantalla decía que todo salió bien.
-        const detalle = error?.error?.error || error?.error?.message || error?.message || "";
-        Swal.fire({
-          icon: "error",
-          title: `No se pudo cambiar el estado del pedido ${order.nroPedido || ""}`,
-          text: detalle || "El servidor rechazó el cambio. Recarga la pantalla y vuelve a intentar.",
-          confirmButtonText: "Entendido",
-        });
-        this.refrescarDatos(false);
+          this.mostrarErrorDeEstado(order, error);
+        },
       });
+  }
+
+  /**
+   * Ticket 1224 (ALMARA, DAD-014323): la copia del pedido que tiene la pantalla quedó vieja
+   * (empaque lo marcó o tesorería le asentó un pago mientras la orden de envío estaba
+   * abierta) y el backend rechazó el guardado para no pisar eso. Se trae el pedido actual,
+   * se le aplica el mismo cambio que pidió el usuario y se guarda una sola vez más. Si otra
+   * persona ya lo dejó así, no se escribe. Si vuelve a chocar, se muestra el aviso de siempre.
+   */
+  private reintentarConPedidoFresco(order: Pedido, estado: number, userLite: UserLite, errorOriginal: any) {
+    this.ventasService.getPedidoPorNumero(order.nroPedido)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (fresco) => {
+          if (!fresco) {
+            this.mostrarErrorDeEstado(order, errorOriginal);
+            return;
+          }
+          if (yaQuedoAsi(fresco, estado)) {
+            Object.assign(order, fresco);
+            this.toastr.info(`El pedido ${order.nroPedido} ya estaba así; se actualizó la pantalla.`);
+            this.refrescarDatos(false);
+            return;
+          }
+          aplicarCambioDeEstado(fresco, estado, userLite);
+          this.ventasService.editOrder(fresco)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: () => {
+                delete (fresco as any)._estadoProcesoExplicitlyChanged;
+                // La pantalla se queda con los datos actuales y la versión nueva, para que la
+                // siguiente edición desde aquí no vuelva a chocar.
+                Object.assign(order, fresco);
+                this.cambioDeEstadoGuardado(order);
+              },
+              error: (err) => this.mostrarErrorDeEstado(order, err),
+            });
+        },
+        error: () => this.mostrarErrorDeEstado(order, errorOriginal),
+      });
+  }
+
+  private cambioDeEstadoGuardado(order: Pedido) {
+    delete (order as any)._estadoProcesoExplicitlyChanged; // flag de transporte, no se guarda
+    this.refrescarDatos(false); // No mostrar alertas al cambiar estado
+
+    // Si el pedido se cambió a "Despachado", intentar geocodificarlo automáticamente
+    if (order.estadoProceso === EstadoProceso.Despachado) {
+      console.log(`🚚 Pedido ${order.nroPedido} cambió a Despachado - Verificando geocodificación...`);
+
+      // Geocodificar específicamente este pedido si no tiene coordenadas
+      if (order.envio?.direccionEntrega && order.envio?.ciudad && !this.puntoDePedido(order)) {
+        console.log(`📍 Geocodificando pedido despachado: ${order.nroPedido}`);
+        this.geocodificarPedido(order).then(() => {
+          console.log(`🗺️ Actualizando mapa después de geocodificar pedido despachado: ${order.nroPedido}`);
+          this.actualizarConfiguracionMapa();
+        }).catch(error => {
+          console.error(`❌ Error geocodificando pedido ${order.nroPedido}:`, error);
+        });
+      } else {
+        // Si ya tiene coordenadas, solo actualizar el mapa
+        this.actualizarConfiguracionMapa();
+      }
+    }
+
+    Swal.fire({
+      icon: "success",
+      title: "Pedido actualizado correctamente",
+      showConfirmButton: false,
+      timer: 1500,
+    });
+  }
+
+  private mostrarErrorDeEstado(order: Pedido, error: any) {
+    // Antes este error se perdía en consola y la pantalla decía que todo salió bien.
+    const detalle = error?.error?.error || error?.error?.message || error?.message || "";
+    Swal.fire({
+      icon: "error",
+      title: `No se pudo cambiar el estado del pedido ${order.nroPedido || ""}`,
+      text: detalle || "El servidor rechazó el cambio. Recarga la pantalla y vuelve a intentar.",
+      confirmButtonText: "Entendido",
+    });
+    this.refrescarDatos(false);
   }
 
   actualizarValoresPedido(order: Pedido) {

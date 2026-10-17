@@ -10360,3 +10360,14 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
   - El libro de ventas (D-451) mostraba `[object Object]` como referencia de las notas.
   - La auditoría de notas (D-449) no guardaba la factura ni el motivo, porque leía campos que el front no envía.
 - **Fuera de este cambio:** cartera del cliente, devolver mercancía al inventario, registrar la devolución de dinero, Siigo y notas sin factura con rol Contador.
+
+## D-460 (2026-10-16) — Despachos cambia el estado sobre el pedido actual, no sobre la copia vieja (ticket 1224)
+
+- **Problema (ALMARA, orden #3629, DAD-014323/014337/014328):** los pedidos entraron a la orden de envío en producción; mientras el editor estuvo abierto, empaque los marcó y a uno le asentaron un pago. Al quitarlos de la orden, `cambiarEstado` mandó la copia vieja con `_baseVersion` viejo y el backend respondió 409 `STALE_WRITE` (correcto: habría pisado el empaque y el pago). La pantalla solo mostraba el error; la salida era despachar a mano. El rótulo que "no hacía nada" era otra cosa y ya salió en `bef5233d` (2026.10.16.4).
+- **Decisión** (propuesta `openspec/changes/despachos-estado-con-pedido-fresco`):
+  - **Reintento con el pedido fresco:** ante `isStaleWrite`, Despachos trae el pedido actual por número (`GET /v1/orders/getOrderByNroPedido/:nroPedido`, que ya existía con `auth` y filtro por empresa; `VentasService.getPedidoPorNumero`), le aplica el mismo cambio y guarda una sola vez más. Si vuelve a chocar, muestra el aviso de siempre. Otros errores no reintentan.
+  - **Si ya quedó así, no escribe:** si el pedido fresco ya está en el estado pedido (y, al sacarlo de una orden, ya sin orden), la pantalla lo adopta y avisa.
+  - **Una sola tabla de cambios:** `despachos/estado-despacho.ts` (`estadoDestino`, `aplicarCambioDeEstado`, `yaQuedoAsi`) reemplaza el `switch` que vivía dentro de `cambiarEstado`; el primer intento y el reintento guardan lo mismo. Los retrocesos (códigos 2 y 3) siguen llevando `_estadoProcesoExplicitlyChanged` (D-083 / ticket 1026).
+  - **La pantalla se queda con el pedido actual** (`Object.assign`) y la versión nueva, para que la siguiente edición no vuelva a chocar.
+- **Sin backend, sin endpoint acotado** (queda como opción si el reintento no alcanza). Afecta solo `cambiarEstado` en `despachos.component.ts`: el botón de estado de la lista y quitar un pedido de la orden.
+- **Pruebas:** `tests/despachos/estado-despacho.test.js`, 10/10 (tabla por código, campos intactos, "ya quedó así", flujo con un rechazo, segundo rechazo sin tercer intento, error distinto no relee). Sin probar aún con un pedido real: pendiente con ALMARA tras publicar.

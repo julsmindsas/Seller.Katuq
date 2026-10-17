@@ -5,8 +5,8 @@ import { Producto } from '../../models/productos/Producto';
 import { Pedido, EstadoPago, EstadoProceso } from '../../../components/ventas/modelo/pedido';
 import { CustomerSummary } from '../../../components/ventas/modelo/customer-summary';
 import { POSPedido } from '../../../components/pos/pos-modelo/pedido';
-import { Observable, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { Observable, throwError, of } from 'rxjs';
+import { tap, catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriptionService } from '../subscription.service';
@@ -477,6 +477,21 @@ export class VentasService extends BaseService {
 
   getOrdersByNroPedido(nroPedido: any) {
     return this.get<Pedido[]>('/v1/orders/byNroPedido/' + nroPedido);
+  }
+
+  /**
+   * Ticket 1224: el pedido actual por su número exacto (misma empresa), para reintentar un
+   * cambio de estado cuando la copia de la pantalla quedó vieja. `null` si no existe o falla.
+   */
+  getPedidoPorNumero(nroPedido: string): Observable<Pedido | null> {
+    const nro = String(nroPedido || '').trim();
+    if (!nro) {
+      return of(null);
+    }
+    return this.get<any>('/v1/orders/getOrderByNroPedido/' + encodeURIComponent(nro)).pipe(
+      map((resp) => (resp && resp.success && resp.data ? (resp.data as Pedido) : null)),
+      catchError(() => of(null)),
+    );
   }
 
   /**
