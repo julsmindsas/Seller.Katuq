@@ -2320,6 +2320,39 @@
             </div>
           </div>
 
+          <!-- ── Ticket 1225: días y cupo de entregas ── -->
+          <div class="grupo" id="campo-entregas" *ngIf="entregas as e">
+            <h3>Entregas</h3>
+            <div class="campo-doble">
+              <div class="campo">
+                <label>Pedidos máximos por día</label>
+                <input type="number" min="0" max="500" [(ngModel)]="e.cupoDiario" (ngModelChange)="marcarSucio()" />
+                <small>Cuando se llena, el comprador elige otro día. 0 = sin límite.</small>
+              </div>
+              <div class="campo">
+                <label>Hora de corte para hoy</label>
+                <input type="time" [(ngModel)]="e.horaCorte" (ngModelChange)="marcarSucio()" />
+                <small>Después de esa hora, ya no se reciben pedidos para el mismo día.</small>
+              </div>
+            </div>
+            <div class="campo">
+              <label>Días sin entregas</label>
+              <div class="campo-doble">
+                <input type="date" [(ngModel)]="diaSinEntrega" [min]="hoyISO" />
+                <button class="boton-secundario" (click)="agregarDiaSinEntrega()" [disabled]="!diaSinEntrega">
+                  Agregar día
+                </button>
+              </div>
+              <div class="dias-cerrados" *ngIf="e.diasBloqueados.length">
+                <span class="dia-cerrado" *ngFor="let d of e.diasBloqueados; let i = index">
+                  {{ etiquetaDia(d) }}
+                  <button type="button" (click)="quitarDiaSinEntrega(i)" [attr.aria-label]="'Quitar ' + d">×</button>
+                </span>
+              </div>
+              <small>Festivos, inventario o vacaciones: ese día no aparece para elegir en tu tienda.</small>
+            </div>
+          </div>
+
           <!-- ── Recoger en tienda ── -->
           <div class="grupo" *ngIf="retiro as r">
             <h3>Recoger en tienda</h3>

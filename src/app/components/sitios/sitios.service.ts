@@ -34,6 +34,8 @@ export interface TiendaSitio {
   modoConversion?: boolean;
   /** Ticket 1241: KAI, asesor de compra en la tienda. */
   asesorKai?: boolean;
+  /** Ticket 1225: cupo de pedidos por día, hora de corte (HH:mm) y días sin entregas (YYYY-MM-DD). */
+  entregas?: { cupoDiario: number; horaCorte: string; diasBloqueados: string[] };
   /** Categorías del maestro que no salen en el sitio (menú, baldosas, pie, filtros). */
   categoriasOcultas?: string[];
   /** Ticket 1214: categorías de nombre interno que el comercio decidió mostrar (por defecto, ocultas). */

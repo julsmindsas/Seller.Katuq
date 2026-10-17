@@ -2894,6 +2894,41 @@
   > *, input, select { min-width: 0; max-width: 100%; }
 }
 
+// Ticket 1225: días sin entregas. El span sale de *ngFor (ng-star-inserted):
+// lleva color y tamaño propios para que el CSS global no lo pinte de azul.
+.dias-cerrados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.dia-cerrado {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--kb-line-4);
+  background: var(--kb-surface-3);
+  color: var(--kb-ink) !important;
+  font-size: 12.5px !important;
+  font-weight: 600;
+
+  button {
+    border: 0;
+    background: transparent;
+    color: var(--kb-muted, #6b6880);
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 4px;
+    cursor: pointer;
+
+    &:hover { color: var(--kb-ink); }
+    &:focus-visible { outline: 3px solid #7C5CFF !important; border-radius: 6px; }
+  }
+}
+
 // Ticket 1218: cada campo del cupón con etiqueta y ayuda.
 .cupon-campo {
   display: flex;

@@ -10506,3 +10506,31 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
 - **Verificado:** prueba de navegador con la IA simulada; la cámara recomendada, 2 al carrito ($378.000) y checkout abierto, a 1440 y 390 px. Lo determinista lo cubren 8 pruebas.
 - **Sin verificar:** la respuesta real de Opttia; no se llamó a Bedrock en pruebas.
 - **Fuera (etapas 3 y 4):** compra completa y voz; postventa y paso a humano.
+
+## D-470 (2026-10-17) — Checkout de la tienda: quién recibe, factura de empresa y reglas de entrega (ticket 1225, F2-15)
+
+- **Lo que ya existía:** fecha y franja de entrega y la dedicatoria (tarjeta para/de/mensaje).
+- **Quién recibe:** casilla «Lo recibe otra persona», con nombre y celular.
+  - Van a `envio.nombres` y `envio.celular` del pedido, igual que en la venta asistida.
+  - Sin la casilla, todo queda como antes: el comprador es quien recibe.
+- **Factura a nombre de una empresa:** casilla con razón social y correo de facturación; el NIT usa el campo de documento que ya existía.
+  - Van a `facturacion.nombres` (alias «Empresa») y `facturacion.correoElectronico`.
+- **Reglas de entrega, en Tienda → Entregas** (`tienda.entregas`, apagadas de fábrica):
+  - `cupoDiario`: pedidos por día, entre 0 y 500.
+  - `horaCorte`: HH:mm; pasada esa hora, ya no se recibe para el mismo día.
+  - `diasBloqueados`: hasta 60 fechas.
+- **El servidor manda.** `crearPedido` revisa día bloqueado y corte (`revisarFechaDeEntrega`) y luego el cupo:
+  - Cuenta los `orders` de ese `siteId` con esa `fechaEntrega` que no estén Cancelado ni Precancelado.
+  - Lleno o cerrado responde 409 con un mensaje para el comprador, ANTES de escribir nada.
+  - El celular solo ayuda: la fecha mínima y el aviso del día bloqueado.
+- **Límite conocido:** dos pedidos simultáneos con el último cupo pueden pasar los dos, porque el conteo no es transaccional. Se aceptó para no bloquear la creación de pedidos (módulo sensible); si un comercio lo necesita estricto, va con propuesta propia.
+- **Verificado:**
+  - Navegador a 390 px con API simulada: el día bloqueado se rechaza y el resumen muestra «Recibe» y «Factura».
+  - El cuerpo enviado lleva destinatario, razón social y correo de factura. Hubo 0 errores de JS y la compra automatizada tomó 3,8 s.
+  - 5 pruebas nuevas, y la suite de sitios queda con los mismos 4 fallos previos de la base.
+- **Sin verificar:** el panel del editor solo se compiló; no se vio en navegador.
+- **Fuera de este cambio:**
+  - Cotización real con transportadora: el envío sigue siendo la tarifa fija o por zonas.
+  - Anticipo o link de pago parcial.
+  - Texto de retracto (Ley 1480).
+  - Medir con personas reales los 2 minutos de compra.

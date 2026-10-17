@@ -1221,6 +1221,42 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     return t.retiroEnTienda;
   }
 
+  /** Ticket 1225: cupo diario, hora de corte y días sin entregas (sitios viejos llegan sin esto). */
+  get entregas(): NonNullable<TiendaSitio["entregas"]> | null {
+    if (!this.contenido || !this.contenido.tienda) return null;
+    const t = this.contenido.tienda as TiendaSitio;
+    if (!t.entregas) t.entregas = { cupoDiario: 0, horaCorte: "", diasBloqueados: [] };
+    if (!Array.isArray(t.entregas.diasBloqueados)) t.entregas.diasBloqueados = [];
+    return t.entregas;
+  }
+
+  diaSinEntrega = "";
+  readonly hoyISO = new Date(Date.now() - 5 * 3600e3).toISOString().slice(0, 10);
+
+  agregarDiaSinEntrega(): void {
+    const e = this.entregas;
+    const d = this.diaSinEntrega;
+    if (!e || !/^\d{4}-\d{2}-\d{2}$/.test(d) || e.diasBloqueados.includes(d) || e.diasBloqueados.length >= 60) return;
+    e.diasBloqueados = [...e.diasBloqueados, d].sort();
+    this.diaSinEntrega = "";
+    this.marcarSucio();
+  }
+
+  /** "2026-12-25" → "vie, 25 dic 2026" (la app no registra el locale es para el pipe date). */
+  etiquetaDia(d: string): string {
+    const t = Date.parse(`${d}T12:00:00Z`);
+    return isNaN(t)
+      ? d
+      : new Date(t).toLocaleDateString("es-CO", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  }
+
+  quitarDiaSinEntrega(i: number): void {
+    const e = this.entregas;
+    if (!e) return;
+    e.diasBloqueados = e.diasBloqueados.filter((_, j) => j !== i);
+    this.marcarSucio();
+  }
+
   get cupones(): CuponSitio[] {
     if (!this.contenido || !this.contenido.tienda) return [];
     const t = this.contenido.tienda as TiendaSitio;
