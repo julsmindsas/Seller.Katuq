@@ -10507,7 +10507,7 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
 - **Sin verificar:** la respuesta real de Opttia; no se llamó a Bedrock en pruebas.
 - **Fuera (etapas 3 y 4):** compra completa y voz; postventa y paso a humano.
 
-## D-470 (2026-10-17) — Checkout de la tienda: quién recibe, factura de empresa y reglas de entrega (ticket 1225, F2-15)
+## D-470 (2026-10-17) — Checkout de la tienda: quién recibe, factura de empresa y reglas de entrega (ticket 1225, F2-15) — PUBLICADO: backend cd2c6075, front 2026.10.17.5
 
 - **Lo que ya existía:** fecha y franja de entrega y la dedicatoria (tarjeta para/de/mensaje).
 - **Quién recibe:** casilla «Lo recibe otra persona», con nombre y celular.
