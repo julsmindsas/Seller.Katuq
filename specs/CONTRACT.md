@@ -10557,7 +10557,7 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - Después de la corrección quedan 0 pagos Pendiente fuera de su pedido en todo Katuq; antes había 1, este.
 - **Abierto:** que los pedidos nazcan con `date_upd` cerraría el hueco del candado para todos los campos. Toca sincronizaciones que leen `date_upd`, así que va con propuesta propia.
 
-## D-472 (2026-10-17) — Marcas con página, sucursales con existencias y agenda de visitas en la web (ticket 1236, F2-44)
+## D-472 (2026-10-17) — Marcas con página, sucursales con existencias y agenda de visitas en la web (ticket 1236, F2-44) — PUBLICADO: backend 744c4397, front 2026.10.17.6
 
 - **Marcas:**
   - La marca sale del campo `identificacion.marca` del producto; el índice de búsqueda suma `marcaOriginal`, sin cambiar los productos.
