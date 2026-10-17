@@ -25,6 +25,7 @@ import {
   serializarConversacion,
   textoAvance,
   validarInstruccion,
+  preguntaPorPublicar,
 } from "./editar-con-ia.logic";
 import { pdfAImagenes, reducirImagen } from "./editar-con-ia.archivos";
 import { avisoContraste, avisoContrastePrincipal, combinacionUsable, mismosColores } from "../contraste";
@@ -2966,6 +2967,21 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     const historial = historialParaServidor(this.mensajesIA);
     this.decirIA({ rol: "comercio", texto: v.instruccion, adjuntos: referencias.length || undefined });
     this.mensajeIA = "";
+    // Ticket 1248: la pregunta por publicar se contesta con el checklist real, sin gastar IA.
+    if (!referencias.length && preguntaPorPublicar(v.instruccion)) {
+      const pendientes = this.pendientes;
+      const criticos = pendientes.filter((p) => p.critico);
+      this.decirIA({
+        rol: "ia",
+        texto: !pendientes.length
+          ? "Tu página está lista: no le falta nada para publicar."
+          : criticos.length
+            ? `No puedes publicar todavía: faltan ${criticos.length} cosa(s) que bloquean. Toca «Corregir» y te llevo.`
+            : "Ya puedes publicar. Antes, te recomiendo revisar esto:",
+        pendientes: [...criticos, ...pendientes.filter((p) => !p.critico)].slice(0, 8),
+      });
+      return;
+    }
     if (referencias.length) {
       this.adjuntosIA = [];
       this.propositoAdjuntos = null;
@@ -3694,6 +3710,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       e.fondoImagen ||
       e.colorTexto ||
       e.alineacion ||
+      e.dispositivo ||
       (e.espaciado && e.espaciado !== "normal") ||
       (e.ancho && e.ancho !== "normal")
     );

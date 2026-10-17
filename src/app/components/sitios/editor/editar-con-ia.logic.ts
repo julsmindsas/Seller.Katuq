@@ -27,6 +27,8 @@ export interface MensajeEditarIA {
   cambios?: CambioIA[];
   /** Cuántas imágenes acompañaron el mensaje (solo para mostrar "📎 2 imágenes"). */
   adjuntos?: number;
+  /** Ticket 1248: pendientes del checklist con su botón para corregir (no se guardan en la conversación). */
+  pendientes?: { texto: string; critico?: boolean; ir?: () => void }[];
 }
 
 // ── Archivos que se le muestran a la IA ─────────────────────────────────────────────────────────
@@ -97,7 +99,19 @@ export const SUGERENCIAS_EDITAR_IA: ReadonlyArray<string> = [
   'Pon el catálogo justo después de la portada',
   'Pon la portada a pantalla completa',
   'Agrega una sección que cuente nuestra historia',
+  // Ticket 1248.
+  'Muestra el botón de WhatsApp solo en celular',
+  '¿Por qué no puedo publicar?',
 ];
+
+/**
+ * Ticket 1248: «¿por qué no puedo publicar?», «¿qué me falta para publicar?».
+ * Se responde con el checklist real del editor, sin IA. Una orden («publica la
+ * página») no entra: eso es el botón Publicar.
+ */
+export function preguntaPorPublicar(texto: string): boolean {
+  return /(por ?qu[eé]|no (puedo|me deja|se puede)|qu[eé] (me )?falta|qu[eé] necesito)[^.]{0,40}public/i.test(String(texto || ''));
+}
 
 /** Tipo plano a propósito: el proyecto compila sin `strictNullChecks` y ahí una unión no se estrecha con `!ok`. */
 export interface ResultadoInstruccion {

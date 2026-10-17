@@ -120,6 +120,14 @@
               <div class="chat-ia__burbuja" [class.chat-ia__burbuja--yo]="m.rol === 'comercio'" [class.chat-ia__burbuja--error]="m.error">
                 <span class="chat-ia__adjuntos" *ngIf="m.adjuntos">📎 {{ m.adjuntos === 1 ? '1 imagen' : m.adjuntos + ' imágenes' }}</span>
                 {{ m.texto }}
+                <!-- Ticket 1248: lo que falta para publicar, con su atajo -->
+                <ul class="chat-ia__cambios" *ngIf="m.pendientes?.length">
+                  <li *ngFor="let p of m.pendientes">
+                    <span class="chat-ia__icono" aria-hidden="true">{{ p.critico ? '⛔' : '💡' }}</span>
+                    <span>{{ p.texto }}</span>
+                    <button type="button" class="enlace-sutil" *ngIf="p.ir" (click)="p.ir()">Corregir</button>
+                  </li>
+                </ul>
                 <ul class="chat-ia__cambios" *ngIf="m.cambios?.length">
                   <li class="chat-ia__cambios-titulo">Esto cambié:</li>
                   <li *ngFor="let c of m.cambios">
@@ -1969,6 +1977,18 @@
                   <option value="ninguna">Quieta</option>
                 </select>
                 <small>Necesita el movimiento encendido en la pestaña Estilo.</small>
+              </div>
+
+              <!-- Ticket 1248: dónde se ve la sección -->
+              <div class="campo">
+                <label>Dónde se ve</label>
+                <select [ngModel]="estiloDe(b).dispositivo || ''"
+                        (ngModelChange)="cambiarEstilo(b, 'dispositivo', $event)">
+                  <option value="">En celular y computador</option>
+                  <option value="movil">Solo en celular</option>
+                  <option value="escritorio">Solo en computador</option>
+                </select>
+                <small>Por ejemplo, el botón de WhatsApp solo en celular.</small>
               </div>
 
               <button class="btn-fantasma btn-fantasma--sm" (click)="limpiarEstilo(b)"

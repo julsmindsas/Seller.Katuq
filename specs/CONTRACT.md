@@ -10460,3 +10460,18 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
   - **Interfaz:** `app-borradores-venta` (base D-400) en la cabecera de las dos pantallas de venta asistida: "Guardar borrador"/"Actualizar borrador" y "Borradores (N)" con modal (Retomar, Eliminar con Swal).
 - **No toca** pedidos, consecutivos, inventario ni precios.
 - **Pruebas:** backend `npm run test:borradores-venta` 7/7 (empresa y dueño de la sesión, campos inventados, 400/413, visibilidad vendedor/administrador/otra empresa, actualizar, vencidos, orden); front `sales-drafts.service.spec.ts` 6/6 (refresco de líneas). Build de producción sin errores.
+
+## D-467 (2026-10-17) — KAI en el editor: «¿por qué no puedo publicar?» y secciones por dispositivo (ticket 1248, TX-33)
+
+- **Ya existía:** «Editar con IA» (bandera `landingPrompt`), con textos, colores, mostrar, ocultar, reordenar y agregar secciones, «Esto cambié» y deshacer. Se cubre con 18 escenarios.
+  - Está encendida en las empresas nuevas (D-395) y en Pucky y Cookie Clean, FLORECER y Sueve.
+  - En Julsmind no está encendida: activarla es escribir en producción, queda para Daniel.
+- **Nuevo:**
+  - **«¿Por qué no puedo publicar?»** (y variantes) se responde en el chat con el checklist real del editor (`pendientes`), los críticos primero, cada uno con «Corregir». No llama a la IA: no gasta Bedrock.
+  - **Dónde se ve:** cualquier sección puede ir solo en celular o solo en computador (`estilo.dispositivo`).
+    - El render marca la primera etiqueta del bloque (también la burbuja flotante de WhatsApp) y el CSS la esconde en el otro dispositivo.
+    - Hay selector en el estilo de la sección.
+    - KAI lo aplica («el botón de WhatsApp solo en celular»), lo describe en «Esto cambié» y «todos» lo devuelve.
+- **Fuera:**
+  - Historial de versiones con comparar y restaurar (ticket 1253).
+  - Renombrar el botón «Opttia» a «KAI»: es una decisión de marca.
