@@ -10071,6 +10071,8 @@ Daniel: «con kapso necesitamos conectar n cantidades de whatsapp y que se pueda
     - los toques Confirmar/Cancelar no se procesan si llegan por una línea;
     - la sesión del bot sigue por contacto;
     - el barrido puede repetir trabajo idempotente.
+- **Piloto (16-oct):** `whatsappMultiNumero` encendida en Julsmind (simulación previa, verificada). La clave del webhook sigue sin ponerse.
+- **Incidente y corrección (16-oct):** el buzón de WhatsApp dejó de cargar los chats en producción desde la publicación del 15-oct (ALMARA lo reportó como «se cayó Kapso»; Kapso estaba bien). Causa: `WhatsappInboxService` pasó a `BaseService` pero quedó provisto en el módulo lazy, que recibe el `HttpClient` de `SharedModule` (importa `HttpClientModule`) sin `HttpInterceptor2`: las peticiones salían sin `Authorization` y el backend respondía 401. Arreglo: `providedIn: "root"` y fuera de `providers` del módulo (`b5ce6f7b`), publicado en 2026.10.16.5. Regla: todo servicio HTTP del front va en `root`.
 
 ## D-438 (2026-10-16) — Los pagos rechazados o cancelados no suman al anticipo (ticket 1221, ALMARA) — PUBLICADO: backend 15cbb5ab
 
