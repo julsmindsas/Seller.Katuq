@@ -10422,7 +10422,7 @@ Daniel: «asegurate que no dañaste nada y no va volver a pasar».
 - **Fuentes:** volver de una pasarela de pago (Wompi, Addi, Sistecrédito, PSE, PlacetoPay, PayU, Mercado Pago) cuenta como «directo», no como otro sitio.
 - **Fuera:** Clarity, Hotjar, Pinterest y LinkedIn. La llegada real a TikTok y GA4 se verifica con las credenciales del comercio: en pruebas, la red fue simulada.
 
-## D-464 (2026-10-16) — KAI explica los rechazos de la DIAN y propone cerrarlos como reemplazados (ticket 1269, FE-18)
+## D-464 (2026-10-16) — KAI explica los rechazos de la DIAN y propone cerrarlos como reemplazados (ticket 1269, FE-18) — PUBLICADO: backend 8c3a7b9b, front 2026.10.17.1
 
 - **Problema:** un rechazo como el de JULS22 («Regla: 90, Rechazo: Documento procesado anteriormente») quedaba en rojo para siempre, sin explicación, aunque el comercio ya lo había resuelto emitiendo JULS41.
 - **Decisión** (`services/accounting/dian/explicarRechazo.js`):
