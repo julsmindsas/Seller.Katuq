@@ -265,6 +265,8 @@ export interface ContenidoSitio {
   seo: { titulo: string; descripcion: string; imagen: string; favicon?: string };
   tienda: TiendaSitio;
   analitica: AnaliticaSitio;
+  /** Ticket 1238: enlaces cortos de campaña (`/r/<codigo>`) con sus utm. */
+  enlaces?: { codigo: string; nombre: string; destino: string; utm_source: string; utm_medium: string; utm_campaign: string; utm_content: string }[];
 }
 
 export interface Sitio {
@@ -306,6 +308,7 @@ export interface DiaMetricas {
 export interface FilaOrigen {
   fuente?: string;
   utm_campaign?: string;
+  cupon?: string;
   vistas: number;
   pedidos: number;
   ventas: number;
@@ -338,6 +341,8 @@ export interface MetricasSitio {
   porFuente?: FilaOrigen[];
   /** Ticket 1239: lo mismo por campaña (utm_campaign). */
   porCampana?: FilaOrigen[];
+  /** Ticket 1238: lo mismo por código de cupón o de influenciador. */
+  porCupon?: FilaOrigen[];
   visitantesUnicos: number;
   /** Null cuando todavía no hay visitas: no es 0%, es que no hay dato. */
   conversion: number | null;

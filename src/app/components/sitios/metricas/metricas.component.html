@@ -130,6 +130,17 @@
             <p class="grafica__pie">Cuenta los pedidos hechos en esta página según por dónde llegó el comprador. Los pedidos de antes del 16 de octubre de 2026 salen como «Sin dato».</p>
           </section>
 
+          <!-- Ticket 1238: el cupón o código de influenciador como fuente -->
+          <section class="clics" *ngIf="datos.porCupon?.length">
+            <h6>Ventas por cupón o influenciador</h6>
+            <ul>
+              <li *ngFor="let c of datos.porCupon">
+                <span>{{ c.cupon }}</span>
+                <strong>{{ c.pedidos }} pedido(s) · {{ dinero(c.ventas) }}</strong>
+              </li>
+            </ul>
+          </section>
+
           <!-- Dispositivo y campañas, lado a lado cuando hay de ambos -->
           <div class="dos-columnas">
             <section class="clics" *ngIf="datos.dispositivos && datos.dispositivos.length">

@@ -2915,6 +2915,35 @@
             <code>{{ enlaceCampana }}</code>
             <button type="button" class="feed-url__copiar" (click)="copiarEnlaceCampana()">Copiar</button>
           </div>
+
+          <!-- Ticket 1238: enlace corto y QR por campaña, influenciador, feria o empaque -->
+          <div class="fechas-programacion">
+            <div class="campo">
+              <label>A dónde lleva</label>
+              <select [(ngModel)]="utmDestino">
+                <option value="/">Inicio</option>
+                <option value="/?catalogo=1">Toda la tienda</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label>Detalle (opcional)</label>
+              <input type="text" [(ngModel)]="utmContenido" maxlength="60" placeholder="influenciador-ana" />
+            </div>
+          </div>
+          <button type="button" class="boton-secundario" (click)="guardarEnlaceCorto()">Guardar como enlace corto con QR</button>
+          <div class="repetible enlace-corto" *ngFor="let e of enlacesCampana; let i = index">
+            <strong class="enlace-corto__nombre">{{ e.nombre }}</strong>
+            <div class="feed-url">
+              <code>{{ urlCorta(e) }}</code>
+              <button type="button" class="feed-url__copiar" (click)="copiarTexto(urlCorta(e), 'Enlace corto copiado')">Copiar</button>
+            </div>
+            <div class="enlace-corto__acciones">
+              <button type="button" class="enlace-sutil" (click)="descargarQr(e)">Descargar QR</button>
+              <button type="button" class="enlace-sutil" (click)="quitarEnlaceCorto(i)">Quitar</button>
+            </div>
+          </div>
+          <small *ngIf="enlacesCampana.length">Los enlaces cortos funcionan desde que publicas. Cada visita que
+            entra por ellos queda con su campaña, y en «Cómo va» ves sus ventas.</small>
         </div>
 
         <!-- Ticket 1229: catálogo para Google Shopping y Meta -->

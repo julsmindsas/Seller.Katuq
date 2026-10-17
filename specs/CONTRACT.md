@@ -10610,3 +10610,33 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - Compra a crédito con control de cupo.
   - Condiciones de pago elegibles al pagar.
   - Solicitud de cotización para proyectos (F2-43).
+
+## D-474 (2026-10-17) — Atribución: origen completo de cada contacto y venta, WhatsApp con rastro, enlaces cortos con QR y cupones como fuente (ticket 1238, F3-24)
+
+- **Ya existía:** `campana` (último toque) en lead, cita, pedido y carrito por WhatsApp; métricas por fuente y campaña (D-462); `adReferral` guardado en `whatsapp_inbound`, pero sin usar.
+- **Captura** (`utils/siteAtribucion.js`, vocabulario cerrado):
+  - Utm, identificadores de clic (gclid, gbraid, wbraid, fbclid, ttclid, msclkid), sitio de referencia externo, página de entrada, dispositivo y fecha.
+  - Un toque nuevo reemplaza al anterior entero; un utm viejo no se mezcla con un clic nuevo.
+  - **Primer toque** guardado 90 días en `localStorage.kq_primer_toque`, SOLO si el sitio no pide consentimiento o el visitante aceptó (`body[data-kq-permiso]` + `kq_consentimiento`). Viaja como `primerToque` dentro del mismo origen, así que todo lo que ya lo enviaba lo lleva.
+- **Origen pegado a todo:**
+  - Lead, cita y pedido (ya estaban).
+  - Carrito abandonado por correo: `campana` al nacer.
+  - Cliente que NACE en una compra de la tienda: `origenPrimerContacto {canal, siteId, pedido, campana}`; a uno existente no se le pisa.
+- **WhatsApp con rastro:**
+  - El sitio agrega «· ref XXXXX» al mensaje de todo enlace `wa.me` (5 caracteres, sin 0/O/1/I).
+  - El clic registra `ref` y el origen en `site_events`.
+  - Al entrar el mensaje por Kapso (`inboundProcessor`), si trae ref válida de ESA empresa (30 días) o el `referral` de un anuncio click-to-WhatsApp, `services/sites/leadsWhatsapp.js` crea el prospecto (`origen: "whatsapp"`, campaña o anuncio con ctwa_clid). Si el teléfono ya existe (`phoneNormalized`), solo anota `ultimoToque`.
+  - Sin rastro no se crea nada, y nunca frena la conversación (try/catch).
+  - El write-set del procesador suma `prospects` en ese caso, documentado en su cabecera.
+- **Enlaces cortos con QR:**
+  - `contenido.enlaces` (hasta 50: código, nombre, destino DENTRO del sitio, utm).
+  - `/r/<código>` redirige 302 con sus utm, antes de la caché del HTML; deja el evento `enlace`, y un código inexistente da 404.
+  - En el editor, junto al armador de utm (Pauta): «Guardar como enlace corto con QR», copiar y «Descargar QR» en PNG.
+  - **Dependencia nueva del front:** `qrcode@1.5.4` (MIT) y `@types/qrcode`, cargada perezosa en un chunk de 84 KB. Quien compile en otra copia debe correr `npm install`.
+- **Cupones e influenciadores como fuente:** «Cómo va» suma «Ventas por cupón o influenciador» (`porCupon`, desde el cupón que el evento de pedido ya guardaba).
+- **Verificado:**
+  - 9 pruebas (`tests/sitios/atribucionCompleta.test.js`). Se ajustaron `pautaTiktokConsentimiento` (el ttclid cambió de lugar) y la caja de arena de `carritoWhatsapp` (nueva dependencia). La suite de sitios y mensajería queda con los mismos fallos previos de la base, comparados contra stash.
+  - Navegador: primer toque Meta y último Google, gbraid descartado con el toque nuevo y el mensaje «…· ref VG2E9» codificado con %20. El clic lleva ref y origen, y con consentimiento pedido sin aceptar no se recuerda nada; 0 errores de JS.
+- **Fuera (acordado con Daniel):**
+  - Devolver a Meta (Conversions API) y a Google (conversión fuera de línea) las ventas cerradas por WhatsApp o venta asistida.
+  - Medir el prospecto de WhatsApp en el número compartido (allí la empresa se infiere).

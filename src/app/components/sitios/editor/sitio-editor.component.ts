@@ -4952,6 +4952,77 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     );
   }
 
+  // ── Ticket 1238: enlaces cortos de campaña (`/r/<código>`) con QR ──
+  utmDestino = "/";
+  utmContenido = "";
+
+  get enlacesCampana(): any[] {
+    const c: any = this.contenido;
+    if (!c) return [];
+    if (!Array.isArray(c.enlaces)) c.enlaces = [];
+    return c.enlaces;
+  }
+
+  private limpiarUtm(v: string): string {
+    return String(v || "").trim().toLowerCase()
+      .normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+  }
+
+  guardarEnlaceCorto(): void {
+    const lista = this.enlacesCampana;
+    if (lista.length >= 50) {
+      this.toastr.warning("Ya tienes 50 enlaces. Quita alguno para guardar otro.");
+      return;
+    }
+    const campana = this.limpiarUtm(this.utmCampana);
+    const base = ((campana || this.limpiarUtm(this.utmFuente)).replace(/-/g, "").slice(0, 9) || "enlace").padEnd(3, "k");
+    let codigo = base;
+    for (let n = 2; lista.some((e) => e.codigo === codigo); n++) codigo = `${base.slice(0, 9)}${n}`;
+    lista.push({
+      codigo,
+      nombre: (this.utmCampana || `${this.utmFuente} · ${this.utmMedio}`).slice(0, 60),
+      destino: this.utmDestino === "/?catalogo=1" ? "/?catalogo=1" : "/",
+      utm_source: this.limpiarUtm(this.utmFuente),
+      utm_medium: this.limpiarUtm(this.utmMedio),
+      utm_campaign: campana,
+      utm_content: this.limpiarUtm(this.utmContenido),
+    });
+    this.marcarSucio();
+    this.toastr.success("Enlace guardado. Funciona desde que publiques.");
+  }
+
+  urlCorta(e: { codigo: string }): string {
+    return `${this.enlacePublico}/r/${e.codigo}`;
+  }
+
+  copiarTexto(url: string, aviso: string): void {
+    navigator.clipboard.writeText(url).then(
+      () => this.toastr.success(aviso),
+      () => this.toastr.info(url, "Copia el enlace")
+    );
+  }
+
+  quitarEnlaceCorto(i: number): void {
+    this.enlacesCampana.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  /** El QR del enlace corto, en PNG, para el empaque, la feria o el volante. */
+  async descargarQr(e: { codigo: string }): Promise<void> {
+    try {
+      const QRCode = await import("qrcode");
+      const datos = await QRCode.toDataURL(this.urlCorta(e), {
+        width: 720, margin: 2, errorCorrectionLevel: "M", color: { dark: "#211F3A", light: "#FFFFFF" },
+      });
+      const a = document.createElement("a");
+      a.href = datos;
+      a.download = `qr-${e.codigo}.png`;
+      a.click();
+    } catch (err) {
+      this.toastr.error("No pudimos generar el QR. Intenta de nuevo.");
+    }
+  }
+
   /** Ticket 1229: dirección del catálogo para Google Merchant Center y Meta. */
   copiarFeed(): void {
     const url = `${this.enlacePublico}/feed.xml`;

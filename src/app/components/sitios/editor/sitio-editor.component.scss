@@ -2894,6 +2894,14 @@
   > *, input, select { min-width: 0; max-width: 100%; }
 }
 
+// Ticket 1238: enlaces cortos de campaña.
+.enlace-corto {
+  margin-top: 10px;
+
+  .enlace-corto__nombre { display: block; font-size: 13px; color: var(--kb-ink); margin-bottom: 4px; }
+  .enlace-corto__acciones { display: flex; gap: 12px; margin-top: 4px; }
+}
+
 // Ticket 1236: logo de marca con su nombre y constancia; días de la agenda.
 .logo-marca__fila {
   display: flex;
