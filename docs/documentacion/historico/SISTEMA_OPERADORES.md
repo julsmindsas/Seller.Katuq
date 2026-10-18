@@ -1,5 +1,7 @@
 # 👷 Sistema de Operadores - Gestión y Asignación Automática
 
+> **Histórico (18-oct-2026, D-491):** describe la demo de agendamiento de oct-2025, que guardaba citas y técnicos ficticios en el navegador. Se retiró. Hoy las citas viven en la Agenda (`/agenda`, colección `appointments`); ver `openspec/changes/servicios-y-agenda/`.
+
 ## 📋 Descripción General
 
 Sistema de gestión de técnicos/operadores para asignación automática a citas de servicio. Los operadores están distribuidos geográficamente en Medellín, Colombia, y se asignan automáticamente según criterios de proximidad, especialidad y calificación.

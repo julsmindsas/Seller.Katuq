@@ -1,5 +1,7 @@
 # Sistema de Agendamiento Video Agent
 
+> **Histórico (18-oct-2026, D-491):** describe la demo de agendamiento de oct-2025, que guardaba citas y técnicos ficticios en el navegador. Se retiró. Hoy las citas viven en la Agenda (`/agenda`, colección `appointments`); ver `openspec/changes/servicios-y-agenda/`.
+
 ## 📋 Descripción General
 
 Sistema dual de agendamiento para el módulo Video Agent que permite dos modos de operación:

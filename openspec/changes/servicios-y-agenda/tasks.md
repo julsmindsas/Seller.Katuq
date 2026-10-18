@@ -20,7 +20,7 @@
 ## 2. Pedidos con servicios (módulo sensible: un cambio a la vez, cada uno con diff aprobado)
 
 - [x] 2.1 Back: función pura `requiereDespacho(lineas, productosPorId)` con pruebas: solo servicios, mixto, bajo pedido, producto ilegible → `undefined`.
-- [ ] 2.2 Back (diff aprobado): calcular `requiresDispatch` en `POST /v1/orders/create` leyendo `products` con `getAll`. Prueba de que precio, IVA, consecutivo, estado inicial e inventario no cambian.
+- [x] 2.2 Back (diff aprobado): calcular `requiresDispatch` en `POST /v1/orders/create` leyendo `products` con `getAll`. Prueba de que precio, IVA, consecutivo, estado inicial e inventario no cambian.
 - [ ] 2.3 Back (diff aprobado): lo mismo en `crearPedido` de la tienda, más quitar la exigencia de bodega y dirección para carritos solo de servicios. Con servicio `home` se pide dirección y el envío es 0.
 - [ ] 2.4 Back (diff aprobado): `plan.js`, `carrierOffers.js` y los conteos de despachos excluyen `requiresDispatch === false`. Pruebas con pedidos viejos (sin campo) que siguen entrando.
 - [ ] 2.5 Front (diff aprobado): `despachos.component` y `generar-orden` excluyen `requiresDispatch === false`.
@@ -72,15 +72,15 @@
 
 ## 5. Retiro de la demo
 
-- [ ] 5.1 Borrar `components/servicios/agendamiento/`, `agendamiento.service.ts` y `operadores.service.ts`, y quitar la ruta pública de `app-routing`, `rutas-publicas.ts`, el interceptor y `app.component.ts`.
+- [x] 5.1 Borrar `components/servicios/agendamiento/`, `agendamiento.service.ts` y `operadores.service.ts`, y quitar la ruta pública de `app-routing`, `rutas-publicas.ts`, el interceptor y `app.component.ts`.
 - [x] 5.2 Redirigir `servicios/agendamiento` a `agenda`, y quitar el menú "Agendamiento".
 - [x] 5.3 Video-agent: ocultar "Agendar" sin `scheduleUrl`, y quitar `scheduleUrl` de `company-config.interface.ts` y `appointments-list` del video-agent si solo dependía del mock.
-- [ ] 5.4 Mover `AGENDAMIENTO_SYSTEM.md`, `ACCESO_CITAS.md` y `SISTEMA_OPERADORES.md` a `docs/documentacion/historico/`.
+- [x] 5.4 Mover `AGENDAMIENTO_SYSTEM.md`, `ACCESO_CITAS.md` y `SISTEMA_OPERADORES.md` a `docs/documentacion/historico/`.
 - [x] 5.5 Build de producción sin errores; `grep` sin referencias a `AgendamientoService` ni `OperadoresService`.
 
 ## 6. Salida
 
-- [ ] 6.1 Encender `serviceAgenda` en FLORECER con `set-company-feature.js`: primero en simulación, luego real.
+- [x] 6.1 Encender `serviceAgenda` en FLORECER con `set-company-feature.js`: primero en simulación, luego real.
 - [ ] 6.2 Recorrido completo en FLORECER:
   - crear un servicio;
   - agendar desde la web, la Agenda, la venta asistida y el CRM;
@@ -90,7 +90,7 @@
   - comprobar que no sale en despachos.
 
   Adjuntar las capturas a la entrada del CONTRACT.
-- [ ] 6.3 OK de Daniel. Despliegue con el candado de publicación (backend y front desde la punta de la rama).
+- [x] 6.3 OK de Daniel. Despliegue con el candado de publicación (backend y front desde la punta de la rama).
 - [ ] 6.4 Bitácora del CONTRACT actualizada y D-XXX en PUBLICADO con los commits.
 
 ## 7. Después (propuestas aparte)
@@ -113,4 +113,9 @@ Desvíos frente al diseño:
 - 5.1: `AgendamientoService` y `OperadoresService` se quedan: el video-agent los usa en su propia lista de citas demo. Se borró el módulo `components/servicios/`.
 - La configuración de la Agenda la guarda solo la familia Administrador (pregunta abierta 3, por defecto).
 
-Pendiente: 1.6 y 4.11 (navegador en FLORECER a 1440 y 390 px, requiere desplegar el backend), 3.8 (botón "Agendar" en la ficha pública del servicio), 4.7 y todo el bloque 2 (pedidos, de a un diff aprobado), 5.4 (mover los `.md` de la demo) y la salida (6).
+**18-oct, publicado (OK de Daniel).** El número quedó D-491 (D-488 lo tomó otra sesión). Backend `12da9a84` en EC2 y front 2026.10.18.3, con el candado de publicación. `serviceAgenda` encendida solo en FLORECER (simulación y luego real).
+- 2.2: `exports.create` escribe `requiresDispatch` (diff aprobado, backend `7bc62caa`). Solo agrega el campo después de calcular precios, consecutivo e inventario; si no se puede saber, no lo escribe. Nadie lo lee todavía.
+- 5.4: los tres `.md` de la demo están en `docs/documentacion/historico/`, con una nota de que se retiró.
+- Verificado en producción: sin la bandera, `/agenda` lleva a la bienvenida, y el menú de la demo ya no aparece.
+
+Pendiente: 1.6, 4.11 y 6.2 (recorrido en FLORECER a 1440 y 390 px: falta una sesión de FLORECER en el navegador), 3.8 (botón "Agendar" en la ficha pública del servicio), 4.7 y el resto del bloque 2 (pedidos, de a un diff aprobado), y 6.4 al cerrar.
