@@ -10893,7 +10893,7 @@ Daniel (16-oct): "requiero un módulo de marketing para Katuq y para Julsmind; q
   - Encabezado transparente sobre la portada.
   - Ajustes de estilo por dispositivo más allá de mostrar u ocultar secciones (ticket 1248).
 
-## D-487 (2026-10-18) — Venta asistida: una sola entrada con «Rápida» o «Por pasos», y se recuerda la elección (ticket 1168) — SIN DESPLEGAR
+## D-487 (2026-10-18) — Venta asistida: una sola entrada con «Rápida» o «Por pasos», y se recuerda la elección (ticket 1168) — PUBLICADO: front 2026.10.18.2 (93841ec9)
 
 - **Pedido de Jairo:** conservar las dos vistas, pero en una sola entrada con dos botones para que cada vendedor elija.
 - **Menú:** queda solo «Venta asistida» (`ventas/venta-asistida`). Los roles guardados con la ruta del asistente siguen viendo la entrada (`permisoPrevio: "ventas/crear-ventas"`, D-400).
