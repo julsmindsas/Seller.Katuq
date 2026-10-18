@@ -10948,3 +10948,14 @@ Daniel (16-oct): "requiero un módulo de marketing para Katuq y para Julsmind; q
 - **Pedidos (módulo sensible), pendiente de diff aprobado uno por uno:** `requiresDispatch` calculado en el servidor desde `products` (ya existe y está probado `services/orders/requiereDespacho.js`, sin cablear), despachos y mensajeros lo leen, `ParaDespachar → Entregado` solo sin despacho, venta asistida y tienda sin envío para carritos de servicios, «Cobrar» desde la cita, y SIIGO/World Office crean el ítem como servicio.
 - **Verificado:** `npm run test:agenda` (66 pruebas, incluida la reserva simultánea por el último espacio y el write-set solo `appointments`/`companyConfig`); build completo del front sin errores; sin gradientes, primarios prohibidos ni clases con «p-» en lo nuevo.
 - **Sin verificar:** nada en navegador todavía: el backend nuevo no está desplegado y el front local apunta a producción.
+
+## D-490 (2026-10-18) — Módulo NPS por comercio: encuestas configurables, envío a compradores y seguimiento de detractores — PROPUESTA, pendiente de aprobación
+
+Daniel (18-oct), al ver D-483: "eso no es un sistema NPS". Quiere un módulo NPS propio (crear encuestas, preguntas y cuándo se envían, resultados), que cada comercio mida a sus compradores y avisos con seguimiento de detractores.
+
+- **Amplía D-483:** la encuesta de Julsmind a sus comercios queda como una encuesta más (canal "dentro del Seller"); el tablero pasa a ser de cada empresa y filtrable por encuesta.
+- **Módulo "NPS"** con Resultados, Encuestas y Seguimiento. Canales de la primera entrega: correo después de la entrega (1 a 30 días) y enlace con QR. WhatsApp después.
+- **Seguimiento:** cada detractor es un caso (Nuevo, Contactado, Resuelto, Sin solución) con responsable, notas e historial, guardado en la misma respuesta de `surveyResponses`. Aviso en la campana y correo al responsable; recordatorio a las 48 horas.
+- **Reutiliza:** `surveyResponses`, `services/nps/*`, el motor de reportes, KAI, `EscalaNpsComponent`, `scheduleSatisfactionSurvey`, `notification_queue`, la campana y las banderas por comercio.
+- **Pide aprobación:** colección nueva `npsSurveys`; canales (correo, enlace y QR primero); planes.
+- **Propuesta:** `openspec/changes/nps-modulo-por-comercio/`.
