@@ -11090,3 +11090,4 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
 | D-501 | `fotos-uniformes-producto` | 1252 (TX-37) |
 | D-502 | `modo-oscuro-seller` | 1180 |
 | D-503 | `modo-agencia-sitios` | 1253 (F5-29, parte agencia) |
+- **2026-10-18, diseño y tareas aprobados:** Daniel aprobó en bloque el diseño, las specs, las tareas y los valores por defecto de las nueve (D-495 a D-503; artefactos en f6417dcd). Se implementa empezando por lo de menor riesgo (modo oscuro fase 0, fotos fase 1 y medición de atributos F0), con las banderas apagadas. Lo que toque pedidos, pagos, inventario o consecutivos va diff por diff con su aprobación.
