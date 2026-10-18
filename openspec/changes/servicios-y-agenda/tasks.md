@@ -1,25 +1,25 @@
 ## 0. Decisiones
 
-- [ ] 0.1 Daniel aprueba la propuesta, las specs y el diseño, y responde las 5 preguntas abiertas. La primera es la colección nueva `appointments`.
-- [ ] 0.2 Reservar el D-XXX mirando `origin` (memoria "reservar-decision-mirar-origin") y registrar la decisión como APROBADA en `specs/CONTRACT.md`. La entrada incluye:
+- [x] 0.1 Daniel aprueba la propuesta, las specs y el diseño, y responde las 5 preguntas abiertas. La primera es la colección nueva `appointments`.
+- [x] 0.2 Reservar el D-XXX mirando `origin` (memoria "reservar-decision-mirar-origin") y registrar la decisión como APROBADA en `specs/CONTRACT.md`. La entrada incluye:
   - el cambio de ICP frente a lo decidido el 5-oct;
   - la colección nueva;
   - la transición condicionada a `Entregado`;
   - la bandera `serviceAgenda` con dueño Daniel y retiro el 2027-03-31.
-- [ ] 0.3 Avisar por SendMessage a las sesiones activas que tocan `crear-ventas`, `sites.js` u `orders.js` antes de editar esos archivos.
+- [x] 0.3 Avisar por SendMessage a las sesiones activas que tocan `crear-ventas`, `sites.js` u `orders.js` antes de editar esos archivos.
 
 ## 1. Servicio como tipo de ítem (sin bandera; no toca pedidos)
 
-- [ ] 1.1 Back: pruebas de la regla de guardado (`servicio ⇒ inventariable:false`, `service` por defecto 60 min si requiere cita, ítem sin marca = producto) en crear, editar, rápido e importación.
-- [ ] 1.2 Back: implementar la regla en el guardado de producto, sin tocar precio, IVA, listas, variantes ni imágenes. Prueba de que esos campos salen idénticos.
-- [ ] 1.3 Front: selector Producto/Servicio en `crear-productos` y `crear-producto-lite`. Con servicio se ocultan y dejan de ser obligatorios peso, dimensiones, tipo y tiempo de entrega, y aparecen duración, modalidad y "Requiere cita". La confirmación al pasar de producto a servicio usa Swal.
-- [ ] 1.4 Front: columna "Tipo" en `import-modal`, que gana sobre "Inventariable".
-- [ ] 1.5 Back: `get_services` prefiere los marcados como servicio (`itemType`), con caída al criterio actual. Ajustar `tests/mcp/getServices.test.js`.
+- [x] 1.1 Back: pruebas de la regla de guardado (`servicio ⇒ inventariable:false`, `service` por defecto 60 min si requiere cita, ítem sin marca = producto) en crear, editar, rápido e importación.
+- [x] 1.2 Back: implementar la regla en el guardado de producto, sin tocar precio, IVA, listas, variantes ni imágenes. Prueba de que esos campos salen idénticos.
+- [x] 1.3 Front: selector Producto/Servicio en `crear-productos` y `crear-producto-lite`. Con servicio se ocultan y dejan de ser obligatorios peso, dimensiones, tipo y tiempo de entrega, y aparecen duración, modalidad y "Requiere cita". La confirmación al pasar de producto a servicio usa Swal.
+- [x] 1.4 Front: columna "Tipo" en `import-modal`, que gana sobre "Inventariable".
+- [x] 1.5 Back: `get_services` prefiere los marcados como servicio (`itemType`), con caída al criterio actual. Ajustar `tests/mcp/getServices.test.js`.
 - [ ] 1.6 Build de producción y backend sin errores. Crear un servicio en FLORECER por cada formulario.
 
 ## 2. Pedidos con servicios (módulo sensible: un cambio a la vez, cada uno con diff aprobado)
 
-- [ ] 2.1 Back: función pura `requiereDespacho(lineas, productosPorId)` con pruebas: solo servicios, mixto, bajo pedido, producto ilegible → `undefined`.
+- [x] 2.1 Back: función pura `requiereDespacho(lineas, productosPorId)` con pruebas: solo servicios, mixto, bajo pedido, producto ilegible → `undefined`.
 - [ ] 2.2 Back (diff aprobado): calcular `requiresDispatch` en `POST /v1/orders/create` leyendo `products` con `getAll`. Prueba de que precio, IVA, consecutivo, estado inicial e inventario no cambian.
 - [ ] 2.3 Back (diff aprobado): lo mismo en `crearPedido` de la tienda, más quitar la exigencia de bodega y dirección para carritos solo de servicios. Con servicio `home` se pide dirección y el envío es 0.
 - [ ] 2.4 Back (diff aprobado): `plan.js`, `carrierOffers.js` y los conteos de despachos excluyen `requiresDispatch === false`. Pruebas con pedidos viejos (sin campo) que siguen entrando.
@@ -36,47 +36,47 @@
 
 ## 3. Agenda — backend
 
-- [ ] 3.1 Bandera `serviceAgenda` en los dos catálogos (`companyFeatureFlags.js`, `company-features.service.ts`) y en la prueba del catálogo.
-- [ ] 3.2 `utils/agenda.js` (puro), que generaliza `siteAgenda.js`: disponibilidad por hora y duración, por franja y cupo, choque por persona, "cualquiera disponible" y zona horaria de Colombia. `siteAgenda.js` queda como fachada y sus 9 pruebas siguen en verde.
-- [ ] 3.3 Pruebas de contrato de `/v1/appointments`:
+- [x] 3.1 Bandera `serviceAgenda` en los dos catálogos (`companyFeatureFlags.js`, `company-features.service.ts`) y en la prueba del catálogo.
+- [x] 3.2 `utils/agenda.js` (puro), que generaliza `siteAgenda.js`: disponibilidad por hora y duración, por franja y cupo, choque por persona, "cualquiera disponible" y zona horaria de Colombia. `siteAgenda.js` queda como fachada y sus 9 pruebas siguen en verde.
+- [x] 3.3 Pruebas de contrato de `/v1/appointments`:
   - empresa solo del JWT;
   - bandera apagada → 403;
   - reserva concurrente → una sola gana;
   - `requestId` repetido → misma cita;
   - transiciones de estado e historial;
   - sin datos personales en el log.
-- [ ] 3.4 `services/agenda/reservar.js` con `runTransaction`, `tx.get(query)` y `tx.create`; id del documento = hash(empresa + requestId).
-- [ ] 3.5 `routers/appointments.js` (`isAuth + requireJwtTenant + requireFeature`): listar por rango y persona, crear, mover, cambiar estado, ligar pedido, disponibilidad. También `GET/PUT` de `companyConfig.agenda`.
-- [ ] 3.6 Índices `(company, date)` y `(company, staffId, date)` desplegados con Firebase CLI (memoria "firestore-indices-como-crear").
-- [ ] 3.7 Web: con la bandera encendida, `agendaPublica` y `agendarCita` usan la Agenda (transaccional) y siguen creando el prospecto. Con la bandera apagada, nada cambia. Prueba de cada camino.
+- [x] 3.4 `services/agenda/reservar.js` con `runTransaction`, `tx.get(query)` y `tx.create`; id del documento = hash(empresa + requestId).
+- [x] 3.5 `routers/appointments.js` (`isAuth + requireJwtTenant + requireFeature`): listar por rango y persona, crear, mover, cambiar estado, ligar pedido, disponibilidad. También `GET/PUT` de `companyConfig.agenda`.
+- [x] 3.6 Índices `(company, date)` y `(company, staffId, date)` desplegados con Firebase CLI (memoria "firestore-indices-como-crear").
+- [x] 3.7 Web: con la bandera encendida, `agendaPublica` y `agendarCita` usan la Agenda (transaccional) y siguen creando el prospecto. Con la bandera apagada, nada cambia. Prueba de cada camino.
 - [ ] 3.8 Ficha pública de un servicio con `requiresAppointment`: botón "Agendar" que usa los mismos endpoints públicos.
 - [ ] 3.9 Al crear un pedido con `appointmentId`, ligar la cita y pasarla a `completed` en un paso que no hace fallar el pedido.
-- [ ] 3.10 Avisos: `writeSellerNotification` y correo en una cita web nueva, y al mover o cancelar si lo hace otra persona. Idempotentes por `appointmentId + evento + destinatario`.
-- [ ] 3.11 Tool MCP `get_appointments` en el registro, con prueba de aislamiento por empresa.
-- [ ] 3.12 Onboarding: guardar `businessProfile.sells` y encender `serviceAgenda` para servicios o ambos (patrón D-395, con el mismo interruptor general).
-- [ ] 3.13 Pruebas en verde y el backend arranca.
+- [x] 3.10 Avisos: `writeSellerNotification` y correo en una cita web nueva, y al mover o cancelar si lo hace otra persona. Idempotentes por `appointmentId + evento + destinatario`.
+- [x] 3.11 Tool MCP `get_appointments` en el registro, con prueba de aislamiento por empresa.
+- [x] 3.12 Onboarding: guardar `businessProfile.sells` y encender `serviceAgenda` para servicios o ambos (patrón D-395, con el mismo interruptor general).
+- [x] 3.13 Pruebas en verde y el backend arranca.
 
 ## 4. Agenda — front
 
-- [ ] 4.1 `AgendaService extends BaseService` y modelos.
-- [ ] 4.2 Módulo lazy `components/agenda/` con ruta `agenda`, guard de la bandera y entrada de menú "Agenda" (verificar que se vea, memoria "menu-invisible-modulo-nuevo"). Agregar la ruta a las plantillas de rol que decida 0.1.
-- [ ] 4.3 `reserva-selector` compartido: servicio, persona o "cualquiera", día y horas libres.
-- [ ] 4.4 `agenda-page`: vista día/semana con CSS grid por persona y "Sin asignar", estado vacío, crear en espacio libre y mover.
-- [ ] 4.5 `cita-panel`: confirmar, cancelar, no asistió, abrir cliente y "Cobrar" (borrador de venta asistida con `appointmentId`).
-- [ ] 4.6 `agenda-config`: horario por día, modo, `slotMinutes`, franjas y cupo, y personas con sus servicios y estado activo.
+- [x] 4.1 `AgendaService extends BaseService` y modelos.
+- [x] 4.2 Módulo lazy `components/agenda/` con ruta `agenda`, guard de la bandera y entrada de menú "Agenda" (verificar que se vea, memoria "menu-invisible-modulo-nuevo"). Agregar la ruta a las plantillas de rol que decida 0.1.
+- [x] 4.3 `reserva-selector` compartido: servicio, persona o "cualquiera", día y horas libres.
+- [x] 4.4 `agenda-page`: vista día/semana con CSS grid por persona y "Sin asignar", estado vacío, crear en espacio libre y mover.
+- [x] 4.5 `cita-panel`: confirmar, cancelar, no asistió, abrir cliente y "Cobrar" (borrador de venta asistida con `appointmentId`).
+- [x] 4.6 `agenda-config`: horario por día, modo, `slotMinutes`, franjas y cupo, y personas con sus servicios y estado activo.
 - [ ] 4.7 Venta asistida: la línea de servicio con cita usa `reserva-selector` y la cita se crea ligada al pedido.
-- [ ] 4.8 CRM: botón "Agendar" en `crm-detail`.
-- [ ] 4.9 Onboarding: guardar la respuesta productos/servicios/ambos en la empresa.
-- [ ] 4.10 Diseño: base `config-pagina`, plano, `#5F3FE0`, sin clases con "p-", `span` con color propio y `:focus-visible`. Conteo de gradientes y primarios prohibidos sin subir.
+- [x] 4.8 CRM: botón "Agendar" en `crm-detail`.
+- [x] 4.9 Onboarding: guardar la respuesta productos/servicios/ambos en la empresa.
+- [x] 4.10 Diseño: base `config-pagina`, plano, `#5F3FE0`, sin clases con "p-", `span` con color propio y `:focus-visible`. Conteo de gradientes y primarios prohibidos sin subir.
 - [ ] 4.11 Build de producción sin errores. Revisión en navegador a 1440 y 390 px, sin scroll horizontal ni texto invisible.
 
 ## 5. Retiro de la demo
 
 - [ ] 5.1 Borrar `components/servicios/agendamiento/`, `agendamiento.service.ts` y `operadores.service.ts`, y quitar la ruta pública de `app-routing`, `rutas-publicas.ts`, el interceptor y `app.component.ts`.
-- [ ] 5.2 Redirigir `servicios/agendamiento` a `agenda`, y quitar el menú "Agendamiento".
-- [ ] 5.3 Video-agent: ocultar "Agendar" sin `scheduleUrl`, y quitar `scheduleUrl` de `company-config.interface.ts` y `appointments-list` del video-agent si solo dependía del mock.
+- [x] 5.2 Redirigir `servicios/agendamiento` a `agenda`, y quitar el menú "Agendamiento".
+- [x] 5.3 Video-agent: ocultar "Agendar" sin `scheduleUrl`, y quitar `scheduleUrl` de `company-config.interface.ts` y `appointments-list` del video-agent si solo dependía del mock.
 - [ ] 5.4 Mover `AGENDAMIENTO_SYSTEM.md`, `ACCESO_CITAS.md` y `SISTEMA_OPERADORES.md` a `docs/documentacion/historico/`.
-- [ ] 5.5 Build de producción sin errores; `grep` sin referencias a `AgendamientoService` ni `OperadoresService`.
+- [x] 5.5 Build de producción sin errores; `grep` sin referencias a `AgendamientoService` ni `OperadoresService`.
 
 ## 6. Salida
 
@@ -101,4 +101,16 @@
 
 ## Avance y desvíos
 
-- (vacío)
+**18-oct (D-488 reservado y escrito en el contrato).** Backend `b5d4a4c2` + `18621af7` y front `a7cc645e`, locales y sin desplegar. `npm run test:agenda`: 66 pruebas en verde; build completo del front sin errores.
+
+Desvíos frente al diseño:
+- **Marca del servicio: `itemType: "service"`, no `identificacion.tipoReferencia`.** Ese campo ya significa "referencia manual o automática" (`propio`/`externo`) en el formulario de producto y "SKU" en WooCommerce; marcar ahí perdía el servicio al editarlo. Se sigue leyendo el `"servicio"` del onboarding.
+- `siteAgenda.js` no se tocó: `utils/agenda.js` reusa sus fechas. Sus 10 pruebas siguen igual.
+- Config: `capacity` (cupo por franja o, sin personas, citas a la vez) en vez de `capacityPerWindow`; se sumó `notifyEmails` ("Avisarme a"), que reemplaza "usuarios con acceso a la Agenda" como destinatarios cuando la persona no tiene correo.
+- 3.6: no hacen falta índices compuestos: todo se consulta por igualdad (empresa + fecha, o empresa + `itemType`).
+- 3.9: ligar la cita al pedido es `PUT /v1/appointments/:id/pedido`, que solo LEE `orders`; no se tocó `orders.js`. Falta el botón "Cobrar", que necesita la venta asistida (tarea 4.7, módulo sensible).
+- 4.9: el asistente ya mandaba "¿Qué vendes?" en el progreso; el backend lo toma de ahí (`users.saveOnboardingProgress`), sin cambio en el front.
+- 5.1: `AgendamientoService` y `OperadoresService` se quedan: el video-agent los usa en su propia lista de citas demo. Se borró el módulo `components/servicios/`.
+- La configuración de la Agenda la guarda solo la familia Administrador (pregunta abierta 3, por defecto).
+
+Pendiente: 1.6 y 4.11 (navegador en FLORECER a 1440 y 390 px, requiere desplegar el backend), 3.8 (botón "Agendar" en la ficha pública del servicio), 4.7 y todo el bloque 2 (pedidos, de a un diff aprobado), 5.4 (mover los `.md` de la demo) y la salida (6).
