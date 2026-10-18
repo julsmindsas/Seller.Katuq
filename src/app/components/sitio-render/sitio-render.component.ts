@@ -421,9 +421,48 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
   get alternas(): Set<number> {
     // En el editor `bloquesVisibles` trae también los ocultos; la alternancia se
     // cuenta solo con los publicados, como en la página.
-    const publicados = this.bloquesVisibles.map((b, i) => ({ b, i })).filter((x) => x.b.visible !== false);
+    // Revisión 2026-10-18: y solo con los que salen pintados en el dispositivo
+    // de la previa (la publicada no gasta turno en un bloque vacío ni en uno
+    // solo para el otro dispositivo).
+    const otro = this.dispositivo === "movil" ? "escritorio" : "movil";
+    const publicados = this.bloquesVisibles
+      .map((b, i) => ({ b, i }))
+      .filter((x) => x.b.visible !== false && ((x.b as any).estilo || {}).dispositivo !== otro && this.sePublica(x.b));
     const elegidas = seccionesAlternas(publicados.map((x) => x.b) as any[], this.tema);
     return new Set(publicados.filter((_, k) => elegidas.has(k)).map((x) => x.i));
+  }
+
+  /**
+   * Revisión 2026-10-18: ¿la página publicada pinta este bloque? Espejo de los
+   * `return ""` de los bloques alternables en utils/siteHtml.js; la previa sí
+   * los muestra con su aviso de vacío. Lo que solo sabe el servidor (puntos de
+   * retiro, marcas del catálogo) se da por pintado.
+   */
+  private sePublica(b: BloqueSitio): boolean {
+    const d: any = (b && b.datos) || {};
+    switch (b && b.tipo) {
+      case "galeria": return (d.imagenes || []).some((img: any) => img && img.url);
+      case "instagram": return !!String(d.usuario || "").replace(/[^\w.]/g, "") && (d.fotos || []).some(Boolean);
+      case "contador": return !!d.hasta;
+      case "resenas": return (d.items || []).length > 0;
+      case "faq": return (d.preguntas || []).length > 0;
+      case "columnas": return (d.columnas || []).length > 0;
+      case "botones": return (d.botones || []).some((x: any) => x && x.url);
+      // El producto lo resuelve el servidor; en la previa basta con haberlo elegido.
+      case "destacado": return d.producto ? d.producto.disponible !== false : !!d.productoId;
+      case "agenda": return (d.franjas || []).length > 0;
+      case "ubicacion": return !!(d.direccion || d.ciudad);
+      case "marcas": return (d.logos || []).some((l: any) => l && l.url) || !!d.desdeCatalogo;
+      case "sucursales": return (d.sedes || []).length > 0 || d.usarPuntosDeRetiro !== false;
+      case "categorias": return (this.categorias || []).length > 0;
+      default: return true;
+    }
+  }
+
+  /** Ticket 1257: fotos del mosaico como la publicada (1, 2 o 4; con tres, dos). */
+  fotosDeMosaico(d: any): string[] {
+    const fotos = ((d && d.mosaico) || []).filter(Boolean);
+    return fotos.length === 3 ? fotos.slice(0, 2) : fotos.slice(0, 4);
   }
 
   private familiaTipografica(clave: string): string {

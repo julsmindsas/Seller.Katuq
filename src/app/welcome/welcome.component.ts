@@ -21,7 +21,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   // Paths del menú por sección — única fuente para el *ngIf de cada bloque del
   // template (título + grid comparten contenedor, sin listas duplicadas).
   readonly accionesRapidasPaths: string[] = [
-    'ventas/crear-ventas', 'ventas/ventas-pos', 'productos', 'ventas/pedidos',
+    'ventas/venta-asistida', 'ventas/crear-ventas', 'ventas/ventas-pos', 'productos', 'ventas/pedidos',
     'inventario/inventario-catalogo', 'ventas/clienteslista', 'crm/list',
   ];
   readonly herramientasPaths: string[] = [
@@ -132,6 +132,15 @@ export class WelcomeComponent implements OnInit, OnDestroy {
 
   get showHerramientas(): boolean {
     return this.canAccessAny(this.herramientasPaths);
+  }
+
+  /**
+   * Revisión 2026-10-18 (ticket 1168): la venta asistida es una sola entrada
+   * (`ventas/venta-asistida`); los roles guardados antes conservan el permiso
+   * viejo del asistente (`ventas/crear-ventas`). Cualquiera de los dos habilita vender.
+   */
+  get puedeVender(): boolean {
+    return this.canAccess('ventas/venta-asistida') || this.canAccess('ventas/crear-ventas');
   }
 
   // Visibilidad por widget: la misma regla que la pantalla a la que navega la

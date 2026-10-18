@@ -1,12 +1,13 @@
-import { ChangeDetectionStrategy, Component, Injectable, Input } from "@angular/core";
-import { ActivatedRoute, ActivatedRouteSnapshot, CanActivate, Router, UrlTree } from "@angular/router";
+import { ChangeDetectionStrategy, Component, EventEmitter, Injectable, Input, Output } from "@angular/core";
+import { ActivatedRouteSnapshot, CanActivate, Params, Router, UrlTree } from "@angular/router";
 
 /**
  * Ticket 1168: las dos vistas de la venta asistida en una sola entrada del menú.
  * «Rápida» es la pantalla única (`venta-asistida`) y «Por pasos» el asistente
- * (`crear-ventas`). Las dos comparten la misma lógica y el carrito vive en el
- * navegador, así que cambiar de vista no pierde el pedido. La elección queda
- * guardada por navegador y es la que abre el menú la próxima vez.
+ * (`crear-ventas`). Las dos comparten la misma lógica, pero cada una arranca de
+ * cero al abrirse. Revisión 2026-10-18: por eso el selector no navega solo; avisa
+ * a la pantalla, que pregunta qué hacer con la venta en curso antes de cambiar.
+ * La elección queda guardada por navegador y es la que abre el menú la próxima vez.
  */
 export type VistaVenta = "rapida" | "pasos";
 
@@ -27,6 +28,16 @@ function recordarVista(vista: VistaVenta): void {
   } catch {
     /* sin almacenamiento: la vista vale solo para esta visita */
   }
+}
+
+/**
+ * Revisión 2026-10-18: abre la otra vista cuando la pantalla ya decidió qué hacer
+ * con la venta en curso. Se recuerda antes de navegar para que el guard no
+ * devuelva a la vista anterior.
+ */
+export function abrirVistaVenta(router: Router, vista: VistaVenta, queryParams: Params = {}): Promise<boolean> {
+  recordarVista(vista);
+  return router.navigate([RUTAS[vista]], { queryParams });
 }
 
 /**
@@ -72,13 +83,14 @@ export class VistaVentaGuard implements CanActivate {
 export class SelectorVistaVentaComponent {
   /** La vista en la que está el vendedor. */
   @Input() actual: VistaVenta = "rapida";
-
-  constructor(private router: Router, private route: ActivatedRoute) {}
+  /** Revisión 2026-10-18: la pantalla decide si cambia (y qué hace con la venta en curso). */
+  @Output() pedirCambio = new EventEmitter<VistaVenta>();
 
   cambiar(vista: VistaVenta): void {
-    recordarVista(vista);
-    if (vista === this.actual) return;
-    // Se conservan los parámetros (un borrador abierto, por ejemplo).
-    this.router.navigate([RUTAS[vista]], { queryParams: this.route.snapshot.queryParams });
+    if (vista === this.actual) {
+      recordarVista(vista);
+      return;
+    }
+    this.pedirCambio.emit(vista);
   }
 }

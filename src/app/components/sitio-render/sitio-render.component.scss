@@ -517,12 +517,22 @@ h3 {
   align-items: center;
 }
 
+// Ticket 1257 (espejo de siteHtml.js): el marco toma la forma de la rejilla
+// (2×2 y 1 foto, cuadrado; 2 fotos, 2:1) y su tamaño sale del alto de pantalla.
 .hero__fotos {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.75rem;
   grid-auto-rows: minmax(0, 1fr);
-  height: clamp(240px, 46vh, 340px);
+  aspect-ratio: 1 / 1;
+  width: min(100%, clamp(240px, 46vh, 340px));
+  height: auto;
+  margin: 0 auto;
+
+  &--2 {
+    aspect-ratio: 2 / 1;
+    width: 100%;
+  }
 
   &--3 .hero__foto:first-child,
   &--1 .hero__foto {
@@ -555,9 +565,13 @@ h3 {
   }
 
   .hero__fotos {
-    height: clamp(340px, 58vh, 470px);
+    width: min(100%, clamp(340px, 58vh, 470px));
     margin-left: auto;
-    max-width: 660px;
+    margin-right: 0;
+  }
+
+  .hero__fotos--2 {
+    width: 100%;
   }
 }
 
@@ -939,7 +953,7 @@ h3 {
   border-radius: 12px;
 
   &__estrellas {
-    color: var(--sitio-primario);
+    color: var(--sitio-acento, var(--sitio-primario));
     letter-spacing: 0.1em;
     font-size: 0.95rem;
     margin-bottom: 0.5rem;
@@ -1055,6 +1069,14 @@ h3 {
 .categorias__grid--fila { display: flex; overflow-x: auto; gap: 1rem; .categoria { flex: 1 0 clamp(150px, 20vw, 220px); max-width: 300px; } }
 .categoria { position: relative; display: block; overflow: hidden; text-decoration: none; color: inherit; text-align: left; border-radius: var(--sitio-radio-sm, 8px); cursor: default; }
 .categoria__foto { display: block; aspect-ratio: 1 / 1; overflow: hidden; background: #f4f4f5; img { width: 100%; height: 100%; object-fit: cover; } }
+// Ticket 1257 (espejo): categoría sin foto, su inicial sobre un tinte de la marca.
+// Span creado por *ngIf: lleva color y tamaño propios (regla global span.ng-star-inserted).
+.categoria__inicial {
+  display: grid; place-items: center; width: 100%; height: 100%;
+  font-family: var(--sitio-fuente-titulo); font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 600; line-height: 1;
+  color: var(--sitio-primario);
+  background: color-mix(in srgb, var(--sitio-primario) 9%, var(--sitio-secundario));
+}
 .categoria__pie { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; padding: 0.6rem 0.8rem; background: rgba(17,17,17,.78); color: #fff; }
 .categoria__nombre { margin: 0; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: #fff; }
 .categoria__total { margin: 0; font-size: 0.72rem; opacity: 0.7; color: #fff; white-space: nowrap; }
@@ -1130,7 +1152,7 @@ h3 {
 
 .boton--borde {
   background: transparent;
-  color: var(--sitio-primario);
+  color: var(--sitio-acento, var(--sitio-primario));
 }
 
 .separador {
@@ -1167,7 +1189,7 @@ h3 {
   }
 
   ::ng-deep a {
-    color: var(--sitio-primario);
+    color: var(--sitio-acento, var(--sitio-primario));
     text-decoration: underline;
   }
 
@@ -1467,7 +1489,8 @@ h3 {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--sitio-primario);
+  // Revisión 2026-10-18: --sitio-acento lo redefine la sección alterna (espejo).
+  color: var(--sitio-acento, var(--sitio-primario));
   margin-bottom: 0.6rem;
 }
 
@@ -1581,7 +1604,7 @@ h3 {
 
 // ── Instagram (espejo) ───────────────────────────────────────────────────────
 .insta { max-width: 1480px; text-align: center; }
-.insta__usuario { margin: -0.4rem 0 1.1rem; font-size: 0.9rem; color: var(--sitio-primario); font-weight: 600; }
+.insta__usuario { margin: -0.4rem 0 1.1rem; font-size: 0.9rem; color: var(--sitio-acento, var(--sitio-primario)); font-weight: 600; }
 .insta__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
 .insta__foto {
   position: relative;
@@ -1599,7 +1622,8 @@ h3 {
 
 /* ── "Busca tu detalle", burbuja de WhatsApp y pie con horarios/pagos (espejo de siteHtml.js) ── */
 .buscador { background: color-mix(in srgb, var(--sitio-primario, #111) 7%, var(--sitio-secundario, #fff)); }
-.buscador__caja { max-width: 980px; margin: 0 auto; background: #fff; border: 1px solid var(--sitio-borde, rgba(0,0,0,.08)); border-radius: var(--sitio-radio, 16px); padding: 1.4rem 1.5rem; box-shadow: var(--sitio-sombra, none);
+// Revisión 2026-10-18: caja blanca fija; su texto es el que se lee sobre blanco (sin la variable, hereda).
+.buscador__caja { max-width: 980px; margin: 0 auto; background: #fff; border: 1px solid var(--sitio-borde, rgba(0,0,0,.08)); border-radius: var(--sitio-radio, 16px); padding: 1.4rem 1.5rem; box-shadow: var(--sitio-sombra, none); color: var(--sitio-texto-sobre-blanco);
   h2 { margin: 0 0 1rem; font-size: 1.5rem; }
   .boton { margin-top: 1rem; }
 }
@@ -1667,11 +1691,18 @@ h3 {
 .sitio[data-kq-ajustes~="boton-pastilla"] :is(.boton, .kq-agregar) { border-radius: 999px; }
 .sitio[data-kq-ajustes~="boton-chico"] .boton:not(.boton--chico) { padding: 0.6rem 1.15rem; font-size: 0.88rem; }
 .sitio[data-kq-ajustes~="boton-grande"] .boton:not(.boton--chico) { padding: 1rem 2.1rem; font-size: 1.05rem; }
-.sitio[data-kq-ajustes~="color-boton"] .boton:not(.boton--whatsapp):not(.boton--secundario):not(.boton--borde) {
+// Revisión 2026-10-18: con «Contorno», el color de botón tiñe el contorno en vez de rellenar.
+.sitio[data-kq-ajustes~="color-boton"]:not([data-kq-ajustes~="boton-contorno"]) .boton:not(.boton--whatsapp):not(.boton--secundario):not(.boton--borde) {
   background: var(--sitio-boton); border-color: var(--sitio-boton); color: var(--sitio-sobre-boton);
 }
 .sitio[data-kq-ajustes~="boton-contorno"] .boton:not(.boton--whatsapp) { background: transparent; color: var(--sitio-contorno); border: 2px solid currentColor; }
 .sitio[data-kq-ajustes~="boton-contorno"] .hero--con-imagen .boton:not(.boton--whatsapp) { color: inherit; }
+// Revisión 2026-10-18: el del boletín va sobre la caja del principal; las cajas
+// blancas fijas usan el contorno medido contra el blanco.
+.sitio[data-kq-ajustes~="boton-contorno"] .suscripcion__form .boton { color: var(--sitio-secundario-sobre-primario, var(--sitio-secundario, #fff)); }
+.sitio[data-kq-ajustes~="boton-contorno"] .buscador__caja,
+.sitio[data-kq-ajustes~="boton-contorno"] .kq-popup__caja,
+.sitio[data-kq-ajustes~="boton-contorno"] .tarjeta:not(.tarjeta--fondo):not(.tarjeta--icono) { --sitio-contorno: var(--sitio-contorno-claro); }
 .sitio[data-kq-ajustes~="foto-11"] .producto__foto { aspect-ratio: 1 / 1; }
 .sitio[data-kq-ajustes~="foto-45"] .producto__foto { aspect-ratio: 4 / 5; }
 .sitio[data-kq-ajustes~="foto-34"] .producto__foto { aspect-ratio: 3 / 4; }
@@ -1683,8 +1714,31 @@ h3 {
 .sitio[data-kq-ajustes~="color-etiqueta"] :is(.producto__oferta, .producto__insignia--nuevo) { background: var(--sitio-etiqueta); color: var(--sitio-sobre-etiqueta); }
 .sitio[data-kq-ajustes~="color-oferta"] .producto--oferta .producto__precio > span { color: var(--sitio-oferta); }
 .sitio[data-kq-ajustes~="color-enlace"] :is(.texto, .columna, .faq) a { color: var(--sitio-enlace); }
-.sitio[data-kq-ajustes~="alterno"] .envoltura[data-alterno] { background-color: var(--sitio-fondo-alterno); color: var(--sitio-texto-alterno); }
+// Revisión 2026-10-18: los enlaces del texto entran por [innerHTML] y no llevan
+// el atributo del encapsulado; sin ::ng-deep la regla de arriba no los alcanza.
+.sitio[data-kq-ajustes~="color-enlace"] .texto .formato ::ng-deep a,
+.sitio[data-kq-ajustes~="color-enlace"] .columna .formato ::ng-deep a { color: var(--sitio-enlace); }
+// Revisión 2026-10-18 (espejo de estilosAjustes): dentro de la alterna, los
+// colores medidos contra el alterno; lo de fondo blanco fijo vuelve al texto
+// que se lee sobre blanco.
+.sitio[data-kq-ajustes~="alterno"] .envoltura[data-alterno] {
+  background-color: var(--sitio-fondo-alterno); color: var(--sitio-texto-alterno);
+  --sitio-texto: var(--sitio-texto-alterno); --sitio-acento: var(--sitio-acento-alterno);
+  --sitio-contorno: var(--sitio-contorno-alterno);
+}
+.sitio[data-kq-ajustes~="alterno"] .envoltura[data-alterno] .tarjeta:not(.tarjeta--fondo):not(.tarjeta--icono) {
+  color: var(--sitio-texto-sobre-blanco); --sitio-texto: var(--sitio-texto-sobre-blanco); --sitio-acento: var(--sitio-primario);
+}
+.sitio[data-kq-ajustes~="color-enlace"] .envoltura[data-alterno] .texto .formato ::ng-deep a,
+.sitio[data-kq-ajustes~="color-enlace"] .envoltura[data-alterno] .columna .formato ::ng-deep a { color: var(--sitio-enlace-alterno, var(--sitio-enlace)); }
+// Revisión 2026-10-18: la tarjeta blanca dentro de la alterna vuelve al color de
+// enlace de la página; el medido contra un alterno oscuro sale blanco sobre blanco.
+.sitio[data-kq-ajustes~="color-enlace"] .envoltura[data-alterno] .tarjeta:not(.tarjeta--fondo):not(.tarjeta--icono) .formato ::ng-deep a { color: var(--sitio-enlace, var(--sitio-primario)); }
+.sitio[data-kq-ajustes~="color-oferta"] .envoltura[data-alterno] .producto--oferta .producto__precio > span { color: var(--sitio-oferta-alterno, var(--sitio-oferta)); }
 .sitio:not(.sitio--movil)[data-kq-ajustes~="cols"] .productos__grid:not(.productos__grid--fila) { grid-template-columns: repeat(var(--sitio-cols), minmax(0, 1fr)); }
+// Revisión 2026-10-18 (espejo de siteHtml.js): hasta 4 productos, fila centrada
+// de tarjetas normales, salvo que el comercio haya elegido columnas.
+.sitio:not(.sitio--movil):not([data-kq-ajustes~="cols"]) .productos__grid--pocos:not(.productos__grid--fila) { grid-template-columns: repeat(auto-fit, minmax(240px, 300px)); justify-content: center; }
 .sitio--movil[data-kq-ajustes~="cols-movil"] .productos__grid:not(.productos__grid--fila) { grid-template-columns: repeat(var(--sitio-cols-movil), minmax(0, 1fr)); }
 .sitio[data-kq-ajustes~="logo-centro"] .cabecera { justify-content: center; column-gap: 1.25rem; }
 .sitio[data-kq-ajustes~="logo-centro"] .cabecera__marca { order: -1; flex-basis: 100%; margin: 0; justify-content: center; }

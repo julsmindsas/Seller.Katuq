@@ -334,3 +334,166 @@ test('server credential indicators cannot overwrite newer removal or replacement
   assert.equal(editor.contenido.analitica.ga4SecretoPuesto, true);
   assert.equal(editor.sucio, true);
 });
+
+// ── Revisión 2026-10-18: propuesta de KAI, «Volver al de antes» del Tema y productos de la previa ──
+const metodosIA = [
+  'disenarConIA', 'aplicarPropuestaIA', 'volverAntesDeIA', 'nadaTocadoPorIA', 'cerrarPropuestaIA',
+  'conAntesDeIA', 'alternarAntesIA', 'aceptarPropuestaIA', 'hayPropuestaIA', 'marcarSucio',
+  'probarVestido', 'descartarVestido', 'fotosDeVitrina', 'preciosDeVitrina', 'esNuevo',
+];
+const miembrosIA = component.members.filter(node => metodosIA.includes(node.name?.getText(source)));
+assert.equal(miembrosIA.length, metodosIA.length);
+const precioTipo = cargarTs('../../src/app/shared/utils/precio-por-tipo-cliente.ts', () => ({}));
+const contextoIA = { exports: {}, descuentoVigente: precioTipo.descuentoVigente };
+vm.runInNewContext(ts.transpileModule('export class EditorIA { ' + miembrosIA.map(node => node.getText(source)).join('\n') + ' }', {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+}).outputText, contextoIA);
+
+function fixtureIA() {
+  const peticiones = [], autoguardados = [], avisos = [];
+  const editor = new contextoIA.exports.EditorIA();
+  Object.assign(editor, {
+    id: 'site-test', indicacionesIA: '', disenandoIA: false, razonesIA: [], seleccionado: -1,
+    viendoAntesIA: false, fotoAntesDeIA: '', fotoPropuestaIA: '', temaAnterior: null,
+    conservarMisColores: false, coloresMarca: null, clavesDelVestido: new Set(),
+    service: { disenarConIA() { const r = new Subject(); peticiones.push(r); return r; } },
+    toastr: Object.fromEntries(['success', 'error', 'warning', 'info'].map(name => [name, m => avisos.push([name, m])])),
+    recalcularSucio() {}, recalcularPrevia() {}, guardarEnHistorial() {},
+    programarAutoguardado() { autoguardados.push(true); },
+  });
+  editor.tocadoPorIA = editor.nadaTocadoPorIA();
+  editor.contenido = {
+    tema: { estilo: 'clasico', colorPrimario: '#111111', colorSecundario: '#ffffff', colorTexto: '#000000' },
+    bloques: [
+      { id: 'h', tipo: 'hero', visible: true, datos: { titulo: 'Hola', subtitulo: 'Sub', ctaTexto: 'Ver' } },
+      { id: 'p', tipo: 'productos', visible: true, datos: { titulo: 'Productos' } },
+      { id: 'f', tipo: 'faq', visible: true, datos: { titulo: 'Preguntas' } },
+    ],
+    tienda: { cupones: [] },
+  };
+  const propuesta = {
+    tema: { estilo: 'moderno', colorPrimario: '#5F3FE0' }, orden: ['f', 'h', 'p'], ocultar: ['p'],
+    portada: { titulo: 'Nuevo titular', subtitulo: '', cta: 'Comprar' }, anuncio: '', razones: ['Más contraste'],
+  };
+  return {
+    editor, autoguardados, avisos, propuesta,
+    responder(res) { const r = peticiones[peticiones.length - 1]; r.next(res); r.complete(); },
+    fallar(e) { peticiones[peticiones.length - 1].error(e); },
+  };
+}
+
+test('a failed first KAI request leaves no phantom proposal and resumes autosave', () => {
+  const a = fixtureIA();
+  a.editor.disenarConIA();
+  a.fallar({ status: 403, error: { message: 'Límite del plan' } });
+  assert.equal(a.editor.hayPropuestaIA, false);
+  assert.equal(a.autoguardados.length, 1);
+  const b = fixtureIA();
+  b.editor.disenarConIA();
+  b.responder({ success: false, message: 'Sin propuesta' });
+  assert.equal(b.editor.hayPropuestaIA, false);
+  assert.equal(b.autoguardados.length, 1);
+});
+
+test('a failed «Proponer otro» keeps the pending proposal and its original before', () => {
+  const { editor, responder, fallar, propuesta } = fixtureIA();
+  editor.disenarConIA();
+  responder({ success: true, data: propuesta });
+  editor.disenarConIA();
+  fallar({ error: { message: 'Timeout' } });
+  assert.equal(editor.hayPropuestaIA, true);
+  editor.volverAntesDeIA();
+  assert.equal(editor.contenido.tema.estilo, 'clasico');
+});
+
+test('discarding reverts only what KAI changed and keeps later store and block edits', () => {
+  const { editor, responder, propuesta } = fixtureIA();
+  editor.disenarConIA();
+  responder({ success: true, data: propuesta });
+  assert.deepEqual(clone(editor.contenido.bloques.map(b => b.id)), ['f', 'h', 'p']);
+  editor.contenido.tienda.cupones.push({ codigo: 'BIENVENIDA' });
+  editor.contenido.bloques[0].datos.titulo = 'FAQ editado';
+  editor.contenido.tema.botonForma = 'pastilla';
+  editor.volverAntesDeIA();
+  const c = editor.contenido;
+  assert.equal(editor.hayPropuestaIA, false);
+  assert.equal(c.tema.estilo, 'clasico');
+  assert.equal(c.tema.colorPrimario, '#111111');
+  assert.equal(c.tema.botonForma, 'pastilla');
+  assert.deepEqual(clone(c.bloques.map(b => b.id)), ['h', 'p', 'f']);
+  assert.equal(c.bloques[1].visible, true);
+  assert.deepEqual(clone(c.bloques[0].datos), { titulo: 'Hola', subtitulo: 'Sub', ctaTexto: 'Ver' });
+  assert.equal(c.bloques[2].datos.titulo, 'FAQ editado');
+  assert.deepEqual(clone(c.tienda.cupones), [{ codigo: 'BIENVENIDA' }]);
+});
+
+test('the before view keeps later store edits; its main button keeps what is seen', () => {
+  const { editor, responder, propuesta } = fixtureIA();
+  editor.disenarConIA();
+  responder({ success: true, data: propuesta });
+  editor.contenido.tienda.cupones.push({ codigo: 'X' });
+  editor.alternarAntesIA();
+  assert.equal(editor.viendoAntesIA, true);
+  assert.equal(editor.contenido.tema.estilo, 'clasico');
+  assert.deepEqual(clone(editor.contenido.tienda.cupones), [{ codigo: 'X' }]);
+  // «Quedarme con como estaba» (volverAntesDeIA mirando el antes) deja el antes, no la propuesta.
+  editor.volverAntesDeIA();
+  assert.equal(editor.hayPropuestaIA, false);
+  assert.equal(editor.viendoAntesIA, false);
+  assert.equal(editor.contenido.tema.estilo, 'clasico');
+  assert.deepEqual(clone(editor.contenido.tienda.cupones), [{ codigo: 'X' }]);
+});
+
+test('accepting from the proposal view keeps KAI design; editing on the before view keeps the before', () => {
+  const a = fixtureIA();
+  a.editor.disenarConIA();
+  a.responder({ success: true, data: a.propuesta });
+  a.editor.aceptarPropuestaIA();
+  assert.equal(a.editor.hayPropuestaIA, false);
+  assert.equal(a.editor.contenido.tema.estilo, 'moderno');
+  const b = fixtureIA();
+  b.editor.disenarConIA();
+  b.responder({ success: true, data: b.propuesta });
+  b.editor.alternarAntesIA();
+  b.editor.contenido.tema.colorTexto = '#222222';
+  b.editor.marcarSucio();
+  assert.equal(b.editor.hayPropuestaIA, false);
+  assert.equal(b.editor.contenido.tema.estilo, 'clasico');
+  assert.equal(b.editor.contenido.tema.colorTexto, '#222222');
+});
+
+test('«Volver al de antes» of Tema restores only what the theme changed', () => {
+  const { editor } = fixtureIA();
+  editor.contenido.tema.fuenteTitulo = 'serif';
+  editor.probarVestido({ id: 'v', nombre: 'V', tema: { estilo: 'moderno', fuenteTitulo: 'sans', fuenteCuerpo: 'sans', colorPrimario: '#5F3FE0', colorSecundario: '#f4f2fb', colorTexto: '#211F3A' } });
+  editor.contenido.tema.botonForma = 'pastilla';
+  editor.contenido.tema.logoPosicion = 'centro';
+  editor.descartarVestido();
+  const t = editor.contenido.tema;
+  assert.equal(t.estilo, 'clasico');
+  assert.equal(t.fuenteTitulo, 'serif');
+  assert.equal(Object.hasOwn(t, 'fuenteCuerpo'), false);
+  assert.equal(t.colorPrimario, '#111111');
+  assert.equal(t.botonForma, 'pastilla');
+  assert.equal(t.logoPosicion, 'centro');
+  assert.equal(editor.temaAnterior, null);
+});
+
+test('preview products carry the storefront offer, second photo and new flag', () => {
+  const { editor } = fixtureIA();
+  const hoy = new Date().toISOString();
+  const producto = {
+    precio: { precioUnitarioConIva: 120000 },
+    preciosPorTipoCliente: [{ tipoClienteNombre: 'Público en general', activo: true, precioConIva: 100000, precioDescuentoConIva: 80000, descuentoHasta: '2999-12-31' }],
+    createdAt: hoy,
+  };
+  assert.deepEqual(clone(editor.preciosDeVitrina(producto)), { precioConIva: 80000, precioAntes: 100000, descuentoPorcentaje: 20 });
+  const vencida = { ...producto, preciosPorTipoCliente: [{ ...producto.preciosPorTipoCliente[0], descuentoHasta: '2000-01-01' }] };
+  assert.deepEqual(clone(editor.preciosDeVitrina(vencida)), { precioConIva: 100000, precioAntes: null, descuentoPorcentaje: null });
+  assert.equal(editor.preciosDeVitrina({ precio: { precioUnitarioConIva: 5000 } }).precioConIva, 5000);
+  assert.equal(editor.esNuevo(producto), true);
+  assert.equal(editor.esNuevo({ createdAt: '2001-01-01T00:00:00Z' }), false);
+  assert.equal(editor.esNuevo({}), false);
+  assert.deepEqual(clone(editor.fotosDeVitrina({ imagenesPrincipales: ['/a.jpg', { urls: '/a.jpg' }], imagenesSecundarias: [{ urls: 'https://x.test/b.jpg' }] })),
+    ['https://images2.guiacereza.com/a.jpg', 'https://x.test/b.jpg']);
+});

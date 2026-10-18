@@ -3724,6 +3724,9 @@ input.is-error { border-color: #b42318 !important; }
     font-size: 15px;
     line-height: 1;
     cursor: pointer;
+
+    // Revisión 2026-10-18: el reset global quita el outline de button:focus.
+    &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
   }
 
   &__muestra--vacia { opacity: 0.55; border-style: dashed; }
@@ -3767,6 +3770,8 @@ input.is-error { border-color: #b42318 !important; }
       cursor: pointer;
 
       &.is-active { background: #fff; color: #5F3FE0; box-shadow: 0 2px 8px -4px rgba(95, 63, 224, 0.35); }
+      // Revisión 2026-10-18: foco visible con teclado (el reset global lo quita).
+      &:focus-visible { outline: 3px solid #7C5CFF !important; }
     }
   }
 

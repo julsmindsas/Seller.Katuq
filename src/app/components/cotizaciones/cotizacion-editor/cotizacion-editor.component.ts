@@ -520,7 +520,10 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   get vendedorMetaDoc(): string {
     const v = this.cotizacion.vendedor;
     if (!v) return "";
-    return [v.nombre, v.email, v.celular].filter(Boolean).join(" · ");
+    // Ticket 1243 (revisión 2026-10-18): solo un correo de verdad, como en el
+    // enlace público; KAI firma con el identificador `kai` y salía «KAI · kai».
+    const email = String(v.email || "").includes("@") ? v.email : "";
+    return [v.nombre, email, v.celular].filter(Boolean).join(" · ");
   }
 
   /**

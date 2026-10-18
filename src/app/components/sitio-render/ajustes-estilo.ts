@@ -125,14 +125,18 @@ const ALTERNABLES = new Set([
   "suscripcion", "instagram", "marcas", "sucursales", "agenda", "formulario", "faq", "resenas", "ubicacion",
 ]);
 
-/** Índices de las secciones que llevan el fondo alterno (una sí, una no). */
-export function seccionesAlternas(bloques: { tipo: string; estilo?: any }[], t: AjustesEstilo | null | undefined): Set<number> {
+/**
+ * Índices de las secciones que llevan el fondo alterno (una sí, una no).
+ * Revisión 2026-10-18: tampoco una con color de texto propio, y un bloque
+ * `null` no cuenta (la previa pasa así los que no salen publicados).
+ */
+export function seccionesAlternas(bloques: ({ tipo: string; estilo?: any } | null)[], t: AjustesEstilo | null | undefined): Set<number> {
   const salida = new Set<number>();
   if (!hex((t || {}).colorFondoAlterno)) return salida;
   let n = 0;
   (bloques || []).forEach((b, i) => {
     const e = (b && b.estilo) || {};
-    if (!b || !ALTERNABLES.has(b.tipo) || e.fondo || e.fondoImagen) return;
+    if (!b || !ALTERNABLES.has(b.tipo) || e.fondo || e.fondoImagen || e.colorTexto) return;
     if (n++ % 2 === 1) salida.add(i);
   });
   return salida;
@@ -171,14 +175,22 @@ export function variablesDeAjustes(
   const legible = (c: string) => ((contraste(c, fondo) || 0) >= 4.5 ? c : texto);
   const vars: { [k: string]: string } = {};
   const alterno = hex(a.colorFondoAlterno);
+  // Revisión 2026-10-18: texto de las piezas de fondo blanco fijo (tarjetas, buscador).
+  const sobreBlanco = (contraste(texto, "#ffffff") || 0) >= 4.5 ? texto : "#222222";
+  if (alterno || sobreBlanco !== texto) vars["--sitio-texto-sobre-blanco"] = sobreBlanco;
+  let legibleAlterno: ((c: string) => string) | null = null;
   if (alterno) {
     vars["--sitio-fondo-alterno"] = alterno;
-    vars["--sitio-texto-alterno"] =
+    const textoAlterno =
       (contraste(texto, alterno) || 0) >= 4.5
         ? texto
         : (contraste("#ffffff", alterno) || 0) >= (contraste("#111111", alterno) || 0)
         ? "#ffffff"
         : "#111111";
+    vars["--sitio-texto-alterno"] = textoAlterno;
+    // Revisión 2026-10-18: enlaces, oferta, contorno y color de marca medidos contra el alterno.
+    legibleAlterno = (c: string) => ((contraste(c, alterno) || 0) >= 4.5 ? c : textoAlterno);
+    vars["--sitio-acento-alterno"] = legibleAlterno(primarioAccesible(hex(a.colorPrimario) || "#111111").fondo);
   }
   const boton = hex(a.colorBoton);
   if (boton) {
@@ -188,8 +200,10 @@ export function variablesDeAjustes(
   }
   const enlace = hex(a.colorEnlace);
   if (enlace) vars["--sitio-enlace"] = legible(enlace);
+  if (enlace && legibleAlterno) vars["--sitio-enlace-alterno"] = legibleAlterno(enlace);
   const oferta = hex(a.colorOferta);
   if (oferta) vars["--sitio-oferta"] = legible(oferta);
+  if (oferta && legibleAlterno) vars["--sitio-oferta-alterno"] = legibleAlterno(oferta);
   const etiqueta = hex(a.colorEtiqueta);
   if (etiqueta) {
     const e = primarioAccesible(etiqueta);
@@ -197,7 +211,11 @@ export function variablesDeAjustes(
     vars["--sitio-sobre-etiqueta"] = e.texto;
   }
   if (a.botonRelleno === "contorno") {
-    vars["--sitio-contorno"] = legible(primarioAccesible(boton || hex(a.colorPrimario) || "#111111").fondo);
+    const base = primarioAccesible(boton || hex(a.colorPrimario) || "#111111").fondo;
+    vars["--sitio-contorno"] = legible(base);
+    // Revisión 2026-10-18: en las cajas blancas fijas se mide contra el blanco.
+    vars["--sitio-contorno-claro"] = (contraste(base, "#ffffff") || 0) >= 4.5 ? base : sobreBlanco;
+    if (legibleAlterno) vars["--sitio-contorno-alterno"] = legibleAlterno(base);
   }
   const cols = Number(a.columnasEscritorio);
   if (cols >= 2 && cols <= 5) vars["--sitio-cols"] = String(cols);

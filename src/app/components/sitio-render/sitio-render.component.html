@@ -171,8 +171,9 @@
                  (paste)="alPegar($event)"
                  (click)="registrarClic('cta', bloque.id, $event)">{{ bloque.datos.ctaTexto }}</a>
             </div>
-            <div class="hero__fotos" [ngClass]="'hero__fotos--' + bloque.datos.mosaico.length">
-              <span class="hero__foto" *ngFor="let u of bloque.datos.mosaico"><img [src]="u" alt="" [ngStyle]="estiloFotoPortada(bloque.datos)" /></span>
+            <!-- Ticket 1257: 1, 2 o 4 fotos como la publicada (con tres se muestran dos). -->
+            <div class="hero__fotos" [ngClass]="'hero__fotos--' + fotosDeMosaico(bloque.datos).length">
+              <span class="hero__foto" *ngFor="let u of fotosDeMosaico(bloque.datos)"><img [src]="u" alt="" [ngStyle]="estiloFotoPortada(bloque.datos)" /></span>
             </div>
           </div>
 
@@ -230,7 +231,8 @@
         <!-- Productos. El id fijo es el destino del ancla "#productos". -->
         <section *ngSwitchCase="'productos'" class="bloque productos" id="productos">
           <h2 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h2>
-          <div class="productos__grid" [class.productos__grid--fila]="bloque.datos.carrusel" *ngIf="bloque.datos.productos?.length">
+          <div class="productos__grid" [class.productos__grid--fila]="bloque.datos.carrusel" *ngIf="bloque.datos.productos?.length"
+               [class.productos__grid--pocos]="bloque.datos.productos.length <= 4">
             <article class="producto" *ngFor="let p of bloque.datos.productos"
                      [class.producto--oferta]="enOferta(p)" [class.producto--agotado]="p.disponible === false">
               <div class="producto__foto">
@@ -628,7 +630,9 @@
           <ng-container *ngIf="categoriasDe(bloque.datos).length; else catsEsqueleto">
             <div class="categorias__grid" [class.categorias__grid--fila]="bloque.datos.carrusel">
               <a class="categoria" *ngFor="let c of categoriasDe(bloque.datos)" (click)="$event.preventDefault()">
-                <span class="categoria__foto"><img *ngIf="c.imagen" [src]="c.imagen" alt="" loading="lazy" /></span>
+                <!-- Sin foto, su inicial sobre un tinte de la marca, como la publicada. -->
+                <span class="categoria__foto"><img *ngIf="c.imagen" [src]="c.imagen" alt="" loading="lazy" /><span
+                      class="categoria__inicial" *ngIf="!c.imagen" aria-hidden="true">{{ (c.nombre || '').trim().charAt(0).toUpperCase() }}</span></span>
                 <span class="categoria__pie">
                   <span class="categoria__nombre">{{ c.nombre }}</span>
                   <span class="categoria__total">{{ c.total }} producto{{ c.total === 1 ? '' : 's' }}</span>

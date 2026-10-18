@@ -15,6 +15,7 @@ interface NavigationItem {
   color?: string;
   isActive?: boolean;
   alwaysVisible?: boolean; // se muestra sin importar permisos (Inicio, acceso al menú)
+  otrasRutas?: string[]; // rutas que también marcan el tab como activo
 }
 
 @Component({
@@ -45,7 +46,10 @@ export class BottomNavigationComponent implements OnInit, OnDestroy {
       id: 'ventas',
       label: 'Ventas',
       icon: 'fa fa-shopping-cart',
-      route: '/ventas/crear-ventas',
+      // Revisión 2026-10-18 (ticket 1168): la entrada única del menú; el guard abre la
+      // vista preferida y el menú la deja ver también con el permiso viejo (permisoPrevio).
+      route: '/ventas/venta-asistida',
+      otrasRutas: ['/ventas/crear-ventas'],
       color: '#28a745'
     },
     {
@@ -155,6 +159,7 @@ export class BottomNavigationComponent implements OnInit, OnDestroy {
       }
       
       item.isActive = this.currentRoute.startsWith(item.route) ||
+                     (item.otrasRutas || []).some((ruta) => this.currentRoute.startsWith(ruta)) ||
                      (item.route === '/welcome' && this.currentRoute === '/');
     });
   }

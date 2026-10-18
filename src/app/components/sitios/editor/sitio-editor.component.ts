@@ -30,6 +30,7 @@ import {
 import { pdfAImagenes, reducirImagen } from "./editar-con-ia.archivos";
 import { avisoContraste, avisoContrastePrincipal, combinacionUsable, contraste, mismosColores } from "../contraste";
 import { ajustesDeEstiloCompletos } from "../../sitio-render/ajustes-estilo";
+import { descuentoVigente } from "../../../shared/utils/precio-por-tipo-cliente";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
 const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; icono: string }[] = [
@@ -3680,12 +3681,25 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.razonesIA = [];
     // «Proponer otro» no pisa el antes: «Volver a como estaba» regresa al
     // diseño previo a la primera propuesta, no a la propuesta anterior.
-    if (!this.fotoAntesDeIA) this.fotoAntesDeIA = JSON.stringify(this.contenido);
+    const primera = !this.fotoAntesDeIA;
+    if (primera) {
+      this.fotoAntesDeIA = JSON.stringify(this.contenido);
+      this.tocadoPorIA = this.nadaTocadoPorIA();
+    }
+    // Revisión 2026-10-18: si la PRIMERA petición falla no hay propuesta que
+    // decidir; sin soltar la foto quedaba una «propuesta» fantasma que frenaba
+    // el autoguardado y que «Descartar» usaba para borrar lo editado.
+    const soltarSiEraLaPrimera = () => {
+      if (!primera) return;
+      this.cerrarPropuestaIA();
+      this.programarAutoguardado();
+    };
     this.service.disenarConIA(this.id, this.contenido, this.indicacionesIA.trim()).subscribe({
       next: (res) => {
         this.disenandoIA = false;
         if (!res || !res.success || !res.data) {
           this.toastr.warning((res && (res as any).message) || "KAI no devolvió una propuesta.");
+          soltarSiEraLaPrimera();
           return;
         }
         this.aplicarPropuestaIA(res.data);
@@ -3693,6 +3707,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       error: (e) => {
         this.disenandoIA = false;
         this.toastr.error((e && e.error && e.error.message) || "No pudimos pedir el diseño.");
+        soltarSiEraLaPrimera();
       },
     });
   }
@@ -3700,36 +3715,53 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   private aplicarPropuestaIA(p: PropuestaDiseno): void {
     if (!this.contenido) return;
     const c: any = this.contenido;
-    if (p.tema && Object.keys(p.tema).length) c.tema = { ...c.tema, ...p.tema };
+    // Revisión 2026-10-18: se anota qué tocó KAI para que «Antes» y «Descartar»
+    // reviertan solo eso (y no Tienda, cupones ni otros textos editados después).
+    const tocado = this.tocadoPorIA;
+    if (p.tema && Object.keys(p.tema).length) {
+      c.tema = { ...c.tema, ...p.tema };
+      Object.keys(p.tema).forEach((k) => tocado.tema.add(k));
+    }
     if (p.orden && p.orden.length === c.bloques.length) {
       const porId = new Map(c.bloques.map((b: any) => [b.id, b]));
       c.bloques = p.orden.map((id) => porId.get(id)).filter(Boolean);
+      tocado.orden = true;
     }
     for (const id of p.ocultar || []) {
       const b = c.bloques.find((x: any) => x.id === id);
-      if (b) b.visible = false;
+      if (b) {
+        b.visible = false;
+        tocado.ocultos.add(id);
+      }
     }
+    const anotarDato = (bloque: any, campo: string) => {
+      if (!tocado.datos.has(bloque.id)) tocado.datos.set(bloque.id, new Set<string>());
+      tocado.datos.get(bloque.id)!.add(campo);
+    };
     const hero = c.bloques.find((b: any) => b.tipo === "hero");
     if (hero && p.portada) {
-      if (p.portada.titulo) hero.datos.titulo = p.portada.titulo;
-      if (p.portada.subtitulo) hero.datos.subtitulo = p.portada.subtitulo;
-      if (p.portada.cta) hero.datos.ctaTexto = p.portada.cta;
+      if (p.portada.titulo) { hero.datos.titulo = p.portada.titulo; anotarDato(hero, "titulo"); }
+      if (p.portada.subtitulo) { hero.datos.subtitulo = p.portada.subtitulo; anotarDato(hero, "subtitulo"); }
+      if (p.portada.cta) { hero.datos.ctaTexto = p.portada.cta; anotarDato(hero, "ctaTexto"); }
     }
     const anuncio = c.bloques.find((b: any) => b.tipo === "anuncio");
-    if (anuncio && p.anuncio) anuncio.datos.texto = p.anuncio;
+    if (anuncio && p.anuncio) { anuncio.datos.texto = p.anuncio; anotarDato(anuncio, "texto"); }
     this.seleccionado = -1;
     this.razonesIA = p.razones || [];
     this.marcarSucio();
     this.toastr.success("KAI propone un diseño: compáralo con el de antes y decide si lo dejas.");
   }
 
+  /**
+   * «Descartar» (y «Quedarme con como estaba» mirando el antes). Revisión
+   * 2026-10-18: revierte solo lo que tocó KAI; lo editado después en Tienda,
+   * cupones u otros bloques se queda.
+   */
   volverAntesDeIA(): void {
-    if (!this.fotoAntesDeIA) return;
-    this.contenido = JSON.parse(this.fotoAntesDeIA);
-    this.fotoAntesDeIA = "";
-    this.fotoPropuestaIA = "";
-    this.viendoAntesIA = false;
-    this.razonesIA = [];
+    if (!this.fotoAntesDeIA || !this.contenido) return;
+    // Mirando el antes, el contenido ya es ese antes (con lo demás intacto).
+    if (!this.viendoAntesIA) this.contenido = this.conAntesDeIA(this.contenido);
+    this.cerrarPropuestaIA();
     this.seleccionado = -1;
     this.marcarSucio();
   }
@@ -3738,12 +3770,65 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   viendoAntesIA = false;
   private fotoPropuestaIA = "";
 
+  // Revisión 2026-10-18: lo que KAI cambió desde la foto del antes (se acumula con «Proponer otro»).
+  private tocadoPorIA = this.nadaTocadoPorIA();
+
+  private nadaTocadoPorIA() {
+    return { tema: new Set<string>(), orden: false, ocultos: new Set<string>(), datos: new Map<string, Set<string>>() };
+  }
+
+  /** Deja de haber propuesta por decidir. No toca el contenido. */
+  private cerrarPropuestaIA(): void {
+    this.fotoAntesDeIA = "";
+    this.fotoPropuestaIA = "";
+    this.viendoAntesIA = false;
+    this.razonesIA = [];
+    this.tocadoPorIA = this.nadaTocadoPorIA();
+  }
+
+  /**
+   * Copia de `base` con lo que tocó KAI devuelto a como estaba en la foto del
+   * antes: tema, orden y visibilidad de bloques, portada y anuncio.
+   */
+  private conAntesDeIA(base: any): any {
+    const c = JSON.parse(JSON.stringify(base));
+    const antes = JSON.parse(this.fotoAntesDeIA);
+    const tocado = this.tocadoPorIA;
+    const enAntes = (id: string) => (antes.bloques || []).find((b: any) => b.id === id);
+    const restaurar = (destino: any, origen: any, clave: string) => {
+      if (origen && clave in origen) destino[clave] = origen[clave];
+      else delete destino[clave];
+    };
+    c.tema = c.tema || {};
+    tocado.tema.forEach((k) => restaurar(c.tema, antes.tema, k));
+    if (tocado.orden && Array.isArray(c.bloques)) {
+      // Los bloques que ya existían vuelven a su orden; uno agregado después se queda en su lugar.
+      const pos = new Map<string, number>((antes.bloques || []).map((b: any, i: number) => [b.id, i] as [string, number]));
+      const lugares = c.bloques.map((b: any, i: number) => (pos.has(b.id) ? i : -1)).filter((i: number) => i >= 0);
+      const ordenados = lugares.map((i: number) => c.bloques[i]).sort((x: any, y: any) => pos.get(x.id)! - pos.get(y.id)!);
+      lugares.forEach((i: number, k: number) => (c.bloques[i] = ordenados[k]));
+    }
+    tocado.ocultos.forEach((id) => {
+      const b = (c.bloques || []).find((x: any) => x.id === id);
+      const a = enAntes(id);
+      if (b && a) restaurar(b, a, "visible");
+    });
+    tocado.datos.forEach((campos, id) => {
+      const b = (c.bloques || []).find((x: any) => x.id === id);
+      const a = enAntes(id);
+      if (!b || !a) return;
+      b.datos = b.datos || {};
+      campos.forEach((k) => restaurar(b.datos, a.datos, k));
+    });
+    return c;
+  }
+
   /** Cambia la vista previa entre la propuesta y como estaba, sin perder ninguna. */
   alternarAntesIA(): void {
     if (!this.fotoAntesDeIA || !this.contenido) return;
     if (!this.viendoAntesIA) {
       this.fotoPropuestaIA = JSON.stringify(this.contenido);
-      this.contenido = JSON.parse(this.fotoAntesDeIA);
+      this.contenido = this.conAntesDeIA(this.contenido);
       this.viendoAntesIA = true;
     } else {
       this.contenido = JSON.parse(this.fotoPropuestaIA);
@@ -3758,8 +3843,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   aceptarPropuestaIA(): void {
     if (!this.fotoAntesDeIA) return;
     if (this.viendoAntesIA) this.alternarAntesIA();
-    this.fotoAntesDeIA = "";
-    this.razonesIA = [];
+    this.cerrarPropuestaIA();
     this.marcarSucio();
     this.toastr.success("Listo, quedó el diseño de KAI.");
   }
@@ -3792,7 +3876,10 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     // Se guarda el punto de partida la PRIMERA vez, no en cada prueba: así
     // "volver al de antes" devuelve al look con el que llegó, no al anterior
     // de la cadena de pruebas.
-    if (!this.temaAnterior) this.temaAnterior = { ...(this.contenido.tema as any) };
+    if (!this.temaAnterior) {
+      this.temaAnterior = { ...(this.contenido.tema as any) };
+      this.clavesDelVestido = new Set<string>();
+    }
 
     const v = vestido.tema || {};
     const nuevo: any = {
@@ -3802,22 +3889,39 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       fuenteCuerpo: v.fuenteCuerpo,
       tipografia: v.tipografia,
     };
+    ["estilo", "fuenteTitulo", "fuenteCuerpo", "tipografia"].forEach((k) => this.clavesDelVestido.add(k));
     if (!this.conservarMisColores) {
       nuevo.colorPrimario = v.colorPrimario;
       nuevo.colorSecundario = v.colorSecundario;
       nuevo.colorTexto = v.colorTexto;
+      ["colorPrimario", "colorSecundario", "colorTexto"].forEach((k) => this.clavesDelVestido.add(k));
     } else if (this.coloresMarca) {
       // Ticket 1216: "mis colores" son los de Mi marca, no los que trajo la plantilla.
       Object.assign(nuevo, this.coloresMarca);
+      Object.keys(this.coloresMarca).forEach((k) => this.clavesDelVestido.add(k));
     }
     this.contenido.tema = nuevo;
     this.marcarSucio();
   }
 
+  // Revisión 2026-10-18: lo que cambiaron las pruebas de Tema desde temaAnterior.
+  private clavesDelVestido = new Set<string>();
+
+  /**
+   * Revisión 2026-10-18: devuelve solo lo que cambia un Tema (estilo, letra y,
+   * si se cambiaron, los colores base); botones, tarjeta, encabezado y medidas
+   * elegidos después se quedan.
+   */
   descartarVestido(): void {
     if (!this.temaAnterior) return;
-    this.contenido.tema = { ...this.temaAnterior };
+    const tema: any = { ...(this.contenido.tema as any) };
+    this.clavesDelVestido.forEach((k) => {
+      if (k in this.temaAnterior) tema[k] = this.temaAnterior[k];
+      else delete tema[k];
+    });
+    this.contenido.tema = tema;
     this.temaAnterior = null;
+    this.clavesDelVestido = new Set<string>();
     this.marcarSucio();
   }
 
@@ -4496,11 +4600,17 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         for (const p of res.products || []) {
           const crear = p.crearProducto || {};
           const disp = p.disponibilidad || {};
+          // Revisión 2026-10-18: los mismos datos de tarjeta que la página
+          // (productoParaVitrina en vitrinaProducto.js): precio con su oferta,
+          // segunda foto y «Nuevo». Sin ellos las insignias no salían en la previa.
+          const fotos = this.fotosDeVitrina(crear);
           this.productosPrevia.set(p.cd, {
             productoId: p.cd,
             titulo: crear.titulo || "Producto",
-            imagen: this.primeraImagen(crear),
-            precioConIva: Number((p.precio || {}).precioUnitarioConIva || 0),
+            imagen: fotos[0] || null,
+            imagen2: fotos.length > 1 ? fotos[1] : null,
+            ...this.preciosDeVitrina(p),
+            nuevo: this.esNuevo(p),
             disponible: disp.inventariable === false ? true : Number(disp.cantidadDisponible || 0) > 0,
           });
         }
@@ -4511,18 +4621,56 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     });
   }
 
-  private primeraImagen(crear: any): string | null {
+  /** Fotos utilizables, absolutas y sin repetir (espejo de `todasLasImagenes` del servidor). */
+  private fotosDeVitrina(crear: any): string[] {
     const candidatas = [...(crear.imagenesPrincipales || []), ...(crear.imagenesSecundarias || [])];
+    const fotos: string[] = [];
     for (const img of candidatas) {
       const ruta = typeof img === "string" ? img : img && img.urls;
       if (!ruta || typeof ruta !== "string" || !ruta.trim()) continue;
       const limpia = ruta.trim();
-      if (/^https?:\/\//i.test(limpia) || limpia.startsWith("data:") || limpia.startsWith("//")) {
-        return limpia;
-      }
-      return `https://images2.guiacereza.com${limpia.startsWith("/") ? "" : "/"}${limpia}`;
+      const url = /^https?:\/\//i.test(limpia) || limpia.startsWith("data:") || limpia.startsWith("//")
+        ? limpia
+        : `https://images2.guiacereza.com${limpia.startsWith("/") ? "" : "/"}${limpia}`;
+      if (!fotos.includes(url)) fotos.push(url);
     }
-    return null;
+    return fotos;
+  }
+
+  /**
+   * Precio de la tarjeta con la cadena de `preciosDeVitrina` del servidor:
+   * oferta vigente de la lista pública → lista pública → precio principal.
+   */
+  private preciosDeVitrina(p: any): { precioConIva: number; precioAntes: number | null; descuentoPorcentaje: number | null } {
+    const listas = Array.isArray(p.preciosPorTipoCliente) ? p.preciosPorTipoCliente : [];
+    const publica = listas.find(
+      (l: any) =>
+        l &&
+        l.activo !== false &&
+        typeof l.tipoClienteNombre === "string" &&
+        /p[uú]blico/i.test(l.tipoClienteNombre) &&
+        (l.precioConIva > 0 || l.precio > 0)
+    );
+    const lista = publica
+      ? Number(publica.precioConIva || publica.precio) || 0
+      : Number((p.precio || {}).precioUnitarioConIva) || 0;
+    if (publica && descuentoVigente({ ...publica, precioConIva: lista })) {
+      const dto = Number(publica.precioDescuentoConIva);
+      return {
+        precioConIva: dto,
+        precioAntes: lista,
+        descuentoPorcentaje: Number(publica.descuentoPorcentaje) || Math.round((1 - dto / lista) * 100),
+      };
+    }
+    return { precioConIva: lista, precioAntes: null, descuentoPorcentaje: null };
+  }
+
+  /** «Nuevo» = creado hace 45 días o menos, como `esNuevo` del servidor. */
+  private esNuevo(p: any): boolean {
+    const fecha = Date.parse(p.createdAt || p.fechaCreacion || "");
+    if (!Number.isFinite(fecha)) return false;
+    const dias = (Date.now() - fecha) / 86400000;
+    return dias >= 0 && dias <= 45;
   }
 
   /**
@@ -4745,12 +4893,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   marcarSucio(): void {
     // Ticket 1227: editar mientras se mira el «antes» es quedarse con el antes
     // (y su cambio): la propuesta de KAI se descarta en vez de pisar lo editado.
-    if (this.viendoAntesIA) {
-      this.viendoAntesIA = false;
-      this.fotoPropuestaIA = "";
-      this.fotoAntesDeIA = "";
-      this.razonesIA = [];
-    }
+    if (this.viendoAntesIA) this.cerrarPropuestaIA();
     this.recalcularSucio();
     this.recalcularPrevia();
     this.guardarEnHistorial();
@@ -5024,6 +5167,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
           this.guardar(alPublicar);
         } else {
           this.panel = "diseno";
+          // Revisión 2026-10-18: el aviso y los selectores viven en el grupo Colores del acordeón.
+          this.estiloAbierto = "colores";
         }
       });
       return;

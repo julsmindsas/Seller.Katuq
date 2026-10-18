@@ -12,7 +12,8 @@
                     Gestiona productos, ventas, inventarios y envíos desde un solo lugar.
                 </p>
                 <div class="hero-actions">
-                    <a *ngIf="canAccess('ventas/crear-ventas')" class="btn btn-katuq-solid btn-sm" routerLink="/ventas/crear-ventas">
+                    <!-- Revisión 2026-10-18 (ticket 1168): entrada única; el guard abre la vista preferida. -->
+                    <a *ngIf="puedeVender" class="btn btn-katuq-solid btn-sm" routerLink="/ventas/venta-asistida">
                         <i class="fa fa-plus me-1" aria-hidden="true"></i>Nueva venta
                     </a>
                     <!-- Mi perfil siempre visible — todos pueden editar su perfil propio -->
@@ -63,7 +64,7 @@
                 </div>
             </div>
             <div class="start-center-actions">
-                <a *ngIf="canAccess('ventas/crear-ventas')" class="start-action start-action--primary" routerLink="/ventas/crear-ventas">
+                <a *ngIf="puedeVender" class="start-action start-action--primary" routerLink="/ventas/venta-asistida">
                     <i class="fa fa-shopping-cart" aria-hidden="true"></i>
                     <span><strong>Hacer mi primera venta</strong><small>Registra cliente, productos y pago.</small></span>
                 </a>
@@ -108,8 +109,8 @@
 <div class="container-fluid px-4 mb-4" *ngIf="showAccionesRapidas">
     <h2 class="section-title mb-2">Acciones rápidas</h2>
     <div class="row g-3">
-        <div class="col-6 col-lg-4" *ngIf="canAccess('ventas/crear-ventas')">
-            <a routerLink="/ventas/crear-ventas" class="action-card">
+        <div class="col-6 col-lg-4" *ngIf="puedeVender">
+            <a routerLink="/ventas/venta-asistida" class="action-card">
                 <div class="action-icon action-icon--primary">
                     <i class="fa fa-shopping-cart" aria-hidden="true"></i>
                 </div>

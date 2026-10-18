@@ -38,7 +38,8 @@ import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import * as XLSX from "xlsx";
 import Swal from "sweetalert2";
 import { CarritoComponent } from "../carrito/carrito.component";
-import { SalesDraftsService, CLAVE_CONTEXTO_BORRADOR, EntradaBorrador } from "../../../shared/services/ventas/sales-drafts.service";
+import { SalesDraftsService, CLAVE_CONTEXTO_BORRADOR, EntradaBorrador, BorradorVenta } from "../../../shared/services/ventas/sales-drafts.service";
+import { VistaVenta, abrirVistaVenta } from "../selector-vista-venta/selector-vista-venta.component";
 import {
   EstadoPago,
   EstadoProceso,
@@ -52,7 +53,7 @@ import { NotasComponent } from "../notas/notas/notas.component";
 import { CheckOutComponent } from "../checkout/checkout.component";
 import { ConfirmComponent } from "../confirm/confirm.component";
 import { MovingDirection, WizardComponent } from "angular-archwizard";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { VentasService } from "../../../shared/services/ventas/ventas.service";
 import { PaymentService } from "../../../shared/services/ventas/payment.service";
 import { CartSingletonService } from "../../../shared/services/ventas/cart.singleton.service";
@@ -107,6 +108,8 @@ export class CrearVentasComponent
   guardandoBorrador = false;
   private borradorPendiente: { envio: any; facturacion: any; notasPedido: any } | null = null;
   private readonly salesDrafts = inject(SalesDraftsService);
+  // Revisión 2026-10-18 (ticket 1168): cambio de vista; con inject() para no tocar el constructor.
+  private readonly router = inject(Router);
   @ViewChild("carrito") carrito: CarritoComponent;
   @ViewChild("products", { static: false })
   productos: EcomerceProductsComponent;
@@ -531,12 +534,15 @@ export class CrearVentasComponent
   /**
    * Ticket 1169: guarda la venta en curso como borrador y deja la pantalla
    * limpia. Si la venta salió de un borrador, actualiza ese mismo.
+   * Revisión 2026-10-18: `despues` reemplaza la limpieza (cambio de vista).
    */
-  async guardarBorrador(): Promise<void> {
+  async guardarBorrador(despues?: (guardado: BorradorVenta | null, estado: EntradaBorrador["estado"]) => void): Promise<void> {
     if (this.guardandoBorrador || !this.puedeGuardarBorrador) return;
     const respuesta = await Swal.fire({
       title: this.borradorId ? "Actualizar borrador" : "Guardar borrador",
-      text: "La venta queda guardada y la pantalla se limpia para la siguiente.",
+      text: despues
+        ? "La venta queda guardada y sigue en la otra vista."
+        : "La venta queda guardada y la pantalla se limpia para la siguiente.",
       input: "text",
       inputLabel: "Nombre (opcional)",
       inputValue: this.borradorNombre,
@@ -581,7 +587,12 @@ export class CrearVentasComponent
 
     this.guardandoBorrador = true;
     const enviar = (id: string | null) => (id ? this.salesDrafts.actualizar(id, entrada) : this.salesDrafts.crear(entrada));
-    const alGuardar = () => {
+    const alGuardar = (guardado?: BorradorVenta) => {
+      if (despues) {
+        this.guardandoBorrador = false;
+        despues(guardado || null, entrada.estado);
+        return;
+      }
       Swal.fire({
         icon: "success",
         title: "Borrador guardado",
@@ -618,6 +629,69 @@ export class CrearVentasComponent
     if (!id) return;
     this.borradorId = null;
     this.salesDrafts.eliminar(id).subscribe({ error: () => { /* vence solo a los 30 días */ } });
+  }
+
+  /**
+   * Ticket 1168 (revisión 2026-10-18): la otra vista arranca de cero, así que con
+   * venta en curso (cliente o productos) se pregunta antes de cambiar. Guardar la
+   * deja como borrador y la retoma en la otra vista por el mismo camino de
+   * «Borradores»; sin venta en curso cambia directo.
+   */
+  async cambiarVistaVenta(vista: VistaVenta): Promise<void> {
+    const parametros = this.route.snapshot.queryParams;
+    if (!this.puedeGuardarBorrador) {
+      abrirVistaVenta(this.router, vista, parametros);
+      return;
+    }
+    const decision = await Swal.fire({
+      title: "¿Cambiar de vista?",
+      text: "Hay una venta en curso y la otra vista empieza de cero. Puede guardarla como borrador para seguirla allá.",
+      icon: "warning",
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: "Guardar y cambiar",
+      denyButtonText: "Cambiar sin guardar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#5F3FE0",
+      denyButtonColor: "#D64545",
+    });
+    if (decision.isDenied) {
+      // La venta se descarta: la cotización de origen ya no se sella con otro pedido.
+      try { sessionStorage.removeItem("cotizacionOrigen"); } catch { /* noop */ }
+      abrirVistaVenta(this.router, vista, parametros);
+      return;
+    }
+    if (!decision.isConfirmed) return;
+    await this.guardarBorrador((guardado, estado) => {
+      const documento = estado.cliente?.documento ? String(estado.cliente.documento) : "";
+      // Revisión 2026-10-18: el aviso solo promete la retoma si el contexto quedó escrito.
+      let retomaLista = false;
+      if (guardado?.id) {
+        try {
+          sessionStorage.setItem(
+            CLAVE_CONTEXTO_BORRADOR,
+            JSON.stringify({
+              id: guardado.id,
+              nombre: guardado.nombre || "",
+              documento,
+              bodega: estado.bodega,
+              ciudad: estado.ciudad,
+              items: estado.items,
+              envio: estado.envio,
+              facturacion: estado.facturacion,
+              notasPedido: estado.notasPedido,
+            }),
+          );
+          retomaLista = true;
+        } catch { /* sin almacenamiento: el borrador queda en «Borradores» */ }
+      }
+      this.toastrService.success(
+        retomaLista
+          ? "Borrador guardado. La venta sigue en la otra vista."
+          : "Borrador guardado. Retómelo desde «Borradores» en la otra vista.",
+      );
+      abrirVistaVenta(this.router, vista, documento ? { documento } : {});
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
