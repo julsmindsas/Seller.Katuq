@@ -28,6 +28,9 @@ export const COMPANY_FEATURE_FLAGS = [
   // Varios números de WhatsApp por comercio, asignados a vendedores, y dueño del chat (D-437).
   // Dueño: Daniel. Se retira 30 días después de tenerla encendida para todos.
   'whatsappMultiNumero',
+  // Agenda de servicios (D-488): citas, horario y personas que atienden. Dueño: Daniel.
+  // Se retira el 2027-03-31: encendida para todos o eliminada.
+  'serviceAgenda',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

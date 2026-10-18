@@ -1,0 +1,135 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: 'min(640px, 96vw)' }"
+  [appendTo]="'body'"
+  styleClass="ag-dialogo"
+  header="Agendar cita"
+  (onHide)="cerrarDialogo()">
+
+  <div class="ag-form">
+    <!-- Cliente -->
+    <div class="ag-campo">
+      <span class="ag-etiqueta">Cliente</span>
+      <div class="ag-cliente-elegido" *ngIf="cliente.clientId; else buscarOEscribir">
+        <span class="ag-cliente-nombre">{{ cliente.name }}</span>
+        <span class="ag-muted">{{ cliente.phone }}<ng-container *ngIf="cliente.email"> · {{ cliente.email }}</ng-container></span>
+        <button type="button" class="ag-quitar" (click)="quitarCliente()">Cambiar</button>
+      </div>
+      <ng-template #buscarOEscribir>
+        <div class="ag-buscador">
+          <input class="ag-input" type="search" [(ngModel)]="busqueda" (ngModelChange)="alBuscar()"
+            placeholder="Buscar cliente por nombre, cédula o celular" autocomplete="off" aria-label="Buscar cliente">
+          <div class="ag-resultados" *ngIf="resultados.length">
+            <button type="button" class="ag-resultado" *ngFor="let r of resultados" (click)="elegirCliente(r)">
+              <span class="ag-cliente-nombre">{{ r.nombres_completos || r.displayLabel }}</span>
+              <span class="ag-muted">{{ r.numero_celular_comprador || r.documento || '' }}</span>
+            </button>
+          </div>
+        </div>
+        <div class="ag-dos">
+          <input class="ag-input" [(ngModel)]="cliente.name" placeholder="Nombre" aria-label="Nombre del cliente" maxlength="120">
+          <input class="ag-input" [(ngModel)]="cliente.phone" placeholder="Celular" aria-label="Celular" inputmode="tel" maxlength="30">
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Servicios -->
+    <div class="ag-campo">
+      <span class="ag-etiqueta">Servicio</span>
+      <p-multiSelect *ngIf="servicios.length; else sinServicios"
+        [options]="serviciosActivos" optionLabel="name" optionValue="productId"
+        [(ngModel)]="serviceIds" (onChange)="alCambiarServicios()"
+        [filter]="true" filterPlaceholder="Buscar servicio" defaultLabel="Elige uno o varios"
+        [showToggleAll]="false" display="chip" [appendTo]="'body'" styleClass="ag-multi">
+        <ng-template let-s pTemplate="item">
+          <span class="ag-opcion-servicio">{{ s.name }}<ng-container *ngIf="s.durationMinutes"> · {{ s.durationMinutes }} min</ng-container></span>
+        </ng-template>
+      </p-multiSelect>
+      <ng-template #sinServicios>
+        <input class="ag-input" [(ngModel)]="motivo" placeholder="Motivo de la cita" maxlength="60" aria-label="Motivo">
+        <span class="ag-muted">Todavía no tienes servicios marcados. En Productos, marca un ítem como "Servicio" para elegirlo aquí.</span>
+      </ng-template>
+    </div>
+
+    <div class="ag-dos">
+      <div class="ag-campo" *ngIf="config.staff.length">
+        <span class="ag-etiqueta">Quién atiende</span>
+        <select class="ag-input" [(ngModel)]="staffId" (ngModelChange)="alCambiarCriterio()" aria-label="Quién atiende">
+          <option [ngValue]="null">Cualquiera disponible</option>
+          <option *ngFor="let p of personas" [ngValue]="p.id">{{ p.name }}</option>
+        </select>
+      </div>
+      <div class="ag-campo">
+        <span class="ag-etiqueta">Fecha</span>
+        <input class="ag-input" type="date" [(ngModel)]="fecha" [min]="hoy" (ngModelChange)="alCambiarCriterio()" aria-label="Fecha">
+      </div>
+      <div class="ag-campo" *ngIf="!modoFranjas">
+        <span class="ag-etiqueta">Duración (min)</span>
+        <input class="ag-input" type="number" min="5" max="720" step="5" [(ngModel)]="duracion" (ngModelChange)="alCambiarDuracion()" aria-label="Duración en minutos">
+      </div>
+    </div>
+
+    <!-- Hora o franja -->
+    <div class="ag-campo">
+      <span class="ag-etiqueta">{{ modoFranjas ? 'Franja' : 'Hora' }} · {{ fechaLarga(fecha) }}</span>
+      <span class="ag-muted" *ngIf="cargandoHoras">Buscando horas libres…</span>
+
+      <ng-container *ngIf="!cargandoHoras && !modoFranjas">
+        <div class="ag-opciones" *ngIf="disponibilidad?.horas?.length; else sinHoras">
+          <button type="button" class="ag-opcion" *ngFor="let h of disponibilidad?.horas"
+            [class.ag-opcion--activa]="hora === h.hora && !horaManual" (click)="elegirHora(h.hora)">
+            {{ horaLegible(h.hora) }}
+          </button>
+        </div>
+        <ng-template #sinHoras><span class="ag-muted">No hay horas libres ese día con esa persona y esa duración.</span></ng-template>
+        <div class="ag-otra-hora">
+          <span class="ag-muted">¿Otra hora?</span>
+          <input class="ag-input ag-input--hora" type="time" [(ngModel)]="horaManual" (ngModelChange)="alEscribirHora()" aria-label="Otra hora">
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="!cargandoHoras && modoFranjas">
+        <div class="ag-opciones" *ngIf="disponibilidad?.franjas?.length; else sinFranjas">
+          <button type="button" class="ag-opcion" *ngFor="let f of disponibilidad?.franjas"
+            [disabled]="!f.disponible && franja !== f.franja"
+            [class.ag-opcion--activa]="franja === f.franja" (click)="elegirFranja(f.franja)">
+            {{ f.franja }}
+          </button>
+        </div>
+        <ng-template #sinFranjas><span class="ag-muted">Ese día no hay agenda.</span></ng-template>
+      </ng-container>
+    </div>
+
+    <!-- A domicilio -->
+    <div class="ag-dos" *ngIf="aDomicilio">
+      <div class="ag-campo">
+        <span class="ag-etiqueta">Dirección del servicio</span>
+        <input class="ag-input" [(ngModel)]="lugar.address" maxlength="200" aria-label="Dirección del servicio">
+      </div>
+      <div class="ag-campo">
+        <span class="ag-etiqueta">Ciudad</span>
+        <input class="ag-input" [(ngModel)]="lugar.city" maxlength="80" aria-label="Ciudad">
+      </div>
+    </div>
+
+    <div class="ag-campo">
+      <span class="ag-etiqueta">Notas (opcional)</span>
+      <textarea class="ag-input" [(ngModel)]="notas" maxlength="600" rows="2" aria-label="Notas"></textarea>
+    </div>
+
+    <div class="cfg-aviso cfg-aviso--error" *ngIf="error" role="alert"><span class="ag-txt">{{ error }}</span></div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="ag-pie">
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrarDialogo()"><span class="ag-txt">Cancelar</span></button>
+      <button type="button" class="cfg-btn" [disabled]="!puedeGuardar" (click)="guardar()">
+        <span class="ag-txt">{{ guardando ? 'Agendando…' : 'Agendar' }}</span>
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>

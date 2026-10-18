@@ -10930,3 +10930,21 @@ Daniel (16-oct): "requiero un módulo de marketing para Katuq y para Julsmind; q
   - Plantilla «Tecnología / catálogo grande» tipo Baudio: debe nacer con bandera (D-385), y el cableado de banderas de plantillas sigue sin hacer; necesita visto bueno de Daniel. Filtros técnicos y ficha con especificaciones dependen de la propuesta de atributos por categoría (F2-42).
   - Revisar con 3 catálogos reales de comercios (solo lectura).
   - Contenido de muestra real por sector en las demás plantillas.
+
+## D-491 (2026-10-18) — Servicios y Agenda: el servicio como tipo de ítem y una Agenda real que reemplaza la demo de agendamiento — APROBADA (Daniel, 18-oct: «dale»), EN CURSO
+
+- **Por qué:** Daniel, 18-oct: «la intención es que Katuq lo usen empresas que venden servicios». Revierte lo del 5-oct para la feria (no invertir en agendamiento porque el ICP vendía producto tangible). Propuesta en `openspec/changes/servicios-y-agenda/`.
+- **Lo que había:** la demo `servicios/agendamiento` (oct-2025, video-agent Haceb/Apple) botaba los datos y guardaba citas y 10 técnicos ficticios en el `localStorage`; la ruta era pública y el menú lo veía todo Administrador. Se retira: menú, ruta (los enlaces viejos llevan a `/agenda`) y el botón «Agendar» del video-agent. `AgendamientoService` y `OperadoresService` se quedan solo porque el video-agent los usa.
+- **Servicio como ítem:** `itemType: "service"` + `service {durationMinutes, mode: onsite|home|virtual, requiresAppointment}`. Un servicio nunca maneja existencias (`utils/productoServicio.js`, en crear, editar e importar). **No** se usa `identificacion.tipoReferencia`: en el formulario de producto ya significa referencia manual o automática (`propio`/`externo`); solo se LEE su valor `"servicio"` que escribía el onboarding. Selector «Producto | Servicio» en el formulario completo y el rápido, y columna «Tipo» en la importación.
+- **Agenda (bandera `serviceAgenda`, dueño Daniel, retiro 2027-03-31):**
+  - Colección nueva `appointments` (aprobada), `/v1/appointments` con la empresa del JWT. Config en `companyConfig/{empresa}.agenda`: por hora (duración y persona) o por franjas con cupo, horario por día, personas que atienden sin necesidad de usuario y «Avisarme a».
+  - Reserva dentro de `runTransaction` (consulta del día + escritura) e idempotente por `requestId`. Estados: Solicitada, Confirmada, Atendida, Cancelada, No asistió, con historial.
+  - Pantalla Agenda por día (columna por persona) y por semana; configuración; «Agendar» desde la ficha del CRM.
+  - Bloque «Agenda de visitas» de la web (D-472): con bandera Y config reserva en la Agenda (transaccional) y sigue creando el prospecto; si no, igual que hoy.
+  - Avisos de cita web al comercio: campana del Seller + correo, uno por evento. Nada automático al cliente final.
+  - Onboarding: «¿Qué vendes?» queda en `businessProfile.sells`; servicios o ambos encienden la Agenda (mismo interruptor `NEW_COMPANY_FEATURE_FLAGS`).
+  - Opttia/MCP: `get_appointments` (compuerta `serviceAgenda`); `get_services` prefiere los marcados.
+- **Decisiones por defecto de las preguntas abiertas:** «Marcar como prestado» lo hacen los mismos roles que hoy cambian el estado del pedido; la Agenda la configura la familia Administrador; la cita de la web nace Solicitada y conserva «Confirmar por WhatsApp»; la plantilla de recordatorio en Meta queda para la fase 2.
+- **Pedidos (módulo sensible), pendiente de diff aprobado uno por uno:** `requiresDispatch` calculado en el servidor desde `products` (ya existe y está probado `services/orders/requiereDespacho.js`, sin cablear), despachos y mensajeros lo leen, `ParaDespachar → Entregado` solo sin despacho, venta asistida y tienda sin envío para carritos de servicios, «Cobrar» desde la cita, y SIIGO/World Office crean el ítem como servicio.
+- **Verificado:** `npm run test:agenda` (66 pruebas, incluida la reserva simultánea por el último espacio y el write-set solo `appointments`/`companyConfig`); build completo del front sin errores; sin gradientes, primarios prohibidos ni clases con «p-» en lo nuevo.
+- **Sin verificar:** nada en navegador todavía: el backend nuevo no está desplegado y el front local apunta a producción.

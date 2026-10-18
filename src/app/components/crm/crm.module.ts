@@ -35,6 +35,8 @@ import { CrmSeguimientoComponent } from './components/crm-seguimiento/crm-seguim
 
 import { MessageService, ConfirmationService } from 'primeng/api';
 
+import { AgendaFormModule } from '../agenda/agenda-form.module';
+
 @NgModule({
   declarations: [CrmListComponent, CrmDetailComponent, CrmSeguimientoComponent],
   imports: [
@@ -46,6 +48,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
     CardModule, ToolbarModule, TooltipModule, SkeletonModule,
     BadgeModule, MenuModule, DragulaModule, InputSwitchModule,
     LeadFormModalComponent, ClientesSharedModule,
+    AgendaFormModule, // D-488: "Agendar" desde la ficha
   ],
   providers: [MessageService, ConfirmationService],
 })

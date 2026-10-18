@@ -381,6 +381,14 @@ export const content: Routes = [
     canActivate: [AuthGuard],
     data: { title: "CRM" },
   },
+  {
+    // Agenda de servicios (D-488). Además de la sesión, exige la bandera `serviceAgenda` (AgendaGuard).
+    path: "agenda",
+    loadChildren: () =>
+      import("../../components/agenda/agenda.module").then((m) => m.AgendaModule),
+    canActivate: [AuthGuard],
+    data: { title: "Agenda" },
+  },
   // ⚠️ Los tres buzones van ANTES de "notificaciones" a propósito.
   //
   // Angular resuelve las rutas EN ORDEN y por prefijo: "notificaciones" a secas

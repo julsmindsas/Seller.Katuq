@@ -212,6 +212,20 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     { tab: 'Categorías', grupo: () => this.categoriasForm },
   ];
 
+  /**
+   * D-488: qué es el ítem. Un servicio no maneja existencias ni pide medidas, peso
+   * ni datos de entrega. `itemType` solo se manda si es servicio o si lo era al
+   * abrirlo (para poder devolverlo a producto); el resto de productos no cambia.
+   */
+  tipoItem: 'product' | 'service' = 'product';
+  private tipoItemInicial: 'product' | 'service' = 'product';
+  servicioForm!: FormGroup;
+  readonly modalidadesServicio = [
+    { valor: 'onsite', texto: 'En el local' },
+    { valor: 'home', texto: 'A domicilio' },
+    { valor: 'virtual', texto: 'Virtual' },
+  ];
+
   // Pestaña: Pedidos relacionados
   pedidosRelacionados: any[] = [];
   loadingPedidos = false;
@@ -366,6 +380,13 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       cantidadMinVenta: ["", [Validators.required]],
       inventarioSeguridad: ["", [Validators.required]],
       inventariable: [true],
+    });
+
+    // D-488: datos propios del servicio (solo se guardan si el ítem es servicio).
+    this.servicioForm = this.fb.group({
+      durationMinutes: [null],
+      mode: ['onsite'],
+      requiresAppointment: [false],
     });
 
     this.service.getTotalProducts().subscribe((x: any) => {
@@ -1754,6 +1775,60 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       });
   }
 
+  // ── D-488: producto o servicio ─────────────────────────────────────────────
+
+  get esServicio(): boolean {
+    return this.tipoItem === 'service';
+  }
+
+  async elegirTipoItem(tipo: 'product' | 'service'): Promise<void> {
+    if (tipo === this.tipoItem) return;
+    if (tipo === 'service' && this.isEditMode() && this.disponibilidad.value?.inventariable) {
+      const r = await Swal.fire({
+        title: '¿Pasar este producto a servicio?',
+        text: 'Sus existencias dejarán de contarse en las ventas. El inventario que ya tiene no se borra.',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, es un servicio',
+        cancelButtonText: 'No',
+        confirmButtonColor: '#5F3FE0',
+      });
+      if (!r.isConfirmed) return;
+    }
+    this.tipoItem = tipo;
+    if (tipo === 'product') this.disponibilidad.patchValue({ inventariable: true });
+    this.aplicarReglasDeTipo();
+  }
+
+  /** Un servicio no exige medidas, peso, entrega ni inventario de seguridad. */
+  private aplicarReglasDeTipo(): void {
+    const servicio = this.esServicio;
+    const requerido = servicio ? null : Validators.required;
+    for (const c of ['largoProductoCm', 'altoProductoCm', 'anchoProductoCm', 'pesoUnitarioProductoKg']) {
+      const control = this.Dimensiones.get(c);
+      control?.setValidators(requerido);
+      control?.updateValueAndValidity({ emitEvent: false });
+    }
+    for (const c of ['tipoEntrega', 'tiempoEntrega', 'inventarioSeguridad']) {
+      const control = this.disponibilidad.get(c);
+      control?.setValidators(requerido);
+      control?.updateValueAndValidity({ emitEvent: false });
+    }
+    if (servicio) {
+      const patch: any = { inventariable: false };
+      if (this.disponibilidad.value?.inventarioSeguridad === '' || this.disponibilidad.value?.inventarioSeguridad == null) {
+        patch.inventarioSeguridad = 0;
+      }
+      this.disponibilidad.patchValue(patch, { emitEvent: false });
+    }
+  }
+
+  /** Lo que se suma al payload: nada para un producto que siempre lo fue. */
+  private datosDeTipoParaGuardar(): { itemType?: 'product' | 'service'; service?: any } {
+    if (this.esServicio) return { itemType: 'service', service: { ...this.servicioForm.value } };
+    if (this.tipoItemInicial === 'service') return { itemType: 'product' };
+    return {};
+  }
+
   validarReferenciaEnBlur(): void {
     const tipoRef = this.identificacion.get('tipoReferencia')?.value;
     if (tipoRef === 'propio') return;
@@ -1927,6 +2002,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     const payload = {
       ...this.formGeneral.value,
       identificacion: this.identificacionParaGuardar(),
+      ...this.datosDeTipoParaGuardar(),
     };
 
     const context = this;
@@ -2056,7 +2132,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       stringify(this.categoriasForm.controls["categorias"].value),
     );
 
-    const formGeneralEditar = this.formGeneral.value;
+    const formGeneralEditar = { ...this.formGeneral.value, ...this.datosDeTipoParaGuardar() };
     formGeneralEditar["cd"] = this.cd;
 
     this.edit = formGeneralEditar;
@@ -2968,6 +3044,13 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.crearProducto.patchValue(this.edit.crearProducto);
     this.Dimensiones.patchValue(this.edit.dimensiones);
     this.disponibilidad.patchValue(this.edit.disponibilidad);
+    // D-488: servicio marcado (`itemType`) o creado por el onboarding (tipoReferencia "servicio").
+    const eraServicio = this.edit.itemType === 'service' ||
+      (!this.edit.itemType && this.edit.identificacion?.tipoReferencia === 'servicio');
+    this.tipoItem = eraServicio ? 'service' : 'product';
+    this.tipoItemInicial = this.tipoItem;
+    if (this.edit.service) this.servicioForm.patchValue(this.edit.service);
+    this.aplicarReglasDeTipo();
     // La traducción del `tiempoEntrega` legacy vive en `normalizarTiempoEntregaGuardado()`
     // y se dispara cuando responde el maestro. Se llama igual acá por si ya llegó.
     this.normalizarTiempoEntregaGuardado();

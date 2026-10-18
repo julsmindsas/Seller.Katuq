@@ -131,6 +131,38 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
   productoOriginal: any = null;
   get editando(): boolean { return !!this.productoOriginal; }
 
+  /** D-488: ¿el ítem guardado es servicio? (`itemType`, o el `tipoReferencia` del onboarding). */
+  private esServicioGuardado(prod: any): boolean {
+    if (prod?.itemType === "service") return true;
+    if (prod?.itemType === "product") return false;
+    return prod?.identificacion?.tipoReferencia === "servicio";
+  }
+
+  /** D-488: lo que se suma al guardar. Nada para un producto que siempre lo fue. */
+  private datosDeTipo(v: any, eraServicio: boolean): { itemType?: "product" | "service"; service?: any } {
+    if (v.esServicio) {
+      const duracion = Number(v.duracion);
+      return {
+        itemType: "service",
+        service: {
+          durationMinutes: duracion > 0 ? Math.round(duracion) : null,
+          mode: v.modalidad || "onsite",
+          requiresAppointment: !!v.requiereCita,
+        },
+      };
+    }
+    return eraServicio ? { itemType: "product" } : {};
+  }
+
+  /** Producto o servicio (botones de la sección Datos básicos). */
+  elegirTipo(servicio: boolean): void {
+    this.formulario.patchValue({ esServicio: servicio, inventariable: !servicio });
+  }
+
+  get esServicio(): boolean {
+    return !!this.formulario?.get("esServicio")?.value;
+  }
+
   /**
    * El producto tiene rangos de volumen de verdad (de 2 unidades en adelante).
    * Importa avisarlo: al vender, el rango de volumen LE GANA al precio unitario
@@ -192,6 +224,11 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
       cantidadMinVenta: [1, Validators.min(1)],
       inventarioSeguridad: [0, Validators.min(0)],
       inventariable: [true],
+      // D-488: producto o servicio. Un servicio no maneja existencias ni entrega.
+      esServicio: [false],
+      duracion: [null],
+      modalidad: ["onsite"],
+      requiereCita: [false],
       // Identificación
       referencia: [{ value: "", disabled: true }, Validators.required],
       marca: [""],
@@ -713,6 +750,11 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
       // false tiene que llegar en false, y uno viejo al que le falta la llave
       // se asume encendido, que es como se venía creando hasta ahora.
       inventariable: prod?.disponibilidad?.inventariable !== false,
+      // D-488: servicio marcado (`itemType`) o creado por el onboarding.
+      esServicio: this.esServicioGuardado(prod),
+      duracion: prod?.service?.durationMinutes ?? null,
+      modalidad: prod?.service?.mode || "onsite",
+      requiereCita: prod?.service?.requiresAppointment === true,
       marca: prod?.identificacion?.marca || "",
       codigoBarras: prod?.identificacion?.codigoBarras || "",
       referencia: prod?.identificacion?.referencia || "",
@@ -1296,8 +1338,9 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
         tiempoEntrega: v.tiempoEntrega || orig?.disponibilidad?.tiempoEntrega || "",
         cantidadMinVenta: Number(v.cantidadMinVenta) || 1,
         inventarioSeguridad: Number(v.inventarioSeguridad) || 0,
-        inventariable: !!v.inventariable,
+        inventariable: v.esServicio ? false : !!v.inventariable,
       },
+      ...this.datosDeTipo(v, this.esServicioGuardado(orig)),
       exposicion: {
         ...(orig.exposicion || {}),
         activar: !!v.activar,
@@ -1446,8 +1489,9 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
         cantidadDisponible: 0,
         cantidadMinVenta: Number(v.cantidadMinVenta) || 1,
         inventarioSeguridad: Number(v.inventarioSeguridad) || 0,
-        inventariable: !!v.inventariable,
+        inventariable: v.esServicio ? false : !!v.inventariable,
       },
+      ...this.datosDeTipo(v, false),
       identificacion: {
         referencia: v.referencia,
         tipoProducto: "propio",
@@ -1529,6 +1573,10 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
       cantidadMinVenta: 1,
       inventarioSeguridad: 0,
       inventariable: true,
+      esServicio: false,
+      duracion: null,
+      modalidad: "onsite",
+      requiereCita: false,
       referencia: this.referenciaManual ? "" : this.construirReferencia(),
       marca: "",
       codigoBarras: "",

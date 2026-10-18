@@ -128,17 +128,9 @@ const routes: Routes = [
       }
     ]
   },
-  // Service Scheduling
-  {
-    path: 'servicios/agendamiento',
-    component: BlankComponent,
-    children: [
-      {
-        path: '',
-        loadChildren: () => import('./components/servicios/agendamiento/agendamiento.module').then(m => m.AgendamientoModule)
-      }
-    ]
-  },
+  // La demo de agendamiento (oct-2025) se retiró: los enlaces viejos llevan a la Agenda (D-488).
+  { path: 'servicios/agendamiento', redirectTo: '/agenda' },
+  { path: 'servicios/agendamiento/citas', redirectTo: '/agenda' },
   // Pricing page
   {
     path: 'pricing',

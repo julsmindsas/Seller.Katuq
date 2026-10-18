@@ -1,0 +1,129 @@
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Configuración</span>
+      <h1 class="cfg-titulo">Agenda</h1>
+      <p class="cfg-sub">Qué días y a qué horas atiendes, quién presta cada servicio y a quién avisamos cuando entra una cita de tu página web.</p>
+    </div>
+    <div class="cfg-acciones">
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="volver()"><span class="ag-txt">Volver a la Agenda</span></button>
+      <button type="button" class="cfg-btn" [disabled]="guardando || cargando" (click)="guardar()">
+        <span class="ag-txt">{{ guardando ? 'Guardando…' : 'Guardar' }}</span>
+      </button>
+    </div>
+  </header>
+
+  <section class="cfg-card" *ngIf="cargando"><span class="ag-muted">Cargando…</span></section>
+
+  <div class="cfg-aviso cfg-aviso--error" *ngIf="error" role="alert"><span class="ag-txt">{{ error }}</span></div>
+
+  <ng-container *ngIf="!cargando">
+    <!-- Cómo se agenda -->
+    <section class="cfg-card ag-bloque">
+      <h2 class="cfg-card__titulo">Cómo se agenda</h2>
+      <div class="ag-opciones">
+        <button type="button" class="ag-opcion" [class.ag-opcion--activa]="modo === 'hourly'" (click)="modo = 'hourly'">Por hora</button>
+        <button type="button" class="ag-opcion" [class.ag-opcion--activa]="modo === 'window'" (click)="modo = 'window'">Por franjas</button>
+      </div>
+      <p class="ag-ayuda" *ngIf="modo === 'hourly'">Cada cita tiene hora de inicio y dura lo que dure el servicio. Cada persona atiende una cita a la vez. Ideal para peluquería, consultorio o taller.</p>
+      <p class="ag-ayuda" *ngIf="modo === 'window'">El cliente elige una franja (por ejemplo 8:00 - 10:00) y caben varias citas por franja. Ideal para visitas técnicas o instalaciones a domicilio.</p>
+
+      <div class="ag-tres">
+        <div class="ag-campo" *ngIf="modo === 'hourly'">
+          <label for="ag-paso">Cada cuánto se ofrecen horas</label>
+          <select id="ag-paso" class="ag-input" [(ngModel)]="paso">
+            <option *ngFor="let p of PASOS" [ngValue]="p">Cada {{ p }} minutos</option>
+          </select>
+        </div>
+        <div class="ag-campo">
+          <label for="ag-cupo">{{ modo === 'window' ? 'Citas por franja' : 'Citas a la vez (si no hay personas)' }}</label>
+          <input id="ag-cupo" class="ag-input" type="number" min="1" max="50" [(ngModel)]="capacidad">
+        </div>
+        <div class="ag-campo">
+          <label for="ag-adelante">Días hacia adelante en la web</label>
+          <input id="ag-adelante" class="ag-input" type="number" min="1" max="90" [(ngModel)]="diasAdelante">
+        </div>
+        <div class="ag-campo" *ngIf="modo === 'hourly'">
+          <label for="ag-durweb">Duración de una cita de la web (min)</label>
+          <input id="ag-durweb" class="ag-input" type="number" min="5" max="720" step="5" [(ngModel)]="duracionWeb">
+        </div>
+      </div>
+
+      <div class="ag-campo" *ngIf="modo === 'window'">
+        <label for="ag-franjas">Franjas (una por línea)</label>
+        <textarea id="ag-franjas" class="ag-input" rows="4" [(ngModel)]="franjasTexto" placeholder="8:00 - 10:00&#10;10:00 - 12:00&#10;14:00 - 16:00"></textarea>
+      </div>
+    </section>
+
+    <!-- Horario -->
+    <section class="cfg-card ag-bloque">
+      <h2 class="cfg-card__titulo">Horario de atención</h2>
+      <div class="ag-dia-fila" *ngFor="let d of dias">
+        <label class="ag-dia-toggle">
+          <input type="checkbox" [(ngModel)]="d.abierto">
+          <span class="ag-dia-nombre">{{ d.nombre }}</span>
+        </label>
+        <div class="ag-bloques" *ngIf="d.abierto; else cerrado">
+          <div class="ag-bloque-horas" *ngFor="let b of d.bloques; let i = index; trackBy: trackIndice">
+            <input class="ag-input ag-input--hora" type="time" [(ngModel)]="b.desde" [attr.aria-label]="d.nombre + ' desde'">
+            <span class="ag-muted">a</span>
+            <input class="ag-input ag-input--hora" type="time" [(ngModel)]="b.hasta" [attr.aria-label]="d.nombre + ' hasta'">
+            <button type="button" class="ag-mini" (click)="quitarBloque(d, i)" aria-label="Quitar horario"><i class="fa fa-times" aria-hidden="true"></i></button>
+          </div>
+          <div class="ag-bloque-acciones">
+            <button type="button" class="ag-enlace" *ngIf="d.bloques.length < 4" (click)="agregarBloque(d)">+ Otro horario</button>
+            <button type="button" class="ag-enlace" *ngIf="d.clave === '1'" (click)="copiarALaSemana(d)">Copiar a toda la semana</button>
+          </div>
+        </div>
+        <ng-template #cerrado><span class="ag-muted">Cerrado</span></ng-template>
+      </div>
+    </section>
+
+    <!-- Personas -->
+    <section class="cfg-card ag-bloque">
+      <div class="ag-titulo-acciones">
+        <h2 class="cfg-card__titulo">Quién atiende</h2>
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="agregarPersona()"><i class="fa fa-plus" aria-hidden="true"></i><span class="ag-txt">Agregar persona</span></button>
+      </div>
+      <p class="ag-ayuda">Cada persona es una columna en la Agenda. No necesita usuario en Katuq. Si tiene correo, le avisamos de sus citas.</p>
+
+      <div class="cfg-vacio" *ngIf="!personas.length">
+        <div class="cfg-vacio__icono"><i class="fa fa-user" aria-hidden="true"></i></div>
+        <h3 class="cfg-vacio__titulo">Sin personas todavía</h3>
+        <p class="cfg-vacio__texto">Sin personas, la Agenda usa "Citas a la vez" como cupo general.</p>
+      </div>
+
+      <div class="ag-persona" *ngFor="let p of personas; let i = index; trackBy: trackIndice" [class.ag-persona--inactiva]="!p.active">
+        <div class="ag-tres">
+          <div class="ag-campo">
+            <label [for]="'ag-nom-' + i">Nombre</label>
+            <input [id]="'ag-nom-' + i" class="ag-input" [(ngModel)]="p.name" maxlength="60">
+          </div>
+          <div class="ag-campo">
+            <label [for]="'ag-cor-' + i">Correo (opcional)</label>
+            <input [id]="'ag-cor-' + i" class="ag-input" type="email" [(ngModel)]="p.email" maxlength="120">
+          </div>
+          <div class="ag-campo">
+            <span class="ag-etiqueta">Servicios que presta</span>
+            <p-multiSelect [options]="servicios" optionLabel="name" optionValue="productId" [(ngModel)]="p.serviceIds"
+              defaultLabel="Todos" [filter]="true" display="chip" [appendTo]="'body'" styleClass="ag-multi"></p-multiSelect>
+          </div>
+        </div>
+        <div class="ag-persona-pie">
+          <label class="ag-dia-toggle">
+            <input type="checkbox" [(ngModel)]="p.active">
+            <span class="ag-dia-nombre">{{ p.active ? 'Atiende' : 'No atiende por ahora' }}</span>
+          </label>
+          <button type="button" class="ag-enlace ag-enlace--peligro" (click)="quitarPersona(i)">Quitar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Avisos -->
+    <section class="cfg-card ag-bloque">
+      <h2 class="cfg-card__titulo">Avisarme cuando entra una cita</h2>
+      <p class="ag-ayuda">Las citas de tu página web avisan dentro de Katuq y por correo a la persona asignada. Si no tiene correo, avisamos a estos correos (hasta 5).</p>
+      <textarea class="ag-input" rows="2" [(ngModel)]="avisarTexto" placeholder="recepcion@tunegocio.com" aria-label="Correos a avisar"></textarea>
+    </section>
+  </ng-container>
+</div>

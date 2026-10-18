@@ -1,0 +1,315 @@
+// Agenda (D-488): base config-pagina (D-400), plano, acento #5F3FE0.
+@import '../agenda';
+@include agenda-piezas;
+
+.ag-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ag-nav, .ag-derecha, .ag-vistas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.ag-icono {
+  appearance: none;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 11px;
+  background: #fff;
+  color: $cfg-ink;
+  cursor: pointer;
+
+  &:hover { border-color: $cfg-accent; color: $cfg-accent; }
+}
+
+.ag-fecha {
+  margin: 0 0 0 4px;
+  font-size: 17px !important;
+  font-weight: 800;
+  color: $cfg-ink;
+  text-transform: capitalize;
+}
+
+.ag-resumen { font-size: 13px; font-weight: 700; color: $cfg-body !important; letter-spacing: normal; }
+
+.ag-cargando { text-align: center; }
+
+// ── Grilla del día ───────────────────────────────────────────────────────────
+.ag-dia { padding: 0 !important; overflow: hidden; }
+
+.ag-grilla {
+  --ancho-horas: 68px;
+  overflow-x: auto;
+}
+
+.ag-cabecera, .ag-cuerpo {
+  display: grid;
+  grid-template-columns: var(--ancho-horas) repeat(var(--columnas, 1), minmax(160px, 1fr));
+  min-width: calc(var(--ancho-horas) + var(--columnas, 1) * 160px);
+}
+
+.ag-cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: $cfg-tint;
+  border-bottom: 1px solid $cfg-line;
+}
+
+.ag-col-cab {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-left: 1px solid $cfg-line;
+}
+
+.ag-col-nombre {
+  font-size: 11.5px !important;
+  font-weight: 800;
+  letter-spacing: .6px !important;
+  text-transform: uppercase;
+  color: $cfg-muted !important;
+}
+
+.ag-cuerpo { position: relative; }
+
+.ag-horas { display: flex; flex-direction: column; }
+
+.ag-hora {
+  position: relative;
+  box-sizing: border-box;
+}
+
+.ag-hora-txt {
+  position: absolute;
+  top: -8px;
+  right: 8px;
+  font-size: 11px !important;
+  color: $cfg-muted !important;
+  letter-spacing: normal;
+  background: #fff;
+  padding: 0 2px;
+}
+
+.ag-col {
+  position: relative;
+  border-left: 1px solid $cfg-line;
+}
+
+.ag-hueco {
+  appearance: none;
+  display: block;
+  width: 100%;
+  border: 0;
+  border-top: 1px dashed $cfg-line-soft;
+  background: transparent;
+  cursor: pointer;
+  box-sizing: border-box;
+
+  &.ag-hueco--punto { border-top: 1px solid $cfg-line; }
+  &:hover { background: $cfg-accent-soft; }
+}
+
+.ag-cita {
+  appearance: none;
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 8px;
+  border: 1px solid;
+  border-radius: 11px;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(30, 20, 80, .06);
+
+  &:hover { box-shadow: 0 6px 14px -8px rgba(95, 63, 224, .6); }
+
+  &.ag-estado--solicitada { background: $cfg-warn-soft; border-color: #f6dcb7; }
+  &.ag-estado--confirmada { background: $cfg-accent-soft; border-color: #ddd3fb; }
+  &.ag-estado--atendida { background: $cfg-ok-soft; border-color: #c4ead4; }
+  &.ag-estado--cancelada { background: $cfg-chip-bg; border-color: $cfg-chip-border; opacity: .7; }
+  &.ag-estado--noasistio { background: $cfg-err-soft; border-color: #f6caca; }
+
+  &.ag-estado--cancelada .ag-cita-cliente { text-decoration: line-through; }
+}
+
+.ag-cita--lista {
+  position: static;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.ag-cita-hora { font-size: 11px !important; font-weight: 800; color: $cfg-body !important; letter-spacing: normal; }
+.ag-cita-cliente { font-size: 13px !important; font-weight: 800; color: $cfg-ink !important; letter-spacing: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ag-cita-serv { font-size: 12px !important; color: $cfg-body !important; letter-spacing: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ag-ahora {
+  position: absolute;
+  left: var(--ancho-horas);
+  right: 0;
+  height: 0;
+  border-top: 2px solid $cfg-err;
+  pointer-events: none;
+  z-index: 1;
+}
+
+// ── Franjas ──────────────────────────────────────────────────────────────────
+.ag-franjas { display: flex; flex-direction: column; gap: 12px; }
+
+.ag-franja {
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  overflow: hidden;
+}
+
+.ag-franja-cab {
+  padding: 8px 12px;
+  background: $cfg-tint;
+  border-bottom: 1px solid $cfg-line;
+}
+
+.ag-franja-nombre { font-size: 13px !important; font-weight: 800; color: $cfg-ink !important; letter-spacing: normal; }
+
+.ag-franja-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.ag-franja-col {
+  padding: 8px 10px 10px;
+  border-left: 1px solid $cfg-line-soft;
+
+  &:first-child { border-left: 0; }
+}
+
+.ag-etiqueta-col {
+  display: block;
+  font-size: 11px !important;
+  font-weight: 800;
+  letter-spacing: .5px !important;
+  text-transform: uppercase;
+  color: $cfg-muted !important;
+}
+
+.ag-agregar {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  border: 1px dashed $cfg-chip-border;
+  border-radius: 11px;
+  background: #fff;
+  color: $cfg-accent !important;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover { border-color: $cfg-accent; background: $cfg-accent-soft; }
+}
+
+// ── Lista del día ────────────────────────────────────────────────────────────
+.ag-lista-dia { display: flex; flex-direction: column; gap: 4px; }
+
+.ag-lista-titulo {
+  margin: 0 0 6px;
+  font-size: 11.5px !important;
+  font-weight: 800;
+  letter-spacing: .6px !important;
+  text-transform: uppercase;
+  color: $cfg-muted;
+}
+
+.ag-fila {
+  appearance: none;
+  display: grid;
+  grid-template-columns: 130px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid $cfg-line-soft;
+  border-radius: 11px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover { background: $cfg-row-hover; border-color: $cfg-line; }
+}
+
+.ag-fila-hora { font-size: 13px !important; font-weight: 800; color: $cfg-ink !important; letter-spacing: normal; }
+.ag-fila-centro { display: flex; flex-direction: column; min-width: 0; }
+
+// Por franjas, las franjas ya son la lista.
+.ag-franjas + .ag-lista-dia { display: none; }
+
+// En pantallas anchas la grilla manda; la lista queda para el celular.
+@media (min-width: 900px) {
+  .ag-dia + .ag-lista-dia { display: none; }
+}
+@media (max-width: 899px) {
+  .ag-dia { display: none; }
+}
+@media (max-width: 560px) {
+  .ag-fila { grid-template-columns: 1fr; gap: 4px; }
+}
+
+// ── Semana ───────────────────────────────────────────────────────────────────
+.ag-semana {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+
+  @media (max-width: 1100px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 560px) { grid-template-columns: 1fr; }
+}
+
+.ag-dia-sem {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid $cfg-line-soft;
+  border-radius: 11px;
+  background: #fff;
+
+  &.ag-dia-sem--hoy { border-color: #ddd3fb; background: $cfg-tint; }
+}
+
+.ag-dia-sem-cab {
+  appearance: none;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border: 0;
+  background: transparent;
+  padding: 2px 2px 4px;
+  cursor: pointer;
+}
+
+.ag-dia-sem-nombre {
+  font-size: 12px !important;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .5px !important;
+  color: $cfg-ink !important;
+}
+
+.ag-dia-sem-vacio { padding: 6px 2px; }

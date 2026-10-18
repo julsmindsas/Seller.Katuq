@@ -119,6 +119,44 @@
 							</form>
 						</p-tabPanel>
 						<p-tabPanel header="Datos básicos">
+							<!-- D-488: qué es el ítem. Un servicio no maneja existencias ni pide medidas ni entrega. -->
+							<section class="tipo-item" aria-label="Qué estás creando">
+								<span class="tipo-item__etiqueta">¿Qué estás creando?</span>
+								<div class="tipo-item__opciones" role="radiogroup">
+									<button type="button" class="tipo-item__opcion" role="radio"
+										[attr.aria-checked]="!esServicio" [class.tipo-item__opcion--activa]="!esServicio"
+										(click)="elegirTipoItem('product')">
+										<i class="fa fa-cube" aria-hidden="true"></i>
+										<span class="tipo-item__txt">Producto</span>
+									</button>
+									<button type="button" class="tipo-item__opcion" role="radio"
+										[attr.aria-checked]="esServicio" [class.tipo-item__opcion--activa]="esServicio"
+										(click)="elegirTipoItem('service')">
+										<i class="fa fa-calendar-check-o" aria-hidden="true"></i>
+										<span class="tipo-item__txt">Servicio</span>
+									</button>
+								</div>
+								<form *ngIf="esServicio" [formGroup]="servicioForm" class="tipo-item__servicio">
+									<div class="tipo-item__campo">
+										<label class="form-label" for="servDuracion">Duración (minutos)</label>
+										<input id="servDuracion" class="form-control" type="number" min="5" max="720" step="5"
+											formControlName="durationMinutes" placeholder="Ej: 45">
+									</div>
+									<div class="tipo-item__campo">
+										<label class="form-label" for="servModo">Dónde se presta</label>
+										<select id="servModo" class="form-control" formControlName="mode">
+											<option *ngFor="let m of modalidadesServicio" [value]="m.valor">{{ m.texto }}</option>
+										</select>
+									</div>
+									<label class="tipo-item__check">
+										<input type="checkbox" formControlName="requiresAppointment">
+										<span class="tipo-item__txt">Requiere cita</span>
+									</label>
+									<small class="mp-hint tipo-item__ayuda">
+										Un servicio no maneja existencias ni se despacha. Si requiere cita, se agenda en la Agenda.
+									</small>
+								</form>
+							</section>
 							<form [formGroup]="crearProducto">
 								<div class="row">
 									<h5>Datos básicos</h5>
@@ -453,7 +491,10 @@
 							</form>
 						</p-tabPanel>
 						<p-tabPanel header="Dimensiones">
-							<form [formGroup]="Dimensiones">
+							<p class="mp-hint tipo-item__nota" *ngIf="esServicio">
+								Un servicio no lleva medidas ni peso: no se despacha.
+							</p>
+							<form [formGroup]="Dimensiones" [hidden]="esServicio">
 								<div class="row">
 									<h5>Dimensiones</h5>
 									<p class="mp-hint" style="margin:0">
@@ -507,8 +548,11 @@
 						<p-tabPanel header="Disponibilidad">
 							<form [formGroup]="disponibilidad">
 								<h5>Disponibilidad</h5>
+								<p class="mp-hint tipo-item__nota" *ngIf="esServicio">
+									Un servicio no maneja existencias ni tiempos de entrega.
+								</p>
 								<div class="row ">
-									<div class="col-md-3 mb-3">
+									<div class="col-md-3 mb-3" [hidden]="esServicio">
 										<label class="form-label" for="dispTipoEntrega">Tipo de entrega<span
 												class="redasteris">*</span>
 										</label>
@@ -523,7 +567,7 @@
 											Maestros.
 										</small>
 									</div>
-									<div class="col-md-3 mb-3">
+									<div class="col-md-3 mb-3" [hidden]="esServicio">
 										<label class="form-label" for="dispTiempoEntrega">Tiempo de entrega <span
 												class="redasteris">*</span>
 										</label>
@@ -559,7 +603,7 @@
 									<!-- Este contenedor tenía la clase `form-control`, o sea que un <div>
 										 se pintaba como si fuera un campo de texto y envolvía label +
 										 input + checkbox adentro. -->
-									<div class="col-md-3 mb-3">
+									<div class="col-md-3 mb-3" [hidden]="esServicio">
 										<label class="form-label" for="dispInvSeguridad">Inventario de
 											Seguridad <span class="redasteris">*</span></label>
 										<input formControlName="inventarioSeguridad" class="form-control"
@@ -573,7 +617,7 @@
 											Unidades que se reservan y no se ofrecen a la venta. Si no aplica, 0.
 										</small>
 									</div>
-									<div class="col-md-3 mb-3">
+									<div class="col-md-3 mb-3" [hidden]="esServicio">
 										<label class="form-label" for="dispInventariable">¿Este producto es
 											inventariable?</label>
 										<div>

@@ -1,0 +1,104 @@
+// Configuración de la Agenda (D-488): base config-pagina (D-400).
+@import '../agenda';
+@include agenda-piezas;
+
+.ag-bloque { display: flex; flex-direction: column; gap: 12px; }
+
+.ag-ayuda { margin: 0; font-size: 13px; line-height: 1.5; color: $cfg-body; letter-spacing: normal; }
+
+.ag-tres {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.ag-titulo-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ag-dia-fila {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  align-items: start;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid $cfg-line-soft;
+
+  &:first-of-type { border-top: 0; }
+
+  @media (max-width: 560px) { grid-template-columns: 1fr; }
+}
+
+.ag-dia-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  margin: 0;
+  cursor: pointer;
+
+  input { width: 18px; height: 18px; accent-color: $cfg-accent; }
+}
+
+.ag-dia-nombre { font-size: 14px !important; font-weight: 700; color: $cfg-ink !important; letter-spacing: normal; }
+
+.ag-bloques { display: flex; flex-direction: column; gap: 8px; }
+
+.ag-bloque-horas { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+.ag-input--hora { width: 130px; }
+
+.ag-bloque-acciones { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.ag-mini {
+  appearance: none;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 11px;
+  background: #fff;
+  color: $cfg-muted;
+  cursor: pointer;
+
+  &:hover { color: $cfg-err; border-color: $cfg-err; }
+}
+
+.ag-enlace {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: $cfg-accent !important;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: normal;
+  cursor: pointer;
+
+  &.ag-enlace--peligro { color: $cfg-err !important; }
+}
+
+.ag-persona {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+
+  &.ag-persona--inactiva { background: $cfg-chip-bg; }
+}
+
+.ag-persona-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+:host ::ng-deep .ag-multi { width: 100%; border-radius: 11px; }

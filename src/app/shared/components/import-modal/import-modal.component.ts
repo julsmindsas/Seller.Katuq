@@ -751,6 +751,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       { field: 'cantidadMinVenta', header: 'Cantidad Minima de Venta', required: false, example: '1' },
       { field: 'inventarioSeguridad', header: 'Inventario de Seguridad', required: false, example: '10' },
       { field: 'inventariable', header: 'Inventariable (SI/NO)', required: false, example: 'SI' },
+      // D-488: un servicio no maneja existencias ni se despacha; gana sobre "Inventariable".
+      { field: 'tipoItem', header: 'Tipo (Producto/Servicio)', required: false, example: 'Producto', help: "Servicio = no maneja existencias ni se despacha. Vacío = Producto." },
       { field: 'activar', header: 'Activo (SI/NO)', required: false, example: 'SI' },
       { field: 'disponible', header: 'Disponible (SI/NO)', required: false, example: 'SI' },
       // Los dos son SELECTS que se llenan del maestro de la empresa, y cada
@@ -813,6 +815,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'disponibilidad.tipoEntrega': 'Tipo de Entrega',
       'disponibilidad.tiempoEntrega': 'Tiempo de Entrega',
       'disponibilidad.inventariable': 'Es Inventariable',
+      'itemType': 'Tipo (Producto/Servicio)',
       'exposicion.activar': 'Activo',
       'exposicion.disponible': 'Disponible',
       'exposicion.posicion': 'Posicion',
@@ -874,6 +877,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'activar': 'Activo (SI/NO)',
       'disponible': 'Disponible (SI/NO)',
       'seProduceInternamente': 'Requiere Produccion (SI/NO)',
+      'tipoItem': 'Tipo (Producto/Servicio)',
       'integraConProduccion': 'Integra con Software de Produccion',
       'tiempoProduccion': 'Tiempo de Produccion',
       'softwareProduccion': 'Software de Produccion',
@@ -2245,6 +2249,12 @@ export class ImportModalComponent implements OnInit, OnDestroy {
             !!transformedRow.procesoComercial.seProduceInternamente;
         }
 
+        // D-488: un servicio nunca maneja existencias (el servidor lo vuelve a forzar).
+        if (transformedRow.itemType === 'service') {
+          transformedRow.disponibilidad = transformedRow.disponibilidad || {};
+          transformedRow.disponibilidad.inventariable = false;
+        }
+
         // Aplicar flags globales de produccion si estan activos
         if (this.todosParaProduccion) {
           transformedRow.seProduceInternamente = true;
@@ -2499,6 +2509,13 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       return String(value).trim().slice(0, 20000);
     }
 
+    // D-488: "Servicio" → service; cualquier otro texto → product.
+    if (katuqField === 'itemType') {
+      const t = String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+      if (!t) return undefined;
+      return t.startsWith('serv') ? 'service' : 'product';
+    }
+
     if (ImportModalComponent.BOOLEAN_FIELDS.includes(katuqField)) {
       if (typeof value === 'boolean') return value;
       if (typeof value === 'string') {
@@ -2618,6 +2635,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'restriccionesProducto': 'crearProducto.restriccionesProducto',
       'cuidadoConsumo': 'crearProducto.cuidadoConsumo',
       'inventariable': 'disponibilidad.inventariable',
+      'tipoItem': 'itemType',
       // Dimensiones: sin estas entradas las columnas de la plantilla se
       // descartaban en silencio (un campo plano sin mapeo NO se escribe), y el
       // producto importado quedaba sin medidas ni peso — o sea, imposible de

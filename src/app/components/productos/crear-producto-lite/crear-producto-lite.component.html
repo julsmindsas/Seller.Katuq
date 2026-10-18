@@ -167,6 +167,43 @@
             <section class="lite-seccion">
               <h3 class="lite-seccion__titulo">Datos básicos</h3>
 
+              <!-- D-488: producto o servicio. Un servicio no maneja existencias ni se despacha. -->
+              <div class="lite-field">
+                <span class="lite-label">¿Qué estás creando?</span>
+                <div class="lite-tipo" role="radiogroup" aria-label="Qué estás creando">
+                  <button type="button" class="lite-tipo__opcion" role="radio" [attr.aria-checked]="!esServicio"
+                          [class.lite-tipo__opcion--activa]="!esServicio" (click)="elegirTipo(false)">
+                    <span class="lite-tipo__txt">Producto</span>
+                  </button>
+                  <button type="button" class="lite-tipo__opcion" role="radio" [attr.aria-checked]="esServicio"
+                          [class.lite-tipo__opcion--activa]="esServicio" (click)="elegirTipo(true)">
+                    <span class="lite-tipo__txt">Servicio</span>
+                  </button>
+                </div>
+              </div>
+              <div class="lite-fila" *ngIf="esServicio">
+                <div class="lite-field">
+                  <label class="lite-label" for="duracionServicio">Duración (minutos)</label>
+                  <input id="duracionServicio" type="number" class="lite-input" formControlName="duracion"
+                         min="5" max="720" step="5" placeholder="Ej: 45" />
+                </div>
+                <div class="lite-field">
+                  <label class="lite-label" for="modalidadServicio">Dónde se presta</label>
+                  <select id="modalidadServicio" class="lite-input" formControlName="modalidad">
+                    <option value="onsite">En el local</option>
+                    <option value="home">A domicilio</option>
+                    <option value="virtual">Virtual</option>
+                  </select>
+                </div>
+                <label class="lite-check" for="requiereCita">
+                  <input id="requiereCita" type="checkbox" formControlName="requiereCita" />
+                  <span class="lite-check__texto">
+                    <strong>Requiere cita</strong>
+                    <small>Se agenda en la Agenda.</small>
+                  </span>
+                </label>
+              </div>
+
               <div class="lite-field">
                 <label class="lite-label" for="titulo">
                   Título <span class="lite-req">*</span>
@@ -282,7 +319,9 @@
                 Disponibilidad <span class="lite-opcional">Opcional</span>
               </h3>
 
-              <div class="lite-fila">
+              <p class="lite-ayuda" *ngIf="esServicio">Un servicio no maneja existencias ni tiempos de entrega.</p>
+
+              <div class="lite-fila" [hidden]="esServicio">
                 <div class="lite-field">
                   <label class="lite-label" for="tipoEntrega">Tipo de entrega</label>
                   <select id="tipoEntrega" class="lite-input" formControlName="tipoEntrega">
@@ -327,7 +366,7 @@
                   </span>
                 </div>
 
-                <div class="lite-field">
+                <div class="lite-field" [hidden]="esServicio">
                   <label class="lite-label" for="inventarioSeguridad">Inventario de seguridad</label>
                   <input id="inventarioSeguridad" type="number" class="lite-input"
                          formControlName="inventarioSeguridad" min="0" step="1" placeholder="Ej: 0" />
@@ -338,7 +377,7 @@
                 </div>
               </div>
 
-              <label class="lite-check" for="inventariable">
+              <label class="lite-check" for="inventariable" [hidden]="esServicio">
                 <input id="inventariable" type="checkbox" formControlName="inventariable" />
                 <span class="lite-check__texto">
                   <strong>¿Este producto es inventariable?</strong>

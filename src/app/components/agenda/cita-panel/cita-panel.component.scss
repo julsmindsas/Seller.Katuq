@@ -1,0 +1,89 @@
+// Detalle de la cita (D-488).
+@import '../agenda';
+@include agenda-piezas;
+
+.ag-detalle { display: flex; flex-direction: column; gap: 16px; padding-bottom: 24px; }
+
+.ag-detalle-cab { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+
+.ag-detalle-titulo {
+  margin: 0;
+  font-size: 20px !important;
+  font-weight: 800;
+  color: $cfg-ink;
+  letter-spacing: normal;
+}
+
+.ag-detalle-cuando { font-size: 14px !important; font-weight: 700; color: $cfg-accent !important; letter-spacing: normal; }
+
+.ag-datos {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  background: $cfg-tint;
+
+  > div { display: grid; grid-template-columns: 90px 1fr; gap: 8px; }
+
+  dt {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $cfg-muted;
+  }
+
+  dd { margin: 0; font-size: 13.5px; color: $cfg-ink; word-break: break-word; }
+}
+
+.ag-acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.ag-mover {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #ddd3fb;
+  border-radius: 11px;
+}
+
+.ag-subtitulo {
+  margin: 0;
+  font-size: 11.5px !important;
+  font-weight: 800;
+  letter-spacing: .6px !important;
+  text-transform: uppercase;
+  color: $cfg-muted;
+}
+
+.ag-dos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.ag-otra-hora { display: flex; align-items: center; gap: 8px; }
+.ag-input--hora { width: 140px; }
+
+.ag-linea {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: flex;
+    flex-direction: column;
+    padding-left: 12px;
+    border-left: 2px solid $cfg-line;
+  }
+}
+
+.ag-linea-txt { font-size: 13px !important; color: $cfg-ink !important; letter-spacing: normal; }
+
+:host ::ng-deep .ag-lateral { width: min(440px, 100vw) !important; }

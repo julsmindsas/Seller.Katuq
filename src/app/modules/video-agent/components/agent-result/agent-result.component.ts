@@ -91,25 +91,6 @@ export class AgentResultComponent implements OnInit {
   }
 
   /**
-   * Navega al módulo de agendamiento
-   */
-  navigateToScheduling(): void {
-    if (this.action?.data) {
-      // Guardar datos del servicio en sessionStorage
-      sessionStorage.setItem('pendingService', JSON.stringify({
-        serviceType: this.action.data.serviceType || 'Reparación',
-        reason: this.action.data.reason,
-        urgency: this.action.data.urgency,
-        estimatedCost: this.action.data.estimatedCost,
-        diagnosticResult: this.result
-      }));
-
-      // Navegar a agendamiento
-      this.router.navigate(['/servicios/agendamiento']);
-    }
-  }
-
-  /**
    * Cierra el panel
    */
   close(): void {

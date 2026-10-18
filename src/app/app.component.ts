@@ -395,7 +395,7 @@ export class AppComponent implements OnInit, OnDestroy {
     // Visibilidad del asistente independiente del loader y de la autenticación.
     const path = currentUrl.split(/[?#;]/)[0];
     const excluded = [...this.PUBLIC_ROUTES, '/r', '/c', '/s', '/cat',
-      '/onboarding', '/payment-callback', '/subscription-callback', '/servicios/agendamiento'];
+      '/onboarding', '/payment-callback', '/subscription-callback'];
     let route = this.router.routerState.snapshot.root;
     let hiddenByRoute = route.data['hideFloatingAssistant'] === true;
     while (route.firstChild) {

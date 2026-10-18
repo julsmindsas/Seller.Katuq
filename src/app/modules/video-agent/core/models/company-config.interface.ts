@@ -63,7 +63,6 @@ export const COMPANY_CONFIGS: { [key: string]: CompanyConfig } = {
     adapterType: "HacebAdapter",
     contact: {
       phone: "#466",
-      scheduleUrl: "/servicios/agendamiento",
     },
   },
 
@@ -91,7 +90,6 @@ export const COMPANY_CONFIGS: { [key: string]: CompanyConfig } = {
     adapterType: "AppleAdapter",
     contact: {
       phone: "1-800-MY-APPLE",
-      scheduleUrl: "/servicios/agendamiento",
     },
   },
 

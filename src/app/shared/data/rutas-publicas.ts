@@ -19,13 +19,13 @@ export const RUTAS_PUBLICAS_BASE: readonly string[] = [
 
 /**
  * Todas: las de arriba, la landing de campaña, los resultados de pago, el onboarding,
- * los enlaces públicos (reportes, cotizaciones, sitios, catálogos, agendamiento) y la
+ * los enlaces públicos (reportes, cotizaciones, sitios y catálogos) y la
  * encuesta pública a compradores (fase 2).
  */
 export const RUTAS_PUBLICAS: readonly string[] = [
   ...RUTAS_PUBLICAS_BASE,
   '/promo', '/payment-callback', '/subscription-callback', '/onboarding',
-  '/r', '/c', '/s', '/cat', '/servicios/agendamiento',
+  '/r', '/c', '/s', '/cat',
   '/encuesta',
 ];
 

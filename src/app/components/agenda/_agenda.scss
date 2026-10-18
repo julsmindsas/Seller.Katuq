@@ -1,0 +1,86 @@
+// Piezas comunes de la Agenda (D-488) sobre la base config-pagina (D-400).
+// Plano, acento #5F3FE0, estados en par fuerte / fondo suave. Ninguna clase lleva
+// "p-" (trampa del reset global) y todo texto lleva color propio.
+@import '../../shared/styles/config-pagina';
+
+@mixin agenda-piezas {
+  @include config-pagina;
+
+  .ag-txt { color: inherit !important; font-size: inherit; letter-spacing: normal; }
+  .ag-muted { color: $cfg-muted !important; font-size: 12.5px; letter-spacing: normal; }
+
+  .ag-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid transparent;
+    font-size: 11px !important;
+    font-weight: 800;
+    letter-spacing: .3px !important;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .ag-estado--solicitada { background: $cfg-warn-soft; color: $cfg-warn !important; border-color: #f6dcb7; }
+  .ag-estado--confirmada { background: $cfg-accent-soft; color: $cfg-accent !important; border-color: #ddd3fb; }
+  .ag-estado--atendida { background: $cfg-ok-soft; color: $cfg-ok !important; border-color: #c4ead4; }
+  .ag-estado--cancelada { background: $cfg-chip-bg; color: $cfg-muted !important; border-color: $cfg-chip-border; }
+  .ag-estado--noasistio { background: $cfg-err-soft; color: $cfg-err !important; border-color: #f6caca; }
+
+  .ag-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+
+    > label, .ag-etiqueta {
+      font-size: 11px !important;
+      font-weight: 800;
+      letter-spacing: .6px !important;
+      text-transform: uppercase;
+      color: $cfg-muted !important;
+      margin: 0;
+    }
+  }
+
+  .ag-input {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid $cfg-line;
+    border-radius: 11px;
+    background: #fff;
+    color: $cfg-ink;
+    font-size: 14px;
+    letter-spacing: normal;
+    box-sizing: border-box;
+
+    &:focus { border-color: $cfg-accent; outline: none; box-shadow: 0 0 0 3px $cfg-accent-soft; }
+  }
+
+  textarea.ag-input { min-height: 72px; resize: vertical; }
+
+  .ag-opcion {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 0 12px;
+    border: 1px solid $cfg-chip-border;
+    border-radius: 20px;
+    background: #fff;
+    color: $cfg-ink !important;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: normal;
+    cursor: pointer;
+
+    &:hover:not(:disabled) { border-color: $cfg-accent; color: $cfg-accent !important; }
+    &.ag-opcion--activa { background: $cfg-accent; border-color: $cfg-accent; color: #fff !important; }
+    &:disabled { opacity: .45; cursor: not-allowed; text-decoration: line-through; }
+  }
+
+  .ag-opciones { display: flex; flex-wrap: wrap; gap: 8px; }
+}

@@ -29,6 +29,9 @@
       <button pButton icon="pi pi-pencil" label="{{ 'Editar' | translate }}" class="p-button-text p-button-sm ms-auto"
         pTooltip="Corregir los datos ingresados de este lead" tooltipPosition="bottom"
         (click)="openEditDialog()"></button>
+      <!-- D-488: agendar una cita de servicio para este cliente -->
+      <button *ngIf="agendaActiva" pButton icon="pi pi-calendar-plus" label="Agendar" class="p-button-sm"
+        (click)="abrirAgendar()"></button>
     </div>
 
     <!-- Stage selector -->
@@ -310,3 +313,15 @@
 
 <p-toast></p-toast>
 <p-confirmDialog [style]="{width: '420px'}"></p-confirmDialog>
+
+<!-- D-488: formulario de la Agenda con el cliente ya puesto -->
+<app-cita-form
+  *ngIf="agendarAbierto && agendaConfig"
+  [config]="agendaConfig"
+  [servicios]="agendaServicios"
+  [preset]="null"
+  origen="crm"
+  [clienteInicial]="clienteAgenda"
+  (creada)="alAgendar($event)"
+  (cerrar)="agendarAbierto = false">
+</app-cita-form>

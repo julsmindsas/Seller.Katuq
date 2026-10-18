@@ -1,0 +1,167 @@
+<div class="cfg-pagina ag-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Servicios</span>
+      <h1 class="cfg-titulo">Agenda</h1>
+      <p class="cfg-sub">Tus citas por día y por semana. Las que llegan de tu página web entran como solicitadas para que las confirmes.</p>
+    </div>
+    <div class="cfg-acciones">
+      <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="esAdmin" (click)="irAConfigurar()">
+        <i class="fa fa-cog" aria-hidden="true"></i><span class="ag-txt">Configurar</span>
+      </button>
+      <button type="button" class="cfg-btn" (click)="nuevaCita()" [disabled]="!configurada">
+        <i class="fa fa-plus" aria-hidden="true"></i><span class="ag-txt">Agendar</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="cfg-aviso cfg-aviso--error" *ngIf="error" role="alert">
+    <span class="ag-txt">{{ error }}</span>
+  </div>
+
+  <section class="cfg-card ag-arranque" *ngIf="!cargando && !error && !configurada">
+    <div class="cfg-vacio">
+      <div class="cfg-vacio__icono"><i class="fa fa-calendar" aria-hidden="true"></i></div>
+      <h2 class="cfg-vacio__titulo">Configura tu Agenda</h2>
+      <p class="cfg-vacio__texto">Di qué días y a qué horas atiendes y quién presta cada servicio. Toma dos minutos.</p>
+      <button type="button" class="cfg-btn" *ngIf="esAdmin" (click)="irAConfigurar()"><span class="ag-txt">Configurar ahora</span></button>
+      <p class="cfg-vacio__texto" *ngIf="!esAdmin">Pídele a un administrador de tu empresa que la configure.</p>
+    </div>
+  </section>
+
+  <ng-container *ngIf="configurada && !error">
+    <!-- Barra: fecha, vista y resumen -->
+    <section class="cfg-card ag-barra">
+      <div class="ag-nav">
+        <button type="button" class="ag-icono" (click)="mover(-1)" aria-label="Anterior"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
+        <button type="button" class="ag-opcion" (click)="irAHoy()">Hoy</button>
+        <button type="button" class="ag-icono" (click)="mover(1)" aria-label="Siguiente"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+        <h2 class="ag-fecha">{{ tituloFecha }}</h2>
+      </div>
+      <div class="ag-derecha">
+        <span class="ag-resumen" *ngIf="vista === 'dia'">{{ totalDelDia }} {{ totalDelDia === 1 ? 'cita' : 'citas' }}</span>
+        <span class="ag-estado ag-estado--solicitada" *ngIf="porConfirmar > 0">{{ porConfirmar }} por confirmar</span>
+        <div class="ag-vistas" role="group" aria-label="Vista">
+          <button type="button" class="ag-opcion" [class.ag-opcion--activa]="vista === 'dia'" (click)="cambiarVista('dia')">Día</button>
+          <button type="button" class="ag-opcion" [class.ag-opcion--activa]="vista === 'semana'" (click)="cambiarVista('semana')">Semana</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="cfg-card ag-cargando" *ngIf="cargando">
+      <span class="ag-muted">Cargando citas…</span>
+    </section>
+
+    <!-- ═════ DÍA ═════ -->
+    <ng-container *ngIf="!cargando && vista === 'dia'">
+      <!-- Grilla (pantallas anchas) -->
+      <section class="cfg-card ag-dia" *ngIf="!modoFranjas">
+        <div class="ag-grilla" [style.--columnas]="columnas.length">
+          <div class="ag-cabecera">
+            <div class="ag-horas-cab"></div>
+            <div class="ag-col-cab" *ngFor="let col of columnas">
+              <span class="ag-col-nombre">{{ col.nombre }}</span>
+              <span class="ag-muted" *ngIf="col.inactiva">(ya no atiende)</span>
+            </div>
+          </div>
+          <div class="ag-cuerpo" [style.height.px]="altoGrilla">
+            <div class="ag-horas">
+              <div class="ag-hora" *ngFor="let f of filas" [style.height.px]="altoMediaHora">
+                <span class="ag-hora-txt" *ngIf="f.enPunto">{{ f.etiqueta }}</span>
+              </div>
+            </div>
+            <div class="ag-col" *ngFor="let col of columnas">
+              <button type="button" class="ag-hueco" *ngFor="let f of filas"
+                [class.ag-hueco--punto]="f.enPunto" [style.height.px]="altoMediaHora"
+                (click)="agendarEn(col, f.min)" [attr.aria-label]="'Agendar con ' + col.nombre"></button>
+              <button type="button" class="ag-cita" *ngFor="let c of citasDeColumna(col); trackBy: trackCita"
+                [ngClass]="ESTADOS[c.status].clase" [class.ag-cita--fuera]="!c.startTime"
+                [style.top.px]="c.startTime ? posicion(c).top : 0" [style.height.px]="c.startTime ? posicion(c).height : 40"
+                (click)="abrirCita(c)">
+                <span class="ag-cita-hora">{{ cuando(c) }}</span>
+                <span class="ag-cita-cliente">{{ c.customer?.name }}</span>
+                <span class="ag-cita-serv">{{ textoServicios(c) }}</span>
+              </button>
+            </div>
+            <div class="ag-ahora" *ngIf="lineaAhora !== null" [style.top.px]="lineaAhora"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Modo por franjas: una fila por franja -->
+      <section class="cfg-card ag-franjas" *ngIf="modoFranjas">
+        <div class="ag-franja" *ngFor="let franja of config?.windows">
+          <div class="ag-franja-cab">
+            <span class="ag-franja-nombre">{{ franja }}</span>
+          </div>
+          <div class="ag-franja-cols">
+            <div class="ag-franja-col" *ngFor="let col of columnas">
+              <span class="ag-etiqueta-col" *ngIf="columnas.length > 1">{{ col.nombre }}</span>
+              <button type="button" class="ag-cita ag-cita--lista" *ngFor="let c of citasDeFranja(col, franja); trackBy: trackCita"
+                [ngClass]="ESTADOS[c.status].clase" (click)="abrirCita(c)">
+                <span class="ag-cita-cliente">{{ c.customer?.name }}</span>
+                <span class="ag-cita-serv">{{ textoServicios(c) }}</span>
+              </button>
+              <button type="button" class="ag-agregar" (click)="agendarEnFranja(col, franja)">
+                <i class="fa fa-plus" aria-hidden="true"></i><span class="ag-txt">Agendar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Lista del día (celular, y siempre como respaldo) -->
+      <section class="cfg-card ag-lista-dia">
+        <h3 class="ag-lista-titulo">Citas del día</h3>
+        <div class="cfg-vacio" *ngIf="!citasDelDia(fecha).length">
+          <div class="cfg-vacio__icono"><i class="fa fa-calendar-o" aria-hidden="true"></i></div>
+          <h4 class="cfg-vacio__titulo">Sin citas este día</h4>
+          <p class="cfg-vacio__texto">Agenda la primera o mira otro día.</p>
+          <button type="button" class="cfg-btn" (click)="nuevaCita()"><span class="ag-txt">Agendar</span></button>
+        </div>
+        <button type="button" class="ag-fila" *ngFor="let c of citasDelDia(fecha); trackBy: trackCita" (click)="abrirCita(c)">
+          <span class="ag-fila-hora">{{ cuando(c) }}</span>
+          <span class="ag-fila-centro">
+            <span class="ag-cita-cliente">{{ c.customer?.name }}</span>
+            <span class="ag-muted">{{ textoServicios(c) }} · {{ c.staffName || 'Sin asignar' }}</span>
+          </span>
+          <span class="ag-estado" [ngClass]="ESTADOS[c.status].clase">{{ ESTADOS[c.status].texto }}</span>
+        </button>
+      </section>
+    </ng-container>
+
+    <!-- ═════ SEMANA ═════ -->
+    <section class="cfg-card ag-semana" *ngIf="!cargando && vista === 'semana'">
+      <div class="ag-dia-sem" *ngFor="let d of diasSemana" [class.ag-dia-sem--hoy]="d === hoy">
+        <button type="button" class="ag-dia-sem-cab" (click)="verDia(d)">
+          <span class="ag-dia-sem-nombre">{{ fechaCorta(d) }}</span>
+          <span class="ag-muted">{{ citasDelDia(d).length }}</span>
+        </button>
+        <button type="button" class="ag-cita ag-cita--lista" *ngFor="let c of citasDelDia(d); trackBy: trackCita"
+          [ngClass]="ESTADOS[c.status].clase" (click)="abrirCita(c)">
+          <span class="ag-cita-hora">{{ c.startTime ? horaLegible(c.startTime) : c.window }}</span>
+          <span class="ag-cita-cliente">{{ c.customer?.name }}</span>
+          <span class="ag-cita-serv">{{ textoServicios(c) }}<ng-container *ngIf="c.staffName"> · {{ c.staffName }}</ng-container></span>
+        </button>
+        <span class="ag-muted ag-dia-sem-vacio" *ngIf="!citasDelDia(d).length">Sin citas</span>
+      </div>
+    </section>
+  </ng-container>
+</div>
+
+<app-cita-form
+  *ngIf="formAbierto && config"
+  [config]="config"
+  [servicios]="servicios"
+  [preset]="preset"
+  (creada)="alCrear($event)"
+  (cerrar)="formAbierto = false">
+</app-cita-form>
+
+<app-cita-panel
+  *ngIf="citaAbierta && config"
+  [cita]="citaAbierta"
+  [config]="config"
+  (cambio)="alCambiar($event)"
+  (cerrar)="citaAbierta = null">
+</app-cita-panel>

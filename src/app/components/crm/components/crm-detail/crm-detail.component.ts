@@ -6,6 +6,9 @@ import { takeUntil } from 'rxjs/operators';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import Swal from 'sweetalert2';
 import { CrmService } from '../../services/crm.service';
+import { CompanyFeaturesService } from '../../../../shared/services/company-features.service';
+import { AgendaService } from '../../../agenda/agenda.service';
+import { Cita, ConfigAgenda, ServicioAgenda } from '../../../agenda/agenda.models';
 import { CorporateConfigService } from '../../../ventas/clientes/services/corporate-config.service';
 import { ClientTag } from '../../../ventas/clientes/services/client-config.service';
 import {
@@ -64,6 +67,12 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
   private entityId = '';
   private destroy$ = new Subject<void>();
 
+  // D-488: "Agendar" desde la ficha, con la Agenda encendida.
+  agendaConfig: ConfigAgenda | null = null;
+  agendaServicios: ServicioAgenda[] = [];
+  agendarAbierto = false;
+  clienteAgenda: { name: string; phone?: string; email?: string } | null = null;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -72,6 +81,8 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private corpConfig: CorporateConfigService,
+    private features: CompanyFeaturesService,
+    private agenda: AgendaService,
   ) {
     this.activityForm = this.fb.group({
       type: ['note'],
@@ -455,6 +466,50 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
 
   get visibleStages(): CrmStage[] {
     return this.stages.filter(s => s.active !== false);
+  }
+
+  // ── D-488: Agendar una cita para este cliente ──────────────────────────────
+
+  get agendaActiva(): boolean {
+    return this.features.isEnabled('serviceAgenda');
+  }
+
+  private clienteParaAgenda(): { name: string; phone?: string; email?: string } {
+    const e = this.lead?.entity || {};
+    return {
+      name: this.entityName,
+      phone: e.phone || e.celular || e.telefono || e.numero_celular_comprador || '',
+      email: e.email || e.correo_electronico_comprador || '',
+    };
+  }
+
+  abrirAgendar(): void {
+    this.clienteAgenda = this.clienteParaAgenda();
+    if (this.agendaConfig) {
+      this.agendarAbierto = true;
+      return;
+    }
+    this.agenda.config().pipe(takeUntil(this.destroy$)).subscribe({
+      next: ({ config, configurada }) => {
+        if (!configurada) {
+          this.messageService.add({ severity: 'info', summary: 'Agenda', detail: 'Primero configura el horario de la Agenda.' });
+          return;
+        }
+        this.agendaConfig = config;
+        this.agenda.servicios().pipe(takeUntil(this.destroy$)).subscribe({
+          next: (s) => { this.agendaServicios = s; this.agendarAbierto = true; },
+          error: () => { this.agendarAbierto = true; },
+        });
+      },
+      error: (e) => {
+        this.messageService.add({ severity: 'error', summary: 'Agenda', detail: e?.error?.message || 'No pudimos abrir la Agenda.' });
+      },
+    });
+  }
+
+  alAgendar(c: Cita): void {
+    this.agendarAbierto = false;
+    this.messageService.add({ severity: 'success', summary: 'Cita agendada', detail: `${c.date} · ${c.startTime || c.window || ''}` });
   }
 
   get entityName(): string {
