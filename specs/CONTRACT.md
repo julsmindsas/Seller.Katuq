@@ -11070,3 +11070,19 @@ Daniel (17-oct): el chat de Opttia del botón flotante responde que no tiene her
   - front: las 5 pruebas node de sitios vuelven a pasar; estaban rotas por cambios de pauta y de la ruta de la lista.
   - Se mantienen los 3 fallos previos de sitios en el backend.
 - **Verificado en producción:** los 6 sitios publicados en 200 y el feed sin `&amp;amp;`.
+
+## D-495 a D-503 (2026-10-18) — Propuestas aprobadas por Daniel; pasan a diseño y tareas
+
+Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el diseño y las tareas se aprueban antes de implementar, y lo que toque pedidos, pagos, inventario o consecutivos va con su diff aprobado, uno a la vez.
+
+| Decisión | Propuesta (`openspec/changes/…`) | Tickets |
+|---|---|---|
+| D-495 | `atributos-por-categoria` | 1234 (F2-42) |
+| D-496 | `pedido-whatsapp-con-link-de-pago` | 1243 (F4-40, parte 2) |
+| D-497 | `suscripciones-en-la-tienda` | 1235 (F2-43, parte suscripción) |
+| D-498 | `importador-migracion-tiendas` | 1245 (F5-30, parte importador) |
+| D-499 | `facturacion-electronica-hoja-de-ruta` | 13 tickets FE (FE-02 a FE-24) |
+| D-500 | `facturacion-en-integraciones` | 1260 (FE-01) |
+| D-501 | `fotos-uniformes-producto` | 1252 (TX-37) |
+| D-502 | `modo-oscuro-seller` | 1180 |
+| D-503 | `modo-agencia-sitios` | 1253 (F5-29, parte agencia) |
