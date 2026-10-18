@@ -1,7 +1,7 @@
 ## 0. Decisiones
 
-- [ ] 0.1 Daniel aprueba la propuesta, las specs y el diseño, y responde las 3 preguntas abiertas (colección `npsSurveys`, canales y planes).
-- [ ] 0.2 Pasar D-490 de propuesta a aprobada en `specs/CONTRACT.md`.
+- [x] 0.1 Daniel aprueba la propuesta, las specs y el diseño, y responde las 3 preguntas abiertas (colección `npsSurveys`, canales y planes).
+- [x] 0.2 Pasar D-490 de propuesta a aprobada en `specs/CONTRACT.md`.
 
 ## 1. Backend: encuestas
 

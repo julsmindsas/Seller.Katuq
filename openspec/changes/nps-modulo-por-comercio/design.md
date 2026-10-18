@@ -117,8 +117,39 @@ Se rehace `SATISFACTION_SURVEY` y se crean `NPS_CASO_NUEVO` y `NPS_CASO_RECORDAT
 4. Encender `NPS_COMPRADORES` y luego los comercios por grupos.
 5. Reversa: apagar `NPS_COMPRADORES` y la bandera.
 
+## Contrato HTTP (fuente única para front y backend)
+
+Todas bajo `/v1/nps`, con `auth` + `requireJwtTenant`, salvo `/publica/*`. Los errores responden `{ success: false, code, error }`, con `error` en lenguaje de comercio.
+
+**Encuestas** (familia Administrador para escribir):
+- `GET /encuestas`: `{ encuestas: Encuesta[] }`. Julsmind recibe además la encuesta virtual `{ id: "seller", canal: "seller", soloLectura: true, etapa }`.
+- `GET /encuestas/plantilla`: `{ preguntas }`, los textos por omisión.
+- `GET /encuestas/:id`: `{ encuesta }`.
+- `POST /encuestas`: crea en borrador.
+- `PUT /encuestas/:id`: edita.
+- `POST /encuestas/:id/estado` con `{ estado: "activa" | "pausada", confirmar?: boolean }`. Si ya hay otra encuesta de entrega activa y no viene `confirmar`, responde `409 OTRA_ACTIVA { otra: { id, nombre } }`. Si no, `{ encuesta, pausada?: { id, nombre } }`. Sin responsable o sin pregunta NPS responde `400 INCOMPLETA`.
+- `DELETE /encuestas/:id`: con respuestas responde `409 TIENE_RESPUESTAS`.
+- `GET /responsables`: `{ usuarios: [{ email, nombre, rol }] }`, los usuarios activos de la empresa.
+
+`Encuesta = { id, nombre, canal, estado, preguntas: { nps, abiertas: { detractor, pasivo, promotor }, adicionales: [{ id, tipo: "opcion" | "texto", texto, opciones? }] }, diasEspera?, publicId?, enlace?, responsable: { email, nombre } | null, respuestas90d, createdAt, updatedAt }`. El texto `{comercio}` se reemplaza al mostrarse al comprador.
+
+**Casos:**
+- `GET /casos?estado=&responsable=&encuesta=`: `{ casos: Caso[], indicadores: { abiertos, vencidos, horasPrimerContacto, horasCierre } }`. Quien no es de la familia Administrador ve solo los suyos.
+- `GET /casos/:id`: `{ caso }`.
+- `PUT /casos/:id` con `{ estado?, responsableEmail?, nota? }`: `{ caso }`. Cerrar sin nota responde `400 NOTA_REQUERIDA`. Sin permiso, `403`.
+
+`Caso = { id, encuesta: { id, nombre, canal }, nota, segmento, comentario, adicionales: [{ texto, valor }], fecha, comprador: { nombre?, email?, telefono? }, pedido?: { id, nroPedido }, empresaQueResponde?, nroTicket?, estado, responsable, vencido, notas: [{ texto, autor, fecha }], historial: [{ accion, de?, a?, autor, fecha }], abiertoAt, primerContactoAt?, cerradoAt?, notaCierre? }`.
+
+**Tablero:** `GET /tablero?pruebas=1&encuesta=<id|seller>&canal=<entrega|enlace|seller>`. Tiene la misma forma de D-483, más:
+- `adicionales: [{ id, texto, tipo, conteo?: [{ opcion, n }], respuestas?: [{ texto, fecha }] }]`, solo si se filtra por encuesta;
+- cada comentario trae `canal`, `encuestaId` y `casoEstado`.
+
+**Pública** (sin sesión, con límite por visitante):
+- `GET /publica/encuesta/:ref`: `{ encuesta: { comercio, logo?, preguntas, canal }, respuesta?: { nota } }`. `ref` es el token firmado del correo o `e-<publicId>` del enlace. Errores: `400 INVALIDO`, `410 VENCIDO`, `404 NO_DISPONIBLE` (pausada).
+- `POST /publica/respuesta` con `{ ref, nota }`: `{ sesion }`. En el enlace abierto, `sesion` identifica la respuesta nueva para el paso 2.
+- `POST /publica/comentario` con `{ ref, sesion, comentario?, adicionales?: { [id]: valor }, contacto?: { nombre?, email?, telefono? } }`: `{ opinionesProducto?: url }`.
+- El correo enlaza `/encuesta/<token>?n=<nota>`. La página registra la nota por POST al cargar; un GET nunca registra.
+
 ## Open Questions
 
-1. ¿Se aprueba la colección `npsSurveys`?
-2. ¿Correo, enlace y QR en la primera entrega, y WhatsApp después?
-3. ¿Todos los planes, o con límite en el plan gratis?
+Resueltas por Daniel el 18-oct: se aprueba la colección `npsSurveys`; la primera entrega va por correo, enlace y QR, y WhatsApp después; está en todos los planes por ahora.
