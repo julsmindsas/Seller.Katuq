@@ -10765,11 +10765,21 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
 - **Verificado:** 4 pruebas (`tests/sitios/kaiAdministra.test.js`, Firestore falso y correo simulado: envía una vez, solo a quien lo encendió, solo el lunes). La consulta anidada corre en producción sin índice, la suite de sitios queda con los mismos 4 fallos previos y el build del front pasa.
 - **Fuera de esta entrega:** pruebas A/B y optimización con datos, detectar enlaces rotos y fotos de mala calidad, mantenimiento automático de SEO y texto alternativo, y aprobar sugerencias de KAI desde una bandeja.
 
-## D-481 (2026-10-17) — Las cotizaciones del bot de WhatsApp salen con el asesor KAI (ticket 1243, F4-40, parte 1) — backend f648ab2a, SIN DESPLEGAR
+## D-481 (2026-10-17) — Las cotizaciones del bot de WhatsApp salen con el asesor KAI (ticket 1243, F4-40, parte 1) — PUBLICADO: backend 6c2cf351 (incluye f648ab2a)
 
 - **Antes:** el bot dejaba `vendedor.email` vacío y sus cotizaciones caían en «Sin comercial» en las métricas por asesor.
 - **Ahora:** `whatsappBotCierre.js` firma con `vendedor: { email: "kai", nombre: "KAI" }`. El identificador `kai` agrupa en métricas y filtros como un asesor más.
 - **Cuidados:** `completarVendedor` no busca celular para un identificador sin «@», y `asesorPublico` no muestra `kai` como correo en el enlace público.
 - **Verificado:** `tests/cotizaciones/asesorKai.test.js` (3 casos, sin red).
 - **Parte 2, con propuesta** (`openspec/changes/pedido-whatsapp-con-link-de-pago/`): pedido y link de pago desde WhatsApp sin humano. Toca pedidos, inventario y pagos, así que espera aprobación. Hallazgos: aceptar por el link exige el documento del cliente (el bot no lo manda) y `convertir-pedido` no puede pasar (estado `aceptada` contra `"Aprobada"`); la vía es extraer el núcleo de `sites.crearPedido` a un servicio, con bandera apagada y solo con pasarela propia del comercio.
-- **Choque de número:** el commit ajeno `03aae0fe` (empresas solo desde Julsmind) se rotuló D-476, que ya es la dirección por marca. Quien lo registre en este contrato debe tomar un número libre.
+- **Choque de número:** el commit ajeno `03aae0fe` (empresas solo desde Julsmind) se rotuló D-476, que ya es la dirección por marca. Quien lo registre en este contrato debe tomar un número libre. Ese commit salió a producción en el mismo despliegue, con aprobación de Daniel.
+
+## D-482 (2026-10-17) — Las rutas del editor de sitios toman la empresa del token, no de la cabecera — PUBLICADO: backend 6c2cf351
+
+- **Hueco:** 24 rutas privadas de `/v1/sites` (crear, listar, ver, editar, publicar, quitar de línea, borrar, correos, contactos, reseñas, IA, legales, acceso de cliente, venta-config, slug, dominio…) solo tenían `auth`, y el controlador usaba `req.headers.company`, que manda el navegador.
+- **Arreglo:** `requireJwtTenant` en todas. Con token de una empresa y cabecera de otra responde 403 `TENANT_MISMATCH`; si coinciden, la cabecera queda con el valor del token. El front ya manda la misma empresa del login, así que no cambia nada para los comercios. Las herramientas MCP llaman al controlador directo, no por HTTP.
+- **Origen:** tarea 0b.2 de `openspec/changes/blindar-registro-cuentas-falsas/` (D-323 reservado). Daniel aprobó adelantarla. Falta la parte de `/v1/whatsapp`.
+- **Verificado:**
+  - `tests/sitios/rutasConTenant.test.js`: recorre las 43 rutas privadas del router y prueba el 403 con una empresa cruzada.
+  - La suite de sitios queda con los mismos 4 fallos previos.
+  - En producción: sitio publicado en 200, `/v1/sites/all` sin sesión da 401 y con token inválido 403, y no hay errores de tenant en los logs.

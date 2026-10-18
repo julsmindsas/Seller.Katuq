@@ -8,6 +8,8 @@
 
 - [ ] 0b.1 Relay: contar en los logs de nginx las llamadas a `/v1/notifications/send` de los últimos 30 días; con ese dato, retirarlo o exigir `auth` y mandar solo al correo del token. Contract test: sin token da 401
 - [ ] 0b.2 Tenant: test que muestre que hoy, con token de la empresa A y cabecera `company: B`, `/v1/sites/:id/publish` alcanza el sitio de B, usando empresas de prueba y solo en local. Luego montar `requireJwtTenant` en `/v1/sites` (autenticadas) y `/v1/whatsapp`, y comprobar que la web sigue funcionando
+  - [x] `/v1/sites`: hecho y desplegado (D-482, backend 6c2cf351, aprobado por Daniel el 2026-10-17). Las 43 rutas privadas quedan con `requireJwtTenant`; prueba `tests/sitios/rutasConTenant.test.js`.
+  - [ ] `/v1/whatsapp`: pendiente.
 - [ ] 0b.3 Wompi: Daniel rota la llave privada y la de integridad de producción; quitar los valores por defecto de `plataforma.js` y fallar cerrado sin la variable de entorno
 
 ## 1. IP real (independiente, puede salir primero)
