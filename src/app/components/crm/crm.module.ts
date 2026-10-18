@@ -48,7 +48,7 @@ import { AgendaFormModule } from '../agenda/agenda-form.module';
     CardModule, ToolbarModule, TooltipModule, SkeletonModule,
     BadgeModule, MenuModule, DragulaModule, InputSwitchModule,
     LeadFormModalComponent, ClientesSharedModule,
-    AgendaFormModule, // D-488: "Agendar" desde la ficha
+    AgendaFormModule, // D-491: "Agendar" desde la ficha
   ],
   providers: [MessageService, ConfirmationService],
 })

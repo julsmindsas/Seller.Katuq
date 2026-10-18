@@ -16,7 +16,7 @@ import { esFecha, fechaLarga, horaLegible, hoyBogota, minutos, nuevoRequestId } 
 const DURACION_POR_DEFECTO = 60;
 
 /**
- * Agendar una cita en tres datos: cliente, servicio y hora (D-488). La hora sale
+ * Agendar una cita en tres datos: cliente, servicio y hora (D-491). La hora sale
  * de la disponibilidad real del servidor; el comercio también puede escribir
  * otra hora fuera de la grilla (el servidor solo impide cruzar a una persona).
  */

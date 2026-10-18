@@ -16,7 +16,7 @@ import {
 import { esFecha, fechaCorta, fechaLarga, horaLegible, hoyBogota, minutos } from '../agenda-fechas';
 
 /**
- * Detalle de una cita (D-488): estado, mover, notas, historial y escribirle al
+ * Detalle de una cita (D-491): estado, mover, notas, historial y escribirle al
  * cliente por WhatsApp (abre el chat con el texto escrito; Katuq no envía nada).
  */
 @Component({

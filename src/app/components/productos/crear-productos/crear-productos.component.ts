@@ -213,7 +213,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   ];
 
   /**
-   * D-488: qué es el ítem. Un servicio no maneja existencias ni pide medidas, peso
+   * D-491: qué es el ítem. Un servicio no maneja existencias ni pide medidas, peso
    * ni datos de entrega. `itemType` solo se manda si es servicio o si lo era al
    * abrirlo (para poder devolverlo a producto); el resto de productos no cambia.
    */
@@ -382,7 +382,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       inventariable: [true],
     });
 
-    // D-488: datos propios del servicio (solo se guardan si el ítem es servicio).
+    // D-491: datos propios del servicio (solo se guardan si el ítem es servicio).
     this.servicioForm = this.fb.group({
       durationMinutes: [null],
       mode: ['onsite'],
@@ -1775,7 +1775,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       });
   }
 
-  // ── D-488: producto o servicio ─────────────────────────────────────────────
+  // ── D-491: producto o servicio ─────────────────────────────────────────────
 
   get esServicio(): boolean {
     return this.tipoItem === 'service';
@@ -3044,7 +3044,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.crearProducto.patchValue(this.edit.crearProducto);
     this.Dimensiones.patchValue(this.edit.dimensiones);
     this.disponibilidad.patchValue(this.edit.disponibilidad);
-    // D-488: servicio marcado (`itemType`) o creado por el onboarding (tipoReferencia "servicio").
+    // D-491: servicio marcado (`itemType`) o creado por el onboarding (tipoReferencia "servicio").
     const eraServicio = this.edit.itemType === 'service' ||
       (!this.edit.itemType && this.edit.identificacion?.tipoReferencia === 'servicio');
     this.tipoItem = eraServicio ? 'service' : 'product';

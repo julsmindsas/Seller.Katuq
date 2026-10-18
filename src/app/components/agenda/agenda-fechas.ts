@@ -1,5 +1,5 @@
 /**
- * Fechas y horas de la Agenda (D-488), siempre en hora de Colombia (UTC-5, sin
+ * Fechas y horas de la Agenda (D-491), siempre en hora de Colombia (UTC-5, sin
  * horario de verano), igual que el backend. Funciones puras.
  */
 

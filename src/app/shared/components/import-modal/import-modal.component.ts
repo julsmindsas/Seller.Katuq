@@ -751,7 +751,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       { field: 'cantidadMinVenta', header: 'Cantidad Minima de Venta', required: false, example: '1' },
       { field: 'inventarioSeguridad', header: 'Inventario de Seguridad', required: false, example: '10' },
       { field: 'inventariable', header: 'Inventariable (SI/NO)', required: false, example: 'SI' },
-      // D-488: un servicio no maneja existencias ni se despacha; gana sobre "Inventariable".
+      // D-491: un servicio no maneja existencias ni se despacha; gana sobre "Inventariable".
       { field: 'tipoItem', header: 'Tipo (Producto/Servicio)', required: false, example: 'Producto', help: "Servicio = no maneja existencias ni se despacha. Vacío = Producto." },
       { field: 'activar', header: 'Activo (SI/NO)', required: false, example: 'SI' },
       { field: 'disponible', header: 'Disponible (SI/NO)', required: false, example: 'SI' },
@@ -2249,7 +2249,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
             !!transformedRow.procesoComercial.seProduceInternamente;
         }
 
-        // D-488: un servicio nunca maneja existencias (el servidor lo vuelve a forzar).
+        // D-491: un servicio nunca maneja existencias (el servidor lo vuelve a forzar).
         if (transformedRow.itemType === 'service') {
           transformedRow.disponibilidad = transformedRow.disponibilidad || {};
           transformedRow.disponibilidad.inventariable = false;
@@ -2509,7 +2509,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       return String(value).trim().slice(0, 20000);
     }
 
-    // D-488: "Servicio" → service; cualquier otro texto → product.
+    // D-491: "Servicio" → service; cualquier otro texto → product.
     if (katuqField === 'itemType') {
       const t = String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
       if (!t) return undefined;

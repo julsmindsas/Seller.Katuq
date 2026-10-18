@@ -7,7 +7,7 @@ import { SharedModule as PrimeSharedModule } from 'primeng/api';
 import { CitaFormComponent } from './cita-form/cita-form.component';
 
 /**
- * El formulario "Agendar cita" (D-488) sin las rutas de la Agenda, para usarlo
+ * El formulario "Agendar cita" (D-491) sin las rutas de la Agenda, para usarlo
  * también desde el CRM (y, más adelante, desde la venta asistida).
  */
 @NgModule({

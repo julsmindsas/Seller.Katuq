@@ -382,7 +382,7 @@ export const content: Routes = [
     data: { title: "CRM" },
   },
   {
-    // Agenda de servicios (D-488). Además de la sesión, exige la bandera `serviceAgenda` (AgendaGuard).
+    // Agenda de servicios (D-491). Además de la sesión, exige la bandera `serviceAgenda` (AgendaGuard).
     path: "agenda",
     loadChildren: () =>
       import("../../components/agenda/agenda.module").then((m) => m.AgendaModule),

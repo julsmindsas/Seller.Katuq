@@ -101,7 +101,7 @@
 
 ## Avance y desvíos
 
-**18-oct (D-488 reservado y escrito en el contrato).** Backend `b5d4a4c2` + `18621af7` y front `a7cc645e`, locales y sin desplegar. `npm run test:agenda`: 66 pruebas en verde; build completo del front sin errores.
+**18-oct (D-491 reservado y escrito en el contrato).** Backend `b5d4a4c2` + `18621af7` y front `a7cc645e`, locales y sin desplegar. `npm run test:agenda`: 66 pruebas en verde; build completo del front sin errores.
 
 Desvíos frente al diseño:
 - **Marca del servicio: `itemType: "service"`, no `identificacion.tipoReferencia`.** Ese campo ya significa "referencia manual o automática" (`propio`/`externo`) en el formulario de producto y "SKU" en WooCommerce; marcar ahí perdía el servicio al editarlo. Se sigue leyendo el `"servicio"` del onboarding.

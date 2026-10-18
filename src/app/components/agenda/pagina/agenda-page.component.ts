@@ -42,7 +42,7 @@ interface PresetCita {
 }
 
 /**
- * La Agenda (D-488): citas por día (una columna por persona que atiende) y por
+ * La Agenda (D-491): citas por día (una columna por persona que atiende) y por
  * semana (una columna por día). Crear, abrir, mover y cambiar estado pasan por
  * `/v1/appointments`; el servidor revalida todo.
  */

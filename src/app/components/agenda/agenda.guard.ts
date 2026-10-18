@@ -4,7 +4,7 @@ import { ToastrService } from 'ngx-toastr';
 import { CompanyFeaturesService } from '../../shared/services/company-features.service';
 
 /**
- * La Agenda de servicios (D-488) se muestra solo a la empresa con la bandera
+ * La Agenda de servicios (D-491) se muestra solo a la empresa con la bandera
  * `serviceAgenda`. Esto solo decide qué se MUESTRA: el servidor responde 403 en
  * `/v1/appointments` sin la bandera. La autenticación la resuelve `AuthGuard`.
  */

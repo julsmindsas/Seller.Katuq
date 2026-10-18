@@ -128,7 +128,7 @@ const routes: Routes = [
       }
     ]
   },
-  // La demo de agendamiento (oct-2025) se retiró: los enlaces viejos llevan a la Agenda (D-488).
+  // La demo de agendamiento (oct-2025) se retiró: los enlaces viejos llevan a la Agenda (D-491).
   { path: 'servicios/agendamiento', redirectTo: '/agenda' },
   { path: 'servicios/agendamiento/citas', redirectTo: '/agenda' },
   // Pricing page

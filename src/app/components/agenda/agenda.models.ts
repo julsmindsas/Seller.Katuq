@@ -1,5 +1,5 @@
 /**
- * Agenda de servicios (D-488, openspec/changes/servicios-y-agenda). Mismos
+ * Agenda de servicios (D-491, openspec/changes/servicios-y-agenda). Mismos
  * nombres que el backend (`/v1/appointments`, `utils/agenda.js`).
  */
 

@@ -13,7 +13,7 @@ import {
 } from './agenda.models';
 
 /**
- * Agenda de servicios (D-488). El servidor toma la empresa del JWT y exige la
+ * Agenda de servicios (D-491). El servidor toma la empresa del JWT y exige la
  * bandera `serviceAgenda`; aquí no se manda empresa.
  */
 @Injectable({ providedIn: 'root' })

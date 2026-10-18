@@ -131,14 +131,14 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
   productoOriginal: any = null;
   get editando(): boolean { return !!this.productoOriginal; }
 
-  /** D-488: ¿el ítem guardado es servicio? (`itemType`, o el `tipoReferencia` del onboarding). */
+  /** D-491: ¿el ítem guardado es servicio? (`itemType`, o el `tipoReferencia` del onboarding). */
   private esServicioGuardado(prod: any): boolean {
     if (prod?.itemType === "service") return true;
     if (prod?.itemType === "product") return false;
     return prod?.identificacion?.tipoReferencia === "servicio";
   }
 
-  /** D-488: lo que se suma al guardar. Nada para un producto que siempre lo fue. */
+  /** D-491: lo que se suma al guardar. Nada para un producto que siempre lo fue. */
   private datosDeTipo(v: any, eraServicio: boolean): { itemType?: "product" | "service"; service?: any } {
     if (v.esServicio) {
       const duracion = Number(v.duracion);
@@ -224,7 +224,7 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
       cantidadMinVenta: [1, Validators.min(1)],
       inventarioSeguridad: [0, Validators.min(0)],
       inventariable: [true],
-      // D-488: producto o servicio. Un servicio no maneja existencias ni entrega.
+      // D-491: producto o servicio. Un servicio no maneja existencias ni entrega.
       esServicio: [false],
       duracion: [null],
       modalidad: ["onsite"],
@@ -750,7 +750,7 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
       // false tiene que llegar en false, y uno viejo al que le falta la llave
       // se asume encendido, que es como se venía creando hasta ahora.
       inventariable: prod?.disponibilidad?.inventariable !== false,
-      // D-488: servicio marcado (`itemType`) o creado por el onboarding.
+      // D-491: servicio marcado (`itemType`) o creado por el onboarding.
       esServicio: this.esServicioGuardado(prod),
       duracion: prod?.service?.durationMinutes ?? null,
       modalidad: prod?.service?.mode || "onsite",

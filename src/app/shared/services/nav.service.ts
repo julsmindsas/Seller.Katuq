@@ -89,7 +89,7 @@ export class NavService implements OnDestroy {
   private alistamientoPrendido: boolean = false;
   // Igual para dropshipping (D-403): último valor con el que se filtró el menú.
   private dropshippingPrendido: boolean = false;
-  // Agenda de servicios (D-488): bandera `serviceAgenda`. Último valor con el que se filtró el menú.
+  // Agenda de servicios (D-491): bandera `serviceAgenda`. Último valor con el que se filtró el menú.
   private agendaPrendida: boolean = false;
 
   constructor(
@@ -272,7 +272,7 @@ export class NavService implements OnDestroy {
 
     // Alistamiento (picking y packing): sin la bandera de la empresa no se ofrece
     this.alistamientoPrendido = this.features.isEnabled("pickingAlistamiento");
-    // Agenda de servicios (D-488): igual, con su bandera.
+    // Agenda de servicios (D-491): igual, con su bandera.
     this.agendaPrendida = this.features.isEnabled("serviceAgenda");
 
     // Paso 1: Filtrar elementos y sus hijos basados en roles y permisos
@@ -308,7 +308,7 @@ export class NavService implements OnDestroy {
             return false;
           }
 
-          // Agenda (D-488): sin la bandera no se ofrece; su configuración, solo a la familia Administrador.
+          // Agenda (D-491): sin la bandera no se ofrece; su configuración, solo a la familia Administrador.
           if (child.path && (child.path === "agenda" || child.path.startsWith("agenda/")) && !this.agendaPrendida) return false;
           if (child.path === "agenda/configuracion" && !isCompanyAdmin && !isSuperAdmin) return false;
 
@@ -605,7 +605,7 @@ export class NavService implements OnDestroy {
       ],
     },
     {
-      // Agenda de servicios (D-488): solo con la bandera `serviceAgenda` de la empresa.
+      // Agenda de servicios (D-491): solo con la bandera `serviceAgenda` de la empresa.
       title: "Agenda",
       icon: "calendar",
       type: "sub",

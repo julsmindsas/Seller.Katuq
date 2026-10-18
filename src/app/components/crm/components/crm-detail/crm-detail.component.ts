@@ -67,7 +67,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
   private entityId = '';
   private destroy$ = new Subject<void>();
 
-  // D-488: "Agendar" desde la ficha, con la Agenda encendida.
+  // D-491: "Agendar" desde la ficha, con la Agenda encendida.
   agendaConfig: ConfigAgenda | null = null;
   agendaServicios: ServicioAgenda[] = [];
   agendarAbierto = false;
@@ -468,7 +468,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
     return this.stages.filter(s => s.active !== false);
   }
 
-  // ── D-488: Agendar una cita para este cliente ──────────────────────────────
+  // ── D-491: Agendar una cita para este cliente ──────────────────────────────
 
   get agendaActiva(): boolean {
     return this.features.isEnabled('serviceAgenda');

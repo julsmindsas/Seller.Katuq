@@ -17,7 +17,7 @@ interface DiaEditable {
 const PASOS = [15, 20, 30, 60];
 
 /**
- * Configuración de la Agenda (D-488): horario por día, por hora o por franjas,
+ * Configuración de la Agenda (D-491): horario por día, por hora o por franjas,
  * personas que atienden (no necesitan usuario en Katuq) y a quién avisar. La
  * guarda un administrador; el servidor la valida antes de escribir.
  */

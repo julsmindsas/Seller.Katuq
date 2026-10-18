@@ -18,7 +18,7 @@ const routes: Routes = [
   { path: 'configuracion', component: AgendaConfigComponent, canActivate: [AgendaGuard], data: { title: 'Agenda' } },
 ];
 
-/** Agenda de servicios (D-488, openspec/changes/servicios-y-agenda). */
+/** Agenda de servicios (D-491, openspec/changes/servicios-y-agenda). */
 @NgModule({
   declarations: [AgendaPageComponent, AgendaConfigComponent, CitaPanelComponent],
   imports: [
