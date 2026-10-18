@@ -34,6 +34,10 @@ export const COMPANY_FEATURE_FLAGS = [
   // Módulo NPS por comercio (D-490): encuestas, resultados y seguimiento. Dueño: Daniel.
   // Revisión el 2027-01-31: encendida para todos o eliminada.
   'npsModulo',
+  // Plantillas de sitio que nacen apagadas (D-385, ticket 1257): producto único para pauta y
+  // «Tecnología / catálogo grande». Dueño: Daniel. Se retiran el 2027-03-31.
+  'singleProductTemplate',
+  'techCatalogTemplate',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

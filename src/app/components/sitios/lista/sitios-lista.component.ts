@@ -570,6 +570,8 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
         this.cargandoPlantillas = false;
         this.plantillas = (res && res.data) || [];
         this.objetivos = (res && res.meta && res.meta.objetivos) || [];
+        // Ticket 1257: las recomendadas llegan aparte, en su orden.
+        this.recomendadas = (res && res.meta && res.meta.recomendadas) || [];
       },
       error: () => {
         this.cargandoPlantillas = false;
@@ -902,11 +904,18 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
    * grupo abría su propia rejilla de tres columnas para una sola tarjeta: se
    * veía una columna flaca con dos tercios de la ventana en blanco.
    */
+  /** Ticket 1257: ids de las plantillas recomendadas, en su orden (del servidor). */
+  recomendadas: string[] = [];
+
+  esRecomendada(p: PlantillaSitio): boolean {
+    return this.recomendadas.includes(p.id);
+  }
+
   get plantillasVisibles(): PlantillaSitio[] {
     const aptas = this.plantillas.filter((p) => this.aptaParaTipo(p));
     const filtradas = this.sectorFiltro ? aptas.filter((p) => p.sector === this.sectorFiltro) : aptas;
     // Ticket 1257: las recomendadas primero, en su orden; las demás como llegan.
-    const peso = (p: PlantillaSitio) => (p.destacada ? p.orden || 0 : 1000);
+    const peso = (p: PlantillaSitio) => (this.esRecomendada(p) ? this.recomendadas.indexOf(p.id) : 1000);
     return filtradas
       .map((p, i) => ({ p, i }))
       .sort((a, b) => peso(a.p) - peso(b.p) || a.i - b.i)
