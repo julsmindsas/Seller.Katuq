@@ -10858,3 +10858,37 @@ Daniel (16-oct): "requiero un módulo de marketing para Katuq y para Julsmind; q
   - definición de primer pedido;
   - destinatarios del resumen.
 - **Fase 2 (fuera):** pausar anuncios desde Katuq y automatizaciones para los comercios.
+
+## D-486 (2026-10-18) — Estilo robusto: paleta completa con contraste garantizado, botones, tarjeta de producto, encabezado, medidas y propuesta de KAI como antes y después (ticket 1227, F2-17) — backend 3b847f62, front 4b5fc9be, SIN DESPLEGAR
+
+- **Número:** el commit del backend dice D-483 porque se escribió mientras otra sesión tomaba D-483 (NPS), D-484 y D-485. La decisión es D-486.
+- **Ajustes del tema** (`siteBlocks.normalizarTema`): todos nacen vacíos y vacío significa «como lo deja el estilo de página», así que un sitio que no los toca se ve igual. Solo aceptan listas cerradas o colores hexadecimales; no hay CSS libre.
+  - **Paleta:** `colorBoton`, `colorEnlace`, `colorOferta`, `colorEtiqueta` y `colorFondoAlterno`.
+  - **Botones:** `botonForma` (recto, redondeado, pastilla), `botonRelleno` (contorno) y `botonTamano`.
+  - **Tarjeta:** `fotoProporcion` (1:1, 4:5, 3:4), `fotoAjuste` (encajar), `columnasEscritorio` (2 a 5), `columnasCelular` (1 o 2), `etiquetas` {descuento, agotado, nuevo} y `segundaFoto`.
+  - **Encabezado:** `logoPosicion` (centro), `logoTamano` y `menuMayusculas`. Lo fijo y el nombre ya vivían en la sección Encabezado.
+  - **Medidas:** `anchoContenido`, `espaciado`, `tamanoTexto` y `escalaTitulos`. Multiplican los valores del estilo de página, no los reemplazan.
+- **Cómo se aplican:**
+  - Fichas en `<html data-kq-ajustes="…">` (`fichasDeAjustes`) y variables CSS en `:root`.
+  - `estilosAjustes()` va al final de la hoja compartida con `html[…]`, para ganarle a los estilos de página.
+  - El fondo alterno se marca desde el servidor (`seccionesAlternas`): una sección de contenido sí y otra no, nunca la portada, banners, catálogo, la sección libre ni una sección con fondo propio. Pinta a todo el ancho con sombra y `clip-path`.
+- **Ilegible imposible:**
+  - Un enlace o un precio en oferta que no alcanza 4,5:1 sobre el fondo cae al color del texto.
+  - Botón, etiqueta y contorno usan `primarioAccesible`.
+  - El texto de las secciones alternas cambia a claro u oscuro según el fondo.
+- **Editor:**
+  - Panel Estilo en acordeón (uno abierto a la vez).
+  - Hexadecimal y contraste en cada color.
+  - Grupos Botones, Tarjeta de producto, Encabezado y Medidas, todos en el buscador de ajustes.
+  - Temas con muestra visual (fondo, «Aa» en su letra y botón) y parejas de letra con nombres para el comercio.
+  - La propuesta de KAI se compara (Antes / Propuesta) y se deja o se descarta. Editar mientras se mira el antes se queda con el antes. «Proponer otro» ya no pisa el antes.
+- **Vista previa:** `sitio-render/ajustes-estilo.ts` es espejo de la lógica del servidor. La tarjeta de la previa gana insignias y segunda foto, y el tamaño del texto se aproxima con `zoom`.
+- **Verificado:**
+  - `tests/sitios/estiloRobusto.test.js`: 7 casos, entre ellos sin ajustes igual a antes, valores raros descartados, una regla por ficha y contraste garantizado.
+  - La suite de sitios queda con los mismos 4 fallos previos y el build de producción pasa.
+  - En Chromium, página publicada en 3 variantes (incluida una oscura tipo Baudio) y editor con API simulada, a 1440 y 390 px: sin desborde, con la previa reflejando cada cambio en unos 60 ms (el criterio pide menos de 1 s).
+- **Fuera, a propósito:**
+  - CSS personalizado (riesgo de inyección en la página del comercio).
+  - Subir fuente propia (licencias y almacenamiento).
+  - Encabezado transparente sobre la portada.
+  - Ajustes de estilo por dispositivo más allá de mostrar u ocultar secciones (ticket 1248).
