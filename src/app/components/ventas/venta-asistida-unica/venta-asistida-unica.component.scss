@@ -104,6 +104,8 @@
   display: flex;
   align-items: center;
   gap: 9px;
+  // Ticket 1168: con el selector de vista, en celular las acciones bajan de fila en vez de desbordar.
+  flex-wrap: wrap;
 }
 
 // Botón "Descartar" (rojo suave)

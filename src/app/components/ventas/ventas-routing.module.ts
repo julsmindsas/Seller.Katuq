@@ -2,6 +2,7 @@ import { NgModule } from "@angular/core";
 import { Routes, RouterModule } from "@angular/router";
 import { CrearVentasComponent } from "./crear-ventas/crear-ventas.component";
 import { VentaAsistidaUnicaComponent } from "./venta-asistida-unica/venta-asistida-unica.component";
+import { VistaVentaGuard } from "./selector-vista-venta/selector-vista-venta.component";
 import { ClientesComponent } from "./clientes/clientes.component";
 import { ListOrdersComponent } from "./list/list.component";
 import { ClientesListaComponent } from "./clientes/lista/clientes-lista.component";
@@ -17,6 +18,8 @@ const routes: Routes = [
   {
     path: "venta-asistida",
     component: VentaAsistidaUnicaComponent,
+    // Ticket 1168: desde el menú abre la vista que el vendedor eligió (rápida o por pasos).
+    canActivate: [VistaVentaGuard],
   },
   {
     path: "clientes",

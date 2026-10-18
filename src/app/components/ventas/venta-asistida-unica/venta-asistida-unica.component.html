@@ -23,6 +23,8 @@
         </div>
       </div>
       <div class="va-page-head-actions">
+        <!-- Ticket 1168: elegir entre esta vista y la de pasos; se recuerda. -->
+        <app-selector-vista-venta actual="rapida" *ngIf="!showPedidoConfirm"></app-selector-vista-venta>
         <app-borradores-venta
           *ngIf="!showPedidoConfirm"
           [puedeGuardar]="puedeGuardarBorrador"

@@ -445,10 +445,10 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "ventas/venta-asistida", title: "Venta asistida", type: "link", icon: "shopping-bag" },
-        // Wizard original de 6 pasos. Se deja accesible como respaldo hasta que la
-        // pantalla única quede validada con un pedido real.
-        { path: "ventas/crear-ventas", title: "Venta asistida (pasos)", type: "link", icon: "list" },
+        // Ticket 1168: una sola entrada. Adentro se elige «Rápida» (pantalla única) o
+        // «Por pasos» (el asistente de siempre) y la elección se recuerda. Los roles
+        // guardados con la ruta del asistente siguen viendo la entrada (permisoPrevio).
+        { path: "ventas/venta-asistida", title: "Venta asistida", type: "link", icon: "shopping-bag", permisoPrevio: "ventas/crear-ventas" },
         { path: "ventas/carga-ventas", title: "Ventas masivas", type: "link", icon: "upload" },
         { path: "ventas/ventas-pos", title: "Ventas POS", type: "link", icon: "monitor" },
       ],
