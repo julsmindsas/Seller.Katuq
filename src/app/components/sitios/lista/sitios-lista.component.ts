@@ -123,7 +123,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
       tipo: "landing" as const,
       objetivoId: "contactos",
       nombre: "Conseguir contactos",
-      pista: "Una página con formulario y WhatsApp para que te escriban",
+      pista: "Un sitio con formulario y WhatsApp para que te escriban",
     },
     {
       id: "landing-conocer",
@@ -195,7 +195,8 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
    * solo los catálogos y creando catálogos por defecto. Null = todas las páginas.
    */
   get soloTipo(): "catalogo" | null {
-    return this.route.snapshot.data?.["tipo"] === "catalogo" ? "catalogo" : null;
+    // Con la misma guarda que el enlace del chat (línea de queryParamMap): sin ruta, todas.
+    return this.route?.snapshot?.data?.["tipo"] === "catalogo" ? "catalogo" : null;
   }
 
   /** Página cuyas métricas se están viendo. Null = ninguna. */
@@ -289,7 +290,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.cargando = false;
-        this.toastr.error("No pudimos cargar tus páginas.");
+        this.toastr.error("No pudimos cargar tus sitios.");
         this.abrirDesdeEnlace();
       },
     });
@@ -425,15 +426,15 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   eliminarSitio(s: Sitio): void {
     const publicada =
       s.estado === "publicado"
-        ? `<br /><br />Está <b>publicada</b>: <code>${s.slug}.katuq.com</code> dejará de existir.`
+        ? `<br /><br />Está <b>publicado</b>: <code>${s.slug}.katuq.com</code> dejará de existir.`
         : "";
     Swal.fire({
       title: `¿Eliminar "${this.textoSeguro(s.nombre)}"?`,
       html: `Esta acción no se puede deshacer.${publicada}`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Sí, eliminarla",
-      cancelButtonText: "Conservarla",
+      confirmButtonText: "Sí, eliminarlo",
+      cancelButtonText: "Conservarlo",
       confirmButtonColor: "#b42318",
       focusCancel: true,
     }).then((r) => {
@@ -453,7 +454,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
         this.duplicando = "";
         const data = res && res.data;
         if (!res || !res.success || !data) {
-          this.toastr.error((res && res.message) || "No pudimos duplicar la página.");
+          this.toastr.error((res && res.message) || "No pudimos duplicar el sitio.");
           return;
         }
         this.toastr.success(`Copia creada: ${data.nombre}. Cambia el producto y los textos y publícala.`);
@@ -461,7 +462,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.duplicando = "";
-        this.toastr.error(err?.error?.message || "No pudimos duplicar la página.");
+        this.toastr.error(err?.error?.message || "No pudimos duplicar el sitio.");
       },
     });
   }
@@ -497,15 +498,15 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
         next: (res) => {
           this.uniendo = "";
           if (!res || !res.success) {
-            this.toastr.error((res && res.message) || "No pudimos unir la página.");
+            this.toastr.error((res && res.message) || "No pudimos unir el sitio.");
             return;
           }
-          this.toastr.success(res.message || "Página unida a tu sitio principal.");
+          this.toastr.success(res.message || "Listo: ahora es una página de tu sitio principal.");
           s.redirigeA = { siteId: String(r.value), ruta: (res.data && res.data.ruta) || s.slug };
         },
         error: (err) => {
           this.uniendo = "";
-          this.toastr.error(err?.error?.message || "No pudimos unir la página.");
+          this.toastr.error(err?.error?.message || "No pudimos unir el sitio.");
         },
       });
     });
@@ -521,15 +522,15 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.eliminando = "";
         if (!res || !res.success) {
-          this.toastr.error((res && res.message) || "No pudimos eliminar la página.");
+          this.toastr.error((res && res.message) || "No pudimos eliminar el sitio.");
           return;
         }
         this.sitios = this.sitios.filter((x) => x.id !== s.id);
-        this.toastr.success("Página eliminada.");
+        this.toastr.success("Sitio eliminado.");
       },
       error: () => {
         this.eliminando = "";
-        this.toastr.error("No pudimos eliminar la página.");
+        this.toastr.error("No pudimos eliminar el sitio.");
       },
     });
   }
@@ -744,7 +745,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
         this.creandoConIA = false;
         const data = res && res.data;
         if (!data || !data.id) {
-          this.toastr.error((res && res.message) || "No pudimos crear la página.");
+          this.toastr.error((res && res.message) || "No pudimos crear el sitio.");
           return;
         }
         this.mostrandoAsistente = false;
@@ -823,7 +824,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
     const escrito = this.nombre.trim();
     const nombre = escrito && escrito === escrito.toLowerCase() ? escrito.charAt(0).toUpperCase() + escrito.slice(1) : escrito;
     if (!nombre) {
-      this.toastr.warning("Ponle un nombre a tu página.");
+      this.toastr.warning("Ponle un nombre a tu sitio.");
       return;
     }
     if (this.slugEstado === "ocupada" || this.slugEstado === "invalida") {
@@ -877,7 +878,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
           this.creando = false;
           const data = res && res.data;
           if (!data || !data.id) {
-            this.toastr.error((res && res.message) || "No pudimos crear la página.");
+            this.toastr.error((res && res.message) || "No pudimos crear el sitio.");
             return;
           }
           this.mostrandoAsistente = false;
@@ -886,7 +887,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
         error: (e) => {
           this.creando = false;
           const msg = e && e.error && e.error.message;
-          this.toastr.error(msg || "No pudimos crear la página.");
+          this.toastr.error(msg || "No pudimos crear el sitio.");
         },
       });
   }

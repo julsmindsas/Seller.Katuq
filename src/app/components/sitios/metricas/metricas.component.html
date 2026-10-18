@@ -3,7 +3,7 @@
 
     <header class="caja__cabecera">
       <div>
-        <h5>Cómo va tu página</h5>
+        <h5>Cómo va tu sitio</h5>
         <p class="sub">{{ nombre || (datos && datos.sitio.nombre) }}</p>
       </div>
       <button class="cerrar" (click)="cerrar.emit()" title="Cerrar" aria-label="Cerrar">
@@ -31,7 +31,7 @@
         <div class="sin-datos" *ngIf="!hayTrafico">
           <strong>Todavía nadie ha entrado</strong>
           <p *ngIf="datos.sitio.estado !== 'publicado'">
-            Esta página aún no está publicada. Publícala y comparte el enlace por WhatsApp o tus redes.
+            Este sitio aún no está publicado. Publícalo y comparte el enlace por WhatsApp o tus redes.
           </p>
           <p *ngIf="datos.sitio.estado === 'publicado'">
             Comparte tu enlace por WhatsApp, Instagram o donde estén tus clientes. Aquí verás cuánta
@@ -127,7 +127,7 @@
                 </tbody>
               </table>
             </div>
-            <p class="grafica__pie">Cuenta los pedidos hechos en esta página según por dónde llegó el comprador. Los pedidos de antes del 16 de octubre de 2026 salen como «Sin dato».</p>
+            <p class="grafica__pie">Cuenta los pedidos hechos en este sitio según por dónde llegó el comprador. Los pedidos de antes del 16 de octubre de 2026 salen como «Sin dato».</p>
           </section>
 
           <!-- Ticket 1238: el cupón o código de influenciador como fuente -->
@@ -171,7 +171,7 @@
                 <span>Botón de WhatsApp</span><strong>{{ datos.clicsPorDestino['whatsapp'] }}</strong>
               </li>
               <li *ngIf="datos.clicsPorDestino['cta']">
-                <span>Botones de la página</span><strong>{{ datos.clicsPorDestino['cta'] }}</strong>
+                <span>Botones del sitio</span><strong>{{ datos.clicsPorDestino['cta'] }}</strong>
               </li>
               <li *ngIf="datos.clicsPorDestino['producto']">
                 <span>Productos</span><strong>{{ datos.clicsPorDestino['producto'] }}</strong>
@@ -183,7 +183,7 @@
           </section>
 
           <p class="aviso" *ngIf="datos.truncado">
-            Esta página tiene mucho tráfico y estamos mostrando solo una parte. Avísanos para
+            Este sitio tiene mucho tráfico y estamos mostrando solo una parte. Avísanos para
             activarte el histórico completo.
           </p>
         </ng-container>

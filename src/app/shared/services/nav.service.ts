@@ -517,7 +517,7 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "sitios", title: "Mis páginas", type: "link", icon: "layout" },
+        { path: "sitios", title: "Mis sitios", type: "link", icon: "layout" },
         // Ticket 1175: acceso directo a los catálogos digitales (vitrina D-141).
         {
           path: "sitios/catalogos",

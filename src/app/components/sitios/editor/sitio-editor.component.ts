@@ -972,7 +972,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     document.body.classList.add("kq-editor-lleno");
     if (!this.id) {
       this.cargando = false;
-      this.error = "No encontramos esta página.";
+      this.error = "No encontramos este sitio.";
       return;
     }
 
@@ -999,7 +999,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       next: (res) => {
         this.cargando = false;
         if (!res || !res.success || !res.data) {
-          this.error = "No encontramos esta página.";
+          this.error = "No encontramos este sitio.";
           return;
         }
         this.sitio = res.data;
@@ -1023,7 +1023,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       },
       error: () => {
         this.cargando = false;
-        this.error = "No encontramos esta página.";
+        this.error = "No encontramos este sitio.";
       },
     });
   }
@@ -1878,7 +1878,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     { texto: "Tu propio dominio", donde: "Ajustes", panel: "ajustes", claves: "dominio dns direccion" },
     { texto: "Cómo se ve al compartir", donde: "Ajustes", panel: "ajustes", claves: "seo google descripcion titulo imagen" },
     { texto: "Publicación", donde: "Ajustes", panel: "ajustes", claves: "programar publicar" },
-    { texto: "Redirecciones desde tu página anterior", donde: "Ajustes", panel: "ajustes", claves: "301 shopify woocommerce wix migrar seo" },
+    { texto: "Redirecciones desde tu sitio anterior", donde: "Ajustes", panel: "ajustes", claves: "301 shopify woocommerce wix migrar seo" },
     { texto: "Historial de versiones", donde: "Ajustes", panel: "ajustes", claves: "restaurar revertir version" },
     { texto: "Programar la publicación", donde: "Ajustes", panel: "ajustes", claves: "fecha hora programar" },
     // Ticket 1227: el panel Estilo va en acordeón; `grupo` abre el que toca.
@@ -2934,12 +2934,12 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         : "⏳ Todavía no vemos el registro. El DNS puede tardar de minutos a un par de horas — vuelve a comprobar más tarde.";
     }
     if (d.raiz && d.www) return "✅ Los dos registros apuntan bien. El candado verde se activa solo con la primera visita.";
-    if (d.raiz) return "✅ El registro A ya apunta. Falta el CNAME de www — tu página ya funciona sin www.";
+    if (d.raiz) return "✅ El registro A ya apunta. Falta el CNAME de www — tu sitio ya funciona sin www.";
     if (d.www) return "✅ El www ya apunta. Falta el registro A de la raíz (@) — sin él, el dominio sin www no abre.";
     // No se le dice "cámbialo": si ese dominio ya tiene una web, cambiar el
     // registro A la tumba. Primero se pregunta qué quiere conservar.
     if (d.raizApuntaOtroLado) {
-      return `⚠️ ${d.dominio} ya muestra una página en otro servidor. Si la quieres conservar, usa un subdominio como tienda.${d.dominio}. Solo si quieres REEMPLAZARLA por esta, edita el registro A existente y ponle 34.225.223.187.`;
+      return `⚠️ ${d.dominio} ya muestra un sitio en otro servidor. Si lo quieres conservar, usa un subdominio como tienda.${d.dominio}. Solo si quieres REEMPLAZARLO por este, edita el registro A existente y ponle 34.225.223.187.`;
     }
     return "⏳ Todavía no vemos los registros. El DNS puede tardar de minutos a un par de horas — vuelve a comprobar más tarde.";
   }
@@ -3587,7 +3587,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       this.decirIA({
         rol: "ia",
         texto: !pendientes.length
-          ? "Tu página está lista: no le falta nada para publicar."
+          ? "Tu sitio está listo: no le falta nada para publicar."
           : criticos.length
             ? `No puedes publicar todavía: faltan ${criticos.length} cosa(s) que bloquean. Toca «Corregir» y te llevo.`
             : "Ya puedes publicar. Antes, te recomiendo revisar esto:",
@@ -4800,7 +4800,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   /** Datos que el servidor rechazaría o borraría: mejor esperar a que se corrijan. */
   private motivoParaNoAutoguardar(): string {
-    if (!this.slugValido) return "Corrige la dirección de la página.";
+    if (!this.slugValido) return "Corrige la dirección del sitio.";
     const pautaMala = CAMPOS_PAUTA.find((c) => this.errorPauta(c.campo));
     if (pautaMala) return `Corrige ${pautaMala.nombre} en Pauta.`;
     const t = this.contenido && this.contenido.tema;
@@ -5087,7 +5087,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
             // Ticket 1219: lo escrito mientras se guardaba sale en el siguiente guardado automático.
             if (automatico) { this.programarAutoguardado(); return; }
             this.toastr.warning(alPublicar
-              ? "Hay cambios nuevos sin guardar. Revisa tu página y vuelve a pulsar Publicar."
+              ? "Hay cambios nuevos sin guardar. Revisa tu sitio y vuelve a pulsar Publicar."
               : "Se guardó la versión enviada. Los cambios nuevos siguen sin guardar.");
             return;
           }
@@ -5384,7 +5384,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       .map((p) => `<li style="margin:0 0 8px"><strong>${esc(p.texto)}</strong><br><small style="color:#6b6880">${esc(p.donde)}</small></li>`)
       .join("");
     const r = await Swal.fire({
-      title: "Confirma lo que promete tu página",
+      title: "Confirma lo que promete tu sitio",
       html:
         `<p style="text-align:left;margin:0 0 10px">Estas frases prometen condiciones de venta. Si no las cumples, el comprador puede reclamar. Publícalas solo si son ciertas en tu negocio:</p>` +
         `<ul style="text-align:left;padding-left:18px;margin:0">${items}</ul>` +
@@ -5412,7 +5412,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
           return;
         }
         if (this.sitio) this.sitio.estado = "publicado";
-        this.toastr.success("Tu página está en línea");
+        this.toastr.success("Tu sitio está en línea");
       },
       error: (e) => {
         this.publicando = false;
@@ -5441,7 +5441,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       next: () => {
         this.publicando = false;
         if (this.sitio) this.sitio.estado = "borrador";
-        this.toastr.info("Tu página ya no es visible");
+        this.toastr.info("Tu sitio ya no es visible");
       },
       error: () => {
         this.publicando = false;

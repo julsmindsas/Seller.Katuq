@@ -265,7 +265,7 @@ test('la opción y el paso solo se dibujan con la bandera prendida', () => {
   const html = leer(path.join(LISTA, 'sitios-lista.component.html'));
   assert.match(html, /\*ngIf="features\.isEnabled\('landingPrompt'\)"\s*\n\s*\(click\)="abrirDescribe\(\)"/);
   assert.match(html, /\*ngIf="paso === 'describe'"/);
-  assert.match(html, /Descríbela y la armamos con IA/);
+  assert.match(html, /Descríbelo y lo armamos con IA/);
 });
 
 test('el componente nunca usa HttpClient: habla por el servicio (BaseService) a la ruta de la función', () => {

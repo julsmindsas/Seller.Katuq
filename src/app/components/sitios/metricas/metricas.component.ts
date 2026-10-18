@@ -107,7 +107,7 @@ export class MetricasComponent implements OnInit {
   cargar(): void {
     if (!this.siteId) {
       this.cargando = false;
-      this.error = "No sabemos de qué página.";
+      this.error = "No sabemos de qué sitio.";
       return;
     }
     this.cargando = true;
@@ -155,7 +155,7 @@ export class MetricasComponent implements OnInit {
       email: "Correo",
       directo: "Directo (link o favorito)",
       "campaña": "Tus campañas",
-      "otro-sitio": "Otros sitios",
+      "otro-sitio": "Otros sitios web",
       "sin dato": "Sin dato (de antes de medir)",
     };
     return nombres[fuente] || fuente;

@@ -105,7 +105,7 @@
 
           <p class="tep__aviso" *ngIf="avisoFotos" role="status">{{ avisoFotos }}</p>
           <p class="tep__nota" *ngIf="!formulario.fotos.length && !preparandoFotos">
-            Sin fotos, dejamos tu página lista como borrador y te decimos qué falta para publicarla.
+            Sin fotos, dejamos tu tienda lista como borrador y te decimos qué falta para publicarla.
           </p>
         </div>
 
@@ -149,7 +149,7 @@
           <i class="pi pi-info-circle" aria-hidden="true"></i>
           <span>{{ avisoLargo }}</span>
         </div>
-        <p class="tep__nota">Puedes cerrar esta ventana: seguimos trabajando y la encuentras en Mis páginas.</p>
+        <p class="tep__nota">Puedes cerrar esta ventana: seguimos trabajando y la encuentras en Mis sitios.</p>
       </div>
 
       <!-- ── El resultado ── -->
@@ -208,7 +208,7 @@
       <!-- Avance -->
       <ng-container *ngIf="fase === 'avance'">
         <span class="tep__pista">Seguimos aunque cierres esta ventana.</span>
-        <button type="button" class="tep__btn tep__btn--fantasma" (click)="cerrarVentana()">Cerrar y seguir en Mis páginas</button>
+        <button type="button" class="tep__btn tep__btn--fantasma" (click)="cerrarVentana()">Cerrar y seguir en Mis sitios</button>
       </ng-container>
 
       <!-- Resultado -->

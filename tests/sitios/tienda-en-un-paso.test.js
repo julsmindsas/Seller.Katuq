@@ -1149,7 +1149,7 @@ test('contrato: los textos de la pantalla están en español claro, sin jerga ni
   const html = leer('src/app/components/sitios/tienda-en-un-paso/tienda-en-un-paso.component.html');
   const visible = html.replace(/<!--[\s\S]*?-->/g, '').replace(/<[^>]+>/g, ' ').replace(/\{\{[^}]*\}\}/g, ' ');
   assert.ok(!/\b(SKU|payload|token|JSON|SSRF|endpoint|requestId|data URL|base64)\b/i.test(visible), 'jerga en la pantalla');
-  for (const frase of ['Crear mi tienda', 'Nombre de tu negocio', 'Precio de venta', 'Reintentar', 'Ver mi tienda', 'Mis páginas']) {
+  for (const frase of ['Crear mi tienda', 'Nombre de tu negocio', 'Precio de venta', 'Reintentar', 'Ver mi tienda', 'Mis sitios']) {
     assert.ok(html.includes(frase), frase);
   }
 });
