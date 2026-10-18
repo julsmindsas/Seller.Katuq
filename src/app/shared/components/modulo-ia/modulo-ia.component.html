@@ -12,7 +12,8 @@
       <h3 class="ins-panel__title">{{ titulo }}</h3>
       <p class="ins-panel__sub" *ngIf="d?.soloPropios">Solo con los pedidos que usted tiene asignados.</p>
       <p class="ins-panel__sub" *ngIf="!d?.soloPropios && modulo === 'cartera'">La misma cartera de tesorería, ordenada por lo que hay que cobrar primero.</p>
-      <p class="ins-panel__sub" *ngIf="modulo === 'satisfaccion'">Con las respuestas de los últimos 90 días.</p>
+      <!-- D-490: el cálculo de insights no recibe los filtros de encuesta ni de canal -->
+      <p class="ins-panel__sub" *ngIf="modulo === 'satisfaccion'">Con las respuestas de todas las encuestas de los últimos 90 días; no cambia con los filtros de arriba.</p>
       <p class="ins-panel__sub" *ngIf="!d?.soloPropios && modulo !== 'cartera' && modulo !== 'satisfaccion'">Con los pedidos de los últimos 12 meses.</p>
     </div>
     <div class="ins-panel__actions">

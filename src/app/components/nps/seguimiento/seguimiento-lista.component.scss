@@ -1,0 +1,24 @@
+// Seguimiento de casos (D-490). Base config-pagina (D-400) + piezas del módulo; plano, sin
+// gradientes; ningún nombre de clase contiene "p-".
+@import '../../../shared/styles/config-pagina';
+@import '../nps';
+
+@include config-pagina;
+@include nps-piezas;
+
+.seg-barra { margin-bottom: 14px; }
+.seg-filtros { margin-bottom: 8px; }
+
+// En la lista el comentario se corta a dos líneas; completo en el caso.
+.seg-comentario {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.seg-flecha {
+  align-self: center;
+  color: $cfg-muted;
+  font-size: 14px;
+}

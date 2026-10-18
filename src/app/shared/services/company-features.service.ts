@@ -31,6 +31,9 @@ export const COMPANY_FEATURE_FLAGS = [
   // Agenda de servicios (D-491): citas, horario y personas que atienden. Dueño: Daniel.
   // Se retira el 2027-03-31: encendida para todos o eliminada.
   'serviceAgenda',
+  // Módulo NPS por comercio (D-490): encuestas, resultados y seguimiento. Dueño: Daniel.
+  // Revisión el 2027-01-31: encendida para todos o eliminada.
+  'npsModulo',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

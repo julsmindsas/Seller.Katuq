@@ -1,0 +1,108 @@
+<div class="cfg-pagina nps-seccion">
+  <!-- ── Indicadores de 90 días ───────────────────────── -->
+  <section class="cfg-card">
+    <div class="nps-barra seg-barra">
+      <div>
+        <h2 class="nps-barra__titulo">Seguimiento</h2>
+        <p class="nps-barra__sub">
+          {{ esAdmin ? 'Cada cliente que calificó de 0 a 6 es un caso: contáctalo y registra cómo terminó.' : 'Los casos a tu nombre: contacta al cliente y registra cómo terminó.' }}
+        </p>
+      </div>
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cargar()" [disabled]="cargando" aria-label="Actualizar">
+        <i class="pi pi-refresh" [class.pi-spin]="cargando" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="nps-indicadores" *ngIf="indicadores as ind">
+      <div class="nps-indicador">
+        <span class="cfg-label">Abiertos</span>
+        <span class="nps-indicador__valor">{{ ind.abiertos | number }}</span>
+      </div>
+      <div class="nps-indicador">
+        <span class="cfg-label">Vencidos (48 h sin respuesta)</span>
+        <span class="nps-indicador__valor" [class.is-peligro]="ind.vencidos > 0">{{ ind.vencidos | number }}</span>
+      </div>
+      <div class="nps-indicador">
+        <span class="cfg-label">Primer contacto</span>
+        <span class="nps-indicador__valor">{{ duracion(ind.horasPrimerContacto) }}</span>
+        <span class="nps-muted">promedio, 90 días</span>
+      </div>
+      <div class="nps-indicador">
+        <span class="cfg-label">Cierre</span>
+        <span class="nps-indicador__valor">{{ duracion(ind.horasCierre) }}</span>
+        <span class="nps-muted">promedio, 90 días</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Lista ─────────────────────────────────────────── -->
+  <section class="cfg-card" aria-labelledby="seg-lista-titulo">
+    <h2 class="nps-oculto" id="seg-lista-titulo">Casos</h2>
+    <div class="nps-filtros seg-filtros">
+      <label class="nps-campo">
+        <span class="nps-campo__label">Estado</span>
+        <select class="nps-select" name="estado" [(ngModel)]="filtroEstado" (ngModelChange)="cambiarEstado()" [disabled]="cargando">
+          <option value="abiertos">Abiertos</option>
+          <option value="todos">Todos</option>
+          <option *ngFor="let e of ESTADOS" [value]="e">{{ NOMBRE_ESTADO[e] }}</option>
+        </select>
+      </label>
+      <label class="nps-campo" *ngIf="esAdmin && responsables.length">
+        <span class="nps-campo__label">Responsable</span>
+        <select class="nps-select" name="responsable" [(ngModel)]="filtroResponsable" (ngModelChange)="cargar()" [disabled]="cargando">
+          <option value="">Todos</option>
+          <option *ngFor="let u of responsables" [value]="u.email">{{ u.nombre || u.email }}</option>
+        </select>
+      </label>
+      <label class="nps-campo" *ngIf="esAdmin && encuestas.length">
+        <span class="nps-campo__label">Encuesta</span>
+        <select class="nps-select" name="encuesta" [(ngModel)]="filtroEncuesta" (ngModelChange)="cargar()" [disabled]="cargando">
+          <option value="">Todas</option>
+          <option *ngFor="let e of encuestas" [value]="e.id">{{ e.nombre }}</option>
+        </select>
+      </label>
+    </div>
+
+    <p class="cfg-aviso cfg-aviso--error" *ngIf="error" role="alert">
+      <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+      <span class="nps-heredar">{{ error }}</span>
+    </p>
+
+    <div class="cfg-vacio" *ngIf="cargando && !casos.length">
+      <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-spin pi-spinner"></i></span>
+      <p class="cfg-vacio__titulo">Cargando los casos…</p>
+    </div>
+
+    <ul class="nps-lista" *ngIf="visibles.length">
+      <li *ngFor="let c of visibles; trackBy: porId">
+        <a class="nps-fila" [routerLink]="c.id">
+          <div class="nps-nota" [ngClass]="'is-' + c.segmento">
+            <span class="nps-oculto">Nota</span>
+            <span class="nps-heredar">{{ c.nota }}</span>
+          </div>
+          <div class="nps-fila__cuerpo">
+            <div class="nps-fila__cabeza">
+              <span class="nps-fila__titulo">{{ quien(c) }}</span>
+              <span class="nps-pastilla" [ngClass]="'is-' + c.estado">{{ NOMBRE_ESTADO[c.estado] }}</span>
+              <span class="nps-pastilla is-vencido" *ngIf="c.vencido">Vencido</span>
+              <span class="nps-doc" *ngIf="c.pedido">Pedido {{ c.pedido.nroPedido }}</span>
+              <span class="nps-doc" *ngIf="c.nroTicket">Ticket #{{ c.nroTicket }}</span>
+              <time class="nps-fila__fecha" [attr.datetime]="c.fecha">{{ fecha(c.fecha) }}</time>
+            </div>
+            <p class="nps-fila__texto seg-comentario" *ngIf="c.comentario; else sinComentario">{{ c.comentario }}</p>
+            <ng-template #sinComentario><p class="nps-fila__texto is-vacio">Sin comentario</p></ng-template>
+            <p class="nps-fila__meta">
+              {{ c.encuesta?.nombre }}{{ c.encuesta?.canal && NOMBRE_CANAL[c.encuesta.canal] !== c.encuesta.nombre ? ' · ' + NOMBRE_CANAL[c.encuesta.canal] : '' }}{{ c.responsable ? ' · Responsable: ' + (c.responsable.nombre || c.responsable.email) : ' · Sin responsable' }}
+            </p>
+          </div>
+          <i class="pi pi-angle-right seg-flecha" aria-hidden="true"></i>
+        </a>
+      </li>
+    </ul>
+
+    <div class="cfg-vacio" *ngIf="!cargando && !error && !visibles.length">
+      <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-check-circle"></i></span>
+      <p class="cfg-vacio__titulo">{{ filtroEstado === 'abiertos' ? 'No hay casos abiertos' : 'No hay casos con estos filtros' }}</p>
+      <p class="cfg-vacio__texto">{{ filtroEstado === 'abiertos' ? 'Cuando un cliente califique de 0 a 6, su caso aparece aquí y le avisamos al responsable.' : 'Prueba con otro estado, responsable o encuesta.' }}</p>
+    </div>
+  </section>
+</div>

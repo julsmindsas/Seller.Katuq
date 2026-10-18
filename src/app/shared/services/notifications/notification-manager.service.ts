@@ -469,7 +469,10 @@ export class NotificationManagerService {
       'TICKET_ASSIGNED': NotificationType.TICKET_ASSIGNED,
       'TICKET_REPLY': NotificationType.TICKET_REPLY,
       'TICKET_CLOSED': NotificationType.TICKET_CLOSED,
-      'TICKET_REOPENED': NotificationType.TICKET_REOPENED
+      'TICKET_REOPENED': NotificationType.TICKET_REOPENED,
+
+      // NPS (D-490): la escribe el backend con actionUrl al caso
+      'NPS_DETRACTOR': NotificationType.NPS_DETRACTOR
     };
 
     return typeMap[type] || NotificationType.SYSTEM_ALERT;
@@ -495,7 +498,8 @@ export class NotificationManagerService {
       'TICKET_ASSIGNED': 'Ticket asignado',
       'TICKET_REPLY': 'Nueva respuesta en tu ticket',
       'TICKET_CLOSED': 'Ticket resuelto',
-      'TICKET_REOPENED': 'Ticket reabierto'
+      'TICKET_REOPENED': 'Ticket reabierto',
+      'NPS_DETRACTOR': 'Cliente inconforme'
     };
     
     return typeNames[notification.type] || 'Notificación';

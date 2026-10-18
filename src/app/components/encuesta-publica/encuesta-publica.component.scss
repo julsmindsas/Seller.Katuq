@@ -1,0 +1,156 @@
+// Página pública de la encuesta NPS (D-490). Marco y piezas de las pantallas públicas (D-398):
+// plano, acento #5F3FE0, sin gradientes. Ningún nombre de clase contiene "p-"; spans con color propio.
+@import '../../shared/components/publica/publica';
+
+:host {
+  display: block;
+  @include publica-piezas;
+}
+
+.enc-heredar { color: inherit; font-size: inherit; }
+
+.enc-centro {
+  align-items: center;
+  text-align: center;
+
+  .pub-lead { margin-left: auto; margin-right: auto; }
+}
+
+.enc-marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.enc-marca__logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border: 1px solid $pub-line;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.enc-marca__nombre {
+  color: $pub-body;
+  font-family: $pub-display;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.enc-guardada { font-size: 13.5px; padding: 10px 14px; }
+
+.enc-pregunta {
+  float: none;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  color: $pub-ink;
+  font-family: $pub-display;
+  // Hay un `label { font-size: .7rem !important }` global (styles.scss).
+  font-size: 16px !important;
+  font-weight: normal;
+  line-height: 1.35;
+}
+
+.enc-texto,
+.enc-input {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1.5px solid $pub-chip-border;
+  border-radius: 11px;
+  background: $pub-chip-bg;
+  color: $pub-ink;
+  font-family: $pub-text;
+  font-size: 16px; // iOS no hace zoom con 16 px o más
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+
+  &::placeholder { color: #b4b0cb; }
+
+  &:focus {
+    outline: none;
+    background: #fff;
+    border-color: $pub-accent;
+    box-shadow: 0 0 0 4px rgba(95, 63, 224, .12);
+  }
+
+  &.is-error { border-color: $pub-err; background: #fff; }
+}
+
+.enc-texto { min-height: 110px; padding: 12px 14px; line-height: 1.5; resize: vertical; }
+.enc-input { height: 50px; padding: 0 14px; }
+
+.enc-contador { justify-self: end; color: $pub-muted; font-size: 12px; }
+
+.enc-grupo {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.enc-opciones { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.enc-opcion {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 16px;
+  border: 1.5px solid $pub-chip-border;
+  border-radius: 20px;
+  background: #fff;
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease;
+
+  &:hover { border-color: #d9cffb; }
+  &:focus-within { outline: 3px solid $pub-accent-2; outline-offset: 2px; }
+  &.is-activa { background: $pub-accent-soft; border-color: $pub-accent; }
+}
+
+.enc-radio { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; pointer-events: none; }
+
+.enc-opcion__texto { color: $pub-ink; font-size: 14.5px; }
+.enc-opcion.is-activa .enc-opcion__texto { color: $pub-accent; font-weight: 700; }
+
+.enc-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  cursor: pointer;
+
+  input { flex-shrink: 0; width: 18px; height: 18px; margin: 2px 0 0; accent-color: $pub-accent; cursor: pointer; }
+}
+
+.enc-check__texto { color: $pub-ink; font-size: 15px; line-height: 1.4; }
+
+.enc-contacto {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid $pub-line;
+  border-radius: 16px;
+  background: $pub-tint;
+}
+
+.enc-productos {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.enc-productos__titulo { font-size: 17px !important; }
+
+.enc-producto { min-height: 50px; font-size: 15px; }
+
+.enc-producto__nombre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

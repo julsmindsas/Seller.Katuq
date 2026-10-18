@@ -87,7 +87,7 @@ $line: #ececf4;
 .nt-label {
   margin: 0;
   color: $ink;
-  font-size: 13.5px;
+  font-size: 13.5px !important; // hay un `label { font-size: .7rem !important }` global (styles.scss)
   font-weight: 700;
   line-height: 1.4;
 }

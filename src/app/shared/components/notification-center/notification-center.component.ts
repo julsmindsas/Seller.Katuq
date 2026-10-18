@@ -427,7 +427,10 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
       [NotificationType.TICKET_ASSIGNED]: 'fa-user',
       [NotificationType.TICKET_REPLY]: 'fa-comment-o',
       [NotificationType.TICKET_CLOSED]: 'fa-check-circle',
-      [NotificationType.TICKET_REOPENED]: 'fa-undo'
+      [NotificationType.TICKET_REOPENED]: 'fa-undo',
+
+      // NPS (D-490)
+      [NotificationType.NPS_DETRACTOR]: 'fa-frown-o'
     };
 
     return iconMap[type] || 'fa-info-circle';
@@ -565,7 +568,8 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
       [NotificationType.TICKET_ASSIGNED]: 'Ticket Asignado',
       [NotificationType.TICKET_REPLY]: 'Respuesta de Soporte',
       [NotificationType.TICKET_CLOSED]: 'Ticket Resuelto',
-      [NotificationType.TICKET_REOPENED]: 'Ticket Reabierto'
+      [NotificationType.TICKET_REOPENED]: 'Ticket Reabierto',
+      [NotificationType.NPS_DETRACTOR]: 'Cliente inconforme'
     };
 
     return nameMap[type] || type;
@@ -712,6 +716,7 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
       [NotificationType.OUT_OF_STOCK]: 'Producto agotado',
       [NotificationType.INVOICE_CREATED]: 'Factura creada',
       [NotificationType.INVOICE_FAILED]: 'Error de facturación',
+      [NotificationType.NPS_DETRACTOR]: 'Cliente inconforme (NPS)',
     };
 
     this.preferencesService.preferences$

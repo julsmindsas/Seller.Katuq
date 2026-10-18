@@ -1,0 +1,297 @@
+// Piezas del módulo NPS (D-490) sobre la base de configuración (D-400) y los tokens de
+// openspec/specs/design-system. Plano: sin gradientes, sin border-left, sin primarios paralelos.
+// Ningún nombre de clase contiene "p-" (trampa `[class*="p-"]`); todo span con texto lleva color
+// y tamaño propios (trampa `span.ng-star-inserted`).
+//
+// Uso en el SCSS de una pieza del módulo:
+//   @import '<ruta>/shared/styles/config-pagina';
+//   @import '<ruta>/components/nps/nps';
+//   @include config-pagina;
+//   @include nps-piezas;
+
+$nps-muted-2: #9995b3;
+$nps-slate: #5A6B78;
+$nps-slate-soft: #eef0f3;
+
+@mixin nps-piezas {
+  :host { display: block; }
+
+  // Cada pestaña vive dentro del marco del módulo: sin el relleno de página.
+  .cfg-pagina.nps-seccion { padding: 0; }
+
+  .nps-heredar { color: inherit; font-size: inherit; }
+
+  .nps-oculto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .nps-muted { color: $cfg-muted; font-size: 12.5px; line-height: 1.45; }
+
+  // ── Barra de la sección: título a la izquierda, filtros y acciones a la derecha ──
+  .nps-barra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 16px;
+  }
+
+  .nps-barra__titulo {
+    margin: 0;
+    color: $cfg-ink;
+    font-size: 17px !important;
+    font-weight: 800;
+    line-height: 1.25;
+  }
+
+  .nps-barra__sub { margin: 2px 0 0; color: $cfg-body; font-size: 13px; }
+
+  .nps-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+  }
+
+  .nps-campo {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .nps-campo--linea { flex-direction: row; align-items: center; gap: 8px; }
+
+  .nps-campo__label {
+    color: $cfg-muted;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .6px !important;
+    text-transform: uppercase;
+  }
+
+  .nps-select,
+  .nps-input,
+  .nps-textarea {
+    box-sizing: border-box;
+    min-width: 0;
+    border: 1px solid $cfg-chip-border;
+    border-radius: 10px;
+    background: $cfg-chip-bg;
+    color: $cfg-ink;
+    font-family: inherit;
+    font-size: 13.5px;
+    transition: border-color .15s ease, background .15s ease;
+
+    &:focus { border-color: $cfg-accent; background: #fff; outline: none; }
+    &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+    &:disabled { color: $cfg-body; cursor: not-allowed; opacity: .8; }
+    &.is-error { border-color: $cfg-err; }
+  }
+
+  .nps-select { height: 40px; padding: 0 12px; font-weight: 600; cursor: pointer; }
+  .nps-input { height: 40px; padding: 0 12px; width: 100%; }
+  .nps-textarea { width: 100%; min-height: 84px; padding: 10px 12px; line-height: 1.45; resize: vertical; }
+
+  .nps-error { color: $cfg-err; font-size: 12px; font-weight: 700; }
+  .nps-ayuda { color: $cfg-muted; font-size: 12px; line-height: 1.4; }
+
+  // Interruptor (checkbox nativo con role="switch").
+  .nps-interruptor {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .nps-interruptor__input { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; }
+
+  .nps-interruptor__pista {
+    position: relative;
+    flex-shrink: 0;
+    width: 38px;
+    height: 22px;
+    border-radius: 20px;
+    background: #e4e2ef;
+    transition: background .15s ease;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(30, 20, 80, .2);
+      transition: transform .15s ease;
+    }
+  }
+
+  .nps-interruptor__input:checked + .nps-interruptor__pista {
+    background: $cfg-accent;
+    &::after { transform: translateX(16px); }
+  }
+  .nps-interruptor__input:focus-visible + .nps-interruptor__pista { outline: 3px solid $cfg-accent-2; outline-offset: 2px; }
+  .nps-interruptor__input:disabled + .nps-interruptor__pista { opacity: .55; }
+  .nps-interruptor__texto { color: $cfg-body; font-size: 13px; font-weight: 700; }
+
+  .nps-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    margin: 0;
+    cursor: pointer;
+
+    input { width: 16px; height: 16px; margin: 0; accent-color: $cfg-accent; cursor: pointer; }
+  }
+
+  .nps-check__texto { color: $cfg-body; font-size: 13px; font-weight: 700; }
+
+  // ── Pastillas de estado: par fuerte / fondo suave ──
+  .nps-pastilla {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    background: $nps-slate-soft;
+    color: $nps-slate;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .4px !important;
+    line-height: 1.6;
+    text-transform: uppercase;
+    white-space: nowrap;
+
+    &.is-promotor, &.is-activa, &.is-resuelto { background: $cfg-ok-soft; color: $cfg-ok; }
+    &.is-pasivo, &.is-borrador, &.is-sin_solucion { background: $nps-slate-soft; color: $nps-slate; }
+    &.is-detractor, &.is-vencido { background: $cfg-err-soft; color: $cfg-err; }
+    &.is-nuevo, &.is-pausada, &.is-prueba { background: $cfg-warn-soft; color: $cfg-warn; }
+    &.is-contactado { background: $cfg-info-soft; color: $cfg-info; }
+    &.is-canal { background: $cfg-accent-soft; color: $cfg-accent; }
+  }
+
+  // Nota 0 a 10 en un cuadro con el color del segmento.
+  .nps-nota {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    font-size: 16px;
+    font-weight: 800;
+
+    &.is-promotor { background: $cfg-ok-soft; color: $cfg-ok; }
+    &.is-pasivo { background: $nps-slate-soft; color: $nps-slate; }
+    &.is-detractor { background: $cfg-err-soft; color: $cfg-err; }
+  }
+
+  .nps-nota--grande { width: 64px; height: 64px; border-radius: 16px; font-size: 28px; }
+
+  // Número de documento (pedido, ticket): monoespaciado en color info.
+  .nps-doc {
+    color: $cfg-info;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+
+  // ── Indicadores ──
+  .nps-indicadores {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .nps-indicador {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    border: 1px solid #eeecf7;
+    border-radius: 11px;
+    background: $cfg-tint;
+  }
+
+  .nps-indicador__valor {
+    color: $cfg-accent;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.1;
+
+    &.is-peligro { color: $cfg-err; }
+  }
+
+  // ── Listas ──
+  .nps-lista { margin: 0; padding: 0; list-style: none; }
+
+  .nps-fila {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 6px;
+    border-bottom: 1px solid $cfg-line-soft;
+    color: inherit;
+    text-decoration: none;
+    transition: background .12s ease;
+
+    &:last-child { border-bottom: 0; }
+    &:hover { background: $cfg-row-hover; }
+  }
+
+  a.nps-fila { cursor: pointer; }
+
+  .nps-fila__cuerpo {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .nps-fila__cabeza {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+  }
+
+  .nps-fila__titulo { color: $cfg-ink; font-size: 14px; font-weight: 800; }
+  .nps-fila__texto { margin: 0; color: $cfg-ink; font-size: 13.5px; line-height: 1.5; overflow-wrap: anywhere; white-space: pre-line; }
+  .nps-fila__texto.is-vacio { color: $cfg-muted; font-style: italic; }
+  .nps-fila__meta { margin: 0; color: $cfg-muted; font-size: 12px; }
+  .nps-fila__fecha { margin-left: auto; color: $cfg-muted; font-size: 11.5px; white-space: nowrap; }
+
+  .nps-enlace {
+    color: $cfg-accent;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; color: $cfg-accent-hover; }
+  }
+
+  @media (max-width: 991.98px) {
+    .nps-indicadores { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (max-width: 575.98px) {
+    .nps-fila__fecha { margin-left: 0; }
+    .nps-filtros { width: 100%; }
+    .nps-filtros .nps-campo { flex: 1 1 140px; }
+    .nps-select { width: 100%; }
+  }
+}

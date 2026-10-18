@@ -91,6 +91,8 @@ export class NavService implements OnDestroy {
   private dropshippingPrendido: boolean = false;
   // Agenda de servicios (D-491): bandera `serviceAgenda`. Último valor con el que se filtró el menú.
   private agendaPrendida: boolean = false;
+  // NPS por comercio (D-490): bandera `npsModulo`. Último valor con el que se filtró el menú.
+  private npsPrendido: boolean = false;
 
   constructor(
     private router: Router,
@@ -148,6 +150,14 @@ export class NavService implements OnDestroy {
           this.filterMenuItemsByAuthorization();
         }
       });
+    this.features
+      .isEnabled$("npsModulo")
+      .pipe(takeUntil(this.unsubscriber))
+      .subscribe((prendida) => {
+        if (prendida !== this.npsPrendido) {
+          this.filterMenuItemsByAuthorization();
+        }
+      });
 
     // Dropshipping: cambia al iniciar sesión o al guardar su configuración, sin volver a entrar.
     this.securityService.companyInformation$
@@ -196,6 +206,11 @@ export class NavService implements OnDestroy {
    */
   isDropshippingEnabled(): boolean {
     return dropshippingHabilitadoEnLaSesion();
+  }
+
+  /** NPS (D-490): Julsmind lo ve siempre; los demás comercios, con la bandera `npsModulo`. */
+  private npsVisible(user: any): boolean {
+    return String(user?.company || "").trim().toLowerCase() === "julsmind" || this.npsPrendido;
   }
 
   /** Normaliza acentos/mayúsculas y acepta la familia "Administrador" (p. ej. "Administrador LT"). */
@@ -274,6 +289,8 @@ export class NavService implements OnDestroy {
     this.alistamientoPrendido = this.features.isEnabled("pickingAlistamiento");
     // Agenda de servicios (D-491): igual, con su bandera.
     this.agendaPrendida = this.features.isEnabled("serviceAgenda");
+    // NPS por comercio (D-490): igual, con su bandera.
+    this.npsPrendido = this.features.isEnabled("npsModulo");
 
     // Paso 1: Filtrar elementos y sus hijos basados en roles y permisos
     const filteredMenu = this.ALLMENUITEMS.map((item) => {
@@ -296,9 +313,13 @@ export class NavService implements OnDestroy {
           // La adhesión/cuenta Kuvo usa el rol administrador existente; no aparece
           // para un rol operativo aunque tenga el comodín de rutas.
           if (child.path === "kuvo" && !isCompanyAdmin && !isSuperAdmin) return false;
-          // Fase 1 (D-483): solo Julsmind recibe opiniones (las de los comercios sobre Katuq).
-          // Cuando lleguen las de los compradores (fase 2), se abre a cada comercio.
-          if (child.path === "crm/satisfaccion" && !(esFamiliaAdministrador(user.rol) && user.company === "Julsmind")) return false;
+          // NPS (D-490): con la bandera `npsModulo` de la empresa (Julsmind siempre). Resultados y
+          // Encuestas son de la familia Administrador (el servidor responde 403 a los demás);
+          // Seguimiento, de quien tenga la ruta.
+          if (child.path && child.path.startsWith("nps/")) {
+            if (!this.npsVisible(user)) return false;
+            if (child.path !== "nps/seguimiento" && !isCompanyAdmin && !isSuperAdmin) return false;
+          }
           // Filtrar rutas de dropshipping si no está habilitado
           if (
             child.path &&
@@ -534,9 +555,19 @@ export class NavService implements OnDestroy {
       children: [
         { path: "crm/list", title: "Pipeline", type: "link", icon: "bar-chart-2" },
         { path: "crm/tasks", title: "Seguimiento", type: "link", icon: "alert-circle" },
-        // D-483: NPS y comentarios. Solo la familia Administrador (el backend responde 403 a
-        // los demás), aunque el rol tenga la ruta o el comodín.
-        { path: "crm/satisfaccion", title: "Satisfacción de clientes", type: "link", icon: "fa-smile-o" },
+      ],
+    },
+    // NPS por comercio (D-490). Cada pestaña es un hijo para que el administrador pueda dar
+    // solo Seguimiento a quien atiende a los clientes inconformes.
+    {
+      title: "NPS",
+      icon: "fa-smile-o",
+      type: "sub",
+      active: false,
+      children: [
+        { path: "nps/resultados", title: "Resultados", type: "link", icon: "fa-line-chart" },
+        { path: "nps/encuestas", title: "Encuestas", type: "link", icon: "fa-list-alt" },
+        { path: "nps/seguimiento", title: "Seguimiento", type: "link", icon: "fa-inbox" },
       ],
     },
 

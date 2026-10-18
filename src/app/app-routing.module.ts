@@ -213,6 +213,17 @@ const routes: Routes = [
       }
     ]
   },
+  // Encuesta NPS pública (D-490): la abre el comprador desde el correo o el QR, sin cuenta.
+  {
+    path: 'encuesta',
+    component: BlankComponent,
+    children: [
+      {
+        path: ':ref',
+        loadComponent: () => import('./components/encuesta-publica/encuesta-publica.component').then(m => m.EncuestaPublicaComponent),
+      }
+    ]
+  },
   {
     path: '',
     component: ContentComponent,

@@ -767,6 +767,23 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTempla
       }
     },
     persistInNotificationCenter: true
+  },
+
+  // NPS (D-490): lo escribe el backend en la campana de la empresa, con el enlace al caso
+  [NotificationType.NPS_DETRACTOR]: {
+    type: NotificationType.NPS_DETRACTOR,
+    channels: [NotificationChannel.IN_APP, NotificationChannel.FIREBASE_REALTIME],
+    priority: NotificationPriority.HIGH,
+    targetRoles: [UserRole.ADMIN, UserRole.SELLER],
+    templates: {
+      [NotificationChannel.IN_APP]: {
+        title: 'Cliente inconforme',
+        message: 'Un cliente calificó de 0 a 6. Contáctalo desde Seguimiento.',
+        actionText: 'Ver el caso',
+        actionUrl: '/nps/seguimiento'
+      }
+    },
+    persistInNotificationCenter: true
   }
 };
 

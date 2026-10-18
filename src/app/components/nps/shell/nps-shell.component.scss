@@ -1,0 +1,50 @@
+// Marco del módulo NPS (D-490): base config-pagina (D-400). Pestañas como control segmentado
+// del design system. Ningún nombre de clase contiene "p-".
+@import '../../../shared/styles/config-pagina';
+
+@include config-pagina;
+
+:host { display: block; }
+
+.nps-pestanas {
+  display: inline-flex;
+  align-self: flex-start;
+  flex-wrap: wrap;
+  gap: 2px;
+  max-width: 100%;
+  padding: 4px;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 11px;
+  background: $cfg-chip-bg;
+}
+
+.nps-pestanas__opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 9px;
+  color: $cfg-body;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background .12s ease, color .12s ease;
+
+  .pi { font-size: 13px; }
+
+  &:hover { color: $cfg-accent; }
+
+  &.is-activa {
+    background: #fff;
+    color: $cfg-accent;
+    box-shadow: 0 1px 3px rgba(30, 20, 80, .08);
+  }
+}
+
+.nps-pestanas__texto { color: inherit; font-size: inherit; }
+
+@media (max-width: 575.98px) {
+  .nps-pestanas { display: flex; align-self: stretch; }
+  .nps-pestanas__opcion { flex: 1 1 0; justify-content: center; padding: 0 8px; }
+}

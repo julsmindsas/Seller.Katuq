@@ -1,0 +1,274 @@
+// Resultados del módulo NPS (D-490). Base config-pagina (D-400) + piezas del módulo.
+// Plano, sin gradientes ni border-left; ningún nombre de clase contiene "p-".
+@import '../../../shared/styles/config-pagina';
+@import '../nps';
+
+@include config-pagina;
+@include nps-piezas;
+
+// ── Resumen ──
+.res-resumen {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 16px;
+}
+
+.res-nps,
+.res-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.res-nps__fila {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.res-nps__valor {
+  color: $cfg-accent;
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -1px !important;
+
+  &.is-peligro { color: $cfg-err; }
+  &.is-aviso { color: $cfg-warn; }
+  &.is-exito { color: $cfg-ok; }
+}
+
+.res-nps__respuestas { color: $cfg-ink; font-size: 14px; font-weight: 700; }
+.res-nps__aviso { margin-top: 4px; font-size: 12.5px; }
+.res-vacio { padding: 12px 8px 4px; }
+
+.res-stat__valor {
+  color: $cfg-accent;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+// Barra apilada plana: verde, gris, rojo.
+.res-barra {
+  display: flex;
+  overflow: hidden;
+  height: 12px;
+  margin: 6px 0 4px;
+  border-radius: 20px;
+  background: $cfg-chip-bg;
+
+  &.is-vacia { border: 1px solid $cfg-chip-border; }
+}
+
+.res-barra__tramo {
+  height: 100%;
+  &.is-promotor { background: $cfg-ok; }
+  &.is-pasivo { background: $nps-muted-2; }
+  &.is-detractor { background: $cfg-err; }
+}
+
+.res-leyenda {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.res-leyenda__item { display: flex; align-items: center; gap: 8px; }
+
+.res-punto {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  &.is-promotor { background: $cfg-ok; }
+  &.is-pasivo { background: $nps-muted-2; }
+  &.is-detractor { background: $cfg-err; }
+}
+
+.res-leyenda__nombre { flex: 1; min-width: 0; color: $cfg-body; font-size: 12.5px; }
+.res-leyenda__valor { color: $cfg-ink; font-size: 12.5px; font-weight: 800; white-space: nowrap; }
+
+// ── Gráficas ──
+.res-graficas {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.res-card-titulo { margin-bottom: 2px; font-size: 16px !important; }
+.res-card-sub { margin: 0 0 8px; color: $cfg-muted; font-size: 12.5px; }
+
+// El widget trae su propio marco (alto 480, borde gris): dentro de la tarjeta sobra.
+:host ::ng-deep .res-grafica {
+  display: block;
+
+  .chart-host {
+    height: 280px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .chart-empty {
+    padding: 48px 16px;
+    color: $cfg-muted;
+    font-size: 13px;
+  }
+}
+
+// ── Preguntas adicionales ──
+.res-adicionales {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.res-adicional {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #eeecf7;
+  border-radius: 11px;
+  background: $cfg-tint;
+}
+
+.res-adicional__pregunta { margin: 0; color: $cfg-ink; font-size: 14px; font-weight: 800; }
+
+.res-opciones,
+.res-textos { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+
+.res-opcion__fila { display: flex; justify-content: space-between; gap: 8px; }
+.res-opcion__nombre { color: $cfg-body; font-size: 12.5px; min-width: 0; }
+.res-opcion__valor { color: $cfg-ink; font-size: 12.5px; font-weight: 800; white-space: nowrap; }
+
+.res-opcion__barra {
+  overflow: hidden;
+  height: 8px;
+  margin-top: 4px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid $cfg-chip-border;
+}
+
+.res-opcion__relleno { display: block; height: 100%; background: $cfg-accent; border-radius: 20px; }
+
+.res-texto { display: flex; flex-direction: column; gap: 2px; }
+.res-texto__valor { color: $cfg-ink; font-size: 13px; line-height: 1.45; font-style: italic; overflow-wrap: anywhere; }
+.res-texto__fecha { color: $cfg-muted; font-size: 11px; }
+
+.res-mas-textos {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: $cfg-accent;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover { text-decoration: underline; }
+}
+
+// ── Lista ──
+.res-lista__cabeza {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  .res-card-titulo { margin: 0; }
+}
+
+.res-contador { color: $cfg-muted; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.res-filtros { margin-bottom: 8px; }
+
+.res-segmentado {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 10px;
+  background: $cfg-chip-bg;
+}
+
+.res-segmentado__opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: $cfg-body;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+
+  &:hover { color: $cfg-accent; }
+
+  &.is-activa {
+    background: #fff;
+    color: $cfg-accent;
+    box-shadow: 0 1px 3px rgba(30, 20, 80, .08);
+  }
+}
+
+.res-segmentado__n {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 20px;
+  background: $cfg-accent-soft;
+  color: $cfg-accent;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+}
+
+// Del comentario del detractor a su caso.
+.res-caso {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 5px 10px 5px 6px;
+  border: 1px solid #e4e2ef;
+  border-radius: 20px;
+  background: #fff;
+  color: $cfg-accent;
+  text-decoration: none;
+  transition: background .12s ease, border-color .12s ease;
+
+  .pi { font-size: 11px; }
+
+  &:hover { background: $cfg-accent-soft; border-color: #d9cffb; color: $cfg-accent; }
+}
+
+.res-caso__texto { color: inherit; font-size: 12.5px; font-weight: 700; }
+
+.res-mas { display: flex; justify-content: center; padding-top: 12px; }
+
+@media (max-width: 991.98px) {
+  .res-resumen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .res-nps { grid-column: 1 / -1; }
+  .res-graficas { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 575.98px) {
+  .res-resumen { grid-template-columns: minmax(0, 1fr); }
+  .res-nps__valor { font-size: 48px; }
+  :host ::ng-deep .res-grafica .chart-host { height: 240px; }
+}

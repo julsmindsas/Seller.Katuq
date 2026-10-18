@@ -381,6 +381,15 @@ export const content: Routes = [
     canActivate: [AuthGuard],
     data: { title: "CRM" },
   },
+  // Módulo NPS por comercio (D-490): Resultados, Encuestas y Seguimiento. Los datos los
+  // limita el servidor por empresa y rol; el menú lo muestra con la bandera `npsModulo`.
+  {
+    path: "nps",
+    loadChildren: () =>
+      import("../../components/nps/nps.module").then((m) => m.NpsModule),
+    canActivate: [AuthGuard],
+    data: { title: "NPS" },
+  },
   {
     // Agenda de servicios (D-491). Además de la sesión, exige la bandera `serviceAgenda` (AgendaGuard).
     path: "agenda",

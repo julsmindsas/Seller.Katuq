@@ -1,0 +1,147 @@
+// Lista de encuestas (D-490). Base config-pagina (D-400) + piezas del módulo; plano, sin
+// gradientes; ningún nombre de clase contiene "p-".
+@import '../../../shared/styles/config-pagina';
+@import '../nps';
+
+@include config-pagina;
+@include nps-piezas;
+
+.enc-grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.enc-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.enc-tarjeta__cabeza {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.enc-icono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: $cfg-accent-soft;
+  color: $cfg-accent;
+  font-size: 16px;
+}
+
+.enc-tarjeta__textos {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.enc-tarjeta__nombre {
+  margin: 0;
+  color: $cfg-ink;
+  font-size: 15px !important;
+  font-weight: 800;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.enc-tarjeta__detalle { color: $cfg-body; font-size: 12.5px; line-height: 1.4; }
+
+.enc-datos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.enc-dato {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid #eeecf7;
+  border-radius: 11px;
+  background: $cfg-tint;
+  min-width: 0;
+}
+
+.enc-dato__valor {
+  margin: 0;
+  color: $cfg-accent;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.enc-dato__valor--texto {
+  color: $cfg-ink;
+  font-size: 13.5px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &.is-falta { color: $cfg-warn; }
+}
+
+.enc-enlace {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 6px 6px 12px;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 11px;
+  background: $cfg-chip-bg;
+  min-width: 0;
+}
+
+.enc-enlace__url {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: $cfg-info;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.enc-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #e4e2ef;
+  border-radius: 9px;
+  background: #fff;
+  color: $cfg-body;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover { color: $cfg-accent; border-color: #d9cffb; }
+}
+
+.enc-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.enc-borrar { padding: 0 12px; margin-left: auto; }
+
+.enc-pie { color: $cfg-muted; font-size: 11.5px; }
+
+@media (max-width: 575.98px) {
+  .enc-grilla { grid-template-columns: minmax(0, 1fr); }
+}

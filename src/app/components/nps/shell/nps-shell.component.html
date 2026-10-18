@@ -1,0 +1,25 @@
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Clientes</span>
+      <h1 class="cfg-titulo">NPS</h1>
+      <p class="cfg-sub">Qué tan probable es que tus clientes te recomienden, las encuestas que lo miden y el seguimiento de cada cliente que quedó inconforme.</p>
+    </div>
+  </header>
+
+  <nav class="nps-pestanas" aria-label="Secciones de NPS">
+    <a
+      *ngFor="let p of pestanas"
+      class="nps-pestanas__opcion"
+      [routerLink]="p.ruta"
+      routerLinkActive="is-activa"
+      #rla="routerLinkActive"
+      [attr.aria-current]="rla.isActive ? 'page' : null"
+    >
+      <i class="pi" [ngClass]="p.icono" aria-hidden="true"></i>
+      <span class="nps-pestanas__texto">{{ p.texto }}</span>
+    </a>
+  </nav>
+
+  <router-outlet></router-outlet>
+</div>

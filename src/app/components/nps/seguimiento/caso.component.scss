@@ -1,0 +1,212 @@
+// Caso de seguimiento (D-490). Base config-pagina (D-400) + piezas del módulo; plano, sin
+// gradientes ni border-left; ningún nombre de clase contiene "p-".
+@import '../../../shared/styles/config-pagina';
+@import '../nps';
+
+@include config-pagina;
+@include nps-piezas;
+
+.caso-volver {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  color: $cfg-accent;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+
+  .pi { font-size: 11px; }
+  &:hover { text-decoration: underline; color: $cfg-accent-hover; }
+}
+
+.caso-cabeza {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.caso-cabeza__textos { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+
+.caso-cuerpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  align-items: start;
+  gap: 16px;
+}
+
+.caso-columna { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+.caso-bloque { display: flex; flex-direction: column; gap: 12px; }
+
+.caso-bloque__titulo {
+  margin: 0;
+  color: $cfg-ink;
+  font-size: 15px !important;
+  font-weight: 800;
+}
+
+.caso-bloque__titulo--sep { margin-top: 8px; padding-top: 14px; border-top: 1px solid $cfg-line-soft; }
+
+.caso-comentario {
+  margin: 0;
+  color: $cfg-ink;
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+
+  &.is-vacio { color: $cfg-muted; font-size: 13.5px; font-style: italic; }
+}
+
+.caso-adicionales { display: flex; flex-direction: column; gap: 10px; margin: 0; }
+
+.caso-adicional {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid #eeecf7;
+  border-radius: 11px;
+  background: $cfg-tint;
+}
+
+.caso-adicional__valor { margin: 0; color: $cfg-ink; font-size: 13.5px; font-weight: 600; overflow-wrap: anywhere; }
+
+.caso-campo { display: flex; flex-direction: column; gap: 8px; margin: 0; }
+
+.caso-estados {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.caso-estado {
+  min-height: 40px;
+  padding: 0 8px;
+  border: 1px solid #e4e2ef;
+  border-radius: 11px;
+  background: #fff;
+  color: $cfg-body;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease, color .12s ease;
+
+  &:hover:not(:disabled) { border-color: #d9cffb; color: $cfg-accent; }
+  &:disabled { cursor: not-allowed; opacity: .6; }
+
+  &.is-activo { cursor: default; }
+  &.is-activo.caso-estado--nuevo { background: $cfg-warn-soft; border-color: $cfg-warn; color: $cfg-warn; }
+  &.is-activo.caso-estado--contactado { background: $cfg-info-soft; border-color: $cfg-info; color: $cfg-info; }
+  &.is-activo.caso-estado--resuelto { background: $cfg-ok-soft; border-color: $cfg-ok; color: $cfg-ok; }
+  &.is-activo.caso-estado--sin_solucion { background: $nps-slate-soft; border-color: $nps-slate; color: $nps-slate; }
+}
+
+.caso-cierre {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: $cfg-ok-soft;
+  color: $cfg-ok;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.caso-responsable { color: $cfg-ink; font-size: 14px; font-weight: 700; }
+
+.caso-reasignar { display: flex; flex-wrap: wrap; gap: 8px; }
+.caso-reasignar .nps-select { flex: 1 1 200px; }
+
+.caso-nota__pie { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+.caso-notas { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+
+.caso-nota {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid #eeecf7;
+  border-radius: 11px;
+  background: $cfg-tint;
+}
+
+.caso-nota__texto { margin: 0; color: $cfg-ink; font-size: 13.5px; line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
+.caso-nota__meta { color: $cfg-muted; font-size: 11.5px; }
+
+.caso-historial { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+
+.caso-paso {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding: 0 0 14px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 14px;
+    bottom: 0;
+    left: 6px;
+    width: 2px;
+    background: #eceaf4;
+  }
+
+  &:last-child { padding-bottom: 0; }
+  &:last-child::before { display: none; }
+}
+
+.caso-paso__punto {
+  position: relative;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  border: 3px solid $cfg-accent;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.caso-paso__textos { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.caso-paso__accion { color: $cfg-ink; font-size: 13px; font-weight: 700; }
+.caso-paso__meta { color: $cfg-muted; font-size: 11.5px; }
+
+.caso-datos { display: flex; flex-direction: column; gap: 10px; margin: 0; }
+
+.caso-dato { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.caso-dato__valor {
+  margin: 0;
+  color: $cfg-ink;
+  font-size: 13.5px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.caso-contactar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid $cfg-line-soft;
+
+  .cfg-btn { width: 100%; }
+}
+
+.caso-fechas { gap: 10px; }
+
+@media (max-width: 991.98px) {
+  .caso-cuerpo { grid-template-columns: minmax(0, 1fr); }
+  // En celular el contacto va primero: es lo que se usa para atender.
+  .caso-lado { order: -1; }
+}
+
+@media (max-width: 575.98px) {
+  .caso-estados { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .caso-cabeza { align-items: flex-start; }
+}

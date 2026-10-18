@@ -1,0 +1,110 @@
+<app-publica-marco ancho="angosto" pie="Encuesta con tecnología de Katuq">
+  <!-- Cargando -->
+  <div class="pub-stack enc-centro" *ngIf="paso === 'cargando'" role="status">
+    <span class="pub-estado pub-estado--info" aria-hidden="true"><i class="pi pi-spin pi-spinner"></i></span>
+    <p class="pub-lead">Abriendo la encuesta…</p>
+  </div>
+
+  <!-- Error: enlace inválido, vencido o encuesta pausada -->
+  <div class="pub-stack enc-centro" *ngIf="paso === 'error'" role="alert">
+    <span class="pub-estado pub-estado--warn" aria-hidden="true"><i class="pi" [ngClass]="error.icono"></i></span>
+    <h1 class="pub-h2">{{ error.titulo }}</h1>
+    <p class="pub-lead">{{ error.texto }}</p>
+  </div>
+
+  <!-- Nota y segundo paso -->
+  <div class="pub-stack" *ngIf="paso === 'nota' || paso === 'comentario'">
+    <div class="enc-marca" *ngIf="encuesta">
+      <img class="enc-marca__logo" *ngIf="encuesta.logo" [src]="encuesta.logo" [alt]="comercio" />
+      <span class="enc-marca__nombre">{{ comercio }}</span>
+    </div>
+
+    <h1 class="pub-h2" id="enc-pregunta">{{ preguntaNps }}</h1>
+    <app-escala-nps [valor]="nota" etiquetadoPor="enc-pregunta" (cambio)="escogerNota($event)"></app-escala-nps>
+
+    <p class="pub-aviso pub-aviso--error" *ngIf="avisoNota" role="alert">
+      <span class="enc-heredar">{{ avisoNota }}</span>
+    </p>
+
+    <form class="pub-stack" *ngIf="paso === 'comentario'" (ngSubmit)="enviar()" novalidate>
+      <p class="pub-aviso pub-aviso--ok enc-guardada" *ngIf="!avisoNota" role="status">
+        <i class="pi" [ngClass]="guardandoNota ? 'pi-spin pi-spinner' : 'pi-check-circle'" aria-hidden="true"></i>
+        <span class="enc-heredar">{{ guardandoNota ? 'Guardando tu nota…' : 'Tu nota quedó guardada. Lo que sigue es opcional.' }}</span>
+      </p>
+
+      <div class="pub-field">
+        <label class="enc-pregunta" for="enc-comentario">{{ preguntaAbierta }}</label>
+        <textarea id="enc-comentario" class="enc-texto" name="comentario" rows="4" [(ngModel)]="comentario"
+                  [maxlength]="MAX_COMENTARIO" placeholder="Escribe aquí (opcional)" aria-describedby="enc-contador"></textarea>
+        <span class="enc-contador" id="enc-contador">{{ comentario.length }}/{{ MAX_COMENTARIO }}</span>
+      </div>
+
+      <ng-container *ngFor="let a of preguntasAdicionales">
+        <fieldset class="enc-grupo" *ngIf="a.tipo === 'opcion'">
+          <legend class="enc-pregunta">{{ conComercio(a.texto) }}</legend>
+          <div class="enc-opciones">
+            <label class="enc-opcion" *ngFor="let o of a.opciones" [class.is-activa]="adicionales[a.id] === o">
+              <input type="radio" class="enc-radio" [name]="'adicional-' + a.id" [value]="o"
+                     [checked]="adicionales[a.id] === o" (change)="escogerAdicional(a.id, o)" />
+              <span class="enc-opcion__texto">{{ o }}</span>
+            </label>
+          </div>
+        </fieldset>
+        <div class="pub-field" *ngIf="a.tipo === 'texto'">
+          <label class="enc-pregunta" [attr.for]="'adicional-' + a.id">{{ conComercio(a.texto) }}</label>
+          <input class="enc-input" [id]="'adicional-' + a.id" [name]="'adicional-' + a.id" [maxlength]="MAX_TEXTO_ADICIONAL"
+                 [ngModel]="adicionales[a.id] || ''" (ngModelChange)="escogerAdicional(a.id, $event)" placeholder="Respuesta corta (opcional)" />
+        </div>
+      </ng-container>
+
+      <!-- Contacto opcional: solo en el enlace abierto (en el correo ya se sabe quién es) -->
+      <div class="enc-grupo" *ngIf="encuesta?.canal === 'enlace'">
+        <label class="enc-check">
+          <input type="checkbox" name="quiereContacto" [(ngModel)]="quiereContacto" />
+          <span class="enc-check__texto">Quiero que {{ comercio }} me contacte sobre mi opinión</span>
+        </label>
+        <div class="enc-contacto" *ngIf="quiereContacto">
+          <div class="pub-field">
+            <label class="pub-label" for="enc-nombre">Nombre</label>
+            <input id="enc-nombre" class="enc-input" name="nombre" autocomplete="name" maxlength="80" [(ngModel)]="contacto.nombre" />
+          </div>
+          <div class="pub-field">
+            <label class="pub-label" for="enc-correo">Correo</label>
+            <input id="enc-correo" class="enc-input" name="email" type="email" autocomplete="email" maxlength="120"
+                   [class.is-error]="intento && correoInvalido" [(ngModel)]="contacto.email" />
+            <span class="pub-error" *ngIf="intento && correoInvalido">Revisa el correo; parece incompleto.</span>
+          </div>
+          <div class="pub-field">
+            <label class="pub-label" for="enc-telefono">Celular</label>
+            <input id="enc-telefono" class="enc-input" name="telefono" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" [(ngModel)]="contacto.telefono" />
+          </div>
+          <p class="pub-fine">Solo lo usa {{ comercio }} para responderte.</p>
+        </div>
+      </div>
+
+      <p class="pub-aviso pub-aviso--error" *ngIf="avisoEnvio" role="alert">
+        <span class="enc-heredar">{{ avisoEnvio }}</span>
+      </p>
+
+      <button type="submit" class="pub-btn" [disabled]="enviando || guardandoNota">
+        <span class="pub-spinner" *ngIf="enviando" aria-hidden="true"></span>
+        <span class="enc-heredar">{{ enviando ? 'Enviando…' : 'Enviar' }}</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- Gracias -->
+  <div class="pub-stack enc-centro" *ngIf="paso === 'gracias'" role="status">
+    <span class="pub-estado pub-estado--ok" aria-hidden="true"><i class="pi pi-heart"></i></span>
+    <h1 class="pub-h2">¡Gracias por tu opinión!</h1>
+    <p class="pub-lead">{{ comercio }} la va a leer. Nos ayuda a atenderte mejor.</p>
+    <div class="enc-productos" *ngIf="opinionesProducto.length">
+      <h2 class="pub-h2 enc-productos__titulo">Califica lo que compraste</h2>
+      <a class="pub-btn pub-btn--sec enc-producto" *ngFor="let o of opinionesProducto"
+         [href]="o.url" target="_blank" rel="noopener">
+        <i class="pi pi-star" aria-hidden="true"></i>
+        <span class="enc-heredar enc-producto__nombre">{{ o.nombre || 'Producto' }}</span>
+      </a>
+    </div>
+  </div>
+</app-publica-marco>

@@ -54,7 +54,9 @@ export class AppComponent implements OnInit, OnDestroy {
     '/terms-conditions',
     '/privacy-policy',
     '/video-agent',
-    '/live-audio'
+    '/live-audio',
+    // Encuesta NPS pública (D-490): sin loader global ni asistente
+    '/encuesta'
   ];
 
   // Propiedad para verificar si estamos en una ruta donde NO debe mostrarse el floating button

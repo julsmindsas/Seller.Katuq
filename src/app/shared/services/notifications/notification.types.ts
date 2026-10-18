@@ -68,7 +68,10 @@ export enum NotificationType {
   TICKET_ASSIGNED = 'TICKET_ASSIGNED',
   TICKET_REPLY = 'TICKET_REPLY',
   TICKET_CLOSED = 'TICKET_CLOSED',
-  TICKET_REOPENED = 'TICKET_REOPENED'
+  TICKET_REOPENED = 'TICKET_REOPENED',
+
+  // NPS (D-490): un cliente calificó de 0 a 6; actionUrl lleva al caso (/nps/seguimiento/<id>)
+  NPS_DETRACTOR = 'NPS_DETRACTOR'
 }
 
 // Canales de notificación disponibles
