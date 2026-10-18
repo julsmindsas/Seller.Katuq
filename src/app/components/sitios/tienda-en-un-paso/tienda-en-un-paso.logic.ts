@@ -135,13 +135,13 @@ export const MENSAJES = {
   fotosPreparando: 'Espera un momento: todavía estamos preparando tus fotos.',
   sinConexion: 'No pudimos conectarnos. Revisa tu internet e inténtalo de nuevo.',
   tardoDemasiado:
-    'La respuesta tardó más de lo normal. Mira en Mis páginas si tu tienda ya apareció; si no, inténtalo de nuevo.',
+    'La respuesta tardó más de lo normal. Mira en Mis sitios si tu tienda ya apareció; si no, inténtalo de nuevo.',
   sesion: 'No pudimos identificar tu sesión. Cierra sesión, vuelve a entrar e inténtalo de nuevo.',
   generico: 'Algo salió mal al crear tu tienda. Inténtalo de nuevo; si sigue igual, escríbenos por soporte.',
   seCortoLaConsulta:
-    'Perdimos la conexión con tu tienda, pero sigue creándose. Búscala en Mis páginas en unos minutos.',
+    'Perdimos la conexión con tu tienda, pero sigue creándose. Búscala en Mis sitios en unos minutos.',
   muchoTiempo:
-    'Está tardando más de lo normal. Puedes cerrar esta ventana: tu tienda sigue creándose y la encuentras en Mis páginas.',
+    'Está tardando más de lo normal. Puedes cerrar esta ventana: tu tienda sigue creándose y la encuentras en Mis sitios.',
 };
 
 /** Texto de una línea: sin saltos ni espacios de más. */
@@ -374,7 +374,7 @@ export function pasosDelAvance(avance: AvanceTienda | null, conFotos: boolean): 
 
     if (clave === 'photos' && !hayFotos) {
       estado = 'omitido';
-      detalle = 'Sin fotos: tu página queda como borrador.';
+      detalle = 'Sin fotos: tu tienda queda como borrador.';
     } else if (terminado) {
       if (clave === 'publishing' && !avance!.published) {
         estado = 'omitido';
@@ -488,7 +488,7 @@ export function resumenFinal(avance: AvanceTienda): ResumenFinal {
     return {
       ...base,
       tono: 'info',
-      titulo: 'Tu página quedó como borrador',
+      titulo: 'Tu tienda quedó como borrador',
       texto: avance.message,
       puedeAgregarProducto: avance.missing === 'product',
     };

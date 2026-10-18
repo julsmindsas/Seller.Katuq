@@ -1087,7 +1087,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       const pistas = [this.product?.nombre, this.offering].filter(Boolean).join(' ');
       this.tiendaInicial = await this.onboardingService.crearTiendaInicial(this.tipoNegocio, pistas);
     } catch (error: any) {
-      this.errorTienda = error?.error?.error || 'No pudimos publicar tu tienda ahora. Puedes hacerlo después desde "Mis páginas".';
+      this.errorTienda = error?.error?.error || 'No pudimos publicar tu tienda ahora. Puedes hacerlo después desde "Mis sitios".';
     } finally {
       this.publicandoTienda = false;
     }

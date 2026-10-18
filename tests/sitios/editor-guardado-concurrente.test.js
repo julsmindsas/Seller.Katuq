@@ -15,13 +15,29 @@ const component = source.statements.find(node => ts.isClassDeclaration(node));
 const methodNames = [
   'completar', 'firmaActual', 'fijarComoGuardado', 'recalcularSucio', 'guardar',
   'contenidoParaGuardar', 'aplicarLoGuardado', 'camposPerdidos', 'publicar', 'publicarAhora',
+  // Lo llama guardar() desde los cambios de pauta.
+  'errorPauta',
 ];
 const methods = component.members.filter(node => methodNames.includes(node.name?.getText(source)));
 assert.equal(methods.length, methodNames.length);
-const compiled = ts.transpileModule('export class Editor { ' + methods.map(node => node.getText(source)).join('\n') + ' }', {
+// Las constantes de nivel superior del archivo (CAMPOS_PAUTA, PALETAS…) también:
+// los métodos las usan y sin ellas la prueba rompe por un ReferenceError ajeno.
+const constantes = source.statements.filter(node => ts.isVariableStatement(node)).map(node => node.getText(source)).join('\n');
+const compiled = ts.transpileModule(constantes + '\nexport class Editor { ' + methods.map(node => node.getText(source)).join('\n') + ' }', {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
 }).outputText;
-const context = { exports: {} };
+// `completar` usa ajustesDeEstiloCompletos (ticket 1227): se carga el módulo real.
+function cargarTs(relativo, requerir) {
+  const salida = ts.transpileModule(fs.readFileSync(path.resolve(__dirname, relativo), 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+  }).outputText;
+  const modulo = { exports: {} };
+  vm.runInNewContext(salida, { exports: modulo.exports, module: modulo, require: requerir });
+  return modulo.exports;
+}
+const contraste = cargarTs('../../src/app/components/sitios/contraste.ts', () => ({}));
+const ajustesEstilo = cargarTs('../../src/app/components/sitio-render/ajustes-estilo.ts', (p) => (p.includes('contraste') ? contraste : {}));
+const context = { exports: {}, ajustesDeEstiloCompletos: ajustesEstilo.ajustesDeEstiloCompletos };
 vm.runInNewContext(compiled, context);
 
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -32,6 +48,9 @@ function fixture() {
     id: 'site-test', nombre: 'Tienda', slug: 'tienda', dominioPropio: '', slugValido: true,
     guardando: false, publicando: false, sucio: false, firmaGuardada: '',
     tokenMetaNuevo: '', secretoGa4Nuevo: '', quitarMeta: false, quitarGa4: false,
+    tokenTiktokNuevo: '', quitarTiktok: false,
+    // publicar() mira el checklist (getter en el componente): sin pendientes críticos.
+    pendientesCriticos: [],
     sitio: { nombre: 'Tienda', slug: 'tienda', estado: 'borrador' },
     service: {
       guardar(body) {
