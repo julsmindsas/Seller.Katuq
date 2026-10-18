@@ -2149,8 +2149,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       fav.path === item.path && fav.title === item.title
     );
 
-    // Ticket 1222: solo se agrega lo que lleva a una pantalla (quitar sí se permite).
-    if (index === -1 && !item.path) return;
+    // Ticket 1222/1232: se agrega lo que lleva a una pantalla o una sección con
+    // submenú (que se abre en el menú, ver abrirSeccionFavorita).
+    if (index === -1 && !item.path && !item.children?.length) return;
 
     if (index > -1) {
       this.favoriteItems.splice(index, 1);
@@ -2163,6 +2164,39 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     this.saveFavoriteItems();
+  }
+
+  /**
+   * Ticket 1232: un favorito que es una sección (sin ruta) abre esa sección en el
+   * menú, con sus padres, y la deja a la vista.
+   */
+  abrirSeccionFavorita(favorito: Menu, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    const buscar = (items: Menu[], cadena: Menu[]): Menu[] | null => {
+      for (const item of items || []) {
+        if (!item.path && item.children?.length && item.title === favorito.title) return [...cadena, item];
+        const hallado = item.children ? buscar(item.children, [...cadena, item]) : null;
+        if (hallado) return hallado;
+      }
+      return null;
+    };
+    let cadena: Menu[] | null = null;
+    for (const section of this.sections) {
+      cadena = buscar(section.items, []);
+      if (cadena) break;
+    }
+    if (!cadena) return;
+
+    this.closeAllFirstLevelMenus();
+    cadena.forEach(item => (item.active = true));
+    this.cdr.detectChanges();
+    const destino = cadena[cadena.length - 1];
+    setTimeout(() => {
+      document.getElementById(this.getMenuKey(destino) + '-toggle')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
   }
 
   // Comprobar si un item está en favoritos
@@ -2191,23 +2225,28 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
     try {
-      // Ticket 1222: un favorito sin ruta (una sección con submenú) no lleva a ninguna
-      // pantalla; se descarta aunque el menú todavía no haya cargado.
-      const parsed: Menu[] = (JSON.parse(savedFavorites) || []).filter((fav: Menu) => !!fav?.path);
+      const parsed: Menu[] = (JSON.parse(savedFavorites) || []).filter((fav: Menu) => !!fav?.title);
 
-      // SEGURIDAD DE ROLES: descartar favoritos cuya ruta ya no esté en el menú
-      // autorizado del usuario (el menú ya viene filtrado por NavService).
+      // SEGURIDAD DE ROLES: descartar favoritos cuya ruta (o sección, si es un
+      // favorito sin ruta) ya no esté en el menú autorizado del usuario (el menú
+      // ya viene filtrado por NavService).
+      const menu = this.getAllMenuItems();
       const authorizedPaths = new Set(
-        this.getAllMenuItems()
+        menu
           .map(i => (i.path || '').replace(/^\/+/, '').toLowerCase())
           .filter(p => p.length > 0)
+      );
+      // Ticket 1232: las secciones con submenú vuelven a ser favoritos válidos.
+      const authorizedSections = new Set(
+        menu.filter(i => !i.path && i.children?.length).map(i => i.title)
       );
 
       // Si el menú aún no cargó (set vacío), no filtrar para no ocultar favoritos válidos.
       this.favoriteItems = authorizedPaths.size === 0
         ? parsed
         : parsed.filter(fav => {
-            const p = (fav.path || '').replace(/^\/+/, '').toLowerCase();
+            if (!fav.path) return authorizedSections.has(fav.title);
+            const p = fav.path.replace(/^\/+/, '').toLowerCase();
             return p.length > 0 && authorizedPaths.has(p);
           });
     } catch (e) {

@@ -156,7 +156,8 @@
       <li class="favorite-item" 
           *ngFor="let favorite of favoriteItems" 
           role="listitem">
-        <a [routerLink]="rutaMenu(favorite.path)"
+        <a *ngIf="favorite.path; else favoritoSeccion"
+           [routerLink]="rutaMenu(favorite.path)"
            (click)="onMenuItemClick(favorite); onMobileLinkClick()"
            class="favorite-link"
            [attr.aria-label]="'Ir a ' + (favorite.title | translate)">
@@ -168,6 +169,21 @@
             <i class="fa fa-times" aria-hidden="true"></i>
           </button>
         </a>
+        <!-- Ticket 1232: favorito de una sección: la abre en el menú. -->
+        <ng-template #favoritoSeccion>
+          <a href="#"
+             (click)="abrirSeccionFavorita(favorite, $event)"
+             class="favorite-link"
+             [attr.aria-label]="'Abrir ' + (favorite.title | translate) + ' en el menú'">
+            <i class="fa" [ngClass]="getMenuIcon(favorite.icon, favorite.title)" aria-hidden="true"></i>
+            <span>{{favorite.title | translate}}</span>
+            <button class="remove-favorite-btn"
+                    (click)="toggleFavorite(favorite, $event)"
+                    [attr.aria-label]="'Quitar ' + (favorite.title | translate) + ' de favoritos'">
+              <i class="fa fa-times" aria-hidden="true"></i>
+            </button>
+          </a>
+        </ng-template>
       </li>
     </ul>
   </div>
@@ -284,7 +300,17 @@
                  *ngIf="!collapseMenu || isTemporarilyExpanded"
                  [class.rotated]="item.active"
                  aria-hidden="true"></i>
-              <!-- Ticket 1222: una sección que abre submenú no tiene ruta; sin estrella de favorito. -->
+              <!-- Ticket 1232: la sección también puede ser favorita; el favorito la abre en el menú. -->
+              <span class="favorite-btn"
+                    *ngIf="!collapseMenu || isTemporarilyExpanded"
+                    role="button"
+                    tabindex="0"
+                    (click)="toggleFavorite(item, $event)"
+                    (keydown.enter)="toggleFavorite(item, $event)"
+                    [class.active]="isFavorite(item)"
+                    [attr.aria-label]="isFavorite(item) ? 'Quitar de favoritos' : 'Añadir a favoritos'">
+                <i class="fa fa-star" aria-hidden="true"></i>
+              </span>
               <div class="tooltip" *ngIf="isCompactMode || collapseMenu">{{item.title | translate}}</div>
             </button>
 
