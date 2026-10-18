@@ -10965,3 +10965,23 @@ Daniel (18-oct), al ver D-483: "eso no es un sistema NPS". Quiere un módulo NPS
   - **Encendido:** `npsModulo` por comercio (Julsmind siempre); envío a compradores con `NPS_COMPRADORES=encendida`, que todavía no está.
   - **Antes de encender:** `ENCUESTA_SECRET` en el `.env`, y SPF, DKIM y DMARC verificados.
   - **Rastreo de las vías de Entregado y desvíos:** en el tasks.md del change.
+
+## D-492 (2026-10-18) — Plantillas con bandera por comercio, cableadas, y «Tecnología — Catálogo grande» apagada (ticket 1257, TX-36 parte 2) — backend 60f01646, front 5793d0b8
+
+- **Cableado de D-385:** `listarPlantillas` y `generar` preguntan una vez por petición las banderas de plantillas de la empresa del token (`isFeatureEnabled`). Una plantilla con bandera solo se lista, al final, y solo se genera para quien la tenga encendida; para los demás es una plantilla desconocida. Las pruebas A4 y A5 de `plantillaProductoUnicoApagada`, pendientes desde D-385, pasan.
+- **Catálogo:** `singleProductTemplate` y `techCatalogTemplate`, en backend y front, apagadas para todos. Se encienden con `scripts/set-company-feature.js "<empresa>" <bandera> on --execute`, primero en FLORECER. Se retiran el 2027-03-31.
+- **«Tecnología — Catálogo grande» (`tecnologia-catalogo`),** con Baudio como referencia:
+  - oscuro y amarillo;
+  - menú grande de categorías y accesos por categoría;
+  - más vendidos, marcas del catálogo y catálogo en su página con filtro por marca;
+  - sección «Compras para empresas» con formulario de cotización y preguntas frecuentes;
+  - fotos enteras (encajar), 4 columnas en computador y 2 en celular.
+
+  Revisión visual con 3 catálogos a 4 anchos sin hallazgos. Pendiente por F2-42: filtros técnicos y ficha con especificaciones.
+- **Recomendadas:** pasan de campos de cada plantilla a `meta.recomendadas` (ids en orden), porque la prueba A1 fija la forma pública de cada plantilla. El front ordena y pone la etiqueta con eso. Si se publica un lado antes que el otro, solo dejan de verse las etiquetas.
+- **Pruebas:**
+  - `plantillaProductoUnicoApagada` vuelve a correr: su db simulado no tenía `runTransaction`, que exige el libro de Kuvo, y el logger de firebase-functions no cuenta como SDK de Firestore. Da 12/12.
+  - `plantillaProductoUnico` da 40/40; su R3 aceptaba una sola bandera y ahora exige una por plantilla.
+  - `companyFeatureFlags` da 34, con el catálogo en 21.
+  - `plantillasRecomendadas` da 7.
+  - La suite de sitios queda con 3 fallos previos (antes eran 4).
