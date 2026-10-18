@@ -4096,7 +4096,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
       return notas.map((n: any) => `${n.fecha ? new Date(n.fecha).toLocaleDateString('es-CO') : ''}: ${n.nota || n.descripcion || ''}`).join(' | ');
     };
 
-    const escapeHtml = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // String(): hay pedidos con el celular guardado como número; con .replace directo
+    // la orden no imprimía si traía uno de esos (ticket 1224, DAD-014323).
+    const escapeHtml = (text: any) => String(text ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     // Agrupar pedidos por zona para separadores visuales
     const pedidosPorZona = new Map<string, any[]>();
