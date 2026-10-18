@@ -904,8 +904,13 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
    */
   get plantillasVisibles(): PlantillaSitio[] {
     const aptas = this.plantillas.filter((p) => this.aptaParaTipo(p));
-    if (!this.sectorFiltro) return aptas;
-    return aptas.filter((p) => p.sector === this.sectorFiltro);
+    const filtradas = this.sectorFiltro ? aptas.filter((p) => p.sector === this.sectorFiltro) : aptas;
+    // Ticket 1257: las recomendadas primero, en su orden; las demás como llegan.
+    const peso = (p: PlantillaSitio) => (p.destacada ? p.orden || 0 : 1000);
+    return filtradas
+      .map((p, i) => ({ p, i }))
+      .sort((a, b) => peso(a.p) - peso(b.p) || a.i - b.i)
+      .map((x) => x.p);
   }
 
   /** Sectores con al menos una plantilla apta para lo que se quiere crear. */

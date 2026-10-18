@@ -302,6 +302,9 @@ export interface PlantillaSitio {
   descripcion: string;
   tema: TemaSitio;
   bloques: string[];
+  /** Ticket 1257: plantilla recomendada (sale primero en el selector). */
+  destacada?: boolean;
+  orden?: number;
 }
 
 /** Un día de la serie de métricas. Los días sin tráfico llegan en cero. */

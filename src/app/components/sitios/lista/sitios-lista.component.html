@@ -339,6 +339,7 @@
               </span>
             </span>
 
+            <span class="plantilla__recomendada" *ngIf="p.destacada">Recomendada</span>
             <span class="plantilla__nombre">
               <span>{{ tituloPlantilla(p) }}</span>
               <span class="plantilla__check" *ngIf="plantillaElegida?.id === p.id">

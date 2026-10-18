@@ -585,6 +585,21 @@
     border: 1px solid var(--kb-line-3);
   }
 
+  // Ticket 1257: etiqueta de las recomendadas (span de *ngIf: color y tamaño propios).
+  &__recomendada {
+    align-self: flex-start;
+    margin: 10px 0 -2px;
+    padding: 3px 9px;
+    border-radius: 99px;
+    background: #efeaff;
+    color: #5f3fe0;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.4;
+  }
+
   &__hero {
     display: block;
     padding: 16px 12px;
