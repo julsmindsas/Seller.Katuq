@@ -10836,3 +10836,25 @@ Abierto por pedido de Daniel al aprobar D-483 (17-oct). Hallazgo leído en el c�
 - **Código local:** Shop aparece como `pronto` en el directorio; el backend revisado tiene Events API para conversiones web, sin conector Shop encontrado. No se verificaron cuentas, credenciales ni datos de producción.
 - **Alternativa a evaluar para Colombia:** compra en la tienda de Katuq desde el enlace habilitado del perfil; diferente del checkout nativo de Shop.
 - **Evidencia y límites:** [informe fechado](research/tiktok-commerce-2026-10-17.md), con fuentes oficiales y pendientes de elegibilidad del desarrollador/comercio. Sin spec, diseño, tasks ni decisiones de implementación aprobadas; sin cambios de código, build, commit o deploy.
+
+## D-485 (2026-10-17) — De la pauta al pago: motor de marketing de Julsmind, fase 1 — PROPUESTA, pendiente de aprobación
+
+Daniel (16-oct): "requiero un módulo de marketing para Katuq y para Julsmind; quiero automatizar todo y convertir".
+
+- **Problema:** van unos $1,34 M en Meta. La mejor campaña trajo 34 registros: 1 abrió tienda y ninguno recibió pedidos. A Meta solo le llega el inicio del registro, el costo se escribe a mano y después del registro nadie empuja al pago.
+- **Propuesta:** `openspec/changes/pauta-hasta-el-pago/`. Julsmind usa el mismo módulo de Marketing como un comercio más; sus clientes son las empresas registradas.
+  1. El gasto de Meta se lee solo (`ads_read`, sin guardarlo).
+  2. Registro, primer pedido real y primer pago llegan a Meta por la API de conversiones: una vez por empresa y sin duplicar el píxel.
+  3. Embudo de la pauta hasta el pago en `/marketing/pauta` (solo Julsmind), más un resumen diario por correo con los anuncios para pausar. Katuq no pausa nada solo.
+  4. Aviso al 80 % y al tope del plan gratis, con enlace al pago.
+  5. CRM de empresas con etapas automáticas que nunca retroceden, y un puntaje con motivos.
+- **Datos:** sin colecciones nuevas. Campos en `companies` (`pauta.*`, `avisosPlan`) y en `crm_pipeline` (`score`, `scoreMotivos`, `stageAuto`).
+- **Reglas:** solo lectura de `orders`, del contador del plan y del cobro, con contract test del write-set. Todo arranca apagado o en sombra y se enciende sin desplegar.
+- **Pendiente de Daniel:**
+  - aprobar la propuesta;
+  - credenciales (usuario del sistema con `ads_read`, token de la API de conversiones del píxel);
+  - guardar o no `fbc`/`fbp`;
+  - canal del aviso;
+  - definición de primer pedido;
+  - destinatarios del resumen.
+- **Fase 2 (fuera):** pausar anuncios desde Katuq y automatizaciones para los comercios.
