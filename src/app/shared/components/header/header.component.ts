@@ -9,6 +9,8 @@ import { NgpThemeService } from '../../services/ngtheme.service';
 import { MaestroService } from '../../services/maestros/maestro.service';
 import { TourNavigationService } from '../../services/tour-navigation.service';
 import { SubscriptionService } from '../../services/subscription.service';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { abrirOpinar } from '../opinar-modal/opinar-modal.component';
 
 @Component({
   selector: 'app-header',
@@ -33,7 +35,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     @Inject(DOCUMENT) private document: any,
     private notificationService: NotificationrlService,
     private tourNavigationService: TourNavigationService,
-    public subscriptionService: SubscriptionService) {
+    public subscriptionService: SubscriptionService,
+    private modal: NgbModal) {
     // const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     // if (darkModeMediaQuery.matches) {
     //   this.layoutToggle();
@@ -169,6 +172,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.document.msExitFullscreen();
       }
     }
+  }
+
+  /** "Opinar" (D-483): en escritorio vive en la barra; en celular, en el menú de la cuenta. */
+  abrirOpinar() {
+    abrirOpinar(this.modal);
   }
 
   openTourMenu() {

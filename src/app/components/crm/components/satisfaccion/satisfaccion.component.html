@@ -1,0 +1,181 @@
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">CRM</span>
+      <h1 class="cfg-titulo">Satisfacción de clientes</h1>
+      <p class="cfg-sub">Qué tan probable es que te recomienden (NPS) y lo que dicen en sus comentarios, con las respuestas de los últimos 90 días.</p>
+    </div>
+    <div class="cfg-acciones">
+      <label class="sat-interruptor">
+        <input
+          type="checkbox"
+          role="switch"
+          class="sat-interruptor__input"
+          [(ngModel)]="conPruebas"
+          (ngModelChange)="cargar()"
+          [disabled]="cargando"
+        />
+        <span class="sat-interruptor__pista" aria-hidden="true"></span>
+        <span class="sat-interruptor__texto">Incluir respuestas de prueba</span>
+      </label>
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cargar()" [disabled]="cargando">
+        <i class="pi pi-refresh" [class.pi-spin]="cargando" aria-hidden="true"></i>
+        <span>Actualizar</span>
+      </button>
+    </div>
+  </header>
+
+  <p class="cfg-aviso cfg-aviso--error" *ngIf="error" role="alert">
+    <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+    <span class="sat-heredar">{{ error }}</span>
+  </p>
+
+  <section class="cfg-card" *ngIf="cargando && !tablero">
+    <div class="cfg-vacio">
+      <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-spin pi-spinner"></i></span>
+      <p class="cfg-vacio__titulo">Calculando la satisfacción…</p>
+    </div>
+  </section>
+
+  <ng-container *ngIf="tablero as t">
+    <p class="cfg-aviso" *ngIf="t.conPruebas">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      <span class="sat-heredar">Incluye las respuestas de prueba de Julsmind y FLORECER (marcadas como "Prueba"). Sirven para revisar la pantalla, no para decidir.</span>
+    </p>
+
+    <!-- ── Resumen ───────────────────────────────────────── -->
+    <div class="sat-resumen">
+      <section class="cfg-card sat-nps" aria-labelledby="sat-nps-titulo">
+        <span class="cfg-label" id="sat-nps-titulo">NPS · últimos 90 días</span>
+        <ng-container *ngIf="t.nps !== null; else sinRespuestas">
+          <div class="sat-nps__fila">
+            <span class="sat-nps__valor" [ngClass]="tonoNps(t.nps)">{{ t.nps }}</span>
+            <span class="sat-nps__respuestas">{{ t.respuestas | number }} {{ t.respuestas === 1 ? 'respuesta' : 'respuestas' }}</span>
+          </div>
+          <span class="sat-nota-pie">Va de −100 a 100: el porcentaje de promotores menos el de detractores.</span>
+          <p class="cfg-aviso cfg-aviso--warn sat-nps__aviso" *ngIf="t.respuestas < t.minimoConfiable">
+            <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+            <span class="sat-heredar">Pocas respuestas: con menos de {{ t.minimoConfiable }} la nota todavía se mueve mucho.</span>
+          </p>
+        </ng-container>
+        <ng-template #sinRespuestas>
+          <div class="cfg-vacio sat-vacio">
+            <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-comments"></i></span>
+            <p class="cfg-vacio__titulo">Sin respuestas todavía</p>
+            <p class="cfg-vacio__texto">Cuando alguien responda la encuesta, el NPS aparece aquí.</p>
+          </div>
+        </ng-template>
+      </section>
+
+      <section class="cfg-card sat-stat" aria-labelledby="sat-tasa-titulo">
+        <span class="cfg-label" id="sat-tasa-titulo">Tasa de respuesta</span>
+        <span class="sat-stat__valor">{{ t.tasaRespuesta !== null ? t.tasaRespuesta + '%' : '—' }}</span>
+        <span class="sat-nota-pie" *ngIf="t.mostradas; else nadie">
+          De {{ t.mostradas | number }} {{ t.mostradas === 1 ? 'persona' : 'personas' }} a las que se les mostró la pregunta en 90 días.
+        </span>
+        <ng-template #nadie><span class="sat-nota-pie">Todavía no se le ha mostrado la pregunta a nadie.</span></ng-template>
+      </section>
+
+      <section class="cfg-card sat-stat" aria-labelledby="sat-reparto-titulo">
+        <span class="cfg-label" id="sat-reparto-titulo">Reparto</span>
+        <div class="sat-barra" *ngIf="totalReparto; else repartoVacio" role="img" [attr.aria-label]="textoReparto">
+          <span *ngFor="let s of SEGMENTOS" class="sat-barra__tramo" [ngClass]="'is-' + s" [style.width.%]="ancho(s)"></span>
+        </div>
+        <ng-template #repartoVacio><div class="sat-barra is-vacia" aria-hidden="true"></div></ng-template>
+        <ul class="sat-leyenda">
+          <li class="sat-leyenda__item" *ngFor="let s of SEGMENTOS">
+            <span class="sat-punto" [ngClass]="'is-' + s" aria-hidden="true"></span>
+            <span class="sat-leyenda__nombre">{{ NOMBRE_PLURAL[s] }}</span>
+            <span class="sat-leyenda__valor">{{ pct(s) }}% · {{ t.reparto[s] | number }}</span>
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- ── Gráficas (widgets del constructor de reportes) ── -->
+    <div class="sat-graficas">
+      <section class="cfg-card" aria-labelledby="sat-tendencia-titulo">
+        <h2 class="cfg-card__titulo sat-card-titulo" id="sat-tendencia-titulo">Tendencia mensual</h2>
+        <p class="sat-card-sub">NPS de cada mes, últimos 6 meses.</p>
+        <app-viz-chart class="sat-grafica" [result]="t.tendencia" chartType="line" [colors]="COLOR_LINEA"></app-viz-chart>
+      </section>
+      <section class="cfg-card" aria-labelledby="sat-torta-titulo">
+        <h2 class="cfg-card__titulo sat-card-titulo" id="sat-torta-titulo">Reparto de respuestas</h2>
+        <p class="sat-card-sub">Últimos 90 días.</p>
+        <app-viz-chart class="sat-grafica" [result]="t.graficaReparto" chartType="pie" [colors]="coloresReparto" [compacta]="true"></app-viz-chart>
+      </section>
+    </div>
+
+    <!-- ── KAI: explicación y temas, solo a pedido ─────────── -->
+    <app-modulo-ia modulo="satisfaccion"></app-modulo-ia>
+
+    <!-- ── Respuestas y comentarios ─────────────────────── -->
+    <section class="cfg-card" aria-labelledby="sat-lista-titulo">
+      <div class="sat-lista__cabeza">
+        <h2 class="cfg-card__titulo sat-card-titulo" id="sat-lista-titulo">Respuestas y comentarios</h2>
+        <span class="sat-contador">{{ filtrados.length | number }} de {{ t.comentarios.length | number }}</span>
+      </div>
+
+      <div class="sat-filtros">
+        <div class="sat-segmentado" role="group" aria-label="Tipo de respuesta">
+          <button
+            type="button"
+            *ngFor="let f of filtrosSegmento"
+            class="sat-segmentado__opcion"
+            [class.is-activa]="filtroSegmento === f.key"
+            [attr.aria-pressed]="filtroSegmento === f.key"
+            (click)="filtrarSegmento(f.key)"
+          >
+            <span class="sat-heredar">{{ f.label }}</span>
+            <span class="sat-segmentado__n">{{ conteo[f.key] | number }}</span>
+          </button>
+        </div>
+        <label class="sat-campo">
+          <span class="sat-campo__label">Periodo</span>
+          <select class="sat-select" name="periodo" [(ngModel)]="periodo" (ngModelChange)="aplicarFiltros()">
+            <option *ngFor="let p of periodos" [ngValue]="p.dias">{{ p.label }}</option>
+          </select>
+        </label>
+        <label class="sat-check">
+          <input type="checkbox" class="sat-check__input" name="soloConComentario" [(ngModel)]="soloConComentario" (ngModelChange)="aplicarFiltros()" />
+          <span class="sat-check__texto">Solo con comentario</span>
+        </label>
+      </div>
+
+      <ul class="sat-lista" *ngIf="filtrados.length; else listaVacia">
+        <li class="sat-item" *ngFor="let c of filtrados | slice: 0:visibles; trackBy: porId">
+          <div class="sat-item__nota" [ngClass]="'is-' + c.segmento">
+            <span class="sat-oculto">Nota</span>
+            <span class="sat-heredar">{{ c.nota }}</span>
+          </div>
+          <div class="sat-item__cuerpo">
+            <div class="sat-item__cabeza">
+              <span class="sat-seg" [ngClass]="'is-' + c.segmento">{{ NOMBRE[c.segmento] }}</span>
+              <span class="sat-seg is-prueba" *ngIf="c.prueba">Prueba</span>
+              <span class="sat-doc" *ngIf="c.nroTicket">Ticket #{{ c.nroTicket }}</span>
+              <span class="sat-doc" *ngIf="c.pedido">Pedido {{ c.pedido }}</span>
+              <time class="sat-item__fecha" [attr.datetime]="c.fecha">{{ fecha(c.fecha) }}</time>
+            </div>
+            <p class="sat-item__comentario" *ngIf="c.comentario; else sinComentario">{{ c.comentario }}</p>
+            <ng-template #sinComentario><p class="sat-item__comentario is-vacio">Sin comentario</p></ng-template>
+            <p class="sat-item__meta" *ngIf="metaDe(c) as meta">{{ meta }}</p>
+          </div>
+        </li>
+      </ul>
+
+      <div class="sat-mas" *ngIf="filtrados.length > visibles">
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="verMas()">
+          <span>Ver más ({{ filtrados.length - visibles | number }})</span>
+        </button>
+      </div>
+
+      <ng-template #listaVacia>
+        <div class="cfg-vacio">
+          <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-inbox"></i></span>
+          <p class="cfg-vacio__titulo">{{ t.comentarios.length ? 'Nada con estos filtros' : 'Sin respuestas todavía' }}</p>
+          <p class="cfg-vacio__texto">{{ t.comentarios.length ? 'Prueba con otro tipo de respuesta o con un periodo más largo.' : 'Aquí aparecen las respuestas con su nota y comentario.' }}</p>
+        </div>
+      </ng-template>
+    </section>
+  </ng-container>
+</div>

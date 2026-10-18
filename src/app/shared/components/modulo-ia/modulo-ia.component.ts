@@ -9,12 +9,27 @@ const TITULOS: Record<ModuloIA, string> = {
   clientes: 'Clientes para recuperar',
   cartera: 'A quién cobrar primero',
   pedidos: 'Pedidos que necesitan atención',
+  satisfaccion: 'Qué dicen los clientes',
 };
 
 const PREGUNTAS: Record<ModuloIA, string[]> = {
   clientes: ['¿Qué clientes dejaron de comprarme?', '¿Quiénes son mis mejores clientes este trimestre?'],
   cartera: ['¿A quién le cobro primero esta semana?', '¿Cuánta cartera tengo vencida?'],
   pedidos: ['¿Qué pedidos necesitan atención hoy?'],
+  // Vacía a propósito: el chat de Opttia todavía no puede consultar el NPS (D-483).
+  satisfaccion: [],
+};
+
+/** Mensaje del 403 por módulo: cada uno lo restringe a roles distintos. */
+const SIN_ACCESO: Partial<Record<ModuloIA, string>> = {
+  satisfaccion: 'Esta información la ven los administradores.',
+};
+
+const SEGMENTOS: Record<string, { texto: string; clase: string }> = {
+  promotor: { texto: 'Promotores', clase: 'is-success' },
+  pasivo: { texto: 'Pasivos', clase: 'is-slate' },
+  detractor: { texto: 'Detractores', clase: 'is-danger' },
+  mixto: { texto: 'Mixto', clase: 'is-accent' },
 };
 
 const TIPOS_PEDIDO: Record<string, { texto: string; clase: string }> = {
@@ -72,7 +87,7 @@ export class ModuloIaComponent implements OnDestroy {
       next: (r) => { this.d = r.insights; this.cargando = false; this.cdr.markForCheck(); },
       error: (e) => {
         this.error = e?.status === 403
-          ? 'Esta información la ven los roles de tesorería y administración.'
+          ? (SIN_ACCESO[this.modulo] || 'Esta información la ven los roles de tesorería y administración.')
           : (e?.error?.error || 'No pudimos calcular esto en este momento. Intente de nuevo en unos minutos.');
         this.cargando = false;
         this.cdr.markForCheck();
@@ -124,6 +139,16 @@ export class ModuloIaComponent implements OnDestroy {
     } catch {
       this.copiado = null;
     }
+  }
+
+  segmento(s: string): { texto: string; clase: string } {
+    return SEGMENTOS[s] || { texto: s, clase: 'is-slate' };
+  }
+
+  /** Color del NPS: negativo peligro, 0 a 29 aviso, 30 o más éxito. */
+  tonoNps(n: number | null | undefined): string {
+    if (n === null || n === undefined) return '';
+    return n < 0 ? 'is-danger' : n < 30 ? 'is-warning' : 'is-success';
   }
 
   tipoPedido(t: string): { texto: string; clase: string } {

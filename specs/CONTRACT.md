@@ -10783,3 +10783,56 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - `tests/sitios/rutasConTenant.test.js`: recorre las 43 rutas privadas del router y prueba el 403 con una empresa cruzada.
   - La suite de sitios queda con los mismos 4 fallos previos.
   - En producción: sitio publicado en 200, `/v1/sites/all` sin sesión da 401 y con token inválido 403, y no hay errores de tenant en los logs.
+
+## D-483 (2026-10-17) — NPS y comentarios para comercios y compradores, reutilizando lo existente — APROBADA (Daniel, 17-oct), en implementación
+
+Se reservó como D-475 y luego como D-481; en la rama esos números (D-475 a D-482) quedaron para otros cambios publicados el mismo día.
+
+Daniel (17-oct): "un sistema NPS para saber la satisfacción de nuestros clientes y poder tomar decisiones rápidas, y algo para que comenten"; para los dos públicos, por fases; "con buenas prácticas y buena arquitectura, reutilizando el código lo más que se pueda".
+
+- **Modelo:** la empresa que recibe la opinión es la dueña de la respuesta (Julsmind para los comercios, cada comercio para sus compradores), igual que el CRM híbrido. Una sola pantalla, cálculo y permisos para las dos fases.
+- **Reutiliza:**
+  - `surveyResponses` con `type: "nps"` (hoy solo la escribe el registro y nadie la lee): sin colecciones nuevas;
+  - `crearTicketSoporte` para "Opinar" y para el ticket automático del detractor;
+  - el motor de reportes y sus widgets, con un filtro fijo genérico nuevo;
+  - el módulo de insights, `explicarBloques` y `app-modulo-ia`;
+  - la encuesta a compradores que quedó a medias, y las tareas del CRM.
+- **Refactors sin cambio de comportamiento:** la creación de tickets del Seller a un servicio, los widgets de reportes a un módulo compartido, y un util genérico de enlaces firmados (las ~20 implementaciones existentes no se migran).
+- **Hallazgo de seguridad:** `POST /v1/reports/query` (`routers/reports.js:20`) y `GET /v1/companies/overview` (`platformOverview.js:158`) toman la empresa del header del navegador. El NPS no pasa por ahí, y su fuente no se registra en el constructor hasta que se cierre, en otro cambio.
+- **Propuesta:** `openspec/changes/nps-y-comentarios/`.
+- **Aprobado (Daniel, 17-oct, "dale" sobre las recomendaciones):**
+  - propuesta, specs, diseño y tasks;
+  - el ticket del detractor le llega al comercio como cualquier ticket de Soporte (acuse y respuestas del equipo);
+  - un solo correo por pedido cuando están activas la encuesta y las opiniones de tienda;
+  - los comentarios se guardan 24 meses; después se borra el texto y queda la nota;
+  - se abre aparte el cambio que hace que `/v1/reports/query` y `/v1/companies/overview` tomen la empresa del JWT;
+  - excepción al Artículo IX: los módulos existentes siguen en NgModule y `*ngIf`; lo nuevo y aislado va standalone.
+
+## D-484 (2026-10-17) — Reportes y empresas toman la empresa del JWT, no del header — PROPUESTA, pendiente de aprobación (arreglo urgente aprobado y en commit 03aae0fe)
+
+Se reservó como D-476 (así quedó escrito en el commit 03aae0fe del backend) y luego como D-482; en la rama D-476 es "Una sola dirección por marca" y D-482 "las rutas del editor de sitios toman la empresa del token".
+
+Abierto por pedido de Daniel al aprobar D-483 (17-oct). Hallazgo leído en el código, no probado contra producción.
+
+- **Reportes:** las 9 rutas con sesión de `routers/reports.js` toman la empresa de `getCompany` (:20), que prefiere el header `company`. Con el header cambiado se leen reportes de otra empresa y se puede guardar en ella un reporte público, cuyo enlace lee sus datos sin sesión (`reports.js:45-56`).
+- **Empresas:** `/overview` (:198 → `platformOverview.js:158`), `/billing-overview`, `POST /estado-ciclo`, `/:id/historial-estado`, `/:id/pedidos-excluidos`, `/all` y `/brand-kit` deciden "solo Julsmind" o la empresa con el header.
+- **Super Admin:** no se rompe. El front no cambia de empresa: el token se firma al iniciar sesión con la misma empresa que el interceptor manda en el header.
+- **Más grave y fuera de este alcance (verificado en el código el 17-oct):**
+  - `POST /v1/companies/delete` (`companies.js:387`), `/edit` (:363) y `/changeStatus` (:313) solo piden rol Administrador: el administrador de cualquier comercio puede borrar (irreversible), editar o bloquear cualquier empresa por `nit` o id;
+  - `POST /v1/companies/updateAuthorizationCodes` (:419) no pide sesión y cambia el código de autorización de todas las empresas;
+  - `POST /v1/analiticas/data` (`analiticas.js:8`) no pide sesión.
+- **Propuesta:** `openspec/changes/reportes-empresa-del-jwt/`.
+- **Arreglo urgente (aprobado por Daniel el 17-oct, aparte de la propuesta), commit 03aae0fe en backend-aws-security:**
+  - `requirePlatformTenant` en `middleware/companyAccess.js`: solo Julsmind, con la empresa del JWT. Va en `/delete`, `/changeStatus`, `/estado-ciclo`, `/updateAuthorizationCodes` (que ahora pide sesión y Super Administrador) y `/v1/analiticas/data` (que ahora pide sesión; ninguna pantalla la usa);
+  - `requireOwnCompanyByNitOrPlatform` en `/edit`: un comercio solo edita la empresa con su NIT y ya no crea empresas por ahí; Julsmind sigue igual;
+  - prueba `tests/companies/rutasDePlataforma.test.js`.
+  - Queda para la propuesta: las lecturas de `/all`, `/active`, `/filter`, `/byName`, `POST /` y `/brand-kit`, y reportes.
+
+
+### 2026-10-17 — Investigación de viabilidad: TikTok Shop y ventas en LIVE
+
+- **Solicitud de Daniel:** investigar primero si Katuq puede conectarse a TikTok para vender durante los LIVE y en TikTok Shop. No autoriza implementación.
+- **Resultado documental:** el conector Shop es técnicamente viable con tienda habilitada, autorización y revisión de la app. Colombia no figura en la disponibilidad oficial consultada; no se confirmó lanzamiento ni fecha local. Las compras nativas durante un LIVE pueden entrar por pedidos de Shop; automatizar comentarios/respuestas del directo requiere acceso específico que no se comprobó para Katuq.
+- **Código local:** Shop aparece como `pronto` en el directorio; el backend revisado tiene Events API para conversiones web, sin conector Shop encontrado. No se verificaron cuentas, credenciales ni datos de producción.
+- **Alternativa a evaluar para Colombia:** compra en la tienda de Katuq desde el enlace habilitado del perfil; diferente del checkout nativo de Shop.
+- **Evidencia y límites:** [informe fechado](research/tiktok-commerce-2026-10-17.md), con fuentes oficiales y pendientes de elegibilidad del desarrollador/comercio. Sin spec, diseño, tasks ni decisiones de implementación aprobadas; sin cambios de código, build, commit o deploy.

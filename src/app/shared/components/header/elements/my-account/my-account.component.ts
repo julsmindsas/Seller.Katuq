@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../../services/firebase/auth.service';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { abrirOpinar } from '../../../opinar-modal/opinar-modal.component';
 
 interface User {
   name: string;
@@ -64,7 +66,8 @@ export class MyAccountComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private modal: NgbModal
   ) {
     try {
       const userData = localStorage.getItem('user');
@@ -102,6 +105,12 @@ export class MyAccountComponent implements OnInit {
   logOut() {
     this.authService.SignOut()
   };
+
+  /** "Opinar" (D-483): en celular la barra no tiene espacio para el botón y va aquí. */
+  opinar() {
+    this.openAccount = false;
+    abrirOpinar(this.modal);
+  }
 
   // For Mobile Device
   toggleAccount() {

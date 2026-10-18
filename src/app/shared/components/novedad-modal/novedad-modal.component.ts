@@ -4,6 +4,7 @@ import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { NovedadesService, Novedad } from '../../services/novedades.service';
 import { AuthService } from '../../services/firebase/auth.service';
+import { RUTAS_PUBLICAS_BASE } from '../../data/rutas-publicas';
 
 /**
  * Modal "¿Qué hay de nuevo?". Se muestra UNA sola vez (por usuario/navegador)
@@ -21,11 +22,7 @@ export class NovedadModalComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
   private yaEvaluado = false;
-  private readonly RUTAS_PUBLICAS = [
-    '/login', '/authentication', '/registrarse', '/nuevo-registro',
-    '/change-password', '/terms-conditions', '/privacy-policy',
-    '/video-agent', '/live-audio',
-  ];
+  private readonly RUTAS_PUBLICAS = RUTAS_PUBLICAS_BASE;
 
   constructor(
     private novedades: NovedadesService,

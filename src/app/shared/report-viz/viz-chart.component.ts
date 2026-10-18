@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { EChartsOption } from 'echarts';
-import { ReportResult, VizType } from '../../model/report-spec.interfaces';
+import { ReportResult, VizType } from '../../components/dashboard/model/report-spec.interfaces';
 
 @Component({
   selector: 'app-viz-chart',
@@ -28,6 +28,8 @@ import { ReportResult, VizType } from '../../model/report-spec.interfaces';
 export class VizChartComponent {
   private _result: ReportResult | null = null;
   private _chartType: VizType = 'bar';
+  private _colors: string[] | null = null;
+  private _compacta = false;
   chartOption: EChartsOption | null = null;
 
   @Input() set result(r: ReportResult | null) {
@@ -40,11 +42,34 @@ export class VizChartComponent {
     this.compute();
   }
 
+  /** Paleta propia (p. ej. los colores del design system); sin ella, la de ECharts. */
+  @Input() set colors(c: string[] | null | undefined) {
+    this._colors = c && c.length ? c : null;
+    this.compute();
+  }
+
+  /**
+   * Torta compacta para tarjetas angostas (D-483): leyenda abajo y sin etiquetas alrededor,
+   * que en menos de ~600 px se montan sobre la leyenda. Sin ella, igual que antes.
+   */
+  @Input() set compacta(v: boolean) {
+    this._compacta = !!v;
+    this.compute();
+  }
+
   private compute(): void {
     if (!this._result || this._result.rows.length === 0) {
       this.chartOption = null;
       return;
     }
+    this.buildOption();
+    if (this.chartOption && this._colors) {
+      this.chartOption = { ...this.chartOption, color: this._colors };
+    }
+  }
+
+  private buildOption(): void {
+    if (!this._result) return;
     const cols = this._result.columns;
     const hasAxis = cols.some((c) => !!c.axis);
     const rowDims = hasAxis
@@ -85,14 +110,16 @@ export class VizChartComponent {
         const k = String(r[xDim.field] ?? '');
         agg.set(k, (agg.get(k) || 0) + (Number(r[m.field]) || 0));
       }
+      const compacta = this._compacta;
       this.chartOption = {
         tooltip: { trigger: 'item' },
-        legend: { orient: 'vertical', left: 'left' },
+        legend: compacta ? { bottom: 0, left: 'center' } : { orient: 'vertical', left: 'left' },
         series: [
           {
             name: m.label,
             type: 'pie',
-            radius: ['40%', '70%'],
+            radius: compacta ? ['42%', '68%'] : ['40%', '70%'],
+            ...(compacta ? { center: ['50%', '44%'], label: { show: false }, labelLine: { show: false } } : {}),
             data: Array.from(agg.entries()).map(([k, v]) => ({
               name: this.formatLabel(k, xDim),
               value: v,

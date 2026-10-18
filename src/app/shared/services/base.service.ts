@@ -36,6 +36,15 @@ export class BaseService {
         return this.http.post<T>(urlComplete, body, { context: new HttpContext().set(SKIP_LOADER, true) });
     }
 
+    /**
+     * GET sin la pantalla de carga global: para lo que corre de fondo sin que la persona lo
+     * haya pedido (por ejemplo, preguntar si le toca la encuesta NPS al entrar).
+     */
+    protected getSinLoader<T>(url: string): Observable<T> {
+        const urlComplete = this.urlBase + url;
+        return this.http.get<T>(urlComplete, { context: new HttpContext().set(SKIP_LOADER, true) });
+    }
+
     protected put<T>(url: string, body: any, options?: HttpParams): Observable<T> {
         const urlComplete = this.urlBase + url;
         return this.http.put<T>(urlComplete, body);

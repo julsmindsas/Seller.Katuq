@@ -1,0 +1,26 @@
+<div class="enps">
+  <div
+    class="enps__opciones"
+    role="radiogroup"
+    [attr.aria-labelledby]="etiquetadoPor"
+    [attr.aria-label]="etiquetadoPor ? null : etiqueta"
+    (keydown)="teclado($event)"
+  >
+    <button
+      #opcion
+      *ngFor="let n of notas"
+      type="button"
+      role="radio"
+      class="enps__opcion"
+      [class.is-activa]="valor === n"
+      [attr.aria-checked]="valor === n"
+      [attr.aria-label]="ariaDe(n)"
+      [attr.tabindex]="foco === n ? 0 : -1"
+      (click)="escoger(n)"
+    >{{ n }}</button>
+  </div>
+  <div class="enps__leyendas" aria-hidden="true">
+    <span class="enps__leyenda">Nada probable</span>
+    <span class="enps__leyenda">Muy probable</span>
+  </div>
+</div>

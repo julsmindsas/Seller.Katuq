@@ -1,0 +1,286 @@
+// "Opinar" (D-483). Contenido de un NgbModal (se abre con modalDialogClass 'katuq-modal',
+// que redondea el .modal-content). Tema canónico: plano, acento #5F3FE0, radios 16/11/20.
+// Ningún nombre de clase contiene "p-"; spans con color y tamaño propios; h2 con !important.
+$accent: #5F3FE0;
+$accent-hover: #4a2fc0;
+$accent-2: #7C5CFF;
+$accent-soft: #efe9ff;
+$ink: #211F3A;
+$body: #5b5878;
+$muted: #8f8bab;
+$line: #ececf4;
+$line-soft: #f1f0f7;
+$err: #D64545;
+$err-soft: #FDECEC;
+
+:host { display: block; }
+
+.opinar {
+  color: $ink;
+  background: #fff;
+
+  p, label, span, button, textarea, legend { letter-spacing: normal; }
+  :focus-visible { outline: 3px solid $accent-2 !important; outline-offset: 2px; }
+}
+
+.opinar__cabeza {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid $line-soft;
+}
+
+.opinar__textos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.opinar__eyebrow {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border: 1px solid #ddd3fb;
+  border-radius: 20px;
+  background: $accent-soft;
+  color: $accent;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .6px !important;
+  text-transform: uppercase;
+}
+
+.opinar__titulo {
+  margin: 0;
+  color: $ink;
+  font-size: 19px !important;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.opinar__sub {
+  margin: 0;
+  color: $body;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.opinar__cerrar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid #e4e2ef;
+  border-radius: 11px;
+  background: #fff;
+  color: $body;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { background: #faf9fe; color: $accent; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+.opinar__cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 20px 20px;
+}
+
+.opinar__grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.opinar__label {
+  float: none;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  color: $muted;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .6px !important;
+  text-transform: uppercase;
+}
+
+.opinar__opciones {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.opinar__tipo {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #e9e7f3;
+  border-radius: 16px;
+  background: #faf9fe;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+
+  &:hover { background: #faf9ff; border-color: #d9cffb; }
+  &:focus-within { outline: 3px solid $accent-2; outline-offset: 2px; }
+
+  &.is-activo {
+    background: rgba(124, 92, 255, .09);
+    border-color: $accent;
+  }
+}
+
+// El radio nativo da el teclado (flechas) y el lector de pantalla; la tarjeta es lo visible.
+.opinar__radio {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  pointer-events: none;
+}
+
+.opinar__icono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: $accent-soft;
+  color: $accent;
+  font-size: 14px;
+}
+
+.opinar__tipo-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.opinar__tipo-nombre {
+  color: $ink;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.opinar__tipo-ayuda {
+  color: $muted;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.opinar__texto {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 120px;
+  padding: 10px 12px;
+  border: 1px solid #e9e7f3;
+  border-radius: 11px;
+  background: #f5f4fa;
+  color: $ink;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color .15s ease, background .15s ease;
+
+  &::placeholder { color: $muted; }
+  &:focus { border-color: $accent; background: #fff; outline: none; }
+  &:focus-visible { outline: 3px solid $accent-2 !important; outline-offset: 1px; }
+  &[aria-invalid='true'] { border-color: $err; }
+}
+
+.opinar__pie-texto {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.opinar__nota,
+.opinar__contador {
+  color: $muted;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.opinar__contador { flex-shrink: 0; font-weight: 700; }
+
+.opinar__error {
+  color: $err;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.opinar__aviso {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: $err-soft;
+  color: $err;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.opinar__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.opinar__btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid $accent;
+  border-radius: 11px;
+  background: $accent;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+
+  &:hover:not(:disabled) { background: $accent-hover; border-color: $accent-hover; }
+  &:disabled { background: #d8d4ea; border-color: #d8d4ea; box-shadow: none; cursor: not-allowed; }
+}
+
+.opinar__btn-texto { color: inherit; font-size: inherit; }
+
+.opinar__btn--sec {
+  border-color: #e4e2ef;
+  background: #fff;
+  color: $body;
+  box-shadow: none;
+
+  &:hover:not(:disabled) { background: #faf9fe; border-color: #d9cffb; color: $accent; }
+  &:disabled { background: #fff; border-color: #e4e2ef; opacity: .55; }
+}
+
+@media (max-width: 480px) {
+  .opinar__opciones { grid-template-columns: 1fr; }
+  .opinar__cabeza { padding: 16px 16px 12px; }
+  .opinar__cuerpo { padding: 14px 16px 16px; }
+  .opinar__acciones .opinar__btn { flex: 1; }
+}

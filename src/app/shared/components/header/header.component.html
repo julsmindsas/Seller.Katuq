@@ -56,6 +56,16 @@
           </button>
         </li>
 
+        <!-- Opinar (D-483): una idea o algo que no funciona, desde cualquier pantalla.
+             En celular va en el menú de la cuenta. -->
+        <li class="opinar-nav">
+          <button class="opinar-btn" type="button" (click)="abrirOpinar()"
+                  aria-label="Opinar: cuéntanos una idea o algo que no funciona">
+            <i class="pi pi-comment" aria-hidden="true"></i>
+            <span class="opinar-btn__texto">Opinar</span>
+          </button>
+        </li>
+
         <!-- Notifications -->
         <li class="onhover-dropdown" aria-label="Notificaciones">
           <app-notification-center></app-notification-center>

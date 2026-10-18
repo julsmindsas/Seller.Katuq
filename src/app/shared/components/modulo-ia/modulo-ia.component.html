@@ -1,7 +1,7 @@
 <!-- Barra compacta: no se calcula nada hasta que la persona lo pide -->
 <div class="mi-barra" *ngIf="!abierto">
   <span class="ins-panel__icon mi-ico"><i class="pi pi-bolt"></i></span>
-  <span class="mi-barra__texto">{{ titulo }}: Katuq lo calcula y Opttia se lo explica.</span>
+  <span class="mi-barra__texto">{{ titulo }}: {{ modulo === 'satisfaccion' ? 'Katuq hace las cuentas y Opttia agrupa los comentarios en temas.' : 'Katuq lo calcula y Opttia se lo explica.' }}</span>
   <button type="button" class="ins-btn is-primary" (click)="abrir()"><i class="pi pi-bolt"></i> Ver con IA</button>
 </div>
 
@@ -12,7 +12,8 @@
       <h3 class="ins-panel__title">{{ titulo }}</h3>
       <p class="ins-panel__sub" *ngIf="d?.soloPropios">Solo con los pedidos que usted tiene asignados.</p>
       <p class="ins-panel__sub" *ngIf="!d?.soloPropios && modulo === 'cartera'">La misma cartera de tesorería, ordenada por lo que hay que cobrar primero.</p>
-      <p class="ins-panel__sub" *ngIf="!d?.soloPropios && modulo !== 'cartera'">Con los pedidos de los últimos 12 meses.</p>
+      <p class="ins-panel__sub" *ngIf="modulo === 'satisfaccion'">Con las respuestas de los últimos 90 días.</p>
+      <p class="ins-panel__sub" *ngIf="!d?.soloPropios && modulo !== 'cartera' && modulo !== 'satisfaccion'">Con los pedidos de los últimos 12 meses.</p>
     </div>
     <div class="ins-panel__actions">
       <button type="button" class="ins-btn is-primary" (click)="explicar()" [disabled]="explicando || cargando || !d">
@@ -107,7 +108,32 @@
       </div>
     </ng-container>
 
-    <div class="d-flex flex-wrap gap-2 px-3 pb-3">
+    <!-- ── Satisfacción (D-483) ──────────────────────────────── -->
+    <ng-container *ngIf="modulo === 'satisfaccion'">
+      <div class="mi-stats">
+        <div class="mi-stat"><span class="ins-label">NPS (90 días)</span><strong [ngClass]="tonoNps(d.nps)">{{ d.nps ?? '—' }}</strong></div>
+        <div class="mi-stat"><span class="ins-label">Respuestas</span><strong>{{ d.respuestas | number }}</strong></div>
+        <div class="mi-stat"><span class="ins-label">Tasa de respuesta</span><strong>{{ d.tasaRespuesta !== null && d.tasaRespuesta !== undefined ? d.tasaRespuesta + '%' : '—' }}</strong></div>
+        <div class="mi-stat"><span class="ins-label">Con comentario</span><strong>{{ (d.comentarios?.length || 0) | number }}</strong></div>
+      </div>
+      <div class="mi-lista" *ngIf="ia?.temas?.length">
+        <div class="ins-label mi-tit mi-mt">Lo que más se repite</div>
+        <div class="mi-item" *ngFor="let t of ia.temas">
+          <div class="mi-item__top">
+            <strong class="mi-item__name">{{ t.titulo }}</strong>
+            <span class="mi-chips mi-nowrap">
+              <span class="ins-pill is-accent">{{ t.menciones | number }} {{ t.menciones === 1 ? 'mención' : 'menciones' }}</span>
+              <span class="ins-pill" [ngClass]="segmento(t.segmento).clase">{{ segmento(t.segmento).texto }}</span>
+            </span>
+          </div>
+          <span class="mi-item__why mi-cita" *ngFor="let c of (t.citas || []) | slice:0:2">“{{ c }}”</span>
+        </div>
+      </div>
+      <p class="mi-pie" *ngIf="!ia?.temas?.length && d.comentarios?.length">Toque "Explicar con Opttia" para agrupar los comentarios en temas.</p>
+      <div class="mi-vacio" *ngIf="!d.comentarios?.length"><span>Todavía no hay comentarios para agrupar.</span></div>
+    </ng-container>
+
+    <div class="d-flex flex-wrap gap-2 px-3 pb-3" *ngIf="preguntas.length">
       <button type="button" class="ins-chip" *ngFor="let p of preguntas" (click)="preguntar(p)">{{ p }}</button>
     </div>
   </ng-container>

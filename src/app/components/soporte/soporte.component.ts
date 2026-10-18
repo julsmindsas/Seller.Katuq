@@ -1,9 +1,8 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ServiciosService } from '../../shared/services/servicios.service';
 import { SecurityService } from '../../shared/services/security/security.service';
-import { TicketNotificacionesSellerService } from '../../shared/services/ticket-notificaciones-seller.service';
+import { TicketsSoporteService } from '../../shared/services/soporte/tickets-soporte.service';
 import Swal from 'sweetalert2';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { finalize } from 'rxjs/operators';
@@ -88,9 +87,8 @@ export class SoporteComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private ticketService: ServiciosService,
     private securityService: SecurityService,
-    private ticketNotificaciones: TicketNotificacionesSellerService,
+    private ticketsSoporte: TicketsSoporteService,
     private storage: AngularFireStorage
   ) {
     // Get currently logged in user
@@ -572,27 +570,12 @@ export class SoporteComponent implements OnInit {
     this.isSubmitting = true;
 
     try {
-      const formData = this.ticketForm.getRawValue();
-      
-      // Add additional fields
-      formData.prioridad = this.selectedPriority;
-      formData.usuarioMesaAyuda = {
-        id: '0',
-        nombreCompleto: 'Desconocido',
-        iniciales: 'UD',
-        color: '#808080',
-        email: 'anonimo@anonimo.com',
-        celular: '0000',
-        fechaCreacion: "2024-11-06T13:16:04.0316182+00:00"
-      };
-      formData.base64String = this.fileBase64String ?? '';
-      // Identidad mínima trazable del comercio; no se envía la configuración completa de la empresa
-      formData.tienda = empresa.nombreComercio;
-      formData.company = empresa.nombreComercio;
-      formData.nit = this.currentUser?.nit || '';
-      formData.emailUsuarioReporta = this.currentUser?.email || '';
-      // Número visible consecutivo (contador compartido con Support); el cd queda como clave técnica
-      formData.nroTicket = await this.ticketNotificaciones.siguienteNumero();
+      // Identidad del comercio y número visible: el mismo armado que usa "Opinar"
+      const formData = await this.ticketsSoporte.preparar({
+        ...this.ticketForm.getRawValue(),
+        prioridad: this.selectedPriority,
+        base64String: this.fileBase64String ?? ''
+      }, empresa, this.currentUser);
 
       // Show processing indicator with progress steps
       let loadingStep = 'Preparando información...';
@@ -629,26 +612,10 @@ export class SoporteComponent implements OnInit {
         html: `Paso ${currentStep}/${totalSteps}: ${loadingStep}`
       });
 
-      // Send ticket data
-      this.ticketService.addTicket(formData).subscribe({
-        next: (response) => {
-          const ticketId = response?.result?.cd || '';
-          const numeroVisible = formData.nroTicket || ticketId;
+      // Send ticket data (el servicio avisa al equipo y a la campana del comercio)
+      this.ticketsSoporte.enviar(formData, empresa, this.currentUser).subscribe({
+        next: ({ numeroVisible }) => {
           this.isSubmitting = false;
-
-          // Notificar al equipo de soporte (ticketId como string, no el objeto)
-          this.ticketService.addNotification(`Nuevo ticket #${numeroVisible} creado`, ticketId);
-          // Campana del comercio (payload tipado y accionable), idempotente ante
-          // reintentos. El correo al equipo de soporte NO sale de aquí: lo manda el
-          // backend al crear el ticket (services/notifications/supportTicketNotifier.js).
-          this.ticketNotificaciones.notificarCreacion({
-            ticketCd: ticketId,
-            numero: formData.nroTicket,
-            asunto: formData.asunto,
-            nomComercial: empresa.nombreComercio,
-            emailComercio: this.currentUser?.email,
-            autor: formData.nombreUsuarioReporta
-          });
 
           Swal.fire({
             title: '¡Ticket creado con éxito!',

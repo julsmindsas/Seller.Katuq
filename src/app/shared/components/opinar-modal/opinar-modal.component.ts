@@ -1,0 +1,205 @@
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { ToastrService } from 'ngx-toastr';
+import { take } from 'rxjs/operators';
+import { TicketsSoporteService } from '../../services/soporte/tickets-soporte.service';
+import { SecurityService } from '../../services/security/security.service';
+import { Menu, NavService } from '../../services/nav.service';
+import { CATEGORIA_POR_DEFECTO } from '../../data/clasificacion-tickets';
+import { rutaSinQuery } from '../../data/rutas-publicas';
+
+type TipoOpinion = 'idea' | 'bug';
+
+interface OpcionOpinion {
+  key: TipoOpinion;
+  /** Lo que ya entiende Support: 'idea' sale en "Mis ideas", 'soporte' en "Mis tickets". */
+  motivo: 'idea' | 'soporte';
+  label: string;
+  ayuda: string;
+  icono: string;
+  destino: { ruta: string; nombre: string };
+}
+
+const TIPOS: OpcionOpinion[] = [
+  {
+    key: 'idea', motivo: 'idea', label: 'Una idea', ayuda: 'Algo que te gustaría que Katuq hiciera',
+    icono: 'pi-star', destino: { ruta: '/misIdeas', nombre: 'Mis ideas' },
+  },
+  {
+    key: 'bug', motivo: 'soporte', label: 'Algo no funciona', ayuda: 'Un error o algo que no se comporta como esperas',
+    icono: 'pi-exclamation-triangle', destino: { ruta: '/misTickets', nombre: 'Mis tickets' },
+  },
+];
+
+/** Primeras palabras del texto, sin cortar una palabra a la mitad. */
+export function asuntoDe(texto: string, max = 70): string {
+  const limpio = String(texto || '').replace(/\s+/g, ' ').trim();
+  if (limpio.length <= max) return limpio;
+  const corte = limpio.slice(0, max - 1);
+  const ultimoEspacio = corte.lastIndexOf(' ');
+  const base = ultimoEspacio > max / 2 ? corte.slice(0, ultimoEspacio) : corte;
+  return base.replace(/[\s.,;:¡!¿?-]+$/, '') + '…';
+}
+
+/** Título del menú de la pantalla (la ruta más larga que coincida), p. ej. "Inventario por bodega". */
+export function nombreDePantalla(ruta: string, menu: Menu[] | undefined): string | null {
+  let titulo: string | null = null;
+  let largo = 0;
+  const pendientes: Menu[] = [...(menu || [])];
+  while (pendientes.length) {
+    const it = pendientes.pop() as Menu;
+    if (it.children) pendientes.push(...it.children);
+    if (!it.path || !it.title) continue;
+    const p = '/' + it.path.replace(/^\/+/, '');
+    if ((ruta === p || ruta.startsWith(p + '/')) && p.length > largo) {
+      largo = p.length;
+      titulo = it.title;
+    }
+  }
+  return titulo;
+}
+
+/**
+ * "Opinar" (D-483): atajo de un solo campo que crea el mismo ticket que Soporte, por el
+ * mismo servicio. La pantalla de origen se guarda sola (campo `pantalla` y pie de la
+ * descripción, para que el equipo la vea sin cambiar Support).
+ */
+@Component({
+  selector: 'app-opinar-modal',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './opinar-modal.component.html',
+  styleUrls: ['./opinar-modal.component.scss'],
+})
+export class OpinarModalComponent {
+  readonly MIN = 10;
+  readonly MAX = 2000;
+  readonly tipos = TIPOS;
+
+  tipo: TipoOpinion | null = null;
+  texto = '';
+  intento = false;
+  enviando = false;
+  error: string | null = null;
+
+  /** Ruta desde donde se abrió, sin query (puede traer búsquedas o datos del cliente). */
+  readonly pantalla: string;
+  readonly nombrePantalla: string | null;
+
+  constructor(
+    public activeModal: NgbActiveModal,
+    private router: Router,
+    private security: SecurityService,
+    private ticketsSoporte: TicketsSoporteService,
+    private toastr: ToastrService,
+    nav: NavService,
+  ) {
+    this.pantalla = rutaSinQuery(this.router.url);
+    this.nombrePantalla = nombreDePantalla(this.pantalla, nav.ALLMENUITEMS);
+  }
+
+  get largo(): number { return this.texto.trim().length; }
+  get textoValido(): boolean { return this.largo >= this.MIN && this.largo <= this.MAX; }
+  get opcion(): OpcionOpinion | undefined { return TIPOS.find((t) => t.key === this.tipo); }
+
+  async enviar(): Promise<void> {
+    if (this.enviando) return;
+    this.intento = true;
+    this.error = null;
+    const opcion = this.opcion;
+    if (!opcion || !this.textoValido) return;
+
+    // Empresa activa desde la fuente canónica; sin ella no se crea un ticket huérfano
+    const empresa = this.security.getCompanyInformationLogged();
+    if (!empresa?.nombreComercio) {
+      this.error = 'No pudimos identificar tu comercio. Cierra sesión, vuelve a entrar e inténtalo de nuevo.';
+      return;
+    }
+    const usuario = this.usuarioActual();
+
+    this.enviando = true;
+    try {
+      const ticket = await this.ticketsSoporte.preparar(this.armarDatos(opcion, usuario), empresa, usuario);
+      this.ticketsSoporte.enviar(ticket, empresa, usuario).subscribe({
+        next: ({ numeroVisible }) => {
+          this.enviando = false;
+          this.avisarEnviado(numeroVisible, opcion);
+          this.activeModal.close(numeroVisible);
+        },
+        error: () => this.fallo(),
+      });
+    } catch {
+      this.fallo();
+    }
+  }
+
+  cerrar(): void {
+    if (!this.enviando) this.activeModal.dismiss();
+  }
+
+  /** Los mismos campos que arma Soporte; identidad, número y responsable los pone el servicio. */
+  private armarDatos(opcion: OpcionOpinion, usuario: any): any {
+    const hoy = new Date().toISOString().split('T')[0];
+    const texto = this.texto.trim();
+    const lugar = this.nombrePantalla ? `${this.nombrePantalla} (${this.pantalla})` : this.pantalla;
+    return {
+      adjuntos: [],
+      ticketComments: '',
+      canal: 'opinar',
+      categoria: CATEGORIA_POR_DEFECTO.valor,
+      subcategoria: CATEGORIA_POR_DEFECTO.subcategorias[0].valor,
+      motivo: opcion.motivo,
+      tipoSolicitud: opcion.key,
+      nombreUsuarioReporta: usuario?.name || usuario?.email || '',
+      fechaRegistro: hoy,
+      fechaEvento: hoy,
+      asunto: asuntoDe(texto),
+      descripcion: `${texto}\n\n—\nPantalla: ${lugar}`,
+      pantalla: this.pantalla,
+      status: 'Pendiente',
+      prioridad: 'media',
+      base64String: '',
+    };
+  }
+
+  private avisarEnviado(numero: string | number, opcion: OpcionOpinion): void {
+    const aviso = this.toastr.success(
+      `Quedó con el número #${numero}. Toca aquí para verlo en ${opcion.destino.nombre}.`,
+      'Gracias, lo leemos todo',
+      { timeOut: 8000, closeButton: true, progressBar: true },
+    );
+    aviso.onTap.pipe(take(1)).subscribe(() => this.router.navigate([opcion.destino.ruta]));
+  }
+
+  private fallo(): void {
+    this.enviando = false;
+    this.error = 'No pudimos enviarlo. Revisa tu conexión e inténtalo de nuevo; lo que escribiste sigue aquí.';
+  }
+
+  private usuarioActual(): any {
+    try {
+      return JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  }
+}
+
+/**
+ * Abre "Opinar". NgbModal lo monta en el body: declarado dentro de la pantalla quedaría
+ * atrapado bajo el menú (contexto de apilamiento de `.page-body`). Lo usan el botón del
+ * header (escritorio) y el menú de la cuenta (celular, donde la barra no tiene espacio).
+ */
+export function abrirOpinar(modal: NgbModal): void {
+  const ref = modal.open(OpinarModalComponent, {
+    centered: true,
+    backdrop: 'static', // un clic afuera no borra lo escrito; Esc y la X sí cierran
+    modalDialogClass: 'katuq-modal',
+    ariaLabelledBy: 'opinar-titulo',
+    beforeDismiss: () => !ref.componentInstance?.enviando,
+  });
+  ref.result.catch(() => { /* cerrado sin enviar */ });
+}

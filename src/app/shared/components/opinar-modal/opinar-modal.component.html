@@ -1,0 +1,74 @@
+<div class="opinar">
+  <header class="opinar__cabeza">
+    <div class="opinar__textos">
+      <span class="opinar__eyebrow">Opinar</span>
+      <h2 class="opinar__titulo" id="opinar-titulo">¿Qué nos quieres contar?</h2>
+      <p class="opinar__sub">Lo lee el equipo de Katuq y te responde aquí mismo.</p>
+    </div>
+    <button type="button" class="opinar__cerrar" (click)="cerrar()" [disabled]="enviando" aria-label="Cerrar">
+      <i class="pi pi-times" aria-hidden="true"></i>
+    </button>
+  </header>
+
+  <form class="opinar__cuerpo" (ngSubmit)="enviar()" novalidate>
+    <fieldset class="opinar__grupo">
+      <legend class="opinar__label">¿Qué es?</legend>
+      <div class="opinar__opciones">
+        <label
+          *ngFor="let t of tipos; let primero = first"
+          class="opinar__tipo"
+          [class.is-activo]="tipo === t.key"
+        >
+          <input
+            type="radio"
+            class="opinar__radio"
+            name="tipo"
+            [value]="t.key"
+            [(ngModel)]="tipo"
+            [attr.ngbAutofocus]="primero ? '' : null"
+          />
+          <span class="opinar__icono" aria-hidden="true"><i class="pi" [ngClass]="t.icono"></i></span>
+          <span class="opinar__tipo-textos">
+            <span class="opinar__tipo-nombre">{{ t.label }}</span>
+            <span class="opinar__tipo-ayuda">{{ t.ayuda }}</span>
+          </span>
+        </label>
+      </div>
+      <span class="opinar__error" *ngIf="intento && !tipo">Elige si es una idea o algo que no funciona.</span>
+    </fieldset>
+
+    <div class="opinar__grupo">
+      <label class="opinar__label" for="opinar-texto">{{ tipo === 'bug' ? 'Cuéntanos qué pasó' : 'Cuéntanos tu idea' }}</label>
+      <textarea
+        id="opinar-texto"
+        class="opinar__texto"
+        name="texto"
+        rows="5"
+        aria-describedby="opinar-nota"
+        [attr.aria-invalid]="intento && !textoValido"
+        [maxlength]="MAX"
+        [placeholder]="tipo === 'bug' ? 'Qué estabas haciendo y qué pasó' : 'Qué te gustaría que Katuq hiciera'"
+        [(ngModel)]="texto"
+      ></textarea>
+      <div class="opinar__pie-texto">
+        <span class="opinar__error" id="opinar-nota" *ngIf="intento && !textoValido; else notaPantalla">
+          Escribe al menos {{ MIN }} caracteres para enviarlo.
+        </span>
+        <ng-template #notaPantalla>
+          <span class="opinar__nota" id="opinar-nota">Guardamos sola la pantalla donde estás<ng-container *ngIf="nombrePantalla">: {{ nombrePantalla }}</ng-container>.</span>
+        </ng-template>
+        <span class="opinar__contador">{{ texto.length }}/{{ MAX }}</span>
+      </div>
+    </div>
+
+    <p class="opinar__aviso" *ngIf="error" role="alert">{{ error }}</p>
+
+    <div class="opinar__acciones">
+      <button type="button" class="opinar__btn opinar__btn--sec" (click)="cerrar()" [disabled]="enviando">Cancelar</button>
+      <button type="submit" class="opinar__btn" [disabled]="enviando">
+        <i class="pi" [ngClass]="enviando ? 'pi-spin pi-spinner' : 'pi-send'" aria-hidden="true"></i>
+        <span class="opinar__btn-texto">{{ enviando ? 'Enviando…' : 'Enviar' }}</span>
+      </button>
+    </div>
+  </form>
+</div>

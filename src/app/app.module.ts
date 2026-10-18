@@ -19,6 +19,7 @@ import { LoadingBarModule } from '@ngx-loading-bar/core';
 import { environment } from '../environments/environment';
 import { AppComponent } from './app.component';
 import { NovedadModalComponent } from './shared/components/novedad-modal/novedad-modal.component';
+import { NpsTarjetaComponent } from './shared/components/nps-tarjeta/nps-tarjeta.component';
 import { LoginModule } from '../app/auth/login/login.module';
 // import { ServiceWorkerModule } from '@angular/service-worker'; // SW desactivado (2026-03-25)
 import { TreeTableModule } from 'primeng/treetable';
@@ -151,7 +152,9 @@ export function HttpLoaderFactory(http: HttpClient) {
     AppTranslateModule,
     VoiceInteractionModule,
     VoiceAgentModule, // Agregamos el módulo aquí
-    LiveAudioModule
+    LiveAudioModule,
+    // Pregunta NPS a comercios (D-483), standalone
+    NpsTarjetaComponent
   ],
   providers: [
     NotificationService,

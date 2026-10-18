@@ -7,9 +7,7 @@ import { DashboardRoutingModule } from './dashboard-routing.module';
 import { LegacyDashboardComponent } from './legacy-dashboard.component';
 import { DashboardHomeComponent } from './home/dashboard-home.component';
 import { ReportBuilderComponent } from './builder/report-builder.component';
-import { VizKpiComponent } from './builder/widgets/viz-kpi.component';
-import { VizTableComponent } from './builder/widgets/viz-table.component';
-import { VizChartComponent } from './builder/widgets/viz-chart.component';
+import { ReportVizModule } from '../../shared/report-viz/report-viz.module';
 import { ReportViewComponent } from './view/report-view.component';
 
 import { NgSelectModule } from '@ng-select/ng-select';
@@ -51,6 +49,7 @@ import { AnalyticsService } from '../../shared/services/dashboard/analytics.serv
     MultiSelectModule,
     ToastModule,
     DragDropModule,
+    ReportVizModule,
     NgxEchartsModule.forRoot({
       echarts: () => import('echarts'),
     }),
@@ -60,9 +59,6 @@ import { AnalyticsService } from '../../shared/services/dashboard/analytics.serv
     DashboardHomeComponent,
     ReportBuilderComponent,
     ReportViewComponent,
-    VizKpiComponent,
-    VizTableComponent,
-    VizChartComponent,
   ],
 })
 export class DashboardModule {}

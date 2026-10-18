@@ -284,6 +284,9 @@ export class NavService implements OnDestroy {
           // La adhesión/cuenta Kuvo usa el rol administrador existente; no aparece
           // para un rol operativo aunque tenga el comodín de rutas.
           if (child.path === "kuvo" && !isCompanyAdmin && !isSuperAdmin) return false;
+          // Fase 1 (D-483): solo Julsmind recibe opiniones (las de los comercios sobre Katuq).
+          // Cuando lleguen las de los compradores (fase 2), se abre a cada comercio.
+          if (child.path === "crm/satisfaccion" && !(esFamiliaAdministrador(user.rol) && user.company === "Julsmind")) return false;
           // Filtrar rutas de dropshipping si no está habilitado
           if (
             child.path &&
@@ -515,6 +518,9 @@ export class NavService implements OnDestroy {
       children: [
         { path: "crm/list", title: "Pipeline", type: "link", icon: "bar-chart-2" },
         { path: "crm/tasks", title: "Seguimiento", type: "link", icon: "alert-circle" },
+        // D-483: NPS y comentarios. Solo la familia Administrador (el backend responde 403 a
+        // los demás), aunque el rol tenga la ruta o el comodín.
+        { path: "crm/satisfaccion", title: "Satisfacción de clientes", type: "link", icon: "fa-smile-o" },
       ],
     },
 

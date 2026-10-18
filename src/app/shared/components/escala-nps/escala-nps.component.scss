@@ -1,0 +1,70 @@
+// Escala NPS 0–10. Tema canónico (openspec/specs/design-system): plano, acento #5F3FE0.
+// Neutra a propósito: sin rojo ni verde por nota, para no sesgar la respuesta.
+// Ningún nombre de clase contiene "p-" (trampa `[class*="p-"]`); spans con color propio.
+$accent: #5F3FE0;
+$accent-2: #7C5CFF;
+$ink: #211F3A;
+$muted: #8f8bab;
+
+:host { display: block; }
+
+.enps__opciones {
+  display: grid;
+  // Las 11 caben en 358 px (390 px menos márgenes) sin scroll horizontal.
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.enps__opcion {
+  appearance: none;
+  // El global de celular da `min-width: 44px !important` a todo botón: 11 x 44 no caben en 390.
+  min-width: 0 !important;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #e9e7f3;
+  border-radius: 11px;
+  background: #f5f4fa;
+  color: $ink;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: normal;
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease, color .12s ease, transform .12s ease;
+
+  &:hover { background: #efe9ff; border-color: #d9cffb; color: $accent; }
+
+  &.is-activa {
+    background: $accent;
+    border-color: $accent;
+    color: #fff;
+    box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+  }
+
+  &:focus-visible { outline: 3px solid $accent-2 !important; outline-offset: 2px; }
+}
+
+.enps__leyendas {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.enps__leyenda {
+  color: $muted;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: normal;
+}
+
+// En celular el alto queda en 44 px (el mismo global), que sirve de blanco táctil.
+@media (max-width: 768px) {
+  .enps__opcion { height: 44px; }
+}
+
+@media (max-width: 420px) {
+  .enps__opciones { gap: 3px; }
+  .enps__opcion { font-size: 13px; border-radius: 9px; }
+}

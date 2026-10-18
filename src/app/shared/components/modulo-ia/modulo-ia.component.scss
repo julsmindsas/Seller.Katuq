@@ -35,6 +35,7 @@ $muted: #8f8bab;
   strong { font-size: 17px; font-weight: 800; color: $accent; }
   strong.is-danger { color: #D64545; }
   strong.is-warning { color: #D9820A; }
+  strong.is-success { color: #1E874B; }
 }
 
 .mi-small { font-size: 12px; color: $muted; font-weight: 700; }
@@ -70,6 +71,8 @@ $muted: #8f8bab;
 .mi-item__meta { color: $muted; font-size: 12px; letter-spacing: normal; }
 .mi-item__why { color: #4b4868; font-size: 12.5px; letter-spacing: normal; }
 .mi-wa { text-decoration: none; border: 0; cursor: pointer; }
+.mi-nowrap { flex-wrap: nowrap; flex-shrink: 0; }
+.mi-cita { font-style: italic; }
 .mi-pie, .mi-vacio span { display: block; color: $muted; font-size: 12px; margin: 6px 18px 10px; letter-spacing: normal; }
 
 @media (max-width: 992px) {

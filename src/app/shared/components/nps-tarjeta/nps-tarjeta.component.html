@@ -1,0 +1,49 @@
+<aside
+  *ngIf="paso"
+  class="nt-tarjeta"
+  role="dialog"
+  aria-modal="false"
+  [attr.aria-labelledby]="paso === 'gracias' ? null : 'nt-pregunta'"
+  [attr.aria-label]="paso === 'gracias' ? 'Gracias por tu opinión' : null"
+  (keydown.escape)="cerrar()"
+>
+  <button type="button" class="nt-cerrar" (click)="cerrar()" aria-label="Cerrar">
+    <i class="pi pi-times" aria-hidden="true"></i>
+  </button>
+
+  <ng-container *ngIf="paso !== 'gracias'; else gracias">
+    <span class="nt-eyebrow">Tu opinión</span>
+    <h2 class="nt-pregunta" id="nt-pregunta">Del 0 al 10, ¿qué tan probable es que le recomiendes Katuq a otro negocio?</h2>
+
+    <app-escala-nps [valor]="nota" etiquetadoPor="nt-pregunta" (cambio)="escogerNota($event)"></app-escala-nps>
+
+    <div class="nt-acciones" *ngIf="paso === 'nota'">
+      <button type="button" class="nt-btn nt-btn--sec" (click)="ahoraNo()">Ahora no</button>
+    </div>
+
+    <form class="nt-segundo" *ngIf="paso === 'comentario'" (ngSubmit)="enviar()">
+      <label class="nt-label" for="nt-comentario">{{ preguntaComentario }}</label>
+      <textarea
+        id="nt-comentario"
+        class="nt-texto"
+        name="comentario"
+        rows="3"
+        placeholder="Opcional"
+        aria-describedby="nt-contador"
+        [maxlength]="MAX_COMENTARIO"
+        [(ngModel)]="comentario"
+      ></textarea>
+      <div class="nt-pie">
+        <span class="nt-contador" id="nt-contador">{{ comentario.length }}/{{ MAX_COMENTARIO }}</span>
+        <button type="submit" class="nt-btn">Enviar</button>
+      </div>
+    </form>
+  </ng-container>
+
+  <ng-template #gracias>
+    <div class="nt-gracias" role="status">
+      <span class="nt-gracias__icono" aria-hidden="true"><i class="pi pi-heart"></i></span>
+      <p class="nt-gracias__texto">¡Gracias! Lo leemos todo.</p>
+    </div>
+  </ng-template>
+</aside>

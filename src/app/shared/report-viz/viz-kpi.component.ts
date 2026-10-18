@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { ReportColumn, ReportResult } from '../../model/report-spec.interfaces';
+import { ReportColumn, ReportResult } from '../../components/dashboard/model/report-spec.interfaces';
 
 @Component({
   selector: 'app-viz-kpi',

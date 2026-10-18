@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { BaseService } from './base.service';
 
-export type ModuloIA = 'clientes' | 'cartera' | 'pedidos';
+export type ModuloIA = 'clientes' | 'cartera' | 'pedidos' | 'satisfaccion';
 
 /** IA de los módulos principales (D-405): calcular no gasta cupo; explicar consume un mensaje de chat. */
 @Injectable({ providedIn: 'root' })
