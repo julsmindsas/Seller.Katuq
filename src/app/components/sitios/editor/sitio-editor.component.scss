@@ -3789,3 +3789,46 @@ input.is-error { border-color: #b42318 !important; }
   &__aa { font-size: 20px; font-weight: 700; line-height: 1; color: inherit; }
   &__boton { width: 22px; height: 10px; border-radius: 99px; }
 }
+
+// ── Ticket 1247 (TX-32): pestaña Tienda en acordeón ──────────────────────────
+// El título del grupo abre y cierra; cerrado solo se ve el título.
+.grupo--plegable {
+  margin-bottom: 8px;
+  padding: 0 14px;
+  border: 1.5px solid var(--kb-line-4);
+  border-radius: 14px;
+  background: #fff;
+
+  &.is-abierto { padding-bottom: 14px; border-color: var(--kb-accent-line-2, #cfc5f7); }
+  &:not(.is-abierto) > :not(.grupo__plegar) { display: none !important; }
+
+  > h3.grupo__plegar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 -14px;
+    padding: 12px 14px;
+    cursor: pointer;
+    border-radius: 14px;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--kb-ink);
+
+    &::after {
+      content: "";
+      flex: none;
+      width: 8px;
+      height: 8px;
+      border-right: 2.5px solid var(--kb-muted);
+      border-bottom: 2.5px solid var(--kb-muted);
+      transform: rotate(-45deg);
+      transition: transform 0.15s ease;
+    }
+
+    &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  }
+
+  &.is-abierto > h3.grupo__plegar { margin-bottom: 4px; }
+  &.is-abierto > h3.grupo__plegar::after { transform: rotate(45deg); }
+}

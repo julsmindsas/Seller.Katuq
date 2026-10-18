@@ -1866,8 +1866,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     { texto: "Promociones automáticas", donde: "Tienda", panel: "tienda", claves: "oferta 2x1 descuento" },
     { texto: "Correos de tu tienda", donde: "Tienda", panel: "tienda", claves: "email confirmacion carrito" },
     { texto: "Cómo te pagan", donde: "Tienda", panel: "tienda", claves: "pagos wompi contra entrega transferencia nequi" },
-    { texto: "Productos que se cotizan", donde: "Tienda", panel: "tienda", claves: "cotizar asesor cotizacion" },
-    { texto: "Pedido mínimo", donde: "Tienda", panel: "tienda", claves: "minimo mayorista" },
+    { texto: "Productos que se cotizan", donde: "Tienda", panel: "tienda", grupo: "Cómo te pagan", claves: "cotizar asesor cotizacion" },
+    { texto: "Pedido mínimo", donde: "Tienda", panel: "tienda", grupo: "Cómo te pagan", claves: "minimo mayorista" },
     { texto: "Enlace para una campaña", donde: "Pauta", panel: "pauta", claves: "utm qr enlace corto influenciador" },
     { texto: "Catálogo para Google Shopping y Meta", donde: "Pauta", panel: "pauta", claves: "feed merchant" },
     { texto: "Meta — Facebook e Instagram", donde: "Pauta", panel: "pauta", claves: "pixel conversions api" },
@@ -1902,7 +1902,10 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.busquedaAjuste = "";
     this.panel = a.panel as any;
     if (a.panel === "tienda") this.cargarBodegas();
-    if (a.grupo) {
+    if (a.panel === "tienda") {
+      // La pestaña Tienda va en acordeón: se abre el grupo del ajuste.
+      this.tiendaAbierto = a.grupo || a.texto;
+    } else if (a.grupo) {
       this.estiloAbierto = a.grupo;
       if (a.grupo === "letra") this.cargarMuestrasDeLetra();
     }
@@ -2080,6 +2083,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   irACampo(panel: string, campoId: string): void {
     this.panel = panel as any;
     if (panel === "tienda") this.cargarBodegas();
+    // Ticket 1247: la pestaña Tienda va en acordeón; se abre el grupo del campo.
+    const grupoDeCampo: { [id: string]: string } = { "campo-envio": "Envío", "campo-pagos": "Cómo te pagan", "campo-entregas": "Entregas", "campo-kai": "KAI administra tu web", "campo-cotizables": "Cómo te pagan" };
+    if (panel === "tienda" && grupoDeCampo[campoId]) this.tiendaAbierto = grupoDeCampo[campoId];
     // Espera a que la pestaña se pinte para ubicar el campo.
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const el = document.getElementById(campoId);
@@ -2445,6 +2451,13 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   estiloAbierto = "colores";
   readonly coloresExtra = COLORES_EXTRA;
   readonly opcionesEstilo = OPCIONES_ESTILO;
+
+  /** Ticket 1247 (TX-32): grupo abierto de la pestaña Tienda (acordeón; "" = todos plegados). */
+  tiendaAbierto = "";
+
+  abrirGrupoTienda(titulo: string): void {
+    this.tiendaAbierto = this.tiendaAbierto === titulo ? "" : titulo;
+  }
 
   abrirGrupoEstilo(id: string): void {
     this.estiloAbierto = this.estiloAbierto === id ? "" : id;
