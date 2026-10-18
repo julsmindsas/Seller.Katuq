@@ -10864,7 +10864,8 @@ Daniel (16-oct): "requiero un módulo de marketing para Katuq y para Julsmind; q
   - Verificado: 5 contract tests nuevos en `tests/pauta` (write-set de cada motor, idempotencia del envío comprobada con mutación, token fuera de URL y errores) y los de activación, vendedores activos y CRM en verde; build del front sin errores.
   - Desvíos registrados en `design.md`: modo `hitos`, ventana de 6 días de Meta, puntaje en `companies.pauta.crm`, sin backfill de menús y `landingContacts` sin tocar (nadie lo llama).
   - Publicado el 18-oct: backend `ed3ab1cd` (pull + `pm2 reload`, sin variables nuevas en `.env`: todo apagado; `/v1/pauta/*` responde 401 sin sesión) y front 2026.10.18.9 desde `240d7cbb` con la copia limpia.
-  - Falta: revisar la pantalla a 1440 y 390 px, medir el p95 y encender por pasos con OK de Daniel (tareas 9.x).
+  - Encendido el 18-oct a las 20:49 UTC, con OK de Daniel: `PAUTA_EVENTOS=hitos` (calcula etapas sin llamar a Meta), `AVISOS_PLAN=sombra` y `CRM_AUTOPILOT=sombra` (anotan sin enviar ni mover). Respaldo en `functions/.env.bak-d485-*`. Primera vuelta a las 21:00 UTC sin errores: el embudo revisó 3 empresas de los últimos 14 días y encontró 4 hitos; el aviso revisó 7 empresas con 3 o más pedidos y ninguna llega al 80 %.
+  - Falta: credenciales de Meta, revisar la pantalla con la sesión de Julsmind a 1440 y 390 px, medir el p95 y seguir encendiendo por pasos con OK de Daniel (tareas 9.x).
 
 ## D-486 (2026-10-18) — Estilo robusto: paleta completa con contraste garantizado, botones, tarjeta de producto, encabezado, medidas y propuesta de KAI como antes y después (ticket 1227, F2-17) — PUBLICADO: backend 3b847f62, front 2026.10.18.1
 

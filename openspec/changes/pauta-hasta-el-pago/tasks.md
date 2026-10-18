@@ -68,8 +68,8 @@
 
 ## 9. Encendido (cada paso con OK de Daniel)
 
-- [ ] 9.1 Desplegar el backend con todo `apagado`; verificar el log y que las pantallas existentes sigan iguales.
-- [ ] 9.2 Desplegar el front; comparar el embudo con la consola en el mismo rango.
+- [x] 9.1 Desplegar el backend con todo `apagado`; verificar el log y que las pantallas existentes sigan iguales. — 18-oct: backend `ed3ab1cd`; `/v1/pauta/*` 401 sin sesión y 403 a un administrador de comercio.
+- [ ] 9.2 (Publicado 2026.10.18.9; falta comparar con la sesión de Julsmind) Desplegar el front; comparar el embudo con la consola en el mismo rango.
 - [ ] 9.3 `PAUTA_EVENTOS=hitos` y `PAUTA_EVENTOS_DESDE` = día del encendido (en 6 horas quedan calculados los 90 días, sin script) → `sombra` 1 día → revisar 10 empresas a mano → `prueba` (ver en "Probar eventos") → `envio`.
 - [ ] 9.4 Con OK de Daniel: crear la conversión personalizada `PrimerPedido` y cambiar la optimización de la campaña.
 - [ ] 9.5 `AVISOS_PLAN=sombra` 2 días → Daniel revisa la lista → `envio`.
