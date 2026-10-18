@@ -11091,3 +11091,11 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
 | D-502 | `modo-oscuro-seller` | 1180 |
 | D-503 | `modo-agencia-sitios` | 1253 (F5-29, parte agencia) |
 - **2026-10-18, diseño y tareas aprobados:** Daniel aprobó en bloque el diseño, las specs, las tareas y los valores por defecto de las nueve (D-495 a D-503; artefactos en f6417dcd). Se implementa empezando por lo de menor riesgo (modo oscuro fase 0, fotos fase 1 y medición de atributos F0), con las banderas apagadas. Lo que toque pedidos, pagos, inventario o consecutivos va diff por diff con su aprobación.
+
+## D-504 (2026-10-18) — Facturar en SIIGO con el código del producto que ya existe allá, y bodegas de Bombas conectadas (ticket 1229) — PROPUESTA
+
+- **Contexto:** ALMACEN BOMBAS factura en SIIGO, pero su código de producto lleva el bloque de categoría (`GLD-00-01-4SSFR`) y en SIIGO no (`GLD-01-4SSFR`). Solo 41 de 1.286 casan tal cual, y al facturar `findOrCreateProduct` crea otro producto en SIIGO: 11 repetidos ya. Ninguna bodega estaba conectada, así que SIIGO descontaba de su bodega por defecto.
+- **Hecho (datos, 2026-10-18):** se conectaron BOD-005 Bogotá → 6, BOD-006 Cali → 7 y BOD-001 Zona Franca LD → 31, en `warehouses.integrations.siigo` (mismo formato que la pantalla D-046, `mappedBy: ticket-1229`). Medellín (4 bodegas Katuq contra Medellin 4 y BMedellin 64) y Zona Franca Exterior quedan para el comercio.
+- **Propuesta:** `products.integrations.siigo.productCode`, que se usa antes de la referencia al facturar. Carga inicial de 666 equivalencias únicas con prueba sin escribir. Sin código y sin referencia en SIIGO, la regla busca un único equivalente antes de crear. Write-set en `products` limitado a `integrations.siigo.productCode*`.
+- **No toca:** referencia de Katuq, precios, catálogo, inventario de Katuq, World Office. D-500 (facturación a Integraciones) es aparte.
+- [Propuesta](../openspec/changes/siigo-codigo-producto-y-bodega/proposal.md). Pendiente: aprobación de Daniel para pasar a diseño y tareas.
