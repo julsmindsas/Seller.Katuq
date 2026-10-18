@@ -10859,7 +10859,7 @@ Daniel (16-oct): "requiero un módulo de marketing para Katuq y para Julsmind; q
   - destinatarios del resumen.
 - **Fase 2 (fuera):** pausar anuncios desde Katuq y automatizaciones para los comercios.
 
-## D-486 (2026-10-18) — Estilo robusto: paleta completa con contraste garantizado, botones, tarjeta de producto, encabezado, medidas y propuesta de KAI como antes y después (ticket 1227, F2-17) — backend 3b847f62, front 4b5fc9be, SIN DESPLEGAR
+## D-486 (2026-10-18) — Estilo robusto: paleta completa con contraste garantizado, botones, tarjeta de producto, encabezado, medidas y propuesta de KAI como antes y después (ticket 1227, F2-17) — PUBLICADO: backend 3b847f62, front 2026.10.18.1
 
 - **Número:** el commit del backend dice D-483 porque se escribió mientras otra sesión tomaba D-483 (NPS), D-484 y D-485. La decisión es D-486.
 - **Ajustes del tema** (`siteBlocks.normalizarTema`): todos nacen vacíos y vacío significa «como lo deja el estilo de página», así que un sitio que no los toca se ve igual. Solo aceptan listas cerradas o colores hexadecimales; no hay CSS libre.
@@ -10892,3 +10892,14 @@ Daniel (16-oct): "requiero un módulo de marketing para Katuq y para Julsmind; q
   - Subir fuente propia (licencias y almacenamiento).
   - Encabezado transparente sobre la portada.
   - Ajustes de estilo por dispositivo más allá de mostrar u ocultar secciones (ticket 1248).
+
+## D-487 (2026-10-18) — Venta asistida: una sola entrada con «Rápida» o «Por pasos», y se recuerda la elección (ticket 1168) — SIN DESPLEGAR
+
+- **Pedido de Jairo:** conservar las dos vistas, pero en una sola entrada con dos botones para que cada vendedor elija.
+- **Menú:** queda solo «Venta asistida» (`ventas/venta-asistida`). Los roles guardados con la ruta del asistente siguen viendo la entrada (`permisoPrevio: "ventas/crear-ventas"`, D-400).
+- **Selector** (`selector-vista-venta`): «Rápida | Por pasos» en el encabezado de las dos pantallas.
+  - Guarda la elección en el navegador (`kq_vista_venta_asistida`) y cambia de ruta conservando los parámetros.
+  - Las dos vistas comparten lógica (`VentaAsistidaUnica` extiende `CrearVentas`) y el carrito vive en el navegador, así que cambiar no pierde el pedido.
+- **Guard** (`VistaVentaGuard`): entrar desde el menú sin parámetros abre la vista elegida. Los enlaces con parámetros, como `?documento=` de cotizaciones, CRM o clientes, siguen yendo a `crear-ventas` sin cambio.
+- **Sin cambios en pedidos:** no toca la lógica de pedidos, precios, inventario ni facturación; es solo navegación y presentación.
+- **Pendiente:** el asistente por pasos conserva la plantilla vieja (título azul). Modernizarlo con la Regla de diseño va en un cambio aparte.
