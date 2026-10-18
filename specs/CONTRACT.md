@@ -10966,7 +10966,7 @@ Daniel (18-oct), al ver D-483: "eso no es un sistema NPS". Quiere un módulo NPS
   - **Antes de encender:** `ENCUESTA_SECRET` en el `.env`, y SPF, DKIM y DMARC verificados.
   - **Rastreo de las vías de Entregado y desvíos:** en el tasks.md del change.
 
-## D-492 (2026-10-18) — Plantillas con bandera por comercio, cableadas, y «Tecnología — Catálogo grande» apagada (ticket 1257, TX-36 parte 2) — backend 60f01646, front 5793d0b8
+## D-492 (2026-10-18) — Plantillas con bandera por comercio, cableadas, y «Tecnología — Catálogo grande» apagada (ticket 1257, TX-36 parte 2) — PUBLICADO: backend 60f01646, front 2026.10.18.5 (banderas apagadas)
 
 - **Cableado de D-385:** `listarPlantillas` y `generar` preguntan una vez por petición las banderas de plantillas de la empresa del token (`isFeatureEnabled`). Una plantilla con bandera solo se lista, al final, y solo se genera para quien la tenga encendida; para los demás es una plantilla desconocida. Las pruebas A4 y A5 de `plantillaProductoUnicoApagada`, pendientes desde D-385, pasan.
 - **Catálogo:** `singleProductTemplate` y `techCatalogTemplate`, en backend y front, apagadas para todos. Se encienden con `scripts/set-company-feature.js "<empresa>" <bandera> on --execute`, primero en FLORECER. Se retiran el 2027-03-31.
