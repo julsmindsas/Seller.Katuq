@@ -7,6 +7,7 @@ import { UtilsService } from "./utils.service";
 import { CompanyFeaturesService } from "./company-features.service";
 import { SecurityService } from "./security/security.service";
 import { dropshippingHabilitadoEnLaSesion } from "./dropshipping-settings.service";
+import { npsDisponible } from "./nps/nps.service";
 import { esFamiliaAdministrador, esSuperAdministrador } from "../utils/roles";
 
 // Menu
@@ -210,7 +211,7 @@ export class NavService implements OnDestroy {
 
   /** NPS (D-490): Julsmind lo ve siempre; los demás comercios, con la bandera `npsModulo`. */
   private npsVisible(user: any): boolean {
-    return String(user?.company || "").trim().toLowerCase() === "julsmind" || this.npsPrendido;
+    return npsDisponible(user?.company, this.npsPrendido);
   }
 
   /** Normaliza acentos/mayúsculas y acepta la familia "Administrador" (p. ej. "Administrador LT"). */

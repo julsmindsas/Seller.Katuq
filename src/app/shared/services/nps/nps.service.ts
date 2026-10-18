@@ -16,6 +16,14 @@ function consulta(params: Record<string, string | undefined | null>): string {
 }
 
 /**
+ * ¿La empresa de la sesión tiene el módulo NPS? Julsmind siempre; los demás comercios, con la
+ * bandera `npsModulo`. Lo usan el menú y la pantalla; quien manda es el servidor (403 MODULO_APAGADO).
+ */
+export function npsDisponible(company: unknown, banderaPrendida: boolean): boolean {
+  return String(company || '').trim().toLowerCase() === 'julsmind' || banderaPrendida;
+}
+
+/**
  * Módulo NPS por comercio (D-490). Todos los endpoints del contrato de `/v1/nps`; los
  * públicos (la página que responde el comprador) no muestran la pantalla de carga global.
  */

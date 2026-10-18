@@ -52,6 +52,14 @@ export function emailSesion(): string {
   }
 }
 
+export function empresaSesion(): string {
+  try {
+    return String(JSON.parse(localStorage.getItem('user') || '{}')?.company || '');
+  } catch {
+    return '';
+  }
+}
+
 export function esAdministradorSesion(): boolean {
   return esFamiliaAdministrador(rolSesion());
 }

@@ -1,7 +1,9 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { esAdministradorSesion } from '../nps-comun';
+import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
+import { npsDisponible } from '../../../shared/services/nps/nps.service';
+import { empresaSesion, esAdministradorSesion } from '../nps-comun';
 
 interface Pestana {
   ruta: string;
@@ -19,6 +21,7 @@ const PESTANAS: Pestana[] = [
  * Marco del módulo NPS (D-490): encabezado y las tres pestañas. Resultados y Encuestas son
  * de la familia Administrador (el servidor responde 403 a los demás); Seguimiento lo ve
  * cualquiera con sesión, con los casos a su nombre (el correo del aviso lo lleva ahí).
+ * Sin el módulo (quien llega por la dirección) se explica y no se pide nada al servidor.
  */
 @Component({
   selector: 'app-nps-shell',
@@ -28,7 +31,10 @@ const PESTANAS: Pestana[] = [
   styleUrls: ['./nps-shell.component.scss'],
 })
 export class NpsShellComponent {
+  readonly disponible = npsDisponible(empresaSesion(), this.features.isEnabled('npsModulo'));
   readonly pestanas: Pestana[] = this.visibles();
+
+  constructor(private features: CompanyFeaturesService) {}
 
   private visibles(): Pestana[] {
     return esAdministradorSesion() ? PESTANAS : PESTANAS.filter((p) => p.ruta === 'seguimiento');
