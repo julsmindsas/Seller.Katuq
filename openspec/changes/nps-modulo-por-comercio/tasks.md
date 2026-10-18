@@ -45,7 +45,9 @@
 
 - [x] 5.1 Publicar el backend apagado y luego el front. Salieron el 18-oct: backend 834ccc80 y front 2026.10.18.4.
 - [ ] 5.2 FLORECER: encuesta de entrega con un pedido real y encuesta por enlace; responder como comprador, revisar el caso, el aviso, el correo y el recordatorio. Guardar capturas como evidencia.
+  - 18-oct: bandera `npsModulo` prendida a FLORECER; encuestas "Después de la entrega" (1 día) y "QR del mostrador" activas. Respuesta 3/10 por el QR: caso abierto, campana al instante, correo al responsable enviado, Contactado → nota → Resuelto con nota de cierre, Resultados con NPS −100. Pedido de prueba CER-000013 (cliente "PRUEBA Claude BORRAR") creado por Venta asistida y pasado a Entregado: encuesta programada para el 19-oct 9:00 a. m. Colombia (`scheduled_notifications/nps_Mn5P951Rn5UTsVwxiMrB`). Falta: confirmar que llega el correo y responderlo, y el recordatorio de 48 h.
 - [ ] 5.3 `ENCUESTA_SECRET` propio en el `.env` de producción (hoy se firma con `SECRET_TOKEN`); SPF, DKIM y DMARC verificados; encender `NPS_COMPRADORES`.
+  - 18-oct: `ENCUESTA_SECRET` propio y `NPS_COMPRADORES=encendida` en EC2 (respaldo `.env.bak-nps-*`), API reiniciada. Falta SPF/DKIM/DMARC.
 - [ ] 5.4 Encender `npsModulo` a los comercios por grupos.
 - [ ] 5.5 Bitácora en `specs/CONTRACT.md`.
 
