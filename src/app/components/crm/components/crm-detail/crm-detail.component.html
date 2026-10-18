@@ -144,7 +144,10 @@
               <i class="pi pi-arrow-right mx-1" style="font-size:0.6rem;" *ngIf="a.oldStage && a.newStage"></i>
               <p-tag *ngIf="a.newStage" [value]="getStageLabel(a.newStage)" [severity]="getStageSeverity(a.newStage)" [style]="{'font-size':'0.7rem'}"></p-tag>
             </div>
-            <div><small class="text-muted">{{ a.createdBy }}</small></div>
+            <div *ngIf="a.createdBy !== 'Automático'; else autor"><small class="text-muted">{{ a.createdBy }}</small></div>
+            <ng-template #autor>
+              <div><small class="crm-automatico"><i class="fa fa-magic" aria-hidden="true"></i> Automático</small></div>
+            </ng-template>
           </div>
         </div>
       </div>

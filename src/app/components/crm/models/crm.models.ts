@@ -61,6 +61,12 @@ export interface CrmLead {
   lostReason?: string;
   lostBy?: string;
   lostAt?: string;
+  // CRM de empresas de Julsmind (D-485): puntaje con sus motivos y la etapa que
+  // movió (o movería, en prueba) el recálculo automático.
+  score?: number | null;
+  scoreMotivos?: string[];
+  stageAuto?: { stage: string; motivo: string; at: string } | null;
+  stageAutoPropuesta?: { stage: string; motivo: string } | null;
 }
 
 export interface CrmActivity {

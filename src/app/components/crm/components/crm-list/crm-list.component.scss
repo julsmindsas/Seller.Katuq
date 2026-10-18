@@ -467,3 +467,45 @@
   height: 31px;
   font-size: 13px;
 }
+
+/* D-485: puntaje del CRM de empresas de Julsmind y etapa sugerida por el recálculo */
+.crm-puntaje {
+  display: inline-block;
+  min-width: 32px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.5;
+  text-align: center;
+  color: #8f8bab;
+  background: #f5f4fa;
+  cursor: default;
+
+  &.crm-puntaje--alto { color: #1E874B; background: #E6F7EE; }
+  &.crm-puntaje--medio { color: #D9820A; background: #FFF1DF; }
+  &.crm-puntaje--bajo { color: #8f8bab; background: #f5f4fa; }
+}
+
+.crm-puntaje-linea {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.crm-puntaje-etiqueta { font-size: 11px; color: #8f8bab; }
+
+.crm-sugerido {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 8px;
+  border: 1px dashed #d9cffb;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #5F3FE0;
+  background: #faf9fe;
+  cursor: default;
+}

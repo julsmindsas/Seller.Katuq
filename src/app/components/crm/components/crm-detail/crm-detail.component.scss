@@ -153,3 +153,15 @@
   line-height: 1.4;
   cursor: default;
 }
+
+/* D-485: movimientos del recálculo automático del CRM de empresas */
+.crm-automatico {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #5F3FE0;
+
+  i { font-size: 11px; color: inherit; }
+}

@@ -169,11 +169,30 @@ El crón `avisosPlan` corre cada 15 minutos.
 
 ## Open Questions
 
-1. ¿Se guarda `fbc`/`fbp` al registrarse? Cambia lo decidido en la campaña de vendedores activos y mejora el cruce de los eventos tardíos.
-2. ¿El aviso del plan va por correo + campana (propuesto) o también por WhatsApp? En ese caso, ¿por qué número?
-3. ¿La definición de "primer pedido real" es la propuesta (venta asistida, POS o tienda, total > 0, sin ejemplo)?
-4. ¿Quiénes reciben el resumen diario?
-5. Por verificar en la implementación:
-   - qué campo de `orders` filtra por empresa (`company` = `nomComercial`) y si el registro crea pedidos de ejemplo;
-   - la firma exacta de `writeSellerNotification` para un aviso que no es de pedido;
-   - la moneda y la zona horaria de la cuenta publicitaria.
+Daniel aprobó construir el 18-oct («dale construye») sin contestar las preguntas 1 a 4. Se construyó con lo propuesto, que se cambia sin tocar código:
+
+1. `fbc`/`fbp`: **no se guardan** por ahora; los eventos cruzan por correo, celular e id externo, todos resumidos. La tarea 3.6 queda pendiente de su decisión.
+2. Aviso del plan: **correo + campana**, sin WhatsApp.
+3. Primer pedido real: **el propuesto** (total > 0, no anulado, sin marca de ejemplo o prueba), en `embudo/hitos.js:esPedidoReal`.
+4. Resumen diario: **no sale** mientras `PAUTA_RESUMEN_PARA` esté vacío.
+5. Verificado en el código (18-oct):
+   - `orders.company` = `nomComercial`; `fechaCreacion` es texto ISO y el índice `company + fechaCreacion` ya existe (lo usan los insights). El registro **no** crea pedidos de ejemplo.
+   - `writeSellerNotification(type, {company}, {title, message, data})` sirve para un aviso que no es de pedido; el front toma el destino de `data.ruta`.
+   - La moneda y la zona horaria de la cuenta publicitaria se leen en cada consulta (`/act_{id}?fields=currency,timezone_name`); falta la credencial para confirmarlas.
+
+## Desvíos en la implementación (18-oct)
+
+- **Un solo modo para el embudo:** `PAUTA_EVENTOS` = `apagado | hitos | sombra | prueba | envio`. `hitos` calcula y guarda los hitos sin tocar Meta, para encender la pantalla antes que los eventos.
+- **Ventana de Meta:** la API de conversiones rechaza eventos de más de 7 días. Los hitos de más de 6 días se marcan `omitidoAt` y no se envían; por eso `PAUTA_EVENTOS_DESDE` debe ponerse el día del encendido.
+- **Rechazo de Meta:** si Meta responde con error (token, formato), nada quedó a medias y el evento se libera para la vuelta siguiente, hasta 3 intentos. Si no responde (red, tiempo agotado), queda incierto y no se repite.
+- **Modo prueba:** marca `pruebaAt` para no repetir el evento de prueba; al pasar a `envio` sale el real.
+- **Lecturas por vuelta:** las empresas de menos de 3 días se revisan cada 15 minutos, las de 3 a 14 días cada hora y las de 14 a 90 días cada 6 horas, sin escribir marcas de revisión. Solo se consulta lo que falta (productos, sitios, pedidos, suscripciones), con `limit 5`.
+- **Pago:** sale del historial de la suscripción (`subscriptions.companyDocId` → `paymentHistory` aprobado más antiguo). `subscriptionStartDate` no sirve porque el plan gratis también lo tiene.
+- **Plataforma:** se reutiliza `requirePlatformTenant` (D-484) en lugar de un `requirePlataforma` nuevo.
+- **Puntaje del CRM:** vive en `companies.pauta.crm` (`score`, `motivos`, `propuesta`), no en `crm_pipeline`. Crear un pipeline por empresa cambiaría el orden del CRM y quién aparece "sin dueño". `crm_pipeline` solo se escribe al mover una etapa (`stage` + `stageAuto`). En sombra la etapa propuesta queda en `companies.pauta.crm.propuesta`.
+- **Empresas de más de 90 días:** no tienen hitos; para el CRM cuenta el contador de pedidos del mes ("tiene pedidos este mes").
+- **Orden del CRM:** entre las empresas sin pipeline, primero las de mayor puntaje, para que entren en la carga de 200.
+- **Avisos del plan:** las marcas son `companies.avisosPlan = {cicloActual, ciclos: {<YYYY-MM-DD>: {p80, tope}}}` para medir por mes. El clic se cuenta en el ciclo actual.
+- **Menú:** no hace falta backfill de `menus`. Desde el ticket 1177 el Super Administrador recibe todas las rutas del menú; la entrada lleva `isOnlySuperAdministrador` y un filtro por empresa Julsmind.
+- **Formulario de contacto (`landingContacts`):** nadie lo llama (ni la landing ni el front). Arreglar el `!mensaje` lo abriría como endpoint público que manda correos con HTML sin escapar; se deja como está y se propone retirarlo aparte.
+- **Resumen:** recuerda el DMARC pendiente; se quita con `PAUTA_RESUMEN_NOTA_DNS=false`.

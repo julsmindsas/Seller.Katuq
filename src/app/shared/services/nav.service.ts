@@ -371,6 +371,9 @@ export class NavService implements OnDestroy {
       // Si es un enlace directo, verificar roles y permisos
       if (
         (item.isOnlySuperAdministrador && !isSuperAdmin) ||
+        // D-485: la pauta es de Katuq, no del Super Administrador de otra empresa.
+        (item.path === "/marketing/pauta" &&
+          String(user.company || "").trim().toLowerCase() !== "julsmind") ||
         (item.isOnlyAdmin && !isJulsmindAdmin) ||
         !authorizedPaths.includes(item.path) ||
         (item.path &&
@@ -838,6 +841,16 @@ export class NavService implements OnDestroy {
       type: "link",
       path: "/marketing/campanas",
       active: false,
+    },
+    // Embudo de la pauta de Katuq hasta el pago (D-485): solo el Super
+    // Administrador de Julsmind (filtro en filterMenuItemsByAuthorization).
+    {
+      title: "Pauta",
+      icon: "target",
+      type: "link",
+      path: "/marketing/pauta",
+      active: false,
+      isOnlySuperAdministrador: true,
     },
     // Los tres buzones agrupados: el menú no crece cada vez que se suma un
     // canal, y el operador entiende que es la misma tarea en distintos lugares.

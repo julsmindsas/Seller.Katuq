@@ -315,8 +315,11 @@ export class NotificationManagerService {
       createdAt: new Date(raw.timestamp || raw.createdAt || Date.now()),
       readAt: raw.read ? new Date(raw.readAt || Date.now()) : undefined,
 
-      // Acción y navegación (enviados por el backend)
-      actionUrl: raw.actionUrl || undefined,
+      // Acción y navegación (enviados por el backend). El aviso del plan gratis
+      // (D-485) llega por writeSellerNotification, que solo pasa `data`: su
+      // destino interno viene en `data.ruta` (se muestra como alerta).
+      actionUrl: raw.actionUrl
+        || (raw.type === 'PLAN_LIMIT' && typeof data.ruta === 'string' && data.ruta.startsWith('/') ? data.ruta : undefined),
       actionText: raw.actionText || undefined,
       icon: raw.icon || undefined,
       color: raw.color || undefined

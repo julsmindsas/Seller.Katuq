@@ -11,10 +11,14 @@ import { CampanaCorreoComponent } from './components/campana-correo/campana-corr
 import { EditorBloquesCorreoComponent } from './components/editor-bloques-correo/editor-bloques-correo.component';
 import { VistaPreviaCorreoComponent } from './components/vista-previa-correo/vista-previa-correo.component';
 import { SuscriptoresCorreoComponent } from './components/suscriptores-correo/suscriptores-correo.component';
+import { PautaEmbudoComponent } from './components/pauta-embudo/pauta-embudo.component';
 import { SelectorProductosModule } from '../../components/sitios/selector-productos/selector-productos.module';
 import { MarketingService } from './services/marketing.service';
 import { MarketingCorreoService } from './services/marketing-correo.service';
+import { PautaService } from './services/pauta.service';
 import { MarketingGuard } from './guards/marketing.guard';
+import { PlataformaGuard } from './guards/plataforma.guard';
+import { TableModule } from 'primeng/table';
 
 const routes: Routes = [
   {
@@ -48,6 +52,12 @@ const routes: Routes = [
     component: SuscriptoresCorreoComponent,
     canActivate: [MarketingGuard],
   },
+  // Embudo de la pauta hasta el pago (D-485): solo el Super Administrador de Julsmind.
+  {
+    path: 'pauta',
+    component: PautaEmbudoComponent,
+    canActivate: [MarketingGuard, PlataformaGuard],
+  },
 ];
 
 /**
@@ -67,16 +77,18 @@ const routes: Routes = [
     EditorBloquesCorreoComponent,
     VistaPreviaCorreoComponent,
     SuscriptoresCorreoComponent,
+    PautaEmbudoComponent,
   ],
   imports: [
     CommonModule,
     FormsModule,
+    TableModule,
     SelectorProductosModule,
     RouterModule.forChild(routes),
     NgxEchartsModule.forRoot({
       echarts: () => import('echarts'),
     }),
   ],
-  providers: [MarketingService, MarketingCorreoService, MarketingGuard],
+  providers: [MarketingService, MarketingCorreoService, PautaService, MarketingGuard, PlataformaGuard],
 })
 export class MarketingModule {}

@@ -10837,7 +10837,7 @@ Abierto por pedido de Daniel al aprobar D-483 (17-oct). Hallazgo leído en el c�
 - **Alternativa a evaluar para Colombia:** compra en la tienda de Katuq desde el enlace habilitado del perfil; diferente del checkout nativo de Shop.
 - **Evidencia y límites:** [informe fechado](research/tiktok-commerce-2026-10-17.md), con fuentes oficiales y pendientes de elegibilidad del desarrollador/comercio. Sin spec, diseño, tasks ni decisiones de implementación aprobadas; sin cambios de código, build, commit o deploy.
 
-## D-485 (2026-10-17) — De la pauta al pago: motor de marketing de Julsmind, fase 1 — PROPUESTA, pendiente de aprobación
+## D-485 (2026-10-17) — De la pauta al pago: motor de marketing de Julsmind, fase 1 — APROBADA (Daniel, 18-oct) y CONSTRUIDA, todo apagado: backend ed3ab1cd
 
 Daniel (16-oct): "requiero un módulo de marketing para Katuq y para Julsmind; quiero automatizar todo y convertir".
 
@@ -10858,6 +10858,12 @@ Daniel (16-oct): "requiero un módulo de marketing para Katuq y para Julsmind; q
   - definición de primer pedido;
   - destinatarios del resumen.
 - **Fase 2 (fuera):** pausar anuncios desde Katuq y automatizaciones para los comercios.
+- **Construido (18-oct):** Daniel aprobó con «dale construye»; las 4 preguntas quedaron con lo propuesto (sin `fbc`/`fbp`, correo + campana, primer pedido con total > 0, resumen sin destinatarios). Todo arranca apagado.
+  - Backend `ed3ab1cd` (`backend-aws-security`): `services/pauta/` (gasto de Meta, motor del embudo, eventos a Meta, aviso del plan, resumen), `services/crm/autopilot*.js`, `GET /v1/pauta/{embudo,estado,avisos-plan/metricas}` con `requirePlatformTenant` y 4 crones con su modo (`PAUTA_EVENTOS` apagado|hitos|sombra|prueba|envio, `AVISOS_PLAN`, `CRM_AUTOPILOT`, `PAUTA_RESUMEN_PARA`).
+  - Front: `/marketing/pauta` (solo Super Administrador de Julsmind), enlace desde la consola, puntaje y etapa sugerida en el CRM de empresas, y el aviso `PLAN_LIMIT` de la campana lleva a `/pricing`.
+  - Verificado: 5 contract tests nuevos en `tests/pauta` (write-set de cada motor, idempotencia del envío comprobada con mutación, token fuera de URL y errores) y los de activación, vendedores activos y CRM en verde; build del front sin errores.
+  - Desvíos registrados en `design.md`: modo `hitos`, ventana de 6 días de Meta, puntaje en `companies.pauta.crm`, sin backfill de menús y `landingContacts` sin tocar (nadie lo llama).
+  - Falta: desplegar, revisar la pantalla a 1440 y 390 px, medir el p95 y encender por pasos con OK de Daniel (tareas 9.x).
 
 ## D-486 (2026-10-18) — Estilo robusto: paleta completa con contraste garantizado, botones, tarjeta de producto, encabezado, medidas y propuesta de KAI como antes y después (ticket 1227, F2-17) — PUBLICADO: backend 3b847f62, front 2026.10.18.1
 

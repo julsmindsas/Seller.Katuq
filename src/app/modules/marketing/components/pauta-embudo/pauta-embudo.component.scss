@@ -1,0 +1,206 @@
+// Embudo de la pauta (D-485): base de Configuración (D-400), plano y sin gradientes.
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
+
+:host { display: block; }
+
+.embudo { max-width: 1280px; margin: 0 auto; }
+
+// ── Rango ──
+.embudo__rangos {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  background: $cfg-chip-bg;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 11px;
+}
+
+.embudo__rango {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: $cfg-body;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 9px;
+  cursor: pointer;
+
+  &:hover { color: $cfg-accent; }
+}
+
+.embudo__rango--activo {
+  background: #fff;
+  color: $cfg-accent;
+  font-weight: 800;
+  box-shadow: $cfg-shadow-panel;
+}
+
+.embudo__manual {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.embudo__fecha {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+
+  input {
+    min-height: 40px;
+    padding: 0 10px;
+    border: 1px solid #e4e2ef;
+    border-radius: 11px;
+    font-size: 13.5px;
+    color: $cfg-ink;
+    background: #fff;
+  }
+}
+
+// ── Avisos ──
+.embudo__aviso-cuerpo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.embudo__aviso-titulo { font-size: 13.5px; font-weight: 800; color: inherit; }
+.embudo__aviso-texto { font-size: 13px; line-height: 1.5; color: inherit; }
+.embudo__reintentar { margin-left: auto; min-height: 32px; }
+
+.embudo__advertencias {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: inherit;
+}
+.embudo__advertencias--estado { margin-top: 12px; color: $cfg-warn; }
+
+// ── Plata ──
+.embudo__kpis,
+.embudo__etapas {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .embudo__kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .embudo__etapas { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+.embudo__kpi,
+.embudo__etapa {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  box-shadow: $cfg-shadow-panel;
+}
+
+.embudo__kpi-valor,
+.embudo__etapa-valor {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: $cfg-ink;
+  overflow-wrap: anywhere;
+}
+.embudo__kpi-valor--acento { color: $cfg-accent; }
+.embudo__kpi-valor--ok { color: $cfg-ok; }
+
+.embudo__etapa { background: $cfg-tint; }
+.embudo__etapa-paso { font-size: 12px; font-weight: 700; color: $cfg-accent; }
+.embudo__etapa-paso--base { color: $cfg-muted; font-weight: 600; }
+
+// ── Tabla ──
+.embudo__ayuda { margin: -6px 0 12px; font-size: 12.5px; line-height: 1.5; color: $cfg-muted; }
+
+.embudo__tabla { overflow: hidden; }
+
+.embudo__num { text-align: right !important; white-space: nowrap; }
+
+.embudo__nombre { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.embudo__nombre-texto { font-size: 13px; font-weight: 700; color: $cfg-ink; }
+.embudo__nombre-texto--organico { color: $cfg-body; font-style: italic; }
+
+.embudo__abrir {
+  appearance: none;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #e4e2ef;
+  border-radius: 9px;
+  background: #fff;
+  color: $cfg-accent;
+  font-size: 11px;
+  cursor: pointer;
+
+  &:hover { background: $cfg-accent-soft; border-color: #d9cffb; }
+}
+
+.embudo__anuncio-nombre {
+  display: inline-block;
+  padding-left: 36px;
+  font-size: 12.5px;
+  color: $cfg-body;
+}
+.embudo__anuncio-nombre--sin { color: $cfg-muted; font-style: italic; }
+
+:host ::ng-deep .embudo__tabla .p-datatable {
+  .p-datatable-tbody > tr.embudo__anuncio { background: $cfg-tint; }
+  .p-datatable-tbody > tr.embudo__anuncio > td { font-size: 12.5px; color: $cfg-body; }
+  .p-datatable-tfoot > tr.embudo__total > td {
+    background: $cfg-accent-soft;
+    color: $cfg-ink;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 12px 14px;
+    border-color: $cfg-line-soft;
+  }
+}
+
+// ── Estado de la automatización ──
+.embudo__modos {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @media (min-width: 768px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.embudo__modo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  background: $cfg-tint;
+  border: 1px solid $cfg-line-soft;
+  border-radius: 11px;
+}
+
+.embudo__modo-nombre { font-size: 13px; color: $cfg-ink; min-width: 0; }
+
+.embudo__modo-valor {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  color: $cfg-muted;
+  background: $cfg-chip-bg;
+}
+.embudo__modo-valor--apagado { color: $cfg-muted; background: $cfg-chip-bg; }
+.embudo__modo-valor--prueba { color: $cfg-warn; background: $cfg-warn-soft; }
+.embudo__modo-valor--encendido { color: $cfg-ok; background: $cfg-ok-soft; }

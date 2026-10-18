@@ -1097,6 +1097,12 @@ export class CrmListComponent implements OnInit, OnDestroy {
     return labels[priority] || priority;
   }
 
+  /** Puntaje del CRM de empresas (D-485): 60 o más es alto, 30 a 59 medio y menos de 30 bajo. */
+  nivelPuntaje(score: number | null | undefined): 'alto' | 'medio' | 'bajo' {
+    const s = Number(score) || 0;
+    return s >= 60 ? 'alto' : s >= 30 ? 'medio' : 'bajo';
+  }
+
   getPriorityColor(priority: string): string {
     const colors: Record<string, string> = {
       low: '#6b7280', medium: '#D35400', high: '#d12b38', urgent: '#d12b38',

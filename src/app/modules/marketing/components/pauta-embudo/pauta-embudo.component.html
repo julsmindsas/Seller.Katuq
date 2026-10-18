@@ -1,0 +1,220 @@
+<div class="cfg-pagina embudo">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Marketing</span>
+      <h1 class="cfg-titulo">Pauta</h1>
+      <p class="cfg-sub">De cada peso en Meta hasta el comercio que paga. Cuenta las empresas por su fecha de registro.</p>
+    </div>
+    <div class="cfg-acciones">
+      <div class="embudo__rangos" role="group" aria-label="Período">
+        <button *ngFor="let r of rangos" type="button" class="embudo__rango"
+          [class.embudo__rango--activo]="rango === r.id" [attr.aria-pressed]="rango === r.id"
+          (click)="setRango(r.id)">{{ r.label }}</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="cfg-card embudo__manual" *ngIf="rango === 'custom'">
+    <label class="embudo__fecha">
+      <span class="cfg-label">Desde</span>
+      <input type="date" [(ngModel)]="desde" [max]="hasta" />
+    </label>
+    <label class="embudo__fecha">
+      <span class="cfg-label">Hasta</span>
+      <input type="date" [(ngModel)]="hasta" [min]="desde" />
+    </label>
+    <button type="button" class="cfg-btn" (click)="cargar()" [disabled]="cargando || !desde || !hasta">Aplicar</button>
+  </section>
+
+  <!-- Solo el equipo de Katuq -->
+  <section class="cfg-card" *ngIf="prohibido">
+    <div class="cfg-vacio">
+      <div class="cfg-vacio__icono"><i class="fa fa-lock" aria-hidden="true"></i></div>
+      <h2 class="cfg-vacio__titulo">Esta pantalla es solo para el equipo de Katuq</h2>
+      <p class="cfg-vacio__texto">Muestra la pauta de Katuq, no la de tu negocio.</p>
+    </div>
+  </section>
+
+  <p class="cfg-aviso cfg-aviso--error" *ngIf="error" role="alert">
+    <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+    <span class="embudo__aviso-texto">{{ error }}</span>
+    <button type="button" class="cfg-btn cfg-btn--sec embudo__reintentar" (click)="cargar()">Reintentar</button>
+  </p>
+
+  <section class="cfg-card" *ngIf="cargando && !embudo">
+    <div class="cfg-vacio">
+      <div class="cfg-vacio__icono"><i class="fa fa-circle-o-notch fa-spin" aria-hidden="true"></i></div>
+      <h2 class="cfg-vacio__titulo">Calculando el embudo…</h2>
+      <p class="cfg-vacio__texto">Juntamos los registros con el gasto de Meta.</p>
+    </div>
+  </section>
+
+  <ng-container *ngIf="embudo && !prohibido">
+    <div class="cfg-aviso cfg-aviso--warn" *ngIf="!embudo.gasto?.disponible" role="status">
+      <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+      <div class="embudo__aviso-cuerpo">
+        <strong class="embudo__aviso-titulo">No pudimos leer el gasto de Meta</strong>
+        <span class="embudo__aviso-texto">{{ motivoGasto }} Los registros, pedidos y pagos sí están completos.</span>
+      </div>
+    </div>
+    <div class="cfg-aviso cfg-aviso--warn" *ngIf="embudo.gasto?.advertencias?.length" role="status">
+      <i class="fa fa-info-circle" aria-hidden="true"></i>
+      <ul class="embudo__advertencias">
+        <li *ngFor="let a of embudo.gasto.advertencias">{{ a }}</li>
+      </ul>
+    </div>
+
+    <!-- Plata -->
+    <section class="embudo__kpis" aria-label="Resumen de plata">
+      <div class="embudo__kpi">
+        <span class="cfg-label">Gasto en Meta</span>
+        <strong class="embudo__kpi-valor">{{ pesos(embudo.total.gastoCOP) }}</strong>
+      </div>
+      <div class="embudo__kpi">
+        <span class="cfg-label">Costo por registro</span>
+        <strong class="embudo__kpi-valor">{{ pesos(embudo.total.costoPorRegistro) }}</strong>
+      </div>
+      <div class="embudo__kpi">
+        <span class="cfg-label">Costo por cliente que paga</span>
+        <strong class="embudo__kpi-valor embudo__kpi-valor--acento">{{ pesos(embudo.total.costoPorPago) }}</strong>
+      </div>
+      <div class="embudo__kpi">
+        <span class="cfg-label">Ingreso cobrado</span>
+        <strong class="embudo__kpi-valor embudo__kpi-valor--ok">{{ pesos(embudo.total.ingresoCOP) }}</strong>
+      </div>
+    </section>
+
+    <!-- Etapas -->
+    <section class="embudo__etapas" aria-label="Etapas del embudo">
+      <div class="embudo__etapa" *ngFor="let e of etapas; let i = index">
+        <span class="cfg-label">{{ e.etiqueta }}</span>
+        <strong class="embudo__etapa-valor">{{ numero(e.valor) }}</strong>
+        <span class="embudo__etapa-paso" *ngIf="e.paso">{{ e.paso }} de la anterior</span>
+        <span class="embudo__etapa-paso embudo__etapa-paso--base" *ngIf="!e.paso">Punto de partida</span>
+      </div>
+    </section>
+
+    <section class="cfg-card" *ngIf="sinRegistros">
+      <div class="cfg-vacio">
+        <div class="cfg-vacio__icono"><i class="fa fa-filter" aria-hidden="true"></i></div>
+        <h2 class="cfg-vacio__titulo">No hubo registros en estas fechas</h2>
+        <p class="cfg-vacio__texto">Prueba con un rango más largo.</p>
+      </div>
+    </section>
+
+    <!-- Por campaña y anuncio -->
+    <section class="cfg-card embudo__tabla" *ngIf="!sinRegistros">
+      <h2 class="cfg-card__titulo">Por campaña</h2>
+      <p class="embudo__ayuda">Abre una campaña para ver sus anuncios. Los registros sin campaña van en «Orgánico», sin gasto.</p>
+      <p-table [value]="campanas" dataKey="clave" responsiveLayout="scroll"
+        sortField="gastoCOP" [sortOrder]="-1" [tableStyle]="{ 'min-width': '72rem' }">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Campaña / anuncio</th>
+            <th pSortableColumn="gastoCOP" class="embudo__num">Gasto <p-sortIcon field="gastoCOP"></p-sortIcon></th>
+            <th pSortableColumn="registros" class="embudo__num">Registros <p-sortIcon field="registros"></p-sortIcon></th>
+            <th class="embudo__num">Producto</th>
+            <th class="embudo__num">Tienda</th>
+            <th class="embudo__num">Primer pedido</th>
+            <th class="embudo__num">Pagó</th>
+            <th class="embudo__num">Por registro</th>
+            <th class="embudo__num">Por primer pedido</th>
+            <th class="embudo__num">Por cliente que paga</th>
+            <th class="embudo__num">Ingreso</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-c let-abierta="expanded">
+          <tr>
+            <td>
+              <div class="embudo__nombre">
+                <button *ngIf="c.anuncios?.length" type="button" class="embudo__abrir" [pRowToggler]="c"
+                  [attr.aria-expanded]="abierta" [attr.aria-label]="(abierta ? 'Cerrar' : 'Ver') + ' anuncios de ' + c.nombre">
+                  <i class="fa" [ngClass]="abierta ? 'fa-chevron-down' : 'fa-chevron-right'" aria-hidden="true"></i>
+                </button>
+                <span class="embudo__nombre-texto" [class.embudo__nombre-texto--organico]="c.clave === 'organico'">{{ c.nombre }}</span>
+              </div>
+            </td>
+            <td class="embudo__num">{{ pesos(c.gastoCOP) }}</td>
+            <td class="embudo__num"><strong>{{ numero(c.registros) }}</strong></td>
+            <td class="embudo__num">{{ numero(c.producto) }}</td>
+            <td class="embudo__num">{{ numero(c.tienda) }}</td>
+            <td class="embudo__num">{{ numero(c.primerPedido) }}</td>
+            <td class="embudo__num"><strong>{{ numero(c.pago) }}</strong></td>
+            <td class="embudo__num">{{ pesos(c.costoPorRegistro) }}</td>
+            <td class="embudo__num">{{ pesos(c.costoPorPrimerPedido) }}</td>
+            <td class="embudo__num"><strong>{{ pesos(c.costoPorPago) }}</strong></td>
+            <td class="embudo__num">{{ pesos(c.ingresoCOP) }}</td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="rowexpansion" let-c>
+          <tr class="embudo__anuncio" *ngFor="let a of c.anuncios">
+            <td><span class="embudo__anuncio-nombre" [class.embudo__anuncio-nombre--sin]="a.clave === 'sin-anuncio'">{{ a.nombre }}</span></td>
+            <td class="embudo__num">{{ pesos(a.gastoCOP) }}</td>
+            <td class="embudo__num">{{ numero(a.registros) }}</td>
+            <td class="embudo__num">{{ numero(a.producto) }}</td>
+            <td class="embudo__num">{{ numero(a.tienda) }}</td>
+            <td class="embudo__num">{{ numero(a.primerPedido) }}</td>
+            <td class="embudo__num">{{ numero(a.pago) }}</td>
+            <td class="embudo__num">{{ pesos(a.costoPorRegistro) }}</td>
+            <td class="embudo__num">{{ pesos(a.costoPorPrimerPedido) }}</td>
+            <td class="embudo__num">{{ pesos(a.costoPorPago) }}</td>
+            <td class="embudo__num">{{ pesos(a.ingresoCOP) }}</td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+          <tr class="embudo__total">
+            <td>Total</td>
+            <td class="embudo__num">{{ pesos(embudo.total.gastoCOP) }}</td>
+            <td class="embudo__num">{{ numero(embudo.total.registros) }}</td>
+            <td class="embudo__num">{{ numero(embudo.total.producto) }}</td>
+            <td class="embudo__num">{{ numero(embudo.total.tienda) }}</td>
+            <td class="embudo__num">{{ numero(embudo.total.primerPedido) }}</td>
+            <td class="embudo__num">{{ numero(embudo.total.pago) }}</td>
+            <td class="embudo__num">{{ pesos(embudo.total.costoPorRegistro) }}</td>
+            <td class="embudo__num">{{ pesos(embudo.total.costoPorPrimerPedido) }}</td>
+            <td class="embudo__num">{{ pesos(embudo.total.costoPorPago) }}</td>
+            <td class="embudo__num">{{ pesos(embudo.total.ingresoCOP) }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+  </ng-container>
+
+  <!-- Estado de la automatización -->
+  <section class="cfg-card embudo__estado" *ngIf="!prohibido && (estado || errorEstado)">
+    <h2 class="cfg-card__titulo">Estado de la automatización</h2>
+    <p class="embudo__ayuda" *ngIf="errorEstado">No pudimos leer el estado en este momento.</p>
+    <ul class="embudo__modos" *ngIf="estado">
+      <li class="embudo__modo">
+        <span class="embudo__modo-nombre">Eventos a Meta (registro, primer pedido y pago)</span>
+        <span class="embudo__modo-valor" [ngClass]="'embudo__modo-valor--' + modo(estado.modos.eventos).tono">{{ modo(estado.modos.eventos).texto }}</span>
+      </li>
+      <li class="embudo__modo">
+        <span class="embudo__modo-nombre">Aviso del plan gratis</span>
+        <span class="embudo__modo-valor" [ngClass]="'embudo__modo-valor--' + modo(estado.modos.avisosPlan).tono">{{ modo(estado.modos.avisosPlan).texto }}</span>
+      </li>
+      <li class="embudo__modo">
+        <span class="embudo__modo-nombre">CRM automático</span>
+        <span class="embudo__modo-valor" [ngClass]="'embudo__modo-valor--' + modo(estado.modos.crm).tono">{{ modo(estado.modos.crm).texto }}</span>
+      </li>
+      <li class="embudo__modo">
+        <span class="embudo__modo-nombre">Lectura del gasto de Meta</span>
+        <span class="embudo__modo-valor" [ngClass]="estado.meta.gastoConfigurado ? 'embudo__modo-valor--encendido' : 'embudo__modo-valor--apagado'">{{ estado.meta.gastoConfigurado ? 'Conectada' : 'Falta conectar' }}</span>
+      </li>
+      <li class="embudo__modo">
+        <span class="embudo__modo-nombre">Envío de eventos a Meta</span>
+        <span class="embudo__modo-valor" [ngClass]="estado.meta.eventosConfigurado ? 'embudo__modo-valor--encendido' : 'embudo__modo-valor--apagado'">{{ estado.meta.eventosConfigurado ? 'Conectado' : 'Falta conectar' }}</span>
+      </li>
+      <li class="embudo__modo">
+        <span class="embudo__modo-nombre">Resumen diario por correo</span>
+        <span class="embudo__modo-valor" [ngClass]="estado.resumen.destinatarios ? 'embudo__modo-valor--encendido' : 'embudo__modo-valor--apagado'">{{ estado.resumen.destinatarios ? (estado.resumen.destinatarios + (estado.resumen.destinatarios === 1 ? ' destinatario' : ' destinatarios')) : 'Sin destinatarios' }}</span>
+      </li>
+    </ul>
+    <ul class="embudo__advertencias embudo__advertencias--estado" *ngIf="estado?.meta?.advertencias?.length">
+      <li *ngFor="let a of estado!.meta.advertencias">{{ a }}</li>
+    </ul>
+  </section>
+</div>

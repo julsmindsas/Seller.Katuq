@@ -4,10 +4,13 @@
       <h5 class="pauta__titulo">Registros por campaña</h5>
       <p class="pauta__sub">Vendedores activos = responden que reciben 10 o más pedidos a la semana (solo en campañas con <code>perfil=vendedor</code>). Sin cuentas de prueba ni registros sin confirmar su correo.</p>
     </div>
-    <label class="pauta__desde">
-      <span>Desde</span>
-      <input type="date" [(ngModel)]="desde" (change)="cargar()" />
-    </label>
+    <div class="pauta__acciones">
+      <a class="pauta__embudo" routerLink="/marketing/pauta">Ver embudo hasta el pago</a>
+      <label class="pauta__desde">
+        <span>Desde</span>
+        <input type="date" [(ngModel)]="desde" (change)="cargar()" />
+      </label>
+    </div>
   </header>
 
   <p class="pauta__error" *ngIf="error" role="alert">{{ error }}</p>

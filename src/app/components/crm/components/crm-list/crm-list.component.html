@@ -260,6 +260,12 @@
                     <small class="text-muted d-block" *ngIf="lead.nit">
                       <i class="fa fa-id-card-o me-1"></i>{{ lead.nit }}
                     </small>
+                    <small class="d-block crm-puntaje-linea" *ngIf="entityType === 'company' && lead.score !== null && lead.score !== undefined"
+                      [pTooltip]="lead.scoreMotivos?.length ? lead.scoreMotivos.join(' · ') : 'Sin señales todavía'" tooltipPosition="top">
+                      <span class="crm-puntaje" [ngClass]="'crm-puntaje--' + nivelPuntaje(lead.score)">{{ lead.score }}</span>
+                      <span class="crm-puntaje-etiqueta">puntaje</span>
+                      <span class="crm-sugerido" *ngIf="lead.stageAutoPropuesta">Sugerido: {{ getStageLabel(lead.stageAutoPropuesta.stage) }}</span>
+                    </small>
                     <small class="d-block fw-semibold" style="color: #8b5cf6;" *ngIf="lead.estimatedValue">
                       <i class="fa fa-dollar me-1"></i>{{ formatCurrency(lead.estimatedValue) }}
                     </small>
@@ -377,6 +383,7 @@
                 <th style="width:4%"></th>
                 <th style="width:20%">Nombre</th>
                 <th style="width:12%" *ngIf="entityType === 'company'">Plan</th>
+                <th style="width:8%" *ngIf="entityType === 'company'" pSortableColumn="score">Puntaje <p-sortIcon field="score"></p-sortIcon></th>
                 <th style="width:10%">Etapa</th>
                 <th style="width:8%">Estado</th>
                 <th style="width:10%">Prioridad</th>
@@ -404,9 +411,21 @@
                     {{ lead.subscriptionPlan }}
                   </span>
                 </td>
+                <td *ngIf="entityType === 'company'">
+                  <span class="crm-puntaje" *ngIf="lead.score !== null && lead.score !== undefined; else sinPuntaje"
+                    [ngClass]="'crm-puntaje--' + nivelPuntaje(lead.score)"
+                    [pTooltip]="lead.scoreMotivos?.length ? lead.scoreMotivos.join(' · ') : 'Sin señales todavía'" tooltipPosition="top">
+                    {{ lead.score }}
+                  </span>
+                  <ng-template #sinPuntaje><small class="text-muted">-</small></ng-template>
+                </td>
                 <td (click)="$event.stopPropagation()" style="cursor:default">
                   <p-tag [value]="getStageLabel(lead.stage)" [severity]="getStageSeverity(lead.stage)"
                     [style]="{'font-size':'0.75rem'}"></p-tag>
+                  <span class="crm-sugerido" *ngIf="entityType === 'company' && lead.stageAutoPropuesta"
+                    [pTooltip]="lead.stageAutoPropuesta.motivo" tooltipPosition="top">
+                    Sugerido: {{ getStageLabel(lead.stageAutoPropuesta.stage) }}
+                  </span>
                 </td>
                 <td (click)="$event.stopPropagation()" style="cursor:default">
                   <span class="stat-badge badge-sm" style="cursor:pointer;"
@@ -460,7 +479,7 @@
 
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td [attr.colspan]="entityType === 'company' ? 10 : 9" class="text-center p-4">
+                <td [attr.colspan]="entityType === 'company' ? 11 : 9" class="text-center p-4">
                   <i class="fa fa-inbox" style="font-size:2rem; color:#9ca3af;"></i>
                   <p class="text-muted mt-2 mb-0">No hay leads que mostrar</p>
                 </td>
