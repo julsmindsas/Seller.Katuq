@@ -10949,7 +10949,7 @@ Daniel (16-oct): "requiero un módulo de marketing para Katuq y para Julsmind; q
 - **Verificado:** `npm run test:agenda` (66 pruebas, incluida la reserva simultánea por el último espacio y el write-set solo `appointments`/`companyConfig`); build completo del front sin errores; sin gradientes, primarios prohibidos ni clases con «p-» en lo nuevo.
 - **Sin verificar:** nada en navegador todavía: el backend nuevo no está desplegado y el front local apunta a producción.
 
-## D-490 (2026-10-18) — Módulo NPS por comercio: encuestas configurables, envío a compradores y seguimiento de detractores — APROBADA (Daniel, 18-oct), en implementación
+## D-490 (2026-10-18) — Módulo NPS por comercio: encuestas configurables, envío a compradores y seguimiento de detractores — PUBLICADO APAGADO: backend 834ccc80, front 2026.10.18.4
 
 Daniel (18-oct), al ver D-483: "eso no es un sistema NPS". Quiere un módulo NPS propio (crear encuestas, preguntas y cuándo se envían, resultados), que cada comercio mida a sus compradores y avisos con seguimiento de detractores.
 
@@ -10959,3 +10959,9 @@ Daniel (18-oct), al ver D-483: "eso no es un sistema NPS". Quiere un módulo NPS
 - **Reutiliza:** `surveyResponses`, `services/nps/*`, el motor de reportes, KAI, `EscalaNpsComponent`, `scheduleSatisfactionSurvey`, `notification_queue`, la campana y las banderas por comercio.
 - **Aprobado (Daniel, 18-oct):** colección nueva `npsSurveys`; primera entrega por correo, enlace y QR (WhatsApp después); todos los planes por ahora.
 - **Propuesta:** `openspec/changes/nps-modulo-por-comercio/`.
+- **Publicado el 18-oct, apagado para los comercios:**
+  - **Backend:** módulo en f00d7f37. El diff de pedidos que aprobó Daniel va aparte (834ccc80): la entrega por el mensajero y el cambio masivo llaman `invitarACalificar`, que ahora también programa la encuesta.
+  - **Front:** 2026.10.18.4.
+  - **Encendido:** `npsModulo` por comercio (Julsmind siempre); envío a compradores con `NPS_COMPRADORES=encendida`, que todavía no está.
+  - **Antes de encender:** `ENCUESTA_SECRET` en el `.env`, y SPF, DKIM y DMARC verificados.
+  - **Rastreo de las vías de Entregado y desvíos:** en el tasks.md del change.

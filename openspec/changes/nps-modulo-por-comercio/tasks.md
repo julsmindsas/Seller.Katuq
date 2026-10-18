@@ -43,9 +43,9 @@
 
 ## 5. Salida (con OK de Daniel)
 
-- [ ] 5.1 Publicar el backend apagado y luego el front.
+- [x] 5.1 Publicar el backend apagado y luego el front. Salieron el 18-oct: backend 834ccc80 y front 2026.10.18.4.
 - [ ] 5.2 FLORECER: encuesta de entrega con un pedido real y encuesta por enlace; responder como comprador, revisar el caso, el aviso, el correo y el recordatorio. Guardar capturas como evidencia.
-- [ ] 5.3 SPF, DKIM y DMARC verificados; encender `NPS_COMPRADORES`.
+- [ ] 5.3 `ENCUESTA_SECRET` propio en el `.env` de producción (hoy se firma con `SECRET_TOKEN`); SPF, DKIM y DMARC verificados; encender `NPS_COMPRADORES`.
 - [ ] 5.4 Encender `npsModulo` a los comercios por grupos.
 - [ ] 5.5 Bitácora en `specs/CONTRACT.md`.
 
