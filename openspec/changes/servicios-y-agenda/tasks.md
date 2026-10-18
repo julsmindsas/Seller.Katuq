@@ -49,7 +49,7 @@
 - [x] 3.5 `routers/appointments.js` (`isAuth + requireJwtTenant + requireFeature`): listar por rango y persona, crear, mover, cambiar estado, ligar pedido, disponibilidad. También `GET/PUT` de `companyConfig.agenda`.
 - [x] 3.6 Índices `(company, date)` y `(company, staffId, date)` desplegados con Firebase CLI (memoria "firestore-indices-como-crear").
 - [x] 3.7 Web: con la bandera encendida, `agendaPublica` y `agendarCita` usan la Agenda (transaccional) y siguen creando el prospecto. Con la bandera apagada, nada cambia. Prueba de cada camino.
-- [ ] 3.8 Ficha pública de un servicio con `requiresAppointment`: botón "Agendar" que usa los mismos endpoints públicos.
+- [x] 3.8 Ficha pública de un servicio con `requiresAppointment`: botón "Agendar" que usa los mismos endpoints públicos.
 - [ ] 3.9 Al crear un pedido con `appointmentId`, ligar la cita y pasarla a `completed` en un paso que no hace fallar el pedido.
 - [x] 3.10 Avisos: `writeSellerNotification` y correo en una cita web nueva, y al mover o cancelar si lo hace otra persona. Idempotentes por `appointmentId + evento + destinatario`.
 - [x] 3.11 Tool MCP `get_appointments` en el registro, con prueba de aislamiento por empresa.
@@ -118,4 +118,6 @@ Desvíos frente al diseño:
 - 5.4: los tres `.md` de la demo están en `docs/documentacion/historico/`, con una nota de que se retiró.
 - Verificado en producción: sin la bandera, `/agenda` lleva a la bienvenida, y el menú de la demo ya no aparece.
 
-Pendiente: 1.6, 4.11 y 6.2 (recorrido en FLORECER a 1440 y 390 px: falta una sesión de FLORECER en el navegador), 3.8 (botón "Agendar" en la ficha pública del servicio), 4.7 y el resto del bloque 2 (pedidos, de a un diff aprobado), y 6.4 al cerrar.
+- 3.8 (backend `6f10d7b7`, sin desplegar): la ficha pública de un servicio con "requiere cita" muestra "Agendar cita" cuando la Agenda está encendida y configurada. No hace falta el bloque "Agenda de visitas". Usa `GET /public/:slug/agenda?servicio=` y `POST /public/:slug/cita` con `servicio`. La cita dura lo que dura el servicio, solo cuentan las personas que lo prestan, y si es a domicilio pide la dirección. El modal reusa los estilos de "Cotizar". Pruebas: `tests/agenda/fichaServicio.test.js` (ficha real y endpoints sobre una Firestore en memoria) y 3 más en `web.test.js`. Las suites de sitios fallan igual que antes del cambio: 3 pruebas y 5 casos de publicación.
+
+Pendiente: desplegar 3.8; 1.6, 4.11 y 6.2 (recorrido en FLORECER a 1440 y 390 px: falta una sesión de FLORECER en el navegador); 4.7 y el resto del bloque 2 (pedidos, de a un diff aprobado); 6.4 al cerrar.
