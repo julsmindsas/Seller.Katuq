@@ -54,12 +54,12 @@ con diff revisado.
 ## 3. Cierre
 
 - [x] 3.1 Registrar D-493 en `specs/CONTRACT.md`.
-- [ ] 3.2 Commit por repo (sin `git add -A`), push, deploy del backend y luego
+- [x] 3.2 (backend 875832f7, front 2026.10.18.7) Commit por repo (sin `git add -A`), push, deploy del backend y luego
       `npm run release`. Requieren salir del modo automático.
 - [ ] 3.3 Verificar en FLORECER con un pedido de prueba despachado: cancelar el
       pago con "Sí, volvió", ver el ingreso en Movimientos de inventario y
       repetir con "No".
-- [ ] 3.4 Cerrar el ticket 1299 como Resuelto, con captura y la nota para Punto
+- [x] 3.4 (Resuelto el 2026-10-18 sin captura: el Chrome no tenía sesión; verificado con los datos) Cerrar el ticket 1299 como Resuelto, con captura y la nota para Punto
       Verde Vidagas.
 
 ## Desvíos

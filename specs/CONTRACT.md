@@ -11017,7 +11017,7 @@ Daniel (17-oct): el chat de Opttia del botón flotante responde que no tiene her
   - si `analyze_sales` va sin bandera (se propone) o detrás de `featureFlags.opttiaConsultaVentas` (D-385);
   - si los rankings muestran la participación (%) de cada fila.
 
-## D-493 (2026-10-18) — Al cancelar el pago de un pedido despachado, preguntar si el producto volvió a la bodega (ticket 1299)
+## D-493 (2026-10-18) — Al cancelar el pago de un pedido despachado, preguntar si el producto volvió a la bodega (ticket 1299) — PUBLICADO: backend 875832f7, front 2026.10.18.7; falta probarlo en pantalla en FLORECER
 
 - **Problema:** Punto Verde Vidagas canceló gas-000008 porque no se llevó, pero la recarga no volvió al inventario. El historial muestra que el domiciliario lo marcó Entregado a las 12:14 y el pago se canceló a las 12:25. La regla del ticket 1035 (`decidirDevolucionPorPago`) no devuelve con el pedido En despacho, Despachado, Entregado o Cerrado (`MERCANCIA_YA_SALIO`), y el comercio no tenía cómo corregirlo.
 - **Decisión** (propuesta, design y tasks en `openspec/changes/devolver-inventario-pedido-no-entregado`, aprobados por Daniel el 2026-10-18):
