@@ -10904,7 +10904,7 @@ Daniel (16-oct): "requiero un módulo de marketing para Katuq y para Julsmind; q
 - **Sin cambios en pedidos:** no toca la lógica de pedidos, precios, inventario ni facturación; es solo navegación y presentación.
 - **Pendiente:** el asistente por pasos conserva la plantilla vieja (título azul). Modernizarlo con la Regla de diseño va en un cambio aparte.
 
-## D-488 (2026-10-18) — Plantillas sin recortes ni huecos con datos reales y 3 recomendadas con forma propia (ticket 1257, TX-36, parte 1) — backend 9c222196, front 4d23c164, SIN DESPLEGAR
+## D-488 (2026-10-18) — Plantillas sin recortes ni huecos con datos reales y 3 recomendadas con forma propia (ticket 1257, TX-36, parte 1) — PUBLICADO: backend 9c222196 (vivo en 834ccc80), front 2026.10.18.3
 
 - **Revisión visual del ticket:**
   - Cada una de las 13 plantillas visibles, generada con el generador real.
