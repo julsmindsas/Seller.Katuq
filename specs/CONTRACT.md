@@ -11030,3 +11030,37 @@ Daniel (17-oct): el chat de Opttia del botón flotante responde que no tiene her
 - **Write-set:** `inventory`, `inventoryMovement` e `inventory_audit` vía `restoreStock` (D-134 intacto). Solo en modo de inventario legacy; el ledger transaccional queda fuera.
 - **Caso del ticket:** gas-000008 se corrigió el 2026-10-18 con `restoreStock` (prueba primero): +1 RECARGA DE 10LB en BOD-PRINCIPAL (PUNTO VERDE JK - YUMBO), saldo 1 → 2. Fue el único pedido cancelado de esa empresa con salida sin devolver.
 - **Pruebas:** backend `npm run test:devolucion-por-pago` 7/7 y `tests/inventory/restoreStock.test.js` 7/7 (caso nuevo con `confirmadoPor`), tesorería sin cambios; front `pedido-mercancia-devuelta.spec.ts` 3/3. Build de producción sin errores. Backend 875832f7.
+
+## D-494 (2026-10-18) — Revisión adversarial de lo desplegado hoy y sus arreglos; seguridad de /v1/media; feed de Google — PUBLICADO: backend d8f1903b (más 9c342f09 y 5cbbe72f), front 2026.10.18.8
+
+- **Revisión:** 6 revisores por dimensión sobre los commits de hoy (render, seguridad, editor, paridad de la vista previa, venta asistida, generador/feed). Cada hallazgo pasó por 3 escépticos que intentaron refutarlo: 33 hallazgos, 32 confirmados.
+- **Arreglos** (4 grupos de archivos disjuntos, cada uno con 2 revisores y un ajuste):
+  - **Venta asistida (1168, D-487):** cambiar de vista con una venta en curso perdía el pedido. Ahora pregunta y ofrece guardarla como borrador y retomarla en la otra vista. La pestaña «Ventas» de la barra del celular y «Nueva venta» en Inicio, que se habían caído al quitar la entrada del menú, vuelven para quien tenga venta asistida (también con el permiso viejo).
+  - **Render (D-486/D-488):**
+    - el botón del boletín y los de las cajas blancas se leen con «Contorno», y el color de botón ya no anula el contorno;
+    - en el fondo alterno se recalculan acento, enlaces, oferta y contorno, y las piezas blancas vuelven a texto oscuro;
+    - la alternancia cuenta solo lo que se pinta y por dispositivo, sin pisar el color de texto propio ni encoger el ancho completo;
+    - la fila de hasta 4 productos centra con auto-fit y no pisa las columnas elegidas;
+    - los controles de fondo blanco se leen en temas oscuros.
+  - **Editor:**
+    - el aviso de pasarela es visible aunque el grupo esté plegado;
+    - el antes/después de KAI ya no deja propuestas fantasma ni descarta sin confirmar;
+    - la previa recibe los datos de oferta, nuevo y segunda foto;
+    - Espacio y foco visible en los plegables.
+  - **Vista previa:** mosaico, inicial de categoría, color de enlaces y fondo alterno como la publicada.
+  - **Feed:** la descripción sale como texto limpio, sin entidades dobles, sin `<style>`/`<title>` y sin palabras pegadas.
+  - **Cotizaciones del bot:** «Atendido por: KAI» sin el identificador, y la meta mensual de KAI se acepta.
+  - **Tecnología:** enlace de Marcas válido y formulario B2B en su lugar.
+- **Seguridad /v1/media (backend 9c342f09, aprobado por Daniel):** cualquier cuenta autenticada podía borrar cualquier archivo del bucket compartido por su URL y subir a cualquier carpeta pisando archivos ajenos. Ahora:
+  - `requireJwtTenant` en las rutas con sesión;
+  - el dueño del archivo es `metadata.company`;
+  - borrar exige ser el dueño (403 `FILE_NOT_OWNED`, sin cerrar la sesión en el Seller);
+  - subir nunca sobrescribe lo ajeno: se guarda con un sufijo.
+  - Prueba: `tests/media/archivosPorEmpresa.test.js` (8).
+- **Feed de Google y marca de la ficha (backend 5cbbe72f):** el feed leía del índice (marca y descripción en minúscula, sin `identificacion`). Ahora lee del documento: manda `g:mpn` y deja de declarar «sin identificador». La ficha usa `identificacion.marca` en su JSON-LD; antes caía al nombre del comercio. Verificado en FLORECER: 1.000 `g:mpn`.
+- **TX-32 (front 2026.10.18.6 y d83bd9d2):** pestaña Tienda en acordeón y glosario único (sitio / página / tienda, menú «Mis sitios»).
+- **Pruebas:**
+  - backend `alternoYContorno` (7) y `feedMarcaReferencia`;
+  - front: las 5 pruebas node de sitios vuelven a pasar; estaban rotas por cambios de pauta y de la ruta de la lista.
+  - Se mantienen los 3 fallos previos de sitios en el backend.
+- **Verificado en producción:** los 6 sitios publicados en 200 y el feed sin `&amp;amp;`.
