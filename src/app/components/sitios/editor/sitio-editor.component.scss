@@ -3591,3 +3591,201 @@ input.is-error { border-color: #b42318 !important; }
   &:focus-visible { outline: 3px solid #7c5cff !important; }
 }
 .fechas-programacion input[type="time"] { @include kb-input; }
+
+// ── Ticket 1227: panel Estilo en acordeón ────────────────────────────────────
+// Un grupo abierto a la vez; la cabeza dice qué hay adentro sin abrirlo.
+.acordeon {
+  margin-bottom: 8px;
+  border: 1.5px solid var(--kb-line-4);
+  border-radius: 14px;
+  background: #fff;
+
+  &.grupo--ia { border-color: var(--kb-accent-line-2, #cfc5f7); background: var(--kb-accent-wash-4, #f6f3ff); padding: 0; }
+  &.is-abierto { border-color: var(--kb-accent-line-2, #cfc5f7); }
+
+  &__cabeza {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 14px;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 14px;
+
+    &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  }
+
+  &__titulo { font-size: 13.5px; font-weight: 800; color: var(--kb-ink); }
+  &__resumen {
+    flex: 1;
+    min-width: 0;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--kb-muted);
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  &__puntos {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 3px;
+    span { width: 14px; height: 14px; border-radius: 99px; border: 1px solid rgba(0, 0, 0, 0.12); }
+  }
+  &__flecha { flex: none; color: var(--kb-muted); transition: transform 0.15s ease; }
+  &.is-abierto &__flecha { transform: rotate(90deg); }
+
+  &__cuerpo {
+    padding: 0 14px 14px;
+
+    > p { margin: 0 0 12px; font-size: 12.5px; color: var(--kb-muted); font-weight: 600; line-height: 1.45; }
+  }
+}
+
+.subgrupo {
+  margin: 16px 0 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kb-muted);
+
+  small { font-weight: 600; text-transform: none; letter-spacing: normal; }
+}
+
+// Opciones de lista cerrada: una fila de botones, el elegido en morado.
+.segmentos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  button {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 7px 10px;
+    border: 1.5px solid var(--kb-line-4);
+    border-radius: 11px;
+    background: #fff;
+    color: var(--kb-ink-2);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: normal;
+    cursor: pointer;
+    transition: border-color 0.14s ease, background 0.14s ease;
+
+    &:hover { border-color: var(--kb-accent); }
+    &.is-active { border-color: #5F3FE0; background: #5F3FE0; color: #fff; }
+    &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  }
+}
+
+.color {
+  &__hex {
+    width: 82px;
+    margin-left: auto;
+    padding: 6px 8px;
+    border: 1.5px solid var(--kb-line-4);
+    border-radius: 9px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    color: var(--kb-ink);
+    text-transform: lowercase;
+
+    &:focus { outline: none; border-color: #5F3FE0; }
+  }
+
+  &__contraste {
+    flex: none;
+    padding: 3px 7px;
+    border-radius: 99px;
+    background: #e8f6ee;
+    color: #1d7a47;
+    font-size: 10.5px;
+    font-weight: 800;
+
+    &.is-bajo { background: #fff4e5; color: #9a5b00; }
+  }
+
+  &__quitar {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 99px;
+    background: var(--kb-surface-2, #f4f2fb);
+    color: var(--kb-muted);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  &__muestra--vacia { opacity: 0.55; border-style: dashed; }
+}
+
+.nota-estilo {
+  display: block;
+  margin-top: 10px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--kb-muted);
+}
+
+// Antes y después de la propuesta de KAI.
+.ia-decision {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1.5px solid var(--kb-accent-line-2, #cfc5f7);
+
+  &__vista {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 3px;
+    border-radius: 11px;
+    background: var(--kb-surface-2, #f4f2fb);
+
+    button {
+      padding: 7px 8px;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--kb-ink-2);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+
+      &.is-active { background: #fff; color: #5F3FE0; box-shadow: 0 2px 8px -4px rgba(95, 63, 224, 0.35); }
+    }
+  }
+
+  &__acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+  &__nota { font-size: 11.5px; color: var(--kb-muted); }
+}
+
+// Tarjeta de tema con muestra visual: fondo, titular en su letra y botón.
+.vestido {
+  &__muestra {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 42px;
+    padding: 0 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+  &__aa { font-size: 20px; font-weight: 700; line-height: 1; color: inherit; }
+  &__boton { width: 22px; height: 10px; border-radius: 99px; }
+}

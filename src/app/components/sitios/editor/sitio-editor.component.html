@@ -2142,32 +2142,58 @@
              portada a partir de la marca, el sector, el objetivo, las
              secciones y las categorías reales. Se aplica sobre lo que hay y se
              puede deshacer. -->
-        <div class="grupo grupo--ia">
-          <h3>Diseñar con IA</h3>
-          <p>KAI mira tu marca, tu sector, para qué es la página, tus secciones y tus categorías, y propone estilo, colores, letra, orden y portada.</p>
-          <div class="campo">
-            <label>Indicaciones (opcional)</label>
-            <textarea rows="2" [(ngModel)]="indicacionesIA" maxlength="400"
-                      placeholder="Ej: más elegante, fondo claro, que la portada hable de la nueva colección"></textarea>
+        <!-- Ticket 1227: el panel va en acordeón (uno abierto a la vez) para que
+             tantas opciones no abrumen. Cada cambio se ve al instante en la previa. -->
+        <div class="grupo grupo--ia acordeon" [class.is-abierto]="estiloAbierto === 'ia' || hayPropuestaIA">
+          <button type="button" class="acordeon__cabeza" (click)="abrirGrupoEstilo('ia')"
+                  [attr.aria-expanded]="estiloAbierto === 'ia' || hayPropuestaIA">
+            <span class="acordeon__titulo">Diseñar con IA</span>
+            <span class="acordeon__resumen">{{ hayPropuestaIA ? 'Propuesta por decidir' : 'KAI propone un diseño' }}</span>
+            <svg class="acordeon__flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="acordeon__cuerpo" *ngIf="estiloAbierto === 'ia' || hayPropuestaIA">
+            <p>KAI mira tu marca, tu sector, para qué es la página, tus secciones y tus categorías, y propone estilo, colores, letra, orden y portada.</p>
+            <div class="campo">
+              <label>Indicaciones (opcional)</label>
+              <textarea rows="2" [(ngModel)]="indicacionesIA" maxlength="400"
+                        placeholder="Ej: más elegante, fondo claro, que la portada hable de la nueva colección"></textarea>
+            </div>
+            <div class="ia-acciones">
+              <button class="btn-primario btn-primario--sm" (click)="disenarConIA()" [disabled]="disenandoIA">
+                <!-- Varita (no un indicador de carga): esto propone, no está cargando. -->
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 12-12M14 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1zM19 11l.7 1.3L21 13l-1.3.7L19 15l-.7-1.3L17 13l1.3-.7z"/></svg>
+                {{ disenandoIA ? 'Pensando…' : (hayPropuestaIA ? 'Proponer otro' : 'Proponer un diseño') }}
+              </button>
+            </div>
+            <!-- Antes y después: la propuesta se ve en la previa; se compara, se deja o se descarta. -->
+            <div class="ia-decision" *ngIf="hayPropuestaIA">
+              <div class="ia-decision__vista" role="group" aria-label="Comparar">
+                <button type="button" [class.is-active]="viendoAntesIA" (click)="!viendoAntesIA && alternarAntesIA()" [disabled]="disenandoIA">Antes</button>
+                <button type="button" [class.is-active]="!viendoAntesIA" (click)="viendoAntesIA && alternarAntesIA()" [disabled]="disenandoIA">Propuesta de KAI</button>
+              </div>
+              <div class="ia-decision__acciones">
+                <button type="button" class="btn-primario btn-primario--sm" (click)="aceptarPropuestaIA()" [disabled]="disenandoIA">Dejar este diseño</button>
+                <button type="button" class="btn-fantasma btn-fantasma--sm" (click)="volverAntesDeIA()" [disabled]="disenandoIA">Descartar</button>
+              </div>
+              <small class="ia-decision__nota" *ngIf="viendoAntesIA">Estás viendo cómo estaba. Los cambios se hacen sobre la propuesta.</small>
+            </div>
+            <ul class="ia-razones" *ngIf="razonesIA.length">
+              <li *ngFor="let r of razonesIA">{{ r }}</li>
+            </ul>
           </div>
-          <div class="ia-acciones">
-            <button class="btn-primario btn-primario--sm" (click)="disenarConIA()" [disabled]="disenandoIA">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
-              {{ disenandoIA ? 'Pensando…' : (hayPropuestaIA ? 'Proponer otro' : 'Proponer un diseño') }}
-            </button>
-            <button class="btn-fantasma btn-fantasma--sm" *ngIf="hayPropuestaIA" (click)="volverAntesDeIA()" [disabled]="disenandoIA">Volver a como estaba</button>
-          </div>
-          <ul class="ia-razones" *ngIf="razonesIA.length">
-            <li *ngFor="let r of razonesIA">{{ r }}</li>
-          </ul>
         </div>
 
         <!-- ── Vestido completo ──
              Probarse el look entero de otra plantilla sobre el contenido que ya
              está escrito. Cambia SOLO la apariencia: no agrega, quita ni
              reordena una sola sección, así que no hay forma de perder nada. -->
-        <div class="grupo" *ngIf="vestidos.length">
-          <h3>Tema</h3>
+        <div class="grupo acordeon" *ngIf="vestidos.length" [class.is-abierto]="estiloAbierto === 'tema'">
+          <button type="button" class="acordeon__cabeza" (click)="abrirGrupoEstilo('tema')" [attr.aria-expanded]="estiloAbierto === 'tema'">
+            <span class="acordeon__titulo">Tema</span>
+            <span class="acordeon__resumen">El look completo de otra plantilla</span>
+            <svg class="acordeon__flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="acordeon__cuerpo" *ngIf="estiloAbierto === 'tema'">
           <p>El diseño completo de otra plantilla, sobre lo que ya escribiste. No cambia ni una sección.</p>
 
           <div class="vestidos">
@@ -2175,13 +2201,12 @@
                     [class.is-active]="vestidoActivo === v.id"
                     (click)="probarVestido(v)"
                     [title]="v.nombre">
-              <span class="vestido__puntos">
-                <span [style.background]="v.tema.colorPrimario"></span>
-                <span [style.background]="v.tema.colorSecundario"></span>
-                <span [style.background]="v.tema.colorTexto"></span>
+              <!-- Ticket 1227: muestra visual (fondo, titular en su letra y botón) en vez del nombre de la fuente. -->
+              <span class="vestido__muestra" [style.background]="v.tema.colorSecundario" [style.color]="v.tema.colorTexto">
+                <span class="vestido__aa" [style.font-family]="familiaDe(v.tema.fuenteTitulo)">Aa</span>
+                <span class="vestido__boton" [style.background]="v.tema.colorPrimario"></span>
               </span>
               <span class="vestido__nombre">{{ v.nombre }}</span>
-              <span class="vestido__letra">{{ nombreDeFuente(v.tema.fuenteTitulo) }}</span>
             </button>
           </div>
 
@@ -2198,10 +2223,20 @@
           <button class="secundario" *ngIf="temaAnterior" (click)="descartarVestido()">
             Volver al de antes
           </button>
+          </div>
         </div>
 
-        <div class="grupo">
-          <h3>Colores</h3>
+        <div class="grupo acordeon" [class.is-abierto]="estiloAbierto === 'colores'">
+          <button type="button" class="acordeon__cabeza" (click)="abrirGrupoEstilo('colores')" [attr.aria-expanded]="estiloAbierto === 'colores'">
+            <span class="acordeon__titulo">Colores</span>
+            <span class="acordeon__puntos">
+              <span [style.background]="contenido.tema.colorPrimario"></span>
+              <span [style.background]="contenido.tema.colorSecundario"></span>
+              <span [style.background]="contenido.tema.colorTexto"></span>
+            </span>
+            <svg class="acordeon__flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="acordeon__cuerpo" *ngIf="estiloAbierto === 'colores'">
           <!-- Ticket 1216: siempre se ve qué paleta tiene la página. -->
           <p class="paleta-aplicada" [class.paleta-aplicada--marca]="usaColoresDeMarca">
             <ng-container *ngIf="usaColoresDeMarca">Usando los colores de tu marca.</ng-container>
@@ -2254,10 +2289,138 @@
           </div>
           <p class="aviso" *ngIf="avisoContrasteTema">{{ avisoContrasteTema }}</p>
           <p class="aviso aviso--info" *ngIf="avisoContrastePrincipal">{{ avisoContrastePrincipal }}</p>
+
+          <!-- Los tres colores van a la vista, no escondidos tras un desplegable:
+               cambiar un color es lo primero que intenta todo el mundo. Ticket
+               1227: con código hexadecimal y el contraste al lado. -->
+          <h4 class="subgrupo">A tu gusto</h4>
+          <div class="colores">
+            <div class="color" *ngFor="let c of [{ clave: 'colorPrimario', nombre: 'Principal', pista: 'Botones y detalles' }, { clave: 'colorSecundario', nombre: 'Fondo', pista: 'El fondo de la página' }, { clave: 'colorTexto', nombre: 'Texto', pista: 'Mejor uno oscuro' }]">
+              <label class="color__muestra" [style.background]="$any(contenido.tema)[c.clave]" [attr.aria-label]="'Elegir color ' + c.nombre">
+                <input type="color" [ngModel]="$any(contenido.tema)[c.clave]" (ngModelChange)="ponerColor(c.clave, $event)" />
+              </label>
+              <span class="color__texto">
+                <strong>{{ c.nombre }}</strong>
+                <small>{{ c.pista }}</small>
+              </span>
+              <input class="color__hex" type="text" maxlength="7" spellcheck="false" [attr.aria-label]="'Código del color ' + c.nombre"
+                     [ngModel]="$any(contenido.tema)[c.clave]" (ngModelChange)="ponerColor(c.clave, $event)" />
+              <span class="color__contraste" *ngIf="contrasteColor(c.clave) as k" [class.is-bajo]="!k.ok"
+                    [title]="c.clave === 'colorPrimario' ? 'Texto blanco sobre el botón' : 'Texto sobre el fondo'">{{ k.texto }}</span>
+            </div>
+          </div>
+
+          <h4 class="subgrupo">Más colores <small>(opcionales)</small></h4>
+          <div class="colores">
+            <div class="color" *ngFor="let c of coloresExtra">
+              <label class="color__muestra" [class.color__muestra--vacia]="!$any(contenido.tema)[c.clave]"
+                     [style.background]="$any(contenido.tema)[c.clave] || $any(contenido.tema)[c.respaldo]" [attr.aria-label]="'Elegir color ' + c.nombre">
+                <input type="color" [ngModel]="$any(contenido.tema)[c.clave] || $any(contenido.tema)[c.respaldo]" (ngModelChange)="ponerColor(c.clave, $event, true)" />
+              </label>
+              <span class="color__texto">
+                <strong>{{ c.nombre }}</strong>
+                <small>{{ $any(contenido.tema)[c.clave] ? c.pista : 'El de siempre' }}</small>
+              </span>
+              <input class="color__hex" type="text" maxlength="7" spellcheck="false" placeholder="—" [attr.aria-label]="'Código del color ' + c.nombre"
+                     [ngModel]="$any(contenido.tema)[c.clave]" (ngModelChange)="ponerColor(c.clave, $event, true)" />
+              <button type="button" class="color__quitar" *ngIf="$any(contenido.tema)[c.clave]" (click)="cambiarAjuste(c.clave, '')"
+                      [attr.aria-label]="'Volver al color de siempre en ' + c.nombre" title="Volver al de siempre">×</button>
+              <span class="color__contraste" *ngIf="contrasteColor(c.clave) as k" [class.is-bajo]="!k.ok">{{ k.texto }}</span>
+            </div>
+          </div>
+          <small class="nota-estilo">Si un color no se lee sobre su fondo, la página publicada usa uno que sí (el texto o un tono más oscuro): ninguna combinación deja texto ilegible.</small>
+          </div>
         </div>
 
-        <div class="grupo">
-          <h3>Forma</h3>
+        <!-- ── Botones ── -->
+        <div class="grupo acordeon" [class.is-abierto]="estiloAbierto === 'botones'">
+          <button type="button" class="acordeon__cabeza" (click)="abrirGrupoEstilo('botones')" [attr.aria-expanded]="estiloAbierto === 'botones'">
+            <span class="acordeon__titulo">Botones</span>
+            <span class="acordeon__resumen">Forma, relleno y tamaño</span>
+            <svg class="acordeon__flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="acordeon__cuerpo" *ngIf="estiloAbierto === 'botones'">
+            <div class="campo" *ngFor="let g of [{ clave: 'botonForma', nombre: 'Forma' }, { clave: 'botonRelleno', nombre: 'Relleno' }, { clave: 'botonTamano', nombre: 'Tamaño' }]">
+              <label>{{ g.nombre }}</label>
+              <div class="segmentos">
+                <button type="button" *ngFor="let o of $any(opcionesEstilo)[g.clave]" [class.is-active]="($any(contenido.tema)[g.clave] || '') === o.id"
+                        (click)="cambiarAjuste(g.clave, o.id)">{{ o.nombre }}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Tarjeta de producto ── -->
+        <div class="grupo acordeon" [class.is-abierto]="estiloAbierto === 'tarjeta'">
+          <button type="button" class="acordeon__cabeza" (click)="abrirGrupoEstilo('tarjeta')" [attr.aria-expanded]="estiloAbierto === 'tarjeta'">
+            <span class="acordeon__titulo">Tarjeta de producto</span>
+            <span class="acordeon__resumen">Foto, columnas y etiquetas</span>
+            <svg class="acordeon__flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="acordeon__cuerpo" *ngIf="estiloAbierto === 'tarjeta'">
+            <div class="campo" *ngFor="let g of [{ clave: 'fotoProporcion', nombre: 'Proporción de la foto' }, { clave: 'fotoAjuste', nombre: 'Foto' }, { clave: 'columnasEscritorio', nombre: 'Columnas en computador' }, { clave: 'columnasCelular', nombre: 'Columnas en celular' }]">
+              <label>{{ g.nombre }}</label>
+              <div class="segmentos">
+                <button type="button" *ngFor="let o of $any(opcionesEstilo)[g.clave]" [class.is-active]="($any(contenido.tema)[g.clave] || (g.clave.startsWith('columnas') ? 0 : '')) === o.id"
+                        (click)="cambiarAjuste(g.clave, o.id)">{{ o.nombre }}</button>
+              </div>
+            </div>
+            <button class="opcion" [class.is-active]="$any(contenido.tema).segundaFoto !== false" (click)="cambiarAjuste('segundaFoto', $any(contenido.tema).segundaFoto === false)">
+              <span class="opcion__texto"><strong>Segunda foto al pasar el mouse</strong><small>Si el producto tiene otra foto, la tarjeta la muestra.</small></span>
+              <span class="palanca"><span></span></span>
+            </button>
+            <button class="opcion" *ngFor="let e of [{ clave: 'descuento', nombre: 'Etiqueta de descuento', pista: 'El porcentaje de la promoción' }, { clave: 'agotado', nombre: 'Etiqueta de agotado', pista: 'En los productos sin existencias' }, { clave: 'nuevo', nombre: 'Etiqueta de nuevo', pista: 'En los productos recién creados' }]"
+                    [class.is-active]="($any(contenido.tema).etiquetas || {})[e.clave] !== false" (click)="alternarEtiqueta($any(e.clave))">
+              <span class="opcion__texto"><strong>{{ e.nombre }}</strong><small>{{ e.pista }}</small></span>
+              <span class="palanca"><span></span></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Encabezado ── -->
+        <div class="grupo acordeon" [class.is-abierto]="estiloAbierto === 'encabezado'">
+          <button type="button" class="acordeon__cabeza" (click)="abrirGrupoEstilo('encabezado')" [attr.aria-expanded]="estiloAbierto === 'encabezado'">
+            <span class="acordeon__titulo">Encabezado</span>
+            <span class="acordeon__resumen">Logo y menú</span>
+            <svg class="acordeon__flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="acordeon__cuerpo" *ngIf="estiloAbierto === 'encabezado'">
+            <div class="campo" *ngFor="let g of [{ clave: 'logoPosicion', nombre: 'Logo' }, { clave: 'logoTamano', nombre: 'Tamaño del logo' }, { clave: 'menuMayusculas', nombre: 'Menú' }]">
+              <label>{{ g.nombre }}</label>
+              <div class="segmentos">
+                <button type="button" *ngFor="let o of $any(opcionesEstilo)[g.clave]" [class.is-active]="($any(contenido.tema)[g.clave] || '') === o.id"
+                        (click)="cambiarAjuste(g.clave, o.id)">{{ o.nombre }}</button>
+              </div>
+            </div>
+            <small class="nota-estilo">Mostrar el nombre junto al logo y dejar el encabezado fijo al bajar se eligen en la sección Encabezado.</small>
+          </div>
+        </div>
+
+        <!-- ── Medidas ── -->
+        <div class="grupo acordeon" [class.is-abierto]="estiloAbierto === 'medidas'">
+          <button type="button" class="acordeon__cabeza" (click)="abrirGrupoEstilo('medidas')" [attr.aria-expanded]="estiloAbierto === 'medidas'">
+            <span class="acordeon__titulo">Medidas</span>
+            <span class="acordeon__resumen">Ancho, aire y tamaño de letra</span>
+            <svg class="acordeon__flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="acordeon__cuerpo" *ngIf="estiloAbierto === 'medidas'">
+            <div class="campo" *ngFor="let g of [{ clave: 'anchoContenido', nombre: 'Ancho del contenido' }, { clave: 'espaciado', nombre: 'Espacio entre secciones' }, { clave: 'tamanoTexto', nombre: 'Tamaño del texto' }, { clave: 'escalaTitulos', nombre: 'Títulos' }]">
+              <label>{{ g.nombre }}</label>
+              <div class="segmentos">
+                <button type="button" *ngFor="let o of $any(opcionesEstilo)[g.clave]" [class.is-active]="($any(contenido.tema)[g.clave] || '') === o.id"
+                        (click)="cambiarAjuste(g.clave, o.id)">{{ o.nombre }}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grupo acordeon" [class.is-abierto]="estiloAbierto === 'forma'">
+          <button type="button" class="acordeon__cabeza" (click)="abrirGrupoEstilo('forma')" [attr.aria-expanded]="estiloAbierto === 'forma'">
+            <span class="acordeon__titulo">Forma</span>
+            <span class="acordeon__resumen">Esquinas, sombras y peso</span>
+            <svg class="acordeon__flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="acordeon__cuerpo" *ngIf="estiloAbierto === 'forma'">
           <p>Esquinas, sombras, aire y peso de los títulos, todo de una.</p>
           <div class="estilos">
             <button class="estilo" *ngFor="let e of estilosPagina"
@@ -2275,10 +2438,16 @@
               <svg *ngIf="estiloActivo === e.id" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
             </button>
           </div>
+          </div>
         </div>
 
-        <div class="grupo">
-          <h3>Letra</h3>
+        <div class="grupo acordeon" [class.is-abierto]="estiloAbierto === 'letra'">
+          <button type="button" class="acordeon__cabeza" (click)="abrirGrupoEstilo('letra')" [attr.aria-expanded]="estiloAbierto === 'letra'">
+            <span class="acordeon__titulo">Letra</span>
+            <span class="acordeon__resumen" [style.font-family]="familiaDe(fuenteDe('titulo'))">Títulos y texto</span>
+            <svg class="acordeon__flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="acordeon__cuerpo" *ngIf="estiloAbierto === 'letra'">
           <p>Parejas ya combinadas: una para los títulos y otra para el texto.</p>
           <div class="parejas">
             <button class="pareja" *ngFor="let p of parejas"
@@ -2333,10 +2502,16 @@
               </div>
             </div>
           </div>
+          </div>
         </div>
 
-        <div class="grupo">
-          <h3>Movimiento</h3>
+        <div class="grupo acordeon" [class.is-abierto]="estiloAbierto === 'movimiento'">
+          <button type="button" class="acordeon__cabeza" (click)="abrirGrupoEstilo('movimiento')" [attr.aria-expanded]="estiloAbierto === 'movimiento'">
+            <span class="acordeon__titulo">Movimiento</span>
+            <span class="acordeon__resumen">{{ contenido.tema.animaciones ? 'Encendido' : 'Apagado' }}</span>
+            <svg class="acordeon__flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="acordeon__cuerpo" *ngIf="estiloAbierto === 'movimiento'">
           <button class="opcion" [class.is-active]="contenido.tema.animaciones"
                   (click)="alternarAnimaciones()">
             <span class="opcion__texto">
@@ -2346,44 +2521,7 @@
             </span>
             <span class="palanca"><span></span></span>
           </button>
-        </div>
-
-        <!-- Los tres colores van a la vista, no escondidos tras un desplegable:
-             cambiar un color es lo primero que intenta todo el mundo, y detrás
-             de "Elegir mis propios colores" nadie los encontraba. -->
-        <div class="grupo">
-          <h3>Colores a tu gusto</h3>
-          <p>Toca un círculo y elige el color. Cambia toda la página al instante.</p>
-          <div class="colores">
-            <label class="color">
-              <span class="color__muestra" [style.background]="contenido.tema.colorPrimario">
-                <input type="color" [(ngModel)]="contenido.tema.colorPrimario" (ngModelChange)="marcarSucio()" />
-              </span>
-              <span class="color__texto">
-                <strong>Principal</strong>
-                <small>Botones y detalles</small>
-              </span>
-            </label>
-            <label class="color">
-              <span class="color__muestra" [style.background]="contenido.tema.colorSecundario">
-                <input type="color" [(ngModel)]="contenido.tema.colorSecundario" (ngModelChange)="marcarSucio()" />
-              </span>
-              <span class="color__texto">
-                <strong>Fondo</strong>
-                <small>El fondo de la página</small>
-              </span>
-            </label>
-            <label class="color">
-              <span class="color__muestra" [style.background]="contenido.tema.colorTexto">
-                <input type="color" [(ngModel)]="contenido.tema.colorTexto" (ngModelChange)="marcarSucio()" />
-              </span>
-              <span class="color__texto">
-                <strong>Texto</strong>
-                <small>Mejor uno oscuro</small>
-              </span>
-            </label>
           </div>
-          <p class="aviso" *ngIf="avisoContrasteTema">{{ avisoContrasteTema }}</p>
         </div>
       </div>
 

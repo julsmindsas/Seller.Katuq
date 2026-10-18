@@ -1,4 +1,4 @@
-<div class="sitio" [ngStyle]="estiloTema" [attr.data-estilo]="tema?.estilo || 'clasico'" [class.sitio--movil]="dispositivo === 'movil'"
+<div class="sitio" [ngStyle]="estiloTema" [attr.data-estilo]="tema?.estilo || 'clasico'" [attr.data-kq-ajustes]="fichasAjustes" [class.sitio--movil]="dispositivo === 'movil'"
      [class.sitio--editable]="previsualizacion"
      cdkDropList [cdkDropListDisabled]="!previsualizacion"
      (cdkDropListDropped)="soltarBloque($event)">
@@ -18,6 +18,7 @@
          empezaría a mover la sección. -->
     <div class="envoltura"
          [ngStyle]="estiloDeBloque(bloque)"
+         [attr.data-alterno]="alternas.has(i) ? '' : null"
          [class.envoltura--editable]="previsualizacion"
          [class.envoltura--activa]="previsualizacion && bloque.id === bloqueActivo"
          [class.envoltura--soltando]="soltandoEn === bloque.id"
@@ -230,12 +231,19 @@
         <section *ngSwitchCase="'productos'" class="bloque productos" id="productos">
           <h2 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h2>
           <div class="productos__grid" [class.productos__grid--fila]="bloque.datos.carrusel" *ngIf="bloque.datos.productos?.length">
-            <article class="producto" *ngFor="let p of bloque.datos.productos">
+            <article class="producto" *ngFor="let p of bloque.datos.productos"
+                     [class.producto--oferta]="enOferta(p)" [class.producto--agotado]="p.disponible === false">
               <div class="producto__foto">
+                <!-- Ticket 1227: las mismas insignias que la página (agotado manda; nuevo solo sin descuento). -->
+                <span class="producto__insignia producto__insignia--agotado" *ngIf="p.disponible === false">Agotado</span>
+                <span class="producto__oferta" *ngIf="p.disponible !== false && enOferta(p)">-{{ porcentajeOferta(p) }}%</span>
+                <span class="producto__insignia producto__insignia--nuevo" *ngIf="p.disponible !== false && !enOferta(p) && p.nuevo === true">Nuevo</span>
                 <img *ngIf="p.imagen" [src]="p.imagen" [alt]="p.titulo" loading="lazy" />
+                <img *ngIf="p.imagen && p.imagen2" class="producto__foto2" [src]="p.imagen2" alt="" loading="lazy" />
               </div>
               <h3>{{ p.titulo }}</h3>
-              <p class="producto__precio">{{ precio(p.precioConIva) }}</p>
+              <p class="producto__precio"><span class="producto__actual">{{ precio(p.precioConIva) }}</span>
+                <s class="producto__antes" *ngIf="enOferta(p)">{{ precio(p.precioAntes) }}</s></p>
               <button *ngIf="tiendaActiva && bloque.datos.permitirCompra" type="button" class="kq-agregar"
                       [disabled]="p.disponible === false">{{ p.disponible === false ? 'Agotado' : 'Agregar' }}</button>
             </article>

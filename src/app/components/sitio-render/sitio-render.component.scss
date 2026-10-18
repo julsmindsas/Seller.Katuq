@@ -300,7 +300,30 @@ h3 {
 
 // Tarjeta sin caja, espejo de la página publicada: la foto manda.
 .producto {
+  // Ticket 1227: insignias y segunda foto, espejo de siteHtml.js.
+  &__oferta,
+  &__insignia {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 1;
+    padding: 0.18rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+  }
+  &__oferta { background: #b42318; color: #fff; }
+  &__insignia--nuevo { background: var(--sitio-primario); color: var(--sitio-secundario, #fff); }
+  &__insignia--agotado { background: #3f3f46; color: #fff; }
+  &__foto2 { position: absolute; inset: 0; opacity: 0; transition: opacity 0.35s ease; }
+  &:hover &__foto2 { opacity: 1; }
+  &__actual { color: inherit; font-size: inherit; }
+  &__antes { font-weight: 400; font-size: 0.82rem; opacity: 0.55; margin-left: 0.4rem; color: inherit; }
+
   &__foto {
+    position: relative;
     aspect-ratio: 1 / 1;
     display: flex;
     align-items: center;
@@ -1634,3 +1657,46 @@ h3 {
 .kq-popup__foto { min-height: 220px; background: #f4f4f5; img { width: 100%; height: 100%; object-fit: cover; display: block; min-height: 220px; } }
 .kq-popup__texto { padding: 2rem 1.75rem; display: flex; flex-direction: column; justify-content: center; gap: 0.75rem; h2 { margin: 0; font-size: 1.7rem; line-height: 1.1; } p { margin: 0; opacity: 0.8; line-height: 1.5; } .boton { align-self: flex-start; margin-top: 0.5rem; } }
 .kq-popup__cerrar { position: absolute; top: 0.6rem; right: 0.6rem; z-index: 2; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.92); color: #222; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px -8px rgba(0,0,0,.5); }
+
+/* ── Ajustes de estilo (ticket 1227) ──────────────────────────────────────────
+   Espejo de `estilosAjustes()` en siteHtml.js. Van al final y con
+   `.sitio[data-kq-ajustes~=…]` para ganarle a los estilos de página. Cada regla
+   aplica solo si su ficha está puesta: sin ajustes, la previa no cambia. */
+.sitio[data-kq-ajustes~="boton-recto"] :is(.boton, .kq-agregar) { border-radius: 0; }
+.sitio[data-kq-ajustes~="boton-redondeado"] :is(.boton, .kq-agregar) { border-radius: 10px; }
+.sitio[data-kq-ajustes~="boton-pastilla"] :is(.boton, .kq-agregar) { border-radius: 999px; }
+.sitio[data-kq-ajustes~="boton-chico"] .boton:not(.boton--chico) { padding: 0.6rem 1.15rem; font-size: 0.88rem; }
+.sitio[data-kq-ajustes~="boton-grande"] .boton:not(.boton--chico) { padding: 1rem 2.1rem; font-size: 1.05rem; }
+.sitio[data-kq-ajustes~="color-boton"] .boton:not(.boton--whatsapp):not(.boton--secundario):not(.boton--borde) {
+  background: var(--sitio-boton); border-color: var(--sitio-boton); color: var(--sitio-sobre-boton);
+}
+.sitio[data-kq-ajustes~="boton-contorno"] .boton:not(.boton--whatsapp) { background: transparent; color: var(--sitio-contorno); border: 2px solid currentColor; }
+.sitio[data-kq-ajustes~="boton-contorno"] .hero--con-imagen .boton:not(.boton--whatsapp) { color: inherit; }
+.sitio[data-kq-ajustes~="foto-11"] .producto__foto { aspect-ratio: 1 / 1; }
+.sitio[data-kq-ajustes~="foto-45"] .producto__foto { aspect-ratio: 4 / 5; }
+.sitio[data-kq-ajustes~="foto-34"] .producto__foto { aspect-ratio: 3 / 4; }
+.sitio[data-kq-ajustes~="foto-encajar"] .producto__foto img { object-fit: contain; }
+.sitio[data-kq-ajustes~="sin-descuento"] .producto__oferta { display: none; }
+.sitio[data-kq-ajustes~="sin-agotado"] .producto__insignia--agotado { display: none; }
+.sitio[data-kq-ajustes~="sin-nuevo"] .producto__insignia--nuevo { display: none; }
+.sitio[data-kq-ajustes~="sin-foto2"] .producto__foto2 { display: none; }
+.sitio[data-kq-ajustes~="color-etiqueta"] :is(.producto__oferta, .producto__insignia--nuevo) { background: var(--sitio-etiqueta); color: var(--sitio-sobre-etiqueta); }
+.sitio[data-kq-ajustes~="color-oferta"] .producto--oferta .producto__precio > span { color: var(--sitio-oferta); }
+.sitio[data-kq-ajustes~="color-enlace"] :is(.texto, .columna, .faq) a { color: var(--sitio-enlace); }
+.sitio[data-kq-ajustes~="alterno"] .envoltura[data-alterno] { background-color: var(--sitio-fondo-alterno); color: var(--sitio-texto-alterno); }
+.sitio:not(.sitio--movil)[data-kq-ajustes~="cols"] .productos__grid:not(.productos__grid--fila) { grid-template-columns: repeat(var(--sitio-cols), minmax(0, 1fr)); }
+.sitio--movil[data-kq-ajustes~="cols-movil"] .productos__grid:not(.productos__grid--fila) { grid-template-columns: repeat(var(--sitio-cols-movil), minmax(0, 1fr)); }
+.sitio[data-kq-ajustes~="logo-centro"] .cabecera__marca { order: -1; width: 100%; margin: 0; justify-content: center; }
+.sitio[data-kq-ajustes~="logo-centro"] .cabecera__enlaces { width: 100%; justify-content: center; }
+.sitio[data-kq-ajustes~="logo-chico"] .cabecera__logo { height: 30px; }
+.sitio[data-kq-ajustes~="logo-grande"] .cabecera__logo { height: 60px; max-width: 240px; }
+.sitio--movil[data-kq-ajustes~="logo-chico"] .cabecera__logo { height: 26px; }
+.sitio--movil[data-kq-ajustes~="logo-grande"] .cabecera__logo { height: 44px; }
+.sitio[data-kq-ajustes~="menu-mayusculas-si"] :is(.cabecera__enlaces a, .cabecera__cats a) { text-transform: uppercase; letter-spacing: 0.06em; }
+.sitio[data-kq-ajustes~="menu-mayusculas-no"] :is(.cabecera__enlaces a, .cabecera__cats a) { text-transform: none; letter-spacing: normal; }
+.sitio[data-kq-ajustes~="ancho-estrecho"] :is(.productos, .catalogo, .categorias, .galeria, .columnas, .seccion, .resenas, .botones, .video) { max-width: 1180px; }
+.sitio[data-kq-ajustes~="ancho-amplio"] :is(.productos, .catalogo, .categorias, .galeria, .columnas, .seccion, .resenas, .botones, .video) { max-width: 1720px; }
+// En la página el tamaño base va en <html> (todo está en rem); en la previa, la
+// raíz es la del panel, así que se aproxima con zoom sobre el lienzo.
+.sitio[data-kq-ajustes~="texto-chico"] { zoom: 0.9375; }
+.sitio[data-kq-ajustes~="texto-grande"] { zoom: 1.0625; }

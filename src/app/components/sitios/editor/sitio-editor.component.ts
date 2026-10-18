@@ -28,7 +28,8 @@ import {
   preguntaPorPublicar,
 } from "./editar-con-ia.logic";
 import { pdfAImagenes, reducirImagen } from "./editar-con-ia.archivos";
-import { avisoContraste, avisoContrastePrincipal, combinacionUsable, mismosColores } from "../contraste";
+import { avisoContraste, avisoContrastePrincipal, combinacionUsable, contraste, mismosColores } from "../contraste";
+import { ajustesDeEstiloCompletos } from "../../sitio-render/ajustes-estilo";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
 const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; icono: string }[] = [
@@ -286,13 +287,98 @@ const TIPOGRAFIAS: { id: string; nombre: string; pista: string; familia: string;
  * de "combinar a mi manera".
  */
 const PAREJAS: { id: string; nombre: string; titulo: string; cuerpo: string }[] = [
-  { id: "boutique", nombre: "Cormorant + Jakarta", titulo: "cormorant", cuerpo: "jakarta" },
-  { id: "revista", nombre: "Playfair + Inter", titulo: "playfair", cuerpo: "inter" },
-  { id: "calido", nombre: "Fraunces + Sora", titulo: "fraunces", cuerpo: "sora" },
-  { id: "moderno", nombre: "Syne + Outfit", titulo: "syne", cuerpo: "outfit" },
-  { id: "editorial", nombre: "DM Serif + Jakarta", titulo: "dmserif", cuerpo: "jakarta" },
-  { id: "sistema", nombre: "Del sistema", titulo: "sistema", cuerpo: "sistema" },
+  // Ticket 1227: nombres para el comercio, no los de las fuentes; la muestra ya enseña la letra.
+  { id: "boutique", nombre: "Elegante", titulo: "cormorant", cuerpo: "jakarta" },
+  { id: "revista", nombre: "Revista", titulo: "playfair", cuerpo: "inter" },
+  { id: "calido", nombre: "Cálida", titulo: "fraunces", cuerpo: "sora" },
+  { id: "moderno", nombre: "Moderna", titulo: "syne", cuerpo: "outfit" },
+  { id: "editorial", nombre: "Editorial", titulo: "dmserif", cuerpo: "jakarta" },
+  { id: "sistema", nombre: "Sencilla", titulo: "sistema", cuerpo: "sistema" },
 ];
+
+/** Ticket 1227: colores opcionales de la paleta. Vacío = el de siempre (sale del principal o del texto). */
+const COLORES_EXTRA: { clave: string; nombre: string; pista: string; respaldo: string }[] = [
+  { clave: "colorBoton", nombre: "Botones", pista: "Si no, usan el principal", respaldo: "colorPrimario" },
+  { clave: "colorEnlace", nombre: "Enlaces", pista: "Los enlaces dentro de los textos", respaldo: "colorPrimario" },
+  { clave: "colorOferta", nombre: "Precio en oferta", pista: "El precio rebajado", respaldo: "colorTexto" },
+  { clave: "colorEtiqueta", nombre: "Etiquetas", pista: "Descuento y Nuevo", respaldo: "colorPrimario" },
+  { clave: "colorFondoAlterno", nombre: "Fondo alterno", pista: "Una sección sí y otra no", respaldo: "colorSecundario" },
+];
+
+/** Ticket 1227: opciones del panel Estilo. `""` = lo que trae el estilo de página. */
+const OPCIONES_ESTILO = {
+  botonForma: [
+    { id: "", nombre: "Del estilo" },
+    { id: "recto", nombre: "Recto" },
+    { id: "redondeado", nombre: "Redondeado" },
+    { id: "pastilla", nombre: "Pastilla" },
+  ],
+  botonRelleno: [
+    { id: "", nombre: "Relleno" },
+    { id: "contorno", nombre: "Contorno" },
+  ],
+  botonTamano: [
+    { id: "chico", nombre: "Chico" },
+    { id: "", nombre: "Normal" },
+    { id: "grande", nombre: "Grande" },
+  ],
+  fotoProporcion: [
+    { id: "", nombre: "Del estilo" },
+    { id: "1:1", nombre: "Cuadrada" },
+    { id: "4:5", nombre: "4:5" },
+    { id: "3:4", nombre: "3:4 alta" },
+  ],
+  fotoAjuste: [
+    { id: "", nombre: "Recortar" },
+    { id: "encajar", nombre: "Encajar entera" },
+  ],
+  columnasEscritorio: [
+    { id: 0, nombre: "Auto" },
+    { id: 2, nombre: "2" },
+    { id: 3, nombre: "3" },
+    { id: 4, nombre: "4" },
+    { id: 5, nombre: "5" },
+  ],
+  columnasCelular: [
+    { id: 0, nombre: "Auto" },
+    { id: 1, nombre: "1" },
+    { id: 2, nombre: "2" },
+  ],
+  logoPosicion: [
+    { id: "", nombre: "Izquierda" },
+    { id: "centro", nombre: "Centro" },
+  ],
+  logoTamano: [
+    { id: "chico", nombre: "Chico" },
+    { id: "", nombre: "Normal" },
+    { id: "grande", nombre: "Grande" },
+  ],
+  menuMayusculas: [
+    { id: "", nombre: "Del estilo" },
+    { id: "si", nombre: "MAYÚSCULAS" },
+    { id: "no", nombre: "Normal" },
+  ],
+  anchoContenido: [
+    { id: "estrecho", nombre: "Estrecho" },
+    { id: "", nombre: "Normal" },
+    { id: "amplio", nombre: "Amplio" },
+  ],
+  espaciado: [
+    { id: "compacto", nombre: "Compacto" },
+    { id: "", nombre: "Normal" },
+    { id: "amplio", nombre: "Amplio" },
+  ],
+  tamanoTexto: [
+    { id: "chico", nombre: "Chico" },
+    { id: "", nombre: "Normal" },
+    { id: "grande", nombre: "Grande" },
+  ],
+  escalaTitulos: [
+    { id: "sobria", nombre: "Sobrios" },
+    { id: "", nombre: "Normales" },
+    { id: "grande", nombre: "Grandes" },
+  ],
+};
 
 /**
  * Secciones ya armadas.
@@ -996,6 +1082,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         fuenteCuerpo: (d.tema && (d.tema.fuenteCuerpo || d.tema.tipografia)) || "sistema",
         estilo: (d.tema && d.tema.estilo) || "clasico",
         animaciones: (d.tema && d.tema.animaciones) === true,
+        // Ticket 1227: ajustes de estilo. Vacío = «como lo deja el estilo de página».
+        ...ajustesDeEstiloCompletos(d.tema),
       },
       seo: d.seo || { titulo: "", descripcion: "", imagen: "" },
       // Un sitio creado antes de que existiera la tienda llega sin esto. Nace
@@ -1793,23 +1881,35 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     { texto: "Redirecciones desde tu página anterior", donde: "Ajustes", panel: "ajustes", claves: "301 shopify woocommerce wix migrar seo" },
     { texto: "Historial de versiones", donde: "Ajustes", panel: "ajustes", claves: "restaurar revertir version" },
     { texto: "Programar la publicación", donde: "Ajustes", panel: "ajustes", claves: "fecha hora programar" },
-  ];
+    // Ticket 1227: el panel Estilo va en acordeón; `grupo` abre el que toca.
+    { texto: "Colores", donde: "Estilo", panel: "diseno", grupo: "colores", claves: "paleta hexadecimal contraste enlaces oferta etiquetas fondo alterno" },
+    { texto: "Botones", donde: "Estilo", panel: "diseno", grupo: "botones", claves: "forma pastilla redondeado contorno tamaño" },
+    { texto: "Tarjeta de producto", donde: "Estilo", panel: "diseno", grupo: "tarjeta", claves: "foto proporcion columnas etiquetas descuento agotado nuevo" },
+    { texto: "Encabezado", donde: "Estilo", panel: "diseno", grupo: "encabezado", claves: "logo centro tamaño menu mayusculas" },
+    { texto: "Medidas", donde: "Estilo", panel: "diseno", grupo: "medidas", claves: "ancho espacio espaciado tamaño letra titulos" },
+    { texto: "Letra", donde: "Estilo", panel: "diseno", grupo: "letra", claves: "fuente tipografia" },
+    { texto: "Diseñar con IA", donde: "Estilo", panel: "diseno", grupo: "ia", claves: "kai propuesta diseño" },
+  ] as { texto: string; donde: string; panel: string; claves: string; grupo?: string }[];
 
-  get ajustesEncontrados(): { texto: string; donde: string; panel: string }[] {
+  get ajustesEncontrados(): { texto: string; donde: string; panel: string; grupo?: string }[] {
     const limpio = (v: string) => String(v || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
     const q = limpio(this.busquedaAjuste).trim();
     if (q.length < 2) return [];
     return SitioEditorComponent.AJUSTES.filter((a) => limpio(`${a.texto} ${a.claves}`).includes(q)).slice(0, 8);
   }
 
-  irAAjuste(a: { texto: string; panel: string }): void {
+  irAAjuste(a: { texto: string; panel: string; grupo?: string }): void {
     this.busquedaAjuste = "";
     this.panel = a.panel as any;
     if (a.panel === "tienda") this.cargarBodegas();
+    if (a.grupo) {
+      this.estiloAbierto = a.grupo;
+      if (a.grupo === "letra") this.cargarMuestrasDeLetra();
+    }
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const raiz = this.panelEl && this.panelEl.nativeElement;
       if (!raiz) return;
-      const destino = Array.from(raiz.querySelectorAll<HTMLElement>("h3, label"))
+      const destino = Array.from(raiz.querySelectorAll<HTMLElement>("h3, label, .acordeon__titulo"))
         .find((el) => (el.textContent || "").trim().startsWith(a.texto));
       if (!destino) return;
       destino.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2338,6 +2438,74 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     if (!this.contenido) return;
     this.contenido.tema = { ...this.contenido.tema, tipografia: id };
     this.marcarSucio();
+  }
+
+  // ── Ticket 1227: estilo robusto ──
+  /** Grupo abierto del panel Estilo (acordeón: uno a la vez, el resto plegado). */
+  estiloAbierto = "colores";
+  readonly coloresExtra = COLORES_EXTRA;
+  readonly opcionesEstilo = OPCIONES_ESTILO;
+
+  abrirGrupoEstilo(id: string): void {
+    this.estiloAbierto = this.estiloAbierto === id ? "" : id;
+    if (this.estiloAbierto === "letra") this.cargarMuestrasDeLetra();
+  }
+
+  /** Un ajuste de lista cerrada; el mismo valor otra vez no cambia nada. */
+  cambiarAjuste(clave: string, valor: string | number | boolean): void {
+    if (!this.contenido) return;
+    const tema: any = this.contenido.tema;
+    if (tema[clave] === valor) return;
+    this.contenido.tema = { ...tema, [clave]: valor };
+    this.marcarSucio();
+  }
+
+  alternarEtiqueta(clave: "descuento" | "agotado" | "nuevo"): void {
+    if (!this.contenido) return;
+    const tema: any = this.contenido.tema;
+    const etiquetas = { descuento: true, agotado: true, nuevo: true, ...(tema.etiquetas || {}) };
+    etiquetas[clave] = !etiquetas[clave];
+    this.contenido.tema = { ...tema, etiquetas };
+    this.marcarSucio();
+  }
+
+  /**
+   * Color por código hexadecimal: se acepta con o sin «#» y solo cuando está
+   * completo (6 cifras), para no pintar la página a medio escribir. Vacío en un
+   * color opcional = volver al de siempre.
+   */
+  ponerColor(clave: string, valor: string, opcional = false): void {
+    const limpio = String(valor || "").trim().replace(/^#?/, "#").toLowerCase();
+    if (/^#[0-9a-f]{6}$/.test(limpio)) this.cambiarAjuste(clave, limpio);
+    else if (opcional && !String(valor || "").trim()) this.cambiarAjuste(clave, "");
+  }
+
+  /** «7,2:1» y si alcanza el mínimo de lectura (4,5:1). */
+  contrasteDe(a: string, b: string): { texto: string; ok: boolean } | null {
+    const r = contraste(a, b);
+    if (r === null) return null;
+    return { texto: `${r.toLocaleString("es-CO", { maximumFractionDigits: 1 })}:1`, ok: r >= 4.5 };
+  }
+
+  /** Contraste de cada color de la paleta contra lo que tiene detrás. */
+  contrasteColor(clave: string): { texto: string; ok: boolean } | null {
+    const t: any = this.contenido && this.contenido.tema;
+    if (!t) return null;
+    switch (clave) {
+      case "colorTexto":
+        return this.contrasteDe(t.colorTexto, t.colorSecundario);
+      case "colorPrimario":
+        return this.contrasteDe("#ffffff", t.colorPrimario);
+      case "colorBoton":
+        return t.colorBoton ? this.contrasteDe("#ffffff", t.colorBoton) : null;
+      case "colorEnlace":
+      case "colorOferta":
+        return t[clave] ? this.contrasteDe(t[clave], t.colorSecundario) : null;
+      case "colorFondoAlterno":
+        return t.colorFondoAlterno ? this.contrasteDe(t.colorTexto, t.colorFondoAlterno) : null;
+      default:
+        return null;
+    }
   }
 
   seleccionar(indice: number): void {
@@ -3493,9 +3661,13 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    */
   disenarConIA(): void {
     if (!this.contenido || this.disenandoIA) return;
+    // Ticket 1227: comparando, se vuelve a la propuesta antes de pedir otra.
+    if (this.viendoAntesIA) this.alternarAntesIA();
     this.disenandoIA = true;
     this.razonesIA = [];
-    this.fotoAntesDeIA = JSON.stringify(this.contenido);
+    // «Proponer otro» no pisa el antes: «Volver a como estaba» regresa al
+    // diseño previo a la primera propuesta, no a la propuesta anterior.
+    if (!this.fotoAntesDeIA) this.fotoAntesDeIA = JSON.stringify(this.contenido);
     this.service.disenarConIA(this.id, this.contenido, this.indicacionesIA.trim()).subscribe({
       next: (res) => {
         this.disenandoIA = false;
@@ -3535,16 +3707,48 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.seleccionado = -1;
     this.razonesIA = p.razones || [];
     this.marcarSucio();
-    this.toastr.success("Diseño propuesto por KAI aplicado. Si no te convence, vuelve a como estaba.");
+    this.toastr.success("KAI propone un diseño: compáralo con el de antes y decide si lo dejas.");
   }
 
   volverAntesDeIA(): void {
     if (!this.fotoAntesDeIA) return;
     this.contenido = JSON.parse(this.fotoAntesDeIA);
     this.fotoAntesDeIA = "";
+    this.fotoPropuestaIA = "";
+    this.viendoAntesIA = false;
     this.razonesIA = [];
     this.seleccionado = -1;
     this.marcarSucio();
+  }
+
+  // Ticket 1227: la propuesta de KAI como antes y después.
+  viendoAntesIA = false;
+  private fotoPropuestaIA = "";
+
+  /** Cambia la vista previa entre la propuesta y como estaba, sin perder ninguna. */
+  alternarAntesIA(): void {
+    if (!this.fotoAntesDeIA || !this.contenido) return;
+    if (!this.viendoAntesIA) {
+      this.fotoPropuestaIA = JSON.stringify(this.contenido);
+      this.contenido = JSON.parse(this.fotoAntesDeIA);
+      this.viendoAntesIA = true;
+    } else {
+      this.contenido = JSON.parse(this.fotoPropuestaIA);
+      this.fotoPropuestaIA = "";
+      this.viendoAntesIA = false;
+    }
+    this.seleccionado = -1;
+    this.recalcularPrevia();
+  }
+
+  /** Deja el diseño de KAI: desde aquí se guarda como cualquier cambio (y queda en el historial). */
+  aceptarPropuestaIA(): void {
+    if (!this.fotoAntesDeIA) return;
+    if (this.viendoAntesIA) this.alternarAntesIA();
+    this.fotoAntesDeIA = "";
+    this.razonesIA = [];
+    this.marcarSucio();
+    this.toastr.success("Listo, quedó el diseño de KAI.");
   }
 
   get hayPropuestaIA(): boolean {
@@ -4526,6 +4730,14 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   marcarSucio(): void {
+    // Ticket 1227: editar mientras se mira el «antes» es quedarse con el antes
+    // (y su cambio): la propuesta de KAI se descarta en vez de pisar lo editado.
+    if (this.viendoAntesIA) {
+      this.viendoAntesIA = false;
+      this.fotoPropuestaIA = "";
+      this.fotoAntesDeIA = "";
+      this.razonesIA = [];
+    }
     this.recalcularSucio();
     this.recalcularPrevia();
     this.guardarEnHistorial();

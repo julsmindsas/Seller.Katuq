@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from "@angular/core";
 import { CdkDragDrop } from "@angular/cdk/drag-drop";
+import { AjustesEstilo, fichasDeAjustes, medidasDeAjustes, seccionesAlternas, variablesDeAjustes } from "./ajustes-estilo";
 
 /** Un bloque tal como lo entrega el backend: tipo + datos ya saneados. */
 export interface BloqueSitio {
@@ -15,7 +16,7 @@ export interface BloqueSitio {
   programacion?: { desde?: string; hasta?: string; temporada?: string };
 }
 
-export interface TemaSitio {
+export interface TemaSitio extends AjustesEstilo {
   colorPrimario: string;
   colorSecundario: string;
   colorTexto: string;
@@ -392,13 +393,37 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
     const t = this.tema || ({} as TemaSitio);
     const base = t.tipografia || "sistema";
     return {
-      ...(ESTILOS[t.estilo || "clasico"] || ESTILOS.clasico),
+      ...medidasDeAjustes(ESTILOS[t.estilo || "clasico"] || ESTILOS.clasico, t),
       "--sitio-primario": t.colorPrimario || "#111111",
       "--sitio-secundario": t.colorSecundario || "#ffffff",
       "--sitio-texto": t.colorTexto || "#222222",
       "--sitio-fuente": this.familiaTipografica(t.fuenteCuerpo || base),
       "--sitio-fuente-titulo": this.familiaTipografica(t.fuenteTitulo || base),
+      ...variablesDeAjustes(t),
     };
+  }
+
+  /** Ticket 1227: producto con promoción (precio de lista mayor al de venta), como `fichaDeProducto`. */
+  enOferta(p: any): boolean {
+    return Number(p && p.precioAntes) > Number(p && p.precioConIva);
+  }
+
+  porcentajeOferta(p: any): number {
+    return Math.round(Number(p.descuentoPorcentaje) || (1 - Number(p.precioConIva) / Number(p.precioAntes)) * 100);
+  }
+
+  /** Ticket 1227: los ajustes de estilo como fichas (`data-kq-ajustes`), igual que la página publicada. */
+  get fichasAjustes(): string | null {
+    return fichasDeAjustes(this.tema) || null;
+  }
+
+  /** Ticket 1227: qué secciones llevan el fondo alterno. */
+  get alternas(): Set<number> {
+    // En el editor `bloquesVisibles` trae también los ocultos; la alternancia se
+    // cuenta solo con los publicados, como en la página.
+    const publicados = this.bloquesVisibles.map((b, i) => ({ b, i })).filter((x) => x.b.visible !== false);
+    const elegidas = seccionesAlternas(publicados.map((x) => x.b) as any[], this.tema);
+    return new Set(publicados.filter((_, k) => elegidas.has(k)).map((x) => x.i));
   }
 
   private familiaTipografica(clave: string): string {
