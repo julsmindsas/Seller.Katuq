@@ -10903,3 +10903,30 @@ Daniel (16-oct): "requiero un módulo de marketing para Katuq y para Julsmind; q
 - **Guard** (`VistaVentaGuard`): entrar desde el menú sin parámetros abre la vista elegida. Los enlaces con parámetros, como `?documento=` de cotizaciones, CRM o clientes, siguen yendo a `crear-ventas` sin cambio.
 - **Sin cambios en pedidos:** no toca la lógica de pedidos, precios, inventario ni facturación; es solo navegación y presentación.
 - **Pendiente:** el asistente por pasos conserva la plantilla vieja (título azul). Modernizarlo con la Regla de diseño va en un cambio aparte.
+
+## D-488 (2026-10-18) — Plantillas sin recortes ni huecos con datos reales y 3 recomendadas con forma propia (ticket 1257, TX-36, parte 1) — backend 9c222196, front 4d23c164, SIN DESPLEGAR
+
+- **Revisión visual del ticket:**
+  - Cada una de las 13 plantillas visibles, generada con el generador real.
+  - 3 catálogos: 3 productos; 40 productos; 12 productos con fotos muy anchas, muy altas, diminutas y categorías sin foto.
+  - 4 anchos: 360, 768, 1366 y 1920 px.
+  - Se midió desborde horizontal, imágenes con más de 25 % de corte, secciones vacías y portadas altas sin foto.
+  - **Antes:** sin desbordes ni vacíos, pero recortes en todas: el mosaico de portada cortaba hasta 77 % aun con fotos cuadradas, las tarjetas, categorías y promo cortaban las fotos de otra forma, y las categorías sin foto quedaban como cuadro en blanco.
+  - **Después:** cero hallazgos. Queda la promo con foto cuadrada en marco 4:3 (25 % justo, aceptado).
+- **Arreglos en el render** (valen para todas las plantillas y los sitios ya publicados):
+  - Una foto cuya forma se cortaría más de un 25 % en su marco se muestra entera (`img.kq-encajada`, al cargar y al cambiar el tamaño de la ventana). Las que casi calzan siguen llenando el marco.
+  - El mosaico de portada usa 1, 2 o 4 fotos, nunca 3, con un marco de la forma de la rejilla para que las baldosas queden cuadradas.
+  - Una categoría sin foto muestra su inicial sobre un tinte de la marca.
+  - Hasta 4 productos en escritorio: fila centrada con tarjetas de tamaño normal.
+  - Logo al centro (D-486): logo arriba y la barra centrada debajo; antes quedaba desordenada.
+- **Recomendadas:** `destacada`/`orden` en regalos-tienda (1), boutique-luxury (2) y alimentos-domicilio (3), más producto-unico (4), que sigue escondida tras su bandera (D-385).
+  - Cada una trae su forma (botones, foto, columnas en celular, logo y medidas). `generarContenido` ahora la pasa a la página; los colores extra no, porque los manda la marca.
+  - El selector de Mis páginas las muestra primero con la etiqueta «Recomendada». No se agregó, quitó ni reordenó ninguna plantilla de siempre (la regla de D-385 y la prueba A1).
+- **Verificado:**
+  - `tests/sitios/plantillasRecomendadas.test.js` (6 casos).
+  - Los 4 fallos previos de la suite de sitios siguen igual. `precioSelectorVariantes` se rompió por el script nuevo (`document.images` en su documento simulado) y se arregló haciéndolo defensivo; ahora pasa 17/17.
+  - Build del front y selector en Chromium a 1440 y 390 px.
+- **Pendiente (parte 2):**
+  - Plantilla «Tecnología / catálogo grande» tipo Baudio: debe nacer con bandera (D-385), y el cableado de banderas de plantillas sigue sin hacer; necesita visto bueno de Daniel. Filtros técnicos y ficha con especificaciones dependen de la propuesta de atributos por categoría (F2-42).
+  - Revisar con 3 catálogos reales de comercios (solo lectura).
+  - Contenido de muestra real por sector en las demás plantillas.
