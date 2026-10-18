@@ -10784,7 +10784,7 @@ Daniel: «las cards de opttia se volvieron muy invasivas». Escogió **botoncito
   - La suite de sitios queda con los mismos 4 fallos previos.
   - En producción: sitio publicado en 200, `/v1/sites/all` sin sesión da 401 y con token inválido 403, y no hay errores de tenant en los logs.
 
-## D-483 (2026-10-17) — NPS y comentarios para comercios y compradores, reutilizando lo existente — APROBADA (Daniel, 17-oct), en implementación
+## D-483 (2026-10-17) — NPS y comentarios para comercios y compradores, reutilizando lo existente — FASE 1 PUBLICADA, APAGADA: backend 97209bfc (en 3b847f62), front 78c08d5e (en 2026.10.18.1); falta la etapa "internos"
 
 Se reservó como D-475 y luego como D-481; en la rama esos números (D-475 a D-482) quedaron para otros cambios publicados el mismo día.
 
@@ -10808,7 +10808,7 @@ Daniel (17-oct): "un sistema NPS para saber la satisfacción de nuestros cliente
   - se abre aparte el cambio que hace que `/v1/reports/query` y `/v1/companies/overview` tomen la empresa del JWT;
   - excepción al Artículo IX: los módulos existentes siguen en NgModule y `*ngIf`; lo nuevo y aislado va standalone.
 
-## D-484 (2026-10-17) — Reportes y empresas toman la empresa del JWT, no del header — PROPUESTA, pendiente de aprobación (arreglo urgente aprobado y en commit 03aae0fe)
+## D-484 (2026-10-17) — Reportes y empresas toman la empresa del JWT, no del header — PROPUESTA, pendiente de aprobación; arreglo urgente de empresas PUBLICADO (backend 03aae0fe, en 6c2cf351)
 
 Se reservó como D-476 (así quedó escrito en el commit 03aae0fe del backend) y luego como D-482; en la rama D-476 es "Una sola dirección por marca" y D-482 "las rutas del editor de sitios toman la empresa del token".
 

@@ -41,7 +41,7 @@
 
 ## 4. Salida fase 1 (con OK de Daniel)
 
-- [ ] 4.1 Publicar backend (`apagada`) y luego el front.
+- [x] 4.1 Publicar backend (`apagada`) y luego el front. Salieron en los despliegues de otra sesión el 18-oct: backend 3b847f62 (incluye 97209bfc) y front 2026.10.18.1 (incluye 78c08d5e). Verificado: `/v1/nps` y `/v1/analiticas/data` responden 401 sin sesión.
 - [ ] 4.2 `internos` una semana: responder desde Julsmind y FLORECER, abrir un detractor de prueba, revisar la pantalla y KAI; captura como evidencia.
 - [ ] 4.3 `todos`; revisar la tasa de respuesta a los 7 días.
 - [ ] 4.4 Bitácora en `specs/CONTRACT.md`.
