@@ -4,6 +4,7 @@ import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 
 import { TreasuryService } from '../../../../shared/services/treasury/treasury.service';
+import { debePreguntarSiVolvio, preguntarSiVolvio } from '../../../../shared/utils/pedido-mercancia-devuelta';
 import {
   PAYMENT_STATE_TRANSITIONS,
   MOTIVOS_CAMBIO_ESTADO,
@@ -78,13 +79,25 @@ export class CambiarEstadoPagoComponent implements OnInit {
     }
   }
 
-  confirmar(): void {
+  async confirmar(): Promise<void> {
     if (!this.puedeConfirmar) return;
+    // D-493 (ticket 1299): si el pedido ya salió, preguntar si el producto volvió.
+    const proceso = this.pedido?.estadoProceso || '';
+    let mercanciaVolvio = false;
+    if (debePreguntarSiVolvio(this.estadoActual, this.estadoSeleccionado, proceso)) {
+      const respuesta = await preguntarSiVolvio(proceso);
+      if (respuesta === null) return;
+      mercanciaVolvio = respuesta;
+    }
     this.submitting = true;
-    this.treasury.changePaymentState(this.pedido?._id, this.estadoSeleccionado, this.motivoFinal).subscribe({
-      next: () => {
+    this.treasury.changePaymentState(this.pedido?._id, this.estadoSeleccionado, this.motivoFinal, mercanciaVolvio).subscribe({
+      next: (res) => {
         this.submitting = false;
-        this.toastr.success(`Estado cambiado a ${this.meta(this.estadoSeleccionado).label}.`);
+        const devolvio = mercanciaVolvio && res?.devolucionInventario === true;
+        this.toastr.success(
+          `Estado cambiado a ${this.meta(this.estadoSeleccionado).label}.` +
+            (devolvio ? ' El inventario se devolvió a la bodega.' : ''),
+        );
         this.activeModal.close({ changed: true });
       },
       error: (err) => {

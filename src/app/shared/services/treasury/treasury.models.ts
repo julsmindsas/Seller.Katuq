@@ -100,6 +100,8 @@ export interface ReviewPaymentResponse {
 export interface ChangePaymentStateResponse {
   success: boolean;
   estadoPago: string;
+  /** D-493: el pago cancelado devolvió el inventario a la bodega. */
+  devolucionInventario?: boolean;
 }
 
 /** Item de la colección normalizada `payments` (historial). */

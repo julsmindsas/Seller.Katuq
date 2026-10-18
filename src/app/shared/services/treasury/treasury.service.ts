@@ -80,8 +80,18 @@ export class TreasuryService extends BaseService {
   }
 
   /** POST /orders/:orderId/payment-state — cambio manual validando la matriz de transiciones. */
-  changePaymentState(orderId: string, nuevoEstado: string, motivo: string): Observable<ChangePaymentStateResponse> {
-    return this.post<ChangePaymentStateResponse>(`${this.base}/orders/${orderId}/payment-state`, { nuevoEstado, motivo });
+  changePaymentState(
+    orderId: string,
+    nuevoEstado: string,
+    motivo: string,
+    mercanciaVolvioABodega = false,
+  ): Observable<ChangePaymentStateResponse> {
+    // D-493: mercanciaVolvioABodega = "el producto volvió a la bodega" (pedido ya despachado).
+    return this.post<ChangePaymentStateResponse>(`${this.base}/orders/${orderId}/payment-state`, {
+      nuevoEstado,
+      motivo,
+      mercanciaVolvioABodega,
+    });
   }
 
   /** GET /metrics — KPIs server-side. */

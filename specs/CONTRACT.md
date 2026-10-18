@@ -10988,3 +10988,45 @@ Daniel (18-oct), al ver D-483: "eso no es un sistema NPS". Quiere un módulo NPS
   - `companyFeatureFlags` da 34, con el catálogo en 21.
   - `plantillasRecomendadas` da 7.
   - La suite de sitios queda con 3 fallos previos (antes eran 4).
+
+## D-474 (2026-10-17) — El chat de Opttia en Katuq responde cualquier pregunta de ventas y de los demás módulos — PROPUESTA, pendiente de aprobación
+
+Daniel (17-oct): el chat de Opttia del botón flotante responde que no tiene herramientas para "¿quién fue el mejor vendedor?". Luego: "el chat debe responder toda clase de preguntas de ventas y demás".
+
+- **Causa:**
+  - las diez herramientas de ventas del chat son de respuesta fija; ninguna agrupa ni filtra por vendedor, canal, forma de pago, ciudad, bodega, transportador, cupón, categoría, día u hora, ni compara con el período anterior (`tools/getOrderAnalytics.js:14`);
+  - la instrucción del chat manda los "análisis extensos" a opttia.com (`adk_agent/endpoints/katuq_basic_chat_endpoint.py:54`).
+- **Hallazgos de la misma revisión:**
+  - si el rol no tiene permiso, el chat dice "no tengo herramientas" en vez de "tu rol no tiene acceso";
+  - las cifras de ventas de Opttia ignoran "cada vendedor ve solo sus métricas";
+  - el chat pasa la persona como `userEmail` y las herramientas leen `mcpUserEmail`, así que la regla por persona del plan de despachos no aplica allí;
+  - el chat no recuerda la conversación.
+- **Propuesta:** `openspec/changes/opttia-chat-katuq-preguntas-de-negocio/`.
+  1. **Herramienta nueva `analyze_sales`** (solo lectura, `ventas.view`): agrupa hasta por dos criterios, mide ventas, pedidos, ticket, unidades, descuentos, envíos y saldo, filtra y compara con el período anterior. Cuenta igual que el Dashboard y que "productos más vendidos", con funciones compartidas, y en hora de Colombia.
+  2. **"Solo sus métricas"** en toda cifra de ventas de Opttia, decidido en el servidor; la persona viaja con el nombre canónico.
+  3. **El chat usa las herramientas antes de remitir** y dice qué módulo le falta al rol (`deniedModules` en `/admit`).
+  4. **Seguimiento:** viajan las últimas 3 preguntas, sin respuestas.
+  5. **Banco de 43 preguntas** de todos los módulos: umbral del 95 % y cero "no tengo herramientas" antes de desplegar.
+- **Descartado:** abrirle al chat el motor del Report Builder. Lee todos los pedidos de la empresa, suma cancelados, agrupa en la zona del servidor y expone datos de compradores.
+- **Reglas:**
+  - solo lectura de `orders`, con contract test del write-set;
+  - sin colecciones ni endpoints nuevos y sin memoria en el servidor;
+  - cupo, créditos, modelo y límite de 4 consultas sin cambio.
+- **Pendiente de Daniel:**
+  - aprobar la propuesta;
+  - si `analyze_sales` va sin bandera (se propone) o detrás de `featureFlags.opttiaConsultaVentas` (D-385);
+  - si los rankings muestran la participación (%) de cada fila.
+
+## D-493 (2026-10-18) — Al cancelar el pago de un pedido despachado, preguntar si el producto volvió a la bodega (ticket 1299)
+
+- **Problema:** Punto Verde Vidagas canceló gas-000008 porque no se llevó, pero la recarga no volvió al inventario. El historial muestra que el domiciliario lo marcó Entregado a las 12:14 y el pago se canceló a las 12:25. La regla del ticket 1035 (`decidirDevolucionPorPago`) no devuelve con el pedido En despacho, Despachado, Entregado o Cerrado (`MERCANCIA_YA_SALIO`), y el comercio no tenía cómo corregirlo.
+- **Decisión** (propuesta, design y tasks en `openspec/changes/devolver-inventario-pedido-no-entregado`, aprobados por Daniel el 2026-10-18):
+  - **El Seller pregunta** "¿El producto volvió a la bodega?" al cancelar, precancelar o rechazar un pago que no lo estaba, con el pedido en esos cuatro estados (`shared/utils/pedido-mercancia-devuelta.ts`). Respuestas: "Sí, volvió" / "No, el cliente lo tiene" / Cancelar (no guarda). Está en el modal de estado de pago de Pedidos y en Tesorería.
+  - **Campo de solicitud `mercanciaVolvioABodega`**: `updateOrderInternal` lo lee y lo borra antes de guardar; Tesorería lo pasa por `POST /v1/treasury/orders/:id/payment-state`. Sin el campo (MCP, integraciones, edición masiva, transportador) todo sigue como el ticket 1035.
+  - **Regla:** `decidirDevolucionPorPago` recibe `mercanciaVolvio`; con `true` y la mercancía afuera responde `MERCANCIA_VOLVIO_CONFIRMADA` y devuelve. El pago que ya estaba caído y el pedido ya devuelto siguen sin devolver.
+  - **Rastro:** `restoreStock` recibe `confirmadoPor`. El movimiento guarda `mercanciaVolvioConfirmadaPor` y la observación termina en "— el producto volvió a la bodega". La respuesta trae `devolucionInventario` para el aviso.
+  - **Sin bandera:** solo devuelve con un "Sí" explícito de una persona.
+- **Desvío:** el POS no cambia. Su botón de estado de pago abre una plantilla `cambioEstadoPagoModal` que no existe en la pantalla, así que por ahí no se cambia el pago.
+- **Write-set:** `inventory`, `inventoryMovement` e `inventory_audit` vía `restoreStock` (D-134 intacto). Solo en modo de inventario legacy; el ledger transaccional queda fuera.
+- **Caso del ticket:** gas-000008 se corrigió el 2026-10-18 con `restoreStock` (prueba primero): +1 RECARGA DE 10LB en BOD-PRINCIPAL (PUNTO VERDE JK - YUMBO), saldo 1 → 2. Fue el único pedido cancelado de esa empresa con salida sin devolver.
+- **Pruebas:** backend `npm run test:devolucion-por-pago` 7/7 y `tests/inventory/restoreStock.test.js` 7/7 (caso nuevo con `confirmadoPor`), tesorería sin cambios; front `pedido-mercancia-devuelta.spec.ts` 3/3. Build de producción sin errores. Backend 875832f7.

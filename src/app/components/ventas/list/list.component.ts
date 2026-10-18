@@ -69,6 +69,7 @@ import { catchError, debounceTime, distinctUntilChanged, map, switchMap, takeUnt
 import { OrdenVentaComponent } from "../orden-venta/orden-venta.component";
 import { IntegrationsService } from "../../integrations/integrations.service";
 import { TreasuryService } from "../../../shared/services/treasury/treasury.service";
+import { debePreguntarSiVolvio, preguntarSiVolvio } from "../../../shared/utils/pedido-mercancia-devuelta";
 
 @Component({
   selector: "app-list-orders",
@@ -6965,12 +6966,23 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       );
   }
 
-  cambiarEstadoPago(order: Pedido) {
+  async cambiarEstadoPago(order: Pedido) {
+    // D-493 (ticket 1299): si el pedido ya salió, preguntar si el producto volvió.
+    // Cancelar la pregunta deja el modal abierto, sin guardar.
+    const procesoTras = this.tempEstadoProceso || this.originalEstadoProceso;
+    let mercanciaVolvio = false;
+    if (debePreguntarSiVolvio(this.originalEstadoPago, this.tempEstadoPago, procesoTras)) {
+      const respuesta = await preguntarSiVolvio(procesoTras);
+      if (respuesta === null) return;
+      mercanciaVolvio = respuesta;
+    }
+
     const orderToUpdate = {
       ...order,
       estadoPago: this.tempEstadoPago,
       estadoProceso: this.tempEstadoProceso
     };
+    if (mercanciaVolvio) (orderToUpdate as any).mercanciaVolvioABodega = true;
 
     // Marcar como calculado en frontend para evitar recálculo automático
     (orderToUpdate as any)._estadoCalculadoEnFrontend = true;
@@ -6996,12 +7008,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.avisarBloqueoEstadoPago(bloqueo);
           return;
         }
+        const devolvio = res?.details?.devolucionInventario === true && mercanciaVolvio;
         Swal.fire({
           icon: "success",
           title: "Estado de pago actualizado",
-          text: `El estado se cambió a: ${orderToUpdate.estadoPago}`,
+          text: `El estado se cambió a: ${orderToUpdate.estadoPago}` +
+            (devolvio ? ". El inventario se devolvió a la bodega." : ""),
           showConfirmButton: false,
-          timer: 1500,
+          timer: devolvio ? 2500 : 1500,
         });
       },
       error: (e) => {
