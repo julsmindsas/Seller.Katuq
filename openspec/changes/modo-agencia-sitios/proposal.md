@@ -1,6 +1,6 @@
 # Modo agencia en Sitios: acceso a varios comercios con permisos que cada comercio otorga y revoca
 
-> Estado: **propuesta para aprobación.** Toca autenticación y aislamiento entre
+> Estado: **propuesta aprobada (D-503).** Toca autenticación y aislamiento entre
 > empresas. No se implementa nada hasta aprobar proposal, design y tasks.
 
 ## Why
@@ -199,5 +199,5 @@ _(ninguna; no hay spec vigente de Sitios en `openspec/specs/`)_
 8. ¿Se enciende con una bandera por comercio? Según el Artículo XII, necesita
    dueño y fecha de retiro.
 
-Al aprobar, la decisión se registra como D-XXX en `specs/CONTRACT.md`; el último
-ID al 2026-10-17 es D-480. Antes hay que revisar si otra sesión tomó un ID nuevo.
+Decisión: **D-503** (aprobada por Daniel el 2026-10-18), registrada en
+`specs/CONTRACT.md` (tabla «D-495 a D-503»).

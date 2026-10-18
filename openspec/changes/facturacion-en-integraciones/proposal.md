@@ -1,8 +1,8 @@
 # Facturación electrónica en Integraciones: un proveedor por comercio, con estado y asistentes
 
-> Ticket 1260 (FE-01). Propuesta **para aprobación; no implementar**. Toca facturación DIAN y
-> consecutivos (resoluciones), que son módulos sensibles. El número D-XXX se asigna al aprobarla
-> (el último usado en `specs/CONTRACT.md` es D-480).
+> Ticket 1260 (FE-01). Propuesta aprobada; se implementa solo con `design.md` y `tasks.md` aprobados.
+> Toca facturación DIAN y consecutivos (resoluciones), que son módulos sensibles.
+> **Decisión: D-500 (aprobada por Daniel el 2026-10-18).**
 
 ## Why
 

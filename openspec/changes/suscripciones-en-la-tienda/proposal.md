@@ -1,8 +1,8 @@
 # Productos por suscripción en la tienda, con cobro recurrente en Wompi
 
 > Ticket 1235 (F2-43), parte 2 de 2. La parte 1 (cotizables) es D-475. Toca **pagos y
-> pedidos**: es una propuesta para aprobar, no para implementar. Decisión: D-XXX (el
-> siguiente número libre al aprobarla).
+> pedidos**: es una propuesta para aprobar, no para implementar. Decisión: D-497
+> (aprobada por Daniel el 2026-10-18).
 
 ## Why
 
@@ -12,13 +12,13 @@ puede hacerlo (código leído el 2026-10-17):
 
 - **La tienda cobra pedido por pedido, con un enlace de un solo uso.** `crearPedido`
   (`controllers/sites.js`) crea el pedido y llama a `paymentGateway.generatePaymentLink`.
-  `providers/wompiProvider.js` hace `POST /payment_links` con `single_use: true` y
+  `services/paymentGateway/providers/wompiProvider.js` hace `POST /payment_links` con `single_use: true` y
   vencimiento de 24 h. El pago entra por el webhook principal
   (`controllers/integration.js`, `procesarNotificacionWompi`), que ubica el pedido por
   `pagoTienda.linkIds`, y se aplica en `aplicarPagoDeTienda`, en transacción. Nada guarda
   la tarjeta del comprador ni cobra sin él.
 - **El dinero va a la cuenta Wompi del comercio solo si la configuró.**
-  `paymentGateway/index.js` usa `integrations.wompi` del comercio (`publicKey`,
+  `services/paymentGateway/index.js` usa `integrations.wompi` del comercio (`publicKey`,
   `privateKey`, `eventsSecret`, `integritySecret`). Si no la tiene, usa la cuenta de
   plataforma, y `ventaConfig` advierte que en ese caso "el dinero entra a la cuenta de
   la PLATAFORMA".
@@ -45,8 +45,9 @@ puede hacerlo (código leído el 2026-10-17):
   trae enlace ni número de pedido: el webhook principal no sabría de qué comercio es y no
   podría validarlo con su secreto.
 - **La cuenta del comprador ya existe.** Entra con un código por correo, solo si ya es
-  cliente (`utils/siteCuenta.js`). `pedidosDeCuenta` muestra sus pedidos filtrando por
-  `cliente.cd` de la sesión. **Ojo:** `cuenta/suscripcion` es la autorización de correos
+  cliente (ayudantes en `utils/siteCuenta.js`; sesión con `clienteDeAcceso` en
+  `controllers/sites.js`). `pedidosDeCuenta` (`controllers/sites.js`) muestra sus pedidos
+  filtrando por `cliente.cd` de la sesión. **Ojo:** `cuenta/suscripcion` es la autorización de correos
   de novedades (D-318), no un cobro.
 - **Pedidos.** `orderService.createOrder` toma el consecutivo y solo evita gemelos dentro
   de 2 minutos (`VENTANA_PEDIDO_DUPLICADO_MS`), así que no impide repetir una renovación.

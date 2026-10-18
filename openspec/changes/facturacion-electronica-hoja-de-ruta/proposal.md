@@ -154,6 +154,6 @@ Leído en el código el 2026-10-18, sin consultar Firestore. Las rutas del backe
 
 ## Decisión
 
-Al aprobar, se registra como **D-XXX** en `specs/CONTRACT.md`, con el orden aprobado y las respuestas.
-El último número usado hoy es D-492; hay que revisarlo al registrar. Esta propuesta no modifica el
+**D-499**, aprobada por Daniel el 2026-10-18 y registrada en `specs/CONTRACT.md` (tabla «D-495 a D-503»).
+Las respuestas a las preguntas quedan como valores por defecto en `design.md`. Esta propuesta no modifica el
 contrato. Cada fase abre su propio cambio OpenSpec con proposal, design y tasks, y sus checkpoints.

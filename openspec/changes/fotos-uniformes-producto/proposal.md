@@ -1,6 +1,6 @@
 # Fotos de producto uniformes (TX-37, ticket 1252)
 
-> Estado: **propuesta para revisión**. Sin código, sin escrituras en Firestore. La decisión D-XXX se asigna al aprobar.
+> Estado: **aprobada como D-501** (Daniel, 2026-10-18; ver «Decisión» al final y `specs/CONTRACT.md`). El diseño y las tareas están en revisión. Todavía no hay código ni escrituras en Firestore.
 
 ## Por qué
 
@@ -143,7 +143,7 @@ Escala: OH MY STORE tiene ~8.200 productos con varias fotos cada uno, así que u
 
 ## Decisión
 
-> **D-XXX (se asigna al aprobar) — Fotos de producto uniformes.**
+> **D-501 (aprobada por Daniel el 2026-10-18) — Fotos de producto uniformes.**
 >
 > - **Fase 1, sin IA:** encuadre, proporción, fondo liso, WebP y aviso de calidad. Va con una bandera por comercio que nace apagada y se prueba en FLORECER.
 > - **Fase 2, quitar el fondo con IA:** con otra bandera, el interruptor del servidor y el proveedor que se apruebe, solo vía Opttia/ADK.

@@ -31,7 +31,7 @@ Hoy, medido leyendo el código el 2026-10-17 (no se consultó producción):
 - **Límites.** Nunca inventa precios, existencias, descuentos, cupones ni valor del domicilio: el envío sale de la tienda (tarifa fija o zona de `zonacobro`) y si la ciudad no da una sola zona, no hay pedido. Si el cliente pide una persona, se traspasa (`traspasoMotivo`) sin crear pedido.
 - **Modo sombra:** registra «así habría creado el pedido» sin crear ni cobrar. **Observabilidad (VII, XI):** eventos `pedido_directo_ok|cae_a_cotizacion|fallido` con `phoneHash`, sin teléfonos ni nombres.
 
-**Write-set del camino nuevo.** Permitido: `orders`, contador `consecutives`, `inventory`/`inventoryMovement` solo vía `inventoryService.updateByPOS` (sin lógica nueva), `clients` (como la tienda) y la sesión del bot. Prohibido: `products`, catálogo, precios, precios por cliente y listas de precios; un contract test falla si se escribe fuera. Decisión D-XXX al aprobar (última: D-480).
+**Write-set del camino nuevo.** Permitido: `orders`, contador `consecutives`, `inventory`/`inventoryMovement` solo vía `inventoryService.updateByPOS` (sin lógica nueva), `clients` (como la tienda) y la sesión del bot. Prohibido: `products`, catálogo, precios, precios por cliente y listas de precios; un contract test falla si se escribe fuera. Decisión: D-496 (aprobada por Daniel el 2026-10-18).
 
 ## Capabilities
 

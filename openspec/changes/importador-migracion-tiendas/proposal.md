@@ -111,4 +111,4 @@ _(ninguna archivada: el importador y las redirecciones viven en D-148, D-214 y D
 
 ## Decisión
 
-**D-XXX**, propuesta; el número se asigna al aprobar, mirando el `CONTRACT.md` del remoto (D-481 ya es el asesor KAI de las cotizaciones del bot). Va para aprobación: no se implementa nada antes de responder las preguntas y aprobar el design.
+**D-498**, aprobada por Daniel el 2026-10-18 (tabla «D-495 a D-503» de `specs/CONTRACT.md`). No se implementa nada antes de responder las preguntas y aprobar el design y las tareas.

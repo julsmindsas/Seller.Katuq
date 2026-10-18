@@ -1,6 +1,6 @@
 # Modo oscuro del Seller sobre los tokens Katuq (ticket #1180)
 
-> Estado: **propuesta** (solo `proposal.md`; design, specs y tasks después de aprobarla). Ticket #1180 «Mejorar el aspecto visual del modo oscuro en todas las páginas». Investigación de solo lectura del 2026-10-18 sobre `feature/venta-asistida-mejorada`. Decisión: **D-XXX** al aprobar.
+> Estado: **aprobada** como D-502 (2026-10-18). `design.md`, `design-f1.md`, `design-pruebas.md`, el delta `specs/design-system/spec.md` y `tasks.md` están en revisión y se aprueban en la tarea 0.1, antes de implementar. Ticket #1180 «Mejorar el aspecto visual del modo oscuro en todas las páginas». Investigación de solo lectura del 2026-10-18 sobre `feature/venta-asistida-mejorada`. Decisión: **D-502** (aprobada por Daniel el 2026-10-18).
 
 ## Por qué
 
@@ -96,4 +96,4 @@ Por el Artículo XIII, cada fase puede salir como cambio propio si crece.
 
 ## Decisión
 
-Pendiente. Al aprobar se registra como **D-XXX** en `specs/CONTRACT.md`, revisando antes el último ID (hoy D-492) para no chocar. Esta propuesta no toca el contrato.
+**D-502**, aprobada por Daniel el 2026-10-18. Registrada en `specs/CONTRACT.md`, tabla «D-495 a D-503». El diseño, el delta de specs y las tareas se aprueban antes de implementar. Los ajustes que hizo el diseño a esta propuesta (las pantallas sin menú siempre en claro y el criterio 5 sobre los 169 azules) quedan como valores por defecto 7 y 13 de `design.md`.

@@ -118,7 +118,7 @@ Hoy (leído en el código el 2026-10-17; backend = `katuq_admin_back_firebase/fu
    - En `feed.xml`, `g:product_detail` (sección, atributo, valor) para Google.
      Para Meta, los campos estándar que coincidan; se confirma en design.
 
-Al aprobarse se registra como D-XXX en `specs/CONTRACT.md` con el siguiente ID libre.
+**Decisión:** D-495 (aprobada por Daniel el 2026-10-18), registrada en `specs/CONTRACT.md` (tabla «D-495 a D-503»).
 
 ## Capabilities
 
