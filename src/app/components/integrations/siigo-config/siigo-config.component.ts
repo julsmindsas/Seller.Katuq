@@ -274,6 +274,7 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
     if (config.accountsMapping) {
       this.siigoForm.get('accountsMapping')?.patchValue(config.accountsMapping);
       this.grupoPorCategoria = { ...(config.accountsMapping.accountGroupByCategory || {}) };
+      this.alinearClaves();
     }
 
     if (config.paymentMethodsMapping) {
@@ -363,8 +364,29 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
             if (h) filas.push({ clave: `${r0} > ${h}`, nombre: h, nivel: 1, padre: r0 });
           }
         }
-        this.filasCategorias = filas;
+        // El árbol trae nombres repetidos (con y sin consecutivo): una fila por clave.
+        const vistas = new Set<string>();
+        this.filasCategorias = filas.filter((f) => !vistas.has(f.clave) && !!vistas.add(f.clave));
+        this.alinearClaves();
       });
+  }
+
+  /** Normaliza como el backend: sin tildes, minúsculas, un espacio y " > " entre niveles. */
+  private normalizarClave(clave: string): string {
+    return String(clave || '').split('>')
+      .map((p) => p.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim())
+      .filter(Boolean).join(' > ');
+  }
+
+  /** Lleva las conexiones guardadas a la clave exacta de cada fila (mayúsculas, tildes o espacios distintos). */
+  private alinearClaves(): void {
+    if (!this.filasCategorias.length) return;
+    const porNormal = new Map(this.filasCategorias.map((f) => [this.normalizarClave(f.clave), f.clave]));
+    const alineado: Record<string, number | null> = {};
+    for (const [clave, grupo] of Object.entries(this.grupoPorCategoria)) {
+      alineado[porNormal.get(this.normalizarClave(clave)) || clave] = grupo;
+    }
+    this.grupoPorCategoria = alineado;
   }
 
   /** Solo las categorías con una categoría de SIIGO elegida. */
