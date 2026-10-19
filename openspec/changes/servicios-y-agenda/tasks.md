@@ -29,6 +29,7 @@
 - [ ] 2.8 Back (diff aprobado): transición `ParaDespachar → Entregado` solo si `requiresDispatch === false`, con historial. Prueba de que un pedido mixto sigue rechazado.
 - [ ] 2.9 Front: botón "Marcar como prestado" en el detalle y la lista de pedidos, solo para esos pedidos y los roles que decida 0.1.
 - [ ] 2.10 Back (diff aprobado): SIIGO `findOrCreateProduct` usa `type:"Service"` cuando el ítem es servicio (`itemType`), y World Office crea el ítem como no inventariable. El ajuste contable automático omite servicios. Pruebas con mapper simulado; ítems existentes intactos.
+- [ ] 2.12 Back (diff aprobado): las tarjetas de conteo de Despachos (`/logistica/shippingorders/metrics`, con `count()`) descuentan los pedidos con `requiresDispatch === false`. Necesita un índice nuevo en Firestore.
 - [ ] 2.11 Build de producción y pruebas del backend sin errores. En FLORECER:
   - un pedido solo de servicios no sale en despachos y se cierra como prestado;
   - uno mixto despacha solo lo físico;
@@ -124,4 +125,18 @@ Desvíos frente al diseño:
 - 2.5 (diff aprobado por Daniel; backend `c1a552f5`, front `502ff3d2`, publicado en 2026.10.18.13): `/v1/orders/all/filter/optimized` acepta `soloConDespacho: true`, que solo mandan Despachos y Generar orden. Deja fuera `requiresDispatch === false` en los tres caminos (filtros de columna, con métricas y sin métricas), así el total, las páginas y las métricas cuadran. La lista de Pedidos no cambia. Prueba: `tests/orders/despachosSinServicios.test.js`, que falla sin el cambio. `listadoYExportacionSinMemoria` sigue en verde. Las 3 fallas de `tests/orders` (correo de confirmación, emulador, precios por tipo) ya estaban.
 - Queda fuera: las tarjetas de conteo de Despachos (`/logistica/shippingorders/metrics`, con `count()`) siguen contando los pedidos solo de servicios. Descontarlos pide un índice nuevo; va aparte.
 
-Pendiente: 1.6, 4.11 y 6.2 (recorrido en FLORECER a 1440 y 390 px: falta una sesión de FLORECER en el navegador); 4.7 y el resto del bloque 2 (pedidos, de a un diff aprobado); 6.4 al cerrar.
+## Lo que falta (estado al 19-oct)
+
+Publicado y encendido solo en FLORECER (`companies.featureFlags.serviceAgenda`). Para que un comercio de servicios lo use completo falta, en este orden:
+
+1. **Probar en el navegador (1.6, 4.11, 6.2).** El recorrido completo en FLORECER a 1440 y 390 px. Falta que Daniel inicie sesión con FLORECER en Chrome.
+2. **Venta asistida y tienda sin envío para carritos solo de servicios (2.6 front, 2.3 tienda).** Hoy piden dirección, ciudad y bodega aunque todo sea servicio. Es lo más urgente.
+3. **"Marcar como prestado" (2.8 back, 2.9 front).** Hoy un pedido de servicios no puede pasar a Entregado sin pasar por Despachado. Antes va 2.7: ver qué reportes y KPIs leen Despachado y Entregado.
+4. **Cobrar desde la cita (4.7, 3.9).** La venta asistida nace desde la cita, y al crear el pedido la cita queda ligada y Atendida.
+5. **Factura electrónica como servicio (2.10).** SIIGO y World Office todavía crean el ítem como producto con inventario.
+6. **Tarjetas de conteo de Despachos (2.12).** Todavía cuentan los pedidos solo de servicios.
+7. **Cierre (6.4).** El CONTRACT D-491 queda en PUBLICADO con todos los commits.
+
+Los puntos 2 a 6 tocan pedidos o facturación: van de a un diff, cada uno con la aprobación de Daniel. Cualquier interruptor o ajuste nuevo va en Firestore, nunca en el `.env` (D-505).
+
+Fase 2, cada una en su propia propuesta (7.1 a 7.3): recordatorio de la cita al cliente por WhatsApp, Opttia agendando por WhatsApp, visitas de técnicos en la app del mensajero, pago anticipado, `requiresShipping:false` en Shopify y retirar la bandera el 2027-03-31.
