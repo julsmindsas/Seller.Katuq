@@ -196,3 +196,26 @@ Daniel aprobó construir el 18-oct («dale construye») sin contestar las pregun
 - **Menú:** no hace falta backfill de `menus`. Desde el ticket 1177 el Super Administrador recibe todas las rutas del menú; la entrada lleva `isOnlySuperAdministrador` y un filtro por empresa Julsmind.
 - **Formulario de contacto (`landingContacts`):** nadie lo llama (ni la landing ni el front). Arreglar el `!mensaje` lo abriría como endpoint público que manda correos con HTML sin escapar; se deja como está y se propone retirarlo aparte.
 - **Resumen:** recuerda el DMARC pendiente; se quita con `PAUTA_RESUMEN_NOTA_DNS=false`.
+
+## Desvío del 19-oct: ajustes en Firestore (D-505)
+
+Daniel fijó que ningún interruptor vive en el `.env`. Los de la pauta pasan a `config/pauta`, que se lee en cada vuelta (`services/pauta/ajustes.js`); lo que falte o no sirva queda apagado. Las variables que nombra este documento se leen así:
+
+| Antes (`.env`) | Ahora (`config/pauta`) |
+|---|---|
+| `PAUTA_EVENTOS` | `eventos` |
+| `PAUTA_EVENTOS_DESDE` | `eventosDesde` (medianoche de Colombia) |
+| `AVISOS_PLAN` | `avisosPlan` |
+| `CRM_AUTOPILOT` | `crm` |
+| `PAUTA_RESUMEN_PARA` | `resumenPara` (lista) |
+| `PAUTA_UMBRAL_PAUSA_COP` | `umbralPausaCOP` |
+| `PAUTA_RESUMEN_NOTA_DNS` | `notaDns` |
+| `META_AD_ACCOUNT_ID` | `meta.cuenta` |
+| `META_PIXEL_ID` | `meta.pixel` |
+| `META_CAPI_TEST_CODE` | `meta.codigoPrueba` |
+| `META_ADS_APPSECRET_PROOF` | `meta.firmar` |
+| `PAUTA_EVENTOS_CRON` y los demás horarios | fijos en el código |
+
+- Siguen en el `.env`, por ser secretos: `META_ADS_TOKEN`, `META_CAPI_TOKEN` y `META_APP_SECRET`.
+- Los 4 crones quedan siempre programados; con su pieza apagada no hacen nada ni dejan registro.
+- Se escribe con `node scripts/pauta-ajustes.js campo=valor [--execute]`. Simula por omisión, rechaza valores que el servidor leería como apagado, no deja prender eventos sin `eventosDesde` ni el modo prueba sin `meta.codigoPrueba`, y solo escribe ese documento.
