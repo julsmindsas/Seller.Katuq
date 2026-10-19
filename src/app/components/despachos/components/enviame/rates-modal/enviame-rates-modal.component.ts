@@ -1141,13 +1141,11 @@ export class EnviameRatesModalComponent implements OnInit {
       destinatario: pedidoData.destinoData.recipient.name
     });
 
-    // Actualizar referencias de municipios primero
-    if (pedidoData.municipioOrigen) {
-      this.municipioSeleccionadoOrigen = pedidoData.municipioOrigen;
-    }
-    if (pedidoData.municipioDestino) {
-      this.municipioSeleccionadoDestino = pedidoData.municipioDestino;
-    }
+    // Ticket 1237: los municipios son los de ESTE pedido, o ninguno. Antes, si el pedido
+    // no traía municipio, quedaba el del pedido anterior (p. ej. "Apía" en un pedido para
+    // Bogotá) y viajaba a Enviame como código DANE de destino.
+    this.municipioSeleccionadoOrigen = pedidoData.municipioOrigen || null;
+    this.municipioSeleccionadoDestino = pedidoData.municipioDestino || null;
 
     // Construir objeto de valores consolidado
     const formValues: any = {
@@ -1174,6 +1172,10 @@ export class EnviameRatesModalComponent implements OnInit {
       value: pedidoData.packageData.value || 0,
       description: pedidoData.packageData.description || ''
     };
+
+    // Ticket 1237: sin municipio el campo queda vacío (no conserva el del pedido anterior).
+    formValues.originMunicipio = null;
+    formValues.destinationMunicipio = null;
 
     // Añadir municipio origen si existe
     if (pedidoData.municipioOrigen) {
