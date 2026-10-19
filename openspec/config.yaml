@@ -46,6 +46,7 @@ rules:
     - "UI: usar los tokens y patrones de openspec/specs/design-system/spec.md — acento #5F3FE0, semánticos par fuerte/fondo-suave, plano SIN gradientes; prohibidos #2196f3, #4361ee, #2563eb, #5c6ac4, #667eea"
     - "HTTP siempre via servicios Angular que extienden BaseService — nunca HttpClient directo en componentes (el interceptor agrega auth)"
     - Componentes con SRP en módulos pequeños lazy-loaded; nada monolítico
+    - "Configuración en Firestore (D-505): banderas y ajustes de empresa en companies.featureFlags y companyConfig/{empresa}; interruptores globales en config/{doc}. El .env solo para secretos e infraestructura; prohibido agregar interruptores nuevos al .env"
     - Sin capas de cache nuevas (optimizar queries/índices en origen) y sin setTimeout para sincronizar parent-child (usar callbacks/flags)
     - "Inventario: operaciones con transacciones Firestore; idBodega SIEMPRE business code (BOD-001), nunca doc ID; al sumar inventory normalizar productoId y deduplicar"
     - "Aislamiento: la lógica de inventario solo escribe inventory, inventoryMovement, idempotencia/auditoría permitida e InventoryLevel Shopify; products y precios son read-only"

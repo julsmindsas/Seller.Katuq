@@ -11104,3 +11104,14 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
 - **Propuesta:** `products.integrations.siigo.productCode`, que se usa antes de la referencia al facturar. Carga inicial de 666 equivalencias únicas con prueba sin escribir. Sin código y sin referencia en SIIGO, la regla busca un único equivalente antes de crear. Write-set en `products` limitado a `integrations.siigo.productCode*`.
 - **No toca:** referencia de Katuq, precios, catálogo, inventario de Katuq, World Office. D-500 (facturación a Integraciones) es aparte.
 - [Propuesta](../openspec/changes/siigo-codigo-producto-y-bodega/proposal.md). Pendiente: aprobación de Daniel para pasar a diseño y tareas.
+
+## D-505 (2026-10-19) — Toda configuración de empresa vive en Firestore; no más interruptores en el `.env` — APROBADA (Daniel, 19-oct)
+
+- **Por qué:** Daniel, 19-oct: «no quiero más interruptores en .env, está muy grande… toda configuración de empresa es en Firestore».
+- **Regla:**
+  - Configuración de una empresa: banderas en `companies.featureFlags.<nombre>` (D-385: `requireFeature`, `CompanyFeaturesService`, `scripts/set-company-feature.js`) y ajustes en `companyConfig/{empresa}`.
+  - Interruptores globales de la plataforma: también en Firestore, en `config/{doc}` (ya existen `config/feature_flags` y `config/pautaCostos`).
+  - El `.env` queda solo para secretos e infraestructura: llaves, contraseñas, URLs y puertos.
+  - No se agregan al `.env` variables nuevas que prendan, apaguen o configuren algo.
+- **Deuda (no se mueve en este cambio):** el backend lee hoy decenas de interruptores, horarios de crones y topes del `.env`. Algunos son listas de empresas, justo lo que esta regla prohíbe: `ALLOWED_NOTIFICATION_COMPANIES`, `ORDER_NOTIF_UNIFIED_COMPANIES`, `HIDE_CEREZA_COMPANIES`, `INVENTARIO_DIGEST_EMPRESAS_DEMO` y `KAPSO_DEFAULT_COMPANY`. Cada uno se mueve a Firestore en su propio cambio, cuando se toque.
+- **Registrada en:** `AGENTS.md` del Seller, `CLAUDE.md` del backend y las reglas de diseño de los `openspec/config.yaml` de los dos repos.
