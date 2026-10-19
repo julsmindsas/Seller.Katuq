@@ -91,7 +91,52 @@ Script `scripts/siigo/cargarCodigosSiigo.js --company "ALMACEN BOMBAS"`:
   equivalente y repetidos en SIIGO.
 - Escribe con D4, en lotes, y deja un resumen en la salida.
 
+## D6. Categoría contable de SIIGO por categoría de Katuq
+
+En SIIGO, la categoría de productos (`account_group`) lleva las cuentas de
+inventario, costo de venta, ingreso y devolución. Hoy `createProduct` usa
+`accountsMapping.accountGroup`. Si está vacío, usa el primero que devuelve
+`GET /account-groups`, que en Bombas es Motobombas.
+
+- **Dónde vive la conexión:** en `accountsMapping.accountGroupByCategory` de la
+  configuración SIIGO (`integration_configs/{empresa}_siigo`), en Firestore y
+  cifrado igual que el resto (D-505). Es un objeto `{ "<ruta>": <id SIIGO> }`.
+  La ruta se normaliza: sin tildes, en minúsculas, sin espacios repetidos y con
+  ` > ` entre niveles. Por ejemplo, `"bombas > motobomba": 377` o
+  `"motores": 1348`.
+- **`grupoContableSiigo(producto, accountsMapping)`**, en
+  `utils/codigoSiigo.js`, es una función pura.
+  - Saca la ruta de la categoría de `producto.categorias`. Viene serializada con
+    `flatted` y en tres formas: con `ruta`, con cadena de `parent` o solo con
+    `label`.
+  - Busca primero la ruta completa, después sus prefijos hacia la raíz y al
+    final la etiqueta sola.
+  - Si no encuentra nada, devuelve `accountsMapping.accountGroup`, o `null`
+    para que se comporte como hoy.
+- **`findOrCreateProduct`:** antes de `createProduct`, pasa
+  `accountsMapping.accountGroup` resuelto por categoría. `createProduct` no
+  cambia su búsqueda de respaldo.
+- **Servicios:** `createProduct` lee `product.stockControl`, pero el mapper
+  entrega `stock_control`. Por eso hoy todo producto queda con control de
+  inventario. Se pasa a respetar `stock_control` cuando viene.
+- **Pantalla:** en Integraciones → SIIGO, junto al selector de categoría que ya
+  existe, va una tabla con las categorías de Katuq de la empresa y un
+  selector de categoría de SIIGO para cada una. Se guarda en el mismo
+  `accountsMapping`.
+- **Bombas:** un script precarga la conexión por mayoría a partir de los
+  productos ya emparejados, con prueba sin escribir y por
+  `integrationConfigService`, para no tocar el cifrado a mano. Se carga
+  solo después de que el comercio confirme si van las categorías viejas
+  (BOMBAS, MOTOR…) o las nuevas (1647–1679).
+- **No cambia** la categoría de los productos que ya existen en SIIGO.
+
 ## Pruebas
+
+- `grupoContableSiigo`: las tres formas de `categorias`, la ruta completa
+  antes que la raíz, la normalización de tildes, el caso sin conexión (vuelve a
+  `accountGroup`) y el caso sin categoría.
+- `createProduct` con un httpClient falso: `account_group` resuelto por
+  categoría y servicio con `stock_control: false`.
 
 - `candidatosSiigo`: ejemplos reales de Bombas, código corto y código sin
   bloques.

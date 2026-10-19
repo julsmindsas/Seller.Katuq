@@ -34,7 +34,50 @@ Franca Libre Disposición (BOD-001 → 31). Quedan las cuatro de Medellín
 (MED-VIT, MED-MOT, MED-VIR, MED-REP), que SIIGO tiene en dos (Medellin 4 y
 BMedellin 64), y Zona Franca Exterior, que no existe en SIIGO.
 
+**Categorías contables (revisión del 2026-10-19).** En SIIGO, cada producto de
+inventario pertenece a una categoría de productos (grupo de inventario, `account_group`
+en la API). Esa categoría trae las cuentas contables de inventario, costo de
+venta, ingreso y devolución. SIIGO no permite ajustar ni trasladar inventario
+por API: la existencia solo cambia con facturas de venta y de compra.
+
+Cuando Katuq crea un producto en SIIGO, le asigna la categoría
+`accountsMapping.accountGroup` de la empresa. Bombas no tiene ninguna
+configurada, así que Katuq toma la primera de la lista: **Motobombas (377)**.
+
+| Hallazgo | Dato |
+|----------|------|
+| Productos creados por Katuq desde el 1-sep que quedaron en Motobombas | 50 de 60 |
+| Ejemplos | un motor 56C/J, un kit, una carcasa, un medidor de flujo, y los servicios Diagnóstico y Asesoría (estos además con control de inventario) |
+| Productos emparejados cuya categoría de Katuq corresponde a una sola categoría SIIGO | ~98 % |
+
+Las correspondencias principales son las siguientes:
+
+| Categoría en Katuq | Categoría en SIIGO |
+|--------------------|--------------------|
+| BOMBAS > Bomba, BOMBAS > Kit | BOMBAS (378) |
+| BOMBAS > Motobomba | Motobombas (377) |
+| MOTORES > * | MOTOR (1348) |
+| Repuesto > *, Impulsor | REPUESTOS (1349) |
+| Sello | Sellos Mecánicos (1357) |
+| Plantas Eléctricas y Generadores | 1350 |
+
+SIIGO tiene además 33 categorías nuevas (1647–1679) que se llaman como las
+subcategorías de Katuq: Bomba, Kit, Eléctrico TC, Base SS y otras. Todavía no
+tienen productos. El comercio debe decir cuáles usar.
+
 ## What Changes
+
+- **Categoría contable por categoría de Katuq.** Cada categoría de Katuq se
+  conecta con una categoría de SIIGO, y la conexión se guarda en la
+  configuración SIIGO de la empresa (Firestore, D-505), en
+  `accountsMapping.accountGroupByCategory`. Al crear un producto en SIIGO, Katuq
+  usa la categoría que corresponde a la del producto. Si la categoría no está
+  conectada, usa la de la empresa, igual que hoy. Los servicios se crean sin
+  control de inventario.
+  - Se configura en Integraciones → SIIGO, con una tabla de categoría de Katuq
+    contra categoría de SIIGO.
+  - Para Bombas, la tabla viene precargada con la correspondencia medida,
+    para que el comercio la revise.
 
 - **Código SIIGO por producto.** Cada producto puede guardar su código en SIIGO
   en `products.integrations.siigo.productCode` (Artículo XV, D-009). Al facturar,
@@ -52,11 +95,16 @@ BMedellin 64), y Zona Franca Exterior, que no existe en SIIGO.
   dos de SIIGO va cada una. Se hace desde Bodegas → Importar → Importar SIIGO,
   sin código nuevo.
 
+- **Bodega Zona Franca (revisar).** En SIIGO, la bodega 31 "Zona franca LD" no
+  tiene existencias en ningún producto. En Katuq, ZF-01 tiene 2.857 unidades. La
+  conexión BOD-001 → 31 del 18-oct queda en duda hasta que el comercio diga en
+  qué bodega de SIIGO tiene ese inventario.
+
 ## Capabilities
 
 ### New Capabilities
 - `siigo-codigo-producto`: equivalencia de código de producto Katuq → SIIGO al
-  facturar.
+  facturar, y categoría contable de SIIGO según la categoría de Katuq.
 
 ## No-goals
 
@@ -87,9 +135,12 @@ BMedellin 64), y Zona Franca Exterior, que no existe en SIIGO.
 
 ## Impact
 
-- Backend: `siigoProvider.findOrCreateProduct`, `siigoDataMapper` (código del
+- Backend: `siigoProvider.findOrCreateProduct` y `createProduct`, `siigoDataMapper` (código del
   producto), armado de `productCode` en `accountingManager`, función pura de la
-  regla, script de carga con `--dry-run`.
-- Datos: `products.integrations.siigo.*` de ALMACEN BOMBAS.
-- Front: sin cambios.
+  regla, resolución de la categoría contable, script de carga con `--dry-run`.
+- Datos: `products.integrations.siigo.*` y `accountsMapping.accountGroupByCategory` de ALMACEN BOMBAS.
+- Front: tabla de categorías en Integraciones → SIIGO (`siigo-config`).
+- No-goal adicional: cambiar la categoría de los productos que ya existen en SIIGO,
+  incluidos los 50 que quedaron en Motobombas. Eso es contabilidad del comercio;
+  se le entrega la lista.
 - Decisión: D-504.

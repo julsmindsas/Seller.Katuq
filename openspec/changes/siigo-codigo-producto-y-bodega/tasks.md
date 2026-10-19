@@ -7,7 +7,8 @@ revisado.
 
 - [x] 0.1 Conectar BOD-005 → 6 Bogota, BOD-006 → 7 Cali, BOD-001 → 31 Zona
       franca LD (`warehouses.integrations.siigo`, prueba sin escribir y luego
-      aplicado el 2026-10-18).
+      aplicado el 2026-10-18). ⚠️ El 19-oct se vio que la 31 no tiene
+      existencias en SIIGO: preguntar al comercio.
 - [ ] 0.2 Medellín (MED-VIT, MED-MOT, MED-VIR, MED-REP → Medellin 4 o BMedellin
       64) y Zona Franca Exterior: según lo que diga el comercio, desde Bodegas →
       Importar SIIGO.
@@ -29,12 +30,26 @@ revisado.
 - [ ] 1.6 Pruebas de `findOrCreateProduct` con un httpClient falso. Correr las
       pruebas de facturación SIIGO que ya existen.
 
+- [ ] 1.7 `grupoContableSiigo` en `codigoSiigo.js` con pruebas (D6).
+- [ ] 1.8 `findOrCreateProduct` pasa la categoría resuelta; `createProduct`
+      respeta `stock_control` del mapper. Pruebas con un httpClient falso.
+
+## 1b. Front (Seller.Katuq)
+
+- [ ] 1b.1 `siigo-config`: tabla "Categorías contables" con categoría de Katuq
+      y selector de categoría SIIGO. Guarda
+      `accountsMapping.accountGroupByCategory`. Diseño `cfg-*` (D-400).
+      Build de producción sin errores.
+
 ## 2. Carga inicial
 
 - [ ] 2.1 `scripts/siigo/cargarCodigosSiigo.js` (D5), por defecto sin escribir.
 - [ ] 2.2 Prueba sin escribir para ALMACEN BOMBAS: esperado ~666 asignados,
       2 ambiguos y ~618 sin equivalente. Excel de revisión en Descargas.
 - [ ] 2.3 Aplicar con `--apply` (salir del modo automático) y releer una muestra.
+- [ ] 2.4 Script de precarga de la conexión de categorías de Bombas (mayoría
+      sobre los emparejados), primero sin escribir. Aplicar cuando el comercio
+      confirme si van las categorías viejas o las nuevas.
 
 ## 3. Cierre
 

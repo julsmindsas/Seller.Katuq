@@ -39,3 +39,31 @@ con dot-notation, sin tocar referencia, precios ni catálogo.
 #### Scenario: Contract test del write-set
 - **WHEN** se guarda un código SIIGO en un producto
 - **THEN** el update solo contiene esas tres rutas
+
+### Requirement: Categoría contable según la categoría de Katuq
+
+WHEN Katuq crea un producto en SIIGO y la categoría de Katuq del producto está
+conectada en `accountsMapping.accountGroupByCategory`, THE SYSTEM SHALL crear el
+producto con esa categoría de SIIGO (`account_group`). Si no está conectada,
+SHALL usar `accountsMapping.accountGroup`, igual que hoy.
+
+#### Scenario: Categoría conectada
+- **WHEN** se crea un producto de la categoría `MOTORES > Eléctrico 56C/J` y la conexión dice `MOTORES` → 1348
+- **THEN** el producto queda en SIIGO con `account_group` 1348, no en Motobombas
+
+#### Scenario: Subcategoría con conexión propia
+- **WHEN** existen las conexiones `BOMBAS` → 378 y `BOMBAS > Motobomba` → 377
+- **THEN** un producto de `BOMBAS > Motobomba` queda en 377 y uno de `BOMBAS > Kit` en 378
+
+#### Scenario: Sin conexión
+- **WHEN** la categoría del producto no está conectada
+- **THEN** se usa la categoría de la empresa, como hoy
+
+### Requirement: Servicios sin control de inventario
+
+WHEN Katuq crea en SIIGO un producto de tipo servicio, THE SYSTEM SHALL
+enviarlo con `stock_control: false`.
+
+#### Scenario: Servicio
+- **WHEN** se factura el servicio "Diagnóstico", que no existe en SIIGO
+- **THEN** se crea con `type: Service` y sin control de inventario
