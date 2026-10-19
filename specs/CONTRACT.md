@@ -11115,3 +11115,9 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - No se agregan al `.env` variables nuevas que prendan, apaguen o configuren algo.
 - **Deuda (no se mueve en este cambio):** el backend lee hoy decenas de interruptores, horarios de crones y topes del `.env`. Algunos son listas de empresas, justo lo que esta regla prohíbe: `ALLOWED_NOTIFICATION_COMPANIES`, `ORDER_NOTIF_UNIFIED_COMPANIES`, `HIDE_CEREZA_COMPANIES`, `INVENTARIO_DIGEST_EMPRESAS_DEMO` y `KAPSO_DEFAULT_COMPANY`. Cada uno se mueve a Firestore en su propio cambio, cuando se toque.
 - **Registrada en:** `AGENTS.md` del Seller, `CLAUDE.md` del backend y las reglas de diseño de los `openspec/config.yaml` de los dos repos.
+## D-506 (2026-10-19) — NPS de Katuq para todos los comercios, por cuatro canales — PROPUESTA (reservada)
+
+- **Por qué:** Daniel, 19-oct: el NPS es para que los comercios califiquen a Katuq. La fase 1 (D-483) nunca se prendió para todos, y su tarjeta flotante se apagó el 18-oct porque tapaba la pantalla.
+- **Alcance (`openspec/changes/nps-de-katuq-canales/`):** una sola pregunta por usuario cada 90 días, que pasa por la ventana al entrar, la tarjeta en Inicio, la tarjeta flotante cerrada y el correo al administrador hasta que responda. Prendida para todos los comercios. Los interruptores del NPS pasan a `config/nps` (D-505), y el correo tiene interruptor propio, apagado hasta verificar SPF, DKIM y DMARC.
+- **Estado:** propuesta, diseño y tareas escritos; esperan la aprobación de Daniel antes de implementar.
+
