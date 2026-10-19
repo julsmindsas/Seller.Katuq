@@ -8,10 +8,12 @@ revisado.
 - [x] 0.1 Conectar BOD-005 → 6 Bogota, BOD-006 → 7 Cali, BOD-001 → 31 Zona
       franca LD (`warehouses.integrations.siigo`, prueba sin escribir y luego
       aplicado el 2026-10-18). ⚠️ El 19-oct se vio que la 31 no tiene
-      existencias en SIIGO: preguntar al comercio.
-- [ ] 0.2 Medellín (MED-VIT, MED-MOT, MED-VIR, MED-REP → Medellin 4 o BMedellin
-      64) y Zona Franca Exterior: según lo que diga el comercio, desde Bodegas →
-      Importar SIIGO.
+      existencias en SIIGO. Respuesta del comercio (19-oct): la conexión está
+      bien; ellos no han cargado ese inventario en SIIGO.
+- [ ] 0.2 Medellín (MED-VIT, MED-MOT, MED-VIR, MED-REP) y Zona Franca
+      Exterior. Respuesta del comercio (19-oct): Katuq es el dueño del dato, así que
+      el comercio crea en SIIGO una bodega por cada una de Katuq. Cuando las
+      cree, se conectan desde Bodegas → Importar SIIGO.
 
 ## 1. Backend (katuq_admin_back_firebase/functions)
 
@@ -54,6 +56,9 @@ servicios.
 - [x] 2.2 Prueba sin escribir para ALMACEN BOMBAS: esperado ~666 asignados,
       2 ambiguos y ~618 sin equivalente. Excel de revisión en Descargas.
 - [ ] 2.3 Aplicar con `--apply` (salir del modo automático) y releer una muestra.
+      Antes la revisa Laura (Bombas) con el Excel `Codigos SIIGO ALMACEN
+      BOMBAS.xlsx` (19-oct: 666 asignados, 2 ambiguos, 618 sin equivalente,
+      38 repetidos).
 - [x] 2.4 Script de precarga de la conexión de categorías de Bombas (mayoría
       sobre los emparejados), primero sin escribir. Aplicar cuando el comercio
       confirme si van las categorías viejas o las nuevas. Prueba del 19-oct
@@ -61,6 +66,16 @@ servicios.
       BOMBAS > Motobomba → 377, MOTORES → 1348, Plantas → 1350,
       Repuesto > Impulsor → 1349, Repuesto > Sello → 1357, Bomba → 378). Las
       demás se eligen en la pantalla.
+      **19-oct, respuesta del comercio:** van las categorías NUEVAS
+      (1647–1679). Se descarta la mayoría y se usa la lista explícita
+      `--conexiones "~/Downloads/Categorias SIIGO ALMACEN BOMBAS.json"` (backend
+      83202c51), con 54 conexiones y los nombres viejos de las mismas categorías.
+      Prueba: los 1.286 productos quedan con categoría. Las que no tienen
+      categoría nueva siguen en la de siempre: Motobomba, Generador, RCI >
+      Sistema de Presión, Aspersor, Calentador, Medidor de flujo, Repuestos y
+      Sello. Laura la revisa con `Categorias SIIGO ALMACEN BOMBAS.xlsx` y
+      confirma que las categorías nuevas tienen las cuentas de inventario,
+      costo, ingreso y devolución. Luego `--apply`.
 - [ ] 2.5 Prender `siigoProductEquivalence` para ALMACEN BOMBAS
       (`scripts/set-company-feature.js`).
 
