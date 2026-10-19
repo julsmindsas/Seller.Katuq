@@ -1220,6 +1220,15 @@
 													placeholder="Seleccione una ocasión"
 													style="font-family: roboto;color: #ffffff !important;"
 													[multiple]="true" formControlName="ocasion" [closeOnSelect]="false">
+													<!-- Ticket 1236: marcar o quitar todas las ocasiones de una vez -->
+													<ng-template ng-header-tmp>
+														<div class="d-flex gap-2">
+															<button type="button" class="btn btn-sm btn-outline-primary"
+																(click)="seleccionarTodasOcasiones()">Seleccionar todas</button>
+															<button type="button" class="btn btn-sm btn-outline-secondary"
+																(click)="quitarTodasOcasiones()">Quitar todas</button>
+														</div>
+													</ng-template>
 												</ng-select>
 												<div *ngIf="procesoComercial?.controls['ocasion']?.invalid && procesoComercial.controls['ocasion'].touched"
 													class="error-message">

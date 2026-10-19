@@ -1192,6 +1192,24 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     errorReset: null,
   };
 
+  /** Ticket 1236: marca todas las ocasiones del catálogo para el producto. */
+  seleccionarTodasOcasiones(): void {
+    const control = this.procesoComercial?.controls['ocasion'];
+    if (!control) return;
+    control.setValue((this.ocasiones || []).map((o: any) => o.id));
+    control.markAsDirty();
+    control.markAsTouched();
+  }
+
+  /** Ticket 1236: quita todas las ocasiones elegidas. */
+  quitarTodasOcasiones(): void {
+    const control = this.procesoComercial?.controls['ocasion'];
+    if (!control) return;
+    control.setValue([]);
+    control.markAsDirty();
+    control.markAsTouched();
+  }
+
   ngOnInit(): void {
     this.initializeCompanyData();
     this.setupFormSubscriptions();
