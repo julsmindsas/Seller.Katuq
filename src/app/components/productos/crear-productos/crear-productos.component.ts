@@ -59,7 +59,10 @@ import { MunicipioDane } from "../../../shared/data/colombia-dane-codes";
 
 import { AVISO_REFERENCIA_CON_ESPACIOS, limpiarReferencia, referenciaRechazada } from 'src/app/shared/utils/referencia-producto';
 import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
+import type { CompanyFeatureFlag } from "../../../shared/services/company-features.service";
 import { FichaDesdeFotoService } from "../../../shared/services/productos/ficha-desde-foto.service";
+import { medirCalidadDeArchivo } from "../../../shared/services/productos/photo-quality-canvas";
+import { textoDeAvisos } from "../../../shared/services/productos/photo-quality";
 import {
   DecisionFicha,
   buscarNodoEnArbol,
@@ -70,6 +73,10 @@ import {
   textoAHtml,
   unirEtiquetas,
 } from "../../../shared/services/productos/ficha-desde-foto.mapper";
+
+/** D-501: bandera por comercio de «Uniformar fotos» y del aviso de calidad al subir (nace apagada). */
+const BANDERA_FOTOS_UNIFORMES: CompanyFeatureFlag = "productPhotoUniform";
+
 @Component({
   selector: "app-crear-productos",
   templateUrl: "./crear-productos.component.html",
@@ -167,6 +174,9 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   variables: TreeNode[];
   categoriasForm: any;
   cd: any;
+  // D-501: «Uniformar fotos» del producto guardado y aviso de calidad al subir (bandera productPhotoUniform).
+  fotosUniformesIds: string[] | null = null;
+  avisoCalidadFoto = "";
   flag: any = [];
   filesPaths: { name: string; pathName: string; tipo: string; url?: string; }[] = [];
   fileUrls: { urls: string; nombreImagen: string; path: string; tipo: string; }[] = [];
@@ -2868,9 +2878,58 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     event.target.value = "";
   }
 
+  // ---- D-501: Uniformar fotos (solo con la bandera productPhotoUniform) ----
+
+  /** El botón aparece con la bandera y un producto ya guardado (con id). */
+  get fotosUniformesActiva(): boolean {
+    return this.features.isEnabled(BANDERA_FOTOS_UNIFORMES) && !!(this.edit?.cd || this.cd);
+  }
+
+  abrirFotosUniformes(): void {
+    const id = this.edit?.cd || this.cd;
+    if (!this.fotosUniformesActiva || !id) return;
+    this.fotosUniformesIds = [String(id)];
+  }
+
+  /**
+   * Si el lote cambió las fotos en el servidor, se traen las nuevas al formulario: así guardar
+   * después no devuelve las fotos viejas. El guardado en sí no cambia.
+   */
+  cerrarFotosUniformes(evento: { cambio: boolean }): void {
+    const id = this.fotosUniformesIds && this.fotosUniformesIds[0];
+    this.fotosUniformesIds = null;
+    if (!evento || !evento.cambio || !id) {
+      this.cdr.detectChanges();
+      return;
+    }
+    this.service.getProductsByIds([id]).subscribe({
+      next: (r: any) => {
+        const producto = r && Array.isArray(r.products) ? r.products.find((p: any) => p && p.cd === id) : null;
+        const fotos = producto?.crearProducto?.imagenesPrincipales;
+        if (Array.isArray(fotos)) {
+          this.crearProducto.get("imagenesPrincipales").setValue(fotos);
+          if (this.edit?.crearProducto) this.edit.crearProducto.imagenesPrincipales = fotos;
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => this.cdr.detectChanges(),
+    });
+  }
+
+  /** Aviso informativo de calidad al subir: nunca bloquea ni cambia lo que se sube. */
+  private async avisarCalidadDeFoto(archivo: File): Promise<void> {
+    const medida = await medirCalidadDeArchivo(archivo);
+    const texto = medida ? textoDeAvisos(medida.warnings) : "";
+    if (!texto) return;
+    this.avisoCalidadFoto = `${archivo.name}: ${texto}`;
+    this.cdr.detectChanges();
+  }
+
   private async processSelectedFiles(selectedFiles: FileList, tipoImagen: string) {
     for (let i = 0; i < selectedFiles.length; i++) {
       const originalFile = selectedFiles[i];
+      // D-501: aviso de calidad (solo con la bandera), en paralelo y sin esperar.
+      if (this.features.isEnabled(BANDERA_FOTOS_UNIFORMES)) void this.avisarCalidadDeFoto(originalFile);
       const processedFile = await this.convertToWebP(originalFile);
 
       const entry = { img: processedFile, tipo: tipoImagen, preview: undefined };

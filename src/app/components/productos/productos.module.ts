@@ -17,9 +17,12 @@ import { ImportModalModule } from '../../shared/components/import-modal/import-m
 import 'hammerjs';
 import 'mousetrap';
 import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
+import { FotosUniformesComponent } from './fotos-uniformes/fotos-uniformes.component';
 @NgModule({
   imports: [
     ImagenProductoPipe,
+    // D-501: diálogo standalone «Uniformar fotos».
+    FotosUniformesComponent,
     CommonModule,
     SharedModule,
     ProductosRoutingModule,

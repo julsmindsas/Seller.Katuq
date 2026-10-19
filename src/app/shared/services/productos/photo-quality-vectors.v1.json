@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "decision": "D-501",
+  "algorithm": "Varianza del laplaciano de 4 vecinos sobre grises enteros 0-255, solo píxeles interiores; 0 si un lado mide menos de 3. Redondeo a 4 decimales.",
+  "nota": "Copia IDÉNTICA en el Seller (src/app/shared/services/productos/photo-quality-vectors.v1.json). Si cambia el cálculo, se sube la versión en los dos repos.",
+  "thresholds": { "lowResolutionMinSide": 600, "blurryLaplacian": 100 },
+  "vectors": [
+    {
+      "name": "plano",
+      "width": 6,
+      "height": 6,
+      "gray": [128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128],
+      "minSide": 1200,
+      "laplacianVariance": 0,
+      "warnings": ["blurry"]
+    },
+    {
+      "name": "tablero",
+      "width": 6,
+      "height": 6,
+      "gray": [0, 255, 0, 255, 0, 255, 255, 0, 255, 0, 255, 0, 0, 255, 0, 255, 0, 255, 255, 0, 255, 0, 255, 0, 0, 255, 0, 255, 0, 255, 255, 0, 255, 0, 255, 0],
+      "minSide": 2000,
+      "laplacianVariance": 1040400,
+      "warnings": []
+    },
+    {
+      "name": "degradado",
+      "width": 6,
+      "height": 6,
+      "gray": [0, 40, 80, 120, 160, 200, 0, 40, 80, 120, 160, 200, 0, 40, 80, 120, 160, 200, 0, 40, 80, 120, 160, 200, 0, 40, 80, 120, 160, 200, 0, 40, 80, 120, 160, 200],
+      "minSide": 500,
+      "laplacianVariance": 0,
+      "warnings": ["low_resolution", "blurry"]
+    },
+    {
+      "name": "patron-fijo",
+      "width": 5,
+      "height": 4,
+      "gray": [12, 200, 45, 90, 33, 77, 150, 3, 250, 61, 18, 99, 140, 7, 222, 64, 31, 180, 55, 120],
+      "minSide": 800,
+      "laplacianVariance": 260156.5556,
+      "warnings": []
+    },
+    {
+      "name": "relieve-suave",
+      "width": 5,
+      "height": 5,
+      "gray": [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 30, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
+      "minSide": 600,
+      "laplacianVariance": 222.2222,
+      "warnings": []
+    },
+    {
+      "name": "bajo-umbral",
+      "width": 5,
+      "height": 5,
+      "gray": [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 25, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
+      "minSide": 599,
+      "laplacianVariance": 55.5556,
+      "warnings": ["low_resolution", "blurry"]
+    },
+    {
+      "name": "muy-chica",
+      "width": 2,
+      "height": 9,
+      "gray": [10, 250, 10, 250, 10, 250, 10, 250, 10, 250, 10, 250, 10, 250, 10, 250, 10, 250],
+      "minSide": 2,
+      "laplacianVariance": 0,
+      "warnings": ["low_resolution", "blurry"]
+    }
+  ]
+}

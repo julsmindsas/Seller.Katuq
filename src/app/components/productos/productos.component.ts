@@ -21,8 +21,11 @@ import { catchError, debounceTime, distinctUntilChanged, switchMap, takeUntil } 
 import { EMPTY, of } from 'rxjs';
 import { parse as flatedParse } from 'flatted';
 import { LoaderService } from '../../shared/services/loader.service';
+import { CompanyFeatureFlag, CompanyFeaturesService } from '../../shared/services/company-features.service';
 
 const FILTROS_SESSION_KEY = 'productos_filtros';
+/** D-501: bandera por comercio de «Uniformar fotos» (nace apagada, D-385). */
+const BANDERA_FOTOS_UNIFORMES: CompanyFeatureFlag = 'productPhotoUniform';
 
 @Component({
   selector: 'app-productos',
@@ -425,6 +428,9 @@ export class ProductosComponent implements OnInit, OnDestroy {
   osmosisEnabled: boolean = false;
   importandoProductosOsmosis: boolean = false;
 
+  // D-501: diálogo «Uniformar fotos» abierto (selección o categoría), o null.
+  fotosUniformes: { productIds: string[]; categoryLabel: string } | null = null;
+
 
   constructor(
     private service: MaestroService,
@@ -438,8 +444,36 @@ export class ProductosComponent implements OnInit, OnDestroy {
     private fulfillmentService: FulfillmentService,
     private toastr: ToastrService,
     private integrationsService: IntegrationsService,
-    private loaderService: LoaderService
+    private loaderService: LoaderService,
+    private features: CompanyFeaturesService
   ) { }
+
+  // ---- D-501: Uniformar fotos (solo con la bandera productPhotoUniform) ----
+  get fotosUniformesActiva(): boolean {
+    return this.features.isEnabled(BANDERA_FOTOS_UNIFORMES);
+  }
+
+  /** Una categoría REAL filtrada (no "Sin categoría"), o ''. */
+  get categoriaParaFotos(): string {
+    const c = this.filtros.categoria;
+    return c && c !== ProductosComponent.SIN_CATEGORIA ? c : '';
+  }
+
+  abrirFotosUniformesSeleccion(): void {
+    const productIds = this.selectedProductos.map(p => this.rowId(p)).filter(Boolean);
+    if (!this.fotosUniformesActiva || productIds.length === 0) return;
+    this.fotosUniformes = { productIds, categoryLabel: '' };
+  }
+
+  abrirFotosUniformesCategoria(): void {
+    if (!this.fotosUniformesActiva || !this.categoriaParaFotos) return;
+    this.fotosUniformes = { productIds: [], categoryLabel: this.categoriaParaFotos };
+  }
+
+  cerrarFotosUniformes(evento: { cambio: boolean }): void {
+    this.fotosUniformes = null;
+    if (evento && evento.cambio) this.cargarConFiltros();
+  }
 
   ngOnInit(): void {
     // Handshake para abrir el importador real al llegar desde otra pantalla:

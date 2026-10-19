@@ -969,3 +969,52 @@ td {
 .tipo-item__ayuda { flex-basis: 100%; }
 
 .tipo-item__nota { margin: 0 0 12px; }
+
+// D-501: aviso de calidad al subir y entrada a «Uniformar fotos» (design-system: plano, acento
+// #5F3FE0, aviso en par info). Sin "p-" en las clases; span con color propio; foco visible.
+.fu-aviso-subida {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px 0 12px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: #E7F1FF;
+  color: #1E6FD9;
+  font-size: 12.5px;
+
+  .fu-aviso-subida-texto { flex: 1 1 auto; color: #1E6FD9; font-size: 12.5px; line-height: 1.45; letter-spacing: normal; }
+}
+
+.fu-aviso-subida-cerrar {
+  border: 0;
+  background: transparent;
+  color: #1E6FD9;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.fu-entrada-fila { margin: 4px 0 12px; }
+
+.fu-entrada-editor {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 11px;
+  border: 1px solid #e4e2ef;
+  background: #fff;
+  color: #5F3FE0;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+
+  .fu-entrada-texto { color: #5F3FE0; font-size: 13px; }
+
+  &:hover:not(:disabled) { background: #faf9fe; }
+  &:disabled { opacity: 0.55; cursor: default; }
+}
+
+.fu-entrada-editor:focus-visible,
+.fu-aviso-subida-cerrar:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }

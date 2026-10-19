@@ -49,6 +49,10 @@
    - **Ejecutar:** lo intenta tomar el proceso que lo creó. `batchRunner` usa un arriendo transaccional de 2 min, renovado en cada producto.
    - **Antes de cada producto** relee el modo y la bandera. El modo efectivo es el menor entre `lote.mode`, fijado al crearlo, y `PRODUCT_PHOTO_UNIFORM_MODE` (`off` < `shadow` < `on`). Si baja, o si se apaga la bandera, el lote termina `stopped` (`mode_changed` o `feature_off`), libera el candado y lo hecho queda reversible. Un lote `shadow` nunca escribe, aunque el modo suba.
    - **Retomar** lotes vencidos, al arrancar y cada 5 min, solo con `CRON_ENABLED=true` (`index.js:952`, `cronService.js:111`). Con el modo en `off`, el runner solo toma lotes de reversión. Así, un backend local apuntado a producción no toma lotes.
+     - Agregado en la implementación (2026-10-18), pendiente del visto bueno de Daniel con el diff de 3.1 y 3.3:
+       - con el modo en `off`, los lotes de uniformar quedan intactos, sin arriendo ni escrituras;
+       - revertir con el modo en `off` cierra (`stopped`/`mode_changed`) el lote de uniformar que quedó activo sin arriendo, en la transacción que crea la reversión;
+       - un lote corre una sola vez a la vez por proceso, y cada corrida firma el arriendo con su propio dueño.
    - **Topes:** 100 productos (más da 422 `BATCH_TOO_LARGE`), 12 fotos por producto y 15 s por foto.
    - **Cancelar:** el lote para al cerrar el producto en curso.
 9. **Bandera, interruptor, sombra y reversión.**

@@ -719,6 +719,9 @@ $fs-active-border: $pk-accent-border;
 .pk-btn-sm-muted     { background: #F1F2F5; color: $pk-text-mid; border-color: $pk-border-2; &:hover:not(:disabled) { background: #e7e8ee; } }
 .pk-btn-sm-ghost     { background: #fff; color: $pk-text-mid; border-color: $pk-border-2; &:hover:not(:disabled) { background: $pk-bg-soft; } }
 
+// D-501: entradas a «Uniformar fotos»; el reset global quita el outline del foco.
+.fu-entrada:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+
 // ====================================================
 // PILLS Y CHIPS DE LA TABLA
 // ====================================================

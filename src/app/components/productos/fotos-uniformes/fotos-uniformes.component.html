@@ -1,0 +1,221 @@
+<!-- «Uniformar fotos» (D-501, ticket 1252). Clases fu-*: ninguna lleva "p-" (trampa de CSS global). -->
+<div class="fu-fondo" (click)="cerrarDesdeFondo($event)">
+  <section #dialogo class="fu-dialogo" role="dialog" aria-modal="true" aria-labelledby="fu-titulo" tabindex="-1">
+
+    <header class="fu-cabeza">
+      <div class="fu-cabeza-textos">
+        <div class="fu-eyebrow">Fotos de producto</div>
+        <h2 id="fu-titulo" class="fu-titulo">Uniformar fotos</h2>
+        <div class="fu-sub">{{ textoSeleccion }}</div>
+      </div>
+      <button type="button" class="fu-cerrar" (click)="cerrar()" aria-label="Cerrar">
+        <i class="pi pi-times" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <ol class="fu-pasos" *ngIf="paso === 'ajustes' || paso === 'vista' || paso === 'aplicando' || paso === 'resumen'" aria-label="Pasos">
+      <li class="fu-marca" [class.is-active]="paso === 'ajustes'" [class.is-done]="paso !== 'ajustes'"><span class="fu-marca-num">1</span><span class="fu-marca-texto">Ajustes</span></li>
+      <li class="fu-marca" [class.is-active]="paso === 'vista'" [class.is-done]="paso === 'aplicando' || paso === 'resumen'"><span class="fu-marca-num">2</span><span class="fu-marca-texto">Vista previa</span></li>
+      <li class="fu-marca" [class.is-active]="paso === 'aplicando'" [class.is-done]="paso === 'resumen'"><span class="fu-marca-num">3</span><span class="fu-marca-texto">Aplicar</span></li>
+      <li class="fu-marca" [class.is-active]="paso === 'resumen'"><span class="fu-marca-num">4</span><span class="fu-marca-texto">Resumen</span></li>
+    </ol>
+
+    <div class="fu-cuerpo">
+      <div *ngIf="error && paso !== 'error'" class="fu-aviso fu-aviso--error" role="alert">
+        <i class="pi pi-exclamation-circle" aria-hidden="true"></i><span class="fu-aviso-texto">{{ error }}</span>
+      </div>
+      <div *ngIf="aviso" class="fu-aviso fu-aviso--info" role="status">
+        <i class="pi pi-info-circle" aria-hidden="true"></i><span class="fu-aviso-texto">{{ aviso }}</span>
+      </div>
+
+      <!-- Cargando -->
+      <div *ngIf="paso === 'cargando'" class="fu-vacio">
+        <div class="fu-vacio-icono"><i class="pi pi-spin pi-spinner" aria-hidden="true"></i></div>
+        <div class="fu-vacio-titulo">Cargando…</div>
+      </div>
+
+      <!-- Error que no deja seguir -->
+      <div *ngIf="paso === 'error'" class="fu-vacio">
+        <div class="fu-vacio-icono fu-vacio-icono--error"><i class="pi pi-exclamation-triangle" aria-hidden="true"></i></div>
+        <div class="fu-vacio-titulo">No pudimos abrir Uniformar fotos</div>
+        <div class="fu-vacio-texto">{{ error }}</div>
+      </div>
+
+      <!-- Interruptor en pausa: solo revertir -->
+      <div *ngIf="paso === 'pausa'" class="fu-vacio">
+        <div class="fu-vacio-icono"><i class="pi pi-pause" aria-hidden="true"></i></div>
+        <div class="fu-vacio-titulo">Uniformar fotos está en pausa</div>
+        <div class="fu-vacio-texto">Por ahora no se pueden uniformar fotos nuevas. Sí puedes devolver las fotos originales de lo que ya uniformaste.</div>
+        <div class="fu-vacio-texto" *ngIf="config && !config.canApply">Solo un administrador puede revertir fotos.</div>
+      </div>
+
+      <!-- Paso 1: ajustes -->
+      <div *ngIf="paso === 'ajustes'" class="fu-ajustes">
+        <fieldset class="fu-grupo">
+          <legend class="fu-label">Proporción</legend>
+          <div class="fu-opciones">
+            <button type="button" *ngFor="let a of proporciones" class="fu-opcion" [class.is-active]="ajustes.aspect === a"
+              [attr.aria-pressed]="ajustes.aspect === a" (click)="elegirProporcion(a)">
+              <span class="fu-forma" [class.fu-forma--cuadrada]="a === '1:1'" [class.fu-forma--alta]="a === '4:5'" [class.fu-forma--mas-alta]="a === '3:4'" aria-hidden="true"></span>
+              <span class="fu-opcion-texto">{{ etiquetasProporcion[a] }}</span>
+            </button>
+          </div>
+        </fieldset>
+
+        <fieldset class="fu-grupo">
+          <legend class="fu-label">Fondo</legend>
+          <div class="fu-opciones">
+            <button type="button" *ngFor="let f of fondos" class="fu-opcion" [class.is-active]="ajustes.background === f"
+              [disabled]="f === 'brand' && !colorMarca" [attr.aria-pressed]="ajustes.background === f" (click)="elegirFondo(f)"
+              [attr.title]="f === 'brand' && !colorMarca ? 'Configura el color secundario en Mi marca para usar esta opción' : null">
+              <span class="fu-muestra-color" [style.background]="colorDeFondo(f)" aria-hidden="true"></span>
+              <span class="fu-opcion-texto">{{ etiquetasFondo[f] }}</span>
+            </button>
+          </div>
+        </fieldset>
+
+        <fieldset class="fu-grupo">
+          <legend class="fu-label">Margen alrededor del producto</legend>
+          <div class="fu-margen">
+            <input type="range" min="0" max="20" step="1" class="fu-rango" [ngModel]="ajustes.marginPct"
+              (ngModelChange)="cambiarMargen($event)" aria-label="Margen en porcentaje">
+            <span class="fu-margen-valor">{{ ajustes.marginPct }} %</span>
+          </div>
+        </fieldset>
+
+        <div class="fu-aviso fu-aviso--info">
+          <i class="pi pi-info-circle" aria-hidden="true"></i>
+          <span class="fu-aviso-texto">Centramos el producto, quitamos los bordes de un solo color y dejamos el fondo liso. Una foto con una mesa o una pared detrás no queda con fondo blanco. Las fotos originales se guardan y puedes revertir.</span>
+        </div>
+      </div>
+
+      <!-- Paso 2: vista previa -->
+      <div *ngIf="paso === 'vista'" class="fu-vista">
+        <div class="fu-ajustes-elegidos">{{ textoAjustes }}</div>
+        <div *ngIf="!muestras.length" class="fu-vacio">
+          <div class="fu-vacio-icono"><i class="pi pi-images" aria-hidden="true"></i></div>
+          <div class="fu-vacio-titulo">No hay fotos para mostrar</div>
+          <div class="fu-vacio-texto">Ninguna de las primeras fotos se puede uniformar. Abajo te contamos por qué.</div>
+        </div>
+        <div class="fu-muestras">
+          <article *ngFor="let m of muestras; trackBy: trackMuestra" class="fu-tarjeta" [class.is-excluded]="excluida(m)">
+            <div class="fu-comparar">
+              <figure class="fu-figura">
+                <img [src]="m.before" alt="Foto actual" loading="lazy">
+                <figcaption class="fu-pie-foto">Antes</figcaption>
+              </figure>
+              <figure class="fu-figura">
+                <img [src]="m.after.dataUrl" alt="Foto uniformada">
+                <figcaption class="fu-pie-foto">Después</figcaption>
+              </figure>
+            </div>
+            <div class="fu-etiquetas" *ngIf="m.after.warnings?.length">
+              <span *ngFor="let w of m.after.warnings" class="fu-etiqueta fu-etiqueta--alerta">{{ textoAviso(w) }}</span>
+            </div>
+            <button type="button" class="fu-btn fu-btn--sec fu-btn--bloque" (click)="alternar(m)" [attr.aria-pressed]="excluida(m)">
+              <i class="pi" [class.pi-undo]="excluida(m)" [class.pi-ban]="!excluida(m)" aria-hidden="true"></i>
+              <span class="fu-btn-texto">{{ excluida(m) ? 'Volver a incluir' : 'No uniformar esta' }}</span>
+            </button>
+          </article>
+        </div>
+        <details *ngIf="omitidas.length" class="fu-omitidas">
+          <summary class="fu-omitidas-titulo">{{ omitidas.length }} {{ omitidas.length === 1 ? 'foto no entra' : 'fotos no entran' }} en la vista previa</summary>
+          <ul class="fu-lista">
+            <li *ngFor="let o of omitidas" class="fu-lista-item"><span class="fu-lista-texto">{{ motivo(o.code) }}</span></li>
+          </ul>
+        </details>
+        <div class="fu-aviso fu-aviso--info" *ngIf="config?.mode === 'shadow'">
+          <i class="pi pi-info-circle" aria-hidden="true"></i>
+          <span class="fu-aviso-texto">Por ahora es una simulación: al aplicar contamos lo que se haría, sin cambiar tus productos.</span>
+        </div>
+        <div class="fu-aviso fu-aviso--alerta" *ngIf="config && !config.canApply">
+          <i class="pi pi-lock" aria-hidden="true"></i>
+          <span class="fu-aviso-texto">Solo un administrador puede aplicar el cambio a los productos.</span>
+        </div>
+      </div>
+
+      <!-- Paso 3: aplicando -->
+      <div *ngIf="paso === 'aplicando'" class="fu-aplicando">
+        <div class="fu-vacio-titulo">{{ lote?.type === 'revert' ? 'Devolviendo las fotos originales…' : 'Uniformando fotos…' }}</div>
+        <div class="fu-barra" role="progressbar" [attr.aria-valuenow]="progreso.porcentaje" aria-valuemin="0" aria-valuemax="100">
+          <div class="fu-barra-relleno" [style.width.%]="progreso.porcentaje"></div>
+        </div>
+        <div class="fu-vacio-texto">{{ progreso.hechos }} de {{ progreso.total }} productos. Puedes cerrar esta ventana: el lote sigue y, si vuelves a abrir Uniformar fotos en este navegador, verás cómo va. Si estás editando el producto, espera a que termine antes de guardar.</div>
+      </div>
+
+      <!-- Paso 4: resumen -->
+      <div *ngIf="paso === 'resumen' && resumen" class="fu-resumen">
+        <div class="fu-resumen-titulo" [ngClass]="'fu-tono--' + resumen.tono">{{ resumen.titulo }}</div>
+        <div class="fu-aviso fu-aviso--alerta" *ngIf="resumen.parada">
+          <i class="pi pi-exclamation-triangle" aria-hidden="true"></i><span class="fu-aviso-texto">{{ resumen.parada }}</span>
+        </div>
+        <div class="fu-aviso fu-aviso--info" *ngIf="resumen.enSombra">
+          <i class="pi pi-info-circle" aria-hidden="true"></i><span class="fu-aviso-texto">Fue una simulación: tus productos no cambiaron.</span>
+        </div>
+        <div class="fu-cifras">
+          <div class="fu-cifra">
+            <div class="fu-cifra-label">{{ lote?.type === 'revert' ? 'Revertidas' : (resumen.enSombra ? 'Se uniformarían' : 'Uniformadas') }}</div>
+            <div class="fu-cifra-valor">{{ lote?.type === 'revert' ? resumen.revertidas : (resumen.enSombra ? resumen.habrian : resumen.uniformadas) }}</div>
+          </div>
+          <div class="fu-cifra">
+            <div class="fu-cifra-label">Omitidas</div>
+            <div class="fu-cifra-valor">{{ resumen.omitidas }}</div>
+          </div>
+          <div class="fu-cifra">
+            <div class="fu-cifra-label">Con aviso de calidad</div>
+            <div class="fu-cifra-valor">{{ resumen.conAviso }}</div>
+          </div>
+        </div>
+        <ul class="fu-lista" *ngIf="resumen.motivos.length">
+          <li *ngFor="let mo of resumen.motivos" class="fu-lista-item">
+            <span class="fu-lista-texto">{{ mo.texto }}</span><span class="fu-lista-cantidad">{{ mo.cantidad }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <footer class="fu-pie">
+      <ng-container *ngIf="paso === 'ajustes'">
+        <button type="button" class="fu-btn fu-btn--sec" (click)="cerrar()">Cancelar</button>
+        <button type="button" class="fu-btn" (click)="pedirVistaPrevia()" [disabled]="ocupado">
+          <i class="pi" [class.pi-spin]="ocupado" [class.pi-spinner]="ocupado" [class.pi-eye]="!ocupado" aria-hidden="true"></i>
+          <span class="fu-btn-texto">{{ ocupado ? 'Preparando vista previa…' : 'Ver vista previa' }}</span>
+        </button>
+      </ng-container>
+
+      <ng-container *ngIf="paso === 'vista'">
+        <button type="button" class="fu-btn fu-btn--sec" (click)="volverAAjustes()" [disabled]="ocupado">Cambiar ajustes</button>
+        <button type="button" class="fu-btn" (click)="aplicar()" [disabled]="ocupado || !puedeAplicar">
+          <i class="pi" [class.pi-spin]="ocupado" [class.pi-spinner]="ocupado" [class.pi-check]="!ocupado" aria-hidden="true"></i>
+          <span class="fu-btn-texto">{{ config?.mode === 'shadow' ? 'Simular en los productos' : 'Aplicar a los productos' }}</span>
+        </button>
+      </ng-container>
+
+      <ng-container *ngIf="paso === 'aplicando'">
+        <button type="button" class="fu-btn fu-btn--sec" (click)="cerrar()">Cerrar</button>
+        <button type="button" class="fu-btn fu-btn--peligro" (click)="cancelarLote()" [disabled]="ocupado || !lote || !config?.canApply">Cancelar lote</button>
+      </ng-container>
+
+      <ng-container *ngIf="paso === 'resumen'">
+        <button type="button" class="fu-btn fu-btn--sec" *ngIf="resumen?.puedeRevertir && config?.canApply" (click)="revertirLote()" [disabled]="ocupado">
+          <i class="pi pi-undo" aria-hidden="true"></i><span class="fu-btn-texto">Revertir lote</span>
+        </button>
+        <button type="button" class="fu-btn" (click)="cerrar()">Listo</button>
+      </ng-container>
+
+      <ng-container *ngIf="paso === 'pausa'">
+        <button type="button" class="fu-btn fu-btn--sec" (click)="cerrar()">Cerrar</button>
+        <button type="button" class="fu-btn fu-btn--sec" *ngIf="puedeRevertirSeleccion" (click)="revertirSeleccion()" [disabled]="ocupado">
+          <i class="pi pi-undo" aria-hidden="true"></i><span class="fu-btn-texto">Revertir estos productos</span>
+        </button>
+        <button type="button" class="fu-btn" *ngIf="ultimoLoteId && config?.canApply" (click)="revertirLote(ultimoLoteId)" [disabled]="ocupado">
+          <i class="pi pi-undo" aria-hidden="true"></i><span class="fu-btn-texto">Revertir el último lote</span>
+        </button>
+      </ng-container>
+
+      <ng-container *ngIf="paso === 'error' || paso === 'cargando'">
+        <button type="button" class="fu-btn fu-btn--sec" (click)="cerrar()">Cerrar</button>
+      </ng-container>
+    </footer>
+  </section>
+</div>

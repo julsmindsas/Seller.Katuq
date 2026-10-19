@@ -187,6 +187,14 @@
                                 <option *ngFor="let c of categoriasList" [value]="c.label">{{ c.label }}</option>
                             </select>
 
+                            <!-- D-501: uniformar las fotos de la categoría filtrada (bandera productPhotoUniform) -->
+                            <button *ngIf="fotosUniformesActiva && categoriaParaFotos" type="button"
+                                class="pk-btn-sm pk-btn-sm-ghost fu-entrada ms-1"
+                                title="Uniformar fotos de esta categoría (hasta 100 productos por lote)"
+                                (click)="abrirFotosUniformesCategoria()">
+                                <i class="pi pi-images"></i>Uniformar fotos de esta categoría · hasta 100
+                            </button>
+
                             <!-- Subcategoría (solo si la categoría tiene hijos) -->
                             <ng-container *ngIf="subcategoriasList.length > 0">
                                 <span class="fs-divider"></span>
@@ -431,6 +439,11 @@
                         </button>
                         <button class="pk-btn-sm pk-btn-sm-muted" (click)="accionMasiva('agotado')" [disabled]="ejecutandoAccionMasiva">
                             <i class="pi pi-minus-circle"></i>Agotado
+                        </button>
+                        <!-- D-501: uniformar las fotos de la selección (bandera productPhotoUniform) -->
+                        <button *ngIf="fotosUniformesActiva" type="button" class="pk-btn-sm pk-btn-sm-ghost fu-entrada"
+                            (click)="abrirFotosUniformesSeleccion()" [disabled]="ejecutandoAccionMasiva">
+                            <i class="pi pi-images"></i>Uniformar fotos
                         </button>
                         <button class="pk-btn-sm pk-btn-sm-danger" (click)="accionMasiva('eliminar')" [disabled]="ejecutandoAccionMasiva">
                             <i class="pi pi-trash"></i>Eliminar
@@ -964,5 +977,11 @@
         </button>
     </ng-template>
 </p-dialog>
+
+<!-- D-501: diálogo «Uniformar fotos» (solo se abre con la bandera productPhotoUniform) -->
+<app-fotos-uniformes *ngIf="fotosUniformes"
+    [productIds]="fotosUniformes.productIds"
+    [categoryLabel]="fotosUniformes.categoryLabel"
+    (cerrado)="cerrarFotosUniformes($event)"></app-fotos-uniformes>
 
 

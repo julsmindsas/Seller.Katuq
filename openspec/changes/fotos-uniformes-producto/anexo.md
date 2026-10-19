@@ -35,7 +35,9 @@ Los mensajes van sin jerga y sin la palabra «token», para que no se cierre la 
 - `original: { urls, path }`;
 - `processed: { settings, algorithmVersion, settingsHash, sourcePath, batchId, at, by, format, variants: [{ width, path }], quality }`.
 
-**Códigos de omisión:** `external_link` (incluye otro bucket), `legacy_format`, `not_owned`, `owner_unknown`, `product_integrated`, `flow_photos`, `already_uniform`, `too_large`, `unreadable`, `timeout`, `changed_meanwhile`, `original_missing` y `reprocessed_later`. Los avisos son `trim_skipped`, `low_resolution` y `blurry`.
+**Códigos de omisión:** `external_link` (incluye otro bucket), `legacy_format`, `not_owned`, `owner_unknown`, `product_integrated`, `flow_photos`, `already_uniform`, `too_large`, `unreadable`, `timeout`, `changed_meanwhile`, `original_missing`, `reprocessed_later` y `photo_limit`. Los avisos son `trim_skipped`, `low_resolution` y `blurry`.
+
+`photo_limit` marca cada foto que pasa el tope de 12 por producto (D2). Se agregó en la implementación, el 2026-10-18, y espera el visto bueno de Daniel.
 
 **Lote** (`product_photo_batches/{batchId}`):
 - campos: `{ company, companyDocId, type: "uniform"|"revert", mode, status, stopCode?, settings, algorithmVersion, selection, excluded, totals, counters, metrics: { msPerPhotoAvg, msPerPhotoMax, bytesWritten }, lease, cancelRequested, revertOf?, createdBy, createdAt, finishedAt }`;
