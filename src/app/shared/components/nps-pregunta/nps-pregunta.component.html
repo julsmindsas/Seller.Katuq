@@ -1,0 +1,37 @@
+<ng-container *ngIf="pregunta.estado$ | async as e">
+  <ng-container *ngIf="e.paso !== 'gracias'; else gracias">
+    <span class="nt-eyebrow">Tu opinión</span>
+    <h2 class="nt-pregunta" [id]="idBase + '-pregunta'">Del 0 al 10, ¿qué tan probable es que le recomiendes Katuq a otro negocio?</h2>
+
+    <app-escala-nps [valor]="e.nota" [etiquetadoPor]="idBase + '-pregunta'" (cambio)="escoger($event)"></app-escala-nps>
+
+    <div class="nt-acciones" *ngIf="e.paso === 'nota'">
+      <button type="button" class="nt-btn nt-btn--sec" (click)="pregunta.ahoraNo()">Ahora no</button>
+    </div>
+
+    <form class="nt-segundo" *ngIf="e.paso === 'comentario'" (ngSubmit)="enviar()">
+      <label class="nt-label" [for]="idBase + '-comentario'">{{ pregunta.preguntaComentario(e.nota) }}</label>
+      <textarea
+        [id]="idBase + '-comentario'"
+        class="nt-texto"
+        name="comentario"
+        rows="3"
+        placeholder="Opcional"
+        [attr.aria-describedby]="idBase + '-contador'"
+        [maxlength]="MAX_COMENTARIO"
+        [(ngModel)]="comentario"
+      ></textarea>
+      <div class="nt-pie">
+        <span class="nt-contador" [id]="idBase + '-contador'">{{ comentario.length }}/{{ MAX_COMENTARIO }}</span>
+        <button type="submit" class="nt-btn">Enviar</button>
+      </div>
+    </form>
+  </ng-container>
+
+  <ng-template #gracias>
+    <div class="nt-gracias" role="status">
+      <span class="nt-gracias__icono" aria-hidden="true"><i class="pi pi-heart"></i></span>
+      <p class="nt-gracias__texto">¡Gracias! Lo leemos todo.</p>
+    </div>
+  </ng-template>
+</ng-container>

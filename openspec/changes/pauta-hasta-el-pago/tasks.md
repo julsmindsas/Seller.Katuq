@@ -70,10 +70,11 @@
 
 - [x] 9.1 Desplegar el backend con todo `apagado`; verificar el log y que las pantallas existentes sigan iguales. — 18-oct: backend `ed3ab1cd`; `/v1/pauta/*` 401 sin sesión y 403 a un administrador de comercio.
 - [ ] 9.2 (Publicado 2026.10.18.9; falta comparar con la sesión de Julsmind) Desplegar el front; comparar el embudo con la consola en el mismo rango.
-- [ ] 9.3 `PAUTA_EVENTOS=hitos` y `PAUTA_EVENTOS_DESDE` = día del encendido (en 6 horas quedan calculados los 90 días, sin script) → `sombra` 1 día → revisar 10 empresas a mano → `prueba` (ver en "Probar eventos") → `envio`.
+- [ ] 9.3 `eventos=hitos` (hecho el 18-oct) → `eventos=sombra eventosDesde=hoy` 1 día → revisar 10 empresas a mano → `eventos=prueba` con `meta.codigoPrueba` (ver en "Probar eventos") → `eventos=envio`. Cada paso con `node scripts/pauta-ajustes.js … --execute` (D-505).
 - [ ] 9.4 Con OK de Daniel: crear la conversión personalizada `PrimerPedido` y cambiar la optimización de la campaña.
-- [ ] 9.5 `AVISOS_PLAN=sombra` 2 días → Daniel revisa la lista → `envio`.
-- [ ] 9.6 `CRM_AUTOPILOT=sombra` 2 días → revisar movimientos → `envio`.
-- [ ] 9.7 Cargar `PAUTA_RESUMEN_PARA` y verificar el primer resumen.
+- [ ] 9.5 `avisosPlan=sombra` (desde el 18-oct) 2 días → Daniel revisa la lista → `avisosPlan=envio`.
+- [ ] 9.6 `crm=sombra` (desde el 18-oct) 2 días → revisar movimientos → `crm=envio`.
+- [ ] 9.7 Cargar `resumenPara` y verificar el primer resumen.
 - [ ] 9.8 A los 30 días en `envio` sin incidentes: retirar los modos de flag (Artículo XII).
 - [ ] 9.9 Bitácora en `specs/CONTRACT.md` con los commits y lo verificado.
+- [x] 9.10 D-505 (19-oct, OK de Daniel): interruptores del `.env` a `config/pauta` (`services/pauta/ajustes.js`, `scripts/pauta-ajustes.js`), crones siempre programados. Backend `2fa5bdfe` desplegado con los mismos modos; las 3 líneas salieron del `.env` y la vuelta de las 16:45 UTC leyó de Firestore sin errores.

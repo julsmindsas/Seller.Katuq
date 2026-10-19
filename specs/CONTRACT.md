@@ -10837,7 +10837,7 @@ Abierto por pedido de Daniel al aprobar D-483 (17-oct). Hallazgo leído en el c�
 - **Alternativa a evaluar para Colombia:** compra en la tienda de Katuq desde el enlace habilitado del perfil; diferente del checkout nativo de Shop.
 - **Evidencia y límites:** [informe fechado](research/tiktok-commerce-2026-10-17.md), con fuentes oficiales y pendientes de elegibilidad del desarrollador/comercio. Sin spec, diseño, tasks ni decisiones de implementación aprobadas; sin cambios de código, build, commit o deploy.
 
-## D-485 (2026-10-17) — De la pauta al pago: motor de marketing de Julsmind, fase 1 — APROBADA (Daniel, 18-oct) y PUBLICADA, todo apagado: backend ed3ab1cd en producción, front 2026.10.18.9 (240d7cbb)
+## D-485 (2026-10-17) — De la pauta al pago: motor de marketing de Julsmind, fase 1 — APROBADA (Daniel, 18-oct) y PUBLICADA: backend 2fa5bdfe en producción con los ajustes en `config/pauta` (embudo en hitos, aviso del plan y CRM en sombra), front desde 2026.10.18.9
 
 Daniel (16-oct): "requiero un módulo de marketing para Katuq y para Julsmind; quiero automatizar todo y convertir".
 
@@ -10865,7 +10865,13 @@ Daniel (16-oct): "requiero un módulo de marketing para Katuq y para Julsmind; q
   - Desvíos registrados en `design.md`: modo `hitos`, ventana de 6 días de Meta, puntaje en `companies.pauta.crm`, sin backfill de menús y `landingContacts` sin tocar (nadie lo llama).
   - Publicado el 18-oct: backend `ed3ab1cd` (pull + `pm2 reload`, sin variables nuevas en `.env`: todo apagado; `/v1/pauta/*` responde 401 sin sesión) y front 2026.10.18.9 desde `240d7cbb` con la copia limpia.
   - Encendido el 18-oct a las 20:49 UTC, con OK de Daniel: `PAUTA_EVENTOS=hitos` (calcula etapas sin llamar a Meta), `AVISOS_PLAN=sombra` y `CRM_AUTOPILOT=sombra` (anotan sin enviar ni mover). Respaldo en `functions/.env.bak-d485-*`. Primera vuelta a las 21:00 UTC sin errores: el embudo revisó 3 empresas de los últimos 14 días y encontró 4 hitos; el aviso revisó 7 empresas con 3 o más pedidos y ninguna llega al 80 %.
-  - Falta: credenciales de Meta, revisar la pantalla con la sesión de Julsmind a 1440 y 390 px, medir el p95 y seguir encendiendo por pasos con OK de Daniel (tareas 9.x).
+  - Textos del aviso del plan gratis aprobados por Daniel el 19-oct, sin cambios.
+  - Interruptores a Firestore el 19-oct (D-505, con OK de Daniel): backend `2fa5bdfe`.
+    - Los modos y ajustes pasan del `.env` a `config/pauta` y se leen en cada vuelta, sin reiniciar: `eventos`, `eventosDesde`, `avisosPlan`, `crm`, `resumenPara`, `umbralPausaCOP`, `notaDns` y `meta.{cuenta, pixel, codigoPrueba, firmar}`. En el `.env` quedan solo los secretos `META_ADS_TOKEN`, `META_CAPI_TOKEN` y `META_APP_SECRET`.
+    - Los 4 crones quedan siempre programados y no hacen nada con su pieza apagada. Se cambia con `node scripts/pauta-ajustes.js campo=valor --execute` (sin `--execute` simula).
+    - Desplegado con los mismos modos (`hitos`, `sombra`, `sombra`) y sin las 3 líneas en el `.env` (respaldo `.env.bak-d505-*`). La vuelta de las 16:45 UTC los leyó de Firestore, sin errores.
+    - Contract test nuevo `ajustesPauta`: lectura, script, su write-set y que la pauta no lea interruptores del `.env`. Los 6 de `tests/pauta` en verde. Tabla de equivalencias en `design.md`.
+  - Falta: credenciales de Meta (los dos tokens al `.env`; la cuenta publicitaria y el código de prueba a `config/pauta`), destinatarios del resumen, revisar la pantalla con la sesión de Julsmind a 1440 y 390 px, medir el p95 y seguir encendiendo por pasos con OK de Daniel (tareas 9.x).
 
 ## D-486 (2026-10-18) — Estilo robusto: paleta completa con contraste garantizado, botones, tarjeta de producto, encabezado, medidas y propuesta de KAI como antes y después (ticket 1227, F2-17) — PUBLICADO: backend 3b847f62, front 2026.10.18.1
 

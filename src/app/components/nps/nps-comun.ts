@@ -10,6 +10,7 @@ export const NOMBRE_CANAL: Record<CanalEncuesta, string> = {
   entrega: 'Después de la entrega',
   enlace: 'Enlace y QR',
   seller: 'Dentro del Seller',
+  katuq: 'Correo de Katuq',
 };
 
 export const NOMBRE_ESTADO_ENCUESTA: Record<EstadoEncuesta, string> = { borrador: 'Borrador', activa: 'Activa', pausada: 'Pausada' };

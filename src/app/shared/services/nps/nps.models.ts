@@ -6,7 +6,8 @@ import { NpsTablero, SegmentoNps } from '../feedback/feedback.models';
  * `/publica/*` van sin sesión.
  */
 
-export type CanalEncuesta = 'entrega' | 'enlace' | 'seller';
+/** `katuq`: la pregunta de Katuq a un comercio, por el enlace del correo (D-506). */
+export type CanalEncuesta = 'entrega' | 'enlace' | 'seller' | 'katuq';
 export type EstadoEncuesta = 'borrador' | 'activa' | 'pausada';
 export type TipoAdicional = 'opcion' | 'texto';
 export type EstadoCaso = 'nuevo' | 'contactado' | 'resuelto' | 'sin_solucion';
@@ -164,6 +165,8 @@ export interface EncuestaPublica {
   logo?: string;
   preguntas: PreguntasEncuesta;
   canal: CanalEncuesta;
+  /** La pregunta es de Katuq, no de una tienda (D-506). */
+  marca?: 'katuq';
 }
 
 export interface ContactoPublico {

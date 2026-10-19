@@ -1,5 +1,6 @@
-// Tarjeta NPS (D-483). Tema canónico (openspec/specs/design-system): plano, acento #5F3FE0,
-// radios 16/11/20, sin gradientes ni border-left. Sin velo: no bloquea la pantalla.
+// Pregunta NPS de Katuq (D-483, D-506): la ventana al entrar (una vez por ciclo), el botón
+// flotante cerrado y su tarjeta. Tema canónico (openspec/specs/design-system): plano, acento
+// #5F3FE0, radios 16/11/20, sin gradientes ni border-left. El contenido es de nps-pregunta.
 // Ningún nombre de clase contiene "p-"; spans con color y tamaño propios; h2 con !important.
 $accent: #5F3FE0;
 $accent-hover: #4a2fc0;
@@ -49,139 +50,6 @@ $line: #ececf4;
   &:hover { background: #f5f4fa; color: $ink; }
 }
 
-.nt-eyebrow {
-  display: inline-block;
-  margin-bottom: 8px;
-  padding: 3px 10px;
-  border: 1px solid #ddd3fb;
-  border-radius: 20px;
-  background: $accent-soft;
-  color: $accent;
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: .6px !important;
-  text-transform: uppercase;
-}
-
-.nt-pregunta {
-  margin: 0 30px 14px 0;
-  color: $ink;
-  font-size: 15px !important;
-  font-weight: 800;
-  line-height: 1.35;
-}
-
-.nt-acciones {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 14px;
-}
-
-.nt-segundo {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 16px 0 0;
-}
-
-.nt-label {
-  margin: 0;
-  color: $ink;
-  font-size: 13.5px !important; // hay un `label { font-size: .7rem !important }` global (styles.scss)
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-.nt-texto {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 84px;
-  padding: 10px 12px;
-  border: 1px solid #e9e7f3;
-  border-radius: 11px;
-  background: #f5f4fa;
-  color: $ink;
-  font-family: inherit;
-  font-size: 13.5px;
-  line-height: 1.45;
-  resize: vertical;
-  transition: border-color .15s ease, background .15s ease;
-
-  &::placeholder { color: $muted; }
-  &:focus { border-color: $accent; background: #fff; outline: none; }
-  &:focus-visible { outline: 3px solid $accent-2 !important; outline-offset: 1px; }
-}
-
-.nt-pie {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.nt-contador {
-  color: $muted;
-  font-size: 11.5px;
-  font-weight: 700;
-}
-
-.nt-btn {
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  padding: 0 18px;
-  border: 1px solid $accent;
-  border-radius: 11px;
-  background: $accent;
-  color: #fff;
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 700;
-  line-height: 1;
-  box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
-  cursor: pointer;
-  transition: background .15s ease, border-color .15s ease;
-
-  &:hover { background: $accent-hover; border-color: $accent-hover; }
-}
-
-.nt-btn--sec {
-  border-color: #e4e2ef;
-  background: #fff;
-  color: $body;
-  box-shadow: none;
-
-  &:hover { background: #faf9fe; border-color: #d9cffb; color: $accent; }
-}
-
-.nt-gracias {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 4px 36px 4px 0;
-}
-
-.nt-gracias__icono {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 11px;
-  background: $accent-soft;
-  color: $accent;
-  font-size: 16px;
-}
-
-.nt-gracias__texto {
-  margin: 0;
-  color: $ink;
-  font-size: 15px;
-  font-weight: 800;
-}
-
 // Celular y tableta (mismo corte que el lanzador de Opttia): hoja inferior a todo el ancho,
 // sobre la barra de navegación (1000) y el lanzador (1040), debajo de los modales (1050).
 @media (max-width: 768px) {
@@ -199,13 +67,84 @@ $line: #ececf4;
     animation-name: nt-subir;
   }
 
-  // El global de celular lleva todo botón a 44 x 44: la X crece y el texto le abre espacio.
-  .nt-pregunta { margin-right: 44px; }
-  .nt-gracias { padding-right: 50px; }
+}
+
+// Botón "Califica a Katuq": cerrado no tapa contenido; al tocarlo abre la tarjeta.
+.nt-boton {
+  position: fixed;
+  right: 24px;
+  bottom: 96px; // encima del botón del asistente, como la tarjeta
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid #ddd3fb;
+  border-radius: 20px;
+  background: #fff;
+  color: $accent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 12px 26px -16px rgba(80, 60, 180, .5);
+  cursor: pointer;
+  animation: nt-entrar .2s ease-out;
+
+  .pi { font-size: 13px; }
+  &:hover { background: $accent-soft; }
+  &:focus-visible { outline: 3px solid $accent-2 !important; outline-offset: 2px; }
+}
+
+.nt-boton__texto { color: inherit; font-size: inherit; letter-spacing: normal; }
+
+// Ventana al entrar: velo suave, se cierra con la X, "Ahora no", Escape o tocando afuera.
+.nt-velo {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(33, 31, 58, .42);
+  animation: nt-aparecer .15s ease-out;
+}
+
+.nt-ventana {
+  position: relative;
+  box-sizing: border-box;
+  width: 460px;
+  max-width: 100%;
+  padding: 22px 22px 18px;
+  background: #fff;
+  border: 1px solid $line;
+  border-radius: 20px;
+  box-shadow: 0 30px 60px -28px rgba(80, 60, 180, .55);
+  color: $ink;
+  animation: nt-entrar .2s ease-out;
+
+  &:focus { outline: none; }
+}
+
+@media (max-width: 768px) {
+  .nt-boton { right: 16px; bottom: calc(84px + env(safe-area-inset-bottom)); }
+  .nt-velo { align-items: end; padding: 0; }
+  .nt-ventana {
+    width: 100%;
+    padding: 20px 16px calc(16px + env(safe-area-inset-bottom));
+    border-bottom: 0;
+    border-radius: 20px 20px 0 0;
+    animation-name: nt-subir;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nt-tarjeta { animation: none; }
+  .nt-tarjeta, .nt-boton, .nt-velo, .nt-ventana { animation: none; }
+}
+
+@keyframes nt-aparecer {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes nt-entrar {
