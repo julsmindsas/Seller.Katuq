@@ -388,6 +388,7 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
       fields: 'full',
       limit: this.LIMITE_PEDIDOS,
       tipoFecha: "fechaEntrega",
+      soloConDespacho: true, // D-491: sin pedidos solo de servicios
     };
 
     this.ventasService.getOrdersByFilterOptimized(filter, 1, this.LIMITE_PEDIDOS)

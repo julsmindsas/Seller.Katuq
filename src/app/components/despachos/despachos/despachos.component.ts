@@ -7114,7 +7114,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
         EstadoPago.Pendiente,
         EstadoPago.Pospendiente,
       ],
-      tipoFecha: "fechaEntrega" // El rango de fecha de logística filtra por fecha de entrega
+      tipoFecha: "fechaEntrega", // El rango de fecha de logística filtra por fecha de entrega
+      soloConDespacho: true // D-491: sin pedidos solo de servicios
     };
 
     // Apply quick filters from metrics (breadcrumbs)
