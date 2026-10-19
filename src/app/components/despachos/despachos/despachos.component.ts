@@ -4690,7 +4690,43 @@ export class DespachosComponent implements OnInit, OnDestroy {
     const campo = (etiqueta: string, valor: string, extra = '') =>
       `<div class="campo ${extra}"><div class="lbl">${etiqueta}</div><div class="val">${valor}</div></div>`;
 
-    const html = `<!DOCTYPE html>
+    // Ticket 1235: cada empresa elige el formato en su configuración. "compacto" es para
+    // etiquetas de 5×5 cm (ALMARA): número de pedido grande y solo lo necesario para
+    // entregar, sin "Bulto". Por defecto, el rótulo completo de 10×10 cm (ticket 1219).
+    const horarioEntrega = fechaEntrega + (pedido.horarioEntrega ? ' / ' + pedido.horarioEntrega : '');
+    const htmlCompacto = `<!DOCTYPE html>
+<html><head><title>Rotulo #${escapeHtml(pedido.nroPedido)}</title>
+<style>
+  @page { size: 5cm 5cm; margin: 1.5mm; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 7.5px; color: #000; line-height: 1.2; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .rotulo { height:100%; display:flex; flex-direction:column; gap:1.5px; overflow:hidden; }
+  .cabeza { display:flex; justify-content:space-between; align-items:baseline; gap:3px; border-bottom:1.5px solid #000; padding-bottom:1.5px; }
+  .empresa { font-size:6px; text-transform:uppercase; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; min-width:0; }
+  .nro { font-size:12px; font-weight:900; font-family:monospace; white-space:nowrap; }
+  .cliente { font-size:9px; font-weight:800; }
+  .dir { word-break:break-word; overflow:hidden; max-height:4.8em; }
+  .pie { margin-top:auto; display:flex; justify-content:space-between; align-items:flex-end; gap:3px; border-top:1.5px solid #000; padding-top:1.5px; }
+  .cobrar { font-size:9px; font-weight:900; font-family:monospace; white-space:nowrap; }
+</style></head><body>
+<div class="rotulo">
+  <div class="cabeza">
+    <div class="empresa">${escapeHtml(companyName)}</div>
+    <div class="nro">#${escapeHtml(pedido.nroPedido || '-')}</div>
+  </div>
+  <div class="cliente">${escapeHtml(recibe)}</div>
+  ${telefono ? `<div><b>Tel:</b> ${escapeHtml(telefono)}</div>` : ''}
+  <div class="dir">${escapeHtml(direccion)}${pedido.envio?.ciudad ? ` · ${escapeHtml(pedido.envio.ciudad)}` : ''}</div>
+  ${zona ? `<div><b>Zona:</b> ${escapeHtml(zona)}</div>` : ''}
+  <div class="pie">
+    <div><b>Entrega:</b> ${escapeHtml(horarioEntrega)}</div>
+    ${porCobrar > 0 ? `<div class="cobrar">${escapeHtml(valorCobrar)}</div>` : ''}
+  </div>
+</div>
+</body></html>`;
+
+    const htmlCompleto = `<!DOCTYPE html>
 <html><head><title>Rotulo #${escapeHtml(pedido.nroPedido)}</title>
 <style>
   @page { size: 10cm 10cm; margin: 2mm; }
@@ -4751,6 +4787,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
   </div>
 </div>
 </body></html>`;
+
+    const html = empresa.formatoRotulo === 'compacto' ? htmlCompacto : htmlCompleto;
 
     const printWindow = window.open('', '_blank', 'width=400,height=400');
     if (printWindow) {

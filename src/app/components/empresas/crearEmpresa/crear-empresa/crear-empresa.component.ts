@@ -270,6 +270,8 @@ export class CrearEmpresaComponent implements OnInit {
       indicativoCel: ['Código País', Validators.required],
       cel: ['', Validators.required],
       emailFactuElec: ['', Validators.required],
+      // Ticket 1235: tamaño del rótulo de despacho ('completo' 10×10 cm | 'compacto' 5×5 cm).
+      formatoRotulo: ['completo'],
       //campos Auxiliares
 
       nomCompletoContacto: [''],
@@ -707,6 +709,7 @@ export class CrearEmpresaComponent implements OnInit {
     this.companiesService.updateCompanyById(this.empresaId, this.f.value).subscribe({
       next: () => {
         this.guardando = false;
+        this.sincronizarFormatoRotuloEnSesion();
         Swal.fire({
           title: 'Editado!',
           text: 'Editado con exito',
@@ -727,6 +730,23 @@ export class CrearEmpresaComponent implements OnInit {
         });
       },
     });
+  }
+
+  /**
+   * Ticket 1235: Despachos lee el formato del rótulo de `currentCompany`, que solo se
+   * carga al iniciar sesión. Si la empresa editada es la de la sesión, se actualiza ahí
+   * para que el cambio aplique sin volver a entrar.
+   */
+  private sincronizarFormatoRotuloEnSesion(): void {
+    try {
+      const actual = JSON.parse(localStorage.getItem('currentCompany') || '{}') || {};
+      const editada = this.f.value || {};
+      const esLaMisma = (actual.nit && actual.nit === editada.nit)
+        || (actual.nomComercial && actual.nomComercial === editada.nomComercial);
+      if (!esLaMisma) return;
+      actual.formatoRotulo = editada.formatoRotulo || 'completo';
+      localStorage.setItem('currentCompany', JSON.stringify(actual));
+    } catch { /* noop: el cambio igual aplica al volver a iniciar sesión */ }
   }
 
   volverAlListado(): void {
