@@ -41,7 +41,7 @@
 
 - [x] 5.1 Decisión pura `p80`/`tope` con `getEffectiveOrderUsage`: ciclo vencido, cupón, premium promocional, baja y un correo al día compartido con la activación.
 - [x] 5.2 Tipos `plan80`/`plantope` en `activacion/enlaces.js`, que llevan a `/pricing` y cuentan el clic.
-- [x] 5.3 Plantillas del correo (textos para que Daniel los apruebe) y aviso `PLAN_LIMIT` en la campana. — Textos en `templates/avisoPlan.js`, pendientes de que Daniel los lea antes de `envio`.
+- [x] 5.3 Plantillas del correo (textos para que Daniel los apruebe) y aviso `PLAN_LIMIT` en la campana. — Textos en `templates/avisoPlan.js`, aprobados por Daniel el 19-oct sin cambios.
 - [x] 5.4 Crón `avisosPlan` (cada 15 min) con reserva en transacción y modos apagado/sombra/envío.
 - [x] 5.5 Contract test del write-set: solo `companies.avisosPlan` y `activacion.ultimoEnvioAt`.
 - [x] 5.6 `GET /v1/pauta/avisos-plan/metricas` (solo plataforma).
