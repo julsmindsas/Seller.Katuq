@@ -5,6 +5,7 @@ import { MessageService } from 'primeng/api';
 import { Subject, forkJoin, of } from 'rxjs';
 import { takeUntil, catchError, finalize } from 'rxjs/operators';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
+import { parse } from 'flatted';
 
 interface SiigoMasterData {
   costCenters: any[];
@@ -58,6 +59,11 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
 
   // Sync result
   syncResult: SyncResult | null = null;
+
+  // D-504 (ticket 1229): categoría de SIIGO (cuentas de inventario, costo, ingreso y
+  // devolución) por categoría de Katuq. Clave: "Raíz" o "Raíz > Subcategoría".
+  filasCategorias: { clave: string; nombre: string; nivel: number; padre: string }[] = [];
+  grupoPorCategoria: Record<string, number | null> = {};
   syncProgress = 0;
 
   // Existing config
@@ -84,6 +90,7 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadKatuqPaymentMethods();
     this.loadExistingConfig();
+    this.cargarCategorias();
   }
 
   /**
@@ -266,6 +273,7 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
 
     if (config.accountsMapping) {
       this.siigoForm.get('accountsMapping')?.patchValue(config.accountsMapping);
+      this.grupoPorCategoria = { ...(config.accountsMapping.accountGroupByCategory || {}) };
     }
 
     if (config.paymentMethodsMapping) {
@@ -332,6 +340,40 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
           });
         }
       });
+  }
+
+  /** Las categorías de la empresa, raíz y subcategorías, para conectarlas con SIIGO. */
+  cargarCategorias(): void {
+    this.maestroService.getCategorias()
+      .pipe(takeUntil(this.destroy$), catchError(() => of([])))
+      .subscribe((r: any) => {
+        let arbol: any[] = [];
+        try {
+          const crudo = Array.isArray(r) && r[0] ? r[0].categoria : null;
+          arbol = crudo ? parse(crudo) : [];
+        } catch { arbol = []; }
+        const nombre = (n: any) => String(n?.data?.nombre || n?.label || '').trim();
+        const filas: { clave: string; nombre: string; nivel: number; padre: string }[] = [];
+        for (const raiz of Array.isArray(arbol) ? arbol : []) {
+          const r0 = nombre(raiz);
+          if (!r0) continue;
+          filas.push({ clave: r0, nombre: r0, nivel: 0, padre: '' });
+          for (const hija of raiz.children || []) {
+            const h = nombre(hija);
+            if (h) filas.push({ clave: `${r0} > ${h}`, nombre: h, nivel: 1, padre: r0 });
+          }
+        }
+        this.filasCategorias = filas;
+      });
+  }
+
+  /** Solo las categorías con una categoría de SIIGO elegida. */
+  private categoriasConectadas(): Record<string, number> {
+    const salida: Record<string, number> = {};
+    for (const [clave, grupo] of Object.entries(this.grupoPorCategoria)) {
+      if (grupo !== null && grupo !== undefined && String(grupo) !== '') salida[clave] = Number(grupo);
+    }
+    return salida;
   }
 
   loadMasterData(): void {
@@ -423,7 +465,7 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
       enableAutoInvoicing: formValue.enableAutoInvoicing,
       autoSyncInventory: formValue.autoSyncInventory,
       syncFrequency: formValue.syncFrequency,
-      accountsMapping: formValue.accountsMapping,
+      accountsMapping: { ...formValue.accountsMapping, accountGroupByCategory: this.categoriasConectadas() },
       paymentMethodsMapping: formValue.paymentMethodsMapping
     };
 

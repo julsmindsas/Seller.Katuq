@@ -43,6 +43,9 @@ export const COMPANY_FEATURE_FLAGS = [
   'categoryAttributes',
   // Fotos uniformes del producto (D-501, ticket 1252). Dueño: Daniel. Se retira el 2027-04-30.
   'productPhotoUniform',
+  // SIIGO: facturar con el producto equivalente en vez de crear otro (D-504, ticket 1229).
+  // Solo donde se comprobó la regla (ALMACEN BOMBAS). Dueño: Daniel. Se revisa el 2027-04-30.
+  'siigoProductEquivalence',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

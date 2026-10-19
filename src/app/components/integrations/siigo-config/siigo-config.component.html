@@ -318,6 +318,46 @@
         </div>
       </div>
 
+      <!-- D-504 (ticket 1229): categoría de SIIGO por categoría de Katuq -->
+      <div class="cat-contable">
+        <h4 class="cat-contable__titulo">Categoría contable por categoría de Katuq</h4>
+        <p class="cat-contable__texto">
+          En SIIGO, la categoría del producto define sus cuentas de inventario, costo, ingreso y devolución.
+          Cuando Katuq tenga que crear un producto en SIIGO, usará la categoría que elijas aquí para su
+          categoría. Si una categoría no tiene ninguna, usará el "Grupo de Cuentas" de arriba.
+        </p>
+        <div class="cat-contable__vacio" *ngIf="!filasCategorias.length">
+          <i class="pi pi-sitemap"></i>
+          <strong>Sin categorías</strong>
+          <small>Crea las categorías de tus productos para conectarlas con SIIGO.</small>
+        </div>
+        <table class="cat-contable__tabla" *ngIf="filasCategorias.length">
+          <thead>
+            <tr><th>Categoría en Katuq</th><th>Categoría en SIIGO</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let fila of filasCategorias">
+              <td [class.cat-contable__hija]="fila.nivel > 0">{{ fila.nombre }}</td>
+              <td>
+                <p-dropdown
+                  [options]="masterData.accountGroups"
+                  optionLabel="name"
+                  optionValue="id"
+                  [(ngModel)]="grupoPorCategoria[fila.clave]"
+                  [ngModelOptions]="{ standalone: true }"
+                  [placeholder]="fila.nivel > 0 ? 'Igual que ' + fila.padre : 'Grupo de Cuentas de arriba'"
+                  [showClear]="true"
+                  [filter]="true"
+                  filterBy="name"
+                  appendTo="body"
+                  styleClass="w-full">
+                </p-dropdown>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
       <!-- PUC Guide -->
       <div class="puc-guide">
         <h4><i class="pi pi-info-circle"></i> Guia de Cuentas PUC Colombia</h4>

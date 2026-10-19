@@ -231,6 +231,74 @@
 
 
 // PUC Guide
+// D-504: categoría de SIIGO por categoría de Katuq (design-system D-131).
+.cat-contable {
+  margin-top: 24px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #E6E0FA;
+  border-radius: 16px;
+
+  &__titulo {
+    margin: 0 0 6px 0;
+    font-size: 0.95rem !important;
+    color: #211F3A;
+  }
+
+  &__texto {
+    margin: 0 0 12px 0;
+    font-size: 0.85rem;
+    line-height: 1.45;
+    letter-spacing: normal;
+    color: #6B6787;
+  }
+
+  &__tabla {
+    width: 100%;
+    border-collapse: collapse;
+
+    th {
+      text-align: left;
+      padding: 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #6B6787;
+      border-bottom: 1px solid #E6E0FA;
+    }
+
+    td {
+      padding: 6px 8px;
+      font-size: 0.875rem;
+      color: #211F3A;
+      border-bottom: 1px solid #F3F0FD;
+      vertical-align: middle;
+    }
+
+    td:first-child { width: 45%; font-weight: 600; }
+    td.cat-contable__hija { font-weight: 400; padding-left: 28px; color: #4A4766; }
+  }
+
+  &__vacio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 20px;
+    color: #6B6787;
+
+    i { font-size: 1.4rem; color: #5F3FE0; }
+    strong { color: #211F3A; }
+    small { color: #6B6787; }
+  }
+}
+
+@media (max-width: 576px) {
+  .cat-contable__tabla td:first-child { width: 40%; }
+  .cat-contable__tabla td.cat-contable__hija { padding-left: 16px; }
+}
+
 .puc-guide {
   margin-top: 24px;
   padding: 16px;
