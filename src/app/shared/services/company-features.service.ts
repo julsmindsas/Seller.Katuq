@@ -38,6 +38,11 @@ export const COMPANY_FEATURE_FLAGS = [
   // «Tecnología / catálogo grande». Dueño: Daniel. Se retiran el 2027-03-31.
   'singleProductTemplate',
   'techCatalogTemplate',
+  // Atributos por categoría (D-495, ticket 1234): esquemas en Maestros y pestaña "Especificaciones".
+  // Dueño: Daniel. Se retira el 2027-04-30: encendida para todos o eliminada.
+  'categoryAttributes',
+  // Fotos uniformes del producto (D-501, ticket 1252). Dueño: Daniel. Se retira el 2027-04-30.
+  'productPhotoUniform',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

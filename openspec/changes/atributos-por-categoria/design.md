@@ -138,6 +138,24 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
 ## Migration Plan
 - **Datos:** sin migración.
 - **Medición** (`scripts/medir-atributos-categoria.js --dry-run`, solo lectura): documentos de `categorias` por empresa (en todas, con máscara `company`), tamaño del documento y del árbol, rutas, colisiones, formas, ambiguos, productos con `attributes` en la raíz, y bytes del índice y del registro con 10 y 30 atributos.
+- **Resultado de la medición (2026-10-18, producción, solo lectura, `bc5c93d2`):** solo conteos y bytes; KB = 1000 bytes.
+
+  | | FLORECER | OH MY STORE |
+  |---|---|---|
+  | Documentos de `categorias` | 1 | 1 |
+  | Documento / árbol (KB) | 31,9 / 12,3 | 19,6 / 19,4 |
+  | Rutas · hojas · profundidad | 104 · 90 · 3 | 147 · 147 · 1 |
+  | Colisiones · etiquetas con varias rutas | 0 · 6 | 0 · 0 |
+  | Productos | 2166 | 8568 |
+  | Con `attributes` en la raíz | 0 | 0 |
+  | Ruta resuelta por `ruta` · `parent` · etiquetas | 66 · 906 · 1141 | 12 · 0 · 8455 |
+  | Sin categoría · fuera del árbol · ambigua | 30 · 12 · 11 | 99 · 2 · 0 |
+  | Índice de rutas (KB) | 12,8 | 10,7 |
+  | Registro con 30 atributos, típico / peor caso con topes (KB) | 115,7 / 212,8 | 113,6 / 210,8 |
+
+  - **Global:** 138 documentos de `categorias` para 133 empresas, todos con `company`. 129 empresas tienen 1 documento, 3 tienen 2 y 1 tiene 3.
+  - **Paradas:** ni FLORECER ni OH MY STORE activan ninguna. En las dos, el documento está lejos de 700 KB, ningún producto tiene `attributes` en la raíz y el registro con 30 atributos queda por debajo de 250 KB, también en el peor caso.
+  - **Parada activa: «más de un documento de `categorias`» (4 empresas, en el conteo global).** D2 ya define cuál se elige (`documentoDeCategorias`), pero la regla de 0.5 manda volver al diseño, así que F1 queda detenida hasta que Daniel decida si D2 basta para esas 4 empresas o si se resuelve antes de encender la bandera en ellas.
 - **Encendido**, cada paso con OK de Daniel: backend apagado, front, FLORECER y el comercio del ticket.
 - **Reversa:** `scripts/set-company-feature.js`.
 

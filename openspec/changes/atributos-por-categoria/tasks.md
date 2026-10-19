@@ -16,24 +16,25 @@
 - [ ] 0.2 Daniel aprueba las dos specs (`specs/*/spec.md`), `design.md` y esta lista, y la excepción de `createCategoria` sin bandera (D3).
   - Dep: 0.1.
   - Éxito: aprobación y excepción con fecha en `CONTRACT.md`.
-- [ ] 0.3 Prueba primero: `tests/catalogo/medirAtributosSoloLectura.test.js`. Falla si el script llama `set`, `update`, `delete`, `add`, `batch` o `runTransaction`.
+- [x] 0.3 Prueba primero: `tests/catalogo/medirAtributosSoloLectura.test.js`. Falla si el script llama `set`, `update`, `delete`, `add`, `batch` o `runTransaction`.
   - Dep: 0.2.
   - Éxito: falla porque el script no existe.
-- [ ] 0.4 `scripts/medir-atributos-categoria.js --company "<X>" --dry-run`, solo lectura. Mide lo de `design.md` (Migration Plan):
+- [x] 0.4 `scripts/medir-atributos-categoria.js --company "<X>" --dry-run`, solo lectura. Mide lo de `design.md` (Migration Plan):
   - documentos de `categorias` por empresa en todas las empresas;
   - tamaños, rutas, formas y ambiguos;
   - `attributes` en la raíz;
   - bytes del índice y del registro `{schemas, indice}`.
   - Dep: 0.3.
   - Éxito: 0.3 en verde; JSON sin datos personales.
-- [ ] 0.5 Correr 0.4 en FLORECER y OH MY STORE (más el conteo global) y anotar los números en `design.md`.
+- [x] 0.5 Correr 0.4 en FLORECER y OH MY STORE (más el conteo global) y anotar los números en `design.md`.
+  - Hecho el 2026-10-18 (números en design.md, «Resultado de la medición»). Activa una parada: 4 empresas tienen más de un documento de `categorias`. F1 espera la decisión de Daniel.
   - Dep: 0.4.
   - **Parar y volver al diseño** si:
     - alguna empresa tiene más de un documento de `categorias`;
     - el documento pasa de 700 KB;
     - algún producto ya tiene `attributes` en la raíz;
     - el registro proyectado con 30 atributos pasa de 250 KB por empresa.
-- [ ] 0.6 [P] Bandera `categoryAttributes` en `services/companyFeatureFlags.js` y `company-features.service.ts`. Dueño: Daniel. Retiro: 2027-04-30.
+- [x] 0.6 [P] Bandera `categoryAttributes` en `services/companyFeatureFlags.js` y `company-features.service.ts`. Dueño: Daniel. Retiro: 2027-04-30.
   - Dep: 0.2.
   - Éxito: la suite de banderas sigue en verde, y una prueba nueva deja la bandera apagada si falta o no vale `true`.
 - [ ] 0.7 Escalar a Daniel el endurecimiento de cómo resuelven la empresa los handlers existentes que tocan 3.2 y 3.4. Debe quedar como cambio en el openspec del backend privado, sin detalle en este repo.
