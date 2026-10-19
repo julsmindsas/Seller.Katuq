@@ -50,6 +50,7 @@
   - 18-oct: `ENCUESTA_SECRET` propio y `NPS_COMPRADORES=encendida` en EC2 (respaldo `.env.bak-nps-*`), API reiniciada. Falta SPF/DKIM/DMARC.
 - [ ] 5.4 Encender `npsModulo` a los comercios por grupos.
   - 18-oct: sin el módulo, la pantalla de NPS explica que todavía no está disponible para la empresa y no llama al servidor (antes salía vacía con un aviso titulado "Suscripción"). La regla "Julsmind siempre o la bandera" quedó en `npsDisponible` (menú y pantalla). Se apagó `NPS_COMERCIOS` (tarjeta "Tu opinión") a pedido de Daniel.
+- [ ] 5.6 D-505 (19-oct): mover los interruptores `NPS_COMERCIOS`, `NPS_COMPRADORES` y `NPS_RESPONSABLE_COMERCIOS` del `.env` a Firestore (`config/nps`), con el mismo valor por omisión (apagado). `ENCUESTA_SECRET` es secreto y se queda en el `.env`.
 - [ ] 5.5 Bitácora en `specs/CONTRACT.md`.
 
 ## 6. Después
