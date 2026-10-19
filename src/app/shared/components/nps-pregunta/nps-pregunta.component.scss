@@ -1,0 +1,158 @@
+// Contenido de la pregunta NPS de Katuq (D-483, D-506), el mismo en la ventana, el botón
+// flotante y la tarjeta de Inicio. Tema canónico: plano, acento #5F3FE0, radios 16/11/20, sin
+// gradientes. Ningún nombre de clase contiene "p-"; spans con color y tamaño propios; h2 con !important.
+$accent: #5F3FE0;
+$accent-hover: #4a2fc0;
+$accent-2: #7C5CFF;
+$accent-soft: #efe9ff;
+$ink: #211F3A;
+$body: #5b5878;
+$muted: #8f8bab;
+$line: #ececf4;
+
+:host {
+  display: block;
+
+  p, label, span, button, textarea { letter-spacing: normal; }
+  :focus-visible { outline: 3px solid $accent-2 !important; outline-offset: 2px; }
+}
+
+.nt-eyebrow {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 3px 10px;
+  border: 1px solid #ddd3fb;
+  border-radius: 20px;
+  background: $accent-soft;
+  color: $accent;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .6px !important;
+  text-transform: uppercase;
+}
+
+.nt-pregunta {
+  margin: 0 30px 14px 0;
+  color: $ink;
+  font-size: 15px !important;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.nt-acciones {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.nt-segundo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0 0;
+}
+
+.nt-label {
+  margin: 0;
+  color: $ink;
+  font-size: 13.5px !important; // hay un `label { font-size: .7rem !important }` global (styles.scss)
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.nt-texto {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 84px;
+  padding: 10px 12px;
+  border: 1px solid #e9e7f3;
+  border-radius: 11px;
+  background: #f5f4fa;
+  color: $ink;
+  font-family: inherit;
+  font-size: 13.5px;
+  line-height: 1.45;
+  resize: vertical;
+  transition: border-color .15s ease, background .15s ease;
+
+  &::placeholder { color: $muted; }
+  &:focus { border-color: $accent; background: #fff; outline: none; }
+  &:focus-visible { outline: 3px solid $accent-2 !important; outline-offset: 1px; }
+}
+
+.nt-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nt-contador {
+  color: $muted;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.nt-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid $accent;
+  border-radius: 11px;
+  background: $accent;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+
+  &:hover { background: $accent-hover; border-color: $accent-hover; }
+}
+
+.nt-btn--sec {
+  border-color: #e4e2ef;
+  background: #fff;
+  color: $body;
+  box-shadow: none;
+
+  &:hover { background: #faf9fe; border-color: #d9cffb; color: $accent; }
+}
+
+.nt-gracias {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 36px 4px 0;
+}
+
+.nt-gracias__icono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: $accent-soft;
+  color: $accent;
+  font-size: 16px;
+}
+
+.nt-gracias__texto {
+  margin: 0;
+  color: $ink;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+// La X del contenedor queda arriba a la derecha: el texto le abre espacio (en celular el global
+// lleva todo botón a 44 x 44).
+@media (max-width: 768px) {
+  .nt-pregunta { margin-right: 44px; }
+  .nt-gracias { padding-right: 50px; }
+}

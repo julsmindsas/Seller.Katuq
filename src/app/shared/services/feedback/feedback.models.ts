@@ -13,8 +13,12 @@ export type PublicoNps = 'merchant' | 'buyer';
 /** Códigos de error del backend (`{ success: false, code, error }`). */
 export type CodigoErrorNps = 'NOTA_INVALIDA' | 'NO_ENCONTRADA' | 'YA_REGISTRADA' | 'SIN_NOTA' | 'COMENTARIO_LARGO';
 
+/** Cómo se presenta la pregunta (D-506): la ventana sale una sola vez por ciclo. */
+export type PresentacionNps = 'ventana' | 'tarjeta';
+
 export interface NpsPregunta {
   id: string;
+  presentacion?: PresentacionNps;
 }
 
 /** GET /v1/nps/pendiente. Nunca falla con error: si algo pasa, `pregunta` llega null. */

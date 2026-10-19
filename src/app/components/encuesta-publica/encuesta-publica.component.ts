@@ -30,6 +30,11 @@ const ERRORES: Record<string, ErrorPagina> = {
     texto: 'Las encuestas se pueden responder durante 30 días después de recibirlas. Gracias por tu interés.',
     icono: 'pi-clock',
   },
+  YA_RESPONDIDA: {
+    titulo: 'Ya respondiste esta encuesta',
+    texto: 'Tu opinión ya quedó guardada. ¡Gracias!',
+    icono: 'pi-check-circle',
+  },
   NO_DISPONIBLE: {
     titulo: 'Esta encuesta no está recibiendo respuestas',
     texto: 'La tienda la pausó por ahora. Gracias por querer darnos tu opinión.',
