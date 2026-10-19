@@ -468,3 +468,16 @@
     cursor: pointer;
   }
 }
+
+// Oferta de pedidos a mensajeros independientes de Katuq: lista de ayuda y aviso junto al interruptor
+.ofrecer-independientes-card {
+  .ofrecer-ayuda {
+    padding-left: 1.1rem;
+
+    li + li { margin-top: 0.15rem; }
+  }
+
+  .ofrecer-error {
+    font-weight: 600;
+  }
+}

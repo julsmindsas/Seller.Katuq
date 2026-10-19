@@ -1,7 +1,8 @@
 import { Component, EventEmitter, Input, OnInit, Output, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
-import { LogisticaServiceV2 } from '../../../../shared/services/despachos/logistica.service.v2';
+import { LogisticaServiceV2, MensajerosConfigRespuesta } from '../../../../shared/services/despachos/logistica.service.v2';
+import { ayudaOfrecerIndependientes, interpretarErrorOfrecer } from './ofrecer-independientes.util';
 
 @Component({
   selector: 'app-transportadores',
@@ -36,6 +37,17 @@ export class TransportadoresComponent implements OnInit, OnChanges {
   pagoGuardado = false;
   readonly pagoFijoMax = 500000;
 
+  /**
+   * Oferta de los pedidos a mensajeros independientes de Katuq (null mientras carga o si no se pudo leer).
+   * Es independiente de `tomanPedidos`: se puede encender una sin la otra.
+   */
+  ofrecerIndependientes: boolean | null = null;
+  guardandoOfrecer = false;
+  /** Mensaje del servidor junto al interruptor (por ejemplo, que falta definir el pago al mensajero). */
+  errorOfrecer: string | null = null;
+  /** Comisión de Katuq en % del domicilio, tal como la manda el servidor. */
+  comisionIndependientes: number | null = null;
+
   constructor(private formBuilder: FormBuilder, private logistica: LogisticaServiceV2) { }
 
   ngOnInit(): void {
@@ -46,8 +58,50 @@ export class TransportadoresComponent implements OnInit, OnChanges {
         const pago = r?.config?.pagoMensajero;
         this.pagoTipo = pago ? pago.tipo : 'ninguno';
         this.pagoValor = pago ? pago.valor : null;
+        this.ofrecerIndependientes = r?.config?.ofrecerAIndependientes === true;
+        this.comisionIndependientes = this.comisionDe(r);
       },
-      error: () => this.tomanPedidos = null,
+      error: () => {
+        this.tomanPedidos = null;
+        this.ofrecerIndependientes = null;
+      },
+    });
+  }
+
+  /** Frases de ayuda junto al interruptor de independientes; la comisión sale de lo que manda el servidor. */
+  get ayudaOfrecer(): string[] {
+    return ayudaOfrecerIndependientes(this.comisionIndependientes);
+  }
+
+  private comisionDe(r: MensajerosConfigRespuesta | null | undefined): number | null {
+    const comision = r?.config?.comisionIndependientesPorcentaje;
+    return typeof comision === 'number' && Number.isFinite(comision) ? comision : this.comisionIndependientes;
+  }
+
+  /**
+   * Enciende o apaga la oferta de pedidos a mensajeros independientes. El interruptor solo cambia cuando el
+   * servidor confirma. Si falta definir el pago al mensajero, el servidor rechaza: el mensaje se muestra
+   * junto al interruptor y este queda apagado.
+   */
+  cambiarOfrecerIndependientes(valor: boolean): void {
+    if (this.guardandoOfrecer) { return; }
+    this.guardandoOfrecer = true;
+    this.errorOfrecer = null;
+    this.logistica.saveMensajerosConfig({ ofrecerAIndependientes: valor }).subscribe({
+      next: (r) => {
+        this.guardandoOfrecer = false;
+        this.ofrecerIndependientes = typeof r?.config?.ofrecerAIndependientes === 'boolean' ? r.config.ofrecerAIndependientes : valor;
+        this.comisionIndependientes = this.comisionDe(r);
+      },
+      error: (e) => {
+        this.guardandoOfrecer = false;
+        const error = interpretarErrorOfrecer(e);
+        if (error.pagoRequerido) {
+          this.errorOfrecer = error.texto;
+          return;
+        }
+        Swal.fire({ icon: 'error', title: 'No se guardó el cambio', text: error.texto });
+      },
     });
   }
 
@@ -72,9 +126,15 @@ export class TransportadoresComponent implements OnInit, OnChanges {
     this.pagoGuardado = false;
     const pagoMensajero = this.pagoTipo === 'ninguno' ? null : { tipo: this.pagoTipo, valor: Number(this.pagoValor) };
     this.logistica.saveMensajerosConfig({ pagoMensajero }).subscribe({
-      next: () => {
+      next: (r) => {
         this.guardandoPago = false;
         this.pagoGuardado = true;
+        // Con el pago ya definido, el aviso de "falta el pago" junto al interruptor deja de aplicar. Y si el
+        // servidor cambió la oferta a independientes al guardar el pago, el interruptor refleja lo que dijo.
+        this.errorOfrecer = null;
+        if (typeof r?.config?.ofrecerAIndependientes === 'boolean') {
+          this.ofrecerIndependientes = r.config.ofrecerAIndependientes;
+        }
       },
       error: (e) => {
         this.guardandoPago = false;

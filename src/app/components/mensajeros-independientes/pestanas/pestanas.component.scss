@@ -1,0 +1,42 @@
+// Pestañas de "Mensajeros independientes": segmented control del sistema de diseño (D-400).
+@import '../../../shared/styles/config-pagina';
+
+:host {
+  display: block;
+}
+
+.mp {
+  display: inline-flex;
+  max-width: 100%;
+  gap: 2px;
+  padding: 3px;
+  background: $cfg-chip-bg;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 10px;
+}
+
+.mp__enlace {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 18px;
+  border-radius: 8px;
+  color: $cfg-body !important; // los estilos globales de `a` pisan el color
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none !important;
+  white-space: nowrap;
+  transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+
+  &:hover { color: $cfg-accent !important; }
+  &:focus-visible { outline: 3px solid $cfg-accent-2; outline-offset: 2px; }
+}
+
+.mp__enlace--activo,
+.mp__enlace--activo:hover {
+  background: #fff;
+  color: $cfg-accent !important;
+  box-shadow: $cfg-shadow-panel;
+}

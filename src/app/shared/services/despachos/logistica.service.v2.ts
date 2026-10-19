@@ -14,7 +14,14 @@ export interface PagoMensajero {
 
 export interface MensajerosConfigRespuesta {
     success: boolean;
-    config: { mensajerosTomanPedidos: boolean; pagoMensajero?: PagoMensajero | null };
+    config: {
+        mensajerosTomanPedidos: boolean;
+        pagoMensajero?: PagoMensajero | null;
+        /** ¿Los pedidos listos sin mensajero propio se ofrecen a mensajeros independientes de Katuq? */
+        ofrecerAIndependientes?: boolean;
+        /** Comisión que Katuq cobra al comercio por entrega de un independiente, en % del domicilio (hoy 7). */
+        comisionIndependientesPorcentaje?: number;
+    };
 }
 
 @Injectable({ providedIn: 'root' })
@@ -61,12 +68,14 @@ export class LogisticaServiceV2 extends BaseService {
     }
 
     /**
-     * Guarda la toma de pedidos desde la app y/o el pago al mensajero por entrega. Solo administradores.
-     * `pagoMensajero: null` quita la regla de pago.
+     * Guarda la toma de pedidos desde la app, el pago al mensajero por entrega y/o si se ofrecen los pedidos
+     * a mensajeros independientes. Solo administradores. `pagoMensajero: null` quita la regla de pago.
+     * Encender `ofrecerAIndependientes` sin pago definido responde 400 con `code: 'PAGO_REQUERIDO'`.
      */
     saveMensajerosConfig(cambios: {
         mensajerosTomanPedidos?: boolean;
         pagoMensajero?: PagoMensajero | null;
+        ofrecerAIndependientes?: boolean;
     }): Observable<MensajerosConfigRespuesta> {
         return this.http.put<MensajerosConfigRespuesta>(`${this.apiUrl}/v1/logistica/mensajeros/config`, cambios);
     }

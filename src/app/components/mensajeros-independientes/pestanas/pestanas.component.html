@@ -1,0 +1,12 @@
+<nav class="mp" aria-label="Secciones de mensajeros independientes">
+  <a
+    *ngFor="let pestana of pestanas"
+    class="mp__enlace"
+    [routerLink]="pestana.ruta"
+    routerLinkActive="mp__enlace--activo"
+    [routerLinkActiveOptions]="{ exact: pestana.exacta }"
+    ariaCurrentWhenActive="page"
+  >
+    {{ pestana.texto }}
+  </a>
+</nav>

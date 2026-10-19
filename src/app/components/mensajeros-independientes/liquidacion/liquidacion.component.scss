@@ -1,0 +1,274 @@
+// "Mensajeros independientes": liquidación. Base D-400 (config-pagina): plano, fondo lila, tarjetas blancas.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+// ── Filtros: rango de fechas ──
+.lq-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 14px;
+}
+
+.lq-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.lq-input {
+  appearance: none;
+  box-sizing: border-box;
+  height: 40px;
+  min-width: 160px;
+  padding: 0 12px;
+  background: $cfg-chip-bg;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 10px;
+  color: $cfg-ink;
+  font-size: 13.5px;
+  font-family: inherit;
+  transition: border-color .15s ease, background .15s ease;
+
+  &:hover:not(:disabled) { border-color: #d9cffb; }
+  &:focus-visible { outline: 3px solid $cfg-accent-2; outline-offset: 2px; background: #fff; }
+  &:disabled { opacity: .6; cursor: not-allowed; }
+}
+
+.lq-atajos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.lq-atajo {
+  appearance: none;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 20px;
+  background: $cfg-chip-bg;
+  color: $cfg-body;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+
+  &:hover:not(:disabled) { background: $cfg-accent-soft; border-color: #ddd3fb; color: $cfg-accent; }
+  &:focus-visible { outline: 3px solid $cfg-accent-2; outline-offset: 2px; }
+  &:disabled { opacity: .6; cursor: not-allowed; }
+}
+
+.lq-error-rango {
+  margin: 12px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: $cfg-err;
+}
+
+// ── Cargando / error ──
+.lq-estado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 8px;
+  text-align: center;
+}
+
+.lq-estado__icono {
+  font-size: 26px;
+  color: $cfg-accent;
+}
+
+.lq-estado__texto {
+  font-size: 13.5px;
+  color: $cfg-body;
+}
+
+.lq-estado__aviso {
+  width: 100%;
+  max-width: 560px;
+  text-align: left;
+}
+
+.lq-aviso__icono {
+  margin-top: 2px;
+  font-size: 16px;
+  color: inherit;
+}
+
+.lq-aviso__textos {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.lq-aviso__titulo {
+  display: block;
+  font-weight: 800;
+  color: inherit;
+}
+
+.lq-vacio__titulo {
+  font-size: 15px !important;
+  line-height: 1.3;
+}
+
+// ── Encabezado de cada sección ──
+.lq-cabeza-seccion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 14px;
+}
+
+.lq-titulo {
+  margin-bottom: 2px;
+}
+
+.lq-rango {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: $cfg-muted;
+}
+
+// ── Tarjetas de totales: chips planos tintados, sin gradientes ──
+.lq-tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.lq-tarjeta {
+  min-width: 0;
+  padding: 12px 14px;
+  background: $cfg-tint;
+  border: 1px solid $cfg-line;
+  border-radius: 10px;
+  transition: transform .15s ease;
+
+  &:hover { transform: translateY(-1px); }
+}
+
+.lq-tarjeta--principal {
+  background: $cfg-accent-soft;
+  border-color: #ddd3fb;
+}
+
+.lq-tarjeta__etiqueta {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: $cfg-muted;
+}
+
+.lq-tarjeta__valor {
+  margin-top: 4px;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: $cfg-accent;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.lq-tarjeta__nota {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: $cfg-muted;
+}
+
+// ── Tablas ──
+.lq-celda-nombre {
+  font-weight: 700;
+  color: $cfg-ink;
+}
+
+.lq-celda-principal {
+  color: $cfg-ink;
+}
+
+.lq-celda-detalle {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: $cfg-muted;
+}
+
+.lq-celda-fuerte {
+  font-weight: 800;
+  color: $cfg-ink;
+}
+
+// Cifras alineadas a la derecha y con ancho parejo, para comparar de un vistazo.
+:host ::ng-deep .lq-tabla {
+  td.lq-num,
+  th.lq-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  th.lq-num .p-sortable-column-icon { margin-left: .5rem; }
+}
+
+// La tabla scrollea por dentro de la tarjeta, nunca la página.
+:host ::ng-deep .cfg-card .p-datatable .p-datatable-wrapper {
+  overflow-x: auto;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  :host ::ng-deep .lq-tabla .p-datatable-table { min-width: 40rem; }
+  :host ::ng-deep .lq-tabla--detalle .p-datatable-table { min-width: 62rem; }
+}
+
+// En el celular cada fila se vuelve una tarjeta: nombre arriba y los datos en dos columnas.
+@media (max-width: 767px) {
+  :host ::ng-deep .cfg-card .lq-tabla.p-datatable {
+    .p-datatable-wrapper { overflow-x: visible; }
+    .p-datatable-thead { display: none; }
+
+    .p-datatable-tbody > tr {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 14px;
+      padding: 14px 4px;
+      border-bottom: 1px solid $cfg-line-soft;
+
+      > td {
+        display: block;
+        min-width: 0;
+        padding: 0 !important;
+        border: 0 !important;
+        overflow-wrap: anywhere;
+
+        &.lq-num { text-align: left; white-space: normal; }
+
+        &[data-etiqueta]::before {
+          content: attr(data-etiqueta);
+          display: block;
+          margin-bottom: 2px;
+          font-size: 10.5px;
+          font-weight: 800;
+          letter-spacing: .6px;
+          text-transform: uppercase;
+          color: $cfg-muted;
+        }
+
+        &.lq-celda-nombre:not([data-etiqueta]) { grid-column: 1 / -1; font-size: 15px !important; }
+      }
+    }
+  }
+}
+
+@media (max-width: 575px) {
+  .lq-atajos { margin-left: 0; width: 100%; }
+  .lq-input { min-width: 0; width: 100%; }
+  .lq-campo { flex: 1 1 140px; }
+}

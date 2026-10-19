@@ -1,7 +1,33 @@
-import { SolicitudMensajero } from './mensajeros-independientes.models';
+import { EntregaLiquidada, SolicitudMensajero } from './mensajeros-independientes.models';
 import {
   accionesDisponibles,
   accionPideMotivo,
+  agruparPorComercio,
+  BOM_UTF8,
+  celdaCsv,
+  COMERCIO_SIN_NOMBRE,
+  comerciosPorComision,
+  construirCsv,
+  construirFilaEntrega,
+  construirLiquidacion,
+  ENCABEZADOS_CSV,
+  entero,
+  esFechaIso,
+  fechaHoraCsv,
+  fechaIso,
+  formatearEntero,
+  formatearFechaIso,
+  formatearPesos,
+  formatearPorcentaje,
+  mensajeVacioLiquidacion,
+  nombreArchivoCsv,
+  rangoDelMes,
+  SEPARADOR_CSV,
+  sumarEntregas,
+  TEXTOS_ERROR_LIQUIDACION,
+  textoRango,
+  TOTALES_VACIOS,
+  validarRango,
   construirDocumentos,
   construirFila,
   CODIGO_TRANSICION_NO_PERMITIDA,
@@ -503,6 +529,353 @@ describe('mensajeros-independientes.utils', () => {
       expect(esSuperAdminOperadora({})).toBeFalse();
       expect(esSuperAdminOperadora({ company: 'Julsmind' })).toBeFalse();
       expect(esSuperAdminOperadora({ rol: 'Super Administrador' })).toBeFalse();
+    });
+  });
+
+  describe('liquidación: fechas y rangos', () => {
+    it('fechaIso usa la hora local y rellena con ceros', () => {
+      expect(fechaIso(new Date(2026, 9, 5))).toBe('2026-10-05');
+      expect(fechaIso(new Date(2026, 0, 1))).toBe('2026-01-01');
+      // 11:30 p. m. local: en UTC ya sería otro día, pero el rango debe seguir en el día de la persona.
+      expect(fechaIso(new Date(2026, 9, 31, 23, 30))).toBe('2026-10-31');
+    });
+
+    it('esFechaIso solo acepta días reales con el formato YYYY-MM-DD', () => {
+      expect(esFechaIso('2026-10-14')).toBeTrue();
+      expect(esFechaIso('2028-02-29')).toBeTrue();
+      expect(esFechaIso('2026-02-29')).toBeFalse();
+      expect(esFechaIso('2026-02-31')).toBeFalse();
+      expect(esFechaIso('2026-13-01')).toBeFalse();
+      expect(esFechaIso('14/10/2026')).toBeFalse();
+      expect(esFechaIso('2026-10-14T00:00:00Z')).toBeFalse();
+      expect(esFechaIso('')).toBeFalse();
+      expect(esFechaIso(null)).toBeFalse();
+      expect(esFechaIso(20261014)).toBeFalse();
+    });
+
+    it('rangoDelMes va del primer al último día del mes', () => {
+      expect(rangoDelMes(new Date(2026, 9, 19))).toEqual({ desde: '2026-10-01', hasta: '2026-10-31' });
+      expect(rangoDelMes(new Date(2026, 8, 30))).toEqual({ desde: '2026-09-01', hasta: '2026-09-30' });
+      expect(rangoDelMes(new Date(2026, 1, 10))).toEqual({ desde: '2026-02-01', hasta: '2026-02-28' });
+      expect(rangoDelMes(new Date(2028, 1, 10))).toEqual({ desde: '2028-02-01', hasta: '2028-02-29' });
+    });
+
+    it('rangoDelMes con desfase -1 es el mes anterior, también al cruzar de año y desde el día 31', () => {
+      expect(rangoDelMes(new Date(2026, 9, 19), -1)).toEqual({ desde: '2026-09-01', hasta: '2026-09-30' });
+      expect(rangoDelMes(new Date(2026, 0, 15), -1)).toEqual({ desde: '2025-12-01', hasta: '2025-12-31' });
+      expect(rangoDelMes(new Date(2026, 2, 31), -1)).toEqual({ desde: '2026-02-01', hasta: '2026-02-28' });
+    });
+
+    it('validarRango pide las dos fechas y que el inicio no pase del final', () => {
+      expect(validarRango('2026-10-01', '2026-10-31')).toEqual({ valido: true, error: null });
+      expect(validarRango('2026-10-15', '2026-10-15').valido).toBeTrue();
+      expect(validarRango('', '2026-10-31').error).toBe('Elige la fecha de inicio.');
+      expect(validarRango('2026-10-01', '').error).toBe('Elige la fecha final.');
+      expect(validarRango(null, null).valido).toBeFalse();
+      expect(validarRango('2026-10-31', '2026-10-01').error).toBe(
+        'La fecha de inicio no puede ser posterior a la fecha final.',
+      );
+      expect(validarRango('2026-02-30', '2026-03-01').error).toBe('Revisa las fechas: alguna no es válida.');
+    });
+
+    it('formatearFechaIso y textoRango no corren el día por la zona horaria', () => {
+      expect(formatearFechaIso('2026-10-01')).toBe('01/10/2026');
+      expect(formatearFechaIso('2026-10-01T05:00:00.000Z')).toBe('01/10/2026');
+      expect(formatearFechaIso('otra cosa')).toBe('otra cosa');
+      expect(formatearFechaIso(undefined)).toBe('');
+      expect(textoRango('2026-10-01', '2026-10-31')).toBe('Del 01/10/2026 al 31/10/2026');
+    });
+  });
+
+  describe('liquidación: pesos, cantidades y sumas', () => {
+    // El formato usa un espacio de no separación entre el signo y la cifra: se compara sin espacios.
+    const sinEspacios = (texto: string) => texto.replace(/\s/g, '');
+
+    it('formatearPesos da pesos colombianos sin decimales', () => {
+      expect(sinEspacios(formatearPesos(1234567))).toBe('$1.234.567');
+      expect(sinEspacios(formatearPesos(0))).toBe('$0');
+      expect(sinEspacios(formatearPesos(7000))).toBe('$7.000');
+      expect(sinEspacios(formatearPesos(1234.6))).toBe('$1.235');
+      expect(sinEspacios(formatearPesos(-5000))).toBe('-$5.000');
+    });
+
+    it('formatearPesos y entero no se rompen con valores que no son número', () => {
+      expect(sinEspacios(formatearPesos(null))).toBe('$0');
+      expect(sinEspacios(formatearPesos(undefined))).toBe('$0');
+      expect(sinEspacios(formatearPesos(NaN))).toBe('$0');
+      expect(sinEspacios(formatearPesos('abc'))).toBe('$0');
+      expect(entero('15000')).toBe(15000);
+      expect(entero('')).toBe(0);
+      expect(entero(Infinity)).toBe(0);
+      expect(entero(12.5)).toBe(13);
+    });
+
+    it('formatearEntero separa los miles con punto', () => {
+      expect(formatearEntero(1234)).toBe('1.234');
+      expect(formatearEntero(12)).toBe('12');
+      expect(formatearEntero(null)).toBe('0');
+    });
+
+    it('formatearPorcentaje usa coma decimal y devuelve vacío si no hay número', () => {
+      expect(formatearPorcentaje(7)).toBe('7 %');
+      expect(formatearPorcentaje(7.5)).toBe('7,5 %');
+      expect(formatearPorcentaje(null)).toBe('');
+      expect(formatearPorcentaje(undefined)).toBe('');
+      expect(formatearPorcentaje('7')).toBe('');
+    });
+
+    const entregas = [
+      { totalEnvio: 8000, pagoMensajero: 5000, comision: 560 },
+      { totalEnvio: 10000, pagoMensajero: 6000, comision: 700 },
+      { totalEnvio: 6500, pagoMensajero: 4000, comision: 455 },
+    ];
+
+    it('sumarEntregas suma cada monto y cuenta las entregas', () => {
+      expect(sumarEntregas(entregas)).toEqual({ entregas: 3, totalEnvio: 24500, comision: 1715, pagoMensajeros: 15000 });
+    });
+
+    it('sumarEntregas con nada devuelve ceros, y los montos inválidos cuentan como 0', () => {
+      expect(sumarEntregas([])).toEqual(TOTALES_VACIOS);
+      expect(sumarEntregas(null)).toEqual(TOTALES_VACIOS);
+      expect(sumarEntregas([{ totalEnvio: NaN, pagoMensajero: undefined as any, comision: '300' as any }])).toEqual({
+        entregas: 1,
+        totalEnvio: 0,
+        comision: 300,
+        pagoMensajeros: 0,
+      });
+    });
+
+    const entregaBase: EntregaLiquidada = {
+      pedidoId: 'p1',
+      nroPedido: 1001,
+      comercio: 'Tienda Uno',
+      fecha: '2026-10-14T15:30:00.000Z',
+      mensajeroId: 'm1',
+      mensajero: 'Ana Pérez',
+      totalEnvio: 8000,
+      pagoMensajero: 5000,
+      comision: 560,
+    };
+
+    it('agruparPorComercio junta y suma por nombre de comercio', () => {
+      const grupos = agruparPorComercio([
+        entregaBase,
+        { ...entregaBase, pedidoId: 'p2', totalEnvio: 10000, pagoMensajero: 6000, comision: 700 },
+        { ...entregaBase, pedidoId: 'p3', comercio: 'Tienda Dos', comision: 100 },
+        { ...entregaBase, pedidoId: 'p4', comercio: '  ' },
+      ]);
+      expect(grupos.length).toBe(3);
+      expect(grupos.find((g) => g.comercio === 'Tienda Uno')).toEqual({
+        comercio: 'Tienda Uno',
+        entregas: 2,
+        totalEnvio: 18000,
+        comision: 1260,
+        pagoMensajeros: 11000,
+      });
+      expect(grupos.find((g) => g.comercio === COMERCIO_SIN_NOMBRE)?.entregas).toBe(1);
+      expect(agruparPorComercio(null)).toEqual([]);
+    });
+
+    it('comerciosPorComision ordena de mayor a menor y desempata por nombre sin tocar el original', () => {
+      const original = [
+        { comercio: 'B', entregas: 1, totalEnvio: 0, comision: 100, pagoMensajeros: 0 },
+        { comercio: 'C', entregas: 1, totalEnvio: 0, comision: 900, pagoMensajeros: 0 },
+        { comercio: 'A', entregas: 1, totalEnvio: 0, comision: 100, pagoMensajeros: 0 },
+      ];
+      expect(comerciosPorComision(original).map((c) => c.comercio)).toEqual(['C', 'A', 'B']);
+      expect(original.map((c) => c.comercio)).toEqual(['B', 'C', 'A']);
+    });
+  });
+
+  describe('liquidación: lo que se pinta', () => {
+    const cruda: EntregaLiquidada = {
+      pedidoId: 'p1',
+      nroPedido: 1001,
+      comercio: 'Tienda Uno',
+      fecha: { _seconds: Date.parse('2026-10-14T15:30:00.000Z') / 1000, _nanoseconds: 0 },
+      mensajeroId: 'm1',
+      mensajero: 'Ana Pérez',
+      totalEnvio: 8000,
+      pagoMensajero: 5000,
+      comision: 560,
+    };
+
+    it('construirFilaEntrega normaliza fecha, número y montos', () => {
+      const fila = construirFilaEntrega(cruda);
+      expect(fila.numero).toBe('1001');
+      expect(fila.comercio).toBe('Tienda Uno');
+      expect(fila.mensajero).toBe('Ana Pérez');
+      expect(fila.fecha?.getTime()).toBe(Date.parse('2026-10-14T15:30:00.000Z'));
+      expect(fila.marca).toBe(Date.parse('2026-10-14T15:30:00.000Z'));
+      expect([fila.totalEnvio, fila.pagoMensajero, fila.comision]).toEqual([8000, 5000, 560]);
+    });
+
+    it('construirFilaEntrega usa el id si no hay número y no se rompe con datos faltantes', () => {
+      expect(construirFilaEntrega({ ...cruda, nroPedido: '' }).numero).toBe('p1');
+      const vacia = construirFilaEntrega({} as EntregaLiquidada);
+      expect(vacia.numero).toBe('');
+      expect(vacia.comercio).toBe(COMERCIO_SIN_NOMBRE);
+      expect(vacia.fecha).toBeNull();
+      expect(vacia.marca).toBe(0);
+      expect(vacia.totalEnvio).toBe(0);
+    });
+
+    const respuesta = {
+      success: true,
+      desde: '2026-10-01',
+      hasta: '2026-10-31',
+      comisionPorcentaje: 7,
+      totales: { entregas: 5, totalEnvio: 40000, comision: 2800, pagoMensajeros: 25000 },
+      porComercio: [
+        { comercio: 'Tienda Dos', entregas: 1, totalEnvio: 6000, comision: 420, pagoMensajeros: 4000 },
+        { comercio: 'Tienda Uno', entregas: 4, totalEnvio: 34000, comision: 2380, pagoMensajeros: 21000 },
+      ],
+      entregas: [
+        { ...cruda, pedidoId: 'vieja', fecha: '2026-10-01T10:00:00Z' },
+        { ...cruda, pedidoId: 'sin-fecha', fecha: null },
+        { ...cruda, pedidoId: 'nueva', fecha: '2026-10-20T10:00:00Z' },
+      ],
+    };
+
+    it('construirLiquidacion respeta los totales y el resumen del servidor, aunque la lista venga recortada', () => {
+      const vista = construirLiquidacion(respuesta);
+      expect(vista.desde).toBe('2026-10-01');
+      expect(vista.hasta).toBe('2026-10-31');
+      expect(vista.comisionPorcentaje).toBe(7);
+      expect(vista.totales).toEqual(respuesta.totales);
+      expect(vista.entregas.length).toBe(3);
+      expect(vista.totales.entregas).not.toBe(vista.entregas.length);
+    });
+
+    it('construirLiquidacion ordena el resumen por comisión y las entregas por fecha reciente', () => {
+      const vista = construirLiquidacion(respuesta);
+      expect(vista.porComercio.map((c) => c.comercio)).toEqual(['Tienda Uno', 'Tienda Dos']);
+      expect(vista.entregas.map((e) => e.pedidoId)).toEqual(['nueva', 'vieja', 'sin-fecha']);
+    });
+
+    it('construirLiquidacion calcula totales y resumen si el servidor no los manda', () => {
+      const vista = construirLiquidacion({ entregas: [cruda, { ...cruda, pedidoId: 'p2', comercio: 'Tienda Dos' }] });
+      expect(vista.totales).toEqual({ entregas: 2, totalEnvio: 16000, comision: 1120, pagoMensajeros: 10000 });
+      expect(vista.porComercio.map((c) => c.comercio).sort()).toEqual(['Tienda Dos', 'Tienda Uno']);
+      expect(vista.comisionPorcentaje).toBeNull();
+    });
+
+    it('construirLiquidacion completa con cálculo solo el total que falte', () => {
+      const vista = construirLiquidacion({ entregas: [cruda], totales: { comision: 999 } as any });
+      expect(vista.totales).toEqual({ entregas: 1, totalEnvio: 8000, comision: 999, pagoMensajeros: 5000 });
+    });
+
+    it('construirLiquidacion no se rompe con una respuesta vacía', () => {
+      [null, undefined, {}].forEach((vacia) => {
+        const vista = construirLiquidacion(vacia as any);
+        expect(vista.entregas).toEqual([]);
+        expect(vista.porComercio).toEqual([]);
+        expect(vista.totales).toEqual(TOTALES_VACIOS);
+        expect(vista.desde).toBe('');
+      });
+    });
+
+    it('el mensaje de vacío y los textos de error son propios de la liquidación', () => {
+      expect(mensajeVacioLiquidacion().titulo).toBe('No hay entregas en estas fechas');
+      expect(interpretarError({ status: 403 }, TEXTOS_ERROR_LIQUIDACION).texto).toBe(
+        'Solo el Super Administrador de la operadora puede ver la liquidación.',
+      );
+      expect(interpretarError({ status: 404 }, TEXTOS_ERROR_LIQUIDACION).texto).toContain('todavía no está disponible');
+      // Sin textos propios se mantiene el de solicitudes, y el mensaje del backend siempre manda.
+      expect(interpretarError({ status: 403 }).texto).toContain('solicitudes');
+      expect(
+        interpretarError({ status: 403, error: { success: false, error: 'Texto del servidor' } }, TEXTOS_ERROR_LIQUIDACION).texto,
+      ).toBe('Texto del servidor');
+    });
+  });
+
+  describe('liquidación: archivo CSV', () => {
+    const fila = (cambios: Partial<ReturnType<typeof construirFilaEntrega>> = {}) => ({
+      ...construirFilaEntrega({
+        pedidoId: 'p1',
+        nroPedido: 1001,
+        comercio: 'Tienda Uno',
+        fecha: new Date(2026, 9, 14, 15, 5).toISOString(),
+        mensajeroId: 'm1',
+        mensajero: 'Ana Pérez',
+        totalEnvio: 8000,
+        pagoMensajero: 5000,
+        comision: 560,
+      }),
+      ...cambios,
+    });
+
+    it('celdaCsv deja el texto sencillo tal cual', () => {
+      expect(celdaCsv('Tienda Uno')).toBe('Tienda Uno');
+      expect(celdaCsv('Ana Pérez')).toBe('Ana Pérez');
+      expect(celdaCsv(null)).toBe('');
+      expect(celdaCsv(1001)).toBe('1001');
+    });
+
+    it('celdaCsv entrecomilla lo que trae el separador o comillas, y duplica las comillas', () => {
+      expect(celdaCsv('Pan; Café')).toBe('"Pan; Café"');
+      expect(celdaCsv('La "Esquina"')).toBe('"La ""Esquina"""');
+      expect(celdaCsv('Pérez, Ana')).toBe('Pérez, Ana');
+    });
+
+    it('celdaCsv cambia los saltos de línea por espacio', () => {
+      expect(celdaCsv('Línea uno\r\nLínea dos\nTres')).toBe('Línea uno Línea dos Tres');
+    });
+
+    it('celdaCsv impide que un texto se lea como fórmula en la hoja de cálculo', () => {
+      expect(celdaCsv('=SUMA(A1:A9)')).toBe("'=SUMA(A1:A9)");
+      expect(celdaCsv('+57 300 111 2233')).toBe("'+57 300 111 2233");
+      expect(celdaCsv('-algo')).toBe("'-algo");
+      expect(celdaCsv('@usuario')).toBe("'@usuario");
+      expect(celdaCsv('Tienda =1')).toBe('Tienda =1');
+    });
+
+    it('fechaHoraCsv usa YYYY-MM-DD HH:mm en hora local', () => {
+      expect(fechaHoraCsv(new Date(2026, 9, 14, 15, 5))).toBe('2026-10-14 15:05');
+      expect(fechaHoraCsv(new Date(2026, 0, 2, 0, 0))).toBe('2026-01-02 00:00');
+      expect(fechaHoraCsv(null)).toBe('');
+    });
+
+    it('construirCsv empieza con la marca UTF-8 y usa ; entre columnas', () => {
+      const csv = construirCsv([fila()]);
+      expect(csv.charCodeAt(0)).toBe(0xfeff);
+      expect(csv.startsWith(BOM_UTF8)).toBeTrue();
+      expect(SEPARADOR_CSV).toBe(';');
+      const [encabezado] = csv.slice(1).split('\r\n');
+      expect(encabezado).toBe(
+        'Fecha;Pedido;Comercio;Mensajero;Valor del domicilio;Pago al mensajero;Comisión de Katuq',
+      );
+      expect(encabezado.split(';').length).toBe(ENCABEZADOS_CSV.length);
+    });
+
+    it('construirCsv escribe los pesos como número entero, sin símbolo ni separador de miles', () => {
+      const lineas = construirCsv([fila({ totalEnvio: 1234567, pagoMensajero: 800000, comision: 86419 })])
+        .slice(1)
+        .split('\r\n');
+      expect(lineas[1]).toBe('2026-10-14 15:05;1001;Tienda Uno;Ana Pérez;1234567;800000;86419');
+      expect(lineas[1]).not.toContain('$');
+      expect(lineas[1]).not.toContain('.');
+    });
+
+    it('construirCsv termina cada línea con \\r\\n y cuida los nombres con ; o comillas', () => {
+      const csv = construirCsv([fila({ comercio: 'Pan; Café', mensajero: 'Luis "Lucho" Gómez' }), fila({ numero: '1002' })]);
+      expect(csv.endsWith('\r\n')).toBeTrue();
+      const lineas = csv.slice(1).split('\r\n');
+      expect(lineas.length).toBe(4); // encabezado + 2 filas + línea final vacía
+      expect(lineas[1]).toContain('"Pan; Café"');
+      expect(lineas[1]).toContain('"Luis ""Lucho"" Gómez"');
+      expect(lineas[2].startsWith('2026-10-14 15:05;1002;')).toBeTrue();
+    });
+
+    it('construirCsv sin entregas deja solo el encabezado', () => {
+      expect(construirCsv([]).slice(1)).toBe(ENCABEZADOS_CSV.join(';') + '\r\n');
+      expect(construirCsv(null)).toBe(construirCsv([]));
+    });
+
+    it('nombreArchivoCsv lleva el rango consultado y cae a un nombre fijo si no hay fechas válidas', () => {
+      expect(nombreArchivoCsv('2026-10-01', '2026-10-31')).toBe('liquidacion-independientes_2026-10-01_2026-10-31.csv');
+      expect(nombreArchivoCsv('', '')).toBe('liquidacion-independientes.csv');
+      expect(nombreArchivoCsv('../../x', '2026-10-31')).toBe('liquidacion-independientes.csv');
     });
   });
 });

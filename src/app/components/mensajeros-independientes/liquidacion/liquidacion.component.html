@@ -1,0 +1,196 @@
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Logística</span>
+      <h1 class="cfg-titulo">Mensajeros independientes</h1>
+      <p class="cfg-sub">
+        Entregas hechas por mensajeros independientes y la comisión que Katuq debe cobrar a cada comercio. El pago al
+        mensajero lo hace cada comercio directamente.
+      </p>
+    </div>
+  </header>
+
+  <app-mensajeros-pestanas></app-mensajeros-pestanas>
+
+  <!-- Rango de fechas -->
+  <section class="cfg-card" aria-label="Rango de fechas de la liquidación">
+    <form class="lq-filtros" (ngSubmit)="consultar()" novalidate>
+      <div class="lq-campo">
+        <label class="cfg-label" for="lq-desde">Desde</label>
+        <input id="lq-desde" name="desde" type="date" class="lq-input" [(ngModel)]="desde" [disabled]="cargando" />
+      </div>
+      <div class="lq-campo">
+        <label class="cfg-label" for="lq-hasta">Hasta</label>
+        <input id="lq-hasta" name="hasta" type="date" class="lq-input" [(ngModel)]="hasta" [disabled]="cargando" />
+      </div>
+      <button class="cfg-btn" type="submit" [disabled]="cargando">
+        <i class="pi" [ngClass]="cargando ? 'pi-spin pi-spinner' : 'pi-search'" aria-hidden="true"></i>
+        <span>Consultar</span>
+      </button>
+      <div class="lq-atajos" role="group" aria-label="Rangos rápidos">
+        <button class="lq-atajo" type="button" (click)="usarMes(0)" [disabled]="cargando">Este mes</button>
+        <button class="lq-atajo" type="button" (click)="usarMes(-1)" [disabled]="cargando">Mes anterior</button>
+      </div>
+    </form>
+    <p class="lq-error-rango" role="alert" *ngIf="errorRango">{{ errorRango }}</p>
+  </section>
+
+  <!-- Cargando -->
+  <section class="cfg-card" *ngIf="cargando && !resultado">
+    <div class="lq-estado" role="status">
+      <i class="pi pi-spin pi-spinner lq-estado__icono" aria-hidden="true"></i>
+      <div class="lq-estado__texto">Cargando la liquidación…</div>
+    </div>
+  </section>
+
+  <!-- Error -->
+  <section class="cfg-card" *ngIf="error">
+    <div class="lq-estado" role="alert">
+      <div class="cfg-aviso cfg-aviso--error lq-estado__aviso">
+        <i class="pi pi-exclamation-circle lq-aviso__icono" aria-hidden="true"></i>
+        <div class="lq-aviso__textos">
+          <strong class="lq-aviso__titulo">No pudimos cargar la liquidación</strong>
+          <div>{{ error }}</div>
+        </div>
+      </div>
+      <button class="cfg-btn cfg-btn--sec" type="button" (click)="consultar()" [disabled]="cargando">Reintentar</button>
+    </div>
+  </section>
+
+  <ng-container *ngIf="resultado && !error">
+    <!-- Totales -->
+    <section class="cfg-card" aria-labelledby="lq-titulo-totales" [attr.aria-busy]="cargando">
+      <div class="lq-cabeza-seccion">
+        <h2 class="cfg-card__titulo lq-titulo" id="lq-titulo-totales">Resumen</h2>
+        <div class="lq-rango" aria-live="polite">
+          {{ textoRango(resultado.desde, resultado.hasta) }}
+          <ng-container *ngIf="porcentaje(resultado.comisionPorcentaje) as comision">
+            · Comisión de {{ comision }} del valor del domicilio
+          </ng-container>
+        </div>
+      </div>
+      <div class="lq-tarjetas">
+        <div class="lq-tarjeta">
+          <div class="lq-tarjeta__etiqueta">Entregas</div>
+          <div class="lq-tarjeta__valor">{{ cantidad(resultado.totales.entregas) }}</div>
+        </div>
+        <div class="lq-tarjeta lq-tarjeta--principal">
+          <div class="lq-tarjeta__etiqueta">Comisión a cobrar</div>
+          <div class="lq-tarjeta__valor">{{ pesos(resultado.totales.comision) }}</div>
+        </div>
+        <div class="lq-tarjeta">
+          <div class="lq-tarjeta__etiqueta">Valor de los domicilios</div>
+          <div class="lq-tarjeta__valor">{{ pesos(resultado.totales.totalEnvio) }}</div>
+        </div>
+        <div class="lq-tarjeta">
+          <div class="lq-tarjeta__etiqueta">Pago a mensajeros</div>
+          <div class="lq-tarjeta__valor">{{ pesos(resultado.totales.pagoMensajeros) }}</div>
+          <div class="lq-tarjeta__nota">Lo pagan los comercios</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sin entregas -->
+    <section class="cfg-card" *ngIf="!hayEntregas">
+      <div class="cfg-vacio">
+        <div class="cfg-vacio__icono"><i class="pi pi-inbox" aria-hidden="true"></i></div>
+        <h2 class="cfg-vacio__titulo lq-vacio__titulo">{{ vacio.titulo }}</h2>
+        <p class="cfg-vacio__texto">{{ vacio.texto }}</p>
+      </div>
+    </section>
+
+    <ng-container *ngIf="hayEntregas">
+      <!-- Por comercio: lo que Katuq debe cobrar a cada uno -->
+      <section class="cfg-card" aria-labelledby="lq-titulo-comercios">
+        <div class="lq-cabeza-seccion">
+          <h2 class="cfg-card__titulo lq-titulo" id="lq-titulo-comercios">Por comercio</h2>
+          <div class="lq-rango">Lo que Katuq debe cobrar a cada comercio</div>
+        </div>
+        <p-table
+          [value]="resultado.porComercio"
+          [rowHover]="true"
+          styleClass="lq-tabla"
+          [paginator]="resultado.porComercio.length > 10"
+          [rows]="10"
+          [showCurrentPageReport]="resultado.porComercio.length > 10"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th pSortableColumn="comercio">Comercio <p-sortIcon field="comercio"></p-sortIcon></th>
+              <th class="lq-num" pSortableColumn="entregas">Entregas <p-sortIcon field="entregas"></p-sortIcon></th>
+              <th class="lq-num" pSortableColumn="totalEnvio">Valor de domicilios <p-sortIcon field="totalEnvio"></p-sortIcon></th>
+              <th class="lq-num" pSortableColumn="comision">Comisión a cobrar <p-sortIcon field="comision"></p-sortIcon></th>
+              <th class="lq-num" pSortableColumn="pagoMensajeros">Pago a mensajeros <p-sortIcon field="pagoMensajeros"></p-sortIcon></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-fila>
+            <tr>
+              <td class="lq-celda-nombre">{{ fila.comercio }}</td>
+              <td class="lq-num" data-etiqueta="Entregas">{{ cantidad(fila.entregas) }}</td>
+              <td class="lq-num" data-etiqueta="Valor de domicilios">{{ pesos(fila.totalEnvio) }}</td>
+              <td class="lq-num lq-celda-fuerte" data-etiqueta="Comisión a cobrar">{{ pesos(fila.comision) }}</td>
+              <td class="lq-num" data-etiqueta="Pago a mensajeros">{{ pesos(fila.pagoMensajeros) }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </section>
+
+      <!-- Detalle de entregas -->
+      <section class="cfg-card" aria-labelledby="lq-titulo-detalle">
+        <div class="lq-cabeza-seccion">
+          <div>
+            <h2 class="cfg-card__titulo lq-titulo" id="lq-titulo-detalle">Detalle de entregas</h2>
+            <div class="lq-rango" aria-live="polite">
+              {{ cantidad(resultado.entregas.length) }}
+              {{ resultado.entregas.length === 1 ? 'entrega' : 'entregas' }}
+            </div>
+          </div>
+          <button class="cfg-btn cfg-btn--sec" type="button" (click)="descargarCsv()" [disabled]="!resultado.entregas.length">
+            <i class="pi pi-download" aria-hidden="true"></i>
+            <span>Descargar CSV</span>
+          </button>
+        </div>
+        <p-table
+          [value]="resultado.entregas"
+          [rowHover]="true"
+          styleClass="lq-tabla lq-tabla--detalle"
+          [paginator]="resultado.entregas.length > 10"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50, 100]"
+          [showCurrentPageReport]="resultado.entregas.length > 10"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th pSortableColumn="marca">Fecha <p-sortIcon field="marca"></p-sortIcon></th>
+              <th pSortableColumn="numero">Pedido <p-sortIcon field="numero"></p-sortIcon></th>
+              <th pSortableColumn="comercio">Comercio <p-sortIcon field="comercio"></p-sortIcon></th>
+              <th pSortableColumn="mensajero">Mensajero <p-sortIcon field="mensajero"></p-sortIcon></th>
+              <th class="lq-num" pSortableColumn="totalEnvio">Domicilio <p-sortIcon field="totalEnvio"></p-sortIcon></th>
+              <th class="lq-num" pSortableColumn="pagoMensajero">Pago al mensajero <p-sortIcon field="pagoMensajero"></p-sortIcon></th>
+              <th class="lq-num" pSortableColumn="comision">Comisión <p-sortIcon field="comision"></p-sortIcon></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-fila>
+            <tr>
+              <td data-etiqueta="Fecha">
+                <ng-container *ngIf="fila.fecha; else sinFecha">
+                  <div class="lq-celda-principal">{{ fila.fecha | date: 'dd/MM/yyyy' }}</div>
+                  <div class="lq-celda-detalle">{{ fila.fecha | date: 'HH:mm' }}</div>
+                </ng-container>
+                <ng-template #sinFecha>—</ng-template>
+              </td>
+              <td class="lq-celda-nombre" data-etiqueta="Pedido">{{ fila.numero || '—' }}</td>
+              <td data-etiqueta="Comercio">{{ fila.comercio }}</td>
+              <td data-etiqueta="Mensajero">{{ fila.mensajero || '—' }}</td>
+              <td class="lq-num" data-etiqueta="Domicilio">{{ pesos(fila.totalEnvio) }}</td>
+              <td class="lq-num" data-etiqueta="Pago al mensajero">{{ pesos(fila.pagoMensajero) }}</td>
+              <td class="lq-num lq-celda-fuerte" data-etiqueta="Comisión">{{ pesos(fila.comision) }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

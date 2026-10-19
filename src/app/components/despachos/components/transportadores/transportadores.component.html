@@ -67,6 +67,35 @@
         </div>
     </div>
 
+    <!-- Ofrecer los pedidos a mensajeros independientes de Katuq: interruptor por empresa, independiente del anterior -->
+    <div class="card mb-3 toman-pedidos-card ofrecer-independientes-card" *ngIf="!showForm && ofrecerIndependientes !== null">
+        <div class="card-body">
+            <div class="d-flex align-items-center gap-3">
+                <i class="pi pi-users toman-pedidos-icon"></i>
+                <h6 class="mb-0 flex-grow-1" id="ofrecerIndependientesTitulo">
+                    {{ 'Ofrecer mis pedidos a mensajeros independientes de Katuq' | translate }}
+                </h6>
+                <div class="form-check form-switch m-0">
+                    <input class="form-check-input" type="checkbox" role="switch" id="ofrecerIndependientesSwitch"
+                           aria-labelledby="ofrecerIndependientesTitulo"
+                           [attr.aria-describedby]="errorOfrecer ? 'ofrecerIndependientesError' : 'ofrecerIndependientesAyuda'"
+                           [checked]="ofrecerIndependientes" [disabled]="guardandoOfrecer"
+                           (change)="cambiarOfrecerIndependientes($any($event.target).checked); $any($event.target).checked = ofrecerIndependientes">
+                    <label class="form-check-label" for="ofrecerIndependientesSwitch">
+                        {{ (ofrecerIndependientes ? 'Activo' : 'Apagado') | translate }}
+                    </label>
+                </div>
+            </div>
+            <!-- El servidor rechaza encenderlo sin pago al mensajero: el mensaje queda junto al interruptor, que sigue apagado -->
+            <div class="ofrecer-error small text-danger mt-2" id="ofrecerIndependientesError" role="alert" *ngIf="errorOfrecer">
+                <i class="pi pi-exclamation-circle me-1"></i>{{ errorOfrecer }}
+            </div>
+            <ul class="ofrecer-ayuda small text-muted mt-2 mb-0" id="ofrecerIndependientesAyuda">
+                <li *ngFor="let frase of ayudaOfrecer">{{ frase }}</li>
+            </ul>
+        </div>
+    </div>
+
     <!-- Tabla principal de transportadores -->
     <div class="card table-card mb-3" *ngIf="!showForm">
         <div class="card-body">

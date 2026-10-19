@@ -7,6 +7,7 @@ import {
   EstadoSolicitud,
   RespuestaAccionSolicitud,
   RespuestaDetalleSolicitud,
+  RespuestaLiquidacion,
   RespuestaListaSolicitudes,
 } from './mensajeros-independientes.models';
 
@@ -22,6 +23,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class MensajerosIndependientesService extends BaseService {
   private readonly ruta = '/v1/logistica/independientes/solicitudes';
+  private readonly rutaLiquidacion = '/v1/logistica/independientes/liquidacion';
 
   constructor(http: HttpClient) {
     super(http);
@@ -53,6 +55,17 @@ export class MensajerosIndependientesService extends BaseService {
 
   suspender(id: string, motivo: string): Observable<RespuestaAccionSolicitud> {
     return this.postSinLoader<RespuestaAccionSolicitud>(`${this.ruta}/${encodeURIComponent(id)}/suspender`, { motivo }).pipe(
+      mergeMap((respuesta) => this.exigirExito(respuesta)),
+    );
+  }
+
+  /**
+   * Entregas hechas por mensajeros independientes en un rango de fechas (`YYYY-MM-DD`) y lo que Katuq
+   * cobra de comisión a cada comercio. Solo la operadora: el backend responde 403 a cualquier otra sesión.
+   */
+  liquidacion(desde: string, hasta: string): Observable<RespuestaLiquidacion> {
+    const consulta = `desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}`;
+    return this.getSinLoader<RespuestaLiquidacion>(`${this.rutaLiquidacion}?${consulta}`).pipe(
       mergeMap((respuesta) => this.exigirExito(respuesta)),
     );
   }

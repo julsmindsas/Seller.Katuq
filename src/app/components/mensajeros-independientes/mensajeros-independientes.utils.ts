@@ -1,16 +1,21 @@
 import {
   AccionSolicitud,
   EnlaceDocumento,
+  EntregaLiquidada,
   EstadoSolicitud,
   FechaServidor,
+  LiquidacionComercio,
+  RespuestaLiquidacion,
   SolicitudMensajero,
   TipoDocumento,
+  TotalesLiquidacion,
 } from './mensajeros-independientes.models';
 
 /**
  * Lógica pura de "Mensajeros independientes": etiquetas, fechas, validación del motivo, qué botones
- * se ven y cómo se interpretan los errores. Sin Angular ni acceso al DOM (salvo la lectura de la
- * sesión, que está aislada), para probarla con un spec sencillo.
+ * se ven, cómo se interpretan los errores y la liquidación (rangos de fechas, pesos, sumas y CSV).
+ * Sin Angular ni acceso al DOM (salvo la lectura de la sesión, que está aislada), para probarla con
+ * un spec sencillo.
  */
 
 // ---------------------------------------------------------------------------
@@ -461,7 +466,13 @@ export interface ErrorInterpretado {
 
 export const CODIGO_TRANSICION_NO_PERMITIDA = 'TRANSICION_NO_PERMITIDA';
 
-function textoPorEstado(status: number | null): string {
+/** Textos propios de una pantalla para los estados 403 y 404 (por ejemplo, los de la liquidación). */
+export interface TextosPorEstado {
+  403?: string;
+  404?: string;
+}
+
+function textoPorEstado(status: number | null, propios?: TextosPorEstado): string {
   if (status === 0) {
     return 'No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.';
   }
@@ -469,10 +480,10 @@ function textoPorEstado(status: number | null): string {
     return 'Tu sesión ya no es válida. Vuelve a iniciar sesión.';
   }
   if (status === 403) {
-    return 'No tienes permiso para gestionar las solicitudes de mensajeros independientes.';
+    return propios?.[403] ?? 'No tienes permiso para gestionar las solicitudes de mensajeros independientes.';
   }
   if (status === 404) {
-    return 'No encontramos la solicitud. Puede que ya no exista.';
+    return propios?.[404] ?? 'No encontramos la solicitud. Puede que ya no exista.';
   }
   if (status !== null && status >= 500) {
     return 'El servidor tuvo un problema. Inténtalo de nuevo en unos minutos.';
@@ -483,16 +494,17 @@ function textoPorEstado(status: number | null): string {
 /**
  * Lee el error de una respuesta HTTP. El backend responde `{ success:false, error, code? }` con el
  * texto ya en español; ese `error` se muestra tal cual. Solo se lee de un cuerpo JSON: una página de
- * error de un proxy (HTML o texto) no se le muestra a nadie.
+ * error de un proxy (HTML o texto) no se le muestra a nadie. `propios` reemplaza el texto genérico de
+ * 403 y 404 cuando la pantalla no es la de solicitudes.
  */
-export function interpretarError(err: unknown): ErrorInterpretado {
+export function interpretarError(err: unknown, propios?: TextosPorEstado): ErrorInterpretado {
   const crudo = (err ?? {}) as { status?: unknown; error?: unknown };
   const status = typeof crudo.status === 'number' ? crudo.status : null;
   const cuerpo = crudo.error && typeof crudo.error === 'object' ? (crudo.error as Record<string, unknown>) : null;
   const delBackend = cuerpo && typeof cuerpo['error'] === 'string' && (cuerpo['error'] as string).trim() ? (cuerpo['error'] as string) : null;
   const codigo = cuerpo && typeof cuerpo['code'] === 'string' ? (cuerpo['code'] as string) : null;
   return {
-    texto: delBackend ?? textoPorEstado(status),
+    texto: delBackend ?? textoPorEstado(status, propios),
     status,
     transicionObsoleta: status === 409 && codigo === CODIGO_TRANSICION_NO_PERMITIDA,
   };
@@ -580,4 +592,334 @@ export function sesionEsSuperAdminOperadora(): boolean {
   } catch {
     return false;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Liquidación: rango de fechas
+// ---------------------------------------------------------------------------
+
+export interface RangoFechas {
+  /** `YYYY-MM-DD`. */
+  desde: string;
+  /** `YYYY-MM-DD`. */
+  hasta: string;
+}
+
+function dosDigitos(n: number): string {
+  return n < 10 ? `0${n}` : String(n);
+}
+
+/**
+ * `Date` -> `YYYY-MM-DD` con la hora local de quien mira la pantalla. No se usa `toISOString()`: a las
+ * 8 p. m. en Colombia ya es "mañana" en UTC y el rango quedaría un día corrido.
+ */
+export function fechaIso(fecha: Date): string {
+  return `${fecha.getFullYear()}-${dosDigitos(fecha.getMonth() + 1)}-${dosDigitos(fecha.getDate())}`;
+}
+
+/** Texto `YYYY-MM-DD` que además es un día real del calendario (no acepta "2026-02-31"). */
+export function esFechaIso(valor: unknown): valor is string {
+  if (typeof valor !== 'string') {
+    return false;
+  }
+  const partes = /^(\d{4})-(\d{2})-(\d{2})$/.exec(valor);
+  if (!partes) {
+    return false;
+  }
+  const [anio, mes, dia] = [Number(partes[1]), Number(partes[2]), Number(partes[3])];
+  const fecha = new Date(anio, mes - 1, dia);
+  return fecha.getFullYear() === anio && fecha.getMonth() === mes - 1 && fecha.getDate() === dia;
+}
+
+/** Del primer al último día del mes de `referencia`. `desfaseMeses = -1` es el mes anterior. */
+export function rangoDelMes(referencia: Date, desfaseMeses = 0): RangoFechas {
+  const anio = referencia.getFullYear();
+  const mes = referencia.getMonth() + desfaseMeses;
+  return { desde: fechaIso(new Date(anio, mes, 1)), hasta: fechaIso(new Date(anio, mes + 1, 0)) };
+}
+
+export interface ResultadoRango {
+  valido: boolean;
+  error: string | null;
+}
+
+/** Las dos fechas son obligatorias, deben existir y la de inicio no puede ser posterior a la final. */
+export function validarRango(desde: unknown, hasta: unknown): ResultadoRango {
+  let error: string | null = null;
+  if (!desde) {
+    error = 'Elige la fecha de inicio.';
+  } else if (!hasta) {
+    error = 'Elige la fecha final.';
+  } else if (!esFechaIso(desde) || !esFechaIso(hasta)) {
+    error = 'Revisa las fechas: alguna no es válida.';
+  } else if (desde > hasta) {
+    error = 'La fecha de inicio no puede ser posterior a la fecha final.';
+  }
+  return { valido: error === null, error };
+}
+
+/** `2026-10-01` -> `01/10/2026`. Se arma con el texto, sin pasar por `Date`, para no correr el día. */
+export function formatearFechaIso(valor: unknown): string {
+  const texto = typeof valor === 'string' ? valor.trim() : '';
+  const partes = /^(\d{4})-(\d{2})-(\d{2})/.exec(texto);
+  return partes ? `${partes[3]}/${partes[2]}/${partes[1]}` : texto;
+}
+
+export function textoRango(desde: unknown, hasta: unknown): string {
+  return `Del ${formatearFechaIso(desde)} al ${formatearFechaIso(hasta)}`;
+}
+
+// ---------------------------------------------------------------------------
+// Liquidación: pesos, porcentajes y sumas
+// ---------------------------------------------------------------------------
+
+/** Número finito (o texto numérico) redondeado a entero. Cualquier otra cosa vale 0. */
+export function entero(valor: unknown): number {
+  const n = typeof valor === 'string' && valor.trim() ? Number(valor) : valor;
+  return typeof n === 'number' && isFinite(n) ? Math.round(n) : 0;
+}
+
+function numeroFinito(valor: unknown): number | null {
+  return typeof valor === 'number' && isFinite(valor) ? valor : null;
+}
+
+let formatoPesos: Intl.NumberFormat | null = null;
+let formatoEntero: Intl.NumberFormat | null = null;
+let formatoPorcentaje: Intl.NumberFormat | null = null;
+
+/** Pesos colombianos sin decimales: 1234567 -> "$ 1.234.567". */
+export function formatearPesos(valor: unknown): string {
+  formatoPesos ??= new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+  return formatoPesos.format(entero(valor));
+}
+
+/** Cantidades con separador de miles: 1234 -> "1.234". */
+export function formatearEntero(valor: unknown): string {
+  formatoEntero ??= new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
+  return formatoEntero.format(entero(valor));
+}
+
+/** 7 -> "7 %"; 7.5 -> "7,5 %". Si no es un número, devuelve texto vacío. */
+export function formatearPorcentaje(valor: unknown): string {
+  const n = numeroFinito(valor);
+  if (n === null) {
+    return '';
+  }
+  formatoPorcentaje ??= new Intl.NumberFormat('es-CO', { maximumFractionDigits: 2 });
+  return `${formatoPorcentaje.format(n)} %`;
+}
+
+export const TOTALES_VACIOS: Readonly<TotalesLiquidacion> = Object.freeze({
+  entregas: 0,
+  totalEnvio: 0,
+  comision: 0,
+  pagoMensajeros: 0,
+});
+
+type MontosEntrega = Pick<EntregaLiquidada, 'totalEnvio' | 'pagoMensajero' | 'comision'>;
+
+/** Suma los montos de varias entregas. `entregas` es cuántas son. */
+export function sumarEntregas(entregas: MontosEntrega[] | null | undefined): TotalesLiquidacion {
+  return (entregas ?? []).reduce<TotalesLiquidacion>(
+    (total, e) => ({
+      entregas: total.entregas + 1,
+      totalEnvio: total.totalEnvio + entero(e?.totalEnvio),
+      comision: total.comision + entero(e?.comision),
+      pagoMensajeros: total.pagoMensajeros + entero(e?.pagoMensajero),
+    }),
+    { ...TOTALES_VACIOS },
+  );
+}
+
+export const COMERCIO_SIN_NOMBRE = 'Sin comercio';
+
+function nombreComercio(valor: unknown): string {
+  const texto = typeof valor === 'string' ? valor.trim() : valor === null || valor === undefined ? '' : String(valor).trim();
+  return texto || COMERCIO_SIN_NOMBRE;
+}
+
+/** Junta las entregas por comercio y suma cada grupo. Sirve cuando el servidor no manda el resumen. */
+export function agruparPorComercio(entregas: EntregaLiquidada[] | null | undefined): LiquidacionComercio[] {
+  const grupos = new Map<string, EntregaLiquidada[]>();
+  (entregas ?? []).forEach((e) => {
+    const nombre = nombreComercio(e?.comercio);
+    grupos.set(nombre, [...(grupos.get(nombre) ?? []), e]);
+  });
+  return Array.from(grupos, ([comercio, delComercio]) => ({ comercio, ...sumarEntregas(delComercio) }));
+}
+
+/** Lo que más se le debe cobrar primero; a igual comisión, por nombre. */
+export function comerciosPorComision(comercios: LiquidacionComercio[]): LiquidacionComercio[] {
+  return [...comercios].sort((a, b) => b.comision - a.comision || a.comercio.localeCompare(b.comercio, 'es'));
+}
+
+// ---------------------------------------------------------------------------
+// Liquidación: lo que se pinta
+// ---------------------------------------------------------------------------
+
+export interface FilaEntrega {
+  pedidoId: string;
+  /** Número del pedido tal como lo ve el comercio (si el servidor no lo manda, el id). */
+  numero: string;
+  comercio: string;
+  mensajero: string;
+  fecha: Date | null;
+  /** Milisegundos de `fecha` (0 si no hay): sirve para ordenar la columna. */
+  marca: number;
+  totalEnvio: number;
+  pagoMensajero: number;
+  comision: number;
+}
+
+function textoPlano(valor: unknown): string {
+  return valor === null || valor === undefined ? '' : String(valor).trim();
+}
+
+export function construirFilaEntrega(entrega: EntregaLiquidada): FilaEntrega {
+  const fecha = normalizarFecha(entrega?.fecha);
+  const pedidoId = textoPlano(entrega?.pedidoId);
+  return {
+    pedidoId,
+    numero: textoPlano(entrega?.nroPedido) || pedidoId,
+    comercio: nombreComercio(entrega?.comercio),
+    mensajero: textoPlano(entrega?.mensajero),
+    fecha,
+    marca: fecha?.getTime() ?? 0,
+    totalEnvio: entero(entrega?.totalEnvio),
+    pagoMensajero: entero(entrega?.pagoMensajero),
+    comision: entero(entrega?.comision),
+  };
+}
+
+export interface LiquidacionVista {
+  desde: string;
+  hasta: string;
+  /** `null` si el servidor no manda el porcentaje. */
+  comisionPorcentaje: number | null;
+  totales: TotalesLiquidacion;
+  /** Lo que Katuq cobra a cada comercio, de mayor a menor comisión. */
+  porComercio: LiquidacionComercio[];
+  /** Más recientes primero; las que no tienen fecha, al final. */
+  entregas: FilaEntrega[];
+}
+
+function totalesDe(crudos: unknown, calculados: TotalesLiquidacion): TotalesLiquidacion {
+  const t = (crudos && typeof crudos === 'object' ? crudos : {}) as Partial<Record<keyof TotalesLiquidacion, unknown>>;
+  const dato = (campo: keyof TotalesLiquidacion): number => {
+    const n = numeroFinito(t[campo]);
+    return n === null ? calculados[campo] : Math.round(n);
+  };
+  return {
+    entregas: dato('entregas'),
+    totalEnvio: dato('totalEnvio'),
+    comision: dato('comision'),
+    pagoMensajeros: dato('pagoMensajeros'),
+  };
+}
+
+/**
+ * Convierte la respuesta del servidor en lo que pinta la pantalla. Los totales y el resumen por
+ * comercio mandan tal como vienen (el servidor ve todas las entregas; la lista podría venir recortada);
+ * solo si faltan se calculan sumando las entregas recibidas.
+ */
+export function construirLiquidacion(respuesta: Partial<RespuestaLiquidacion> | null | undefined): LiquidacionVista {
+  const crudas = Array.isArray(respuesta?.entregas) ? (respuesta?.entregas as EntregaLiquidada[]) : [];
+  const entregas = crudas.map(construirFilaEntrega).sort((a, b) => b.marca - a.marca);
+  const calculados = sumarEntregas(entregas);
+  const comercios = Array.isArray(respuesta?.porComercio)
+    ? (respuesta?.porComercio as LiquidacionComercio[]).map((c) => ({
+        comercio: nombreComercio(c?.comercio),
+        ...totalesDe(c, TOTALES_VACIOS),
+      }))
+    : agruparPorComercio(crudas);
+  return {
+    desde: textoPlano(respuesta?.desde),
+    hasta: textoPlano(respuesta?.hasta),
+    comisionPorcentaje: numeroFinito(respuesta?.comisionPorcentaje),
+    totales: totalesDe(respuesta?.totales, calculados),
+    porComercio: comerciosPorComision(comercios),
+    entregas,
+  };
+}
+
+export function mensajeVacioLiquidacion(): MensajeVacio {
+  return {
+    titulo: 'No hay entregas en estas fechas',
+    texto:
+      'Cuando los mensajeros independientes entreguen pedidos en este rango, aparecerán aquí con la comisión que Katuq cobra a cada comercio.',
+  };
+}
+
+/** Textos de error propios de la liquidación (los de solicitudes hablan de otra cosa). */
+export const TEXTOS_ERROR_LIQUIDACION: TextosPorEstado = {
+  403: 'Solo el Super Administrador de la operadora puede ver la liquidación.',
+  404: 'La liquidación todavía no está disponible. Inténtalo de nuevo más tarde.',
+};
+
+// ---------------------------------------------------------------------------
+// Liquidación: archivo CSV
+// ---------------------------------------------------------------------------
+
+/** Separador de columnas: con coma, Excel en español parte mal los números con decimales. */
+export const SEPARADOR_CSV = ';';
+/** Marca de orden de bytes: sin ella Excel abre el UTF-8 con las tildes dañadas. */
+export const BOM_UTF8 = '﻿';
+const FIN_DE_LINEA_CSV = '\r\n';
+
+export const ENCABEZADOS_CSV: readonly string[] = [
+  'Fecha',
+  'Pedido',
+  'Comercio',
+  'Mensajero',
+  'Valor del domicilio',
+  'Pago al mensajero',
+  'Comisión de Katuq',
+];
+
+/**
+ * Texto de una celda: los saltos de línea pasan a espacio; lo que empieza con `=`, `+`, `-` o `@` lleva
+ * un apóstrofo delante para que la hoja de cálculo no lo trate como fórmula; y si trae el separador o
+ * comillas, va entre comillas dobles.
+ */
+export function celdaCsv(valor: unknown): string {
+  let texto = textoPlano(valor).replace(/[\r\n]+/g, ' ');
+  if (/^[=+\-@\t]/.test(texto)) {
+    texto = `'${texto}`;
+  }
+  return /[;"]/.test(texto) ? `"${texto.replace(/"/g, '""')}"` : texto;
+}
+
+/** `YYYY-MM-DD HH:mm` en hora local; vacío si no hay fecha. */
+export function fechaHoraCsv(fecha: Date | null): string {
+  return fecha ? `${fechaIso(fecha)} ${dosDigitos(fecha.getHours())}:${dosDigitos(fecha.getMinutes())}` : '';
+}
+
+/**
+ * Arma el CSV del detalle de entregas: separador `;`, valores en pesos como número entero sin símbolo
+ * ni puntos, fin de línea `\r\n` y marca UTF-8 al inicio.
+ */
+export function construirCsv(entregas: FilaEntrega[] | null | undefined): string {
+  const filas = (entregas ?? []).map((f) => [
+    celdaCsv(fechaHoraCsv(f.fecha)),
+    celdaCsv(f.numero),
+    celdaCsv(f.comercio),
+    celdaCsv(f.mensajero),
+    String(entero(f.totalEnvio)),
+    String(entero(f.pagoMensajero)),
+    String(entero(f.comision)),
+  ]);
+  const lineas = [ENCABEZADOS_CSV.map(celdaCsv), ...filas].map((celdas) => celdas.join(SEPARADOR_CSV));
+  return BOM_UTF8 + lineas.join(FIN_DE_LINEA_CSV) + FIN_DE_LINEA_CSV;
+}
+
+/** `liquidacion-independientes_2026-10-01_2026-10-31.csv`. */
+export function nombreArchivoCsv(desde: unknown, hasta: unknown): string {
+  return esFechaIso(desde) && esFechaIso(hasta)
+    ? `liquidacion-independientes_${desde}_${hasta}.csv`
+    : 'liquidacion-independientes.csv';
 }

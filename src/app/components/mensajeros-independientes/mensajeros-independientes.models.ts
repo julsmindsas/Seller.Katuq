@@ -91,3 +91,42 @@ export interface RespuestaAccionSolicitud {
 }
 
 export type AccionSolicitud = 'aprobar' | 'rechazar' | 'suspender';
+
+// ---------------------------------------------------------------------------
+// Liquidación (lo que Katuq cobra a cada comercio por las entregas de independientes)
+// ---------------------------------------------------------------------------
+
+/** Todos los valores en pesos colombianos, enteros. */
+export interface TotalesLiquidacion {
+  entregas: number;
+  totalEnvio: number;
+  comision: number;
+  pagoMensajeros: number;
+}
+
+export interface LiquidacionComercio extends TotalesLiquidacion {
+  comercio: string;
+}
+
+export interface EntregaLiquidada {
+  pedidoId: string;
+  nroPedido: string | number;
+  comercio: string;
+  fecha: FechaServidor;
+  mensajeroId: string;
+  mensajero: string;
+  totalEnvio: number;
+  pagoMensajero: number;
+  comision: number;
+}
+
+/** `GET /v1/logistica/independientes/liquidacion?desde=YYYY-MM-DD&hasta=YYYY-MM-DD` (solo operadora). */
+export interface RespuestaLiquidacion {
+  success: boolean;
+  desde: string;
+  hasta: string;
+  comisionPorcentaje: number;
+  totales: TotalesLiquidacion;
+  porComercio: LiquidacionComercio[];
+  entregas: EntregaLiquidada[];
+}
