@@ -120,7 +120,7 @@ const routes: Routes = [
     path: 'agent-builder',
     component: ContentComponent,
     canActivate: [AdminGuard, SubscriptionGuard],
-    data: { requiresPremium: true },
+    data: { requiresPremium: true, shell: true }, // shell: marco con menú, ver ThemeModeService (D-502)
     children: [
       {
         path: '',
@@ -136,6 +136,7 @@ const routes: Routes = [
     path: 'pricing',
     component: ContentComponent,
     canActivate: [AdminGuard],
+    data: { shell: true }, // marco con menú (D-502)
     children: [
       {
         path: '',
@@ -148,6 +149,7 @@ const routes: Routes = [
     path: 'billing',
     component: ContentComponent,
     canActivate: [AdminGuard],
+    data: { shell: true }, // marco con menú (D-502)
     children: [
       {
         path: '',
@@ -228,6 +230,8 @@ const routes: Routes = [
     path: '',
     component: ContentComponent,
     canActivate: [AdminGuard],
+    // D-502: el tema oscuro solo se aplica dentro del marco con menú (ThemeModeService)
+    data: { shell: true },
     children: content
   },
   {

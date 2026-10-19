@@ -434,9 +434,9 @@ textarea.form-control {
 }
 
 // ===================================
-// Dark mode support (opcional)
+// Modo oscuro: sigue el botón de Katuq, no el sistema operativo (D-502)
 // ===================================
-@media (prefers-color-scheme: dark) {
+:host-context(body.dark-only) {
   .card {
     background-color: #2d3748;
     color: #e2e8f0;

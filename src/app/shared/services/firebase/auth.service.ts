@@ -11,6 +11,7 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import { syncSentryUserContext } from "../errores/sentry-context";
 import { clearOnboardingStorage } from "../../../components/onboarding/utils/onboarding-v2.utils";
 import { LoaderService } from "../loader.service";
+import { ThemeModeService } from "../theme-mode.service";
 import { AppLanguage, DEFAULT_APP_LANGUAGE, normalizeAppLanguage } from "../../utils/app-language.utils";
 import { INICIO_JULSMIND } from "../../guards/inicio-julsmind.guard";
 import { sesionEsJulsmind } from "../../../components/en-vivo/paginas/sesion-katuq";
@@ -48,7 +49,8 @@ export class AuthService implements OnInit {
     private navServices: NavService,
     private initializationService: InitializationService,
     private onboardingService: OnboardingService,
-    private loaderService: LoaderService
+    private loaderService: LoaderService,
+    private themeMode: ThemeModeService
   ) { }
 
   ngOnInit(): void { }
@@ -316,6 +318,8 @@ export class AuthService implements OnInit {
     sessionStorage.removeItem('onboarding_banner_dismissed');
     sessionStorage.removeItem('onboarding_postponed');
     sessionStorage.removeItem('onboarding_reminder_shown');
+
+    this.themeMode.reset(); // D-502: el login queda en claro, sin restos del oscuro
 
     this.router.navigateByUrl('/login');
   }

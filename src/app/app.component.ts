@@ -19,6 +19,7 @@ import { syncSentryUserContext } from './shared/services/errores/sentry-context'
 import { AuthService } from './shared/services/firebase/auth.service';
 import { LayoutService } from './shared/services/layout.service';
 import { NgpThemeService } from './shared/services/ngtheme.service';
+import { ThemeModeService } from './shared/services/theme-mode.service';
 import { IdleInterruptService, IdleConfiguration } from './shared/services/idle-interrupt.service';
 import { Subject } from 'rxjs';
 import { DEFAULT_APP_LANGUAGE, normalizeAppLanguage } from './shared/utils/app-language.utils';
@@ -79,7 +80,9 @@ export class AppComponent implements OnInit, OnDestroy {
     private loader: LoadingBarService,
     translate: TranslateService,
     // private updates: SwUpdate, // SW desactivado (2026-03-25)
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    // D-502: inyectarlo aquí decide el tema al arrancar, antes del primer evento del router
+    private themeMode: ThemeModeService
   ) {
     // Initialize loader
     this.loaders = this.loader.progress$.pipe(
@@ -260,23 +263,7 @@ export class AppComponent implements OnInit, OnDestroy {
       console.warn('user en localStorage corrupto, ignorado:', e);
       this.UserLogged = null;
     }
-
-    const tema = this.UserLogged?.tema;
-
-    this.layout.config.settings.layout_version = tema ? 'dark-only' : 'light';
-
-    this.ngpService.switchTheme(tema ? 'md-dark-deeppurple' : 'lara-light-blue');
-
-    // Apply dark-only class to body for proper dark mode styling
-    if (tema) {
-      document.body.classList.add('dark-only');
-    } else {
-      document.body.classList.remove('dark-only');
-    }
-
-    document.body.style.backgroundColor = tema ? 'black' : 'white';
-
-
+    // D-502: el tema lo aplica ThemeModeService (inyectado en el constructor), no este componente.
   }
 
 

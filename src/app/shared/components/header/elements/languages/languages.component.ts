@@ -69,7 +69,17 @@ export class LanguagesComponent implements OnInit, OnDestroy {
     this.service.updateUser(item)
       .pipe(takeUntil(this.destroy$))
       .subscribe((response: any) => {
-        localStorage.setItem("user", JSON.stringify(this.UserLogged));
+        // D-502: releer el user justo antes de guardar y cambiar solo `lang`; la copia leída al
+        // montar devolvía el `tema` anterior.
+        let actual: any = null;
+        try {
+          actual = JSON.parse(localStorage.getItem('user') || 'null');
+        } catch {
+          actual = null;
+        }
+        if (!actual) return; // la sesión terminó mientras se guardaba
+        actual.lang = lang;
+        localStorage.setItem("user", JSON.stringify(actual));
       });
   }
 

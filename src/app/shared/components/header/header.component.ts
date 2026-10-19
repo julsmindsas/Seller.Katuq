@@ -5,7 +5,7 @@ import { takeUntil } from 'rxjs/operators';
 import { NavService } from '../../services/nav.service';
 import { LayoutService } from '../../services/layout.service';
 import { NotificationrlService } from '../../services/notificationrl.service';
-import { NgpThemeService } from '../../services/ngtheme.service';
+import { ThemeModeService } from '../../services/theme-mode.service';
 import { MaestroService } from '../../services/maestros/maestro.service';
 import { TourNavigationService } from '../../services/tour-navigation.service';
 import { SubscriptionService } from '../../services/subscription.service';
@@ -21,7 +21,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   public elem: any;
-  public dark: boolean = this.layout.config.settings.layout_version == 'dark-only' ? true : false;
+  // D-502: refleja el tema aplicado por ThemeModeService (también pinta aria-pressed)
+  public dark: boolean = false;
 
   public newTickets: any[] = []; // Lista de tickets nuevos o pendientes
   public unreadNotifications: any[] = []; // Lista de notificaciones no leídas
@@ -30,23 +31,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
   constructor(
     public layout: LayoutService,
     public navServices: NavService,
-    public ngpService: NgpThemeService,
     private service: MaestroService,
     @Inject(DOCUMENT) private document: any,
     private notificationService: NotificationrlService,
     private tourNavigationService: TourNavigationService,
     public subscriptionService: SubscriptionService,
-    private modal: NgbModal) {
-    // const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    // if (darkModeMediaQuery.matches) {
-    //   this.layoutToggle();
-
-    // }
-    // darkModeMediaQuery.addEventListener('change', (event) => {
-    //   const newColorScheme = event.matches ? 'dark-only' : 'light';
-    //   // this.layout.config.settings.layout_version = newColorScheme;
-    //   this.layoutToggle();
-    // });
+    private modal: NgbModal,
+    private themeMode: ThemeModeService) {
   }
   loadNotifications() {
     this.notificationService.getNotifications()
@@ -72,18 +63,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     const userData = localStorage.getItem('user');
     this.UserLogged = userData ? JSON.parse(userData) : {};
 
-    this.dark = this.UserLogged.tema;
-    this.layout.config.settings.layout_version = this.dark ? 'dark-only' : 'light';
-    this.ngpService.switchTheme(this.dark ? 'md-dark-deeppurple' : 'lara-light-blue');
-
-    // Apply dark-only class to body for proper dark mode styling
-    if (this.dark) {
-      document.body.classList.add('dark-only');
-    } else {
-      document.body.classList.remove('dark-only');
-    }
-
-    document.body.style.backgroundColor = this.dark ? 'black' : 'white';
+    // D-502: el header ya no toca el DOM del tema; solo lo refleja.
+    this.themeMode.isDark$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(dark => this.dark = dark);
   }
 
   // Método para aplicar marca de expansión temporal desde fuera
@@ -106,32 +89,23 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   layoutToggle() {
+    const dark = !this.dark;
 
-    this.dark = !this.dark;
+    // D-502: aplica y guarda `tema` en el navegador de inmediato (solo ese campo del user).
+    this.themeMode.setPreference(dark);
 
-    this.ngpService.switchTheme(this.dark ? 'md-dark-deeppurple' : 'lara-light-blue');
-
-    this.layout.config.settings.layout_version = this.dark ? 'dark-only' : 'light';
-
-    // Apply dark-only class to body for proper dark mode styling
-    if (this.dark) {
-      document.body.classList.add('dark-only');
-    } else {
-      document.body.classList.remove('dark-only');
-    }
-
-    // actualizar tema
+    // actualizar tema en el backend
     const item = {
-      identificacion: this.UserLogged.nit,
-      tema: this.dark,
+      identificacion: this.UserLogged?.nit,
+      tema: dark,
     }
 
     this.service.updateUser(item)
       .pipe(takeUntil(this.destroy$))
-      .subscribe((res: any) => {
-        this.UserLogged.tema = this.dark;
-        localStorage.setItem('user', JSON.stringify(this.UserLogged));
-        document.body.style.backgroundColor = this.dark ? 'black' : 'white';
+      .subscribe({
+        // D-502 (valor por defecto 9): si el backend lo rechaza no se revierte ni se cierra
+        // la sesión; el interceptor ya avisa y en el siguiente inicio de sesión manda el backend.
+        error: () => { }
       });
   }
 

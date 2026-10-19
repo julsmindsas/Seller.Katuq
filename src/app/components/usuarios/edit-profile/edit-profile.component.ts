@@ -157,7 +157,16 @@ export class EditProfileComponent implements OnInit, OnDestroy {
             showConfirmButton: true
           });
         } else {
-          // Actualizar localStorage
+          // Actualizar localStorage. D-502: releer el user justo antes de guardar y cambiar solo
+          // el prompt; la copia leída al montar devolvía el `tema` anterior.
+          let actual: any = null;
+          try {
+            actual = JSON.parse(localStorage.getItem('user') || 'null');
+          } catch {
+            actual = null;
+          }
+          if (!actual) return; // la sesión terminó mientras se guardaba: no revivirla con la copia vieja
+          this.UserLogged = actual;
           this.UserLogged.kaiPersonalitityUserPrompt = this.kaiPrompt;
           localStorage.setItem('user', JSON.stringify(this.UserLogged));
 

@@ -11,80 +11,82 @@
 
 ## 0. Aprobación y línea base
 
-- [ ] **0.1 Aprobar los artefactos y los valores por defecto.**
+- [x] **0.1 Aprobar los artefactos y los valores por defecto.** Aprobados en bloque por Daniel el 2026-10-18 (`CONTRACT.md`, «D-495 a D-503»), con los 13 valores por defecto tal como están.
   - Qué: Daniel aprueba `design.md`, `design-f1.md`, `design-pruebas.md`, el delta `specs/design-system/spec.md` (EARS de F0 y F1) y este `tasks.md`. Además responde los 13 valores por defecto (`design.md`).
   - Criterio: respuestas anotadas en `CONTRACT.md`, bajo D-502. El delta queda aprobado antes de cualquier código (Art. I). Si cambia un valor por defecto, primero se ajustan el delta y el diseño.
   - Dependencias: ninguna. Sin 0.1 no se implementa nada.
-- [ ] **0.2 Tomar la línea base visual.**
+- [x] **0.2 Tomar la línea base visual.** Hecha el 2026-10-18 con `auditoria-tema.js` sobre el build 2026.10.17.12 (commit 6efb605c): `tmp/d502-linea-base-2026-10-18/` (fuera de git). Tiene 19 capturas, el `json` de axe de cada pantalla a 1440 px y `reporte.json`. El login después de cerrar sesión en oscuro está solo a 1440 px.
   - Qué: capturas en claro y oscuro, a 1440 y 390 px, del marco, Ocasiones, Bodegas, Todos los pedidos, Inicio y el login después de cerrar sesión en oscuro, más el axe en claro de esas pantallas.
   - Criterio: carpeta de evidencia fechada con capturas y el `json` de axe. Es la referencia de «claro idéntico» y de «ninguna violación nueva».
   - Dependencias: 0.1.
 
 ## 1. Pruebas primero (`design-pruebas.md`)
 
-- [ ] **1.1 [P] `tests/theme/theme-mode.test.js`.**
+- [x] **1.1 [P] `tests/theme/theme-mode.test.js`.** Corre contra la configuración real de rutas; incluye un caso de `SignOut()`. Estuvo en rojo (15 de 15) antes del servicio. El caso de `SignOut()` va como `todo` («tarea 2.5») mientras el diff de 2.5 no esté aprobado y aplicado; al aplicarlo se le quita el `todo`. Con el patch de 2.5 puesto en una copia aparte pasa (16 de 16).
   - Qué: los seis grupos de casos, incluidos el arranque provisional, `isShellUrl`, `NavigationCancel` y la copia vieja del `user`.
   - Criterio: falla porque el servicio todavía no existe.
   - Dependencias: 0.1.
-- [ ] **1.2 [P] `tests/theme/users-edit-contract.test.js`.**
+- [x] **1.2 [P] `tests/theme/users-edit-contract.test.js`.** El payload pasó desde el inicio; el 403 y el 5xx estuvieron en rojo hasta 2.4.
   - Qué: payload exacto `{ identificacion, tema }`. Ante un 403 de rol o un 5xx, `tema` queda en el navegador, la clase no se revierte y no se llama `SignOut()`.
   - Criterio: el payload pasa hoy. El rechazo falla hoy y pasa después de 2.4.
   - Dependencias: 0.1.
-- [ ] **1.3 [P] `tests/theme/user-writers.test.js`.**
+- [x] **1.3 [P] `tests/theme/user-writers.test.js`.** Estuvo en rojo (idioma y prompt) hasta 2.6. Incluye también que una respuesta que llega después de `SignOut()` no revive el `user` (estuvo en rojo en `edit-profile`).
   - Qué: guardar el idioma (`languages`) o el prompt de KAI (`edit-profile`) no pisa un `tema` cambiado después de montar el componente.
   - Criterio: falla hoy y pasa después de 2.6.
   - Dependencias: 0.1.
-- [ ] **1.4 [P] `tests/theme/conteos.test.js`.**
+- [x] **1.4 [P] `tests/theme/conteos.test.js`.** La segunda parte va marcada como `todo` («F1, tarea 3.4»): se reporta y no rompe `test:theme`. En 3.4 se le quita el `todo`.
   - Qué: gradientes y primarios prohibidos sin subir, y cero de los seis patrones de la familia del azul en `dark-mode.scss` (`design-pruebas.md`).
   - Criterio: la primera parte pasa hoy; la segunda falla hasta 3.4.
   - Dependencias: 0.1.
-- [ ] **1.5 Auditoría `tests/theme/auditoria-tema.js`.**
+- [x] **1.5 Auditoría `tests/theme/auditoria-tema.js`.** Contra el build 2026.10.17.12 reprodujo los cuatro fallos y pasó el destello. Uso: `node tests/theme/auditoria-tema.js --deps <carpeta con playwright-core@1.49.1 y axe-core> --dist dist/cuba --salida <carpeta> --base tmp/d502-linea-base-2026-10-18`. Con la hora fija, dos corridas del mismo build dan 0,000 % de píxeles distintos. Después de la revisión se sumaron dos chequeos, y contra el mismo build los dos fallan como se espera, sin mover la comparación en claro. `chatSistemaOscuroAppClara` y `chatSistemaClaroAppOscura` revisan el chat de `/chat` y `general-chat` (2.11): en el build viejo los dos siguen al sistema. `tarea25ResetEnSignOut` (2.5) mira si la clase seguía puesta cuando la URL pasó a `/login`. Los filtros no se miden porque su bloque estaba vacío.
   - Qué: lo de «Auditoría en navegador» en `design-pruebas.md`.
   - Criterio: contra el build actual reproduce los fallos de la propuesta: `dark-only` sigue en el login después de `SignOut()`, aparece en `/terms-conditions` recargado con sesión oscura, la barra inferior sigue al sistema operativo y hay fondos `#fff` en oscuro.
   - Dependencias: 0.2.
-- [ ] **1.6 Script `test:theme` en `package.json`.**
+- [x] **1.6 Script `test:theme` en `package.json`.** En Windows: 28 pruebas, 26 pasan y quedan 2 `todo` (la de F1 y el `SignOut()` de 2.5).
   - Qué: la línea de `design-pruebas.md`, con los archivos uno por uno (un glob no corre en Windows con Node 20).
   - Criterio: `npm run test:theme` corre 1.1 a 1.4 en el equipo de desarrollo (Windows) y falla solo donde se espera.
   - Dependencias: 1.1 a 1.4.
 
 ## 2. Fase 0: un solo dueño del tema
 
-- [ ] **2.1 `app-routing.module.ts`: `data: { shell: true }` en las cuatro rutas con `ContentComponent`.**
+> **Cierre de la verificación (2026-10-18):** Daniel aprobó los diffs de 2.5, 2.9 y 2.10 y quedaron aplicados. Build de producción sin errores. `npm run test:theme`: 28 pruebas, 27 pasan y 1 `todo` (F1, tarea 3.4). La auditoría sobre el build nuevo da OK en `criterio1CerrarSesion`, `tarea25ResetEnSignOut`, `publicaConSesionOscura`, `destelloAlRecargar`, los dos chequeos de la barra, los dos del chat y `criterio6SinScrollHorizontal`. Fallan dos, y ninguno es de F0: `criterio3SinFondosBlancosEnOscuro` (2 fondos en Ocasiones y en Bodegas; es de F2a, tarea 4.1) y `comparacionClaro` (el login base tenía el aviso «Sin conexión a internet» y en Ocasiones solo cambia el botón «Opinar» del NPS, D-490). Las notas de estado de cada tarea quedan como estaban al implementarse.
+
+- [x] **2.1 `app-routing.module.ts`: `data: { shell: true }` en las cuatro rutas con `ContentComponent`.** Código aplicado y `tsc` sin errores. Falta el build (`npm run build`, lo corre el orquestador): `tsc` no revisa plantillas AOT ni SCSS.
   - Criterio: build sin errores. Rutas, guards y redirecciones siguen iguales.
   - Dependencias: 0.1.
-- [ ] **2.2 Crear `src/app/shared/services/theme-mode.service.ts`.**
+- [x] **2.2 Crear `src/app/shared/services/theme-mode.service.ts`.** Código aplicado, 1.1 en verde (salvo el `todo` de 2.5) y `tsc` sin errores. Falta el build (lo corre el orquestador).
   - Qué: `isShellUrl`, decisión provisional en el constructor, confirmación en `NavigationEnd`, preferencia en memoria por identidad, `apply`, `setPreference`, `reset` e `isDark$`. Sin `console.log`.
   - Criterio: 1.1 en verde y `npm run build` sin errores.
   - Dependencias: 1.1 y 2.1.
-- [ ] **2.3 `app.component.ts`.**
+- [x] **2.3 `app.component.ts`.** Código aplicado; falta correr la auditoría sobre el build nuevo.
   - Qué: inyectar el servicio en el constructor y quitar el bloque `:264-277`.
   - Criterio: en la auditoría, al recargar una ruta del marco en oscuro con el chunk demorado, `body.dark-only` ya está mientras el chunk no llega. En `/terms-conditions` con la misma sesión, no está.
   - Dependencias: 2.2 y 1.5.
-- [ ] **2.4 `header.component.ts`.**
+- [x] **2.4 `header.component.ts`.** Código aplicado y 1.2 en verde. `aria-pressed` ya estaba en la plantilla y sigue a `dark`; `tsc` sin errores. Falta el build (lo corre el orquestador).
   - Qué: `dark` sale de `isDark$`. `layoutToggle()` llama `setPreference` y después `updateUser` como hoy, sin revertir si falla. Se quitan las escrituras al DOM, la del `user` completo y el bloque comentado `:40-49`.
   - Criterio: 1.2 en verde (payload y rechazo). El botón alterna y `aria-pressed` acompaña. Build sin errores.
   - Dependencias: 2.2 y 1.2.
-- [ ] **2.5 `auth.service.ts`: `reset()` en `SignOut()`.** **Sensible** (autenticación): una sola línea, con diff aprobado.
+- [x] **2.5 `auth.service.ts`: `reset()` en `SignOut()`.** **Sensible** (autenticación): una sola línea, con diff aprobado. Diff preparado y **sin aplicar** (se sacó del árbol para que ningún build ni commit lo arrastre): el import y la inyección de `ThemeModeService`, y `this.themeMode.reset()` justo antes de `navigateByUrl('/login')`. Sin ciclo de DI: `ThemeModeService` solo depende de `Router`, `LayoutService` y `NgpThemeService`. Espera el visto bueno de Daniel; después va en su propio commit con el guard de alcance, se le quita el `todo` al caso `SignOut()` de 1.1 y falta la auditoría sobre el build nuevo. Para cerrar 2.5, la auditoría debe dar OK en `tarea25ResetEnSignOut`. `criterio1CerrarSesion` no sirve, porque ya pasa sin `reset()`: el `NavigationEnd` hacia `/login` encuentra la sesión borrada y aplica el claro. La sonda se probó con el build 2026.10.17.12: falla tal cual y pasa con una copia que quita la clase antes de navegar.
   - Criterio: criterio 1 de la propuesta en la auditoría. Después de cerrar sesión no quedan la clase, el `style` de fondo ni el bundle oscuro.
   - Dependencias: 2.2.
-- [ ] **2.6 [P] `languages.component.ts:72` y `edit-profile.component.ts:162`: leer, modificar y escribir.**
+- [x] **2.6 [P] `languages.component.ts:72` y `edit-profile.component.ts:162`: leer, modificar y escribir.** Código aplicado, 1.3 en verde y `tsc` sin errores. Las dos ramas cortan igual si la sesión terminó mientras se guardaba (no reviven el `user` con la copia vieja ni su token). Falta el build (lo corre el orquestador).
   - Qué: releer el `user` justo antes de guardar y cambiar solo `lang` o `kaiPersonalitityUserPrompt`. No cambia nada más.
   - Criterio: 1.3 en verde; build sin errores.
   - Dependencias: 1.3.
-- [ ] **2.7 [P] `src/index.html:44`: apuntar a `lara-light-blue.css`.**
+- [x] **2.7 [P] `src/index.html:44`: apuntar a `lara-light-blue.css`.** Código aplicado; falta revisar la red y las capturas sobre el build nuevo.
   - Criterio: en la pestaña de red, el primer CSS de tema responde 200 con `text/css`, y las capturas en claro son iguales a las de 0.2.
   - Dependencias: 0.2.
-- [ ] **2.8 [P] Barra inferior y filtros.**
+- [x] **2.8 [P] Barra inferior y filtros.** Código aplicado y conteos sin subir; falta la auditoría sobre el build nuevo.
   - Qué: los tres bloques de `bottom-navigation.component.scss` pasan a `:host-context(body.dark-only)`, y se borra el bloque vacío de `shared-filters.component.scss`.
   - Criterio: con `emulateMedia({ colorScheme: 'dark' })` y la app en claro, la barra queda clara; al revés, queda oscura. Los conteos de 1.4 no suben.
   - Dependencias: 2.2.
-- [ ] **2.9 `tracking-details-modal.component.scss` (despachos).** **Sensible:** solo `.scss`, con diff aprobado.
+- [x] **2.9 `tracking-details-modal.component.scss` (despachos).** **Sensible:** solo `.scss`, con diff aprobado. Diff preparado y sin aplicar: se borra el bloque `prefers-color-scheme` vacío de la línea 1723. Espera la aprobación de Daniel.
   - Criterio: el modal sigue al botón y no al sistema operativo. Los gradientes no pasan de 5.
   - Dependencias: 2.2.
-- [ ] **2.10 `crear-formas-pago.component.scss` (POS).** **Sensible:** solo `.scss`, con diff aprobado. Va después de 2.9, nunca a la vez.
+- [x] **2.10 `crear-formas-pago.component.scss` (POS).** **Sensible:** solo `.scss`, con diff aprobado. Va después de 2.9, nunca a la vez. Diff preparado y sin aplicar: `@media (prefers-color-scheme: dark)` pasa a `:host-context(body.dark-only)` (línea 439). Espera la aprobación de Daniel.
   - Criterio: el formulario sigue al botón. Los primarios prohibidos no pasan de 1.
   - Dependencias: 2.9.
-- [ ] **2.11 [P] Chat.**
+- [x] **2.11 [P] Chat.** Código aplicado. `general-chat` no tiene encapsulado, así que usa `body.dark-only` y `:where(body:not(.dark-only))`, sin `:host-context`. Falta pasar la auditoría sobre el build nuevo (`chatSistemaOscuroAppClara` y `chatSistemaClaroAppOscura` en OK) y revisarla en el navegador.
   - Qué: `general-chat.component.scss` sigue a `body.dark-only`, y `chat.component.ts` lee `isDark$` en vez de `matchMedia`.
   - Criterio: con el sistema en oscuro y la app en claro, el chat se ve claro. Build sin errores.
   - Dependencias: 2.2.

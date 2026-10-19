@@ -1,6 +1,8 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked, ChangeDetectorRef, Input, Output, EventEmitter, AfterViewInit, OnDestroy } from '@angular/core';
 import { ChatUsers } from '../../../shared/models/chat/chat.model';
 import { ChatService } from '../../../shared/services/chat.service';
+import { ThemeModeService } from '../../../shared/services/theme-mode.service';
+import { Subscription } from 'rxjs';
 import { NgForm } from '@angular/forms';
 import { trigger, style, animate, transition, state } from '@angular/animations';
 
@@ -58,8 +60,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
   public emojies: any;
   public mobileToggle: boolean = false
 
-  // Modo oscuro automático
+  // Modo oscuro: sigue el botón de Katuq (D-502)
   public isDarkMode: boolean = false;
+  private temaSub?: Subscription;
   public isGenerating: boolean = false;
 
   // Adjuntos y prompts
@@ -74,8 +77,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
 
   constructor(
     private chatService: ChatService,
-    private cdRef: ChangeDetectorRef
-  ) {   
+    private cdRef: ChangeDetectorRef,
+    private themeMode: ThemeModeService
+  ) {
     this.chatService.getUsers().subscribe(users => { 
       this.searchUsers = users
       this.users = users
@@ -83,11 +87,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
   }
 
   ngOnInit() {  
-    // Detectar modo oscuro del sistema
-    this.isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      this.isDarkMode = e.matches;
-    });
+    // D-502: el tema sale del botón de Katuq, no del sistema operativo
+    this.temaSub = this.themeMode.isDark$.subscribe(dark => this.isDarkMode = dark);
     // Ajustar comportamiento si está en modo flotante
     if (this.isFloating) {
       // Posibles ajustes específicos para el modo flotante
@@ -447,6 +448,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
   // Manejar cuando el componente se destruye
   ngOnDestroy() {
     // Limpiar cualquier suscripción o temporizador pendiente
+    this.temaSub?.unsubscribe();
   }
 
   /**

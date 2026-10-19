@@ -1075,14 +1075,6 @@ $transition-slow: 300ms ease;
 }
 
 // ===========================================
-// DARK MODE SUPPORT (optional)
-// ===========================================
-@media (prefers-color-scheme: dark) {
-  // Add dark mode variables here if needed in future
-  // For now, leaving as light mode only
-}
-
-// ===========================================
 // PRINT STYLES
 // ===========================================
 @media print {

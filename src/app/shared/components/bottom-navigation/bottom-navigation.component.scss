@@ -20,8 +20,8 @@
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   
-  // Dark mode support
-  @media (prefers-color-scheme: dark) {
+  // Modo oscuro: sigue el botón de Katuq, no el sistema operativo (D-502)
+  :host-context(body.dark-only) & {
     background: rgba(28, 28, 30, 0.95);
     border-top-color: rgba(255, 255, 255, 0.12);
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
@@ -150,8 +150,8 @@
       color: #6c757d;
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       
-      // Dark mode
-      @media (prefers-color-scheme: dark) {
+      // Modo oscuro del botón de Katuq (D-502)
+      :host-context(body.dark-only) & {
         color: #8e8e93;
       }
     }
@@ -213,8 +213,8 @@
       font-size: 12px;
     }
     
-    // Dark mode
-    @media (prefers-color-scheme: dark) {
+    // Modo oscuro del botón de Katuq (D-502)
+    :host-context(body.dark-only) & {
       color: #8e8e93;
     }
     

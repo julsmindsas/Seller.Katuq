@@ -92,27 +92,26 @@
     --gemini-greeting-gradient: #5F3FE0; // plano (D-399): el saludo se pinta con background-clip: text
 }
 
-// Dark Theme (System Preference)
-@media (prefers-color-scheme: dark) {
-    :root {
-        --gemini-bg: #131314;
-        --gemini-sidebar: #1e1f20;
-        --gemini-surface: #1e1f20;
-        --gemini-input: #282a2c;
-        --gemini-input-focus: #363739;
-        --gemini-text-primary: #e3e3e3;
-        --gemini-text-secondary: #c4c7c5;
-        --gemini-border: #444746;
-        --gemini-accent: #a8c7fa;
-        --gemini-user-bubble: #282a2c;
-        --gemini-hover: rgba(255, 255, 255, 0.08);
-        --gemini-selected: #004a77;
-        --gemini-selected-text: #c2e7ff;
-        --gemini-code-bg: #1e1f20;
-        --gemini-thought-bg: #1e1f20;
-        --gemini-mention-bg: rgba(168, 199, 250, 0.2);
-        --gemini-mention-text: #d3e3fd;
-    }
+// Tema oscuro: sigue el botón de Katuq (body.dark-only), no el sistema operativo (D-502).
+// Sin encapsulado, así que el selector va directo sobre el body.
+body.dark-only {
+    --gemini-bg: #131314;
+    --gemini-sidebar: #1e1f20;
+    --gemini-surface: #1e1f20;
+    --gemini-input: #282a2c;
+    --gemini-input-focus: #363739;
+    --gemini-text-primary: #e3e3e3;
+    --gemini-text-secondary: #c4c7c5;
+    --gemini-border: #444746;
+    --gemini-accent: #a8c7fa;
+    --gemini-user-bubble: #282a2c;
+    --gemini-hover: rgba(255, 255, 255, 0.08);
+    --gemini-selected: #004a77;
+    --gemini-selected-text: #c2e7ff;
+    --gemini-code-bg: #1e1f20;
+    --gemini-thought-bg: #1e1f20;
+    --gemini-mention-bg: rgba(168, 199, 250, 0.2);
+    --gemini-mention-text: #d3e3fd;
 }
 
 // Manual Dark Mode Override
@@ -546,7 +545,9 @@ $font-family: "Google Sans",
                             box-shadow 0.2s;
                         border: 1px solid transparent;
 
-                        @media (prefers-color-scheme: light) {
+                        // En claro según el botón de Katuq, no el sistema operativo (D-502).
+                        // :where() no suma especificidad: el :hover de abajo sigue ganando.
+                        :where(body:not(.dark-only)) & {
                             border-color: var(--gemini-border);
                         }
 
