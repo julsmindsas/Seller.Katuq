@@ -233,6 +233,15 @@
   overflow: hidden;
 }
 
+// Ticket 1238: la lista de comerciales se abre hacia abajo y la tarjeta la cortaba
+// (overflow: hidden), así que los nombres de abajo (p. ej. "Martín…") no se alcanzaban.
+// Se deja salir y queda por encima de la tarjeta de indicadores.
+.cotz-card.filtros-card {
+  overflow: visible;
+  position: relative;
+  z-index: 20;
+}
+
 .cotz-card-head {
   display: flex;
   align-items: center;
