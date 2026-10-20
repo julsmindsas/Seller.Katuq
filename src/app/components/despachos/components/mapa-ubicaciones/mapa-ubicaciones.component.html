@@ -169,6 +169,17 @@
             <i class="punto punto--{{ m.senal }}"></i>{{ textoSenal(m) }} · {{ m.hace }}
           </div>
           <div class="mensajero-fila__entrega" *ngIf="textoEntrega(m) as entrega">{{ entrega }}</div>
+          <ul class="mensajero-fila__pedidos" *ngIf="pedidosPorMensajero.get(m.id) as lleva"
+            [attr.aria-label]="'Pedidos que lleva' | translate">
+            <li *ngFor="let p of lleva | slice:0:6" [class.mensajero-fila__pedido--actual]="p.nroPedido === m.pedidoActual">
+              <b>{{ p.nroPedido }}</b>
+              <span class="mensajero-fila__pedido-cliente">{{ p.cliente }}</span>
+              <em>{{ etiquetaEstado(p.estado) | translate }}</em>
+            </li>
+            <li class="mensajero-fila__pedidos-mas" *ngIf="lleva.length > 6">
+              +{{ lleva.length - 6 }} {{ 'más' | translate }}
+            </li>
+          </ul>
         </div>
         <button type="button" class="mensajero-fila__seguir"
           [class.mensajero-fila__seguir--on]="m.id === siguiendoId"

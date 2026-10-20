@@ -56,6 +56,7 @@ import {
   AvanceUbicacion, MapaUbicacionesComponent, PedidoSinUbicar
 } from "../components/mapa-ubicaciones/mapa-ubicaciones.component";
 import { OrdenesDespachoV2Component } from "../components/ordenes-despacho-v2/ordenes-despacho-v2.component";
+import { entregaAsignada, EntregaAsignada, nombreDeTransportador } from "../../../shared/utils/entregas-mensajero";
 import { aplicarCambioDeEstado, estadoDestino, yaQuedoAsi } from "./estado-despacho";
 import { AnalisisDespachosComponent } from '../components/analisis-despachos/analisis-despachos.component';
 import { SeguimientoModalComponent } from "../components/seguimiento-modal/seguimiento-modal.component";
@@ -337,6 +338,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
   avanceUbicacion: AvanceUbicacion | null = null;
   /** Pedidos que no se pudieron ubicar con confianza (lista "Sin ubicar" del mapa). */
   pedidosSinUbicar: PedidoSinUbicar[] = [];
+  /** Pedidos que siguen en manos de un mensajero (el panel «Mensajeros» del mapa lista los de cada uno). */
+  entregasAsignadas: EntregaAsignada[] = [];
   private sinUbicarPorPedido = new Map<string, PedidoSinUbicar>();
   /** Direcciones que el servicio ya rechazó en esta visita, con su motivo: no se vuelven a consultar. */
   private fallosUbicacion = new Map<string, string>();
@@ -6579,7 +6582,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
       direccion: `${pedido.envio!.direccionEntrega}, ${pedido.envio!.ciudad || ''}`,
       latitud: punto.lat,
       longitud: punto.lng,
-      transportador: pedido.transportador?.nombre || '',
+      // El pedido que toma un mensajero desde la app guarda el nombre como texto, no como objeto.
+      transportador: nombreDeTransportador(pedido.transportador),
       fechaEntrega: pedido.fechaEntrega || '',
       horaEstimada: pedido.horarioEntrega || '',
       distanciaRestante: undefined, // Se puede calcular más tarde
@@ -6615,6 +6619,11 @@ export class DespachosComponent implements OnInit, OnDestroy {
       ...this.configuracionMapa,
       ubicaciones: ubicaciones
     };
+
+    // Incluye los pedidos que aún no se ubican en el mapa: el mensajero los lleva igual.
+    this.entregasAsignadas = this.orders
+      .map(pedido => entregaAsignada(pedido))
+      .filter((entrega): entrega is EntregaAsignada => entrega !== null);
 
     // Actualizar métricas de logística
     if (this.metricasLogistica) {

@@ -9,6 +9,9 @@ import {
   esSaltoImposible, haceCuanto, marcaDeUbicacion, marcaDesconexion, minutosEstimados, nombreDesdeClave,
   perteneceAEmpresa, senalMensajero, SenalMensajero, ubicacionVigente
 } from '../../../../shared/utils/ubicacion-mensajero';
+import {
+  EntregaAsignada, entregasDeMensajero, esClaveIndependiente, etiquetaEstadoEntrega, nombreDeIndependiente
+} from '../../../../shared/utils/entregas-mensajero';
 
 /** Pin y ficha de los estados que no tienen color propio en la leyenda. */
 const COLOR_OTRO_ESTADO = '#5A6B78';
@@ -158,6 +161,8 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   @Input() avanceUbicacion: AvanceUbicacion | null = null;
   /** Pedidos que no se pudieron ubicar con confianza: van en el panel, nunca en un punto aproximado. */
   @Input() pedidosSinUbicar: PedidoSinUbicar[] = [];
+  /** Pedidos que siguen en manos de un mensajero, con o sin ubicación en el mapa (para listar los de cada uno). */
+  @Input() entregasAsignadas: EntregaAsignada[] = [];
   @Input() verMensajeros: boolean = true;
   @Input() configuracionZonas: ConfiguracionZonas = {
     zonas: [],
@@ -193,6 +198,10 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   public mostrarMensajeros: boolean = true;
   public mostrarZonasEntrega: boolean = true;
   public mensajeros: UbicacionMensajero[] = [];
+  /** Los pedidos que lleva cada mensajero visible, por clave de `active_users`. */
+  public pedidosPorMensajero = new Map<string, EntregaAsignada[]>();
+  /** Lo último que llegó de `active_users`, sin filtrar, para volver a decidir quién se ve cuando cambian los pedidos. */
+  private nodosActivos: Array<{ clave: string; dato: any }> = [];
 
   intervalTimer: any = null;
   /** La tarjeta de avance se ve mientras ubica y unos segundos con el resumen al terminar. */
@@ -241,6 +250,11 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    // Un independiente aparece o se va según los pedidos que lleva: se decide de nuevo quién se ve.
+    if (changes['entregasAsignadas'] && !changes['entregasAsignadas'].firstChange && this.mostrarMensajeros) {
+      this.recalcularMensajeros();
+      this.actualizarMarcadoresMensajeros();
+    }
     if (changes['avanceUbicacion']) {
       const avance = this.avanceUbicacion;
       clearTimeout(this.ocultarAvanceTimer);
@@ -1048,6 +1062,12 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     if (entrega) {
       filas.push(`<div class="mpop__fila"><span>Entrega</span><b>${escaparHtml(entrega)}</b></div>`);
     }
+    const lleva = this.pedidosPorMensajero.get(id) || [];
+    if (lleva.length > 0) {
+      const numeros = lleva.slice(0, 6).map(p => p.nroPedido).join(', ');
+      const mas = lleva.length > 6 ? ` y ${lleva.length - 6} más` : '';
+      filas.push(`<div class="mpop__fila"><span>Pedidos</span><b>${escaparHtml(numeros + mas)}</b></div>`);
+    }
     if (m.velocidad !== undefined && m.velocidad > 0.5) {
       filas.push(`<div class="mpop__fila"><span>Velocidad</span><b>${Math.round(m.velocidad * 3.6)} km/h</b></div>`);
     }
@@ -1257,19 +1277,41 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     this.iniciarPurgaMensajeros();
     const activeUsersRef = this.db.list('active_users');
     this.mensajerosSubscription = activeUsersRef.snapshotChanges().subscribe(snapshots => {
-      this.mensajeros = snapshots
-        // Ticket 1159: solo los mensajeros de ESTA empresa (la clave termina en la de la empresa).
-        .filter(snapshot => !!this.companyName && perteneceAEmpresa(snapshot.key, this.companyName))
-        // Ticket 1154: solo ubicaciones de los últimos 15 minutos de quien no figura desconectado.
-        .filter(snapshot => ubicacionVigente(snapshot.payload.val() as any))
-        .map(snapshot => this.filtrarPunto(this.aMensajero(snapshot.key as string, snapshot.payload.val() as any)))
-        .sort((a, b) => (b.marca || 0) - (a.marca || 0));
-
+      this.nodosActivos = snapshots.map(snapshot => ({ clave: String(snapshot.key), dato: snapshot.payload.val() as any }));
+      this.recalcularMensajeros();
       this.actualizarMarcadoresMensajeros();
       this.cd.detectChanges();
     }, error => {
       console.error('❌ [ERROR] Error escuchando ubicación de mensajeros:', error);
     });
+  }
+
+  /**
+   * Decide quién se ve y qué pedidos lleva cada uno. Se repite cuando llega un punto de `active_users` y
+   * cuando cambia la lista de pedidos asignados (un independiente aparece al tomar un pedido del comercio).
+   */
+  private recalcularMensajeros(): void {
+    const llevan = new Map<string, EntregaAsignada[]>();
+    const visibles = this.nodosActivos.filter(({ clave, dato }) => {
+      const lleva = entregasDeMensajero(clave, this.companyName, this.entregasAsignadas);
+      // Ticket 1159: los mensajeros de ESTA empresa (la clave termina en la de la empresa). Un independiente
+      // no es de ninguna empresa: solo se ve mientras lleva un pedido de este comercio.
+      const esDeLaEmpresa = !!this.companyName && perteneceAEmpresa(clave, this.companyName);
+      const visible = esDeLaEmpresa || (esClaveIndependiente(clave) && lleva.length > 0);
+      // Ticket 1154: solo ubicaciones de los últimos 15 minutos de quien no figura desconectado.
+      if (!visible || !ubicacionVigente(dato)) return false;
+      if (lleva.length > 0) llevan.set(clave, lleva);
+      return true;
+    });
+    this.pedidosPorMensajero = llevan;
+    this.mensajeros = visibles
+      .map(({ clave, dato }) => this.filtrarPunto(this.aMensajero(clave, dato)))
+      .sort((a, b) => (b.marca || 0) - (a.marca || 0));
+  }
+
+  /** "En camino", "Para despachar": el estado de un pedido en la lista del mensajero. */
+  public etiquetaEstado(estado: string): string {
+    return etiquetaEstadoEntrega(estado);
   }
 
   /**
@@ -1291,6 +1333,13 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     return nuevo;
   }
 
+  /** La clave de un independiente lleva el id de su ficha en medio del nombre: el nombre sale de su pedido. */
+  private nombreDeClave(clave: string): string {
+    return esClaveIndependiente(clave)
+      ? nombreDeIndependiente(this.pedidosPorMensajero.get(clave) || [])
+      : nombreDesdeClave(clave, this.companyName);
+  }
+
   /**
    * Solo se toman los campos que el mapa usa (no se esparce el nodo entero: un campo cualquiera de
    * `active_users` no debe pisar el nombre ni la posición). Velocidad y batería, si la app las manda.
@@ -1301,7 +1350,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     const numero = (v: any) => (v === null || v === undefined || v === '' || !Number.isFinite(Number(v)) ? undefined : Number(v));
     return {
       id: clave,
-      nombre: nombrePropio || nombreDesdeClave(clave, this.companyName) || 'Mensajero',
+      nombre: nombrePropio || this.nombreDeClave(clave) || 'Mensajero',
       lat: Number(dato?.lat),
       lng: Number(dato?.lng),
       timestamp: dato?.timestamp,
@@ -1361,6 +1410,8 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       this.purgaMensajerosSubscription?.unsubscribe();
       this.purgaMensajerosSubscription = null;
       this.mensajeros = [];
+      this.nodosActivos = [];
+      this.pedidosPorMensajero = new Map();
       this.limpiarCapaMensajeros();
     }
     this.cd.detectChanges();

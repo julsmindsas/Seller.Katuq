@@ -532,6 +532,41 @@ $danger-color:  $em-red;
       letter-spacing: normal;
     }
 
+    // Pedidos que lleva el mensajero: número, cliente y estado; el que va navegando se resalta.
+    &__pedidos {
+      list-style: none;
+      margin: 5px 0 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      li {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        min-width: 0;
+        font-size: 11px;
+        font-weight: 600;
+        color: $em-muted;
+        line-height: 1.35;
+
+        b { color: $em-ink; font-weight: 700; flex-shrink: 0; }
+        em { font-style: normal; flex-shrink: 0; margin-left: auto; }
+      }
+    }
+
+    &__pedido-cliente {
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    &__pedido--actual b { color: $em-green; }
+
+    &__pedidos-mas { font-style: normal; }
+
     &__nombre {
       font-size: 13.5px;
       font-weight: 700;
