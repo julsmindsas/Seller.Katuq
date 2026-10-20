@@ -11326,7 +11326,7 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - `test:dian-invoice` 60/60, `test:dian-config` 17/17, `test:dian-bandeja` 5;
   - `companyFeatureFlags` 38, `reemplazarFactura` 11, `liberarFactura` 14, `dianAlertasPreventivas` 7, `dianAuditoria` 4 y `pedidoYaFacturado` OK.
 - **Regla de la sesión (el usuario: «ojo con dañar cosas»):** solo módulos nuevos detrás de banderas apagadas. Las tareas sensibles (2.8, 2.9, 3.3, 3.4, 4.4, 4.5, 5.x y 7.4) se hacen con diff aprobado, una a la vez.
-- **Avance 20-oct (commiteado sin desplegar: backend `82ac738c`):**
+- **Avance 20-oct (commiteado sin desplegar: backend `b8d7b3cf`):**
   - **Backend** (`backend-aws-security`), módulos nuevos en `services/accounting/invoicing/`:
     - `documentTypes`, `descriptors/*`, `resolveInvoicingProvider`, `invoicingSettings`, `invoicingInProgress`, `invoicingSummary` y `config` (el interruptor de `config/invoicing`);
     - `controllers/invoicingSettingsController.js` y las 5 rutas `/v1/accounting/invoicing/*`, antes de `/:provider/*`, todas detrás de `invoicingHub`;
@@ -11342,3 +11342,5 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
     - Si el certificado no se puede abrir, se guarda como hoy, con `null` y sin secretos en el error.
     - `config_audit.secretsChanged` guarda solo los nombres de los secretos que cambiaron.
     - `test:dian-config` pasa 23/23 (6 nuevas, tarea 1.4) y `test:dian-invoice` sigue en 60/60. El diff se probó primero en una copia aparte.
+  - **Cierre de la sesión, 20-oct (el usuario: «aprobado cierra»):** subidos a origin el backend `b8d7b3cf` (rebasado sobre `e9c4f1b7`, D-513 a D-515) y el front `8b267b9e`. Hubo un conflicto en el catálogo de banderas con `wooStockPublish` (D-515); se resolvió conservando las tres, así que el catálogo queda en 29. Después del rebase se volvieron a correr las suites y todas pasan. **Sin desplegar.**
+  - **Próxima sesión:** 2.9, la sombra en `from-order`, sensible y con diff aprobado; el PR del índice de `orders` (0.4); el front base (3.x); y las pantallas (4.x). D-499 fase 0 (FE-03, idempotencia) puede ir en paralelo con las pruebas primero.
