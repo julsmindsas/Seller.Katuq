@@ -64,6 +64,49 @@ export function opcionesDeFactura(config: any): any {
   return opciones;
 }
 
+/** D-500: tipos de documento que decide el servidor (`resolveInvoicingProvider`). */
+export type TipoDocumentoFactura = 'orderInvoice' | 'posInvoice' | 'manualInvoice';
+
+/** Respuesta de `GET /v1/accounting/invoicing/resolve`. */
+export interface ResolucionServidor {
+  provider: ProveedorContableId | null;
+  source: 'choice' | 'legacyOrder' | 'originalInvoice' | 'none';
+  reason: { code: string; message: string } | null;
+}
+
+/** Proveedor con el motivo cuando no hay uno que se pueda usar. */
+export interface ProveedorResuelto {
+  proveedor: ProveedorContable | null;
+  motivo: string | null;
+}
+
+const MOTIVO_SIN_CONFIGURACION = 'No se pudo leer la configuración del proveedor de facturación. Intenta de nuevo.';
+
+/**
+ * D-500 (decisión 12), con la bandera `invoicingHub`: el servidor decide el proveedor y aquí se
+ * arma el mismo `ProveedorContable` de hoy con su configuración (`evaluarProveedor`). Si el
+ * servidor no da proveedor, NO se prueba otro: se devuelve null con su motivo.
+ */
+export function resolverConServidor(
+  resolve$: Observable<ResolucionServidor>,
+  getIntegration: (p: string) => Observable<any>,
+): Observable<ProveedorResuelto> {
+  return resolve$.pipe(
+    switchMap((r) => {
+      if (!r || !r.provider) {
+        return of({ proveedor: null, motivo: r?.reason?.message || 'No hay un proveedor de facturación disponible.' });
+      }
+      const provider = r.provider;
+      return getIntegration(provider).pipe(
+        map((integracion: any) => evaluarProveedor(provider, integracion)),
+        catchError(() => of(null)),
+        map((proveedor) => (proveedor ? { proveedor, motivo: null } : { proveedor: null, motivo: MOTIVO_SIN_CONFIGURACION })),
+      );
+    }),
+    catchError(() => of({ proveedor: null, motivo: 'No se pudo consultar el proveedor de facturación. Intenta de nuevo.' })),
+  );
+}
+
 /**
  * Primer proveedor contable configurado, probando en ORDEN_PROVEEDORES.
  * `getIntegration` es el de IntegrationsService (inyectable para pruebas).

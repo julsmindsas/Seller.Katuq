@@ -4,6 +4,8 @@ import { defer, forkJoin, of, Subject } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { IntegrationsService } from '../integrations/integrations.service';
+import { CompanyFeaturesService } from '../../shared/services/company-features.service';
+import { FacturacionIntegracionService, ResumenFacturacion } from '../../shared/services/facturacion/facturacion-integracion.service';
 import { VentasService } from '../../shared/services/ventas/ventas.service';
 import { splitDianDocumentList } from './dian-document-list';
 import { InvoiceComposerComponent } from './composer/invoice-composer.component';
@@ -106,7 +108,30 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private changeDetector: ChangeDetectorRef,
+    private features: CompanyFeaturesService,
+    private facturacionIntegracion: FacturacionIntegracionService,
   ) {}
+
+  /** D-500 (FE-01, tarea 4.7): estado del proveedor de facturación, solo con `invoicingHub`. */
+  resumenFacturacion: ResumenFacturacion | null = null;
+  readonly estadosFacturacion: Record<string, string> = {
+    connected: 'Conectado', testing: 'En pruebas', error: 'Con error', unconfigured: 'Sin configurar',
+  };
+
+  private cargarResumenFacturacion(): void {
+    if (!this.features.isEnabled('invoicingHub')) return;
+    this.facturacionIntegracion
+      .resumen()
+      .pipe(catchError(() => of(null)), takeUntil(this.destroy$))
+      .subscribe((r) => {
+        this.resumenFacturacion = r;
+        this.changeDetector.markForCheck();
+      });
+  }
+
+  verEnIntegraciones(): void {
+    this.router.navigateByUrl('/integrations/facturacion');
+  }
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -115,6 +140,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadDashboard();
+    this.cargarResumenFacturacion();
 
     // `?documento=<número o CUFE>` abre directamente la lista buscando ese
     // documento. Lo usa la consola de plataforma para saltar desde el cobro de

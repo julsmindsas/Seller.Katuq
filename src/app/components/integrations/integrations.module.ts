@@ -65,6 +65,12 @@ const routes: Routes = [
   { path: 'configure', component: IntegrationsComponent },
   // Siigo configuration
   { path: 'siigo', component: SiigoConfigComponent },
+  // D-500 (ticket 1260, FE-01): facturación electrónica en Integraciones (lazy, detrás de invoicingHub).
+  {
+    path: 'facturacion',
+    loadChildren: () => import('./facturacion/facturacion.module').then((m) => m.FacturacionModule),
+    data: { title: 'Facturación electrónica' },
+  },
   // Shopify Dashboard (UI concreta de Shopify)
   { path: 'shopify', component: ShopifyDashboardComponent },
   { path: 'shopify/logs', component: SyncLogsComponent },

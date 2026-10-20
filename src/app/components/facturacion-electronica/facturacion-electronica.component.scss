@@ -511,3 +511,6 @@ $head: var(--kc-font-head);
   p { margin: 0 0 10px; letter-spacing: normal; font-size: 14px !important; line-height: 1.5; color: #211F3A; }
   .kai-rechazo__dian { font-size: 12.5px !important; color: #6b6890; }
 }
+
+// D-500 (FE-01): proveedor de facturación en la franja de estado (solo con invoicingHub).
+.fe-strip__proveedor { font-size: 12.5px; font-weight: 600; color: #5b5878; letter-spacing: normal; }

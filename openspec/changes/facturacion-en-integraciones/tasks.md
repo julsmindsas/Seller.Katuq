@@ -69,7 +69,7 @@ Todas: **Dep.** 0.1, 0.3. **Éxito:** corren con `node` y fallan por código aus
 - [ ] 1.6 [P] `tests/accounting/seedInvoicingChoice.test.js`: la simulación no escribe; `--execute` escribe sobre documento
   ausente o sin elección y se niega con elección; `--revert` con compare-and-set de `version` y sin borrar `health`; nunca
   imprime secretos.
-- [ ] 1.7 [P] Specs del front de `facturacion-integracion.service.ts` y `resolverProveedor(documentType)`, con y sin bandera,
+- [x] 1.7 [P] Specs del front de `facturacion-integracion.service.ts` y `resolverProveedor(documentType)`, con y sin bandera,
   y del cálculo de contadores del directorio (receta de un solo spec de Karma).
 - [ ] 1.8 [P] `tests/accounting/invoiceShadow.contract.test.js`, para `from-order` y `from-order-async`:
   - status y cuerpo 201/202 idénticos con la sombra encendida o apagada (salvo `timestamp`);
@@ -103,8 +103,8 @@ Todas: **Dep.** 0.1, 0.3. **Éxito:** corren con `node` y fallan por código aus
 
 ## 3. Front base (sin bandera = igual que hoy)
 
-- [ ] 3.1 `facturacion-integracion.service.ts`, que extiende `base.service.ts`. **Dep.** 1.7, 2.7. **Éxito:** pasa su spec.
-- [ ] 3.2 `FacturacionAutomaticaService.resolverProveedor(documentType)`. **Dep.** 3.1, 2.1. **Éxito:** 1.7 pasa; sin bandera,
+- [x] 3.1 `facturacion-integracion.service.ts`, que extiende `base.service.ts`. **Dep.** 1.7, 2.7. **Éxito:** pasa su spec.
+- [x] 3.2 `FacturacionAutomaticaService.resolverProveedor(documentType)`. **Dep.** 3.1, 2.1. **Éxito:** 1.7 pasa; sin bandera,
   mismas peticiones que hoy.
 - [ ] 3.3 **Sensible (pedidos), con diff aprobado.** Venta asistida pasa `'orderInvoice'` y el POS `'posInvoice'`. **Dep.** 3.2.
   **Éxito:** sin bandera, la pestaña de red muestra las mismas peticiones.
@@ -116,22 +116,22 @@ Todas: **Dep.** 0.1, 0.3. **Éxito:** corren con `node` y fallan por código aus
 
 ## 4. Pantallas con bandera
 
-- [ ] 4.1 Directorio (decisión 13): `bandera`, `reemplaza`, fuente `'facturacion'` y `entradasVisibles`. **Dep.** 3.1, 1.7.
+- [x] 4.1 Directorio (decisión 13): `bandera`, `reemplaza`, fuente `'facturacion'` y `entradasVisibles`. **Dep.** 3.1, 1.7.
   **Éxito:** con la bandera apagada, directorio, contadores, "Solo las mías" y "Otras conexiones" idénticos; encendida, una
   tarjeta con uno de los cuatro estados, contada una vez, y Siigo, WO y DIAN fuera de "Otras conexiones".
-- [ ] 4.2 Hub `/integrations/facturacion` (lazy, D-400, `OnPush`): proveedor, estados, selector por tipo (solo soportados),
+- [x] 4.2 Hub `/integrations/facturacion` (lazy, D-400, `OnPush`): proveedor, estados, selector por tipo (solo soportados),
   "Volver a…", bloqueo con su motivo, "Probar conexión" y botones según `canConfigure`. **Dep.** 4.1. **Éxito:** verificado
   en FLORECER con Administrador, Contador y Vendedor.
-- [ ] 4.3 [P] `facturacion-asistentes.registry.ts`. **Dep.** 4.2. **Éxito:** los componentes nuevos no comparan el proveedor
+- [x] 4.3 [P] `facturacion-asistentes.registry.ts`. **Dep.** 4.2. **Éxito:** los componentes nuevos no comparan el proveedor
   con un texto fijo.
 - [ ] 4.4 **Sensible (consecutivos: el formulario edita el rango), con diff aprobado.** Extraer `dian-config-form.ts` sin
   cambiar el comportamiento. **Dep.** 0.3. **Éxito:** el asistente viejo envía el mismo cuerpo (petición comparada).
 - [ ] 4.5 **Sensible (consecutivos), con diff aprobado.** Asistente `facturacion/dian`: vencimiento del certificado, correo con
   `emailReady` e historial. **Dep.** 4.4, 2.8, 0.2. **Éxito:** el certificado nunca vuelve al navegador (red) y lo sensible
   queda deshabilitado para el Contador.
-- [ ] 4.6 Siigo con un solo asistente: con la bandera, el `case 'siigo'` lleva a `/integrations/siigo`. **Dep.** 4.3. **Éxito:**
+- [x] 4.6 Siigo con un solo asistente: con la bandera, el `case 'siigo'` lleva a `/integrations/siigo`. **Dep.** 4.3. **Éxito:**
   mismo endpoint y mismo cuerpo que hoy.
-- [ ] 4.7 Pantalla operativa: estado, "Ver en Integraciones" según `canConfigure` y próximo número con su resolución.
+- [x] 4.7 Pantalla operativa: estado, "Ver en Integraciones" según `canConfigure` y próximo número con su resolución.
   **Dep.** 3.1. **Éxito:** sin la bandera, igual que hoy.
 - [ ] 4.8 Textos EN y PT, trampas de CSS global y conteo de gradientes y primarios prohibidos (no sube). **Dep.** 4.1-4.7.
   **Éxito:** revisado en 1440 y 390 px, sin scroll horizontal ni texto invisible.

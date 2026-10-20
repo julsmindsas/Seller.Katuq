@@ -1,5 +1,5 @@
 import { of, throwError } from 'rxjs';
-import { evaluarProveedor, nombreProveedor, opcionesDeFactura, resolverProveedorCon } from './facturacion-automatica.util';
+import { evaluarProveedor, nombreProveedor, opcionesDeFactura, resolverConServidor, resolverProveedorCon } from './facturacion-automatica.util';
 
 /** D-419 / ticket 1171: facturación automática compartida (venta asistida y POS). */
 describe('facturacion-automatica.util', () => {
@@ -52,6 +52,48 @@ describe('facturacion-automatica.util', () => {
       const integraciones: any = { getIntegration: () => of({ enabled: false }) };
       resolverProveedorCon(integraciones.getIntegration).subscribe((p) => {
         expect(p).toBeNull();
+        done();
+      });
+    });
+  });
+
+  /** D-500 (FE-01), tarea 1.7: con la bandera, el servidor decide y nunca se prueba otro proveedor. */
+  describe('resolverConServidor', () => {
+    it('arma el mismo ProveedorContable de hoy con la configuración del proveedor resuelto', (done) => {
+      const pedidas: string[] = [];
+      const getIntegration = (p: string) => { pedidas.push(p); return of(siigoActivo); };
+      resolverConServidor(of({ provider: 'siigo', source: 'choice', reason: null } as any), getIntegration).subscribe((r) => {
+        expect(r.proveedor).toEqual(evaluarProveedor('siigo', siigoActivo));
+        expect(r.motivo).toBeNull();
+        expect(pedidas).toEqual(['siigo']);
+        done();
+      });
+    });
+
+    it('sin proveedor del servidor: null con su motivo y sin pedir ninguna integración', (done) => {
+      const pedidas: string[] = [];
+      const motivo = 'El proveedor elegido para facturar está desactivado o sin configurar. Revísalo en Integraciones.';
+      resolverConServidor(of({ provider: null, source: 'choice', reason: { code: 'CHOSEN_PROVIDER_INACTIVE', message: motivo } } as any),
+        (p: string) => { pedidas.push(p); return of(siigoActivo); }).subscribe((r) => {
+        expect(r.proveedor).toBeNull();
+        expect(r.motivo).toBe(motivo);
+        expect(pedidas).toEqual([]);
+        done();
+      });
+    });
+
+    it('si la configuración del resuelto no se puede leer, null: no cae a otro proveedor', (done) => {
+      resolverConServidor(of({ provider: 'dian', source: 'choice', reason: null } as any), () => throwError(() => new Error('404'))).subscribe((r) => {
+        expect(r.proveedor).toBeNull();
+        expect(r.motivo).toBeTruthy();
+        done();
+      });
+    });
+
+    it('si el servidor falla, null con motivo', (done) => {
+      resolverConServidor(throwError(() => new Error('500')), () => of(siigoActivo)).subscribe((r) => {
+        expect(r.proveedor).toBeNull();
+        expect(r.motivo).toBeTruthy();
         done();
       });
     });

@@ -42,6 +42,11 @@
         <i class="pi" [ngClass]="isConfigured ? 'pi-check' : 'pi-exclamation-circle'"></i>
         {{ configurationError ? 'Configuración sin consultar' : (isConfigured ? 'Configuración guardada' : 'Sin configurar') }}
       </span>
+      <!-- D-500 (FE-01): con la bandera invoicingHub, el proveedor que factura y su estado. -->
+      <span class="fe-strip__proveedor" *ngIf="resumenFacturacion as rf">
+        Facturas con {{ rf.providerName || 'ningún proveedor' }} · {{ estadosFacturacion[rf.status] }}<ng-container *ngIf="rf.dian?.nextNumber"> · próximo {{ rf.dian?.prefix }}{{ rf.dian?.nextNumber }} (resolución {{ rf.dian?.resolutionNumber }})</ng-container>
+      </span>
+      <a href="#" class="fe-strip__hist" *ngIf="resumenFacturacion?.canConfigure" (click)="$event.preventDefault(); verEnIntegraciones()">Ver en Integraciones</a>
       <a href="#" class="fe-strip__hist" *ngIf="technicalHistory.length" (click)="toggleHistory($event)" [attr.aria-expanded]="historyOpen">
         Historial técnico ({{ technicalHistory.length }})
         <i class="pi pi-chevron-down" [class.is-open]="historyOpen"></i>

@@ -11344,6 +11344,24 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
     - `test:dian-config` pasa 23/23 (6 nuevas, tarea 1.4) y `test:dian-invoice` sigue en 60/60. El diff se probó primero en una copia aparte.
   - **Cierre de la sesión, 20-oct (el usuario: «aprobado cierra»):** subidos a origin el backend `b8d7b3cf` (rebasado sobre `e9c4f1b7`, D-513 a D-515) y el front `8b267b9e`. Hubo un conflicto en el catálogo de banderas con `wooStockPublish` (D-515); se resolvió conservando las tres, así que el catálogo queda en 29. Después del rebase se volvieron a correr las suites y todas pasan. **Sin desplegar.**
   - **Próxima sesión:** 2.9, la sombra en `from-order`, sensible y con diff aprobado; el PR del índice de `orders` (0.4); el front base (3.x); y las pantallas (4.x). D-499 fase 0 (FE-03, idempotencia) puede ir en paralelo con las pruebas primero.
+- **D-500, bitácora 2026-10-20 (2), objetivo del usuario «cerrar estos tickets de factura»:**
+  - **Regla:** un ticket se cierra solo con su trabajo hecho y publicado (memoria del 20-oct). FE-01 (#1260) se cierra cuando D-500 esté desplegada y encendida. Los otros 13 FE siguen la hoja D-499, y cada fase lleva su propia propuesta.
+  - **Front, no sensible (bandera apagada = igual que hoy):**
+    - 3.1: `facturacion-integracion.service.ts` (extiende `BaseService`).
+    - 3.2: `FacturacionAutomaticaService.resolverProveedorPara(tipo)`. Sin la bandera hace las mismas peticiones que hoy y no trae motivo; con ella decide el servidor y nunca se prueba otro proveedor.
+    - 4.1: tarjeta única «Facturación electrónica» en el directorio, con `bandera` y `reemplaza`. El filtro `entradasActivas` alimenta los contadores, «Mis conexiones» y la búsqueda; Siigo, World Office y DIAN no caen en «Otras conexiones».
+    - 4.2 y 4.3: pantalla `/integrations/facturacion` (módulo lazy, `OnPush`, base D-400) y registro de asistentes.
+    - 4.6: SIIGO se configura en `/integrations/siigo`. World Office se abre en el listado con `?abrir=world_office`.
+    - 4.7: el proveedor y su estado en la franja de «Facturación electrónica».
+    - 1.7: spec de `resolverConServidor`. Karma no corre en esta máquina (no hay Chrome); la lógica se verificó compilando el util con `tsc` y corriéndolo en Node (5/5).
+  - **Verificado:** `tsc` sin errores en `src/`. `ng build --configuration production` termina sin errores y sin subir la versión (salida en el scratchpad, no en `dist/cuba`); la pantalla nueva sale en un chunk aparte. Sin gradientes ni primarios prohibidos. Ninguna clase con «p-».
+  - **Desvío en 4.8:** Integraciones no usa i18n (todo en español), así que la pantalla sigue esa convención y no trae EN ni PT. Falta la revisión visual a 1440 y 390 px, en FLORECER con la bandera encendida.
+  - **Sensibles, preparadas con diff y esperando aprobación:**
+    - 2.9: medición en `from-order` y `from-order-async`. Corre después de responder y se traga sus errores. `invoiceShadow.contract` 7/7, sin regresión.
+    - 3.3: venta asistida usa `orderInvoice` y el POS `posInvoice`.
+    - 3.4: «Todos los pedidos» decide con `proveedorDe(pedido)`. Sin la bandera devuelve exactamente lo de antes; con ella, el del tipo de la fila o el motivo. Ya no usa `|| 'siigo'`.
+    - Las tres compilan; se probaron en una copia aparte y no se aplicaron.
+
 ## D-513 (2026-10-20) — WooCommerce: cerrar rutas sin sesión y exigir firma (puntos 25, 26 y 27 del reporte del 19-10) — IMPLEMENTADA LOCAL
 
 - Propuesta y tareas en el backend: `openspec/changes/woocommerce-cerrar-rutas-abiertas/`. Aprobada por la usuaria tras leer el Word del Escritorio.
