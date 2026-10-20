@@ -11307,6 +11307,8 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - Backend: 27/27 suites de soporte, más acceso a empresas, banderas y MCP.
   - Support: `ng build` de producción limpio.
   - Probado en Chrome el 20-oct con ALMARA FELICIDAD y con el equipo. La API del comercio trajo sus 73 tickets, con 0 notas internas (hay 48 tickets con notas en Firestore) y 0 contactos del equipo. El ticket de prueba #1319 quedó archivado.
-  - `supportMerchantAccess` quedó encendida en ALMARA FELICIDAD: Santiago aceptó que entre a Support apenas se despliegue.
-- **Pendiente:** despliegue (primero backend, luego Support `hosting:katuq-tickets`) con aprobación, y la Fase 2 en otra sesión.
+  - `supportMerchantAccess` quedó encendida en ALMARA FELICIDAD y en Baudio Corporation Colombia SAS (20-oct). Santiago aceptó que entren a Support apenas se despliegue.
+- **Pendiente:**
+  - Despliegue desde la máquina principal: primero el backend (`backend-aws-security` en `40e2ee22` o posterior), luego Support (`main` en `a8f3761`, `hosting:katuq-tickets`). Al revés, el front llamaría a `/v1/support/sesion`, que no existe, y mandaría a todos a "sin acceso".
+  - La Fase 2, en otra sesión.
 
