@@ -46,16 +46,6 @@
       <app-feather-icons [icon]="'chevron-right'" class="chevron"></app-feather-icons>
     </a>
 
-    <!-- Opinar (D-483): solo en celular; en escritorio está en la barra -->
-    <a class="menu-item d-md-none" role="menuitem" tabindex="0"
-       (click)="opinar()" (keydown.enter)="opinar()">
-      <div class="item-icon">
-        <app-feather-icons [icon]="'message-circle'"></app-feather-icons>
-      </div>
-      <span>Opinar</span>
-      <app-feather-icons [icon]="'chevron-right'" class="chevron"></app-feather-icons>
-    </a>
-
     <!-- Dynamic Menu Items -->
     <a class="menu-item" *ngFor="let item of authorizedMenuItems"
        [routerLink]="'/' + item.path" (click)="openAccount = false">

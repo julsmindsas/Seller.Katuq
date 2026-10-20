@@ -10807,6 +10807,7 @@ Daniel (17-oct): "un sistema NPS para saber la satisfacción de nuestros cliente
   - los comentarios se guardan 24 meses; después se borra el texto y queda la nota;
   - se abre aparte el cambio que hace que `/v1/reports/query` y `/v1/companies/overview` tomen la empresa del JWT;
   - excepción al Artículo IX: los módulos existentes siguen en NgModule y `*ngIf`; lo nuevo y aislado va standalone.
+- **Bitácora 20-oct:** Daniel pidió quitar el botón "Opinar" del encabezado y del menú de la cuenta ("no aporta nada"). El modal (`opinar-modal`) y su endpoint quedan en el código, sin ninguna entrada que los abra.
 
 ## D-484 (2026-10-17) — Reportes y empresas toman la empresa del JWT, no del header — PROPUESTA, pendiente de aprobación; arreglo urgente de empresas PUBLICADO (backend 03aae0fe, en 6c2cf351)
 

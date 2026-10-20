@@ -332,37 +332,3 @@
     padding: 0 12px;
   }
 }
-
-// =============================================================================
-// Opinar (D-483): mismo botón blanco de 40 px que sus vecinos. En celular no
-// cabe (la barra ya ocupa los 390 px justos): ahí la entrada va en el menú de
-// la cuenta (app-my-account).
-// =============================================================================
-.page-header .nav-right .nav-menus > li > button.opinar-btn {
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 12px;
-  border: 1px solid var(--ktq-border, #ece8f7);
-  border-radius: 12px;
-  background: #fff;
-  color: #5F3FE0;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: normal;
-  cursor: pointer;
-  transition: all .15s;
-
-  .pi { font-size: 14px; }
-  .opinar-btn__texto { color: inherit; font-size: inherit; letter-spacing: normal; }
-
-  &:hover { background: #f0ecff; border-color: #ddd4f7; }
-  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
-
-}
-
-@media (max-width: 767.98px) {
-  .page-header .nav-right .nav-menus > li.opinar-nav { display: none; }
-}
