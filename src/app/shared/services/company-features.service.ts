@@ -54,6 +54,9 @@ export const COMPANY_FEATURE_FLAGS = [
   'invoicingHub',
   // La factura automática al aprobar el pago sigue la elección (D-500). Dueño: Daniel. Se retira el 2027-03-31.
   'invoicingAutoFollowsChoice',
+  // Stock de Katuq a WooCommerce: ventas, POS y despachos actualizan la tienda (D-515).
+  // Se enciende a mano, primero en una empresa de prueba. Dueño: Daniel. Se revisa el 2027-04-30.
+  'wooStockPublish',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

@@ -11344,3 +11344,34 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
     - `test:dian-config` pasa 23/23 (6 nuevas, tarea 1.4) y `test:dian-invoice` sigue en 60/60. El diff se probó primero en una copia aparte.
   - **Cierre de la sesión, 20-oct (el usuario: «aprobado cierra»):** subidos a origin el backend `b8d7b3cf` (rebasado sobre `e9c4f1b7`, D-513 a D-515) y el front `8b267b9e`. Hubo un conflicto en el catálogo de banderas con `wooStockPublish` (D-515); se resolvió conservando las tres, así que el catálogo queda en 29. Después del rebase se volvieron a correr las suites y todas pasan. **Sin desplegar.**
   - **Próxima sesión:** 2.9, la sombra en `from-order`, sensible y con diff aprobado; el PR del índice de `orders` (0.4); el front base (3.x); y las pantallas (4.x). D-499 fase 0 (FE-03, idempotencia) puede ir en paralelo con las pruebas primero.
+## D-513 (2026-10-20) — WooCommerce: cerrar rutas sin sesión y exigir firma (puntos 25, 26 y 27 del reporte del 19-10) — IMPLEMENTADA LOCAL
+
+- Propuesta y tareas en el backend: `openspec/changes/woocommerce-cerrar-rutas-abiertas/`. Aprobada por la usuaria tras leer el Word del Escritorio.
+- Los GET de depuración `/v1/woocommerceWebhook/orders/{raw,mapped,debug/:id}` pasan a `auth, requirePlatformTenant`; `sync/products/import-all` a `auth, requireJwtTenant, ONLY_ADMIN` con la empresa de `req.tenant` (antes `body.companyId`); `/v1/woocommerce/test-connection` a `rateLimit, auth, requireJwtTenant, ONLY_ADMIN` con solo https, sin IP internas (también al conectar, vía `lookup`), `apiVersion` `wc/vN`, sin redirecciones ni `verifySsl:false`.
+- La entrada oficial `/v1/woocommerce/webhook/:companyId` rechaza con 401 `webhook_secret_not_configured` si la empresa no tiene `webhookSecret`. Producción (lectura 20-10): 3 configs Woo; sin secreto solo Mi Campo Verde y Tienda Demo KAI Import (cortesía Katuq); `wc_webhook_events` = 0, nadie usa esa entrada.
+- Nadie llamaba esas rutas (front usa `/v1/integration/config/test`). No se quitó auth ni se borraron rutas. Prueba: `functions/tests/integrations/woocommerceRutasCerradas.test.js` (sin red ni Firestore real).
+- Orden propuesto (sin confirmar) para lo que sigue: 16 (+17) → 10 → 1 (+2). Sin commit ni deploy.
+
+## D-514 (2026-10-20) — WooCommerce: editar o borrar una variante toca solo esa variante (puntos 16 y 17 del reporte del 19-10) — IMPLEMENTADA LOCAL
+
+- Propuesta y tareas en el backend: `openspec/changes/woocommerce-variantes-sin-tocar-el-padre/`. Aprobada por la usuaria.
+- `woocommerceProvider.updateProduct/deleteProduct` usan `/products/{parentId}/variations/{variationId}` cuando el documento tiene `integrations.woocommerce.variationId`; la variación solo recibe precio, SKU, descripción e imagen (nunca nombre, categorías ni etiquetas). Antes pegaban sobre el padre: borrar una variante lo borraba entero con `force=true`.
+- Productos (no variantes) se borran a la papelera de Woo (`force=false`). Documento con aspecto de variante sin `variationId` → no llama a la tienda y escribe en `integration_audit` (`woocommerce_variant_without_variation_id`).
+- Importador: precio de Katuq desde `regular_price` (antes `price`, que es el de oferta); no vuelve a ligar como padre un documento con `variationId`.
+- Producción (lectura 20-10): solo CAFE ESCOBAR expuesta, 16 variantes en condición de sincronizar; 3 productos importados en oferta ya tienen hoy el precio normal. Sin backfill.
+- Prueba: `functions/tests/integrations/woocommerceVariantes.test.js` (tienda y Firestore simulados). Sin commit ni deploy.
+
+## D-515 (2026-10-20) — WooCommerce: ventas, POS y despachos actualizan el stock de la tienda (puntos 10, 11 y 13 del reporte del 19-10) — CÓDIGO LOCAL, SIN ENCENDER
+
+- Propuesta y tareas en el backend: `openspec/changes/woocommerce-stock-desde-katuq/`. Aprobada por la usuaria. Camino solo-stock: trigger `katuq-inventory-changed` (D-176) → `woocommerce-inventory-adjust`, que ahora entiende `{productoId, setTo}`, procesa todos los items, lee `products` solo para identidad y escribe solo `inventory_audit` (`action: woo_stock_publish`).
+- Publica únicamente con `featureFlags.wooStockPublish` de la empresa y `config/feature_flags.wooStockPublish !== false`; además el trigger sigue en sombra (`publicar: false`). Omite producto ajeno, inactivo, sin página web, sin id de Woo, variante sin `variationId` y padre variable; negativos → 0; simples con `manage_stock: true` (punto 13, solo en este camino).
+- `_requireWooConfig` ya no exige `consumerSecret` (la config del flow es pública): arregla todos los nodos Woo (punto 11). Plantilla `woo-stock-katuq-to-woo` corregida (polling 5 min, `bodegas`, sombra) y el seed ya no escribe al importarse. Instalador `functions/scripts/instalar-stock-woo.js` (simulación por defecto): Demo → `001`, CAFE ESCOBAR → BOD-005, Mi Campo Verde → BOD-001.
+- Falta en producción el índice `inventory (company ASC, updatedAt ASC)` (FAILED_PRECONDITION en lectura del 20-10). Crearlo por el enlace de la consola; nunca `firebase deploy --only firestore:indexes --force`. Nada instalado ni encendido. Prueba: `functions/tests/integrations/woocommerceStockDesdeKatuq.test.js` (incluye write-set).
+
+### 2026-10-20 — D-514 ampliada: importador (bodega e IVA) y borrado que nunca avisaba a la tienda (punto 20) — probado con tienda local
+
+- Probando con WordPress Playground local conectado a FLORECER (bodega BOD-006, canal `WooCommerce PRUEBA LOCAL`) aparecieron tres errores más, aprobados por la usuaria:
+  - `importAllProducts` pasaba a `processProduct/processVariation` el ID de documento de la bodega: `inventory` e `inventoryMovement` quedaban con `idBodega` = docId (regla dura). Ahora va el código BOD-xxx. Prod: FLORECER 4 filas de prueba (corregidas a BOD-006 con `woo-prueba/corregir-bodega-prueba.js`, simulación primero) y **CAFE ESCOBAR 1 fila (1 unidad) sin tocar, pendiente de decisión**.
+  - El importador guardaba en `precio.precioUnitarioIva` el MONTO del IVA (la ficha mostraba 7983 %). Ahora `'19'` (porcentaje, como lo leen la ficha y orderCalculationService) y el monto en `valorIva`. CAFE ESCOBAR: 0 productos afectados.
+  - `services/ecommerce/index.js` hacía `.bind` de funciones que ya no existen en el adapter: el módulo reventaba al cargarse y `POST /productos/delete` borraba en Katuq, nunca en la tienda, y respondía `{}` (punto 20). Ahora solo expone `syncProduct` y `syncInventoryByProduct`.
+- Comprobado en la tienda local: editar la talla M cambió solo esa variación (padre intacto); retirar stock llegó a la variación (5 → 0); borrar la talla S borró solo la variación #12. Pruebas: `tests/integrations/woocommerceImportadorBodegaIva.test.js` y `woocommerceVariantes.test.js`. Sin commit ni deploy.
