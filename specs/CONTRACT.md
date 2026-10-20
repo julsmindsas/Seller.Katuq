@@ -10217,7 +10217,7 @@ Daniel: «arreglalo y te autorizo a corregir los pedidos». Sigue a D-438.
 - **`dian_auditoria` (append-only):** las notas crédito y débito y el envío de facturas desde Nueva factura registran usuario y rol del JWT firmado, fecha, documento y resultado, incluidos los fallidos. Los cambios de configuración ya quedaban en `config_audit`.
 - **Escalado sin tocar:** `POST /v1/accounting/:provider/notes/:noteType` no exige rol ni tenant del JWT (la empresa sale del header). Corregirlo puede afectar el cambio de empresa del superadmin y requiere decisión. Roles de facturador y consulta, conservación legal y cifrado del certificado (ya cifrado en `integration_secrets`) quedan para su spec.
 
-## D-450 (2026-10-16) — Support: módulo de proyectos con metodología ágil (backlog, sprints, tablero y métricas), multiempresa desde el primer día (ticket Julsmind 1284) — SUBIDO sin publicar: backend 91746a7 (merge cf2f4f6), Support eeb1f83; pendiente el despliegue que autoriza Daniel
+## D-450 (2026-10-16) — Support: módulo de proyectos con metodología ágil (backlog, sprints, tablero y métricas), multiempresa desde el primer día (ticket Julsmind 1284) — EN PRODUCCIÓN desde el 16-oct: índices y backend (c31b6618), Support (1096976f); backend 91746a7 (merge cf2f4f6), Support eeb1f83. Mejoras de confiabilidad en D-510
 
 > Se registró primero como "D-442". Otra sesión usó ese número el mismo día (rótulo de despacho, ticket 1219), así que se renumeró a D-450. Los commits 91746a7, 8af7b1d y eeb1f83 y el código dicen "D-442": se refieren a esta entrada.
 
@@ -11226,3 +11226,35 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
 - **Responsive:** 1440 sin desbordamiento; a 390 el directorio mide 358/358 y los diálogos 372/372. Se encontró desbordamiento de 42 px en el encabezado compartido .right-header, fuera del diff: no se oculta ni se declara QA móvil global sin incidencias. Viewport restaurado. No se completó login OAuth desde las IA ni se concedieron permisos nuevos.
 - **MCP:** ambas notas internas confirmadas; **1315 Resuelto** con resolución y versión. **1313 Haciendo** sólo por la revisión editorial de Jairo indicada en el ticket; no se le envió mensaje y el padre omnicanal sigue abierto.
 - **Evidencia:** `openspec/changes/instructivos-mcp-en-integraciones/verificacion.md`, capturas produccion-* de esta sesión y logs en /tmp/katuq-1315-1313-publicacion/. Environments actualizados sólo en versión; sin cambios de backend/datos de negocio.
+
+## D-510 (2026-10-20) — Proyectos de Support: que no se pierda trabajo ni se vean datos malos (paquete 1 de mejoras, ticket 1284) — SUBIDO sin desplegar: backend 87e48475, Support e30be42
+
+- **Por qué:** la revisión del módulo (D-450) del 20-oct encontró casos que pierden trabajo o muestran datos equivocados:
+  - tarjetas que, tras cambiar de sprint, ya no se pueden reordenar (empates de `rank`);
+  - un 500 al borrar o mover un padre con muchas subtareas;
+  - un burndown cortado en la fecha de fin;
+  - ediciones del panel de detalle que se descartaban.
+- **Decisiones (`openspec/changes/proyectos-pulido-confiabilidad/` del backend):**
+  - Al cambiar de lista sin vecinos, o al pasar lo pendiente en el cierre del sprint, el elemento va al final de la lista destino.
+  - Los vecinos se validan: no puede ser el mismo elemento, y deben estar en la misma lista y bajo el mismo padre.
+  - **Reorganización del orden** (`services/soporte/proyectos/reorganizar.js`): reasigna claves cortas conservando el orden, cuando hay empates o claves de más de 64 caracteres. Escribe **solo `rank`**, sin subir `version` ni dejar historial, porque el orden no es contenido.
+  - Script `scripts/proyectos-reorganizar-orden.js`: simulación por defecto, `--execute` para escribir.
+  - **Tope de 50 subtareas por elemento** (409 `TOO_MANY_SUBTASKS`). Así borrar o mover un padre no supera las 500 escrituras de una transacción.
+  - El burndown llega hasta el día real de cierre (o hasta hoy). La línea ideal sigue llegando a cero en la fecha de fin.
+  - Cerrar pasando lo pendiente a un sprint sin espacio responde `SPRINT_FULL` con `details: { carrying, available }`, y el mensaje dice cuántos pasan y cuántos caben.
+  - Front Support:
+    - el panel encola las ediciones en vez de descartarlas y pregunta antes de cerrar con cambios sin guardar (también en el modal de equipo);
+    - comentarios e historial se pueden paginar, y el total de comentarios es el real;
+    - las fechas del panel salen en es-CO (`LOCALE_ID` declarado en el propio panel: ng-bootstrap no deja que vea el del módulo);
+    - el filtro de etiquetas ya no se encoge;
+    - planeación recarga las listas ante un 409;
+    - métricas distingue un error de un "sin datos" y redibuja las gráficas al reintentar;
+    - la sección de proyectos del ticket se reinicia al cambiar de ticket.
+- **No toca:** tickets (`support`), auth, colecciones ni endpoints nuevos, ni el modelo de orden.
+- **Estado:**
+  - Pruebas del backend: 143/143 (12 nuevas en `tests/support/proyectos/confiabilidad.test.js`).
+  - `ng build` de Support sin errores.
+  - Diagnóstico de producción en simulación (20-oct): 2 proyectos, sin empates, sin claves largas y sin padres con más de 50 subtareas. No hace falta reorganizar.
+  - Prueba manual en Chrome (20-oct) con el proyecto PRUEBA D-510, que quedó cerrado. Orden, panel, filtros, cierre, burndown y equipo: OK.
+- **Pendiente:** despliegue (primero backend, luego Support), con aprobación, y la prueba con un proyecto real del equipo.
+
