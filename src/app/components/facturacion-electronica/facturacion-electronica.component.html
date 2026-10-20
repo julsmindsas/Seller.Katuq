@@ -345,7 +345,7 @@
                 </div>
               </td>
             </tr>
-            <tr class="fe-reject" *ngIf="statusGroup(document) === 'rejected' && !document.reemplazadaPor">
+            <tr class="fe-reject" *ngIf="statusGroup(document) === 'rejected' && !document.reemplazadaPor && !notaRechazadaYaRehecha(document)">
               <td colspan="6">
                 <div class="fe-reject__body">
                   <span class="fe-reject__icon"><i class="pi pi-times"></i></span>

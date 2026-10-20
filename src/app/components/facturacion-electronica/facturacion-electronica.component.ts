@@ -27,6 +27,8 @@ interface DianDocument {
   createdAt?: any;
   reference?: { number?: string; cufe?: string; issueDate?: string };
   correction?: { code?: string; description?: string };
+  /** Ticket 1242: lo que ajustaba una nota (para reenviarla igual si la DIAN la rechazó). */
+  adjustment?: { description?: string; baseAmount?: number; taxRate?: number } | null;
   artifacts?: any;
   error?: { code?: string; message?: string };
   emailDelivery?: { requested?: boolean; sent?: boolean; recipient?: string };
@@ -664,6 +666,10 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   }
 
   retryDocument(document: DianDocument): void {
+    if (document.type === 'creditNote' || document.type === 'debitNote') {
+      this.reenviarNota(document);
+      return;
+    }
     if (document.orderId) {
       this.invoiceOrder({ _id: document.orderId, nroPedido: document.orderId });
       return;
@@ -864,6 +870,63 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
       if (result.value === 'credit_full') this.confirmFullCreditNote(document);
       else this.openAdjustmentForm(document, 'credit');
     });
+  }
+
+  /**
+   * Ticket 1242: una nota rechazada se corrige volviendo a hacerla sobre su factura.
+   * Si guardó lo que corregía, se puede reenviar igual; si no, se abre la nota de cero.
+   * La rechazada no tiene efecto fiscal: el número de la nueva es otro.
+   */
+  private reenviarNota(nota: DianDocument): void {
+    const ref = nota.reference || {};
+    const factura = this.documents.find((d) => d.type === 'invoice' && d.status === 'accepted' && d.number === ref.number)
+      || (ref.number && ref.cufe
+        ? { type: 'invoice', status: 'accepted', number: ref.number, cufe: ref.cufe, issueDate: ref.issueDate, orderId: nota.orderId } as DianDocument
+        : null);
+    if (!factura) {
+      Swal.fire({ icon: 'error', title: 'No encontramos la factura', text: 'Esta nota no tiene guardada la factura que corregía. Haz la nota desde la factura.' });
+      return;
+    }
+    const tipo: 'credit' | 'debit' = nota.type === 'creditNote' ? 'credit' : 'debit';
+    const correccion = nota.correction?.code && nota.correction?.description ? nota.correction : null;
+    if (!correccion) {
+      this.iniciarNota(factura, tipo);
+      return;
+    }
+    const ajuste = nota.adjustment && Number(nota.adjustment.baseAmount) > 0 ? nota.adjustment : null;
+    const que = ajuste
+      ? `${this.escapeHtml(ajuste.description || correccion.description)} por ${this.formatCop(Number(ajuste.baseAmount))} más IVA del ${Number(ajuste.taxRate || 0)}%`
+      : (tipo === 'credit' && correccion.code === '2' ? 'anular toda la factura' : this.escapeHtml(correccion.description));
+    Swal.fire({
+      icon: 'question',
+      title: `Reenviar la ${tipo === 'credit' ? 'nota crédito' : 'nota débito'}`,
+      html: `<p>Sobre la factura <strong>${this.escapeHtml(factura.number || '')}</strong>: ${que}.</p><p>Sale con un número nuevo; la rechazada no tiene efecto ante la DIAN.</p>`,
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: 'Reenviar igual',
+      denyButtonText: 'Cambiarla',
+      cancelButtonText: 'Cancelar',
+    }).then((r) => {
+      if (r.isDenied) { this.iniciarNota(factura, tipo); return; }
+      if (!r.isConfirmed) return;
+      if (tipo === 'credit' && !ajuste && this.hasAcceptedCreditNote(factura)) {
+        Swal.fire({ icon: 'info', title: 'Esta factura ya tiene nota crédito', text: 'Revisa la nota en la bandeja antes de generar otra corrección.' });
+        return;
+      }
+      this.sendNote(factura, tipo, { code: String(correccion.code), description: String(correccion.description) },
+        ajuste ? { description: String(ajuste.description || correccion.description), baseAmount: Number(ajuste.baseAmount), taxRate: Number(ajuste.taxRate || 0) } : undefined);
+    });
+  }
+
+  /** Ticket 1242: una nota rechazada que ya se rehízo y la DIAN aceptó no se vuelve a ofrecer. */
+  notaRechazadaYaRehecha(document: DianDocument): boolean {
+    if (document.type !== 'creditNote' && document.type !== 'debitNote') return false;
+    const cuando = this.documentDate(document)?.getTime() || 0;
+    return this.documents.some((d) => d !== document
+      && d.type === document.type
+      && d.status === 'accepted'
+      && d.reference?.number === document.reference?.number
+      && (this.documentDate(d)?.getTime() || 0) >= cuando);
   }
 
   /** Ticket 1279: notas de la bandeja que citan esta factura. */
