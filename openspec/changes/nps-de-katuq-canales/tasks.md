@@ -42,4 +42,5 @@ Backend en `katuq_admin_back_firebase/functions`; front en `Seller.Katuq`. Cada 
 - [x] 6.2 Etapa "internos": probado en FLORECER el 20-oct (ventana una sola vez, tarjeta en Inicio, botón flotante, respuesta 8 con comentario guardada y todo desaparece). La respuesta de prueba del 18-oct se movió 91 días atrás para volver a preguntar (con OK de Daniel). El enlace del correo queda para 6.4
 - [x] 6.3 Etapa "todos" en `config/nps` (20-oct, 8:07 a. m.)
 - [ ] 6.4 Verificar SPF, DKIM y DMARC de katuq.com; luego encender `correoComercios`
+  - 20-oct, 8:47 a. m.: `correoComercios` encendido por decisión de Daniel ("prende todo") ANTES de arreglar el DNS. Sigue pendiente: `include:_spf.google.com` en el SPF, DKIM de Workspace (`google._domainkey`) y el `rua` de DMARC hacia un buzón de Katuq (hoy va a lovable.dev).
 - [ ] 6.5 Bitácora en `specs/CONTRACT.md`
