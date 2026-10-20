@@ -127,7 +127,8 @@ $line: #ececf4;
 }
 
 @media (max-width: 768px) {
-  .nt-boton { right: 16px; bottom: calc(84px + env(safe-area-inset-bottom)); }
+  // Encima del lanzador de Opttia (a 88 px del borde, 64 de alto), que en celular va en la misma esquina.
+  .nt-boton { right: 16px; bottom: calc(162px + env(safe-area-inset-bottom)); }
   .nt-velo { align-items: end; padding: 0; }
   .nt-ventana {
     width: 100%;
