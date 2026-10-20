@@ -11258,3 +11258,54 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - Prueba manual en Chrome (20-oct) con el proyecto PRUEBA D-510, que quedó cerrado. Orden, panel, filtros, cierre, burndown y equipo: OK.
 - **Pendiente:** despliegue (primero backend, luego Support), con aprobación, y la prueba con un proyecto real del equipo.
 
+## D-511 (2026-10-20) — Un comercio ya no lee pedidos de otra empresa por `GET /v1/orders/byNroPedido` — COMMITEADO, sin despliegue
+
+- **Por qué:** la ruta solo pedía `auth` y le creía al header `company` (`controllers/orders.js:677`). Cualquier sesión de comercio leía los pedidos de otra empresa con solo cambiar ese header. Apareció revisando la apertura de Support a los comercios (D-512).
+- **Decisión:** nuevo middleware `requireJwtTenantOrPlatform` (`middleware/companyAccess.js`) justo después de `auth`:
+  - **Comercio:** queda amarrado a la empresa del JWT (`requireJwtTenant`). Si el header pide otra, recibe 403; si no la pide, el header se reescribe con la del JWT.
+  - **Julsmind:** sigue pidiendo la empresa que necesite, porque Support consulta los pedidos de la empresa de cada ticket.
+  - **API key sin empresa en el token:** se rechaza. Ninguna integración usa la ruta.
+- **El Seller no cambia:** arma el header con la empresa del login, que es la misma del token.
+- **Estado:** 6 pruebas nuevas en `tests/companies/companyAccess.test.js` (22/22), incluida una que falla si la ruta pierde el candado. Arranque local sin errores.
+- **Pendiente:** despliegue, con aprobación (va junto con D-512).
+
+## D-512 (2026-10-20) — Support abierto a los comercios: su propia mesa de ayuda con solo sus datos; el equipo Katuq sigue viendo todo — APROBADA (Santiago, 20-oct), PROBADA en local y COMMITEADA, sin despliegue
+
+- **Por qué:** compartir la herramienta de soporte (support.katuq.com) con los comercios, que entran con su cuenta de Katuq. El diagnóstico del 20-oct encontró que hoy cualquier cuenta entra y ve:
+  - las notas internas;
+  - el maestro de comercios;
+  - los contactos de los agentes;
+  - la campana global.
+
+  También encontró que crear un ticket acepta cualquier empresa.
+- **Decisiones (`openspec/changes/soporte-para-comercios/` del backend):**
+  - **Equipo y comercio** se siguen separando con la regla Julsmind del JWT; no hay rol nuevo.
+  - **Entrada del comercio:** con la bandera `supportMerchantAccess` (D-505), consultada por `GET /v1/support/sesion`, que responde `equipo`, `comercio` o `sin-acceso`.
+  - **La bandera no cierra las rutas que usa el Seller** para "Mis tickets".
+  - **Seguimiento propio del comercio** en el ticket, en `seguimientoComercio`: responsable de su empresa, prioridad propia y etiqueta (por revisar, en curso, esperando a Katuq, listo).
+  - **Estado, prioridad y agente de Katuq son solo del equipo.** El comercio los ve, pero no los cambia, salvo confirmar la resolución (D-328). El PUT del equipo no pisa el seguimiento del comercio.
+  - **Crear ticket con sesión de comercio:** empresa y tienda salen del JWT, y el número lo asigna el servidor. Sin sesión, el alta pública del Seller sigue igual (riesgo residual documentado).
+  - **Contactos de los agentes:** la API REST deja de dar correo y celular de los agentes, como el MCP. Se conserva el correo de la propia sesión.
+  - **Lista de tickets del comercio:** se filtra en Firestore, después de una auditoría de mayúsculas en `company` y `tienda`.
+  - **Proyectos:** entran todos los usuarios del comercio habilitado; solo la familia Administrador crea proyectos de su empresa, sin clientes de otra.
+  - **Front Support en modo comercio:** sin notas, sin comercios afectados y sin lista de agentes. La campana usa `ActualizacionTicket{empresa}` y no `notificaciones`.
+- **Fase 2 (cambio aparte):** mesa de ayuda para los clientes finales del comercio, en una **colección nueva aparte (aprobada por Santiago el 20-oct)**. Por dónde entran esos tickets se decide en otra sesión.
+- **Riesgo abierto:** Support lee y escribe RTDB y Storage desde el navegador sin Firebase Auth, así que las reglas no separan empresas. Se audita en este cambio y se arregla en otro.
+- **Auditoría 20-oct (tarea 0.3, solo lectura con la cuenta de servicio): las reglas de producción de `julsmind-katuq` están abiertas a internet.**
+  - **Realtime Database:** `{".read": true, ".write": true}` en la raíz.
+  - **Storage:** `allow read, write` en todo el bucket hasta 2050.
+  - **Firestore** (ruleset del 14-oct): `get`, `list`, `create`, `update` y `delete` en todas las colecciones hasta 2028-12-30. Solo se exceptúan los documentos push de la app.
+  - **Consecuencia:** con la configuración web pública (la que va en el bundle del Seller y de Support), cualquiera puede leer y borrar datos de todas las empresas sin pasar por el backend. Esto incluye `users`, que guarda el campo `password`, y el login manda el hash calculado en el navegador, así que ese valor funciona como credencial.
+  - El aislamiento por empresa del backend no protege esa vía. No se tocó ninguna regla. Requiere un cambio propio, urgente, que primero inventaríe qué lee y escribe cada front directamente.
+- **Ajustes durante la implementación:**
+  - El Seller ya manda la sesión al crear tickets. Por eso la creación con sesión de comercio respeta la prioridad elegida y el `nroTicket` del contador compartido; solo empresa, tienda y NIT salen del JWT.
+  - El backend también rechaza un cliente de otra empresa al EDITAR un proyecto, no solo al crearlo.
+  - `/v1/support/sesion` devuelve `puedeCrearProyectos`.
+  - En Support, la campana del comercio muestra solo avisos de tickets: su canal es la campana general del Seller.
+- **Estado:**
+  - Backend: 27/27 suites de soporte, más acceso a empresas, banderas y MCP.
+  - Support: `ng build` de producción limpio.
+  - Probado en Chrome el 20-oct con ALMARA FELICIDAD y con el equipo. La API del comercio trajo sus 73 tickets, con 0 notas internas (hay 48 tickets con notas en Firestore) y 0 contactos del equipo. El ticket de prueba #1319 quedó archivado.
+  - `supportMerchantAccess` quedó encendida en ALMARA FELICIDAD: Santiago aceptó que entre a Support apenas se despliegue.
+- **Pendiente:** despliegue (primero backend, luego Support `hosting:katuq-tickets`) con aprobación, y la Fase 2 en otra sesión.
+
