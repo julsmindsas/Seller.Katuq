@@ -30,6 +30,8 @@ import {
 import { MetaInboxService } from "../notificaciones/meta-inbox/meta-inbox.service";
 import { MetaConexiones } from "../notificaciones/meta-inbox/models/meta-thread.model";
 import { PARAM_CONEXION_PENDIENTE, getConnectorConfig } from "./connectors/connector-registry";
+import { MCP_GUIDES } from "./mcp-guides";
+import { McpGuideComponent } from "./mcp-guide/mcp-guide.component";
 
 /**
  * Estado que ve el comercio en cada tarjeta.
@@ -38,7 +40,7 @@ import { PARAM_CONEXION_PENDIENTE, getConnectorConfig } from "./connectors/conne
  * - sin: no está conectada.
  * - desconocido: no se pudo saber (cargando o error); no se muestra estado.
  */
-export type EstadoTarjeta = "pronto" | "sin" | "ok" | "prueba" | "atencion" | "desconocido";
+export type EstadoTarjeta = "pronto" | "guia" | "sin" | "ok" | "prueba" | "atencion" | "desconocido";
 
 interface ResumenWhatsapp {
   activo: boolean;
@@ -920,6 +922,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   }
 
   estadoTarjeta(entrada: EntradaDirectorio): EstadoTarjeta {
+    if (entrada.estado === "guia") return "guia";
     if (entrada.estado === "pronto") return "pronto";
     switch (entrada.fuente) {
       case "config":
@@ -951,6 +954,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   textoEstado(entrada: EntradaDirectorio, estado: EstadoTarjeta): string {
     const bot = entrada.fuente === "whatsapp_bot";
     switch (estado) {
+      case "guia": return "Desde tu IA";
       case "pronto": return "Próximamente";
       case "ok": return bot ? "Encendido" : "Conectado";
       case "prueba": return "En prueba";
@@ -976,6 +980,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   }
 
   textoBoton(entrada: EntradaDirectorio, estado: EstadoTarjeta): string {
+    if (estado === "guia") return "Ver instructivo";
     if (entrada.ruta) {
       if (estado === "atencion") return "Reconectar";
       if (estado === "sin") return "Conectar";
@@ -1041,6 +1046,14 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   abrirEntrada(entrada: EntradaDirectorio, event?: Event): void {
     event?.stopPropagation();
     if (entrada.estado === "pronto") return;
+    if (entrada.estado === "guia") {
+      if (!entrada.guideId) return;
+      const ref = this.modal.open(McpGuideComponent, {
+        size: "lg", scrollable: true, ariaLabelledBy: "mguide-title", windowClass: "mguide-window",
+      });
+      ref.componentInstance.guide = MCP_GUIDES[entrada.guideId];
+      return;
+    }
     if (entrada.ruta) {
       this.router.navigateByUrl(entrada.ruta);
       return;

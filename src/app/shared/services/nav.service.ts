@@ -9,6 +9,7 @@ import { SecurityService } from "./security/security.service";
 import { dropshippingHabilitadoEnLaSesion } from "./dropshipping-settings.service";
 import { npsDisponible } from "./nps/nps.service";
 import { esFamiliaAdministrador, esSuperAdministrador } from "../utils/roles";
+import { FUTURE_MESSAGE_CHANNELS } from "../data/future-message-channels";
 
 // Menu
 export interface Menu {
@@ -365,8 +366,14 @@ export class NavService implements OnDestroy {
         ) {
           return null;
         }
-        // Devolver el padre con los hijos filtrados
-        return { ...item, children: filteredChildren };
+        // Los futuros canales son información dentro de un grupo ya autorizado.
+        // No entran al catálogo de permisos ni pueden mantener visible Mensajes solos.
+        const children: Menu[] = item.title === "Mensajes"
+          ? [...filteredChildren, ...FUTURE_MESSAGE_CHANNELS.map(channel => ({
+              title: channel.title, icon: channel.icon, type: "info", badgeValue: "Próximamente",
+            }))]
+          : filteredChildren;
+        return { ...item, children };
       }
 
       // Si es un enlace directo, verificar roles y permisos

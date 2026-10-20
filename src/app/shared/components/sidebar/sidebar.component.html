@@ -342,6 +342,16 @@
                   <span class="menu-badge" *ngIf="badgeVisible(child)">{{child.badgeValue | translate}}</span>
                 </a>
 
+                <!-- Canal informativo, sin ruta ni eventos de navegación -->
+                <div *ngIf="child.type === 'info'" class="submenu-link submenu-future"
+                     role="menuitem" aria-disabled="true">
+                  <div class="submenu-icon" aria-hidden="true">
+                    <i class="fa" [ngClass]="getSubmenuIcon(child.icon, child.title)"></i>
+                  </div>
+                  <span class="submenu-text">{{ child.title | translate }}</span>
+                  <span class="submenu-future-label">Próximamente</span>
+                </div>
+
                 <!-- Subitem con nietos -->
                 <button *ngIf="child.children" 
                         class="submenu-link submenu-toggle"

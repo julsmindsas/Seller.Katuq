@@ -2408,7 +2408,12 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Crear contenido del submenú con diseño mejorado
     item.children.forEach((childItem, index) => {
-      const itemElement = this.renderer.createElement('a');
+      const informational = childItem.type === 'info';
+      const itemElement = this.renderer.createElement(informational ? 'div' : 'a');
+      if (informational) {
+        this.renderer.addClass(itemElement, 'submenu-future');
+        this.renderer.setAttribute(itemElement, 'aria-disabled', 'true');
+      }
 
       if (childItem.type === 'link') {
         this.renderer.setAttribute(itemElement, 'href', this.rutaMenu(childItem.path) || '#');
@@ -2454,6 +2459,13 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       this.renderer.appendChild(textElement, this.renderer.createText(childItem.title || ''));
 
       this.renderer.appendChild(contentWrapper, textElement);
+
+      if (informational) {
+        const label = this.renderer.createElement('span');
+        this.renderer.addClass(label, 'submenu-future-label');
+        this.renderer.appendChild(label, this.renderer.createText('Próximamente'));
+        this.renderer.appendChild(contentWrapper, label);
+      }
 
       // Añadir indicador para enlaces externos
       if (childItem.type === 'extLink') {

@@ -12,8 +12,10 @@
 //   FedEx, DHL, CRM, etc.). Sigue en getAvailableIntegrations() por si vuelve.
 
 import { IntegrationCategory } from './integrations.service';
+import { MCP_GUIDES, McpGuideId } from './mcp-guides';
+import { FUTURE_MESSAGE_CHANNELS } from '../../shared/data/future-message-channels';
 
-export type EstadoDirectorio = 'conectable' | 'pronto';
+export type EstadoDirectorio = 'conectable' | 'pronto' | 'guia';
 
 /**
  * De dónde se sabe si está conectada:
@@ -40,6 +42,8 @@ export interface EntradaDirectorio {
   ruta?: string;
   /** Logo en assets; sin logo se muestra la inicial. */
   logo?: string;
+  /** Instructivo local: no representa una conexión guardada. */
+  guideId?: McpGuideId;
 }
 
 export interface GrupoDirectorio {
@@ -54,6 +58,21 @@ const C = IntegrationCategory;
 const L = 'assets/images/logos/';
 
 export const DIRECTORIO_INTEGRACIONES: GrupoDirectorio[] = [
+  {
+    id: 'ia',
+    pregunta: '¿Con qué IA trabajas?',
+    ayuda: 'Consulta tu negocio desde tu IA. La conexión se hace allá, con tu cuenta de Katuq.',
+    icono: 'M12 3v3 M12 18v3 M3 12h3 M18 12h3 M7 7l-2-2 M17 17l2 2 M7 17l-2 2 M17 7l2-2 M8 8h8v8H8z',
+    entradas: Object.values(MCP_GUIDES).map(guide => ({
+      id: `mcp_${guide.id}`,
+      nombre: guide.name,
+      queHace: `Conecta Katuq por MCP con ${guide.name} y consulta ventas, productos y pedidos según tus permisos.`,
+      estado: 'guia',
+      categoria: C.OTHER,
+      fuente: 'ninguna',
+      guideId: guide.id,
+    })),
+  },
   {
     id: 'vender',
     pregunta: '¿Dónde vendes?',
@@ -118,6 +137,14 @@ export const DIRECTORIO_INTEGRACIONES: GrupoDirectorio[] = [
     entradas: [
       { id: 'whatsapp_kapso', nombre: 'WhatsApp Business', queHace: 'Avisa a tus clientes por WhatsApp cuando su pedido avanza.', estado: 'conectable', categoria: C.MARKETING, fuente: 'whatsapp' },
       { id: 'meta', nombre: 'Instagram y Messenger', queHace: 'Responde desde Katuq los mensajes que te llegan por redes.', estado: 'conectable', categoria: C.MARKETING, fuente: 'meta', ruta: '/integrations/meta' },
+      ...FUTURE_MESSAGE_CHANNELS.map(channel => ({
+        id: channel.id,
+        nombre: channel.title,
+        queHace: channel.description,
+        estado: 'pronto' as const,
+        categoria: C.MARKETING,
+        fuente: 'ninguna' as const,
+      })),
     ],
   },
   {

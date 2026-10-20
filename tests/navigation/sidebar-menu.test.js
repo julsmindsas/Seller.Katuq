@@ -16,12 +16,13 @@ const names = new Set([
   'toggletNavActive', 'closeAllFirstLevelMenus', 'closeChildrenActive', 'closeChildrenInSet',
   'closeChildrenRecursive', 'closeSiblings', 'closeSiblingsInChildren', 'isFirstLevelItem',
   'resetActiveState', 'isAncestor', 'handleMobileSubmenuToggle', 'setActiveRecursive',
+  'showCollapsedSubmenu',
 ]);
 const members = component.members.filter(node => names.has(node.name?.getText(source)));
 const compiled = ts.transpileModule(`export class SidebarMenu { ${members.map(node => node.getText(source)).join('\n')} }`, {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
 }).outputText;
-const context = { exports: {} };
+const context = { exports: {}, window: { innerHeight: 900 }, document: { body: { children: [] } }, setTimeout: () => null };
 vm.runInNewContext(compiled, context);
 
 function group(title, children) {
@@ -51,6 +52,31 @@ function fixture() {
   });
   return { sidebar, operations, settings, products };
 }
+
+test('el submenú flotante pinta canales futuros como información sin href ni eventos de navegación', () => {
+  const sidebar = new context.exports.SidebarMenu();
+  Object.assign(sidebar, {
+    isMobile: () => false, closeCollapsedSubmenu() {}, getMenuIcon: () => 'fa-circle',
+    rutaMenu: p => p, navigateAndCleanup: () => assert.fail('no debe navegar'),
+    renderer: {
+      createElement: tag => ({ tag, attrs: {}, children: [], listeners: [] }),
+      createText: text => ({ text }), addClass() {}, removeClass() {}, setStyle() {},
+      setAttribute: (el, key, value) => { el.attrs[key] = value; },
+      appendChild: (el, child) => el.children.push(child),
+      listen: (el, event) => { el.listeners.push(event); return () => {}; },
+    },
+  });
+  const parent = { getBoundingClientRect: () => ({ top: 100, right: 200 }) };
+  sidebar.showCollapsedSubmenu({ children: [{ title: 'TikTok', type: 'info', badgeValue: 'Próximamente' }] }, {
+    target: { closest: () => parent },
+  });
+  const entry = sidebar.currentCollapsedSubmenu.children[0];
+  assert.equal(entry.tag, 'div');
+  assert.equal(entry.attrs['aria-disabled'], 'true');
+  assert.equal(entry.attrs.href, undefined);
+  assert(!entry.listeners.includes('click'));
+  assert.equal(entry.children[1].children[1].children[0].text, 'Próximamente');
+});
 
 test('Logística de Operaciones abre al primer clic después de Logística de Configuración', () => {
   const { sidebar, operations, settings } = fixture();

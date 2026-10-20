@@ -27,6 +27,7 @@ import { SharedModule } from '../../shared/shared.module';
 
 import { IntegrationsComponent } from './integrations.component';
 import { IntegrationsListComponent } from './integrations-list.component';
+import { McpGuideComponent } from './mcp-guide/mcp-guide.component';
 import { IntegrationNotificationsComponent } from './integration-notifications.component';
 import { CredentialStrengthIndicatorComponent } from './credential-strength-indicator.component';
 import { IntegrationStateService } from './integration-state.service';
@@ -110,6 +111,7 @@ const routes: Routes = [
     WhatsappBotConfigComponent
   ],
   imports: [
+    McpGuideComponent,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,

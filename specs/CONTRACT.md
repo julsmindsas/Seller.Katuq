@@ -11154,3 +11154,65 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
 - **Estado:** APROBADA (Daniel, 19-oct) y EN PRODUCCIÓN para todos los comercios desde el 20-oct (`config/nps.etapaComercios = "todos"`). Backend 80bb73ce, front 2026.10.20.1. Probada en FLORECER: ventana una sola vez, tarjeta en Inicio, botón flotante, y la respuesta guardada. Los interruptores `NPS_*` salieron del `.env`; solo queda `ENCUESTA_SECRET`. Pendiente: el correo al administrador (`correoComercios`), apagado hasta verificar SPF, DKIM y DMARC de katuq.com.
 - **Bitácora 20-oct:** el módulo por comercio (D-490) sigue solo en FLORECER. La tarjeta flotante de D-483 quedó como botón cerrado "Califica a Katuq". Se cambia con `node scripts/set-nps-config.js` (simulación por defecto).
 
+## D-508 (2026-10-20) — Instructivos MCP en Integraciones, ticket 1315 — PROPUESTA
+
+- Daniel seleccionó «esas dos»: 1315 y 1313, después de revisar los pendientes sin asignación. Se prepararon propuesta y spec en `openspec/changes/instructivos-mcp-en-integraciones/`.
+- Lista inicial propuesta para confirmar: ChatGPT, Claude y Codex. Tarjetas «Desde tu IA», acción «Ver instructivo», instrucciones actuales y consulta de lectura de ejemplo. Sin estado ficticio de conexión ni alterar los contadores o Mis conexiones. Autorización con cuenta propia de Katuq, sin llaves para asistentes de personas.
+- Fuentes leídas: manual MCP local del backend y páginas oficiales de OpenAI (MCP y quickstart de plugins) y Claude (conectores remotos). La documentación actual difiere de pasos antiguos: contrastar antes de escribir la guía final. No se afirma compatibilidad end-to-end por leer documentación.
+- Propuesta/spec pendientes de aprobación. No se crearon diseño, tareas ni código; no se interpreta la selección de tickets como aprobación de artefactos aún inexistentes.
+
+## D-509 (2026-10-20) — Canales Próximamente en Mensajes e Integraciones, ticket 1313 — PROPUESTA
+
+- Propuesta y spec en `openspec/changes/canales-proximamente-en-mensajes/`. TikTok, Correo y Llamadas informativos en la sección de atención y en Mensajes; sin activar, nuevas rutas operativas o permisos. TikTok Shop sigue independiente.
+- Se omite el opcional «Me interesa». No se incluyen precios ni fechas de disponibilidad. Revisión de texto comercial pendiente: la consulta web de katuq.com/precios/comunicaciones falló; no se presume alineación ni revisión de Jairo.
+- Ambos cambios respetan UI canónica y no tocan pedidos, inventario, pagos o consecutivos. Los tickets seguían Pendiente y sin responsable en la relectura MCP. No se reasignan ni cierran por tener specs escritas.
+- Estado: espera checkpoint humano de propuesta y spec; diseño y tareas vendrán después de aprobarlas, según SPEC-DRIVEN.md. Sin implementación, build, commit ni deploy en esta fase.
+
+- **Comprobaciones posteriores de D-508/D-509 (solo lectura):** descubrimiento OAuth público de api.katuq.com respondió 200 en ambos documentos `.well-known`, con emisor y autorización del propio dominio; no equivale a prueba OAuth completa por cliente. Fuentes y límites en `instructivos-mcp-en-integraciones/fuentes.md`. La página comercial respondió 200 por HTTP directo, pero el HTML inicial no contiene los textos de canales; la alineación comercial sigue sin acreditarse. Línea base CSS: listado Integraciones 0 degradados/12 ocurrencias de primarios prohibidos legacy; parcial del directorio 0/0; sidebar 2/0. Deben no aumentar. Checkpoint de specs solicitado por pregunta asíncrona; no se avanza al diseño sin respuesta.
+
+
+### 2026-10-20 — D-508/D-509: propuestas, specs y tres IA aprobadas; diseños preparados
+
+- **Aprobación explícita de Daniel:** «Apruebo ambas specs y la lista de tres IA», mediante respuesta al checkpoint asíncrono. Quedan aprobadas propuesta/spec de 1315 y 1313 y ChatGPT, Claude y Codex; las entradas anteriores que dicen pendiente conservan el estado histórico.
+- **Diseños preparados:** `instructivos-mcp-en-integraciones/design.md` y `canales-proximamente-en-mensajes/design.md`. Se mantienen pendientes del checkpoint de diseño antes de tasks.
+- **D-508:** catálogo editorial local y diálogo standalone OnPush con NgbModal; estado `guia` separado de las conexiones y de los tres contadores; copia con alternativa manual y sin configurar/guardar servicios. Marco del listado y diálogo con la base `config-pagina`, sin rehacer flujos existentes.
+- **D-509:** catálogo informativo de tres canales; menú se amplía sólo después de filtrar sus rutas operativas y sólo cuando queda al menos una. Entradas sin ruta, sin ampliar ALLMENUITEMS/permisos y sin acumularse al re-filtrar; sidebar estático accesible. Las tarjetas sí aumentan Próximamente en tres, a diferencia de las guías.
+- **Compatibilidad a aprobar con los diseños:** Angular 14.3/TS 4.8 no dispone de signals ni control flow nativo. Adaptación acotada del Art. IX: standalone/OnPush para el diálogo, propiedades locales y directivas soportadas; NgModule existente se conserva. No se declara aún aprobada esa excepción ni se modifica la constitución global.
+- **Validación pendiente:** permisos reales de menú, contadores/acciones de guía, copia fallida, navegador a 1440/390, build prod y conteos CSS. Validación editorial con la página comercial renderizada y Jairo queda explícita; sin mensajes a terceros. No se crearon tareas ni código de producto, ni se hicieron build/commit/deploy.
+
+- **Seguimiento MCP:** tras releer ambos y confirmar que seguían Pendiente/sin responsable, 1315 y 1313 se asignaron a Daniel García (agente 7) y pasaron a Haciendo; las dos respuestas MCP confirmaron los cambios. Se agregó una nota interna en cada uno con la aprobación de specs y el diseño pendiente, sin cierre ni menciones.
+- **Referencia comercial D-509 comprobada en navegador:** `/precios/comunicaciones` redirige a `/es/precios/comunicaciones`; TikTok, Correo y Telefonía en la nube figuran Próximamente. La FAQ confirma desarrollo por etapas sin fecha comprometida. Evidencia en `canales-proximamente-en-mensajes/fuentes.md`. Se mantiene pendiente únicamente la revisión editorial de Jairo indicada por el ticket, sin haberlo contactado.
+
+
+### 2026-10-20 — D-508/D-509: diseños y adaptación aprobados; tareas preparadas
+
+- **Aprobación explícita de Daniel:** «Apruebo ambos diseños y la adaptación», en respuesta al checkpoint asíncrono. Quedan aprobados ambos `design.md`.
+- **Excepción acotada Art. IX aprobada (Art. XIV):** sólo para 1315/1313, Angular 14.3/TS 4.8 usa las directivas disponibles y propiedades locales, sin signals/@if. El diálogo nuevo mantiene standalone y OnPush; los componentes existentes mantienen NgModule. No modifica la constitución global ni habilita una migración del framework.
+- **Tareas redactadas:** ocho en cada `tasks.md`, con dependencias y criterios verificables. D-508 precede a las ediciones compartidas de D-509; después se verifica el conjunto. Incluyen contadores/acciones del listado, copia fallida, matriz de permisos de menú, QA a 1440/390, build prod, control CSS/environments y seguimiento MCP.
+- **Estado:** tareas pendientes de aprobación; todavía no se implementan. Los tickets siguen en Haciendo bajo Daniel; no se cierra ninguno por tener documentos. Compilar/QA no equivalen a publicar; commit/despliegue y revisión editorial pendiente se declaran por separado.
+
+
+### 2026-10-20 — D-508/D-509: tareas aprobadas e implementación local
+
+- Daniel aprobó explícitamente: «Apruebo las tareas; implementa y valida ambos». Se ejecutan ambos cambios, sin autorización de publicación o cierre anticipado.
+- Regresión previa: 5/9 pruebas de navegación pasaban; las otras 4 fallaban por imports ausentes del fixture (esSuperAdministrador), antes de cambios productivos. Se reutilizó un fixture que carga los helpers reales de roles y simula sólo sus dependencias externas.
+- Pruebas nuevas vistas en rojo antes del código; ahora 22/22 entre navegación, permisos y guías. TypeScript sin errores. Build de producción 2026.10.20.5 finalizó con exit 0 (advertencias existentes de CommonJS, presupuesto y CSS global). `version.json` conserva el sello automático de árbol sin commit; no se ha desplegado.
+- Se cubrió también el sidebar flotante que construye nodos con Renderer2: los canales futuros se representan como div deshabilitado con etiqueta, sin href/listener de navegación. Sin cambios de auth, backend o datos de negocio. Pendiente QA visual y registro final.
+
+
+### 2026-10-20 — D-508/D-509 implementadas y validadas localmente; sin publicación
+
+- **1315:** grupo de guías para ChatGPT, Claude y Codex, catálogo local tipado, estado `guia`/«Desde tu IA» y diálogo standalone OnPush con fuentes, fecha, URL pública seleccionable y Copiar. No altera contadores/Mis conexiones ni configura servicios. La conexión usa OAuth en la IA; no se recopilan secretos.
+- **1313:** TikTok, Correo y Llamadas como Próximamente en atención y, después del filtro de permisos, en Mensajes. Fuente local compartida; sin rutas ni configuración. También se cubrió el submenú flotante del sidebar. WhatsApp/Instagram/Facebook mantienen rutas y permisos; al quitar el último permiso desaparecen los informativos.
+- **QA halló y corrigió:** la actualización asíncrona de Copiar no se reflejaba en el entorno Angular 14 aislado. Se usan callbacks con manejo explícito de rechazo, actualización de vista OnPush y guard de destrucción; la alternativa manual queda visible y el botón se habilita. Pruebas de éxito/rechazo/sin API y cierre mientras copia.
+- **Validación:** 24/24 específicas (guías y navegación), TypeScript sin errores. Suite ampliada 121: 112 pasan y 9 fallan en dian-invoice-composer; los mismos 9 se reprodujeron en archivos de HEAD extraídos a una carpeta temporal (57 de ese archivo: 48/9), sin este cambio. No se tocaron facturación/clientes para corregirlos.
+- **Build:** npm run build:prod y build final CLI de producción limpios, candidato local 2026.10.20.5, hash e5cf298ca35991f0. Advertencias de CommonJS, presupuesto y CSS global documentadas. Prebuild actualizó environments y version.json; se revisaron, sin configuración de API alterada. Git conserva archivos ajenos y el sello de cambios sin commit; no apto para afirmar publicación.
+- **UI:** revisión local en navegador a 1440 y 390 px, sin scroll horizontal, tres guías, menú informativo, búsqueda, Mis conexiones, Enter/Espacio/Escape, foco y copia simulada permitida/rechazada. Se reutilizan plantillas, estilos y métodos reales en un harness temporal con datos simulados; no acredita el shell autenticado completo ni login OAuth end-to-end por cliente. El viewport temporal se restauró.
+- **CSS:** sin aumentos: listado 0 gradientes/12 primarios legacy, parcial directorio 0/0, sidebar 2/0; diálogo nuevo 0/0. Base config-pagina usada en marco/encabezado y diálogo. Sin clases nuevas con p-.
+- **Entrega:** verificación en `openspec/changes/instructivos-mcp-en-integraciones/verificacion.md`; capturas locales en la carpeta de visualizaciones de esta conversación. Ambos tickets permanecen Haciendo/Daniel, con nota interna de implementación y límites. Sin commit, deploy, cierre o mensajes a Jairo. Pendientes: publicación autorizada y revisión editorial de 1313; no se cierra el padre omnicanal.
+
+
+### 2026-10-20 — D-508/D-509: publicación autorizada
+
+- Daniel pidió «Dale, publica los dos cambios y verifica que funcionen en producción». Autoriza la publicación de 1315/1313 y sus comprobaciones de lectura, sin activar canales ni conceder permisos OAuth nuevos.
+- Se incorporó la punta remota con git pull --ff-only (362ae79e); conserva los cambios de la otra sesión. Se prepara un build en worktree limpio para no sellar documentación ajena sin commit como código productivo. El resultado del despliegue y la comprobación autenticada se registrarán después de ejecutarlos.

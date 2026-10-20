@@ -3,6 +3,8 @@
 // tinta #211F3A, superficies lila, plano sin gradientes. Todo bajo .ig-page
 // porque el componente usa ViewEncapsulation.None.
 @import '../proceso/combos/combos-tema';
+@import '../../shared/styles/config-pagina';
+@include config-pagina;
 
 .ig-page {
   min-height: 100%;
@@ -12,13 +14,13 @@
   font-family: $cb-text;
   color: $cb-ink;
 
-  .ig-wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+  .ig-wrap { width: 100%; min-width: 0; max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
 
   // ---- Encabezado ----
   .ig-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
   .ig-head-txt { display: flex; flex-direction: column; gap: 10px; max-width: 660px; }
   .ig-eyebrow { @include cb-chip-accent; align-self: flex-start; }
-  .ig-title { margin: 0; font-family: $cb-display; font-size: 30px; line-height: 1.15; color: $cb-ink; span { color: $cb-accent; } }
+  .ig-title { margin: 0; font-family: $cb-display; font-size: 24px !important; line-height: 1.15; color: $cb-ink; span { color: $cb-accent; font-size: inherit; } }
   .ig-sub { margin: 0; font-size: 15px; line-height: 1.55; color: $cb-body; }
   .ig-head-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 
@@ -88,7 +90,8 @@
     position: relative; display: flex; flex-direction: column; gap: 6px; padding: 16px 16px 14px;
     border-radius: 16px; background: #fff; border: 1px solid $cb-line; box-shadow: $cb-shadow-panel;
     cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
-    &:hover, &:focus-visible { border-color: $cb-accent-line; box-shadow: $cb-shadow-float; outline: none; }
+    &:hover, &:focus-visible { border-color: $cb-accent-line; box-shadow: $cb-shadow-float; }
+    &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
     h3 { margin: 6px 0 0; font-family: $cb-display; font-size: 16px; color: $cb-ink; }
     &.is-atencion { border-color: #F6DDB0; }
     &.is-pronto {
@@ -118,6 +121,7 @@
   .ig-estado-atencion { background: #FFF6E5; color: #8A5200; border-color: #F6DDB0; }
   .ig-estado-sin { background: $cb-chip-bg; color: $cb-muted; border-color: $cb-chip-border; .ig-dot { background: transparent; border: 1.5px solid currentColor; } }
   .ig-estado-pronto { background: $cb-accent-soft; color: $cb-accent; border-color: $cb-accent-line; .ig-dot { display: none; } }
+  .ig-estado-guia { background: $cfg-accent-soft; color: $cfg-accent; border-color: $cfg-chip-border; .ig-dot { display: none; } }
 
   .ig-card-foot { display: flex; align-items: center; gap: 8px; margin-top: 8px; min-height: 36px; }
   .ig-pronto-txt { font-size: 12.5px; color: $cb-muted; }
@@ -129,6 +133,14 @@
     p { margin: 0; color: $cb-body; font-size: 14px; }
   }
   .ig-empty-title { font-family: $cb-display; font-size: 18px; color: $cb-ink; }
+}
+
+.mguide-window .modal-content {
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  border-radius: 16px;
+  border: 1px solid $cfg-line;
+  background: $cfg-tint;
 }
 
 @media (max-width: 900px) {
