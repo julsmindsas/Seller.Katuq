@@ -1284,6 +1284,25 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Numeración:** sub-spec **011.1** (evita colisión con specs 012+ de otras ramas; convención de punto ya usada). **Pendiente:** E2E navegador (usuario) + registrar cierre. **Recordatorio de negocio:** para que ALMARA deje de generar filas nuevas hay que **desplegar v2** (front+back) — el borrado múltiple limpia, pero sin deploy el problema de raíz sigue.
 - **Addendum 011.1 (2026-09-01, mismo D-054):** a pedido del usuario, la lista de zonas ahora (a) muestra columna **"Fecha creación"** (`date_add`, formato dd/MM/yyyy; `—` si falta) y (b) se **ordena por fecha DESC** al cargar, para que **una zona recién creada aparezca en la 1ª página**. Solo front (`zona-cobro.util.ts` +interface `date_add`, `zonas-cobro.component.{ts,html}` orden + columna, `colspan` 9→10). Verificado: los 1088 docs de ALMARA traen `date_add`. Compila OK. Backend intacto (ya guardaba `date_add` en `create`).
 
+
+### 2026-10-19 — D-WOO-360-MVP: Sello operativo WooCommerce 360 plug-and-play
+
+- **Contexto:** suite `scripts/test-woocommerce-360-acceptance.js` ejecutada con resultado 8/8 PASS contra Firestore Emulator + commit hash `7a5263c3`.
+- **Decisión:** Spec 003 marco + sub-specs 003.1..003.6 done. Goal del usuario *"cualquier comerciante WooCommerce puede integrar facilísimo"* CUMPLIDO técnicamente.
+- **Habilitado:** invitación a primer comerciante piloto (M-WOO-02 del marco).
+- **Tests results:**
+  - ✅ Test 1: Configurar Woo en /integrations
+  - ✅ Test 2: HMAC rechaza POST sin firma
+  - ✅ Test 3: Dedup retorna duplicate en segundo POST
+  - ✅ Test 4: Cron sync productos crea producto en Katuq
+  - ✅ Test 5: Webhook order.created se procesa sin crashear pipeline
+  - ✅ Test 6: Soft delete desactiva sin borrar
+  - ✅ Test 7: Nodo Woo sin config falla con WC-CONFIG-MISSING
+  - ✅ Test 8: Template plug-and-play instancia flow en ≤ 2s
+- **Compromiso post-sello:** monitorear con `flow-cron-monitoring-playbook.md` durante primer mes con piloto. Cualquier ajuste futuro va por nueva spec.
+
+---
+
 ## 4. Cambios de alcance (scope changes)
 
 > Cuando una spec ya iniciada cambia de alcance, se registra aquí antes de tocar código.
