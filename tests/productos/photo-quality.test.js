@@ -39,7 +39,9 @@ test('la copia del front es idéntica a la del backend (si el backend está al l
     t.skip('el repo del backend no está en esta máquina');
     return;
   }
-  assert.equal(fs.readFileSync(RUTA_VECTORES, 'utf8'), fs.readFileSync(backend, 'utf8'));
+  // Sin los finales de línea: Git en Windows puede sacar cada copia con CRLF o LF.
+  const sinCr = (ruta) => fs.readFileSync(ruta, 'utf8').replace(/\r\n/g, '\n');
+  assert.equal(sinCr(RUTA_VECTORES), sinCr(backend));
 });
 
 test('datos incompletos no rompen: dan 0 y el aviso de borrosa', () => {
