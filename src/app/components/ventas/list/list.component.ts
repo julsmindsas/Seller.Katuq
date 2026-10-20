@@ -71,6 +71,19 @@ import { IntegrationsService } from "../../integrations/integrations.service";
 import { TreasuryService } from "../../../shared/services/treasury/treasury.service";
 import { debePreguntarSiVolvio, preguntarSiVolvio } from "../../../shared/utils/pedido-mercancia-devuelta";
 
+/** Estados en los que el pedido ya salió de la bodega (ticket 1318). */
+const ESTADOS_DE_SALIDA = ['Despachado', 'Entregado', 'Cerrado'];
+const ORDEN_PROCESO = ['SinProducir', 'EnProduccion', 'ProducidoParcialmente', 'ProducidoTotalmente', 'ParaDespachar',
+  'EnDespacho', 'Empacado', 'Despachado', 'Entregado', 'Cerrado'];
+
+/** ¿El cambio devuelve a un estado anterior un pedido que ya salió? */
+export function esRetrocesoDeSalida(actual: string, nuevo: string): boolean {
+  if (!ESTADOS_DE_SALIDA.includes(actual)) return false;
+  const a = ORDEN_PROCESO.indexOf(actual);
+  const n = ORDEN_PROCESO.indexOf(nuevo);
+  return n >= 0 && n < a;
+}
+
 @Component({
   selector: "app-list-orders",
   templateUrl: "./list.component.html",
@@ -7018,12 +7031,43 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       mercanciaVolvio = respuesta;
     }
 
+    // Ticket 1318: devolver un pedido que ya salió (Despachado, Entregado o Cerrado) es un cambio
+    // deliberado; se pide el motivo y queda en el historial del pedido.
+    const cambiaProceso = !!this.tempEstadoProceso && this.tempEstadoProceso !== this.originalEstadoProceso;
+    let motivoRetroceso = '';
+    if (cambiaProceso && esRetrocesoDeSalida(this.originalEstadoProceso, this.tempEstadoProceso)) {
+      // Se cierra la ventana del pedido antes: su foco atrapado no deja escribir en el motivo.
+      this.modalService.dismissAll("confirmed");
+      const r = await Swal.fire({
+        icon: 'warning',
+        title: '¿Por qué se devuelve el pedido?',
+        text: `Pasa de ${this.originalEstadoProceso} a ${this.tempEstadoProceso}. El motivo queda en el historial del pedido.`,
+        input: 'textarea',
+        inputPlaceholder: 'Ej.: el cliente no recibió, se reprograma la entrega',
+        showCancelButton: true,
+        confirmButtonText: 'Devolver el pedido',
+        cancelButtonText: 'Cancelar',
+        inputValidator: (v) => (!v || !String(v).trim() ? 'Escribe el motivo' : undefined),
+      });
+      if (!r.isConfirmed) {
+        order.estadoPago = this.originalEstadoPago;
+        order.estadoProceso = this.originalEstadoProceso;
+        return;
+      }
+      motivoRetroceso = String(r.value).trim();
+    }
+
     const orderToUpdate = {
       ...order,
       estadoPago: this.tempEstadoPago,
       estadoProceso: this.tempEstadoProceso
     };
     if (mercanciaVolvio) (orderToUpdate as any).mercanciaVolvioABodega = true;
+    if (cambiaProceso) {
+      // El backend solo acepta un retroceso con esta marca (la usa también Despachos).
+      (orderToUpdate as any)._estadoProcesoExplicitlyChanged = true;
+      if (motivoRetroceso) (orderToUpdate as any)._motivoRetroceso = motivoRetroceso;
+    }
 
     // Marcar como calculado en frontend para evitar recálculo automático
     (orderToUpdate as any)._estadoCalculadoEnFrontend = true;
@@ -7062,10 +7106,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       error: (e) => {
         order.estadoPago = this.originalEstadoPago;
         order.estadoProceso = this.originalEstadoProceso;
+        // Ticket 1318: el mensaje del servidor dice por qué no se pudo (p. ej. un retroceso no permitido).
+        const motivo = typeof e?.error?.error === 'string' && e.error.error.length < 200 ? e.error.error : '';
         Swal.fire({
           icon: "error",
-          title: "No se pudo cambiar el estado de pago",
-          text: e?.isStaleWrite ? e.message : "El cambio no se guardó. Intenta de nuevo.",
+          title: "No se pudo cambiar el estado",
+          text: e?.isStaleWrite ? e.message : (motivo || "El cambio no se guardó. Intenta de nuevo."),
         });
       },
     });
