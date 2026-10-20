@@ -170,7 +170,7 @@ fija, el tope de revisión es el 2027-04-30.
   - `consecutives` (`getNextConsecutive`).
   - `inventory`, `inventoryMovement` e `inventory_audit`, solo por `updateByPOS` (pedido nuevo) y `restoreStock` (barrido), sin lógica nueva.
   - `clients`.
-  - El contador del plan en `companies` (`consumeStoreOrderSlot`).
+  - El contador del plan en `companies` (`createOrderWithinLimit`, dentro de `createOrder`; desde 2026-10-20 la tienda ya no suma otra vez con `consumeStoreOrderSlot`).
   - Lo que hoy escriben en la tienda `orderNotificationService.notify`, `notificationHooks.writeSellerNotification` y `correoComprador.avisarAlComprador`, sin tocar ese código. La tarea 2.1 enumera esas colecciones y la lista queda cerrada.
   - La sesión del bot.
 - **Prohibido:** `products`, precios, `preciosAsociados`, catálogo, `cotizaciones` (en el camino directo), `sites`, `site_events` y `prospects`.
@@ -234,3 +234,49 @@ openspec privado del backend.
 | Aviso de pago y recordatorio por WhatsApp | Plantilla aprobada por Meta |
 | Mover el núcleo a `services/sites/` | Esta fase estable |
 | `convertir-pedido` y aprobar por link sin documento | No-goal; cambio aparte |
+
+## Desvíos
+
+Lectura de la tarea 0.3, hecha el 2026-10-19 sobre la punta local de `backend-aws-security`, sin consultar producción. No se corrió `git pull --rebase` porque en esta sesión trabajan varios agentes en el mismo árbol y el orquestador lo prohíbe. Las líneas del diseño siguen vigentes:
+
+- en `sites.js`: `crearPedido` 2493-3299, `vencerReservasDeTienda` 4835-4891 y `recordarPagosPendientes` 4998-5067;
+- en el despachador: `obtenerOCrear` 740, la reapertura 753-768, `registrarTurno` 825, la rama `opcionId` 940-1044, `pedirTurno` 1054 y el cierre 1148.
+
+**Desvíos del diseño:**
+
+1. **Faltan colecciones en el write-set.** La lista cerrada de 6.6 debe sumar:
+   - `notifications`: `createOrder` llama a `sellerMobileNotifications.notifyOrderCreated` en las empresas habilitadas;
+   - una segunda escritura en `companies`: `orderRepository.create` pasa por `limitsService.createOrderWithinLimit`, que también actualiza el contador del plan;
+   - las colecciones de las notificaciones de la tienda, que el golden de 2.1 enumera leyendo el código: marcas en `orders`, `notification_queue`, `scheduled_notifications` y la campana del vendedor en RTDB.
+
+   `whatsappConfirmacionPedido` solo aplica a contra entrega, así que no corre con el bot. La asignación de bodega en sombra solo corre si falta `bodegaId`, y la tienda siempre lo trae.
+2. **El contador del plan cuenta dos veces (hallazgo previo, escalado a Daniel).** Por cada pedido de tienda en plan gratis suben `createOrderWithinLimit` (desde 75407fbc, 2026-09-01) y `consumeStoreOrderSlot` (≈3048). El comentario de D-319 supone que la tienda no pasa por la primera. El golden lo fija: el contador va de 3 a 5. El pedido del bot lo heredaría. No se corrige en este cambio.
+   - **Corregido (2026-10-20, aprobado por Daniel):** el checkout de la tienda ya no llama a `consumeStoreOrderSlot`; cuenta solo `createOrderWithinLimit`, dentro de `createOrder`. El golden de 2.1 quedó con el contador de 3 a 4 y una sola escritura en `companies`. El write-set de 6.6 ya no lleva `consumeStoreOrderSlot`.
+3. **En un gemelo, la tienda repite efectos.** Genera otro link y vuelve a sumar `pedidosCount`, el contador del plan y el evento `pedido` (caso «gemelo» del golden). Al bot no le pasa porque D7 lo frena antes del núcleo.
+4. **`origenPrimerContacto.pedido` siempre llega `null`.** `resolverClienteEnCRM` (≈3022) corre antes de `createOrder`, cuando la orden todavía no tiene número. Pasa igual con el bot, así que 4.1 no debe exigir ese número.
+5. **El texto de `verificarTotalVisto` es de contra entrega** («a pagar al recibir»). El bot arma su mensaje con `codigo: "PRECIO_CAMBIO"` y los totales de `data`, sin reenviar `message`.
+6. **La pasarela se resuelve dos veces.** `gateway.generatePaymentLink` vuelve a llamar a `getProvider`. Para cumplir «`getProvider` una vez» de 4.1, el núcleo cobra con la misma instancia que ya resolvió y revisa la pasarela antes de la primera escritura. El detalle está en la revisión de seguridad.
+7. **La reapertura no reconoce `pedidoCreado`.** Hoy reabre de inmediato solo si la sesión está `cerrada`, o en `humano` con `cotizacionCreada` (753-761). El camino «201 sin link» traspasa sin cotización. Si no termina con `marcarCerrada({pedidoCreado})`, solo lo reabre `traspasoSinTomarVencido` (644, rama 762-768): cuando pasan `HORAS_REAPERTURA_TRASPASO` (12 h) desde la última escritura de la sesión (`actualizadoAt`), y con el carrito vacío. Mientras tanto el hilo queda mudo, incluso ante un «link» del pedido recién creado. Es una versión acotada del bug de ALMARA: unas horas, no para siempre. En 6.4 y 6.7, `marcarCerrada` va siempre al final, también después del traspaso.
+8. **`bot.modoSombra` ya existe y es otra cosa.** Es la sombra del bot entero: no envía nada y el cierre devuelve `sombra_cierre`. `evaluar` exige `modoSombra` falso y, aparte, `pedidoDirectoModo === "activo"`. Los eventos no se mezclan.
+9. **La configuración del bot se cachea 5 minutos** (`resolveBot`). Un cambio de modo hecho con el script de 5.5 puede tardar ese tiempo en verse. El script debe avisarlo.
+10. **El barrido D-206 no filtra por `siteId`.** Toma todo pedido de la empresa con `inventarioDescontadoAlCrear` y «Pago en línea». Eso cubre el pedido del bot, como quiere el diseño. Pero `services/kuvo/orderWriter.js` también pone esa marca y maneja su propia reserva: hay que verificar aparte que el barrido no toque pedidos de Kuvo. Escalado a Daniel.
+11. **La conciliación tiene tres entradas:**
+    - el webhook de la tienda;
+    - el webhook principal de Wompi;
+    - el regreso a `/gracias` (`conciliarAlVolver`, ≈4430).
+
+    Las tres pasan por `aplicarPagoDeTienda`, así que el filtro de D4 las cubre. La prueba 4.3 debe incluir el regreso.
+12. **`pedidoReservaDuplicada` está en rojo por montaje y choca con el criterio de 3.1.** Cinco de sus 8 casos, los que crean un pedido, responden 500 en vez de 201. El contexto vm donde la prueba corre `createOrder` (≈169) no trae `require`, y `createOrder` ahora pide `./sellerMobileNotifications/runtime` (`orderService.js` ≈115).
+
+    Se comprobó sin tocar la prueba: con un doble de ese módulo en el contexto, pasan los 8 con las mismas aserciones. Por eso «las 4 pruebas en verde con las mismas aserciones» de 3.1 solo se cumple si antes se arregla el montaje. Puede hacerse al pasarla al arnés de 2.1, que ya trae ese doble, o sumando el doble al contexto. Se cambia el montaje y las aserciones quedan como están. Si después del arreglo alguna aserción falla, es un hallazgo: se escala y no se ajusta la aserción.
+
+**Línea base de la tarea 0.4 (2026-10-19).** Se corrieron 132 archivos de `tests/sitios`, `notifications`, `cotizaciones`, `integrations`, `orders` y `companies`: 124 pasaron. Fallos previos, ninguno de este cambio:
+
+- `sitios/carritoWhatsapp`: falla en la prueba 46 con «Route.get() requires a callback».
+- `sitios/pedidoReservaDuplicada`: el contexto vm de `createOrder` no tiene `require`, y `createOrder` ahora pide `sellerMobileNotifications/runtime`, así que responde 500 (5 de 8 casos). Choca con el criterio de 3.1: ver el desvío 12.
+- `sitios/tiendaEnUnPaso`.
+- `companies/soloLectura`.
+- `orders/preciosPorTipoFase0`: redondeo (45294.117… contra 45294.12).
+- `cotizaciones/anexoCondiciones`, `cotizaciones/valoresSinDecimales` y `orders/estadoPagoBloqueado`: son pruebas `.emulator`; sin emulador vencen por tiempo.
+
+Wompi (`tests/integrations`) y el bot (`tests/notifications`) quedaron en verde. `whatsappBotCierre` ya se midió con 1.1 y 1.2 aplicadas.

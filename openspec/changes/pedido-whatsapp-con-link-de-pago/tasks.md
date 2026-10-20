@@ -11,12 +11,20 @@ D-496 (ticket 1243, F4-40). Backend en `katuq_admin_back_firebase/functions`.
 
 ## 0. Antes del código
 
-- [ ] 0.1 Revisar la spec: `specs/whatsapp-bot-pedido-directo/spec.md` y el delta
+- [x] 0.1 Revisar la spec: `specs/whatsapp-bot-pedido-directo/spec.md` y el delta
       de `whatsapp-bot-pedidos`. Incluye el escenario de producto, variantes,
       precio y listas sin cambios. Éxito: aprobada por Daniel.
-- [ ] 0.2 Daniel aprueba el diseño, estas tareas y la lista «Valores por defecto»
+      Estado: aprobada por Daniel el 2026-10-18, en bloque con las nueve propuestas
+      (`specs/CONTRACT.md`, «D-495 a D-503», línea «2026-10-18, diseño y tareas aprobados»;
+      artefactos en f6417dcd).
+- [x] 0.2 Daniel aprueba el diseño, estas tareas y la lista «Valores por defecto»
       de `design.md`, incluidos los desvíos marcados. Dep: 0.1.
-- [ ] 0.3 `git pull --rebase` en los dos repos. Leer completos:
+      Estado: aprobado en la misma línea del contrato (2026-10-18), sobre los artefactos de
+      f6417dcd, incluidos los valores 12, 13 y 16, marcados como desvío de la propuesta. No cubre
+      lo escrito después: la sección «Desvíos» de `design.md` (0.3 y 0.4, 2026-10-19) espera su
+      visto bueno, igual que la confirmación expresa de la 6.8 (valor 17) y los dos hallazgos
+      escalados (desvíos 2 y 10 de esa sección).
+- [x] 0.3 `git pull --rebase` en los dos repos. Leer completos:
       - `controllers/sites.js` (≈2320-3300, 4148-4460, 4832-5070);
       - `utils/siteOrden.js`, `siteCompraAhora.js` y `sitePagoPendiente.js`;
       - `services/whatsappBotDispatcher.js`, `whatsappBotSessionService.js`, `whatsappBotCierre.js` y `whatsappCompanyConfig.js`;
@@ -24,27 +32,35 @@ D-496 (ticket 1243, F4-40). Backend en `katuq_admin_back_firebase/functions`.
       - `inventoryService.js`, solo `updateByPOS` y `restoreStock`;
       - las 4 pruebas que extraen `crearPedido`: `compraAhoraPedido`, `pedidoReservaDuplicada`, `pedidoRetiroCantidades` y `checkoutAltaConversion`.
       Éxito: desvíos anotados en «Desvíos». Dep: 0.2.
-- [ ] 0.4 Línea base: `tests/sitios`, `tests/notifications` (bot),
+      Estado (2026-10-19): doce desvíos anotados en «Desvíos» de `design.md`. Se leyó la punta local, sin `pull`,
+      porque el orquestador lo prohíbe con varios agentes en el mismo árbol. El `pull --rebase` queda para
+      antes del commit (7.2).
+- [x] 0.4 Línea base: `tests/sitios`, `tests/notifications` (bot),
       `tests/cotizaciones`, `tests/integrations` (Wompi), `tests/orders` y
       `tests/companies`. Éxito: fallos previos en «Desvíos». Dep: 0.2.
+      Estado (2026-10-19): 124 de 132 en verde. Los 8 fallos previos están en «Desvíos» de `design.md`.
 - [ ] 0.5 Revisión de seguridad del camino nuevo, escrita en el openspec privado del
       backend (`katuq_admin_back_firebase/openspec/changes/`), con sus pruebas. En
       este repo no se describe. Éxito: aprobada por Daniel. Dep: 0.2. Bloquea 4.2,
       4.6, 6.2, 6.7 y 7.4.
+      Estado (2026-10-19): escrita en `pedido-whatsapp-seguridad`, con sus pruebas propuestas. Espera la aprobación de Daniel.
 
 ## 1. Parte 1 restante: historial del paso a `enviada` (solo `cotizaciones`)
 
-- [ ] 1.1 Prueba primero en `whatsappBotCierre.contract.test.js`: el paso a
+- [x] 1.1 Prueba primero en `whatsappBotCierre.contract.test.js`: el paso a
       `enviada` deja `fechaEnviada` y el evento `{de:"borrador", a:"enviada",
       usuario:"kai", origen:"whatsapp-bot"}`. El write-set sigue en `cotizaciones`
       y su contador. Éxito: falla contra el código actual. Dep: 0.3, 0.4.
-- [ ] 1.2 Implementarlo con `historial.cambioDeEstado` y `arrayUnion`. Éxito: 1.1,
+      Estado (2026-10-19): falló contra el código anterior con «queda la fecha derivada del estado: undefined».
+- [x] 1.2 Implementarlo con `historial.cambioDeEstado` y `arrayUnion`. Éxito: 1.1,
       `asesorKai`, `historialEstados`, `indicadoresComerciales` y
       `metricasListado` en verde. Dep: 1.1.
+      Estado (2026-10-19): en verde, junto con las dos `asesorKai`, `historialEstados`, `indicadoresComerciales`,
+      `metricasListado` y `whatsappBotDispatcher`. No es [sensible]: solo escribe en `cotizaciones`.
 
 ## 2. Caracterización (sin tocar código de producción)
 
-- [ ] 2.1 Arnés compartido `tests/sitios/_crearPedidoHarness.js` (vm + acorn,
+- [x] 2.1 Arnés compartido `tests/sitios/_crearPedidoHarness.js` (vm + acorn,
       Firestore falso). Extrae por nombre:
       - `exports.crearPedido`;
       - `crearPedidoDeTienda`, si existe (antes de 3.1 no existe);
@@ -62,13 +78,20 @@ D-496 (ticket 1243, F4-40). Backend en `katuq_admin_back_firebase/functions`.
       operación y documento), incluidas las del barrido, y las llamadas a
       efectos. También enumera las colecciones de notificación. Éxito: verde
       contra el código actual. Dep: 0.4.
-- [ ] 2.2 [P] Conciliación base con `wompiWebhookHarness.js`. Un pedido de tienda
+      Estado (2026-10-19): 20 casos en verde y deterministas. Usan el `createOrder`, el repositorio y el
+      `limitsService` reales sobre un Firestore falso. El golden está en `pedidoTiendaCaracterizacion.golden.json`
+      y se rehace con `ACTUALIZAR_GOLDEN=1`.
+- [x] 2.2 [P] Conciliación base con `wompiWebhookHarness.js`. Un pedido de tienda
       se aprueba una vez y el reintento no cambia nada. Corren `registrarEvento("pago")`
       y la conversión, sin segundo descuento. Éxito: verde. Dep: 0.4.
-- [ ] 2.3 [P] Recordatorio y `/pagar` base, con un pedido de tienda en la ventana.
+      Estado (2026-10-19): `tests/sitios/pagoTiendaConciliacionBase.test.js`, 6 pruebas en verde. Cubren el
+      webhook real con la tienda real, la carrera, el pago recuperado, la red de seguridad, el pago tardío y el rechazo.
+- [x] 2.3 [P] Recordatorio y `/pagar` base, con un pedido de tienda en la ventana.
       `recordarPagosPendientes` envía `pago_pendiente`, registra
       `recordatorio_pago` y suma la empresa a `empresasPorBarrer`; `retomarPago`
       genera link. Éxito: verde. Dep: 0.4.
+      Estado (2026-10-19): `tests/sitios/recordatorioPagoBase.test.js`, 7 pruebas en verde, incluida la simulación,
+      el link vigente, la firma mala y la reserva vencida.
 
 ## 3. Extracción del núcleo, sin cambio de comportamiento
 
@@ -79,6 +102,8 @@ D-496 (ticket 1243, F4-40). Backend en `katuq_admin_back_firebase/functions`.
       Solo cambia la extracción, no las aserciones. Éxito: goldens de 2.1
       idénticos; las 4 pruebas en verde con las mismas aserciones; suite de
       sitios sin fallos nuevos. Dep: 2.1.
+      Ojo: `pedidoReservaDuplicada` ya está en rojo por montaje (desvío 12 de la sección «Desvíos» de
+      `design.md`). Se arregla el montaje al pasarla al arnés; sus aserciones no se tocan.
 - [ ] 3.2 **[sensible]** `codigo` interno. Prueba primero: el cuerpo HTTP no cambia
       (`TOPE_PLAN` y `PRECIO_CAMBIO` siguen en él) y cada caso trae su `codigo`.
       Dep: 3.1.
@@ -217,4 +242,4 @@ D-496 (ticket 1243, F4-40). Backend en `katuq_admin_back_firebase/functions`.
 
 ## Desvíos
 
-(vacío)
+Están en la sección «Desvíos» de `design.md`, junto con los fallos previos de la línea base (0.3 y 0.4).
