@@ -1,0 +1,1 @@
+- [Replace con $`](feedback_replace_dolar_backtick.md) — editar por script con split/join; "$`" en replace duplicó tasks.md (14-oct)
