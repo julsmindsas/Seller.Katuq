@@ -11298,7 +11298,8 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - **Consecuencia:** con la configuración web pública (la que va en el bundle del Seller y de Support), cualquiera puede leer y borrar datos de todas las empresas sin pasar por el backend. Esto incluye `users`, que guarda el campo `password`, y el login manda el hash calculado en el navegador, así que ese valor funciona como credencial.
   - El aislamiento por empresa del backend no protege esa vía. No se tocó ninguna regla. Requiere un cambio propio, urgente, que primero inventaríe qué lee y escribe cada front directamente.
 - **Ajustes durante la implementación:**
-  - El Seller ya manda la sesión al crear tickets. Por eso la creación con sesión de comercio respeta la prioridad elegida y el `nroTicket` del contador compartido; solo empresa, tienda y NIT salen del JWT.
+  - El Seller ya manda la sesión al crear tickets. Por eso la creación con sesión de comercio respeta la prioridad elegida; solo empresa, tienda y NIT salen del JWT. El número lo asigna siempre el servidor (D-507, que llegó a origin en paralelo; la sesión viaja en `deps.sesion` junto a sus `{ fs, rtdb }`).
+  - Subido: backend `75769247` (D-511), `ed917977` (D-512) y `40e2ee22` (propuesta cerrar-reglas-firebase); Support `a8f3761`.
   - El backend también rechaza un cliente de otra empresa al EDITAR un proyecto, no solo al crearlo.
   - `/v1/support/sesion` devuelve `puedeCrearProyectos`.
   - En Support, la campana del comercio muestra solo avisos de tickets: su canal es la campana general del Seller.
