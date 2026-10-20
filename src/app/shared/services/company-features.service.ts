@@ -46,6 +46,9 @@ export const COMPANY_FEATURE_FLAGS = [
   // SIIGO: facturar con el producto equivalente en vez de crear otro (D-504, ticket 1229).
   // Solo donde se comprobó la regla (ALMACEN BOMBAS). Dueño: Daniel. Se revisa el 2027-04-30.
   'siigoProductEquivalence',
+  // Traer mi tienda desde Shopify o WooCommerce (D-498, ticket 1245). Solo a mano, primero en
+  // FLORECER y nunca en OH MY STORE. Dueño: Daniel. Se retira el 2027-03-31.
+  'storeMigrationImport',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

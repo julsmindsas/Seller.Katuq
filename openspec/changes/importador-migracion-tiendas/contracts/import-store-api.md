@@ -4,7 +4,7 @@ Lo fija la prueba `importStore.routes.contract.test.js` (tarea 1.1) antes de imp
 
 ### Reglas comunes
 
-- **Cadena:** `auth, requireJwtTenant, requireFeature(FEATURE_FLAGS.storeMigrationImport), ONLY_ADMIN`. La empresa sale del JWT; si el cuerpo trae una, se ignora.
+- **Cadena:** `auth, requireJwtTenant, requireFeature(FEATURE_FLAGS.storeMigrationImport), ONLY_ADMIN`. La empresa sale del JWT. Si el cuerpo o el encabezado traen otra, `requireJwtTenant` responde 403 antes de llegar a la ruta; el cuerpo nunca elige la empresa.
 - **Éxito:** `{ "success": true, … }`.
 - **Error:** `{ "success": false, "code", "message" }`, con `message` en español y sin jerga.
 - **Contenido de respuestas y auditoría:** fila, clave del producto y código. Nunca correos, teléfonos ni direcciones.
@@ -20,9 +20,11 @@ Lo fija la prueba `importStore.routes.contract.test.js` (tarea 1.1) antes de imp
 | `BATCH_NOT_FOUND` | 404 | El lote de clientes no es de la empresa |
 | `FLOW_PUBLISHES_PRODUCTS` | 409 | La guarda de flows (`products`) |
 | `CATEGORY_TREE_UNREADABLE` | 409 | El árbol de categorías es ilegible |
-| `WAREHOUSE_INVALID` | 409 | La bodega no existe o está inactiva |
+| `WAREHOUSE_INVALID` | 409 | La bodega elegida no existe o está inactiva, o no se eligió ninguna y hay existencias por cargar (el mensaje pide elegirla) |
 | `IMPORT_IN_PROGRESS` | 409 | El candado de la empresa está tomado (`products`, `customers`) |
 | `TOO_MANY` | 413 | Se pasa el límite de la ruta (tabla de abajo) |
+
+Mientras no entren las escrituras (tareas 6.1 y 7.1), `products` y `redirects` validan, revisan la guarda y el sitio, y responden 501 `NOT_AVAILABLE_YET`.
 
 Ante `IMPORT_IN_PROGRESS`, el front espera y reenvía el mismo lote. Si ese lote ya había terminado, recibe su resultado con `replayed: true`.
 
@@ -44,7 +46,8 @@ Ante `IMPORT_IN_PROGRESS`, el front espera y reenvía el mismo lote. Si ese lote
 - `source`: `shopify` (y `woocommerce` en la fase 1c).
 - `mode`: `create` (por defecto) o `upsert`.
 - `lot` es obligatorio en `products` y no va en `dry-run`.
-- `siteId` solo sirve en `dry-run`, para contar redirecciones.
+- `siteId` solo sirve en `dry-run`, para contar redirecciones. Sin él, `redirects` llega en `null`.
+- Cada fila de `rows` puede traer `_row`, su número en el archivo, para que el reporte diga la fila.
 
 **`dry-run` → 200:**
 

@@ -1,6 +1,6 @@
 ## Context
 
-D-498 (ticket 1245, F5-30, parte importador). El punto de partida está en la propuesta («Hoy»). Las citas salen del código leído el 2026-10-18 (backend `katuq_admin_back_firebase/functions`, `backend-aws-security`, `d8f1903b`), sin consultar producción. Las columnas de los exports salen de la documentación pública; 0.4 las confirma con archivos reales.
+D-498 (ticket 1245, F5-30, parte importador). El punto de partida está en la propuesta («Hoy»). Las citas salen del código leído el 2026-10-18 (backend `katuq_admin_back_firebase/functions`, `backend-aws-security`, `d8f1903b`), sin consultar producción. Las columnas de los exports salen de la documentación pública; 0.4 las confirma con archivos reales. **Mientras no lleguen, las pruebas usan fixtures SINTÉTICOS** (`functions/tests/storeMigration/fixtures/`, backend privado): productos e inventario de Shopify, el export anterior con `Variant Inventory Qty` y productos de WooCommerce, con esas columnas, sin datos personales ni clientes.
 
 Para no pasar de 3 páginas por documento (Artículo XIII), el diseño se reparte así: este documento; `design-escritura.md` (categorías, productos, existencias y write-set); `design-clientes.md` (fase 1b) y `contracts/import-store-api.md` (contrato de cada ruta).
 
@@ -88,6 +88,17 @@ Para no pasar de 3 páginas por documento (Artículo XIII), el diseño se repart
 Aprobar specs, valores y diseño → archivos reales → pruebas, implementación y revisión → desplegar apagado y encender FLORECER → medir y decidir por comercio. No hay relleno de datos: la simulación es el `--dry-run`.
 
 **Reversa:** apagar la bandera. Clientes y autorizaciones salen con `DELETE import-store/customers/:batchId`; las redirecciones, en el editor. Los productos quedan normales, identificables por `metadata.migration.migrationId`; borrarlos en masa es otra propuesta, con `--dry-run`.
+
+## Notas de implementación (2026-10-19)
+
+Lo que el código decidió donde este documento no bajaba al detalle. Se revisa con los exports reales (0.4).
+
+- **Rutas:** router propio `routers/importStore.js`, montado en `index.js` en `/v1/onboarding/import-store` (antes de `/v1/onboarding` y dentro de un `try`). Mismas rutas y misma cadena de la decisión 1; no toca `routers/onboarding.js`, que editan otras sesiones. Hasta 6.1 y 7.1, `products` y `redirects` validan, revisan la guarda y el sitio, y responden 501 `NOT_AVAILABLE_YET`. Un cuerpo con otra empresa recibe 403 de `requireJwtTenant`.
+- **Simulación:** escribe solo su registro en `migration_audit`. Sin `siteId`, `redirects` es `null`. `photos.valid` cuenta las fotos que entran (hasta 8 por producto). `total` cuenta cada producto separado por precio, y `withoutSku` los productos sin SKU en ninguna variante. Los avisos de un grupo omitido entero (por ejemplo, las fotos de un producto que ya existe) no van al reporte: solo el motivo de la omisión. Sin bodega elegida, `WAREHOUSE_INVALID` solo aparece si hay unidades por cargar, con un mensaje que pide elegirla. Las consultas de coincidencias van en paralelo, en tandas de 50; el tiempo con Firestore real se mide en 12.2 (la prueba supone 150 ms por consulta).
+- **Lector de Shopify:** la referencia es el SKU solo si el producto tiene **una** variante y trae SKU. La categoría sale de `Type` y, si falta, del último nivel de `Product Category`. La cantidad sale de «Available» en el CSV de inventario (no de «On hand», que incluye lo comprometido), sumada en todas las ubicaciones. `externalId` es el `Handle`, porque el CSV no trae el id del producto. «Title / Default Title» no es un eje.
+- **Contrato:** cada fila puede traer `_row` (su número en el archivo) para el reporte.
+- **WooCommerce (1c):** el exportador por defecto no trae el *slug*. Las redirecciones `/product/<slug>` necesitan otra fuente (otra columna o la dirección pegada por el comercio).
+- **Actualización acotada:** si el producto existente no tiene `user_add` ni fechas de creación, el upsert las completa con el actor y la fecha de hoy. No se evita sin modificarlo.
 
 ## Open Questions — valores por defecto *(confirmar con Daniel)*
 
