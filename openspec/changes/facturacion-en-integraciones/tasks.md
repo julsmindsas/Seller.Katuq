@@ -11,7 +11,7 @@ Convenciones:
 
 ## 0. Prerrequisitos
 
-- [ ] 0.1 Daniel aprueba `specs/facturacion-proveedor/spec.md` y confirma los 13 valores por defecto de `design.md` (Open
+- [x] 0.1 Daniel aprueba `specs/facturacion-proveedor/spec.md` y confirma los 13 valores por defecto de `design.md` (Open
   Questions), las dos banderas y el interruptor `INVOICING_SHADOW_MODE`. Se registran bajo D-500 en `specs/CONTRACT.md`,
   junto con la excepción parcial del Art. IX (Art. XIV). **Dep.** —. **Éxito:** entrada con fecha en el contrato.
 - [ ] 0.2 El cambio privado del backend para las rutas que ya existen (guardar configuración y contables) está aprobado.
@@ -39,23 +39,23 @@ Convenciones:
 
 Todas: **Dep.** 0.1, 0.3. **Éxito:** corren con `node` y fallan por código ausente (los casos viejos siguen verdes).
 
-- [ ] 1.1 [P] `tests/accounting/invoicingResolve.test.js`:
+- [x] 1.1 [P] `tests/accounting/invoicingResolve.test.js`:
   - paridad con `evaluarProveedor` (DIAN, Siigo, WO, ninguno, inactivos);
   - sin elección = orden fijo: sin documento, `status` distinto de `'settings'`, sin `defaultProvider`, o documento creado
     solo por `check`;
   - `defaultProvider` desconocido → `CHOICE_INVALID`; con elección, inactivo o tipo no soportado → `null`, nunca otro;
   - notas siguen a la original; `documentTypeForOrder` (`POS` → `posInvoice`; lo demás → `orderInvoice`).
-- [ ] 1.2 [P] `tests/accounting/invoicingSettings.contract.test.js`:
+- [x] 1.2 [P] `tests/accounting/invoicingSettings.contract.test.js`:
   - forma y códigos de las 5 rutas; 401 sin sesión y empresa tomada del token;
   - 403 por rol: Vendedor en `choice`, `check` y `history`; Contador permitido ahí; `summary` y `resolve` para toda la empresa;
   - 403 `FEATURE_DISABLED` con la bandera apagada; 409 por facturas en proceso o versión vieja;
   - `switchBlockedReason` nombra el pedido o el envío; un candado vencido no bloquea; un `uncertain` sí;
   - `check` no cambia `version` ni `config`; el resumen no trae secretos ni `issuer`.
-- [ ] 1.3 [P] `tests/accounting/invoicingWriteSet.test.js` (Firestore simulado):
+- [x] 1.3 [P] `tests/accounting/invoicingWriteSet.test.js` (Firestore simulado):
   - los módulos nuevos no escriben numeración, `orders`, `products` ni inventario; la elección no cambia `maxIntegrations`;
   - `GET`/`DELETE /v1/integration/config/invoicing` se rechazan y no cambian `status`; `listConfigs(…, true)` y el censo
     omiten `_invoicing`.
-- [ ] 1.4 [P] Extender `tests/integrations/dianConfigPersistence.test.js`:
+- [x] 1.4 [P] Extender `tests/integrations/dianConfigPersistence.test.js`:
   - `certificateExpiresAt` sale del certificado (también si solo cambia la contraseña) y el del cliente se ignora;
   - certificado ilegible: el guardado pasa como hoy, `certificateExpiresAt: null`, sin secretos en el error;
   - `secretsChanged` trae solo nombres; `numbering.current` intacto y `preventRewind` sigue.
@@ -79,24 +79,24 @@ Todas: **Dep.** 0.1, 0.3. **Éxito:** corren con `node` y fallan por código aus
 
 ## 2. Núcleo del servidor (banderas e interruptor apagados, sin cambio visible)
 
-- [ ] 2.1 `invoicingHub` e `invoicingAutoFollowsChoice` en `FEATURE_FLAG_NAMES` y `COMPANY_FEATURE_FLAGS`, y lectura de
+- [x] 2.1 `invoicingHub` e `invoicingAutoFollowsChoice` en `FEATURE_FLAG_NAMES` y `COMPANY_FEATURE_FLAGS`, y lectura de
   `INVOICING_SHADOW_MODE` (`off` si falta), con dueño Daniel y retiro 2027-03-31 en comentario. **Dep.** 0.1. **Éxito:** pasa
   la prueba del catálogo en los dos repos y el front compila.
-- [ ] 2.2 [P] `invoicing/documentTypes.js` y `descriptors/*` (puros, con `autoInvoicing.runner`). **Dep.** 1.1. **Éxito:**
+- [x] 2.2 [P] `invoicing/documentTypes.js` y `descriptors/*` (puros, con `autoInvoicing.runner`). **Dep.** 1.1. **Éxito:**
   pasan sus casos de 1.1.
-- [ ] 2.3 `resolveInvoicingProvider.js`. **Dep.** 2.2. **Éxito:** 1.1 pasa completa.
-- [ ] 2.4 `invoicingSettings.js`: lectura por id; elección en transacción con compare-and-set; `health` con merge, sin
+- [x] 2.3 `resolveInvoicingProvider.js`. **Dep.** 2.2. **Éxito:** 1.1 pasa completa.
+- [x] 2.4 `invoicingSettings.js`: lectura por id; elección en transacción con compare-and-set; `health` con merge, sin
   `version`. **Dep.** 2.2. **Éxito:** pasan los casos de escritura de 1.2 y 1.3.
-- [ ] 2.5 [P] `invoicingInProgress.js` (decisión 9). **Dep.** 0.4. **Éxito:** pasan los casos 409 y de motivo de 1.2.
-- [ ] 2.6 `invoicingSummary.js` (decisión 5). **Dep.** 2.3, 2.5. **Éxito:** pasan los casos de estado de 1.2.
-- [ ] 2.7 `controllers/invoicingSettingsController.js` y las rutas, antes de `/:provider/*`, con `auth`, `requireJwtTenant`,
+- [x] 2.5 [P] `invoicingInProgress.js` (decisión 9). **Dep.** 0.4. **Éxito:** pasan los casos 409 y de motivo de 1.2.
+- [x] 2.6 `invoicingSummary.js` (decisión 5). **Dep.** 2.3, 2.5. **Éxito:** pasan los casos de estado de 1.2.
+- [x] 2.7 `controllers/invoicingSettingsController.js` y las rutas, antes de `/:provider/*`, con `auth`, `requireJwtTenant`,
   `requireRole(INVOICING_CONFIG_ROLES)` donde toca y `requireFeature('invoicingHub')`. **Dep.** 2.4, 2.6. **Éxito:** 1.2 pasa;
   `/dian/...` y `/:provider/invoices/*` responden igual (prueba de humo).
-- [ ] 2.8 **Sensible (consecutivos), con diff aprobado.** `prepareConfigUpdate`/`saveConfig`: `certificateExpiresAt` (decisión 8)
+- [x] 2.8 **Sensible (consecutivos), con diff aprobado.** `prepareConfigUpdate`/`saveConfig`: `certificateExpiresAt` (decisión 8)
   y `secretsChanged`. **Dep.** 1.4. **Éxito:** 1.4 pasa y las suites DIAN siguen verdes.
 - [ ] 2.9 **Sensible (facturación de pedidos), con diff aprobado.** Sombra de la decisión 10 en `createInvoiceFromOrder` y su
   variante async, después de responder. **Dep.** 1.8, 2.3. **Éxito:** 1.8 pasa.
-- [ ] 2.10 [P] Id reservado `invoicing` en las rutas genéricas, `listConfigs` y el censo (decisión 1). **Dep.** 1.3. **Éxito:**
+- [x] 2.10 [P] Id reservado `invoicing` en las rutas genéricas, `listConfigs` y el censo (decisión 1). **Dep.** 1.3. **Éxito:**
   pasan sus casos de 1.3; el listado de integraciones de una empresa sin elección no cambia.
 - [ ] 2.11 `node --check` de lo tocado y las suites `dianConfigPersistence`, `pedidoYaFacturado`, `reemplazarFactura`,
   `liberarFactura`, `dianAlertasPreventivas`. **Dep.** 2.1-2.10. **Éxito:** todo verde.

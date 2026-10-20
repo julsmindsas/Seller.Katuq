@@ -11312,3 +11312,33 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - Despliegue desde la máquina principal: primero el backend (`backend-aws-security` en `40e2ee22` o posterior), luego Support (`main` en `a8f3761`, `hosting:katuq-tickets`). Al revés, el front llamaría a `/v1/support/sesion`, que no existe, y mandaría a todos a "sin acceso".
   - La Fase 2, en otra sesión.
 
+
+## D-500, bitácora 2026-10-20 — Arranque de la implementación (FE-01, ticket 1260)
+
+- **Ramas:** el usuario indicó que la facturación electrónica (D-499 y D-500) se trabaja en `feature/venta-asistida-mejorada` (Seller) y `backend-aws-security` (backend). Se empieza por D-500, porque la bandeja de D-499 (fase 1) depende de su resolvedor.
+- **Tarea 0.1:** la aprobación en bloque del 18-oct (tabla D-495 a D-503) cubre la spec `facturacion-proveedor`, el diseño, las tareas y los 13 valores por defecto. También cubre la excepción parcial del Art. IX: módulo NgModule lazy, RxJS en vez de signals y `*ngIf` en vez de `@if`, porque Angular 14 no los tiene (precedente D-054). `OnPush` sí se cumple.
+- **Ajuste por D-505 (posterior al diseño):** el interruptor general de la sombra no va en el `.env`. `INVOICING_SHADOW_MODE` pasa a `config/invoicing.shadowMode` (`"off"` | `"on"`) en Firestore. Sin el documento, o si no se puede leer, queda `"off"`. Se lee con caché corto, como `config/nps`.
+- **Índices (tarea 0.4), por defecto sin índices nuevos donde se pueda:**
+  - `dian_documents` y `dian_invoice_requests` se consultan solo con igualdades (`companyId ==` y `status in`), que no necesitan índice compuesto. La fecha y `reemplazadaPor` se filtran en memoria.
+  - El historial (`config_audit`) consulta por `configId ==` y ordena en memoria: son pocos guardados por configuración.
+  - El rango de `orders` (`company ==` y `facturacionEnProceso.at >=`) sí necesita índice compuesto. Mientras no exista, si la consulta falla, el cambio de proveedor **se bloquea** (`INVOICING_CHECK_UNAVAILABLE`); nunca se deja pasar a ciegas. El PR de índices sale de la lista viva exportada.
+- **Línea base antes de tocar código (todo en verde):**
+  - `test:dian-invoice` 60/60, `test:dian-config` 17/17, `test:dian-bandeja` 5;
+  - `companyFeatureFlags` 38, `reemplazarFactura` 11, `liberarFactura` 14, `dianAlertasPreventivas` 7, `dianAuditoria` 4 y `pedidoYaFacturado` OK.
+- **Regla de la sesión (el usuario: «ojo con dañar cosas»):** solo módulos nuevos detrás de banderas apagadas. Las tareas sensibles (2.8, 2.9, 3.3, 3.4, 4.4, 4.5, 5.x y 7.4) se hacen con diff aprobado, una a la vez.
+- **Avance 20-oct (commiteado sin desplegar: backend `82ac738c`):**
+  - **Backend** (`backend-aws-security`), módulos nuevos en `services/accounting/invoicing/`:
+    - `documentTypes`, `descriptors/*`, `resolveInvoicingProvider`, `invoicingSettings`, `invoicingInProgress`, `invoicingSummary` y `config` (el interruptor de `config/invoicing`);
+    - `controllers/invoicingSettingsController.js` y las 5 rutas `/v1/accounting/invoicing/*`, antes de `/:provider/*`, todas detrás de `invoicingHub`;
+    - banderas `invoicingHub` e `invoicingAutoFollowsChoice` en los dos catálogos.
+  - **Tareas hechas:** 1.1 a 1.3, 2.1 a 2.7 y 2.10.
+  - **2.10 (`invoicing` como id reservado):** `GET` y `DELETE /v1/integration/config/invoicing` responden 400 `PROVIDER_NOT_SUPPORTED`. `listConfigs` (también con inactivas) y el censo omiten `status: "settings"`. Los demás lectores de `integration_configs` ya filtran `active`.
+  - **Pruebas:** `npm run test:invoicing`: resolvedor 18, contrato 28 y write-set 6.
+  - **Sin regresión:** la línea base completa sigue igual y el censo da 16/16. En el front, `tsc` no da errores en `src/`; los 2 errores que muestra están en `node_modules` y ya existían.
+  - **Con las banderas apagadas nada cambia para los comercios:** las rutas nuevas responden 403 y nadie llama al resolvedor todavía.
+  - **Siguen las sensibles, con diff aprobado:** 2.8 (vencimiento del certificado al guardar DIAN) y 2.9 (sombra en `from-order`). También falta el índice de `orders` (0.4).
+  - **2.8 APROBADA por el usuario («DALE», 20-oct) y aplicada:**
+    - `prepareConfigUpdate` (DIAN) descarta el `certificateExpiresAt` que manda el cliente. Si llegan un certificado o una contraseña nuevos, el servidor calcula el vencimiento.
+    - Si el certificado no se puede abrir, se guarda como hoy, con `null` y sin secretos en el error.
+    - `config_audit.secretsChanged` guarda solo los nombres de los secretos que cambiaron.
+    - `test:dian-config` pasa 23/23 (6 nuevas, tarea 1.4) y `test:dian-invoice` sigue en 60/60. El diff se probó primero en una copia aparte.
