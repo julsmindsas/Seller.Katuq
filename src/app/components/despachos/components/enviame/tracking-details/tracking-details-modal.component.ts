@@ -402,12 +402,17 @@ export class TrackingDetailsModalComponent implements OnInit {
     // Detectar si viene con originalResponse (estructura real del backend)
     const data = response.originalResponse || response;
 
+    const conHistorial = Array.isArray(response.history) && response.history.length > 0;
+
     if (data.status) {
       // Mapear el status de Enviame
       currentStatus = this.mapEnviameStatusCode(data.status.code || data.status.name);
       currentStatusName = data.status.name || data.status.info;
+    }
 
-      // Crear evento del estado actual
+    // Con historial (ticket 1317) los eventos son los de Enviame; el evento armado con
+    // updated_at solo queda cuando Enviame no devuelve historial.
+    if (data.status && !conHistorial) {
       events.push({
         timestamp: data.updated_at || response.statusDate || new Date().toISOString(),
         status: currentStatus,
@@ -422,14 +427,14 @@ export class TrackingDetailsModalComponent implements OnInit {
     }
 
     // Agregar historial si existe
-    if (response.history && response.history.length > 0) {
+    if (conHistorial) {
       events.push(...response.history.map((item: any) => ({
-        timestamp: item.date || item.timestamp,
-        status: this.mapEnviameStatusCode(item.status || item.code),
+        timestamp: item.timestamp || item.date,
+        status: this.mapEnviameStatusCode(item.code || item.status || ''),
         statusName: item.statusName || item.description,
-        description: item.description || item.info,
+        description: item.description || item.comment || item.info,
         location: item.location || '',
-        providerSpecific: { courier: response.carrier }
+        providerSpecific: { courier: response.carrier, statusCode: item.code }
       })));
     }
 
@@ -514,10 +519,31 @@ export class TrackingDetailsModalComponent implements OnInit {
       'En Reparto': TrackingStatus.OUT_FOR_DELIVERY,
       'En Tránsito': TrackingStatus.IN_TRANSIT,
       'Entregado': TrackingStatus.DELIVERED,
-      'Creado': TrackingStatus.CREATED
+      'Creado': TrackingStatus.CREATED,
+      // Códigos reales de Enviame (ticket 1317)
+      'PENDING': TrackingStatus.CREATED,
+      'IN_ORIGIN': TrackingStatus.PICKED_UP,
+      'IN_DESTINATION': TrackingStatus.IN_TRANSIT,
+      'CANCELED': TrackingStatus.CANCELLED,
+      'DELETED': TrackingStatus.CANCELLED,
+      // Lo que ya llega traducido por el backend
+      'delivered': TrackingStatus.DELIVERED,
+      'out_for_delivery': TrackingStatus.OUT_FOR_DELIVERY,
+      'in_transit': TrackingStatus.IN_TRANSIT,
+      'picked_up': TrackingStatus.PICKED_UP,
+      'cancelled': TrackingStatus.CANCELLED,
+      'returned': TrackingStatus.RETURNED,
+      'exception': TrackingStatus.EXCEPTION
     };
 
-    return codeMap[statusCode] || codeMap[statusCode.toUpperCase()] || TrackingStatus.PROCESSING;
+    const codigo = String(statusCode || '');
+    const mayus = codigo.toUpperCase();
+    if (codeMap[codigo] || codeMap[mayus]) return codeMap[codigo] || codeMap[mayus];
+    // Variantes de Enviame: DELIVERED_DOM, RETURN_IN_TRANSIT, DELAY_COURIER…
+    if (mayus.startsWith('DELIVERED')) return TrackingStatus.DELIVERED;
+    if (mayus.startsWith('RETURN')) return TrackingStatus.RETURNED;
+    if (mayus.startsWith('DELAY')) return TrackingStatus.EXCEPTION;
+    return TrackingStatus.PROCESSING;
   }
 
   private normalizeServientregaResponse(response: any): TrackingResponse {
@@ -838,6 +864,12 @@ export class TrackingDetailsModalComponent implements OnInit {
 
   get hasEvents(): boolean {
     return this.timelineItems.length > 0;
+  }
+
+  /** Distintivo del estado: el envío terminó (entregado, cancelado, devuelto) o sigue en curso. */
+  get estadoDistintivo(): string {
+    const fin = [TrackingStatus.DELIVERED, TrackingStatus.CANCELLED, TrackingStatus.RETURNED];
+    return this.trackingData && fin.includes(this.trackingData.currentStatus) ? 'Finalizado' : 'En curso';
   }
 
   get isDelivered(): boolean {
