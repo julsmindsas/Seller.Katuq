@@ -123,6 +123,25 @@
                     <span *ngIf="pedidoGral.envio?.departamento">, {{ pedidoGral.envio?.departamento }}</span>
                 </p>
             </div>
+            <!-- Ticket 1245: la dirección del pedido también se puede editar -->
+            <button
+                class="btn btn-sm"
+                style="
+                    background-color: transparent;
+                    border: 1px solid #86efac;
+                    color: #166534;
+                    font-size: 0.75rem;
+                    border-radius: 8px;
+                    padding: 4px 10px;
+                    align-self: center;
+                    margin-right: 6px;
+                "
+                (click)="editarDireccionSeleccionada(entrega)"
+                placement="top"
+                ngbTooltip="Editar direcci&oacute;n seleccionada"
+            >
+                <i class="fa fa-pencil me-1"></i> Editar
+            </button>
             <button
                 class="btn btn-sm"
                 style="

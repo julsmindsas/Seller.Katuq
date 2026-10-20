@@ -54,6 +54,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
   codigo_postal_entrega: any;
   @Input() pedidoGral: Pedido;
   idenxEntrega: any;
+  /** Ticket 1245: índice de la dirección del pedido agregada solo para editarla. */
+  entregaTemporalIndex: number | null = null;
   private originalAliasEntrega: string;
   private originalDireccionEntrega: string;
   filteredResults: any;
@@ -523,7 +525,31 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       this.overridePedido.emit(this.pedidoGral);
     }
   }
+  /**
+   * Ticket 1245: editar la dirección que tiene el pedido. Si es una de las guardadas del
+   * cliente se edita esa; si no (llegó por otro lado), se agrega a la lista solo mientras
+   * se edita: al guardar queda en el pedido y en las direcciones del cliente, como
+   * cualquier edición; si se cancela, se retira (ver limpiarVariables).
+   */
+  editarDireccionSeleccionada(modal): void {
+    const envio = this.pedidoGral?.envio;
+    if (!envio) return;
+    if (!Array.isArray(this.datosEntregas)) this.datosEntregas = [];
+    let idx = this.datosEntregas.findIndex((d: any) =>
+      (!!envio.alias && d?.alias === envio.alias) ||
+      (!!envio.direccionEntrega && d?.direccionEntrega === envio.direccionEntrega)
+    );
+    if (idx === -1) {
+      this.datosEntregas.push({ ...envio });
+      idx = this.datosEntregas.length - 1;
+      this.entregaTemporalIndex = idx;
+    }
+    this.editarDatos(modal, idx);
+  }
+
   editarDatosEntrega() {
+    // Ticket 1245: la dirección agregada para editar se está guardando; ya no es temporal.
+    this.entregaTemporalIndex = null;
     const datosEntreg = {
       alias: this.alias_entrega,
       nombres: this.nombres_entrega,
@@ -980,6 +1006,13 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
   }
 
   limpiarVariables() {
+    // Ticket 1245: si se canceló la edición de una dirección que no estaba guardada,
+    // se retira de la lista (no se guardó nada).
+    if (this.entregaTemporalIndex !== null && Array.isArray(this.datosEntregas)) {
+      this.datosEntregas.splice(this.entregaTemporalIndex, 1);
+    }
+    this.entregaTemporalIndex = null;
+
     // Variables de control
     this.editandodato = false;
     this.idenxEntrega = null;
