@@ -145,6 +145,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /** Ticket 1054: retenciones del SIIGO de la empresa, agrupadas por tipo, y la elegida en cada una. */
   facturaRetencionesPorTipo: { tipo: string; etiqueta: string; opciones: { id: number; name: string }[] }[] = [];
   facturaRetencionSel: { [tipo: string]: number | null } = {};
+  /** Ticket 1241: cuando el SIIGO tiene varios IVA del mismo %, el que se escoge al facturar. */
+  facturaIvasPorPct: { pct: string; opciones: { id: number; name: string }[] }[] = [];
+  facturaIvaSel: { [pct: string]: number | null } = {};
   /**
    * Ticket 1052: vendedor y centro de costo de la factura, de los del SIIGO de la empresa.
    * Vienen ya marcados (quien factura si es vendedor en SIIGO, o lo último usado en ese tipo
@@ -1136,6 +1139,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.facturaRetencionesPorTipo = this.agruparRetencionesFactura(this.extraerListaFactura(taxes, 'taxes'));
         this.facturaRetencionSel = {};
         this.facturaRetencionesPorTipo.forEach((g) => (this.facturaRetencionSel[g.tipo] = null));
+        this.prepararIvasFactura(this.extraerListaFactura(taxes, 'taxes'), config?.config?.config ?? config?.config ?? {});
         this.facturaVendedores = this.extraerListaFactura(sellers, 'sellers')
           .filter((v: any) => v && v.id != null)
           .map((v: any) => ({ id: Number(v.id), nombre: String(v.nombre || v.first_name || `Vendedor ${v.id}`), email: v.email || null }));
@@ -1169,6 +1173,40 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       }
     });
+  }
+
+  /**
+   * Ticket 1241: si el SIIGO tiene más de un IVA activo del 19% o del 5% (venta, servicios,
+   * mayor valor del gasto…), la ventana deja escoger cuál usar. Viene marcado el configurado o,
+   * si no hay, el mismo que escogería el servidor: el de venta con id menor.
+   */
+  private prepararIvasFactura(impuestos: any[], cfg: any): void {
+    const noEsDeVenta = /servic|\bserv\b|mayor valor|gasto|descontable|compra|importaci/i;
+    const lista = Array.isArray(impuestos) ? impuestos : [];
+    this.facturaIvasPorPct = [];
+    this.facturaIvaSel = {};
+    for (const pct of ['19', '5']) {
+      const opciones = lista
+        .filter((i: any) => i && i.type === 'IVA' && i.active !== false && Number(i.percentage) === Number(pct) && i.id != null)
+        .map((i: any) => ({ id: Number(i.id), name: String(i.name || `IVA ${pct}%`) }))
+        .sort((a, b) => a.id - b.id);
+      if (opciones.length < 2) continue;
+      const configurado = Number(cfg?.[`tax${pct}Id`]);
+      const porDefecto = opciones.find((o) => o.id === configurado)
+        || opciones.find((o) => !noEsDeVenta.test(o.name)) || opciones[0];
+      this.facturaIvasPorPct.push({ pct, opciones });
+      this.facturaIvaSel[pct] = porDefecto.id;
+    }
+  }
+
+  /** Ticket 1241: el IVA escogido, solo de los porcentajes con más de una opción. */
+  private facturaIvaElegido(): { [pct: string]: number } | undefined {
+    const iva: { [pct: string]: number } = {};
+    for (const g of this.facturaIvasPorPct) {
+      const id = this.facturaIvaSel[g.pct];
+      if (id) iva[g.pct] = Number(id);
+    }
+    return Object.keys(iva).length ? iva : undefined;
   }
 
   /**
@@ -1350,6 +1388,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         .map((v) => Number(v)),
       sellerId: this.facturaVendedorId || undefined,
       costCenterId: this.facturaUsaCentroCosto ? (this.facturaCentroCostoId || undefined) : undefined,
+      iva: this.facturaIvaElegido(),
       reemplazarFactura: this.facturaReemplazo?.pedidoId === this.facturaPedido?._id ? this.facturaReemplazo?.invoiceId : undefined,
     };
   }
@@ -1413,6 +1452,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         .map((v) => Number(v)),
       sellerId: this.facturaVendedorId || undefined,
       costCenterId: this.facturaUsaCentroCosto ? (this.facturaCentroCostoId || undefined) : undefined,
+      iva: this.facturaIvaElegido(), // ticket 1241
     };
     if (documentTypeId && (extras.sellerId || extras.costCenterId)) {
       this.recordarFactura(String(documentTypeId), { sellerId: extras.sellerId, costCenterId: extras.costCenterId });
@@ -1559,7 +1599,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param paymentTypeId ID de la forma de pago en SIIGO (D-042)
    * @param dueDate Fecha de vencimiento de crédito en formato yyyy-MM-dd (D-042)
    */
-  private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number, prefijoId?: number, paymentTypeId?: number, dueDate?: string, extras?: { observaciones?: string; retenciones?: number[]; sellerId?: number; costCenterId?: number }): void {
+  private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number, prefijoId?: number, paymentTypeId?: number, dueDate?: string, extras?: { observaciones?: string; retenciones?: number[]; sellerId?: number; costCenterId?: number; iva?: { [pct: string]: number } }): void {
     const providerDisplayName = this.getAccountingProviderDisplayName();
     const nroPedido = pedido.nroPedido || pedido.referencia || pedido._id;
 
@@ -1583,6 +1623,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (extras?.retenciones?.length) options.retenciones = extras.retenciones; // ticket 1054
     if (extras?.sellerId) options.sellerId = extras.sellerId; // ticket 1052
     if (extras?.costCenterId) options.costCenterId = extras.costCenterId; // ticket 1052
+    if (extras?.iva) options.iva = extras.iva; // ticket 1241
     // REFACTURAR: el servidor solo reemplaza si el pedido sigue con esta factura.
     const reemplazo = this.facturaReemplazo?.pedidoId === pedido._id ? this.facturaReemplazo : null;
     if (reemplazo) options.reemplazarFactura = reemplazo.invoiceId;

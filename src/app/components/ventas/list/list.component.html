@@ -2733,6 +2733,19 @@
                       placeholder="Ej: Orden de compra 4500123"></textarea>
             <small class="text-muted">Sale en la factura. {{ facturaObservaciones?.length || 0 }}/1000</small>
         </div>
+        <!-- Ticket 1241: varios IVA del mismo % en SIIGO -->
+        <div class="form-group mb-3" *ngIf="facturaIvasPorPct.length">
+            <label class="mb-1">IVA de SIIGO</label>
+            <div class="row g-2">
+                <div class="col-12 col-sm-6" *ngFor="let g of facturaIvasPorPct">
+                    <select class="form-select form-control form-control-sm"
+                            [(ngModel)]="facturaIvaSel[g.pct]" [attr.aria-label]="'IVA del ' + g.pct + '%'">
+                        <option *ngFor="let o of g.opciones" [ngValue]="o.id">{{ g.pct }}%: {{ o.name }}</option>
+                    </select>
+                </div>
+            </div>
+            <small class="text-muted">Tu SIIGO tiene más de un IVA con ese porcentaje. Se usa para los productos con ese IVA.</small>
+        </div>
         <div class="form-group mb-1" *ngIf="facturaRetencionesPorTipo.length">
             <label class="mb-1">Retenciones <small class="text-muted">(opcional)</small></label>
             <div class="row g-2">
