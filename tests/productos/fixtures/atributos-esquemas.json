@@ -1,0 +1,1099 @@
+{
+  "_nota": "D-495 (ticket 1234). Copia IDÉNTICA en Seller.Katuq/tests/productos/fixtures/atributos-esquemas.json: el espejo del front (documentoDeCategorias, esquemaEfectivo, claves y rutaDelProducto) se prueba con este mismo archivo. Si cambia uno, se copia al otro. Los documentos van en orden de id, que es el orden en que Firestore los devuelve y en que /v1/categorias/all los entrega. `indice` (y el de cada maestro) es lo que GET /v1/categorias/attribute-schemas devuelve para ese árbol; el backend comprueba que indiceDeRutas lo reproduce.",
+  "arbol": [
+    {
+      "data": {
+        "nombre": "Networking",
+        "imagen": "",
+        "activo": true
+      },
+      "children": [
+        {
+          "data": {
+            "nombre": "Routers",
+            "imagen": "",
+            "activo": true
+          },
+          "children": [
+            {
+              "data": {
+                "nombre": "WiFi 6",
+                "imagen": "",
+                "activo": true
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "data": {
+            "nombre": "Switches",
+            "imagen": "",
+            "activo": true
+          },
+          "children": []
+        },
+        {
+          "data": {
+            "nombre": "Cables",
+            "imagen": "",
+            "activo": true
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "data": {
+        "nombre": "Accesorios",
+        "imagen": "",
+        "activo": true
+      },
+      "children": [
+        {
+          "data": {
+            "nombre": "Cables",
+            "imagen": "",
+            "activo": true
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "data": {
+        "nombre": "Cámaras",
+        "imagen": "",
+        "activo": true
+      },
+      "children": []
+    }
+  ],
+  "schemas": {
+    "networking": {
+      "attributes": [
+        {
+          "multiple": false,
+          "required": true,
+          "filterable": true,
+          "comparable": true,
+          "section": "specs",
+          "key": "tecnologia_wifi",
+          "label": "Tecnología WiFi",
+          "type": "option",
+          "options": [
+            "WiFi 5",
+            "WiFi 6",
+            "WiFi 6E"
+          ],
+          "order": 1
+        },
+        {
+          "multiple": false,
+          "required": false,
+          "filterable": true,
+          "comparable": true,
+          "section": "specs",
+          "key": "velocidad",
+          "label": "Velocidad",
+          "type": "number",
+          "unit": "Mbps",
+          "order": 2
+        }
+      ],
+      "aliases": []
+    },
+    "networking > routers": {
+      "attributes": [
+        {
+          "multiple": false,
+          "required": false,
+          "filterable": false,
+          "comparable": false,
+          "section": "specs",
+          "key": "modelo",
+          "label": "Modelo",
+          "type": "text",
+          "order": 4
+        },
+        {
+          "multiple": false,
+          "required": false,
+          "filterable": false,
+          "comparable": true,
+          "section": "specs",
+          "key": "puertos_lan",
+          "label": "Puertos LAN",
+          "type": "number",
+          "order": 1
+        },
+        {
+          "multiple": false,
+          "required": false,
+          "filterable": false,
+          "comparable": false,
+          "section": "compatibility",
+          "key": "mesh",
+          "label": "Compatible con Mesh",
+          "type": "boolean",
+          "order": 2
+        },
+        {
+          "multiple": true,
+          "required": false,
+          "filterable": false,
+          "comparable": false,
+          "section": "compatibility",
+          "key": "sistemas",
+          "label": "Sistemas operativos",
+          "type": "option",
+          "options": [
+            "Windows",
+            "macOS",
+            "Linux"
+          ],
+          "order": 3
+        }
+      ],
+      "aliases": []
+    }
+  },
+  "claves": [
+    {
+      "nombres": [
+        "  Networking ",
+        "Routers"
+      ],
+      "clave": "networking > routers"
+    },
+    {
+      "nombres": [
+        "Cámaras   IP"
+      ],
+      "clave": "cámaras ip"
+    },
+    {
+      "nombres": [
+        "REDES",
+        "Routers",
+        "WiFi 6"
+      ],
+      "clave": "redes > routers > wifi 6"
+    }
+  ],
+  "esquemaEfectivo": [
+    {
+      "ruta": "networking > routers > wifi 6",
+      "claves": [
+        "tecnologia_wifi",
+        "velocidad",
+        "puertos_lan",
+        "mesh",
+        "sistemas",
+        "modelo"
+      ],
+      "heredadas": 6
+    },
+    {
+      "ruta": "networking > routers",
+      "claves": [
+        "tecnologia_wifi",
+        "velocidad",
+        "puertos_lan",
+        "mesh",
+        "sistemas",
+        "modelo"
+      ],
+      "heredadas": 2
+    },
+    {
+      "ruta": "networking",
+      "claves": [
+        "tecnologia_wifi",
+        "velocidad"
+      ],
+      "heredadas": 0
+    },
+    {
+      "ruta": "accesorios > cables",
+      "claves": [],
+      "heredadas": 0
+    },
+    {
+      "ruta": "no existe",
+      "claves": [],
+      "heredadas": 0
+    }
+  ],
+  "documentoDeCategorias": [
+    {
+      "caso": "un solo documento legible",
+      "docs": [
+        {
+          "id": "a1",
+          "data": {
+            "categoria": "[[\"1\",\"2\",\"3\"],{\"data\":\"4\",\"children\":\"5\"},{\"data\":\"6\",\"children\":\"7\"},{\"data\":\"8\",\"children\":\"9\"},{\"nombre\":\"10\",\"imagen\":\"11\",\"activo\":true},[\"12\",\"13\",\"14\"],{\"nombre\":\"15\",\"imagen\":\"11\",\"activo\":true},[\"16\"],{\"nombre\":\"17\",\"imagen\":\"11\",\"activo\":true},[],\"Networking\",\"\",{\"data\":\"18\",\"children\":\"19\"},{\"data\":\"20\",\"children\":\"21\"},{\"data\":\"22\",\"children\":\"23\"},\"Accesorios\",{\"data\":\"24\",\"children\":\"25\"},\"Cámaras\",{\"nombre\":\"26\",\"imagen\":\"11\",\"activo\":true},[\"27\"],{\"nombre\":\"28\",\"imagen\":\"11\",\"activo\":true},[],{\"nombre\":\"29\",\"imagen\":\"11\",\"activo\":true},[],{\"nombre\":\"29\",\"imagen\":\"11\",\"activo\":true},[],\"Routers\",{\"data\":\"30\",\"children\":\"31\"},\"Switches\",\"Cables\",{\"nombre\":\"32\",\"imagen\":\"11\",\"activo\":true},[],\"WiFi 6\"]"
+          }
+        }
+      ],
+      "elegido": 0
+    },
+    {
+      "caso": "gana el árbol legible aunque haya otro antes con la lista plana",
+      "docs": [
+        {
+          "id": "a1",
+          "data": {
+            "categorias": [
+              "Ramos"
+            ]
+          }
+        },
+        {
+          "id": "b2",
+          "data": {
+            "categoria": "[[\"1\",\"2\",\"3\"],{\"data\":\"4\",\"children\":\"5\"},{\"data\":\"6\",\"children\":\"7\"},{\"data\":\"8\",\"children\":\"9\"},{\"nombre\":\"10\",\"imagen\":\"11\",\"activo\":true},[\"12\",\"13\",\"14\"],{\"nombre\":\"15\",\"imagen\":\"11\",\"activo\":true},[\"16\"],{\"nombre\":\"17\",\"imagen\":\"11\",\"activo\":true},[],\"Networking\",\"\",{\"data\":\"18\",\"children\":\"19\"},{\"data\":\"20\",\"children\":\"21\"},{\"data\":\"22\",\"children\":\"23\"},\"Accesorios\",{\"data\":\"24\",\"children\":\"25\"},\"Cámaras\",{\"nombre\":\"26\",\"imagen\":\"11\",\"activo\":true},[\"27\"],{\"nombre\":\"28\",\"imagen\":\"11\",\"activo\":true},[],{\"nombre\":\"29\",\"imagen\":\"11\",\"activo\":true},[],{\"nombre\":\"29\",\"imagen\":\"11\",\"activo\":true},[],\"Routers\",{\"data\":\"30\",\"children\":\"31\"},\"Switches\",\"Cables\",{\"nombre\":\"32\",\"imagen\":\"11\",\"activo\":true},[],\"WiFi 6\"]"
+          }
+        }
+      ],
+      "elegido": 1
+    },
+    {
+      "caso": "dos árboles legibles: el primero en orden de id",
+      "docs": [
+        {
+          "id": "a1",
+          "data": {
+            "categoria": "[[\"1\"],{\"data\":\"2\",\"children\":\"3\"},{\"nombre\":\"4\",\"imagen\":\"5\",\"activo\":true},[],\"Ramos\",\"\"]"
+          }
+        },
+        {
+          "id": "b2",
+          "data": {
+            "categoria": "[[\"1\",\"2\",\"3\"],{\"data\":\"4\",\"children\":\"5\"},{\"data\":\"6\",\"children\":\"7\"},{\"data\":\"8\",\"children\":\"9\"},{\"nombre\":\"10\",\"imagen\":\"11\",\"activo\":true},[\"12\",\"13\",\"14\"],{\"nombre\":\"15\",\"imagen\":\"11\",\"activo\":true},[\"16\"],{\"nombre\":\"17\",\"imagen\":\"11\",\"activo\":true},[],\"Networking\",\"\",{\"data\":\"18\",\"children\":\"19\"},{\"data\":\"20\",\"children\":\"21\"},{\"data\":\"22\",\"children\":\"23\"},\"Accesorios\",{\"data\":\"24\",\"children\":\"25\"},\"Cámaras\",{\"nombre\":\"26\",\"imagen\":\"11\",\"activo\":true},[\"27\"],{\"nombre\":\"28\",\"imagen\":\"11\",\"activo\":true},[],{\"nombre\":\"29\",\"imagen\":\"11\",\"activo\":true},[],{\"nombre\":\"29\",\"imagen\":\"11\",\"activo\":true},[],\"Routers\",{\"data\":\"30\",\"children\":\"31\"},\"Switches\",\"Cables\",{\"nombre\":\"32\",\"imagen\":\"11\",\"activo\":true},[],\"WiFi 6\"]"
+          }
+        }
+      ],
+      "elegido": 0
+    },
+    {
+      "caso": "árbol dañado vale 0: gana la lista plana",
+      "docs": [
+        {
+          "id": "a1",
+          "data": {
+            "categoria": "{{no es flatted"
+          }
+        },
+        {
+          "id": "b2",
+          "data": {
+            "categorias": [
+              "Ramos"
+            ]
+          }
+        }
+      ],
+      "elegido": 1
+    },
+    {
+      "caso": "árbol vacío y nada más: el primero",
+      "docs": [
+        {
+          "id": "a1",
+          "data": {
+            "categoria": ""
+          }
+        },
+        {
+          "id": "b2",
+          "data": {}
+        }
+      ],
+      "elegido": 0
+    },
+    {
+      "caso": "sin documentos",
+      "docs": [],
+      "elegido": null
+    }
+  ],
+  "indice": {
+    "rutas": {
+      "networking": [
+        "Networking"
+      ],
+      "networking > routers": [
+        "Networking",
+        "Routers"
+      ],
+      "networking > routers > wifi 6": [
+        "Networking",
+        "Routers",
+        "WiFi 6"
+      ],
+      "networking > switches": [
+        "Networking",
+        "Switches"
+      ],
+      "networking > cables": [
+        "Networking",
+        "Cables"
+      ],
+      "accesorios": [
+        "Accesorios"
+      ],
+      "accesorios > cables": [
+        "Accesorios",
+        "Cables"
+      ],
+      "cámaras": [
+        "Cámaras"
+      ]
+    },
+    "etiquetas": {
+      "networking": [
+        "networking"
+      ],
+      "routers": [
+        "networking > routers"
+      ],
+      "wifi 6": [
+        "networking > routers > wifi 6"
+      ],
+      "switches": [
+        "networking > switches"
+      ],
+      "cables": [
+        "networking > cables",
+        "accesorios > cables"
+      ],
+      "accesorios": [
+        "accesorios"
+      ],
+      "cámaras": [
+        "cámaras"
+      ]
+    },
+    "colisiones": []
+  },
+  "maestros": {
+    "raizRepetida": {
+      "arbol": [
+        {
+          "data": {
+            "nombre": "Routers",
+            "imagen": "",
+            "activo": true
+          },
+          "children": []
+        },
+        {
+          "data": {
+            "nombre": "Networking",
+            "imagen": "",
+            "activo": true
+          },
+          "children": [
+            {
+              "data": {
+                "nombre": "Routers",
+                "imagen": "",
+                "activo": true
+              },
+              "children": []
+            },
+            {
+              "data": {
+                "nombre": "Switches",
+                "imagen": "",
+                "activo": true
+              },
+              "children": []
+            }
+          ]
+        }
+      ],
+      "schemas": {},
+      "indice": {
+        "rutas": {
+          "routers": [
+            "Routers"
+          ],
+          "networking": [
+            "Networking"
+          ],
+          "networking > routers": [
+            "Networking",
+            "Routers"
+          ],
+          "networking > switches": [
+            "Networking",
+            "Switches"
+          ]
+        },
+        "etiquetas": {
+          "routers": [
+            "routers",
+            "networking > routers"
+          ],
+          "networking": [
+            "networking"
+          ],
+          "switches": [
+            "networking > switches"
+          ]
+        },
+        "colisiones": []
+      }
+    },
+    "renombrado": {
+      "arbol": [
+        {
+          "data": {
+            "nombre": "Redes",
+            "imagen": "",
+            "activo": true
+          },
+          "children": [
+            {
+              "data": {
+                "nombre": "Routers",
+                "imagen": "",
+                "activo": true
+              },
+              "children": [
+                {
+                  "data": {
+                    "nombre": "WiFi 6",
+                    "imagen": "",
+                    "activo": true
+                  },
+                  "children": []
+                }
+              ]
+            },
+            {
+              "data": {
+                "nombre": "Switches",
+                "imagen": "",
+                "activo": true
+              },
+              "children": []
+            },
+            {
+              "data": {
+                "nombre": "Cables",
+                "imagen": "",
+                "activo": true
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "data": {
+            "nombre": "Accesorios",
+            "imagen": "",
+            "activo": true
+          },
+          "children": [
+            {
+              "data": {
+                "nombre": "Cables",
+                "imagen": "",
+                "activo": true
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "data": {
+            "nombre": "Cámaras",
+            "imagen": "",
+            "activo": true
+          },
+          "children": []
+        }
+      ],
+      "schemas": {
+        "redes": {
+          "attributes": [
+            {
+              "multiple": false,
+              "required": true,
+              "filterable": true,
+              "comparable": true,
+              "section": "specs",
+              "key": "tecnologia_wifi",
+              "label": "Tecnología WiFi",
+              "type": "option",
+              "options": [
+                "WiFi 5",
+                "WiFi 6",
+                "WiFi 6E"
+              ],
+              "order": 1
+            },
+            {
+              "multiple": false,
+              "required": false,
+              "filterable": true,
+              "comparable": true,
+              "section": "specs",
+              "key": "velocidad",
+              "label": "Velocidad",
+              "type": "number",
+              "unit": "Mbps",
+              "order": 2
+            }
+          ],
+          "aliases": [
+            "networking"
+          ]
+        },
+        "redes > routers": {
+          "attributes": [
+            {
+              "multiple": false,
+              "required": false,
+              "filterable": false,
+              "comparable": false,
+              "section": "specs",
+              "key": "modelo",
+              "label": "Modelo",
+              "type": "text",
+              "order": 4
+            },
+            {
+              "multiple": false,
+              "required": false,
+              "filterable": false,
+              "comparable": true,
+              "section": "specs",
+              "key": "puertos_lan",
+              "label": "Puertos LAN",
+              "type": "number",
+              "order": 1
+            },
+            {
+              "multiple": false,
+              "required": false,
+              "filterable": false,
+              "comparable": false,
+              "section": "compatibility",
+              "key": "mesh",
+              "label": "Compatible con Mesh",
+              "type": "boolean",
+              "order": 2
+            },
+            {
+              "multiple": true,
+              "required": false,
+              "filterable": false,
+              "comparable": false,
+              "section": "compatibility",
+              "key": "sistemas",
+              "label": "Sistemas operativos",
+              "type": "option",
+              "options": [
+                "Windows",
+                "macOS",
+                "Linux"
+              ],
+              "order": 3
+            }
+          ],
+          "aliases": [
+            "networking > routers"
+          ]
+        }
+      },
+      "indice": {
+        "rutas": {
+          "redes": [
+            "Redes"
+          ],
+          "redes > routers": [
+            "Redes",
+            "Routers"
+          ],
+          "redes > routers > wifi 6": [
+            "Redes",
+            "Routers",
+            "WiFi 6"
+          ],
+          "redes > switches": [
+            "Redes",
+            "Switches"
+          ],
+          "redes > cables": [
+            "Redes",
+            "Cables"
+          ],
+          "accesorios": [
+            "Accesorios"
+          ],
+          "accesorios > cables": [
+            "Accesorios",
+            "Cables"
+          ],
+          "cámaras": [
+            "Cámaras"
+          ]
+        },
+        "etiquetas": {
+          "redes": [
+            "redes"
+          ],
+          "routers": [
+            "redes > routers"
+          ],
+          "wifi 6": [
+            "redes > routers > wifi 6"
+          ],
+          "switches": [
+            "redes > switches"
+          ],
+          "cables": [
+            "redes > cables",
+            "accesorios > cables"
+          ],
+          "accesorios": [
+            "accesorios"
+          ],
+          "cámaras": [
+            "cámaras"
+          ]
+        },
+        "colisiones": []
+      }
+    },
+    "colision": {
+      "arbol": [
+        {
+          "data": {
+            "nombre": "Networking",
+            "imagen": "",
+            "activo": true
+          },
+          "children": [
+            {
+              "data": {
+                "nombre": "Routers",
+                "imagen": "",
+                "activo": true
+              },
+              "children": []
+            },
+            {
+              "data": {
+                "nombre": "routers ",
+                "imagen": "",
+                "activo": true
+              },
+              "children": []
+            }
+          ]
+        }
+      ],
+      "schemas": {},
+      "indice": {
+        "rutas": {
+          "networking": [
+            "Networking"
+          ],
+          "networking > routers": [
+            "Networking",
+            "Routers"
+          ]
+        },
+        "etiquetas": {
+          "networking": [
+            "networking"
+          ],
+          "routers": [
+            "networking > routers"
+          ]
+        },
+        "colisiones": [
+          "networking > routers"
+        ]
+      }
+    }
+  },
+  "rutaDelProducto": [
+    {
+      "caso": "forma 1, nodo con ruta (importador)",
+      "producto": {
+        "categorias": {
+          "label": "Routers",
+          "data": {
+            "nombre": "Routers"
+          },
+          "ruta": [
+            "Networking",
+            "Routers"
+          ]
+        }
+      },
+      "esperado": {
+        "estado": "porRuta",
+        "ruta": "networking > routers"
+      }
+    },
+    {
+      "caso": "forma 1, nodo guardado por el formulario (flatted con cadena parent)",
+      "producto": {
+        "categorias": "[{\"label\":\"1\",\"data\":\"2\",\"children\":\"3\",\"parent\":\"4\"},\"WiFi 6\",{\"nombre\":\"1\"},[],{\"label\":\"5\",\"data\":\"6\",\"children\":\"7\",\"parent\":\"8\"},\"Routers\",{\"nombre\":\"5\"},[\"0\"],{\"label\":\"9\",\"data\":\"10\",\"children\":\"11\"},\"Networking\",{\"nombre\":\"9\"},[\"4\"]]"
+      },
+      "esperado": {
+        "estado": "porParent",
+        "ruta": "networking > routers > wifi 6"
+      }
+    },
+    {
+      "caso": "forma 1, nodo elegido en el selector (objeto con parent)",
+      "producto": {
+        "categorias": {
+          "label": "WiFi 6",
+          "data": {
+            "nombre": "WiFi 6"
+          },
+          "children": [],
+          "parent": {
+            "label": "Routers",
+            "data": {
+              "nombre": "Routers"
+            },
+            "children": [],
+            "parent": {
+              "label": "Networking",
+              "data": {
+                "nombre": "Networking"
+              },
+              "children": []
+            }
+          }
+        }
+      },
+      "esperado": {
+        "estado": "porParent",
+        "ruta": "networking > routers > wifi 6"
+      }
+    },
+    {
+      "caso": "forma 1 sin ruta ni parent: la etiqueta única vale",
+      "producto": {
+        "categorias": {
+          "label": "Switches",
+          "data": {
+            "nombre": "Switches"
+          }
+        }
+      },
+      "esperado": {
+        "estado": "porEtiquetas",
+        "ruta": "networking > switches"
+      }
+    },
+    {
+      "caso": "forma 2, texto con comas: gana la más profunda",
+      "producto": {
+        "categorias": "Networking, Routers, WiFi 6"
+      },
+      "esperado": {
+        "estado": "porEtiquetas",
+        "ruta": "networking > routers > wifi 6"
+      }
+    },
+    {
+      "caso": "forma 3, texto vacío",
+      "producto": {
+        "categorias": ""
+      },
+      "esperado": {
+        "estado": "sinCategoria"
+      }
+    },
+    {
+      "caso": "forma 3, null",
+      "producto": {
+        "categorias": null
+      },
+      "esperado": {
+        "estado": "sinCategoria"
+      }
+    },
+    {
+      "caso": "forma 3, arreglo vacío en texto",
+      "producto": {
+        "categorias": "[]"
+      },
+      "esperado": {
+        "estado": "sinCategoria"
+      }
+    },
+    {
+      "caso": "forma 3, el valor inicial del formulario guardado",
+      "producto": {
+        "categorias": "[\"\"]"
+      },
+      "esperado": {
+        "estado": "sinCategoria"
+      }
+    },
+    {
+      "caso": "forma 4, arreglo de nodos sin label (onboarding)",
+      "producto": {
+        "categorias": [
+          {
+            "data": {
+              "nombre": "Switches"
+            },
+            "children": [],
+            "parent": null
+          }
+        ]
+      },
+      "esperado": {
+        "estado": "porEtiquetas",
+        "ruta": "networking > switches"
+      }
+    },
+    {
+      "caso": "forma 5, arreglo de textos (OH MY STORE)",
+      "producto": {
+        "categorias": [
+          "Networking",
+          "Routers"
+        ]
+      },
+      "esperado": {
+        "estado": "porEtiquetas",
+        "ruta": "networking > routers"
+      }
+    },
+    {
+      "caso": "forma 5 después de que el formulario la guarda (flatted del arreglo)",
+      "producto": {
+        "categorias": "[[\"1\",\"2\"],\"Networking\",\"Routers\"]"
+      },
+      "esperado": {
+        "estado": "porEtiquetas",
+        "ruta": "networking > routers"
+      }
+    },
+    {
+      "caso": "forma 6, exposicion.categorias",
+      "producto": {
+        "exposicion": {
+          "categorias": [
+            "Cámaras"
+          ]
+        }
+      },
+      "esperado": {
+        "estado": "porEtiquetas",
+        "ruta": "cámaras"
+      }
+    },
+    {
+      "caso": "etiqueta que está en dos ramas",
+      "producto": {
+        "categorias": [
+          "Cables"
+        ]
+      },
+      "esperado": {
+        "estado": "ambigua",
+        "motivo": "etiqueta_con_varias_rutas"
+      }
+    },
+    {
+      "caso": "nodo solo con una etiqueta que está en dos ramas",
+      "producto": {
+        "categorias": {
+          "label": "Cables",
+          "data": {
+            "nombre": "Cables"
+          },
+          "children": []
+        }
+      },
+      "esperado": {
+        "estado": "ambigua",
+        "motivo": "etiqueta_con_varias_rutas"
+      }
+    },
+    {
+      "caso": "etiquetas de ramas distintas",
+      "producto": {
+        "categorias": [
+          "Switches",
+          "Cámaras"
+        ]
+      },
+      "esperado": {
+        "estado": "ambigua",
+        "motivo": "etiquetas_divergentes"
+      }
+    },
+    {
+      "caso": "ruta que no está en el árbol",
+      "producto": {
+        "categorias": {
+          "ruta": [
+            "Juguetes"
+          ]
+        }
+      },
+      "esperado": {
+        "estado": "fueraDelArbol",
+        "motivo": "ruta_no_esta_en_el_arbol"
+      }
+    },
+    {
+      "caso": "texto que el formulario reenvía sin haberlo podido leer (queda como una sola etiqueta)",
+      "producto": {
+        "categorias": "[\"Networking, Routers\"]"
+      },
+      "esperado": {
+        "estado": "fueraDelArbol",
+        "motivo": "etiquetas_sin_ruta"
+      }
+    },
+    {
+      "caso": "raíz con el mismo nombre que una subcategoría, elegida en el selector (sin parent)",
+      "maestro": "raizRepetida",
+      "producto": {
+        "categorias": {
+          "label": "Routers",
+          "data": {
+            "nombre": "Routers"
+          },
+          "children": []
+        }
+      },
+      "esperado": {
+        "estado": "ambigua",
+        "motivo": "etiqueta_con_varias_rutas"
+      }
+    },
+    {
+      "caso": "subcategoría con el mismo nombre que una raíz, elegida con su parent",
+      "maestro": "raizRepetida",
+      "producto": {
+        "categorias": {
+          "label": "Routers",
+          "data": {
+            "nombre": "Routers"
+          },
+          "children": [],
+          "parent": {
+            "label": "Networking",
+            "data": {
+              "nombre": "Networking"
+            },
+            "children": []
+          }
+        }
+      },
+      "esperado": {
+        "estado": "porParent",
+        "ruta": "networking > routers"
+      }
+    },
+    {
+      "caso": "raíz repetida con ruta guardada (importador)",
+      "maestro": "raizRepetida",
+      "producto": {
+        "categorias": {
+          "label": "Routers",
+          "ruta": [
+            "Routers"
+          ]
+        }
+      },
+      "esperado": {
+        "estado": "porRuta",
+        "ruta": "routers"
+      }
+    },
+    {
+      "caso": "tras renombrar Networking a Redes: ruta vieja por alias",
+      "maestro": "renombrado",
+      "producto": {
+        "categorias": {
+          "label": "Routers",
+          "data": {
+            "nombre": "Routers"
+          },
+          "ruta": [
+            "Networking",
+            "Routers"
+          ]
+        }
+      },
+      "esperado": {
+        "estado": "porAlias",
+        "ruta": "redes > routers"
+      }
+    },
+    {
+      "caso": "tras renombrar: nodo guardado con la cadena vieja, un nivel abajo",
+      "maestro": "renombrado",
+      "producto": {
+        "categorias": "[{\"label\":\"1\",\"data\":\"2\",\"children\":\"3\",\"parent\":\"4\"},\"WiFi 6\",{\"nombre\":\"1\"},[],{\"label\":\"5\",\"data\":\"6\",\"children\":\"7\",\"parent\":\"8\"},\"Routers\",{\"nombre\":\"5\"},[\"0\"],{\"label\":\"9\",\"data\":\"10\",\"children\":\"11\"},\"Networking\",{\"nombre\":\"9\"},[\"4\"]]"
+      },
+      "esperado": {
+        "estado": "porAlias",
+        "ruta": "redes > routers > wifi 6"
+      }
+    },
+    {
+      "caso": "tras renombrar: etiqueta vieja sola (forma 5)",
+      "maestro": "renombrado",
+      "producto": {
+        "categorias": [
+          "Networking"
+        ]
+      },
+      "esperado": {
+        "estado": "porEtiquetas",
+        "ruta": "redes"
+      }
+    },
+    {
+      "caso": "tras renombrar: etiquetas vieja y vigente en cadena (forma 5)",
+      "maestro": "renombrado",
+      "producto": {
+        "categorias": [
+          "Networking",
+          "Routers"
+        ]
+      },
+      "esperado": {
+        "estado": "porEtiquetas",
+        "ruta": "redes > routers"
+      }
+    },
+    {
+      "caso": "ruta en colisión",
+      "maestro": "colision",
+      "producto": {
+        "categorias": {
+          "ruta": [
+            "Networking",
+            "Routers"
+          ]
+        }
+      },
+      "esperado": {
+        "estado": "enColision",
+        "motivo": "ruta_en_colision"
+      }
+    }
+  ]
+}

@@ -590,6 +590,8 @@ function arbolDelSelector() {
 function crearFull({ banderas = { productFromPhoto: true }, servicio, swal = swalFalso(), propiedades = {} } = {}) {
   const Full = cargarClase('src/app/components/productos/crear-productos/crear-productos.component.ts', {
     Swal: swal,
+    // D-495: la pestaña «Especificaciones» entra por @ViewChild; aquí basta su nombre.
+    EspecificacionesProductoComponent: class {},
   });
   // Sin pasar por el constructor (levanta ~30 llamadas a servicios): solo lo que usan los métodos de la foto.
   const c = Object.create(Full.prototype);

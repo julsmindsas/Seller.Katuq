@@ -1,0 +1,68 @@
+<div class="esp">
+  <p class="esp__cargando" *ngIf="cargando">Cargando especificaciones…</p>
+
+  <div class="cfg-aviso cfg-aviso--error" *ngIf="errorCarga" role="alert">
+    <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+    <p class="esp__aviso-texto">No se pudieron cargar las especificaciones: {{ errorCarga }}</p>
+  </div>
+
+  <div class="cfg-vacio" *ngIf="!cargando && !errorCarga && !esquema.length">
+    <div class="cfg-vacio__icono"><i class="pi pi-list" aria-hidden="true"></i></div>
+    <p class="cfg-vacio__titulo">{{ tituloVacio }}</p>
+    <p class="cfg-vacio__texto">{{ textoVacio }}</p>
+  </div>
+
+  <ng-container *ngIf="!cargando && esquema.length">
+    <p class="esp__ruta">Categoría: <strong class="esp__ruta-nombre">{{ nombreRuta }}</strong></p>
+
+    <section class="esp__seccion" *ngFor="let s of secciones">
+      <h4 class="esp__titulo">{{ s.titulo }}</h4>
+      <div class="esp__grilla">
+        <div class="esp__campo" *ngFor="let d of s.defs; trackBy: porClave">
+          <label class="cfg-label esp__etiqueta" [attr.for]="'esp-' + d.key">
+            {{ d.label }}<span class="esp__obligatorio" *ngIf="d.required"> *</span><span class="esp__unidad" *ngIf="d.unit"> ({{ d.unit }})</span>
+          </label>
+
+          <ng-container [ngSwitch]="d.type">
+            <input *ngSwitchCase="'number'" class="esp__input" type="number" [id]="'esp-' + d.key" [(ngModel)]="valores[d.key]" />
+
+            <select *ngSwitchCase="'boolean'" class="esp__input" [id]="'esp-' + d.key" [(ngModel)]="valores[d.key]">
+              <option [ngValue]="null">Sin dato</option>
+              <option [ngValue]="true">Sí</option>
+              <option [ngValue]="false">No</option>
+            </select>
+
+            <ng-container *ngSwitchCase="'option'">
+              <select *ngIf="!d.multiple" class="esp__input" [id]="'esp-' + d.key" [(ngModel)]="valores[d.key]">
+                <option value="">Sin dato</option>
+                <option *ngFor="let o of d.options" [value]="o">{{ o }}</option>
+              </select>
+              <div *ngIf="d.multiple" class="esp__varias" role="group" [attr.aria-label]="d.label">
+                <label class="esp__marca" *ngFor="let o of d.options">
+                  <input type="checkbox" [checked]="marcado(d.key, o)" (change)="alternar(d.key, o, $any($event.target).checked)" />
+                  <span class="esp__texto">{{ o }}</span>
+                </label>
+              </div>
+            </ng-container>
+
+            <input *ngSwitchDefault class="esp__input" type="text" maxlength="120" [id]="'esp-' + d.key" [(ngModel)]="valores[d.key]" />
+          </ng-container>
+
+          <span class="esp__origen" *ngIf="d.heredado">De «{{ nombreDe(d.origen) }}»</span>
+        </div>
+      </div>
+    </section>
+
+    <p class="esp__nota">Se guardan al guardar el producto. Guardarlas no reenvía el producto a tus tiendas conectadas.</p>
+  </ng-container>
+
+  <div class="cfg-aviso" [class.cfg-aviso--error]="avisoError" [class.cfg-aviso--ok]="!avisoError" *ngIf="aviso" role="status">
+    <i class="fa" [class.fa-exclamation-circle]="avisoError" [class.fa-check-circle]="!avisoError" aria-hidden="true"></i>
+    <div class="esp__aviso-cuerpo">
+      <p class="esp__aviso-texto">{{ aviso }}</p>
+      <button type="button" class="cfg-btn cfg-btn--sec esp__reintentar" *ngIf="avisoError" (click)="reintentar()" [disabled]="guardando">
+        <span class="esp__texto-boton">{{ guardando ? 'Guardando…' : 'Reintentar' }}</span>
+      </button>
+    </div>
+  </div>
+</div>

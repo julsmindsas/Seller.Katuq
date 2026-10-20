@@ -12,6 +12,8 @@ import { FormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { CommonModule } from '@angular/common';
 import { ImportModalModule } from 'src/app/shared/components/import-modal/import-modal.module';
+// D-495: atributos por categoría (standalone, OnPush).
+import { CategoriaAtributosComponent } from './categoria-atributos/categoria-atributos.component';
 
 @NgModule({
     imports: [CategoriaRoutingModule,
@@ -21,7 +23,8 @@ import { ImportModalModule } from 'src/app/shared/components/import-modal/import
         FormsModule,
         CommonModule,
         SharedModule,
-        ImportModalModule],
+        ImportModalModule,
+        CategoriaAtributosComponent],
     exports: [],
     declarations: [ListComponent],
     providers: [],

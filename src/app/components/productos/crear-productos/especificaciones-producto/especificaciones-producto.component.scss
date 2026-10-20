@@ -1,0 +1,73 @@
+// D-495: pestaña «Especificaciones» del producto. Tokens D-400 (cfg-*), plano, sin
+// gradientes. Ninguna clase con "p-"; todo span con texto lleva color y tamaño propios.
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.esp {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 0 8px;
+  color: $cfg-ink;
+
+  p, label, span, button { letter-spacing: normal; }
+  :focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+}
+
+.esp__cargando { margin: 0; font-size: 13.5px; color: $cfg-muted; }
+
+.esp__ruta { margin: 0; font-size: 13.5px; color: $cfg-body; }
+.esp__ruta-nombre { color: $cfg-ink; font-weight: 800; }
+
+.esp__seccion {
+  padding: 16px;
+  background: #fff;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+}
+
+.esp__titulo {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 800;
+  color: $cfg-ink;
+}
+
+.esp__grilla {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px 16px;
+
+  @media (min-width: 640px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.esp__campo { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.esp__etiqueta { display: block; }
+.esp__obligatorio { font-size: inherit; color: $cfg-err; }
+.esp__unidad { font-size: inherit; color: $cfg-muted; text-transform: none; }
+
+.esp__input {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid #e4e2ef;
+  border-radius: 11px;
+  background: #fff;
+  color: $cfg-ink;
+  font-size: 13.5px;
+  box-sizing: border-box;
+
+  &:focus { border-color: $cfg-accent; outline: none; }
+}
+
+.esp__varias { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.esp__marca { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; input { accent-color: $cfg-accent; } }
+.esp__texto { font-size: 13px; color: $cfg-body; }
+.esp__origen { font-size: 11.5px; color: $cfg-muted; }
+
+.esp__nota { margin: 0; font-size: 12.5px; color: $cfg-muted; }
+
+.esp__aviso-cuerpo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.esp__aviso-texto { margin: 0; font-size: 13.5px; color: inherit; }
+.esp__reintentar { min-height: 32px; }
+.esp__texto-boton { font-size: inherit; color: inherit; }

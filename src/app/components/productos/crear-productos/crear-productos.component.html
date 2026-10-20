@@ -1159,6 +1159,17 @@
 								</div>
 							</form>
 						</p-tabPanel>
+						<!-- D-495: especificaciones de la categoría (solo con la bandera categoryAttributes).
+						     Se crea al abrir la pestaña; no es parte del formulario del producto. -->
+						<p-tabPanel header="Especificaciones" *ngIf="features.isEnabled('categoryAttributes')">
+							<ng-template pTemplate="content">
+								<app-especificaciones-producto
+									[categoria]="categoriasForm.get('categorias').value"
+									[productoId]="cd"
+									[guardados]="edit?.attributes">
+								</app-especificaciones-producto>
+							</ng-template>
+						</p-tabPanel>
 						<p-tabPanel header="Proceso Comercial">
 							<form [formGroup]="procesoComercial">
 

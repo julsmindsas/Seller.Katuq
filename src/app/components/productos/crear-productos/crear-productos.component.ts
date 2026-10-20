@@ -63,6 +63,8 @@ import type { CompanyFeatureFlag } from "../../../shared/services/company-featur
 import { FichaDesdeFotoService } from "../../../shared/services/productos/ficha-desde-foto.service";
 import { medirCalidadDeArchivo } from "../../../shared/services/productos/photo-quality-canvas";
 import { textoDeAvisos } from "../../../shared/services/productos/photo-quality";
+// D-495: pestaña «Especificaciones» (bandera categoryAttributes).
+import { EspecificacionesProductoComponent, ResultadoEspecificaciones } from "./especificaciones-producto/especificaciones-producto.component";
 import {
   DecisionFicha,
   buscarNodoEnArbol,
@@ -211,6 +213,8 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
    * "producto no activado" caía en Dimensiones en vez de Exposición).
    */
   @ViewChild(TabView) private tabView?: TabView;
+  /** D-495: existe solo con la bandera y después de abrir la pestaña «Especificaciones». */
+  @ViewChild(EspecificacionesProductoComponent) private especificaciones?: EspecificacionesProductoComponent;
 
   /** Secciones con obligatorios, en el orden en que aparecen en el tabView. */
   private readonly seccionesObligatorias: { tab: string; grupo: () => FormGroup }[] = [
@@ -2042,12 +2046,19 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
         sessionStorage.setItem("infoForms", JSON.stringify(context.edit));
         context.saving = false;
         console.log(r);
-        Swal.fire({
-          title: "Guardado!",
-          text: "Guardado con exito",
-          icon: "success",
-          confirmButtonText: "Ok",
-        });
+        // D-495: si hay especificaciones por guardar, se guardan aquí (en el next, sin
+        // setTimeout) y el aviso espera su resultado. Sin ellas, el aviso de siempre.
+        const especificaciones = context.especificacionesPendientes(r.cd);
+        if (especificaciones) {
+          especificaciones.then((res) => context.avisarEspecificaciones("Guardado!", "Guardado con exito", res));
+        } else {
+          Swal.fire({
+            title: "Guardado!",
+            text: "Guardado con exito",
+            icon: "success",
+            confirmButtonText: "Ok",
+          });
+        }
 
         // Cambiar a modo editar solo DESPUÉS de guardar exitosamente
         context.mostrarCrear = false;
@@ -2170,7 +2181,13 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       next: (res) => {
         this.saving = false;
         if (res) {
-          Swal.fire("Editado", "Producto editado correctamente", "success");
+          // D-495: especificaciones pendientes en el next (sin setTimeout); si no hay, como siempre.
+          const especificaciones = this.especificacionesPendientes(this.cd);
+          if (especificaciones) {
+            especificaciones.then((r) => this.avisarEspecificaciones("Editado", "Producto editado correctamente", r));
+          } else {
+            Swal.fire("Editado", "Producto editado correctamente", "success");
+          }
           // Limpiar arrays DESPUÉS de que el servidor confirme éxito
           this.filesPaths = [];
           this.fileUrls = [];
@@ -2188,6 +2205,34 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       },
     });
   }
+  /**
+   * D-495: guarda las especificaciones si la pestaña se abrió y algo cambió (solo con la
+   * bandera). `null` = no hay nada que guardar y el aviso es el de siempre.
+   */
+  private especificacionesPendientes(cd: string): Promise<ResultadoEspecificaciones> | null {
+    if (!cd || !this.especificaciones || !this.features.isEnabled("categoryAttributes")) return null;
+    return this.especificaciones.hayCambios() ? this.especificaciones.guardar(cd) : null;
+  }
+
+  /** D-495: el aviso del guardado dice si las especificaciones no quedaron (y que se puede reintentar). */
+  private avisarEspecificaciones(titulo: string, texto: string, r: ResultadoEspecificaciones): void {
+    if (r.ok) {
+      Swal.fire({
+        title: titulo,
+        text: r.faltantes.length ? `${texto}. Faltan especificaciones obligatorias: ${r.faltantes.join(", ")}.` : texto,
+        icon: r.faltantes.length ? "warning" : "success",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+    Swal.fire({
+      title: "El producto se guardó, las especificaciones no",
+      text: `${r.mensaje || ""} Revisa la pestaña «Especificaciones» y usa «Reintentar».`.trim(),
+      icon: "warning",
+      confirmButtonText: "Ok",
+    });
+  }
+
   onRadioClick() {
     if (this.opcionSeleccionada.nativeElement.value == "manual") {
       this.identificacion.get("referencia").enable();

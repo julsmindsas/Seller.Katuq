@@ -50,7 +50,7 @@ D-495 (ticket 1234, F2-42). Los requisitos están en `specs/`. **Este diseño cu
   3. etiquetas sueltas: cada una vale si una sola ruta termina en ella. Si las rutas forman una cadena, gana la más profunda; si divergen o una etiqueta tiene varias rutas, queda `ambigua` (*por defecto*);
   4. `aliases`.
 - **`indiceDeRutas`, `esquemaEfectivo`, `validarEsquemas`, `validarValores` y `valoresVisibles`:** el esquema efectivo pone primero los ancestros. Al leer solo se muestra lo válido, y lo huérfano se conserva.
-- Sin `if` por proveedor (Artículo VI). El front espeja `documentoDeCategorias`, `esquemaEfectivo` y el tipo, con el mismo fixture JSON; manda el servidor.
+- Sin `if` por proveedor (Artículo VI). El front espeja `documentoDeCategorias`, `esquemaEfectivo`, el tipo y `rutaDelProducto` (este con el índice que devuelve el GET de esquemas), con el mismo fixture JSON; manda el servidor.
 
 ### D3. Endpoints y write-set
 - **Endpoints nuevos:**
@@ -60,16 +60,22 @@ D-495 (ticket 1234, F2-42). Los requisitos están en `specs/`. **Este diseño cu
 
 | Endpoint | Hace |
 |---|---|
-| `GET /v1/categorias/attribute-schemas` (nuevo) | Devuelve `{version, schemas}` del documento elegido |
+| `GET /v1/categorias/attribute-schemas` (nuevo) | Devuelve `{version, schemas, indice}` del documento elegido. `indice` trae rutas, etiquetas y colisiones del árbol, sin imágenes |
 | `PUT` misma ruta `{version, schemas}` (nuevo) | `runTransaction`: esquemas, versión+1 y `date_edit`/`user_edit`. Otra versión → 409. Ruta inexistente → 400, salvo una huérfana previa. Invalida el registro. No toca `categoria` |
-| `POST /v1/productos/attributes` `{cd, attributes}` (nuevo) | `update` por ruta: `attributes.<key>`, y `null` → `FieldValue.delete()`. Otra empresa → 404; inválido → 400 con detalle. Responde `{written, removed, missing}`, sin `syncProduct` |
+| `POST /v1/productos/attributes` `{cd, attributes}` (nuevo) | `update` por ruta: `attributes.<key>`, y `null` → `FieldValue.delete()`. Otra empresa → 404; inválido → 400 con detalle. Responde `{written, removed, missing}`, sin `syncProduct` y sin mover `date_edit` |
 | `GET /v1/categorias/all` | Quita `attributeSchemas*`: los 11 `getCategorias()` reciben lo de hoy |
-| `POST /v1/categorias/create` (sin bandera) | `runTransaction`: elige el documento (D2), conserva esquemas, aliases y versión, ignora los del cuerpo y aplica `renombres: [{de, a}]` (versión+1 si cambian). `tx.set` sobre ese documento, o `add` si no hay. Invalida el registro |
+| `POST /v1/categorias/create` (sin bandera) | `runTransaction`: toma el documento que Maestros editó (con la bandera, el de D2; sin ella, `r[0]`, el primero por id), conserva esquemas, aliases y versión, ignora los del cuerpo y aplica `renombres: [{de, a}]` (versión+1 si cambian). `tx.set` sobre ese documento, o `add` si no hay. Invalida el registro |
 | `POST /v1/productos/edit` y `/create` | `attributes` sale de `updateData` y de `productData` antes del `update`, para no reescribir el snapshot. En `create`, del cuerpo |
 
 - **Excepción declarada:** `createCategoria` cambia para todas las empresas, también las de D-385, porque borrar y crear perdería esquemas. Con un documento el resultado es el de hoy, con id estable. Se registra en la tarea 0.2.
-- **Write-set:** `attributeSchemas`, `attributeSchemasVersion`, `products.attributes.<key>` y `date_edit`/`user_edit`.
-- **Nunca:** `precio`, `preciosPorTipoCliente`, `variantes`, `integrations`, inventario, Price Lists ni flows (D-134).
+- **Write-set:**
+  - en `categorias`: `attributeSchemas`, `attributeSchemasVersion` y `date_edit`/`user_edit`;
+  - en `products`: `attributes.<key>`, `attributesEditedAt` y `attributesEditedBy`.
+- **Nunca:** `precio`, `preciosPorTipoCliente`, `variantes`, `integrations`, inventario, Price Lists ni flows (D-134). Tampoco `date_edit` del producto: es el cursor de `katuq-product-changed`, que alimenta el flow mixto `katuq-web-to-shopify` y reenviaría el producto a Shopify.
+- **Revisión del 2026-10-19 (desvíos; se aprueban con los diffs de 3.1, 3.2 y 3.3):**
+  - **Marca propia en `products`.** POST `/v1/productos/attributes` escribía `date_edit`/`user_edit`. Eso reenviaba el producto a Shopify y rompía el requisito «no reenviar el producto a las tiendas conectadas» de `specs/` (lo mismo que costó el ticket 1088). Ahora escribe `attributesEditedAt`/`attributesEditedBy`, y el producto no se reordena en las listas por `date_edit`. La alternativa la decide Daniel: volver a `date_edit`, aceptar el reenvío y corregir el requisito y los textos.
+  - **El GET trae `indice`.** La pestaña «Especificaciones» resolvía la ruta solo por `ruta` y `parent`, mientras el servidor también usa etiquetas y alias. En raíces repetidas, en categorías renombradas y en la forma 5, la pestaña pintaba campos que el POST rechazaba, o no mostraba los que sí aceptaba. Ahora espeja `rutaDelProducto` con el índice del mismo documento que elige el servidor.
+  - **`createCategoria` sin la bandera escribe `r[0]`.** Maestros, sin la bandera, edita y manda `r[0]`. Si el servidor escribía el documento de D2, en las empresas con varios documentos (4 en la medición) el árbol de `r[0]` reemplazaba al documento bueno cuando `r[0]` no tenía árbol legible. Con la bandera, los dos usan D2.
 
 ### D4. Seller
 - **`CatalogAttributesService extends BaseService`:** `getSchemas`, `saveSchemas` y `saveProductAttributes`. El GET se hace solo con la bandera, al abrir el modal o la pestaña.
@@ -79,7 +85,7 @@ D-495 (ticket 1234, F2-42). Los requisitos están en `specs/`. **Este diseño cu
   - se deshabilita mientras el árbol esté sucio;
   - los renombres salen de un `WeakMap`.
 - **Producto:**
-  - pestaña "Especificaciones" con `EspecificacionesProductoComponent` (standalone, OnPush);
+  - pestaña "Especificaciones" con `EspecificacionesProductoComponent` (standalone, OnPush). Resuelve la categoría con el espejo de `rutaDelProducto` sobre lo que guardará el formulario. Si no hay ruta, dice por qué: sin categoría, ambigua, en colisión o fuera del árbol;
   - `saveProductAttributes` va en el `next` de crear y editar, sin `setTimeout`;
   - si falla, el aviso lo dice.
 - **Obligatorio:** avisa y no bloquea. *Por defecto.*
@@ -115,10 +121,11 @@ Las de contrato corren en el emulador (`*.emulator.test.js`, proyecto `demo-`), 
    - 401, 403, 409, 400 y 200;
    - `create` conserva, renombra con versión+1, ignora el cuerpo y mantiene el id;
    - `create` y PUT simultáneos sin pérdida;
-   - varios documentos;
+   - varios documentos: con la bandera, el de D2; sin ella, `create` escribe `r[0]` y no toca el documento con árbol;
+   - el GET trae el índice;
    - `/all` sin esquemas.
 3. **`atributosWriteSet.contract.emulator.test.js`:**
-   - solo cambian `attributes.<key>`, `date_edit` y `user_edit`, y las demás claves siguen;
+   - solo cambian `attributes.<key>`, `attributesEditedAt` y `attributesEditedBy`; las demás claves siguen, también `date_edit` y `user_edit`;
    - `precio`, `preciosPorTipoCliente`, `variantes` e `integrations` quedan idénticos;
    - responde 401, 403 y 404, sin `syncProduct`;
    - `/edit` no pisa un POST que entra entre su lectura y su `update` (espía);
@@ -126,7 +133,7 @@ Las de contrato corren en el emulador (`*.emulator.test.js`, proyecto `demo-`), 
    - canario: `update({attributes: {...}})` la hace fallar.
 4. **`escritoresDeAtributos.contract.test.js` (estático):** solo los archivos permitidos escriben `attributes`; inventario no lo menciona.
 5. **`fichaEspecificaciones.test.js`:** orden, unidades, sección vacía y `additionalProperty`. Con la bandera apagada, la ficha y `productoPublico` quedan idénticos.
-6. **Front:** espejo con el mismo fixture.
+6. **Front:** espejo con el mismo fixture, que incluye los casos de `rutaDelProducto` y el índice que devuelve el GET.
 
 ### D9. Gates
 I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no aplican. VI: D2. VII y XI: D7. VIII: D8. IX: standalone OnPush, sin signals (excepción registrada). XII: D6. XIII: sub-cambios. XV: `integrations` intacto.
@@ -156,6 +163,8 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
   - **Global:** 138 documentos de `categorias` para 133 empresas, todos con `company`. 129 empresas tienen 1 documento, 3 tienen 2 y 1 tiene 3.
   - **Paradas:** ni FLORECER ni OH MY STORE activan ninguna. En las dos, el documento está lejos de 700 KB, ningún producto tiene `attributes` en la raíz y el registro con 30 atributos queda por debajo de 250 KB, también en el peor caso.
   - **Parada activa: «más de un documento de `categorias`» (4 empresas, en el conteo global).** D2 ya define cuál se elige (`documentoDeCategorias`), pero la regla de 0.5 manda volver al diseño, así que F1 queda detenida hasta que Daniel decida si D2 basta para esas 4 empresas o si se resuelve antes de encender la bandera en ellas.
+  - **Decisión de Daniel (2026-10-18): seguir con F1 tal cual.** La bandera se enciende primero en FLORECER; antes de encenderla en una de esas 4 empresas se revisa su caso.
+  - **Revisión del 2026-10-19:** desde el despliegue (5.1) y con la bandera apagada, `createCategoria` escribe `r[0]` en esas 4 empresas, como hacía antes, y no el documento de D2. Antes de encender la bandera en una de ellas, se revisa que `r[0]` y el documento de D2 coincidan. Si no coinciden, se unifican, porque al encenderla Maestros pasa a editar el de D2.
 - **Encendido**, cada paso con OK de Daniel: backend apagado, front, FLORECER y el comercio del ticket.
 - **Reversa:** `scripts/set-company-feature.js`.
 

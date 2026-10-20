@@ -66,7 +66,20 @@
     color: $cfg-err;
     &:hover { background: #fbd9d9; }
   }
+
+  // D-495: "Atributos" (solo con la bandera categoryAttributes).
+  &.atributos-button {
+    background: $cfg-tile;
+    color: $cfg-accent;
+    &:hover:not(:disabled) { background: #e2d8fd; }
+    &:disabled { opacity: .45; cursor: not-allowed; }
+  }
+
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
 }
+
+// El span lo crea *ngIf: lleva color propio (trampa global span.ng-star-inserted).
+.atributos-envoltura { display: inline-block; color: $cfg-accent; font-size: inherit; }
 
 // Tabla de árbol (p-treetable) con el mismo tema que la tabla de datos.
 :host ::ng-deep .cfg-card .p-treetable {

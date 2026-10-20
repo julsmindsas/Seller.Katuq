@@ -1,0 +1,124 @@
+<div class="cfg-pagina atr">
+  <header class="atr__cabeza">
+    <div class="atr__textos">
+      <span class="cfg-eyebrow atr__eyebrow">Atributos de la categoría</span>
+      <h2 class="atr__titulo">{{ nombreRuta }}</h2>
+      <p class="cfg-sub atr__sub">Lo que pide cada producto de esta categoría en la pestaña «Especificaciones» y lo que muestra su ficha en la tienda.</p>
+    </div>
+    <button type="button" class="atr__cerrar" (click)="cerrar.emit()" aria-label="Cerrar sin guardar">
+      <i class="pi pi-times" aria-hidden="true"></i>
+    </button>
+  </header>
+
+  <section class="cfg-card" *ngIf="heredadas.length">
+    <h3 class="atr__seccion">Heredados de la categoría superior</h3>
+    <ul class="atr__heredados">
+      <li *ngFor="let h of heredadas" class="atr__heredado">
+        <span class="atr__nombre">{{ h.label }}</span>
+        <span class="atr__dato">{{ textoTipo(h.type) }}{{ h.unit ? ' · ' + h.unit : '' }}</span>
+        <span class="atr__dato">de {{ nombreDe(h.origen) }}</span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="cfg-card">
+    <h3 class="atr__seccion">Propios de esta categoría</h3>
+
+    <div class="cfg-vacio" *ngIf="!propias.length">
+      <div class="cfg-vacio__icono"><i class="pi pi-list" aria-hidden="true"></i></div>
+      <p class="cfg-vacio__titulo">Sin atributos propios</p>
+      <p class="cfg-vacio__texto">Agrega los datos técnicos que comparten sus productos, como velocidad o puertos.</p>
+    </div>
+
+    <div class="atr__fila" *ngFor="let d of propias; let i = index; let primero = first; let ultimo = last; trackBy: porIndice">
+      <div class="atr__grilla">
+        <label class="atr__campo atr__campo--ancho">
+          <span class="cfg-label atr__etiqueta">Nombre</span>
+          <input class="atr__input" type="text" maxlength="60" [(ngModel)]="d.label" (ngModelChange)="alCambiarNombre(d)"
+            placeholder="Ej.: Tecnología WiFi" />
+          <span class="atr__ayuda">Clave: {{ d.key || '—' }}{{ d.nueva ? '' : ' (no cambia)' }}</span>
+        </label>
+        <label class="atr__campo">
+          <span class="cfg-label atr__etiqueta">Tipo</span>
+          <select class="atr__input" [(ngModel)]="d.type" (ngModelChange)="refrescarVista()">
+            <option *ngFor="let t of tipos" [ngValue]="t.valor">{{ t.texto }}</option>
+          </select>
+        </label>
+        <label class="atr__campo">
+          <span class="cfg-label atr__etiqueta">Sección</span>
+          <select class="atr__input" [(ngModel)]="d.section" (ngModelChange)="refrescarVista()">
+            <option ngValue="specs">Especificaciones</option>
+            <option ngValue="compatibility">Compatibilidad</option>
+          </select>
+        </label>
+        <label class="atr__campo" *ngIf="d.type === 'number'">
+          <span class="cfg-label atr__etiqueta">Unidad</span>
+          <input class="atr__input" type="text" maxlength="12" [(ngModel)]="d.unit" (ngModelChange)="refrescarVista()" placeholder="Ej.: Mbps" />
+        </label>
+        <label class="atr__campo atr__campo--ancho" *ngIf="d.type === 'option'">
+          <span class="cfg-label atr__etiqueta">Opciones</span>
+          <textarea class="atr__input" rows="2" [(ngModel)]="d.opcionesTexto" (ngModelChange)="refrescarVista()"
+            placeholder="Separadas por coma: WiFi 5, WiFi 6, WiFi 6E"></textarea>
+        </label>
+      </div>
+
+      <div class="atr__marcas">
+        <label class="atr__marca" *ngIf="d.type === 'option'">
+          <input type="checkbox" [(ngModel)]="d.multiple" /> <span class="atr__texto">Permite varias</span>
+        </label>
+        <label class="atr__marca"><input type="checkbox" [(ngModel)]="d.required" /> <span class="atr__texto">Obligatorio</span></label>
+        <label class="atr__marca"><input type="checkbox" [(ngModel)]="d.filterable" /> <span class="atr__texto">Usar como filtro</span></label>
+        <label class="atr__marca"><input type="checkbox" [(ngModel)]="d.comparable" /> <span class="atr__texto">Mostrar en comparador</span></label>
+        <span class="atr__espacio"></span>
+        <button type="button" class="atr__icono" (click)="mover(i, -1)" [disabled]="primero" [attr.aria-label]="'Subir ' + (d.label || 'atributo')">
+          <i class="pi pi-arrow-up" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="atr__icono" (click)="mover(i, 1)" [disabled]="ultimo" [attr.aria-label]="'Bajar ' + (d.label || 'atributo')">
+          <i class="pi pi-arrow-down" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="atr__icono atr__icono--quitar" (click)="quitar(i)" [attr.aria-label]="'Quitar ' + (d.label || 'atributo')">
+          <i class="pi pi-trash" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <ul class="atr__errores" *ngIf="erroresDe(i).length" role="alert">
+        <li *ngFor="let m of erroresDe(i)" class="atr__error">{{ m }}</li>
+      </ul>
+    </div>
+
+    <button type="button" class="cfg-btn cfg-btn--sec atr__agregar" (click)="agregar()">
+      <i class="pi pi-plus" aria-hidden="true"></i><span class="atr__texto-boton">Agregar atributo</span>
+    </button>
+  </section>
+
+  <section class="cfg-card" *ngIf="previa.length">
+    <h3 class="atr__seccion">Vista previa de la ficha</h3>
+    <table class="atr__previa">
+      <thead>
+        <tr><th scope="col">Atributo</th><th scope="col">Ejemplo</th><th scope="col">Sección</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let f of previa">
+          <th scope="row">{{ f.etiqueta }}<span class="atr__heredado-marca" *ngIf="f.heredado"> · heredado</span></th>
+          <td>{{ f.ejemplo }}{{ f.unidad ? ' ' + f.unidad : '' }}</td>
+          <td>{{ f.seccion }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="cfg-aviso cfg-aviso--error" *ngIf="mensaje || erroresGenerales.length" role="alert">
+    <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+    <div>
+      <p class="atr__aviso-texto" *ngIf="mensaje">{{ mensaje }}</p>
+      <p class="atr__aviso-texto" *ngFor="let m of erroresGenerales">{{ m }}</p>
+    </div>
+  </div>
+
+  <footer class="atr__pie">
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrar.emit()">Cancelar</button>
+    <button type="button" class="cfg-btn" (click)="guardar()" [disabled]="guardando">
+      <span class="atr__texto-boton">{{ guardando ? 'Guardando…' : 'Guardar atributos' }}</span>
+    </button>
+  </footer>
+</div>

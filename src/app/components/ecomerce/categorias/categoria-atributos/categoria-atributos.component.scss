@@ -1,0 +1,193 @@
+// D-495: atributos de una categoría, dentro del modal de Maestros > Categorías.
+// Base D-400 (cfg-*), plano, sin gradientes. Ojo con las trampas globales: ninguna
+// clase con "p-", todo span con texto lleva color y tamaño propios.
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.atr {
+  padding: 16px;
+  gap: 12px;
+  background: #f6f4fd;
+
+  @media (min-width: 768px) { padding: 20px; }
+}
+
+.atr__cabeza {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.atr__textos { min-width: 0; }
+.atr__eyebrow { display: block; }
+
+.atr__titulo {
+  margin: 4px 0 4px;
+  font-size: 20px !important;
+  font-weight: 800;
+  color: $cfg-ink;
+  overflow-wrap: anywhere;
+}
+
+.atr__sub { margin: 0; }
+
+.atr__cerrar {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  background: #fff;
+  color: $cfg-body;
+  cursor: pointer;
+
+  &:hover { color: $cfg-accent; border-color: #d9cffb; }
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+}
+
+.atr__seccion {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 800;
+  color: $cfg-ink;
+}
+
+.atr__heredados {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.atr__heredado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 8px 12px;
+  border-radius: 11px;
+  background: $cfg-tint;
+}
+
+.atr__nombre { font-size: 13.5px; font-weight: 700; color: $cfg-ink; }
+.atr__dato { font-size: 12.5px; color: $cfg-muted; }
+
+.atr__fila {
+  padding: 12px 0;
+  border-bottom: 1px solid $cfg-line-soft;
+
+  &:first-of-type { padding-top: 0; }
+}
+
+.atr__grilla {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+
+  @media (min-width: 640px) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.atr__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+
+  &--ancho { @media (min-width: 640px) { grid-column: span 3; } }
+}
+
+.atr__etiqueta { display: block; }
+
+.atr__input {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid #e4e2ef;
+  border-radius: 11px;
+  background: #fff;
+  color: $cfg-ink;
+  font-size: 13.5px;
+  box-sizing: border-box;
+
+  &:focus { border-color: $cfg-accent; outline: none; }
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 1px; }
+}
+
+.atr__ayuda { font-size: 11.5px; color: $cfg-muted; }
+
+.atr__marcas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 10px;
+}
+
+.atr__marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+
+  input { accent-color: $cfg-accent; }
+}
+
+.atr__texto { font-size: 13px; color: $cfg-body; }
+.atr__espacio { flex: 1; font-size: 0; color: transparent; }
+
+.atr__icono {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: $cfg-accent-soft;
+  color: $cfg-accent;
+  cursor: pointer;
+
+  &:disabled { opacity: .4; cursor: not-allowed; }
+  &--quitar { background: $cfg-err-soft; color: $cfg-err; }
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+}
+
+.atr__errores {
+  margin: 8px 0 0;
+  padding: 8px 12px 8px 28px;
+  border-radius: 11px;
+  background: $cfg-err-soft;
+}
+
+.atr__error { font-size: 12.5px; color: $cfg-err; }
+
+.atr__agregar { margin-top: 12px; }
+.atr__texto-boton { font-size: inherit; color: inherit; }
+
+.atr__previa {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th, td { padding: 8px 10px; border-bottom: 1px solid $cfg-line-soft; text-align: left; color: $cfg-ink; }
+
+  thead th {
+    background: $cfg-tint;
+    color: $cfg-muted;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+
+  tbody th { font-weight: 700; }
+}
+
+.atr__heredado-marca { font-size: 12px; font-weight: 400; color: $cfg-muted; }
+.atr__aviso-texto { margin: 0; font-size: 13.5px; color: inherit; letter-spacing: normal; }
+
+.atr__pie {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}

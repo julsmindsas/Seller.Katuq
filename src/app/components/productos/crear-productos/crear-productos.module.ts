@@ -24,11 +24,14 @@ import { PickListModule } from 'primeng/picklist';
 
 import { ImagenProductoPipe } from '../../../shared/pipes/imagen-producto.pipe';
 import { FotosUniformesComponent } from '../fotos-uniformes/fotos-uniformes.component';
+import { EspecificacionesProductoComponent } from './especificaciones-producto/especificaciones-producto.component';
 @NgModule({
   imports: [
     ImagenProductoPipe,
     // D-501: diálogo standalone «Uniformar fotos».
     FotosUniformesComponent,
+    // D-495: pestaña standalone «Especificaciones» (bandera categoryAttributes).
+    EspecificacionesProductoComponent,
     NgSelectModule,
     CommonModule,
     DropdownModule,

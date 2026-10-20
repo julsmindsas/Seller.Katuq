@@ -3,8 +3,13 @@ import { TreeNode } from 'primeng/api';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import { ChangeDetectorRef } from '@angular/core';
 import { parse, stringify } from 'flatted';
-import { NgbModal, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbModalRef, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { MessageService } from 'primeng/api';
+// D-495 (ticket 1234): atributos por categoría, solo con la bandera `categoryAttributes`.
+import { CompanyFeaturesService } from 'src/app/shared/services/company-features.service';
+import { CatalogAttributesService, EsquemasRespuesta } from 'src/app/shared/services/catalogo/catalog-attributes.service';
+import { claveDeRuta, documentoDeCategorias, RutaDelArbol } from 'src/app/shared/services/catalogo/atributos-categoria';
+import { mensajeDeError, renombresDelArbol, rutasPorNodo } from 'src/app/shared/services/catalogo/atributos-editor';
 
 @Component({
   selector: 'app-list',
@@ -14,7 +19,17 @@ import { MessageService } from 'primeng/api';
 })
 export class ListComponent implements OnInit, OnChanges {
   @ViewChild('confirmationDialog') confirmationDialog: TemplateRef<any>;
-  
+  @ViewChild('atributosDialog') atributosDialog: TemplateRef<any>;
+
+  // D-495: con la bandera, cada fila tiene "Atributos". Se deshabilita mientras el árbol
+  // tenga cambios sin guardar, y los renombres salen de la ruta que tenía cada nodo al cargar.
+  readonly atributosActivos: boolean;
+  sucio = false;
+  rutaAtributos: RutaDelArbol | null = null;
+  esquemasAtributos: EsquemasRespuesta | null = null;
+  private rutasOriginales = new WeakMap<object, string[]>();
+  private modalAtributos: NgbModalRef | null = null;
+
   files1: TreeNode[];
   files2: TreeNode[];
   cols: any[];
@@ -32,10 +47,20 @@ export class ListComponent implements OnInit, OnChanges {
     private nodeService: MaestroService, 
     private cdr: ChangeDetectorRef, 
     private modalService: NgbModal,
-    private messageService: MessageService
-  ) { }
+    private messageService: MessageService,
+    features: CompanyFeaturesService,
+    private catalogAttributes: CatalogAttributesService
+  ) {
+    this.atributosActivos = features.isEnabled('categoryAttributes');
+  }
+
+  /** D-495: hay cambios del árbol sin guardar (deshabilita "Atributos"). */
+  marcarSucio() {
+    this.sucio = true;
+  }
 
   create() {
+    this.marcarSucio();
     if (this.data.length == 0) {
       this.data = [
         {
@@ -119,6 +144,7 @@ export class ListComponent implements OnInit, OnChanges {
     const tipoHijo = this.nombreNivelHijo(node);
     node.children.unshift(hijo);
     node.expanded = true;
+    this.marcarSucio();
 
     this.data = [...this.data];
     this.cdr.detectChanges();
@@ -242,6 +268,7 @@ export class ListComponent implements OnInit, OnChanges {
       return;
     }
     hermanos.splice(index, 1);
+    this.marcarSucio();
 
     this.data = [...this.data];
     this.cdr.detectChanges();
@@ -270,9 +297,15 @@ export class ListComponent implements OnInit, OnChanges {
   guardar() {
     this.cargando = true;
     this.categoriaPorEmpresa.categoria = stringify(this.data);
-    this.nodeService.createCategorias(this.categoriaPorEmpresa).subscribe(     
+    // D-495: con la bandera, el servidor mueve los atributos de las categorías renombradas.
+    // Sin la bandera el cuerpo es exactamente el de siempre.
+    const cuerpo: any = this.atributosActivos
+      ? { ...this.categoriaPorEmpresa, renombres: renombresDelArbol(this.data, this.rutasOriginales) }
+      : this.categoriaPorEmpresa;
+    this.nodeService.createCategorias(cuerpo).subscribe(
       (r: any) => {
         this.cargando = false;
+        this.recordarRutas();
         this.showSuccess('Categorías guardadas correctamente');
         console.log("🚀 ~ file: list.component.ts:140 ~ ListComponent ~ this.nodeService.createCategorias ~ r", r);
         console.log("🚀 ~ file: list.component.ts:140 ~ ListComponent ~ this.nodeService.createCategorias ~ r.categorias", parse(r.categorias.categoria));
@@ -291,10 +324,12 @@ export class ListComponent implements OnInit, OnChanges {
       (r: any) => {
         this.cargando = false;
         if ((r as any[]).length > 0) {
-          this.categoriaPorEmpresa = r[0];
+          // D-495: con la bandera se usa el mismo documento que el servidor (D2); sin ella, r[0].
+          this.categoriaPorEmpresa = this.atributosActivos ? documentoDeCategorias(r as any[]) || r[0] : r[0];
           this.data = parse(this.categoriaPorEmpresa.categoria);
           this.data = [...this.data];
         }
+        this.recordarRutas();
         console.log("🚀 ~ file: list.component.ts:140 ~ ListComponent ~ this.nodeService.createCategorias ~ r", r);
       },
       (error) => {
@@ -319,6 +354,7 @@ export class ListComponent implements OnInit, OnChanges {
         const reader = new FileReader();
         reader.onload = (event: any) => {
           node.data.imagen = event.target.result;
+          this.marcarSucio();
           this.cdr.detectChanges();
           this.showSuccess('Imagen seleccionada correctamente');
         };
@@ -349,6 +385,42 @@ export class ListComponent implements OnInit, OnChanges {
 
   openImportModal() {
     this.showImportModal = true;
+  }
+
+  /** D-495: la ruta de cada nodo tal como quedó guardada (base de los renombres) y el árbol limpio. */
+  private recordarRutas() {
+    this.sucio = false;
+    if (!this.atributosActivos) return;
+    this.rutasOriginales = new WeakMap<object, string[]>();
+    rutasPorNodo(this.data).forEach((ruta, nodo) => this.rutasOriginales.set(nodo, ruta));
+  }
+
+  /** D-495: abre los atributos de la categoría con los esquemas recién leídos (con su versión). */
+  abrirAtributos(node: TreeNode) {
+    if (!this.atributosActivos || this.sucio) return;
+    const nombres = rutasPorNodo(this.data).get(node) || [];
+    if (!nombres.length) return;
+    this.catalogAttributes.getSchemas().subscribe({
+      next: (r) => {
+        this.esquemasAtributos = r;
+        this.rutaAtributos = { clave: claveDeRuta(nombres), nombres };
+        this.modalAtributos = this.modalService.open(this.atributosDialog, { size: 'lg', scrollable: true, backdrop: 'static' });
+        this.cdr.detectChanges();
+      },
+      error: (err) => this.showError(mensajeDeError(err)),
+    });
+  }
+
+  alGuardarAtributos(r: EsquemasRespuesta) {
+    this.esquemasAtributos = r;
+    if (this.modalAtributos) this.modalAtributos.close();
+    this.modalAtributos = null;
+    this.showSuccess('Atributos guardados');
+  }
+
+  cerrarAtributos() {
+    if (this.modalAtributos) this.modalAtributos.dismiss();
+    this.modalAtributos = null;
   }
 
   onImportComplete(result: any) {

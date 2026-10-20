@@ -76,7 +76,7 @@
                                         <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
                                         <p-treeTableCellEditor>
                                             <ng-template pTemplate="input">
-                                                <input pInputText class="cfg-input-celda" type="text" [(ngModel)]="node.data.nombre"
+                                                <input pInputText class="cfg-input-celda" type="text" [(ngModel)]="node.data.nombre" (ngModelChange)="marcarSucio()"
                                                     [ngStyle]="{'width': '100%', 'font-size': '1.1rem', 'padding': '8px'}"
                                                     placeholder="Ingrese el nombre de la categoría">
                                             </ng-template>
@@ -103,7 +103,7 @@
                                     <td class="text-center" ttEditableColumn [ngClass]="{'p-toggler-column': true}">
                                         <p-treeTableCellEditor>
                                             <ng-template pTemplate="input">
-                                                <input class="text-center cfg-input-celda" pInputText type="number" [(ngModel)]="node.data.posicion"
+                                                <input class="text-center cfg-input-celda" pInputText type="number" [(ngModel)]="node.data.posicion" (ngModelChange)="marcarSucio()"
                                                     [ngStyle]="{'width': '100%', 'font-size': '1.1rem', 'padding': '8px'}"
                                                     placeholder="Ingrese la posición">
                                             </ng-template>
@@ -116,7 +116,7 @@
                                     <td class="text-center" ttEditableColumn [ngClass]="{'p-toggler-column': true}">
                                         <p-treeTableCellEditor>
                                             <ng-template pTemplate="input">
-                                                <input class="text-center cfg-input-celda" pInputText type="number" [(ngModel)]="node.data.consecutivo"
+                                                <input class="text-center cfg-input-celda" pInputText type="number" [(ngModel)]="node.data.consecutivo" (ngModelChange)="marcarSucio()"
                                                     [ngStyle]="{'width': '100%', 'font-size': '1.1rem', 'padding': '8px'}"
                                                     placeholder="Id Categoria SIIGO">
                                             </ng-template>
@@ -127,7 +127,7 @@
                                         </p-treeTableCellEditor>
                                     </td>
                                     <td class="text-center">
-                                        <p-inputSwitch [(ngModel)]="node.data.activo" ariaLabel="¿Categoría activa?"
+                                        <p-inputSwitch [(ngModel)]="node.data.activo" (ngModelChange)="marcarSucio()" ariaLabel="¿Categoría activa?"
                                             ngbTooltip="Activa o desactiva esta categoría">
                                         </p-inputSwitch>
                                         <small *ngIf="node.data.activo" class="cfg-estado cfg-estado--on">Activo</small>
@@ -144,6 +144,16 @@
                                             [ngbTooltip]="'Agregar una ' + nombreNivelHijo(node) + ' dentro de «' + node.data.nombre + '»'">
                                             <i class="pi pi-plus"></i>
                                         </button>
+                                        <!-- D-495: atributos de la categoría (solo con la bandera). Con cambios
+                                             del árbol sin guardar se deshabilita: los renombres se resuelven al guardar. -->
+                                        <span class="atributos-envoltura" *ngIf="atributosActivos"
+                                            [ngbTooltip]="sucio ? 'Guarda el árbol antes de editar atributos' : 'Atributos de «' + node.data.nombre + '»'">
+                                            <button class="action-icon-button atributos-button" type="button" (click)="abrirAtributos(node)"
+                                                [disabled]="sucio"
+                                                [attr.aria-label]="'Atributos de ' + node.data.nombre">
+                                                <i class="pi pi-sliders-h"></i>
+                                            </button>
+                                        </span>
                                         <button class="action-icon-button delete-button" (click)="confirmDelete(node)"
                                             [attr.aria-label]="'Eliminar la ' + nombreNivel(node) + ' ' + node.data.nombre"
                                             [ngbTooltip]="'Eliminar la ' + nombreNivel(node) + ' «' + node.data.nombre + '»'">
@@ -162,6 +172,16 @@
     type="category"
     (importComplete)="onImportComplete($event)">
 </app-import-modal>
+
+<!-- D-495: atributos de una categoría (solo con la bandera categoryAttributes). -->
+<ng-template #atributosDialog>
+    <app-categoria-atributos
+        [ruta]="rutaAtributos"
+        [esquemas]="esquemasAtributos"
+        (guardado)="alGuardarAtributos($event)"
+        (cerrar)="cerrarAtributos()">
+    </app-categoria-atributos>
+</ng-template>
 
 <!-- Confirmation Dialog Template -->
 <ng-template #confirmationDialog let-modal>
