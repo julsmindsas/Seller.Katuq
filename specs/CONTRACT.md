@@ -11216,3 +11216,13 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
 
 - Daniel pidió «Dale, publica los dos cambios y verifica que funcionen en producción». Autoriza la publicación de 1315/1313 y sus comprobaciones de lectura, sin activar canales ni conceder permisos OAuth nuevos.
 - Se incorporó la punta remota con git pull --ff-only (362ae79e); conserva los cambios de la otra sesión. Se prepara un build en worktree limpio para no sellar documentación ajena sin commit como código productivo. El resultado del despliegue y la comprobación autenticada se registrarán después de ejecutarlos.
+
+
+### 2026-10-20 — D-508/D-509: publicación y comprobación productiva
+
+- **Autoridad:** Daniel pidió publicar ambos y verificar en producción. `git pull --ff-only` incorporó 362ae79e; código 1e918941 publicado en origin. Build aislado en worktree limpio conservó los cambios/documentos ajenos sin incluirlos.
+- **Publicado:** Firebase Hosting **2026.10.20.6**, build **8dc1a7cc28b35b3f**, origen 1e918941 y `cambiosSinCommit=0`. Build y deploy exit 0; verify-dist-prod y guard-publicacion pasaron sin forzar. El dominio sellercenter.katuq.com devuelve la versión y el SHA-256 del main compilado.
+- **Comprobación real:** sesión autenticada, tres guías abiertas, copia nativa con confirmación, Escape/foco, búsqueda MCP y Mis conexiones sin guías. Conectadas 5→5 / Para conectar 11→11 / Próximamente 12→15. Tres canales informativos sin enlaces/activación en directorio y menú; canales actuales y TikTok Shop conservados. 24/24 pruebas específicas después de actualizar la rama.
+- **Responsive:** 1440 sin desbordamiento; a 390 el directorio mide 358/358 y los diálogos 372/372. Se encontró desbordamiento de 42 px en el encabezado compartido .right-header, fuera del diff: no se oculta ni se declara QA móvil global sin incidencias. Viewport restaurado. No se completó login OAuth desde las IA ni se concedieron permisos nuevos.
+- **MCP:** ambas notas internas confirmadas; **1315 Resuelto** con resolución y versión. **1313 Haciendo** sólo por la revisión editorial de Jairo indicada en el ticket; no se le envió mensaje y el padre omnicanal sigue abierto.
+- **Evidencia:** `openspec/changes/instructivos-mcp-en-integraciones/verificacion.md`, capturas produccion-* de esta sesión y logs en /tmp/katuq-1315-1313-publicacion/. Environments actualizados sólo en versión; sin cambios de backend/datos de negocio.

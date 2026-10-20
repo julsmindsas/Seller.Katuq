@@ -27,3 +27,8 @@ Orden secuencial: D-508 primero y D-509 después por compartir directorio/listad
 - Las tareas de implementación y validación local están completas. Detalle común en `../instructivos-mcp-en-integraciones/verificacion.md`.
 - La revisión de navegador usa datos simulados y plantillas/estilos/métodos reales aislados, sin sesión ni datos reales del comercio. No acredita el shell autenticado completo, un login OAuth en cada IA ni disponibilidad de los canales futuros.
 - No se ha publicado ni cerrado el ticket. La revisión editorial de Jairo para 1313 sigue pendiente; no se le enviaron mensajes.
+
+
+## Entrega productiva (20-oct-2026)
+
+Daniel autorizó publicar y verificar. Publicado en **2026.10.20.6** (código 1e918941, build 8dc1a7cc28b35b3f); deploy y candado sin errores. Comprobación autenticada real y límites en `../instructivos-mcp-en-integraciones/verificacion.md`. 1315 Resuelto; 1313 conserva pendiente la revisión editorial de Jairo. Hallazgo móvil del encabezado compartido registrado por separado; directorio y diálogos caben en 390 px.
