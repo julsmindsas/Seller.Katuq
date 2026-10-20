@@ -4,8 +4,8 @@ import { AngularFireDatabase } from '@angular/fire/compat/database';
 /**
  * Notificaciones de tickets del lado Seller (contrato compartido con la app
  * Support): notificación in-app en `ActualizacionTicket{nomComercial}`, que es
- * la que escucha la campana, y consecutivo visible desde el contador compartido
- * `contadores/tickets`. Las escrituras son idempotentes: la clave es
+ * la que escucha la campana. El número visible lo asigna el backend desde
+ * `contadores/tickets` (D-507). Las escrituras son idempotentes: la clave es
  * determinística por evento y la transacción crear-si-no-existe descarta
  * reintentos, así que no se duplican avisos.
  *
@@ -32,22 +32,6 @@ export interface DatosCreacionTicket {
 export class TicketNotificacionesSellerService {
 
   constructor(private db: AngularFireDatabase) { }
-
-  /**
-   * Reserva el siguiente número consecutivo del contador compartido con la
-   * app Support. Devuelve null si no fue posible (el ticket se crea igual).
-   */
-  async siguienteNumero(): Promise<number | null> {
-    try {
-      const resultado = await this.db.database
-        .ref('contadores/tickets')
-        .transaction(actual => (actual || 0) + 1);
-      return resultado.committed ? resultado.snapshot.val() : null;
-    } catch (error) {
-      console.error('No fue posible reservar el consecutivo del ticket:', error);
-      return null;
-    }
-  }
 
   /**
    * Notificación in-app del comercio, con payload tipado y accionable. El

@@ -22,11 +22,10 @@ describe('TicketsSoporteService', () => {
 
   beforeEach(() => {
     servicios = {
-      addTicket: jasmine.createSpy('addTicket').and.returnValue(of({ result: { cd: 'abc123' } })),
+      addTicket: jasmine.createSpy('addTicket').and.returnValue(of({ result: { cd: 'abc123', nroTicket: 1316 } })),
       addNotification: jasmine.createSpy('addNotification')
     };
     notificaciones = {
-      siguienteNumero: jasmine.createSpy('siguienteNumero').and.returnValue(Promise.resolve(1250)),
       notificarCreacion: jasmine.createSpy('notificarCreacion').and.returnValue(Promise.resolve())
     };
     servicio = new TicketsSoporteService(servicios, notificaciones);
@@ -42,15 +41,13 @@ describe('TicketsSoporteService', () => {
       tienda: 'FLORECER',
       company: 'FLORECER',
       nit: '900123',
-      emailUsuarioReporta: 'ana@florecer.co',
-      nroTicket: 1250
+      emailUsuarioReporta: 'ana@florecer.co'
     });
   });
 
-  it('sin número del contador, deja null para que lo asigne el backend', async () => {
-    notificaciones.siguienteNumero.and.returnValue(Promise.resolve(null));
-    const ticket = await servicio.preparar(formulario, empresa, {});
-    expect(ticket.nroTicket).toBeNull();
+  it('no manda número: lo asigna el backend (D-507), aunque el formulario traiga uno', async () => {
+    const ticket = await servicio.preparar({ ...formulario, nroTicket: 1241 }, empresa, {});
+    expect('nroTicket' in ticket).toBeFalse();
     expect(ticket.nit).toBe('');
     expect(ticket.emailUsuarioReporta).toBe('');
   });
@@ -62,18 +59,18 @@ describe('TicketsSoporteService', () => {
 
     expect(servicios.addTicket).toHaveBeenCalledTimes(1);
     expect(servicios.addTicket).toHaveBeenCalledWith(ticket);
-    expect(creado).toEqual({ ticketId: 'abc123', numeroVisible: 1250 });
+    expect(creado).toEqual({ ticketId: 'abc123', nroTicket: 1316, numeroVisible: 1316 });
     expect(servicios.addNotification).toHaveBeenCalledTimes(1);
-    expect(servicios.addNotification).toHaveBeenCalledWith('Nuevo ticket #1250 creado', 'abc123');
+    expect(servicios.addNotification).toHaveBeenCalledWith('Nuevo ticket #1316 creado', 'abc123');
     expect(notificaciones.notificarCreacion).toHaveBeenCalledTimes(1);
     expect(notificaciones.notificarCreacion).toHaveBeenCalledWith({
-      ticketCd: 'abc123', numero: 1250, asunto: 'No carga el pedido',
+      ticketCd: 'abc123', numero: 1316, asunto: 'No carga el pedido',
       nomComercial: 'FLORECER', emailComercio: 'ana@florecer.co', autor: 'Ana'
     });
   });
 
   it('sin número visible, muestra el cd', async () => {
-    notificaciones.siguienteNumero.and.returnValue(Promise.resolve(null));
+    servicios.addTicket.and.returnValue(of({ result: { cd: 'abc123' } }));
     const ticket = await servicio.preparar(formulario, empresa, usuario);
     let creado: any;
     servicio.enviar(ticket, empresa, usuario).subscribe(r => creado = r);
