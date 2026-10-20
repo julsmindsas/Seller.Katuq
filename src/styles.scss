@@ -1622,3 +1622,7 @@ body.kq-editor-lleno {
   app-sitio-editor .editor { height: 100vh; }
   overflow: hidden;
 }
+
+// Avisos flotantes (ngx-toastr y p-toast) con el estilo Katuq. Al final para mandar sobre
+// los temas, primeng-overrides y dark-mode.
+@import "./assets/scss/components/avisos";

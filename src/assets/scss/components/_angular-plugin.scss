@@ -129,29 +129,7 @@
         }
     }
 }
-// toastr page css
-.toast-success {
-    background-color: $success-color !important;
-}
-.toast-error {
-    background-color: $danger-color !important;
-}
-.toast-info {
-    background-color: var(--theme-deafult) !important;
-}
-.toast-warning {
-    background-color: $warning-color !important;
-}
-.ngx-toastr {
-    background-color: var(--theme-deafult) !important;
-    box-shadow: none !important;
-    &:hover {
-        box-shadow: none !important;
-    }
-    .toast-close-button {
-        top: -1px;
-    }
-}
+// toastr: el estilo vive en components/_avisos.scss (regla de diseño Katuq)
 // modal
 .modal-header {
     .btn-close {
