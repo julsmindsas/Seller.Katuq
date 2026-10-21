@@ -1,17 +1,14 @@
-<!-- Header Moderno Katuq Style -->
-<div class="container-fluid px-0">
-    <div class="card border-0 shadow-sm mb-4">
-        <!-- Header del módulo -->
-        <div class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
-            <div>
-                <h5 class="mb-1 fw-bold d-flex align-items-center gap-2" style="color: #8b5cf6;">
-                    <i class="pi pi-users" style="color: #8b5cf6;"></i>{{ "Crear cliente" | translate }}
-                </h5>
-                <p class="text-muted mb-0" style="font-size: 0.95rem;">
+<!-- D-516: marco canónico (config-pagina) -->
+<div class="cfg-pagina cli-pagina">
+        <header class="cfg-cabeza">
+            <div class="cfg-cabeza__textos">
+                <span class="cfg-eyebrow">Clientes</span>
+                <h1 class="cfg-titulo">{{ "Crear cliente" | translate }}</h1>
+                <p class="cfg-sub">
                     {{ "Ingresa todos los datos para crear un cliente nuevo" | translate }}
                 </p>
             </div>
-            <div class="d-flex gap-2">
+            <div class="cfg-acciones">
                 <button pButton
                         type="button"
                         icon="pi pi-tags"
@@ -25,15 +22,15 @@
                         type="button"
                         [icon]="buscadorAbierto ? 'pi pi-chevron-up' : 'pi pi-search'"
                         label="{{ 'Buscar existente' | translate }}"
-                        class="p-button-outlined p-button-sm"
+                        class="p-button-outlined p-button-sm cli-btn-buscar"
                         [class.p-button-secondary]="buscadorAbierto"
                         (click)="toggleBuscador()"
                         pTooltip="{{ 'Buscar un cliente ya creado para editarlo' | translate }}"></button>
             </div>
-        </div>
+        </header>
 
         <!-- Buscador de cliente (ticket 1163: plegado por defecto al crear) -->
-        <div class="search-section px-4 py-3 bg-light border-bottom" *ngIf="buscadorAbierto">
+        <div class="cfg-card search-section" *ngIf="buscadorAbierto">
             <div class="row align-items-end g-2">
                 <div class="col-12 col-md-3">
                     <label class="form-label fw-semibold small">{{ "Buscar por" | translate }}</label>
@@ -71,7 +68,7 @@
         </div>
 
         <!-- Resultados de búsqueda por email/nombre -->
-        <div *ngIf="resultadosBusqueda && resultadosBusqueda.length > 0" class="px-4 py-3 bg-white border-bottom">
+        <div *ngIf="resultadosBusqueda && resultadosBusqueda.length > 0" class="cfg-card cli-resultados">
             <p class="fw-semibold small mb-2 text-muted">
                 <i class="pi pi-list me-1"></i>{{ resultadosBusqueda.length }} resultados encontrados — selecciona el cliente:
             </p>
@@ -105,10 +102,8 @@
             </div>
         </div>
 
-    </div>
-
     <!-- Ficha 360° del cliente -->
-    <div class="card border-0 shadow-sm mt-4 c360-card" *ngIf="encontrado">
+    <div class="cfg-card c360-card" *ngIf="encontrado">
         <div class="c360-body">
             <!-- Cabecera: avatar + identidad + chips + acciones -->
             <div class="c360-head">
@@ -329,6 +324,18 @@
             </div>
         </div>
     </div>
+
+    <!-- D-406: el formulario unificado de cliente (Contacto / Entrega / Facturación / Notas)
+         carga de una vez debajo de la cabecera (ticket 1163) y guarda el cliente completo
+         en una sola acción (tickets 1164, 1166). Al elegir un resultado del buscador pasa
+         a editar ese cliente. -->
+    <app-crear-cliente-modal
+        modo="inline"
+        [isEdit]="encontrado && !!datos"
+        [clienteData]="encontrado ? datos : null"
+        [documentoPrellenado]="documentoNoEncontrado"
+        (guardado)="onClienteGuardadoInline($event)">
+    </app-crear-cliente-modal>
 </div>
 <ng-template #resultadosModal let-modal>
     <div class="modal-header">
@@ -366,17 +373,6 @@
         <button type="button" class="btn btn-outline-secondary" (click)="modal.close()">Cerrar</button>
     </div>
 </ng-template>
-<!-- D-406: el formulario unificado de cliente (Contacto / Entrega / Facturación / Notas)
-     carga de una vez debajo de la cabecera (ticket 1163) y guarda el cliente completo
-     en una sola acción (tickets 1164, 1166). Al elegir un resultado del buscador pasa
-     a editar ese cliente. -->
-<app-crear-cliente-modal
-    modo="inline"
-    [isEdit]="encontrado && !!datos"
-    [clienteData]="encontrado ? datos : null"
-    [documentoPrellenado]="documentoNoEncontrado"
-    (guardado)="onClienteGuardadoInline($event)">
-</app-crear-cliente-modal>
 
 <!-- Modal configuración de etiquetas -->
 <p-dialog

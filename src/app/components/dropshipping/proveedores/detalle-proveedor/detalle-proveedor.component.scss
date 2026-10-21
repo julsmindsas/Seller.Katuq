@@ -1,60 +1,148 @@
-.card-header {
-  background-color: var(--surface-50);
-  border-bottom: 1px solid var(--surface-200);
-  padding: 1rem 1.5rem;
-  
-  h5, h6 {
-    margin: 0;
-    color: var(--text-color);
-  }
+// Regla de diseño Katuq (D-400): base común de pantallas internas (detalle).
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.dv-cabeza-izq {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
 }
 
-.card-body {
-  padding: 1.5rem;
+// Métricas: tarjetas blancas planas con ícono en par fuerte / fondo suave (sin bloques de color).
+.dv-metricas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.dv-metrica {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #ececf4;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
+  min-width: 0;
+
+  --dv-fuerte: #5F3FE0;
+  --dv-suave: #efe9ff;
+}
+.dv-metrica--info { --dv-fuerte: #1E6FD9; --dv-suave: #E7F1FF; }
+.dv-metrica--alerta { --dv-fuerte: #D9820A; --dv-suave: #FFF1DF; }
+.dv-metrica--ok { --dv-fuerte: #1E874B; --dv-suave: #E6F7EE; }
+
+.dv-metrica__icono {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: var(--dv-suave);
+  color: var(--dv-fuerte);
+  font-size: 18px;
+}
+
+.dv-metrica__valor {
+  margin: 4px 0 0;
+  font-size: 22px !important;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #211F3A;
+  word-break: break-word;
+}
+
+.dv-metrica__label {
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: #8f8bab;
+}
+
+.dv-dos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
 }
 
 .info-item {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  gap: 4px 16px;
   margin-bottom: 1rem;
-  
+
   label {
-    font-weight: 600;
-    color: var(--text-color-secondary);
     min-width: 150px;
-    margin-right: 1rem;
     margin-bottom: 0;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: #8f8bab;
   }
-  
-  span, a {
+
+  > span, > a {
     flex: 1;
+    min-width: 0;
+    font-size: 13.5px;
+    color: #211F3A;
+    word-break: break-word;
   }
+
+  > span.cfg-pill { flex: 0 0 auto; }
+  > .text-muted { color: #8f8bab !important; }
 }
 
-.bg-primary .card-body,
-.bg-warning .card-body,
-.bg-success .card-body,
-.bg-info .card-body {
-  padding: 1.5rem 1rem;
-  
-  h3 {
-    font-size: 2rem;
-    font-weight: 700;
-  }
-  
-  .pi {
-    opacity: 0.8;
-  }
-}
+.dv-enlace { color: #5F3FE0 !important; letter-spacing: normal; text-decoration: none; &:hover { text-decoration: underline; } }
 
-::ng-deep {
+:host ::ng-deep {
   .p-tag {
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    border-radius: 20px;
+    padding: 3px 10px;
+    align-self: flex-start;
+
+    &.p-tag-success { background: #E6F7EE; color: #1E874B; }
+    &.p-tag-danger { background: #FDECEC; color: #D64545; }
+    &.p-tag-warning { background: #FFF1DF; color: #D9820A; }
+    &.p-tag-info { background: #E7F1FF; color: #1E6FD9; }
   }
-  
-  .badge {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
+
+  .cfg-acciones .p-button {
+    background: #5F3FE0;
+    border-color: #5F3FE0;
+    color: #fff;
+    border-radius: 11px;
+    font-weight: 700;
+    box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+
+    &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
+  }
+
+  .dv-cabeza-izq .p-button.p-button-text { color: #5F3FE0; }
+
+  // Acciones rápidas: secundarios blancos con borde; el ícono conserva su tono.
+  .cfg-card .p-button.p-button-outlined {
+    background: #fff;
+    border: 1px solid #e4e2ef;
+    color: #5b5878;
+    border-radius: 11px;
+    font-weight: 700;
+    min-height: 40px;
+
+    .p-button-icon { color: #5F3FE0; }
+    &.p-button-success .p-button-icon { color: #1E874B; }
+    &.p-button-secondary .p-button-icon { color: #5b5878; }
+
+    &:enabled:hover { background: #faf9fe; border-color: #d9cffb; color: #5F3FE0; }
   }
 }

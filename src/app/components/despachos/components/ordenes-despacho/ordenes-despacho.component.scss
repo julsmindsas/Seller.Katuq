@@ -2,7 +2,7 @@
 @import '../../../../../assets/scss/utils/katuq-tokens';
 
 // Variables
-$primary-color: $katuq-primary;
+$primary-color: #5F3FE0;
 $secondary-color: $katuq-gray-500;
 $success-color: $katuq-success;
 $warning-color: $katuq-warning;
@@ -115,6 +115,23 @@ $light-color: $katuq-gray-50;
   &.btn-sm {
     padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
+  }
+
+  // Toggle Servidor/Local: el [class] del template aplica btn-success; se pinta con el acento del canon.
+  &.btn-success {
+    background-color: #5F3FE0;
+    border-color: #5F3FE0;
+    color: #fff;
+
+    &:hover { background-color: #4a2fc0; border-color: #4a2fc0; }
+  }
+
+  &.btn-outline-info {
+    color: #5F3FE0;
+    border-color: #ddd3fb;
+    background-color: #fff;
+
+    &:hover { background-color: #efe9ff; color: #5F3FE0; }
   }
   
   &.btn-outline-primary {

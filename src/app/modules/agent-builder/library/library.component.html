@@ -1,88 +1,90 @@
-<div class="google-library-container">
-  <!-- Top Bar -->
-  <header class="google-header">
-    <div class="header-left">
+<div class="cfg-pagina google-library-container">
+  <!-- Encabezado -->
+  <header class="cfg-cabeza google-header">
+    <div class="cfg-cabeza__textos header-left">
+      <span class="cfg-eyebrow">Agent Builder</span>
       <div class="logo-area">
         <i class="pi pi-th-large logo-icon"></i>
-        <h1>Mis agentes IA</h1>
+        <h1 class="cfg-titulo">Mis agentes IA</h1>
       </div>
     </div>
 
-    <div class="header-center">
-      <div class="search-bar">
-        <i class="pi pi-search"></i>
-        <input type="text" placeholder="Search agents, departments..." [(ngModel)]="searchTerm"
-          (input)="filterAgents()">
-      </div>
-    </div>
-
-    <div class="header-right">
-      <button class="google-btn primary" (click)="createNewAgent()">
+    <div class="cfg-acciones header-right">
+      <button class="cfg-btn google-btn primary" (click)="createNewAgent()">
         <i class="pi pi-plus"></i>
         <span>New Agent</span>
       </button>
-      <button class="google-btn icon-only" (click)="goToGeneralChat()" pTooltip="Unified Chat" tooltipPosition="bottom">
+      <button class="cfg-btn cfg-btn--sec google-btn icon-only" (click)="goToGeneralChat()" pTooltip="Unified Chat" tooltipPosition="bottom">
         <i class="pi pi-comments"></i>
       </button>
       <div class="user-avatar">
-        <span>U</span>
+        <span class="avatar-letra">U</span>
       </div>
     </div>
   </header>
 
   <!-- Main Content -->
   <main class="library-content">
-    <section class="hero-banner">
+    <section class="cfg-card hero-banner">
       <div class="hero-text">
         <h2>Construye tu escuadrón de agentes</h2>
         <p>Comparte, reutiliza y lanza agentes especializados en segundos.</p>
         <div class="hero-actions">
-          <button class="google-btn primary" (click)="createNewAgent()">
+          <button class="cfg-btn google-btn primary" (click)="createNewAgent()">
             <i class="pi pi-sparkles"></i>
             Crear agente
           </button>
-          <button class="google-btn ghost" (click)="goToGeneralChat()">
+          <button class="cfg-btn cfg-btn--sec google-btn ghost" (click)="goToGeneralChat()">
             <i class="pi pi-comments"></i>
             Ir al chat general
           </button>
         </div>
       </div>
-      <div class="hero-badges">
-        <div class="badge-card">
-          <span class="label">Activos</span>
-          <strong>{{ getCountByStatus('active') }}</strong>
+      <div class="cfg-stats hero-badges">
+        <div class="cfg-stat badge-card">
+          <span class="cfg-stat__label label">Activos</span>
+          <strong class="cfg-stat__valor">{{ getCountByStatus('active') }}</strong>
         </div>
-        <div class="badge-card">
-          <span class="label">Ventas</span>
-          <strong>{{ getCountByDepartment('sales') }}</strong>
+        <div class="cfg-stat badge-card">
+          <span class="cfg-stat__label label">Ventas</span>
+          <strong class="cfg-stat__valor">{{ getCountByDepartment('sales') }}</strong>
         </div>
-        <div class="badge-card">
-          <span class="label">Inventario</span>
-          <strong>{{ getCountByDepartment('inventory') }}</strong>
+        <div class="cfg-stat badge-card">
+          <span class="cfg-stat__label label">Inventario</span>
+          <strong class="cfg-stat__valor">{{ getCountByDepartment('inventory') }}</strong>
         </div>
-        <div class="badge-card">
-          <span class="label">Logística</span>
-          <strong>{{ getCountByDepartment('logistics') }}</strong>
+        <div class="cfg-stat badge-card">
+          <span class="cfg-stat__label label">Logística</span>
+          <strong class="cfg-stat__valor">{{ getCountByDepartment('logistics') }}</strong>
         </div>
       </div>
     </section>
-    <!-- Filters Row -->
-    <div class="filters-row">
-      <div class="chip-filters">
-        <button class="filter-chip" [class.active]="filterDepartment === 'all'" (click)="setDepartment('all')">
-          All
-        </button>
-        <button *ngFor="let dept of departments" class="filter-chip" [class.active]="filterDepartment === dept.value"
-          (click)="setDepartment(dept.value)">
-          <i [class]="'pi ' + dept.icon"></i>
-          {{ dept.label }}
-        </button>
+
+    <!-- Búsqueda y filtros -->
+    <section class="cfg-card filters-card">
+      <div class="search-bar">
+        <i class="pi pi-search"></i>
+        <input type="text" placeholder="Search agents, departments..." [(ngModel)]="searchTerm"
+          (input)="filterAgents()">
       </div>
 
-      <div class="view-options">
-        <span class="agent-count">{{ filteredAgents.length }} agents</span>
+      <div class="filters-row">
+        <div class="chip-filters">
+          <button class="filter-chip" [class.active]="filterDepartment === 'all'" (click)="setDepartment('all')">
+            All
+          </button>
+          <button *ngFor="let dept of departments" class="filter-chip" [class.active]="filterDepartment === dept.value"
+            (click)="setDepartment(dept.value)">
+            <i [class]="'pi ' + dept.icon"></i>
+            {{ dept.label }}
+          </button>
+        </div>
+
+        <div class="view-options">
+          <span class="agent-count">{{ filteredAgents.length }} agents</span>
+        </div>
       </div>
-    </div>
+    </section>
 
     <!-- Loading State -->
     <div class="loading-container" *ngIf="isLoading">
@@ -98,17 +100,19 @@
     </div>
 
     <!-- Empty State -->
-    <div class="empty-state-google" *ngIf="!isLoading && filteredAgents.length === 0">
+    <div class="cfg-card cfg-vacio empty-state-google" *ngIf="!isLoading && filteredAgents.length === 0">
       <img src="assets/images/empty-box.svg" alt="No agents found" onerror="this.style.display='none'">
       <div class="empty-content">
-        <i class="pi pi-search" *ngIf="searchTerm"></i>
-        <i class="pi pi-box" *ngIf="!searchTerm"></i>
-        <h3>{{ searchTerm ? 'No agents found matching "' + searchTerm + '"' : 'No agents yet' }}</h3>
-        <p>{{ searchTerm ? 'Try adjusting your search or filters' : 'Create your first AI agent to get started' }}</p>
-        <button class="google-btn primary" (click)="createNewAgent()" *ngIf="!searchTerm">
+        <span class="cfg-vacio__icono">
+          <i class="pi pi-search" *ngIf="searchTerm"></i>
+          <i class="pi pi-box" *ngIf="!searchTerm"></i>
+        </span>
+        <h3 class="cfg-vacio__titulo">{{ searchTerm ? 'No agents found matching "' + searchTerm + '"' : 'No agents yet' }}</h3>
+        <p class="cfg-vacio__texto">{{ searchTerm ? 'Try adjusting your search or filters' : 'Create your first AI agent to get started' }}</p>
+        <button class="cfg-btn google-btn primary" (click)="createNewAgent()" *ngIf="!searchTerm">
           Create Agent
         </button>
-        <button class="google-btn text" (click)="clearFilters()" *ngIf="searchTerm">
+        <button class="cfg-btn cfg-btn--sec google-btn text" (click)="clearFilters()" *ngIf="searchTerm">
           Clear filters
         </button>
       </div>

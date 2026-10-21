@@ -43,7 +43,7 @@
 .cb-title {
   margin: 0;
   font-family: $cb-display;
-  font-size: 30px;
+  font-size: 30px !important; // hay un `h1 { 1.5rem !important }` global
   line-height: 1.15;
   color: $cb-ink;
 
@@ -309,7 +309,8 @@
   color: $cb-ink;
 }
 
-.cb-chip-more {
+// Antes `.cb-chip-more`: el nombre tenía "p-" y la regla global `[class*="p-"]` le forzaba el tamaño.
+.cb-mas {
   background: $cb-accent-soft;
   border-color: $cb-accent-soft;
   color: $cb-accent;
@@ -410,7 +411,7 @@
 
 @media (max-width: 575px) {
   .cb-page { padding: 20px 16px 32px; }
-  .cb-title { font-size: 24px; }
+  .cb-title { font-size: 24px !important; }
   .cb-search { min-width: 0; flex: 1 1 100%; }
   .cb-head-actions { width: 100%; }
   .cb-head-actions .cb-btn-primary { flex: 1 1 100%; }

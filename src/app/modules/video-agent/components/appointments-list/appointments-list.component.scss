@@ -1,364 +1,391 @@
+// Agenda de citas: tema canónico Katuq (D-131, D-400). Plano, sin gradientes ni acento lateral.
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
+
+:host { display: block; background: $cfg-tint; min-height: 100%; }
+
 .appointments-container {
-    padding: 1.5rem;
     max-width: 1400px;
     margin: 0 auto;
-    background: #f8f9fa;
     min-height: 100vh;
 }
 
-// ========== HEADER ==========
+// ========== ENCABEZADO ==========
 .appointments-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    gap: 1rem;
-    flex-wrap: wrap;
+    .title-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+    }
 
-    .header-title {
+    .cfg-titulo {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 10px;
 
-        h2 {
-            margin: 0;
-            font-size: 1.75rem;
-            font-weight: 600;
-            color: #2c3e50;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-
-            i {
-                color: #3b82f6;
-            }
+        i {
+            color: $cfg-accent;
+            font-size: 18px;
         }
     }
-
-    .header-actions {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
 }
+
+// Botones PrimeNG de la pantalla
+:host ::ng-deep .appointments-container .p-button {
+    min-height: 36px;
+    border-radius: 11px;
+    font-weight: 700;
+
+    &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+
+    &.p-button-outlined,
+    &.p-button-text {
+        background: #fff;
+        border: 1px solid #e4e2ef;
+        color: $cfg-body;
+        box-shadow: none;
+
+        &:enabled:hover { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent; }
+    }
+
+    &.p-button-text { border-color: transparent; background: transparent; }
+
+    &.p-button-danger.p-button-outlined,
+    &.p-button-danger.p-button-text {
+        color: $cfg-err;
+
+        &:enabled:hover { background: $cfg-err-soft; border-color: $cfg-err; color: $cfg-err; }
+    }
+
+    &.p-button-danger.p-button-outlined { border-color: #f3c9c9; }
+
+    &:disabled { opacity: .55; }
+}
+
+// Etiquetas de estado PrimeNG en pill
+:host ::ng-deep .appointments-container .p-tag {
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    background: $cfg-accent-soft;
+    color: $cfg-accent;
+
+    .p-tag-value, .p-tag-icon { color: inherit !important; }
+
+    &.p-tag-success { background: $cfg-ok-soft; color: $cfg-ok; }
+    &.p-tag-warning { background: $cfg-warn-soft; color: $cfg-warn; }
+    &.p-tag-danger { background: $cfg-err-soft; color: $cfg-err; }
+    &.p-tag-info { background: $cfg-info-soft; color: $cfg-info; }
+}
+
+:host ::ng-deep .appointments-container .p-progress-spinner-circle { stroke: $cfg-accent !important; }
 
 // ========== ESTADÍSTICAS ==========
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+    gap: 10px;
 }
 
 .stat-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.25rem;
+    background: #fff;
+    border: 1px solid $cfg-line;
+    border-radius: 16px;
+    padding: 14px 16px;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border-left: 4px solid;
-    transition: all 0.2s;
+    gap: 12px;
+    box-shadow: $cfg-shadow-panel;
+    transition: transform .15s ease;
+    min-width: 0;
 
     &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        transform: translateY(-1px);
     }
 
     .stat-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
+        flex: 0 0 auto;
+        width: 44px;
+        height: 44px;
+        border-radius: 11px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 18px;
     }
 
     .stat-info {
         display: flex;
         flex-direction: column;
+        gap: 2px;
+        min-width: 0;
     }
 
     .stat-value {
-        font-size: 1.75rem;
-        font-weight: 700;
+        font-size: 20px !important;
+        font-weight: 800;
         line-height: 1.2;
     }
 
     .stat-label {
-        font-size: 0.875rem;
-        color: #64748b;
-        font-weight: 500;
+        font-size: 10.5px !important;
+        color: $cfg-muted !important;
+        font-weight: 800;
+        letter-spacing: .5px;
+        text-transform: uppercase;
     }
 
-    // Variantes de color
+    // Variantes: par fuerte / fondo suave
     &.total {
-        border-left-color: #3b82f6;
-        .stat-icon {
-            background: #dbeafe;
-            color: #3b82f6;
-        }
-        .stat-value {
-            color: #3b82f6;
-        }
+        .stat-icon { background: $cfg-accent-soft; color: $cfg-accent; }
+        .stat-value { color: $cfg-accent !important; }
     }
 
     &.confirmed {
-        border-left-color: #10b981;
-        .stat-icon {
-            background: #d1fae5;
-            color: #10b981;
-        }
-        .stat-value {
-            color: #10b981;
-        }
+        .stat-icon { background: $cfg-ok-soft; color: $cfg-ok; }
+        .stat-value { color: $cfg-ok !important; }
     }
 
     &.pending {
-        border-left-color: #f59e0b;
-        .stat-icon {
-            background: #fef3c7;
-            color: #f59e0b;
-        }
-        .stat-value {
-            color: #f59e0b;
-        }
+        .stat-icon { background: $cfg-warn-soft; color: $cfg-warn; }
+        .stat-value { color: $cfg-warn !important; }
     }
 
     &.completed {
-        border-left-color: #6366f1;
-        .stat-icon {
-            background: #e0e7ff;
-            color: #6366f1;
-        }
-        .stat-value {
-            color: #6366f1;
-        }
+        .stat-icon { background: $cfg-info-soft; color: $cfg-info; }
+        .stat-value { color: $cfg-info !important; }
     }
 
     &.cancelled {
-        border-left-color: #ef4444;
-        .stat-icon {
-            background: #fee2e2;
-            color: #ef4444;
-        }
-        .stat-value {
-            color: #ef4444;
-        }
+        .stat-icon { background: $cfg-err-soft; color: $cfg-err; }
+        .stat-value { color: $cfg-err !important; }
     }
 }
 
 // ========== FILTROS ==========
 .filters-section {
-    background: white;
-    padding: 1.25rem;
-    border-radius: 12px;
-    margin-bottom: 1.5rem;
     display: flex;
-    gap: 2rem;
+    gap: 16px 24px;
     align-items: flex-end;
     flex-wrap: wrap;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
     .filter-group {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 6px;
+        min-width: 0;
 
         label {
-            font-weight: 600;
-            color: #475569;
-            font-size: 0.875rem;
+            font-size: 10.5px;
+            font-weight: 800;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            color: $cfg-muted;
+            margin: 0;
         }
 
         &.search-group {
             flex: 1;
-            min-width: 250px;
+            min-width: min(250px, 100%);
+
+            .p-input-icon-left { display: block; width: 100%; }
+            .search-input { width: 100%; max-width: 420px; }
         }
+    }
+
+    ::ng-deep .p-dropdown,
+    ::ng-deep .p-inputtext {
+        min-height: 40px;
+        background: $cfg-chip-bg;
+        border: 1px solid $cfg-chip-border;
+        border-radius: 10px;
+        color: $cfg-ink;
+    }
+
+    ::ng-deep .p-dropdown .p-dropdown-label { background: transparent; border: 0; min-height: 0; }
+
+    ::ng-deep .p-dropdown:not(.p-disabled).p-focus,
+    ::ng-deep .p-inputtext:enabled:focus {
+        background: #fff;
+        border-color: $cfg-accent-2;
+        box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
     }
 }
 
 // ========== LISTA DE CITAS ==========
 .appointments-list {
     display: grid;
-    gap: 1.25rem;
+    gap: 16px;
 }
 
-// ========== CARD DE CITA ==========
+// ========== TARJETA DE CITA ==========
 .appointment-card {
-    background: white;
-    border-radius: 12px;
+    background: #fff;
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s;
-    border: 1px solid #e2e8f0;
+    box-shadow: $cfg-shadow-panel;
+    transition: box-shadow .15s ease, transform .15s ease;
+    border: 1px solid $cfg-line;
+    min-width: 0;
 
     &:hover {
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        transform: translateY(-2px);
+        box-shadow: 0 12px 28px -16px rgba(95, 63, 224, .35);
+        transform: translateY(-1px);
     }
 
-    // Header del Card
+    // Encabezado de la tarjeta: plano, sin bloque de color fuerte
     .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1.25rem 1.5rem;
-        background: #5F3FE0;
-        color: white;
-        gap: 1rem;
+        padding: 16px 20px;
+        background: $cfg-tint;
+        border-bottom: 1px solid $cfg-line-soft;
+        color: $cfg-ink;
+        gap: 12px;
 
         .card-header-left {
+            min-width: 0;
+
             h3 {
-                margin: 0 0 0.25rem 0;
-                font-size: 1.25rem;
-                font-weight: 600;
+                margin: 0 0 4px 0;
+                font-size: 16px;
+                font-weight: 800;
+                color: $cfg-ink;
                 display: flex;
+                flex-wrap: wrap;
                 align-items: center;
-                gap: 0.5rem;
+                gap: 8px;
+                overflow-wrap: anywhere;
             }
 
             .confirmation-number {
                 display: flex;
                 align-items: center;
-                gap: 0.5rem;
-                font-size: 0.875rem;
-                opacity: 0.9;
-                font-weight: 500;
+                gap: 6px;
+                font-size: 12.5px !important;
+                color: $cfg-body !important;
+                font-weight: 700;
+
+                i { color: $cfg-accent; }
             }
         }
     }
 
-    // Body del Card
+    // Cuerpo
     .card-body {
-        padding: 1.5rem;
+        padding: 20px;
     }
 
     .info-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.25rem;
+        grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+        gap: 16px;
     }
 
     .info-item {
         display: flex;
-        gap: 0.75rem;
+        gap: 10px;
         align-items: flex-start;
+        min-width: 0;
 
         &.full-width {
             grid-column: 1 / -1;
         }
 
         i {
-            font-size: 1.25rem;
-            color: #3b82f6;
+            font-size: 16px;
+            color: $cfg-accent;
             margin-top: 2px;
             flex-shrink: 0;
         }
 
         .info-content {
             flex: 1;
+            min-width: 0;
             display: flex;
             flex-direction: column;
-            gap: 0.25rem;
+            gap: 4px;
 
             label {
-                font-size: 0.75rem;
-                font-weight: 600;
-                color: #64748b;
+                font-size: 10.5px;
+                font-weight: 800;
+                color: $cfg-muted;
                 text-transform: uppercase;
-                letter-spacing: 0.5px;
+                letter-spacing: .5px;
+                margin: 0;
             }
 
             span {
-                font-size: 0.95rem;
-                color: #1e293b;
-                font-weight: 500;
+                font-size: 13.5px;
+                color: $cfg-ink;
+                font-weight: 600;
                 word-break: break-word;
             }
         }
     }
 
-    // Footer del Card
+    // Pie
     .card-footer {
-        padding: 1rem 1.5rem;
-        background: #f8fafc;
-        border-top: 1px solid #e2e8f0;
+        padding: 12px 20px;
+        background: #fff;
+        border-top: 1px solid $cfg-line-soft;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 1rem;
+        gap: 12px;
         flex-wrap: wrap;
 
         .card-footer-left {
             .created-at {
-                color: #64748b;
-                font-size: 0.875rem;
+                color: $cfg-muted;
+                font-size: 12.5px;
                 display: flex;
                 align-items: center;
-                gap: 0.5rem;
+                gap: 6px;
 
-                i {
-                    color: #94a3b8;
-                }
+                i { color: $cfg-muted; }
             }
         }
 
         .card-footer-right {
             display: flex;
-            gap: 0.5rem;
+            gap: 8px;
             flex-wrap: wrap;
         }
     }
 }
 
 // ========== ESTADOS VACÍOS ==========
-.empty-state,
-.loading-state {
-    text-align: center;
-    padding: 4rem 2rem;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-
-    i {
-        font-size: 4rem;
-        color: #cbd5e1;
-        margin-bottom: 1rem;
-    }
-
-    h3 {
-        margin: 0 0 0.5rem 0;
-        font-size: 1.5rem;
-        color: #475569;
-    }
-
-    p {
-        margin: 0;
-        color: #64748b;
-        font-size: 0.95rem;
-    }
+.empty-state {
+    .cfg-vacio__icono { font-size: 26px; }
 }
 
 .loading-state {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: 12px;
+    text-align: center;
+    padding: 48px 16px;
+    background: #fff;
+    border: 1px solid $cfg-line;
+    border-radius: 16px;
+
+    p {
+        margin: 0;
+        color: $cfg-muted;
+        font-size: 13.5px;
+    }
 }
 
 // ========== RESPONSIVE ==========
 @media (max-width: 768px) {
-    .appointments-container {
-        padding: 1rem;
-    }
-
     .appointments-header {
-        flex-direction: column;
-        align-items: flex-start;
-
         .header-actions {
             width: 100%;
 
@@ -366,10 +393,6 @@
                 flex: 1;
             }
         }
-    }
-
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
     }
 
     .filters-section {
@@ -382,8 +405,9 @@
             &.search-group {
                 min-width: unset;
 
-                input {
+                .search-input {
                     width: 100% !important;
+                    max-width: none;
                 }
             }
 
@@ -399,10 +423,6 @@
             align-items: flex-start;
         }
 
-        .info-grid {
-            grid-template-columns: 1fr;
-        }
-
         .card-footer {
             flex-direction: column;
             align-items: flex-start;
@@ -415,15 +435,5 @@
                 }
             }
         }
-    }
-}
-
-@media (max-width: 480px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .appointment-card .card-header h3 {
-        font-size: 1.1rem;
     }
 }

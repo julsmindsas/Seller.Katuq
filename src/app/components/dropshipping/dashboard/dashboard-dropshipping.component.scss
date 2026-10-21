@@ -1,52 +1,111 @@
-.card-header {
-  background-color: var(--surface-50);
-  border-bottom: 1px solid var(--surface-200);
-  padding: 1rem 1.5rem;
-  
-  h5, h6 {
-    margin: 0;
-    color: var(--text-color);
-  }
-  
-  p {
-    margin-bottom: 0;
-  }
-}
-
-.card-body {
-  padding: 1.5rem;
-}
+// Regla de diseño Katuq (D-400): base común de pantallas internas.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
 
 .cursor-pointer {
   cursor: pointer;
-  transition: transform 0.2s ease-in-out;
-  
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
   &:hover {
     transform: translateY(-2px);
+    box-shadow: 0 10px 24px -14px rgba(95, 63, 224, .45);
   }
 }
 
-.bg-primary .card-body,
-.bg-info .card-body,
-.bg-warning .card-body,
-.bg-success .card-body {
-  padding: 2rem 1rem;
-  
-  h3 {
-    font-size: 2.5rem;
-    font-weight: 700;
-  }
-  
-  .pi {
-    opacity: 0.9;
-  }
+// Métricas principales: tarjetas blancas planas, ícono en par fuerte / fondo suave (sin bloques de color).
+.dsh-metricas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
 }
+
+.dsh-metrica {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #ececf4;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
+  min-width: 0;
+
+  --dsh-fuerte: #5F3FE0;
+  --dsh-suave: #efe9ff;
+}
+.dsh-metrica--info { --dsh-fuerte: #1E6FD9; --dsh-suave: #E7F1FF; }
+.dsh-metrica--alerta { --dsh-fuerte: #D9820A; --dsh-suave: #FFF1DF; }
+.dsh-metrica--ok { --dsh-fuerte: #1E874B; --dsh-suave: #E6F7EE; }
+
+.dsh-metrica__icono {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  background: var(--dsh-suave);
+  color: var(--dsh-fuerte);
+  font-size: 20px;
+}
+
+.dsh-metrica__valor {
+  margin: 4px 0 0;
+  font-size: 26px !important;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #211F3A;
+  word-break: break-word;
+}
+
+.dsh-metrica__label {
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: #8f8bab;
+}
+
+// Métricas adicionales
+.dsh-dos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.dsh-dos .cfg-label { font-size: 10.5px !important; color: #8f8bab !important; }
+
+.dsh-cifra {
+  margin-top: 4px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #5F3FE0;
+}
+
+.dsh-cifra__icono {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 11px;
+  background: #efe9ff;
+  color: #5F3FE0;
+  font-size: 22px;
+
+  .pi { font-size: 22px; }
+}
+
+// Estado del sistema
+.dsh-estado--ok { color: #1E874B; }
+.dsh-estado--info { color: #1E6FD9; }
+.dsh-estado__texto { font-size: 13.5px; color: #5b5878; }
 
 // Loading state
 .loading-overlay {
   position: relative;
   opacity: 0.7;
-  
+
   &::after {
     content: '';
     position: absolute;
@@ -55,8 +114,8 @@
     width: 20px;
     height: 20px;
     margin: -10px 0 0 -10px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top: 2px solid rgba(255, 255, 255, 0.8);
+    border: 2px solid #efe9ff;
+    border-top: 2px solid #5F3FE0;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     z-index: 1000;
@@ -68,85 +127,25 @@
   100% { transform: rotate(360deg); }
 }
 
-// Card enhancements
-.card {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: none;
-  border-radius: 8px;
-  
-  &.bg-primary {
-    background: #5F3FE0 !important;
-  }
-  
-  &.bg-info {
-    background: #1E6FD9 !important;
-  }
-  
-  &.bg-warning {
-    background: #B86E00 !important;
-  }
-  
-  &.bg-success {
-    background: #1E874B !important;
-  }
-  
-  // Hover effects for metric cards
-  &.cursor-pointer:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  }
-}
+// Acciones rápidas: botones secundarios blancos con borde; el ícono conserva el tono de su destino.
+:host ::ng-deep .cfg-card .p-button.p-button-outlined {
+  background: #fff;
+  border: 1px solid #e4e2ef;
+  color: #5b5878;
+  border-radius: 11px;
+  font-weight: 700;
+  min-height: 40px;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
 
-// Text color utilities
-.text-primary {
-  color: #a78bfa !important;
-}
+  .p-button-icon { color: #5F3FE0; }
+  &.p-button-info .p-button-icon { color: #1E6FD9; }
+  &.p-button-warning .p-button-icon { color: #D9820A; }
 
-.text-info {
-  color: #c4b5fd !important;
-}
-
-.text-success {
-  color: #28a745 !important;
-}
-
-.text-muted {
-  color: #6c757d !important;
-}
-
-// Button enhancements
-.p-button {
-  transition: all 0.2s ease-in-out;
-  
-  &:hover {
-    transform: translateY(-1px);
+  &:enabled:hover {
+    background: #faf9fe;
+    border-color: #d9cffb;
+    color: #5F3FE0;
   }
-}
-
-// Responsive design
-@media (max-width: 768px) {
-  .bg-primary .card-body,
-  .bg-info .card-body,
-  .bg-warning .card-body,
-  .bg-success .card-body {
-    padding: 1.5rem 1rem;
-    
-    h3 {
-      font-size: 2rem;
-    }
-    
-    .pi {
-      font-size: 2rem !important;
-    }
-  }
-  
-  .card-body {
-    padding: 1rem;
-  }
-}
-
-// Icon sizes
-.fs-1 {
-  font-size: 2.5rem !important;
 }
 
 // Spacing utilities

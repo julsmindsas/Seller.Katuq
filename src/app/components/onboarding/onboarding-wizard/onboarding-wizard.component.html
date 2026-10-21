@@ -178,7 +178,7 @@
             <div class="import-panel" *ngIf="needsImportedInventory">
               <span class="large-icon" aria-hidden="true"><i class="pi pi-box"></i></span>
               <div><strong>Faltan las existencias iniciales</strong><p>Usa la plantilla de inventario; solo se actualizarán cantidades de productos existentes.</p></div>
-              <button type="button" class="btn-primary" (click)="openInventoryImporter()">
+              <button type="button" class="ow-btn" (click)="openInventoryImporter()">
                 <i class="pi pi-external-link" aria-hidden="true"></i> Cargar existencias
               </button>
             </div>
@@ -188,7 +188,7 @@
               <div class="import-panel">
                 <span class="large-icon" aria-hidden="true"><i class="pi pi-file-excel"></i></span>
                 <div><strong>Excel o CSV</strong><p>Podrás revisar las columnas y los errores antes de confirmar.</p></div>
-                <button type="button" class="btn-primary" (click)="openImporter()">
+                <button type="button" class="ow-btn" (click)="openImporter()">
                   <i class="pi pi-external-link" aria-hidden="true"></i> Importar productos
                 </button>
               </div>
@@ -266,7 +266,7 @@
                 <input id="custom-payment" type="text" maxlength="60" [(ngModel)]="customPayment"
                        [ngModelOptions]="{ standalone: true }" placeholder="Ej. Bono o convenio"
                        (keyup.enter)="addCustomPayment()">
-                <button type="button" class="btn-ghost" [disabled]="!customPayment.trim()" (click)="addCustomPayment()">Agregar</button>
+                <button type="button" class="ow-btn ow-btn--sec" [disabled]="!customPayment.trim()" (click)="addCustomPayment()">Agregar</button>
               </div>
             </div>
             <div class="selected-chips" *ngIf="paymentMethods.length">
@@ -326,8 +326,8 @@
                   <a class="tienda-1clic__url" [href]="tiendaInicial.urlPublica" target="_blank" rel="noopener">{{ tiendaInicial.urlPublica }}</a>
                   <div class="tienda-1clic__acciones">
                     <a class="tienda-1clic__publicar" [href]="tiendaInicial.urlPublica" target="_blank" rel="noopener"><i class="pi pi-external-link" aria-hidden="true"></i> Verla</a>
-                    <button type="button" class="btn-ghost" (click)="compartirTiendaPorWhatsApp()"><i class="pi pi-whatsapp" aria-hidden="true"></i> Compartir por WhatsApp</button>
-                    <button type="button" class="btn-ghost" (click)="copiarTextoInstagram()"><i class="pi pi-copy" aria-hidden="true"></i> {{ textoCopiado ? 'Copiado' : 'Copiar para Instagram' }}</button>
+                    <button type="button" class="ow-btn ow-btn--sec" (click)="compartirTiendaPorWhatsApp()"><i class="pi pi-whatsapp" aria-hidden="true"></i> Compartir por WhatsApp</button>
+                    <button type="button" class="ow-btn ow-btn--sec" (click)="copiarTextoInstagram()"><i class="pi pi-copy" aria-hidden="true"></i> {{ textoCopiado ? 'Copiado' : 'Copiar para Instagram' }}</button>
                   </div>
                   <a class="tienda-1clic__mas" routerLink="/productos/crear">Agregar más productos</a>
                 </ng-container>
@@ -349,21 +349,21 @@
                 </div>
               </div>
 
-              <button *ngIf="!isCheckingReadiness && !readiness?.ready_to_sell" type="button" class="btn-ghost verify-button" (click)="retryReadiness()">
+              <button *ngIf="!isCheckingReadiness && !readiness?.ready_to_sell" type="button" class="ow-btn ow-btn--sec verify-button" (click)="retryReadiness()">
                 <i class="pi pi-refresh" aria-hidden="true"></i> Verificar de nuevo
               </button>
 
               <div class="result-actions" *ngIf="!isCheckingReadiness && !readiness?.ready_to_sell && missingActionLabel">
-                <button type="button" class="btn-ghost" (click)="resolveFirstMissing()">
+                <button type="button" class="ow-btn ow-btn--sec" (click)="resolveFirstMissing()">
                   <i class="pi pi-arrow-left" aria-hidden="true"></i> {{ missingActionLabel }}
                 </button>
               </div>
 
               <div class="result-actions" *ngIf="!isCheckingReadiness && readiness?.ready_to_sell">
-                <button type="button" class="btn-ghost" (click)="viewProducts()">
+                <button type="button" class="ow-btn ow-btn--sec" (click)="viewProducts()">
                   <i class="pi pi-box" aria-hidden="true"></i> Ver mis productos
                 </button>
-                <button type="button" class="btn-ghost" (click)="continueLater()">
+                <button type="button" class="ow-btn ow-btn--sec" (click)="continueLater()">
                   <i class="pi pi-clock" aria-hidden="true"></i> Seguir después
                 </button>
               </div>
@@ -375,11 +375,11 @@
 
     <footer class="wizard-footer">
       <div class="footer-shell">
-        <button type="button" class="btn-ghost" (click)="goBack()" [disabled]="stepPosition === 1 || isSaving">
+        <button type="button" class="ow-btn ow-btn--sec" (click)="goBack()" [disabled]="stepPosition === 1 || isSaving">
           <i class="pi pi-arrow-left" aria-hidden="true"></i> Atrás
         </button>
         <span class="footer-hint" *ngIf="!canSubmitCurrentStep">{{ nextHint }}</span>
-        <button type="button" class="btn-primary" (click)="goNext()" [disabled]="!canSubmitCurrentStep">
+        <button type="button" class="ow-btn" (click)="goNext()" [disabled]="!canSubmitCurrentStep">
           <i *ngIf="isSaving" class="pi pi-spin pi-spinner" aria-hidden="true"></i>
           <span>{{ isSaving ? 'Guardando…' : nextLabel }}</span>
           <i *ngIf="!isSaving" class="pi pi-arrow-right" aria-hidden="true"></i>

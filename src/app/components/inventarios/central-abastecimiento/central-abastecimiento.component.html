@@ -1,32 +1,32 @@
-<div class="container-fluid ca">
-  <header class="ca-head">
-    <div>
-      <span class="ca-label">Inventario</span>
-      <h1 class="ca-title">Central de Abastecimiento</h1>
-      <p class="ca-sub">Qué comprar, qué tiene quieto y qué revisar, con las ventas reales de los últimos {{ dias }} días.</p>
+<div class="cfg-pagina ca">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Inventarios</span>
+      <h1 class="cfg-titulo">Central de Abastecimiento</h1>
+      <p class="cfg-sub">Qué comprar, qué tiene quieto y qué revisar, con las ventas reales de los últimos {{ dias }} días.</p>
     </div>
-    <div class="ca-head__actions">
+    <div class="cfg-acciones">
       <div class="ca-segmented" role="group" aria-label="Período">
         <button type="button" *ngFor="let d of opcionesDias" [class.is-active]="d === dias" (click)="cambiarDias(d)" [disabled]="cargando">{{ d }} días</button>
       </div>
-      <button type="button" class="ca-btn" (click)="cargar()" [disabled]="cargando" aria-label="Actualizar">
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cargar()" [disabled]="cargando" aria-label="Actualizar">
         <i class="pi pi-refresh" [class.pi-spin]="cargando"></i>
       </button>
-      <button type="button" class="ca-btn is-primary" (click)="explicar()" [disabled]="explicando || cargando || !hayAlgo">
+      <button type="button" class="cfg-btn" (click)="explicar()" [disabled]="explicando || cargando || !hayAlgo">
         <i class="pi" [ngClass]="explicando ? 'pi-spin pi-spinner' : 'pi-bolt'"></i>
         {{ explicando ? 'Opttia está leyendo…' : 'Explicar con Opttia' }}
       </button>
     </div>
   </header>
 
-  <div class="ca-loading" *ngIf="cargando && !insights">
+  <div class="ca-loading cfg-card" *ngIf="cargando && !insights">
     <div class="loader-8"></div>
-    <span>Calculando con las ventas del período…</span>
+    <span class="ca-loading__texto">Calculando con las ventas del período…</span>
   </div>
 
   <div class="ca-alert is-danger" *ngIf="error">
     <i class="pi pi-exclamation-circle"></i> {{ error }}
-    <button type="button" class="ca-btn ms-auto" (click)="cargar()">Reintentar</button>
+    <button type="button" class="cfg-btn cfg-btn--sec ms-auto" (click)="cargar()">Reintentar</button>
   </div>
 
   <ng-container *ngIf="insights">

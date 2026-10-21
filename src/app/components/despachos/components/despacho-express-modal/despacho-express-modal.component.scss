@@ -1,6 +1,18 @@
 // Katuq Design Tokens
 @import '../../../../../assets/scss/utils/katuq-tokens';
 
+// Colores del canon (openspec/specs/design-system/spec.md): acento, tinta, muted y semánticos en par.
+$dx-accent: #5F3FE0;
+$dx-accent-soft: #efe9ff;
+$dx-ink: #211F3A;
+$dx-muted: #8f8bab;
+$dx-line: #ececf4;
+$dx-tint: #faf9fe;
+$dx-ok: #1E874B;
+$dx-ok-soft: #E6F7EE;
+$dx-warn: #D9820A;
+$dx-warn-soft: #FFF1DF;
+
 :host {
   display: block;
 }
@@ -8,10 +20,110 @@
 details summary {
   user-select: none;
   &:hover {
-    color: $katuq-purple-700;
+    color: $dx-accent;
   }
 }
 
 details[open] summary {
   margin-bottom: 4px;
+}
+
+.dx-icono { color: $dx-accent; }
+.dx-icono--sep { margin-right: 6px; }
+
+.dx-cargando {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: $dx-accent-soft;
+  border-radius: 11px;
+}
+.dx-cargando__texto { font-size: 0.85rem; color: $dx-accent; }
+
+.dx-dato {
+  flex: 1;
+  min-width: 150px;
+  padding: 12px 20px;
+  background: $dx-tint;
+  border: 1px solid #eeecf7;
+  border-radius: 11px;
+}
+.dx-dato__label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: $dx-muted;
+}
+.dx-dato__valor { font-size: 1.4rem; font-weight: 800; color: $dx-ink; }
+.dx-dato--ok .dx-dato__valor { color: $dx-ok; }
+.dx-dato--warn .dx-dato__valor { color: $dx-warn; }
+
+.dx-aviso {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: $dx-warn-soft;
+  border-radius: 11px;
+}
+.dx-aviso__icono { color: $dx-warn; margin-right: 8px; }
+.dx-aviso__texto { color: $dx-warn; font-size: 13.5px; }
+
+.dx-grupo {
+  margin-bottom: 12px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid $dx-line;
+  border-radius: 16px;
+}
+.dx-grupo__titulo { font-weight: 700; font-size: 1.05rem; color: $dx-ink; }
+.dx-grupo__valor { font-weight: 700; color: $dx-ok; }
+
+.dx-conteo {
+  margin-left: 8px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  background: $dx-accent-soft;
+  color: $dx-accent;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.dx-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: $dx-muted;
+}
+
+.dx-recoge { color: #5b5878; font-size: 0.9rem; }
+
+.dx-resumen-lista { cursor: pointer; font-size: 0.85rem; color: $dx-muted; }
+
+.dx-tabla__cab {
+  background: $dx-tint;
+
+  th {
+    color: $dx-muted;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+}
+.dx-tabla__fila { border-bottom: 1px solid #f1f0f7; }
+
+// Acción principal del pie ("Despachar Todo"): acento plano del canon.
+:host ::ng-deep .p-dialog-footer .p-button.p-button-warning {
+  background: $dx-accent;
+  border-color: $dx-accent;
+  color: #fff;
+  border-radius: 11px;
+  box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+
+  &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
 }

@@ -4,17 +4,55 @@
 @import './clientes-variables';
 
 // ==============================================
-// CONTAINER AND LAYOUT
+// MARCO CANÓNICO (D-516): cfg-pagina / cfg-cabeza / cfg-card
 // ==============================================
-.container-fluid {
-  padding: $clientes-spacing-lg;
-  background-color: $clientes-bg-lighter;
-  // Ticket 1208: sin min-height. El formulario único (D-404) va fuera de este
-  // contenedor, así que una altura mínima de pantalla lo empujaba hacia abajo.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
 
-  @include clientes-responsive('tablet') {
-    padding: $clientes-spacing-md;
+.cli-pagina {
+  // Ticket 1208: sin min-height. El formulario único (D-404) va al final de la
+  // página; una altura mínima lo empujaba hacia abajo.
+  min-width: 0;
+}
+
+// Botones pButton de la cabecera: secundarios blancos con borde (canon).
+:host ::ng-deep .cfg-cabeza .p-button.p-button-outlined {
+  min-height: 40px;
+  border-radius: 11px;
+  background: #fff !important;
+  border: 1px solid #e4e2ef !important;
+  color: #5b5878 !important;
+  font-weight: 700;
+  box-shadow: none !important;
+
+  .p-button-label, .p-button-icon { color: inherit !important; }
+
+  &:enabled:hover {
+    background: #faf9fe !important;
+    border-color: #d9cffb !important;
+    color: #5F3FE0 !important;
   }
+
+  &.p-button-secondary {
+    background: #efe9ff !important;
+    border-color: #ddd3fb !important;
+    color: #5F3FE0 !important;
+  }
+}
+
+// Botones primarios PrimeNG de la pantalla (buscar, seleccionar).
+:host ::ng-deep .cli-pagina .p-button.p-button-primary {
+  background: #5F3FE0;
+  border-color: #5F3FE0;
+  border-radius: 11px;
+  font-weight: 700;
+
+  &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
+}
+
+.cli-resultados > p {
+  letter-spacing: normal;
+  color: #8f8bab !important;
 }
 
 // ==============================================
@@ -227,11 +265,11 @@
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    color: #6c4ce0;
+    color: #5F3FE0;
   }
 
   tbody tr:hover {
-    background-color: rgba(167, 139, 250, 0.08);
+    background-color: rgba(95, 63, 224, 0.04);
   }
 }
 
@@ -283,7 +321,7 @@
       text-transform: uppercase;
       font-size: $clientes-font-size-small;
       letter-spacing: 0.5px;
-      color: #6c4ce0;
+      color: #5F3FE0;
       padding: $clientes-spacing-md;
       border-bottom: 2px solid $clientes-border-light;
       white-space: nowrap;
@@ -327,7 +365,7 @@
   margin-bottom: $clientes-spacing-lg;
 
   .nav-link {
-    color: #6c4ce0;
+    color: #5F3FE0;
     font-weight: 700;
     font-size: 0.75rem;
     text-transform: uppercase;
@@ -341,14 +379,14 @@
     margin-bottom: -2px;
 
     &:hover:not(.active) {
-      color: #533bc4;
+      color: #4a2fc0;
       background: $clientes-bg-light;
     }
 
     &.active {
-      color: #6c4ce0;
+      color: #5F3FE0;
       background: $clientes-white;
-      border-bottom: 3px solid #6c4ce0;
+      border-bottom: 3px solid #5F3FE0;
 
       &:after {
         content: '';
@@ -357,7 +395,7 @@
         left: 0;
         right: 0;
         height: 3px;
-        background: #6c4ce0;
+        background: #5F3FE0;
         border-radius: $clientes-border-radius-pill $clientes-border-radius-pill 0 0;
       }
     }
@@ -645,27 +683,8 @@ input[type="checkbox"] {
 // MODERN STYLES - KATUQ DESIGN
 // ==============================================
 
-.module-header {
-  background: white;
-  transition: all 0.3s ease;
-
-  h5 {
-    font-size: 1.1rem !important;
-    font-weight: 800 !important;
-    color: #6c4ce0 !important;
-
-    i {
-      font-size: 1.1rem;
-    }
-  }
-
-  p {
-    opacity: 0.85;
-  }
-}
-
 .search-section {
-  background-color: #f8f9fa;
+  background-color: #fff;
 
   label {
     font-size: 0.875rem;
@@ -675,26 +694,26 @@ input[type="checkbox"] {
   ::ng-deep {
     .p-dropdown {
       border-radius: 6px;
-      border: 1px solid #e9ecef;
+      border: 1px solid #ececf4;
       height: 40px;
       transition: all 0.2s ease;
 
       &:focus {
-        border-color: #6c4ce0 !important;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+        border-color: #5F3FE0 !important;
+        box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.15) !important;
       }
     }
 
     .p-inputtext {
-      border: 1px solid #e9ecef !important;
+      border: 1px solid #ececf4 !important;
       border-radius: 6px;
       height: 40px;
       padding: 0 0.75rem !important;
       transition: all 0.2s ease;
 
       &:focus {
-        border-color: #6c4ce0 !important;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+        border-color: #5F3FE0 !important;
+        box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.15) !important;
       }
     }
   }
@@ -736,7 +755,7 @@ input[type="checkbox"] {
     &:focus {
       background-color: var(--primary-color) !important;
       border-color: var(--primary-color) !important;
-      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.35) !important;
+      box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.25) !important;
       color: #fff !important;
     }
   }
@@ -753,7 +772,7 @@ input[type="checkbox"] {
       background-color: var(--primary-color) !important;
       border-color: var(--primary-color) !important;
       color: #fff !important;
-      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.35) !important;
+      box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.25) !important;
     }
   }
 }
@@ -761,13 +780,13 @@ input[type="checkbox"] {
 ::ng-deep {
   .p-inputtext,
   .p-inputtext-sm {
-    border: 1px solid #e9ecef !important;
+    border: 1px solid #ececf4 !important;
     border-radius: 6px;
     transition: all 0.2s ease;
 
     &:focus {
-      border-color: #6c4ce0 !important;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+      border-color: #5F3FE0 !important;
+      box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.15) !important;
     }
 
     &:disabled {
@@ -794,24 +813,24 @@ input[type="checkbox"] {
   transition: all 0.15s ease;
 
   &.btn-tbl-neutral {
-    background: #f3f4f6;
-    color: #495057;
-    &:hover { background: #e9ecef; color: #2F2F3B; }
+    background: #f5f4fa;
+    color: #5b5878;
+    &:hover { background: #ececf4; color: #211F3A; }
   }
   &.btn-tbl-primary {
-    background: #6c4ce0;
+    background: #5F3FE0;
     color: #fff;
-    &:hover { background: #533bc4; }
+    &:hover { background: #4a2fc0; }
   }
   &.btn-tbl-danger {
-    background: #fee2e2;
-    color: #dc2626;
-    &:hover { background: #dc2626; color: #fff; }
+    background: #FDECEC;
+    color: #D64545;
+    &:hover { background: #D64545; color: #fff; }
   }
   &.btn-tbl-success {
-    background: #d1fae5;
-    color: #059669;
-    &:hover { background: #059669; color: #fff; }
+    background: #E6F7EE;
+    color: #1E874B;
+    &:hover { background: #1E874B; color: #fff; }
   }
 }
 
@@ -833,30 +852,30 @@ input[type="checkbox"] {
   i { font-size: 0.8rem; }
 
   &.btn-client-primary {
-    background: #6c4ce0;
+    background: #5F3FE0;
     color: #fff;
-    &:hover { background: #533bc4; }
+    &:hover { background: #4a2fc0; }
   }
 
   &.btn-client-neutral {
     background: #fff;
-    color: #495057;
-    border: 1px solid #dee2e6;
-    &:hover { background: #f8f9fa; border-color: #6c4ce0; color: #6c4ce0; }
+    color: #5b5878;
+    border: 1px solid #e4e2ef;
+    &:hover { background: #f8f9fa; border-color: #5F3FE0; color: #5F3FE0; }
   }
 
   &.btn-client-danger {
     background: #fff3f4;
-    color: #d12b38;
+    color: #D64545;
     border: 1px solid #f5c2c7;
-    &:hover { background: #d12b38; color: #fff; border-color: #d12b38; }
+    &:hover { background: #D64545; color: #fff; border-color: #D64545; }
   }
 
   &.btn-client-success {
     background: #f0fdf4;
-    color: #27AE60;
+    color: #1E874B;
     border: 1px solid #bbf7d0;
-    &:hover { background: #27AE60; color: #fff; border-color: #27AE60; }
+    &:hover { background: #1E874B; color: #fff; border-color: #1E874B; }
   }
 }
 
@@ -868,16 +887,16 @@ input[type="checkbox"] {
   margin-bottom: 0;
 
   thead tr {
-    background: #f4f3ff;
+    background: #faf9fe;
 
     th {
       font-weight: 700;
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: #6c4ce0;
+      color: #5F3FE0;
       padding: 0.6rem 0.875rem;
-      border-bottom: 2px solid #ddd6fe;
+      border-bottom: 2px solid #ddd3fb;
       white-space: nowrap;
       border-top: none;
     }
@@ -887,7 +906,7 @@ input[type="checkbox"] {
     padding: 0.6rem 0.875rem;
     vertical-align: middle;
     border-color: #f0f0f5;
-    color: #374151;
+    color: #211F3A;
   }
 
   tbody tr:hover td {
@@ -902,8 +921,8 @@ input[type="checkbox"] {
 // ==============================================
 .badge-alias {
   display: inline-block;
-  background: #ede9fe;
-  color: #5b21b6;
+  background: #efe9ff;
+  color: #5F3FE0;
   font-size: 0.75rem;
   font-weight: 600;
   padding: 2px 8px;
@@ -911,8 +930,8 @@ input[type="checkbox"] {
 }
 
 .doc-code {
-  background: #f3f4f6;
-  color: #374151;
+  background: #f5f4fa;
+  color: #211F3A;
   font-size: 0.8rem;
   padding: 2px 6px;
   border-radius: 4px;
@@ -923,18 +942,18 @@ input[type="checkbox"] {
 // TÍTULOS DE SECCIÓN EN PESTAÑAS
 // ==============================================
 .nav-link.nav-link-dark {
-  color: #4b5563 !important;
+  color: #5b5878 !important;
 
   &:hover:not(.active) {
-    color: #1f2937 !important;
+    color: #5F3FE0 !important;
   }
 
   &.active {
-    color: #1f2937 !important;
-    border-bottom-color: #4b5563 !important;
+    color: #5F3FE0 !important;
+    border-bottom-color: #5F3FE0 !important;
 
     &:after {
-      background: #4b5563 !important;
+      background: #5F3FE0 !important;
     }
   }
 }
@@ -942,10 +961,10 @@ input[type="checkbox"] {
 .tab-section-title {
   margin: 0;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #111;
+  color: #8f8bab;
 }
 
 // ==============================================
@@ -953,7 +972,7 @@ input[type="checkbox"] {
 // ==============================================
 .empty-state {
   text-align: center;
-  color: #9ca3af;
+  color: #8f8bab;
   font-size: 0.825rem;
   padding: 1.5rem !important;
   font-style: italic;
@@ -969,16 +988,16 @@ input[type="checkbox"] {
   padding: 0 0.75rem;
   font-size: 0.8rem;
   font-weight: 500;
-  color: #5b21b6;
-  background: #ede9fe;
-  border: 1px solid #ddd6fe;
+  color: #5F3FE0;
+  background: #efe9ff;
+  border: 1px solid #ddd3fb;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
 
   &:hover {
-    background: #ddd6fe;
+    background: #ddd3fb;
     border-color: #eee9fd;
   }
 
@@ -993,6 +1012,7 @@ input[type="checkbox"] {
 // ==============================================
 .c360-card {
   overflow: hidden;
+  padding: 0 !important; // la ficha trae su propio padding interno
 }
 
 .c360-body {
@@ -1005,7 +1025,7 @@ input[type="checkbox"] {
   align-items: flex-start;
   gap: 1rem;
   padding-bottom: 1.1rem;
-  border-bottom: 1px solid #ede9fe;
+  border-bottom: 1px solid #efe9ff;
   flex-wrap: wrap;
 }
 
@@ -1013,7 +1033,7 @@ input[type="checkbox"] {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #6c4ce0;
+  background: #5F3FE0;
   color: #fff;
   display: grid;
   place-items: center;
@@ -1031,13 +1051,13 @@ input[type="checkbox"] {
 .c360-name {
   font-size: 1rem;
   font-weight: 700;
-  color: #1e1b2e;
+  color: #211F3A;
   margin: 0 0 0.2rem;
 }
 
 .c360-sub {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: #8f8bab;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -1045,7 +1065,7 @@ input[type="checkbox"] {
 
   i {
     font-size: 0.72rem;
-    color: #8c6bff;
+    color: #7C5CFF;
   }
 }
 
@@ -1064,7 +1084,7 @@ input[type="checkbox"] {
 .c360-actions-sep {
   width: 1px;
   height: 20px;
-  background: #ede9fe;
+  background: #efe9ff;
   margin: 0 0.2rem;
 }
 
@@ -1081,14 +1101,14 @@ input[type="checkbox"] {
   i { font-size: 0.7rem; }
 
   &.chip-ok {
-    background: #e9f8ef;
-    color: #16a34a;
+    background: #E6F7EE;
+    color: #1E874B;
     border-color: #bfe9cd;
   }
 
   &.chip-danger {
-    background: #fdeaea;
-    color: #dc2626;
+    background: #FDECEC;
+    color: #D64545;
     border-color: #f3c6c6;
   }
 }
@@ -1129,7 +1149,7 @@ input[type="checkbox"] {
 .config-list {
   max-height: 200px;
   overflow-y: auto;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ececf4;
   border-radius: 8px;
   padding: 0.25rem 0;
 }
@@ -1155,9 +1175,9 @@ input[type="checkbox"] {
 ::ng-deep .col-toggle-menu {
   min-width: 200px;
   padding: 0.5rem 0;
-  border: 1px solid #ede9fe;
+  border: 1px solid #efe9ff;
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.12);
+  box-shadow: 0 4px 16px rgba(95, 63, 224, 0.12);
 
   .col-toggle-item {
     display: flex;
@@ -1166,18 +1186,18 @@ input[type="checkbox"] {
     padding: 0.45rem 0.9rem;
     cursor: pointer;
     font-size: 0.82rem;
-    color: #374151;
+    color: #211F3A;
     transition: background 0.12s ease;
     user-select: none;
 
     &:hover {
-      background: #f5f3ff;
+      background: #faf9fe;
     }
 
     .col-toggle-check {
       width: 15px;
       height: 15px;
-      accent-color: #533bc4;
+      accent-color: #4a2fc0;
       cursor: pointer;
       flex-shrink: 0;
       pointer-events: none;
@@ -1189,13 +1209,13 @@ input[type="checkbox"] {
 // BOTÓN GESTIONAR ETIQUETAS (header)
 // ==============================================
 ::ng-deep .btn-tags-cfg.p-button.p-button-outlined {
-  color: #6c4ce0 !important;
-  border-color: #6c4ce0 !important;
+  color: #5F3FE0 !important;
+  border-color: #5F3FE0 !important;
   background: transparent !important;
 
   &:hover {
-    background: #f5f3ff !important;
-    border-color: #533bc4 !important;
-    color: #533bc4 !important;
+    background: #faf9fe !important;
+    border-color: #4a2fc0 !important;
+    color: #4a2fc0 !important;
   }
 }

@@ -1,98 +1,73 @@
-<div class="grid">
+<div class="cfg-pagina">
   <!-- Header -->
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header">
-        <h5>Dashboard Dropshipping</h5>
-        <p class="text-muted mb-0">Gestión y seguimiento de operaciones dropshipping</p>
-      </div>
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Dropshipping</span>
+      <h1 class="cfg-titulo">Dashboard Dropshipping</h1>
+      <p class="cfg-sub">Gestión y seguimiento de operaciones dropshipping</p>
     </div>
-  </div>
+  </header>
 
   <!-- Métricas Principales -->
-  <div class="col-md-3">
-    <div class="card bg-primary text-white cursor-pointer" (click)="navegarA('proveedores')" 
+  <div class="dsh-metricas">
+    <div class="dsh-metrica dsh-metrica--acento cursor-pointer" (click)="navegarA('proveedores')" 
          [class.loading-overlay]="loading">
-      <div class="card-body text-center">
-        <i class="pi pi-building fs-1 mb-3"></i>
-        <h3 class="mb-2">{{ loading ? '...' : totalProveedores }}</h3>
-        <p class="mb-0">Proveedores Activos</p>
-      </div>
+        <i class="pi pi-building dsh-metrica__icono"></i>
+        <h3 class="dsh-metrica__valor">{{ loading ? '...' : totalProveedores }}</h3>
+        <p class="dsh-metrica__label">Proveedores Activos</p>
     </div>
-  </div>
 
-  <div class="col-md-3">
-    <div class="card bg-info text-white cursor-pointer" (click)="navegarA('productos')"
+    <div class="dsh-metrica dsh-metrica--info cursor-pointer" (click)="navegarA('productos')"
          [class.loading-overlay]="loading">
-      <div class="card-body text-center">
-        <i class="pi pi-box fs-1 mb-3"></i>
-        <h3 class="mb-2">{{ loading ? '...' : productosActivos }}</h3>
-        <p class="mb-0">Productos Activos</p>
-      </div>
+        <i class="pi pi-box dsh-metrica__icono"></i>
+        <h3 class="dsh-metrica__valor">{{ loading ? '...' : productosActivos }}</h3>
+        <p class="dsh-metrica__label">Productos Activos</p>
     </div>
-  </div>
 
-  <div class="col-md-3">
-    <div class="card bg-warning text-white cursor-pointer" (click)="navegarA('ordenes')"
+    <div class="dsh-metrica dsh-metrica--alerta cursor-pointer" (click)="navegarA('ordenes')"
          [class.loading-overlay]="loading">
-      <div class="card-body text-center">
-        <i class="pi pi-clock fs-1 mb-3"></i>
-        <h3 class="mb-2">{{ loading ? '...' : ordenesPendientes }}</h3>
-        <p class="mb-0">Órdenes Pendientes</p>
-      </div>
+        <i class="pi pi-clock dsh-metrica__icono"></i>
+        <h3 class="dsh-metrica__valor">{{ loading ? '...' : ordenesPendientes }}</h3>
+        <p class="dsh-metrica__label">Órdenes Pendientes</p>
     </div>
-  </div>
 
-  <div class="col-md-3">
-    <div class="card bg-success text-white" [class.loading-overlay]="loading">
-      <div class="card-body text-center">
-        <i class="pi pi-dollar fs-1 mb-3"></i>
-        <h3 class="mb-2">{{ loading ? '...' : ('$' + (totalGanancias | number:'1.0-0')) }}</h3>
-        <p class="mb-0">Ganancias Totales</p>
-      </div>
+    <div class="dsh-metrica dsh-metrica--ok" [class.loading-overlay]="loading">
+        <i class="pi pi-dollar dsh-metrica__icono"></i>
+        <h3 class="dsh-metrica__valor">{{ loading ? '...' : ('$' + (totalGanancias | number:'1.0-0')) }}</h3>
+        <p class="dsh-metrica__label">Ganancias Totales</p>
     </div>
   </div>
 
   <!-- Métricas Adicionales -->
-  <div class="col-md-6">
-    <div class="card">
-      <div class="card-body">
+  <div class="dsh-dos">
+    <section class="cfg-card">
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-0">Ventas del Mes</h6>
-            <h4 class="text-primary mb-0">{{ loading ? '...' : ('$' + (ventasDelMes | number:'1.0-0')) }}</h4>
+            <h6 class="cfg-label mb-0">Ventas del Mes</h6>
+            <h4 class="dsh-cifra mb-0">{{ loading ? '...' : ('$' + (ventasDelMes | number:'1.0-0')) }}</h4>
           </div>
-          <div class="text-primary">
-            <i class="pi pi-chart-line fs-1"></i>
+          <div class="dsh-cifra__icono">
+            <i class="pi pi-chart-line"></i>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+    </section>
 
-  <div class="col-md-6">
-    <div class="card">
-      <div class="card-body">
+    <section class="cfg-card">
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-0">Total Productos</h6>
-            <h4 class="text-info mb-0">{{ loading ? '...' : totalProductos }}</h4>
+            <h6 class="cfg-label mb-0">Total Productos</h6>
+            <h4 class="dsh-cifra mb-0">{{ loading ? '...' : totalProductos }}</h4>
           </div>
-          <div class="text-info">
-            <i class="pi pi-shopping-cart fs-1"></i>
+          <div class="dsh-cifra__icono">
+            <i class="pi pi-shopping-cart"></i>
           </div>
         </div>
-      </div>
-    </div>
+    </section>
   </div>
 
   <!-- Acciones Rápidas -->
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header">
-        <h6>Acciones Rápidas</h6>
-      </div>
-      <div class="card-body">
+  <section class="cfg-card">
+      <h2 class="cfg-card__titulo">Acciones Rápidas</h2>
         <div class="row">
           <div class="col-md-4">
             <div class="d-grid">
@@ -133,42 +108,34 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+  </section>
 
   <!-- Información del Sistema -->
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header">
-        <h6>Estado del Sistema</h6>
-      </div>
-      <div class="card-body">
+  <section class="cfg-card">
+      <h2 class="cfg-card__titulo">Estado del Sistema</h2>
         <div class="row">
           <div class="col-md-6">
             <div class="d-flex align-items-center mb-3">
-              <i class="pi pi-check-circle text-success me-2"></i>
-              <span>Conexión con proveedores: Activa</span>
+              <i class="pi pi-check-circle dsh-estado--ok me-2"></i>
+              <span class="dsh-estado__texto">Conexión con proveedores: Activa</span>
             </div>
             <div class="d-flex align-items-center mb-3">
-              <i class="pi pi-check-circle text-success me-2"></i>
-              <span>Sincronización de productos: OK</span>
+              <i class="pi pi-check-circle dsh-estado--ok me-2"></i>
+              <span class="dsh-estado__texto">Sincronización de productos: OK</span>
             </div>
           </div>
           <div class="col-md-6">
             <div class="d-flex align-items-center mb-3">
-              <i class="pi pi-info-circle text-info me-2"></i>
-              <span>Última sincronización: Hace 2 horas</span>
+              <i class="pi pi-info-circle dsh-estado--info me-2"></i>
+              <span class="dsh-estado__texto">Última sincronización: Hace 2 horas</span>
             </div>
             <div class="d-flex align-items-center mb-3">
-              <i class="pi pi-info-circle text-info me-2"></i>
-              <span>Sistema operativo al 100%</span>
+              <i class="pi pi-info-circle dsh-estado--info me-2"></i>
+              <span class="dsh-estado__texto">Sistema operativo al 100%</span>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+  </section>
 </div>
 
 <!-- Componentes de PrimeNG -->

@@ -4,13 +4,14 @@
 @import '../../../shared/styles/config-pagina';
 @include config-pagina;
 
-.despachos-cabeza {
-  margin: 8px 0 16px;
+// Marco de la página: la tarjeta lleva pestañas y tabla pegadas al borde (sin padding extra).
+.despachos-card {
+  padding: 0 !important;
 }
 
-$primary-color: $katuq-primary;
+$primary-color: #5F3FE0;
 $success-color: $katuq-success;
-$info-color: $katuq-info;
+$info-color: #7C5CFF;
 $warning-color: $katuq-warning;
 $danger-color: $katuq-danger;
 $secondary-color: $katuq-gray-500;
@@ -94,11 +95,11 @@ $border-radius: 8px;
 
   &.stat-primary {
     .stat-icon {
-      background-color: $katuq-primary;
+      background-color: #5F3FE0;
     }
 
     .stat-value {
-      color: $katuq-primary;
+      color: #5F3FE0;
     }
   }
 
@@ -114,11 +115,11 @@ $border-radius: 8px;
 
   &.stat-info {
     .stat-icon {
-      background-color: $katuq-info;
+      background-color: #7C5CFF;
     }
 
     .stat-value {
-      color: $katuq-info;
+      color: #7C5CFF;
     }
   }
 
@@ -223,7 +224,7 @@ $border-radius: 8px;
       }
 
       .stat-value {
-        color: $katuq-primary;
+        color: #5F3FE0;
       }
     }
 
@@ -243,7 +244,7 @@ $border-radius: 8px;
       }
 
       .stat-value {
-        color: $katuq-info;
+        color: #7C5CFF;
       }
     }
 
@@ -510,8 +511,8 @@ $border-radius: 8px;
 }
 
 .optimizacion-badge {
-  background-color: rgba(29, 95, 255, 0.15);
-  color: #8b5cf6;
+  background-color: #efe9ff;
+  color: #5F3FE0;
   border-radius: 50%;
   padding: 0.15rem;
   display: inline-flex;
@@ -560,15 +561,15 @@ $border-radius: 8px;
     }
 
     &.estado-info {
-      background-color: rgba($katuq-primary, 0.15);
+      background-color: rgba(#5F3FE0, 0.15);
       color: $katuq-purple-300;
-      border: 1px solid rgba($katuq-primary, 0.3);
+      border: 1px solid rgba(#5F3FE0, 0.3);
     }
 
     &.estado-primary {
-      background-color: rgba($katuq-primary, 0.15);
-      color: $katuq-primary;
-      border: 1px solid rgba($katuq-primary, 0.3);
+      background-color: rgba(#5F3FE0, 0.15);
+      color: #5F3FE0;
+      border: 1px solid rgba(#5F3FE0, 0.3);
     }
 
     &.estado-warning {
@@ -652,7 +653,7 @@ $border-radius: 8px;
 
       &:hover {
         background-color: #f8f9fa;
-        color: #8b5cf6;
+        color: #5F3FE0;
       }
     }
 
@@ -685,7 +686,7 @@ $border-radius: 8px;
 
         &:hover {
           background-color: #f8f9fa;
-          color: #8b5cf6;
+          color: #5F3FE0;
         }
       }
     }
@@ -742,7 +743,7 @@ $border-radius: 8px;
     transition: all 0.3s ease;
 
     &:hover {
-      border-color: #8b5cf6;
+      border-color: #5F3FE0;
       background: #efe9ff;
     }
 
@@ -767,8 +768,8 @@ $border-radius: 8px;
     border: 1px solid #e9ecef !important;
 
     &:hover {
-      border-color: #8b5cf6 !important;
-      box-shadow: 0 2px 8px rgba($katuq-primary, 0.15);
+      border-color: #5F3FE0 !important;
+      box-shadow: 0 2px 8px rgba(#5F3FE0, 0.15);
     }
 
     .card-body {
@@ -776,7 +777,7 @@ $border-radius: 8px;
     }
 
     .fw-bold {
-      color: #8b5cf6;
+      color: #5F3FE0;
       font-size: 0.9rem;
     }
 
@@ -832,7 +833,7 @@ $border-radius: 8px;
       }
 
       &.text-primary {
-        color: #8b5cf6 !important;
+        color: #5F3FE0 !important;
       }
 
       &.text-success {
@@ -881,7 +882,7 @@ $border-radius: 8px;
       }
 
       &.text-primary {
-        color: #8b5cf6 !important;
+        color: #5F3FE0 !important;
       }
 
       &.text-success {
@@ -898,10 +899,10 @@ $border-radius: 8px;
 /* Estilos para métricas de despacho mejoradas */
 .stat-card {
   &.stat-tracking {
-    border-left: 4px solid;
+    border: 1px solid #ececf4;
 
     &.en-ruta {
-      border-left-color: $katuq-cyan-500;
+      border-color: #ddd3fb;
 
       .stat-icon {
         background: $katuq-cyan-600;
@@ -909,7 +910,7 @@ $border-radius: 8px;
     }
 
     &.para-despacho {
-      border-left-color: #ffc107;
+      border-color: #FFF1DF;
 
       .stat-icon {
         background: #B86E00;
@@ -1200,7 +1201,15 @@ $border-radius: 8px;
   right: 25px;
   z-index: 1050;
   /* Asegura que esté sobre el contenido pero debajo de los modales */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+
+  &.p-button {
+    background: #5F3FE0 !important;
+    border-color: #5F3FE0 !important;
+    color: #fff !important;
+
+    &:hover:not(:disabled) { background: #4a2fc0 !important; border-color: #4a2fc0 !important; }
+  }
 }
 
 // NUEVOS ESTILOS PARA FASE 1
@@ -1236,7 +1245,7 @@ $border-radius: 8px;
 // Tabs de despachos — re-tonados al canon "Todos los pedidos" (design-system
 // D-131): segmented control plano con riel lila, activa como tarjeta blanca con
 // acento #5F3FE0 y sombra violeta difusa. Sin gradientes, sin grises Material.
-:host ::ng-deep .modern-tabs {
+:host ::ng-deep .cfg-pagina .p-tabview.modern-tabs {
   border: none;
 
   .p-tabview-nav-container {
@@ -1355,17 +1364,17 @@ $border-radius: 8px;
 @media (max-width: 576px) {
 
   // Estilos para pantallas extra pequeñas
-  :host ::ng-deep .modern-tabs .p-tabview-nav-content {
+  :host ::ng-deep .cfg-pagina .p-tabview.modern-tabs .p-tabview-nav-content {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  :host ::ng-deep .modern-tabs .p-tabview-nav {
+  :host ::ng-deep .cfg-pagina .p-tabview.modern-tabs .p-tabview-nav {
     flex-wrap: nowrap;
     padding: 0 0.25rem;
   }
 
-  :host ::ng-deep .modern-tabs .p-tabview-nav li {
+  :host ::ng-deep .cfg-pagina .p-tabview.modern-tabs .p-tabview-nav li {
     flex-basis: auto;
     flex-shrink: 0;
 
@@ -1448,8 +1457,8 @@ $border-radius: 8px;
               }
 
               &:focus-within {
-                box-shadow: 0 0 0 0.2rem rgba($katuq-primary, 0.25);
-                border-color: $katuq-primary;
+                box-shadow: 0 0 0 0.2rem rgba(#5F3FE0, 0.25);
+                border-color: #5F3FE0;
               }
 
               .p-inputgroup-addon {
@@ -1473,7 +1482,7 @@ $border-radius: 8px;
                 height: 2.25rem; // Misma altura que p-inputtext-sm
 
                 &:focus {
-                  border-color: #8b5cf6;
+                  border-color: #5F3FE0;
                   box-shadow: none;
                 }
 
@@ -1578,7 +1587,7 @@ $border-radius: 8px;
             align-items: center;
             gap: 0.5rem;
             background: $katuq-purple-50;
-            color: $katuq-primary;
+            color: #5F3FE0;
             padding: 0.25rem 0.75rem;
             border-radius: 16px;
             font-size: 0.875rem;
@@ -1599,7 +1608,7 @@ $border-radius: 8px;
               }
 
               &.status-info {
-                background: $katuq-primary;
+                background: #5F3FE0;
               }
 
               &.status-danger {
@@ -1622,7 +1631,7 @@ $border-radius: 8px;
             .tag-remove {
               background: none;
               border: none;
-              color: $katuq-primary;
+              color: #5F3FE0;
               padding: 0;
               margin-left: 0.25rem;
               width: 16px;
@@ -1687,7 +1696,7 @@ $border-radius: 8px;
     }
 
     &.status-info {
-      background: $katuq-primary;
+      background: #5F3FE0;
     }
 
     &.status-danger {
@@ -1812,7 +1821,7 @@ $border-radius: 8px;
       height: 2.25rem;
 
       &:focus {
-        border-color: #8b5cf6;
+        border-color: #5F3FE0;
         box-shadow: none;
       }
 
@@ -1849,7 +1858,7 @@ $border-radius: 8px;
     font-size: 0.9rem;
 
     i {
-      color: $katuq-primary;
+      color: #5F3FE0;
     }
   }
 
@@ -1999,16 +2008,16 @@ $border-radius: 8px;
   // Variantes de color
   &.metric-chip-primary {
     background-color: $katuq-purple-50;
-    color: $katuq-primary;
+    color: #5F3FE0;
 
     .metric-badge {
-      background-color: $katuq-primary;
+      background-color: #5F3FE0;
       color: white;
     }
 
     &:hover {
       background-color: $katuq-purple-200;
-      border-color: $katuq-primary;
+      border-color: #5F3FE0;
     }
   }
 
@@ -2028,17 +2037,17 @@ $border-radius: 8px;
   }
 
   &.metric-chip-info {
-    background-color: $katuq-info-light;
-    color: $katuq-info-text;
+    background-color: #efe9ff;
+    color: #4a2fc0;
 
     .metric-badge {
-      background-color: $katuq-info-dark;
+      background-color: #7C5CFF;
       color: white;
     }
 
     &:hover {
       background-color: $katuq-purple-200;
-      border-color: $katuq-info-text;
+      border-color: #4a2fc0;
     }
   }
 
@@ -2313,17 +2322,17 @@ $border-radius: 8px;
     }
 
     &:focus-within {
-      border-color: $katuq-primary !important;
+      border-color: #5F3FE0 !important;
       background: #fff !important;
-      box-shadow: 0 0 0 3px rgba($katuq-primary, 0.15) !important;
+      box-shadow: 0 0 0 3px rgba(#5F3FE0, 0.15) !important;
     }
 
     &:focus-within .p-inputgroup-addon {
-      color: $katuq-primary !important;
+      color: #5F3FE0 !important;
     }
 
     .p-inputgroup-addon i.pi-spin {
-      color: $katuq-primary !important;
+      color: #5F3FE0 !important;
     }
   }
 
@@ -2356,11 +2365,11 @@ $border-radius: 8px;
 
     &:not(.p-disabled):hover,
     &:not(.p-disabled).p-focus {
-      border-color: $katuq-primary !important;
+      border-color: #5F3FE0 !important;
     }
 
     &:not(.p-disabled).p-focus {
-      box-shadow: 0 0 0 3px rgba($katuq-primary, 0.15) !important;
+      box-shadow: 0 0 0 3px rgba(#5F3FE0, 0.15) !important;
     }
   }
 
@@ -2394,45 +2403,56 @@ $border-radius: 8px;
 
     // Botón del calendario: cuadro morado a la derecha (como en el mockup)
     .p-datepicker-trigger {
-      background: $katuq-primary !important;
-      border-color: $katuq-primary !important;
+      background: #5F3FE0 !important;
+      border-color: #5F3FE0 !important;
       color: #fff !important;
       border-radius: 0 12px 12px 0 !important;
 
       &:enabled:hover {
-        background: $katuq-primary-dark !important;
-        border-color: $katuq-primary-dark !important;
+        background: #4a2fc0 !important;
+        border-color: #4a2fc0 !important;
       }
     }
   }
 
   // Botón "Filtrar": morado de marca con sombra
   .btn-sm.btn-primary {
-    background: $katuq-primary !important;
-    border-color: $katuq-primary !important;
+    background: #5F3FE0 !important;
+    border-color: #5F3FE0 !important;
     border-radius: 12px !important;
-    box-shadow: 0 6px 16px rgba($katuq-primary, 0.28) !important;
+    box-shadow: 0 6px 16px rgba(#5F3FE0, 0.28) !important;
 
     &:hover:not(:disabled) {
-      background: $katuq-primary-dark !important;
-      border-color: $katuq-primary-dark !important;
+      background: #4a2fc0 !important;
+      border-color: #4a2fc0 !important;
     }
   }
 
-  // Botón exportar (Excel): verde con sombra, cuadrado redondeado
+  // Botón exportar (Excel): secundario blanco con borde (regla de diseño Katuq)
   .btn-sm.btn-success {
-    border-radius: 12px !important;
-    box-shadow: 0 6px 16px rgba($katuq-success, 0.25) !important;
+    background: #fff !important;
+    border: 1px solid #e4e2ef !important;
+    color: #5b5878 !important;
+    border-radius: 11px !important;
+    box-shadow: none !important;
+
+    i { color: #1E874B !important; }
+
+    &:hover:not(:disabled) {
+      background: #faf9fe !important;
+      border-color: #d9cffb !important;
+      color: #5F3FE0 !important;
+    }
   }
 
   // Botón config avanzada (engranaje): gris claro + icono morado
   .btn-sm.btn-secondary {
     background: $katuq-gray-50 !important;
     border-color: $katuq-gray-200 !important;
-    color: $katuq-primary !important;
+    color: #5F3FE0 !important;
     border-radius: 12px !important;
 
-    i { color: $katuq-primary !important; }
+    i { color: #5F3FE0 !important; }
 
     &:hover:not(:disabled) {
       background: $katuq-gray-100 !important;
@@ -2443,14 +2463,14 @@ $border-radius: 8px;
   // Contador de filtros activos: gradiente morado
   .count-badge {
     background: #5F3FE0 !important;
-    box-shadow: 0 2px 4px rgba($katuq-primary, 0.3) !important;
+    box-shadow: 0 2px 4px rgba(#5F3FE0, 0.3) !important;
   }
 
   // Tags de filtros activos (panel avanzado): tinte morado suave
   .filter-tag {
-    border-color: $katuq-primary-border !important;
-    background: $katuq-primary-bg !important;
-    color: $katuq-primary-dark !important;
+    border-color: #ddd3fb !important;
+    background: #efe9ff !important;
+    color: #4a2fc0 !important;
   }
 }
 
@@ -2536,15 +2556,15 @@ $border-radius: 8px;
   // "Generar Orden": morado de marca sólido con sombra
   > button.p-button-primary,
   .p-button.p-button-primary {
-    background: $katuq-primary !important;
-    border-color: $katuq-primary !important;
+    background: #5F3FE0 !important;
+    border-color: #5F3FE0 !important;
     color: #fff !important;
-    box-shadow: 0 6px 16px rgba($katuq-primary, 0.28) !important;
+    box-shadow: 0 6px 16px rgba(#5F3FE0, 0.28) !important;
 
     &:hover:not(:disabled) {
-      background: $katuq-primary-dark !important;
-      border-color: $katuq-primary-dark !important;
-      box-shadow: 0 8px 20px rgba($katuq-primary, 0.35) !important;
+      background: #4a2fc0 !important;
+      border-color: #4a2fc0 !important;
+      box-shadow: 0 8px 20px rgba(#5F3FE0, 0.35) !important;
     }
 
     .p-button-icon { color: #fff !important; }
@@ -2566,10 +2586,10 @@ $border-radius: 8px;
       &:hover:not(:disabled) {
         background: $katuq-gray-50 !important;
         border-color: $katuq-gray-300 !important;
-        color: $katuq-primary !important;
+        color: #5F3FE0 !important;
 
         .p-button-icon,
-        .p-button-label { color: $katuq-primary !important; }
+        .p-button-label { color: #5F3FE0 !important; }
       }
     }
 
@@ -2589,7 +2609,7 @@ $border-radius: 8px;
   .p-button.p-button-text {
     background: $katuq-gray-50 !important;
     border-radius: 12px !important;
-    color: $katuq-primary !important;
+    color: #5F3FE0 !important;
   }
 }
 

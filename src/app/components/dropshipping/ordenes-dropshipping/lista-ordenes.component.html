@@ -1,97 +1,58 @@
+<div class="cfg-pagina">
 <!-- Título de la pantalla (D-400): mismo nombre que en el menú -->
-<header class="cfg-cabeza titulo-pantalla">
+<header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
         <span class="cfg-eyebrow">{{ 'Dropshipping' | translate }}</span>
         <h1 class="cfg-titulo">{{ 'Órdenes de dropshipping' | translate }}</h1>
         <p class="cfg-sub">{{ 'Los pedidos que despachan tus proveedores directamente al cliente.' | translate }}</p>
     </div>
-</header>
-<div class="grid">
-  <!-- Métricas rápidas -->
-  <div class="col-12">
-    <div class="row mb-4">
-      <div class="col-md-3">
-        <div class="card bg-primary text-white">
-          <div class="card-body">
-            <div class="d-flex align-items-center">
-              <div class="flex-grow-1">
-                <h3 class="mb-0">{{getOrdenesDelMes()}}</h3>
-                <p class="mb-0">Órdenes del Mes</p>
-              </div>
-              <div class="ml-auto">
-                <i class="pi pi-calendar fs-1"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card bg-warning text-white">
-          <div class="card-body">
-            <div class="d-flex align-items-center">
-              <div class="flex-grow-1">
-                <h3 class="mb-0">{{getOrdenesPendientes()}}</h3>
-                <p class="mb-0">Órdenes Pendientes</p>
-              </div>
-              <div class="ml-auto">
-                <i class="pi pi-clock fs-1"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card bg-success text-white">
-          <div class="card-body">
-            <div class="d-flex align-items-center">
-              <div class="flex-grow-1">
-                <h3 class="mb-0">${{getTotalGanancias() | number:'1.0-0'}}</h3>
-                <p class="mb-0">Ganancias Entregadas</p>
-              </div>
-              <div class="ml-auto">
-                <i class="pi pi-dollar fs-1"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card bg-info text-white">
-          <div class="card-body">
-            <div class="d-flex align-items-center">
-              <div class="flex-grow-1">
-                <h3 class="mb-0">{{ordenes.length}}</h3>
-                <p class="mb-0">Total Órdenes</p>
-              </div>
-              <div class="ml-auto">
-                <i class="pi pi-list fs-1"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="cfg-acciones">
+          <button type="button" class="cfg-btn cfg-btn--sec" (click)="exportarOrdenes()">
+            <i class="pi pi-download"></i><span class="lo-btn-texto">Exportar</span>
+          </button>
+          <button type="button" class="cfg-btn cfg-btn--sec" (click)="loadData()">
+            <i class="pi pi-refresh"></i><span class="lo-btn-texto">Actualizar</span>
+          </button>
     </div>
-  </div>
+</header>
+  <!-- Métricas rápidas -->
+    <div class="lo-metricas">
+        <div class="lo-metrica">
+              <div class="flex-grow-1">
+                <h3 class="lo-metrica__valor">{{getOrdenesDelMes()}}</h3>
+                <p class="lo-metrica__label">Órdenes del Mes</p>
+              </div>
+              <i class="pi pi-calendar lo-metrica__icono"></i>
+        </div>
+        <div class="lo-metrica lo-metrica--alerta">
+              <div class="flex-grow-1">
+                <h3 class="lo-metrica__valor">{{getOrdenesPendientes()}}</h3>
+                <p class="lo-metrica__label">Órdenes Pendientes</p>
+              </div>
+              <i class="pi pi-clock lo-metrica__icono"></i>
+        </div>
+        <div class="lo-metrica lo-metrica--ok">
+              <div class="flex-grow-1">
+                <h3 class="lo-metrica__valor">${{getTotalGanancias() | number:'1.0-0'}}</h3>
+                <p class="lo-metrica__label">Ganancias Entregadas</p>
+              </div>
+              <i class="pi pi-dollar lo-metrica__icono"></i>
+        </div>
+        <div class="lo-metrica lo-metrica--info">
+              <div class="flex-grow-1">
+                <h3 class="lo-metrica__valor">{{ordenes.length}}</h3>
+                <p class="lo-metrica__label">Total Órdenes</p>
+              </div>
+              <i class="pi pi-list lo-metrica__icono"></i>
+        </div>
+    </div>
 
   <!-- Lista de órdenes -->
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">
+  <section class="cfg-card">
+        <h2 class="cfg-card__titulo">
           <i class="pi pi-list mr-2"></i>
           Órdenes Dropshipping
-        </h5>
-        <div>
-          <button type="button" class="btn btn-outline-success mr-2" (click)="exportarOrdenes()">
-            <i class="pi pi-download mr-2"></i>Exportar
-          </button>
-          <button type="button" class="btn btn-outline-secondary" (click)="loadData()">
-            <i class="pi pi-refresh mr-2"></i>Actualizar
-          </button>
-        </div>
-      </div>
-      
-      <div class="card-body">
+        </h2>
         <!-- Filtros -->
         <div class="row mb-3">
           <div class="col-md-4">
@@ -260,9 +221,7 @@
             </tr>
           </ng-template>
         </p-table>
-      </div>
-    </div>
-  </div>
+  </section>
 </div>
 
 <!-- Componentes de PrimeNG -->

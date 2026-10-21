@@ -1,57 +1,91 @@
-.page-wrapper {
-  padding: 1.5rem;
+// Costos de inventario — base cfg (D-400, D-516): plano, sin borde lateral de acento.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+// Botón "Acciones" (pButton) con el acento del canon.
+:host ::ng-deep .lc-acciones.p-button {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 11px;
+  background: $cfg-accent;
+  border-color: $cfg-accent;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: $cfg-shadow-btn;
+
+  &:enabled:hover { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
+  .p-button-label, .p-button-icon { color: #fff; }
 }
 
-.page-header {
+.lc-ultimo {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 1rem;
-  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+
+  .cfg-label { display: block; margin-bottom: 2px; }
 }
 
-.last-import-card {
-  border-left: 4px solid var(--bs-primary, #0d6efd);
+.lc-archivo {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: $cfg-ink;
+  overflow-wrap: anywhere;
 }
 
-.stat {
-  padding: 0.75rem 1rem;
-  border-radius: 0.375rem;
-  border-left: 3px solid;
-  background: var(--bs-tertiary-bg, #f8f9fa);
+// Cada métrica tiñe su valor con el semántico (plano, fondo suave).
+.lc-stat--ok .cfg-stat__valor { color: $cfg-ok !important; }
+.lc-stat--info .cfg-stat__valor { color: $cfg-info !important; }
+.lc-stat--warn .cfg-stat__valor { color: $cfg-warn !important; }
+.lc-stat--neutro .cfg-stat__valor { color: $cfg-ink !important; }
 
-  small {
-    color: var(--bs-secondary-color, #6c757d);
-    display: block;
-    margin-bottom: 0.25rem;
-    font-size: 0.75rem;
+.lc-pie {
+  display: block;
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: $cfg-muted;
+
+  b { color: $cfg-ink; }
+}
+
+.lc-cargando {
+  display: grid;
+  place-items: center;
+  padding: 24px 0;
+  color: $cfg-accent;
+  font-size: 1.5rem;
+}
+
+.lc-tabla-scroll {
+  overflow-x: auto;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+}
+
+.lc-tabla {
+  min-width: 640px;
+
+  thead th {
+    background: $cfg-tint;
+    color: $cfg-muted;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    border-color: $cfg-line-soft;
+    padding: 12px 14px;
+    white-space: nowrap;
   }
 
-  .stat-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    line-height: 1;
+  tbody td {
+    color: $cfg-ink;
+    font-size: 13px;
+    border-color: $cfg-line-soft;
+    padding: 12px 14px;
+    vertical-align: middle;
   }
 
-  &.stat-success {
-    border-left-color: #198754;
-    .stat-value { color: #198754; }
-  }
-
-  &.stat-info {
-    border-left-color: #0dcaf0;
-    .stat-value { color: #0aa2c0; }
-  }
-
-  &.stat-warning {
-    border-left-color: #ffc107;
-    .stat-value { color: #b58900; }
-  }
-
-  &.stat-neutral {
-    border-left-color: #6c757d;
-    .stat-value { color: #495057; }
-  }
+  tbody tr:hover td { background: $cfg-row-hover; }
 }

@@ -28,7 +28,7 @@
             </button>
 
             <button type="button"
-              class="btn btn-success btn-sm"
+              class="btn btn-primary btn-sm"
               *ngIf="modoDibujo && puntosPoligonoActual.length >= 3"
               (click)="finalizarDibujo()"
               title="{{ 'Finalizar polígono' | translate }}">
@@ -100,7 +100,7 @@
             <i class="pi pi-refresh"></i> Recargar Mapa
           </button>
           <button type="button"
-            class="btn btn-sm btn-info mt-1 w-100"
+            class="btn btn-sm btn-light mt-1 w-100"
             (click)="debugMapaInfo()">
             <i class="pi pi-info"></i> Debug Info
           </button>

@@ -1,12 +1,12 @@
-<div class="card mb-0">
-    <div class="modal-header">
-        <h4 class="modal-title">{{'Horario' | translate}}</h4>
-        <button type="button" class="close" aria-label="Close" (click)="activeModal.close('Cross click')">
-            <span aria-hidden="true">&times;</span>
+<div class="he-marco">
+    <div class="modal-header he-cabeza">
+        <h4 class="modal-title he-titulo">{{'Horario' | translate}}</h4>
+        <button type="button" class="close he-cerrar" aria-label="Close" (click)="activeModal.close('Cross click')">
+            <span aria-hidden="true" class="he-cerrar__x">&times;</span>
         </button>
     </div>
 
-    <div class="card-body">
+    <div class="modal-body cfg-form">
 
         <form [formGroup]="form" (ngSubmit)="submit()">
             <div class="row">
@@ -30,8 +30,7 @@
                 </div>
                 <div class="col-md-4 col-sm-6 mb-3">
                     <label for="text2">Color Horario :</label>
-                    <input type="color" id="text2" formControlName="colorHorario" class="form-control"
-                        style="height: 40px;">
+                    <input type="color" id="text2" formControlName="colorHorario" class="form-control he-color">
                 </div>
                 <div class="col-md-4 col-sm-6 mb-3">
                     <label for="">Activo/InActivo</label>&nbsp;<br>
@@ -47,8 +46,8 @@
         </form>
 
     </div>
-    <div class="card-footer p-3">
-        <button type="button" class="btn btn-primary pull-right" (click)="submit()"><i class="icofont icofont-save"></i>&nbsp;
+    <div class="modal-footer he-pie">
+        <button type="button" class="cfg-btn" (click)="submit()"><i class="icofont icofont-save"></i>&nbsp;
             Guardar</button>
     </div>
 

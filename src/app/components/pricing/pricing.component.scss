@@ -1,12 +1,24 @@
+// Planes y suscripciones: página de venta con hero propio. Colores del canon
+// (openspec/specs/design-system, D-131, D-516): acento #5F3FE0, tinta #211F3A,
+// superficies lila, plano, sin borde lateral de acento ni bloques oscuros.
 :host {
   display: block;
-  --pricing-ink: #111827;
-  --pricing-muted: #64748b;
-  --pricing-line: #e2e8f0;
-  --pricing-soft: #f8fafc;
-  --pricing-purple: #6d4aff;
-  --pricing-purple-dark: #5635dc;
-  --pricing-success: #147d64;
+  --pricing-ink: #211F3A;
+  --pricing-muted: #5b5878;
+  --pricing-faint: #8f8bab;
+  --pricing-line: #ececf4;
+  --pricing-soft: #faf9fe;
+  --pricing-purple: #5F3FE0;
+  --pricing-purple-dark: #4a2fc0;
+  --pricing-purple-soft: #efe9ff;
+  --pricing-purple-line: #ddd3fb;
+  --pricing-success: #1E874B;
+  --pricing-success-soft: #E6F7EE;
+  --pricing-warn: #D9820A;
+  --pricing-warn-soft: #FFF1DF;
+  --pricing-error: #D64545;
+  --pricing-error-soft: #FDECEC;
+  --pricing-shadow: 0 1px 3px rgba(30, 20, 80, .04), 0 10px 28px -18px rgba(50, 40, 110, .25);
 }
 
 .pricing-page {
@@ -20,18 +32,18 @@
   position: relative;
   overflow: hidden;
   padding: 56px 56px 48px;
-  border: 1px solid #1e293b;
-  border-radius: 24px;
-  background: #070b1d;
-  color: #fff;
+  border: 1px solid var(--pricing-purple-line);
+  border-radius: 20px;
+  background: #fff;
+  color: var(--pricing-ink);
   text-align: center;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--pricing-shadow);
 
   &::before,
   &::after {
     content: '';
     position: absolute;
-    border-radius: 999px;
+    border-radius: 20px;
     pointer-events: none;
   }
 
@@ -40,7 +52,7 @@
     height: 220px;
     top: -130px;
     right: 8%;
-    border: 42px solid rgba(109, 74, 255, 0.22);
+    border: 42px solid rgba(95, 63, 224, 0.08);
   }
 
   &::after {
@@ -48,7 +60,7 @@
     height: 100px;
     bottom: -56px;
     left: 7%;
-    border: 24px solid rgba(37, 99, 235, 0.18);
+    border: 24px solid rgba(124, 92, 255, 0.08);
   }
 }
 
@@ -67,10 +79,10 @@
   position: relative;
   z-index: 1;
   padding: 8px 13px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
-  background: #151b34;
-  color: #c7d2fe;
+  border: 1px solid var(--pricing-purple-line);
+  border-radius: 20px;
+  background: var(--pricing-purple-soft);
+  color: var(--pricing-purple);
 }
 
 .pricing-hero h1 {
@@ -85,7 +97,7 @@
 
   span {
     display: block;
-    color: #8ba7ff;
+    color: var(--pricing-purple);
   }
 }
 
@@ -94,7 +106,7 @@
   z-index: 1;
   max-width: 700px;
   margin: 0 auto;
-  color: #aeb8cf;
+  color: var(--pricing-muted);
   font-size: 1.05rem;
   line-height: 1.65;
 }
@@ -107,9 +119,9 @@
   gap: 20px;
   margin-top: 32px;
   padding: 13px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--pricing-line);
   border-radius: 16px;
-  background: #10162b;
+  background: var(--pricing-soft);
   text-align: left;
 
   > div:not(.status-divider):not(.status-icon) {
@@ -119,14 +131,14 @@
   }
 
   span {
-    color: #8491aa;
+    color: var(--pricing-faint);
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
 
   strong {
-    color: #f8fafc;
+    color: var(--pricing-ink);
     font-size: 0.9rem;
   }
 }
@@ -137,14 +149,14 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: #25305a;
-  color: #a5b4fc;
+  background: var(--pricing-purple-soft);
+  color: var(--pricing-purple);
 }
 
 .status-divider {
   width: 1px;
   height: 30px;
-  background: rgba(255, 255, 255, 0.13);
+  background: var(--pricing-line);
 }
 
 .pricing-overview {
@@ -163,12 +175,12 @@
   border: 1px solid var(--pricing-line);
   border-radius: 20px;
   background: #fff;
-  box-shadow: 0 10px 32px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--pricing-shadow);
 }
 
 .calculator-card {
   padding: 30px;
-  border-left: 5px solid var(--pricing-purple);
+  border-color: var(--pricing-purple-line);
 }
 
 .calculator-heading,
@@ -233,16 +245,16 @@
   button.active {
     background: #fff;
     color: var(--pricing-purple);
-    box-shadow: 0 2px 7px rgba(15, 23, 42, 0.1);
+    box-shadow: 0 2px 7px rgba(30, 20, 80, 0.1);
   }
 }
 
 .selected-plan {
   margin: 26px 0 24px;
   padding: 22px;
-  border: 1px solid #ddd6fe;
+  border: 1px solid var(--pricing-purple-line);
   border-radius: 16px;
-  background: #faf9ff;
+  background: var(--pricing-soft);
 }
 
 .selected-plan-main {
@@ -317,9 +329,9 @@
   width: 100%;
   height: 7px;
   margin: 4px 0 0;
-  border-radius: 999px;
+  border-radius: 20px;
   appearance: none;
-  background: #d8dff0;
+  background: var(--pricing-line);
   cursor: pointer;
 
   &::-webkit-slider-thumb {
@@ -329,7 +341,7 @@
     border-radius: 50%;
     appearance: none;
     background: var(--pricing-purple);
-    box-shadow: 0 0 0 2px var(--pricing-purple), 0 4px 12px rgba(109, 74, 255, 0.28);
+    box-shadow: 0 0 0 2px var(--pricing-purple), 0 4px 12px rgba(95, 63, 224, 0.28);
   }
 
   &::-moz-range-thumb {
@@ -351,7 +363,7 @@
     padding: 5px 2px;
     border: 0;
     background: transparent;
-    color: #94a3b8;
+    color: var(--pricing-faint);
     font-size: 0.68rem;
     font-weight: 700;
     text-align: center;
@@ -398,7 +410,7 @@
   border: 1px solid var(--pricing-purple);
   background: var(--pricing-purple);
   color: #fff;
-  box-shadow: 0 8px 18px rgba(109, 74, 255, 0.2);
+  box-shadow: 0 8px 18px rgba(95, 63, 224, 0.2);
 
   &:hover { background: var(--pricing-purple-dark); }
 }
@@ -407,16 +419,15 @@
   margin: 17px 0 0;
   padding-top: 15px;
   border-top: 1px solid var(--pricing-line);
-  color: #94a3b8;
+  color: var(--pricing-faint);
   font-size: 0.7rem;
 }
 
 .free-card {
   position: relative;
   padding: 30px;
-  border-left: 5px solid #94a3b8;
 
-  &.current { border-left-color: var(--pricing-success); }
+  &.current { border-color: #c9ecd8; }
 }
 
 .current-badge {
@@ -425,7 +436,7 @@
   right: 16px;
   padding: 5px 8px;
   border-radius: 7px;
-  background: #e8f7f2;
+  background: var(--pricing-success-soft);
   color: var(--pricing-success);
   font-size: 0.64rem;
   font-weight: 800;
@@ -453,22 +464,22 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #334155;
+    color: var(--pricing-ink);
     font-size: 0.83rem;
 
     i { color: var(--pricing-success); font-size: 0.76rem; }
   }
 
   li.locked {
-    color: #94a3b8;
-    i { color: #94a3b8; }
+    color: var(--pricing-faint);
+    i { color: var(--pricing-faint); }
   }
 }
 
 .free-includes {
   display: block;
   margin-top: 22px;
-  color: #475569;
+  color: var(--pricing-muted);
   font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -477,14 +488,14 @@
 
 .secondary-action {
   width: 100%;
-  border: 1px solid #d8d2ff;
-  background: #f4f1ff;
+  border: 1px solid var(--pricing-purple-line);
+  background: var(--pricing-purple-soft);
   color: var(--pricing-purple-dark);
 }
 
 .payment-safety {
   margin: 11px 0 0;
-  color: #94a3b8;
+  color: var(--pricing-faint);
   font-size: 0.66rem;
   line-height: 1.45;
   text-align: center;
@@ -497,11 +508,10 @@
   gap: 18px;
   margin-top: 24px;
   padding: 22px 24px;
-  border: 1px solid var(--pricing-line);
-  border-left: 5px solid var(--pricing-success);
-  border-radius: 18px;
+  border: 1px solid #c9ecd8;
+  border-radius: 16px;
   background: #fff;
-  box-shadow: 0 10px 32px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--pricing-shadow);
 }
 
 .receipt-icon {
@@ -510,7 +520,7 @@
   width: 46px;
   height: 46px;
   border-radius: 13px;
-  background: #e8f7f2;
+  background: var(--pricing-success-soft);
   color: var(--pricing-success);
   font-size: 1.15rem;
 }
@@ -532,23 +542,23 @@
 
   > strong { color: var(--pricing-ink); font-size: 1.35rem; letter-spacing: -0.025em; }
   > small { color: var(--pricing-muted); font-size: 0.65rem; }
-  > .receipt-reconciliation { color: #9a3412; font-weight: 750; }
+  > .receipt-reconciliation { color: var(--pricing-warn); font-weight: 750; }
 }
 
 .receipt-status {
   display: inline-flex;
   padding: 5px 8px;
   border-radius: 7px;
-  background: #fff7ed;
-  color: #9a3412;
+  background: var(--pricing-warn-soft);
+  color: var(--pricing-warn);
   font-size: 0.64rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 
-  &.status-paid { background: #e8f7f2; color: var(--pricing-success); }
-  &.status-failed { background: #fef2f2; color: #b91c1c; }
-  &.status-overdue { background: #fef2f2; color: #b91c1c; }
+  &.status-paid { background: var(--pricing-success-soft); color: var(--pricing-success); }
+  &.status-failed { background: var(--pricing-error-soft); color: var(--pricing-error); }
+  &.status-overdue { background: var(--pricing-error-soft); color: var(--pricing-error); }
 }
 
 .receipt-actions {
@@ -583,7 +593,7 @@
   border: 1px solid var(--pricing-line);
   border-radius: 9px;
   background: var(--pricing-soft);
-  color: #475569;
+  color: var(--pricing-muted);
   font-size: 0.72rem;
   font-weight: 800;
   cursor: pointer;
@@ -598,11 +608,10 @@
   align-items: center;
   margin-top: 24px;
   padding: 28px;
-  border: 1px solid var(--pricing-line);
-  border-left: 5px solid var(--pricing-purple);
-  border-radius: 18px;
+  border: 1px solid var(--pricing-purple-line);
+  border-radius: 16px;
   background: #fff;
-  box-shadow: 0 10px 32px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--pricing-shadow);
 }
 
 .period-settings-copy {
@@ -614,7 +623,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  color: #92400e !important;
+  color: var(--pricing-warn) !important;
   font-weight: 700;
 }
 
@@ -630,17 +639,15 @@
     min-width: 0;
     padding: 14px;
     border: 1px solid var(--pricing-line);
-    border-left: 3px solid #cbd5e1;
-    border-radius: 12px;
+    border-radius: 11px;
     background: var(--pricing-soft);
     color: var(--pricing-ink);
     text-align: left;
     cursor: pointer;
 
     &.active {
-      border-color: #c4b5fd;
-      border-left-color: var(--pricing-purple);
-      background: #faf9ff;
+      border-color: var(--pricing-purple);
+      background: var(--pricing-purple-soft);
     }
 
     &:disabled { cursor: wait; opacity: 0.65; }
@@ -653,9 +660,9 @@
   em {
     display: inline-block;
     padding: 2px 5px;
-    border-radius: 999px;
-    background: #dcfce7;
-    color: #166534;
+    border-radius: 20px;
+    background: var(--pricing-success-soft);
+    color: var(--pricing-success);
     font-size: 0.56rem;
     font-style: normal;
   }
@@ -666,16 +673,16 @@
   flex-direction: column;
   gap: 4px;
   padding: 16px;
-  border: 1px solid #ddd6fe;
+  border: 1px solid var(--pricing-purple-line);
   border-radius: 12px;
-  background: #faf9ff;
+  background: var(--pricing-soft);
 
   > span { color: var(--pricing-muted); font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.05em; }
   > strong { font-size: 1.05rem; }
   > small { color: var(--pricing-muted); font-size: 0.65rem; line-height: 1.4; }
   .primary-action { width: 100%; margin-top: 8px; padding: 10px 12px; font-size: 0.7rem; }
   .period-success { color: var(--pricing-success); font-weight: 700; }
-  .period-error { color: #b91c1c; font-weight: 700; }
+  .period-error { color: var(--pricing-error); font-weight: 700; }
 }
 
 .billing-self-service {
@@ -683,7 +690,7 @@
   gap: 7px;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #ddd6fe;
+  border-top: 1px solid var(--pricing-purple-line);
 
   > small {
     color: var(--pricing-muted);
@@ -710,13 +717,13 @@
 }
 
 .payment-method-action {
-  border: 1px solid #c4b5fd;
+  border: 1px solid var(--pricing-purple-line);
   color: var(--pricing-purple-dark);
 }
 
 .cancel-plan-action {
-  border: 1px solid #fecaca;
-  color: #b91c1c;
+  border: 1px solid #f3c9c9;
+  color: var(--pricing-error);
 }
 
 .tier-reference,
@@ -759,8 +766,7 @@
   min-height: 185px;
   padding: 16px 13px;
   border: 1px solid var(--pricing-line);
-  border-left: 3px solid #cbd5e1;
-  border-radius: 13px;
+  border-radius: 11px;
   background: #fff;
   color: var(--pricing-ink);
   text-align: left;
@@ -769,25 +775,24 @@
 
   &:hover {
     transform: translateY(-2px);
-    border-color: #c4b5fd;
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    border-color: var(--pricing-purple-line);
+    box-shadow: 0 8px 20px -10px rgba(50, 40, 110, 0.3);
   }
 
   &.selected {
-    border-color: #b7a6ff;
-    border-left-color: var(--pricing-purple);
-    background: #faf9ff;
+    border-color: var(--pricing-purple);
+    background: var(--pricing-purple-soft);
   }
 
   &.current { box-shadow: inset 0 0 0 1px var(--pricing-success); }
 
   > i { margin: 12px 0 9px; color: var(--pricing-purple); font-size: 1.05rem; }
   > strong { font-size: 0.95rem; }
-  > small { color: #94a3b8; font-size: 0.62rem; }
+  > small { color: var(--pricing-faint); font-size: 0.62rem; }
 }
 
 .tier-index {
-  color: #94a3b8;
+  color: var(--pricing-faint);
   font-size: 0.62rem;
   font-weight: 800;
 }
@@ -798,7 +803,7 @@
   right: 8px;
   padding: 3px 5px;
   border-radius: 5px;
-  background: #e8f7f2;
+  background: var(--pricing-success-soft);
   color: var(--pricing-success);
   font-size: 0.55rem;
   font-weight: 800;
@@ -831,8 +836,7 @@
   gap: 12px;
   padding: 17px;
   border: 1px solid var(--pricing-line);
-  border-left: 3px solid #d8d2ff;
-  border-radius: 12px;
+  border-radius: 11px;
   background: var(--pricing-soft);
 
   h3 { margin: 0 0 4px; font-size: 0.85rem; font-weight: 800; }
@@ -846,7 +850,7 @@
   width: 32px;
   height: 32px;
   border-radius: 9px;
-  background: #ece8ff;
+  background: var(--pricing-purple-soft);
   color: var(--pricing-purple);
   font-size: 0.8rem;
 }
@@ -862,8 +866,7 @@
     gap: 13px;
     padding: 18px;
     border: 1px solid var(--pricing-line);
-    border-left: 3px solid var(--pricing-purple);
-    border-radius: 12px;
+    border-radius: 11px;
   }
 
   article > span {
@@ -873,7 +876,7 @@
     width: 31px;
     height: 31px;
     border-radius: 9px;
-    background: #ece8ff;
+    background: var(--pricing-purple-soft);
     color: var(--pricing-purple-dark);
     font-size: 0.78rem;
     font-weight: 900;
@@ -890,7 +893,7 @@
 .back-action {
   border: 1px solid var(--pricing-line);
   background: #fff;
-  color: #475569;
+  color: var(--pricing-muted);
 }
 
 @media (max-width: 1100px) {

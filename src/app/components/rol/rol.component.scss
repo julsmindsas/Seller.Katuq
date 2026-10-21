@@ -1,264 +1,119 @@
-// ===== Card & Header =====
-:host {
-  display: block;
+// Pantalla de Seguridad (D-400 / D-516): base compartida cfg-*.
+@import '../../shared/styles/config-pagina';
+@include config-pagina;
 
-  .card {
-    border: none;
-    border-radius: 10px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  }
-}
+// ===== Tabla =====
+.roles-table-wrapper { overflow-x: auto; }
+.rol-col-acciones { width: 100px; }
 
-.rol-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 24px 12px;
-}
-
-.rol-header-left {
-  .rol-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: #1f2937;
-    margin: 0;
-  }
-
-  .rol-subtitle {
-    font-size: 14px;
-    color: #9ca3af;
-    margin: 2px 0 0;
-  }
-}
-
-.btn-crear {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background-color: #8b5cf6;
-  border-color: #8b5cf6;
-  color: #fff;
-  font-weight: 500;
-  font-size: 14px;
-  padding: 8px 18px;
-  border-radius: 8px;
-  transition: all 0.2s;
-
-  &:hover {
-    background-color: #7c3aed;
-    border-color: #7c3aed;
-    color: #fff;
-  }
-
-  i {
-    font-size: 14px;
-  }
-}
-
-// ===== Table Wrapper =====
-.roles-table-wrapper {
-  padding: 0 24px 24px;
-}
-
-// ===== PrimeNG Table Deep Overrides =====
-::ng-deep .roles-table {
-  .p-datatable {
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #e5e7eb;
-  }
-
-  // Caption (search bar)
+// Caption (búsqueda) dentro de la tabla tematizada por cfg-card
+:host ::ng-deep .roles-table .p-datatable {
   .p-datatable-header {
-    background: #faf8ff;
-    border-bottom: 1px solid #ede9fe;
-    padding: 12px 16px;
+    background: #fff;
+    border: 0;
+    border-bottom: 1px solid #f1f0f7;
+    padding: 0 0 12px;
   }
 
-  // Header cells
-  .p-datatable-thead > tr > th {
-    background: #f9fafb;
-    color: #6b7280;
-    font-weight: 600;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 10px 14px;
-    border-color: #e5e7eb;
-  }
-
-  // Body cells
-  .p-datatable-tbody > tr > td {
-    padding: 12px 14px;
-    border-color: #f3f4f6;
-    font-size: 14px;
-    vertical-align: middle;
-  }
-
-  // Row hover
-  .p-datatable-tbody > tr:hover {
-    background: #faf8ff !important;
-  }
-
-  // Striped
-  .p-datatable-tbody > tr:nth-child(even) {
-    background: #fafafa;
-  }
-
-  // Paginator
-  .p-paginator {
-    border-top: 1px solid #e5e7eb;
-    background: #f9fafb;
-    padding: 8px 16px;
-
-    .p-paginator-element {
-      border-radius: 6px;
-      min-width: 32px;
-      height: 32px;
-      font-size: 13px;
-
-      &.p-highlight {
-        background: #8b5cf6;
-        border-color: #8b5cf6;
-        color: #fff;
-      }
-    }
-  }
+  .p-datatable-tbody > tr > td { vertical-align: middle; }
 }
 
-// ===== Search =====
+// ===== Búsqueda =====
 .table-caption {
   display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   align-items: center;
   justify-content: space-between;
 }
 
 .search-wrapper {
   position: relative;
+  flex: 0 1 280px;
+  min-width: 0;
 
   .search-icon {
     position: absolute;
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #9ca3af;
+    color: #8f8bab;
     font-size: 14px;
     pointer-events: none;
   }
 
   .search-input {
+    width: 100%;
+    min-height: 40px;
     padding-left: 36px;
-    border-radius: 6px;
-    font-size: 13px;
-    width: 260px;
-    border: 1px solid #dee2e6;
-    height: 36px;
+    background-color: #f5f4fa;
+    border: 1px solid #e9e7f3;
+    border-radius: 10px;
+    font-size: 13.5px;
+    color: #211F3A;
 
     &:focus {
-      border-color: #a78bfa;
-      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
+      background-color: #fff;
+      border-color: #7C5CFF;
+      box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
     }
   }
 }
 
 .roles-count {
-  font-size: 13px;
-  color: #9ca3af;
-  font-weight: 500;
+  font-size: 10.5px !important;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: #8f8bab !important;
 }
 
-// ===== Cell Styles =====
-.role-name {
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.role-empresa {
-  color: #6b7280;
-  font-size: 13px;
-}
+// ===== Celdas =====
+.role-name { font-weight: 700; color: #211F3A !important; font-size: 13px !important; }
+.role-empresa { color: #5b5878 !important; font-size: 13px !important; }
 
 .prefijo-badge {
   display: inline-block;
-  padding: 2px 10px;
+  padding: 3px 10px;
   margin: 1px 3px;
-  border-radius: 12px;
-  background: #ede9fe;
-  color: #7c3aed;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
+  border-radius: 20px;
+  background: #efe9ff;
+  color: #5F3FE0 !important;
+  font-size: 10.5px !important;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
 }
 
-.default-label {
-  color: #d1d5db;
-  font-size: 12px;
-  font-style: italic;
-}
+.default-label { color: #8f8bab !important; font-size: 12px !important; font-style: italic; }
+.user-edit { color: #8f8bab !important; font-size: 13px !important; }
 
-.user-edit {
-  color: #9ca3af;
-  font-size: 13px;
-}
-
-// ===== Action Buttons =====
+// ===== Botones de acción =====
 .action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  background: transparent;
+  width: 34px;
+  height: 34px;
+  margin-right: 4px;
+  border-radius: 11px;
+  border: 1px solid #e4e2ef;
+  background: #fff;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
   padding: 0;
 
-  i {
-    font-size: 15px;
-  }
+  i { font-size: 15px; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
 
   &.action-edit {
-    color: #8b5cf6;
-
-    &:hover {
-      background: #f3efff;
-      border-color: #c4b5fd;
-    }
+    color: #5F3FE0;
+    &:hover { background: #efe9ff; border-color: #ddd3fb; }
   }
 
   &.action-delete {
-    color: #d1d5db;
-
-    &:hover {
-      background: #fef2f2;
-      border-color: #fecaca;
-      color: #d12b38;
-    }
-  }
-}
-
-// ===== Empty State =====
-.empty-state {
-  padding: 40px 20px;
-  text-align: center;
-
-  .empty-icon {
-    font-size: 40px;
-    color: #d1d5db;
-    margin-bottom: 12px;
-  }
-
-  .empty-text {
-    font-size: 15px;
-    color: #9ca3af;
-    margin: 0;
-  }
-
-  .empty-hint {
-    font-size: 13px;
-    color: #d1d5db;
-    margin-top: 4px;
+    color: #D64545;
+    border-color: #f3c9c9;
+    &:hover { background: #FDECEC; border-color: #D64545; }
   }
 }

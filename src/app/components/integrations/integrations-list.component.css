@@ -7,7 +7,7 @@
 
 .integrations-list .card-title i {
   margin-right: 8px;
-  color: #7366ff;
+  color: #5F3FE0;
 }
 
 .integration-cards {
@@ -30,17 +30,18 @@
 
 .integration-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(115,102,255,0.15);
-  border-color: rgba(115,102,255,0.2);
+  box-shadow: 0 10px 25px rgba(95, 63, 224, 0.15);
+  border-color: rgba(95, 63, 224, 0.2);
 }
 
 .integration-card.inactive {
   opacity: 0.8;
-  border-left: 3px solid #dc3545;
+  border: 1px solid #f3c9c9;
 }
 
 .integration-card.has-error {
-  border-left: 3px solid #dc3545;
+  border: 1px solid #f3c9c9;
+  background: #FDECEC;
 }
 
 .integration-card.featured::after {
@@ -202,7 +203,7 @@
 
 .category-header h5 i {
   margin-right: 10px;
-  color: #7366ff;
+  color: #5F3FE0;
   font-size: 18px;
 }
 
@@ -237,14 +238,14 @@
 
 .category-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 15px rgba(115,102,255,0.15);
-  border-color: #7366ff;
+  box-shadow: 0 8px 15px rgba(95, 63, 224, 0.15);
+  border-color: #5F3FE0;
 }
 
 .category-card i {
   font-size: 30px;
   margin-bottom: 15px;
-  color: #7366ff;
+  color: #5F3FE0;
 }
 
 .category-card h6 {
@@ -273,7 +274,7 @@
 
 .suggested-category h6 i {
   margin-right: 6px;
-  color: #7366ff;
+  color: #5F3FE0;
 }
 
 .suggested-items {
@@ -354,7 +355,7 @@
 }
 
 .add-icon {
-  color: #7366ff;
+  color: #5F3FE0;
   font-size: 18px;
   opacity: 0.3;
   transition: opacity 0.2s;
@@ -385,7 +386,7 @@
 .see-all {
   display: inline-block;
   font-size: 13px;
-  color: #7366ff;
+  color: #5F3FE0;
   text-decoration: none;
 }
 
@@ -460,7 +461,7 @@
 }
 
 .bg-primary {
-  background-color: #7366ff;
+  background-color: #5F3FE0;
 }
 
 .bg-success {
@@ -615,7 +616,7 @@
 .step-number {
   width: 30px;
   height: 30px;
-  background-color: #7366ff;
+  background-color: #5F3FE0;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -655,7 +656,7 @@
   margin-bottom: 10px;
   min-width: 300px;
   animation: slideIn 0.3s ease-out;
-  border-left: 4px solid #7366ff;
+  border: 1px solid #ececf4;
 }
 
 @keyframes slideIn {
@@ -670,19 +671,23 @@
 }
 
 .toast-notification.success {
-  border-left-color: #28a745;
+  border-color: #c9ecd8;
+  background: #E6F7EE;
 }
 
 .toast-notification.error {
-  border-left-color: #dc3545;
+  border-color: #f3c9c9;
+  background: #FDECEC;
 }
 
 .toast-notification.warning {
-  border-left-color: #ffc107;
+  border-color: #F6DDB0;
+  background: #FFF1DF;
 }
 
 .toast-notification.info {
-  border-left-color: #17a2b8;
+  border-color: #cfe0fa;
+  background: #E7F1FF;
 }
 
 .toast-icon {
@@ -737,8 +742,8 @@
 .spinner {
   width: 50px;
   height: 50px;
-  border: 3px solid rgba(115,102,255,0.2);
-  border-top-color: #7366ff;
+  border: 3px solid rgba(95, 63, 224, 0.2);
+  border-top-color: #5F3FE0;
   border-radius: 50%;
   animation: spin 1s ease-in-out infinite;
 }
@@ -767,13 +772,13 @@
 
 .empty-state-icon i {
   font-size: 36px;
-  color: #7366ff;
+  color: #5F3FE0;
 }
 
 .category-icon {
   width: 60px;
   height: 60px;
-  background-color: rgba(115,102,255,0.1);
+  background-color: rgba(95, 63, 224, 0.1);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -783,7 +788,7 @@
 
 .category-icon i {
   font-size: 24px;
-  color: #7366ff;
+  color: #5F3FE0;
 }
 
 /* Modal de creación de integración */
@@ -842,7 +847,7 @@
 .logo-item:hover {
   transform: translateY(-3px);
   box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-  border-color: rgba(115,102,255,0.3);
+  border-color: rgba(95, 63, 224, 0.3);
 }
 
 .logo-item img {
@@ -864,7 +869,7 @@
   overflow-x: auto;
   margin-bottom: 20px;
   scrollbar-width: thin;
-  scrollbar-color: #7366ff #f0f0f0;
+  scrollbar-color: #5F3FE0 #f0f0f0;
 }
 
 .integration-categories-tabs::-webkit-scrollbar {
@@ -877,7 +882,7 @@
 }
 
 .integration-categories-tabs::-webkit-scrollbar-thumb {
-  background-color: #7366ff;
+  background-color: #5F3FE0;
   border-radius: 10px;
 }
 
@@ -894,16 +899,16 @@
 }
 
 .category-tab.active {
-  border-bottom: 2px solid #7366ff;
+  border-bottom: 2px solid #5F3FE0;
 }
 
 .category-tab.active .category-tab-icon {
-  background-color: #7366ff;
+  background-color: #5F3FE0;
   color: white;
 }
 
 .category-tab:hover {
-  background-color: rgba(115,102,255,0.05);
+  background-color: rgba(95, 63, 224, 0.05);
 }
 
 .category-tab-icon {
@@ -925,8 +930,8 @@
 
 /* Alerta de credenciales */
 .credentials-alert {
-  background-color: #fffbf2;
-  border-left: 4px solid #ffc107;
+  background-color: #FFF1DF;
+  border: 1px solid #F6DDB0;
   padding: 12px 15px;
   margin-bottom: 20px;
   border-radius: 4px;
@@ -959,7 +964,7 @@
 }
 
 .card-header .btn-link:hover {
-  color: #7366ff;
+  color: #5F3FE0;
 }
 
 .form-label.fw-semibold {
@@ -982,23 +987,23 @@
 }
 
 .form-control:focus {
-  border-color: #7366ff;
-  box-shadow: 0 0 0 0.2rem rgba(115, 102, 255, 0.25);
+  border-color: #5F3FE0;
+  box-shadow: 0 0 0 0.2rem rgba(95, 63, 224, 0.25);
 }
 
 .form-select:focus {
-  border-color: #7366ff;
-  box-shadow: 0 0 0 0.2rem rgba(115, 102, 255, 0.25);
+  border-color: #5F3FE0;
+  box-shadow: 0 0 0 0.2rem rgba(95, 63, 224, 0.25);
 }
 
 .btn-primary {
-  background-color: #7366ff;
-  border-color: #7366ff;
+  background-color: #5F3FE0;
+  border-color: #5F3FE0;
 }
 
 .btn-primary:hover {
-  background-color: #5a54d6;
-  border-color: #5a54d6;
+  background-color: #4a2fc0;
+  border-color: #4a2fc0;
 }
 
 .btn-outline-info:hover {
@@ -1014,7 +1019,7 @@
 }
 
 .input-group:focus-within {
-  box-shadow: 0 0 0 0.2rem rgba(115, 102, 255, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(95, 63, 224, 0.25);
 }
 
 .input-group .form-control {
@@ -1180,7 +1185,7 @@
 
 .credential-input-group label i {
   margin-right: 6px;
-  color: #7366ff;
+  color: #5F3FE0;
 }
 
 .credential-input-group .form-control {
@@ -1191,8 +1196,8 @@
 }
 
 .credential-input-group .form-control:focus {
-  box-shadow: 0 0 0 3px rgba(115,102,255,0.15);
-  border-color: #7366ff;
+  box-shadow: 0 0 0 3px rgba(95, 63, 224, 0.15);
+  border-color: #5F3FE0;
 }
 
 .credential-tooltip {
@@ -1244,7 +1249,7 @@
 
 .popular-integrations h6 i {
   margin-right: 8px;
-  color: #7366ff;
+  color: #5F3FE0;
 }
 
 .logo-slider {
@@ -1327,7 +1332,7 @@
 .step.active .step-circle {
   background-color: white;
   border-color: white;
-  color: #7366ff;
+  color: #5F3FE0;
   transform: scale(1.1);
 }
 
@@ -1417,7 +1422,7 @@
   bottom: -5px;
   right: -5px;
   background-color: white;
-  color: #7366ff;
+  color: #5F3FE0;
   width: 20px;
   height: 20px;
   border-radius: 50%;
@@ -1426,7 +1431,7 @@
   justify-content: center;
   font-size: 12px;
   font-weight: 600;
-  border: 2px solid #7366ff;
+  border: 2px solid #5F3FE0;
 }
 
 .step-info {
@@ -1476,15 +1481,15 @@
 }
 
 .category-option:hover {
-  border-color: #7366ff;
-  box-shadow: 0 4px 12px rgba(115, 102, 255, 0.15);
+  border-color: #5F3FE0;
+  box-shadow: 0 4px 12px rgba(95, 63, 224, 0.15);
   transform: translateY(-2px);
 }
 
 .category-option.selected {
-  border-color: #7366ff;
-  background-color: rgba(115, 102, 255, 0.05);
-  box-shadow: 0 6px 20px rgba(115, 102, 255, 0.2);
+  border-color: #5F3FE0;
+  background-color: rgba(95, 63, 224, 0.05);
+  box-shadow: 0 6px 20px rgba(95, 63, 224, 0.2);
 }
 
 .category-option-icon {
@@ -1495,7 +1500,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #7366ff;
+  color: #5F3FE0;
   font-size: 22px;
   margin-right: 15px;
   flex-shrink: 0;
@@ -1536,8 +1541,8 @@
 }
 
 .category-option.selected .category-option-count {
-  background-color: rgba(115, 102, 255, 0.1);
-  color: #7366ff;
+  background-color: rgba(95, 63, 224, 0.1);
+  color: #5F3FE0;
 }
 
 .category-option-arrow {
@@ -1548,7 +1553,7 @@
 
 .category-option:hover .category-option-arrow,
 .category-option.selected .category-option-arrow {
-  color: #7366ff;
+  color: #5F3FE0;
   transform: translateX(5px);
 }
 
@@ -1573,15 +1578,15 @@
 }
 
 .service-option:hover {
-  border-color: #7366ff;
-  box-shadow: 0 4px 12px rgba(115, 102, 255, 0.15);
+  border-color: #5F3FE0;
+  box-shadow: 0 4px 12px rgba(95, 63, 224, 0.15);
   transform: translateY(-2px);
 }
 
 .service-option.selected {
-  border-color: #7366ff;
-  background-color: rgba(115, 102, 255, 0.05);
-  box-shadow: 0 6px 20px rgba(115, 102, 255, 0.2);
+  border-color: #5F3FE0;
+  background-color: rgba(95, 63, 224, 0.05);
+  box-shadow: 0 6px 20px rgba(95, 63, 224, 0.2);
 }
 
 .service-option.popular::before {
@@ -1680,8 +1685,8 @@
 }
 
 .service-option.selected .feature-tag {
-  background-color: rgba(115, 102, 255, 0.1);
-  color: #7366ff;
+  background-color: rgba(95, 63, 224, 0.1);
+  color: #5F3FE0;
 }
 
 .service-option-action {
@@ -1692,7 +1697,7 @@
 
 .service-option:hover .service-option-action,
 .service-option.selected .service-option-action {
-  color: #7366ff;
+  color: #5F3FE0;
   transform: translateX(5px);
 }
 
@@ -1700,8 +1705,8 @@
 .credentials-info-card {
   display: flex;
   align-items: flex-start;
-  background: #f8f9fa;
-  border-left: 4px solid #7366ff;
+  background: #faf9fe;
+  border: 1px solid #ddd3fb;
   padding: 16px;
   border-radius: 8px;
   margin-bottom: 20px;
@@ -1711,7 +1716,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: #7366ff;
+  background-color: #5F3FE0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1735,7 +1740,7 @@
 }
 
 .info-card-link {
-  color: #7366ff;
+  color: #5F3FE0;
   text-decoration: none;
   font-weight: 500;
   font-size: 14px;
@@ -1745,7 +1750,7 @@
 }
 
 .info-card-link:hover {
-  color: #5a54d6;
+  color: #4a2fc0;
   text-decoration: none;
 }
 
@@ -1785,7 +1790,7 @@
 
 .configuration-summary h6 i {
   margin-right: 8px;
-  color: #7366ff;
+  color: #5F3FE0;
 }
 
 .summary-item {
@@ -2098,7 +2103,7 @@
 .integration-card:hover .integration-icon,
 .service-option:hover .service-icon {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(115, 102, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(95, 63, 224, 0.3);
 }
 
 .integration-icon-sm {
@@ -2117,7 +2122,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #7366ff;
+  color: #5F3FE0;
   font-size: 14px;
   margin-right: 16px;
 }
@@ -2168,7 +2173,7 @@
 }
 
 .available-integrations-catalog h5 i {
-  color: #7366ff;
+  color: #5F3FE0;
   margin-right: 8px;
 }
 
@@ -2212,8 +2217,8 @@
 }
 
 .available-integration-card:hover {
-  border-color: #7366ff;
-  box-shadow: 0 4px 8px rgba(115,102,255,0.15);
+  border-color: #5F3FE0;
+  box-shadow: 0 4px 8px rgba(95, 63, 224, 0.15);
   transform: translateY(-2px);
 }
 
@@ -2266,8 +2271,8 @@
 }
 
 .available-integration-card:hover .btn {
-  background-color: #7366ff;
-  border-color: #7366ff;
+  background-color: #5F3FE0;
+  border-color: #5F3FE0;
   color: white;
 }
 

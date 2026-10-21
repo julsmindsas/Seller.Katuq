@@ -1,38 +1,43 @@
-.card-header {
-  background-color: var(--surface-50);
-  border-bottom: 1px solid var(--surface-200);
-  padding: 1rem 1.5rem;
-  
-  h5 {
-    margin: 0;
-    color: var(--text-color);
-  }
-}
+// Regla de diseño Katuq (D-400): base común de pantallas internas de lista.
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
 
-.card-body {
-  padding: 1.5rem;
-}
+.lv-icono { color: #5F3FE0; }
+.lv-enlace { color: #5F3FE0; letter-spacing: normal; text-decoration: none; &:hover { text-decoration: underline; } }
 
-::ng-deep {
-  .p-datatable {
-    .p-datatable-header {
-      background: var(--surface-50);
-      border: 1px solid var(--surface-200);
-    }
-    
-    .p-datatable-thead > tr > th {
-      background: var(--surface-100);
-      font-weight: 600;
-    }
+:host ::ng-deep {
+  // Tablas anchas: scroll dentro de la tarjeta (390 px sin scroll de página).
+  .cfg-card .p-datatable-wrapper { overflow-x: auto; }
+
+  .cfg-acciones .p-button {
+    background: #5F3FE0;
+    border-color: #5F3FE0;
+    color: #fff;
+    border-radius: 11px;
+    font-weight: 700;
+    box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+
+    &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
   }
-  
+
   .p-tag {
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    border-radius: 20px;
+    padding: 3px 10px;
+
+    &.p-tag-success { background: #E6F7EE; color: #1E874B; }
+    &.p-tag-danger { background: #FDECEC; color: #D64545; }
+    &.p-tag-warning { background: #FFF1DF; color: #D9820A; }
+    &.p-tag-info { background: #E7F1FF; color: #1E6FD9; }
   }
-  
-  .p-button.p-button-rounded {
+
+  .cfg-card .p-button.p-button-rounded {
     width: 2rem;
     height: 2rem;
+
+    &.p-button-text.p-button-primary { color: #5F3FE0; }
   }
 }

@@ -1,47 +1,61 @@
-$google-blue: #1a73e8;
-$google-grey-300: #dadce0;
-$google-grey-800: #202124;
+// Paso "Información básica": tema canónico Katuq (D-131). Plano, sin gradientes.
+$ab-accent: #5F3FE0;
+$ab-accent-hover: #4a2fc0;
+$ab-accent-2: #7C5CFF;
+$ab-accent-soft: #efe9ff;
+$ab-ink: #211F3A;
+$ab-body: #5b5878;
+$ab-muted: #8f8bab;
+$ab-line-soft: #f1f0f7;
+$ab-chip-bg: #f5f4fa;
+$ab-chip-border: #e9e7f3;
+$ab-err: #D64545;
 
 .step-container {
+  color: $ab-ink;
 
-  // Title Section
+  p, label, small, span, li { letter-spacing: normal; }
+
+  // Título
   .step-title {
-    font-size: 24px;
-    font-weight: 400;
-    color: $google-grey-800;
-    margin-bottom: 8px;
+    font-size: 18px;
+    font-weight: 800;
+    color: $ab-ink;
+    margin-bottom: 6px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 
     i {
-      font-size: 24px;
-      color: $google-blue;
+      font-size: 18px;
+      color: $ab-accent !important;
     }
   }
 
   .step-subtitle {
-    color: #5f6368;
-    font-size: 14px;
-    margin-bottom: 32px;
+    color: $ab-body;
+    font-size: 13.5px;
+    margin-bottom: 24px;
   }
 
-  // Form Elements
+  // Formulario
   .form-label {
-    font-size: 14px;
-    font-weight: 500;
-    color: $google-grey-800;
-    margin-bottom: 8px;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $ab-muted;
+    margin-bottom: 6px;
     display: block;
 
     &.required::after {
       content: ' *';
-      color: #d93025;
+      color: $ab-err;
     }
   }
 
   small {
-    color: #5f6368;
+    color: $ab-muted !important;
     font-size: 12px;
     margin-top: 4px;
     display: block;
@@ -54,61 +68,97 @@ $google-grey-800: #202124;
   }
 
   .invalid-feedback {
-    color: #d93025;
+    color: $ab-err;
     font-size: 12px;
     margin-top: 4px;
   }
 
-  // Actions
-  .step-actions {
-    margin-top: 48px;
-    padding-top: 24px;
-    border-top: 1px solid $google-grey-300;
+  .department-option {
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
 
-    button {
-      border-radius: 24px; // Pill shape
-    }
+    span { color: $ab-ink !important; font-size: 13.5px !important; }
   }
 
-  // PrimeNG Overrides for Google Style
-  ::ng-deep {
+  // Acciones
+  .step-actions {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid $ab-line-soft;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
 
+  // PrimeNG
+  ::ng-deep {
     .p-inputtext,
     .p-inputtextarea,
     .p-dropdown {
-      border-radius: 4px;
-      border: 1px solid $google-grey-300;
+      min-height: 40px;
+      border-radius: 10px;
+      border: 1px solid $ab-chip-border;
+      background: $ab-chip-bg;
       padding: 10px 12px;
-      font-size: 16px;
-      color: $google-grey-800;
-      transition: all 0.2s;
+      font-size: 14px;
+      color: $ab-ink;
+      transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
 
       &:hover {
-        border-color: $google-grey-800;
+        border-color: #d9cffb;
       }
 
       &:focus {
-        border-color: $google-blue;
-        box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        background: #fff;
+        border-color: $ab-accent-2;
+        box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
       }
 
       &.ng-invalid.ng-dirty {
-        border-color: #d93025;
+        border-color: $ab-err;
 
         &:focus {
-          box-shadow: 0 0 0 2px rgba(217, 48, 37, 0.2);
+          box-shadow: 0 0 0 3px rgba(214, 69, 69, .15);
         }
       }
     }
 
     .p-dropdown {
-      padding: 0; // Dropdown has internal padding
+      padding: 0;
+
+      &.p-focus {
+        background: #fff;
+        border-color: $ab-accent-2;
+        box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
+      }
 
       .p-dropdown-label {
         padding: 10px 12px;
+        background: transparent;
+        border: 0;
+        min-height: 0;
       }
+    }
+
+    .p-button {
+      min-height: 40px;
+      border-radius: 11px;
+      background: $ab-accent;
+      border: 1px solid $ab-accent;
+      color: #fff;
+      font-size: 13.5px;
+      font-weight: 700;
+      box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+
+      &:enabled:hover {
+        background: $ab-accent-hover;
+        border-color: $ab-accent-hover;
+      }
+
+      &:disabled { background: #d8d4ea; border-color: #d8d4ea; box-shadow: none; }
+
+      &:focus-visible { outline: 3px solid $ab-accent-2 !important; outline-offset: 2px; }
     }
   }
 }

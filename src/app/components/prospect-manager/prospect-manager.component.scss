@@ -1,27 +1,79 @@
-// Variables
-$primary-color: var(--primary-color);
-$secondary-color: var(--secondary-color);
-$border-color: #e6e6e6; // Más suave que el anterior
-$text-muted: #757575;
-$card-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-$white: #ffffff;
-$light-gray: #f9f9f9; // Un poco más claro
-$hover-bg: rgba(0, 0, 0, 0.03); // Neutro en lugar de azul
-$active-bg: rgba(0, 0, 0, 0.05); // Neutro en lugar de azul
-$accent-color: #f8b739; // Color acento cálido para equilibrar
-$subtle-accent: rgba(248, 183, 57, 0.1); // Versión sutil del acento
-$success-color: #2e9958;
-$warning-color: #ffc107;
-$danger-color: #dc3545;
-$info-color: #17a2b8;
+// Prospectos — marco canónico (D-516): cfg-pagina / cfg-cabeza / cfg-card y tokens
+// de openspec/specs/design-system (acento #5F3FE0, sin gradientes ni border-left de acento).
+@import '../../shared/styles/config-pagina';
+@include config-pagina;
 
-// Colores fijos en lugar de variables CSS
-$fixed-primary: #1b4ea3; // Color primario fijo
-$fixed-secondary: #3270d2; // Color secundario fijo
+// Variables (canon)
+$primary-color: #5F3FE0;
+$secondary-color: #8f8bab;
+$border-color: #ececf4;
+$text-muted: #8f8bab;
+$card-shadow: 0 1px 3px rgba(30, 20, 80, 0.04);
+$white: #ffffff;
+$light-gray: #faf9fe;
+$hover-bg: #faf9ff;
+$active-bg: #efe9ff;
+$accent-color: #5F3FE0;
+$subtle-accent: #efe9ff;
+$success-color: #1E874B;
+$warning-color: #D9820A;
+$danger-color: #D64545;
+$info-color: #1E6FD9;
+
+// Colores fijos (canon)
+$fixed-primary: #5F3FE0;
+$fixed-secondary: #7C5CFF;
+
+// ─── Cabecera canónica: buscador y acciones ──────────────────
+.prospect-pagina { min-width: 0; }
+
+.prospect-controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: 1 1 420px;
+  min-width: 0;
+
+  .search-container {
+    flex: 1 1 280px;
+    max-width: 500px;
+    min-width: 0;
+  }
+
+  .input-group {
+    flex-wrap: nowrap;
+
+    .form-select, .form-control {
+      min-height: 40px;
+      background-color: #f5f4fa;
+      border: 1px solid #e9e7f3;
+      color: #211F3A;
+      font-size: 13.5px;
+      box-shadow: none;
+
+      &:focus { background-color: #fff; border-color: #7C5CFF; box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
+    }
+
+    .filter-select { max-width: 130px; border-radius: 10px 0 0 10px; }
+    .search-input { min-width: 0; border-radius: 0; }
+    .search-btn { border-radius: 0 11px 11px 0; box-shadow: none; padding: 0 14px; }
+  }
+
+  .dropdown-toggle::after { margin-left: 4px; }
+}
+
+.stats-panel { padding: 16px; }
+
+.prospect-contenido {
+  padding: 0 !important;
+  overflow: hidden;
+}
 
 // Estilos generales
 .customer-card {
-  border-radius: 0.5rem; // Menos redondeado para un look más profesional
+  border-radius: 16px;
   border: none;
   box-shadow: $card-shadow;
   min-height: calc(100vh - 150px);
@@ -35,19 +87,8 @@ $fixed-secondary: #3270d2; // Color secundario fijo
     position: relative;
     overflow: hidden;
     
-    // Barra decorativa lateral con degradado sutil
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: $accent-color;
-    }
-    
     h2 {
-      color: #333; // Texto oscuro para mejor legibilidad
+      color: #211F3A; // Texto oscuro para mejor legibilidad
       font-weight: 600;
       letter-spacing: 0.3px;
       font-size: 1.4rem;
@@ -60,17 +101,6 @@ $fixed-secondary: #3270d2; // Color secundario fijo
         margin-right: 0.5rem;
       }
       
-      &::after {
-        content: '';
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        background-color: $accent-color;
-        border-radius: 50%;
-        margin-left: 0.75rem;
-        position: relative;
-        top: -1px;
-      }
     }
     
     p {
@@ -82,7 +112,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
   
   .search-box {
     .input-group {
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 2px 4px rgba(30, 20, 80, 0.04);
       border-radius: 4px;
       overflow: hidden;
       
@@ -102,7 +132,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
         
         &:hover {
           opacity: 0.9;
-          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 2px 5px rgba(30, 20, 80, 0.1);
         }
       }
     }
@@ -124,7 +154,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
     .input-group {
       border-radius: 0.3rem; // Ligeramente más redondeado
       overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 1px 3px rgba(30, 20, 80, 0.05);
       
       .form-select, .form-control {
         border: 1px solid $border-color;
@@ -158,23 +188,23 @@ $fixed-secondary: #3270d2; // Color secundario fijo
     }
     
     &.btn-success {
-      background-color: #2e9958;
-      border-color: #2e9958;
+      background-color: #1E874B;
+      border-color: #1E874B;
       
       &:hover {
-        background-color: #257a47;
-        border-color: #257a47;
+        background-color: #176b3b;
+        border-color: #176b3b;
         opacity: 1;
       }
     }
     
     &.btn-info {
-      background-color: #17a2b8;
-      border-color: #17a2b8;
+      background-color: #1E6FD9;
+      border-color: #1E6FD9;
       
       &:hover {
-        background-color: #138496;
-        border-color: #117a8b;
+        background-color: #1859b0;
+        border-color: #1859b0;
         opacity: 1;
       }
     }
@@ -208,7 +238,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
 .stat-card {
   background: $white;
   border-radius: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(30, 20, 80, 0.05);
   overflow: hidden;
   margin-bottom: 1.5rem;
   
@@ -217,7 +247,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
     border-bottom: 1px solid $border-color;
     
     h6 {
-      color: #333;
+      color: #211F3A;
       font-weight: 600;
       font-size: 1rem;
       margin: 0;
@@ -257,7 +287,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
     
     &:hover {
       transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 2px 8px rgba(30, 20, 80, 0.06);
     }
     
     &.active {
@@ -400,7 +430,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
 // Estilos para la lista de prospectos
 .prospects-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: 1.5rem;
   padding: 1.5rem;
   background-color: $light-gray;
@@ -416,14 +446,14 @@ $fixed-secondary: #3270d2; // Color secundario fijo
   }
   
   &::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.15);
+    background-color: rgba(30, 20, 80, 0.15);
     border-radius: 3px;
   }
   
   .prospect-item {
     background: $white;
     border-radius: 0.75rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(30, 20, 80, 0.05);
     transition: all 0.3s ease;
     overflow: hidden;
     position: relative;
@@ -431,23 +461,14 @@ $fixed-secondary: #3270d2; // Color secundario fijo
     
     &:hover {
       transform: translateY(-3px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(30, 20, 80, 0.1);
       border-color: rgba($primary-color, 0.3);
     }
     
     &.active {
       border-color: $primary-color;
-      box-shadow: 0 4px 12px rgba($primary-color, 0.15);
-      
-      &::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 4px;
-        background: $primary-color;
-      }
+      background: $hover-bg;
+      box-shadow: 0 8px 18px -10px rgba(95, 63, 224, 0.45);
     }
     
     .prospect-header {
@@ -465,7 +486,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
           height: 48px;
           border-radius: 50%;
           overflow: hidden;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 2px 4px rgba(30, 20, 80, 0.1);
           
           img {
             width: 100%;
@@ -479,7 +500,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
           
           h4 {
             margin: 0;
-            color: #333;
+            color: #211F3A;
             font-size: 1.1rem;
             font-weight: 600;
             margin-bottom: 0.25rem;
@@ -573,7 +594,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
 // Responsive para la lista de prospectos
 @media (max-width: 1200px) {
   .prospects-list {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
   }
 }
 
@@ -608,7 +629,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
   }
   
   &::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.15);
+    background-color: rgba(30, 20, 80, 0.15);
     border-radius: 20px;
   }
   
@@ -634,13 +655,13 @@ $fixed-secondary: #3270d2; // Color secundario fijo
 
   .card {
     border: 1px solid $border-color;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 2px 4px rgba(30, 20, 80, 0.03);
     border-radius: 0.375rem;
     margin-bottom: 1.5rem;
     transition: all 0.2s ease;
     
     &:hover {
-      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 3px 6px rgba(30, 20, 80, 0.05);
     }
     
     .card-header {
@@ -652,7 +673,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
       h5 {
         font-size: 1rem;
         font-weight: 600;
-        color: #333;
+        color: #211F3A;
         margin: 0;
         display: flex;
         align-items: center;
@@ -676,7 +697,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
   
   .form-label {
     font-weight: 500;
-    color: #555;
+    color: #5b5878;
     margin-bottom: 0.4rem;
     font-size: 0.85rem;
   }
@@ -690,7 +711,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
     display: flex;
     align-items: center;
     font-size: 0.9rem;
-    color: #333;
+    color: #211F3A;
   }
   
   .form-control, .form-select {
@@ -739,7 +760,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
       top: 2.4rem;
       bottom: -0.5rem;
       width: 2px;
-      background-color: rgba(0, 0, 0, 0.08);
+      background-color: rgba(30, 20, 80, 0.08);
       z-index: 0;
     }
     
@@ -756,7 +777,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 4px rgba(30, 20, 80, 0.15);
       z-index: 2;
       
       i {
@@ -778,7 +799,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
         border-radius: 20px;
         font-size: 0.7rem;
         font-weight: 500;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 1px 2px rgba(30, 20, 80, 0.1);
       }
     }
     
@@ -788,7 +809,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
       padding: 0.9rem 1rem;
       border-radius: 0.5rem;
       position: relative;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      box-shadow: 0 1px 3px rgba(30, 20, 80, 0.03);
       
       &::before {
         content: '';
@@ -807,7 +828,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
         margin-bottom: 0.75rem;
         font-size: 0.9rem;
         line-height: 1.4;
-        color: #333;
+        color: #211F3A;
       }
       
       .agent-note {
@@ -815,11 +836,11 @@ $fixed-secondary: #3270d2; // Color secundario fijo
         color: $text-muted;
         margin: 0;
         padding-top: 0.5rem;
-        border-top: 1px dashed rgba(0, 0, 0, 0.08);
+        border-top: 1px dashed rgba(30, 20, 80, 0.08);
         font-style: italic;
         
         strong {
-          color: #555;
+          color: #5b5878;
           font-weight: 500;
           font-style: normal;
         }
@@ -830,14 +851,14 @@ $fixed-secondary: #3270d2; // Color secundario fijo
 
 // Timeline card
 .timeline-card {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(30, 20, 80, 0.05);
   height: 100%;
   display: flex;
   flex-direction: column;
   
   .card-header {
     h5 {
-      color: #333;
+      color: #211F3A;
       i {
         color: $accent-color;
       }
@@ -859,7 +880,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
   }
   
   &::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.15);
+    background-color: rgba(30, 20, 80, 0.15);
     border-radius: 20px;
   }
 }
@@ -867,7 +888,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
 // Estado update section
 .status-update-section {
   h6 {
-    color: #555;
+    color: #5b5878;
     font-size: 0.95rem;
     font-weight: 500;
   }
@@ -891,7 +912,7 @@ $fixed-secondary: #3270d2; // Color secundario fijo
 // Formulario de notas
 form {
   h6 {
-    color: #555;
+    color: #5b5878;
     font-size: 0.95rem;
     font-weight: 500;
   }
@@ -919,11 +940,11 @@ form {
 
 // Estados y Badges - Colores más variados y menos azules
 .bg-primary { background-color: $primary-color !important; }
-.bg-info { background-color: #17a2b8 !important; } // Teal en lugar de celeste
-.bg-warning { background-color: #f8b739 !important; color: #212529 !important; } // Acento
-.bg-success { background-color: #2e9958 !important; } // Verde menos saturado
-.bg-secondary { background-color: #6c757d !important; }
-.bg-danger { background-color: #dc3545 !important; }
+.bg-info { background-color: $info-color !important; }
+.bg-warning { background-color: $warning-color !important; color: #fff !important; }
+.bg-success { background-color: $success-color !important; }
+.bg-secondary { background-color: $secondary-color !important; }
+.bg-danger { background-color: $danger-color !important; }
 
 .badge {
   color: $white;
@@ -931,11 +952,11 @@ form {
   padding: 0.35em 0.65em;
   
   &-primary { background-color: $primary-color; }
-  &-info { background-color: #17a2b8; } // Teal
-  &-warning { background-color: #f8b739; color: #212529; } // Acento
-  &-success { background-color: #2e9958; } // Verde menos saturado
-  &-secondary { background-color: #6c757d; }
-  &-danger { background-color: #dc3545; }
+  &-info { background-color: $info-color; }
+  &-warning { background-color: $warning-color; color: #fff; }
+  &-success { background-color: $success-color; }
+  &-secondary { background-color: $secondary-color; }
+  &-danger { background-color: $danger-color; }
 }
 
 // Botones
@@ -948,7 +969,7 @@ form {
   
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 3px 5px rgba(30, 20, 80, 0.1);
   }
   
   &:active {
@@ -967,12 +988,12 @@ form {
   }
   
   &-success {
-    background-color: #2e9958; // Verde menos saturado
-    border-color: #2e9958;
+    background-color: #1E874B; // Verde menos saturado
+    border-color: #1E874B;
     
     &:hover {
       opacity: 0.9;
-      border-color: #2e9958;
+      border-color: #1E874B;
     }
   }
   
@@ -988,13 +1009,13 @@ form {
   }
   
   &-outline-secondary {
-    border-color: #6c757d;
-    color: #6c757d;
+    border-color: #8f8bab;
+    color: #8f8bab;
     
     &:hover {
-      background-color: rgba(108, 117, 125, 0.08);
-      color: #6c757d;
-      border-color: #6c757d;
+      background-color: #faf9fe;
+      color: #8f8bab;
+      border-color: #8f8bab;
     }
   }
 }
@@ -1117,7 +1138,7 @@ form {
     transform: translateX(-50%);
     width: 90%;
     height: 1px;
-    background: linear-gradient(to right, transparent, rgba(0,0,0,0.05), transparent);
+    background: $border-color;
   }
 }
 
@@ -1133,21 +1154,24 @@ form {
   100% { opacity: 0.6; }
 }
 
-/* Estilos del encabezado mejorado */
+/* Encabezados de las tarjetas internas: tinte lila plano, sin barra lateral */
+.card {
+  border: 1px solid $border-color;
+  border-radius: 16px;
+  box-shadow: $card-shadow;
+  overflow: hidden;
+}
+
 .card-header {
-  background: $white;
+  background: $light-gray !important;
   border-bottom: 1px solid $border-color;
-  padding: 1.5rem 2rem;
+  padding: 0.9rem 1.25rem;
   position: relative;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: $accent-color;
+
+  h5, h6 {
+    color: #211F3A;
+    font-size: 14px;
+    font-weight: 800;
   }
   
   .header-main {
@@ -1161,7 +1185,7 @@ form {
       flex: 0 0 auto;
       
       .header-title {
-        color: #333;
+        color: #211F3A;
         font-weight: 600;
         font-size: 1.5rem;
         margin: 0 0 0.5rem 0;
@@ -1193,17 +1217,17 @@ form {
           height: 42px;
           border-radius: 4px;
           overflow: hidden;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+          box-shadow: 0 1px 3px rgba(30, 20, 80, 0.08);
           
           .filter-select {
             width: 130px;
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
             border-right: none;
-            background-color: #f8f8f8;
+            background-color: #f5f4fa;
             font-size: 0.9rem;
             font-weight: 400;
-            color: #555;
+            color: #5b5878;
             border-color: $border-color;
           }
           
@@ -1225,12 +1249,12 @@ form {
             width: 50px;
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
+            background-color: $primary-color;
+            border-color: $primary-color;
             
             &:hover {
               filter: brightness(0.95);
-              box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+              box-shadow: 0 2px 5px rgba(30, 20, 80, 0.1);
             }
           }
         }
@@ -1261,7 +1285,7 @@ form {
             
             &:hover {
               filter: brightness(0.95);
-              box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+              box-shadow: 0 2px 5px rgba(30, 20, 80, 0.1);
             }
           }
           
@@ -1272,7 +1296,7 @@ form {
             
             &:hover {
               filter: brightness(0.95);
-              box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+              box-shadow: 0 2px 5px rgba(30, 20, 80, 0.1);
             }
           }
         }
@@ -1417,7 +1441,7 @@ form {
       }
       
       .timeline-description {
-        color: #333;
+        color: #211F3A;
         margin-bottom: 0.5rem;
       }
       
@@ -1452,7 +1476,7 @@ form {
       
       .document-title {
         font-weight: 600;
-        color: #333;
+        color: #211F3A;
       }
       
       .document-actions {
@@ -1491,7 +1515,7 @@ form {
   
   .suggestion-title {
     font-weight: 600;
-    color: #333;
+    color: #211F3A;
     margin-bottom: 0.5rem;
     display: flex;
     align-items: center;
@@ -1528,7 +1552,7 @@ form {
   .modal-content {
     border-radius: 1rem;
     border: none;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 5px 15px rgba(30, 20, 80, 0.1);
     
     .modal-header {
       border-bottom: 1px solid $border-color;
@@ -1536,7 +1560,7 @@ form {
       
       .modal-title {
         font-weight: 600;
-        color: #333;
+        color: #211F3A;
       }
     }
     
@@ -1548,7 +1572,7 @@ form {
         
         label {
           font-weight: 500;
-          color: #333;
+          color: #211F3A;
           margin-bottom: 0.5rem;
         }
         

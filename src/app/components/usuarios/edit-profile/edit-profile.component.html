@@ -1,35 +1,29 @@
 <!-- <app-breadcrumb [title]="'Edit profile' | translate" [items]="['Utilities' | translate, 'Settings' | translate]"
   [active_item]="'Edit profile' | translate">
 </app-breadcrumb> -->
-<div class="container-fluid">
-  <div class="edit-profile">
-    <div class="row">
-      <div class="col-sm-12 xl-100">
-        <br><br>
-        <div class="card">
-
-          <div class="row col-12 m-2">
-            <div class="col-12">
-                <p class="text-left fc-secondary fs-24 m-0 p-0">Perfil de usuario</p>
-                <p class="text-left text-muted fs-18 m-0 p-0">
+<div class="cfg-pagina edit-profile">
+        <header class="cfg-cabeza">
+          <div class="cfg-cabeza__textos">
+                <span class="cfg-eyebrow">Seguridad</span>
+                <h1 class="cfg-titulo">Perfil de usuario</h1>
+                <p class="cfg-sub">
                     Edita la imagen del usuario o la contraseña de ingreso.
                 </p>
-            </div>
           </div>
+        </header>
 
-
-          <div class="card-body">
-            <div class="row mb-2">
+        <section class="cfg-card">
+            <div class="row mb-2 g-3 align-items-center">
               <div class="col-auto">
-                <img class="img-90 rounded" [src]="this.img ? this.img : 'assets/images/user/user.png'" alt="profile" style="width: auto;">
+                <img class="img-90 perfil-foto" [src]="this.img ? this.img : 'assets/images/user/user.png'" alt="profile">
               </div>
               <div class="col">
-                <h3 class="mb-1">{{name}}</h3>
-                <h5 class="mb-1">{{empre}}</h5>
-                <h4 class="mb-1">{{adm}}</h4>
+                <h3 class="mb-1 perfil-nombre">{{name}}</h3>
+                <h5 class="mb-1 perfil-empresa">{{empre}}</h5>
+                <h4 class="mb-1 perfil-rol">{{adm}}</h4>
               </div>
               <div class="col-auto">
-                <label for="photoprofile" class="subir mt-3 btn btn-primary">
+                <label for="photoprofile" class="cfg-btn perfil-subir">
                   {{'Cambiar foto del perfil' | translate}}
                 </label>
                 <input type="file" #subirfoto (change)="uploadImage()" id="photoprofile" style='display: none;' />
@@ -37,17 +31,17 @@
             </div>
 
             <!-- Sección para Prompt KAI -->
-            <div class="kai-prompt-section">
-              <hr class="m-t-35 m-b-35">
-              <h5>{{ 'Personalizar K.A.I Prompt' | translate }}</h5>
-              <p class="text-muted">{{ 'Define cómo quieres que K.A.I interactúe contigo o qué personalidad prefieres.' | translate }}</p>
+            <div class="kai-prompt-section cfg-form">
+              <hr class="perfil-linea">
+              <h5 class="cfg-card__titulo">{{ 'Personalizar K.A.I Prompt' | translate }}</h5>
+              <p class="cfg-sub perfil-ayuda">{{ 'Define cómo quieres que K.A.I interactúe contigo o qué personalidad prefieres.' | translate }}</p>
               <div class="form-group">
                 <label for="kaiPromptTextarea">{{ 'Tu Prompt Personalizado' | translate }}</label>
                 <textarea class="form-control" id="kaiPromptTextarea" rows="4" [(ngModel)]="kaiPrompt"
                   [placeholder]="kaiPromptPlaceholder"></textarea> <!-- Cambiado a property binding -->
               </div>
-              <div class="form-group text-right">
-                 <button class="btn btn-success" type="button" (click)="saveKaiPrompt()">{{'Guardar Prompt' | translate}}</button>
+              <div class="form-group perfil-acciones">
+                 <button class="cfg-btn" type="button" (click)="saveKaiPrompt()">{{'Guardar Prompt' | translate}}</button>
               </div>
             </div>
             <!-- Fin Sección para Prompt KAI -->
@@ -56,10 +50,9 @@
             <h5 style="align-content: center;">{{'Edita tu contraseña' | translate}}</h5>
             // ... existing commented out password form ...
             </form> -->
-            <hr class="m-t-35">
+            <hr class="perfil-linea">
             <app-shared-change-password></app-shared-change-password>
-          </div>
-        </div>
+        </section>
         <!-- <div class="card">
           <div class="ribbon ribbon-clip ribbon-danger">Nuevo</div>
           <div class="ribbon-wrapper" style="padding-top: 10px !important;">
@@ -91,7 +84,4 @@
             </div>
           </div>
         </div> -->
-      </div>
-    </div>
-  </div>
 </div>

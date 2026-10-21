@@ -1,23 +1,26 @@
-<div class="google-wizard-container">
-  <!-- Header -->
-  <header class="wizard-header">
+<div class="cfg-pagina google-wizard-container">
+  <!-- Encabezado -->
+  <header class="cfg-cabeza wizard-header">
     <div class="header-content">
       <div class="back-button" routerLink="/agent-builder/library">
         <i class="pi pi-arrow-left"></i>
       </div>
-      <div class="title-section">
-        <h1>Crear agente</h1>
-        <p>Configure your AI assistant in a few simple steps</p>
+      <div class="cfg-cabeza__textos title-section">
+        <span class="cfg-eyebrow">Agent Builder</span>
+        <h1 class="cfg-titulo">Crear agente</h1>
+        <p class="cfg-sub">Configure your AI assistant in a few simple steps</p>
       </div>
     </div>
-    <div class="step-indicator">
-      Step {{ activeStep + 1 }} of {{ steps.length }}
+    <div class="cfg-acciones">
+      <div class="step-indicator">
+        Step {{ activeStep + 1 }} of {{ steps.length }}
+      </div>
     </div>
   </header>
 
   <!-- Main Content -->
   <main class="wizard-main">
-    <div class="wizard-card">
+    <section class="cfg-card wizard-card">
       <!-- Stepper -->
       <div class="stepper-wrapper">
         <p-steps [model]="steps" [(activeIndex)]="activeStep" [readonly]="false" styleClass="google-steps">
@@ -44,7 +47,7 @@
           (back)="prevStep()" (create)="createAgent()">
         </app-step-review>
       </div>
-    </div>
+    </section>
   </main>
 
   <!-- Loading Overlay -->

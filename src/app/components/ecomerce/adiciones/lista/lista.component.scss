@@ -1,8 +1,56 @@
-// Título de la pantalla con la base común (D-400)
+// Pantalla con la base común (D-400)
 @import '../../../../shared/styles/config-pagina';
 @include config-pagina;
 
-.titulo-pantalla {
-  margin: 8px 0 16px;
+.adi-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
+.adi-filtro {
+  flex: 1 1 240px;
+  max-width: 420px;
+  min-height: 40px;
+  background: $cfg-chip-bg;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 10px;
+  color: $cfg-ink;
+  font-size: 13.5px;
+
+  &:focus { background: #fff; border-color: $cfg-accent-2; box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
+}
+
+.adi-tabla { overflow-x: auto; }
+
+.adi-img { border-radius: 9px; object-fit: cover; }
+
+.adi-acciones { white-space: nowrap; }
+
+.adi-icono {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-left: 6px;
+  border-radius: 9px;
+  background: $cfg-accent-soft;
+  color: $cfg-accent;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background .15s ease;
+
+  &:hover { background: #e2d8fd; }
+}
+
+.adi-icono--peligro {
+  background: $cfg-err-soft;
+  color: $cfg-err;
+
+  &:hover { background: #fbd9d9; }
+}
+
+.adi-pie { margin-top: 16px; }

@@ -1,20 +1,37 @@
-.subir {
-  padding: 5px 10px;
-  background: dodgerblue;
-  color: #fff;
-  border: 0px solid #fff;
-  cursor: pointer;
-  border-radius: 7px;
-}
+// Pantalla de Seguridad (D-400 / D-516): base compartida cfg-*.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
 
 .form-group {
   margin-bottom: 15px !important;
 }
 
-.img-90 {
-  height: 90;
+.perfil-foto {
+  height: 90px;
+  width: auto;
+  border-radius: 16px;
+  border: 1px solid #ececf4;
 }
 
+.perfil-nombre { font-size: 18px; font-weight: 800; color: #211F3A; }
+.perfil-empresa { font-size: 14px; font-weight: 600; color: #5b5878; }
+.perfil-rol {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #efe9ff;
+  color: #5F3FE0;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}
+
+.perfil-subir { margin: 0; }
+.perfil-linea { margin: 28px 0; border-color: #ececf4; opacity: 1; }
+.perfil-ayuda { margin-bottom: 12px; }
+.perfil-acciones { display: flex; justify-content: flex-end; }
+
 .kai-prompt-section {
-  margin-top: 25px; // Añade espacio arriba de la sección del prompt
+  margin-top: 8px;
 }

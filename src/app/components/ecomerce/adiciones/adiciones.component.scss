@@ -1,1 +1,48 @@
-// 
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.cfg-form {
+  .form-group { margin-bottom: 14px; }
+  .form-control-file { font-size: 13px; color: $cfg-body; margin-bottom: 10px; }
+  .alert-danger {
+    margin-top: 6px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 11px;
+    background: $cfg-err-soft;
+    color: $cfg-err;
+    font-size: 12.5px;
+  }
+  input[type="checkbox"] { accent-color: $cfg-accent; width: 16px; height: 16px; }
+}
+
+.adi-subtitulo {
+  margin: 4px 0 12px;
+  font-size: 15px;
+  font-weight: 800;
+  color: $cfg-ink;
+}
+
+// El span del "$" no lo crea *ngIf, pero se le da color propio igual.
+.adi-prefijo {
+  background: $cfg-tile;
+  border-color: $cfg-chip-border;
+  color: $cfg-muted;
+  font-size: 13px;
+  border-radius: 10px 0 0 10px;
+}
+
+.adi-miniatura {
+  width: 10rem;
+  margin-bottom: 12px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+}
+.adi-miniatura__img { display: block; width: 100%; height: auto; }
+.adi-miniatura__btn { width: 100%; min-height: 34px; border-radius: 0; border-width: 1px 0 0; }
+.adi-miniatura__pie { padding: 8px; text-align: center; }
+.adi-miniatura__tipo { font-size: 12px; font-weight: 700; color: $cfg-muted; }
+
+.adi-select { font-family: inherit; }

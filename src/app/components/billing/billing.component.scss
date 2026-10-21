@@ -1,38 +1,216 @@
-.card {
-  border-radius: 8px;
-  transition: box-shadow 0.2s;
+// Facturación y consumo — base cfg (D-400, D-516): plano, sin borde lateral de acento
+// ni el violeta viejo. Los colores de barras y tramos que llegan por
+// [style.x] se conservan tal cual (dependen del estado).
+@import '../../shared/styles/config-pagina';
+@include config-pagina;
 
-  &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+.bi-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ── Botones pButton de la cabecera y del CTA ──
+:host ::ng-deep {
+  .bi-btn-icono.p-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: #fff;
+    border: 1px solid #e4e2ef;
+    color: $cfg-body;
+
+    &:enabled:hover { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent; }
+    .p-button-icon { color: inherit; }
+  }
+
+  .bi-btn-sec.p-button {
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 11px;
+    background: #fff;
+    border: 1px solid #e4e2ef;
+    color: $cfg-body;
+    font-weight: 700;
+
+    &:enabled:hover { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent; }
+    .p-button-label, .p-button-icon { color: inherit; }
+  }
+
+  .bi-btn-primario.p-button {
+    min-height: 40px;
+    padding: 0 18px;
+    border-radius: 11px;
+    background: $cfg-accent;
+    border: 1px solid $cfg-accent;
+    color: #fff;
+    font-weight: 700;
+    box-shadow: $cfg-shadow-btn;
+
+    &:enabled:hover { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
+    .p-button-label, .p-button-icon { color: #fff; }
   }
 }
 
-table {
+// ── KPIs ──
+.bi-stat--ok .cfg-stat__valor { color: $cfg-ok !important; }
+.bi-stat--warn .cfg-stat__valor { color: $cfg-warn !important; }
+.bi-stat--neutro .cfg-stat__valor { color: #5A6B78 !important; }
+
+.bi-stat-nota {
+  display: block;
+  font-size: 12px;
+  color: $cfg-muted;
+}
+.bi-stat-nota--fina { font-size: 11px; line-height: 1.3; }
+
+// ── Tarjetas de consumo ──
+.bi-card-cabeza {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.bi-card-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.bi-icono { color: $cfg-accent; }
+
+.bi-nota {
+  font-size: 12.5px;
+  color: $cfg-muted;
+}
+
+.bi-porcentaje {
+  font-size: 1.1rem !important;
+  font-weight: 800;
+  color: $cfg-accent !important;
+}
+
+.bi-barra {
+  height: 24px;
+  background: $cfg-line-soft;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.bi-barra__relleno {
+  height: 100%;
+  border-radius: 12px;
+  transition: width 1s ease;
+  min-width: 2%;
+}
+
+.bi-marca {
+  font-size: 0.65rem;
+  color: $cfg-muted;
+}
+.bi-marca--actual { font-weight: 700; color: $cfg-accent; }
+
+.bi-tramo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+}
+.bi-tramo__nombre { font-size: 0.7rem; }
+.bi-tramo__precio { font-size: 0.7rem; color: $cfg-muted !important; }
+.bi-tramo__check { color: $cfg-accent; font-size: 0.6rem; }
+
+// ── Tablas ──
+.bi-card-titulo-fila {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.bi-card-titulo-texto {
+  font-size: 16px !important;
+  font-weight: 800;
+  color: $cfg-ink !important;
+}
+
+.bi-tabla-scroll {
+  overflow-x: auto;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+}
+
+.bi-tabla {
+  min-width: 560px;
+  font-size: 0.85rem;
+
   th {
-    font-size: 0.75rem;
+    background: $cfg-tint;
+    font-size: 10.5px;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
-    color: #6b778c;
-    font-weight: 600;
-    border-bottom: 2px solid #f0f0f0;
-    padding: 10px 8px;
+    letter-spacing: .5px;
+    color: $cfg-muted;
+    border-bottom: 1px solid $cfg-line-soft;
+    padding: 12px 10px;
+    white-space: nowrap;
   }
 
   td {
-    padding: 10px 8px;
+    padding: 12px 10px;
     vertical-align: middle;
-    border-bottom: 1px solid #f8f9fa;
+    color: $cfg-ink;
+    border-bottom: 1px solid $cfg-line-soft;
   }
 
-  tbody tr:hover {
-    background: #fafbfc;
-  }
+  tbody tr:hover td { background: $cfg-row-hover; }
 }
 
-.badge-success { background: #d1fae5; color: #065f46; }
-.badge-warning { background: #fef3c7; color: #92400e; }
-.badge-danger { background: #fee2e2; color: #991b1b; }
-.badge-secondary { background: #e2e8f0; color: #475569; }
+.bi-th-nota {
+  font-size: 0.65rem;
+  color: $cfg-muted;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.bi-celda { color: $cfg-ink !important; font-size: inherit; }
+.bi-monto { font-weight: 800; color: $cfg-accent; }
+.bi-tenue { color: $cfg-muted; }
+
+// Estado de la factura: pill par fuerte/fondo suave (clases que devuelve getStatusClass).
+.badge {
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}
+.badge-success { background: $cfg-ok-soft; color: $cfg-ok; }
+.badge-warning { background: $cfg-warn-soft; color: $cfg-warn; }
+.badge-danger { background: $cfg-err-soft; color: $cfg-err; }
+.badge-secondary { background: #eef0f3; color: #5A6B78; }
+
+// ── CTA freemium ──
+.bi-cta {
+  background: $cfg-accent-soft;
+  border-color: #ddd3fb;
+}
+.bi-cta__titulo {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 800;
+  color: $cfg-accent;
+}
+.bi-cta__texto {
+  margin: 0 0 16px;
+  font-size: 13.5px;
+  color: $cfg-body;
+}
 
 .loader-box {
   display: flex;

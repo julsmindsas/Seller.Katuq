@@ -1,13 +1,16 @@
-<app-breadcrumb [title]="'Crear adiciones' | translate" [items]="['Ecommerce/Configuracion catalogo/adiciones' | translate]"
-    [active_item]="'Adiciones' | translate"> </app-breadcrumb>
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="card">
+<div class="cfg-pagina">
+    <header class="cfg-cabeza">
+        <div class="cfg-cabeza__textos">
+            <span class="cfg-eyebrow">Productos</span>
+            <h1 class="cfg-titulo">Crear adiciones</h1>
+        </div>
+    </header>
 
-                <form cForm [formGroup]="additionForm">
+            <section class="cfg-card">
 
-                    <div class="card-body">
+                <form class="cfg-form" cForm [formGroup]="additionForm">
+
+                    <div>
                         <p-tabView [scrollable]="true">
                             <p-tabPanel header="{{'Datos Básicos' | translate}}">
 
@@ -66,10 +69,9 @@
 
                                         <div class="col-md-3 item"
                                             *ngFor="let img of additionForm.value.imagenPrincipal; let i = index">
-                                            <div class="card" style="width: 10rem;">
-                                                <img src="{{img.urls | imagenProducto}}" class="card-img-top" alt="Image"
-                                                    style="width: 100%; height: auto;">
-                                                <button class="btn btn-danger btn-sm" (click)="deleteImg(img.path, i)">
+                                            <div class="adi-miniatura">
+                                                <img src="{{img.urls | imagenProducto}}" class="adi-miniatura__img" alt="Image">
+                                                <button class="cfg-btn cfg-btn--peligro adi-miniatura__btn" (click)="deleteImg(img.path, i)">
                                                     {{'Eliminar' | translate}}
                                                 </button>
                                             </div>
@@ -78,14 +80,13 @@
                                         <!-- Vista previa de imágenes seleccionadas -->
                                         <div class="row mt-3" *ngIf="carrouselImg && carrouselImg.length > 0">
                                             <div class="col-12">
-                                                <h5>{{'Imágenes para subir' | translate}}:</h5>
+                                                <h5 class="adi-subtitulo">{{'Imágenes para subir' | translate}}:</h5>
                                             </div>
                                             <div class="col-md-3 item" *ngFor="let img of carrouselImg; let i = index">
-                                                <div class="card" style="width: 10rem;">
-                                                    <img [src]="img.preview" class="card-img-top" alt="Vista previa" 
-                                                        style="width: 100%; height: auto;">
-                                                    <div class="card-body text-center">
-                                                        <small>{{img.tipo === 'principal' ? 'Principal' : 'Secundaria'}}</small>
+                                                <div class="adi-miniatura">
+                                                    <img [src]="img.preview" class="adi-miniatura__img" alt="Vista previa">
+                                                    <div class="adi-miniatura__pie">
+                                                        <small class="adi-miniatura__tipo">{{img.tipo === 'principal' ? 'Principal' : 'Secundaria'}}</small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -115,7 +116,7 @@
                                     <label class="form-label" for="precioUnitario">{{'Precio Unitario' | translate}}:</label>
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text">$</span>
+                                            <span class="input-group-text adi-prefijo">$</span>
                                         </div>
                                         <input type="number" class="form-control" id="precioUnitario"
                                             formControlName="precioUnitario">
@@ -129,7 +130,7 @@
                                     <label class="form-label" for="precioIva">{{'Porcentaje IVA' | translate}}:</label>
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text">$</span>
+                                            <span class="input-group-text adi-prefijo">$</span>
                                         </div>
                                         <select type="number" class="form-control" id="precioIva"
                                             formControlName="porcentajeIVA">
@@ -142,7 +143,7 @@
                                     <label class="form-label" for="precioIva">{{'Precio IVA' | translate}}:</label>
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text">$</span>
+                                            <span class="input-group-text adi-prefijo">$</span>
                                         </div>
                                         <input type="number" class="form-control" id="precioTotal"
                                             formControlName="precioIva" disabled>
@@ -151,7 +152,7 @@
                                     <label class="form-label" for="precioTotal">{{'Precio Total' | translate}}:</label>
                                     <div class="input-group mb-3">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text">$</span>
+                                            <span class="input-group-text adi-prefijo">$</span>
                                         </div>
                                         <input type="number" class="form-control" id="precioTotal"
                                             formControlName="precioTotal" disabled>
@@ -201,7 +202,7 @@
                             </p-tabPanel>
                             <p-tabPanel header="{{'Exposición' | translate}}">
                                 <!-- Exposición -->
-                                <h3>{{'Exposición' | translate}}:</h3>
+                                <h3 class="adi-subtitulo">{{'Exposición' | translate}}:</h3>
                                 <div class="row">
 
                                     <div class="col-md-6">
@@ -301,37 +302,35 @@
                             </p-tabPanel>
                             <p-tabPanel header="{{'Ciudades' | translate}}">
                                 <!-- Ciudad -->
-                                <h3>{{'Ciudad' | translate}}:</h3>
+                                <h3 class="adi-subtitulo">{{'Ciudad' | translate}}:</h3>
 
                                 <div class="form-group">
                                     <label class="form-label" for="originCities">{{'Ciudades de origen' | translate}}:</label>
-                                    <ng-select [items]="ciudadesOrigen"
-                                        style="font-family: roboto;color: #ffffff !important;" [multiple]="true"
+                                    <ng-select class="adi-select" [items]="ciudadesOrigen"
+                                        [multiple]="true"
                                         formControlName="originCities" [closeOnSelect]="false">
                                     </ng-select>
                                 </div>
 
                                 <div class="form-group">
                                     <label class="form-label" for="deliveryCities">{{'Ciudades de entrega' | translate}}:</label>
-                                    <ng-select [items]="ciudadesEntrega"
-                                        style="font-family: roboto;color: #ffffff !important;" [multiple]="true"
+                                    <ng-select class="adi-select" [items]="ciudadesEntrega"
+                                        [multiple]="true"
                                         formControlName="deliveryCities" [closeOnSelect]="false">
                                     </ng-select>
                                 </div>
                             </p-tabPanel>
                         </p-tabView>
 
-                        <div class="row">
-                            <div class="col-sm-3">
-                                <button class="btn btn-lg btn-primary" (click)="submitAdicion()">{{'Guardar' | translate}}</button>
+                        <div class="cfg-form__pie">
+                            <div *ngIf="isEditing">
+                                <button class="cfg-btn cfg-btn--sec" (click)="cancelarEdicion()">{{'Cancelar' | translate}}</button>
                             </div>
-                            <div class="col-sm-3" *ngIf="isEditing">
-                                <button class="btn btn-lg btn-secondary" (click)="cancelarEdicion()">{{'Cancelar' | translate}}</button>
+                            <div>
+                                <button class="cfg-btn" (click)="submitAdicion()">{{'Guardar' | translate}}</button>
                             </div>
                         </div>
                     </div>
                 </form>
-            </div>
-        </div>
-    </div>
+            </section>
 </div>

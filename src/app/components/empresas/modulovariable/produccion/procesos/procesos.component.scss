@@ -1,0 +1,40 @@
+// Pantalla de Configuración (D-400 / D-516): base compartida cfg-*.
+@import '../../../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.pr-organigrama { overflow-x: auto; }
+
+:host ::ng-deep .pr-organigrama .p-organizationchart {
+  .p-organizationchart-node-content {
+    border: 1px solid #ececf4;
+    border-radius: 11px;
+    background: #fff;
+    color: #211F3A;
+    box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
+  }
+  .p-organizationchart-node-content.p-organizationchart-selectable-node:not(.p-highlight):hover { background: #faf9ff; }
+  .p-organizationchart-node-content.p-highlight { background: #efe9ff; border-color: #ddd3fb; color: #5F3FE0; }
+  .p-organizationchart-line-down { background: #d9cffb; }
+  .p-organizationchart-line-left { border-right-color: #d9cffb; }
+  .p-organizationchart-line-top { border-top-color: #d9cffb; }
+  .node-header { font-weight: 700; font-size: 13px; }
+}
+
+:host ::ng-deep .cfg-form .p-picklist {
+  .p-picklist-header { background: #faf9fe; border-color: #ececf4; color: #8f8bab; font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
+  .p-picklist-list { border-color: #ececf4; }
+  .p-picklist-item.p-highlight { background: #efe9ff; color: #5F3FE0; }
+  .p-picklist-buttons .p-button { background: #5F3FE0; border-color: #5F3FE0; border-radius: 11px; }
+  .p-picklist-buttons .p-button:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
+}
+
+// Modales de la pantalla (ng-template)
+.mo-cabeza { border-bottom: 1px solid #ececf4; padding: 16px 20px; }
+.mo-titulo { margin: 0; font-size: 18px; font-weight: 800; color: #211F3A; letter-spacing: normal; }
+.mo-cerrar { background: transparent; border: 0; padding: 0 4px; line-height: 1; cursor: pointer; }
+.mo-cerrar__x { color: #8f8bab !important; font-size: 24px !important; }
+.mo-cerrar:hover .mo-cerrar__x { color: #5F3FE0 !important; }
+.mo-pie { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #f1f0f7; padding: 12px 20px; }
+.mo-linea { border-color: #ececf4; opacity: 1; }
+.modal-body { padding: 20px; color: #211F3A; }
+.modal-body p, .modal-body label, .modal-body span, .modal-body a { letter-spacing: normal; }

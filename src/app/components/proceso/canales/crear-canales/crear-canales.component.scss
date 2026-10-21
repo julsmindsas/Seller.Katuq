@@ -1,52 +1,19 @@
-/* Estilos para el componente de crear canales */
-.form-label {
-  margin-bottom: 0.5rem;
-}
+// Modal de Configuración (D-516): base compartida cfg-* sin página completa.
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
 
-.text-danger {
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-}
+.mo-cabeza { border-bottom: 1px solid #ececf4; padding: 16px 20px; }
+.mo-titulo { margin: 0; font-size: 18px; font-weight: 800; color: #211F3A; letter-spacing: normal; }
+.mo-pie { border-top: 1px solid #f1f0f7; gap: 8px; padding: 12px 20px; }
+.modal-body { padding: 20px; color: #211F3A; }
+.modal-body p, .modal-body label, .modal-body span, .modal-body a { letter-spacing: normal; }
+.mo-texto { color: #8f8bab; font-size: 13px; }
+.mo-cargando { color: #5F3FE0; }
+.mo-estado { color: #8f8bab !important; font-size: 13px !important; font-weight: 600; }
+.mo-estado--ok { color: #1E874B !important; }
+.cfg-form .form-check-label { text-transform: none; font-size: 13.5px; letter-spacing: normal; margin: 0; }
 
-.form-control {
-  &:focus {
-    border-color: #6ec0d4;
-    box-shadow: 0 0 0 0.2rem rgba(110, 192, 212, 0.25);
-  }
-}
-
-.form-check-input {
-  &:checked {
-    background-color: #6ec0d4;
-    border-color: #6ec0d4;
-  }
-  
-  &:focus {
-    border-color: #6ec0d4;
-    box-shadow: 0 0 0 0.2rem rgba(110, 192, 212, 0.25);
-  }
-}
-
-/* Botones del modal */
-.modal-footer {
-  .btn-primary {
-    background-color: #6ec0d4;
-    border-color: #6ec0d4;
-    
-    &:hover, &:focus {
-      background-color: darken(#6ec0d4, 10%);
-      border-color: darken(#6ec0d4, 10%);
-    }
-  }
-}
-
-/* Estilos para hacer el formulario más compacto en dispositivos pequeños */
 @media (max-width: 768px) {
-  .modal-body {
-    padding: 1rem;
-  }
-  
-  .row.g-4 {
-    --bs-gutter-x: 0.5rem;
-  }
-} 
+  .modal-body { padding: 16px; }
+  .row.g-4 { --bs-gutter-x: 0.5rem; }
+}

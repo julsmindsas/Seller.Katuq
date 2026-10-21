@@ -1,65 +1,53 @@
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-12 p-4">
+<div class="cfg-pagina">
       <!-- Header -->
-      <div class="card lp-header mb-4">
-        <div class="card-body">
-          <div class="row align-items-center gy-3">
-            <div class="col-md-6">
-              <div class="lp-title-wrap">
-                <div class="lp-title-icon"><i class="pi pi-tags"></i></div>
-                <div>
-                  <h4 class="mb-1 fw-bold">Lista de precios</h4>
-                  <p class="text-muted mb-0">Administra los precios de tus productos</p>
-                  <!-- Modo de precios de la empresa: acá solo se informa; se elige
-                       en el menú de perfil → Configuración de empresa (solo el
-                       administrador). -->
-                  <span class="lp-modo" *ngIf="modoPrecio">
-                    <i class="pi pi-tag"></i> Tu empresa maneja:
-                    <strong>{{ etiquetaModoPrecio }}{{ etiquetaPrecioBaseTipoCliente }}</strong>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="lp-actions">
-                <!-- Un importador y una plantilla POR PESTAÑA: el archivo se
-                     interpreta según dónde está parado el usuario. -->
-                <button class="btn btn-outline-secondary me-2" (click)="importarPrecios()"
-                  [pTooltip]="'Importar ' + nombrePestana + ' desde Excel'" tooltipPosition="bottom">
-                  <i class="icofont icofont-upload"></i> Importar
-                </button>
-                <button class="btn btn-outline-success me-2" (click)="descargarFormatoExcel()"
-                  [pTooltip]="'Descargar plantilla de ' + nombrePestana" tooltipPosition="bottom">
-                  <i class="icofont icofont-download"></i> Plantilla
-                </button>
-                <button class="btn btn-success me-2" (click)="exportarExcel()"
-                  pTooltip="Exportar todos los productos con precios actuales" tooltipPosition="bottom">
-                  <i class="icofont icofont-file-excel"></i> Exportar Excel
-                </button>
-                <button class="btn btn-outline-danger" (click)="limpiarPreciosTipoCliente()" *ngIf="activeTab === 0"
-                  pTooltip="Eliminar todos los precios por tipo de cliente" tooltipPosition="bottom">
-                  <i class="pi pi-trash"></i> Limpiar precios
-                </button>
-
-                <!-- Ticket 1032: auditar los productos a los que les falta el costo. -->
-                <label class="lp-solo-sin-costo" *ngIf="activeTab === COSTO_TAB_INDEX"
-                  pTooltip="Exporta únicamente los productos que están sin costo, para corregirlos y volverlos a importar"
-                  tooltipPosition="bottom">
-                  <input type="checkbox" [(ngModel)]="soloSinCosto" />
-                  <span>Solo sin costo</span>
-                  <span class="lp-chip-conteo" *ngIf="sinCostoContados !== null">
-                    {{ sinCostoContados | number }} de {{ totalContados | number }}
-                  </span>
-                </label>
-              </div>
-            </div>
-          </div>
+      <header class="cfg-cabeza">
+        <div class="cfg-cabeza__textos">
+          <span class="cfg-eyebrow">Inventarios y Productos</span>
+          <h1 class="cfg-titulo">Lista de precios</h1>
+          <p class="cfg-sub">Administra los precios de tus productos</p>
+          <!-- Modo de precios de la empresa: acá solo se informa; se elige
+               en el menú de perfil → Configuración de empresa (solo el
+               administrador). -->
+          <span class="lp-modo" *ngIf="modoPrecio">
+            <i class="pi pi-tag"></i> Tu empresa maneja:
+            <strong>{{ etiquetaModoPrecio }}{{ etiquetaPrecioBaseTipoCliente }}</strong>
+          </span>
         </div>
-      </div>
+        <div class="cfg-acciones lprecios-acciones">
+          <!-- Un importador y una plantilla POR PESTAÑA: el archivo se
+               interpreta según dónde está parado el usuario. -->
+          <button class="cfg-btn cfg-btn--sec" (click)="importarPrecios()"
+            [pTooltip]="'Importar ' + nombrePestana + ' desde Excel'" tooltipPosition="bottom">
+            <i class="icofont icofont-upload"></i> Importar
+          </button>
+          <button class="cfg-btn cfg-btn--sec" (click)="descargarFormatoExcel()"
+            [pTooltip]="'Descargar plantilla de ' + nombrePestana" tooltipPosition="bottom">
+            <i class="icofont icofont-download"></i> Plantilla
+          </button>
+          <button class="cfg-btn cfg-btn--sec" (click)="exportarExcel()"
+            pTooltip="Exportar todos los productos con precios actuales" tooltipPosition="bottom">
+            <i class="icofont icofont-file-excel"></i> Exportar Excel
+          </button>
+          <button class="cfg-btn cfg-btn--peligro" (click)="limpiarPreciosTipoCliente()" *ngIf="activeTab === 0"
+            pTooltip="Eliminar todos los precios por tipo de cliente" tooltipPosition="bottom">
+            <i class="pi pi-trash"></i> Limpiar precios
+          </button>
+
+          <!-- Ticket 1032: auditar los productos a los que les falta el costo. -->
+          <label class="lp-solo-sin-costo" *ngIf="activeTab === COSTO_TAB_INDEX"
+            pTooltip="Exporta únicamente los productos que están sin costo, para corregirlos y volverlos a importar"
+            tooltipPosition="bottom">
+            <input type="checkbox" [(ngModel)]="soloSinCosto" />
+            <span class="lprecios-solo">Solo sin costo</span>
+            <span class="lp-chip-conteo" *ngIf="sinCostoContados !== null">
+              {{ sinCostoContados | number }} de {{ totalContados | number }}
+            </span>
+          </label>
+        </div>
+      </header>
 
       <!-- Tabs -->
-      <div class="card">
+      <section class="cfg-card">
         <!-- [activeIndex] va con el índice RENDERIZADO: con una pestaña oculta por
              el modo de la empresa, la posición ya no coincide con el índice lógico. -->
         <p-tabView (onChange)="onTabChange($event)" [activeIndex]="activeTabRender">
@@ -278,7 +266,7 @@
                         <div class="row mt-3" *ngIf="getPreciosValidosPorTipoCliente(producto).length > 0">
                           <div class="col-md-3 col-sm-6 mb-2" *ngFor="let precio of getPreciosValidosPorTipoCliente(producto); trackBy: trackByTipoClienteId">
                             <div class="card h-100 border-primary">
-                              <div class="card-header bg-primary text-white py-1 text-center">
+                              <div class="card-header lprecios-resumen py-1 text-center">
                                 <small class="fw-bold">{{ precio.tipoClienteNombre }}</small>
                               </div>
                               <div class="card-body p-2">
@@ -331,7 +319,7 @@
 
                 <ng-template pTemplate="emptymessage">
                   <tr>
-                    <td colspan="7" class="text-center"><span *ngIf="hayFiltrosActivos">Ningún producto coincide con la búsqueda o el rango de precio.</span><span *ngIf="!hayFiltrosActivos">No hay productos disponibles</span></td>
+                    <td colspan="7" class="text-center"><span class="lprecios-vacio" *ngIf="hayFiltrosActivos">Ningún producto coincide con la búsqueda o el rango de precio.</span><span class="lprecios-vacio" *ngIf="!hayFiltrosActivos">No hay productos disponibles</span></td>
                   </tr>
                 </ng-template>
               </p-table>
@@ -463,7 +451,7 @@
 
                 <ng-template pTemplate="emptymessage">
                   <tr>
-                    <td colspan="7" class="text-center"><span *ngIf="hayFiltrosActivos">Ningún producto coincide con la búsqueda o el rango de precio.</span><span *ngIf="!hayFiltrosActivos">No hay productos disponibles</span></td>
+                    <td colspan="7" class="text-center"><span class="lprecios-vacio" *ngIf="hayFiltrosActivos">Ningún producto coincide con la búsqueda o el rango de precio.</span><span class="lprecios-vacio" *ngIf="!hayFiltrosActivos">No hay productos disponibles</span></td>
                   </tr>
                 </ng-template>
               </p-table>
@@ -603,7 +591,7 @@
 
                 <ng-template pTemplate="emptymessage">
                   <tr>
-                    <td colspan="6" class="text-center"><span *ngIf="hayFiltrosActivos">Ningún producto coincide con la búsqueda o el rango de precio.</span><span *ngIf="!hayFiltrosActivos">No hay productos disponibles</span></td>
+                    <td colspan="6" class="text-center"><span class="lprecios-vacio" *ngIf="hayFiltrosActivos">Ningún producto coincide con la búsqueda o el rango de precio.</span><span class="lprecios-vacio" *ngIf="!hayFiltrosActivos">No hay productos disponibles</span></td>
                   </tr>
                 </ng-template>
               </p-table>
@@ -734,14 +722,14 @@
 
                 <ng-template pTemplate="emptymessage">
                   <tr>
-                    <td colspan="8" class="text-center"><span *ngIf="hayFiltrosActivos">Ningún producto coincide con la búsqueda o el rango de precio.</span><span *ngIf="!hayFiltrosActivos">No hay productos disponibles</span></td>
+                    <td colspan="8" class="text-center"><span class="lprecios-vacio" *ngIf="hayFiltrosActivos">Ningún producto coincide con la búsqueda o el rango de precio.</span><span class="lprecios-vacio" *ngIf="!hayFiltrosActivos">No hay productos disponibles</span></td>
                   </tr>
                 </ng-template>
               </p-table>
             </div>
           </p-tabPanel>
         </p-tabView>
-      </div>
+      </section>
 
       <!-- Input oculto para importar archivos -->
       <input
@@ -751,6 +739,4 @@
         style="display: none;"
         (change)="onFileSelected($event)"
       />
-    </div>
-  </div>
 </div>

@@ -7,7 +7,7 @@ import { IntegrationsService } from '../integrations.service';
 @Component({
   selector: 'app-sync-logs',
   templateUrl: './sync-logs.component.html',
-  styleUrls: ['./sync-logs.component.css'],
+  styleUrls: ['./sync-logs.component.scss'],
   providers: [MessageService]
 })
 export class SyncLogsComponent implements OnInit, OnDestroy {

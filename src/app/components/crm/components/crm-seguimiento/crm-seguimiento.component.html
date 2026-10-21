@@ -1,13 +1,19 @@
-<div class="seguimiento-wrap">
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <h5 class="mb-0"><i class="fa fa-flag me-2" style="color:#d12b38;"></i>Seguimiento</h5>
-    <button class="btn btn-sm btn-outline-secondary" (click)="load()" [disabled]="loading">
-      <i class="fa fa-refresh me-1"></i>Actualizar
-    </button>
-  </div>
+<!-- D-516: marco canónico (config-pagina) -->
+<div class="cfg-pagina seguimiento-wrap">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">CRM</span>
+      <h1 class="cfg-titulo">Seguimiento</h1>
+    </div>
+    <div class="cfg-acciones">
+      <button class="cfg-btn cfg-btn--sec" (click)="load()" [disabled]="loading">
+        <i class="fa fa-refresh me-1"></i>Actualizar
+      </button>
+    </div>
+  </header>
 
   <!-- Métricas resumen -->
-  <div class="metrics-row mb-3" *ngIf="!loading">
+  <div class="metrics-row" *ngIf="!loading">
     <div class="metric-chip metric-chip-warning">
       <span class="metric-value">{{ cotizacionesSinAbrir.length }}</span>
       <span class="metric-label">Sin abrir</span>
@@ -29,10 +35,10 @@
   <div class="cards-grid">
 
   <!-- Tareas vencidas -->
-  <div class="card stat-card-overdue">
-    <div class="card-body">
+  <div class="cfg-card stat-card-overdue">
+    <div>
       <div class="d-flex align-items-center justify-content-between mb-2">
-        <h6 class="mb-0"><i class="fa fa-clock-o me-2" style="color:#d12b38;"></i>Tareas vencidas</h6>
+        <h6 class="mb-0"><i class="fa fa-clock-o me-2 seg-icono--error"></i>Tareas vencidas</h6>
         <span class="stat-badge stat-badge-danger">{{ overdueTasks.length }}</span>
       </div>
       <small class="text-muted d-block mb-2">Tareas pendientes cuya fecha de vencimiento ya pasó.</small>
@@ -42,14 +48,14 @@
       </div>
 
       <div *ngIf="!loading && overdueTasks.length === 0" class="text-center text-muted py-4">
-        <i class="fa fa-check-circle" style="font-size:2rem; color:#27AE60;"></i>
+        <i class="fa fa-check-circle seg-ok-icono"></i>
         <p class="mb-0 mt-2">No hay tareas vencidas 🎉</p>
       </div>
 
       <div *ngIf="!loading && overdueTasks.length > 0">
         <div *ngFor="let task of overdueTasks"
-          class="d-flex align-items-center justify-content-between gap-2 py-2 border-bottom">
-          <div class="flex-grow-1" style="min-width:0;">
+          class="d-flex align-items-center justify-content-between gap-2 py-2 seg-fila">
+          <div class="flex-grow-1 seg-fila__textos">
             <div class="fw-semibold text-truncate">{{ task.title }}</div>
             <small class="text-muted d-block">
               <i class="fa fa-user-o me-1"></i>{{ leadName(task) }}
@@ -59,8 +65,7 @@
           </div>
           <p-tag [value]="task.priority" [severity]="getPrioritySeverity(task.priority)"
             [style]="{'font-size':'0.7rem'}"></p-tag>
-          <button class="btn btn-outline-primary btn-sm py-0 px-2"
-            style="font-size:0.75rem; white-space:nowrap;" (click)="goToTask(task)">
+          <button class="cfg-btn cfg-btn--sec seg-btn-mini" (click)="goToTask(task)">
             <i class="fa fa-external-link me-1"></i>Ver
           </button>
         </div>
@@ -69,10 +74,10 @@
   </div>
 
   <!-- Propuestas sin abrir -->
-  <div class="card stat-card-pending">
-    <div class="card-body">
+  <div class="cfg-card stat-card-pending">
+    <div>
       <div class="d-flex align-items-center justify-content-between mb-2">
-        <h6 class="mb-0"><i class="fa fa-envelope-o me-2" style="color:#D35400;"></i>Propuestas sin abrir</h6>
+        <h6 class="mb-0"><i class="fa fa-envelope-o me-2 seg-icono--warn"></i>Propuestas sin abrir</h6>
         <span class="stat-badge stat-badge-warning">{{ cotizacionesSinAbrir.length }}</span>
       </div>
       <small class="text-muted d-block mb-2">Cotizaciones enviadas que el cliente todavía no ha abierto.</small>
@@ -82,14 +87,14 @@
       </div>
 
       <div *ngIf="!loading && cotizacionesSinAbrir.length === 0" class="text-center text-muted py-4">
-        <i class="fa fa-check-circle" style="font-size:2rem; color:#27AE60;"></i>
+        <i class="fa fa-check-circle seg-ok-icono"></i>
         <p class="mb-0 mt-2">No hay propuestas pendientes de abrir</p>
       </div>
 
       <div *ngIf="!loading && cotizacionesSinAbrir.length > 0">
         <div *ngFor="let c of cotizacionesSinAbrir"
-          class="d-flex align-items-center justify-content-between gap-2 py-2 border-bottom">
-          <div class="flex-grow-1" style="min-width:0;">
+          class="d-flex align-items-center justify-content-between gap-2 py-2 seg-fila">
+          <div class="flex-grow-1 seg-fila__textos">
             <div class="fw-semibold text-truncate">{{ clienteNombre(c) }}</div>
             <small class="text-muted d-block">
               <i class="fa fa-file-text-o me-1"></i>{{ c.nroCotizacion }}
@@ -97,14 +102,12 @@
               <span class="badge-pending ms-2">{{ c._diasEsperando }}d esperando</span>
             </small>
           </div>
-          <span class="fw-semibold" style="font-size:0.8rem; white-space:nowrap;">{{ formatCurrency(c.total) }}</span>
-          <button class="btn btn-outline-secondary btn-sm py-0 px-2"
-            style="font-size:0.75rem; white-space:nowrap;" (click)="goToLead(c)"
+          <span class="fw-semibold seg-total">{{ formatCurrency(c.total) }}</span>
+          <button class="cfg-btn cfg-btn--sec seg-btn-mini" (click)="goToLead(c)"
             pTooltip="Ver el lead en el CRM" tooltipPosition="top">
             <i class="fa fa-address-book-o"></i>
           </button>
-          <button class="btn btn-outline-primary btn-sm py-0 px-2"
-            style="font-size:0.75rem; white-space:nowrap;" (click)="goToCotizacion(c)">
+          <button class="cfg-btn cfg-btn--sec seg-btn-mini" (click)="goToCotizacion(c)">
             <i class="fa fa-external-link me-1"></i>Ver
           </button>
         </div>
@@ -113,10 +116,10 @@
   </div>
 
   <!-- Vistas pero no cerradas -->
-  <div class="card stat-card-seen">
-    <div class="card-body">
+  <div class="cfg-card stat-card-seen">
+    <div>
       <div class="d-flex align-items-center justify-content-between mb-2">
-        <h6 class="mb-0"><i class="fa fa-eye me-2" style="color:#5F3FE0;"></i>Vistas pero no cerradas</h6>
+        <h6 class="mb-0"><i class="fa fa-eye me-2 seg-icono--acento"></i>Vistas pero no cerradas</h6>
         <span class="stat-badge stat-badge-info">{{ cotizacionesVistasSinCerrar.length }}</span>
       </div>
       <small class="text-muted d-block mb-2">El cliente abrió la cotización pero aún no la acepta ni la rechaza.</small>
@@ -126,30 +129,28 @@
       </div>
 
       <div *ngIf="!loading && cotizacionesVistasSinCerrar.length === 0" class="text-center text-muted py-4">
-        <i class="fa fa-check-circle" style="font-size:2rem; color:#27AE60;"></i>
+        <i class="fa fa-check-circle seg-ok-icono"></i>
         <p class="mb-0 mt-2">No hay propuestas vistas sin cerrar</p>
       </div>
 
       <div *ngIf="!loading && cotizacionesVistasSinCerrar.length > 0">
         <div *ngFor="let c of cotizacionesVistasSinCerrar"
-          class="d-flex align-items-center justify-content-between gap-2 py-2 border-bottom">
-          <div class="flex-grow-1" style="min-width:0;">
+          class="d-flex align-items-center justify-content-between gap-2 py-2 seg-fila">
+          <div class="flex-grow-1 seg-fila__textos">
             <div class="fw-semibold text-truncate">{{ clienteNombre(c) }}</div>
             <small class="text-muted d-block">
               <i class="fa fa-file-text-o me-1"></i>{{ c.nroCotizacion }}
               <span class="ms-2"><i class="fa fa-eye me-1"></i>Vista {{ formatDate(c.fechaPrimeraVista) }}</span>
-              <span class="ms-2" *ngIf="c.vistasCount">({{ c.vistasCount }} {{ c.vistasCount === 1 ? 'vez' : 'veces' }})</span>
+              <span class="ms-2 seg-meta" *ngIf="c.vistasCount">({{ c.vistasCount }} {{ c.vistasCount === 1 ? 'vez' : 'veces' }})</span>
               <span class="badge-pending ms-2">{{ c._diasEsperando }}d esperando</span>
             </small>
           </div>
-          <span class="fw-semibold" style="font-size:0.8rem; white-space:nowrap;">{{ formatCurrency(c.total) }}</span>
-          <button class="btn btn-outline-secondary btn-sm py-0 px-2"
-            style="font-size:0.75rem; white-space:nowrap;" (click)="goToLead(c)"
+          <span class="fw-semibold seg-total">{{ formatCurrency(c.total) }}</span>
+          <button class="cfg-btn cfg-btn--sec seg-btn-mini" (click)="goToLead(c)"
             pTooltip="Ver el lead en el CRM" tooltipPosition="top">
             <i class="fa fa-address-book-o"></i>
           </button>
-          <button class="btn btn-outline-primary btn-sm py-0 px-2"
-            style="font-size:0.75rem; white-space:nowrap;" (click)="goToCotizacion(c)">
+          <button class="cfg-btn cfg-btn--sec seg-btn-mini" (click)="goToCotizacion(c)">
             <i class="fa fa-external-link me-1"></i>Ver
           </button>
         </div>
@@ -158,10 +159,10 @@
   </div>
 
   <!-- Propuestas vencidas -->
-  <div class="card stat-card-vencida">
-    <div class="card-body">
+  <div class="cfg-card stat-card-vencida">
+    <div>
       <div class="d-flex align-items-center justify-content-between mb-2">
-        <h6 class="mb-0"><i class="fa fa-hourglass-end me-2" style="color:#d12b38;"></i>Propuestas vencidas</h6>
+        <h6 class="mb-0"><i class="fa fa-hourglass-end me-2 seg-icono--error"></i>Propuestas vencidas</h6>
         <span class="stat-badge stat-badge-danger">{{ cotizacionesVencidas.length }}</span>
       </div>
       <small class="text-muted d-block mb-2">Cotizaciones que pasaron su fecha de vencimiento sin respuesta.</small>
@@ -171,14 +172,14 @@
       </div>
 
       <div *ngIf="!loading && cotizacionesVencidas.length === 0" class="text-center text-muted py-4">
-        <i class="fa fa-check-circle" style="font-size:2rem; color:#27AE60;"></i>
+        <i class="fa fa-check-circle seg-ok-icono"></i>
         <p class="mb-0 mt-2">No hay propuestas vencidas</p>
       </div>
 
       <div *ngIf="!loading && cotizacionesVencidas.length > 0">
         <div *ngFor="let c of cotizacionesVencidas"
-          class="d-flex align-items-center justify-content-between gap-2 py-2 border-bottom">
-          <div class="flex-grow-1" style="min-width:0;">
+          class="d-flex align-items-center justify-content-between gap-2 py-2 seg-fila">
+          <div class="flex-grow-1 seg-fila__textos">
             <div class="fw-semibold text-truncate">{{ clienteNombre(c) }}</div>
             <small class="text-muted d-block">
               <i class="fa fa-file-text-o me-1"></i>{{ c.nroCotizacion }}
@@ -186,14 +187,12 @@
               <span class="badge-overdue ms-2">{{ c._diasEsperando }}d vencida</span>
             </small>
           </div>
-          <span class="fw-semibold" style="font-size:0.8rem; white-space:nowrap;">{{ formatCurrency(c.total) }}</span>
-          <button class="btn btn-outline-secondary btn-sm py-0 px-2"
-            style="font-size:0.75rem; white-space:nowrap;" (click)="goToLead(c)"
+          <span class="fw-semibold seg-total">{{ formatCurrency(c.total) }}</span>
+          <button class="cfg-btn cfg-btn--sec seg-btn-mini" (click)="goToLead(c)"
             pTooltip="Ver el lead en el CRM" tooltipPosition="top">
             <i class="fa fa-address-book-o"></i>
           </button>
-          <button class="btn btn-outline-primary btn-sm py-0 px-2"
-            style="font-size:0.75rem; white-space:nowrap;" (click)="goToCotizacion(c)">
+          <button class="cfg-btn cfg-btn--sec seg-btn-mini" (click)="goToCotizacion(c)">
             <i class="fa fa-external-link me-1"></i>Ver
           </button>
         </div>
@@ -202,10 +201,10 @@
   </div>
 
   <!-- Tareas sin revisar -->
-  <div class="card stat-card-unreviewed">
-    <div class="card-body">
+  <div class="cfg-card stat-card-unreviewed">
+    <div>
       <div class="d-flex align-items-center justify-content-between mb-2">
-        <h6 class="mb-0"><i class="fa fa-eye-slash me-2" style="color:#7c3aed;"></i>Tareas sin revisar</h6>
+        <h6 class="mb-0"><i class="fa fa-eye-slash me-2 seg-icono--acento"></i>Tareas sin revisar</h6>
         <span class="stat-badge stat-badge-purple">{{ unreviewedTasks.length }}</span>
       </div>
       <small class="text-muted d-block mb-2">Tareas pendientes que no has revisado en los últimos 8 días.</small>
@@ -215,14 +214,14 @@
       </div>
 
       <div *ngIf="!loading && unreviewedTasks.length === 0" class="text-center text-muted py-4">
-        <i class="fa fa-check-circle" style="font-size:2rem; color:#27AE60;"></i>
+        <i class="fa fa-check-circle seg-ok-icono"></i>
         <p class="mb-0 mt-2">Todo al día, sin tareas olvidadas</p>
       </div>
 
       <div *ngIf="!loading && unreviewedTasks.length > 0">
         <div *ngFor="let task of unreviewedTasks"
-          class="d-flex align-items-center justify-content-between gap-2 py-2 border-bottom">
-          <div class="flex-grow-1" style="min-width:0;">
+          class="d-flex align-items-center justify-content-between gap-2 py-2 seg-fila">
+          <div class="flex-grow-1 seg-fila__textos">
             <div class="fw-semibold text-truncate">{{ task.title }}</div>
             <small class="text-muted d-block">
               <i class="fa fa-user-o me-1"></i>{{ leadName(task) }}
@@ -231,8 +230,7 @@
           </div>
           <p-tag [value]="task.priority" [severity]="getPrioritySeverity(task.priority)"
             [style]="{'font-size':'0.7rem'}"></p-tag>
-          <button class="btn btn-outline-primary btn-sm py-0 px-2"
-            style="font-size:0.75rem; white-space:nowrap;" (click)="goToUnreviewedTask(task)">
+          <button class="cfg-btn cfg-btn--sec seg-btn-mini" (click)="goToUnreviewedTask(task)">
             <i class="fa fa-external-link me-1"></i>Ver
           </button>
         </div>

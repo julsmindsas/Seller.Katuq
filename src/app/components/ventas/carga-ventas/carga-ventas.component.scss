@@ -3,27 +3,105 @@
 @include config-pagina;
 
 .titulo-pantalla {
-  margin: 8px 0 16px;
+  margin: 0;
 }
 
-.btn-group {
+// Selector JSON / Excel: el [ngClass] alterna btn-primary / btn-outline-primary.
+// Se re-estilizan aquí (el global `.btn-primary` trae !important con otro color).
+.cv-tipo {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  background: #f5f4fa;
+  border: 1px solid #e9e7f3;
+  border-radius: 11px;
+
   .btn {
-    margin-right: 5px;
+    margin: 0;
+    min-height: 34px;
+    padding: 0 16px;
+    border-radius: 9px !important;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: none;
+  }
+
+  .btn.btn-primary {
+    background-color: #5F3FE0 !important;
+    border-color: #5F3FE0 !important;
+    color: #fff !important;
+  }
+
+  .btn.btn-outline-primary {
+    background-color: transparent !important;
+    border-color: transparent !important;
+    color: #5b5878 !important;
+
+    &:hover { color: #5F3FE0 !important; background-color: #fff !important; }
   }
 }
 
+.cv-archivo {
+  margin-top: 22px;
+
+  strong { color: inherit; }
+}
+
 pre {
-  background-color: #f8f9fa;
-  padding: 10px;
-  border-radius: 5px;
+  background-color: #faf9fe;
+  border: 1px solid #ececf4;
+  color: #211F3A;
+  padding: 12px;
+  border-radius: 11px;
   font-size: 0.8rem;
 }
 
+// Resultado del procesamiento ([ngClass] alert-success / alert-danger): par fuerte / fondo suave.
 .alert {
   margin-top: 15px;
+  border: 0;
+  border-radius: 11px;
+
+  h5 { font-size: 14px; font-weight: 800; color: inherit; }
+  p { margin: 0; color: inherit; letter-spacing: normal; }
 }
+.alert.alert-success { background: #E6F7EE; color: #1E874B; }
+.alert.alert-danger { background: #FDECEC; color: #D64545; }
 
 .table-responsive {
   max-height: 400px;
-  overflow-y: auto;
+  overflow: auto;
+  border: 1px solid #f1f0f7;
+  border-radius: 11px;
 }
+
+.cv-tabla {
+  margin: 0;
+
+  th {
+    background: #faf9fe;
+    color: #8f8bab;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    border-color: #f1f0f7;
+    white-space: nowrap;
+  }
+
+  td { color: #211F3A; font-size: 13px; border-color: #f1f0f7; }
+  tbody tr:hover td { background: #faf9ff; }
+}
+
+.cv-nota { margin-top: 8px; font-size: 12.5px; color: #8f8bab; }
+
+.cv-formatos {
+  border: 1px solid #ececf4;
+  border-radius: 16px;
+  background: #fff;
+
+  h6 { font-size: 13px; font-weight: 800; color: #211F3A; }
+  p, li { font-size: 13px; color: #5b5878; }
+}
+.cv-formatos__cabeza { padding: 16px 16px 0; }
+.cv-formatos__cuerpo { padding: 0 16px 16px; }

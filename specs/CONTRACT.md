@@ -11451,3 +11451,47 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
     - el asistente DIAN por pasos, FE-01b, propuesto y pendiente de aprobación en pantalla;
     - el índice de `orders` (0.4);
     - el cambio privado de permisos del Contador (0.2).
+
+## D-516 (2026-10-20) — Pantallas internas restantes con la regla de diseño Katuq (openspec/changes/modernizar-pantallas-restantes) — COMMITEADO, sin desplegar
+
+**Disparador.** Pedido en sesión (cuenta adminapps de Julsmind): revisar qué pantallas faltaba pasar al diseño nuevo para tener un estándar, y luego «dale, actualiza el diseño».
+
+**Inventario (solo lectura, 174 pantallas con ruta).** Unas 71 ya seguían la regla (D-398, D-399, D-400 y los módulos rehechos). Faltaban 93: 18 solo con residuos y 75 con la plantilla vieja (`container-fluid` + `card`/`card-header`/`module-header`, botones de Bootstrap, `fc-secondary`, `#8b5cf6` escrito en el HTML, azules sueltos, `border-left` de acento).
+
+**Decisión.**
+- La base `_config-pagina.scss` suma `cfg-pill`, `cfg-stats`/`cfg-stat`, `cfg-form` y las pestañas PrimeNG dentro de `cfg-pagina`. Son clases nuevas y ninguna pantalla de D-400 las usaba.
+- Se migran unas 90 pantallas en 8 grupos: productos, clientes/CRM/prospectos, inventario, logística (despachos, picking/packing, dropshipping), formularios «crear» de Configuración y seguridad, integraciones (con Shopify), flows/precios/facturación/planes, IA (agent builder, video agente) e inicio/dashboards/otras.
+- Solo presentación. Un verificador compara los bindings de cada HTML contra el commit anterior (eventos, propiedades, `*ngIf/*ngFor`, referencias, interpolaciones, `formControlName`/`ngModel`, `<app-*>`/`<p-*>`) y no encuentra ninguna diferencia. La única excepción es el `<app-breadcrumb>` activo de 8 pantallas, reemplazado por `cfg-cabeza`.
+- Los únicos `.ts` tocados son los `styleUrls` de las 4 pantallas de Shopify: pasan de `.css` a `.scss` para usar la base y no copiarla a mano.
+
+**Fuera de este cambio.**
+- Venta asistida, crear-ventas, la vista Tabla de Todos los pedidos, POS (`ventas-pos`) y el dashboard de Producción van diff por diff: son de más de 4.000 líneas y están en el flujo de pedidos.
+- La reconciliación de `_katuq-tokens.scss` (`#8b5cf6`) con el canon `#5F3FE0` pide su propia propuesta.
+- Candidatas a retirar: `dashboards/classic`, `pos/ventas`, `sample-page`, `maestros`, `live-audio`.
+
+**Medición en el front (antes → después).**
+
+| Qué | Antes | Después |
+|---|---|---|
+| Azules sueltos | 193 | 44 |
+| `#8b5cf6`/`#a78bfa` | 195 | 88 |
+| Gradientes (sin katuq-flow) | 64 | 44 |
+| `btn-success` | 27 | 19 |
+| `fc-secondary` | 5 | 1 |
+| `card-header` | 165 | 128 |
+| Primarios prohibidos | 4 | 4 |
+| HTML con `cfg-pagina` | 34 | 93 |
+
+**Validación.**
+- `ng build --configuration production` sin errores. El aviso del presupuesto del bundle inicial ya estaba antes.
+- El primer build marcó que `variables.component.html` usaba `userNit`, que no existe en el componente. Compilaba porque estaba dentro de un `*ngIf`. Las acciones vuelven a `*ngIf="!cargando"`, como antes.
+- Un segundo chequeo compara la cadena de `*ngIf`/`*ngFor` de los ancestros de cada elemento con bindings. Encontró un solo cambio, «Volver» en la config de dropshipping de productos, que también volvió a su `*ngIf="!loading"`.
+
+**Pendientes.**
+- Revisar cada pantalla en el navegador a 1440 y 390 px con sesión de comercio. En esta sesión no hubo navegador: Chromium pide librerías del sistema.
+- Colores que viven en bindings o en `.ts` y no se tocaron:
+  - `[style.color]` en inventario por bodega, CRM, sync-logs y artifact-renderer.
+  - `#2563eb` en `report-builder.component.ts`.
+  - `conic-gradient` en `soporte.component.ts`.
+- `::ng-deep` sin `:host` que ya se filtraba a toda la app desde antes: traslados, recepción, clientes y listado de clientes. Ahora filtra colores del canon.
+- Decidir el eyebrow de Usuarios: la lista dice «Configuración» y los formularios «Seguridad», como el menú.

@@ -1,16 +1,57 @@
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+// Diseño Katuq (D-516): cfg-pagina + cfg-cabeza; tarjetas, botones y estados con el tema.
 .siigo-config-container {
   max-width: 900px;
   margin: 0 auto;
-  padding: 20px;
   position: relative;
+}
+
+:host ::ng-deep .siigo-config-container {
+  .p-button {
+    border-radius: 11px;
+    font-weight: 700;
+    background: $cfg-accent;
+    border-color: $cfg-accent;
+    color: #fff;
+    &:enabled:hover { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
+    &:focus { box-shadow: 0 0 0 3px rgba(124, 92, 255, .25); }
+    &:disabled { background: #d8d4ea; border-color: #d8d4ea; opacity: 1; }
+  }
+  .p-button.p-button-outlined {
+    background: #fff;
+    border: 1px solid #e4e2ef;
+    color: $cfg-body;
+    &:enabled:hover { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent; }
+  }
+
+  .p-card {
+    border-radius: 16px;
+    border: 1px solid $cfg-line;
+    box-shadow: $cfg-shadow-panel;
+    color: $cfg-ink;
+    .p-card-title { font-size: 16px; font-weight: 800; color: $cfg-ink; }
+  }
+
+  .p-dropdown, .p-inputtext {
+    border-radius: 10px;
+    border-color: $cfg-chip-border;
+  }
+  .p-dropdown:not(.p-disabled).p-focus, .p-inputtext:enabled:focus {
+    border-color: $cfg-accent-2;
+    box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
+  }
+  .p-checkbox .p-checkbox-box.p-highlight { background: $cfg-accent; border-color: $cfg-accent; }
+  .p-progressbar { background: $cfg-accent-soft; }
+  .p-progressbar .p-progressbar-value { background: $cfg-accent; }
 }
 
 // Header
 .config-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
+  align-items: center;
   flex-wrap: wrap;
   gap: 16px;
 
@@ -18,6 +59,7 @@
     display: flex;
     align-items: center;
     gap: 16px;
+    min-width: 0;
   }
 
   .siigo-logo {
@@ -26,17 +68,7 @@
   }
 
   .header-text {
-    h2 {
-      margin: 0 0 4px 0;
-      font-size: 1.5rem;
-      color: #333;
-    }
-
-    p {
-      margin: 0;
-      color: #666;
-      font-size: 0.9rem;
-    }
+    min-width: 0;
   }
 }
 
@@ -46,33 +78,37 @@
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: .3px;
+  text-transform: uppercase;
 
   &.idle {
-    background-color: #f5f5f5;
-    color: #666;
+    background-color: #eef0f3;
+    color: #5A6B78;
   }
 
   &.testing {
-    background-color: #fff8e1;
-    color: #f57c00;
+    background-color: $cfg-warn-soft;
+    color: $cfg-warn;
   }
 
   &.success {
-    background-color: #e8f5e9;
-    color: #2e7d32;
+    background-color: $cfg-ok-soft;
+    color: $cfg-ok;
   }
 
   &.error {
-    background-color: #ffebee;
-    color: #c62828;
+    background-color: $cfg-err-soft;
+    color: $cfg-err;
   }
 
   i {
     font-size: 1.2rem;
   }
+
+  span { color: inherit; font-size: inherit; }
 }
 
 // Loading Overlay
@@ -92,11 +128,11 @@
 
   i {
     font-size: 2rem;
-    color: #3b82f6;
+    color: #5F3FE0;
   }
 
   span {
-    color: #666;
+    color: $cfg-body;
   }
 }
 
@@ -106,9 +142,9 @@
 
   ::ng-deep .p-card-header {
     padding: 16px 20px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
-    font-weight: 600;
+    background-color: $cfg-tint;
+    border-bottom: 1px solid $cfg-line-soft;
+    font-weight: 800;
   }
 
   ::ng-deep .p-card-body {
@@ -134,13 +170,15 @@
   gap: 6px;
 
   label {
-    font-weight: 500;
-    color: #333;
-    font-size: 0.9rem;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $cfg-muted;
 
     i {
       margin-right: 6px;
-      color: #666;
+      color: $cfg-accent;
     }
   }
 
@@ -164,6 +202,10 @@
       display: flex;
       flex-direction: column;
       gap: 2px;
+      font-size: 0.9rem;
+      letter-spacing: normal;
+      text-transform: none;
+      color: $cfg-ink;
 
       strong {
         font-weight: 600;
@@ -201,7 +243,7 @@
 
   i {
     font-size: 1.5rem;
-    color: #3b82f6;
+    color: #5F3FE0;
   }
 }
 
@@ -209,16 +251,17 @@
 .tax-ids-section {
   margin-top: 24px;
   padding-top: 20px;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid $cfg-line-soft;
 
   h4 {
     margin: 0 0 8px 0;
     font-size: 1rem;
-    color: #333;
+    font-weight: 800;
+    color: $cfg-ink;
 
     i {
       margin-right: 8px;
-      color: #10b981;
+      color: $cfg-accent;
     }
   }
 
@@ -302,18 +345,19 @@
 .puc-guide {
   margin-top: 24px;
   padding: 16px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid #3b82f6;
+  background-color: $cfg-tint;
+  border-radius: 16px;
+  border: 1px solid #ddd3fb;
 
   h4 {
     margin: 0 0 12px 0;
     font-size: 0.95rem;
-    color: #333;
+    font-weight: 800;
+    color: $cfg-ink;
 
     i {
       margin-right: 8px;
-      color: #3b82f6;
+      color: #5F3FE0;
     }
   }
 
@@ -329,8 +373,8 @@
     gap: 10px;
 
     .puc-code {
-      background-color: #e3f2fd;
-      color: #1565c0;
+      background-color: $cfg-accent-soft;
+      color: $cfg-accent;
       padding: 4px 8px;
       border-radius: 4px;
       font-family: monospace;
@@ -348,10 +392,12 @@
 .sync-section {
   margin-top: 24px;
   padding-top: 20px;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid $cfg-line-soft;
 
   h4 {
     margin: 0 0 8px 0;
+    font-weight: 800;
+    color: $cfg-ink;
   }
 
   p {
@@ -387,7 +433,7 @@
     flex-direction: column;
     align-items: center;
     padding: 16px;
-    border-radius: 8px;
+    border-radius: 11px;
     text-align: center;
 
     .result-value {
@@ -400,24 +446,27 @@
       margin-top: 4px;
     }
 
+    span { color: inherit; }
+    .result-label { text-transform: uppercase; font-weight: 800; letter-spacing: .5px; font-size: 10.5px; }
+
     &.success {
-      background-color: #e8f5e9;
-      color: #2e7d32;
+      background-color: $cfg-ok-soft;
+      color: $cfg-ok;
     }
 
     &.created {
-      background-color: #e3f2fd;
-      color: #1565c0;
+      background-color: $cfg-accent-soft;
+      color: $cfg-accent;
     }
 
     &.updated {
-      background-color: #fff8e1;
-      color: #f57c00;
+      background-color: $cfg-warn-soft;
+      color: $cfg-warn;
     }
 
     &.error {
-      background-color: #ffebee;
-      color: #c62828;
+      background-color: $cfg-err-soft;
+      color: $cfg-err;
     }
   }
 }
@@ -442,25 +491,24 @@
     display: flex;
     gap: 12px;
     padding: 16px;
-    background-color: #e8f4fd;
-    border-radius: 8px;
-    border-left: 4px solid #5F3FE0;
+    background-color: $cfg-info-soft;
+    border-radius: 11px;
 
     > i {
       font-size: 1.5rem;
-      color: #5F3FE0;
+      color: $cfg-info;
       flex-shrink: 0;
     }
 
     strong {
       display: block;
       margin-bottom: 4px;
-      color: #1565c0;
+      color: $cfg-info;
     }
 
     p {
       margin: 0;
-      color: #555;
+      color: $cfg-body;
       font-size: 0.9rem;
       line-height: 1.5;
     }
@@ -478,9 +526,9 @@
   align-items: center;
   gap: 16px;
   padding: 12px 16px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+  background-color: $cfg-tint;
+  border-radius: 11px;
+  border: 1px solid $cfg-line;
 
   @media (max-width: 768px) {
     flex-direction: column;
@@ -525,13 +573,13 @@
     width: fit-content;
 
     &.online {
-      background-color: #e3f2fd;
-      color: #1565c0;
+      background-color: $cfg-info-soft;
+      color: $cfg-info;
     }
 
     &.pos {
-      background-color: #fff3e0;
-      color: #e65100;
+      background-color: $cfg-warn-soft;
+      color: $cfg-warn;
     }
   }
 }
@@ -562,20 +610,19 @@
 .mapping-tip {
   margin-top: 16px;
   padding: 12px 16px;
-  background-color: #fff8e1;
-  border-radius: 8px;
-  border-left: 4px solid #ff9800;
+  background-color: $cfg-warn-soft;
+  border-radius: 11px;
   display: flex;
   align-items: flex-start;
   gap: 10px;
 
   > i {
-    color: #ff9800;
+    color: $cfg-warn;
     flex-shrink: 0;
   }
 
   span {
-    color: #5d4037;
+    color: #8A5200;
     font-size: 0.9rem;
     line-height: 1.5;
   }
@@ -587,8 +634,14 @@
   color: #666;
 
   > i {
-    font-size: 2.5rem;
-    color: #ccc;
+    display: inline-grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: $cfg-tile;
+    font-size: 26px;
+    color: $cfg-accent;
     margin-bottom: 16px;
   }
 

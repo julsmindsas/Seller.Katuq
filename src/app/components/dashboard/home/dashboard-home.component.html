@@ -1,15 +1,16 @@
-<div class="home-container">
-  <header class="home-header">
-    <div>
-      <h1 class="home-title">Dashboard gerencial</h1>
-      <p class="home-subtitle">Crea, guarda y comparte reportes dinámicos sobre tus datos.</p>
+<div class="cfg-pagina home-container">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Indicadores</span>
+      <h1 class="cfg-titulo">Dashboard gerencial</h1>
+      <p class="cfg-sub">Crea, guarda y comparte reportes dinámicos sobre tus datos.</p>
     </div>
-    <div class="home-actions">
-      <button type="button" class="btn-secondary" (click)="openClassic()">
-        <i class="fa fa-chart-line me-1"></i> Vista clásica
+    <div class="cfg-acciones">
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="openClassic()">
+        <i class="fa fa-chart-line"></i> Vista clásica
       </button>
-      <button type="button" class="btn-primary" (click)="newReport()">
-        <i class="fa fa-plus me-1"></i> Nuevo reporte
+      <button type="button" class="cfg-btn" (click)="newReport()">
+        <i class="fa fa-plus"></i> Nuevo reporte
       </button>
     </div>
   </header>
@@ -25,8 +26,8 @@
   <div *ngIf="!loading && !loadError && reports.length === 0" class="state-empty">
     <h2>Aún no tienes reportes</h2>
     <p>Empieza creando uno desde cero. Elige una fuente, arrastra campos a filas, columnas o valores y elige tu visualización.</p>
-    <button type="button" class="btn-primary" (click)="newReport()">
-      <i class="fa fa-plus me-1"></i> Crear el primer reporte
+    <button type="button" class="cfg-btn" (click)="newReport()">
+      <i class="fa fa-plus"></i> Crear el primer reporte
     </button>
   </div>
 
@@ -84,7 +85,7 @@
   <section class="preview-panel" #previewPanel *ngIf="selected">
     <div class="preview-header">
       <div class="preview-title-block">
-        <span class="preview-label">Vista previa</span>
+        <span class="cfg-label preview-label">Vista previa</span>
         <h2 class="preview-title">{{ selected.name }}</h2>
         <div class="preview-meta" *ngIf="selectedSource">
           <span><i class="fa fa-database me-1"></i>{{ selectedSource.label }}</span>
@@ -102,7 +103,7 @@
         </div>
       </div>
       <div class="preview-actions">
-        <button type="button" class="btn-outline-sm" (click)="editSelected()">
+        <button type="button" class="cfg-btn cfg-btn--sec btn-outline-sm" (click)="editSelected()">
           <i class="fa fa-pen me-1"></i> Editar
         </button>
         <button type="button" class="btn-icon-sm" (click)="closePreview()" title="Cerrar">

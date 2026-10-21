@@ -1,21 +1,22 @@
 <p-toast></p-toast>
 
-<div class="field-mapping">
+<div class="field-mapping cfg-pagina">
   <!-- Header -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <h3 class="mb-1">Mapeo de Campos</h3>
-      <p class="text-muted mb-0">Configuracion del mapeo entre campos de Katuq y Shopify</p>
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Integraciones</span>
+      <h1 class="cfg-titulo">Mapeo de Campos</h1>
+      <p class="cfg-sub">Configuracion del mapeo entre campos de Katuq y Shopify</p>
     </div>
-  </div>
+  </header>
 
   <!-- Tabs -->
   <p-tabView [(activeIndex)]="activeTabIndex">
     <!-- Tab 1: Variants -->
     <p-tabPanel header="Variantes" leftIcon="pi pi-tag">
       <div class="tab-content-inner">
-        <div class="alert alert-info d-flex align-items-start mb-3">
-          <i class="pi pi-info-circle me-2 mt-1"></i>
+        <div class="cfg-aviso mb-3">
+          <i class="pi pi-info-circle mt-1"></i>
           <div>
             <strong>Mapeo automatico de variantes</strong>
             <p class="mb-0 small">El mapeo de campos entre productos Katuq y Shopify se realiza automaticamente.
@@ -37,15 +38,15 @@
     <!-- Tab 2: Locations -->
     <p-tabPanel header="Bodegas / Locations" leftIcon="pi pi-map-marker">
       <div class="tab-content-inner">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <p class="text-muted mb-0">Mapea las bodegas de Katuq con las ubicaciones (locations) de Shopify</p>
-          <div class="d-flex gap-2">
+        <div class="barra-bodegas mb-3">
+          <p class="cfg-sub">Mapea las bodegas de Katuq con las ubicaciones (locations) de Shopify</p>
+          <div class="cfg-acciones">
             <button pButton type="button" label="Auto-mapear" icon="pi pi-bolt"
               class="p-button-outlined p-button-sm"
               [loading]="autoMapping"
               (click)="autoMapLocations()"></button>
             <button pButton type="button" label="Agregar" icon="pi pi-plus"
-              class="p-button-outlined p-button-success p-button-sm"
+              class="p-button-outlined p-button-sm"
               (click)="addLocationMapping()"></button>
           </div>
         </div>
@@ -76,7 +77,7 @@
                     (onChange)="onWarehouseChange(mapping, $event)"></p-dropdown>
                 </td>
                 <td class="text-center">
-                  <i class="pi pi-arrow-right" style="color: #6366F1;"></i>
+                  <i class="pi pi-arrow-right flecha-acento"></i>
                 </td>
                 <td>
                   <p-dropdown [options]="shopifyLocations"
@@ -95,9 +96,9 @@
             </ng-template>
           </p-table>
 
-          <div *ngIf="locationMappings.length === 0" class="text-center py-4">
-            <i class="pi pi-map-marker" style="font-size: 2rem; color: #ccc;"></i>
-            <p class="text-muted mt-2 mb-0">No hay mapeos configurados. Usa "Auto-mapear" o agrega uno manualmente.</p>
+          <div *ngIf="locationMappings.length === 0" class="cfg-vacio">
+            <i class="pi pi-map-marker cfg-vacio__icono"></i>
+            <p class="cfg-vacio__texto">No hay mapeos configurados. Usa "Auto-mapear" o agrega uno manualmente.</p>
           </div>
 
           <div class="text-end mt-3" *ngIf="locationMappings.length > 0">
@@ -113,8 +114,8 @@
     <!-- Tab 3: Status Mapping (read-only) -->
     <p-tabPanel header="Estados" leftIcon="pi pi-th-large">
       <div class="tab-content-inner">
-        <div class="alert alert-info d-flex align-items-start mb-3">
-          <i class="pi pi-info-circle me-2 mt-1"></i>
+        <div class="cfg-aviso mb-3">
+          <i class="pi pi-info-circle mt-1"></i>
           <div>
             <strong>Mapeo de estados (solo lectura)</strong>
             <p class="mb-0 small">Los estados de Shopify se mapean automaticamente a estados internos de Katuq.</p>
@@ -137,7 +138,7 @@
                   <code class="shopify-field">{{ mapping.shopifyField }}</code>
                 </td>
                 <td class="text-center">
-                  <i class="pi pi-arrow-right" style="color: #6366F1;"></i>
+                  <i class="pi pi-arrow-right flecha-acento"></i>
                 </td>
                 <td>
                   <code class="katuq-field">{{ mapping.katuqField }}</code>

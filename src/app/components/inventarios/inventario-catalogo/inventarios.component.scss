@@ -1,3 +1,6 @@
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
 // ===================================
 // VARIABLES DEL TEMA KATUQ
 // Paleta profesional B2B (estilo Atlassian/Shopify)
@@ -647,8 +650,8 @@ $border-radius: 8px;
 
   /* Estilo para el botón de filtro activo */
   .p-column-filter-menu-button.p-column-filter-menu-button-active {
-    background-color: #e3f2fd;
-    color: #8b5cf6;
+    background-color: #efe9ff;
+    color: #5F3FE0;
   }
 }
 
@@ -1243,8 +1246,7 @@ th.text-center .d-flex.align-items-center.justify-content-center {
 // ── Encabezado del módulo ─────────────────────────────────────────────────
 .inv-header {
   @include kc-card;
-  border-left: 4px solid var(--kc-accent);
-  border-radius: 18px;
+  border-radius: 16px;
   padding: 16px 20px;
   display: flex;
   align-items: center;
@@ -1330,7 +1332,7 @@ th.text-center .d-flex.align-items-center.justify-content-center {
     background: var(--kc-accent);
     border-color: var(--kc-accent);
     color: #fff;
-    box-shadow: 0 6px 16px rgba(108, 76, 224, 0.28);
+    box-shadow: 0 6px 16px rgba(95, 63, 224, 0.28);
     &:hover:not(:disabled) { filter: brightness(1.05); background: var(--kc-accent); }
   }
   &.is-accent {
@@ -1900,7 +1902,7 @@ th.text-center .d-flex.align-items-center.justify-content-center {
     li.p-highlight .p-tabview-nav-link {
       background: var(--kc-accent-wash);
       color: var(--kc-accent);
-      box-shadow: 0 1px 3px rgba(108, 76, 224, 0.14);
+      box-shadow: 0 1px 3px rgba(95, 63, 224, 0.14);
     }
 
     .p-tabview-ink-bar { display: none; }
@@ -1936,7 +1938,7 @@ th.text-center .d-flex.align-items-center.justify-content-center {
   &:not(.p-disabled):hover { border-color: #d9d5ee; }
   &:not(.p-disabled).p-focus {
     border-color: var(--kc-accent);
-    box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12);
+    box-shadow: 0 0 0 3px rgba(95, 63, 224, 0.12);
   }
 }
 
@@ -2409,4 +2411,84 @@ th.text-center .d-flex.align-items-center.justify-content-center {
   margin-top: 12px;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+
+// =============================================================================
+// D-516 — Marco cfg-pagina (Regla de diseño Katuq). Solo presentación.
+// Los tokens kc-* de esta vista se alinean al canon (openspec/specs/design-system):
+// acento #5F3FE0, tinta #211F3A, muted #8f8bab, línea #ececf4 y semánticos canon.
+// =============================================================================
+:host {
+  display: block;
+  background: $cfg-tint;
+  --kc-accent: #{$cfg-accent};
+  --kc-accent-ink: #{$cfg-accent-hover};
+  --kc-accent-wash: #{$cfg-accent-soft};
+  --kc-ink: #{$cfg-ink};
+  --kc-ink2: #{$cfg-body};
+  --kc-muted: #{$cfg-muted};
+  --kc-line: #{$cfg-line};
+  --kc-line2: #{$cfg-line-soft};
+  --kc-canvas: #{$cfg-tint};
+  --kc-green: #{$cfg-ok};
+  --kc-green-wash: #{$cfg-ok-soft};
+  --kc-blue: #{$cfg-info};
+  --kc-blue-wash: #{$cfg-info-soft};
+  --kc-orange: #{$cfg-warn};
+  --kc-orange-wash: #{$cfg-warn-soft};
+  --kc-red: #{$cfg-err};
+  --kc-red-wash: #{$cfg-err-soft};
+}
+
+// La cabecera vive dentro de .inv-shell (ancla del loader).
+.inv-shell > .cfg-cabeza { margin-bottom: 0; }
+
+.inv-aviso-onboarding { flex-wrap: wrap; }
+.inv-aviso-texto { color: $cfg-info; font-size: 13.5px; }
+
+// Botones cuadrados de solo ícono con el par canon fuerte / fondo suave.
+.inv-iconbtn {
+  border-radius: 11px;
+  background: #fff;
+  border-color: #e4e2ef;
+
+  &.is-warning { background: $cfg-warn-soft; border-color: #f8dcb5; color: $cfg-warn; }
+  &.is-danger { background: $cfg-err-soft; border-color: #f3c9c9; color: $cfg-err; }
+}
+
+.inv-iachip { border-radius: 20px; }
+
+// Indicadores en los semánticos canon.
+.inv-stat { border-radius: 11px; }
+.inv-stat.is-amber { --inv-wash: #{$cfg-warn-soft}; --inv-border: #f8dcb5; --inv-fg: #{$cfg-warn}; }
+.inv-stat.is-red   { --inv-wash: #{$cfg-err-soft};  --inv-border: #f3c9c9; --inv-fg: #{$cfg-err}; }
+.inv-stat-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+// Colores que estaban escritos en el HTML.
+.inv-txt-info { color: $cfg-info; }
+.inv-txt-ink { color: $cfg-ink; }
+.inv-txt-ink2 { color: $cfg-body; }
+.inv-txt-accent { color: $cfg-accent; }
+.inv-txt-warn { color: $cfg-warn; }
+.inv-metrics-bodega { background: $cfg-tint; }
+.inv-addon-buscar {
+  background-color: $cfg-accent;
+  border-color: $cfg-accent;
+  color: #fff;
+}
+.inv-miniatura {
+  width: 50px;
+  height: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $cfg-tint;
+  border-radius: 8px;
+  overflow: hidden;
 }

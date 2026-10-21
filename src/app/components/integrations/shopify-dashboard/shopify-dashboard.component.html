@@ -1,30 +1,27 @@
 <p-toast></p-toast>
 
-<div class="shopify-dashboard">
+<div class="shopify-dashboard cfg-pagina">
   <!-- Header -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="dashboard-header d-flex align-items-center justify-content-between">
-        <div>
-          <h2 class="mb-1">Dashboard Shopify</h2>
-          <p class="text-muted mb-0">Monitoreo y gestion de la integracion con Shopify</p>
-        </div>
-        <div class="d-flex gap-2">
-          <button pButton type="button" label="Verificar Conexion" icon="pi pi-refresh"
-            class="p-button-outlined p-button-sm"
-            [loading]="connectionStatus === 'checking'"
-            (click)="verifyConnection()"></button>
-          <button pButton type="button" label="Recargar" icon="pi pi-sync"
-            class="p-button-outlined p-button-secondary p-button-sm"
-            [loading]="loading"
-            (click)="loadDashboardData()"></button>
-        </div>
-      </div>
+  <header class="dashboard-header cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Integraciones</span>
+      <h1 class="cfg-titulo">Dashboard Shopify</h1>
+      <p class="cfg-sub">Monitoreo y gestion de la integracion con Shopify</p>
     </div>
-  </div>
+    <div class="cfg-acciones">
+      <button pButton type="button" label="Verificar Conexion" icon="pi pi-refresh"
+        class="p-button-outlined p-button-sm"
+        [loading]="connectionStatus === 'checking'"
+        (click)="verifyConnection()"></button>
+      <button pButton type="button" label="Recargar" icon="pi pi-sync"
+        class="p-button-outlined p-button-secondary p-button-sm"
+        [loading]="loading"
+        (click)="loadDashboardData()"></button>
+    </div>
+  </header>
 
   <!-- Connection Status + Metrics -->
-  <div class="row mb-4">
+  <div class="row metricas">
     <!-- Connection Card -->
     <div class="col-12 col-md-6 col-lg-3 mb-3">
       <p-card styleClass="dashboard-card status-card">
@@ -38,7 +35,7 @@
               'pi-check-circle': connectionStatus === 'connected',
               'pi-times-circle': connectionStatus === 'disconnected',
               'pi-spin pi-spinner': connectionStatus === 'checking'
-            }" style="font-size: 2rem;"></i>
+            }"></i>
           </div>
           <p-tag [value]="getStatusLabel()" [severity]="getStatusSeverity()"></p-tag>
           <p class="text-muted mt-2 mb-0 small" *ngIf="lastChecked">
@@ -52,9 +49,9 @@
     <div class="col-12 col-md-6 col-lg-3 mb-3">
       <p-card styleClass="dashboard-card metric-card">
         <div class="card-content text-center">
-          <i class="pi pi-box metric-icon mb-2" style="font-size: 2rem; color: #6366F1;"></i>
+          <i class="pi pi-box metric-icon metric-icon--acento mb-2"></i>
           <h3 class="metric-value mb-1">{{ syncMetrics.products }}</h3>
-          <p class="text-muted mb-0">Productos Sincronizados</p>
+          <p class="metric-label mb-0">Productos Sincronizados</p>
         </div>
       </p-card>
     </div>
@@ -63,9 +60,9 @@
     <div class="col-12 col-md-6 col-lg-3 mb-3">
       <p-card styleClass="dashboard-card metric-card">
         <div class="card-content text-center">
-          <i class="pi pi-shopping-cart metric-icon mb-2" style="font-size: 2rem; color: #22C55E;"></i>
+          <i class="pi pi-shopping-cart metric-icon metric-icon--ok mb-2"></i>
           <h3 class="metric-value mb-1">{{ syncMetrics.orders }}</h3>
-          <p class="text-muted mb-0">Ordenes Recibidas</p>
+          <p class="metric-label mb-0">Ordenes Recibidas</p>
         </div>
       </p-card>
     </div>
@@ -74,12 +71,12 @@
     <div class="col-12 col-md-6 col-lg-3 mb-3">
       <p-card styleClass="dashboard-card metric-card">
         <div class="card-content text-center">
-          <i class="pi pi-clock metric-icon mb-2" style="font-size: 2rem; color: #F59E0B;"></i>
+          <i class="pi pi-clock metric-icon metric-icon--alerta mb-2"></i>
           <h3 class="metric-value mb-1" *ngIf="syncMetrics.lastSync">
             {{ syncMetrics.lastSync | date:'short' }}
           </h3>
           <h3 class="metric-value mb-1" *ngIf="!syncMetrics.lastSync">--</h3>
-          <p class="text-muted mb-0">Ultima Sincronizacion</p>
+          <p class="metric-label mb-0">Ultima Sincronizacion</p>
         </div>
       </p-card>
     </div>
@@ -96,11 +93,11 @@
             [loading]="isSyncing('products')"
             (click)="triggerSync('products')"></button>
           <button pButton type="button" label="Sync Inventario" icon="pi pi-database"
-            class="p-button-outlined p-button-success action-btn mb-2 w-100"
+            class="p-button-outlined action-btn mb-2 w-100"
             [loading]="isSyncing('inventory')"
             (click)="triggerSync('inventory')"></button>
           <button pButton type="button" label="Sync Ordenes" icon="pi pi-shopping-cart"
-            class="p-button-outlined p-button-warning action-btn mb-2 w-100"
+            class="p-button-outlined action-btn mb-2 w-100"
             [loading]="isSyncing('orders')"
             (click)="triggerSync('orders')"></button>
         </div>
@@ -127,9 +124,9 @@
           <p class="text-muted mt-2">Cargando eventos...</p>
         </div>
 
-        <div *ngIf="!loading && recentEvents.length === 0" class="text-center py-4">
-          <i class="pi pi-inbox" style="font-size: 3rem; color: #ccc;"></i>
-          <p class="text-muted mt-2">No hay eventos recientes</p>
+        <div *ngIf="!loading && recentEvents.length === 0" class="cfg-vacio">
+          <i class="pi pi-inbox cfg-vacio__icono"></i>
+          <p class="cfg-vacio__titulo">No hay eventos recientes</p>
         </div>
 
         <p-timeline [value]="recentEvents" *ngIf="!loading && recentEvents.length > 0">

@@ -1,38 +1,38 @@
 <p-toast></p-toast>
 
-<div class="sync-logs">
+<div class="sync-logs cfg-pagina">
   <!-- Header -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="d-flex align-items-center justify-content-between">
-        <div>
-          <h3 class="mb-1">Logs de Sincronizacion</h3>
-          <p class="text-muted mb-0">Historial de eventos de sincronizacion con Shopify</p>
-        </div>
-        <button pButton type="button" label="Recargar" icon="pi pi-refresh"
-          class="p-button-outlined p-button-sm"
-          [loading]="loading"
-          (click)="loadLogs()"></button>
-      </div>
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Integraciones</span>
+      <h1 class="cfg-titulo">Logs de Sincronizacion</h1>
+      <p class="cfg-sub">Historial de eventos de sincronizacion con Shopify</p>
     </div>
-  </div>
+    <div class="cfg-acciones">
+      <button pButton type="button" label="Recargar" icon="pi pi-refresh"
+        class="p-button-outlined p-button-sm"
+        [loading]="loading"
+        (click)="loadLogs()"></button>
+    </div>
+  </header>
 
   <!-- Filters -->
-  <div class="row mb-3">
+  <section class="cfg-card filtros">
+  <div class="row">
     <div class="col-12 col-md-3 mb-2">
-      <label class="form-label small fw-bold">Tipo</label>
+      <label class="cfg-label">Tipo</label>
       <p-dropdown [options]="typeOptions" [(ngModel)]="typeFilter"
         placeholder="Todos los tipos" [showClear]="true"
         (onChange)="onFilterChange()" styleClass="w-100"></p-dropdown>
     </div>
     <div class="col-12 col-md-3 mb-2">
-      <label class="form-label small fw-bold">Estado</label>
+      <label class="cfg-label">Estado</label>
       <p-dropdown [options]="statusOptions" [(ngModel)]="statusFilter"
         placeholder="Todos los estados" [showClear]="true"
         (onChange)="onFilterChange()" styleClass="w-100"></p-dropdown>
     </div>
     <div class="col-12 col-md-4 mb-2">
-      <label class="form-label small fw-bold">Rango de Fechas</label>
+      <label class="cfg-label">Rango de Fechas</label>
       <p-calendar [(ngModel)]="dateRange" selectionMode="range"
         [readonlyInput]="true" placeholder="Seleccionar rango"
         dateFormat="dd/mm/yy" [showIcon]="true"
@@ -44,6 +44,7 @@
         (click)="clearFilters()"></button>
     </div>
   </div>
+  </section>
 
   <!-- Table -->
   <p-card styleClass="logs-card">
@@ -73,18 +74,18 @@
             <i [class]="getTypeIcon(event.type)" [style.color]="event.status === 'error' ? '#EF4444' : '#6366F1'"></i>
           </td>
           <td>
-            <span class="fw-medium">{{ getTypeLabel(event.type) }}</span>
+            <span class="fw-medium celda-texto">{{ getTypeLabel(event.type) }}</span>
           </td>
           <td>
             <p-tag [value]="getStatusLabel(event.status)" [severity]="getStatusSeverity(event.status)"></p-tag>
           </td>
           <td>
-            <span class="text-truncate d-inline-block" style="max-width: 300px;">
+            <span class="text-truncate d-inline-block celda-texto" style="max-width: 300px;">
               {{ event.description || event.detail || '--' }}
             </span>
           </td>
           <td>
-            <span class="small text-muted">{{ event.date | date:'medium' }}</span>
+            <span class="small text-muted celda-fecha">{{ event.date | date:'medium' }}</span>
           </td>
           <td>
             <button pButton type="button" icon="pi pi-eye"
@@ -97,9 +98,11 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="6" class="text-center py-4">
-            <i class="pi pi-inbox" style="font-size: 2rem; color: #ccc;"></i>
-            <p class="text-muted mt-2 mb-0">No se encontraron eventos</p>
+          <td colspan="6">
+            <div class="cfg-vacio">
+              <i class="pi pi-inbox cfg-vacio__icono"></i>
+              <p class="cfg-vacio__titulo">No se encontraron eventos</p>
+            </div>
           </td>
         </tr>
       </ng-template>

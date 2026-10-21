@@ -1,8 +1,10 @@
+// Diseño Katuq (D-516): superficie lila plana, labels UPPERCASE muted y guía con el acento.
 .mapping-container {
   padding: 16px;
-  background-color: #fafafa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+  background-color: #faf9fe;
+  border-radius: 16px;
+  border: 1px solid #ececf4;
+  color: #211F3A;
 }
 
 .mapping-grid {
@@ -21,13 +23,15 @@
   gap: 6px;
 
   label {
-    font-weight: 500;
-    color: #333;
-    font-size: 0.9rem;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: #8f8bab;
 
     i {
       margin-right: 6px;
-      color: #666;
+      color: #5F3FE0;
     }
   }
 
@@ -36,7 +40,7 @@
   }
 
   small {
-    color: #888;
+    color: #8f8bab;
     font-size: 0.75rem;
   }
 }
@@ -44,13 +48,14 @@
 .puc-guide {
   margin-top: 20px;
   padding: 12px;
-  background-color: #e3f2fd;
-  border-radius: 6px;
+  background-color: #efe9ff;
+  border-radius: 11px;
 
   h4 {
     margin: 0 0 10px 0;
     font-size: 0.85rem;
-    color: #1565c0;
+    font-weight: 800;
+    color: #5F3FE0;
 
     i {
       margin-right: 6px;
@@ -65,10 +70,10 @@
 
   .puc-item {
     font-size: 0.8rem;
-    color: #333;
+    color: #211F3A;
 
     strong {
-      color: #1565c0;
+      color: #5F3FE0;
       margin-right: 4px;
     }
   }

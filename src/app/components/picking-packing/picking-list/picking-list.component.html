@@ -1,13 +1,16 @@
-<div class="container-fluid">
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <h5 class="card-title">Órdenes de picking</h5>
-          <button pButton type="button" icon="pi pi-plus" label="Nuevo Picking" class="p-button-primary"
-            (click)="iniciarNuevoPicking()"></button>
-        </div>
-        <div class="card-body">
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Picking y packing</span>
+      <h1 class="cfg-titulo">Órdenes de picking</h1>
+    </div>
+    <div class="cfg-acciones">
+      <button pButton type="button" icon="pi pi-plus" label="Nuevo Picking" class="p-button-primary"
+        (click)="iniciarNuevoPicking()"></button>
+    </div>
+  </header>
+
+  <section class="cfg-card">
           <form [formGroup]="filtroForm" (ngSubmit)="aplicarFiltros()">
             <div class="row mb-3">
               <div class="col-md-3">
@@ -50,19 +53,11 @@
               </div>
             </div>
           </form>
-        </div>
-      </div>
-    </div>
-  </div>
+  </section>
 
   <!-- Pedidos pendientes de picking -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <h5 class="card-title">Pedidos Pendientes de Picking</h5>
-        </div>
-        <div class="card-body">
+  <section class="cfg-card">
+          <h2 class="cfg-card__titulo">Pedidos Pendientes de Picking</h2>
           <p-table [value]="ordenesPendientes" [loading]="loading"
             styleClass="p-datatable-gridlines p-datatable-striped" responsiveLayout="scroll">
             <ng-template pTemplate="header">
@@ -111,19 +106,11 @@
           </p-table>
           <p-paginator [rows]="10" [totalRecords]="ordenesPendientes.length"
             [rowsPerPageOptions]="[5,10,25,50]"></p-paginator>
-        </div>
-      </div>
-    </div>
-  </div>
+  </section>
 
   <!-- Pickings en proceso o completados -->
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <h5 class="card-title">Pickings en Proceso o Completados</h5>
-        </div>
-        <div class="card-body">
+  <section class="cfg-card">
+          <h2 class="cfg-card__titulo">Pickings en Proceso o Completados</h2>
           <p-table [value]="pickingList" [loading]="loading" styleClass="p-datatable-gridlines p-datatable-striped"
             responsiveLayout="scroll">
             <ng-template pTemplate="header">
@@ -169,8 +156,5 @@
           </p-table>
           <p-paginator [rows]="10" [totalRecords]="pickingList.length"
             [rowsPerPageOptions]="[5,10,25,50]"></p-paginator>
-        </div>
-      </div>
-    </div>
-  </div>
+  </section>
 </div>

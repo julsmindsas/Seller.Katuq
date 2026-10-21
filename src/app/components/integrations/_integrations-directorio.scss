@@ -135,6 +135,14 @@
   .ig-empty-title { font-family: $cb-display; font-size: 18px; color: $cb-ink; }
 }
 
+// Tutorial «¿Cómo funciona?»: botón principal Katuq a lo ancho y sombra violeta difusa.
+.tutorial-overlay .tutorial-content {
+  border: 1px solid $cfg-line;
+  box-shadow: 0 30px 70px -24px rgba(30, 20, 80, .55);
+  .step-number { background: $cfg-accent; }
+  > .cfg-btn { width: 100%; }
+}
+
 .mguide-window .modal-content {
   max-height: calc(100vh - 2rem);
   overflow-y: auto;

@@ -2,7 +2,7 @@
      POS-LIST (list.component.html optimizado)
      ========================================= -->
 
-<div class="container-fluid">
+<div class="cfg-pagina pos-lista-cabeza">
     <!-- Título de la pantalla (D-400): mismo nombre que en el menú -->
     <header class="cfg-cabeza titulo-pantalla">
         <div class="cfg-cabeza__textos">
@@ -13,9 +13,9 @@
     </header>
 </div>
 
-<div class="container-fluid pos-mobile">
-    <div class="row">
-        <div class="col-sm-12">
+<div class="cfg-pagina pos-lista-cuerpo pos-mobile">
+    <div class="cfg-card pos-lista-card">
+        <div class="pos-lista-tabla">
 
             <!-- CAPTION: filtros y botones arriba -->
             <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="50" [paginator]="true"

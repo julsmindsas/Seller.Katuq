@@ -1,151 +1,90 @@
-<div class="container-fluid">
+<div class="cfg-pagina">
     <!-- Título de la pantalla (D-400): mismo nombre que en el menú -->
-    <header class="cfg-cabeza titulo-pantalla">
+    <header class="cfg-cabeza">
         <div class="cfg-cabeza__textos">
             <span class="cfg-eyebrow">{{ 'Productos' | translate }}</span>
             <h1 class="cfg-titulo">{{ 'Adiciones' | translate }}</h1>
             <p class="cfg-sub">{{ 'Los extras que el cliente puede sumarle a un producto al comprarlo.' | translate }}</p>
         </div>
     </header>
-</div>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="card">
-                <i class="icon-bg" width="80" height="80"
-                    style="opacity: 0.4;position: absolute; color: #6ec0d4; top: 10px; left: 10px;"></i>
-                <div class="loader-box" *ngIf="cargando">
-                    <div class="loader-8"></div>
-                </div>
+    <section class="cfg-card">
+        <div class="loader-box" *ngIf="cargando">
+            <div class="loader-8"></div>
+        </div>
 
-                <div class="card-body custom-datatable" *ngIf="!cargando">
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <input type='text' class="form-control" style="width:70% !important"
-                                placeholder="{{'Escribe el texto que deseas filtrar' | translate}}"
-                                (keyup)='updateFilter($event)' />
-                        </div>
-                        <div class="col-sm-6 mb-3" style="text-align: end;">
+        <div class="custom-datatable" *ngIf="!cargando">
+            <div class="adi-barra">
+                <input type='text' class="form-control adi-filtro"
+                    placeholder="{{'Escribe el texto que deseas filtrar' | translate}}"
+                    (keyup)='updateFilter($event)' />
 
-                            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="create()">
-                                <span style="color: white;">{{'Crear Adición' | translate}}</span> 
-                                <i placement="top" ngbTooltip="{{'Nuevo' | translate}}"
-                                    style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
-                                    class="icofont icofont-plus"></i>
-                            </button>
-                        </div>
+                <button class="cfg-btn" type="button" (click)="create()">
+                    <span>{{'Crear Adición' | translate}}</span>
+                    <i placement="top" ngbTooltip="{{'Nuevo' | translate}}" class="icofont icofont-plus"></i>
+                </button>
+            </div>
 
-                    </div>
-                    <!-- <ngx-datatable #table class='bootstrap' [columns]="columns" [columnMode]="ColumnMode.force"
-                        [headerHeight]="50" [footerHeight]="50" rowHeight="auto" [limit]="10" [rows]="rows"
-                        [sorts]="[{ prop: 'posicion', dir: 'asc' }]">
-                        <ngx-datatable-column name="{{'' | translate}}">
-                            <ng-template let-row="row" ngx-datatable-cell-template>
-                                <img *ngIf="row.imagenPrincipal.length > 0" src="{{row.imagenPrincipal[0]?.urls | imagenProducto}}"
-                                    alt="{{ row.titulo }}" width="50" height="50">
-                                <img *ngIf="row.imagenPrincipal.length == 0" src="" alt="{{ row.titulo }}" width="100"
-                                    height="100">
-                            </ng-template>
-                        </ngx-datatable-column>
-                        <ngx-datatable-column name="{{'Titulo' | translate}}">
-                            <ng-template let-row="row" ngx-datatable-cell-template>
-                                {{ row.titulo }}
-                            </ng-template>
-                        </ngx-datatable-column>
-                        <ngx-datatable-column name="{{'Descripción' | translate}}">
-                            <ng-template let-row="row" ngx-datatable-cell-template>
-                                {{ row.descripcion }}
-                            </ng-template>
-                        </ngx-datatable-column>
+            <div class="adi-tabla">
+                <p-table [value]="rows" [scrollable]="true" scrollHeight="400px" [rows]="10" [paginator]="true" [sortField]="'posicion'" [sortOrder]="1" [responsive]="true">
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th class="text-center">
+                                {{ '' | translate }}
+                            </th>
+                            <th class="text-center" pSortableColumn="titulo">
+                                {{ 'Titulo' | translate }}
+                                <p-sortIcon field="titulo"></p-sortIcon>
+                            </th>
+                            <th class="text-center" pSortableColumn="referencia">
+                                {{ 'Referencia' | translate }}
+                                <p-sortIcon field="referencia"></p-sortIcon>
+                            </th>
+                            <th class="text-center" pSortableColumn="descripcion">
+                                {{ 'Descripción' | translate }}
+                                <p-sortIcon field="descripcion"></p-sortIcon>
+                            </th>
+                            <th class="text-center" pSortableColumn="active">
+                                {{ 'Activo' | translate }}
+                                <p-sortIcon field="active"></p-sortIcon>
+                            </th>
+                            <th class="text-center" pSortableColumn="tiempoEntrega">
+                                {{ 'Tiempo Entrega' | translate }}
+                                <p-sortIcon field="tiempoEntrega"></p-sortIcon>
+                            </th>
+                            <th class="text-center" pSortableColumn="tipoEntrega">
+                                {{ 'Tipo Entrega' | translate }}
+                                <p-sortIcon field="tipoEntrega"></p-sortIcon>
+                            </th>
+                            <th class="text-center">
+                                {{ 'Acciones' | translate }}
+                            </th>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-row>
+                        <tr>
+                            <td>
+                                <img class="adi-img" *ngIf="row.imagenPrincipal.length > 0" [src]="row.imagenPrincipal[0]?.urls | imagenProducto" [alt]="row.titulo" width="50" height="50">
+                                <img class="adi-img" *ngIf="row.imagenPrincipal.length == 0" src="" [alt]="row.titulo" width="100" height="100">
+                            </td>
+                            <td>{{ row.titulo }}</td>
+                            <td>{{ row?.referencia }}</td>
+                            <td>{{ row.descripcion }}</td>
+                            <td>{{ row.active == true ? 'Si' : 'No' }}</td>
+                            <td>{{ row.tiempoEntrega }}</td>
+                            <td>{{ row.tipoEntrega }}</td>
+                            <td class="adi-acciones">
+                                <i placement="top" ngbTooltip="{{'Edit' | translate}}" class="icofont icofont-pencil-alt-5 adi-icono" (click)="editar(row)"></i>
+                                <i placement="top" ngbTooltip="{{'Eliminar' | translate}}" class="icofont icofont-ui-delete adi-icono adi-icono--peligro" (click)="deleteAdicion(row)"></i>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
 
-                        <ngx-datatable-column name="{{'Activo' | translate}}">
-                            <ng-template let-row="row" ngx-datatable-cell-template>
-                                {{row.active == true ? 'Si': 'No'}}
-                            </ng-template>
-                        </ngx-datatable-column>
-                        <ngx-datatable-column name="{{'Tiempo Entrega' | translate}}">
-                            <ng-template let-row="row" ngx-datatable-cell-template>
-                                {{row.tiempoEntrega}}
-                            </ng-template>
-                        </ngx-datatable-column>
-                        <ngx-datatable-column name="{{'Tipo Entrega' | translate}}">
-                            <ng-template let-row="row" ngx-datatable-cell-template>
-                                {{row.tipoEntrega}}
-                            </ng-template>
-                        </ngx-datatable-column>
-                        <ngx-datatable-column name="{{'Acciones' | translate}}">
-                            <ng-template let-row="row" ngx-datatable-cell-template>
-                                <i placement="top" ngbTooltip="{{'Edit' | translate}}"
-                                    style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
-                                    class="icofont icofont-pencil-alt-5" (click)="editar(row)"></i>
-                                    <i placement="top" ngbTooltip="{{'Eliminar' | translate}}"
-                    style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
-                    class="icofont icofont-ui-delete" (click)="deleteAdicion(row)"></i>
-                            </ng-template>
-                        </ngx-datatable-column> 
-                    </ngx-datatable>
-                        -->
-
-                        <p-table [value]="rows" [scrollable]="true" scrollHeight="400px" [rows]="10" [paginator]="true" [sortField]="'posicion'" [sortOrder]="1" [responsive]="true">
-                            <ng-template pTemplate="header">
-                              <tr>
-                                <th class="text-center">
-                                  {{ '' | translate }}
-                                </th>
-                                <th class="text-center" pSortableColumn="titulo">
-                                  {{ 'Titulo' | translate }}
-                                  <p-sortIcon field="titulo"></p-sortIcon>
-                                </th>
-                                <th class="text-center" pSortableColumn="referencia">
-                                  {{ 'Referencia' | translate }}
-                                  <p-sortIcon field="referencia"></p-sortIcon>
-                                </th>
-                                <th class="text-center" pSortableColumn="descripcion">
-                                  {{ 'Descripción' | translate }}
-                                  <p-sortIcon field="descripcion"></p-sortIcon>
-                                </th>
-                                <th class="text-center" pSortableColumn="active">
-                                  {{ 'Activo' | translate }}
-                                  <p-sortIcon field="active"></p-sortIcon>
-                                </th>
-                                <th class="text-center" pSortableColumn="tiempoEntrega">
-                                  {{ 'Tiempo Entrega' | translate }}
-                                  <p-sortIcon field="tiempoEntrega"></p-sortIcon>
-                                </th>
-                                <th class="text-center" pSortableColumn="tipoEntrega">
-                                  {{ 'Tipo Entrega' | translate }}
-                                  <p-sortIcon field="tipoEntrega"></p-sortIcon>
-                                </th>
-                                <th class="text-center">
-                                  {{ 'Acciones' | translate }}
-                                </th>
-                              </tr>
-                            </ng-template>
-                            <ng-template pTemplate="body" let-row>
-                              <tr>
-                                <td>
-                                  <img *ngIf="row.imagenPrincipal.length > 0" [src]="row.imagenPrincipal[0]?.urls | imagenProducto" [alt]="row.titulo" width="50" height="50">
-                                  <img *ngIf="row.imagenPrincipal.length == 0" src="" [alt]="row.titulo" width="100" height="100">
-                                </td>
-                                <td>{{ row.titulo }}</td>
-                                <td>{{ row?.referencia }}</td>
-                                <td>{{ row.descripcion }}</td>
-                                <td>{{ row.active == true ? 'Si' : 'No' }}</td>
-                                <td>{{ row.tiempoEntrega }}</td>
-                                <td>{{ row.tipoEntrega }}</td>
-                                <td>
-                                  <i placement="top" ngbTooltip="{{'Edit' | translate}}" style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;" class="icofont icofont-pencil-alt-5" (click)="editar(row)"></i>
-                                  <i placement="top" ngbTooltip="{{'Eliminar' | translate}}" style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;" class="icofont icofont-ui-delete" (click)="deleteAdicion(row)"></i>
-                                </td>
-                              </tr>
-                            </ng-template>
-                          </p-table>
-                          
-
-                    <button class="btn btn-primary" style="color: white;"><i class="icofont icofont-file-excel"></i>Excel</button>
-                </div>
+            <div class="adi-pie">
+                <button class="cfg-btn cfg-btn--sec"><i class="icofont icofont-file-excel"></i>Excel</button>
             </div>
         </div>
-    </div>
+    </section>
 </div>

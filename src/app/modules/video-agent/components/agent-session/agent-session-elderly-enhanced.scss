@@ -15,9 +15,9 @@
         background: #e8f5e9 !important;
     }
 
-    /* 🔵 Azul: Asistente hablando */
+    /* 🟣 Lila: Asistente hablando */
     &.state-speaking {
-        background: #e3f2fd !important;
+        background: #efe9ff !important;
     }
 
     /* 🟡 Amarillo: Procesando */
@@ -186,8 +186,8 @@
         padding: 0.875rem; /* Slightly more compact */
         margin-bottom: 0.75rem; /* Tighter on mobile */
         background: #f8f9fa;
-        border-radius: 12px;
-        border-left: 4px solid #dee2e6;
+        border-radius: 11px;
+        border: 1px solid #dee2e6;
         transition: all 0.3s ease;
 
         /* Ensure minimum touch target */
@@ -233,7 +233,7 @@
         /* Active step - GREEN and HUGE */
         &.active {
             background: var(--katuq-success);
-            border-left-color: #337c18;
+            border-color: #337c18;
             transform: scale(1.05);
             box-shadow: 0 6px 20px rgba(81, 187, 37, 0.4);
             animation: pulse-step 1.5s ease-in-out infinite;
@@ -255,7 +255,7 @@
         /* Completed step - checkmark */
         &.completed:not(.active) {
             background: rgba(81, 187, 37, 0.1);
-            border-left-color: var(--katuq-success);
+            border-color: var(--katuq-success);
 
             .step-number {
                 background: var(--katuq-success);
@@ -496,7 +496,7 @@
     }
 
     .steps-sidebar-elderly .step-item {
-        border-left-width: 6px;
+        border-width: 2px;
     }
 }
 
@@ -606,7 +606,7 @@
         color: white;
         padding: 14px 24px;
         border-radius: 50px;
-        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 8px 32px rgba(95, 63, 224, 0.4);
         font-size: 1.125rem;
         font-weight: 600;
 

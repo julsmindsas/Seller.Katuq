@@ -33,7 +33,16 @@
 }
 
 // --- Panel ---
-:host > .container-fluid > .row > .col-sm-12 > .card {
+// Página: fondo lila del layout, con el mismo aire lateral que `cfg-pagina`.
+.lite-pagina {
+  padding: 20px 16px 32px;
+  box-sizing: border-box;
+
+  @media (min-width: 768px) { padding: 24px 24px 40px; }
+}
+
+.lite-panel {
+  background: #fff;
   border: 1px solid var(--k-line);
   border-radius: 16px;
   box-shadow: var(--k-shadow-panel);

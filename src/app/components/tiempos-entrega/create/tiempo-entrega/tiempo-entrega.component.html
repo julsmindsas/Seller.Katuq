@@ -1,15 +1,13 @@
-<div class="modal-header d-flex justify-content-between align-items-center">
-    <h4 class="modal-title mb-0">
+<div class="modal-header d-flex justify-content-between align-items-center te-cabeza">
+    <h4 class="modal-title mb-0 te-titulo">
       <i class="icofont icofont-clock-time"></i>&nbsp;{{ isEditing ? 'Editar' : 'Crear' }} tiempo de entrega
     </h4>
-    <button type="button" class="btn-close p-2" aria-label="Close" (click)="activeModal.dismiss('Cross click')">
+    <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss('Cross click')">
    
     </button>
   </div>
   
-  <div class="modal-body">
-    <div class="card">
-      <div class="card-body p-4">
+  <div class="modal-body cfg-form">
         <form [formGroup]="form">
           <div class="row">
             <div class="col-md-6 mb-3">
@@ -32,7 +30,7 @@
               <label class="form-label" for="number">Días mínimo</label>&nbsp;
               <span type="button" class="help" placement="top"
                 ngbPopover="{{'Tipo numérico. Es el número mínimo de días para la entrega.' | translate}}">
-                <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                <i class="icon-help-alt cfg-ayuda"></i>
               </span>
               <input type="number" class="form-control" id="number" formControlName="minDias">
             </div>
@@ -40,15 +38,15 @@
               <label class="form-label" for="number">Posición</label>&nbsp;
               <span type="button" class="help" placement="top"
                 ngbPopover="{{'Tipo numérico. Es la posición que toma el tiempo de entrega en la lista.' | translate}}">
-                <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                <i class="icon-help-alt cfg-ayuda"></i>
               </span>
               <input type="number" class="form-control" id="number" formControlName="posicion">
             </div>
           </div>
   
-          <div class="mb-3">
+          <div class="mb-3 te-activo">
             <input type="checkbox" class="checkboxK" id="checkbox" formControlName="activo">
-            <label class="form-label ms-2" for="checkbox">Activo/Inactivo</label>
+            <label class="form-label" for="checkbox">Activo/Inactivo</label>
           </div>
   
           <div class="mb-3">
@@ -59,13 +57,11 @@
             </ng-select>
           </div>
         </form>
-      </div>
-    </div>
   </div>
   
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss('Cancel click')">Cancelar</button>
-    <button type="button" class="btn btn-primary" (click)="onSubmit()" [disabled]="!form.valid">
+  <div class="modal-footer te-pie">
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="activeModal.dismiss('Cancel click')">Cancelar</button>
+    <button type="button" class="cfg-btn" (click)="onSubmit()" [disabled]="!form.valid">
       <i class="icofont icofont-save"></i>&nbsp; {{ isEditing ? 'Actualizar' : 'Guardar' }}
     </button>
   </div>

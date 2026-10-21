@@ -1,56 +1,72 @@
-.card-header {
-  background-color: var(--surface-50);
-  border-bottom: 1px solid var(--surface-200);
-  padding: 1rem 1.5rem;
-  
-  h5 {
-    margin: 0;
-    color: var(--text-color);
-  }
-}
-
-.card-body {
-  padding: 1.5rem;
-}
+// Regla de diseño Katuq (D-400): base común de pantallas internas (formulario).
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
 
 .field {
   margin-bottom: 1rem;
-  
+
   label {
     display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-    color: var(--text-color);
   }
 }
 
-h6 {
-  color: var(--primary-color);
-  border-bottom: 2px solid var(--primary-color);
+// Subtítulos de sección del formulario: UPPERCASE muted con divisor lila (sin subrayado de color fuerte).
+.cv-seccion {
+  font-size: 10.5px !important;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: #5F3FE0;
+  border-bottom: 1px solid #ececf4;
   padding-bottom: 0.5rem;
-  font-weight: 600;
 }
 
-::ng-deep {
+.cfg-form .text-muted { color: #8f8bab !important; font-size: 12px; }
+.cfg-form .p-error { color: #D64545; font-size: 12px; }
+
+:host ::ng-deep {
   .p-inputnumber {
     width: 100%;
-    
+
     .p-inputtext {
       width: 100%;
     }
   }
-  
+
   .p-dropdown {
     width: 100%;
   }
-  
+
   .p-inputswitch {
     .p-inputswitch-slider {
-      background-color: var(--surface-300);
+      background-color: #d8d4ea;
     }
-    
+
     &.p-inputswitch-checked .p-inputswitch-slider {
-      background-color: var(--primary-color);
+      background-color: #5F3FE0;
+    }
+  }
+
+  .cfg-form__pie .p-button {
+    border-radius: 11px;
+    font-weight: 700;
+    min-height: 40px;
+
+    &.p-button-primary {
+      background: #5F3FE0;
+      border-color: #5F3FE0;
+      color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+
+      &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
+    }
+
+    &.p-button-secondary {
+      background: #fff;
+      border: 1px solid #e4e2ef;
+      color: #5b5878;
+
+      &:enabled:hover { background: #faf9fe; border-color: #d9cffb; color: #5F3FE0; }
     }
   }
 }

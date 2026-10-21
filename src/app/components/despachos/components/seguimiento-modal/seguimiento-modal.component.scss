@@ -154,7 +154,7 @@
         width: 1rem;
         height: 1rem;
         border-radius: 50%;
-        background: $katuq-primary-light;
+        background: #7C5CFF;
         border: 3px solid white;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
@@ -163,7 +163,7 @@
         background: #f8f9fa;
         padding: 1rem;
         border-radius: 8px;
-        border-left: 3px solid $katuq-primary-light;
+        border-left: 3px solid #7C5CFF;
         
         .evento-fecha {
           font-size: 0.8rem;
@@ -184,7 +184,7 @@
           color: #6c757d;
           
           i {
-            color: $katuq-primary-light;
+            color: #7C5CFF;
           }
         }
       }

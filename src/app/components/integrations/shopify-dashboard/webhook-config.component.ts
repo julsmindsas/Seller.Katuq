@@ -17,7 +17,7 @@ interface ShopifyWebhook {
 @Component({
   selector: 'app-webhook-config',
   templateUrl: './webhook-config.component.html',
-  styleUrls: ['./webhook-config.component.css'],
+  styleUrls: ['./webhook-config.component.scss'],
   providers: [MessageService, ConfirmationService]
 })
 export class WebhookConfigComponent implements OnInit, OnDestroy {

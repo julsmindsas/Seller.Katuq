@@ -8,14 +8,14 @@
 // Variables de diseño
 :root {
   // Colores principales
-  --primary-color: #{$katuq-primary};
+  --primary-color: #5F3FE0;
   --primary-solid: #5F3FE0;
-  --primary-gradient: linear-gradient(135deg, #{$katuq-purple-400} 0%, #{$katuq-purple-600} 100%);
-  --secondary-color: #{$katuq-primary};
+  --primary-gradient: #5F3FE0; // plano (D-399): la variable no se usa como degradado
+  --secondary-color: #5F3FE0;
   --success-color: #{$katuq-success};
   --warning-color: #{$katuq-warning};
   --danger-color: #{$katuq-danger};
-  --info-color: #{$katuq-primary-light};
+  --info-color: #7C5CFF;
 
   // Colores neutros
   --text-primary: #1e293b;
@@ -296,7 +296,7 @@
             }
 
             &.badge-in_transit {
-              background: rgba($katuq-primary, 0.15);
+              background: rgba(#5F3FE0, 0.15);
               color: var(--info-color);
               border: 1px solid var(--info-color);
             }

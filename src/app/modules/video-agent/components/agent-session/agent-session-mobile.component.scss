@@ -64,11 +64,11 @@
     }
 
     /* Katuq brand colors */
-    --katuq-primary: #459bd1;
-    --katuq-secondary: #4555d1;
-    --katuq-tertiary: #00a5d2;
-    --katuq-success: #51bb25;
-    --katuq-danger: #dc3545;
+    --katuq-primary: #5F3FE0;
+    --katuq-secondary: #7C5CFF;
+    --katuq-tertiary: #7C5CFF;
+    --katuq-success: #1E874B;
+    --katuq-danger: #D64545;
 
     /* Use CSS custom properties for dynamic colors */
     --primary-color: var(--company-primary, var(--katuq-primary));
@@ -252,13 +252,13 @@
             align-items: flex-start;
             gap: 0.875rem;
             padding: 0.75rem;
-            background: rgba(69, 155, 209, 0.03);
-            border-radius: 12px;
-            border-left: 3px solid var(--katuq-primary);
+            background: rgba(95, 63, 224, 0.03);
+            border-radius: 11px;
+            border: 1px solid rgba(95, 63, 224, 0.15);
             transition: all 0.2s ease;
 
             &:hover {
-                background: rgba(69, 155, 209, 0.06);
+                background: rgba(95, 63, 224, 0.06);
                 transform: translateX(2px);
             }
 
@@ -274,7 +274,7 @@
                 justify-content: center;
                 font-size: 0.875rem;
                 font-weight: 700;
-                box-shadow: 0 2px 4px rgba(69, 155, 209, 0.2);
+                box-shadow: 0 2px 4px rgba(95, 63, 224, 0.2);
             }
 
             .step-text {
@@ -460,7 +460,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: rgba(69, 155, 209, 0.1);
+            background: rgba(95, 63, 224, 0.1);
             color: #ffffff;
 
             i {
@@ -982,9 +982,9 @@
             gap: 0.5rem;
             margin-bottom: 0.625rem;
             padding: 0.5rem;
-            background: rgba(69, 155, 209, 0.05);
+            background: rgba(95, 63, 224, 0.05);
             border-radius: 10px;
-            border: 1px solid rgba(69, 155, 209, 0.1);
+            border: 1px solid rgba(95, 63, 224, 0.1);
 
             .meter-item {
                 flex: 1;
@@ -1028,18 +1028,18 @@
         justify-content: center;
         gap: 1rem;
         border: none;
-        box-shadow: 0 4px 20px rgba(69, 155, 209, 0.3);
+        box-shadow: 0 4px 20px rgba(95, 63, 224, 0.3);
         transition: all 0.2s ease;
         background: var(--katuq-primary);
 
         &:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 6px 24px rgba(69, 155, 209, 0.4);
+            box-shadow: 0 6px 24px rgba(95, 63, 224, 0.4);
         }
 
         &:active:not(:disabled) {
             transform: translateY(0);
-            box-shadow: 0 2px 12px rgba(69, 155, 209, 0.3);
+            box-shadow: 0 2px 12px rgba(95, 63, 224, 0.3);
         }
 
         .btn-content {
@@ -1460,11 +1460,7 @@
         position: absolute;
         inset: 4px;
         border-radius: 50%;
-        background: radial-gradient(
-            circle at 30% 30%,
-            rgba(255, 255, 255, 0.3),
-            transparent 60%
-        );
+        background: rgba(255, 255, 255, 0.12);
         pointer-events: none;
     }
 
@@ -1515,11 +1511,7 @@
 
         /* Enhanced glow while dragging */
         &::after {
-            background: radial-gradient(
-                circle at 30% 30%,
-                rgba(255, 255, 255, 0.5),
-                transparent 50%
-            );
+            background: rgba(255, 255, 255, 0.2);
         }
     }
 

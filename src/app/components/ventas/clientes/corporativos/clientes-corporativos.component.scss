@@ -1,44 +1,15 @@
-// Clientes corporativos — estilo plano, border-left de acento (sin gradientes).
-$accent: #6d28d9; // violeta corporativo
-$ink: #1f2937;
-$muted: #6b7280;
-$line: #e5e7eb;
+// Clientes corporativos — marco canónico (D-516): cfg-pagina / cfg-cabeza / cfg-card.
+// Plano, sin gradientes ni border-left de acento.
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
 
-.corp-page {
-  padding: 1.25rem 1.5rem;
-}
+$accent: #5F3FE0;
+$ink: #211F3A;
+$muted: #8f8bab;
+$line: #ececf4;
 
-.corp-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  border-left: 4px solid $accent;
-  padding-left: 0.85rem;
-  margin-bottom: 1.25rem;
-
-  .corp-title {
-    margin: 0;
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: $ink;
-  }
-  .corp-subtitle {
-    margin: 0.25rem 0 0;
-    font-size: 0.85rem;
-    color: $muted;
-  }
-
-  .corp-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-shrink: 0;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-
-    .btn i { margin-right: 0.35rem; }
-  }
+.corporativos-pagina {
+  min-width: 0;
 }
 
 .corp-toolbar {
@@ -56,6 +27,7 @@ $line: #e5e7eb;
     position: relative;
     display: inline-flex;
     align-items: center;
+    max-width: 100%;
 
     i.pi-search {
       position: absolute !important;
@@ -70,7 +42,11 @@ $line: #e5e7eb;
 
     input {
       width: 320px;
-      max-width: 60vw;
+      max-width: 100%;
+      min-height: 40px;
+      background: #f5f4fa;
+      border: 1px solid #e9e7f3;
+      border-radius: 10px;
       padding-left: 2.4rem !important;
     }
   }
@@ -78,35 +54,37 @@ $line: #e5e7eb;
 
 .estado-filters {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
 
   .chip {
     border: 1px solid $line;
     background: #fff;
     color: $muted;
-    border-radius: 999px;
+    border-radius: 20px;
     padding: 0.3rem 0.85rem;
     font-size: 0.8rem;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.15s ease;
 
     &:hover { border-color: $accent; color: $accent; }
     &.active {
-      background: $accent;
-      border-color: $accent;
-      color: #fff;
+      background: #efe9ff;
+      border-color: #ddd3fb;
+      color: $accent;
     }
   }
 }
 
-.corp-table {
+.corporativos-tabla {
   .doc-tipo {
     display: inline-block;
     font-size: 0.68rem;
     font-weight: 700;
     color: $accent;
-    background: rgba($accent, 0.08);
-    border-radius: 4px;
+    background: #efe9ff;
+    border-radius: 20px;
     padding: 0.05rem 0.35rem;
     margin-right: 0.35rem;
   }
@@ -119,39 +97,43 @@ $line: #e5e7eb;
     gap: 0.15rem;
     font-size: 0.8rem;
     color: $muted;
+    span { color: $muted; font-size: 0.8rem; }
     i { color: $accent; margin-right: 0.3rem; }
   }
 
   .tag {
     display: inline-block;
     font-size: 0.72rem;
-    background: #f3f4f6;
+    background: #f5f4fa;
     color: $ink;
-    border-radius: 4px;
+    border: 1px solid #e9e7f3;
+    border-radius: 20px;
     padding: 0.1rem 0.45rem;
     margin: 0.1rem 0.15rem 0.1rem 0;
   }
 
   .estado-badge {
-    font-size: 0.74rem;
-    font-weight: 600;
-    color: #047857;
-    background: rgba(4, 120, 87, 0.1);
-    border-radius: 999px;
-    padding: 0.15rem 0.6rem;
+    display: inline-flex;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    color: #1E874B;
+    background: #E6F7EE;
+    border-radius: 20px;
+    padding: 3px 10px;
 
     &.bloqueado {
-      color: #b91c1c;
-      background: rgba(185, 28, 28, 0.1);
+      color: #D64545;
+      background: #FDECEC;
     }
   }
 
   // Botones de acción estilo estándar (igual a productos/otros módulos).
   .action-buttons-table {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    align-items: center;
+    white-space: nowrap;
+
+    .btn-action + .btn-action { margin-left: 0.5rem; }
 
     .btn-action {
       width: 32px;
@@ -171,29 +153,31 @@ $line: #e5e7eb;
 
       &.btn-action-info {
         color: $accent;
-        &:hover { background-color: rgba(139, 92, 246, 0.1); }
+        &:hover { background-color: #efe9ff; }
       }
       &.btn-action-danger {
-        color: #dc3545;
-        &:hover { background-color: rgba(220, 53, 69, 0.1); }
+        color: #D64545;
+        &:hover { background-color: #FDECEC; }
       }
       &.btn-action-warn {
-        color: #d97706;
-        &:hover { background-color: rgba(217, 119, 6, 0.1); }
+        color: #D9820A;
+        &:hover { background-color: #FFF1DF; }
       }
       &.btn-action-success {
-        color: #16a34a;
-        &:hover { background-color: rgba(22, 163, 74, 0.1); }
+        color: #1E874B;
+        &:hover { background-color: #E6F7EE; }
       }
     }
   }
 
   .empty {
     text-align: center;
-    padding: 2.5rem 1rem;
+    padding: 0;
     color: $muted;
-
-    i { font-size: 2rem; color: $line; display: block; margin-bottom: 0.5rem; }
-    p { margin: 0 0 0.75rem; }
   }
+}
+
+// Tabla ancha: scroll horizontal dentro de la tarjeta, nunca en la página.
+.corporativos-tabla {
+  overflow-x: auto;
 }

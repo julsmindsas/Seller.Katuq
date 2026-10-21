@@ -1,37 +1,28 @@
-<div class="container-fluid p-0">
-    <div class="card shadow-sm border-0">
+<div class="cfg-pagina">
+    <header class="cfg-cabeza">
+        <div class="cfg-cabeza__textos">
+            <span class="cfg-eyebrow">Inventarios</span>
+            <h1 class="cfg-titulo">{{ 'Traslados entre bodegas' | translate }}</h1>
+            <p class="cfg-sub">{{ 'Mueve multiples productos entre bodegas' | translate }}</p>
+        </div>
+    </header>
+
+    <section class="cfg-card">
         <!-- Loader -->
         <div class="loader-box" *ngIf="loading">
             <div class="loader-8"></div>
         </div>
 
-        <!-- Header -->
-        <div class="module-header px-4 py-3 border-bottom"
-             style="background: #f8fafc; border-left: 4px solid #5F3FE0;">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="mb-2 mb-md-0">
-                    <h4 class="mb-1 fw-bold text-dark">
-                        <i class="pi pi-arrow-right-arrow-left me-2" style="color: #5F3FE0;"></i>
-                        {{ 'Traslados entre bodegas' | translate }}
-                    </h4>
-                    <p class="text-muted small mb-0">
-                        {{ 'Mueve multiples productos entre bodegas' | translate }}
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div class="card-body p-4">
+        <div class="traslado-cuerpo cfg-form">
 
             <!-- Sección Bodegas -->
             <div class="row align-items-center mb-4">
                 <div class="col-md-5">
-                    <div class="bodega-card p-3 rounded bg-light text-center">
-                        <div class="bodega-icon mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle"
-                             style="width: 48px; height: 48px; background-color: rgba(92, 106, 196, 0.15);">
-                            <i class="pi pi-building" style="font-size: 1.2rem; color: #5F3FE0;"></i>
+                    <div class="bodega-card p-3 text-center">
+                        <div class="bodega-icon bodega-icon--origen mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle">
+                            <i class="pi pi-building"></i>
                         </div>
-                        <h6 class="fw-bold mb-2 text-dark">{{ 'Bodega Origen' | translate }}</h6>
+                        <h6 class="bodega-card__titulo mb-2">{{ 'Bodega Origen' | translate }}</h6>
                         <select class="form-select" [formControl]="bodegaForm.controls['bodegaOrigenId']">
                             <option value="">{{ 'Seleccione origen' | translate }}</option>
                             <option *ngFor="let b of bodegas" [value]="b.idBodega">{{ b.nombre }}</option>
@@ -39,16 +30,15 @@
                     </div>
                 </div>
                 <div class="col-md-2 text-center py-2">
-                    <i class="pi pi-arrow-right d-none d-md-inline" style="font-size: 1.5rem; color: #5F3FE0;"></i>
-                    <i class="pi pi-arrow-down d-md-none" style="font-size: 1.5rem; color: #5F3FE0;"></i>
+                    <i class="pi pi-arrow-right d-none d-md-inline flecha-traslado"></i>
+                    <i class="pi pi-arrow-down d-md-none flecha-traslado"></i>
                 </div>
                 <div class="col-md-5">
-                    <div class="bodega-card p-3 rounded bg-light text-center">
-                        <div class="bodega-icon mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle"
-                             style="width: 48px; height: 48px; background-color: rgba(54, 179, 126, 0.15);">
-                            <i class="pi pi-truck" style="font-size: 1.2rem; color: #36b37e;"></i>
+                    <div class="bodega-card p-3 text-center">
+                        <div class="bodega-icon bodega-icon--destino mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle">
+                            <i class="pi pi-truck"></i>
                         </div>
-                        <h6 class="fw-bold mb-2 text-dark">{{ 'Bodega Destino' | translate }}</h6>
+                        <h6 class="bodega-card__titulo mb-2">{{ 'Bodega Destino' | translate }}</h6>
                         <select class="form-select" [formControl]="bodegaForm.controls['bodegaDestinoId']">
                             <option value="">{{ 'Seleccione destino' | translate }}</option>
                             <option *ngFor="let b of bodegas" [value]="b.idBodega">{{ b.nombre }}</option>
@@ -74,7 +64,7 @@
                 <!-- Buscador de productos -->
                 <div class="mb-3">
                     <label class="fw-semibold mb-1 d-block">
-                        <i class="pi pi-search me-1" style="color: #5F3FE0;"></i>{{ 'Agregar productos' | translate }}
+                        <i class="pi pi-search me-1 icono-acento"></i>{{ 'Agregar productos' | translate }}
                     </label>
                     <input type="text" class="form-control form-control-sm mb-1"
                            [(ngModel)]="busquedaProducto"
@@ -105,9 +95,9 @@
                 </div>
 
                 <!-- Tabla de productos a trasladar -->
-                <div class="border rounded" *ngIf="productosTraslado.length > 0">
+                <div class="tabla-traslado" *ngIf="productosTraslado.length > 0">
                     <table class="table table-hover mb-0" style="font-size: 0.85rem;">
-                        <thead style="background: #fafbfc;">
+                        <thead class="tabla-traslado__cabeza">
                             <tr>
                                 <th class="ps-3" style="width: 50px;"></th>
                                 <th>{{ 'Producto' | translate }}</th>
@@ -119,7 +109,7 @@
                         <tbody>
                             <tr *ngFor="let p of productosTraslado; let i = index">
                                 <td class="ps-3 align-middle">
-                                    <div style="width: 36px; height: 36px; border-radius: 4px; overflow: hidden; background: #e9ecef;">
+                                    <div class="miniatura">
                                         <img *ngIf="p.imagen" [src]="p.imagen" style="width: 100%; height: 100%; object-fit: cover;">
                                         <div *ngIf="!p.imagen" class="d-flex align-items-center justify-content-center h-100">
                                             <i class="pi pi-box text-muted" style="font-size: 0.8rem;"></i>
@@ -127,11 +117,11 @@
                                     </div>
                                 </td>
                                 <td class="align-middle">
-                                    <span class="fw-semibold">{{ p.titulo }}</span>
+                                    <span class="fw-semibold texto-producto">{{ p.titulo }}</span>
                                     <br><small class="text-muted font-monospace">{{ p.referencia }}</small>
                                 </td>
                                 <td class="text-center align-middle">
-                                    <span class="badge" style="background: #efe9ff; color: #5F3FE0;">{{ p.stockDisponible }}</span>
+                                    <span class="cfg-pill">{{ p.stockDisponible }}</span>
                                 </td>
                                 <td class="text-center align-middle">
                                     <input type="number" class="form-control form-control-sm text-center"
@@ -147,10 +137,10 @@
                                 </td>
                             </tr>
                         </tbody>
-                        <tfoot style="background: #f8fafc;">
+                        <tfoot class="tabla-traslado__pie">
                             <tr>
                                 <td colspan="3" class="text-end pe-3 fw-semibold">{{ 'Total' | translate }}:</td>
-                                <td class="text-center fw-bold" style="color: #5F3FE0;">{{ totalItems }} {{ 'unid.' | translate }}</td>
+                                <td class="text-center fw-bold texto-acento">{{ totalItems }} {{ 'unid.' | translate }}</td>
                                 <td></td>
                             </tr>
                         </tfoot>
@@ -166,7 +156,7 @@
                 <!-- Observaciones -->
                 <div class="mt-3" *ngIf="productosTraslado.length > 0">
                     <label class="fw-semibold mb-1 d-block">
-                        <i class="pi pi-comment me-1" style="color: #5F3FE0;"></i>{{ 'Observaciones' | translate }}
+                        <i class="pi pi-comment me-1 icono-acento"></i>{{ 'Observaciones' | translate }}
                     </label>
                     <input type="text" class="form-control" [formControl]="bodegaForm.controls['observaciones']"
                            [placeholder]="'Motivo del traslado (opcional)' | translate">
@@ -181,22 +171,22 @@
             </div>
 
             <!-- Botones -->
-            <div class="d-flex justify-content-end gap-2 pt-3 border-top mt-3" *ngIf="productosTraslado.length > 0">
+            <div class="cfg-form__pie" *ngIf="productosTraslado.length > 0">
                 <button pButton type="button"
                         [label]="'Cancelar' | translate"
                         icon="pi pi-times"
-                        class="p-button-outlined p-button-secondary"
+                        class="p-button-outlined p-button-secondary boton-cancelar"
                         (click)="cancelar()"></button>
                 <button pButton type="button"
                         [label]="'Trasladar ' + productosTraslado.length + ' productos'"
                         icon="pi pi-arrow-right-arrow-left"
-                        style="background-color: #5F3FE0; border-color: #5F3FE0;"
+                        class="boton-trasladar"
                         (click)="confirmarTraslado()"
                         [loading]="loading"
                         [disabled]="!canTraslado"></button>
             </div>
         </div>
-    </div>
+    </section>
 </div>
 
 <p-confirmDialog [style]="{width: '500px'}" acceptButtonStyleClass="p-button-success" rejectButtonStyleClass="p-button-outlined"></p-confirmDialog>

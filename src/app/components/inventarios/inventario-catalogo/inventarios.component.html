@@ -1,9 +1,9 @@
 
-<div class="container-fluid">
-    <div class="alert alert-info d-flex align-items-center justify-content-between gap-3 mb-3"
+<div class="cfg-pagina inv-pagina">
+    <div class="cfg-aviso inv-aviso-onboarding d-flex align-items-center justify-content-between gap-3"
          *ngIf="onboardingReturnUrl" role="status">
-        <span><i class="pi pi-arrow-circle-left me-2"></i>Estás cargando existencias para completar la configuración inicial.</span>
-        <button type="button" class="btn btn-sm btn-outline-primary" (click)="returnToOnboarding()">
+        <span class="inv-aviso-texto"><i class="pi pi-arrow-circle-left me-2"></i>Estás cargando existencias para completar la configuración inicial.</span>
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="returnToOnboarding()">
             Volver a la configuración
         </button>
     </div>
@@ -17,16 +17,14 @@
                 </div>
 
                 <!-- Encabezado del módulo -->
-                <div class="inv-header">
-                    <div class="inv-header-id">
-                        <span class="inv-header-icon"><i class="pi pi-th-large"></i></span>
-                        <div>
-                            <div class="inv-header-title">{{ 'Inventario por bodega' | translate }}</div>
-                            <div class="inv-header-sub">{{ 'Vista unificada de stock en todas tus bodegas' | translate }}</div>
-                        </div>
+                <header class="cfg-cabeza">
+                    <div class="cfg-cabeza__textos">
+                        <span class="cfg-eyebrow">Inventarios</span>
+                        <h1 class="cfg-titulo">{{ 'Inventario por bodega' | translate }}</h1>
+                        <p class="cfg-sub">{{ 'Vista unificada de stock en todas tus bodegas' | translate }}</p>
                     </div>
 
-                    <div class="inv-header-actions">
+                    <div class="cfg-acciones">
                         <!-- Refrescar -->
                         <button type="button" class="inv-iconbtn"
                                 (click)="cargarInventarioConsolidado()"
@@ -54,7 +52,7 @@
                         </button>
 
                         <!-- Importar -->
-                        <button type="button" class="inv-btn"
+                        <button type="button" class="cfg-btn cfg-btn--sec"
                                 (click)="showImportModal = true"
                                 pTooltip="Importar inventario desde Excel" tooltipPosition="bottom">
                             <i class="pi pi-upload inv-ico-accent"></i>
@@ -62,7 +60,7 @@
                         </button>
 
                         <!-- Análisis con IA -->
-                        <button type="button" class="inv-btn is-primary"
+                        <button type="button" class="cfg-btn"
                                 (click)="analizarConIA()"
                                 [disabled]="analizandoIA || loadingConsolidado"
                                 pTooltip="Qué comprar, qué está quieto y qué revisar, explicado por Opttia" tooltipPosition="bottom">
@@ -72,7 +70,7 @@
 
                         <!-- Acciones -->
                         <p-menu #accionesMenu [model]="accionesMenuItems" [popup]="true" [appendTo]="'body'"></p-menu>
-                        <button type="button" class="inv-btn is-accent"
+                        <button type="button" class="cfg-btn cfg-btn--sec"
                                 (click)="accionesMenu.toggle($event)"
                                 [disabled]="loadingConsolidado"
                                 pTooltip="Acciones disponibles (exportar, etc.)" tooltipPosition="bottom">
@@ -86,7 +84,7 @@
                             {{ iaLastAnalysis | date:'shortTime' }}
                         </span>
                     </div>
-                </div>
+                </header>
 
                 <!-- Indicadores -->
                 <div class="inv-stats" *ngIf="productosConsolidados.length > 0">
@@ -372,7 +370,7 @@
                                                 class="text-end"
                                                 [pTooltip]="'Valor venta @ ' + tc.nombre + ' (stock × precio ' + tc.nombre + ')'"
                                                 tooltipPosition="top">
-                                                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85rem; display: block; color: #0d6efd;">
+                                                <span class="inv-txt-info" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85rem; display: block;">
                                                     Valor {{ tc.nombre }}
                                                 </span>
                                             </th>
@@ -398,11 +396,11 @@
                                             </th>
                                             <!-- Total por cada Bodega -->
                                             <th *ngFor="let bodega of bodegasConsolidadas"
-                                                class="text-center py-2"
-                                                style="background: #f8fafc; cursor: help;"
+                                                class="text-center py-2 inv-metrics-bodega"
+                                                style="cursor: help;"
                                                 [pTooltip]="'Total en ' + bodega.nombre"
                                                 tooltipPosition="bottom">
-                                                <span class="fw-semibold" style="color: #475569;">
+                                                <span class="fw-semibold inv-txt-ink2">
                                                     {{ getTotalBodegaFooter(bodega.id) | number }}
                                                 </span>
                                             </th>
@@ -413,19 +411,19 @@
                                             <!-- Totales por Tipo de Cliente -->
                                             <th *ngFor="let tc of tiposClienteActivos"
                                                 style="width: 130px;" class="text-end py-2">
-                                                <span class="fw-bold" style="color: #0d6efd;">
+                                                <span class="fw-bold inv-txt-info">
                                                     {{ getMetricaValorVentaPorTipo(tc.id) | currency:'COP':'symbol-narrow':'1.0-0' }}
                                                 </span>
                                             </th>
                                             <!-- Columna Valor Total -->
                                             <th style="width: 130px;" class="text-end py-2">
-                                                <span class="fw-bold" style="color: #5F3FE0;">
+                                                <span class="fw-bold inv-txt-accent">
                                                     {{ getMetricaValorTotal() | currency:'COP':'symbol-narrow':'1.0-0' }}
                                                 </span>
                                             </th>
                                             <!-- Columna Valor a Costo -->
                                             <th style="width: 130px;" class="text-end pe-3 py-2">
-                                                <span class="fw-bold" style="color: #f59e0b;">
+                                                <span class="fw-bold inv-txt-warn">
                                                     {{ getMetricaValorCostoTotal() | currency:'COP':'symbol-narrow':'1.0-0' }}
                                                 </span>
                                             </th>
@@ -493,15 +491,15 @@
                                             </td>
                                             <!-- Precio -->
                                             <td class="text-end" style="white-space: nowrap;">
-                                                <span *ngIf="producto.precio > 0" class="fw-bold" style="color: #172b4d; font-size: 0.9rem;">{{ precioSinIvaFila(producto) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                <span *ngIf="producto.precio > 0" class="fw-bold inv-txt-ink" style="font-size: 0.9rem;">{{ precioSinIvaFila(producto) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
                                                 <span *ngIf="!producto.precio || producto.precio === 0" class="text-muted small">Sin precio</span>
                                             </td>
                                             <!-- Valores por Tipo de Cliente (lista de precios) -->
                                             <td *ngFor="let tc of tiposClienteActivos"
                                                 class="text-end" style="white-space: nowrap;">
                                                 <ng-container *ngIf="getPrecioTipoCliente(producto, tc.id) as precioTC; else sinPrecioTC">
-                                                    <span *ngIf="precioTC > 0" class="fw-semibold"
-                                                          style="color: #0d6efd; font-size: 0.9rem;">
+                                                    <span *ngIf="precioTC > 0" class="fw-semibold inv-txt-info"
+                                                          style="font-size: 0.9rem;">
                                                         {{ getValorVentaPorTipo(producto, tc.id) | currency:'COP':'symbol-narrow':'1.0-0' }}
                                                     </span>
                                                     <span *ngIf="precioTC === 0" class="text-muted small">—</span>
@@ -510,7 +508,7 @@
                                             </td>
                                             <!-- Valor Total (precio × stock) -->
                                             <td class="text-end" style="white-space: nowrap;">
-                                                <span *ngIf="producto.precio > 0" class="fw-bold" style="color: #5F3FE0; font-size: 0.9rem;">{{ (precioSinIvaFila(producto) * producto.stockTotal) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                <span *ngIf="producto.precio > 0" class="fw-bold inv-txt-accent" style="font-size: 0.9rem;">{{ (precioSinIvaFila(producto) * producto.stockTotal) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
                                                 <span *ngIf="!producto.precio || producto.precio === 0" class="text-muted small">—</span>
                                             </td>
                                             <!-- Valor a Costo (costo × stock) — siempre visible -->
@@ -737,7 +735,7 @@
                             <!-- Barra de búsqueda global -->
                             <div class="col-md-12 mb-4" data-tour="search-productos">
                                 <div class="input-group">
-                                    <span class="input-group-text" style="background-color: #5F3FE0; color: white;">
+                                    <span class="input-group-text inv-addon-buscar">
                                         <i class="pi pi-search"></i>
                                     </span>
                                     <input type="text" class="form-control"
@@ -918,7 +916,7 @@
                                                 pTooltip="Ver stock por bodega"></button>
                                     </td>
                                     <td style="width: 80px; min-width: 80px;" class="text-center vertical-align: middle;" [frozen]="true">
-                                        <div style="width: 50px; height: 50px; display: inline-flex; align-items: center; justify-content: center; background-color: #f8f9fa; border-radius: 4px; overflow: hidden;">
+                                        <div class="inv-miniatura">
                                             <img *ngIf="row.crearProducto?.imagenesPrincipales?.length > 0"
                                                 [src]="row.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto: 'assets/images/placeholders/product-not-found.svg'"
                                                 (error)="$event.target.src='assets/images/placeholders/product-not-found.svg'"

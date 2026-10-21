@@ -1,118 +1,169 @@
-.card {
-  margin-bottom: 1.5rem;
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+// Regla de diseño Katuq (D-400): base común de pantallas internas.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.filters {
+  .p-dropdown,
+  .p-calendar {
+    width: 100%;
+  }
 }
 
-.card-header {
-  background-color: #fff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
-  padding: 1rem;
+// Estados en pill: par color fuerte / fondo suave (las clases bg-* llegan por [ngClass]).
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  background: #eef0f3;
+  color: #5A6B78;
 
-  .card-title {
-    margin-bottom: 0;
-    color: #333;
-    font-weight: 600;
+  &.bg-warning, &.badge-warning { background: #FFF1DF !important; color: #D9820A !important; }
+  &.bg-primary, &.badge-info { background: #efe9ff !important; color: #5F3FE0 !important; }
+  &.bg-success, &.badge-success { background: #E6F7EE !important; color: #1E874B !important; }
+  &.bg-danger, &.badge-danger { background: #FDECEC !important; color: #D64545 !important; }
+  &.bg-secondary, &.badge-secondary { background: #eef0f3 !important; color: #5A6B78 !important; }
+}
+
+:host ::ng-deep {
+  // Tablas anchas: scroll dentro de la tarjeta, nunca en la página (390 px).
+  .cfg-card .p-datatable-wrapper { overflow-x: auto; }
+
+  .cfg-acciones .p-button,
+  .p-button.p-button-primary {
+    background: #5F3FE0;
+    border-color: #5F3FE0;
+    color: #fff;
+    border-radius: 11px;
+    font-weight: 700;
+    box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+
+    &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
   }
+
+  .p-button.p-button-secondary {
+    background: #fff;
+    border: 1px solid #e4e2ef;
+    color: #5b5878;
+    border-radius: 11px;
+    font-weight: 700;
+
+    &:enabled:hover { background: #faf9fe; border-color: #d9cffb; color: #5F3FE0; }
+  }
+
+  // Acciones de fila: íconos redondos en acento suave.
+  .p-button.p-button-rounded {
+    width: 2.5rem;
+    height: 2.5rem;
+
+    &.p-button-info,
+    &.p-button-success {
+      background: #efe9ff;
+      border-color: #efe9ff;
+      color: #5F3FE0;
+
+      &:enabled:hover { background: #5F3FE0; border-color: #5F3FE0; color: #fff; }
+    }
+  }
+
+  .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+    background: #5F3FE0;
+    border-color: #5F3FE0;
+    color: #fff;
+    border-radius: 9px;
+  }
+}
+
+// ── Detalle ──
+.detalle-cargando {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.detalle-texto { margin: 0; font-size: 13.5px; color: #8f8bab; }
+
+.detalle-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f0f7;
+
+  .cfg-card__titulo { margin: 0; }
+}
+
+.detalle-subtitulo {
+  margin: 0 0 8px;
+  font-size: 10.5px !important;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: #8f8bab;
+}
+
+.detalle-cuerpo {
+  p { letter-spacing: normal; color: #5b5878; font-size: 13.5px; }
+  strong { color: #211F3A; }
+  .text-muted { color: #8f8bab !important; font-size: 12px; }
+  .p-error { color: #D64545; font-size: 12px; }
 }
 
 .table {
   th {
     width: 150px;
-    color: #666;
-    font-weight: 500;
+    color: #8f8bab;
+    font-weight: 700;
   }
 }
 
 .notes-container {
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 0.25rem;
+  background-color: #faf9fe;
+  border: 1px solid #ececf4;
+  border-radius: 11px;
   padding: 1rem;
   min-height: 200px;
   white-space: pre-wrap;
 }
 
-.badge {
-  padding: 0.5em 0.75em;
-  font-size: 0.875em;
-  font-weight: 500;
-  border-radius: 0.25rem;
-
-  &.badge-warning {
-    background-color: #ffc107;
-    color: #000;
-  }
-
-  &.badge-info {
-    background-color: #c4b5fd;
-    color: #fff;
-  }
-
-  &.badge-success {
-    background-color: #28a745;
-    color: #fff;
-  }
-
-  &.badge-danger {
-    background-color: #dc3545;
-    color: #fff;
-  }
-
-  &.badge-secondary {
-    background-color: #6c757d;
-    color: #fff;
-  }
-}
-
-:host ::ng-deep {
-  .p-datatable {
-    .p-datatable-header {
-      background: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-width: 1px 0;
-    }
-
-    .p-datatable-thead > tr > th {
-      background: #f8f9fa;
-      color: #495057;
-      font-weight: 600;
-      padding: 1rem;
-    }
-
-    .p-datatable-tbody > tr > td {
-      padding: 1rem;
-      border: 1px solid #dee2e6;
-    }
-
-    .p-datatable-tbody > tr:hover {
-      background: #f8f9fa;
-    }
-  }
-
-  .p-button {
-    &.p-button-rounded {
-      width: 2.5rem;
-      height: 2.5rem;
-    }
-  }
-
-  .p-dropdown {
-    min-width: 200px;
-  }
-}
-
 .alert {
   margin-top: 1rem;
   padding: 1rem;
-  border-radius: 0.25rem;
-  
+  border-radius: 11px;
+
   &.alert-danger {
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
-    color: #721c24;
+    background-color: #FDECEC;
+    border-color: #FDECEC;
+    color: #D64545;
   }
 }
 
 .pi-spinner {
-  color: #a78bfa;
-} 
+  color: #5F3FE0;
+}
+
+:host ::ng-deep {
+  .p-dropdown { min-width: 200px; }
+
+  // Acción principal del flujo (Iniciar / Completar): acento del canon en vez del verde.
+  .p-button.p-button-success:not(.p-button-rounded) {
+    background: #5F3FE0;
+    border-color: #5F3FE0;
+    color: #fff;
+    border-radius: 11px;
+    font-weight: 700;
+    box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+
+    &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
+  }
+
+  .p-progress-spinner-circle { stroke: #5F3FE0 !important; }
+}

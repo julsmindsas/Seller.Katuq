@@ -1,0 +1,47 @@
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.var-filtro {
+  max-width: 420px;
+  margin-bottom: 14px;
+
+  .form-control {
+    min-height: 40px;
+    background: $cfg-chip-bg;
+    border: 1px solid $cfg-chip-border;
+    border-radius: 10px;
+    color: $cfg-ink;
+    font-size: 13.5px;
+
+    &:focus { background: #fff; border-color: $cfg-accent-2; box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
+  }
+}
+
+.datatable-scroll { overflow-x: auto; }
+
+.var-pie { margin-top: 16px; }
+
+// ngx-datatable con el tema de las tablas (cabecera UPPERCASE muted, filas con línea lila).
+:host ::ng-deep .cfg-card .ngx-datatable.material {
+  box-shadow: none;
+  border-radius: 11px;
+
+  .datatable-header .datatable-header-cell {
+    background: $cfg-tint;
+    color: $cfg-muted;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+
+  .datatable-body .datatable-body-row {
+    color: $cfg-ink;
+    font-size: 13px;
+    border-bottom: 1px solid $cfg-line-soft;
+  }
+
+  .datatable-body .datatable-row-wrapper:hover .datatable-body-row { background: $cfg-row-hover; }
+  .datatable-footer { color: $cfg-muted; }
+  .datatable-pager li.active a { background: $cfg-accent !important; color: #fff !important; border-radius: 9px; }
+}

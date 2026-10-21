@@ -1,16 +1,21 @@
 // Dropzone styles removed due to import issues
 // @import '~dropzone/dist/dropzone.css';
 
+// Base común (D-400): aquí solo se usan los botones `cfg-btn` del encabezado.
+// No se usa la clase `cfg-pagina` a propósito: su tema de pestañas pisaría la nav lateral `mp-*`.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
 .form-label {
   font-weight: bold;
-  color: black;
+  color: #211F3A;
 }
 
 // Dropshipping configuration mode styles
 .dropshipping-config-mode {
   .p-tabview-nav li:nth-child(7) { // Tab de Dropshipping (índice 6, pero nth-child es 1-indexed)
     .p-tabview-nav-link {
-      background-color: #e3f2fd !important;
+      background-color: #efe9ff !important;
       border-color: #5F3FE0 !important;
       font-weight: bold !important;
     }
@@ -23,11 +28,11 @@
 }
 
 .currencyDivInfoTax {
-  color: red;
+  color: #D64545;
 }
 
 .currencyDivInfoNumber {
-  color: green;
+  color: #1E874B;
 }
 
 .ng-select.custom .ng-select-container {
@@ -46,7 +51,7 @@
 .ng-dropdown-panel .ng-dropdown-panel-items .ng-option.ng-option-selected,
 .ng-dropdown-panel .ng-dropdown-panel-items .ng-option.ng-option-selected.ng-option-marked {
   color: #fff !important;
-  background-color: #313131 !important;
+  background-color: #5F3FE0 !important;
 }
 
 .ng-select.custom {
@@ -60,11 +65,11 @@
 }
 
 .ng-select.custom .ng-option {
-  background-color: red !important;
+  background-color: #FDECEC !important;
 }
 
 .error-message {
-  color: red;
+  color: #D64545;
 }
 
 .notaprecio {
@@ -94,7 +99,7 @@ h4 {
 
 
 .redasteris {
-  color: red;
+  color: #D64545;
 }
 
 .btn-small {
@@ -102,20 +107,20 @@ h4 {
 }
 
 .form-control {
-  color: black;
+  color: #211F3A;
 }
 
 td {
-  color: black;
+  color: #211F3A;
 }
 
 #tbodyArticulos {
-  color: black;
+  color: #211F3A;
 }
 
 #tbodyArticulos>tr>td.right-align {
   text-align: right;
-  color: black;
+  color: #211F3A;
 }
 
 .ai-button-image {
@@ -126,7 +131,7 @@ td {
   padding: 2px;
   /* Añade un poco de espacio alrededor de la imagen */
   cursor: pointer;
-  border: 1px solid #9b00ff;
+  border: 1px solid #5F3FE0;
   transition: transform 0.2s, box-shadow 0.2s, border 0.2s;
   border-radius: 50%;
   /* Hace que la imagen sea circular */
@@ -135,9 +140,9 @@ td {
 .ai-button-image:hover {
   transform: scale(1.1);
   /* Aumenta el tamaño al pasar el ratón */
-  box-shadow: 0 0 15px rgba(212, 0, 255, 0.5);
+  box-shadow: 0 0 15px rgba(95, 63, 224, 0.35);
   /* Añade un efecto de iluminación verde */
-  border: 2px solid #9b00ff;
+  border: 2px solid #5F3FE0;
   /* Añade un borde verde */
 }
 
@@ -147,10 +152,10 @@ td {
   display: flex;
   align-items: center;
   padding: 10px 20px;
-  background-color: #6200ea;
+  background-color: #5F3FE0;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 11px;
   cursor: pointer;
   font-size: 16px;
   transition: background-color 0.3s ease;
@@ -161,7 +166,7 @@ td {
 }
 
 .btn-ia:hover {
-  background-color: #3700b3;
+  background-color: #4a2fc0;
 }
 
 // fin nueva ia
@@ -178,20 +183,21 @@ td {
 // Solo estilos: convierte el p-tabView a layout de nav lateral + panel.
 // =====================================================================
 :host {
-  --mp-accent: #6a4dfb;
+  // Tokens del canon (openspec/specs/design-system/spec.md, D-131).
+  --mp-accent: #5F3FE0;
   --mp-grad: #5F3FE0;
-  --mp-text: #211d33;
-  --mp-text-2: #8b879f;
-  --mp-text-3: #a7a3bd;
-  --mp-input-bg: #fbfaff;
-  --mp-nav-bg: #fcfbff;
-  --mp-border: #e6e3f0;
-  --mp-sep: #f0eef7;
-  --mp-ok: #16a34a;
-  --mp-ok-bg: #e7f8ee;
-  --mp-warn: #e08a1e;
-  --mp-warn-bg: #fdf1dc;
-  --mp-req: #f0416c;
+  --mp-text: #211F3A;
+  --mp-text-2: #8f8bab;
+  --mp-text-3: #9995b3;
+  --mp-input-bg: #faf9fe;
+  --mp-nav-bg: #faf9fe;
+  --mp-border: #e9e7f3;
+  --mp-sep: #f1f0f7;
+  --mp-ok: #1E874B;
+  --mp-ok-bg: #E6F7EE;
+  --mp-warn: #D9820A;
+  --mp-warn-bg: #FFF1DF;
+  --mp-req: #D64545;
 }
 
 @keyframes mp-rise {
@@ -199,14 +205,63 @@ td {
   to   { opacity: 1; transform: none; }
 }
 
-// --- Card contenedora (solo la externa, no las anidadas) ---
-:host > .container-fluid > .row > .col-sm-12 > .card {
-  border: none;
-  border-radius: 22px;
-  box-shadow: 0 6px 30px rgba(30, 20, 60, .06);
+// --- Página y panel contenedor (antes container-fluid > row > col > card) ---
+.maestro-pagina {
+  padding: 20px 16px 32px;
+  box-sizing: border-box;
+
+  @media (min-width: 768px) { padding: 24px 24px 40px; }
+
+  :focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+
+.maestro-panel {
+  position: relative;
+  background: #fff;
+  border: 1px solid #ececf4;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
   max-width: 1360px;
   margin: 0 auto;
+  min-width: 0;
   overflow: visible; // no recortar popups de ng-select / p-treeSelect
+}
+
+// Notas bajo las miniaturas de imagen (antes color inline #666 / #f0ad4e).
+.maestro-nota {
+  padding: 2px;
+  font-size: .7rem;
+  font-weight: 700;
+  color: #8f8bab;
+
+  &--aviso { color: #D9820A; }
+}
+
+// Texto de los paneles de acordeón (antes `style="color: black"`).
+.maestro-tinta { color: #211F3A; }
+
+// Celdas editables de la tabla de imágenes (antes `style="border-color: black"`).
+.maestro-celda { border-color: #e9e7f3; }
+
+// Botones Bootstrap del interior: el primario global es el morado viejo del tema legacy.
+.mp-body,
+.modal-footer {
+  .btn-primary {
+    background: #5F3FE0;
+    border-color: #5F3FE0;
+    color: #fff;
+    border-radius: 11px;
+
+    &:hover:not(:disabled) { background: #4a2fc0; border-color: #4a2fc0; }
+  }
+
+  .btn-outline-primary {
+    color: #5F3FE0;
+    border-color: #ddd3fb;
+    border-radius: 11px;
+
+    &:hover:not(:disabled) { background: #efe9ff; color: #5F3FE0; border-color: #5F3FE0; }
+  }
 }
 
 .mp-body {
@@ -240,7 +295,7 @@ td {
   justify-content: center;
   color: #fff;
   font-size: 23px;
-  box-shadow: 0 8px 18px rgba(107, 78, 251, .32);
+  box-shadow: 0 8px 18px rgba(95, 63, 224, .32);
 }
 
 .mp-header__crumb {
@@ -285,7 +340,7 @@ td {
   &--primary {
     background: var(--mp-grad);
     color: #fff;
-    box-shadow: 0 6px 16px rgba(107, 78, 251, .32);
+    box-shadow: 0 6px 16px rgba(95, 63, 224, .32);
 
     &:hover:not(:disabled) { filter: brightness(1.05); }
     &:disabled { opacity: .6; cursor: default; box-shadow: none; }
@@ -391,7 +446,7 @@ td {
     &:focus {
       border-color: var(--mp-accent);
       background: #fff;
-      box-shadow: 0 0 0 4px rgba(107, 78, 251, .1);
+      box-shadow: 0 0 0 4px rgba(95, 63, 224, .1);
       outline: none;
     }
   }
@@ -498,7 +553,7 @@ td {
 }
 
 :host ::ng-deep .p-tabview .p-tabview-nav li .p-tabview-nav-link:focus-visible {
-  outline: 2px solid rgba(107, 78, 251, .45);
+  outline: 2px solid rgba(95, 63, 224, .45);
   outline-offset: 2px;
   box-shadow: none;
 }
@@ -508,13 +563,13 @@ td {
   background: #fff;
   color: var(--mp-text);
   border-color: #eee7ff;
-  box-shadow: 0 3px 12px rgba(107, 78, 251, .12);
+  box-shadow: 0 3px 12px rgba(95, 63, 224, .12);
 }
 
 :host ::ng-deep .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link::before {
   background: var(--mp-grad);
   color: #fff;
-  box-shadow: 0 4px 10px rgba(107, 78, 251, .35);
+  box-shadow: 0 4px 10px rgba(95, 63, 224, .35);
 }
 
 // Barra de tinta horizontal (no aplica en vertical)
@@ -674,11 +729,11 @@ td {
   select.ng-invalid.ng-touched,
   textarea.ng-invalid.ng-touched {
     border-color: var(--mp-req);
-    background: #fff6f8;
+    background: #FDECEC;
 
     &:focus {
       border-color: var(--mp-req);
-      box-shadow: 0 0 0 4px rgba(240, 65, 108, .12);
+      box-shadow: 0 0 0 4px rgba(214, 69, 69, .12);
     }
   }
 

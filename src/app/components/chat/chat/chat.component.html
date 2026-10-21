@@ -6,16 +6,16 @@
         <img src="assets/images/kai/kai.gif" alt="KAI" class="avatar-img" onerror="this.src='assets/images/default-avatar.png'" style="width: 48px; height: 48px; border-radius: 50%;">
       </div>
       <div>
-        <h5 class="mb-1 fw-bold text-primary">
+        <h5 class="mb-1 fw-bold kai-nombre">
           <i class="pi pi-comments me-2"></i>KAI
-          <span class="p-badge p-badge-sm ms-2">LLM</span>
+          <span class="p-badge p-badge-sm ms-2 kai-insignia">LLM</span>
         </h5>
         <p class="text-muted small mb-0">
-          <span *ngIf="chatUser?.typing" class="text-info">
+          <span *ngIf="chatUser?.typing" class="kai-estado kai-estado--escribiendo">
             <i class="pi pi-spin pi-spinner me-1"></i>Escribiendo...
           </span>
-          <span *ngIf="!chatUser?.typing">
-            <i class="pi pi-circle-fill me-1" style="font-size: 0.5rem; color: #22c55e;"></i>Disponible 24/7 para ayudarte
+          <span *ngIf="!chatUser?.typing" class="kai-estado">
+            <i class="pi pi-circle-fill me-1 kai-punto"></i>Disponible 24/7 para ayudarte
           </span>
         </p>
       </div>

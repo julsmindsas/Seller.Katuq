@@ -1,33 +1,42 @@
-$google-blue: #1a73e8;
-$google-green: #34a853;
-$google-red: #ea4335;
-$google-grey-100: #f1f3f4;
-$google-grey-300: #dadce0;
-$google-grey-600: #5f6368;
-$google-grey-800: #202124;
+// Tarjeta de agente: tema canónico Katuq (D-131). Plano, sin gradientes.
+$ab-accent: #5F3FE0;
+$ab-accent-soft: #efe9ff;
+$ab-ink: #211F3A;
+$ab-body: #5b5878;
+$ab-muted: #8f8bab;
+$ab-line: #ececf4;
+$ab-line-soft: #f1f0f7;
+$ab-ok: #1E874B;
+$ab-ok-soft: #E6F7EE;
 
 .google-card {
-  background: white;
-  border: 1px solid $google-grey-300;
+  background: #fff;
+  border: 1px solid $ab-line;
   border-radius: 16px;
-  padding: 20px;
-  transition: all 0.2s ease;
+  padding: 18px;
+  transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   height: 100%;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
+
+  p, span, button { letter-spacing: normal; }
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(60, 64, 67, 0.15);
-    border-color: transparent;
+    box-shadow: 0 12px 28px -14px rgba(95, 63, 224, .35);
+    border-color: #ddd3fb;
     transform: translateY(-2px);
   }
 
-  // HEADER
+  // ENCABEZADO DE LA TARJETA
   .card-header {
-    margin-bottom: 16px;
+    margin-bottom: 14px;
+    padding: 0;
+    background: transparent;
+    border: 0;
 
     .header-top {
       display: flex;
@@ -36,13 +45,13 @@ $google-grey-800: #202124;
       margin-bottom: 12px;
 
       .icon-wrapper {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
+        width: 44px;
+        height: 44px;
+        border-radius: 11px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 24px;
+        font-size: 20px;
       }
 
       .more-btn {
@@ -50,132 +59,142 @@ $google-grey-800: #202124;
         border: none;
         width: 32px;
         height: 32px;
-        border-radius: 50%;
+        border-radius: 11px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: $google-grey-600;
+        color: $ab-muted;
         cursor: pointer;
-        transition: background 0.2s;
+        transition: background .15s ease, color .15s ease;
 
         &:hover {
-          background: $google-grey-100;
-          color: $google-grey-800;
+          background: $ab-accent-soft;
+          color: $ab-accent;
         }
+
+        &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
       }
     }
 
     .agent-name {
-      font-family: 'Google Sans', sans-serif;
-      font-size: 18px;
-      font-weight: 500;
-      color: $google-grey-800;
+      font-size: 16px;
+      font-weight: 800;
+      color: $ab-ink;
       margin: 0 0 4px;
-      line-height: 1.4;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
     }
 
     .department-label {
-      font-size: 12px;
-      font-weight: 500;
-      color: $google-grey-600;
+      font-size: 10.5px !important;
+      font-weight: 800;
+      color: $ab-muted !important;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: .5px !important;
     }
   }
 
-  // BODY
+  // CUERPO
   .card-body {
     flex: 1;
     display: flex;
     flex-direction: column;
+    padding: 0;
 
     .description {
-      font-size: 14px;
-      color: $google-grey-600;
+      font-size: 13.5px;
+      color: $ab-body;
       line-height: 1.5;
-      margin: 0 0 20px;
+      margin: 0 0 18px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      min-height: 42px;
+      min-height: 40px;
     }
 
     .stats-row {
       display: flex;
-      gap: 16px;
+      flex-wrap: wrap;
+      gap: 14px;
       margin-top: auto;
-      padding-top: 16px;
-      border-top: 1px solid $google-grey-100;
+      padding-top: 14px;
+      border-top: 1px solid $ab-line-soft;
 
       .stat-item {
         display: flex;
         align-items: center;
         gap: 6px;
         font-size: 13px;
-        color: $google-grey-600;
+        color: $ab-body;
 
-        i {
-          font-size: 14px;
-        }
+        i { font-size: 13px; color: $ab-muted; }
+        span { color: $ab-body !important; font-size: 13px !important; font-weight: 700; }
 
-        &.date {
-          margin-left: auto;
-        }
+        &.date { margin-left: auto; }
       }
     }
   }
 
-  // FOOTER
+  // PIE
   .card-footer {
-    margin-top: 16px;
+    margin-top: 14px;
+    padding: 0;
+    background: transparent;
+    border: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
 
     .status-indicator {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 12px;
-      font-weight: 500;
-      color: $google-grey-600;
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      color: #5A6B78;
       padding: 4px 10px;
-      background: $google-grey-100;
-      border-radius: 12px;
+      background: #eef0f3;
+      border-radius: 20px;
 
       .dot {
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background-color: $google-grey-600;
+        background-color: #5A6B78;
       }
 
       &.active {
-        background-color: #e6f4ea;
-        color: #137333;
+        background-color: $ab-ok-soft;
+        color: $ab-ok;
 
-        .dot {
-          background-color: #1e8e3e;
-        }
+        .dot { background-color: $ab-ok; }
       }
     }
 
     .quick-run {
-      border: none;
-      background: rgba(26, 115, 232, 0.12);
-      color: $google-blue;
-      border-radius: 999px;
-      padding: 6px 16px;
-      font-size: 12px;
-      font-weight: 600;
+      border: 1px solid $ab-accent;
+      background: $ab-accent;
+      color: #fff;
+      border-radius: 11px;
+      min-height: 34px;
+      padding: 0 14px;
+      font-size: 12.5px;
+      font-weight: 700;
       cursor: pointer;
-      transition: background 0.2s, transform 0.2s;
+      box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+      transition: background .15s ease, transform .15s ease;
 
       &:hover {
-        background: rgba(26, 115, 232, 0.2);
+        background: #4a2fc0;
+        border-color: #4a2fc0;
         transform: translateY(-1px);
       }
+
+      &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
     }
   }
 }

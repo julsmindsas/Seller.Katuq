@@ -1,8 +1,53 @@
-.detail-header {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 1rem;
+// Marco canónico (D-516): cfg-pagina / cfg-cabeza / cfg-card
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.crm-detalle { min-width: 0; }
+
+// La cabecera del lead apila eyebrow, fila de identidad y barra de etapas.
+.crm-detalle__cabeza {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+
+  .cfg-titulo { overflow-wrap: anywhere; }
+}
+
+.crm-detalle__correo { font-size: 13px; color: #8f8bab !important; }
+
+.crm-icono-error { font-size: 2rem; color: #D64545; }
+.crm-acento { color: #5F3FE0 !important; }
+
+// Pills de estado: par color fuerte / fondo suave.
+.stat-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.crm-par--ok { background-color: #E6F7EE; color: #1E874B !important; }
+.crm-par--warn { background-color: #FFF1DF; color: #D9820A !important; }
+
+// Botones PrimeNG con el canon: principal morado, outlined blanco con borde, text en acento.
+:host ::ng-deep .crm-detalle {
+  .p-button:not(.p-button-text):not(.p-button-outlined) {
+    background: #5F3FE0;
+    border-color: #5F3FE0;
+    border-radius: 11px;
+    font-weight: 700;
+    &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
+  }
+  .p-button.p-button-outlined {
+    background: #fff;
+    border: 1px solid #e4e2ef;
+    color: #5b5878;
+    border-radius: 11px;
+    &:enabled:hover { background: #faf9fe; border-color: #d9cffb; color: #5F3FE0; }
+  }
+  .p-button.p-button-text { color: #5F3FE0; border-radius: 11px; }
 }
 
 .stage-bar {
@@ -12,19 +57,27 @@
   margin-top: 0.5rem;
 
   .stage-active {
-    background-color: #8b5cf6 !important;
+    background-color: #5F3FE0 !important;
     color: #fff !important;
-    border-color: #8b5cf6 !important;
+    border-color: #5F3FE0 !important;
   }
 }
 
 .info-card {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  background: #faf9fe;
+  border: 1px solid #eeecf7;
+  border-radius: 11px;
   padding: 1rem;
+  margin-bottom: 12px;
 
-  h6 { color: #374151; margin-bottom: 0.75rem; }
+  h6 {
+    color: #8f8bab;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
 }
 
 .info-row {
@@ -32,13 +85,16 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.4rem 0;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid #ececf4;
   font-size: 0.875rem;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: #211F3A;
 
   &:last-child { border-bottom: none; }
 
   .info-label {
-    color: #6b7280;
+    color: #8f8bab;
     font-weight: 600;
     i { margin-right: 0.4rem; font-size: 0.8rem; }
   }
@@ -56,7 +112,7 @@
     top: 0;
     bottom: 0;
     width: 2px;
-    background: #e5e7eb;
+    background: #ececf4;
   }
 }
 
@@ -71,7 +127,7 @@
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #8b5cf6;
+  background: #5F3FE0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -82,8 +138,8 @@
 
 .timeline-content {
   background: #fff;
-  border: 1px solid #f3f4f6;
-  border-radius: 8px;
+  border: 1px solid #ececf4;
+  border-radius: 11px;
   padding: 0.6rem 0.8rem;
   flex: 1;
   font-size: 0.875rem;
@@ -92,8 +148,8 @@
 // Tasks
 .task-item {
   background: #fff;
-  border: 1px solid #f3f4f6;
-  border-radius: 8px;
+  border: 1px solid #ececf4;
+  border-radius: 11px;
   padding: 0.6rem 0.8rem;
   margin-bottom: 0.5rem;
 
@@ -102,7 +158,7 @@
 
 // PrimeNG severity "secondary" fallback
 :host ::ng-deep .p-tag-secondary {
-  background: #6b7280 !important;
+  background: #8f8bab !important;
 }
 
 // ─── Etiquetas / tags ────────────────────────────────────────
@@ -117,23 +173,23 @@
   align-items: center;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  border: 1px solid #e5e7eb;
-  background: #f8f9fa;
-  color: #6b7280;
+  border: 1px solid #ececf4;
+  background: #f5f4fa;
+  color: #8f8bab;
   font-size: 0.78rem;
   cursor: pointer;
   user-select: none;
   transition: all 0.15s ease;
 
-  &:hover { border-color: #c4b5fd; }
+  &:hover { border-color: #d9cffb; }
   &.tag-chip-selected { border-color: transparent; font-weight: 600; }
 }
 
 .tags-empty-hint {
   font-size: 0.78rem;
-  color: #9ca3af;
-  background: #f8f9fa;
-  border: 1px dashed #e5e7eb;
+  color: #8f8bab;
+  background: #f5f4fa;
+  border: 1px dashed #ececf4;
   border-radius: 6px;
   padding: 0.45rem 0.65rem;
 }

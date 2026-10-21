@@ -1,8 +1,8 @@
 // Crear ticket de soporte — maqueta tomada del diseño "Crear Ticket"
-// Tokens: Nunito (texto), Baloo 2 (cifras y titulares), acento #6C4CE0.
+// Tokens: Nunito (texto), Baloo 2 (cifras y titulares), acento #5F3FE0.
 
-$acento: #6C4CE0;
-$texto: #2A2E3C;
+$acento: #5F3FE0;
+$texto: #211F3A;
 $texto2: #52586B;
 $texto3: #626878;
 $gris: #6B7280;
@@ -10,8 +10,8 @@ $linea: #F0F1F6;
 $borde: #ECEDF3;
 $borde2: #E4E5EE;
 $campo: #F7F8FC;
-$fondo: #F5F6FB;
-$ok: #15803D;
+$fondo: #f5f4fb;
+$ok: #1E874B;
 
 :host {
   display: block;
@@ -82,7 +82,7 @@ $ok: #15803D;
   background: #fff;
   border: 1px solid $borde;
   border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(30, 35, 60, .04);
+  box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
   padding: 12px 16px;
   flex-shrink: 0;
 }
@@ -134,7 +134,7 @@ $ok: #15803D;
   background: #fff;
   border: 1px solid $borde;
   border-radius: 18px;
-  box-shadow: 0 1px 3px rgba(30, 35, 60, .04);
+  box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
   padding: 18px 20px;
 
   &.is-flush { padding: 0; overflow: hidden; }
@@ -152,7 +152,7 @@ $ok: #15803D;
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #EEE9FD;
+  background: #efe9ff;
   color: $acento;
   display: flex;
   align-items: center;
@@ -186,7 +186,7 @@ $ok: #15803D;
   margin-top: 2px;
 }
 
-.ct-req { color: #C0392F; font-weight: 800; font-size: 14px; }
+.ct-req { color: #D64545; font-weight: 800; font-size: 14px; }
 
 .ct-badge {
   background: #F1F2F5;
@@ -315,7 +315,7 @@ select.ct-input { cursor: pointer; font-size: 13.5px; }
 }
 
 .ct-input::placeholder,
-.ct-textarea::placeholder { color: #8A90A2; font-weight: 500; }
+.ct-textarea::placeholder { color: #8f8bab; font-weight: 500; }
 
 .ct-tips {
   display: flex;
@@ -330,7 +330,7 @@ select.ct-input { cursor: pointer; font-size: 13.5px; }
   gap: 7px;
   font-size: 12px;
   font-weight: 700;
-  color: #8A90A2;
+  color: #8f8bab;
   white-space: nowrap;
 
   &.is-ok { color: $ok; }
@@ -362,7 +362,7 @@ select.ct-input { cursor: pointer; font-size: 13.5px; }
   width: 40px;
   height: 40px;
   border-radius: 13px;
-  background: #EEE9FD;
+  background: #efe9ff;
   color: $acento;
   display: flex;
   align-items: center;
@@ -402,9 +402,9 @@ select.ct-input { cursor: pointer; font-size: 13.5px; }
 
   img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-  &.is-imagen { background: #E7F0FD; color: #1F5FBF; }
-  &.is-video { background: #2A2E3C; color: #fff; }
-  &.is-documento { background: #FCE9E8; color: #C0392F; }
+  &.is-imagen { background: #E7F1FF; color: #1E6FD9; }
+  &.is-video { background: #211F3A; color: #fff; }
+  &.is-documento { background: #FDECEC; color: #D64545; }
 }
 
 .ct-file-text { flex: 1; min-width: 0; }
@@ -430,7 +430,7 @@ select.ct-input { cursor: pointer; font-size: 13.5px; }
   padding: 5px;
   flex-shrink: 0;
 
-  &:hover { color: #C0392F; }
+  &:hover { color: #D64545; }
 }
 
 /* ===== 4. Clasificación ===== */
@@ -488,7 +488,7 @@ select.ct-input { cursor: pointer; font-size: 13.5px; }
 }
 
 .ct-today {
-  background: #EEE9FD;
+  background: #efe9ff;
   color: $acento;
   font-size: 10px;
   font-weight: 800;
@@ -591,14 +591,12 @@ select.ct-input { cursor: pointer; font-size: 13.5px; }
 .ct-check {
   background: #FEFAF2;
   border: 1px solid #F8EBD4;
-  border-left: 4px solid #B5700F;
   border-radius: 16px;
   padding: 14px 16px;
 
   &.is-ok {
     background: #F2FBF6;
     border-color: #D8F0E3;
-    border-left-color: $ok;
   }
 }
 
@@ -614,7 +612,7 @@ select.ct-input { cursor: pointer; font-size: 13.5px; }
   height: 28px;
   border-radius: 9px;
   background: #fff;
-  color: #B5700F;
+  color: #D9820A;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -639,7 +637,7 @@ select.ct-input { cursor: pointer; font-size: 13.5px; }
   font-weight: 700;
   color: $texto3;
 
-  svg { flex-shrink: 0; margin-top: 1px; color: #8A90A2; }
+  svg { flex-shrink: 0; margin-top: 1px; color: #8f8bab; }
 
   &.is-ok {
     color: $texto2;
@@ -662,7 +660,7 @@ select.ct-input { cursor: pointer; font-size: 13.5px; }
   font-weight: 800;
   font-size: 14.5px;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(108, 76, 224, .3);
+  box-shadow: 0 8px 20px rgba(95, 63, 224, .3);
 
   &:disabled {
     background: $borde2;

@@ -3,13 +3,16 @@
 // Diseño basado en el estándar Katuq/Despachos
 // ===================================
 
-// Variables
-$primary-color: #5F3FE0;
-$success-color: #2dce89;
-$danger-color: #f5365c;
-$warning-color: #fb6340;
-$info-color: #11cdef;
-$border-radius: 8px;
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+// Variables (tokens del canon, D-516)
+$primary-color: $cfg-accent;
+$success-color: $cfg-ok;
+$danger-color: $cfg-err;
+$warning-color: $cfg-warn;
+$info-color: $cfg-info;
+$border-radius: 11px;
 
 // ===================================
 // HEADER DEL MÓDULO
@@ -35,21 +38,34 @@ $border-radius: 8px;
 // ===================================
 // PANEL DE FILTROS
 // ===================================
-.card-header {
+.filtros-toggle {
     cursor: pointer;
+    background: $cfg-tint;
+    border: 1px solid #eeecf7;
+    border-radius: 11px;
     transition: background-color 0.2s ease;
 
     &:hover {
-        background-color: #e9ecef !important;
+        background-color: $cfg-accent-soft;
     }
 }
+.filtros-toggle__titulo {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $cfg-muted;
+
+    i { color: $cfg-accent; }
+}
+.filtros-cuerpo { padding: 16px 4px 4px; }
 
 // ===================================
 // MÉTRICAS BREADCRUMB (ESTILO KATUQ)
 // ===================================
 .metrics-breadcrumb-panel {
-    background: #f8f9fa;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    background: transparent;
+    border-bottom: 1px solid $cfg-line-soft;
 }
 
 .metrics-scroll-container {
@@ -76,9 +92,9 @@ $border-radius: 8px;
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    border-radius: 6px;
+    border-radius: 11px;
     background: white;
-    border: 1px solid #dee2e6;
+    border: 1px solid $cfg-line;
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 0.875rem;
@@ -89,13 +105,13 @@ $border-radius: 8px;
     }
 
     .metric-label {
-        font-weight: 500;
-        color: #495057;
+        font-weight: 600;
+        color: $cfg-body;
     }
 
     .metric-badge {
-        background: #e9ecef;
-        color: #495057;
+        background: $cfg-accent-soft;
+        color: $cfg-accent;
         padding: 0.125rem 0.5rem;
         border-radius: 10px;
         font-size: 0.75rem;
@@ -104,41 +120,41 @@ $border-radius: 8px;
 
     &:hover {
         transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 6px 16px -8px rgba(95, 63, 224, .35);
     }
 
     &.active {
         border-width: 2px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        box-shadow: 0 6px 16px -8px rgba(95, 63, 224, .35);
     }
 
     // Estilos por tipo
     &.metric-chip-primary.active {
-        border-color: #6c757d;
-        background: #f8f9fa;
+        border-color: $cfg-accent;
+        background: $cfg-accent-soft;
 
         .metric-label {
-            color: #6c757d;
-            font-weight: 600;
+            color: $cfg-accent;
+            font-weight: 700;
         }
 
         .metric-badge {
-            background: #6c757d;
+            background: $cfg-accent;
             color: white;
         }
     }
 
     &.metric-chip-success {
         i {
-            color: #28a745;
+            color: $cfg-ok;
         }
 
         &.active {
-            border-color: #28a745;
-            background: #d4edda;
+            border-color: $cfg-ok;
+            background: $cfg-ok-soft;
 
             .metric-label {
-                color: #155724;
+                color: $cfg-ok;
                 font-weight: 600;
             }
         }
@@ -146,15 +162,15 @@ $border-radius: 8px;
 
     &.metric-chip-danger {
         i {
-            color: #dc3545;
+            color: $cfg-err;
         }
 
         &.active {
-            border-color: #dc3545;
-            background: #f8d7da;
+            border-color: $cfg-err;
+            background: $cfg-err-soft;
 
             .metric-label {
-                color: #721c24;
+                color: $cfg-err;
                 font-weight: 600;
             }
         }
@@ -162,7 +178,7 @@ $border-radius: 8px;
 }
 
 .separator {
-    color: #dee2e6;
+    color: $cfg-line;
     font-weight: 300;
     font-size: 1.25rem;
     user-select: none;
@@ -172,7 +188,10 @@ $border-radius: 8px;
 // TOOLBAR DE LA TABLA
 // ===================================
 .table-toolbar {
-    background-color: #f8f9fa;
+    background-color: transparent;
+    border-bottom: 1px solid $cfg-line-soft;
+
+    h6 { color: $cfg-ink; font-weight: 800; i { color: $cfg-accent; } }
 }
 
 .badge-count {
@@ -182,16 +201,16 @@ $border-radius: 8px;
     min-width: 28px;
     height: 24px;
     padding: 0.25rem 0.5rem;
-    background-color: #cfe2ff;
-    color: #084298;
-    border: 1px solid #b6d4fe;
-    border-radius: 12px;
+    background-color: $cfg-accent-soft;
+    color: $cfg-accent;
+    border: 1px solid #ddd3fb;
+    border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 600;
     transition: all 0.2s ease;
 
     &:hover {
-        background-color: #b6d4fe;
+        background-color: #ddd3fb;
     }
 }
 
@@ -221,76 +240,76 @@ $border-radius: 8px;
 
     // Ingreso - Verde pastel suave
     &.badge-success {
-        background-color: #d1f4e0;
-        color: #0d6832;
-        border: 1px solid #b8ead3;
+        background-color: $cfg-ok-soft;
+        color: $cfg-ok;
+        border: 1px solid #c3ead3;
 
         i {
-            color: #10b981;
+            color: $cfg-ok;
         }
 
         &:hover {
-            background-color: #b8ead3;
+            background-color: #d3f0df;
         }
     }
 
     // Salida - Rojo pastel suave
     &.badge-danger {
-        background-color: #fce8ea;
-        color: #8b1e28;
-        border: 1px solid #f7d4d8;
+        background-color: $cfg-err-soft;
+        color: $cfg-err;
+        border: 1px solid #f3c9c9;
 
         i {
-            color: #ef4444;
+            color: $cfg-err;
         }
 
         &:hover {
-            background-color: #f7d4d8;
+            background-color: #f9dcdc;
         }
     }
 
     // Secundario - Morado pastel muy claro (matching tema principal)
     &.badge-secondary {
-        background-color: #f0f1ff !important;
-        color: #5b21b6 !important;
-        border: 1px solid #e0e2ff !important;
+        background-color: $cfg-accent-soft !important;
+        color: $cfg-accent !important;
+        border: 1px solid #ddd3fb !important;
 
         i {
-            color: #7c3aed !important;
+            color: $cfg-accent !important;
         }
 
         &:hover {
-            background-color: #e0e2ff !important;
+            background-color: #ddd3fb !important;
         }
     }
 
     // Información - Azul pastel
     &.badge-info {
-        background-color: #e0f2fe;
-        color: #075985;
-        border: 1px solid #bae6fd;
+        background-color: $cfg-info-soft;
+        color: $cfg-info;
+        border: 1px solid #c9defa;
 
         i {
-            color: #0ea5e9;
+            color: $cfg-info;
         }
 
         &:hover {
-            background-color: #bae6fd;
+            background-color: #d6e7fd;
         }
     }
 
     // Advertencia - Amarillo pastel
     &.badge-warning {
-        background-color: #fff3cd;
-        color: #856404;
-        border: 1px solid #ffeeba;
+        background-color: $cfg-warn-soft;
+        color: $cfg-warn;
+        border: 1px solid #f8dcb5;
 
         i {
-            color: #ffc107;
+            color: $cfg-warn;
         }
 
         &:hover {
-            background-color: #ffeeba;
+            background-color: #fde6c6;
         }
     }
 }
@@ -654,4 +673,39 @@ $border-radius: 8px;
       font-size: 0.8rem;
     }
   }
+}
+
+
+// ── Marco cfg-pagina (D-516) ──
+:host { display: block; background: $cfg-tint; }
+
+.historial-card { padding: 0; }
+.historial-card > .filtros-toggle { margin: 16px 16px 0; }
+.historial-card > .filtros-cuerpo { padding: 16px 20px 4px; }
+.cfg-card > .loader-box { border-radius: 16px; }
+
+.icono-acento { color: $cfg-accent; }
+.icono-vacio { font-size: 3rem; color: $cfg-muted; opacity: .5; }
+
+:host ::ng-deep {
+  .boton-principal.p-button {
+    background: $cfg-accent;
+    border-color: $cfg-accent;
+    border-radius: 11px;
+    font-weight: 700;
+    box-shadow: $cfg-shadow-btn;
+
+    &:enabled:hover { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
+  }
+  .boton-secundario.p-button {
+    background: #fff;
+    color: $cfg-body;
+    border: 1px solid #e4e2ef;
+    border-radius: 11px;
+    font-weight: 700;
+
+    &:enabled:hover { background: $cfg-tint; color: $cfg-accent; border-color: #d9cffb; }
+  }
+  .table-toolbar .p-button.p-button-text { color: $cfg-body; }
+  .table-toolbar .p-button.p-button-text.p-button-primary { color: $cfg-accent; background: $cfg-accent-soft; }
 }

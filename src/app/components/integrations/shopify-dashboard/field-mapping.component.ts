@@ -14,7 +14,7 @@ interface LocationMapping {
 @Component({
   selector: 'app-field-mapping',
   templateUrl: './field-mapping.component.html',
-  styleUrls: ['./field-mapping.component.css'],
+  styleUrls: ['./field-mapping.component.scss'],
   providers: [MessageService]
 })
 export class FieldMappingComponent implements OnInit, OnDestroy {

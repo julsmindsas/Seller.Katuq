@@ -1,26 +1,26 @@
-<div class="container-fluid">
-  <div class="row mb-3">
-    <div class="col-12">
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Picking y packing</span>
+      <h1 class="cfg-titulo">Órdenes de packing</h1>
+    </div>
+    <div class="cfg-acciones">
       <button pButton type="button" icon="pi pi-arrow-left" label="Volver" 
               class="p-button-secondary" (click)="volverALista()"></button>
     </div>
-  </div>
+  </header>
 
-  <div *ngIf="loading" class="row">
-    <div class="col-12 text-center">
+  <section *ngIf="loading" class="cfg-card detalle-cargando">
       <p-progressSpinner></p-progressSpinner>
-      <p>Cargando información...</p>
-    </div>
-  </div>
+      <p class="detalle-texto">Cargando información...</p>
+  </section>
 
   <!-- Formulario para nuevo packing -->
-  <div *ngIf="isNuevo && !loading" class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <h5 class="card-title">Iniciar Nuevo Packing</h5>
+  <section *ngIf="isNuevo && !loading" class="cfg-card">
+        <div class="detalle-cabeza">
+          <h2 class="cfg-card__titulo">Iniciar Nuevo Packing</h2>
         </div>
-        <div class="card-body">
+        <div class="detalle-cuerpo">
           <form [formGroup]="packingForm" (ngSubmit)="iniciarPacking()">
             <div class="row mb-3">
               <div class="col-md-6">
@@ -62,17 +62,12 @@
             </div>
           </form>
         </div>
-      </div>
-    </div>
-  </div>
+  </section>
 
   <!-- Detalle de packing existente -->
-  <div *ngIf="!isNuevo && !loading && packing" class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="card-title">Packing ID: {{ packing._id }}</h5>
+  <section *ngIf="!isNuevo && !loading && packing" class="cfg-card">
+        <div class="detalle-cabeza">
+            <h2 class="cfg-card__titulo">Packing ID: {{ packing._id }}</h2>
             <span class="badge" [ngClass]="{
               'bg-warning': packing.estado === 'pendiente',
               'bg-primary': packing.estado === 'en_proceso',
@@ -80,9 +75,8 @@
             }">
               {{ packing.estado | titlecase }}
             </span>
-          </div>
         </div>
-        <div class="card-body">
+        <div class="detalle-cuerpo">
           <div class="row mb-4">
             <div class="col-md-4">
               <p><strong>Orden ID:</strong> {{ packing.ordenId }}</p>
@@ -110,11 +104,11 @@
           <!-- Formulario para completar packing -->
           <div *ngIf="packing.estado !== 'completado'" class="row mt-4">
             <div class="col-12">
-              <div class="card">
-                <div class="card-header">
-                  <h6 class="card-title">Información de Embalaje</h6>
+              <div class="detalle-panel">
+                <div class="detalle-panel__cabeza">
+                  <h3 class="detalle-subtitulo">Información de Embalaje</h3>
                 </div>
-                <div class="card-body">
+                <div class="detalle-panel__cuerpo">
                   <form [formGroup]="embalajeForm" (ngSubmit)="completarPacking()">
                     <div class="row mb-3">
                       <div class="col-md-4">
@@ -198,11 +192,11 @@
           <!-- Información de embalaje completado -->
           <div *ngIf="packing.estado === 'completado' && packing.informacionEmbalaje" class="row mt-4">
             <div class="col-12">
-              <div class="card">
-                <div class="card-header">
-                  <h6 class="card-title">Información de Embalaje</h6>
+              <div class="detalle-panel">
+                <div class="detalle-panel__cabeza">
+                  <h3 class="detalle-subtitulo">Información de Embalaje</h3>
                 </div>
-                <div class="card-body">
+                <div class="detalle-panel__cuerpo">
                   <div class="row">
                     <div class="col-md-4">
                       <p><strong>Tipo de Embalaje:</strong> {{ packing.informacionEmbalaje.tipo | titlecase }}</p>
@@ -235,7 +229,5 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+  </section>
 </div> 

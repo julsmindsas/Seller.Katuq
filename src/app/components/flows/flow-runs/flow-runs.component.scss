@@ -1,5 +1,7 @@
 // Historial de una automatización (2026-10-07, D-350 parte C).
 @import '../au-tema';
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
 
 .au-page {
   @include au-pagina;
@@ -10,6 +12,10 @@
 
   .au-wrap { @include au-envoltura; }
   .au-volver { align-self: flex-start; text-decoration: none; }
+
+  // Encabezado con la base cfg (D-400/D-516); se conserva la fuente de marca del registro.
+  .cfg-titulo { font-family: $cb-display; font-weight: normal; }
+  .au-acento { color: $cb-accent; font-size: inherit; }
 
   .hi-layout { display: grid; grid-template-columns: minmax(260px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; }
 
@@ -85,5 +91,5 @@
 }
 
 @media (max-width: 600px) {
-  .au-page { padding: 20px 16px 36px; .au-title { font-size: 24px; } }
+  .au-page { padding: 20px 16px 36px; }
 }

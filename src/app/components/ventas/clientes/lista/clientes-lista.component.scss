@@ -1,56 +1,146 @@
 // ===================================
 // CLIENTES LISTA - ESTILOS KATUQ
-// Diseño basado en el estándar Katuq/Historial de Movimientos
+// Marco canónico (D-516): cfg-pagina / cfg-cabeza / cfg-card de
+// shared/styles/_config-pagina.scss y tokens de openspec/specs/design-system.
 // ===================================
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
 
-// Variables
-$primary-color: #6c4ce0;
-$success-color: #2dce89;
-$danger-color: #f5365c;
-$warning-color: #fb6340;
-$info-color: #11cdef;
-$border-radius: 8px;
+// Variables (canon)
+$primary-color: #5F3FE0;
+$success-color: #1E874B;
+$danger-color: #D64545;
+$warning-color: #D9820A;
+$info-color: #1E6FD9;
+$border-radius: 11px;
 
 // ===================================
-// HEADER DEL MÓDULO
+// CABECERA: botones PrimeNG con el canon
 // ===================================
-.module-header {
-    background: white;
-    transition: all 0.3s ease;
+// Principal morado (Crear cliente).
+:host ::ng-deep .cfg-cabeza .p-button:not(.p-button-outlined) {
+    min-height: 40px;
+    border-radius: 11px;
+    background: #5F3FE0;
+    border-color: #5F3FE0;
+    font-weight: 700;
+    box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
 
-    h5 {
-        font-size: 1.1rem !important;
-        font-weight: 800 !important;
-        color: #6c4ce0 !important;
+    &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
+}
 
-        i {
-            font-size: 1.1rem;
-        }
+// Secundarios blancos con borde (Importar, Etiquetas, Exportar Excel).
+:host ::ng-deep .cfg-cabeza .p-button.p-button-outlined {
+    min-height: 40px;
+    border-radius: 11px;
+    background: #fff !important;
+    border: 1px solid #e4e2ef !important;
+    color: #5b5878 !important;
+    font-weight: 700;
+    box-shadow: none !important;
+
+    .p-button-label, .p-button-icon { color: inherit !important; }
+
+    &:enabled:hover {
+        background: #faf9fe !important;
+        border-color: #d9cffb !important;
+        color: #5F3FE0 !important;
     }
+}
 
-    p {
-        opacity: 0.85;
-    }
+// Botones primarios/secundarios de filtros y panel lateral.
+:host ::ng-deep .cli-lista__card .p-button.p-button-primary:not(.p-button-text):not(.p-button-outlined) {
+    background: #5F3FE0;
+    border-color: #5F3FE0;
+    border-radius: 11px;
+    font-weight: 700;
+
+    &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
+}
+
+:host ::ng-deep .cli-lista__card .p-button.p-button-secondary:not(.p-button-text) {
+    background: #fff;
+    border: 1px solid #e4e2ef;
+    color: #5b5878;
+    border-radius: 11px;
+    font-weight: 700;
+
+    &:enabled:hover { background: #faf9fe; border-color: #d9cffb; color: #5F3FE0; }
+}
+
+.cli-lista__card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cli-acento { color: #5F3FE0 !important; }
+.cli-tinta { color: #211F3A !important; }
+
+.cli-subtitulo {
+    font-size: 10.5px !important;
+    font-weight: 800;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: #8f8bab !important;
+}
+
+.cli-texto-muted {
+    font-size: 12px !important;
+    white-space: nowrap;
+    color: #8f8bab !important;
+
+    i { color: inherit; }
+}
+
+.cli-badge-activas {
+    background: #efe9ff !important;
+    color: #5F3FE0 !important;
+    font-size: 10.5px !important;
+    font-weight: 800;
+    border-radius: 20px;
+}
+
+.cli-tipo-chip {
+    background: #efe9ff !important;
+    color: #5F3FE0 !important;
+    font-size: 12px !important;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 0.25rem 0.6rem;
+}
+
+.cli-sidebar-titulo {
+    color: #5F3FE0 !important;
+    font-size: 1rem !important;
 }
 
 // ===================================
 // PANEL DE FILTROS
 // ===================================
-.card-header {
-    cursor: pointer;
+.cli-filtros-cabeza {
+    padding: 10px 14px;
+    background: #faf9fe;
+    border: 1px solid #ececf4;
+    border-radius: 11px;
     transition: background-color 0.2s ease;
 
     &:hover {
-        background-color: #e9ecef !important;
+        background-color: #efe9ff;
     }
+}
+
+.cli-filtros-cuerpo {
+    padding: 16px 4px 8px;
 }
 
 // ===================================
 // MÉTRICAS BREADCRUMB (ESTILO KATUQ)
 // ===================================
 .metrics-breadcrumb-panel {
-    background: #f8f9fa;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    background: transparent;
+    border-top: 1px solid #f1f0f7;
+    border-bottom: 1px solid #f1f0f7;
 }
 
 .metrics-scroll-container {
@@ -67,7 +157,7 @@ $border-radius: 8px;
     }
 
     &::-webkit-scrollbar-thumb {
-        background-color: rgba(0, 0, 0, 0.2);
+        background-color: rgba(95, 63, 224, 0.25);
         border-radius: 4px;
     }
 }
@@ -77,9 +167,9 @@ $border-radius: 8px;
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    border-radius: 6px;
-    background: white;
-    border: 1px solid #dee2e6;
+    border-radius: 11px;
+    background: #fff;
+    border: 1px solid #ececf4;
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 0.875rem;
@@ -90,80 +180,83 @@ $border-radius: 8px;
     }
 
     .metric-label {
-        font-weight: 500;
-        color: #495057;
+        font-weight: 600;
+        color: #5b5878;
     }
 
     .metric-badge {
-        background: #e9ecef;
-        color: #495057;
+        background: #efe9ff;
+        color: #5F3FE0;
         padding: 0.125rem 0.5rem;
-        border-radius: 10px;
+        border-radius: 20px;
         font-size: 0.75rem;
-        font-weight: 600;
+        font-weight: 700;
     }
 
     &:hover {
         transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 6px 14px -8px rgba(95, 63, 224, 0.35);
     }
 
     &.active {
-        border-width: 2px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        box-shadow: none;
     }
 
     // Estilos por tipo
-    &.metric-chip-primary.active {
-        border-color: #6c757d;
-        background: #f8f9fa;
+    &.metric-chip-primary {
+        i { color: #5F3FE0; }
 
-        .metric-label {
-            color: #6c757d;
-            font-weight: 600;
-        }
+        &.active {
+            border-color: #5F3FE0;
+            background: #efe9ff;
 
-        .metric-badge {
-            background: #6c757d;
-            color: white;
+            .metric-label {
+                color: #5F3FE0;
+                font-weight: 700;
+            }
+
+            .metric-badge {
+                background: #5F3FE0;
+                color: #fff;
+            }
         }
     }
 
     &.metric-chip-success {
         i {
-            color: #28a745;
+            color: #1E874B;
         }
 
         &.active {
-            border-color: #28a745;
-            background: #d4edda;
+            border-color: #1E874B;
+            background: #E6F7EE;
 
             .metric-label {
-                color: #155724;
-                font-weight: 600;
+                color: #1E874B;
+                font-weight: 700;
             }
         }
     }
 
     &.metric-chip-danger {
         i {
-            color: #dc3545;
+            color: #D64545;
         }
 
         &.active {
-            border-color: #dc3545;
-            background: #f8d7da;
+            border-color: #D64545;
+            background: #FDECEC;
 
             .metric-label {
-                color: #721c24;
-                font-weight: 600;
+                color: #D64545;
+                font-weight: 700;
             }
         }
     }
 }
 
 .separator {
-    color: #dee2e6;
+    color: #ddd3fb;
     font-weight: 300;
     font-size: 1.25rem;
     user-select: none;
@@ -173,17 +266,7 @@ $border-radius: 8px;
 // TOOLBAR DE LA TABLA
 // ===================================
 .table-toolbar {
-    background-color: #f8f9fa;
-
-    h6 {
-        color: #6c4ce0;
-        font-weight: 700;
-    }
-}
-
-.card-header h6 {
-    color: #6c4ce0;
-    font-weight: 700;
+    background-color: transparent;
 }
 
 .badge-count {
@@ -193,24 +276,22 @@ $border-radius: 8px;
     min-width: 28px;
     height: 24px;
     padding: 0.25rem 0.5rem;
-    background-color: #cfe2ff;
-    color: #084298;
-    border: 1px solid #b6d4fe;
-    border-radius: 12px;
+    background-color: #efe9ff;
+    color: #5F3FE0;
+    border: 1px solid #ddd3fb;
+    border-radius: 20px;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     transition: all 0.2s ease;
-
-    &:hover {
-        background-color: #b6d4fe;
-    }
 }
 
 // ===================================
 // CONTENEDOR DE LA TABLA
 // ===================================
 .table-container {
-    background: white;
+    background: #fff;
+    min-width: 0;
+    overflow-x: auto;
 }
 
 // ===================================
@@ -232,76 +313,76 @@ $border-radius: 8px;
 
     // Activo - Verde pastel suave
     &.badge-success {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
+        background-color: #E6F7EE;
+        color: #1E874B;
+        border: 1px solid #cdeedb;
 
         i {
-            color: #28a745;
+            color: #1E874B;
         }
 
         &:hover {
-            background-color: #c3e6cb;
+            background-color: #cdeedb;
         }
     }
 
     // Inactivo - Rojo pastel suave
     &.badge-danger {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
+        background-color: #FDECEC;
+        color: #D64545;
+        border: 1px solid #f3c9c9;
 
         i {
-            color: #dc3545;
+            color: #D64545;
         }
 
         &:hover {
-            background-color: #f5c6cb;
+            background-color: #f3c9c9;
         }
     }
 
     // Secundario - Gris pastel
     &.badge-secondary {
-        background-color: #e2e3e5;
-        color: #383d41;
-        border: 1px solid #d6d8db;
+        background-color: #eef0f3;
+        color: #5A6B78;
+        border: 1px solid #dfe2e7;
 
         i {
             color: #6c757d;
         }
 
         &:hover {
-            background-color: #d6d8db;
+            background-color: #dfe2e7;
         }
     }
 
     // Información - Azul pastel
     &.badge-info {
-        background-color: #d1ecf1;
-        color: #0c5460;
-        border: 1px solid #bee5eb;
+        background-color: #E7F1FF;
+        color: #1E6FD9;
+        border: 1px solid #cfe2fb;
 
         i {
-            color: #eee9fd;
+            color: #1E6FD9;
         }
 
         &:hover {
-            background-color: #bee5eb;
+            background-color: #cfe2fb;
         }
     }
 
     // Advertencia - Amarillo pastel
     &.badge-warning {
-        background-color: #fff3cd;
-        color: #856404;
-        border: 1px solid #ffeeba;
+        background-color: #FFF1DF;
+        color: #D9820A;
+        border: 1px solid #fde2bf;
 
         i {
-            color: #ffc107;
+            color: #D9820A;
         }
 
         &:hover {
-            background-color: #ffeeba;
+            background-color: #fde2bf;
         }
     }
 }
@@ -316,14 +397,14 @@ $border-radius: 8px;
     width: 30px;
     height: 30px;
     border-radius: 6px;
-    border: 1px solid #ddd6fe;
-    background-color: #ede9fe;
+    border: 1px solid #ddd3fb;
+    background-color: #efe9ff;
     cursor: pointer;
     transition: all 0.15s ease;
 
     &:hover {
-        background-color: #533bc4;
-        border-color: #533bc4;
+        background-color: #4a2fc0;
+        border-color: #4a2fc0;
         transform: scale(1.05);
 
         .pi { color: #fff; }
@@ -331,7 +412,7 @@ $border-radius: 8px;
 
     .pi {
         font-size: 0.8rem;
-        color: #533bc4;
+        color: #4a2fc0;
     }
 }
 
@@ -339,7 +420,7 @@ $border-radius: 8px;
     position: fixed;
     width: 190px;
     background-color: #fff;
-    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.12);
+    box-shadow: 0 4px 16px rgba(95, 63, 224, 0.12);
     border-radius: 8px;
     margin: 0;
     padding: 0.25rem 0;
@@ -349,7 +430,7 @@ $border-radius: 8px;
     visibility: hidden;
     transform: scale(0.95);
     transition: all 0.15s ease;
-    border: 1px solid #ede9fe;
+    border: 1px solid #efe9ff;
 
     &.show {
         opacity: 1;
@@ -364,13 +445,13 @@ $border-radius: 8px;
         display: flex;
         align-items: center;
         transition: all 0.12s;
-        color: #374151;
+        color: #211F3A;
 
         &:hover {
-            background-color: #f5f3ff;
-            color: #5b21b6;
+            background-color: #faf9fe;
+            color: #5F3FE0;
 
-            i { color: #5b21b6; }
+            i { color: #5F3FE0; }
         }
 
         i {
@@ -378,7 +459,7 @@ $border-radius: 8px;
             font-size: 0.85rem;
             width: 1rem;
             text-align: center;
-            color: #533bc4;
+            color: #4a2fc0;
             transition: color 0.12s;
         }
 
@@ -386,11 +467,11 @@ $border-radius: 8px;
 
         &.separator {
             height: 1px;
-            background-color: #ede9fe;
+            background-color: #efe9ff;
             margin: 0.25rem 0;
             padding: 0;
             cursor: default;
-            &:hover { background-color: #ede9fe; color: inherit; }
+            &:hover { background-color: #efe9ff; color: inherit; }
         }
     }
 }
@@ -425,7 +506,7 @@ $border-radius: 8px;
 
             // Fila activa
             &.row-active {
-                background-color: rgba(#6c4ce0, 0.05) !important;
+                background-color: rgba(#5F3FE0, 0.05) !important;
             }
         }
     }
@@ -461,7 +542,7 @@ $border-radius: 8px;
 .detail-section {
     margin-bottom: 1rem;
     padding: 0.75rem;
-    border: 1px solid #e9ecef;
+    border: 1px solid #ececf4;
     border-radius: 8px;
     background-color: white;
 
@@ -471,14 +552,14 @@ $border-radius: 8px;
 }
 
 .detail-title {
-    color: #6c4ce0;
+    color: #5F3FE0;
     font-weight: 700;
     margin-bottom: 1rem;
-    border-bottom: 1px solid #ede9fe;
+    border-bottom: 1px solid #efe9ff;
     padding-bottom: 0.5rem;
 
     i {
-        color: #6c4ce0;
+        color: #5F3FE0;
     }
 }
 
@@ -544,17 +625,6 @@ $border-radius: 8px;
 // RESPONSIVE DESIGN
 // ===================================
 @media (max-width: 768px) {
-    .module-header {
-        flex-direction: column;
-        align-items: flex-start !important;
-
-        > div:last-child {
-            width: 100%;
-            justify-content: flex-end;
-            margin-top: 0.75rem;
-        }
-    }
-
     .table-toolbar {
         .d-flex {
             flex-direction: column;
@@ -598,10 +668,6 @@ $border-radius: 8px;
 }
 
 @media (max-width: 576px) {
-    .module-header h5 {
-        font-size: 1.1rem;
-    }
-
     .metric-chip {
         font-size: 0.8rem;
         gap: 0.35rem;
@@ -630,11 +696,11 @@ $border-radius: 8px;
 }
 
 .border-bottom {
-    border-bottom: 1px solid #dee2e6 !important;
+    border-bottom: 1px solid #e4e2ef !important;
 }
 
 .border-top {
-    border-top: 1px solid #dee2e6 !important;
+    border-top: 1px solid #e4e2ef !important;
 }
 
 // Importar estilos de PrimeNG si es necesario
@@ -667,30 +733,30 @@ $border-radius: 8px;
 
     // Table Header (Column Headers)
     .p-datatable-thead > tr > th {
-      background: #f4f3ff;
-      color: #6c4ce0;
+      background: #faf9fe;
+      color: #5F3FE0;
       font-weight: 700;
       text-transform: uppercase;
       font-size: 0.75rem;
       letter-spacing: 0.5px;
       padding: $clientes-spacing-md;
       border: none;
-      border-bottom: 2px solid #ddd6fe;
+      border-bottom: 2px solid #ddd3fb;
       transition: $clientes-transition-fast;
 
       &:hover {
-        background: #ede9fe;
+        background: #efe9ff;
       }
 
       // Sort Icon
       .p-sortable-column-icon {
-        color: #8c6bff;
+        color: #7C5CFF;
         margin-left: $clientes-spacing-xs;
         font-size: 0.75rem;
       }
 
       &.p-highlight {
-        background: #6c4ce0;
+        background: #5F3FE0;
         color: $clientes-white;
 
         .p-sortable-column-icon {
@@ -729,7 +795,7 @@ $border-radius: 8px;
         }
 
         &.p-highlight {
-          background: rgba(#6c4ce0, 0.08);
+          background: rgba(#5F3FE0, 0.08);
           color: $clientes-dark;
         }
 
@@ -737,7 +803,7 @@ $border-radius: 8px;
           padding: 0.6rem $clientes-spacing-md;
           border: none;
           border-bottom: 1px solid #f0f0f5;
-          color: #374151;
+          color: #211F3A;
           vertical-align: middle;
           font-size: 0.8375rem;
         }
@@ -1401,7 +1467,7 @@ $border-radius: 8px;
 .config-tabs {
     display: flex;
     gap: 0.25rem;
-    border-bottom: 2px solid #ede9fe;
+    border-bottom: 2px solid #efe9ff;
     padding-bottom: 0;
 }
 
@@ -1413,15 +1479,15 @@ $border-radius: 8px;
     padding: 0.45rem 1rem;
     font-size: 0.85rem;
     font-weight: 500;
-    color: #6b7280;
+    color: #8f8bab;
     cursor: pointer;
     transition: all 0.15s ease;
 
-    &:hover { color: #5b21b6; }
+    &:hover { color: #5F3FE0; }
 
     &.active {
-        color: #5b21b6;
-        border-bottom-color: #6c4ce0;
+        color: #5F3FE0;
+        border-bottom-color: #5F3FE0;
         font-weight: 600;
     }
 }
@@ -1429,7 +1495,7 @@ $border-radius: 8px;
 .config-list {
     max-height: 220px;
     overflow-y: auto;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #ececf4;
     border-radius: 8px;
     padding: 0.25rem 0;
 }
@@ -1459,8 +1525,8 @@ $border-radius: 8px;
     text-overflow: ellipsis;
 
     &.tag-chip-more {
-        background-color: #e5e7eb !important;
-        color: #374151 !important;
+        background-color: #ececf4 !important;
+        color: #211F3A !important;
         cursor: default;
     }
 }
@@ -1490,18 +1556,18 @@ $border-radius: 8px;
 // BOTÓN GESTIONAR ETIQUETAS (header)
 // ===================================
 ::ng-deep .btn-tags-cfg.p-button.p-button-outlined {
-    color: #6c4ce0 !important;
-    border-color: #6c4ce0 !important;
+    color: #5F3FE0 !important;
+    border-color: #5F3FE0 !important;
     background: transparent !important;
 
     &:hover {
-        background: #f5f3ff !important;
-        border-color: #533bc4 !important;
-        color: #533bc4 !important;
+        background: #faf9fe !important;
+        border-color: #4a2fc0 !important;
+        color: #4a2fc0 !important;
     }
 
     .p-button-icon {
-        color: #6c4ce0 !important;
+        color: #5F3FE0 !important;
     }
 }
 
@@ -1518,13 +1584,13 @@ $border-radius: 8px;
     cursor: pointer;
     user-select: none;
     background: #f3f4f6;
-    color: #6b7280;
+    color: #8f8bab;
     border: 1.5px solid transparent;
     transition: all 0.15s ease;
 
     &:hover {
-        background: #e9ecef;
-        color: #374151;
+        background: #ececf4;
+        color: #211F3A;
         transform: translateY(-1px);
     }
 
@@ -1557,7 +1623,7 @@ $border-radius: 8px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #6c4ce0;
+    color: #5F3FE0;
     margin-bottom: 0.5rem;
 }
 
@@ -1573,12 +1639,12 @@ $border-radius: 8px;
     align-items: flex-start;
     gap: 0.5rem;
     font-size: 0.85rem;
-    color: #374151;
+    color: #211F3A;
     margin-bottom: 0.35rem;
 
     i {
         font-size: 0.8rem;
-        color: #6c4ce0;
+        color: #5F3FE0;
         margin-top: 2px;
         flex-shrink: 0;
     }

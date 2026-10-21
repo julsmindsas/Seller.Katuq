@@ -73,22 +73,22 @@
 :root {
     // Light Theme (Default)
     --gemini-bg: #ffffff;
-    --gemini-sidebar: #f0f4f9;
+    --gemini-sidebar: #faf9fe;
     --gemini-surface: #ffffff;
-    --gemini-input: #f0f4f9;
-    --gemini-input-focus: #e9eef6;
-    --gemini-text-primary: #1f1f1f;
-    --gemini-text-secondary: #444746;
-    --gemini-border: #e0e3e1;
-    --gemini-accent: #0b57d0;
-    --gemini-user-bubble: #f2f2f2;
-    --gemini-hover: rgba(0, 0, 0, 0.05);
-    --gemini-selected: #d3e3fd;
-    --gemini-selected-text: #041e49;
-    --gemini-code-bg: #f8f9fa;
-    --gemini-thought-bg: #f8f9fa;
-    --gemini-mention-bg: rgba(11, 87, 208, 0.1);
-    --gemini-mention-text: #0b57d0;
+    --gemini-input: #f5f4fa;
+    --gemini-input-focus: #efe9ff;
+    --gemini-text-primary: #211F3A;
+    --gemini-text-secondary: #5b5878;
+    --gemini-border: #ececf4;
+    --gemini-accent: #5F3FE0;
+    --gemini-user-bubble: #f3f1fb;
+    --gemini-hover: rgba(95, 63, 224, 0.05);
+    --gemini-selected: #efe9ff;
+    --gemini-selected-text: #211F3A;
+    --gemini-code-bg: #faf9fe;
+    --gemini-thought-bg: #faf9fe;
+    --gemini-mention-bg: rgba(95, 63, 224, 0.1);
+    --gemini-mention-text: #5F3FE0;
     --gemini-greeting-gradient: #5F3FE0; // plano (D-399): el saludo se pinta con background-clip: text
 }
 
@@ -103,15 +103,15 @@ body.dark-only {
     --gemini-text-primary: #e3e3e3;
     --gemini-text-secondary: #c4c7c5;
     --gemini-border: #444746;
-    --gemini-accent: #a8c7fa;
+    --gemini-accent: #b9a7ff;
     --gemini-user-bubble: #282a2c;
     --gemini-hover: rgba(255, 255, 255, 0.08);
-    --gemini-selected: #004a77;
-    --gemini-selected-text: #c2e7ff;
+    --gemini-selected: #3a2c75;
+    --gemini-selected-text: #ddd3fb;
     --gemini-code-bg: #1e1f20;
     --gemini-thought-bg: #1e1f20;
-    --gemini-mention-bg: rgba(168, 199, 250, 0.2);
-    --gemini-mention-text: #d3e3fd;
+    --gemini-mention-bg: rgba(185, 167, 255, 0.2);
+    --gemini-mention-text: #ddd3fb;
 }
 
 // Manual Dark Mode Override
@@ -124,15 +124,15 @@ body.dark-only {
     --gemini-text-primary: #e3e3e3;
     --gemini-text-secondary: #c4c7c5;
     --gemini-border: #444746;
-    --gemini-accent: #a8c7fa;
+    --gemini-accent: #b9a7ff;
     --gemini-user-bubble: #282a2c;
     --gemini-hover: rgba(255, 255, 255, 0.08);
-    --gemini-selected: #004a77;
-    --gemini-selected-text: #c2e7ff;
+    --gemini-selected: #3a2c75;
+    --gemini-selected-text: #ddd3fb;
     --gemini-code-bg: #1e1f20;
     --gemini-thought-bg: #1e1f20;
-    --gemini-mention-bg: rgba(168, 199, 250, 0.2);
-    --gemini-mention-text: #d3e3fd;
+    --gemini-mention-bg: rgba(185, 167, 255, 0.2);
+    --gemini-mention-text: #ddd3fb;
 }
 
 $font-family: "Google Sans",
@@ -338,7 +338,7 @@ $font-family: "Google Sans",
                     width: 32px;
                     height: 32px;
                     border-radius: 50%;
-                    background: #7c4dff;
+                    background: #7C5CFF;
                     @include flex-center;
                     font-size: 14px;
                     color: white;
@@ -441,6 +441,7 @@ $font-family: "Google Sans",
 
                             &.gm {
                                 z-index: 10;
+                                background: #5F3FE0 !important; // el HTML trae un azul fijo en [style.background]
                             }
 
                             &:first-child {
@@ -652,13 +653,13 @@ $font-family: "Google Sans",
                             @include flex-center;
                             color: #ffffff; // White icon
                             font-size: 14px;
-                            background: rgba(11, 87, 208, 0.2);
+                            background: rgba(95, 63, 224, 0.2);
                             border: 2px solid rgba(255, 255, 255, 0.7);
                             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                             transition: transform 0.2s;
 
                             &.manager-avatar {
-                                background: #4285f4;
+                                background: #5F3FE0;
                                 border-color: #dfe3eb;
 
                                 .gm-initials {
@@ -724,8 +725,8 @@ $font-family: "Google Sans",
                                 font-size: 10px;
                                 padding: 2px 6px;
                                 border-radius: 4px;
-                                background: rgba(66, 133, 244, 0.1);
-                                color: #4285f4;
+                                background: rgba(95, 63, 224, 0.1);
+                                color: #5F3FE0;
                                 font-weight: 500;
                                 text-transform: uppercase;
 
@@ -808,7 +809,7 @@ $font-family: "Google Sans",
 
                         .thought-process {
                             background: var(--gemini-surface);
-                            border: 1px solid rgba(11, 87, 208, 0.08);
+                            border: 1px solid rgba(95, 63, 224, 0.08);
                             border-radius: 18px;
                             padding: 12px 16px;
                             margin-bottom: 10px;
@@ -824,7 +825,7 @@ $font-family: "Google Sans",
                                     width: 28px;
                                     height: 28px;
                                     border-radius: 50%;
-                                    background: rgba(11, 87, 208, 0.12);
+                                    background: rgba(95, 63, 224, 0.12);
                                     @include flex-center;
 
                                     .sparkle-icon.thinking {
@@ -858,7 +859,7 @@ $font-family: "Google Sans",
                                             color: var(--gemini-text-secondary);
 
                                             &.running {
-                                                background: rgba(11, 87, 208, 0.1);
+                                                background: rgba(95, 63, 224, 0.1);
                                                 color: var(--gemini-accent);
                                             }
 
@@ -886,7 +887,8 @@ $font-family: "Google Sans",
                                         background: var(--gemini-surface); // Fallback
                                         border-radius: 12px; // Full rounded corners
                                         padding: 12px 16px;
-                                        border-left: 3px solid transparent; // Color set via inline style
+                                        border: 1px solid var(--gemini-border);
+                                        border-left-color: var(--gemini-border) !important; // sin acento lateral (D-131); el HTML aún fija el color
                                         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
                                         animation: slideDown 0.3s ease-out;
                                         position: relative;
@@ -938,7 +940,6 @@ $font-family: "Google Sans",
                                         }
 
                                         &.response-waiting {
-                                            border-left-width: 4px !important; // Thicker border for emphasis
                                             background: #fff8e1 !important; // Light amber background
                                             border-color: #ffca28 !important;
 
@@ -1007,7 +1008,7 @@ $font-family: "Google Sans",
                                     height: 8px;
                                     border-radius: 50%;
                                     background: var(--gemini-accent);
-                                    box-shadow: 0 0 0 6px rgba(11, 87, 208, 0.15);
+                                    box-shadow: 0 0 0 6px rgba(95, 63, 224, 0.15);
                                     animation: pulse 1.5s ease-in-out infinite;
                                     margin-left: auto;
                                 }
@@ -1028,11 +1029,11 @@ $font-family: "Google Sans",
                                         width: 30px;
                                         height: 30px;
                                         border-radius: 50%;
-                                        background: rgba(11, 87, 208, 0.12);
+                                        background: rgba(95, 63, 224, 0.12);
                                         color: var(--step-accent, var(--gemini-accent));
-                                        border: 1px solid rgba(11, 87, 208, 0.15);
-                                        border-color: var(--step-accent, rgba(11, 87, 208, 0.3));
-                                        box-shadow: 0 0 0 3px rgba(11, 87, 208, 0.08);
+                                        border: 1px solid rgba(95, 63, 224, 0.15);
+                                        border-color: var(--step-accent, rgba(95, 63, 224, 0.3));
+                                        box-shadow: 0 0 0 3px rgba(95, 63, 224, 0.08);
                                         @include flex-center;
                                         position: relative;
 
@@ -1060,7 +1061,7 @@ $font-family: "Google Sans",
                                         position: absolute;
                                         inset: 0;
                                         border-radius: 50%;
-                                        border: 1px solid rgba(11, 87, 208, 0.4);
+                                        border: 1px solid rgba(95, 63, 224, 0.4);
                                         animation: mentionPing 1.2s ease-out infinite;
                                     }
 
@@ -1092,7 +1093,7 @@ $font-family: "Google Sans",
                                             letter-spacing: 0.5px;
                                             padding: 4px 10px;
                                             border-radius: 999px;
-                                            background: rgba(11, 87, 208, 0.08);
+                                            background: rgba(95, 63, 224, 0.08);
                                             color: var(--gemini-accent);
                                             white-space: nowrap;
 
@@ -1175,9 +1176,9 @@ $font-family: "Google Sans",
 
                         // Manager bubble distinctive style
                         &.manager-bubble {
-                            border: 1px solid rgba(66, 133, 244, 0.15);
-                            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.08);
-                            background-color: #f8fafd !important; // Lightest blue override
+                            border: 1px solid rgba(95, 63, 224, 0.15);
+                            box-shadow: 0 2px 8px rgba(95, 63, 224, 0.08);
+                            background-color: #faf9fe !important; // Lila más claro
                             border-radius: 0 16px 16px 16px;
                         }
 
@@ -1286,9 +1287,9 @@ $font-family: "Google Sans",
                                 font-weight: 600;
                                 font-size: 12px;
                                 line-height: 1.2;
-                                background: var(--mention-bg, rgba(11, 87, 208, 0.08));
+                                background: var(--mention-bg, rgba(95, 63, 224, 0.08));
                                 color: var(--mention-color, var(--gemini-text-primary));
-                                border: 1px solid var(--mention-border, rgba(11, 87, 208, 0.12));
+                                border: 1px solid var(--mention-border, rgba(95, 63, 224, 0.12));
                                 cursor: pointer;
                                 transition:
                                     transform 0.2s ease,
@@ -1316,12 +1317,12 @@ $font-family: "Google Sans",
                                 &:focus-visible {
                                     transform: translateY(-1px);
                                     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                                    border-color: var(--mention-border, rgba(11, 87, 208, 0.3));
+                                    border-color: var(--mention-border, rgba(95, 63, 224, 0.3));
                                     outline: none;
                                 }
 
                                 &:focus-visible {
-                                    box-shadow: 0 0 0 2px var(--mention-glow, rgba(11, 87, 208, 0.3)), 0 4px 12px rgba(0, 0, 0, 0.15);
+                                    box-shadow: 0 0 0 2px var(--mention-glow, rgba(95, 63, 224, 0.3)), 0 4px 12px rgba(0, 0, 0, 0.15);
                                 }
 
                                 &.ping {
@@ -1351,9 +1352,9 @@ $font-family: "Google Sans",
 
                                 &.general {
                                     --mention-color: #3a2c75;
-                                    --mention-bg: rgba(66, 133, 244, 0.2);
-                                    --mention-border: rgba(66, 133, 244, 0.35);
-                                    --mention-glow: rgba(66, 133, 244, 0.35);
+                                    --mention-bg: rgba(95, 63, 224, 0.2);
+                                    --mention-border: rgba(95, 63, 224, 0.35);
+                                    --mention-glow: rgba(95, 63, 224, 0.35);
                                 }
 
                                 &.unknown {
@@ -1623,11 +1624,11 @@ $font-family: "Google Sans",
 
 @keyframes mentionPing {
     0% {
-        box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.4);
+        box-shadow: 0 0 0 0 rgba(95, 63, 224, 0.4);
     }
 
     100% {
-        box-shadow: 0 0 0 14px rgba(66, 133, 244, 0);
+        box-shadow: 0 0 0 14px rgba(95, 63, 224, 0);
     }
 }
 

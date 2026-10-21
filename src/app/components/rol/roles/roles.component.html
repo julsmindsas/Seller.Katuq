@@ -1,26 +1,24 @@
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-sm-12 p-2">
-      <div class="card">
+<div class="cfg-pagina">
 
-        <!-- Header -->
-        <div class="row col-12 m-2">
-          <div class="col-6">
-            <p class="text-left fc-secondary fs-24 m-0 p-0">
+  <!-- Header -->
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Seguridad</span>
+      <h1 class="cfg-titulo">
               {{ editingRoleId ? 'Editar Rol' : 'Crear Rol' }}
-            </p>
-            <p class="text-left text-muted fs-18 m-0 p-0">
+      </h1>
+      <p class="cfg-sub">
               {{ editingRoleId ? 'Modifica la configuración del rol.' : 'Define un nuevo rol con sus permisos y accesos.' }}
-            </p>
-          </div>
-          <div class="col-6 p-3" style="text-align: end">
-            <button class="btn btn-outline-secondary" type="button" (click)="volver()">
+      </p>
+    </div>
+    <div class="cfg-acciones">
+            <button class="cfg-btn cfg-btn--sec" type="button" (click)="volver()">
               <i class="icofont icofont-arrow-left"></i>&nbsp; Volver al listado
             </button>
-          </div>
-        </div>
+    </div>
+  </header>
 
-        <div class="card-body">
+  <section class="cfg-card cfg-form">
           <form [formGroup]="roleForm" (ngSubmit)="saveRole()">
 
             <!-- Banner: usar plantilla (solo al CREAR, no al editar) -->
@@ -30,10 +28,10 @@
               </div>
               <div class="template-banner-text">
                 <strong>¿Querés empezar más rápido?</strong>
-                <small class="d-block text-muted">Elegí una plantilla (Administrador, Vendedor, Cajero, Bodeguero, etc) y armá un rol con permisos pre-configurados. Después podés personalizarlo.</small>
+                <small class="d-block rl-tenue">Elegí una plantilla (Administrador, Vendedor, Cajero, Bodeguero, etc) y armá un rol con permisos pre-configurados. Después podés personalizarlo.</small>
               </div>
               <div class="template-banner-action">
-                <button type="button" class="btn btn-primary btn-sm">
+                <button type="button" class="cfg-btn rl-btn-chico">
                   Ver plantillas <i class="icofont icofont-simple-right"></i>
                 </button>
               </div>
@@ -44,7 +42,7 @@
             <div class="row mb-3">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="rol">Nombre del Rol <span class="text-danger">*</span></label>
+                  <label for="rol">Nombre del Rol <span class="rl-obligatorio">*</span></label>
                   <input type="text" autocomplete="off" id="rol" formControlName="rol"
                     class="form-control" [class.is-invalid]="roleForm.get('rol')?.invalid && roleForm.get('rol')?.touched"
                     placeholder="Ej: Vendedor, Administrador, Despachador" />
@@ -103,30 +101,25 @@
                     </div>
                   </ng-template>
                 </p-pickList>
-                <small class="form-text text-muted mt-1" *ngIf="selectedMenus.length === 0">
+                <small class="form-text rl-tenue mt-1" *ngIf="selectedMenus.length === 0">
                   Seleccione al menos un menú para este rol.
                 </small>
               </div>
             </div>
 
             <!-- Acciones -->
-            <div class="row">
-              <div class="col-12 d-flex justify-content-end gap-2">
-                <button class="btn btn-outline-secondary mr-2" type="button" (click)="volver()">
+            <div class="cfg-form__pie">
+                <button class="cfg-btn cfg-btn--sec" type="button" (click)="volver()">
                   Cancelar
                 </button>
-                <button class="btn btn-primary" type="submit" [disabled]="roleForm.invalid || selectedMenus.length === 0">
+                <button class="cfg-btn" type="submit" [disabled]="roleForm.invalid || selectedMenus.length === 0">
                   <i class="icofont icofont-check-circled"></i>&nbsp;
                   {{ editingRoleId ? 'Actualizar Rol' : 'Guardar Rol' }}
                 </button>
-              </div>
             </div>
 
           </form>
-        </div>
-      </div>
-    </div>
-  </div>
+  </section>
 </div>
 
 <!-- Modal: Configuraciones del Rol -->
@@ -135,11 +128,11 @@
     <h5 class="modal-title">
       <i class="icofont icofont-gear"></i>&nbsp; Configuraciones del Rol
     </h5>
-    <button type="button" class="close" (click)="modal.dismiss()">
-      <span>&times;</span>
+    <button type="button" class="close rl-cerrar" (click)="modal.dismiss()">
+      <span class="rl-cerrar__x">&times;</span>
     </button>
   </div>
-  <div class="modal-body">
+  <div class="modal-body cfg-form">
 
     <!-- Config: Facturación Electrónica -->
     <div class="config-section">
@@ -153,7 +146,7 @@
           <input type="text" autocomplete="off" id="prefijoFacturacion"
             [formControl]="roleForm.get('prefijoFacturacion')"
             class="form-control" placeholder="Ej: FE, POS, SETT" />
-          <small class="form-text text-muted">
+          <small class="form-text rl-tenue">
             Prefijos separados por coma. Al facturar, el usuario podrá elegir entre estos.
             Si se deja vacío, se usará el prefijo por defecto de la empresa.
           </small>
@@ -179,8 +172,8 @@
     </div>
 
   </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-primary" (click)="modal.close()">
+  <div class="modal-footer rl-modal-pie">
+    <button type="button" class="cfg-btn" (click)="modal.close()">
       <i class="icofont icofont-check"></i>&nbsp; Listo
     </button>
   </div>
@@ -191,7 +184,7 @@
   <div class="template-modal-box" (click)="$event.stopPropagation()">
     <div class="template-modal-header">
       <h5 class="mb-1"><i class="icofont icofont-magic-alt"></i> Elegí una plantilla</h5>
-      <small class="text-muted">El rol se creará con los menús y permisos pre-configurados. Después podés ajustarlo.</small>
+      <small class="rl-tenue">El rol se creará con los menús y permisos pre-configurados. Después podés ajustarlo.</small>
       <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrarSelectorPlantillas()"></button>
     </div>
     <div class="template-modal-body">
@@ -205,13 +198,13 @@
           </div>
           <div class="template-card-body">
             <strong>{{ tpl.nombreSugerido }}</strong>
-            <p class="text-muted small mb-0">{{ tpl.descripcion }}</p>
+            <p class="rl-tenue small mb-0">{{ tpl.descripcion }}</p>
           </div>
         </div>
       </div>
     </div>
     <div class="template-modal-footer">
-      <button type="button" class="btn btn-light" (click)="cerrarSelectorPlantillas()">Cancelar</button>
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrarSelectorPlantillas()">Cancelar</button>
     </div>
   </div>
 </div>

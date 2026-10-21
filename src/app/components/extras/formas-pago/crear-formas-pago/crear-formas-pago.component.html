@@ -1,24 +1,19 @@
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12 p-2">
-            <br>
-            <div class="card">
-                <div class="card-header p-4">
-                    <div class="row col-sm-12">
-                        <div class="col-sm-8">
-                            <p class="text-left fc-secondary fs-24 m-0 p-0"><i class="icofont icofont-money"></i>&nbsp;{{ 'Crea una Forma de Pago' | translate }}</p>
-                            <p class="text-left text-muted fs-18 m-0 p-0">
-                                {{ 'Ingresa todos los datos y define la forma de pago, sino existe, la puedes crear.' | translate }}
-                            </p>
-                        </div>
-                        <div class="col-sm-4">
-                            <button class="btn btn-primary mt-2 pull-right" (click)="regresar()">
-                                <i class="icofont icofont-close"></i> {{ 'Regresar' | translate }}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
+<div class="cfg-pagina">
+    <header class="cfg-cabeza">
+        <div class="cfg-cabeza__textos">
+            <span class="cfg-eyebrow">Configuración</span>
+            <h1 class="cfg-titulo"><i class="icofont icofont-money"></i>&nbsp;{{ 'Crea una Forma de Pago' | translate }}</h1>
+            <p class="cfg-sub">
+                {{ 'Ingresa todos los datos y define la forma de pago, sino existe, la puedes crear.' | translate }}
+            </p>
+        </div>
+        <div class="cfg-acciones">
+            <button class="cfg-btn cfg-btn--sec" (click)="regresar()">
+                <i class="icofont icofont-close"></i> {{ 'Regresar' | translate }}
+            </button>
+        </div>
+    </header>
+    <section class="cfg-card cfg-form">
                     <form [formGroup]="fomrasPagoForm">
                         <div class="row">
                             <div class="col-md-4">
@@ -26,7 +21,7 @@
                                     <label for="id">{{ 'Id' | translate }}</label>&nbsp;
                                     <span type="button" class="help" placement="top"
                                         ngbPopover="{{ 'Ingresa el identificador único de la forma de pago.' | translate }}">
-                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                        <i class="icon-help-alt cfg-ayuda"></i>
                                     </span>
                                     <input class="form-control" type="number" id="id" formControlName="id">
                                 </div>
@@ -36,7 +31,7 @@
                                     <label for="online">{{ 'Clasificación forma de pago' | translate }}</label>&nbsp;
                                     <span type="button" class="help" placement="top"
                                         ngbPopover="{{ 'Selecciona la clasificación de la forma de pago.' | translate }}">
-                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                        <i class="icon-help-alt cfg-ayuda"></i>
                                     </span>
                                     <select class="form-control" id="online" formControlName="online">
                                         <option value="Online">{{ 'Online' | translate }}</option>
@@ -55,7 +50,7 @@
                                     <label for="nombre">{{ 'Título' | translate }}</label>&nbsp;
                                     <span type="button" class="help" placement="top"
                                         ngbPopover="{{ 'Ingresa el título de la forma de pago.' | translate }}">
-                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                        <i class="icon-help-alt cfg-ayuda"></i>
                                     </span>
                                     <input class="form-control" type="text" id="nombre" formControlName="nombre">
                                 </div>
@@ -68,7 +63,7 @@
                                     <label for="posicion">{{ 'Posición' | translate }}</label>&nbsp;
                                     <span type="button" class="help" placement="top"
                                         ngbPopover="{{ 'Ingresa la posición que ocupará la forma de pago en la lista.' | translate }}">
-                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                        <i class="icon-help-alt cfg-ayuda"></i>
                                     </span>
                                     <input class="form-control" type="number" id="posicion" formControlName="posicion">
                                 </div>
@@ -78,7 +73,7 @@
                                     <label for="integracion">{{ 'Integración' | translate }}</label>&nbsp;
                                     <span type="button" class="help" placement="top"
                                         ngbPopover="{{ 'Selecciona si la forma de pago está integrada o no.' | translate }}">
-                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                        <i class="icon-help-alt cfg-ayuda"></i>
                                     </span>
                                     <select class="form-control" id="integracion" formControlName="integracion">
                                         <option value="Si">{{ 'Si' | translate }}</option>
@@ -128,7 +123,7 @@
                                     <label for="descripcionCorreoElectronico">{{ 'Descripción Correo Electrónico' | translate }}</label>&nbsp;
                                     <span type="button" class="help" placement="top"
                                         ngbPopover="{{ 'Ingresa la descripción que aparecerá en el correo electrónico.' | translate }}">
-                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                        <i class="icon-help-alt cfg-ayuda"></i>
                                     </span>
                                     <textarea class="form-control" style="width: 100%;"
                                         formControlName="descripcionCorreoElectronico"></textarea>
@@ -139,7 +134,7 @@
                                     <label for="recordatorioCobro">{{ 'Recordatorio Cobro' | translate }}</label>&nbsp;
                                     <span type="button" class="help" placement="top"
                                         ngbPopover="{{ 'Ingresa el mensaje de recordatorio de cobro.' | translate }}">
-                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                        <i class="icon-help-alt cfg-ayuda"></i>
                                     </span>
                                     <textarea class="form-control" style="width: 100%;"
                                         formControlName="recordatorioCobro"></textarea>
@@ -153,7 +148,7 @@
                                     <label for="imagenInterna">{{ 'Imagen Interna' | translate }}</label>&nbsp;
                                     <span type="button" class="help" placement="top"
                                         ngbPopover="{{ 'Selecciona la imagen que se mostrará internamente.' | translate }}">
-                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                        <i class="icon-help-alt cfg-ayuda"></i>
                                     </span>
                                     <input class="form-control" type="file" id="imagenInterna">
                                 </div>
@@ -163,23 +158,18 @@
                                     <label for="imagenCarrito">{{ 'Imagen Carrito' | translate }}</label>&nbsp;
                                     <span type="button" class="help" placement="top"
                                         ngbPopover="{{ 'Selecciona la imagen que se mostrará en el carrito.' | translate }}">
-                                        <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
+                                        <i class="icon-help-alt cfg-ayuda"></i>
                                     </span>
                                     <input class="form-control" type="file" id="imagenCarrito">
                                 </div>
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <button class="btn btn-primary" type="submit" (click)="editando ? editar() : guardar()">
+                        <div class="cfg-form__pie">
+                                <button class="cfg-btn" type="submit" (click)="editando ? editar() : guardar()">
                                     {{ editando ? 'Guardar cambios' : 'Crear Forma de Pago' | translate }}
                                 </button>
-                            </div>
                         </div>
                     </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    </section>
 </div>

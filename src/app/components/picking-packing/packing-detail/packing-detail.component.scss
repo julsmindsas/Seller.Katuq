@@ -1,32 +1,54 @@
-.card {
-  margin-bottom: 1rem;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  background-color: #fff;
-  border: 1px solid #dee2e6;
-}
+// Regla de diseño Katuq (D-400): base común de pantallas internas.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
 
-.card-header {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
-  padding: 1rem;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
+// ── Detalle ──
+.detalle-cargando {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.detalle-texto { margin: 0; font-size: 13.5px; color: #8f8bab; }
 
-  .card-title {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 500;
-    color: #495057;
-  }
+.detalle-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f0f7;
+
+  .cfg-card__titulo { margin: 0; word-break: break-word; }
 }
 
-.card-body {
-  padding: 1.5rem;
+.detalle-subtitulo {
+  margin: 0;
+  font-size: 10.5px !important;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: #8f8bab;
 }
+
+.detalle-cuerpo {
+  p { letter-spacing: normal; color: #5b5878; font-size: 13.5px; word-break: break-word; }
+  strong { color: #211F3A; }
+}
+
+// Sub-panel (antes una card anidada): blanco con borde lila, sin sombra.
+.detalle-panel {
+  background: #fff;
+  border: 1px solid #eeecf7;
+  border-radius: 11px;
+}
+.detalle-panel__cabeza { padding: 12px 16px; border-bottom: 1px solid #eeecf7; }
+.detalle-panel__cuerpo { padding: 16px; }
+
+:host ::ng-deep .p-progress-spinner-circle { stroke: #5F3FE0 !important; }
 
 .form-control {
   display: block;
@@ -35,11 +57,11 @@
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.5;
-  color: #212529;
-  background-color: #fff;
+  color: #211F3A;
+  background-color: #f5f4fa;
   background-clip: padding-box;
-  border: 1px solid #ced4da;
-  border-radius: 0.25rem;
+  border: 1px solid #e9e7f3;
+  border-radius: 10px;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
@@ -57,8 +79,11 @@
     position: absolute;
     top: -0.75rem;
     left: 0.75rem;
-    font-size: 0.75rem;
-    color: #6c757d;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: #8f8bab;
     background-color: white;
     padding: 0 0.25rem;
     pointer-events: none;
@@ -73,7 +98,8 @@
   padding: 0.5rem 1rem;
   font-size: 1rem;
   line-height: 1.5;
-  border-radius: 0.25rem;
+  border-radius: 11px;
+  font-weight: 700;
   cursor: pointer;
   border: 1px solid transparent;
   text-align: center;
@@ -82,28 +108,29 @@
   user-select: none;
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 
-  &.p-button-primary {
-    background-color: #a78bfa;
-    border-color: #a78bfa;
+  // Principal en acento; "Completar" (success) es la acción principal del flujo.
+  &.p-button-primary,
+  &.p-button-success {
+    background-color: #5F3FE0;
+    border-color: #5F3FE0;
     color: #fff;
+    box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+
+    &:enabled:hover { background-color: #4a2fc0; border-color: #4a2fc0; }
   }
 
   &.p-button-secondary {
-    background-color: #6c757d;
-    border-color: #6c757d;
-    color: #fff;
-  }
+    background-color: #fff;
+    border-color: #e4e2ef;
+    color: #5b5878;
 
-  &.p-button-success {
-    background-color: #28a745;
-    border-color: #28a745;
-    color: #fff;
+    &:enabled:hover { background-color: #faf9fe; border-color: #d9cffb; color: #5F3FE0; }
   }
 
   &.p-button-danger {
-    background-color: #dc3545;
-    border-color: #dc3545;
-    color: #fff;
+    background-color: #fff;
+    border-color: #f3c9c9;
+    color: #D64545;
   }
 
   &.p-button-sm {
@@ -120,40 +147,31 @@
 }
 
 .p-error {
-  color: #dc3545;
+  color: #D64545;
   font-size: 0.875rem;
   margin-top: 0.25rem;
   display: block;
 }
 
+// Estados en pill: par color fuerte / fondo suave (las clases bg-* llegan por [ngClass]).
 .badge {
-  display: inline-block;
-  padding: 0.35em 0.65em;
-  font-size: 0.75em;
-  font-weight: 700;
-  line-height: 1;
-  color: #fff;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  line-height: 1.4;
+  text-transform: uppercase;
   white-space: nowrap;
-  vertical-align: baseline;
-  border-radius: 0.25rem;
-}
+  border-radius: 20px;
+  background-color: #eef0f3;
+  color: #5A6B78;
 
-.bg-primary {
-  background-color: #a78bfa !important;
-}
-
-.bg-success {
-  background-color: #28a745 !important;
-}
-
-.bg-warning {
-  background-color: #ffc107 !important;
-  color: #212529 !important;
-}
-
-.bg-danger {
-  background-color: #dc3545 !important;
+  &.bg-primary { background-color: #efe9ff !important; color: #5F3FE0 !important; }
+  &.bg-success { background-color: #E6F7EE !important; color: #1E874B !important; }
+  &.bg-warning { background-color: #FFF1DF !important; color: #D9820A !important; }
+  &.bg-danger { background-color: #FDECEC !important; color: #D64545 !important; }
 }
 
 .w-100 {
@@ -199,14 +217,14 @@ select.form-control {
 
 .order-details {
   h3 {
-    color: #495057;
+    color: #211F3A;
     margin-bottom: 1rem;
     font-size: 1.25rem;
   }
 
   p {
     margin-bottom: 0.5rem;
-    color: #6c757d;
+    color: #5b5878;
   }
 }
 
@@ -239,14 +257,14 @@ select.form-control {
 }
 
 .notes-section {
-  background-color: #f8f9fa;
+  background-color: #faf9fe;
   padding: 1rem;
-  border-radius: 0.25rem;
+  border-radius: 11px;
 
   textarea {
     width: 100%;
-    border: 1px solid #dee2e6;
-    border-radius: 0.25rem;
+    border: 1px solid #e9e7f3;
+    border-radius: 10px;
     padding: 0.5rem;
     resize: vertical;
   }
@@ -257,7 +275,7 @@ select.form-control {
 }
 
 .text-muted {
-  color: #6c757d;
+  color: #8f8bab;
 }
 
 .text-center {

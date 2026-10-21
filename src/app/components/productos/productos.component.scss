@@ -3,30 +3,34 @@
 // Tokens del diseño "Gestión de Productos.dc.html"
 // ====================================================
 
-// Paleta
-$pk-accent: #6C4CE0;
-$pk-accent-hover: #5b3fc9;
-$pk-accent-soft: #EEE9FD;
-$pk-accent-border: #E2D9FB;
-$pk-bg-soft: #F7F8FC;
-$pk-border: #ECEDF3;
-$pk-border-2: #E4E5EE;
-$pk-row-divider: #F0F1F6;
-$pk-text-dark: #2A2E3C;
-$pk-text-mid: #52586B;
-$pk-text-grey: #8A90A2;
-$pk-text-light: #9199AC;
-$pk-danger: #E0483F;
-$pk-danger-soft: #FCE9E8;
-$pk-danger-border: #F6D4D2;
-$pk-success: #17994F;
-$pk-success-soft: #E3F6EC;
-$pk-info: #1E90B8;
-$pk-info-soft: #E7F5FB;
-$pk-blue: #2F6FE0;
-$pk-blue-soft: #E7F0FD;
-$pk-warning: #E0891B;
-$pk-warning-soft: #FDF1DD;
+// Base común de pantallas internas (D-400): cabecera cfg-cabeza, tarjeta cfg-card y botones cfg-btn.
+@import '../../shared/styles/config-pagina';
+@include config-pagina;
+
+// Paleta: tokens del canon (openspec/specs/design-system/spec.md, D-131).
+$pk-accent: #5F3FE0;
+$pk-accent-hover: #4a2fc0;
+$pk-accent-soft: #efe9ff;
+$pk-accent-border: #ddd3fb;
+$pk-bg-soft: #faf9fe;
+$pk-border: #ececf4;
+$pk-border-2: #e4e2ef;
+$pk-row-divider: #f1f0f7;
+$pk-text-dark: #211F3A;
+$pk-text-mid: #5b5878;
+$pk-text-grey: #8f8bab;
+$pk-text-light: #9995b3;
+$pk-danger: #D64545;
+$pk-danger-soft: #FDECEC;
+$pk-danger-border: #f3c9c9;
+$pk-success: #1E874B;
+$pk-success-soft: #E6F7EE;
+$pk-info: #1E6FD9;
+$pk-info-soft: #E7F1FF;
+$pk-blue: #1E6FD9;
+$pk-blue-soft: #E7F1FF;
+$pk-warning: #D9820A;
+$pk-warning-soft: #FFF1DF;
 
 .modal-fullscreen {
     width: 100%;
@@ -97,11 +101,25 @@ $pk-warning-soft: #FDF1DD;
 // ====================================================
 // ENCABEZADO DEL MÓDULO
 // ====================================================
-.pk-header {
-    background: #fff;
-    border-left: 4px solid $pk-accent;
-    border-bottom: 1px solid $pk-row-divider !important;
+// Aviso de onboarding: par info fuerte/suave de la base, con el botón a la derecha.
+.pk-aviso-onb {
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
 }
+.pk-aviso-onb__texto { color: inherit; font-size: 13.5px; }
+
+// Split "Importar" y el icono de columnas a la altura de cfg-btn (40px).
+.pk-split .pk-split-toggle { min-height: 40px; }
+
+// Enlaces del diálogo de exportar (Todas / Ninguna).
+.pk-enlace { color: $pk-accent; font-weight: 700; letter-spacing: normal; text-decoration: none; }
+.pk-enlace--sec { color: $pk-text-mid; }
+
+// Avisos de los diálogos en par fuerte/suave (sin el azul de Bootstrap).
+.alert-info { background: $pk-info-soft; color: $pk-info; border: 0; border-radius: 11px; }
+.alert-secondary { background: $pk-bg-soft; color: $pk-text-mid; border: 1px solid $pk-border; border-radius: 11px; }
+.alert-warning { background: $pk-warning-soft; color: #8a5300; border: 0; border-radius: 11px; }
 
 .pk-header-icon {
     width: 46px;
@@ -155,7 +173,7 @@ $pk-warning-soft: #FDF1DD;
 .pk-btn-primary {
     background: $pk-accent;
     color: #fff;
-    box-shadow: 0 6px 16px rgba(108, 76, 224, 0.28);
+    box-shadow: 0 6px 16px rgba(95, 63, 224, 0.28);
 
     &:hover { background: $pk-accent-hover; color: #fff; }
 }
@@ -177,9 +195,9 @@ $pk-warning-soft: #FDF1DD;
 }
 
 .pk-btn-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
     background: #fff;
     border: 1px solid $pk-border-2;
     color: $pk-accent;
@@ -195,7 +213,7 @@ $pk-warning-soft: #FDF1DD;
 // Split "Importar"
 .pk-split {
     .pk-split-main {
-        border-radius: 12px 0 0 12px;
+        border-radius: 11px 0 0 11px;
         border-right: none;
     }
 
@@ -203,7 +221,7 @@ $pk-warning-soft: #FDF1DD;
         width: 32px;
         background: $pk-bg-soft;
         border: 1px solid $pk-border-2;
-        border-radius: 0 12px 12px 0;
+        border-radius: 0 11px 11px 0;
         color: $pk-text-light;
         cursor: pointer;
         display: inline-flex;
@@ -325,7 +343,7 @@ $pk-warning-soft: #FDF1DD;
     bottom: 25px;
     right: 25px;
     z-index: 1050;
-    box-shadow: 0 10px 24px rgba(108, 76, 224, 0.4);
+    box-shadow: 0 10px 24px rgba(95, 63, 224, 0.4);
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -358,7 +376,7 @@ $pk-warning-soft: #FDF1DD;
     transition: box-shadow 0.2s, border-color 0.2s;
 
     &:focus-within {
-        box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12);
+        box-shadow: 0 0 0 3px rgba(95, 63, 224, 0.12);
         border-color: $pk-accent-border;
     }
 
@@ -474,7 +492,7 @@ $fs-active-border: $pk-accent-border;
     &:focus {
         outline: none;
         border-color: $fs-active-border;
-        box-shadow: 0 0 0 2px rgba(108, 76, 224, 0.15);
+        box-shadow: 0 0 0 2px rgba(95, 63, 224, 0.15);
     }
 
     &.fs-active,
@@ -579,7 +597,7 @@ $fs-active-border: $pk-accent-border;
     &:focus {
         outline: none;
         border-color: $fs-active-border;
-        box-shadow: 0 0 0 2px rgba(108, 76, 224, 0.15);
+        box-shadow: 0 0 0 2px rgba(95, 63, 224, 0.15);
     }
 }
 
@@ -826,7 +844,7 @@ $fs-active-border: $pk-accent-border;
 
     &:focus {
         border-color: $pk-accent-border;
-        box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.15);
+        box-shadow: 0 0 0 3px rgba(95, 63, 224, 0.15);
     }
 }
 
@@ -867,7 +885,7 @@ $fs-active-border: $pk-accent-border;
 // El menú se adjunta a <body> (container="body") → estilos globales
 ::ng-deep .pk-actions-menu {
     min-width: 188px;
-    border: 1px solid #ECEDF3;
+    border: 1px solid #ececf4;
     border-radius: 14px;
     box-shadow: 0 12px 32px rgba(30, 35, 60, 0.16);
     padding: 6px;
@@ -881,27 +899,27 @@ $fs-active-border: $pk-accent-border;
         padding: 9px 12px;
         font-weight: 700;
         font-size: 0.85rem;
-        color: #52586B;
+        color: #5b5878;
 
         i { font-size: 0.85rem; }
 
-        &:hover { background: #F7F5FE; color: #6C4CE0; }
+        &:hover { background: #faf9fe; color: #5F3FE0; }
 
         &.pk-item-danger {
-            color: #E0483F;
-            i { color: #E0483F; }
-            &:hover { background: #FDECEB; color: #E0483F; }
+            color: #D64545;
+            i { color: #D64545; }
+            &:hover { background: #FDECEC; color: #D64545; }
         }
     }
 
     .dropdown-divider {
         margin: 4px 6px;
-        border-color: #F0F1F6;
+        border-color: #f1f0f7;
     }
 
-    .pk-ico-accent { color: #6C4CE0; }
-    .pk-ico-success { color: #17994F; }
-    .pk-ico-info { color: #2F6FE0; }
+    .pk-ico-accent { color: #5F3FE0; }
+    .pk-ico-success { color: #1E874B; }
+    .pk-ico-info { color: #1E6FD9; }
 }
 
 // ====================================================
@@ -1033,27 +1051,13 @@ $fs-active-border: $pk-accent-border;
     }
 }
 
-// Card con sombra suave
-.card.shadow-sm {
-    border-radius: 18px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04) !important;
-    border: 1px solid $pk-border !important;
-    transition: box-shadow 0.3s ease;
-
-    &:hover {
-        box-shadow: 0 4px 16px rgba(30, 35, 60, 0.08) !important;
-    }
-}
+// Tarjeta del listado: la tabla ancha se desplaza adentro, no la página (390 px).
+.pk-card { min-width: 0; }
 
 // ====================================================
 // RESPONSIVE
 // ====================================================
 @media (max-width: 768px) {
-    .pk-header {
-        > div { flex-direction: column !important; align-items: flex-start !important; }
-    }
-
     .pk-btn {
         padding: 8px 11px;
         font-size: 0.76rem;

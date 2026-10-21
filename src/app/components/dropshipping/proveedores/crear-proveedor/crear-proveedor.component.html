@@ -1,16 +1,17 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header">
-        <h5>{{ isEditMode ? 'Editar Proveedor' : 'Nuevo Proveedor' }}</h5>
-      </div>
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Dropshipping</span>
+      <h1 class="cfg-titulo">{{ isEditMode ? 'Editar Proveedor' : 'Nuevo Proveedor' }}</h1>
+    </div>
+  </header>
 
-      <div class="card-body" *ngIf="!loading">
+      <section class="cfg-card cfg-form" *ngIf="!loading">
         <form [formGroup]="form" (ngSubmit)="onSubmit()">
           <div class="row">
             <!-- Información Básica -->
             <div class="col-md-6">
-              <h6 class="mb-3">Información Básica</h6>
+              <h6 class="cv-seccion mb-3">Información Básica</h6>
               
               <div class="field">
                 <label for="nombre">Nombre del Proveedor *</label>
@@ -78,7 +79,7 @@
 
             <!-- Configuración Comercial -->
             <div class="col-md-6">
-              <h6 class="mb-3">Configuración Comercial</h6>
+              <h6 class="cv-seccion mb-3">Configuración Comercial</h6>
               
               <div class="field">
                 <label for="comision">Comisión (%) *</label>
@@ -121,7 +122,7 @@
 
               <!-- Configuración de Integración -->
               <div formGroupName="api_config">
-                <h6 class="mb-3 mt-4">Configuración de Integración</h6>
+                <h6 class="cv-seccion mb-3 mt-4">Configuración de Integración</h6>
                 
                 <div class="field">
                   <label for="tipo_integracion">Tipo de Integración *</label>
@@ -166,7 +167,7 @@
           </div>
 
           <!-- Botones de Acción -->
-          <div class="d-flex justify-content-end gap-2 mt-4">
+          <div class="cfg-form__pie">
             <button 
               pButton 
               type="button" 
@@ -185,15 +186,13 @@
             </button>
           </div>
         </form>
-      </div>
+      </section>
 
       <!-- Loading State -->
-      <div class="card-body text-center" *ngIf="loading">
-        <i class="pi pi-spinner pi-spin text-primary fs-2"></i>
-        <p class="mt-2">Cargando datos del proveedor...</p>
-      </div>
-    </div>
-  </div>
+      <section class="cfg-card cfg-vacio" *ngIf="loading">
+        <i class="pi pi-spinner pi-spin cfg-vacio__icono"></i>
+        <p class="cfg-vacio__texto">Cargando datos del proveedor...</p>
+      </section>
 </div>
 
 <!-- Toast Messages -->

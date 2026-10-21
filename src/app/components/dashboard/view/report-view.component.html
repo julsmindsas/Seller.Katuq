@@ -4,7 +4,7 @@
   <div *ngIf="notFound" class="view-state">
     <i class="fa fa-circle-exclamation"></i>
     <p>Reporte no encontrado.</p>
-    <button type="button" class="btn-outline" (click)="goHome()">
+    <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="goHome()">
       <i class="fa fa-arrow-left me-1"></i> Volver
     </button>
   </div>
@@ -44,16 +44,16 @@
 
       <span class="spacer"></span>
 
-      <button type="button" class="btn-outline" (click)="exportExcel()" [disabled]="!result || exporting" title="Exportar Excel">
+      <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="exportExcel()" [disabled]="!result || exporting" title="Exportar Excel">
         <i class="fa fa-file-excel"></i> Excel
       </button>
-      <button type="button" class="btn-outline" (click)="exportPng()" [disabled]="!result || exporting" title="Exportar PNG">
+      <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="exportPng()" [disabled]="!result || exporting" title="Exportar PNG">
         <i class="fa fa-file-image"></i> PNG
       </button>
-      <button type="button" class="btn-outline" (click)="exportPdf()" [disabled]="!result || exporting" title="Exportar PDF">
+      <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="exportPdf()" [disabled]="!result || exporting" title="Exportar PDF">
         <i class="fa fa-file-pdf"></i> PDF
       </button>
-      <button type="button" class="btn-primary" (click)="goEdit()" title="Editar reporte">
+      <button type="button" class="cfg-btn rb-btn" (click)="goEdit()" title="Editar reporte">
         <i class="fa fa-pen me-1"></i> Editar
       </button>
     </header>
