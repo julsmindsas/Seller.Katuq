@@ -322,3 +322,130 @@ test('ninguna clase nueva con "p-" en dark-mode.scss (salvo clases propias de Pr
   const inventadas = nuevas.filter(c => !primeng.has(c));
   assert.deepEqual(inventadas, [], `clases nuevas con "p-" que no son de PrimeNG: ${inventadas.join(', ')}`);
 });
+
+// ─── Tarea 3.5 (bloque TEMA-B04): los siete grises de dark-mode.scss pasan a tokens --ds-* ─────────
+// Valor por defecto 3 (aprobado). Reemplazo por rol según design-f1.md §2. Conteo antes del cambio
+// (commit 0b0476ed): #1a1d23 21 (36 al diseñar; TEMA-B03 pasó 15 a --ds-on-accent), #1e2128 11,
+// #252830 57, #2d3139 120, #3d4149 219, #f0f0f0 40 y #e0e0e0 184.
+const COMMIT_ANTES_B04 = '0b0476ed';
+const GRISES = {
+  '#1a1d23': 'var(--ds-canvas)',
+  '#1e2128': 'var(--ds-surface)',
+  '#252830': 'var(--ds-surface)',
+  '#2d3139': 'var(--ds-surface-2)',
+  '#3d4149': 'var(--ds-line-strong)',
+  '#f0f0f0': 'var(--ds-ink)',
+  '#e0e0e0': 'var(--ds-ink-2)',
+};
+// Variantes con alfa que quedan literales porque su token no tiene -rgb (no se inventan tokens).
+// Techo: no pueden subir. La de .loader, rgba(26, 29, 35, .9), pasó a rgba(var(--ds-canvas-rgb), .9).
+const ALFA_LITERALES = [
+  [/rgba\(\s*37\s*,\s*40\s*,\s*48\s*,/gi, 2, '--ds-surface a .9'],
+  [/rgba\(\s*224\s*,\s*224\s*,\s*224\s*,/gi, 6, '--ds-ink-2 con alfa'],
+  [/#2d313980(?![0-9a-f])/gi, 1, '--ds-surface-2 a .5 (--view-grid-bg)'],
+];
+
+function sinComentarios(scss) {
+  return scss.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+}
+
+// Cuenta el hex opaco exacto: `#2d313980` (con alfa) no es `#2d3139`.
+function contarGris(texto, gris) {
+  return (texto.match(new RegExp(`${gris}(?![0-9a-f])`, 'gi')) || []).length;
+}
+
+// Si el retiro (4.5) borra dark-mode.scss entero, las pruebas de 3.5 ya no tienen qué revisar.
+function sinDarkMode(t) {
+  if (leer(DARK_MODE) !== null) return false;
+  t.skip(`${DARK_MODE} ya no existe (retiro, tarea 4.5)`);
+  return true;
+}
+
+test('3.5: contarGris distingue el hex opaco del hex con alfa y no mira mayúsculas', () => {
+  assert.equal(contarGris('a: #2D3139; b: #2d313980; c: #2d3139 ;', '#2d3139'), 2);
+  assert.equal(contarGris('color: #e0e0e0e0', '#e0e0e0'), 0);
+  assert.equal(sinComentarios('a: #fff; // #1a1d23\n/* #1a1d23 */ b: url(http://x)'), 'a: #fff; \n b: url(http://x)');
+});
+
+test('3.5: dark-mode.scss sin ninguno de los siete grises (fuente y CSS compilado)', t => {
+  if (sinDarkMode(t)) return;
+  const fuente = sinComentarios(leer(DARK_MODE));
+  const { css } = reglasDark();
+  for (const gris of Object.keys(GRISES)) {
+    assert.equal(contarGris(fuente, gris), 0, `${gris} sigue en ${DARK_MODE}`);
+    assert.equal(contarGris(css, gris), 0, `${gris} sigue en el CSS compilado de ${DARK_MODE}`);
+  }
+});
+
+test('3.5: las variantes con alfa de los grises no suben y la de .loader usa --ds-canvas-rgb', t => {
+  if (sinDarkMode(t)) return;
+  const fuente = sinComentarios(leer(DARK_MODE));
+  for (const [patron, techo, rol] of ALFA_LITERALES) {
+    const n = (fuente.match(patron) || []).length;
+    assert.ok(n <= techo, `${patron} (${rol}): ${n} > ${techo}`);
+  }
+  for (const otra of [/rgba?\(\s*26\s*,\s*29\s*,\s*35\b/i, /rgba?\(\s*30\s*,\s*33\s*,\s*40\b/i, /rgba?\(\s*45\s*,\s*49\s*,\s*57\b/i,
+    /rgba?\(\s*61\s*,\s*65\s*,\s*73\b/i, /rgba?\(\s*240\s*,\s*240\s*,\s*240\b/i]) {
+    assert.doesNotMatch(fuente, otra, `variante con alfa nueva de un gris: ${otra}`);
+  }
+  // Si el retiro (4.5) quita el bloque de .loader, no hay nada que revisar.
+  const loader = reglaPorSelector('body.dark-only .loader')[0];
+  if (loader) assert.equal(decl(loader, 'background')?.value, 'rgba(var(--ds-canvas-rgb), 0.9)');
+});
+
+test('3.5: cada gris quedó en el token de su rol (contra el CSS de antes del cambio)', t => {
+  if (sinDarkMode(t)) return;
+  try {
+    execFileSync('git', ['cat-file', '-e', `${COMMIT_ANTES_B04}^{commit}`], { cwd: RAIZ, stdio: 'ignore' });
+  } catch {
+    t.skip(`el commit ${COMMIT_ANTES_B04} no está en este clon (¿clon superficial?): no hay base para comparar`);
+    return;
+  }
+  let antes;
+  try {
+    antes = execFileSync('git', ['show', `${COMMIT_ANTES_B04}:${DARK_MODE}`], { cwd: RAIZ, encoding: 'utf8', maxBuffer: 1 << 24 });
+  } catch (error) {
+    assert.fail(`no se pudo leer ${DARK_MODE} en ${COMMIT_ANTES_B04}: ${error.message}`);
+  }
+  const sass = require('sass');
+  const postcss = require('postcss');
+  const indice = css => {
+    const mapa = new Map();
+    postcss.parse(css).walkDecls(d => {
+      const regla = d.parent;
+      if (!regla || regla.type !== 'rule') return;
+      const clave = `${regla.selectors.map(s => s.replace(/\s+/g, ' ').trim()).join(',')}|${d.prop}`;
+      if (!mapa.has(clave)) mapa.set(clave, []);
+      mapa.get(clave).push(`${d.value.trim()}${d.important ? ' !important' : ''}`);
+    });
+    return mapa;
+  };
+  const conGris = valor => Object.keys(GRISES).some(g => contarGris(valor, g) > 0)
+    || /rgba\(26, 29, 35, 0\.9\)/.test(valor);
+  const aToken = valor => {
+    let v = valor.replace(/rgba\(26, 29, 35, 0\.9\)/g, 'rgba(var(--ds-canvas-rgb), 0.9)');
+    for (const [gris, token] of Object.entries(GRISES)) v = v.replace(new RegExp(`${gris}(?![0-9a-f])`, 'gi'), token);
+    return v;
+  };
+  const base = indice(sass.compileString(antes).css);
+  const actual = indice(reglasDark().css);
+  let enBase = 0;
+  let revisadas = 0;
+  const distintas = [];
+  for (const [clave, valores] of base) {
+    const conGrises = valores.filter(conGris);
+    enBase += conGrises.length;
+    if (!actual.has(clave)) continue; // bloque retirado después (4.5): no aplica
+    const hoy = actual.get(clave);
+    for (const valor of conGrises) {
+      revisadas++;
+      if (!hoy.includes(aToken(valor))) distintas.push(`${clave}: ${valor} → hoy ${hoy.join(' / ')}`);
+    }
+  }
+  // La base es fija (0b0476ed): si no trae más de 600 declaraciones con grises, la lectura falló.
+  // Lo revisado hoy sí baja con el retiro (4.5), así que solo se exige que no quede vacío mientras
+  // dark-mode.scss tenga reglas.
+  assert.ok(enBase >= 600, `se esperaban más de 600 declaraciones con grises en ${COMMIT_ANTES_B04}, hubo ${enBase}`);
+  assert.ok(actual.size === 0 || revisadas > 0, `ninguna de las ${enBase} declaraciones con grises de la base se pudo comparar: revisar las claves`);
+  assert.deepEqual(distintas, [], `declaraciones que no siguen la tabla de design-f1.md §2:\n${distintas.join('\n')}`);
+});
