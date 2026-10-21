@@ -342,7 +342,7 @@ Ninguna tarea de esta parte empieza antes de 0.6. Las marcadas **[sensible]** es
 
 ## 10. Seguimientos dentro de 24 h (D16)
 
-- [ ] 10.1 Prueba primero, funciones puras: `proximoSeguimiento(sesion, ahora)`, `puedeSeguir`:
+- [x] 10.1 Prueba primero, funciones puras: `proximoSeguimiento(sesion, ahora)`, `puedeSeguir`:
       - ventana con al menos 1 h de margen;
       - horario del bot y Ley 2300 según la pregunta 6;
       - uno por día;
@@ -350,7 +350,7 @@ Ninguna tarea de esta parte empieza antes de 0.6. Las marcadas **[sensible]** es
       - texto armado sin datos del modelo.
 
       Dep: 0.6.
-- [ ] 10.2 Prueba primero (despachador y cron):
+- [x] 10.2 Prueba primero (despachador y cron):
       - la marca `seguimiento` se escribe en la escritura del turno, con la `lineId` del turno;
       - el cron solo corre con el interruptor general y la bandera, y está siempre programado (no depende del `.env`);
       - consulta por un solo campo, de la más vieja a la más nueva;
@@ -362,7 +362,8 @@ Ninguna tarea de esta parte empieza antes de 0.6. Las marcadas **[sensible]** es
       - con las llaves apagadas no hay escrituras nuevas en la sesión.
 
       Dep: 10.1, 5.4.
-- [ ] 10.3 Implementar D16, etapa 1. Éxito: 10.1, 10.2 y la suite del bot en verde. Dep: 10.2, 0.7.
+- [x] 10.3 Implementar D16, etapa 1. Éxito: 10.1, 10.2 y la suite del bot en verde. Dep: 10.2, 0.7.
+      (F440-B09: hecho en el backend, todo detrás de `whatsappBotFollowUp` (bandera de la empresa + interruptor general, ambos apagados). Pruebas: `tests/notifications/whatsappBotSeguimientoReglas.test.js` (10.1), `whatsappBotSeguimiento24h.test.js` (cron, marcas en el servicio de sesión y write-set) y los casos «seguimiento:» de `whatsappBotDispatcher.test.js`; suite del bot en verde. `recorrerSeguimientos` va en el mismo job de sitios que `recorrerPagos`, siempre programado. La marca viaja en `reemplazarCarrito` y `marcarCerrada` (una sola escritura, con la `lineId` del turno); `traspasarAHumano` la borra. Cotización: texto con el enlace para verla y un solo botón `seguimiento:asesor`. Etapa 2 (10.4) sigue bloqueada. Cabos: 0.7 queda a la aprobación de Daniel y los controles de S11 de los recordatorios de pago dependen de 9.7.)
 - [ ] 10.4 Etapa 2 (fuera de 24 h): **bloqueada** hasta el OK de costo de Daniel (F4-40·5). Incluye el permiso en la conversación, la plantilla de marketing nueva registrada con `scripts/kapso-registrar-plantillas.js`, la Ley 2300 y el interruptor `whatsappBotFollowUpTemplates`. Se le pide a Daniel con la estimación de costo de 15.3.
 
 ## 11. Memoria y postventa informativa (D15, D17)
