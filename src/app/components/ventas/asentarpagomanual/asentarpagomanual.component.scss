@@ -461,7 +461,7 @@
       justify-content: center;
       width: 30px;
       height: 30px;
-      background: #fff;
+      background: var(--ds-surface);
       border: 1px solid #f3c9c9;
       border-radius: 50%;
       color: $cfg-err;

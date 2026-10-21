@@ -287,7 +287,7 @@
   // Piezas internas de PrimeNG, limitadas al paso.
   :host ::ng-deep {
     .p-card {
-      background: #fff;
+      background: var(--ds-surface);
       border: 1px solid $cfg-line;
       border-radius: 16px;
       box-shadow: $cfg-shadow-panel;
@@ -351,7 +351,7 @@
       }
 
       .p-datatable-tbody > tr {
-        background: #fff;
+        background: var(--ds-surface);
         color: $cfg-ink;
 
         > td { padding: 12px 14px; border-color: $cfg-line-soft; }

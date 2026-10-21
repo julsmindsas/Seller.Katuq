@@ -145,7 +145,7 @@
   &:hover:not(:disabled) { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
 }
 .fsh-btn--sec {
-  background: #fff;
+  background: var(--ds-surface);
   color: $cfg-body;
   border-color: #e4e2ef;
   box-shadow: none;
@@ -241,7 +241,7 @@ tr:has(.bg-warning) {
 
   .p-dialog-header {
     padding: 16px 20px;
-    background: #fff;
+    background: var(--ds-surface);
     border-bottom: 1px solid $cfg-line;
     color: $cfg-ink;
   }

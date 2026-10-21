@@ -61,7 +61,7 @@ $light-color: $katuq-gray-50;
   margin-bottom: 0;
   font-size: 13px;
   color: $cfg-ink;
-  background: #fff;
+  background: var(--ds-surface);
   
   th {
     background-color: $cfg-tint;
@@ -171,7 +171,7 @@ $light-color: $katuq-gray-50;
   &.btn-outline-secondary {
     color: $cfg-body;
     border-color: #e4e2ef;
-    background-color: #fff;
+    background-color: var(--ds-surface);
     
     &:hover {
       background-color: $cfg-tint;
@@ -183,7 +183,7 @@ $light-color: $katuq-gray-50;
   &.btn-outline-success {
     color: $cfg-ok;
     border-color: #bfe5cf;
-    background-color: #fff;
+    background-color: var(--ds-surface);
 
     &:hover {
       background-color: $cfg-ok-soft;
