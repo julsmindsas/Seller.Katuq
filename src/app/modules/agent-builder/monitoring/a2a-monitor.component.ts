@@ -271,7 +271,7 @@ export class A2aMonitorComponent implements OnInit, OnDestroy {
       case 'logistics':
         return '#f59e0b'; // amber
       case 'general':
-        return '#8b5cf6'; // purple
+        return '#5F3FE0'; // acento Katuq
       default:
         return '#6b7280'; // gray
     }

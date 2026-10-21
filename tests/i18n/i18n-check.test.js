@@ -1,6 +1,6 @@
 'use strict';
 
-// D-532 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B00c, tarea 1.3): verificación
+// D-540 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B00c, tarea 1.3): verificación
 // automática de los diccionarios y de los textos sueltos (`npm run i18n:check`, design.md D6).
 // Un caso por cada fila de la tabla de D6 y un caso limpio, sobre los fixtures de
 // tests/i18n/fixtures/. Node puro: no compila Angular ni llama a la red.

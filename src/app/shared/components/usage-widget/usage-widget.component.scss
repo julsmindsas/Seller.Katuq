@@ -14,19 +14,17 @@
   gap: 8px;
   margin: -0.25rem 0 1rem;
   padding: 0.75rem;
-  border: 1px solid #f4d58d;
-  border-left: 3px solid #e6a700;
-  border-radius: 6px;
-  color: #6f4f00;
-  background: #fffaf0;
+  border: 1px solid rgba(217, 130, 10, .3);
+  border-radius: 11px;
+  color: #D9820A;
+  background: #FFF1DF;
   font-size: 0.82rem;
   line-height: 1.35;
 
   &--full {
-    border-color: #f0b9be;
-    border-left-color: #dc3545;
-    color: #842029;
-    background: #fff5f5;
+    border-color: rgba(214, 69, 69, .3);
+    color: #D64545;
+    background: #FDECEC;
   }
 }
 
@@ -38,7 +36,7 @@
 
   h4 {
     margin: 0;
-    color: #2c3e50;
+    color: #211F3A;
     font-weight: 600;
   }
 
@@ -65,13 +63,13 @@
     gap: 0.5rem;
 
     i {
-      color: var(--primary-color, #a78bfa);
+      color: #5F3FE0;
     }
   }
 
   .usage-value {
     font-weight: 600;
-    color: #2c3e50;
+    color: #211F3A;
     font-size: 1.1rem;
   }
 
@@ -86,13 +84,13 @@
 }
 
 .blocked-features {
-  background-color: #f8f9fa;
+  background-color: #faf9fe;
   padding: 1rem;
-  border-radius: 6px;
-  border-left: 3px solid #dc3545;
+  border: 1px solid #ececf4;
+  border-radius: 11px;
 
   strong {
-    color: #dc3545;
+    color: #211F3A;
   }
 
   .feature-badge {
@@ -122,7 +120,7 @@
   }
 
   h4 {
-    color: #2c3e50;
+    color: #211F3A;
     font-weight: 600;
   }
 

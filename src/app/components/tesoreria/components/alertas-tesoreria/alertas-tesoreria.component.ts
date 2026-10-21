@@ -111,8 +111,8 @@ export class AlertasTesoreriaComponent implements OnChanges, OnDestroy {
       showCancelButton: true,
       confirmButtonText: this.translate.instant('tesoreria.alertasTesoreria.resolver'),
       cancelButtonText: this.translate.instant('comun.cancelar'),
-      confirmButtonColor: '#7c3aed',
-      cancelButtonColor: '#6b7280',
+      confirmButtonColor: '#5F3FE0',
+      cancelButtonColor: '#8f8bab',
     }).then((result) => {
       if (!result.isConfirmed) return;
       this.treasury

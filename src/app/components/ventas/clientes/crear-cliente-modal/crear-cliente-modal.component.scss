@@ -1,14 +1,17 @@
+// Canon Katuq (D-131): acento, tinta, muted, bordes y semánticos del design system.
 $primary:      #5F3FE0;
-$primary-bg:   #ede9fe;
-$border-color: #e9ecef;
-$text-dark:    #333;
-$text-muted:   #6b7280;
-$danger:       #dc3545;
-$bg-light:     #f8f9fa;
+$primary-bg:   #efe9ff;
+$border-color: #ececf4;
+$text-dark:    #211F3A;
+$text-muted:   #8f8bab;
+$danger:       #D64545;
+$bg-light:     #faf9fe;
+$input-bg:     #f5f4fa;
+$input-border: #e9e7f3;
 
 // ── Contenedor principal ────────────────────────────────────────
 .cliente-modal {
-  border-radius: 10px;
+  border-radius: 16px;
   border: none;
   animation: slideIn 0.2s ease-out;
   display: flex;
@@ -39,21 +42,29 @@ $bg-light:     #f8f9fa;
       gap: 0.75rem;
       align-items: center;
 
-      i {
-        font-size: 1.25rem;
+      > i {
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
+        background: $primary-bg;
+        font-size: 15px;
         color: $primary;
       }
 
       h5 {
-        font-size: 1rem;
-        font-weight: 700;
+        font-size: 17px;
+        font-weight: 800;
         color: $text-dark;
         margin: 0;
       }
 
       p {
-        font-size: 0.78rem;
+        font-size: 12.5px;
         color: $text-muted;
+        letter-spacing: normal;
         margin: 0;
       }
     }
@@ -65,9 +76,11 @@ $bg-light:     #f8f9fa;
       color: $text-muted;
       cursor: pointer;
       padding: 0.35rem;
-      border-radius: 6px;
+      border-radius: 11px;
       line-height: 1;
       transition: all 0.15s ease;
+
+      &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
 
       &:hover {
         background: $primary-bg;
@@ -79,7 +92,7 @@ $bg-light:     #f8f9fa;
 
 // ── Body compacto ───────────────────────────────────────────────
 .modal-body-modern {
-  background: #fafbfc;
+  background: $bg-light;
   padding: 1rem 1.25rem;
   overflow-y: auto;
   max-height: 70vh;
@@ -89,14 +102,14 @@ $bg-light:     #f8f9fa;
 .form-section-modern {
   background: white;
   border: 1px solid $border-color;
-  border-radius: 8px;
+  border-radius: 16px;
   padding: 1rem;
   margin-bottom: 0;
   transition: border-color 0.2s;
 
   &:hover {
-    border-color: $primary;
-    box-shadow: 0 2px 8px rgba($primary, 0.06);
+    border-color: #d9cffb;
+    box-shadow: 0 10px 24px -14px rgba($primary, .35);
   }
 
   .section-header {
@@ -110,9 +123,9 @@ $bg-light:     #f8f9fa;
     i {
       display: grid;
       place-items: center;
-      width: 22px;
-      height: 22px;
-      border-radius: 6px;
+      width: 26px;
+      height: 26px;
+      border-radius: 9px;
       background: $primary-bg;
       color: $primary;
       font-size: 0.75rem;
@@ -137,10 +150,12 @@ $bg-light:     #f8f9fa;
 // ── Labels ───────────────────────────────────────────────────────
 .form-label-modern {
   display: block;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: $text-dark;
-  margin-bottom: 0.35rem;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: $text-muted;
+  margin-bottom: 6px;
 
   .required {
     color: $danger;
@@ -161,28 +176,32 @@ $bg-light:     #f8f9fa;
 // ── Inputs PrimeNG ───────────────────────────────────────────────
 :host ::ng-deep {
   .p-inputtext {
-    border: 1px solid $border-color !important;
-    border-radius: 6px;
-    height: 36px;
-    padding: 0 0.65rem !important;
+    border: 1px solid $input-border !important;
+    border-radius: 10px;
+    height: 40px;
+    padding: 0 0.75rem !important;
     font-size: 0.85rem;
-    transition: border-color 0.15s;
+    background: $input-bg;
+    color: $text-dark;
+    transition: border-color 0.15s, background-color 0.15s;
 
     &:focus {
-      border-color: $primary !important;
-      box-shadow: 0 0 0 2px rgba($primary, 0.12) !important;
+      background: #fff;
+      border-color: #7C5CFF !important;
+      box-shadow: 0 0 0 3px rgba(124, 92, 255, .15) !important;
     }
 
     &:disabled, &[disabled] {
-      background: #f5f5f5;
+      background: #f1f0f7;
       color: $text-muted;
     }
   }
 
   .p-dropdown {
-    border-radius: 6px;
-    border: 1px solid $border-color;
-    height: 36px;
+    border-radius: 10px;
+    border: 1px solid $input-border;
+    background: $input-bg;
+    height: 40px;
     font-size: 0.85rem;
     transition: border-color 0.15s;
 
@@ -214,35 +233,37 @@ $bg-light:     #f8f9fa;
   }
 
   .p-button {
-    height: 36px;
+    height: 40px;
     padding: 0 1.25rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    border-radius: 6px;
+    font-size: 13.5px;
+    font-weight: 700;
+    border-radius: 11px;
 
     &.p-button-primary {
       background: $primary;
       border-color: $primary;
 
       &:hover:not(:disabled) {
-        background: #4c31c4;
-        border-color: #4c31c4;
+        background: #4a2fc0;
+        border-color: #4a2fc0;
       }
 
       &:disabled {
-        opacity: 0.5;
+        background: #d8d4ea;
+        border-color: #d8d4ea;
+        opacity: 1;
         cursor: not-allowed;
       }
     }
 
     &.p-button-outlined.p-button-secondary {
-      background: transparent;
-      color: $text-muted;
-      border: 1px solid $border-color;
+      background: #fff;
+      color: #5b5878;
+      border: 1px solid #e4e2ef;
 
       &:hover {
         background: $bg-light;
-        border-color: $primary;
+        border-color: #d9cffb;
         color: $primary;
       }
     }
@@ -276,17 +297,17 @@ $bg-light:     #f8f9fa;
   border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 500;
-  border: 1.5px solid #d1d5db;
-  background: #f9fafb;
+  border: 1.5px solid $input-border;
+  background: $input-bg;
   color: $text-muted;
   cursor: pointer;
   transition: all 0.12s ease;
   user-select: none;
 
   &:hover {
-    border-color: #8c6bff;
-    background: #f5f3ff;
-    color: #5b21b6;
+    border-color: #d9cffb;
+    background: $bg-light;
+    color: $primary;
   }
 
   &.tag-chip-selected {
@@ -301,17 +322,17 @@ $bg-light:     #f8f9fa;
 
 .tags-empty-hint {
   font-size: 0.75rem;
-  color: #9ca3af;
-  background: #f9fafb;
-  border: 1px dashed #d1d5db;
-  border-radius: 6px;
+  color: $text-muted;
+  background: $bg-light;
+  border: 1px dashed #e4e2ef;
+  border-radius: 10px;
   padding: 0.4rem 0.65rem;
 }
 
 // ── Footer ────────────────────────────────────────────────────────
 .modal-footer-modern {
   background: white;
-  border-top: 1px solid $border-color;
+  border-top: 1px solid #f1f0f7;
   padding: 0.75rem 1.25rem;
   display: flex;
   justify-content: flex-end;

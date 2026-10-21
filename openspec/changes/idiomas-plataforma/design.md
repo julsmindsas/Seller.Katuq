@@ -1,4 +1,4 @@
-# Diseño: idiomas del panel Seller (ticket cd CMNdBkVZXgYoOCvqfGZc, D-532)
+# Diseño: idiomas del panel Seller (ticket cd CMNdBkVZXgYoOCvqfGZc, D-540)
 
 > Aprobado en bloque por Daniel el 2026-10-21 (tarea 0.2), junto con las specs, `tasks.md` y la asignación de carpetas de D10 tal como está escrita. Toda pregunta abierta se resuelve con la recomendación escrita. Las recomendaciones de fondo están en `proposal.md`, «Aprobación (2026-10-21)».
 
@@ -15,7 +15,7 @@ Lo que ya existe y no se reemplaza (verificado el 2026-10-21):
 | Login | `wt-back-tickets-web/functions/controllers/authentication.js:223` | Devuelve `lang: userData.lang \|\| userData.idioma \|\| 'es'` |
 | Bandera de Suiza | `assets/scss/vendors/flag-icon/_flag-icon-list.scss:43` | `flag-icon-ch` ya existe |
 
-No se cambia de librería ni se agrega otra capa de traducción. Angular 14.3 no tiene signals ni `@if`: el código nuevo sigue el estilo de los módulos que toca (excepción acotada al Art. IX, a registrar en el D-532).
+No se cambia de librería ni se agrega otra capa de traducción. Angular 14.3 no tiene signals ni `@if`: el código nuevo sigue el estilo de los módulos que toca (excepción acotada al Art. IX, a registrar en el D-540).
 
 ## D1. Catálogo de idiomas
 
@@ -167,11 +167,11 @@ Las carpetas que no figuran en los doce módulos del informe (dashboard, proceso
 | I, II | Specs sin tecnología; código solo después de 0.2 |
 | VII | La falla al leer la configuración deja log estructurado; no hay integración crítica nueva |
 | VIII | Prueba de contrato del login antes del cambio (1.2) |
-| IX | Parcial: Angular 14.3, se sigue el estilo de cada módulo (excepción en el D-532) |
+| IX | Parcial: Angular 14.3, se sigue el estilo de cada módulo (excepción en el D-540) |
 | XI | El log de D2 no lleva correo ni nombre; el script de D8 no imprime el token |
 | XII | `appLanguagePreviewCompanies`: dueño Daniel, retiro al publicar de-CH o el 2027-06-30 (tarea 14.3) |
 | XIII | Dos specs de menos de tres páginas |
-| XIV | D-532 y bitácora (0.3 y cierre de cada bloque) |
+| XIV | D-540 y bitácora (0.3 y cierre de cada bloque) |
 
 ## Reversión
 

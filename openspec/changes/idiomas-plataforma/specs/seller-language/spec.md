@@ -1,4 +1,4 @@
-# Delta: seller-language (ticket cd CMNdBkVZXgYoOCvqfGZc, D-532)
+# Delta: seller-language (ticket cd CMNdBkVZXgYoOCvqfGZc, D-540)
 
 > Idioma del panel Seller: qué idiomas se ofrecen, cuándo se muestra uno nuevo y qué no cambia con el idioma. Aprobada en bloque por Daniel el 2026-10-21 (tarea 0.2), antes de cualquier código (Artículo I).
 

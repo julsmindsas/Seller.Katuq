@@ -24,12 +24,12 @@ assert.ok(
   subscriptionService.includes('Math.max(0, usage.orders.limit - (usage.orders.current ?? 0))'),
   'los pedidos restantes nunca deben mostrarse negativos'
 );
-// D-532 (IDI-B02): la lista del plan Gratis guarda claves; el texto en español vive en es.json.
+// D-540 (IDI-B02): la lista del plan Gratis guarda claves; el texto en español vive en es.json.
 const esPricing = JSON.parse(read('src/assets/i18n/es.json'));
 assert.ok(pricingTs.includes("text: 'pricing.free.kaiQueries'") && esPricing['pricing.free.kaiQueries'] === 'Consultas KAI: 10 al día por usuario');
 assert.ok(pricingTs.includes("text: 'pricing.free.aiProducts'") && esPricing['pricing.free.aiProducts'] === 'Productos con IA: 10 al día por usuario');
 assert.ok(pricingHtml.includes("'pricing.free.includes' | translate") && esPricing['pricing.free.includes'] === 'Lo que incluye tu plan Gratis');
-// D-532 (IDI-B01a): la tarjeta del plan pasa sus textos por el traductor; el texto en español vive
+// D-540 (IDI-B01a): la tarjeta del plan pasa sus textos por el traductor; el texto en español vive
 // en es.json bajo la clave que pide la plantilla.
 const es = JSON.parse(read('src/assets/i18n/es.json'));
 const muestraTexto = (html, texto) => html.includes(texto)

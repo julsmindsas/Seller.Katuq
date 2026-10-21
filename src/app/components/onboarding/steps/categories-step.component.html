@@ -7,21 +7,21 @@
 
   <p-card class="templates-card">
     <ng-template pTemplate="header">
-      <div class="card-header"><i class="pi pi-th-large"></i><span>Categorías Sugeridas para tu Sector</span></div>
+      <div class="onb-cabeza"><i class="pi pi-th-large"></i><span>Categorías Sugeridas para tu Sector</span></div>
     </ng-template>
     <div class="templates-grid">
       <button *ngFor="let template of currentTemplates" pButton type="button" [label]="template.nombre"
-              icon="pi pi-tag" class="p-button-outlined template-button" (click)="useTemplate(template)"></button>
+              icon="pi pi-tag" class="cfg-btn cfg-btn--sec template-button" (click)="useTemplate(template)"></button>
     </div>
     <div class="form-actions">
       <button pButton type="button" label="Cargar Todas las Sugeridas" icon="pi pi-download"
-              class="p-button-success p-button-outlined" (click)="loadAllTemplates()"></button>
+              class="cfg-btn cfg-btn--sec" (click)="loadAllTemplates()"></button>
     </div>
   </p-card>
 
   <p-card class="mt-3">
     <ng-template pTemplate="header">
-      <div class="card-header"><i class="pi pi-tag"></i>
+      <div class="onb-cabeza"><i class="pi pi-tag"></i>
         <span>{{ editingIndex !== null ? 'Editar Categoría' : 'Agregar Categoría' }}</span></div>
     </ng-template>
     <form [formGroup]="categoryForm">
@@ -46,9 +46,9 @@
       </div>
       <div class="form-actions">
         <button *ngIf="editingNode !== null" pButton type="button" label="Cancelar" icon="pi pi-times"
-                class="p-button-secondary p-button-outlined" (click)="cancelEdit()"></button>
+                class="cfg-btn cfg-btn--sec" (click)="cancelEdit()"></button>
         <button pButton type="button" [label]="editingNode !== null ? 'Actualizar Categoría' : 'Agregar a Lista'"
-                [icon]="editingNode !== null ? 'pi pi-check' : 'pi pi-plus'" class="p-button-success"
+                [icon]="editingNode !== null ? 'pi pi-check' : 'pi pi-plus'" class="cfg-btn"
                 [disabled]="categoryForm.invalid" (click)="addCategory()"></button>
       </div>
     </form>
@@ -56,7 +56,7 @@
 
   <p-card *ngIf="categoriesTree.length > 0" class="mt-3">
     <ng-template pTemplate="header">
-      <div class="card-header"><i class="pi pi-list"></i>
+      <div class="onb-cabeza"><i class="pi pi-list"></i>
         <span>Categorías Configuradas ({{ categoriesTree.length }})</span></div>
     </ng-template>
     <p-table [value]="categoriesTree" styleClass="p-datatable-sm" responsiveLayout="scroll">
@@ -84,7 +84,7 @@
 
   <div class="step-actions mt-4">
     <button pButton type="button" label="Guardar y Continuar" icon="pi pi-check" iconPos="right"
-            class="p-button-success p-button-lg" [disabled]="categoriesTree.length === 0 || isSaving"
+            class="cfg-btn" [disabled]="categoriesTree.length === 0 || isSaving"
             [loading]="isSaving" (click)="onComplete()"></button>
     <p class="form-status" *ngIf="categoriesTree.length === 0">
       <i class="pi pi-info-circle"></i>Agrega al menos una categoría para continuar</p>

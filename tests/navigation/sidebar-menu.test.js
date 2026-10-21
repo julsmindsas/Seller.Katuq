@@ -58,7 +58,7 @@ test('el submenú flotante pinta canales futuros como información sin href ni e
   Object.assign(sidebar, {
     isMobile: () => false, closeCollapsedSubmenu() {}, getMenuIcon: () => 'fa-circle',
     rutaMenu: p => p, navigateAndCleanup: () => assert.fail('no debe navegar'),
-    // D-532 (IDI-B01a): el submenú flotante traduce al mostrar; en español la clave es el texto.
+    // D-540 (IDI-B01a): el submenú flotante traduce al mostrar; en español la clave es el texto.
     translate: { instant: k => k },
     renderer: {
       createElement: tag => ({ tag, attrs: {}, children: [], listeners: [] }),

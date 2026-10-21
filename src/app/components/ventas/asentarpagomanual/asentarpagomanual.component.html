@@ -19,7 +19,7 @@
 
         <div class="payments-grid" *ngIf="pedido?.PagosAsentados && pedido.PagosAsentados.length > 0; else noPayments">
           <div class="payment-card" *ngFor="let pago of pedido?.PagosAsentados; trackBy: trackByPago">
-            <div class="card-header">
+            <div class="pago-cabeza">
               <div class="payment-type">
                 <i class="pi pi-wallet payment-icon"></i>
                 <span class="payment-method">{{pago.formaPago}}</span>
@@ -32,7 +32,7 @@
               </div>
             </div>
 
-            <div class="card-body">
+            <div class="pago-cuerpo">
               <div class="payment-details">
                 <div class="detail-row">
                   <span class="label">{{ 'Número de Comprobante' | translate }}:</span>
@@ -53,7 +53,7 @@
               </div>
             </div>
 
-            <div class="card-footer">
+            <div class="pago-pie">
               <div class="footer-info">
                 <small class="text-muted">
                   <i class="pi pi-user"></i> {{pago.usuarioRegistro}} | 
@@ -62,14 +62,14 @@
               </div>
               <div class="card-actions">
                 <button type="button" 
-                        class="btn btn-outline-primary btn-sm"
+                        class="cfg-btn cfg-btn--sec pago-btn"
                         *ngIf="pago.archivo"
                         (click)="verArchivo(pago.archivo)">
                   <i class="pi pi-file"></i>
                   {{ 'Ver archivo' | translate }}
                 </button>
                 <button type="button"
-                        class="btn btn-outline-danger btn-sm"
+                        class="cfg-btn cfg-btn--peligro pago-btn"
                         [disabled]="isPagoBloqueadoPorTesoreria(pago)"
                         [title]="isPagoBloqueadoPorTesoreria(pago) ? tooltipPagoTesoreria : ''"
                         (click)="eliminarPago(pago)">
@@ -82,10 +82,10 @@
         </div>
 
         <ng-template #noPayments>
-          <div class="empty-state">
-            <i class="pi pi-credit-card empty-icon"></i>
-            <h4>{{ 'No hay pagos registrados' | translate }}</h4>
-            <p>{{ 'Aún no se han registrado pagos para este pedido' | translate }}</p>
+          <div class="cfg-vacio">
+            <div class="cfg-vacio__icono"><i class="pi pi-credit-card"></i></div>
+            <h4 class="cfg-vacio__titulo">{{ 'No hay pagos registrados' | translate }}</h4>
+            <p class="cfg-vacio__texto">{{ 'Aún no se han registrado pagos para este pedido' | translate }}</p>
           </div>
         </ng-template>
       </div>
@@ -184,7 +184,7 @@
                    *ngIf="transaccionForm.get('valor')?.touched && transaccionForm.get('valor')?.errors?.['required']">
                 {{ 'El valor es requerido' | translate }}
               </div>
-              <div class="alert alert-warning mt-2" *ngIf="valorExcedido">
+              <div class="cfg-aviso cfg-aviso--warn pago-aviso mt-2" *ngIf="valorExcedido">
                 <i class="pi pi-exclamation-triangle"></i>
                 {{ 'El valor ingresado es mayor que el valor que falta por pagar que es' | translate }}: 
                 <strong>{{ pedido?.faltaPorPagar | currency:'USD':'symbol':'1.0-0' }}</strong>
@@ -257,13 +257,13 @@
 
           <div class="form-actions">
             <button type="button" 
-                    class="btn btn-outline-secondary"
+                    class="cfg-btn cfg-btn--sec"
                     (click)="cancelar()">
               <i class="pi pi-times"></i>
               {{ 'Cancelar' | translate }}
             </button>
             <button type="submit" 
-                    class="btn btn-primary"
+                    class="cfg-btn"
                     (click)="registrarTransaccion()"
                     [disabled]="!transaccionForm.valid || valorExcedido">
               <i class="pi pi-check"></i>

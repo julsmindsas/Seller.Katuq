@@ -1,5 +1,8 @@
 @import '../../../../assets/scss/utils/variables';
 
+// Acento canónico Katuq (D-131): el $primary-color global (lila claro heredado) queda solo por compatibilidad.
+$oc-accent: #5F3FE0;
+
 :host {
   display: block;
   width: 100%;
@@ -53,7 +56,7 @@
   align-items: center;
   justify-content: center;
   color: #fff;
-  background: $primary-color;
+  background: $oc-accent;
   border-radius: 12px;
 }
 
@@ -85,8 +88,8 @@
     border-radius: 8px;
 
     &:hover:not(:disabled) {
-      color: $primary-color;
-      background: rgba($primary-color, .08);
+      color: $oc-accent;
+      background: rgba($oc-accent, .08);
     }
   }
 }
@@ -112,7 +115,7 @@
     justify-content: center;
     width: 28px;
     height: 28px;
-    color: $primary-color;
+    color: $oc-accent;
     background: #fff;
     border: 1px solid #e2e2ec;
     border-radius: 9px;
@@ -164,8 +167,8 @@
 
   .bubble {
     color: #fff;
-    background: $primary-color;
-    border-color: $primary-color;
+    background: $oc-accent;
+    border-color: $oc-accent;
     border-radius: 13px 13px 4px 13px;
   }
 
@@ -182,14 +185,14 @@
 
   button {
     padding: 7px 10px;
-    color: $primary-color;
+    color: $oc-accent;
     background: #fff;
-    border: 1px solid rgba($primary-color, .3);
+    border: 1px solid rgba($oc-accent, .3);
     border-radius: 16px;
     font-size: 11px;
 
     &:hover {
-      background: rgba($primary-color, .06);
+      background: rgba($oc-accent, .06);
     }
   }
 }
@@ -204,7 +207,7 @@
   span {
     width: 6px;
     height: 6px;
-    background: $primary-color;
+    background: $oc-accent;
     border-radius: 50%;
     animation: opttia-thinking 1.1s infinite ease-in-out;
 
@@ -218,10 +221,9 @@
 .interrupt-card {
   margin: 12px 0 14px 36px;
   padding: 12px 13px;
-  background: #fff;
-  border: 1px solid #ddddea;
-  border-left: 4px solid #e0a12d;
-  border-radius: 8px;
+  background: #FFF1DF;
+  border: 1px solid rgba(217, 130, 10, .35);
+  border-radius: 11px;
 
   .interrupt-heading {
     display: flex;
@@ -239,7 +241,7 @@
   }
 
   a {
-    color: $primary-color;
+    color: $oc-accent;
     font-size: 12px;
     font-weight: 600;
   }
@@ -260,8 +262,8 @@
 
     &.primary {
       color: #fff;
-      background: $primary-color;
-      border-color: $primary-color;
+      background: $oc-accent;
+      border-color: $oc-accent;
     }
 
     &.danger {
@@ -315,8 +317,8 @@
     line-height: 1.4;
 
     &:focus {
-      border-color: rgba($primary-color, .65);
-      box-shadow: 0 0 0 3px rgba($primary-color, .08);
+      border-color: rgba($oc-accent, .65);
+      box-shadow: 0 0 0 3px rgba($oc-accent, .08);
     }
   }
 
@@ -326,7 +328,7 @@
     height: 39px;
     padding: 0;
     color: #fff;
-    background: $primary-color;
+    background: $oc-accent;
     border: 0;
     border-radius: 12px;
 
@@ -388,13 +390,13 @@
     i {
       width: 15px;
       margin-top: 3px;
-      color: $primary-color;
+      color: $oc-accent;
       text-align: center;
     }
   }
 
   > a {
-    color: $primary-color;
+    color: $oc-accent;
     font-size: 12px;
     font-weight: 600;
   }
@@ -415,8 +417,8 @@
 
   .accept {
     color: #fff;
-    background: $primary-color;
-    border: 1px solid $primary-color;
+    background: $oc-accent;
+    border: 1px solid $oc-accent;
   }
 
   .decline {
@@ -445,7 +447,7 @@
   .suggestions button,
   .interrupt-card { background: #2d303b; border-color: #414450; }
   .message .message-text { color: #eeeef4; }
-  .user-message .bubble { background: $primary-color; border-color: $primary-color; }
+  .user-message .bubble { background: $oc-accent; border-color: $oc-accent; }
   .composer textarea { color: #f0f0f5; background: #22252e; border-color: #454854; }
 }
 
@@ -460,8 +462,8 @@
   flex-wrap: wrap;
   gap: 4px 10px;
   padding: 10px 16px;
-  background: #f5f3ff;
-  border-left: 3px solid #7354cf;
+  background: #efe9ff;
+  border-bottom: 1px solid #e9e7f3;
   color: #473b6b;
   font-size: 12px;
   small { flex-basis: 100%; }

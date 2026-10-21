@@ -1,4 +1,4 @@
-# Delta: seller-translation-coverage (ticket cd CMNdBkVZXgYoOCvqfGZc, D-532)
+# Delta: seller-translation-coverage (ticket cd CMNdBkVZXgYoOCvqfGZc, D-540)
 
 > Qué significa que un módulo del panel quede traducido y con buena ortografía, cómo se verifica y quién revisa. Aprobada en bloque por Daniel el 2026-10-21 (tarea 0.2). Los doce bloques de módulo aplican estos mismos requisitos; no agregan otros.
 

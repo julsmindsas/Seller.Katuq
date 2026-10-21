@@ -16,7 +16,7 @@
     
     i {
       margin-right: 5px;
-      color: var(--km-royal);
+      color: var(--ds-accent-ink);
     }
   }
 }
@@ -40,7 +40,7 @@
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    border-color: var(--km-royal);
+    border-color: var(--ds-accent-ink);
   }
   
   .payment-option-icon {

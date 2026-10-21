@@ -647,57 +647,67 @@ $transition: all 0.3s ease;
   color: $primary-color !important;
 }
 
-/* Estilos para modales modernos */
+/* Modales: encabezado blanco, título en tinta e ícono en azulejo lila (D-131/D-400). */
 .modern-modal-header {
   display: flex;
   align-items: center;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  
-  &.bg-primary {
-    background: $primary-color !important;
-  }
+  padding: 16px 20px;
+  background: var(--ds-surface);
+  border-bottom: 1px solid $cfg-line;
 
-  &.bg-success {
-    background: $success-color !important;
-  }
-  
   .modal-title {
     display: flex;
     align-items: center;
+    gap: 11px;
     margin: 0;
-    font-weight: 600;
-    
-    i {
-      font-size: 1.25rem;
+    font-size: 17px !important;
+    font-weight: 800;
+    color: $cfg-ink;
+    letter-spacing: normal;
+
+    > i {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      margin-right: 0 !important;
+      border-radius: 11px;
+      background: $cfg-accent-soft;
+      color: $cfg-accent;
+      font-size: 16px;
     }
+
+    > span { color: $cfg-ink; font-size: inherit; font-weight: inherit; }
   }
-  
+
   .modern-close-btn {
-    background: transparent;
-    border: none;
-    width: 2rem;
-    height: 2rem;
+    background: $cfg-chip-bg;
+    border: 1px solid $cfg-line;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    border-radius: 10px;
     transition: $transition;
     padding: 0;
-    margin: 0;
-    color: inherit;
-    
+    margin: 0 0 0 auto;
+    color: $cfg-body;
+
     i {
-      font-size: 1rem;
+      font-size: 13px;
     }
-    
+
     &:hover {
-      background-color: rgba(0, 0, 0, 0.1);
+      background-color: $cfg-err-soft;
+      border-color: #f3c9c9;
+      color: $cfg-err;
     }
-    
-    &:focus {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+
+    &:focus-visible {
+      outline: 3px solid $cfg-accent-2 !important;
+      outline-offset: 2px;
     }
   }
 }
@@ -706,20 +716,24 @@ $transition: all 0.3s ease;
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  padding: 1.25rem 1.5rem;
-  gap: 0.75rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 14px 20px;
+  gap: 8px;
+  border-top: 1px solid $cfg-line-soft;
 }
 
 .btn-modal-primary,
 .btn-modal-secondary {
   display: flex;
   align-items: center;
-  padding: 0.6rem 1.25rem;
-  border-radius: $border-radius;
-  font-weight: 500;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 11px;
+  font-weight: 700;
+  font-size: 13.5px;
   transition: $transition;
-  border: none;
+  border: 1px solid transparent;
+
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
   
   i {
     font-size: 0.9rem;
@@ -732,24 +746,27 @@ $transition: all 0.3s ease;
 }
 
 .btn-modal-primary {
-  background-color: $primary-color;
+  background-color: $cfg-accent;
+  border-color: $cfg-accent;
   color: white;
-  box-shadow: 0 2px 5px rgba(95, 63, 224, 0.25);
+  box-shadow: $cfg-shadow-btn;
   
   &:hover:not(:disabled) {
-    background-color: darken($primary-color, 5%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(95, 63, 224, 0.3);
+    background-color: $cfg-accent-hover;
+    border-color: $cfg-accent-hover;
+    transform: translateY(-1px);
   }
 }
 
 .btn-modal-secondary {
-  background-color: transparent;
-  color: #5f6368;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: var(--ds-surface);
+  color: $cfg-body;
+  border-color: var(--ds-line-strong);
   
   &:hover:not(:disabled) {
-    background-color: rgba(0, 0, 0, 0.03);
+    background-color: $cfg-tint;
+    border-color: #d9cffb;
+    color: $cfg-accent;
   }
 }
 

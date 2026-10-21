@@ -788,12 +788,12 @@
     margin: 0.5rem 0.5rem 0.5rem 0;
 
     &.btn-primary {
-      background-color: #7C5CFF;
-      border-color: #7C5CFF;
+      background-color: #5F3FE0;
+      border-color: #5F3FE0;
 
       &:hover {
-        background-color: #0056b3;
-        border-color: #0056b3;
+        background-color: #4a2fc0;
+        border-color: #4a2fc0;
       }
     }
 
@@ -808,12 +808,12 @@
     }
 
     &.btn-success {
-      background-color: #198754;
-      border-color: #198754;
+      background-color: #1E874B;
+      border-color: #1E874B;
 
       &:hover {
-        background-color: #146c43;
-        border-color: #146c43;
+        background-color: #176b3b;
+        border-color: #176b3b;
       }
     }
   }
@@ -1439,14 +1439,14 @@
 
   .card-header {
     &.bg-light {
-      background: #f9fafb !important;
-      border-bottom: 1px solid #e5e7eb;
+      background: #faf9fe !important;
+      border-bottom: 1px solid #f1f0f7;
       padding: 0.875rem 1rem;
 
       h6 {
         font-size: 0.875rem;
-        font-weight: 600;
-        color: #374151;
+        font-weight: 800;
+        color: #211F3A;
         margin: 0;
         display: flex;
         align-items: center;
@@ -1454,7 +1454,7 @@
 
         i {
           font-size: 0.8125rem;
-          color: #6b7280;
+          color: #5F3FE0;
         }
       }
     }

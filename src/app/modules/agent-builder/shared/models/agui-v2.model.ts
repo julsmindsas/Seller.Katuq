@@ -279,7 +279,7 @@ export const AGUI_V2_SPEAKERS: Record<string, AgUiSpeaker> = {
     name: 'Carlos',
     displayName: 'Carlos (CEO)',
     department: 'ceo',
-    color: '#6366f1',
+    color: '#5F3FE0',
     avatar: 'briefcase',
     type: 'ceo'
   },
@@ -288,7 +288,7 @@ export const AGUI_V2_SPEAKERS: Record<string, AgUiSpeaker> = {
     name: 'Carlos',
     displayName: 'Carlos (CEO)',
     department: 'ceo',
-    color: '#6366f1',
+    color: '#5F3FE0',
     avatar: 'briefcase',
     type: 'ceo'
   },

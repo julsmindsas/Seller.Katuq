@@ -1,5 +1,9 @@
 @import '../../tesoreria-shared';
 
+// Modal con el aspecto del canon: cfg-btn (config-pagina) + encabezado/cuerpo/pie de tesorería.
+@include config-pagina;
+@include tk-modal-canon;
+
 .tk-pago-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -15,14 +19,14 @@
   font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: $katuq-gray-500;
-  font-weight: 600;
+  color: $cfg-muted;
+  font-weight: 800;
 }
 .tk-pago-value {
   font-size: 0.9rem;
-  color: $katuq-gray-800;
+  color: $cfg-ink;
 }
-.tk-money { font-weight: 700; font-family: 'Courier New', monospace; }
+.tk-money { font-weight: 800; font-variant-numeric: tabular-nums; }
 .tk-pago-file { align-items: flex-start; }
 
 // Ticket 1140: nota escrita al asentar el pago en Pedidos
@@ -30,14 +34,15 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  padding: 0.6rem 0.8rem;
-  border-left: 3px solid $katuq-gray-500;
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 4px;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #eeecf7;
+  background: $cfg-tint;
+  border-radius: 11px;
 }
 .tk-notas-texto {
   font-size: 0.9rem;
-  color: $katuq-gray-800;
+  color: $cfg-ink;
+  letter-spacing: normal;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -47,9 +52,9 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 0.5rem;
   padding: 0.75rem;
-  background: $katuq-gray-50;
-  border: 1px solid $katuq-gray-200;
-  border-radius: 8px;
+  background: $cfg-tint;
+  border: 1px solid #eeecf7;
+  border-radius: 11px;
   @media (max-width: 640px) { grid-template-columns: 1fr 1fr; }
 }
 .tk-resumen-col {
@@ -58,30 +63,30 @@
   gap: 0.15rem;
   text-align: center;
   &.tk-resumen-hl {
-    background: $katuq-purple-50;
-    border-radius: 6px;
+    background: $cfg-accent-soft;
+    border-radius: 10px;
     padding: 0.15rem;
   }
 }
 .tk-resumen-label {
   font-size: 0.68rem;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
-  color: $katuq-gray-500;
-  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: $cfg-muted;
+  font-weight: 800;
 }
 .tk-resumen-num {
   font-size: 1rem;
-  font-weight: 700;
-  color: $katuq-gray-800;
-  font-family: 'Courier New', monospace;
+  font-weight: 800;
+  color: $cfg-ink;
+  font-variant-numeric: tabular-nums;
 }
 
 .tk-reject-box {
-  border: 1px solid $badge-pago-rechazado-border;
-  border-radius: 8px;
+  border: 1px solid #f3c9c9;
+  border-radius: 11px;
   padding: 0.85rem;
-  background: #fff7f7;
+  background: $cfg-err-soft;
 }
 
 .mb-3 { margin-bottom: 1rem; }

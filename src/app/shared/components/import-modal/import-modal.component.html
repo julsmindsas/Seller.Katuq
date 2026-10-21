@@ -13,7 +13,7 @@
 
   <!-- Step 1: File Upload -->
   <div class="import-step" *ngIf="!showMappingPreview && !importResult">
-    <div class="step-header">
+    <div class="ix-cabeza">
       <h4>
         <i class="pi pi-upload mr-2"></i>
         Selecciona el archivo a importar
@@ -31,6 +31,21 @@
       (fileCleared)="clearFile()">
     </app-mobile-file-upload>
 
+    <!-- En la plantilla una casilla SI/NO vacía cuenta como NO (ver `esCasilla`):
+         Activo y Página Web vacíos dejan el producto sin poder venderse. -->
+    <div class="aviso-categorias mt-4" *ngIf="type === 'product'">
+      <h6>
+        <i class="pi pi-exclamation-triangle me-2"></i>Escriba SI o NO en las casillas
+      </h6>
+      <p class="mb-2">
+        En las columnas que dicen <strong>(SI/NO)</strong> escriba SI o NO en cada fila. Una casilla vacía cuenta como NO.
+      </p>
+      <p class="aviso-detalle mb-0">
+        Revise sobre todo <strong>Activo</strong> y <strong>Página Web</strong>: en NO o vacías, el producto queda
+        apagado, no sale en la tienda en línea y su stock no se le envía a la tienda.
+      </p>
+    </div>
+
     <div class="template-section mt-4">
       <p-divider></p-divider>
       <div class="template-info">
@@ -42,7 +57,7 @@
         type="button"
         label="Descargar Plantilla"
         icon="pi pi-download"
-        class="p-button-outlined p-button-sm mt-2"
+        class="cfg-btn cfg-btn--sec mt-2"
         (click)="downloadTemplate()">
       </button>
     </div>
@@ -98,7 +113,7 @@
          "KAI ha sugerido los siguientes mapeos", incluso cuando el aviso de al
          lado decía que no se pudo contactar a KAI: dos mensajes que se
          contradicen en la misma pantalla. -->
-    <div class="step-header">
+    <div class="ix-cabeza">
       <h4>
         <i class="mr-2" [ngClass]="origenMapeo === 'kai' ? 'pi pi-sparkles' : 'pi pi-check-square'"></i>
         Mapeo de Columnas
@@ -168,9 +183,9 @@
     </div>
 
     <!-- Import Mode Selector (products only) -->
-    <div class="import-mode-selector mt-3 p-3 border rounded bg-light" *ngIf="type === 'product'">
+    <div class="import-mode-selector mt-3 ix-panel" *ngIf="type === 'product'">
       <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
-        <i class="pi pi-sliders-h text-primary"></i>
+        <i class="pi pi-sliders-h ix-acento"></i>
         Modo de importación
       </div>
       <div class="d-flex gap-4 flex-wrap">
@@ -197,11 +212,11 @@
         </div>
       </div>
       <div class="mt-2 small" *ngIf="importMode === 'upsert'">
-        <i class="pi pi-info-circle text-primary me-1"></i>
+        <i class="pi pi-info-circle ix-acento me-1"></i>
         <span class="text-muted">Recomendado: los duplicados se detectan por el campo <strong>Referencia</strong>.</span>
       </div>
       <div class="mt-2 small" *ngIf="importMode === 'update'">
-        <i class="pi pi-exclamation-triangle text-warning me-1"></i>
+        <i class="pi pi-exclamation-triangle ix-alerta me-1"></i>
         <span class="text-muted">Solo se actualizarán productos cuya <strong>Referencia</strong> ya exista en el catálogo.</span>
       </div>
     </div>
@@ -257,7 +272,7 @@
             type="button"
             [label]="'Descargar las ' + erroresDetallados.length + ' filas rechazadas'"
             icon="pi pi-download"
-            class="p-button-sm p-button-outlined"
+            class="cfg-btn cfg-btn--sec"
             (click)="descargarErrores()">
           </button>
           <small>Trae fila del Excel, documento, nombre y motivo.</small>
@@ -387,7 +402,7 @@
   <!-- Step 4b: Delete Result -->
   <div class="result-step" *ngIf="deleteResult && !isDeleting">
     <div class="result-content">
-      <i class="pi pi-trash result-icon" style="color: var(--orange-500)"></i>
+      <i class="pi pi-trash result-icon result-icon--alerta"></i>
       <h4>Importacion eliminada</h4>
       <div class="result-stats">
         <div class="stat">
@@ -518,7 +533,7 @@
         type="button"
         label="Cancelar"
         icon="pi pi-times"
-        class="p-button-outlined p-button-secondary"
+        class="cfg-btn cfg-btn--sec"
         (click)="visible = false; visibleChange.emit(false)"
         [disabled]="isUploading || isDeleting">
       </button>
@@ -530,7 +545,7 @@
         type="button"
         label="Confirmar Mapeo"
         icon="pi pi-check"
-        class="p-button-secondary d-md-none"
+        class="cfg-btn cfg-btn--sec d-md-none"
         (click)="confirmAllMappings()"
         [disabled]="mappingFields.length === 0">
       </button>
@@ -542,7 +557,7 @@
         type="button"
         [label]="'Importar ' + (type === 'customer' ? 'Clientes' : type === 'inventory' ? 'Inventario' : type === 'category' ? 'Categorias' : 'Productos') + ' (' + parsedData.length + ')'"
         icon="pi pi-upload"
-        class="p-button-success"
+        class="cfg-btn"
         (click)="importData()"
         [disabled]="!canImport()">
       </button>
@@ -554,7 +569,7 @@
         type="button"
         label="Eliminar Importacion"
         icon="pi pi-trash"
-        class="p-button-outlined p-button-danger"
+        class="cfg-btn cfg-btn--peligro"
         (click)="deleteImport()">
       </button>
 
@@ -565,7 +580,7 @@
         type="button"
         label="Eliminar TODOS los Clientes"
         icon="pi pi-exclamation-triangle"
-        class="p-button-danger"
+        class="cfg-btn ix-btn--peligro-fuerte"
         (click)="deleteAllClients()">
       </button>
 
@@ -576,7 +591,7 @@
         type="button"
         label="Cerrar"
         icon="pi pi-check"
-        class="p-button-success"
+        class="cfg-btn"
         (click)="visible = false; visibleChange.emit(false)">
       </button>
       </div><!-- /.modal-footer-actions -->

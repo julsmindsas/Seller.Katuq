@@ -1,4 +1,8 @@
+// Import step (clientes/productos) — aspecto canónico (D-131/D-399). Piezas
+// comunes de los pasos en styles/_pasos.scss.
 @import '../styles/mobile-mixins';
+@import '../styles/pasos';
+@include onb-pasos(900px);
 
 .mobile-import-step {
   max-width: 900px;
@@ -19,7 +23,7 @@
 
   .intro-text {
     @include mobile-body;
-    color: var(--text-color-secondary);
+    color: $cfg-body;
     line-height: 1.6;
     margin: 0;
   }
@@ -49,7 +53,7 @@
 
     p {
       margin: 0;
-      color: var(--text-color-secondary);
+      color: $cfg-body;
     }
   }
 
@@ -57,7 +61,7 @@
     h4 {
       margin: 0 0 $spacing-md 0;
       @include mobile-subtitle;
-      color: var(--text-color);
+      color: $cfg-ink;
     }
 
     .fields-grid {
@@ -75,23 +79,23 @@
         align-items: flex-start;
         gap: $spacing-xs;
         padding: $spacing-sm;
-        border: 1px solid var(--surface-border);
-        border-radius: 6px;
-        background: var(--surface-50);
+        border: 1px solid $cfg-line;
+        border-radius: 11px;
+        background: $cfg-tint;
 
         &.required-field {
-          border-color: var(--primary-color);
-          background: var(--primary-50);
+          border-color: #d9cffb;
+          background: $cfg-row-hover;
 
           i {
-            color: var(--primary-color);
+            color: $cfg-accent;
           }
         }
 
         i {
           font-size: 0.75rem;
           margin-top: 0.25rem;
-          color: var(--text-color-secondary);
+          color: $cfg-body;
         }
 
         .field-info {
@@ -101,12 +105,12 @@
 
           strong {
             @include mobile-body;
-            color: var(--text-color);
+            color: $cfg-ink;
           }
 
           small {
             @include mobile-small-text;
-            color: var(--text-color-secondary);
+            color: $cfg-body;
             font-style: italic;
           }
         }
@@ -134,7 +138,7 @@
     @include mobile-card;
     padding: $spacing-xxl $spacing-xl;
     text-align: center;
-    background: var(--primary-50);
+    background: $cfg-tint;
 
     @include mobile {
       padding: $spacing-xl $spacing-lg;
@@ -142,7 +146,7 @@
 
     .loading-icon {
       font-size: 3rem;
-      color: var(--primary-color);
+      color: $cfg-accent;
       margin-bottom: $spacing-md;
 
       @include mobile {
@@ -153,13 +157,13 @@
     .loading-title {
       @include mobile-title;
       margin: 0 0 $spacing-sm 0;
-      color: var(--text-color);
+      color: $cfg-ink;
     }
 
     .loading-text {
       @include mobile-body;
       margin: 0;
-      color: var(--text-color-secondary);
+      color: $cfg-body;
     }
   }
 }
@@ -177,20 +181,20 @@
     .mapping-title {
       @include mobile-title;
       margin: 0 0 $spacing-xs 0;
-      color: var(--text-color);
+      color: $cfg-ink;
       display: flex;
       align-items: center;
       gap: $spacing-sm;
 
       i {
-        color: var(--primary-color);
+        color: $cfg-accent;
       }
     }
 
     .mapping-subtitle {
       @include mobile-body;
       margin: 0;
-      color: var(--text-color-secondary);
+      color: $cfg-body;
     }
   }
 
@@ -205,32 +209,32 @@
       align-items: center;
       gap: $spacing-xs;
       padding: $spacing-xs $spacing-sm;
-      background: var(--green-100);
-      color: var(--green-700);
+      background: $cfg-ok-soft;
+      color: $cfg-ok;
       border-radius: 20px;
       @include mobile-small-text;
       font-weight: 600;
 
       i {
         font-size: 0.875rem;
-        color: var(--green-600);
+        color: $cfg-ok;
       }
 
       &.required {
-        background: var(--orange-100);
-        color: var(--orange-700);
+        background: $cfg-warn-soft;
+        color: $cfg-warn;
 
         i {
-          color: var(--orange-600);
+          color: $cfg-warn;
         }
       }
 
       &.adjusted {
-        background: var(--blue-100);
-        color: var(--blue-700);
+        background: $cfg-info-soft;
+        color: $cfg-info;
 
         i {
-          color: var(--blue-600);
+          color: $cfg-info;
         }
       }
     }
@@ -252,8 +256,8 @@
     align-items: flex-start;
     gap: $spacing-md;
     padding: $spacing-md;
-    background: var(--orange-50);
-    border: 2px solid var(--orange-300);
+    background: $cfg-warn-soft;
+    border: 0;
     margin-top: $spacing-md;
 
     @include mobile {
@@ -263,7 +267,7 @@
 
     > i {
       font-size: 1.5rem;
-      color: var(--orange-600);
+      color: $cfg-warn;
       flex-shrink: 0;
 
       @include mobile {
@@ -278,13 +282,13 @@
         @include mobile-subtitle;
         display: block;
         margin-bottom: $spacing-xs;
-        color: var(--orange-800);
+        color: $cfg-warn;
       }
 
       p {
         @include mobile-body;
         margin: 0;
-        color: var(--orange-700);
+        color: $cfg-warn;
       }
     }
   }
@@ -322,37 +326,37 @@
       align-items: center;
       gap: $spacing-md;
       padding: $spacing-md;
-      border-radius: 8px;
+      border-radius: 11px;
 
       @include mobile {
         min-width: auto;
       }
 
       &.success {
-        background: var(--green-50);
-        border: 1px solid var(--green-200);
+        background: $cfg-ok-soft;
+        border: 1px solid transparent;
 
         i {
           font-size: 2rem;
-          color: var(--green-600);
+          color: $cfg-ok;
         }
 
         strong {
-          color: var(--green-700);
+          color: $cfg-ok;
         }
       }
 
       &.error {
-        background: var(--red-50);
-        border: 1px solid var(--red-200);
+        background: $cfg-err-soft;
+        border: 1px solid transparent;
 
         i {
           font-size: 2rem;
-          color: var(--red-600);
+          color: $cfg-err;
         }
 
         strong {
-          color: var(--red-700);
+          color: $cfg-err;
         }
       }
 
@@ -367,7 +371,7 @@
 
         span {
           @include mobile-small-text;
-          color: var(--text-color-secondary);
+          color: $cfg-body;
         }
       }
     }
@@ -379,7 +383,7 @@
     h4 {
       margin: 0 0 $spacing-sm 0;
       @include mobile-body;
-      color: var(--red-700);
+      color: $cfg-err;
     }
 
     ul {
@@ -388,14 +392,14 @@
 
       li {
         @include mobile-small-text;
-        color: var(--red-600);
+        color: $cfg-err;
         margin-bottom: 0.25rem;
       }
     }
 
     small {
       @include mobile-small-text;
-      color: var(--text-color-secondary);
+      color: $cfg-body;
       font-style: italic;
     }
   }
@@ -406,8 +410,8 @@
 // =============================================================================
 
 .info-card {
-  background: var(--blue-50);
-  border: 1px solid var(--blue-200);
+  background: $cfg-info-soft;
+  border: 1px solid transparent;
   margin-bottom: $spacing-lg;
 
   .info-list {
@@ -421,10 +425,10 @@
       gap: $spacing-sm;
       margin-bottom: $spacing-sm;
       @include mobile-body;
-      color: var(--text-color);
+      color: $cfg-ink;
 
       i {
-        color: var(--blue-600);
+        color: $cfg-info;
         margin-top: 0.25rem;
         flex-shrink: 0;
       }
@@ -437,20 +441,11 @@
 }
 
 // =============================================================================
-// CARD HEADER (Shared)
+// ENCABEZADO DE TARJETA (base en _pasos.scss)
 // =============================================================================
 
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  font-weight: 600;
+.onb-cabeza {
   @include mobile-subtitle;
-  color: var(--primary-color);
-
-  i {
-    font-size: 1.25rem;
-  }
 }
 
 // =============================================================================
@@ -467,7 +462,7 @@
 .field-help {
   display: block;
   @include mobile-small-text;
-  color: var(--text-color-secondary);
+  color: $cfg-body;
   margin-top: $spacing-xs;
 
   i {
@@ -491,26 +486,6 @@
       flex-wrap: wrap;
       gap: $spacing-xs;
 
-      ::ng-deep .summary-chip {
-        .p-chip {
-          background: var(--green-100);
-          color: var(--green-700);
-          font-weight: 600;
-
-          .p-chip-icon {
-            color: var(--green-600);
-          }
-
-          &.warning {
-            background: var(--orange-100);
-            color: var(--orange-700);
-
-            .p-chip-icon {
-              color: var(--orange-600);
-            }
-          }
-        }
-      }
     }
   }
 
@@ -523,6 +498,34 @@
       width: 100%;
       @include touch-target-comfortable;
     }
+  }
+}
+
+// Chips de resumen e info-card (piezas internas de PrimeNG).
+:host ::ng-deep {
+  .summary-chip.p-chip,
+  .summary-chip .p-chip {
+    background: $cfg-ok-soft;
+    color: $cfg-ok;
+    font-weight: 800;
+    border-radius: 20px;
+
+    .p-chip-icon { color: $cfg-ok; }
+
+    &.warning {
+      background: $cfg-warn-soft;
+      color: $cfg-warn;
+
+      .p-chip-icon { color: $cfg-warn; }
+    }
+  }
+
+  .info-card .p-card {
+    background: $cfg-info-soft;
+    border-color: transparent;
+    box-shadow: none;
+
+    .p-card-header { background: transparent; border-color: rgba(30, 111, 217, .15); }
   }
 }
 

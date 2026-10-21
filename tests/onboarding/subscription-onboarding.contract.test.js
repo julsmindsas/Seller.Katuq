@@ -7,7 +7,7 @@ const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 
 const modalTs = read('src/app/shared/components/upgrade-modal/upgrade-modal.component.ts');
 const modalHtml = read('src/app/shared/components/upgrade-modal/upgrade-modal.component.html');
-// D-532 (IDI-B01b): el modal de pago pasa sus textos por el traductor; el texto en español vive en
+// D-540 (IDI-B01b): el modal de pago pasa sus textos por el traductor; el texto en español vive en
 // es.json bajo la clave que pide la plantilla (puede llevar variables alrededor).
 const esDic = JSON.parse(read('src/assets/i18n/es.json'));
 const muestraTexto = (html, texto) => html.includes(texto)

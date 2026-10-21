@@ -34,7 +34,7 @@ function loadClass(file, extras = {}) {
     defer, finalize, Date, ...extras };
   vm.runInNewContext(js, globals);
   const Cls = Object.values(globals.exports)[0];
-  // D-532 (IDI-B10): el compositor recibe el traductor como tercer argumento; las pruebas usan los textos en español.
+  // D-540 (IDI-B10): el compositor recibe el traductor como tercer argumento; las pruebas usan los textos en español.
   if (file !== 'invoice-composer.component.ts') return Cls;
   const es = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../src/assets/i18n/es.json'), 'utf8'));
   const translate = { currentLang: 'es', instant: (key, params = {}) => String(es[key] ?? key).replace(/\{\{\s*(\w+)\s*\}\}/g, (_, p) => params[p]) };

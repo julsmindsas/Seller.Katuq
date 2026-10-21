@@ -220,7 +220,7 @@
                         (click)="selectProspect(prospect)">
                   {{ 'prospectManager.gestionar' | translate }}
                 </button>
-                <button class="btn btn-success btn-sm" ngbTooltip="{{ 'prospectManager.convertirACliente' | translate }}" 
+                <button class="btn btn-sm pm-convertir" ngbTooltip="{{ 'prospectManager.convertirACliente' | translate }}" 
                         (click)="convertToClient(prospect); $event.stopPropagation()">
                   <i class="fa fa-user-check"></i>
                 </button>
@@ -664,7 +664,7 @@
     <h4 class="modal-title">{{ 'prospectManager.programarTarea2' | translate }}</h4>
     <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
   </div>
-  <div class="modal-body">
+  <div class="modal-body cfg-form">
     <form [formGroup]="taskForm">
       <div class="mb-3">
         <label class="form-label">{{ 'prospectManager.tipoDeTarea' | translate }}</label>
@@ -726,8 +726,8 @@
     </form>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">{{ 'comun.cancelar' | translate }}</button>
-    <button type="button" class="btn btn-primary" 
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="modal.dismiss()">{{ 'comun.cancelar' | translate }}</button>
+    <button type="button" class="cfg-btn" 
             [disabled]="!taskForm.valid" 
             (click)="saveTask(); modal.close()">
       <i class="fa fa-calendar-check me-1"></i>

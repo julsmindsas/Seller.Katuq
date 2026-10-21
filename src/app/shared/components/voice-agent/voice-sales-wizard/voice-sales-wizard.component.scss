@@ -2,22 +2,24 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #5F3FE0;
-  color: #333;
+  background: #f4f3fa;
+  color: #211F3A;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 
   &.active {
     .wizard-header {
-      background: #1E874B;
+      background: #E6F7EE;
+      border-bottom-color: rgba(30, 135, 75, .3);
     }
   }
 
   // === HEADER ===
   .wizard-header {
-    background: #495057;
-    color: white;
+    background: #fff;
+    color: #211F3A;
     padding: 1rem 2rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid #ececf4;
+    box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
     transition: all 0.3s ease;
 
     .header-content {
@@ -37,7 +39,7 @@
           gap: 0.5rem;
 
           i {
-            color: #ffd700;
+            color: #5F3FE0;
             font-size: 1.5rem;
           }
         }
@@ -82,19 +84,19 @@
       font-weight: 500;
 
       .progress-text {
-        color: #28a745;
+        color: #1E874B;
         font-size: 1.1rem;
       }
 
       .step-text {
-        color: #6c757d;
+        color: #8f8bab;
         font-size: 0.95rem;
       }
     }
 
     .progress-bar {
       height: 8px;
-      background: #e9ecef;
+      background: #ececf4;
       border-radius: 4px;
       overflow: hidden;
 
@@ -145,7 +147,7 @@
       margin: 0 0 1.5rem 0;
       font-size: 1.2rem;
       font-weight: 600;
-      color: #495057;
+      color: #211F3A;
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -180,24 +182,24 @@
         }
 
         &.active {
-          border-color: #a78bfa;
-          background: #E8F1FD;
+          border-color: #5F3FE0;
+          background: #efe9ff;
           box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2);
         }
 
         &.completed {
-          border-color: #28a745;
+          border-color: #1E874B;
           background: #E6F7EE;
         }
 
         &.accessible {
-          border-color: #ffc107;
-          background: #FFF4E0;
+          border-color: #D9820A;
+          background: #FFF1DF;
         }
 
         &.locked {
-          border-color: #6c757d;
-          background: #f8f9fa;
+          border-color: #8f8bab;
+          background: #faf9fe;
           opacity: 0.6;
         }
 
@@ -205,7 +207,7 @@
           width: 40px;
           height: 40px;
           border-radius: 50%;
-          background: #6c757d;
+          background: #8f8bab;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -213,16 +215,16 @@
           font-size: 1.1rem;
 
           .active & {
-            background: #a78bfa;
+            background: #5F3FE0;
           }
 
           .completed & {
-            background: #28a745;
+            background: #1E874B;
           }
 
           .accessible & {
-            background: #ffc107;
-            color: #333;
+            background: #D9820A;
+            color: #211F3A;
           }
         }
 
@@ -231,19 +233,19 @@
 
           .step-number {
             font-size: 0.8rem;
-            color: #6c757d;
+            color: #8f8bab;
             font-weight: 600;
           }
 
           .step-name {
             font-weight: 600;
-            color: #495057;
+            color: #211F3A;
             margin: 0.25rem 0;
           }
 
           .step-description {
             font-size: 0.85rem;
-            color: #6c757d;
+            color: #8f8bab;
             line-height: 1.3;
           }
         }
@@ -268,13 +270,13 @@
       align-items: center;
       margin-bottom: 2rem;
       padding-bottom: 1rem;
-      border-bottom: 2px solid #e9ecef;
+      border-bottom: 2px solid #ececf4;
 
       .step-title {
         margin: 0;
         font-size: 1.5rem;
         font-weight: 600;
-        color: #495057;
+        color: #211F3A;
         display: flex;
         align-items: center;
         gap: 0.75rem;
@@ -286,24 +288,24 @@
       }
 
       .step-progress {
-        background: #f8f9fa;
+        background: #faf9fe;
         padding: 0.5rem 1rem;
         border-radius: 20px;
         font-weight: 600;
-        color: #495057;
+        color: #211F3A;
 
         .step-number {
-          color: #a78bfa;
+          color: #5F3FE0;
           font-size: 1.2rem;
         }
 
         .step-separator {
           margin: 0 0.5rem;
-          color: #6c757d;
+          color: #8f8bab;
         }
 
         .total-steps {
-          color: #6c757d;
+          color: #8f8bab;
         }
       }
     }
@@ -312,13 +314,13 @@
       .step-description {
         margin-bottom: 2rem;
         padding: 1rem;
-        background: #f8f9fa;
+        background: #faf9fe;
         border-radius: 8px;
-        border-left: 4px solid #5F3FE0;
+        border: 1px solid #ececf4;
 
         p {
           margin: 0;
-          color: #495057;
+          color: #211F3A;
           line-height: 1.5;
         }
       }
@@ -327,10 +329,10 @@
         margin-bottom: 2rem;
 
         .info-card {
-          background: #f8f9fa;
+          background: #faf9fe;
           border-radius: 8px;
           padding: 1.5rem;
-          border: 1px solid #e9ecef;
+          border: 1px solid #ececf4;
 
           .info-header {
             display: flex;
@@ -338,7 +340,7 @@
             gap: 0.5rem;
             margin-bottom: 1rem;
             font-weight: 600;
-            color: #495057;
+            color: #211F3A;
 
             i {
               color: #5F3FE0;
@@ -352,7 +354,7 @@
               align-items: center;
               margin-bottom: 0.75rem;
               padding: 0.5rem 0;
-              border-bottom: 1px solid #e9ecef;
+              border-bottom: 1px solid #ececf4;
 
               &:last-child {
                 border-bottom: none;
@@ -361,7 +363,7 @@
 
               .label {
                 font-weight: 500;
-                color: #495057;
+                color: #211F3A;
               }
 
               .value {
@@ -377,7 +379,7 @@
                 gap: 0.5rem;
 
                 .requirement-badge {
-                  background: #dc3545;
+                  background: #D64545;
                   color: white;
                   padding: 0.25rem 0.75rem;
                   border-radius: 15px;
@@ -398,7 +400,7 @@
 
           h4 {
             margin: 0 0 0.5rem 0;
-            color: #495057;
+            color: #211F3A;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -410,7 +412,7 @@
 
           .help-text {
             margin: 0;
-            color: #6c757d;
+            color: #8f8bab;
             font-style: italic;
             font-size: 0.9rem;
           }
@@ -426,7 +428,7 @@
             .command-input {
               flex: 1;
               border-radius: 8px;
-              border: 2px solid #e9ecef;
+              border: 2px solid #ececf4;
               padding: 0.75rem 1rem;
               font-size: 1rem;
               transition: all 0.3s ease;
@@ -438,7 +440,7 @@
               }
 
               &:disabled {
-                background: #f8f9fa;
+                background: #faf9fe;
                 cursor: not-allowed;
               }
             }
@@ -464,7 +466,7 @@
         .example-commands {
           h5 {
             margin: 0 0 1rem 0;
-            color: #495057;
+            color: #211F3A;
             font-size: 1rem;
           }
 
@@ -491,7 +493,7 @@
       .manual-navigation {
         h5 {
           margin: 0 0 1rem 0;
-          color: #495057;
+          color: #211F3A;
           font-size: 1rem;
         }
 
@@ -527,7 +529,7 @@
       margin: 0 0 1rem 0;
       font-size: 1.1rem;
       font-weight: 600;
-      color: #495057;
+      color: #211F3A;
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -553,9 +555,9 @@
           align-items: center;
           gap: 1rem;
           padding: 1rem;
-          background: #f8f9fa;
+          background: #faf9fe;
           border-radius: 8px;
-          border: 1px solid #e9ecef;
+          border: 1px solid #ececf4;
 
           .status-icon {
             width: 40px;
@@ -575,7 +577,7 @@
             .status-label {
               display: block;
               font-size: 0.85rem;
-              color: #6c757d;
+              color: #8f8bab;
               margin-bottom: 0.25rem;
             }
 
@@ -596,19 +598,19 @@
 
       .result-card {
         padding: 1rem;
-        border-radius: 8px;
-        border-left: 4px solid;
+        border-radius: 11px;
+        border: 1px solid;
 
         &.success {
-          background: #d4edda;
-          border-color: #28a745;
-          color: #155724;
+          background: #E6F7EE;
+          border-color: #1E874B;
+          color: #1E874B;
         }
 
         &.error {
-          background: #f8d7da;
-          border-color: #dc3545;
-          color: #721c24;
+          background: #FDECEC;
+          border-color: #D64545;
+          color: #D64545;
         }
 
         .result-header {
@@ -664,17 +666,17 @@
           align-items: center;
           padding: 0.75rem;
           margin-bottom: 0.5rem;
-          border-radius: 6px;
-          border-left: 3px solid;
+          border-radius: 11px;
+          border: 1px solid;
 
           &.success {
-            background: #d4edda;
-            border-color: #28a745;
+            background: #E6F7EE;
+            border-color: #1E874B;
           }
 
           &.error {
-            background: #f8d7da;
-            border-color: #dc3545;
+            background: #FDECEC;
+            border-color: #D64545;
           }
 
           .command-info {
@@ -699,7 +701,7 @@
         .no-history {
           text-align: center;
           padding: 2rem;
-          color: #6c757d;
+          color: #8f8bab;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -730,7 +732,7 @@
       .footer-info {
         display: flex;
         gap: 2rem;
-        color: #6c757d;
+        color: #8f8bab;
         font-size: 0.9rem;
 
         span {
@@ -814,11 +816,40 @@
     animation: fadeIn 0.5s ease-out;
   }
 
+  // === BOTONES (canon Katuq, D-399): principal morado, secundarios blancos con borde ===
+  .btn-primary {
+    background: #5F3FE0;
+    border-color: #5F3FE0;
+    color: #fff;
+
+    &:hover:not(:disabled) { background: #4a2fc0; border-color: #4a2fc0; color: #fff; }
+  }
+
+  .btn-outline-primary,
+  .btn-outline-info,
+  .btn-outline-secondary {
+    background: #fff;
+    border: 1px solid #e9e7f3;
+    color: #211F3A;
+
+    &:hover:not(:disabled) { background: #faf9fe; border-color: #5F3FE0; color: #5F3FE0; }
+  }
+
+  .btn-outline-danger {
+    background: #fff;
+    border: 1px solid rgba(214, 69, 69, .35);
+    color: #D64545;
+
+    &:hover:not(:disabled) { background: #FDECEC; border-color: #D64545; color: #D64545; }
+  }
+
+  .btn:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+
   // === UTILITY CLASSES ===
-  .text-success { color: #28a745 !important; }
-  .text-danger { color: #dc3545 !important; }
-  .text-warning { color: #ffc107 !important; }
-  .text-primary { color: #a78bfa !important; }
-  .text-muted { color: #6c757d !important; }
-  .text-info { color: #c4b5fd !important; }
+  .text-success { color: #1E874B !important; }
+  .text-danger { color: #D64545 !important; }
+  .text-warning { color: #D9820A !important; }
+  .text-primary { color: #5F3FE0 !important; }
+  .text-muted { color: #8f8bab !important; }
+  .text-info { color: #1E6FD9 !important; }
 }

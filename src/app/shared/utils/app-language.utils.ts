@@ -18,7 +18,7 @@ export const DEFAULT_APP_LANGUAGE: AppLanguage = Object.freeze({
 });
 
 /**
- * D-532: catálogo de idiomas del panel. Deutsch (CH) es alemán estándar de Suiza y nace
+ * D-540: catálogo de idiomas del panel. Deutsch (CH) es alemán estándar de Suiza y nace
  * oculto: solo se ofrece cuando el login lo trae en `visibleLanguages`.
  */
 export const APP_LANGUAGES: ReadonlyArray<AppLanguage> = Object.freeze([
@@ -28,7 +28,7 @@ export const APP_LANGUAGES: ReadonlyArray<AppLanguage> = Object.freeze([
   Object.freeze({ language: 'Deutsch', code: 'de', type: 'CH', icon: 'ch', htmlLang: 'de-CH' })
 ] as AppLanguage[]);
 
-/** Idiomas visibles cuando el login no trae `visibleLanguages` (sesiones abiertas antes de D-532). */
+/** Idiomas visibles cuando el login no trae `visibleLanguages` (sesiones abiertas antes de D-540). */
 export const DEFAULT_VISIBLE_LANGUAGES: ReadonlyArray<AppLanguageCode> =
   Object.freeze(['es', 'en', 'pt'] as AppLanguageCode[]);
 
@@ -72,7 +72,7 @@ export function normalizeAppLanguage(
   return supported ? { ...supported } : { ...DEFAULT_APP_LANGUAGE };
 }
 
-/** Forma de `users.lang` (la de antes de D-532): `htmlLang` se deriva del code y no se guarda. */
+/** Forma de `users.lang` (la de antes de D-540): `htmlLang` se deriva del code y no se guarda. */
 export type StoredAppLanguage = Omit<AppLanguage, 'htmlLang'>;
 
 export function idiomaParaGuardar(lang: AppLanguage): StoredAppLanguage {

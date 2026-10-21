@@ -56,8 +56,8 @@
 </div>
 
 <div class="modal-footer">
-  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()" [disabled]="submitting">{{ 'comun.cancelar' | translate }}</button>
-  <button type="button" class="btn btn-primary" (click)="confirmar()" [disabled]="!puedeConfirmar">
+  <button type="button" class="cfg-btn cfg-btn--sec" (click)="activeModal.dismiss()" [disabled]="submitting">{{ 'comun.cancelar' | translate }}</button>
+  <button type="button" class="cfg-btn" (click)="confirmar()" [disabled]="!puedeConfirmar">
     <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check'"></i> {{ 'tesoreria.cambiarEstadoPago.confirmarCambio' | translate }}
   </button>
 </div>

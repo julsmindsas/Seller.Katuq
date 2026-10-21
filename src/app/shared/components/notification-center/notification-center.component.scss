@@ -704,35 +704,31 @@
 
 // Priority indicators with enhanced colors
 .notification-item.priority-low {
-  border-left: 4px solid #a9a5c2;
   color: #a9a5c2;
 }
 
 .notification-item.priority-normal {
-  border-left: 4px solid #5F3FE0;
   color: #5F3FE0;
 }
 
 .notification-item.priority-high {
-  border-left: 4px solid #D9820A;
   color: #D9820A;
   animation: highPriorityPulse 2s ease infinite;
 }
 
 .notification-item.priority-critical {
-  border-left: 4px solid #D64545;
   color: #D64545;
   animation: criticalPriorityPulse 1s ease infinite;
 }
 
 @keyframes highPriorityPulse {
-  0%, 100% { background-color: rgba(245, 158, 11, 0.02); }
-  50% { background-color: rgba(245, 158, 11, 0.06); }
+  0%, 100% { background-color: rgba(217, 130, 10, 0.02); }
+  50% { background-color: rgba(217, 130, 10, 0.06); }
 }
 
 @keyframes criticalPriorityPulse {
-  0%, 100% { background-color: rgba(239, 68, 68, 0.02); }
-  50% { background-color: rgba(239, 68, 68, 0.08); }
+  0%, 100% { background-color: rgba(214, 69, 69, 0.02); }
+  50% { background-color: rgba(214, 69, 69, 0.08); }
 }
 
 // Enhanced notification icon with category-specific styling

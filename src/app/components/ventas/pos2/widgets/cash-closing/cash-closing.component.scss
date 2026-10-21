@@ -8,7 +8,7 @@
     background-color: var(--ds-surface);
     overflow: hidden;
 
-    .card-header {
+    .cc-cabeza {
       background-color: var(--km-gray-50);
       border-bottom: 1px solid var(--km-gray-200);
       padding: 1rem 1.5rem;
@@ -21,7 +21,7 @@
         align-items: center;
         
         i {
-          color: var(--km-blue);
+          color: var(--ds-accent-ink);
         }
       }
 
@@ -40,8 +40,8 @@
             }
             
             &.btn-outline-primary:hover {
-              background-color: #3498db;
-              border-color: #3498db;
+              background-color: var(--ds-accent);
+              border-color: var(--ds-accent-ink);
             }
             
             &.btn-outline-secondary:hover {
@@ -105,13 +105,13 @@
       
       &.active {
         .step-number {
-          background-color: #3498db;
+          background-color: var(--ds-accent);
           color: var(--ds-on-accent);
         }
         
         .step-content {
           h6 {
-            color: var(--km-blue);
+            color: var(--ds-accent-ink);
           }
           
           p {
@@ -186,7 +186,7 @@
         align-items: center;
         
         i {
-          color: var(--km-blue);
+          color: var(--ds-accent-ink);
         }
       }
     }
@@ -211,7 +211,7 @@
       align-items: center;
       
       i {
-        color: var(--km-blue);
+        color: var(--ds-accent-ink);
       }
     }
     
@@ -285,7 +285,7 @@
       border-bottom: 1px solid var(--km-gray-200);
       
       i {
-        color: var(--km-blue);
+        color: var(--ds-accent-ink);
       }
     }
     
@@ -778,7 +778,7 @@
   box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04);
 }
 
-.cash-closing-container .main-card > .card-header,
+.cash-closing-container .main-card > .cc-cabeza,
 .cash-closing-container .panel-header {
   padding: 16px 20px;
   background: var(--ds-surface);
@@ -982,13 +982,19 @@
   color: var(--ds-on-accent) !important;
 }
 
-.btn-success,
-.btn-success:hover,
-.btn-success:focus {
-  background-color: var(--kc-green) !important;
-  border-color: var(--kc-green) !important;
+// Confirmar el cierre es una acción de éxito: verde semántico del canon (D-131).
+.btn-confirmar,
+.btn-confirmar:hover,
+.btn-confirmar:focus {
+  min-height: 44px;
+  background-color: var(--ds-ok) !important;
+  border-color: var(--ds-ok) !important;
   color: var(--ds-on-accent) !important;
 }
+
+.btn-confirmar:hover { background-color: #186d3d !important; border-color: #186d3d !important; }
+
+.btn:focus-visible { outline: 3px solid var(--ds-focus) !important; outline-offset: 2px; }
 
 .btn-outline-primary,
 .btn-outline-primary:focus {
@@ -1056,7 +1062,7 @@
     box-shadow: none !important;
   }
 
-  .main-card > .card-header {
+  .main-card > .cc-cabeza {
     background: var(--ds-surface) !important;
     border-bottom-color: var(--kc-line) !important;
     padding: 16px 20px !important;

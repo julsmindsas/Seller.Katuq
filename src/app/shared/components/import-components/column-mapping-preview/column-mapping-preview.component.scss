@@ -1,90 +1,54 @@
+// Vista de escritorio del mapeo de columnas (importador con KAI).
+// Aspecto canónico (D-131): tabla con cabecera UPPERCASE muted sobre tinte lila,
+// estados en par fuerte/fondo suave, botón principal morado. Sin border-left.
+@import '../../../styles/config-pagina';
+@include config-pagina;
+
 .column-mapping-preview {
+  color: $cfg-ink;
+
+  p, a, li, label, span, small { letter-spacing: normal; }
+
   .mapping-header {
-    margin-bottom: 1.5rem;
+    margin-bottom: 18px;
 
     .mapping-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--text-color);
-      margin-bottom: 0.5rem;
       display: flex;
       align-items: center;
+      gap: 11px;
+      margin-bottom: 8px;
+      font-size: 17px;
+      font-weight: 800;
+      color: $cfg-ink;
 
       i {
-        color: var(--primary-color);
+        display: inline-grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        margin: 0 !important;
+        border-radius: 11px;
+        background: $cfg-accent-soft;
+        color: $cfg-accent;
+        font-size: 16px;
       }
     }
 
     .mapping-subtitle {
-      color: var(--text-color-secondary);
-      font-size: 0.9rem;
+      color: $cfg-body;
+      font-size: 13px;
       margin: 0;
     }
   }
 
-  .mapping-table {
-    ::ng-deep {
-      .manual-adjustment {
-        background-color: var(--blue-50) !important;
-        border-left: 3px solid var(--primary-color);
-      }
-
-      .p-datatable-tbody > tr > td {
-        vertical-align: top;
-        padding: 1rem;
-      }
-
-      .p-dropdown {
-        width: 100%;
-      }
-
-      strong {
-        color: var(--text-color);
-        font-weight: 600;
-      }
-
-      small {
-        &.text-muted {
-          display: block;
-          margin-top: 0.25rem;
-          color: var(--text-color-secondary);
-          font-size: 0.75rem;
-          font-family: monospace;
-        }
-
-        &.reasoning-text {
-          color: var(--text-color-secondary);
-          line-height: 1.4;
-          display: block;
-        }
-      }
-    }
-
-    .confidence-indicator {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+  .confidence-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .warnings-section,
   .suggestions-section {
-    ::ng-deep {
-      .p-accordion .p-accordion-header {
-        background-color: var(--yellow-50);
-        border-color: var(--yellow-200);
-
-        .p-accordion-header-link {
-          color: var(--yellow-900);
-          font-weight: 600;
-
-          &:hover {
-            background-color: var(--yellow-100);
-          }
-        }
-      }
-    }
-
     .warnings-list,
     .suggestions-list {
       list-style: none;
@@ -93,44 +57,20 @@
 
       .warning-item,
       .suggestion-item {
-        padding: 0.5rem 0;
+        padding: 8px 0;
         display: flex;
         align-items: flex-start;
+        font-size: 13px;
+        color: $cfg-ink;
 
         i {
-          margin-top: 0.2rem;
+          margin-top: 3px;
           flex-shrink: 0;
         }
       }
 
-      .warning-item {
-        color: var(--yellow-900);
-
-        i {
-          color: var(--yellow-700);
-        }
-      }
-
-      .suggestion-item {
-        color: var(--blue-900);
-
-        i {
-          color: var(--blue-600);
-        }
-      }
-    }
-  }
-
-  .suggestions-section {
-    ::ng-deep {
-      .p-accordion .p-accordion-header {
-        background-color: var(--blue-50);
-        border-color: var(--blue-200);
-
-        .p-accordion-header-link {
-          color: var(--blue-900);
-        }
-      }
+      .warning-item i { color: $cfg-warn; }
+      .suggestion-item i { color: $cfg-info; }
     }
   }
 
@@ -138,38 +78,192 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--surface-border);
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid $cfg-line-soft;
 
     .footer-info {
       display: flex;
-      gap: 0.5rem;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
     .footer-actions {
       display: flex;
-      gap: 0.5rem;
+      gap: 8px;
     }
   }
 }
 
+// pButton trae `.p-button` del tema (azul) y el `[class*="p-"]` global (0.7rem).
+.p-button.cfg-btn {
+  font-size: 13.5px !important;
+  line-height: 1 !important;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 11px;
+
+  &:focus { box-shadow: none; }
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+}
+
+// Estado vacío: ícono en azulejo, título y texto corto.
+.empty-state,
 .empty-mapping-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1rem;
+  gap: 8px;
   text-align: center;
 
+  .vacio-icono {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: $cfg-tile;
+    color: $cfg-accent;
+    font-size: 26px;
+  }
+
   h4 {
-    color: var(--text-color);
-    margin-bottom: 0.5rem;
+    margin: 4px 0 0 !important;
+    font-size: 15px;
+    font-weight: 800;
+    color: $cfg-ink;
   }
 
   p {
-    color: var(--text-color-secondary);
+    margin: 0 !important;
     max-width: 400px;
+    font-size: 12.5px;
+    color: $cfg-muted !important;
+    letter-spacing: normal;
+  }
+}
+
+.empty-state { padding: 24px 16px; }
+.empty-mapping-state { padding: 40px 16px; }
+
+// Piezas internas de PrimeNG (tabla, etiquetas, mensaje, acordeones).
+:host ::ng-deep .column-mapping-preview {
+  .mapping-table {
+    .p-datatable-wrapper { border-radius: 11px; }
+
+    .p-datatable-thead > tr > th {
+      background: $cfg-tint !important;
+      color: $cfg-muted !important;
+      font-size: 10.5px !important;
+      font-weight: 800;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      border-color: $cfg-line-soft !important;
+      padding: 12px 14px;
+    }
+
+    .p-datatable-tbody > tr {
+      background: #fff;
+      color: $cfg-ink;
+
+      > td {
+        vertical-align: top;
+        padding: 12px 14px;
+        border-color: $cfg-line-soft !important;
+      }
+
+      &:hover { background: $cfg-row-hover !important; }
+    }
+
+    // Fila ajustada a mano: seleccionada en lila, sin border-left.
+    .p-datatable-tbody > tr.manual-adjustment {
+      background: rgba(124, 92, 255, .09) !important;
+    }
+
+    .p-dropdown {
+      width: 100%;
+      min-height: 40px;
+      background: $cfg-chip-bg;
+      border: 1px solid $cfg-chip-border;
+      border-radius: 10px;
+
+      &.p-focus {
+        background: #fff;
+        border-color: $cfg-accent-2;
+        box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
+      }
+    }
+
+    strong {
+      color: $cfg-ink;
+      font-weight: 700;
+    }
+
+    small.text-muted {
+      display: block;
+      margin-top: 4px;
+      color: $cfg-muted !important;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+    }
+
+    small.reasoning-text {
+      display: block;
+      color: $cfg-body;
+      line-height: 1.45;
+    }
+  }
+
+  .p-tag {
+    border-radius: 20px;
+    font-weight: 800;
+    background: $cfg-accent-soft;
+    color: $cfg-accent;
+
+    &.p-tag-success { background: $cfg-ok-soft; color: $cfg-ok; }
+    &.p-tag-warning { background: $cfg-warn-soft; color: $cfg-warn; }
+    &.p-tag-danger { background: $cfg-err-soft; color: $cfg-err; }
+    &.p-tag-info { background: $cfg-info-soft; color: $cfg-info; }
+  }
+
+  .p-message.p-message-warn {
+    background: $cfg-warn-soft;
+    border: 0;
+    border-radius: 11px;
+    color: $cfg-warn;
+
+    strong, li, p { color: $cfg-ink; }
+    i { color: $cfg-warn; }
+  }
+
+  .p-chip {
+    background: $cfg-accent-soft;
+    color: $cfg-accent;
+    border-radius: 20px;
+
+    .p-chip-text { font-weight: 800; }
+  }
+
+  .warnings-section .p-accordion .p-accordion-header .p-accordion-header-link {
+    background: $cfg-warn-soft;
+    border-color: transparent;
+    border-radius: 11px;
+    color: $cfg-warn;
+    font-weight: 800;
+  }
+
+  .suggestions-section .p-accordion .p-accordion-header .p-accordion-header-link {
+    background: $cfg-info-soft;
+    border-color: transparent;
+    border-radius: 11px;
+    color: $cfg-info;
+    font-weight: 800;
+  }
+
+  .p-accordion .p-accordion-content {
+    border-color: $cfg-line;
+    border-radius: 0 0 11px 11px;
   }
 }
 
@@ -178,7 +272,7 @@
   .column-mapping-preview {
     .mapping-footer {
       flex-direction: column;
-      gap: 1rem;
+      gap: 16px;
 
       .footer-info,
       .footer-actions {

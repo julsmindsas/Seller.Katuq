@@ -1,3 +1,65 @@
+// Modal de lead con el aspecto Katuq (D-131/D-400): encabezado blanco, ícono en
+// azulejo lila, labels UPPERCASE muted, inputs lilas y pie con botón morado.
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.lfm-cabeza {
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--ds-surface);
+  border-bottom: 1px solid $cfg-line;
+}
+.lfm-titulo {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 0;
+  font-size: 17px !important;
+  font-weight: 800;
+  color: $cfg-ink;
+  letter-spacing: normal;
+}
+.lfm-icono {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: $cfg-accent-soft;
+  color: $cfg-accent;
+  font-size: 16px;
+}
+.lfm-cuerpo { padding: 18px 20px; color: $cfg-ink; }
+.lfm-pie {
+  gap: 8px;
+  padding: 14px 20px;
+  background: var(--ds-surface);
+  border-top: 1px solid $cfg-line-soft;
+}
+.lfm-pie .lfm-btn {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 11px;
+  border: 1px solid $cfg-accent;
+  background: $cfg-accent;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: $cfg-shadow-btn;
+
+  &:enabled:hover { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
+  &:disabled { background: #d8d4ea; border-color: #d8d4ea; box-shadow: none; }
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+}
+.lfm-pie .lfm-btn.lfm-btn--sec {
+  background: var(--ds-surface);
+  color: $cfg-body;
+  border-color: var(--ds-line-strong);
+  box-shadow: none;
+
+  &:enabled:hover { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent; }
+}
+
 .tags-picker {
   display: flex;
   flex-wrap: wrap;
@@ -9,16 +71,16 @@
   align-items: center;
   padding: 0.25rem 0.6rem;
   border-radius: 999px;
-  border: 1px solid #e5e7eb;
-  background: #f9fafb;
-  color: #6b7280;
+  border: 1px solid $cfg-chip-border;
+  background: $cfg-chip-bg;
+  color: $cfg-body;
   font-size: 0.8rem;
   cursor: pointer;
   user-select: none;
   transition: all 0.15s ease;
 
   &:hover {
-    border-color: #c4b5fd;
+    border-color: #d9cffb;
   }
 
   &.tag-chip-selected {
@@ -29,5 +91,5 @@
 
 .tags-empty-hint {
   font-size: 0.8rem;
-  color: #9ca3af;
+  color: $cfg-muted;
 }

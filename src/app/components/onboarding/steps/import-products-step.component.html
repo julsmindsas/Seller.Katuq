@@ -12,7 +12,7 @@
   <div class="template-section hide-mobile">
     <p-card class="template-card">
       <ng-template pTemplate="header">
-        <div class="card-header">
+        <div class="onb-cabeza">
           <i class="pi pi-download"></i>
           <span>Plantilla de Importación</span>
         </div>
@@ -25,7 +25,7 @@
           type="button"
           label="Descargar Plantilla CSV"
           icon="pi pi-download"
-          class="p-button-outlined"
+          class="cfg-btn cfg-btn--sec"
           (click)="downloadTemplate()">
         </button>
       </div>
@@ -61,7 +61,7 @@
       type="button"
       label="Descargar Plantilla CSV"
       icon="pi pi-download"
-      class="p-button-outlined p-button-lg"
+      class="cfg-btn cfg-btn--sec"
       (click)="downloadTemplate()">
     </button>
   </div>
@@ -186,7 +186,7 @@
   <!-- Info Card -->
   <p-card class="info-card">
     <ng-template pTemplate="header">
-      <div class="card-header">
+      <div class="onb-cabeza">
         <i class="pi pi-info-circle"></i>
         <span>Información Importante</span>
       </div>
@@ -224,7 +224,7 @@
         type="button"
         label="Importar Productos"
         icon="pi pi-upload"
-        class="p-button-success p-button-lg"
+        class="cfg-btn"
         [disabled]="!canImport()"
         [loading]="isUploading"
         (click)="importProducts()">
@@ -248,7 +248,7 @@
       type="button"
       label="Importar Productos"
       icon="pi pi-upload"
-      class="p-button-success"
+      class="cfg-btn"
       [disabled]="!canImport()"
       [loading]="isUploading"
       (click)="importProducts()"

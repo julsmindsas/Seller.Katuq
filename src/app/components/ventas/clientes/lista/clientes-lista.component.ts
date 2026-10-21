@@ -359,8 +359,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             text: 'Se quitará de todos los clientes que la tengan asignada. Esta acción no se puede deshacer.',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#dc2626',
-            cancelButtonColor: '#6b7280',
+            confirmButtonColor: '#D64545',
+            cancelButtonColor: '#8f8bab',
             confirmButtonText: 'Sí, eliminar',
             cancelButtonText: 'Cancelar',
             didOpen: () => {

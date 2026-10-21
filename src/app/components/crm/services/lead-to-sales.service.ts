@@ -127,7 +127,7 @@ export class LeadToSalesService {
         title: this.translate.instant('crm.conversion.leadBloqueado'),
         text: this.translate.instant('crm.conversion.desbloquealoAntesDe', { accion: this.translate.instant(accion) }),
         icon: 'warning',
-        confirmButtonColor: '#8b5cf6',
+        confirmButtonColor: '#5F3FE0',
       });
       return null;
     }

@@ -201,7 +201,7 @@ export class KatuqChartComponent implements AfterViewInit, OnChanges {
 
   private getDefaultColor(index: number): string {
     const colors = [
-      '#5F3FE0', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+      '#5F3FE0', '#10b981', '#f59e0b', '#ef4444', '#1E6FD9',
       '#06b6d4', '#ec4899', '#84cc16', '#f97316', '#14b8a6'
     ];
     return colors[index % colors.length];

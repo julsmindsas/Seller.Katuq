@@ -1,20 +1,20 @@
-<div class="tk-page">
+<div class="tk-page cfg-pagina">
 
   <!-- Encabezado -->
-  <div class="tk-header">
-    <div class="tk-header-id">
-      <span class="tk-header-chip" aria-hidden="true"><i class="pi pi-wallet"></i></span>
-      <div>
-        <h4 class="tk-page-title">{{ 'tesoreria.gestionPagos.tesoreria' | translate }}</h4>
-        <p class="tk-page-sub">{{ 'tesoreria.gestionPagos.verificaComprobantesApruebaORechaza' | translate }}</p>
-      </div>
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Finanzas</span>
+      <h1 class="cfg-titulo">{{ 'tesoreria.gestionPagos.tesoreria' | translate }}</h1>
+      <p class="cfg-sub">{{ 'tesoreria.gestionPagos.verificaComprobantesApruebaORechaza' | translate }}</p>
     </div>
-    <button type="button" class="tk-refresh" (click)="loadMetrics()" [disabled]="loadingMetrics"
-            [attr.aria-label]="'tesoreria.gestionPagos.actualizarIndicadores' | translate">
-      <i class="pi" [ngClass]="loadingMetrics ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
-      {{ 'tesoreria.alertasTesoreria.actualizar' | translate }}
-    </button>
-  </div>
+    <div class="cfg-acciones">
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="loadMetrics()" [disabled]="loadingMetrics"
+              [attr.aria-label]="'tesoreria.gestionPagos.actualizarIndicadores' | translate">
+        <i class="pi" [ngClass]="loadingMetrics ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
+        {{ 'tesoreria.alertasTesoreria.actualizar' | translate }}
+      </button>
+    </div>
+  </header>
 
   <!-- KPI cards (server-side) -->
   <div *ngIf="loadingMetrics" class="tk-grid" aria-busy="true">

@@ -1,5 +1,5 @@
 <div class="card customer-sticky">
-    <div class="card-header card-no-border p-3">
+    <div class="tarjeta-cabeza card-no-border p-3">
         <div class="header-top">
             <h5 class="m-0"><i class="fa fa-user-circle me-2"></i>{{ "Cliente" | translate }}</h5>
             <button class="btn-nuevo-cliente" (click)="openModal()">
@@ -59,7 +59,7 @@
 
             <!-- Cliente seleccionado -->
             <div class="cliente-card" *ngIf="datosCliente">
-                <div class="cliente-card-header">
+                <div class="cliente-cabeza">
                     <div class="cliente-status">
                         <i class="fa fa-check-circle"></i>
                         <span>Cliente Asociado</span>

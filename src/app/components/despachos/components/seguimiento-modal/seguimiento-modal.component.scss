@@ -1,48 +1,32 @@
 // Katuq Design Tokens
 @import '../../../../../assets/scss/utils/katuq-tokens';
+@import '../../styles/despachos-modal';
+
+@include despachos-modal;
 
 .seguimiento-modal {
-  .modal-header {
-    border-bottom: none;
-    
-    .modal-title {
-      font-weight: 600;
-      font-size: 1.1rem;
+  color: $cfg-ink;
+
+  .modal-body {
+    padding: 1.25rem 1.25rem 1.5rem;
+    background: $cfg-tint;
+
+    .dm-seccion__cuerpo {
+      p {
+        margin-bottom: 0.5rem;
+        font-size: 13.5px;
+        color: $cfg-body;
+        letter-spacing: normal;
+
+        strong {
+          color: $cfg-ink;
+          font-weight: 700;
+        }
+      }
     }
   }
 
-  .modal-body {
-    padding: 1.5rem;
-    
-    .card {
-      border: 1px solid #e9ecef;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-      
-      .card-header {
-        border-bottom: 1px solid #e9ecef;
-        font-weight: 600;
-        
-        h6 {
-          margin: 0;
-          font-size: 0.95rem;
-        }
-      }
-      
-      .card-body {
-        padding: 1.25rem;
-        
-        p {
-          margin-bottom: 0.5rem;
-          font-size: 0.9rem;
-          
-          strong {
-            color: #495057;
-            font-weight: 600;
-          }
-        }
-      }
-    }
-  }
+  .dm-spinner { color: $cfg-accent; }
 
   // Estilos para los badges de estado
   .estado-badge {
@@ -50,77 +34,47 @@
     align-items: center;
     padding: 0.5rem 0.75rem;
     border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    letter-spacing: 0.4px;
     
     i {
       margin-right: 0.5rem;
       font-size: 0.9rem;
     }
     
-    &.estado-transito {
-      background: #5F3FE0;
-      color: white;
+    // Estados de envío: par fuerte / fondo suave del canon.
+    &.estado-transito,
+    &.estado-ruta,
+    &.estado-recogido,
+    &.estado-procesando,
+    &.estado-creado {
+      background: $cfg-info-soft;
+      color: $cfg-info;
     }
 
     &.estado-entregado {
-      background: #1E874B;
-      color: white;
+      background: $cfg-ok-soft;
+      color: $cfg-ok;
     }
 
-    &.estado-ruta {
-      background: #5F3FE0;
-      color: white;
-    }
-
-    &.estado-retenido {
-      background: $katuq-warning;
-      color: $katuq-gray-900;
-    }
-
-    &.estado-devuelto {
-      background: #D64545;
-      color: white;
-    }
-
-    &.estado-default {
-      background: $katuq-gray-500;
-      color: white;
-    }
-
-    // Estados de Prindel
-    &.estado-creado {
-      background: $katuq-cyan-600;
-      color: white;
-    }
-
-    &.estado-recogido {
-      background: #5F3FE0;
-      color: white;
-    }
-
-    &.estado-error {
-      background: #D64545;
-      color: white;
-    }
-
-    // Estados normalizados
+    &.estado-retenido,
     &.estado-pendiente {
-      background: $katuq-warning;
-      color: $katuq-gray-900;
+      background: $cfg-warn-soft;
+      color: $cfg-warn;
     }
 
-    &.estado-procesando {
-      background: #5F3FE0;
-      color: white;
+    &.estado-devuelto,
+    &.estado-error {
+      background: $cfg-err-soft;
+      color: $cfg-err;
     }
 
+    &.estado-default,
     &.estado-cancelado {
-      background: $katuq-gray-800;
-      color: white;
+      background: #eef0f3;
+      color: #5A6B78;
     }
   }
 
@@ -156,32 +110,32 @@
         border-radius: 50%;
         background: #7C5CFF;
         border: 3px solid white;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 0 0 3px $cfg-accent-soft;
       }
       
       .timeline-content {
-        background: #f8f9fa;
+        background: $cfg-tint;
         padding: 1rem;
-        border-radius: 8px;
-        border-left: 3px solid #7C5CFF;
+        border-radius: 11px;
+        border: 1px solid $cfg-line;
         
         .evento-fecha {
           font-size: 0.8rem;
-          color: #6c757d;
+          color: $cfg-muted;
           font-weight: 600;
           margin-bottom: 0.5rem;
         }
         
         .evento-descripcion {
           font-size: 0.9rem;
-          color: #212529;
+          color: $cfg-ink;
           margin-bottom: 0.5rem;
           font-weight: 500;
         }
         
         .evento-ubicacion {
           font-size: 0.8rem;
-          color: #6c757d;
+          color: $cfg-muted;
           
           i {
             color: #7C5CFF;
@@ -191,29 +145,12 @@
     }
   }
 
-  // Estilos para los botones
-  .modal-footer {
-    border-top: 1px solid #e9ecef;
-    padding: 1rem 1.5rem;
-    
-    .btn {
-      font-size: 0.9rem;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      font-weight: 500;
-      
-      i {
-        font-size: 0.85rem;
-      }
-    }
-  }
-
   // Responsive
   @media (max-width: 768px) {
     .modal-body {
       padding: 1rem;
       
-      .card-body {
+      .dm-seccion__cuerpo {
         padding: 1rem;
       }
     }

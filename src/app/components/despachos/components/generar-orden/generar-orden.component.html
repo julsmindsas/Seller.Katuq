@@ -613,15 +613,16 @@
 <!-- Modal detalles pedido (mantenido igual) -->
 <div class="modal fade" id="detallesPedidoModal" tabindex="-1" aria-hidden="true" *ngIf="pedidoSeleccionadoDetalle">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="d-flex align-items-center">
+        <div class="modal-content go-detalle">
+            <div class="modal-header dm-cabeza">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="pi pi-file dm-icono" aria-hidden="true"></i>
                     <div>
-                        <h4 class="modal-title mb-0">{{ "Detalles del Pedido" | translate }}</h4>
-                        <small>#{{ pedidoSeleccionadoDetalle.nroPedido }}</small>
+                        <h4 class="modal-title dm-titulo mb-0">{{ "Detalles del Pedido" | translate }}</h4>
+                        <small class="dm-sub">#{{ pedidoSeleccionadoDetalle.nroPedido }}</small>
                     </div>
                 </div>
-                <button type="button" class="btn-close" (click)="cerrarDetallesPedido()"></button>
+                <button type="button" class="btn-close dm-cerrar" (click)="cerrarDetallesPedido()"></button>
             </div>
 
             <div class="modal-body p-0">
@@ -637,7 +638,7 @@
                         <button class="nav-link" id="productos-tab" data-bs-toggle="tab"
                             data-bs-target="#productos-content" type="button" role="tab">
                             <i class="pi pi-box me-2"></i>{{ "Productos" | translate }}
-                            <span class="badge bg-primary ms-1">{{ getProductosCount() }}</span>
+                            <span class="cfg-pill ms-1">{{ getProductosCount() }}</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
@@ -661,13 +662,13 @@
                         <div class="row g-4">
                             <!-- Información del Cliente -->
                             <div class="col-lg-6">
-                                <div class="card h-100 border-0 shadow-sm">
-                                    <div class="card-header bg-light border-0 pb-3">
-                                        <h6 class="card-title mb-0 text-primary">
+                                <div class="dm-seccion h-100">
+                                    <div class="dm-seccion__cabeza">
+                                        <h6 class="mb-0">
                                             <i class="pi pi-user me-2"></i>{{ "Información del Cliente" | translate }}
                                         </h6>
                                     </div>
-                                    <div class="card-body">
+                                    <div class="dm-seccion__cuerpo">
                                         <div class="row g-3">
                                             <div class="col-12">
                                                 <div class="info-item">
@@ -710,13 +711,13 @@
 
                             <!-- Estado del Pedido -->
                             <div class="col-lg-6">
-                                <div class="card h-100 border-0 shadow-sm">
-                                    <div class="card-header bg-light border-0 pb-3">
-                                        <h6 class="card-title mb-0 text-primary">
+                                <div class="dm-seccion h-100">
+                                    <div class="dm-seccion__cabeza">
+                                        <h6 class="mb-0">
                                             <i class="pi pi-flag me-2"></i>{{ "Estado del Pedido" | translate }}
                                         </h6>
                                     </div>
-                                    <div class="card-body">
+                                    <div class="dm-seccion__cuerpo">
                                         <div class="row g-3">
                                             <div class="col-sm-6">
                                                 <div class="info-item">
@@ -778,16 +779,16 @@
                     <div class="tab-pane fade" id="productos-content" role="tabpanel">
                         <div class="row g-4">
                             <div class="col-12">
-                                <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-light border-0">
-                                        <h6 class="card-title mb-0 text-primary">
+                                <div class="dm-seccion">
+                                    <div class="dm-seccion__cabeza">
+                                        <h6 class="mb-0">
                                             <i class="pi pi-box me-2"></i>{{ "Productos del Pedido" | translate }}
                                         </h6>
                                     </div>
-                                    <div class="card-body p-0">
+                                    <div class="dm-seccion__cuerpo p-0">
                                         <div class="table-responsive">
                                             <table class="table table-hover mb-0">
-                                                <thead class="table-light">
+                                                <thead class="go-thead">
                                                     <tr>
                                                         <th class="border-0">{{ "Producto" | translate }}</th>
                                                         <th class="border-0 text-center">{{ "Cantidad" | translate }}</th>
@@ -814,7 +815,7 @@
                                                             </div>
                                                         </td>
                                                         <td class="border-0 text-center">
-                                                            <span class="badge bg-primary">{{ item.cantidad }}</span>
+                                                            <span class="cfg-pill">{{ item.cantidad }}</span>
                                                         </td>
                                                         <td class="border-0 text-end">
                                                             {{ getProductPrice(item) | currency:'COP':'symbol':'1.0-0' }}
@@ -824,10 +825,10 @@
                                                         </td>
                                                     </tr>
                                                 </tbody>
-                                                <tfoot class="table-light">
+                                                <tfoot class="go-tfoot">
                                                     <tr>
                                                         <td colspan="3" class="text-end border-0 fw-bold">{{ "Total Productos:" | translate }}</td>
-                                                        <td class="text-end border-0 fw-bold text-primary">
+                                                        <td class="text-end border-0 fw-bold go-acento">
                                                             {{ getProductsTotalValue() | currency:'COP':'symbol':'1.0-0' }}
                                                         </td>
                                                     </tr>
@@ -844,13 +845,13 @@
                     <div class="tab-pane fade" id="entrega-content" role="tabpanel">
                         <div class="row g-4">
                             <div class="col-lg-8">
-                                <div class="card border-0 shadow-sm h-100">
-                                    <div class="card-header bg-light border-0">
-                                        <h6 class="card-title mb-0 text-primary">
+                                <div class="dm-seccion h-100">
+                                    <div class="dm-seccion__cabeza">
+                                        <h6 class="mb-0">
                                             <i class="pi pi-map-marker me-2"></i>{{ "Dirección de Entrega" | translate }}
                                         </h6>
                                     </div>
-                                    <div class="card-body">
+                                    <div class="dm-seccion__cuerpo">
                                         <div class="row g-3">
                                             <div class="col-md-6">
                                                 <div class="info-item">
@@ -913,17 +914,17 @@
                             </div>
 
                             <div class="col-lg-4">
-                                <div class="card border-0 shadow-sm h-100">
-                                    <div class="card-header bg-light border-0">
-                                        <h6 class="card-title mb-0 text-primary">
+                                <div class="dm-seccion h-100">
+                                    <div class="dm-seccion__cabeza">
+                                        <h6 class="mb-0">
                                             <i class="pi pi-truck me-2"></i>{{ "Información de Envío" | translate }}
                                         </h6>
                                     </div>
-                                    <div class="card-body">
+                                    <div class="dm-seccion__cuerpo">
                                         <div class="delivery-summary">
                                             <div class="delivery-item">
-                                                <div class="delivery-icon bg-primary">
-                                                    <i class="pi pi-send text-white"></i>
+                                                <div class="delivery-icon go-tile">
+                                                    <i class="pi pi-send"></i>
                                                 </div>
                                                 <div class="delivery-content">
                                                     <div class="delivery-label">{{ "Forma de Entrega" | translate }}</div>
@@ -932,8 +933,8 @@
                                             </div>
 
                                             <div class="delivery-item">
-                                                <div class="delivery-icon bg-success">
-                                                    <i class="pi pi-dollar text-white"></i>
+                                                <div class="delivery-icon go-tile go-tile--ok">
+                                                    <i class="pi pi-dollar"></i>
                                                 </div>
                                                 <div class="delivery-content">
                                                     <div class="delivery-label">{{ "Costo de Envío" | translate }}</div>
@@ -942,8 +943,8 @@
                                             </div>
 
                                             <div class="delivery-item" *ngIf="pedidoSeleccionadoDetalle.transportador">
-                                                <div class="delivery-icon bg-info">
-                                                    <i class="pi pi-user text-white"></i>
+                                                <div class="delivery-icon go-tile go-tile--info">
+                                                    <i class="pi pi-user"></i>
                                                 </div>
                                                 <div class="delivery-content">
                                                     <div class="delivery-label">{{ "Transportador" | translate }}</div>
@@ -961,13 +962,13 @@
                     <div class="tab-pane fade" id="pagos-content" role="tabpanel">
                         <div class="row g-4">
                             <div class="col-lg-8">
-                                <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-light border-0">
-                                        <h6 class="card-title mb-0 text-primary">
+                                <div class="dm-seccion">
+                                    <div class="dm-seccion__cabeza">
+                                        <h6 class="mb-0">
                                             <i class="pi pi-credit-card me-2"></i>{{ "Resumen de Pagos" | translate }}
                                         </h6>
                                     </div>
-                                    <div class="card-body">
+                                    <div class="dm-seccion__cuerpo">
                                         <div class="payment-summary">
                                             <div class="row g-3">
                                                 <div class="col-sm-6">
@@ -1030,11 +1031,11 @@
                             </div>
 
                             <div class="col-lg-4">
-                                <div class="card border-0 shadow-sm bg-gradient-warning">
-                                    <div class="card-body text-center">
+                                <div class="dm-seccion go-pendiente">
+                                    <div class="dm-seccion__cuerpo text-center">
                                         <div class="payment-pending">
                                             <i class="pi pi-wallet display-4 text-warning mb-3"></i>
-                                            <h5 class="card-title text-dark">{{ "Falta por Pagar" | translate }}</h5>
+                                            <h5 class="go-pendiente__titulo">{{ "Falta por Pagar" | translate }}</h5>
                                             <div class="pending-amount">
                                                 {{ pedidoSeleccionadoDetalle.faltaPorPagar | currency:'COP':'symbol':'1.0-0' }}
                                             </div>
@@ -1052,11 +1053,11 @@
                 </div>
             </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" (click)="cerrarDetallesPedido()">
+            <div class="modal-footer dm-pie">
+                <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrarDetallesPedido()">
                     <i class="pi pi-times me-2"></i>{{ "Cerrar" | translate }}
                 </button>
-                <button type="button" class="btn btn-primary" (click)="agregarPedidoDesdeDetalle()"
+                <button type="button" class="cfg-btn" (click)="agregarPedidoDesdeDetalle()"
                     [disabled]="pedidoExisteEnOrden(pedidoSeleccionadoDetalle)">
                     <i class="pi pi-plus me-2"></i>
                     {{ pedidoExisteEnOrden(pedidoSeleccionadoDetalle) ? ("Ya en orden" | translate) : ("Agregar a Orden" | translate) }}
@@ -1160,16 +1161,16 @@
 <div class="modal-overlay" *ngIf="showEnviameOptionsModal" (click)="closeEnviameOptionsModal()">
     <div class="modal-container" (click)="$event.stopPropagation()">
         <div class="modal-header-custom">
-            <h5>{{ 'Opciones de Envío con Enviame.io' | translate }}</h5>
+            <h5><i class="pi pi-truck dm-icono" aria-hidden="true"></i>{{ 'Opciones de Envío con Enviame.io' | translate }}</h5>
             <button type="button" class="btn-close-custom" (click)="closeEnviameOptionsModal()">
                 <i class="pi pi-times"></i>
             </button>
         </div>
 
         <div class="modal-body-custom">
-            <div class="alert alert-info mb-4">
-                <i class="pi pi-info-circle me-2"></i>
-                <span>Seleccione cómo desea proceder con Enviame.io</span>
+            <div class="cfg-aviso mb-4">
+                <i class="pi pi-info-circle"></i>
+                <span class="go-aviso-txt">Seleccione cómo desea proceder con Enviame.io</span>
             </div>
 
             <div class="row g-3">
@@ -1225,7 +1226,7 @@
                             <div class="transporter-name">{{ getTransporterDisplayName(transporter) }}</div>
                             <div class="transporter-description">Integración configurada</div>
                         </div>
-                        <span *ngIf="transporter.enabled" class="badge bg-success">Activo</span>
+                        <span *ngIf="transporter.enabled" class="cfg-pill cfg-pill--ok">Activo</span>
                     </div>
                 </div>
 
@@ -1237,10 +1238,10 @@
         </div>
 
         <div class="modal-footer-custom">
-            <button type="button" class="btn btn-secondary" (click)="closeEnviameOptionsModal()">
+            <button type="button" class="cfg-btn cfg-btn--sec" (click)="closeEnviameOptionsModal()">
                 {{ 'Cancelar' | translate }}
             </button>
-            <button type="button" class="btn btn-primary"
+            <button type="button" class="cfg-btn"
                     [disabled]="!enviameSelectedOption"
                     (click)="confirmEnviameOption()">
                 <i class="pi pi-arrow-right me-2"></i>

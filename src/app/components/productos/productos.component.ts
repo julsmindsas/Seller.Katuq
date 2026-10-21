@@ -239,18 +239,18 @@ export class ProductosComponent implements OnInit, OnDestroy {
    */
   exportColumnas = [
     { label: 'Referencia (SKU)',                key: 'referencia',         selected: true, getValue: (r: any) => r.identificacion?.referencia || '' },
-    { label: 'Codigo de Barras',                key: 'codigoBarras',       selected: true, getValue: (r: any) => r.identificacion?.codigoBarras || '' },
-    { label: 'Titulo',                          key: 'titulo',             selected: true, getValue: (r: any) => r.crearProducto?.titulo || '' },
-    { label: 'Descripcion',                     key: 'descripcion',        selected: true, getValue: (r: any) => r.crearProducto?.descripcion || '' },
+    { label: 'Código de Barras',                key: 'codigoBarras',       selected: true, getValue: (r: any) => r.identificacion?.codigoBarras || '' },
+    { label: 'Título',                          key: 'titulo',             selected: true, getValue: (r: any) => r.crearProducto?.titulo || '' },
+    { label: 'Descripción',                     key: 'descripcion',        selected: true, getValue: (r: any) => ProductosComponent.textoDeDescripcion(r.crearProducto?.descripcion) },
     { label: 'Marca',                           key: 'marca',              selected: true, getValue: (r: any) => r.identificacion?.marca || '' },
     { label: 'Fecha Inicial (AAAA-MM-DD)',      key: 'fechaInicial',       selected: true, getValue: (r: any) => r.crearProducto?.fechaInicial || '' },
     { label: 'Fecha Final (AAAA-MM-DD)',        key: 'fechaFinal',         selected: true, getValue: (r: any) => r.crearProducto?.fechaFinal || '' },
     // Los 3 niveles del árbol de categorías. `ruta` la arma `normalizeProducts`;
     // si el producto no la tiene (dato viejo), cae al `label` en el nivel 1 —
     // que es exactamente lo que exportaba esta columna antes.
-    { label: 'Categoria',                       key: 'categoria',          selected: true, getValue: (r: any) => r.categorias?.ruta?.[0] || r.categorias?.label || '' },
-    { label: 'Subcategoria (Nivel 2)',          key: 'subcategoria',       selected: true, getValue: (r: any) => r.categorias?.ruta?.[1] || '' },
-    { label: 'Sub-subcategoria (Nivel 3)',      key: 'subsubcategoria',    selected: true, getValue: (r: any) => r.categorias?.ruta?.[2] || '' },
+    { label: 'Categoría',                       key: 'categoria',          selected: true, getValue: (r: any) => r.categorias?.ruta?.[0] || r.categorias?.label || '' },
+    { label: 'Subcategoría (Nivel 2)',          key: 'subcategoria',       selected: true, getValue: (r: any) => r.categorias?.ruta?.[1] || '' },
+    { label: 'Sub-subcategoría (Nivel 3)',      key: 'subsubcategoria',    selected: true, getValue: (r: any) => r.categorias?.ruta?.[2] || '' },
     { label: 'Precio sin IVA',                  key: 'precioSinIva',       selected: true, getValue: (r: any) => r.precio?.precioUnitarioSinIva || 0 },
     { label: 'IVA (%)',                         key: 'porcentajeIva',      selected: true, getValue: (r: any) => r.precio?.precioUnitarioIva || '0' },
     { label: 'Precio con IVA',                  key: 'precioConIva',       selected: true, getValue: (r: any) => r.precio?.precioUnitarioConIva || 0 },
@@ -259,7 +259,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
     { label: 'Activo (SI/NO)',                  key: 'activo',             selected: true, getValue: (r: any) => (r.exposicion?.activar ? 'SI' : 'NO') },
     { label: 'Disponible (SI/NO)',              key: 'disponible',         selected: true, getValue: (r: any) => (r.exposicion?.disponible ? 'SI' : 'NO') },
     { label: 'Inventariable (SI/NO)',           key: 'inventariable',      selected: true, getValue: (r: any) => (r.disponibilidad?.inventariable ? 'SI' : 'NO') },
-    { label: 'Cantidad Minima de Venta',        key: 'cantidadMinVenta',   selected: true, getValue: (r: any) => r.disponibilidad?.cantidadMinVenta ?? '' },
+    { label: 'Cantidad Mínima de Venta',        key: 'cantidadMinVenta',   selected: true, getValue: (r: any) => r.disponibilidad?.cantidadMinVenta ?? '' },
     { label: 'Inventario de Seguridad',         key: 'inventarioSeguridad',selected: true, getValue: (r: any) => r.disponibilidad?.inventarioSeguridad ?? '' },
     { label: 'Tipo de Entrega',                 key: 'tipoEntrega',        selected: true, getValue: (r: any) => r.disponibilidad?.tipoEntrega || '' },
     { label: 'Tiempo de Entrega (dias)',        key: 'tiempoEntrega',      selected: true, getValue: (r: any) => r.disponibilidad?.tiempoEntrega ?? '' },
@@ -275,28 +275,28 @@ export class ProductosComponent implements OnInit, OnDestroy {
     // no aporta nada, así que quitarlas no pierde información — a diferencia de
     // truncar, que sí corta contenido real. Ver `recortarParaExcel`.
     { label: 'Etiquetas (separadas por coma)',  key: 'etiquetas',          selected: true, getValue: (r: any) => ProductosComponent.etiquetasUnicas(r.exposicion?.etiquetas).join(', ') },
-    { label: 'Garantias',                       key: 'garantias',          selected: true, getValue: (r: any) => r.crearProducto?.garantiasProducto || '' },
-    { label: 'Caracteristicas Adicionales',     key: 'caracAdicionales',   selected: true, getValue: (r: any) => r.crearProducto?.caracAdicionales || '' },
+    { label: 'Garantías',                       key: 'garantias',          selected: true, getValue: (r: any) => r.crearProducto?.garantiasProducto || '' },
+    { label: 'Características Adicionales',     key: 'caracAdicionales',   selected: true, getValue: (r: any) => r.crearProducto?.caracAdicionales || '' },
     { label: 'Restricciones',                   key: 'restricciones',      selected: true, getValue: (r: any) => r.crearProducto?.restriccionesProducto || '' },
     { label: 'Cuidado y Consumo',               key: 'cuidadoConsumo',     selected: true, getValue: (r: any) => r.crearProducto?.cuidadoConsumo || '' },
-    { label: 'Requiere Produccion (SI/NO)',     key: 'requiereProduccion', selected: true, getValue: (r: any) => (r.crearProducto?.paraProduccion ? 'SI' : 'NO') },
+    { label: 'Requiere Producción (SI/NO)',     key: 'requiereProduccion', selected: true, getValue: (r: any) => (r.crearProducto?.paraProduccion ? 'SI' : 'NO') },
     // Estas tres estaban en la plantilla de importación pero no acá, así que
     // reimportar un export las dejaba en blanco (el import escribe el producto
     // completo: lo que no viene en el Excel vuelve al valor por defecto).
-    { label: 'Integra Software Produccion? (SI/NO)', key: 'integraProduccion', selected: true, getValue: (r: any) => (r.procesoComercial?.integraConProduccion ? 'SI' : 'NO') },
-    { label: 'Tiempo Produccion',               key: 'tiempoProduccion',   selected: true, getValue: (r: any) => r.procesoComercial?.tiempoProduccion || '' },
-    { label: 'Software Produccion',             key: 'softwareProduccion', selected: true, getValue: (r: any) => r.procesoComercial?.softwareProduccion || '' },
+    { label: '¿Integra Software Producción? (SI/NO)', key: 'integraProduccion', selected: true, getValue: (r: any) => (r.procesoComercial?.integraConProduccion ? 'SI' : 'NO') },
+    { label: 'Tiempo Producción',               key: 'tiempoProduccion',   selected: true, getValue: (r: any) => r.procesoComercial?.tiempoProduccion || '' },
+    { label: 'Software Producción',             key: 'softwareProduccion', selected: true, getValue: (r: any) => r.procesoComercial?.softwareProduccion || '' },
     // Exposición, canales y ciudad (D-148). Se exportan SI/NO explícito —
     // nunca celda vacía — porque en la importación una casilla vacía significa
     // "sin chulear", y un export con blancos volvería atrás los chuleados.
-    { label: 'Posicion',                        key: 'posicion',           selected: true, getValue: (r: any) => r.exposicion?.posicion ?? '' },
+    { label: 'Posición',                        key: 'posicion',           selected: true, getValue: (r: any) => r.exposicion?.posicion ?? '' },
     { label: 'En Oferta (SI/NO)',               key: 'oferta',             selected: true, getValue: (r: any) => (r.exposicion?.oferta ? 'SI' : 'NO') },
     { label: 'Recomendado (SI/NO)',             key: 'recomendado',        selected: true, getValue: (r: any) => (r.exposicion?.recomendado ? 'SI' : 'NO') },
     { label: 'Destacado (SI/NO)',               key: 'destacado',          selected: true, getValue: (r: any) => (r.exposicion?.destacado ? 'SI' : 'NO') },
     { label: 'Nuevo (SI/NO)',                   key: 'nuevo',              selected: true, getValue: (r: any) => (r.exposicion?.nuevo ? 'SI' : 'NO') },
-    { label: 'Mas Vendido (SI/NO)',             key: 'masvendido',         selected: true, getValue: (r: any) => (r.exposicion?.masvendido ? 'SI' : 'NO') },
+    { label: 'Más Vendido (SI/NO)',             key: 'masvendido',         selected: true, getValue: (r: any) => (r.exposicion?.masvendido ? 'SI' : 'NO') },
     { label: 'Seller Center (SI/NO)',           key: 'sellerCenter',       selected: true, getValue: (r: any) => (r.marketplace?.sellerCenter ? 'SI' : 'NO') },
-    { label: 'Pagina Web (SI/NO)',              key: 'paginaWeb',          selected: true, getValue: (r: any) => (r.marketplace?.paginaWeb ? 'SI' : 'NO') },
+    { label: 'Página Web (SI/NO)',              key: 'paginaWeb',          selected: true, getValue: (r: any) => (r.marketplace?.paginaWeb ? 'SI' : 'NO') },
     { label: 'Punto de Venta (SI/NO)',          key: 'puntoDeVenta',       selected: true, getValue: (r: any) => (r.marketplace?.puntoDeVenta ? 'SI' : 'NO') },
     { label: 'Cobertura Nacional Origen (SI/NO)',  key: 'coberturaNacionalOrigen',  selected: true, getValue: (r: any) => (r.ciudades?.coberturaNacionalOrigen ? 'SI' : 'NO') },
     { label: 'Cobertura Nacional Entrega (SI/NO)', key: 'coberturaNacionalEntrega', selected: true, getValue: (r: any) => (r.ciudades?.coberturaNacionalEntrega ? 'SI' : 'NO') },
@@ -1719,6 +1719,28 @@ export class ProductosComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * D-533: la descripción se escribe con editor de formato y se guarda como HTML; en el
+   * Excel salían las etiquetas (`<p>`, `<ul><li>`…). Sale el texto, con cada párrafo y
+   * cada viñeta en su línea. Al reimportar, el servidor conserva la descripción con
+   * formato si el texto no cambió (`descripcionConFormato.js`).
+   */
+  static textoDeDescripcion(html: any): string {
+    const valor = String(html ?? '');
+    if (!/<\/?[a-z][^>]*>|&[a-z#0-9]+;/i.test(valor)) { return valor; }
+    const marcado = valor
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<li[^>]*>/gi, '• ')
+      .replace(/<\/(p|div|li|h[1-6]|tr)>/gi, '\n');
+    const texto = new DOMParser().parseFromString(marcado, 'text/html').body.textContent || '';
+    return texto
+      .replace(/ /g, ' ')
+      .replace(/[ \t]+/g, ' ')
+      .replace(/ *\n */g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  /**
    * Tope de caracteres por celda de Excel. No es un límite de la librería: es
    * del formato. Pasarse hace que `json_to_sheet` lance
    * "Text length must not exceed 32767 characters" y se cae TODO el export.
@@ -1944,7 +1966,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
       confirmButtonText: '<i class="pi pi-cloud-download"></i> Importar todos',
       denyButtonText: '<i class="pi pi-search"></i> Por referencia',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#8b5cf6',
+      confirmButtonColor: '#5F3FE0',
       denyButtonColor: '#00e5cc'
     }).then((result) => {
       if (result.isConfirmed) {
@@ -1967,7 +1989,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
       showCancelButton: true,
       confirmButtonText: 'Importar',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#8b5cf6',
+      confirmButtonColor: '#5F3FE0',
       inputValidator: (value) => {
         if (!value || !value.trim()) {
           return 'Debe ingresar un código o referencia';
@@ -2066,7 +2088,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
       showCancelButton: true,
       confirmButtonText: '<i class="pi pi-cloud-download"></i> Importar',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#8b5cf6'
+      confirmButtonColor: '#5F3FE0'
     }).then((result) => {
       if (!result.isConfirmed) return;
 

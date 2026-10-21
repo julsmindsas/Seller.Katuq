@@ -510,7 +510,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      background: #211F3A;
       z-index: 9999;
       display: flex;
       flex-direction: column;
@@ -598,7 +598,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
               width: 200px;
               height: 200px;
               border-radius: 50%;
-              background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+              background: #5F3FE0;
               display: flex;
               align-items: center;
               justify-content: center;

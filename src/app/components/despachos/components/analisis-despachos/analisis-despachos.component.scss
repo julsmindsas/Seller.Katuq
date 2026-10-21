@@ -1,65 +1,114 @@
-.analisis-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
+@import '../../styles/despachos-modal';
 
-    h5 {
-        font-weight: 600;
-        color: #343a40;
-    }
+@include despachos-modal;
+
+:host {
+    display: block;
+    color: $cfg-ink;
+}
+
+.analisis-header {
+    border-bottom: 1px solid $cfg-line-soft;
 }
 
 .analisis-body {
-    background-color: #fff;
+    background-color: $cfg-tint;
 }
 
 .metric-card {
     height: 100%;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    border: 1px solid #e9ecef;
 
-    .card-header {
-        font-weight: 600;
-        font-size: 0.9rem;
+    .dm-seccion__cabeza {
+        font-weight: 800;
+        font-size: 13.5px;
+        letter-spacing: normal;
+
         i {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
         }
     }
 
     .list-group-flush .list-group-item {
-        font-size: 0.9rem;
+        font-size: 13.5px;
         padding: 0.75rem 1rem;
+        color: $cfg-ink;
+        border-color: $cfg-line-soft;
         transition: background-color 0.2s ease-in-out;
 
         &:hover {
-            background-color: #f8f9fa;
+            background-color: $cfg-row-hover;
         }
     }
+}
 
-    .badge {
-        font-size: 0.8rem;
-    }
+// Badges de estado: par fuerte / fondo suave del canon.
+.badge {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .3px;
+    border-radius: 20px;
+
+    &.bg-danger { background-color: $cfg-err-soft !important; color: $cfg-err !important; }
+    &.bg-warning { background-color: $cfg-warn-soft !important; color: $cfg-warn !important; }
+    &.bg-info { background-color: $cfg-info-soft !important; color: $cfg-info !important; }
 }
 
 .bg-info-light {
-    background-color: rgba(13, 202, 240, 0.15);
+    background-color: $cfg-info-soft;
 }
 
 .text-info-dark {
-    color: #087990;
-    font-weight: 600;
+    color: $cfg-info !important;
+    font-weight: 700;
+}
+
+.analisis-cero { color: $cfg-muted !important; font-size: 13px; }
+.analisis-zona { color: $cfg-ink; font-size: 13.5px; i { color: $cfg-accent; } }
+.analisis-total { color: $cfg-accent !important; }
+
+.table {
+    font-size: 13px;
+    color: $cfg-ink;
+    border-color: $cfg-line;
+    background: #fff;
+
+    .analisis-thead th {
+        background: $cfg-tint;
+        color: $cfg-muted;
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+    }
+}
+
+.list-group-item {
+    border-color: $cfg-line-soft;
 }
 
 .table-hover tbody tr:hover {
-    background-color: rgba(0,0,0,0.025);
+    background-color: $cfg-row-hover;
 }
 
+:host ::ng-deep .p-tabview .p-tabview-nav {
+    background: transparent;
+    border-color: $cfg-line;
+}
 
 :host ::ng-deep .p-tabview .p-tabview-nav li .p-tabview-nav-link {
     border: none !important;
     background: transparent !important;
+    color: $cfg-body;
+    font-weight: 700;
+
+    span { color: inherit !important; }
 }
 
 :host ::ng-deep .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
-    color: var(--primary-color);
-    border-bottom: 2px solid var(--primary-color) !important;
+    color: $cfg-accent;
+    border-bottom: 2px solid $cfg-accent !important;
+}
+
+:host ::ng-deep .p-tabview .p-tabview-panels {
+    background: transparent;
 }

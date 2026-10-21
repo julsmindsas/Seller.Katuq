@@ -106,7 +106,7 @@
       <tr>
         <td colspan="4" class="text-center">
           <div class="empty-state">
-            <i class="pi pi-inbox" style="font-size: 2rem; color: var(--text-color-secondary)"></i>
+            <i class="pi pi-inbox vacio-icono"></i>
             <p class="mt-2">No se encontraron mapeos</p>
           </div>
         </td>
@@ -165,7 +165,7 @@
         type="button"
         label="Confirmar Mapeo"
         icon="pi pi-check"
-        class="p-button-success"
+        class="cfg-btn"
         [disabled]="!canConfirm()"
         (click)="confirmMappings()"
         pTooltip="Confirma el mapeo y procede con la importación"
@@ -177,7 +177,7 @@
 
 <!-- Estado vacío cuando no hay resultado -->
 <div *ngIf="!mappingResult" class="empty-mapping-state">
-  <i class="pi pi-cloud-upload" style="font-size: 3rem; color: var(--text-color-secondary)"></i>
+  <i class="pi pi-cloud-upload vacio-icono"></i>
   <h4 class="mt-3">Sube un archivo para comenzar</h4>
   <p class="text-muted">
     El asistente inteligente analizará automáticamente las columnas de tu archivo

@@ -47,32 +47,6 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
   overflow: hidden;
 }
 
-.card-header {
-  margin-bottom: 32px;
-  
-  h2 {
-    font-size: 28px;
-    font-weight: 600;
-    color: $text-color;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    
-    i {
-      color: $primary-color;
-      font-size: 24px;
-    }
-  }
-  
-  .header-line {
-    height: 4px;
-    background: $primary-color;
-    border-radius: 2px;
-    width: 100px;
-    margin-top: 12px;
-  }
-}
-
 .traslado-form {
   display: flex;
   flex-direction: column;
@@ -622,11 +596,6 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
 
 // Responsive ajustes adicionales
 @media (max-width: 576px) {
-  .module-header {
-    h4 {
-      font-size: 1.1rem;
-    }
-  }
 
   .stats-bar {
     .stat-card {

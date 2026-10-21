@@ -27,7 +27,7 @@ export class LanguagesComponent implements OnInit, OnDestroy {
 
   public language: boolean = false;
 
-  // D-532: solo los idiomas visibles para este usuario (Deutsch (CH) nace oculto).
+  // D-540: solo los idiomas visibles para este usuario (Deutsch (CH) nace oculto).
   public languages: ReadonlyArray<AppLanguage> = APP_LANGUAGES.filter(l => DEFAULT_VISIBLE_LANGUAGES.includes(l.code));
 
   private visibles: AppLanguageCode[] = [...DEFAULT_VISIBLE_LANGUAGES];
@@ -51,7 +51,7 @@ export class LanguagesComponent implements OnInit, OnDestroy {
       this.UserLogged = null;
     }
 
-    // D-532: un idioma oculto se muestra en español sin reescribir users.lang.
+    // D-540: un idioma oculto se muestra en español sin reescribir users.lang.
     this.visibles = idiomasVisibles(this.UserLogged);
     this.languages = APP_LANGUAGES.filter(l => this.visibles.includes(l.code));
     this.selectedLanguage = normalizeAppLanguage(this.UserLogged?.lang, this.visibles);
@@ -65,7 +65,7 @@ export class LanguagesComponent implements OnInit, OnDestroy {
     this.translate.setDefaultLang(DEFAULT_APP_LANGUAGE.code);
     this.translate.use(this.selectedLanguage.code);
     document.documentElement.lang = this.selectedLanguage.htmlLang;
-    // D-532: users.lang conserva su forma de siempre, sin htmlLang.
+    // D-540: users.lang conserva su forma de siempre, sin htmlLang.
     this.guardarLenguaje(idiomaParaGuardar(this.selectedLanguage));
   }
 

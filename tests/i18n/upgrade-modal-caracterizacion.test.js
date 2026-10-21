@@ -1,6 +1,6 @@
 'use strict';
 
-// D-532 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B01b, tarea 2.4): caracterización del
+// D-540 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B01b, tarea 2.4): caracterización del
 // modal de pago (upgrade-modal), escrita ANTES de pasar sus textos al traductor y corrida igual
 // después. El modal toca pagos (Wompi), módulo sensible: el bloque solo puede cambiar textos.
 // Fija lo que no depende del idioma: qué validaciones dejan error (vacío o no), cuándo el

@@ -1,6 +1,6 @@
 'use strict';
 
-// D-532 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B00f, tarea 1.14): src/assets/i18n/de.json,
+// D-540 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B00f, tarea 1.14): src/assets/i18n/de.json,
 // alemán estándar de Suiza (de-CH) en BORRADOR, sin revisión nativa. design.md D3, D4 y D7.
 // - Todas las claves de es.json, en su mismo orden, incluidos primeng.*, comun.* y notificaciones.*.
 // - de-CH: «ss» y nunca «ß»; comillas «»; tratamiento «Sie»; glosario de D7.

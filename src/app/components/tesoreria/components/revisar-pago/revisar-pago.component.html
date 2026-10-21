@@ -73,27 +73,27 @@
 
   <!-- Formulario de rechazo (motivo obligatorio) -->
   <div class="tk-reject-box" *ngIf="showRejectForm">
-    <label class="form-label fw-semibold" for="tk-motivo-rechazo">{{ 'tesoreria.revisarPago.motivoDelRechazo' | translate }} <span class="text-danger">*</span></label>
+    <label class="form-label" for="tk-motivo-rechazo">{{ 'tesoreria.revisarPago.motivoDelRechazo' | translate }} <span class="text-danger">*</span></label>
     <textarea id="tk-motivo-rechazo" class="form-control" rows="3" [(ngModel)]="motivoRechazo"
               [placeholder]="'tesoreria.revisarPago.ejElDineroNoAparece' | translate"></textarea>
   </div>
 </div>
 
 <div class="modal-footer">
-  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()" [disabled]="submitting">{{ 'comun.cerrar' | translate }}</button>
+  <button type="button" class="cfg-btn cfg-btn--sec" (click)="activeModal.dismiss()" [disabled]="submitting">{{ 'comun.cerrar' | translate }}</button>
 
   <ng-container *ngIf="!showRejectForm">
-    <button type="button" class="btn btn-outline-danger" (click)="mostrarRechazo()" [disabled]="submitting">
+    <button type="button" class="cfg-btn cfg-btn--peligro" (click)="mostrarRechazo()" [disabled]="submitting">
       <i class="pi pi-times-circle me-1"></i> {{ 'tesoreria.revisarPago.rechazar' | translate }}
     </button>
-    <button type="button" class="btn btn-success" (click)="aprobar()" [disabled]="submitting">
+    <button type="button" class="cfg-btn tk-btn-ok" (click)="aprobar()" [disabled]="submitting">
       <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check-circle'"></i> {{ 'tesoreria.revisarPago.aprobar' | translate }}
     </button>
   </ng-container>
 
   <ng-container *ngIf="showRejectForm">
-    <button type="button" class="btn btn-outline-secondary" (click)="showRejectForm = false" [disabled]="submitting">{{ 'comun.volver' | translate }}</button>
-    <button type="button" class="btn btn-danger" (click)="confirmarRechazo()" [disabled]="submitting || !motivoRechazo.trim()">
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="showRejectForm = false" [disabled]="submitting">{{ 'comun.volver' | translate }}</button>
+    <button type="button" class="cfg-btn tk-btn-err" (click)="confirmarRechazo()" [disabled]="submitting || !motivoRechazo.trim()">
       <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-times-circle'"></i> {{ 'tesoreria.revisarPago.confirmarRechazo' | translate }}
     </button>
   </ng-container>

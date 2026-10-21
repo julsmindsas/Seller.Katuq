@@ -523,23 +523,48 @@ $border-radius: 8px;
     }
 }
 
-// Mejoras para modales
-::ng-deep .modal-content {
-    border-radius: $border-radius;
-    border: none;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    animation: fadeIn 0.3s ease;
+// Modales de esta pantalla (NgbModal con plantillas declaradas aquí): encabezado
+// y pie blancos, título en tinta (D-131/D-400). Antes era un `::ng-deep` sin
+// :host que se filtraba a todos los modales de la app.
+.modal-header {
+    background: var(--ds-surface);
+    border-bottom: 1px solid $cfg-line;
 
-    .modal-header {
-        border-bottom: 1px solid rgba(0,0,0,0.1);
-        background: #f8f9fa;
-    }
-
-    .modal-footer {
-        border-top: 1px solid rgba(0,0,0,0.1);
-        background: #f8f9fa;
+    .modal-title {
+        font-size: 17px;
+        font-weight: 800;
+        color: $cfg-ink;
     }
 }
+
+.modal-footer {
+    background: var(--ds-surface);
+    border-top: 1px solid $cfg-line-soft;
+}
+
+// Detalle de stock por bodega (fila expandida): tarjetas blancas, sin borde lateral de acento.
+.inv-stock-card {
+    background: var(--ds-surface);
+    border: 1px solid $cfg-line;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: $cfg-shadow-panel;
+}
+.inv-stock-card__cabeza {
+    padding: 10px 14px;
+    background: $cfg-tint;
+    border-bottom: 1px solid $cfg-line-soft;
+}
+.inv-stock-card__titulo {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $cfg-muted;
+
+    i { color: $cfg-accent; }
+}
+.inv-stock-card__titulo--info i { color: $cfg-info; }
 
 /* Estilos para la barra de filtros superior */
 .filter-container {

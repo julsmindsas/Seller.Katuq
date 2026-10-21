@@ -59,7 +59,7 @@
     // Hover effects (desktop)
     @media (hover: hover) {
       &:hover {
-        background: rgba(var(--item-color-rgb, 69, 155, 209), 0.08);
+        background: rgba(var(--item-color-rgb, 95, 63, 224), 0.08);
         transform: translateY(-1px);
       }
     }
@@ -70,7 +70,7 @@
         transform: translateY(-2px);
         
         .nav-icon {
-          color: rgb(var(--item-color-rgb, 69, 155, 209));
+          color: rgb(var(--item-color-rgb, 95, 63, 224));
           font-size: 22px;
           animation: iconPulse 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -83,7 +83,7 @@
           left: 50%;
           width: 40px;
           height: 40px;
-          background: rgba(var(--item-color-rgb, 69, 155, 209), 0.2);
+          background: rgba(var(--item-color-rgb, 95, 63, 224), 0.2);
           border-radius: 50%;
           transform: translate(-50%, -50%);
           animation: glowPulse 2s ease-in-out infinite;
@@ -92,7 +92,7 @@
       }
       
       .nav-label {
-        color: rgb(var(--item-color-rgb, 69, 155, 209));
+        color: rgb(var(--item-color-rgb, 95, 63, 224));
         font-weight: 600;
         animation: labelSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
@@ -101,14 +101,14 @@
     // Focus styles for accessibility
     &:focus {
       outline: none;
-      background: rgba(var(--item-color-rgb, 69, 155, 209), 0.12);
-      box-shadow: 0 0 0 2px rgba(var(--item-color-rgb, 69, 155, 209), 0.3);
+      background: rgba(var(--item-color-rgb, 95, 63, 224), 0.12);
+      box-shadow: 0 0 0 2px rgba(var(--item-color-rgb, 95, 63, 224), 0.3);
     }
     
     // Pressed state for touch devices with ripple effect
     &:active {
       transform: scale(0.96);
-      background: rgba(var(--item-color-rgb, 69, 155, 209), 0.15);
+      background: rgba(var(--item-color-rgb, 95, 63, 224), 0.15);
       
       .ripple-container::before {
         content: '';
@@ -118,7 +118,7 @@
         width: 0;
         height: 0;
         border-radius: 50%;
-        background: rgba(var(--item-color-rgb, 69, 155, 209), 0.3);
+        background: rgba(var(--item-color-rgb, 95, 63, 224), 0.3);
         animation: rippleEffect 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         transform: translate(-50%, -50%);
       }
@@ -138,8 +138,7 @@
     // Extract RGB values for CSS custom properties
     --item-color-rgb: 108, 117, 125; // Default gray
 
-    &[style*="--item-color: #a78bfa"] { --item-color-rgb: 167, 139, 250; } // Purple light
-    &[style*="--item-color: #a78bfa"] { --item-color-rgb: 167, 139, 250; } // Legacy
+    &[style*="--item-color: #5F3FE0"] { --item-color-rgb: 95, 63, 224; } // Acento Katuq
     &[style*="--item-color: #28a745"] { --item-color-rgb: 40, 167, 69; }
     &[style*="--item-color: #fd7e14"] { --item-color-rgb: 253, 126, 20; }
     &[style*="--item-color: #6f42c1"] { --item-color-rgb: 111, 66, 193; }
@@ -191,7 +190,7 @@
       width: 4px;
       height: 4px;
       border-radius: 50%;
-      background: rgb(var(--item-color-rgb, 69, 155, 209));
+      background: rgb(var(--item-color-rgb, 95, 63, 224));
       animation: indicatorScale 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
   }
@@ -219,7 +218,7 @@
     }
     
     &.active-label {
-      color: rgb(var(--item-color-rgb, 69, 155, 209));
+      color: rgb(var(--item-color-rgb, 95, 63, 224));
       font-weight: 600;
     }
   }
@@ -416,7 +415,7 @@
     
     .nav-item {
       &:focus {
-        box-shadow: 0 0 0 3px rgba(var(--item-color-rgb, 69, 155, 209), 0.5);
+        box-shadow: 0 0 0 3px rgba(var(--item-color-rgb, 95, 63, 224), 0.5);
       }
     }
     

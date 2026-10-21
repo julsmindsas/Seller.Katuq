@@ -1,5 +1,11 @@
 // Katuq Design Tokens
 @import '../../../../../assets/scss/utils/katuq-tokens';
+@import '../../styles/despachos-modal';
+
+@include despachos-modal;
+
+// La fila de pie lleva el contador a la izquierda y las acciones a la derecha.
+.dm-pie { justify-content: space-between; }
 
 // Variables
 $primary-color: #5F3FE0;

@@ -1,10 +1,10 @@
 :host {
-  // Reskin: palette morado de Cotizaciones. Re-tiñe todos los var(--primary-*) del componente.
-  --primary-color: #6c4ce0;
-  --primary-ink: #6c4ce0;
-  --primary-light: #8c6bff;
-  --primary-dark: #533bc4;
-  --primary-rgb: 108, 76, 224;
+  // Canon Katuq (D-131). Re-tiñe todos los var(--primary-*) del componente.
+  --primary-color: #5F3FE0;
+  --primary-ink: #5F3FE0;
+  --primary-light: #7C5CFF;
+  --primary-dark: #4a2fc0;
+  --primary-rgb: 95, 63, 224;
 }
 
 // Oscuro (D-502 F3, bloque TEMA-B14): las variables propias de la pantalla toman los tokens del tema.
@@ -84,7 +84,7 @@
           transition: all 0.3s ease;
           
           &:hover {
-            background-color: var(--primary-light, #738efc);
+            background-color: var(--primary-color, var(--ds-accent));
             color: white;
             transform: translateY(-2px);
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
@@ -236,21 +236,25 @@
 }
 
 // Colores de los badges
+// Canon: semánticos en par fuerte/fondo suave (D-131).
 .bg-success {
-  background-color: #28a745 !important;
+  background-color: var(--ds-ok-soft) !important;
+  color: var(--ds-ok) !important;
 }
 
 .bg-warning {
-  background-color: #ffc107 !important;
-  color: #212529 !important;
+  background-color: var(--ds-warn-soft) !important;
+  color: var(--ds-warn) !important;
 }
 
 .bg-danger {
-  background-color: #dc3545 !important;
+  background-color: var(--ds-err-soft) !important;
+  color: var(--ds-err) !important;
 }
 
 .bg-info {
-  background-color: #c4b5fd !important;
+  background-color: var(--ds-accent-soft) !important;
+  color: var(--ds-accent-ink) !important;
 }
 
 /* =================================================================
@@ -399,34 +403,29 @@
   border: 1px solid rgba(255, 255, 255, 0.4);
 
   // ESTADO DEFAULT MEJORADO - Valores hardcoded para máxima visibilidad
-  background: #adb5bd; // gray-500 - MÁS OSCURO y visible
-  color: #212529; // gray-900 - Texto oscuro con buen contraste
-  font-weight: 700; // Peso aumentado para mejor legibilidad
+  // Canon: par fuerte/fondo suave (D-131); la sombra lo separa de la foto.
+  background: #eef0f3;
+  color: #5A6B78;
+  font-weight: 800;
 
-  // Estados específicos con valores hardcoded
   &.badge-success {
-    background: #06d6a0; // success-color
-    color: white;
-    font-weight: 600;
+    background: var(--ds-ok-soft);
+    color: var(--ds-ok);
   }
 
   &.badge-warning {
-    background: #ffd166; // warning-color
-    color: #212529; // Texto oscuro para contraste
-    font-weight: 600;
+    background: var(--ds-warn-soft);
+    color: var(--ds-warn);
   }
 
   &.badge-danger {
-    background: #ef476f; // danger-color
-    color: white;
-    font-weight: 700; // Peso máximo para "Sin Stock"
-    border: 1px solid rgba(255, 255, 255, 0.5); // Borde más visible
+    background: var(--ds-err-soft);
+    color: var(--ds-err);
   }
 
   &.badge-info {
-    background: #2ec4b6; // secondary-color
-    color: white;
-    font-weight: 600;
+    background: var(--ds-accent-soft);
+    color: var(--ds-accent-ink);
   }
 }
 
@@ -834,7 +833,7 @@
   height: 64px;
   border: none;
   border-radius: 0 10px 10px 0;
-  background: var(--primary-color, #6c4ce0);
+  background: var(--primary-color, var(--ds-accent));
   color: #fff;
   cursor: pointer;
   position: absolute;
@@ -848,7 +847,7 @@
   .filtros-collapse-chevron { font-size: 11px; opacity: 0.85; }
 
   &:hover {
-    background: var(--primary-dark, #533bc4);
+    background: var(--primary-dark, var(--ds-accent-hover));
     width: 34px;
   }
 }
@@ -1707,9 +1706,9 @@
 
     &:nth-child(odd) { background: rgba(0, 0, 0, 0.03); }
     &.sbp-actual {
-      background: rgba(115, 102, 255, 0.12);
+      background: rgba(95, 63, 224, 0.12);
       font-weight: 700;
-      small { color: #7366ff; font-weight: 600; }
+      small { color: var(--ds-accent-ink); font-weight: 600; }
     }
 
     // Bodega distinta a la actual: clicable para trabajar allá.
@@ -1717,7 +1716,7 @@
       cursor: pointer;
 
       .sbp-ir {
-        color: #7366ff;
+        color: var(--ds-accent-ink);
         font-weight: 600;
         margin-left: 6px;
         opacity: 0;
@@ -1725,7 +1724,7 @@
       }
 
       &:hover {
-        background: rgba(115, 102, 255, 0.16);
+        background: rgba(95, 63, 224, 0.16);
         .sbp-ir { opacity: 1; }
       }
     }
@@ -1751,9 +1750,9 @@
     gap: 8px;
     padding: 7px 14px;
     border-radius: 20px;
-    border: 1px solid var(--primary-color, #6c4ce0);
-    background: rgba(var(--primary-rgb, 108, 76, 224), 0.06);
-    color: var(--primary-ink, #6c4ce0);
+    border: 1px solid var(--primary-color, var(--ds-accent-ink));
+    background: rgba(var(--primary-rgb, 95, 63, 224), 0.06);
+    color: var(--primary-ink, var(--ds-accent-ink));
     font-weight: 700;
     font-size: 13.5px;
     cursor: pointer;
@@ -1761,7 +1760,7 @@
 
     i { font-size: 14px; }
 
-    &:hover { background: rgba(var(--primary-rgb, 108, 76, 224), 0.14); }
+    &:hover { background: rgba(var(--primary-rgb, 95, 63, 224), 0.14); }
   }
 
   .combos-trigger-badge {
@@ -1772,7 +1771,7 @@
     height: 18px;
     padding: 0 5px;
     border-radius: 9px;
-    background: var(--primary-color, #6c4ce0);
+    background: var(--primary-color, var(--ds-accent));
     color: #fff;
     font-size: 11px;
     font-weight: 800;
@@ -1797,7 +1796,7 @@
 
     & + .combos-picker-row { border-top: 1px solid #f0f0f2; }
 
-    &:hover { background: rgba(var(--primary-rgb, 108, 76, 224), 0.08); }
+    &:hover { background: rgba(var(--primary-rgb, 95, 63, 224), 0.08); }
   }
 
   .combos-picker-icon {
@@ -1808,8 +1807,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(var(--primary-rgb, 108, 76, 224), 0.10);
-    color: var(--primary-ink, #6c4ce0);
+    background: rgba(var(--primary-rgb, 95, 63, 224), 0.10);
+    color: var(--primary-ink, var(--ds-accent-ink));
   }
 
   .combos-picker-info {
@@ -1912,5 +1911,20 @@
   i {
     font-size: 0.68rem;
     color: #b37400;
+  }
+}
+
+/* Modales del catálogo (combos, configurar producto): encabezado blanco con título en tinta (D-131) */
+.modal-header {
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--ds-surface);
+  border-bottom: 1px solid var(--ds-line);
+
+  .modal-title {
+    margin: 0;
+    font-size: 17px !important;
+    font-weight: 800;
+    color: var(--ds-ink);
   }
 }

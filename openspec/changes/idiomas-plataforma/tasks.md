@@ -1,4 +1,4 @@
-# Tareas: idiomas del panel Seller (ticket cd CMNdBkVZXgYoOCvqfGZc, D-532)
+# Tareas: idiomas del panel Seller (ticket cd CMNdBkVZXgYoOCvqfGZc, D-540)
 
 > Reglas para todas las tareas:
 >
@@ -17,12 +17,12 @@
 
 - [x] **0.1 Decisión de fondo.** Daniel, 2026-10-21: «Base + módulo por módulo». Aprueba las recomendaciones 1 a 9 del informe (`proposal.md`, «Aprobación (2026-10-21)»).
 - [x] **0.2 Aprobar los artefactos.** Daniel aprueba `design.md`, las specs `seller-language` y `seller-translation-coverage`, este `tasks.md` y la asignación de carpetas de `design.md` D10.
-  - Criterio: aprobación anotada en `CONTRACT.md` bajo el D-532. Sin 0.2 no hay código (Art. I).
+  - Criterio: aprobación anotada en `CONTRACT.md` bajo el D-540. Sin 0.2 no hay código (Art. I).
   - Dependencias: 0.1.
-  - **Hecho:** aprobados en bloque por Daniel el 2026-10-21, incluida la asignación de carpetas de D10 tal como está escrita. Cada pregunta abierta se resuelve con la recomendación escrita. Anotado en D-532.
-- [x] **0.3 Asentar la decisión.** D-532 en `specs/CONTRACT.md` con fecha, la cita del ticket por su `cd` (no «1231», que D-446 ya usa), las recomendaciones aprobadas, la excepción acotada al Art. IX y la bandera temporal `appLanguagePreviewCompanies` (dueño Daniel, retiro al publicar de-CH o el 2027-06-30). Número: el siguiente libre en `feature/tickets-web` (hoy sería D-532; D-520 a D-529 están reservados para la rama principal). Verificar que nadie lo tomó antes de escribirlo.
+  - **Hecho:** aprobados en bloque por Daniel el 2026-10-21, incluida la asignación de carpetas de D10 tal como está escrita. Cada pregunta abierta se resuelve con la recomendación escrita. Anotado en D-540.
+- [x] **0.3 Asentar la decisión.** D-540 en `specs/CONTRACT.md` con fecha, la cita del ticket por su `cd` (no «1231», que D-446 ya usa), las recomendaciones aprobadas, la excepción acotada al Art. IX y la bandera temporal `appLanguagePreviewCompanies` (dueño Daniel, retiro al publicar de-CH o el 2027-06-30). Número: el siguiente libre en `feature/tickets-web` (hoy sería D-540; D-520 a D-529 están reservados para la rama principal). Verificar que nadie lo tomó antes de escribirlo.
   - Dependencias: 0.2.
-  - **Hecho (2026-10-21):** `grep -oE "D-5[0-9]{2}" specs/CONTRACT.md | sort -u` daba como último D-531; D-532 estaba libre y quedó asentado con su línea de bitácora.
+  - **Hecho (2026-10-21):** `grep -oE "D-5[0-9]{2}" specs/CONTRACT.md | sort -u` daba como último D-531; D-540 estaba libre y quedó asentado con su línea de bitácora.
 - [ ] **0.4 Preguntar a Jairo para quién es el alemán.** Qué comercio o mercado en Suiza y qué módulos usa. La respuesta fija el orden de la revisión nativa (sección 14), no el de los bloques.
   - Dependencias: ninguna. No bloquea el bloque base.
 - [ ] **0.5 Revisor nativo de de-CH.** Daniel decide persona o agencia y aprueba el costo. Para pt-BR, solo se agenda antes de vender en Brasil.
@@ -168,7 +168,7 @@ No cambia textos de pantallas salvo las 11 claves de 1.11.
   - Dependencias: 1.1 a 1.15.
   - **Parte local hecha (IDI-B00f, 2026-10-21); sin marcar hasta producción.**
     - En verde: tsc (`flock … tsc --noEmit -p tsconfig.app.json`, salida 0), `npm run i18n:check` (0 errores), `npm run test:i18n` 114/114, `npm run test:theme` 83/83 (79 + 4 de otro bloque de tema), backend `npm run test:idiomas-login` (caracterización 7/7, contrato 13/13, script 6/6) y `node tests/ai/traduccionPanelPrompt.test.js` 21/21 (tras la corrección).
-    - Bitácora en `CONTRACT.md` (entrada «IDI-B00f y cierre del bloque base»), con las atrasadas de IDI-B00b e IDI-B00d, y el bloque base en D-532.
+    - Bitácora en `CONTRACT.md` (entrada «IDI-B00f y cierre del bloque base»), con las atrasadas de IDI-B00b e IDI-B00d, y el bloque base en D-540.
     - **Espera producción o a Daniel:**
       - `npm run build:prod` (no lo corren los agentes) y revisar después el diff de `environment.ts` y `environment.prod.ts`.
       - Desplegar el backend de IDI-B00a (`visibleLanguages` en el login) y el front.

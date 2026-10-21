@@ -1,6 +1,6 @@
-<div class="modal-header">
-    <h4 class="modal-title">
-        <i class="pi pi-truck me-2"></i>
+<div class="modal-header dm-cabeza">
+    <i class="pi pi-truck dm-icono" aria-hidden="true"></i>
+    <h4 class="modal-title dm-titulo">
         {{ 'Lista de Transportadores' | translate }}
     </h4>
     <button type="button" class="close" aria-label="Close" (click)="closeModal()">
@@ -52,7 +52,7 @@
                            (input)="pagoValor = $any($event.target).value === '' ? null : +$any($event.target).value; pagoGuardado = false">
                 </div>
                 <div class="col-auto">
-                    <button type="button" class="btn btn-sm btn-primary" (click)="guardarPago()"
+                    <button type="button" class="cfg-btn" (click)="guardarPago()"
                             [disabled]="guardandoPago || !pagoValorValido || (pagoTipo !== 'ninguno' && pagoValor === null)">
                         {{ 'Guardar pago' | translate }}
                     </button>
@@ -74,9 +74,9 @@
                 <h5 class="card-title mb-0">
                     <i class="pi pi-list me-2"></i>
                     {{ 'Transportadores Registrados' | translate }}
-                    <span class="badge bg-primary ms-2">{{ vendors?.length || 0 }}</span>
+                    <span class="cfg-pill ms-2">{{ vendors?.length || 0 }}</span>
                 </h5>
-                <button type="button" class="btn btn-primary" (click)="showCreateForm()">
+                <button type="button" class="cfg-btn" (click)="showCreateForm()">
                     <i class="pi pi-plus me-2"></i>
                     {{ 'Agregar Transportador' | translate }}
                 </button>
@@ -296,11 +296,11 @@
                     </div>
                 </div>
                 <div class="mt-4 text-end">
-                    <button type="button" class="btn btn-secondary me-2" (click)="resetForm()" [disabled]="isLoading">
+                    <button type="button" class="cfg-btn cfg-btn--sec me-2" (click)="resetForm()" [disabled]="isLoading">
                         <i class="pi pi-refresh me-1"></i>
                         {{ 'Limpiar' | translate }}
                     </button>
-                    <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+                    <button type="submit" class="cfg-btn" [disabled]="isLoading">
                         <i class="pi pi-spin pi-spinner" *ngIf="isLoading"></i>
                         <i class="pi pi-check" *ngIf="!isLoading"></i>
                         <span class="ms-1">{{ editMode ? ('Actualizar' | translate) : ('Guardar' | translate) }}</span>
@@ -310,6 +310,6 @@
         </div>
     </div>
 </div>
-<div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="closeModal()">{{ 'Cerrar' | translate }}</button>
+<div class="modal-footer dm-pie">
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="closeModal()">{{ 'Cerrar' | translate }}</button>
 </div> 

@@ -84,7 +84,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     // D-502: inyectarlo aquí decide el tema al arrancar, antes del primer evento del router
     private themeMode: ThemeModeService,
-    // D-532: textos de PrimeNG en el idioma del panel; se arranca una sola vez aquí
+    // D-540: textos de PrimeNG en el idioma del panel; se arranca una sola vez aquí
     private primengI18n: PrimengI18nService
   ) {
     // Initialize loader
@@ -96,7 +96,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
     if (isPlatformBrowser(this.platformId)) {
       const storedUser = this.readStoredUser();
-      // D-532: con los idiomas visibles del login; uno oculto arranca en español.
+      // D-540: con los idiomas visibles del login; uno oculto arranca en español.
       const activeLanguage = normalizeAppLanguage(storedUser?.lang, idiomasVisibles(storedUser));
       translate.setDefaultLang(DEFAULT_APP_LANGUAGE.code);
       translate.use(activeLanguage.code);

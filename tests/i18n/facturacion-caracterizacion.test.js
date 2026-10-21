@@ -1,6 +1,6 @@
 'use strict';
 
-// D-532 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B10, tarea 11.7): lo que el compositor de
+// D-540 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B10, tarea 11.7): lo que el compositor de
 // facturas manda a la DIAN no depende del idioma de la pantalla. Se arma el mismo borrador, la misma
 // revisión, los mismos textos de observaciones y el mismo envío con el traductor en español y en inglés,
 // y se compara lo que recibe el servicio HTTP (sin emitir: el servicio es un registro en memoria).

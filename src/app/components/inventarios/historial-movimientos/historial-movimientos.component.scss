@@ -15,27 +15,6 @@ $info-color: $cfg-info;
 $border-radius: 11px;
 
 // ===================================
-// HEADER DEL MÓDULO
-// ===================================
-.module-header {
-    background: var(--ds-surface);
-    transition: all 0.3s ease;
-
-    h5 {
-        font-size: 1.3rem;
-        color: #495057;
-
-        i {
-            font-size: 1.1rem;
-        }
-    }
-
-    p {
-        opacity: 0.85;
-    }
-}
-
-// ===================================
 // PANEL DE FILTROS
 // ===================================
 .filtros-toggle {
@@ -557,16 +536,6 @@ $border-radius: 11px;
 // RESPONSIVE DESIGN
 // ===================================
 @media (max-width: 768px) {
-    .module-header {
-        flex-direction: column;
-        align-items: flex-start !important;
-
-        > div:last-child {
-            width: 100%;
-            justify-content: flex-end;
-            margin-top: 0.75rem;
-        }
-    }
 
     .table-toolbar {
         .d-flex {
@@ -611,9 +580,6 @@ $border-radius: 11px;
 }
 
 @media (max-width: 576px) {
-    .module-header h5 {
-        font-size: 1.1rem;
-    }
 
     .metric-chip {
         font-size: 0.8rem;
@@ -708,4 +674,41 @@ $border-radius: 11px;
   }
   .table-toolbar .p-button.p-button-text { color: $cfg-body; }
   .table-toolbar .p-button.p-button-text.p-button-primary { color: $cfg-accent; background: $cfg-accent-soft; }
+}
+
+// ===================================
+// MODALES (p-dialog de esta pantalla): encabezado blanco, título en tinta,
+// labels UPPERCASE muted y radio 20 (D-131/D-400). Acotado a :host.
+// ===================================
+:host ::ng-deep .p-dialog {
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px -20px rgba(95, 63, 224, .35);
+
+    .p-dialog-header {
+        padding: 16px 20px;
+        background: var(--ds-surface);
+        border-bottom: 1px solid $cfg-line;
+        color: $cfg-ink;
+    }
+
+    .p-dialog-title {
+        font-size: 17px;
+        font-weight: 800;
+        color: $cfg-ink;
+    }
+
+    .p-dialog-content p.text-muted.small {
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+        color: $cfg-muted !important;
+    }
+
+    .p-dialog-footer {
+        padding: 14px 20px;
+        background: var(--ds-surface);
+        border-top: 1px solid $cfg-line-soft;
+    }
 }

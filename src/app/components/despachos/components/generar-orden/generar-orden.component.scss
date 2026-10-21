@@ -5,6 +5,11 @@
 
 // Katuq Design Tokens
 @import '../../../../../assets/scss/utils/katuq-tokens';
+@import '../../styles/despachos-modal';
+
+// Piezas de modal del canon (cfg-btn, cfg-aviso, cfg-pill, dm-*): modal "Detalles del pedido"
+// y modal de opciones de Enviame.
+@include despachos-modal;
 
 // ===========================================
 // VARIABLES MINIMALISTAS (mapped to tokens)
@@ -270,7 +275,7 @@ $radius: 6px;
   background: $bg-white;
   overflow: hidden;
 
-  .card-header-modern {
+  .modern-card__cabeza {
     padding: $spacing-md $spacing-lg;
     border-bottom: $border;
     background: $bg-white;
@@ -660,7 +665,9 @@ $radius: 6px;
 
 .modal-container {
   background: $bg-white;
-  border-radius: $radius;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 64px -12px rgba(48, 30, 120, .28);
   max-width: 600px;
   width: 100%;
   max-height: 85vh;
@@ -676,21 +683,25 @@ $radius: 6px;
     align-items: center;
 
     h5 {
-      font-size: $font-md;
-      font-weight: 600;
-      color: $text-primary;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 17px !important;
+      font-weight: 800;
+      color: $cfg-ink;
+      letter-spacing: normal;
       margin: 0;
     }
 
     .btn-close-custom {
-      width: 28px;
-      height: 28px;
+      width: 36px;
+      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: transparent;
-      border: $border;
-      border-radius: 4px;
+      background: #fff;
+      border: 1px solid #e4e2ef;
+      border-radius: 11px;
       color: $text-secondary;
       cursor: pointer;
       transition: all 0.15s;
@@ -877,7 +888,7 @@ $radius: 6px;
   }
 
   .card.modern-card {
-    .card-header-modern {
+    .modern-card__cabeza {
       padding: $spacing-sm $spacing-md;
     }
 
@@ -915,7 +926,7 @@ $radius: 6px;
   .info-label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #6b7280;
+    color: #8f8bab;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 0.25rem;
@@ -924,14 +935,14 @@ $radius: 6px;
 
   .info-value {
     font-size: 0.875rem;
-    color: #1f2937;
+    color: #211F3A;
     font-weight: 500;
 
     &.address-block {
       padding: 0.5rem;
-      background: #f9fafb;
-      border-radius: 4px;
-      border-left: 3px solid #5F3FE0;
+      background: #faf9fe;
+      border: 1px solid #ececf4;
+      border-radius: 11px;
     }
   }
 }
@@ -985,13 +996,13 @@ img.product-thumbnail[src^="data:image/svg"] {
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem;
-    background: #f9fafb;
-    border-radius: 6px;
+    background: #faf9fe;
+    border-radius: 11px;
 
     .delivery-icon {
       width: 40px;
       height: 40px;
-      border-radius: 8px;
+      border-radius: 11px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1008,7 +1019,7 @@ img.product-thumbnail[src^="data:image/svg"] {
       .delivery-label {
         font-size: 0.75rem;
         font-weight: 600;
-        color: #6b7280;
+        color: #8f8bab;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         margin-bottom: 0.25rem;
@@ -1017,7 +1028,7 @@ img.product-thumbnail[src^="data:image/svg"] {
       .delivery-value {
         font-size: 0.875rem;
         font-weight: 600;
-        color: #1f2937;
+        color: #211F3A;
       }
     }
   }
@@ -1033,13 +1044,13 @@ img.product-thumbnail[src^="data:image/svg"] {
 
     .payment-label {
       font-size: 0.875rem;
-      color: #6b7280;
+      color: #8f8bab;
     }
 
     .payment-value {
       font-size: 0.875rem;
       font-weight: 600;
-      color: #1f2937;
+      color: #211F3A;
     }
   }
 
@@ -1048,19 +1059,19 @@ img.product-thumbnail[src^="data:image/svg"] {
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem;
-    background: #f9fafb;
-    border-radius: 6px;
+    background: #faf9fe;
+    border-radius: 11px;
 
     .payment-label {
       font-size: 0.875rem;
       font-weight: 600;
-      color: #374151;
+      color: #5b5878;
     }
 
     .payment-value-total {
       font-size: 1.125rem;
       font-weight: 700;
-      color: #1f2937;
+      color: #211F3A;
     }
   }
 }
@@ -1072,20 +1083,91 @@ img.product-thumbnail[src^="data:image/svg"] {
   .pending-amount {
     font-size: 2rem;
     font-weight: 700;
-    color: #1f2937;
+    color: #211F3A;
     margin: 1rem 0;
   }
 }
 
-// Gradient backgrounds
-.bg-gradient-primary {
-  background: #5F3FE0;
+// ── Modal "Detalles del pedido": tema canónico ──
+.go-detalle {
+  border: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 64px -12px rgba(48, 30, 120, .28);
+  color: $cfg-ink;
+
+  .modal-body { background: $cfg-tint; }
+
+  .nav-tabs {
+    background: #fff;
+    border-bottom: 1px solid $cfg-line;
+
+    .nav-link {
+      border: 0;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      color: $cfg-body;
+      font-weight: 700;
+      font-size: 13.5px;
+      letter-spacing: normal;
+
+      &:hover { color: $cfg-accent; }
+      &.active { color: $cfg-accent; background: transparent; border-bottom-color: $cfg-accent; }
+      &:focus-visible { outline: 3px solid $cfg-accent-2 !important; }
+    }
+  }
+
+  .table {
+    font-size: 13px;
+    color: $cfg-ink;
+
+    .go-thead th {
+      background: $cfg-tint;
+      color: $cfg-muted;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .go-tfoot td { background: $cfg-tint; }
+    tbody tr:hover { background: $cfg-row-hover; }
+  }
+
+  .badge {
+    border-radius: 20px;
+    font-size: 10.5px;
+    font-weight: 800;
+
+    &.bg-success { background-color: $cfg-ok-soft !important; color: $cfg-ok !important; }
+    &.bg-warning { background-color: $cfg-warn-soft !important; color: $cfg-warn !important; }
+    &.bg-light { background-color: $cfg-chip-bg !important; color: $cfg-body !important; }
+  }
+
+  .text-success { color: $cfg-ok !important; }
 }
 
-.bg-gradient-warning {
-  background: #fef3c7;
-  border: none !important;
+.go-acento { color: $cfg-accent !important; }
+
+// Azulejos de ícono: par fuerte / fondo suave.
+.go-tile { background: $cfg-accent-soft; color: $cfg-accent; i { color: inherit; } }
+.go-tile--ok { background: $cfg-ok-soft; color: $cfg-ok; }
+.go-tile--info { background: $cfg-info-soft; color: $cfg-info; }
+
+// Tarjeta "Falta por pagar": aviso en par de alerta, plano.
+.go-pendiente {
+  background: $cfg-warn-soft;
+  border-color: #f6dcb6;
+
+  .text-warning { color: $cfg-warn !important; }
 }
+.go-pendiente__titulo {
+  margin: 0;
+  font-size: 15px !important;
+  font-weight: 800;
+  color: $cfg-ink;
+}
+
+.go-aviso-txt { color: inherit; font-size: inherit; }
 
 // =============================================================================
 // REDISEÑO "Generar Orden de Envío" (prefijo goe-)
@@ -1254,8 +1336,8 @@ $goe-info-bg:     #E7F1FF;
   &:hover { border-color: #e2d9fb; background: #faf9ff; }
 
   &--sel {
-    border-color: #e2d9fb; border-left: 4px solid $goe-accent;
-    &.is-movido { border-left-color: $goe-warn; }
+    border-color: $goe-accent; box-shadow: 0 0 0 3px rgba(95, 63, 224, .1);
+    &.is-movido { border-color: $goe-warn; box-shadow: 0 0 0 3px rgba(217, 130, 10, .12); }
   }
 
   &__orden {

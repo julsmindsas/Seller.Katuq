@@ -14,7 +14,7 @@ const USUARIO = {
   name: 'Ana María Pérez', image: 'foto.png', lang: { language: 'Español', code: 'es', type: 'CO', icon: 'co' }, tema: false,
 };
 
-// D-532 (IDI-B01b): edit-profile recibe TranslateService para sus avisos; en estas pruebas el
+// D-540 (IDI-B01b): edit-profile recibe TranslateService para sus avisos; en estas pruebas el
 // traductor devuelve la clave, así que lo que se comprueba (qué se guarda en `user`) no cambia.
 const TRADUCTOR = { instant: clave => clave };
 

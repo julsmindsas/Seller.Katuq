@@ -696,10 +696,12 @@ $fixed-secondary: #7C5CFF;
   }
   
   .form-label {
-    font-weight: 500;
-    color: var(--ds-body);
-    margin-bottom: 0.4rem;
-    font-size: 0.85rem;
+    font-weight: 800;
+    color: $text-muted;
+    margin-bottom: 6px;
+    font-size: 10.5px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
   }
   
   .form-control-static {
@@ -1046,36 +1048,47 @@ form {
   &:nth-child(5) { animation-delay: 0.25s; }
 }
 
-// Mejoras para modales
+// Modales (plantillas de esta pantalla): encabezado blanco con título en tinta (D-131/D-400).
 .modal-header {
-  background: var(--ds-accent);
-  color: $white;
-  border-bottom: none;
-  padding: 1rem 1.5rem;
-  
+  background: $white;
+  border-bottom: 1px solid $border-color;
+  padding: 16px 20px;
+
   .modal-title {
-    color: $white;
-    font-weight: 600;
-    font-size: 1.15rem;
-  }
-  
-  .btn-close {
-    color: $white;
-    opacity: 0.8;
-    
-    &:hover {
-      opacity: 1;
-    }
+    color: var(--ds-ink);
+    font-weight: 800;
+    font-size: 17px;
   }
 }
 
 .modal-body {
   padding: 1.5rem;
+
+  // Opciones de radio/checkbox: texto normal, no label de campo.
+  &.cfg-form .form-check-label {
+    text-transform: none;
+    font-size: 13.5px;
+    font-weight: 500;
+    letter-spacing: normal;
+    color: var(--ds-ink);
+  }
 }
 
 .modal-footer {
-  border-top: 1px solid $border-color;
-  padding: 1rem 1.5rem;
+  gap: 8px;
+  border-top: 1px solid var(--ds-line-soft);
+  padding: 14px 20px;
+}
+
+// Convertir a cliente: acción semántica de éxito en par fuerte/fondo suave.
+.pm-convertir {
+  background: var(--ds-ok-soft);
+  border: 1px solid #cdeedb;
+  color: $success-color;
+
+  i { color: inherit; }
+  &:hover { background: $success-color; border-color: $success-color; color: $white; }
+  &:focus-visible { outline: 3px solid var(--ds-focus) !important; outline-offset: 2px; }
 }
 
 // Responsive
