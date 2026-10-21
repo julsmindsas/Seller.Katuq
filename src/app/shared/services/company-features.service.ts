@@ -53,6 +53,9 @@ export const COMPANY_FEATURE_FLAGS = [
   // Traer mi tienda desde Shopify o WooCommerce (D-498, ticket 1245). Solo a mano, primero en
   // FLORECER y nunca en OH MY STORE. Dueño: Daniel. Se retira el 2027-03-31.
   'storeMigrationImport',
+  // Clientes traídos con su autorización de correo (F5-30, D-531). Apagada hasta el concepto legal
+  // (tarea 0.7): sin ella los clientes entran sin suscripción. Dueño: Daniel. Se retira el 2027-03-31.
+  'storeMigrationCustomerConsent',
   // Facturación electrónica en Integraciones (D-500, ticket 1260, FE-01): tarjeta única, elección
   // del proveedor y resolvedor del servidor. Dueño: Daniel. Se retira el 2027-03-31.
   'invoicingHub',

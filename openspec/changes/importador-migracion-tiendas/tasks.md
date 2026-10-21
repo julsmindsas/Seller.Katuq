@@ -29,7 +29,7 @@
   - *Estado:* escrita y **en rojo hasta 6.1** (hoy `products` responde 501). La forma del producto y la actualización acotada ya pasan por el upsert real en la prueba de 4.2. El simulador ahora reemplaza un mapa vacío como Firestore (`simulador.test.js`), así que la condición de `exposicion` sí puede fallar; `migrationProduct.test.js` lo comprueba con un control sin la copia.
 - [x] 1.4 `[P]` `importStoreRedirects.contract.test.js`: solo `draft.redirecciones` (`published` intacto); manuales primero y sin cambios; lo generado se reconoce por `metadata.migration.handle` y se actualiza; destino inexistente → `TARGET_MISSING`; tope 500 con sobrantes reportadas; sitio ajeno → 404; repetir no duplica.
   - *Estado:* escrita; en verde desde 7.1.
-- [ ] 1.5 `[P]` `importStoreCustomers.writeSet.contract.test.js` (fase 1b): los casos de `design-clientes.md`, incluidos el correo suprimido en otra tienda, el celular con otro formato y la reversa con más de 500 documentos.
+- [ ] 1.5 `[P]` `importStoreCustomers.writeSet.contract.test.js` (fase 1b): los casos de `design-clientes.md`, incluidos el correo suprimido en otra tienda, el celular con otro formato y la reversa con más de 500 documentos. **Parcial (B15):** el archivo existe con lector, normalización y consentimiento en verde; faltan ruta `customers` y reversa con más de 500 documentos (los cierra B16, 9.3).
 - [x] 1.6 `[P]` Dorado de categorías: con lotes de prueba, `importProducts` escribe el mismo árbol, `categorias` y `categoriasIndex` que en `HEAD`, y responde el mismo 409. Los valores salen del código actual. El dorado de fotos sigue en verde.
   - *Estado:* `categoriasImportProducts.golden.test.js`, con los valores sacados de `HEAD` en `fixtures/dorado-categorias-importProducts.json`; en verde antes y después de 3.1.
 - [ ] 1.7 `[P]` Pruebas de los lectores sobre los fixtures de 0.4: `shopifyProducts.test.js` y `wooProducts.test.js`. Cubren agrupación, ejes por nombre, separación por precio, más de dos ejes, color de la foto, estado, referencia, suma de cantidades y la tabla de precio sin IVA tomada del modal. Depende de 0.4.
@@ -85,8 +85,8 @@
 
 ## 9. Fase 1b: clientes. **Diff aprobado.** Requiere 0.7 y las respuestas 3, 4 y 19 a 21
 
-- [ ] 9.1 `readers/shopifyCustomers.js` y su normalización, con prueba sobre el fixture. Depende de 0.4.
-- [ ] 9.2 El origen `importacion` y `registrarImportacion` (`design-clientes.md`). **Éxito:** las pruebas de suscripción existentes y la nueva, en verde.
+- [x] 9.1 `readers/shopifyCustomers.js` y su normalización, con prueba sobre el fixture. Depende de 0.4. Hecho en B15 (`readers/shopifyCustomers.js`, fixture `shopify-clientes.csv` sintético; las columnas siguen sin export real, 0.4).
+- [x] 9.2 El origen `importacion` y `registrarImportacion` (`design-clientes.md`). **Éxito:** las pruebas de suscripción existentes y la nueva, en verde. Hecho en B15: origen `importacion`, `registrarImportacion` y la bandera `storeMigrationCustomerConsent` (D-505), APAGADA: sin el concepto legal 0.7 los clientes entran sin suscripción.
 - [ ] 9.3 Las rutas `customers` y `DELETE customers/:batchId`. Depende de 9.1, 9.2 y 6.1. **Éxito:** 1.5 en verde.
 - [ ] 9.4 El paso de clientes en el front, con la casilla de declaración. Build sin errores.
 
