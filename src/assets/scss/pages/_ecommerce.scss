@@ -60,12 +60,12 @@
   }
 
   .input-group {
-    background-color: rgba($dark-color, 0.1);
+    background-color: rgba(44, 50, 63, 0.1);
     width: 77px;
   }
 
   input {
-    background-color: rgba($dark-color, 0.1);
+    background-color: rgba(44, 50, 63, 0.1);
     color: $dark-color;
     max-width: 30px;
     padding: 0;
@@ -706,7 +706,7 @@
   color: var(--theme-deafult);
 
   del {
-    color: rgba($dark-color, 0.4);
+    color: rgba(44, 50, 63, 0.4);
     padding-left: 10px;
     font-size: 80%;
   }
