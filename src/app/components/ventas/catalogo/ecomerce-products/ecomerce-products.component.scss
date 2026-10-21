@@ -1,9 +1,32 @@
 :host {
   // Reskin: palette morado de Cotizaciones. Re-tiñe todos los var(--primary-*) del componente.
   --primary-color: #6c4ce0;
+  --primary-ink: #6c4ce0;
   --primary-light: #8c6bff;
   --primary-dark: #533bc4;
   --primary-rgb: 108, 76, 224;
+}
+
+// Oscuro (D-502 F3, bloque TEMA-B14): las variables propias de la pantalla toman los tokens del tema.
+// Solo en oscuro: el claro conserva sus valores. Una sola fuente de color en oscuro: var(--ds-*).
+:host-context(body.dark-only) {
+  --primary-color: var(--ds-accent);
+  --primary-ink: var(--ds-accent-ink);
+  --primary-dark: var(--ds-accent-hover);
+  --success-color: var(--ds-ok);
+  --warning-color: var(--ds-warn);
+  --danger-color: var(--ds-err);
+  --light-color: var(--ds-surface-2);
+  --dark-color: var(--ds-ink);
+  --gray-100: var(--ds-surface-2);
+  --gray-200: var(--ds-line);
+  --gray-300: var(--ds-line-strong);
+  --gray-400: var(--ds-control-border);
+  --gray-500: var(--ds-muted);
+  --gray-600: var(--ds-muted);
+  --gray-700: var(--ds-body);
+  --gray-800: var(--ds-ink);
+  --gray-900: var(--ds-ink);
 }
 
 .modal-fullscreen {
@@ -260,7 +283,7 @@
   border: 1px solid var(--gray-300);
   border-radius: 12px; // Más redondeado (era 8px)
   overflow: hidden;
-  background: #ffffff;
+  background: var(--ds-surface);
 
   // Sombras más suaves con más blur y menos opacidad
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04),
@@ -481,7 +504,7 @@
       border: 1px solid rgba(0, 0, 0, 0.1);
 
       &:hover {
-        background: white;
+        background: var(--ds-surface);
       }
     }
 
@@ -524,7 +547,7 @@
   flex-direction: column;
   gap: 0.75rem;
   flex: 1;
-  background: white;
+  background: var(--ds-surface);
   // Borde superior MUY sutil para separación visual
   border-top: 1px solid #f8f9fa;
 
@@ -550,7 +573,7 @@
       width: 24px;
       height: 24px;
       background: rgba(var(--primary-rgb), 0.1);
-      color: var(--primary-color);
+      color: var(--primary-ink);
       border-radius: 50%;
       font-size: 0.75rem;
       transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -875,7 +898,7 @@
           align-items: center;
 
           i:not(.toggle-data) {
-            color: var(--primary-color);
+            color: var(--primary-ink);
           }
         }
 
@@ -945,7 +968,7 @@
 
     &:hover {
       background: rgba(var(--primary-rgb), 0.06);
-      color: var(--primary-color);
+      color: var(--primary-ink);
     }
 
     .checkbox_animated {
@@ -1024,10 +1047,10 @@
 
   .p-accordion-header:not(.p-disabled).p-highlight .p-accordion-header-link {
     background: transparent;
-    color: var(--primary-color);
+    color: var(--primary-ink);
 
     .p-accordion-toggle-icon {
-      color: var(--primary-color);
+      color: var(--primary-ink);
     }
   }
 
@@ -1052,7 +1075,7 @@
     .p-slider-handle {
       width: 16px;
       height: 16px;
-      background: white;
+      background: var(--ds-surface);
       border: 2px solid var(--success-color);
       border-radius: 50%;
       transition: all 0.2s ease;
@@ -1096,7 +1119,7 @@
     }
 
     .p-treeselect-trigger {
-      color: var(--primary-color);
+      color: var(--primary-ink);
       width: 2.5rem;
     }
   }
@@ -1159,7 +1182,7 @@
         box-shadow: var(--box-shadow-sm);
 
         i, svg {
-          color: var(--primary-color);
+          color: var(--primary-ink);
           stroke: var(--primary-color);
         }
       }
@@ -1336,7 +1359,7 @@
     color: var(--primary-dark);
 
     i {
-      color: var(--primary-color);
+      color: var(--primary-ink);
     }
 
     h6 {
@@ -1403,7 +1426,7 @@
    ================================================================= */
 
 .search-products-card {
-  background: #ffffff;
+  background: var(--ds-surface);
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   padding: 0.75rem;
@@ -1562,7 +1585,7 @@
       background: var(--primary-color);
 
       .grid-icon span {
-        background: white;
+        background: var(--ds-surface);
       }
     }
 
@@ -1624,7 +1647,7 @@
 
 // Spinner de carga principal
 .spinner-border.text-primary {
-  color: var(--primary-color, #5F3FE0) !important;
+  color: var(--primary-ink, #5F3FE0) !important;
 }
 
 // Alerta de error con botón de reintentar
@@ -1730,7 +1753,7 @@
     border-radius: 20px;
     border: 1px solid var(--primary-color, #6c4ce0);
     background: rgba(var(--primary-rgb, 108, 76, 224), 0.06);
-    color: var(--primary-color, #6c4ce0);
+    color: var(--primary-ink, #6c4ce0);
     font-weight: 700;
     font-size: 13.5px;
     cursor: pointer;
@@ -1786,7 +1809,7 @@
     align-items: center;
     justify-content: center;
     background: rgba(var(--primary-rgb, 108, 76, 224), 0.10);
-    color: var(--primary-color, #6c4ce0);
+    color: var(--primary-ink, #6c4ce0);
   }
 
   .combos-picker-info {
