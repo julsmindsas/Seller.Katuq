@@ -25,7 +25,7 @@
         gap: 10px;
 
         i {
-            color: $cfg-accent;
+            color: $cfg-accent-ink;
             font-size: 18px;
         }
     }
@@ -41,12 +41,12 @@
 
     &.p-button-outlined,
     &.p-button-text {
-        background: #fff;
-        border: 1px solid #e4e2ef;
+        background: var(--ds-surface);
+        border: 1px solid var(--ds-line-strong);
         color: $cfg-body;
         box-shadow: none;
 
-        &:enabled:hover { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent; }
+        &:enabled:hover { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent-ink; }
     }
 
     &.p-button-text { border-color: transparent; background: transparent; }
@@ -72,7 +72,7 @@
     letter-spacing: .4px;
     text-transform: uppercase;
     background: $cfg-accent-soft;
-    color: $cfg-accent;
+    color: $cfg-accent-ink;
 
     .p-tag-value, .p-tag-icon { color: inherit !important; }
 
@@ -82,7 +82,7 @@
     &.p-tag-info { background: $cfg-info-soft; color: $cfg-info; }
 }
 
-:host ::ng-deep .appointments-container .p-progress-spinner-circle { stroke: $cfg-accent !important; }
+:host ::ng-deep .appointments-container .p-progress-spinner-circle { stroke: $cfg-accent-ink !important; }
 
 // ========== ESTADÍSTICAS ==========
 .stats-grid {
@@ -92,7 +92,7 @@
 }
 
 .stat-card {
-    background: #fff;
+    background: var(--ds-surface);
     border: 1px solid $cfg-line;
     border-radius: 16px;
     padding: 14px 16px;
@@ -141,8 +141,8 @@
 
     // Variantes: par fuerte / fondo suave
     &.total {
-        .stat-icon { background: $cfg-accent-soft; color: $cfg-accent; }
-        .stat-value { color: $cfg-accent !important; }
+        .stat-icon { background: $cfg-accent-soft; color: $cfg-accent-ink; }
+        .stat-value { color: $cfg-accent-ink !important; }
     }
 
     &.confirmed {
@@ -210,7 +210,7 @@
 
     ::ng-deep .p-dropdown:not(.p-disabled).p-focus,
     ::ng-deep .p-inputtext:enabled:focus {
-        background: #fff;
+        background: var(--ds-surface);
         border-color: $cfg-accent-2;
         box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
     }
@@ -224,7 +224,7 @@
 
 // ========== TARJETA DE CITA ==========
 .appointment-card {
-    background: #fff;
+    background: var(--ds-surface);
     border-radius: 16px;
     overflow: hidden;
     box-shadow: $cfg-shadow-panel;
@@ -271,7 +271,7 @@
                 color: $cfg-body !important;
                 font-weight: 700;
 
-                i { color: $cfg-accent; }
+                i { color: $cfg-accent-ink; }
             }
         }
     }
@@ -299,7 +299,7 @@
 
         i {
             font-size: 16px;
-            color: $cfg-accent;
+            color: $cfg-accent-ink;
             margin-top: 2px;
             flex-shrink: 0;
         }
@@ -332,7 +332,7 @@
     // Pie
     .card-footer {
         padding: 12px 20px;
-        background: #fff;
+        background: var(--ds-surface);
         border-top: 1px solid $cfg-line-soft;
         display: flex;
         justify-content: space-between;
@@ -372,7 +372,7 @@
     gap: 12px;
     text-align: center;
     padding: 48px 16px;
-    background: #fff;
+    background: var(--ds-surface);
     border: 1px solid $cfg-line;
     border-radius: 16px;
 

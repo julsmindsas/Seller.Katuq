@@ -28,12 +28,12 @@
   border-radius: 9px;
   cursor: pointer;
 
-  &:hover { color: $cfg-accent; }
+  &:hover { color: $cfg-accent-ink; }
 }
 
 .embudo__rango--activo {
-  background: #fff;
-  color: $cfg-accent;
+  background: var(--ds-surface);
+  color: $cfg-accent-ink;
   font-weight: 800;
   box-shadow: $cfg-shadow-panel;
 }
@@ -54,11 +54,11 @@
   input {
     min-height: 40px;
     padding: 0 10px;
-    border: 1px solid #e4e2ef;
+    border: 1px solid var(--ds-line-strong);
     border-radius: 11px;
     font-size: 13.5px;
     color: $cfg-ink;
-    background: #fff;
+    background: var(--ds-surface);
   }
 }
 
@@ -97,7 +97,7 @@
   gap: 6px;
   min-width: 0;
   padding: 16px;
-  background: #fff;
+  background: var(--ds-surface);
   border: 1px solid $cfg-line;
   border-radius: 16px;
   box-shadow: $cfg-shadow-panel;
@@ -111,11 +111,11 @@
   color: $cfg-ink;
   overflow-wrap: anywhere;
 }
-.embudo__kpi-valor--acento { color: $cfg-accent; }
+.embudo__kpi-valor--acento { color: $cfg-accent-ink; }
 .embudo__kpi-valor--ok { color: $cfg-ok; }
 
 .embudo__etapa { background: $cfg-tint; }
-.embudo__etapa-paso { font-size: 12px; font-weight: 700; color: $cfg-accent; }
+.embudo__etapa-paso { font-size: 12px; font-weight: 700; color: $cfg-accent-ink; }
 .embudo__etapa-paso--base { color: $cfg-muted; font-weight: 600; }
 
 // ── Tabla ──
@@ -136,10 +136,10 @@
   flex: 0 0 28px;
   width: 28px;
   height: 28px;
-  border: 1px solid #e4e2ef;
+  border: 1px solid var(--ds-line-strong);
   border-radius: 9px;
-  background: #fff;
-  color: $cfg-accent;
+  background: var(--ds-surface);
+  color: $cfg-accent-ink;
   font-size: 11px;
   cursor: pointer;
 
