@@ -129,13 +129,27 @@ test('a) cada --ds-* de design-f1.md §1 existe en :root y en body.dark-only con
   assert.deepEqual([...new Set(sobrantes)], [], 'tokens que no están en design-f1.md §1');
 });
 
+// Desde F2a (tarea 4.1, bloque TEMA-B07) los $cfg-* son var(--ds-*). Su hex de antes de F2a (commit
+// 4ac9a459) queda fijo aquí, sin git: la prueba no depende de la historia (clon superficial en CI) y exige
+// que el claro de cada token sea ese hex y que la variable de hoy apunte a su token.
+const CFG_HEX_ANTES_F2A = {
+  'cfg-accent': '#5F3FE0', 'cfg-accent-hover': '#4a2fc0', 'cfg-accent-2': '#7C5CFF', 'cfg-accent-soft': '#efe9ff',
+  'cfg-ink': '#211F3A', 'cfg-body': '#5b5878', 'cfg-muted': '#8f8bab', 'cfg-line': '#ececf4', 'cfg-line-soft': '#f1f0f7',
+  'cfg-chip-bg': '#f5f4fa', 'cfg-chip-border': '#e9e7f3', 'cfg-tint': '#faf9fe', 'cfg-row-hover': '#faf9ff',
+  'cfg-tile': '#f3f1fb', 'cfg-ok': '#1E874B', 'cfg-ok-soft': '#E6F7EE', 'cfg-warn': '#D9820A', 'cfg-warn-soft': '#FFF1DF',
+  'cfg-err': '#D64545', 'cfg-err-soft': '#FDECEC', 'cfg-info': '#1E6FD9', 'cfg-info-soft': '#E7F1FF',
+  'cfg-shadow-panel': '0 1px 3px rgba(30, 20, 80, .04)', 'cfg-shadow-btn': '0 8px 18px -8px rgba(95, 63, 224, .7)',
+};
+
 test('a) el claro es igual a los $cfg-* de _config-pagina.scss y a los del marco', () => {
   const { claro } = tokens();
-  const base = fs.readFileSync(CONFIG_PAGINA, 'utf8');
+  const actual = fs.readFileSync(CONFIG_PAGINA, 'utf8');
   for (const [token, variable] of Object.entries(CLARO_IGUAL_A_CFG)) {
-    const m = base.match(new RegExp(`\\$${variable}\\s*:\\s*([^;]+);`));
-    assert.ok(m, `no encontré $${variable} en _config-pagina.scss`);
-    assert.equal(normalizar(claro[token]), normalizar(m[1]), `--ds-${token} claro debe ser $${variable}`);
+    assert.ok(variable in CFG_HEX_ANTES_F2A, `falta el hex de $${variable}`);
+    assert.equal(normalizar(claro[token]), normalizar(CFG_HEX_ANTES_F2A[variable]), `--ds-${token} claro debe ser el hex de $${variable}`);
+    const hoy = actual.match(new RegExp(`^\\$${variable}\\s*:\\s*([^;]+);`, 'm'));
+    assert.ok(hoy, `no encontré $${variable} en _config-pagina.scss`);
+    assert.equal(hoy[1].trim(), `var(--ds-${token})`, `$${variable} debe apuntar a --ds-${token}`);
   }
   const sidebar = fs.readFileSync(path.join(RAIZ, 'src/app/shared/components/sidebar/sidebar.component.scss'), 'utf8');
   const sombra = sidebar.match(/--ktq-shadow-card\s*:\s*([^;]+);/);

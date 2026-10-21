@@ -1,0 +1,452 @@
+/* D-502 F2a: CSS compilado del componente sintético con @include config-pagina en el commit 4ac9a459 (antes de F2a). Referencia fija del «claro idéntico»; no se edita. */
+.cfg-pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 16px 32px;
+  color: #211F3A;
+  box-sizing: border-box;
+}
+@media (min-width: 768px) {
+  .cfg-pagina {
+    padding: 24px 24px 40px;
+  }
+}
+.cfg-pagina p, .cfg-pagina a, .cfg-pagina li, .cfg-pagina label, .cfg-pagina span, .cfg-pagina button {
+  letter-spacing: normal;
+}
+.cfg-pagina :focus-visible {
+  outline: 3px solid #7C5CFF !important;
+  outline-offset: 2px;
+}
+
+.cfg-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #ececf4;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(30, 20, 80, 0.04);
+}
+
+.cfg-cabeza__textos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  max-width: 640px;
+}
+
+.cfg-eyebrow {
+  align-self: flex-start;
+  font-size: 10.5px !important;
+  font-weight: 800;
+  letter-spacing: 0.7px !important;
+  text-transform: uppercase;
+  color: #5F3FE0 !important;
+  background: #efe9ff;
+  border: 1px solid #ddd3fb;
+  border-radius: 20px;
+  padding: 4px 10px;
+}
+
+.cfg-titulo {
+  margin: 0;
+  font-size: 22px !important;
+  line-height: 1.2;
+  font-weight: 800;
+  color: #211F3A;
+}
+
+.cfg-sub {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #5b5878;
+}
+
+.cfg-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.cfg-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid #5F3FE0;
+  border-radius: 11px;
+  background: #5F3FE0;
+  color: #fff !important;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px -8px rgba(95, 63, 224, 0.7);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+.cfg-btn i, .cfg-btn span {
+  color: inherit !important;
+  font-size: inherit;
+}
+.cfg-btn:hover:not(:disabled) {
+  background: #4a2fc0;
+  border-color: #4a2fc0;
+  transform: translateY(-1px);
+}
+.cfg-btn:disabled {
+  background: #d8d4ea;
+  border-color: #d8d4ea;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.cfg-btn--sec {
+  background: #fff;
+  color: #5b5878 !important;
+  border-color: #e4e2ef;
+  box-shadow: none;
+}
+.cfg-btn--sec:hover:not(:disabled) {
+  background: #faf9fe;
+  border-color: #d9cffb;
+  color: #5F3FE0 !important;
+}
+
+.cfg-btn--peligro {
+  background: #fff;
+  color: #D64545 !important;
+  border-color: #f3c9c9;
+  box-shadow: none;
+}
+.cfg-btn--peligro:hover:not(:disabled) {
+  background: #FDECEC;
+  border-color: #D64545;
+  color: #D64545 !important;
+}
+
+.cfg-card {
+  position: relative;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #ececf4;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(30, 20, 80, 0.04);
+  min-width: 0;
+}
+@media (min-width: 768px) {
+  .cfg-card {
+    padding: 20px;
+  }
+}
+
+.cfg-card__titulo {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #211F3A;
+}
+
+.cfg-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #8f8bab;
+}
+
+.cfg-aviso {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 11px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  background: #E7F1FF;
+  color: #1E6FD9;
+}
+
+.cfg-aviso--ok {
+  background: #E6F7EE;
+  color: #1E874B;
+}
+
+.cfg-aviso--warn {
+  background: #FFF1DF;
+  color: #D9820A;
+}
+
+.cfg-aviso--error {
+  background: #FDECEC;
+  color: #D64545;
+}
+
+.cfg-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+  text-align: center;
+}
+
+.cfg-vacio__icono {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: #f3f1fb;
+  color: #5F3FE0;
+  font-size: 26px;
+}
+
+.cfg-vacio__titulo {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #211F3A;
+}
+
+.cfg-vacio__texto {
+  margin: 0;
+  font-size: 12.5px;
+  color: #8f8bab;
+}
+
+.cfg-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10.5px !important;
+  font-weight: 800;
+  letter-spacing: 0.4px !important;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: #efe9ff;
+  color: #5F3FE0 !important;
+}
+
+.cfg-pill--ok {
+  background: #E6F7EE;
+  color: #1E874B !important;
+}
+
+.cfg-pill--warn {
+  background: #FFF1DF;
+  color: #D9820A !important;
+}
+
+.cfg-pill--error {
+  background: #FDECEC;
+  color: #D64545 !important;
+}
+
+.cfg-pill--info {
+  background: #E7F1FF;
+  color: #1E6FD9 !important;
+}
+
+.cfg-pill--neutro {
+  background: #eef0f3;
+  color: #5A6B78 !important;
+}
+
+.cfg-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.cfg-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  background: #faf9fe;
+  border: 1px solid #eeecf7;
+  border-radius: 11px;
+  min-width: 0;
+  transition: transform 0.15s ease;
+}
+.cfg-stat:hover {
+  transform: translateY(-1px);
+}
+
+.cfg-stat__label {
+  font-size: 10.5px !important;
+  font-weight: 800;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase;
+  color: #8f8bab !important;
+}
+
+.cfg-stat__valor {
+  font-size: 18px !important;
+  font-weight: 800;
+  color: #5F3FE0 !important;
+  line-height: 1.2;
+}
+
+.cfg-form label, .cfg-form .form-label, .cfg-form .col-form-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #8f8bab;
+  margin-bottom: 6px;
+}
+.cfg-form .form-control, .cfg-form .form-select {
+  min-height: 40px;
+  background-color: #f5f4fa;
+  border: 1px solid #e9e7f3;
+  border-radius: 10px;
+  color: #211F3A;
+  font-size: 13.5px;
+  box-shadow: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.cfg-form .form-control:focus, .cfg-form .form-select:focus {
+  background-color: #fff;
+  border-color: #7C5CFF;
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.15);
+}
+.cfg-form textarea.form-control {
+  min-height: 88px;
+}
+.cfg-form .form-check-input:checked {
+  background-color: #5F3FE0;
+  border-color: #5F3FE0;
+}
+.cfg-form .invalid-feedback, .cfg-form .text-danger {
+  color: #D64545 !important;
+  font-size: 12px;
+}
+
+.cfg-form__grupo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px 16px;
+}
+
+.cfg-form__pie {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f0f7;
+}
+
+:host ::ng-deep .cfg-form .p-dropdown, :host ::ng-deep .cfg-form .p-multiselect, :host ::ng-deep .cfg-form .p-calendar .p-inputtext, :host ::ng-deep .cfg-form .p-inputnumber .p-inputtext, :host ::ng-deep .cfg-form .p-inputtext {
+  min-height: 40px;
+  background: #f5f4fa;
+  border: 1px solid #e9e7f3;
+  border-radius: 10px;
+}
+:host ::ng-deep .cfg-form .p-dropdown:not(.p-disabled).p-focus, :host ::ng-deep .cfg-form .p-multiselect:not(.p-disabled).p-focus, :host ::ng-deep .cfg-form .p-inputtext:enabled:focus {
+  border-color: #7C5CFF;
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.15);
+}
+
+:host ::ng-deep .cfg-pagina .p-tabview .p-tabview-nav {
+  background: transparent;
+  border-color: #ececf4;
+}
+:host ::ng-deep .cfg-pagina .p-tabview .p-tabview-nav li .p-tabview-nav-link {
+  background: transparent;
+  border-color: transparent;
+  color: #5b5878;
+  font-weight: 700;
+}
+:host ::ng-deep .cfg-pagina .p-tabview .p-tabview-nav li .p-tabview-nav-link .p-tabview-title {
+  color: inherit !important;
+}
+:host ::ng-deep .cfg-pagina .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  color: #5F3FE0;
+  border-color: #5F3FE0;
+}
+:host ::ng-deep .cfg-pagina .p-tabview .p-tabview-ink-bar {
+  background: #5F3FE0;
+}
+:host ::ng-deep .cfg-pagina .p-tabview .p-tabview-panels {
+  background: transparent;
+  padding: 16px 0 0;
+}
+
+:host ::ng-deep .cfg-card .p-datatable .p-datatable-wrapper {
+  border-radius: 11px;
+}
+:host ::ng-deep .cfg-card .p-datatable .p-datatable-thead > tr > th {
+  background: #faf9fe !important;
+  color: #8f8bab !important;
+  font-size: 10.5px !important;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-color: #f1f0f7 !important;
+  padding: 12px 14px;
+}
+:host ::ng-deep .cfg-card .p-datatable .p-datatable-thead > tr > th.p-highlight,
+:host ::ng-deep .cfg-card .p-datatable .p-datatable-thead > tr > th.p-sortable-column:not(.p-highlight):hover {
+  background: #efe9ff !important;
+  color: #5F3FE0 !important;
+}
+:host ::ng-deep .cfg-card .p-datatable .p-datatable-thead > tr > th.p-highlight .p-sortable-column-icon,
+:host ::ng-deep .cfg-card .p-datatable .p-datatable-thead > tr > th.p-sortable-column:not(.p-highlight):hover .p-sortable-column-icon {
+  color: #5F3FE0 !important;
+}
+:host ::ng-deep .cfg-card .p-datatable .p-datatable-tbody > tr {
+  background: #fff;
+  color: #211F3A;
+  transition: background 0.12s ease;
+}
+:host ::ng-deep .cfg-card .p-datatable .p-datatable-tbody > tr > td {
+  border-color: #f1f0f7 !important;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+:host ::ng-deep .cfg-card .p-datatable .p-datatable-tbody > tr:hover {
+  background: #faf9ff !important;
+}
+:host ::ng-deep .cfg-card .p-datatable .p-paginator {
+  background: transparent;
+  border: 0;
+  padding: 12px 0 0;
+}
+:host ::ng-deep .cfg-card .p-datatable .p-paginator .p-paginator-page.p-highlight {
+  background: #5F3FE0 !important;
+  border-color: #5F3FE0 !important;
+  color: #fff !important;
+}
+:host ::ng-deep .cfg-card .p-datatable .p-paginator .p-paginator-page,
+:host ::ng-deep .cfg-card .p-datatable .p-paginator .p-paginator-first,
+:host ::ng-deep .cfg-card .p-datatable .p-paginator .p-paginator-prev,
+:host ::ng-deep .cfg-card .p-datatable .p-paginator .p-paginator-next,
+:host ::ng-deep .cfg-card .p-datatable .p-paginator .p-paginator-last {
+  border-radius: 9px;
+}
+:host ::ng-deep .cfg-card .p-datatable .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider {
+  background: #5F3FE0 !important;
+}
+
+:host ::ng-deep .cfg-card .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider {
+  background: #5F3FE0 !important;
+}
