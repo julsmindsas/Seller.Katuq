@@ -11,6 +11,8 @@
 @import "~@angular/cdk/overlay-prebuilt.css";
 @import "~@ng-select/ng-select/themes/default.theme.css";
 @import "driver.js/dist/driver.css";
+// D-502 F1: tokens del tema (claro en :root, oscuro en body.dark-only). Una sola vez y antes de dark-mode.
+@import "./app/shared/styles/theme-tokens";
 @import "./assets/scss/dark-mode.scss";
 
 
