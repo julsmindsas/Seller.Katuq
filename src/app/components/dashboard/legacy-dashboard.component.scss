@@ -15,7 +15,7 @@
 // HEADER SECTION - Modern Professional
 // ============================================================================
 .dashboard-header-modern {
-  background: #ffffff;
+  background: var(--ds-surface);
   border-bottom: 1px solid #e5e7eb;
   padding: 28px 24px;
   margin-bottom: 24px;
@@ -122,7 +122,7 @@
 
     &:focus {
       outline: none;
-      border-color: #5F3FE0;
+      border-color: var(--ds-accent-ink);
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
@@ -267,7 +267,7 @@
 }
 
 .kpi-card-modern {
-  background: #ffffff;
+  background: var(--ds-surface);
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 24px;
@@ -383,7 +383,7 @@
 }
 
 .operational-module-modern {
-  background: #ffffff;
+  background: var(--ds-surface);
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
@@ -508,7 +508,7 @@
 // Widget Container - Simple DIV Structure
 .widget-modern {
   position: relative;
-  background: #ffffff;
+  background: var(--ds-surface);
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
@@ -589,7 +589,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: var(--ds-surface);
   overflow: auto;
 }
 

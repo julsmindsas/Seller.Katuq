@@ -16,8 +16,8 @@
   gap: 8px;
   flex-wrap: wrap;
   padding: 10px 20px;
-  background: #fff;
-  border-bottom: 1px solid #ececf4;
+  background: var(--ds-surface);
+  border-bottom: 1px solid var(--ds-line);
   flex-shrink: 0;
 }
 
@@ -31,7 +31,7 @@
 .view-title {
   font-size: 16px !important; // h1 global con !important
   font-weight: 800;
-  color: #211F3A;
+  color: var(--ds-ink);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -44,7 +44,7 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #8f8bab;
+  color: var(--ds-muted);
   flex-wrap: wrap;
 
   span { color: inherit; font-size: inherit; }
@@ -55,7 +55,7 @@
 }
 
 .meta-warn {
-  color: #D9820A;
+  color: var(--ds-warn);
 }
 
 .spacer {
@@ -68,13 +68,13 @@
   width: 34px;
   height: 34px;
   border: none;
-  background: #f3f1fb;
+  background: var(--ds-tile);
   border-radius: 7px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5b5878;
+  color: var(--ds-body);
   flex-shrink: 0;
   transition: background 0.15s;
 
@@ -93,7 +93,7 @@
   &:disabled { opacity: .55; }
 }
 
-button:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+button:focus-visible { outline: 3px solid var(--ds-focus) !important; outline-offset: 2px; }
 
 // ── Body ───────────────────────────────────────────────────────
 
@@ -122,32 +122,32 @@ button:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2p
   justify-content: center;
   gap: 12px;
   padding: 64px 24px;
-  color: #8f8bab;
+  color: var(--ds-muted);
   font-size: 14px;
 
   i {
     font-size: 2rem;
-    color: #8f8bab;
+    color: var(--ds-muted);
   }
 }
 
 .view-error {
   padding: 12px 16px;
-  background: #FDECEC;
+  background: var(--ds-err-soft);
   border: 0;
   border-radius: 11px;
-  color: #D64545;
+  color: var(--ds-err);
   font-size: 13px;
 }
 
 .view-refreshing {
   font-size: 13px;
-  color: #8f8bab;
+  color: var(--ds-muted);
   padding: 4px 0;
 }
 
 .view-meta .meta-sep { color: #c9c6dc; }
-.view-meta .meta-info { color: #5F3FE0; }
+.view-meta .meta-info { color: var(--ds-accent-ink); }
 
 @media (max-width: 767.98px) {
   .view-body { padding: 16px; }
