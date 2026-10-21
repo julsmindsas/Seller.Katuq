@@ -127,10 +127,12 @@
   - Dependencias: 3.2.
 - [ ] **3.8 Terceros en oscuro.**
   - Qué: captura de ApexCharts (Inicio), ng-select, SweetAlert2, driver.js, Quill y FullCalendar.
+  - **Prueba lista (2026-10-21, bloque TEMA-B02), sin correr:** sección `terceros` de `auditoria-tema.js` (`design-pruebas.md`, «Auditoría en navegador»). La corre el orquestador sobre el build. Lo verificado en el código: ApexCharts no aparece en ninguna plantilla (los gráficos son de ECharts), FullCalendar no está instalado (la agenda es propia) y el editor de productos es CKEditor (Quill solo trae su CSS). La auditoría mide lo que haya y anota la librería que apareció. El criterio «ninguno empeora» compara los conteos de axe y de fondos `#fff` con una corrida de base (`--base-terceros`), no los píxeles. **Antes de cerrar 3.4–3.7**, el orquestador toma esa base con `--solo terceros` sobre el build de F0 y la guarda en una carpeta durable. **Pendiente de Daniel:** confirmar que la 3.8 revise ECharts y CKEditor en lugar de ApexCharts, Quill y FullCalendar; es un cambio de alcance que la aprobación en bloque no cubre.
   - Criterio: ninguno empeora frente a 0.2. Lo que esté mal queda anotado para F3, sin arreglarlo aquí.
   - Dependencias: de 3.4 a 3.7.
 - [ ] **3.9 Cierre de F1.**
   - Qué: lo mismo que 2.12, más 3.1 en verde y la entrada «D-502 F1» en `CONTRACT.md`. Anotar la deuda medida de los rellenos con `var(--primary-color)` en componentes.
+  - **Pruebas listas (2026-10-21, bloque TEMA-B02):** `tests/theme/deuda-primary.js` mide la deuda: 42 rellenos (33 `background` y 9 `background-color`) en 16 archivos. `conteos.test.js` la congela como trinquete: falla si sube, y también si baja sin bajar `TECHO_DEUDA_PRIMARY` en el mismo commit. Los chequeos `f1RellenosPrimarios`, `f1TamanosPrimeNG` y `f1SinAzulHeredado` de `auditoria-tema.js` (sección `f1`) se corren sobre el build de cierre.
   - Criterio: los criterios 5 (familia de 169) y 7 de la propuesta se cumplen, y el claro sigue idéntico.
   - Dependencias: de 3.2 a 3.8.
 
@@ -140,6 +142,7 @@ Cada una tiene su diseño corto, su delta, sus tareas y su aprobación antes de 
 
 - [ ] **4.1 F2a `_config-pagina.scss`.** **Sensible:** la base también pinta despachos, la lista de POS, formas de pago, borradores, carga de ventas y bodegas. Va con diff aprobado.
   - Pruebas primero: la auditoría de los criterios 2, 3 y 4 sobre las 38 pantallas y la revisión, una por una, de los 22 archivos que usan `$cfg-*`. Consume `--ds-chip-bg` y `--ds-shadow-*` de F1.
+  - **Barrido listo (2026-10-21, bloque TEMA-B02), sin correr:** `auditoria-tema.js --todas` recorre en oscuro las 164 rutas de pantalla que `tests/theme/rutas-marco.js` enumera desde la configuración real, incluidas las 24 con `:param`. De las 118 hojas que incluyen `config-pagina`, el barrido abre 107; las 11 que no son pantalla de ninguna ruta (borradores de venta, horario de entrega y otros diálogos) salen nombradas en `coberturaCfg.sinRuta` para revisarlas a mano. Mide los criterios 2 y 3, los fondos casi blancos, los controles que no se separan 3:1 y el scroll, con solo las banderas de los guards prendidas. `reporte.json` sale ordenado por violaciones, con el módulo de cada ruta y la lista de revisión manual: Ventas, POS, Formas de pago, Despachos, Inventarios, Bodegas y Ocasiones. El criterio 4 sigue con `comparar-claro.js` y las capturas. La línea base del barrido se toma antes del diff de la base.
   - **Tamaño al 2026-10-21:** 120 pantallas con el mixin y 53 archivos con `$cfg-*` directo, más las piezas de 8bae2ba0 (`design-f1.md` §7). Un solo diff en la base y los consumidores por módulo (pregunta 1). El «claro idéntico» de cada diff se revisa con `tests/theme/comparar-claro.js`.
   - Dependencias: 3.9.
 - [ ] **4.2 F2b `_katuq-builder.scss` y `sitios-lista`.** Coordinar con el trabajo de sitios.

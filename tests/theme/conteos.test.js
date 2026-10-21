@@ -61,3 +61,36 @@ test('dark-mode.scss sin ninguno de los seis patrones del azul heredado', { todo
     assert.equal(texto.split(azul.toLowerCase()).length - 1, 0, `${azul} sigue en dark-mode.scss`);
   }
 });
+
+// Tarea 3.9 (bloque TEMA-B02): «deuda medida» de los rellenos con var(--primary-color) en src/.
+// En oscuro `--primary-color` es el tinte de texto, así que esos rellenos quedan en 2,72:1 con texto
+// blanco hasta que su pantalla pase a var(--ds-accent) (F2 o F3). Techo medido el 2026-10-21 con
+// tests/theme/deuda-primary.js: 42 rellenos (33 background y 9 background-color) en 16 archivos.
+// Trinquete: si sube, falla; si baja, también falla hasta que se baje el techo en el mismo commit, así
+// lo migrado no deja hueco para regresiones posteriores.
+const { contarEnTexto, medirDeuda } = require('./deuda-primary');
+const TECHO_DEUDA_PRIMARY = 42;
+
+test('deuda-primary cuenta background y background-color con var(--primary-color), con respaldo y sin comentarios', () => {
+  const hoja = [
+    '.a { background: var(--primary-color); color: var(--primary-color); }',
+    '.b { background-color: var(--primary-color) !important; }',
+    '.c { background: linear-gradient(135deg, var(--primary-color, #7366ff), #fff); }',
+    '.d { background:',
+    '  var( --primary-color ); }',
+    '.e { background: rgba(var(--primary-color-rgb), .1); background-color: var(--primary-color-dark); }',
+    '.f { border-color: var(--primary-color); --x: var(--primary-color); }',
+    '// .g { background: var(--primary-color); }',
+    '/* .h { background: var(--primary-color); } */',
+    '.i { background: url(http://x.test/a.png) var(--primary-color); }',
+  ].join('\n');
+  assert.deepEqual(contarEnTexto(hoja), { background: 4, backgroundColor: 1, total: 5 });
+});
+
+test('la deuda de rellenos con var(--primary-color) no sube y el techo baja con ella (tarea 3.9)', () => {
+  const deuda = medirDeuda();
+  const detalle = deuda.archivos.map(a => `${a.total} ${a.archivo}`).join('\n');
+  assert.ok(deuda.total <= TECHO_DEUDA_PRIMARY, `la deuda subió: ${deuda.total} > ${TECHO_DEUDA_PRIMARY}\n${detalle}`);
+  assert.equal(deuda.total, TECHO_DEUDA_PRIMARY,
+    `la deuda bajó a ${deuda.total}: baja TECHO_DEUDA_PRIMARY a ${deuda.total} en este mismo commit`);
+});

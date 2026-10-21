@@ -16,7 +16,7 @@
 - **`tests/theme/conteos.test.js`.**
   - Gradientes y primarios prohibidos no suben. Línea base del 2026-10-18 (gradientes / primarios): `dark-mode.scss` 1 / 0, `styles.scss` 2 / 10, `sidebar.component.scss` 2 / 0, `shared-filters` 0 / 3, `tracking-details-modal` 5 / 0, `crear-formas-pago` 0 / 1, `general-chat` 1 / 0, y los demás 0 / 0.
   - En `dark-mode.scss` no queda ninguno de los seis patrones de la familia del azul: `#6AB5E8`, `rgba(106, 181, 232`, `rgb(106, 181, 232`, `#5AA5D8`, `#8AC5F8` y `#4A95C8`. Esta parte falla hasta F1.
-- **Script `test:theme`.** Lista los archivos uno por uno, como `test:dian-*`: `node --test tests/theme/theme-mode.test.js tests/theme/users-edit-contract.test.js tests/theme/user-writers.test.js tests/theme/conteos.test.js`. En Windows, npm usa cmd.exe, que no expande `*`, y Node 20 no acepta globs en `--test`. En F1 se agregan `theme-tokens.test.js` y `comparar-claro.test.js` a la misma línea.
+- **Script `test:theme`.** Lista los archivos uno por uno, como `test:dian-*`: `node --test tests/theme/theme-mode.test.js tests/theme/users-edit-contract.test.js tests/theme/user-writers.test.js tests/theme/conteos.test.js`. En Windows, npm usa cmd.exe, que no expande `*`, y Node 20 no acepta globs en `--test`. En F1 se agregan `theme-tokens.test.js` y `comparar-claro.test.js` a la misma línea, y el bloque TEMA-B02 suma `rutas-marco.test.js` y `auditoria-puras.test.js`.
 
 ## Fase 1
 
@@ -34,9 +34,47 @@
 - Mide los criterios 1, 2, 3, 5 y 6 de la propuesta a 1440 y 390 px, y compara las capturas en claro con la línea base de la tarea 0.2.
 - **Destello al recargar.** Recarga una ruta del marco con la sesión en oscuro, con el chunk de la ruta demorado 2 s, y comprueba que `body.dark-only` ya está mientras el chunk no llega. La misma recarga en `/terms-conditions` no tiene la clase. Contra el build actual, el primer caso pasa y el segundo falla.
 - **Sistema operativo.** Con `emulateMedia({ colorScheme: 'dark' })` y la app en claro, la barra inferior, los filtros y el chat quedan claros; al revés, quedan oscuros.
-- **F1.**
-  - En oscuro, `.btn-primary`, `.badge.bg-primary` y el botón primario de PrimeNG tienen fondo `#5F3FE0` y texto blanco.
-  - El `font-size` y el `padding` de `.p-button`, `.p-inputtext` y las celdas de `p-table` son iguales en los dos temas.
+- **F1** (sección `f1`, bloque TEMA-B02), en las cuatro pantallas de la línea base a 1440 px. Contra el build de F0 los tres chequeos fallan; pasan al cerrar 3.4 y 3.7.
+  - `f1RellenosPrimarios`: en oscuro, `.btn-primary`, `.badge.bg-primary` y el botón primario de PrimeNG (`.p-button` sin severidad ni variante) tienen fondo `rgb(95, 63, 224)` y texto blanco. Si la pantalla no trae ninguno de un grupo, se mide en un fixture con las clases reales dentro del marco, y el reporte dice el origen.
+  - `f1TamanosPrimeNG`: el `font-size` y el `padding` de `.p-button`, `.p-inputtext` y los `th` y `td` de `p-table` son iguales en los dos temas, en el primer elemento real y en el fixture.
+  - `f1SinAzulHeredado`: ningún color computado dentro de `app-content` (con `::before` y `::after`) es de la familia del azul, también con alfa. Lista hasta 15 hallazgos.
+- **Terceros, tarea 3.8** (sección `terceros`). Cada uno se abre en los dos temas y se captura (`tercero-<nombre>-<tema>-1440.png`). Se miden axe `color-contrast` y los fondos `#fff` dentro del tercero. Lo que falle se anota para F3, sin arreglarlo.
+  - **Criterio «ninguno empeora».** Con `--base-terceros <carpeta>` (si falta, usa `--base`), cada tercero compara sus conteos de axe y de fondos `#fff`, tema por tema, con el `reporte.json` de esa carpeta: `ok` es «no subió ninguno». Sin base comparable, `ok` queda sin medir (`null`). La comparación de píxeles (`capturaBase`) es solo de apoyo, porque en oscuro cambia siempre que F1 cambia colores. Se anota también `sinViolacionesEnOscuro`, el valor absoluto.
+  - **Base de terceros.** La línea base 0.2 no tiene capturas `tercero-*`. El orquestador corre `--solo terceros` sobre el build de F0, **antes de cerrar 3.4–3.7**, y guarda la carpeta en un lugar durable (no en `/tmp` ni en el scratchpad, que se borran al reiniciar). En la 3.8 la pasa como `--base-terceros`.
+  - **Gráficos** de `/welcome` y del dashboard clásico. Al 2026-10-21, ApexCharts no aparece en ninguna plantilla: los gráficos son de ECharts, y el reporte dice cuál apareció.
+  - **ng-select** en `/tiempoentrega/create`, con el desplegable abierto.
+  - **SweetAlert2 y driver.js** en Ocasiones. Se abren con la librería del bundle (su módulo de webpack ya cargado): un aviso y un paso del tour, sin llamar a la API. En el build de producción driver.js queda concatenado dentro del módulo de `TourService`, que no exporta `driver`, así que se usa `TourService.highlightElement`: el tour real de la app, con su `popoverClass`, sin marcar tours como vistos. Si no se encuentra, se usa el marcado real (overlay, elemento resaltado y popover con `driverjs-theme katuq-tour`) con el CSS de la app. El reporte dice el origen (`libreria`, `tourService` o `fixture`) y, en el último caso, el motivo.
+  - **Editor de texto rico** en `/productos/crearProductos`. Se miden Quill y CKEditor, porque Quill solo trae su CSS y el editor real es CKEditor.
+  - **Agenda** (`/agenda`, con `serviceAgenda` prendida en la sesión simulada). FullCalendar no está instalado: la agenda es propia.
+  - **Pendiente de confirmar.** `design.md`, `proposal.md` y el «Qué» de la 3.8 nombran ApexCharts, Quill y FullCalendar. Medir ECharts y CKEditor en su lugar es un cambio de alcance que la aprobación en bloque de las preguntas 1-8 no cubre: lo confirma Daniel antes de cerrar la 3.8. Mientras tanto, la auditoría mide las seis librerías si aparecen.
+- **Barrido de todas las páginas** (`--todas`, tarea 4.1 y cola de «todas las páginas»). `tests/theme/rutas-marco.js` enumera las pantallas del marco desde la configuración real de rutas (`cargarRutasApp`). Lee los `loadChildren` y los `loadComponent` sin build y descarta con `isShellUrl` lo que en la app cae fuera del marco. Para cada pantalla sigue los `styleUrls` del componente, los parciales locales que importan (`@use`/`@import`) y los contenedores que la envuelven (como el shell de NPS).
+  - **Cifras al 2026-10-21.** 164 rutas de pantalla, 24 de ellas con `:param`, y 119 rutas que usan `cfg-*` (18 con `:param`). Son rutas, no archivos. En archivos: 118 hojas incluyen `config-pagina` (las «120» de `grep` cuentan también la base y un comentario de `_nps.scss`). El barrido abre 107: 98 por rutas sin `:param` y 9 solo por rutas con `:param`. Las 11 restantes no son pantalla de ninguna ruta, porque son hijos o diálogos: borradores de venta, horario de entrega y su lista, crear rol, especificaciones del producto, atributos de categoría, prospectos, líneas de mensajería, guía MCP, medidor de WhatsApp y citas del video-agente.
+  - Cada pantalla se abre en oscuro a 1440 px (y a 390 con `--movil`), también las de `:param`, con un valor de muestra. `--sin-parametros` las omite y el reporte lo dice. Va con la API simulada y `POST /v1/users/edit` interceptado.
+  - **Banderas.** Solo se prenden las que piden los guards de ruta (`serviceAgenda` y `pickingAlistamiento`, leídas de los `*.guard.ts`), y solo en ese navegador. Así cada pantalla se mide en la variante que ven hoy los comercios, con las banderas apagadas (D-505). `--banderas todas` prende el catálogo entero para medir también la variante con las funciones nuevas.
+  - **Qué mide.** axe `color-contrast` (criterio 2). Los fondos `#fff` de paneles, tarjetas, filas, diálogos y pestañas (criterio 3, con un selector más amplio que el de la línea base). Los fondos casi blancos de esos mismos paneles (luminancia ≥ 0,8, como `$cfg-tint`, `$cfg-chip-bg`, `#fafafa` y `#f8f9fa`). Los controles cuyo borde o fondo no se separa 3:1 del fondo de alrededor (WCAG 1.4.11, que axe no mide). También el scroll horizontal y el azul heredado. El indicador de foco no se mide aquí: lo cubre `theme-tokens.test.js` con los tokens contra cada superficie.
+  - `reporte.json` ordena las pantallas por violaciones: axe, más fondos `#fff`, más casi blancos, más controles sin contraste, más 1 si hay scroll. Cada una lleva su módulo, componente, SCSS, hojas con `config-pagina`, si usa `cfg-*` y su captura. Las que un guard desvió o quedaron fuera del marco van al final, como «sin medir».
+  - El reporte también trae el resumen por módulo, que ordena los lotes de la cola, y `coberturaCfg`: las hojas con `config-pagina` que el barrido abre, las que solo abre con `:param` y las que no son pantalla de ninguna ruta.
+  - **Revisión manual de F2a.** Lista explícita de Ventas, POS, Formas de pago, Despachos, Inventarios, Bodegas y Ocasiones, cada una con sus rutas. Se suman las hojas de `coberturaCfg.sinRuta`, que el barrido no abre y se revisan a mano.
+  - Junto con esa revisión manual, es la prueba de los criterios 2 y 3 de F2a. El criterio 4 sigue con `comparar-claro.js` y las capturas en claro.
+- **Uso.** Necesita `dist/cuba` (lo compila el orquestador) y las dependencias fuera del repo. No escribe en `back.katuq.com` ni en Firestore.
+  - Fases y terceros: `node tests/theme/auditoria-tema.js --deps <carpeta> --dist dist/cuba --salida <carpeta>/auditoria-<fecha> [--base <línea base 0.2>] [--base-terceros <terceros sobre F0>] [--solo f0,pantallas,f1,terceros]`.
+  - Base de terceros (una vez, sobre el build de F0): `… --solo terceros --salida <carpeta durable>/terceros-base-f0`.
+  - Barrido: `node tests/theme/auditoria-tema.js --deps <carpeta> --dist dist/cuba --salida <carpeta>/todas-<fecha> --todas [--movil] [--sin-parametros] [--banderas todas]`. Tarda unos 5 s por pantalla y ancho: 164 pantallas a 1440 px.
+  - Solo la lista de rutas, sin navegador: `node tests/theme/rutas-marco.js`.
+- **Pruebas sin navegador** (en `test:theme`):
+  - `rutas-marco.test.js`: la enumeración sobre una configuración simulada y sobre la real. En la real, sin errores y sin descartes fuera del comodín conocido, con `loadComponent`, parciales importados y contenedores. También la cobertura de las hojas con `config-pagina`, las banderas de los guards y la lista F2a con rutas reales.
+  - `auditoria-puras.test.js`: `node --check` de los scripts, rellenos, tamaños, azul heredado, grupos F2a, colores (casi blanco y contraste de controles, también como se inyectan en el navegador), violaciones, orden del reporte, cobertura y comparación de terceros con la base.
+
+## Deuda medida de `var(--primary-color)` (tarea 3.9)
+
+`tests/theme/deuda-primary.js` es estático, sin navegador: `node tests/theme/deuda-primary.js [--json]`. Cuenta por archivo de `src/` las declaraciones `background` y `background-color` con `var(--primary-color)`, también con respaldo. No cuenta comentarios ni `--primary-color-rgb`.
+
+- El 2026-10-21 da **42 rellenos** (33 `background` y 9 `background-color`) en 16 archivos.
+- **Diferencia con `design-f1.md` §2** (43 en 17, 31/12). Ese conteo se hizo con otro método. Con este script, el commit del diseño (bf468499) da 45 en 18 (33/12). Después la deuda bajó por cambios de diseño, no por la forma de contar:
+  - D-516 (df58cd6d) quitó los rellenos de `dropshipping/crear-proveedor` y `prospect-manager`, y quedó en 43 en 16;
+  - D-519 (92519c4b) quitó uno de `crear-ventas`, y quedó en 42.
+  El comentario de `onboarding-wizard` llegó con D-516 y no cuenta. La lista de componentes de §2 todavía nombra dropshipping y prospectos, que ya no tienen rellenos.
+- `conteos.test.js` congela ese total como trinquete. Si sube, falla. Si baja, también falla, hasta que se baje `TECHO_DEUDA_PRIMARY` en el mismo commit. Así lo migrado no deja hueco para regresiones.
 
 ## Cierre de cada fase
 
