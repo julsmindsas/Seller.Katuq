@@ -50,7 +50,7 @@ D-496 (ticket F4-40, cd `PrDNIoDwRacCPQVcHmx1`; el número 1243 está repetido, 
 - [ ] 0.6 **[21-oct]** Daniel aprueba la ampliación: `proposal.md` (parte 3 y preguntas 1 a 18), la sección «Ampliación 21-oct» de `design.md`, las specs nuevas (`whatsapp-bot-pago-y-recuperacion`, `kai-whatsapp-atencion`, `kai-metricas`, `kai-asesor-web`), los bloques [21-oct] de `whatsapp-bot-pedido-directo` y estas tareas. Las decisiones de D-518 ya están aprobadas y no se vuelven a preguntar. Éxito: la aprobación queda en `specs/CONTRACT.md` con fecha.
 - [ ] 0.7 **[21-oct]** Revisión de seguridad de la ampliación, escrita en el openspec privado del backend (`openspec/changes/pedido-whatsapp-con-link-de-pago-seguridad`), con sus pruebas. Aquí: «ver revisión privada». Éxito: aprobada por Daniel. Dep: 0.6. Bloquea 6.2 (tope del celular), 8.4, 9.4, 9.6, 9.8, 9.10, 10.3, 11.2, 11.4, 12.3, 13.2, 14.2, 14.3 y 16.2.
 - [ ] 0.8 **[21-oct]** Cuando estén commiteados en `feature/tickets-web` F2-41 (T·2) y los arreglos del paso 3 del orden de trabajo de D-518 que tocan `controllers/sites.js` (`cotizable-arreglos`, con su 409 `COTIZABLE` en `crearPedido`, y los movimientos de D-505), volver a medir las líneas que citan `design.md` y estas tareas (`crearPedido`, efectos, `aplicarPagoDeTienda`, `datosDeConfirmacion`, la página de gracias, `vencerReservasDeTienda`, `retomarPago` y `recordarPagosPendientes`). Rehacer el golden de 2.1 con el caso del cotizable y con lo que F2-41 haya cambiado, con diff revisado por Daniel. Éxito: desvíos anotados y golden en verde. Dep: F2-41 y esos arreglos commiteados.
-- [ ] 0.9 **[21-oct]** Pendientes de antes que siguen abiertos: el visto bueno a los 12 desvíos de `design.md`, el desvío 10 (barrido D-206 frente a Kuvo) y las decisiones S3, S4 y S5 de 0.5. La 6.8 ya no está pendiente: la confirmó F4-40·9.
+- [ ] 0.9 **[21-oct]** Pendientes de antes que siguen abiertos: el visto bueno a los 12 desvíos de `design.md`, el desvío 10 (barrido D-206 frente a Kuvo) y las decisiones S3, S4 y S5 de 0.5. (S5, el modo solo por script, quedó implementada en F440-B01; el resto sigue abierto.) La 6.8 ya no está pendiente: la confirmó F4-40·9.
 
 ## 1. Parte 1 restante: historial del paso a `enviada` (solo `cotizaciones`)
 
@@ -152,23 +152,31 @@ D-496 (ticket F4-40, cd `PrDNIoDwRacCPQVcHmx1`; el número 1243 está repetido, 
 
 ## 5. Bandera, modo e interruptor
 
-- [ ] 5.1 [P] `whatsappBotDirectOrder` en `companyFeatureFlags.js`, con dueño y
+- [x] 5.1 [P] `whatsappBotDirectOrder` en `companyFeatureFlags.js`, con dueño y
       retiro según 0.2. Éxito: `companyFeatureFlags.test.js` en verde. Dep: 0.2.
 - [ ] 5.2 [P] Front: la misma bandera en `company-features.service.ts`.
       Éxito: build de producción sin errores. Dep: 0.2.
-- [ ] 5.3 [P] `bot.pedidoDirectoModo` en `whatsappCompanyConfig.js`. Prueba primero:
+- [x] 5.3 [P] `bot.pedidoDirectoModo` en `whatsappCompanyConfig.js`. Prueba primero:
       un valor inválido se rechaza, ausente se lee como `sombra` y los demás campos
       no cambian. Dep: 0.2.
-- [ ] 5.4 ~~`WHATSAPP_BOT_PEDIDO_DIRECTO_HABILITADO` documentada en el ejemplo de
+- [x] 5.4 ~~`WHATSAPP_BOT_PEDIDO_DIRECTO_HABILITADO` documentada en el ejemplo de
       variables, apagada.~~ **SUPERSEDED (21-oct) por D-505 y D-518.** [P] `services/interruptorGeneral.js`
       lee `config/feature_flags.<nombre>` (ausente o error = apagado), más
       `scripts/set-interruptor-general.js` (simula por defecto, `--execute` escribe una sola llave).
       Prueba primero: ausente, `false`, error de lectura y `true`, y la simulación no escribe. Nada nuevo
       en el `.env`. Dep: 0.6.
-- [ ] 5.5 [P] `scripts/set-bot-pedido-directo.js --company <c> --modo sombra|activo`.
+- [x] 5.5 [P] `scripts/set-bot-pedido-directo.js --company <c> --modo sombra|activo`.
       Simula por defecto; `--execute` escribe solo `bot.pedidoDirectoModo` con la
       validación de 5.3 e imprime antes y después. Prueba primero: la simulación no
       escribe y los demás campos quedan intactos. Dep: 5.3.
+      **Hecho (F440-B01, 21-oct):** las tres banderas (`whatsappBotDirectOrder`, `whatsappBotAttention`,
+      `whatsappBotFollowUp`) en `companyFeatureFlags.js`; en vez de `interruptorGeneral.js` se usó el
+      `platformFlags.js` que ya existe (llaves `whatsappBotDirectOrder`, `whatsappBotAttention`,
+      `whatsappBotFollowUp`, `whatsappBotFollowUpTemplates`, off|on) y `scripts/platform-flags.js`;
+      `services/whatsappBotInterruptores.js` (`habilitado`) es lo único que consultan los demás bloques.
+      Control S5: el PUT del panel valida pero ignora `bot.pedidoDirectoModo`; solo cambia con
+      `scripts/set-bot-pedido-directo.js` (aviso del caché de 5 min). Pruebas:
+      `tests/notifications/whatsappBotInterruptores.test.js` y `whatsappBotPedidoDirectoModo.test.js`.
 
 ## 6. Servicio del bot y despachador
 
