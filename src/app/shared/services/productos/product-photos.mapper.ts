@@ -123,7 +123,7 @@ export const MENSAJES_OMISION: Record<string, string> = {
   legacy_format: 'Está guardada en un formato antiguo',
   not_owned: 'El archivo no es de tu empresa',
   owner_unknown: 'El archivo no tiene dueño registrado',
-  product_integrated: 'El producto está conectado con otra tienda',
+  product_integrated: 'El producto está vinculado a una integración que actualiza sus fotos (otra tienda o tu operador logístico)',
   flow_photos: 'Sus fotos llegan por una automatización',
   already_uniform: 'Ya estaba uniformada con estos ajustes',
   too_large: 'La foto pesa más de 15 MB',

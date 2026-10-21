@@ -1,6 +1,6 @@
 # Tareas — Fotos de producto uniformes, fase 1 (D-501)
 
-> Se ejecutan después de aprobar `design.md`, `anexo.md` y la spec. Las secciones 0 a 6 son la fase 1 aprobada el 18-oct. **Las secciones 7 a 10 son la ampliación de D-518 (21-oct), pendiente de aprobación:** no se empieza ninguna antes de 7.0. La tarea 0.6 (interruptor a Firestore) aplica la regla ya aprobada de D-518 y va en el paso 3 de su orden de trabajo, sin esperar a 7.0.
+> Se ejecutan después de aprobar `design.md`, `anexo.md` y la spec. Las secciones 0 a 6 son la fase 1 aprobada el 18-oct. **Las secciones 7 a 10 son la ampliación de D-518 (21-oct), aprobada en bloque por Daniel el 21-oct** (front 014d1b62, «diseños aprobados…»; falta asentarla en `specs/CONTRACT.md`, tarea 7.0). La tarea 0.6 (interruptor a Firestore) aplica la regla ya aprobada de D-518 y va en el paso 3 de su orden de trabajo, sin esperar a 7.0.
 >
 > - **Marcas:**
 >   - `[P]`: paralelizable; no comparte archivos con otra `[P]` del grupo.
@@ -28,6 +28,7 @@
   - los escritores de `imagenesPrincipales`.
   - Éxito: el anexo §E queda confirmado y FLORECER, «sin sync».
   - Estado (2026-10-18): script listo, sin correr contra producción: `node scripts/auditar-fotos-uniformes.js --dry-run [--company "FLORECER"]` (backend; solo lee, rechaza `--execute`, imprime solo conteos). En el código, el registro del anexo §E quedó confirmado y ampliado (mappers de WooCommerce como sync; `controllers/diagnostics.js` como manual; cuatro archivos que no escriben `products`). Falta correrlo y anotar el resultado en la bitácora. Si el resultado cambia el anexo §E, se reabren 1.3, 1.5 y 2.3.
+  - Requisito agregado por 7.5 (21-oct, TX37-B03) para que 0.3 sirva de compuerta de 7.5: además de los tipos de los flows activos, contar los de los flows que esos invocan por `sub-flow` (aunque estén pausados), mostrar `clasificarNodo` junto a cada tipo (excluye, no excluye o fuera del registro) y contar los `sub-flow` cuyo `flowId` es una expresión, está vacío, no existe o es de otra empresa, porque ahora excluyen. Va en `scripts/auditar-fotos-uniformes.js` (fuera del bloque TX37-B03).
 - **0.4 [P]** Conteo de solo lectura en FLORECER. Separa:
   - fotos del bucket propio con dueño de la empresa;
   - sin dueño;
@@ -253,26 +254,39 @@ Backend: `functions/tests/productPhotos/`, con `node tests/productPhotos/<archiv
 - **6.1** El 2027-04-30, Daniel decide: dejar la función para todos y quitar la bandera, o retirarla.
   - Depende de: 5.4.
 
-## 7. Ampliación de la fase 1 (D-518) — NUEVO, pendiente de aprobación
+## 7. Ampliación de la fase 1 (D-518) — aprobada en bloque el 21-oct
 
 Diseño: `design-ampliacion.md`. Marcas como arriba. **Sensible** = escribe `products` o el registro de lotes que gobierna esas escrituras: diff aprobado por Daniel, de a uno. Pedidos, pagos, reserva, inventario y consecutivos no se tocan.
 
 - **7.0** Daniel aprueba la ampliación (`design-ampliacion.md`, `design-fase-1b.md`, `design-fase-2.md`, las specs nuevas y el anexo §G) y responde las preguntas 1 a 14 de `proposal.md`. Éxito: queda en `specs/CONTRACT.md` bajo D-518.
-- **7.1 [P]** Caracterización, sin cambiar código: `syncDetector` y `elegibilidadProducto` con las formas de OH MY STORE, CAFE ESCOBAR, ALMACEN BOMBAS (con `integrations.siigo`) y FLORECER. Éxito: en verde contra el código de hoy.
+  - Estado (21-oct): aprobada en bloque por Daniel el 21-oct, con cada pregunta abierta resuelta por la recomendación escrita (front 014d1b62). Falta asentarla en `specs/CONTRACT.md` (en esta rama D-518 es D-531, ver la renumeración); queda sin `[x]` hasta entonces.
+- [x] **7.1 [P]** Caracterización, sin cambiar código: `syncDetector` y `elegibilidadProducto` con las formas de OH MY STORE, CAFE ESCOBAR, ALMACEN BOMBAS (con `integrations.siigo`) y FLORECER. Éxito: en verde contra el código de hoy.
+  - Hecho (21-oct, TX37-B03): backend `tests/productos/productPhotos/exclusionIntegraciones.caracterizacion.test.js`, 12 casos en verde contra el código de antes de 7.5 (incluye un flow que solo avisa y dos que solo llevan pedidos); esa versión queda en su propio commit (backend de4bca60). Con 7.5 cambian solo los 3 casos marcados «CAMBIA CON 7.5» y se agrega 1 (cada flow mixto de OH MY STORE la deja fuera por sí solo), que pasa con los dos códigos: 13 casos.
 - **7.2 [P]** Caracterización de `batchStore`: `crearLote` (candado, `BATCH_RUNNING`, idempotencia, cierre del lote de uniformar al revertir en `off`, `:81`), `cerrarLote` y `pedirCancelacion` (cierre sin arriendo, `:249`). Éxito: en verde contra el código de hoy.
 - **7.3 [P]** Pruebas en rojo: `routes.contract` con `categoryPath` y rutas de serie; `batchRunner` con partes encadenadas, parada en cascada **por cada camino de cierre** (`cerrarLote`, revertir en `off`, cancelar sin arriendo, falla), `detectarSync` al empezar cada parte (`company_has_sync`) y `waiting` fuera de la retoma; adaptador del índice a `rutaDelProducto` y ruta por prefijo (`sinCategoria` cuenta como `category_unresolved`); `NODOS_QUE_EXCLUYEN` contra el registro de nodos y `sub-flow` resuelto y sin resolver; `possible_watermark` con `watermark-vectors.v1.json`; front: entradas y progreso de serie. Depende de: 7.0.
+  - Parte de TX37-B03 (21-oct): `NODOS_QUE_EXCLUYEN` contra el registro de nodos y `sub-flow` resuelto y sin resolver, en backend `tests/productos/productPhotos/nodosQueExcluyen.test.js` (16 casos; contra el código de antes fallan 12; con 7.5 pasan todos). Incluye que la vista de escritores de `REGISTRO_ESCRITORES` coincida con `NODOS_QUE_EXCLUYEN` para todo nodo que escribe `imagenesPrincipales`. El resto de 7.3 sigue en sus bloques.
 - **7.4** Movida a **0.6** (21-oct): el traslado a Firestore es del paso 3 del orden de D-518 y no espera la aprobación de la ampliación.
 - **7.5 Sensible** (amplía quién recibe escrituras en `products`). TX-37·5: regla de producto en `eligibility.js` y lista cerrada `NODOS_QUE_EXCLUYEN` con `sub-flow` resuelto en `syncDetector.js`, más la prueba de registro de nodos. Éxito: 7.1 cambia solo en los casos que D-518 cambia (BOMBAS entra; un flow que solo avisa o solo lleva pedidos no excluye) y OH MY STORE y CAFE ESCOBAR siguen fuera; diff aprobado. Depende de: 0.3 corrida contra producción (tipos de nodo de los flows activos), 7.1 y 7.3.
+  - Estado (21-oct, TX37-B03): código y pruebas listos y revisados, en commit local del backend (de4bca60 la caracterización de antes, 30b4af73 el cambio; sin push ni despliegue).
+    - Una sola lista de proveedores que escriben fotos (`osmosis`, `shopify`, `woocommerce`, `fulfillment`, `aliaddo`) para el producto (`integrations` e `integraciones` legacy) y para `integration_configs`.
+    - Lista cerrada: 9 nodos excluyen y 56 no excluyen, contra los 64 tipos del registro. `REGISTRO_ESCRITORES` usa el mismo criterio: `katuq-product-resolver-by-ref` pasa a «no escribe» (solo lee `products`).
+    - `sub-flow` resuelto hasta 3 niveles, solo entre los flows de la misma empresa y sin lecturas nuevas. Un `flowId` no resoluble, inexistente o de otra empresa excluye.
+    - Un tipo fuera del registro conserva el criterio de antes («product» en el tipo). Casi nunca decide: un tipo sin handler no corre, así que no escribe.
+    - Escenarios de la spec por las rutas y el lote reales (`exclusionIntegraciones.endpoint.test.js`, 3 casos): CAFE ESCOBAR recibe 409 con «WooCommerce» en vista previa y lote sin leer ni procesar fotos; el producto con `integrations.siigo` entra a la vista previa y al lote, y el de `integrations.fulfillment` se omite.
+    - **Para la aprobación de Daniel, criterios que §A2 no enumera:** (a) quedan en «no excluye» `http-request`, `kai-agent-invoke`, `katuq-customer-upsert`, `katuq-canonical-mapper`, `katuq-product-resolver-by-ref`, `worldoffice-balances-sync`, `worldoffice-documents-sync`, `shopify-pricelist-sync` y `fullpi-*` (ninguno escribe fotos; si Daniel quiere que un flow con `http-request` o `kai-agent-invoke` que reacciona a productos excluya, se agrega a la lista); (b) un `sub-flow` de 4.º nivel excluye, y un `flowId` de otra empresa o inexistente también (§A2 solo nombra la expresión); (c) el flow invocado cuenta aunque esté pausado; (d) el respaldo «product» para tipos fuera del registro.
+    - La caracterización 7.1 cambia solo en BOMBAS, en el flow que solo avisa y en el de pedidos con `katuq-product-resolver-by-ref`. OH MY STORE y CAFE ESCOBAR siguen en 409.
+    - Falta: diff aprobado por Daniel y 0.3 contra producción. Si los tipos de nodo reales difieren, se reabre. Hay además un punto que sigue en la revisión privada (ver revisión privada); no cambia este código.
 - **7.6 [P]** TX-37·4: `productosDeCategoria` por ruta con `rutaDelProducto` de D-495, el adaptador `{ categorias: categoriasRaw, exposicion: exposicionObj }` y el árbol de `getCatalogSchemas`. Éxito: pruebas de ruta en verde, incluida la del adaptador (sin él, el lote queda vacío). Depende de: 7.3.
 - **7.7 Sensible.** Series en `batchStore`: crear las partes y el candado en una transacción; **una sola función de cierre** que usan `cerrarLote`, `crearLote` (`:81`) y `pedirCancelacion` (`:249`), y que encadena o para en cascada. Éxito: 7.2 en verde salvo lo que el diff aprobado cambia; casos de serie de 1.2 y 1.6 en verde, uno por camino de cierre. Depende de: 7.2 y 7.3.
 - **7.8** Runner, controlador y rutas de serie (`GET`, `cancel`, `revert`); `detectarSync` antes de empezar cada parte; la reversión de la serie lee los resultados parte por parte. Éxito: `routes.contract` y `batchRunner` en verde. Depende de: 0.6, 7.6 y 7.7.
 - **7.9 [P]** `possible_watermark`: función pura y su lugar en los avisos de `procesarFoto`. Éxito: vectores en verde; sin cambio de tiempo medible en `photoUniform.test.js`. Depende de: 7.3.
 - **7.10 [P]** Front: servicio y mapper (`categoryPath`, rutas de serie, mensajes de los códigos nuevos). Depende de: 7.8.
+  - Adelantado por TX37-B03 (21-oct): el mensaje de `product_integrated` ya dice «vinculado a una integración que actualiza sus fotos (otra tienda o tu operador logístico)», porque con 7.5 el código cubre también al operador logístico.
 - **7.11** Front: diálogo con progreso de serie; paso de categoría solo si la pregunta 4 dice sí; proporción sugerida solo si la pregunta 13 dice sí. Depende de: 7.10.
 - **7.12** Front, entradas: sección «Productos» del editor del sitio (y «Catálogo completo» si la pregunta 4 dice sí); detalle de Catálogos por link; lista con `categoryPath` y sin «· hasta 100». Éxito: cada diff se limita al botón, abrir el diálogo y recargar al cerrar. Depende de: 7.11.
 - **7.13** Cierre: `npm run build:prod` sin errores; degradados y primarios prohibidos de `components/productos/`, `components/sitios/` y `components/cotizaciones/` sin subir; revisión a 1440 y 390 px con la bandera en una empresa de prueba. Depende de: 7.12.
 
-## 8. Fase 1b: fotos externas y sin dueño (D-518 TX-37·3) — NUEVO, pendiente de aprobación
+## 8. Fase 1b: fotos externas y sin dueño (D-518 TX-37·3) — aprobada en bloque el 21-oct
 
 Diseño: `design-fase-1b.md`. Seguridad: revisión privada del backend (`fotos-uniformes-producto-seguridad`), que bloquea 8.1, 8.4 y 8.5.
 
@@ -288,7 +302,7 @@ Diseño: `design-fase-1b.md`. Seguridad: revisión privada del backend (`fotos-u
 - **8.6 [P]** Front: mensajes de `download_failed`, `not_image`, `not_adoptable`, `would_copy` y el origen en el resumen. Depende de: 8.5.
 - **8.7** Sombra de 1b en FLORECER (después de 5.3) y `on` con unos 10 productos con fotos externas o sin dueño, por orden de Daniel. Revertir y comprobar que vuelve la copia.
 
-## 9. Fase 2: quitar el fondo con IA (D-518 TX-37·6) — NUEVO, pendiente de aprobación
+## 9. Fase 2: quitar el fondo con IA (D-518 TX-37·6) — aprobada en bloque el 21-oct
 
 Diseño: `design-fase-2.md`. Requiere la fase 1 en `on` (5.4). **Nada sale a un proveedor de IA sin 9.1 y 9.2.**
 
