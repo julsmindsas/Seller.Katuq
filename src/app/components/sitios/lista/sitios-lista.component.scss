@@ -4,7 +4,40 @@
 // host: los tokens hay que declararlos también sobre él o quedaría sin paleta.
 :host,
 .velo {
-  @include kb-tokens;
+  @include kb-tokens(true);
+  // Textos y fondos propios de la lista que no tienen --kb-* de igual valor. En claro conservan su
+  // literal de siempre; en oscuro toman el juego compartido (hallazgo de contraste, ticket 1180).
+  --sl-ink: #211f3a;
+  --sl-nota: #6b6685;
+  --sl-gris: #6b6880;
+  --sl-libre: #137a3a;
+  --sl-ocupada: #b42318;
+  --sl-fondo-frase: #f4f2fc;
+  --sl-pill-ok-bg: #e3f6ec;
+  --sl-pill-ok: #13774f;
+  --sl-pill-cero-bg: #fff4dd;
+  --sl-pill-cero: #8a5a00;
+  --sl-borde: #e4e0f5;
+  --sl-pista: #e4e1f0;
+  --sl-enlace: #5f3fe0;
+  --sl-recomendada-bg: #efeaff;
+}
+body.dark-only :host,
+body.dark-only .velo {
+  --sl-ink: var(--ds-ink);
+  --sl-nota: var(--ds-muted);
+  --sl-gris: var(--ds-muted);
+  --sl-libre: var(--ds-ok);
+  --sl-ocupada: var(--ds-err);
+  --sl-fondo-frase: var(--ds-surface-2);
+  --sl-pill-ok-bg: var(--ds-ok-soft);
+  --sl-pill-ok: var(--ds-ok);
+  --sl-pill-cero-bg: var(--ds-warn-soft);
+  --sl-pill-cero: var(--ds-warn);
+  --sl-borde: var(--ds-line);
+  --sl-pista: var(--ds-line-strong);
+  --sl-enlace: var(--ds-accent-ink);
+  --sl-recomendada-bg: var(--ds-accent-soft);
 }
 
 @include kb-keyframes;
@@ -125,7 +158,7 @@
 
 // ── Vacío ────────────────────────────────────────────────────────────────────
 .vacio {
-  background: #fff;
+  background: var(--kb-surface);
   border-radius: 22px;
   box-shadow: var(--kb-shadow-card);
   padding: 52px 28px;
@@ -140,7 +173,7 @@
     height: 64px;
     border-radius: 20px;
     background: var(--kb-accent-tile);
-    color: var(--kb-accent);
+    color: var(--kb-accent-fg);
     margin-bottom: 16px;
   }
 
@@ -171,7 +204,7 @@
 .pagina {
   display: flex;
   flex-wrap: wrap;
-  background: #fff;
+  background: var(--kb-surface);
   border-radius: 22px;
   box-shadow: var(--kb-shadow-card);
   overflow: hidden;
@@ -387,7 +420,7 @@
     @include kb-btn-base;
     flex: none;
     border: 1.5px solid var(--kb-line-6);
-    background: #fff;
+    background: var(--kb-surface);
     color: var(--kb-ink-2);
     font-weight: 700;
     font-size: 12.5px;
@@ -461,7 +494,7 @@
     flex: none;
     border-radius: 11px;
     background: var(--kb-accent-tile);
-    color: var(--kb-accent);
+    color: var(--kb-accent-fg);
   }
 }
 
@@ -559,7 +592,7 @@
   flex-direction: column;
   align-items: stretch;
   border: 1.5px solid var(--kb-line-3);
-  background: #fff;
+  background: var(--kb-surface);
   border-radius: 16px;
   padding: 12px;
   cursor: pointer;
@@ -572,7 +605,7 @@
   }
 
   &.is-elegida {
-    border-color: var(--kb-accent);
+    border-color: var(--kb-accent-fg);
     background: var(--kb-accent-wash-4);
     box-shadow: 0 6px 20px rgba(107, 78, 251, 0.16);
   }
@@ -591,8 +624,8 @@
     margin: 10px 0 -2px;
     padding: 3px 9px;
     border-radius: 99px;
-    background: #efeaff;
-    color: #5f3fe0;
+    background: var(--sl-recomendada-bg);
+    color: var(--sl-enlace);
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.04em;
@@ -714,31 +747,31 @@
 }
 .slug-campo__dominio {
   font-size: 13px;
-  color: #6b6880;
+  color: var(--sl-gris);
   white-space: nowrap;
 }
 .slug-estado {
   display: block;
   margin-top: 4px;
   font-size: 12px;
-  color: #6b6880;
+  color: var(--sl-gris);
   letter-spacing: normal;
 
-  &--libre { color: #137a3a; font-weight: 600; }
-  &--ocupada { color: #b42318; font-weight: 600; }
+  &--libre { color: var(--sl-libre); font-weight: 600; }
+  &--ocupada { color: var(--sl-ocupada); font-weight: 600; }
 }
 // Ticket 1256: una sola dirección por marca.
 .slug-marca {
   display: block;
   margin-top: 4px;
   font-size: 12px;
-  color: #6b6880;
+  color: var(--sl-gris);
   letter-spacing: normal;
 }
 .pagina__unida {
   font-size: 12.5px;
   font-weight: 600;
-  color: #6b6880;
+  color: var(--sl-gris);
   align-self: center;
 }
 
@@ -822,7 +855,7 @@
   gap: 13px;
   width: 100%;
   border: 1.5px solid var(--kb-line-4, #e3e0ee);
-  background: #fff;
+  background: var(--kb-surface);
   border-radius: 13px;
   padding: 14px 16px;
   margin: 6px 0 4px;
@@ -840,7 +873,7 @@
   }
 
   &.is-active {
-    border-color: var(--kb-accent);
+    border-color: var(--kb-accent-fg);
     background: var(--kb-accent-wash-4);
     .palanca { background: var(--kb-accent); span { transform: translateX(18px); } }
   }
@@ -850,7 +883,7 @@
   height: 24px;
   flex: none;
   border-radius: 99px;
-  background: #e4e1f0;
+  background: var(--sl-pista);
   padding: 3px;
   transition: background 0.18s ease;
   span {
@@ -890,7 +923,7 @@
   padding: 16px 18px;
   border: 1.8px solid var(--kb-line-3);
   border-radius: 16px;
-  background: #fff;
+  background: var(--kb-surface);
   text-align: left;
   color: var(--kb-ink);
 
@@ -900,7 +933,7 @@
   }
 
   &.is-elegida {
-    border-color: var(--kb-accent);
+    border-color: var(--kb-accent-fg);
     background: var(--kb-accent-wash-4);
   }
 
@@ -975,10 +1008,10 @@
   padding: 11px 13px;
   border: 1.5px solid var(--kb-line-3);
   border-radius: 12px;
-  background: #fff;
+  background: var(--kb-surface);
 
   &.is-active {
-    border-color: var(--kb-accent);
+    border-color: var(--kb-accent-fg);
     background: var(--kb-accent-wash-4);
   }
 
@@ -1023,15 +1056,15 @@
   margin: 0 0 16px;
   padding: 10px 12px;
   border-radius: 11px;
-  background: #f4f2fc;
+  background: var(--sl-fondo-frase);
   font-size: 13px;
 }
-.frase-marca__txt { color: #211f3a; }
+.frase-marca__txt { color: var(--sl-ink); }
 .frase-marca__otra {
   padding: 0;
   border: 0;
   background: none;
-  color: #5f3fe0;
+  color: var(--sl-enlace);
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
@@ -1046,22 +1079,22 @@
   margin-top: 16px;
 }
 .vista-creacion__cab { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
-.vista-creacion__titulo { font-size: 14px; color: #211f3a; }
+.vista-creacion__titulo { font-size: 14px; color: var(--sl-ink); }
 .vista-creacion__productos {
   padding: 3px 10px;
   border-radius: 999px;
-  background: #e3f6ec;
-  color: #13774f;
+  background: var(--sl-pill-ok-bg);
+  color: var(--sl-pill-ok);
   font-size: 12px;
   font-weight: 700;
-  &.is-cero { background: #fff4dd; color: #8a5a00; }
+  &.is-cero { background: var(--sl-pill-cero-bg); color: var(--sl-pill-cero); }
 }
 .vista-creacion__marco {
   max-height: 360px;
   overflow: auto;
-  border: 1.5px solid #e4e0f5;
+  border: 1.5px solid var(--sl-borde);
   border-radius: 14px;
   background: #fff;
   pointer-events: none;
 }
-.vista-creacion__nota { font-size: 12px; color: #6b6685; }
+.vista-creacion__nota { font-size: 12px; color: var(--sl-nota); }

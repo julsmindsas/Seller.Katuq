@@ -15,7 +15,7 @@
 //   :host { @include kb-tokens; font-family: var(--kb-font); }
 // =============================================================================
 
-@mixin kb-tokens {
+@mixin kb-tokens($oscuro: false) {
   --kb-font: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
 
   --kb-canvas: #ecebf4;
@@ -43,6 +43,7 @@
   --kb-chip-2: #f4f2fb;
 
   --kb-accent: #6a4dfb;
+  --kb-accent-fg: #6a4dfb; // acento como color de texto/ícono; en oscuro sube a --ds-accent-ink
   --kb-accent-ink: #5537e8;
   --kb-accent-wash: #f4f0ff;
   --kb-accent-wash-2: #f6f4fe;
@@ -73,6 +74,65 @@
   --kb-shadow-accent: 0 6px 18px rgba(107, 78, 251, 0.32);
   --kb-shadow-accent-sm: 0 5px 14px rgba(107, 78, 251, 0.3);
   --kb-shadow-pill: 0 2px 6px rgba(107, 78, 251, 0.15);
+
+  // D-502 F2b (ticket 1180, tarea 4.2): juego oscuro, opt-in con kb-tokens(true). Los demás consumidores
+  // (editor, marca, métricas, selector de productos) siguen en claro hasta migrar sus blancos literales,
+  // porque con texto claro sobre un #fff literal quedarían ilegibles. No hay hex propios: cada --kb-* que coincide por
+  // rol con un --ds-* lo toma del juego compartido (_theme-tokens.scss, body.dark-only). `&` es la lista
+  // del consumidor (`:host, .velo`), así que el velo que cuelga del <body> también queda cubierto.
+  // Excepciones de negocio que NO cambian: --kb-accent (#6a4dfb), --kb-accent-grad (degradado del botón
+  // principal) y las sombras de modal, marco, miniatura y acento. El texto de acento usa --ds-accent-ink.
+  @if $oscuro {
+  body.dark-only & {
+    --kb-canvas: var(--ds-canvas);
+    --kb-surface: var(--ds-surface);
+    --kb-surface-2: var(--ds-surface-2);
+    --kb-surface-3: var(--ds-row-hover);
+
+    --kb-ink: var(--ds-ink);
+    --kb-ink-2: var(--ds-ink-2);
+    --kb-body: var(--ds-body);
+    --kb-muted: var(--ds-muted);
+    --kb-muted-2: var(--ds-muted);
+    --kb-muted-3: var(--ds-muted);
+    --kb-disabled: var(--ds-muted);
+
+    --kb-line: var(--ds-line-soft);
+    --kb-line-2: var(--ds-line);
+    --kb-line-3: var(--ds-line);
+    --kb-line-4: var(--ds-line-strong);
+    --kb-line-5: var(--ds-line-strong);
+    --kb-line-6: var(--ds-line-strong);
+
+    --kb-chip: var(--ds-chip-bg);
+    --kb-chip-2: var(--ds-chip-bg);
+
+    --kb-accent-ink: var(--ds-accent-ink);
+    --kb-accent-fg: var(--ds-accent-ink);
+    --kb-accent-wash: var(--ds-accent-soft);
+    --kb-accent-wash-2: var(--ds-accent-soft);
+    --kb-accent-wash-3: var(--ds-surface-2);
+    --kb-accent-wash-4: var(--ds-surface-2);
+    --kb-accent-tile: var(--ds-tile);
+    --kb-accent-line: var(--ds-connector);
+    --kb-accent-line-2: var(--ds-connector);
+    --kb-accent-text: var(--ds-accent-ink);
+
+    --kb-ok: var(--ds-ok);
+    --kb-ok-wash: var(--ds-ok-soft);
+    --kb-ok-soft: var(--ds-ok-soft);
+    --kb-ok-line: var(--ds-ok-soft);
+
+    --kb-warn: var(--ds-warn);
+    --kb-warn-wash: var(--ds-warn-soft);
+
+    --kb-danger: var(--ds-err);
+    --kb-danger-wash: var(--ds-err-soft);
+    --kb-danger-line: var(--ds-err-soft);
+
+    --kb-shadow-card: var(--ds-shadow-panel);
+  }
+  }
 }
 
 // Animaciones de entrada. Se declaran en cada componente que las use porque la
@@ -150,7 +210,7 @@
 @mixin kb-btn-ghost($alto: 12px, $ancho: 18px, $texto: 14px) {
   @include kb-btn-base;
   border: 1.5px solid var(--kb-line-6);
-  background: #fff;
+  background: var(--kb-surface);
   color: var(--kb-ink-2);
   font-weight: 700;
   font-size: $texto;
@@ -174,13 +234,13 @@
   height: $lado;
   padding: 0;
   border: 1.5px solid var(--kb-line-5);
-  background: #fff;
+  background: var(--kb-surface);
   border-radius: 9px;
   color: var(--kb-body);
 
   &:hover:not(:disabled) {
-    border-color: var(--kb-accent);
-    color: var(--kb-accent);
+    border-color: var(--kb-accent-fg);
+    color: var(--kb-accent-fg);
   }
 
   &:disabled {
@@ -209,8 +269,8 @@
 
   &:focus {
     outline: none;
-    border-color: var(--kb-accent);
-    background: #fff;
+    border-color: var(--kb-accent-fg);
+    background: var(--kb-surface);
     box-shadow: 0 0 0 4px rgba(107, 78, 251, 0.1);
   }
 }
@@ -253,8 +313,8 @@
     border-radius: 9px;
 
     &.is-active {
-      background: #fff;
-      color: var(--kb-accent);
+      background: var(--kb-surface);
+      color: var(--kb-accent-fg);
       font-weight: 800;
       box-shadow: var(--kb-shadow-pill);
     }
@@ -280,7 +340,7 @@
 @mixin kb-chip-filtro {
   @include kb-btn-base;
   border: 1.5px solid var(--kb-line-4);
-  background: #fff;
+  background: var(--kb-surface);
   color: var(--kb-ink-2);
   font-weight: 700;
   font-size: 12.5px;
@@ -288,7 +348,7 @@
   border-radius: 99px;
 
   &.is-active {
-    border-color: var(--kb-accent);
+    border-color: var(--kb-accent-fg);
     background: #f2eeff;
     color: var(--kb-accent-ink);
     font-weight: 800;
@@ -312,7 +372,7 @@
   svg {
     float: left;
     margin: 1px 11px 0 0;
-    color: var(--kb-accent);
+    color: var(--kb-accent-fg);
   }
 }
 
@@ -344,7 +404,7 @@
   width: 100%;
   max-width: $ancho;
   max-height: 88vh;
-  background: #fff;
+  background: var(--kb-surface);
   border-radius: $radio;
   box-shadow: var(--kb-shadow-modal);
   overflow: hidden;
