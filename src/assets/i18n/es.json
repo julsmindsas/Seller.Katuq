@@ -3755,5 +3755,6 @@
   "facturacionElectronica.invoiceComposer.pedidoConReferencia": "Pedido {{referencia}}",
   "facturacionElectronica.facturacionElectronica.diasCantidad": "{{cantidad}} días",
   "tesoreria.tablaPagosPedidos.cambiarEstadoConDescripcion": "Cambiar estado — {{descripcion}}",
+  "tesoreria.gestionPagos.eyebrow": "Finanzas",
   "facturacionElectronica.invoiceComposer.pedido": "Pedido"
 }
