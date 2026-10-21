@@ -2923,6 +2923,15 @@
   &__datos strong { font-size: 13px; color: var(--kb-ink); }
   &__datos small { font-size: 11.5px; color: var(--kb-muted); letter-spacing: normal; overflow: hidden; text-overflow: ellipsis; }
   &__actual { font-size: 11.5px; color: var(--kb-accent); font-weight: 700; white-space: nowrap; }
+  // D-518 (F5-29·6): encabezado de los borradores guardados antes de restaurar.
+  &__titulo {
+    margin: 14px 0 2px;
+    font-size: 11px !important;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--kb-muted);
+  }
 }
 
 // Ticket 1247: buscador de ajustes, avance hacia publicar y ajuste encontrado.

@@ -126,6 +126,7 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
 ### Compuertas
 
 - [ ] 14.0a Daniel aprueba A1 (lector de Shopify con el formato actual) y A5 (árbol de categorías). Son los arreglos sin diseño nuevo del orden de trabajo 3 de D-518. **Éxito:** queda en `specs/CONTRACT.md`. Bloquea solo 14.1, 14.2, 14.21a, 14.3a y 14.14.
+  - Aprobadas por Daniel el 2026-10-21 («dale pues y aprobado todo»; sección «Aprobación (2026-10-21)» de `proposal.md`). Por eso se hizo la 14.14. **Falta solo el registro en `specs/CONTRACT.md`**, que hace la sesión que cierra; la casilla se marca entonces.
 - [ ] 14.0 Daniel aprueba el resto de la ampliación y responde las preguntas 1 a 19 de `proposal.md` («Ampliación D-518»). **Éxito:** queda en `specs/CONTRACT.md` bajo D-518/D-498. La sesión que edita el contrato anota también T·3 (0.1 a 0.3). Bloquea las demás tareas de esta sección.
 
 ### Arreglos sin diseño nuevo (después de 14.0a)
@@ -137,7 +138,15 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
 - [ ] 14.2 Lector de Shopify con la tabla de alias (`readers/comun.js`, `readers/shopify.js`): códigos de barras con prefijo, `Status`, `Published on online store` y `format` en la simulación. Depende de 14.1. **Éxito:** 14.1 en verde; los fixtures sintéticos siguen en verde.
 - [ ] 14.21a `[P]` **Caracterización del mapeo de cantidades** (solo pruebas; antes de 14.3a, 14.13, 14.21b y del diff de 6.2): una tabla fija qué cantidad recibe `importInventory` en cada caso (Shopify actual y anterior, inventario aparte y Woo). **Éxito:** en verde con el código de hoy; los contract tests de inventario sin cambios.
 - [ ] 14.3a CSV de inventario de Shopify: alias `Option 1 Value`. Depende de 14.21a. **Éxito:** la unión por opciones funciona con los dos nombres y las cantidades de los fixtures no cambian.
-- [ ] 14.14 **Diff aprobado (categorías).** `leerArbol` con `documentoQueEditaElMaestro` (A5). El dorado de `importProducts` suma varios documentos con y sin `categoryAttributes`. **Éxito:** sin la bandera, el dorado no cambia.
+- [x] 14.14 **Diff aprobado (categorías).** `leerArbol` con `documentoQueEditaElMaestro` (A5). El dorado de `importProducts` suma varios documentos con y sin `categoryAttributes`. **Éxito:** sin la bandera, el dorado no cambia.
+  - Hecho (2026-10-21, `feature/tickets-web`, sin desplegar; Daniel aprobó A5 y la pregunta 13 de D-495 con «aprobado todo»): `leerArbol` lee los documentos de la empresa y elige con `documentoQueEditaElMaestro` (la bandera solo se consulta si hay más de uno). `guardarArbol` guarda en una transacción que vuelve a leer el documento y repite las rutas del archivo sobre el árbol fresco, así no pisa lo que Maestros guardó en el intervalo; si el documento quedó ilegible o de otra empresa no escribe, e `importProducts` responde el mismo 409. Sin documento, `add` como siempre. Pruebas: `tests/storeMigration/categoriasArbolMaestro.test.js` (9, rojo antes del arreglo) y el dorado sin cambios (4).
+  - Corrección tras la revisión (2026-10-21):
+    - La transacción sigue el texto aprobado de la pregunta 13: si Maestros no cambió nada en el intervalo, guarda lo mismo que antes (byte a byte); si cambió algo, parte del árbol fresco y **solo agrega las rutas que crearon categorías**. No recrea nombres que Maestros renombró ni repite `consecutivo` sobre nodos que ya existían.
+    - `guardarArbol` devuelve lo resuelto sobre el árbol guardado y `importProducts` lo usa: los productos llevan el nodo que quedó en el maestro (por ejemplo, la categoría que Maestros creó con su consecutivo) y `categoriasCreadas` dice lo que de verdad nació.
+    - Un fallo de Firestore al guardar el árbol responde un mensaje genérico (413 tamaño, 409 contención, 500 otro) sin escribir productos.
+    - El dorado de `importProducts` ahora suma varios documentos con y sin `categoryAttributes`, comparados contra el escenario congelado de HEAD (solo cambia el id del documento): 6 pruebas. `categoriasArbolMaestro`: 12 pruebas.
+  - **Comportamiento declarado:** si a una categoría creada le falta el padre porque Maestros lo renombró en el intervalo, el padre se crea con el nombre del archivo y sale en `categoriasCreadas`. Una ruta que no creó nada y que Maestros renombró conserva el nodo leído al empezar, como los productos que ya tenían esa categoría.
+  - **Riesgo declarado (fuera de la pregunta 13, sin cambio):** Maestros (`createCategoria`) reemplaza el árbol completo con el que el navegador cargó al abrir la pantalla, sin comparar versión. Si una importación crea categorías mientras Maestros está abierto, el siguiente guardado de Maestros las borra y los productos quedan con una categoría que el maestro ya no tiene. Resolverlo (versión u otra protección en Maestros) cambia el comportamiento de Maestros y necesita su propia spec.
 
 ### Lo demás (después de 14.0)
 

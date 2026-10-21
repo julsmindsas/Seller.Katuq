@@ -34,7 +34,8 @@
   "guards": [{ "code": "WOO_INTEGRATION_ACTIVE", "message": "…" }] }
 ```
 
-- **`format`:** `current`, `legacy` o `mixed`.
+- **`format`:** `current`, `legacy` o `mixed`; `null` cuando el archivo no trae las columnas mínimas (handle, nombre y precio) en ningún formato conocido, siempre con `UNKNOWN_FORMAT` en `issues`.
+- **`products.unpublishedOnline`** y **`products.notTracked`** ya los devuelve la simulación (revisión de A1 y E2). Un producto fuera de la tienda web no entra en el plan de redirecciones: la 301 llevaría a una ficha que la tienda no muestra.
 - **`offers.publicList`:** `found`, `missing` o `ambiguous`. Con `missing` o `ambiguous`, las ofertas no se cargan, y la pantalla ofrece crear el tipo de cliente (pregunta 1).
 - **`plan`:** solo con un plan que limita los productos visibles (E1); si no, `null`.
 - **`taxClasses`:** solo Woo, las clases distintas de vacía, `standard` y `zero-rate`.

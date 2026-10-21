@@ -5,7 +5,7 @@ import { ToastrService } from "ngx-toastr";
 import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
-import { CategoriaSitio, ContenidoSitio, CorreosTienda, CuponSitio, EstadoProveedorCuotas, PaginaSitio, PromocionSitio, PropuestaDiseno, ProveedorCuotas, ProveedorReglasCuotas, ReglasCuotasRespuesta, ResenaSitio, Sitio, SitiosService, TemporadaComercial, TextoCorreo, TiendaSitio, VentaConfig } from "../sitios.service";
+import { BorradorGuardado, CategoriaSitio, ContenidoSitio, CorreosTienda, CuponSitio, EstadoProveedorCuotas, PaginaSitio, PromocionSitio, PropuestaDiseno, ProveedorCuotas, PermisosSitio, ProgramacionFallida, ProveedorReglasCuotas, ReglasCuotasRespuesta, ResenaSitio, Sitio, SitiosService, TemporadaComercial, TextoCorreo, TiendaSitio, VentaConfig } from "../sitios.service";
 import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
@@ -1004,6 +1004,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
           return;
         }
         this.sitio = res.data;
+        // D-518 (F5-29·1): quién publica y quién es administrador, desde la carga.
+        this.aplicarPermisos((res.data as any).permisos);
         this.contenido = this.completar(res.data.draft);
         // Con el contenido cargado ya se sabe si el sitio usa lienzo u objetos.
         this.decidirAvanzadas();
@@ -1628,9 +1630,11 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     "carrito_abandonado",
     "pedido_despachado",
     "pedido_entregado",
+    // D-518 (F2-43·6): acuse al cliente que pide una cotización y deja su correo.
+    "cotizacion_recibida",
   ];
   /** Con llaves literales: en la plantilla de Angular, "{" abre un mensaje ICU. */
-  readonly variablesCorreo = "{nombre}, {pedido}, {tienda} y {total}";
+  readonly variablesCorreo = "{nombre}, {pedido}, {tienda}, {total} y {cotizacion}";
   textosCorreo: { [m: string]: TextoCorreo } = {};
   correoAbierto: string | null = null;
   previaCorreo: { asunto: string; html: SafeHtml } | null = null;
@@ -2179,14 +2183,22 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   puedePublicarVersiones = true;
   rolesPublicar: string[] = [];
   fechaProgramada = "";
+  /** D-518 (F5-29·1): borradores guardados antes de restaurar, para recuperarlos. */
+  borradoresGuardados: BorradorGuardado[] = [];
+  /** D-518 (F5-29·1): por qué no salió la última publicación programada (lo dice el servidor). */
+  programacionFallida: ProgramacionFallida | null = null;
+  /** D-518 (F5-29·1): lo decide el servidor con la misma regla con que autoriza (no /admin/i). */
+  private esAdministradorServidor = false;
 
   get esAdministrador(): boolean {
-    try {
-      const rol = String((JSON.parse(localStorage.getItem("user") || "{}") || {}).rol || "");
-      return /admin/i.test(rol);
-    } catch (e) {
-      return false;
-    }
+    return this.esAdministradorServidor;
+  }
+
+  /** Los permisos que el servidor manda con el sitio, desde la carga del editor. */
+  private aplicarPermisos(permisos: PermisosSitio | null | undefined): void {
+    if (!permisos) return;
+    this.puedePublicarVersiones = permisos.puedePublicar !== false;
+    this.esAdministradorServidor = permisos.esAdministrador === true;
   }
 
   get rolesPublicarTexto(): string {
@@ -2201,7 +2213,10 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         this.versiones = (res && res.data) || [];
         this.programada = (res && res.programada) || null;
         this.puedePublicarVersiones = !res || res.puedePublicar !== false;
+        if (res && typeof res.esAdministrador === "boolean") this.esAdministradorServidor = res.esAdministrador;
         this.rolesPublicar = (res && res.rolesPublicar) || [];
+        this.borradoresGuardados = (res && res.borradores) || [];
+        this.programacionFallida = (res && res.ultimaProgramacionFallida) || null;
       },
       error: () => { this.versionesCargadas = true; },
     });
@@ -2210,43 +2225,107 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   restaurarVersion(v: { id: string; publicadaEn: string }): void {
     Swal.fire({
       title: "¿Restaurar esta versión?",
-      text: "Vuelve a quedar publicada y también en tu borrador. Lo que está publicado ahora queda en el historial: no se pierde.",
+      text: "Vuelve a quedar publicada la presentación de esta versión; tu tienda y tu medición quedan como están. " +
+        "Si tenías cambios sin publicar, los guardamos y los puedes recuperar. Lo que está publicado ahora queda en el historial.",
       showCancelButton: true,
       confirmButtonText: "Restaurar",
       cancelButtonText: "Cancelar",
       confirmButtonColor: "#5F3FE0",
     }).then((r) => {
       if (!r.isConfirmed) return;
-      this.service.restaurarVersion(this.id, v.id).subscribe({
-        next: (res) => {
-          if (!res || !res.success) {
-            this.toastr.error((res && res.message) || "No pudimos restaurar esa versión.");
-            return;
-          }
-          this.toastr.success("Versión restaurada y publicada.");
-          // El borrador cambió en el servidor: se recarga para no pisarlo con la copia de esta pantalla.
-          setTimeout(() => location.reload(), 600);
-        },
-        error: (err) => this.toastr.error(err?.error?.message || "No pudimos restaurar esa versión."),
+      // Lo último que escribiste se guarda ANTES (así queda en «Borradores
+      // guardados») y el guardado automático no corre mientras se restaura.
+      this.conBorradorGuardado("restaurar", () => {
+        this.aplicandoVersion = true;
+        this.service.restaurarVersion(this.id, v.id).subscribe({
+          next: (res) => {
+            if (!res || !res.success) {
+              this.aplicandoVersion = false;
+              this.toastr.error((res && res.message) || "No pudimos restaurar esa versión.");
+              return;
+            }
+            this.recargarTrasCambioDelServidor("Versión restaurada y publicada.");
+          },
+          error: (err) => {
+            this.aplicandoVersion = false;
+            this.toastr.error(err?.error?.message || "No pudimos restaurar esa versión.");
+          },
+        });
       });
     });
+  }
+
+  /**
+   * D-518 (F5-29·6): guarda lo pendiente y, cuando el servidor lo confirma,
+   * corre `accion`. Si no se puede guardar (un dato por corregir, sin
+   * conexión), no la corre y lo dice.
+   */
+  private conBorradorGuardado(que: string, accion: () => void): void {
+    if (!this.sucio) { accion(); return; }
+    this.trasGuardar = accion;
+    this.guardar(false, true);
+    if (!this.guardando && this.trasGuardar) {
+      // No arrancó: hay un dato por corregir o un aviso por aceptar.
+      this.trasGuardar = null;
+      this.toastr.warning(`Guarda tus cambios antes de ${que}.`);
+    }
+  }
+
+  /** El borrador cambió en el servidor: se recarga la pantalla para no pisarlo con la copia de esta. */
+  private recargarTrasCambioDelServidor(mensaje: string): void {
+    Swal.fire({ title: mensaje, icon: "success", confirmButtonText: "Listo", confirmButtonColor: "#5F3FE0" })
+      .then(() => location.reload());
   }
 
   programarPublicacion(): void {
     const fecha = new Date(this.fechaProgramada);
     if (isNaN(fecha.getTime())) return;
-    if (this.sucio) this.guardar(false, true);
-    this.service.programarPublicacion(this.id, { fecha: fecha.toISOString() }).subscribe({
-      next: (res) => {
-        if (!res || !res.success) {
-          this.toastr.error((res && res.message) || "No pudimos programar.");
-          return;
-        }
-        this.programada = res.data || null;
-        this.fechaProgramada = "";
-        this.toastr.success(res.message || "Publicación programada.");
-      },
-      error: (err) => this.toastr.error(err?.error?.message || "No pudimos programar."),
+    // Se programa lo guardado: primero se espera a que el guardado responda.
+    this.conBorradorGuardado("programar", () => {
+      this.service.programarPublicacion(this.id, { fecha: fecha.toISOString() }).subscribe({
+        next: (res) => {
+          if (!res || !res.success) {
+            this.toastr.error((res && res.message) || "No pudimos programar.");
+            return;
+          }
+          this.programada = res.data || null;
+          this.programacionFallida = null;
+          this.fechaProgramada = "";
+          this.toastr.success(res.message || "Publicación programada.");
+        },
+        error: (err) => this.toastr.error(err?.error?.message || "No pudimos programar."),
+      });
+    });
+  }
+
+  /** D-518 (F5-29·6): devuelve al borrador lo que había sin publicar antes de restaurar. No publica. */
+  recuperarBorrador(b: BorradorGuardado): void {
+    Swal.fire({
+      title: "¿Recuperar este borrador?",
+      text: "Tus secciones y páginas vuelven a como estaban en ese borrador, sin publicar. Si ahora tienes cambios sin publicar, también los guardamos.",
+      showCancelButton: true,
+      confirmButtonText: "Recuperar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#5F3FE0",
+    }).then((r) => {
+      if (!r.isConfirmed) return;
+      this.conBorradorGuardado("recuperar otro borrador", () => {
+        this.aplicandoVersion = true;
+        this.service.recuperarBorrador(this.id, b.id).subscribe({
+          next: (res) => {
+            if (!res || !res.success) {
+              this.aplicandoVersion = false;
+              this.toastr.error((res && res.message) || "No pudimos recuperar ese borrador.");
+              return;
+            }
+            this.recargarTrasCambioDelServidor(res.message || "Borrador recuperado.");
+          },
+          error: (err) => {
+            this.aplicandoVersion = false;
+            this.toastr.error(err?.error?.message || "No pudimos recuperar ese borrador.");
+          },
+        });
+      });
     });
   }
 
@@ -5130,18 +5209,23 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   estadoAutoguardado: "" | "guardando" | "guardado" | "pendiente" | "error" = "";
   motivoAutoguardado = "";
   private relojAutoguardado: any = null;
+  /** D-518 (F5-29·6): restaurando o recuperando en el servidor; no se autoguarda encima. */
+  private aplicandoVersion = false;
+  /** D-518 (F5-29·6): lo que corre cuando el servidor confirma el guardado (ver conBorradorGuardado). */
+  private trasGuardar: (() => void) | null = null;
   private readonly ESPERA_AUTOGUARDADO = 2500;
   private readonly REINTENTO_AUTOGUARDADO = 10000;
 
   private programarAutoguardado(espera = this.ESPERA_AUTOGUARDADO): void {
     if (this.relojAutoguardado) clearTimeout(this.relojAutoguardado);
-    if (!this.sucio || this.restaurando) return;
+    if (!this.sucio || this.restaurando || this.aplicandoVersion) return;
     this.relojAutoguardado = setTimeout(() => this.autoguardar(), espera);
   }
 
   private autoguardar(): void {
     this.relojAutoguardado = null;
-    if (!this.contenido || !this.sucio) return;
+    // D-518 (F5-29·6): mientras el servidor restaura o recupera, esta copia ya es vieja.
+    if (!this.contenido || !this.sucio || this.aplicandoVersion) return;
     // Algo en curso: se vuelve a intentar al terminar.
     if (this.guardando || this.publicando || this.editandoIA) {
       this.programarAutoguardado();
@@ -5431,7 +5515,10 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       .subscribe({
         next: (res) => {
           this.guardando = false;
+          const despues = this.trasGuardar;
+          this.trasGuardar = null;
           if (!res || !res.success) {
+            if (despues) this.toastr.warning("No pudimos guardar tus cambios: no se hizo la acción.");
             this.estadoAutoguardado = "pendiente";
             this.motivoAutoguardado = (res && res.message) || "No pudimos guardar.";
             this.toastr.error((res && res.message) || "No pudimos guardar.");
@@ -5449,6 +5536,15 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
           this.recalcularSucio();
           this.estadoAutoguardado = "guardado";
           if (res.avisos) this.toastr.info(res.avisos);
+          if (despues) {
+            if (cambioDuranteGuardado) {
+              this.toastr.warning("Escribiste algo mientras se guardaba. Vuelve a intentarlo.");
+              this.programarAutoguardado();
+              return;
+            }
+            despues();
+            return;
+          }
           if (cambioDuranteGuardado) {
             // Ticket 1219: lo escrito mientras se guardaba sale en el siguiente guardado automático.
             if (automatico) { this.programarAutoguardado(); return; }
@@ -5462,6 +5558,10 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         },
         error: (e) => {
           this.guardando = false;
+          if (this.trasGuardar) {
+            this.trasGuardar = null;
+            this.toastr.warning("No pudimos guardar tus cambios: no se hizo la acción.");
+          }
           // Plan gratis (D-319): se explica con la opción de mejorar el plan.
           if (this.plan.manejar(e)) { this.estadoAutoguardado = "pendiente"; return; }
           const sinConexion = !e || e.status === 0 || e.status >= 500;

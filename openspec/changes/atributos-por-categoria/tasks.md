@@ -251,6 +251,7 @@ Cada sub-cambio lleva su `design.md` y su `tasks.md` (3 páginas o menos), se ap
   - Para cada una de las 4 empresas con varios documentos: ¿el primer documento por id es el que elige D2 (`documentoQueEditaElMaestro` con la bandera)? Solo conteos e ids, sin contenido.
   - Si en alguna no coincide: script `--dry-run` de unificación y diff aprobado (pregunta 12), antes de encender la bandera en ella.
   - `leerArbol` es de D-498 (14.14); esta tarea no lo cambia. La transacción de `guardarArbol`, pregunta 13.
+  - 14.14 y la transacción de `guardarArbol` (pregunta 13) hechas el 2026-10-21 en `feature/tickets-web`. Sigue abierta la revisión de solo lectura de las 4 empresas.
   - Dep: —.
   - Éxito: tabla de las 4 empresas (coincide / no coincide) en `design.md`; ninguna con la bandera encendida mientras no coincida.
 - [ ] 8.3 **H3 (primero solo lectura, luego diff aprobado).**
@@ -259,6 +260,8 @@ Cada sub-cambio lleva su `design.md` y su `tasks.md` (3 páginas o menos), se ap
   - Con casos: además, medición `--dry-run` del tamaño del documento y de los campos que Maestros reenvía en esas empresas, reproducción en el emulador y arreglo en diff aparte (pregunta 9 si son las fotos).
   - Dep: —.
   - Éxito: se sabe si ha fallado y por qué; Maestros guarda o dice que no guardó, sin perder el árbol.
+  - Avance (2026-10-21, `feature/tickets-web`, sin desplegar): arreglo de robustez hecho con prueba primero (`tests/catalogo/createCategoriaError.test.js`, 3 en rojo antes). Si la transacción falla, el árbol no cambia y la respuesta es genérica (`CATEGORY_TREE_SAVE_FAILED`, 500); documento de más de 1 MiB, 413 `CATEGORY_TREE_TOO_LARGE` con un mensaje que pide imágenes más livianas; contención agotada, 409. El registro lleva `codigo` (y `bytes` si es por tamaño), sin valores. Maestros muestra el mensaje del servidor. **Queda abierto el paso 1** (consultar el registro de producción): no se hizo desde aquí. Subir las fotos de categoría al almacenamiento sigue en un cambio aparte (pregunta 9).
+  - Corrección tras la revisión (2026-10-21): el 413 también cubre el campo de más de 1.048.487 bytes y la petición de más de 10 MiB (antes daban 500 y el comercio reintentaba sin saber por qué), y Maestros responde 413 antes de escribir si el árbol pasa el tope. La importación de productos usa la misma respuesta genérica. Pruebas: `createCategoriaError` 8. **El arreglo de robustez no reemplaza el paso 1:** si el registro de producción muestra fallos con otra causa, esa causa sigue sin diagnosticar y la casilla sigue abierta.
 - [ ] 8.4 [P] **H4.** Cerrar lo pendiente del cambio privado `atributos-endurecer-empresa-handlers` (bitácora y revisión del registro). H4 sigue en un cambio aparte. Ver revisión privada.
   - Dep: —.
   - Éxito: las casillas del cambio privado reflejan lo desplegado.
