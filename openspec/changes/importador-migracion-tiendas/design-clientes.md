@@ -66,3 +66,20 @@ Complemento de `design.md` (decisión 8). Va después de la fase 1a. Depende de 
 ### Revisión legal (tarea 0.7)
 
 La pregunta 4 depende de un concepto sobre la Ley 1581: ¿el consentimiento dado a la tienda anterior vale para el mismo comercio en Katuq? Si el concepto dice que no, la fase 1b importa los clientes sin suscripción y se les pide la autorización de nuevo.
+
+### Ampliación D-518 (21-oct): NUEVO, pendiente de aprobación
+
+F5-30·1 deja los clientes **dentro de esta entrega**. Lo de arriba no cambia, y la fase 1b sigue bloqueada por el concepto legal (0.7): D-518 no lo resolvió.
+
+- **Columnas verificadas el 2026-10-21** en la ayuda de Shopify (help.shopify.com/en/manual/customers/import-export-customers):
+  - `First Name`, `Last Name`, `Email`, `Accepts Email Marketing`;
+  - `Default Address Company`, `Default Address Address1`, `Default Address Address2`, `Default Address City`, `Default Address Province Code`, `Default Address Country Code`, `Default Address Zip`, `Default Address Phone`;
+  - `Phone`, `Accepts SMS Marketing`, `Accepts WhatsApp Marketing`;
+  - `Total Spent`, `Total Orders`, `Note`, `Tax Exempt`, `Tags`.
+
+  El lector usa `Phone` y, si falta, `Default Address Phone`. `Total Spent`, `Total Orders` y `Note` no se importan: `Note` puede traer datos personales libres.
+- **Permiso de SMS y de WhatsApp (pregunta 10):** no se importan. En Katuq, el permiso de WhatsApp vive por carrito (`utils/siteCarrito.js:94`, F2-21). El registro por contacto lo pide [CONV] E (#1305, cd OpjNQnXBsuR3GFRBiRzN), que está pendiente. El reporte solo cuenta cuántos clientes lo traían.
+- **Llave del cliente (pregunta 11):** celular normalizado y después correo, como arriba. Es la misma pregunta que tiene abierta WP-INT 3 (#1288, cd Ttbk4gnxvl49bpbOJrXV), así que se le avisa a Mónica para que las dos queden con la misma llave.
+- **Precisión del criterio:** «no se duplican con el mismo correo» vale para correos guardados en minúsculas. Uno guardado con mayúsculas puede duplicarse, como se aceptó arriba (§Lectura), y el reporte lo advierte.
+- **Guarda nueva:** un comercio con la integración WooCommerce activa recibe 409 `WOO_INTEGRATION_ACTIVE` también en `customers` (`design-woocommerce.md` W1).
+- **Clientes de WooCommerce:** este documento es de Shopify. WooCommerce exporta sus clientes desde el informe de Analytics, con teléfono pero **sin** consentimiento de marketing. La propuesta (pregunta 19) los trae con la misma búsqueda, lotes y reversa, y nunca con autorización de correo (`design-woocommerce.md` W5).

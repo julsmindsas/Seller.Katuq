@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Un cliente no se duplica
-THE system SHALL buscar a cada cliente del archivo por su celular y luego por su correo, solo dentro del mismo comercio, comparando el celular sin espacios, signos ni indicativo de país, y el correo en minúsculas. WHEN el cliente ya existe, THE system SHALL completar solo los datos que le falten, sin cambiar los que tiene. WHEN no existe, THE system SHALL crearlo sin documento de identidad y con el origen «migración».
+THE system SHALL buscar a cada cliente del archivo por su celular y luego por su correo, solo dentro del mismo comercio, comparando el celular sin espacios, signos ni indicativo de país, y el correo en minúsculas. IF el comercio guardó antes un correo con mayúsculas, THEN THE system SHALL avisar en el reporte que ese cliente puede quedar repetido (→ D-518, precisión pendiente de aprobación: la búsqueda por correo es exacta, `design-clientes.md`). WHEN el cliente ya existe, THE system SHALL completar solo los datos que le falten, sin cambiar los que tiene. WHEN no existe, THE system SHALL crearlo sin documento de identidad y con el origen «migración».
 
 #### Scenario: Mismo celular con otro formato
 - **WHEN** el archivo trae `+57 300 123 4567` y el comercio ya tiene un cliente con `3001234567`

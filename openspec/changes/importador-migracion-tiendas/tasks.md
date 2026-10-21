@@ -7,9 +7,10 @@
 
 ## 0. Compuertas (en este orden: specs → diseño → tareas)
 
-- [ ] 0.1 Daniel aprueba las cuatro specs de `specs/`. **Éxito:** `openspec validate importador-migracion-tiendas --strict` pasa (verificado el 2026-10-18) y la aprobación queda en la entrada de D-498 en `specs/CONTRACT.md`.
-- [ ] 0.2 Daniel confirma los valores por defecto (`design.md`, Open Questions 1 a 21) y aprueba `design.md`, `design-escritura.md`, `design-clientes.md` y `contracts/import-store-api.md`. Depende de 0.1. **Éxito:** D-498 registra los valores, la ampliación del write-set (pregunta 16) y la excepción al Artículo IX (Angular 14). Todo cambio va primero al documento.
-- [ ] 0.3 Daniel aprueba este `tasks.md`. Depende de 0.2.
+- [x] 0.1 Daniel aprueba las cuatro specs de `specs/`. **Éxito:** `openspec validate importador-migracion-tiendas --strict` pasa (verificado el 2026-10-18) y la aprobación queda en la entrada de D-498 en `specs/CONTRACT.md`.
+- [x] 0.2 Daniel confirma los valores por defecto (`design.md`, Open Questions 1 a 21) y aprueba `design.md`, `design-escritura.md`, `design-clientes.md` y `contracts/import-store-api.md`. Depende de 0.1. **Éxito:** D-498 registra los valores, la ampliación del write-set (pregunta 16) y la excepción al Artículo IX (Angular 14). Todo cambio va primero al documento.
+- [x] 0.3 Daniel aprueba este `tasks.md`. Depende de 0.2.
+  - *0.1 a 0.3:* aprobadas en bloque el 18-oct (CONTRACT, D-495 a D-503: «diseño, specs, tareas y valores por defecto»). Se marcan por D-518 T·3. Falta la anotación en el contrato con la fecha de la aprobación; la hace la sesión que edita el contrato (14.18).
 - [ ] 0.4 Exports reales (productos, inventario aparte si existe y clientes de Shopify; productos de WooCommerce), anonimizados como fixtures en `functions/tests/storeMigration/fixtures/`, solo en el backend privado y sin datos personales reales. **Éxito:** columnas reales anotadas en `design.md`. Bloquea 1.7, 4.1 y 8.1.
   - *Estado 2026-10-19:* sin exports reales. Hay fixtures **sintéticos** (productos e inventario de Shopify, export anterior con `Variant Inventory Qty` y productos de WooCommerce) armados con las columnas de la documentación pública, sin datos personales y sin clientes. Se reemplazan por los reales cuando lleguen.
 - [ ] 0.5 Verificar la tarea 3.2 de `banderas-por-comercio`. **Éxito:** estado anotado; sin cerrarla no se enciende nada.
@@ -24,6 +25,7 @@
 - [x] 1.2 `[P]` `importStoreDryRun.noWrites.contract.test.js`: la simulación no escribe (cualquier escritura revienta) ni usa la red.
   - *Estado:* en verde. La única escritura permitida es el registro del paso en `migration_audit` (decisión 10 y 5.1); todo lo demás revienta.
 - [x] 1.3 `[P]` `importStoreProducts.writeSet.contract.test.js`: solo `products`, `categorias`, `migration_audit`, `integration_idempotency` y, desde 6.2, `inventory`/`inventoryMovement` únicamente por `importInventory` y nunca para omitidos; nunca `preciosPorTipoCliente`, listas, `integrations.*`, flows ni pedidos. En `create`, `matchBy: 'cd'` sin `cd`, nada existente cambia y la referencia ambigua se omite. En `upsert` se conservan `date_add`, `fecha`, `fechaCreacion`, `user_add`, `exposicion`, `marketplace`, `ciudades`, `disponibilidad`, `categorias` y `_precioManualOverride`; `user_edit` es el actor y, sin la casilla, `variantes[].cantidad` no cambia.
+  - → D-518 (pendiente de aprobación): la prohibición de `preciosPorTipoCliente` pasa a «como máximo una fila, la del tipo Público de la empresa, en el mismo producto» (14.5). Además vigila `seo`, `alt`, `exposicion.nuevo: false` y `marketplace.paginaWeb`.
   - *Estado:* escrita y **en rojo hasta 6.1** (hoy `products` responde 501). La forma del producto y la actualización acotada ya pasan por el upsert real en la prueba de 4.2. El simulador ahora reemplaza un mapa vacío como Firestore (`simulador.test.js`), así que la condición de `exposicion` sí puede fallar; `migrationProduct.test.js` lo comprueba con un control sin la copia.
 - [x] 1.4 `[P]` `importStoreRedirects.contract.test.js`: solo `draft.redirecciones` (`published` intacto); manuales primero y sin cambios; lo generado se reconoce por `metadata.migration.handle` y se actualiza; destino inexistente → `TARGET_MISSING`; tope 500 con sobrantes reportadas; sitio ajeno → 404; repetir no duplica.
   - *Estado:* escrita; el 404 ya pasa y el resto queda **en rojo hasta 7.1**.
@@ -32,6 +34,7 @@
   - *Estado:* `categoriasImportProducts.golden.test.js`, con los valores sacados de `HEAD` en `fixtures/dorado-categorias-importProducts.json`; en verde antes y después de 3.1.
 - [ ] 1.7 `[P]` Pruebas de los lectores sobre los fixtures de 0.4: `shopifyProducts.test.js` y `wooProducts.test.js`. Cubren agrupación, ejes por nombre, separación por precio, más de dos ejes, color de la foto, estado, referencia, suma de cantidades y la tabla de precio sin IVA tomada del modal. Depende de 0.4.
   - *Estado:* escritas sobre los fixtures sintéticos. Shopify en verde; WooCommerce **en rojo hasta 10.1**. Sin marcar hasta repetirlas con los exports reales (0.4).
+  - → D-518: Shopify suma la plantilla oficial actual (14.1). En `wooProducts.test.js`, «la oferta va al reporte y a metadata» cambia por la fila Público (14.5), y se suman la unión por SKU del padre y los tipos no soportados (14.13).
 - [x] 1.8 `[P]` `importStoreGuard.contract.test.js`: 409 con `katuq-product-changed` → `shopify-product-upsert` y con `katuq-inventory-changed` → `shopify-inventory-adjust`, también en sombra; sin 409 sin flows o con flows que solo traen datos a Katuq. `PUBLISHING_NODE_TYPES` cubre todo nodo de acción de Shopify o Woo que publique productos, existencias o listas.
 - [x] 1.9 `[P]` `importStoreConcurrency.contract.test.js`: dos envíos simultáneos (mismo lote o dos `migrationId`) dan un resultado y un 409 `IMPORT_IN_PROGRESS`, sin repetidos; un lote terminado reenviado devuelve `replayed: true` sin escribir; un candado vencido se vuelve a tomar.
   - *Estado:* escrita y **en rojo hasta 6.1**. Fija la interfaz del candado: `services/storeMigration/candado.js` con `idDelCandado(companyId)` y `VENCE_MS`. Incluye el aislamiento entre empresas (el mismo `migrationId` y el mismo lote desde otra empresa); el detalle está en la revisión privada del backend.
@@ -87,6 +90,7 @@
 ## 10. Fase 1c: WooCommerce
 
 - [ ] 10.1 `readers/woocommerce.js` y su perfil en el front. Depende de 0.4 y 4.1. **Éxito:** 1.7 (Woo) en verde, sin cambios en las rutas.
+  - → D-518: el alcance pasa a la tarea 14.13 (`design-woocommerce.md`).
 
 ## 11. Revisión
 
@@ -105,4 +109,96 @@
 
 - [ ] 13.1 Commit por repo, archivo por archivo, con el sello; registrar en D-498 la medición y los desvíos.
 - [ ] 13.2 Encender comercio por comercio, nunca OH MY STORE. **Requisito:** la ficha sin `variantes[].cantidad` aprobada e implementada (pregunta 2). Si la medición cumple, pasa a `banderasEmpresaNueva`.
+  - → D-518: ese requisito queda en este cambio como E3 (14.22), según la pregunta 18 de la ampliación.
 - [ ] 13.3 Retirar la bandera el 2027-03-31 (Artículo XII) y abrir las propuestas aparte: ficha sin `variantes[].cantidad`, borrado por `migrationId`, Wix y copia de fotos.
+  - → D-518: la copia de fotos entra en esta entrega (14.15). Wix y las páginas siguen en este mismo ticket hasta que un comercio traiga un export real (F5-30·1; T·1: no se crean tickets «b»).
+
+## 14. Ampliación D-518 (21-oct). NUEVO, pendiente de aprobación
+
+Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N5), `design-woocommerce.md` (W1 a W5), `design-fotos.md` (P1 a P5) y `design-ampliacion-plan-existencias.md` (E1 a E3). Contrato: `contracts/import-store-api-d518.md`. Specs: `store-migration-catalog-fidelity`, `store-migration-photos`, `store-migration-woocommerce`, `store-migration-plan-stock` y los requisitos marcados «→ D-518». Seguridad: la ampliación de la revisión privada del backend (`importador-migracion-tiendas-seguridad`). Todo va en la rama `feature/tickets-web` de los dos repos, sin push ni despliegue (D-518).
+
+**Módulos sensibles:**
+- La ampliación **no toca** pedidos, pagos, reserva, consecutivos ni auth.
+- **Inventario:** `importInventory` y sus pruebas no cambian, pero sí qué productos y qué cantidades le entrega el lote (A1, W2 y E2). Eso entra en el diff aprobado de 6.2, con la caracterización de 14.21a antes.
+- `utils/vitrinaProducto.js` y `utils/limitesPlan.js` están en el camino de la tienda; `vitrinaProducto.js`, además, en el del cobro (`checkoutCore.js:108`). Sus cambios (14.7, 14.8, 14.9, 14.20 y 14.22) van con diff aprobado y con caracterización en verde antes y después.
+- `products` se escribe con diff aprobado, como en 6.1.
+
+### Compuertas
+
+- [ ] 14.0a Daniel aprueba A1 (lector de Shopify con el formato actual) y A5 (árbol de categorías). Son los arreglos sin diseño nuevo del orden de trabajo 3 de D-518. **Éxito:** queda en `specs/CONTRACT.md`. Bloquea solo 14.1, 14.2, 14.21a, 14.3a y 14.14.
+- [ ] 14.0 Daniel aprueba el resto de la ampliación y responde las preguntas 1 a 19 de `proposal.md` («Ampliación D-518»). **Éxito:** queda en `specs/CONTRACT.md` bajo D-518/D-498. La sesión que edita el contrato anota también T·3 (0.1 a 0.3). Bloquea las demás tareas de esta sección.
+
+### Arreglos sin diseño nuevo (después de 14.0a)
+
+- [ ] 14.1 `[P]` Pruebas primero (Artículo VIII) del lector:
+  - la plantilla oficial de Shopify (pública, sin datos personales) entra como fixture `shopify-plantilla-oficial.csv`;
+  - `shopifyProducts.test.js` suma: camiseta en un producto con 12 variantes; e-book partido en 3 por precio; perfume activo y fuera de la tienda web; el mismo catálogo con encabezados viejos da lo mismo.
+  - **Éxito:** las nuevas en rojo; las de hoy, igual.
+- [ ] 14.2 Lector de Shopify con la tabla de alias (`readers/comun.js`, `readers/shopify.js`): códigos de barras con prefijo, `Status`, `Published on online store` y `format` en la simulación. Depende de 14.1. **Éxito:** 14.1 en verde; los fixtures sintéticos siguen en verde.
+- [ ] 14.21a `[P]` **Caracterización del mapeo de cantidades** (solo pruebas; antes de 14.3a, 14.13, 14.21b y del diff de 6.2): una tabla fija qué cantidad recibe `importInventory` en cada caso (Shopify actual y anterior, inventario aparte y Woo). **Éxito:** en verde con el código de hoy; los contract tests de inventario sin cambios.
+- [ ] 14.3a CSV de inventario de Shopify: alias `Option 1 Value`. Depende de 14.21a. **Éxito:** la unión por opciones funciona con los dos nombres y las cantidades de los fixtures no cambian.
+- [ ] 14.14 **Diff aprobado (categorías).** `leerArbol` con `documentoQueEditaElMaestro` (A5). El dorado de `importProducts` suma varios documentos con y sin `categoryAttributes`. **Éxito:** sin la bandera, el dorado no cambia.
+
+### Lo demás (después de 14.0)
+
+- [ ] 14.1b `[P]` `importStore.routes.contract` suma los códigos y las rutas de `contracts/import-store-api-d518.md` (incluidas `photos/pending`, `runId`, `pricesIncludeTax` y `taxClassMap`). **Éxito:** en rojo hasta sus tareas.
+- [ ] 14.3b Rechazo del export «Available» (`INVENTORY_FORMAT_UNSUPPORTED`), según la pregunta 9. **Éxito:** prueba con los dos formatos.
+- [ ] 14.4 IVA por producto (A2): lectores, `precioSinIvaDesdeConIva` con la tarifa del producto, `products.taxExempt`, clases de Woo (`zero-rate` al 0 %, `taxClassMap`, `TAX_CLASS_UNMAPPED`) y `pricesIncludeTax` (pregunta 17). **Éxito:** exento al 0 % con `precioUnitarioIva: "0"`; gravado con la tarifa elegida; con `pricesIncludeTax: false`, 50.000 al 19 % queda en 59.500; sin la respuesta y con gravados, `products` da 400.
+- [ ] 14.5 **Diff aprobado (productos).** Oferta en la lista Público (A3):
+  - la simulación lee `tiposPrecios` con `active == true` (`offers.publicList`);
+  - `nuevoProducto` y `actualizacionAcotada` arman la fila; en Shopify, el precio base según la pregunta 2;
+  - `importStoreProducts.writeSet`: como máximo una fila, del tipo Público y de la misma empresa; nunca `tiposPrecios`; en `upsert`, `OFFER_KEPT` y `PRICE_SHADOWED_BY_PUBLIC_LIST`;
+  - `wooProducts.test.js` se actualiza.
+  - **Éxito:** escrituras de prueba en verde, y `git diff` vacío en `katuq-product-upsert.action.js`.
+- [ ] 14.6 Partición por (regular, oferta, IVA) (A4) en `separarPorPrecio` (`readers/comun.js`). **Éxito:** tallas con distinta oferta dan dos productos.
+- [ ] 14.7 **Diff aprobado (tienda).** «Nuevo» (N1):
+  - `nuevoProducto` con `exposicion.nuevo: false` y `metadata.migration.originCreatedAt`;
+  - `fechaDeNovedad` en `utils/vitrinaProducto.js` y `esNuevo` con ella.
+  - **Caracterización antes:** `tests/sitios/detalleComercialProducto.test.js` y `precioSelectorVariantes.test.js` en verde; una prueba nueva fija que un producto no migrado de 10 días sigue «Nuevo», y otra que un migrado leído solo con los campos del `select` de TX-34 D1 más `metadata.migration.migrationId` y `originCreatedAt` no sale «Nuevo».
+  - **Éxito:** la suite de `tests/sitios` igual a la base.
+- [ ] 14.8 **Diff aprobado (tienda).** Texto alternativo (N2):
+  - el lector toma el alt de cada foto; `todasLasImagenes` lo pasa; la ficha y la tarjeta lo usan;
+  - **caracterización del formulario de producto del Seller** (`crear-productos.component.ts:3295-3296`): un producto con `alt` se edita y se guarda, y el `alt` sigue ahí.
+  - **Éxito:** pruebas en verde.
+- [ ] 14.9 **Diff aprobado (tienda).** SEO (N3). Espera a que F2-41 haga commit de `controllers/sites.js`.
+  - `seo` en la raíz del producto desde el lector;
+  - `fichaSeo` lo usa; la URL canónica pasa a armarse con el título del producto (`producto.titulo`) y no con `fichaSeo.titulo`; la ruta y el JSON-LD siguen con el título;
+  - los campos del formulario del Seller, solo si la pregunta 6 los aprueba;
+  - prueba: un título SEO no cambia la canónica.
+  - **Éxito:** en verde.
+- [ ] 14.10 `[P]` Descripción limpia (N4) con `descripcionSegura` en los lectores. **Éxito:** la prueba 1.2 de la revisión privada en verde.
+- [ ] 14.11 `[P]` Tope de 20 simulaciones cada 15 minutos por empresa (N5) en `routers/importStore.js`. **Éxito:** las pruebas 1.3 y 2.1 de la revisión privada en verde; con la bandera apagada sigue el 403.
+- [ ] 14.12 `[P]` Guarda `WOO_INTEGRATION_ACTIVE` (W1) en la simulación y en `products`, `photos`, `redirects` y `customers`. `importStoreGuard` suma los casos activa e inactiva. **Éxito:** en verde; nunca se lee `integration_secrets`.
+- [ ] 14.13 Lector de WooCommerce (W2) y redirecciones probables (W3). Reemplaza la 10.1. Depende de 14.4 a 14.6 y de 14.21a.
+  - encabezados del wiki y en español (`UNKNOWN_FORMAT` si faltan las mínimas); `Published` con los valores del wiki;
+  - la regla de `sanitize_title` («Men's Shirt» → `mens-shirt`) y la base de direcciones (`productBase`, `categoryBase`, `BASE_ASSUMED`).
+  - **Éxito:** `wooProducts.test.js` ampliado en verde; perfil del front sin `if` por proveedor.
+- [ ] 14.15 **Diff aprobado (productos).** Rutas `photos` y `photos/pending` (`design-fotos.md`):
+  - contrato e `importStorePhotos.writeSet.contract.test.js` en rojo primero;
+  - `runId` en la llave del lote: retomar con otro `runId` copia lo pendiente; repetir el mismo lote devuelve `replayed`;
+  - `photos/pending` solo lee y responde números; índice compuesto de `migration_audit` en `firestore.indexes.json`;
+  - usa `photoCopy.js` de TX-37 (su tarea 8.1, que se adelanta si hace falta, con su revisión privada);
+  - el archivo nuevo entra en `manual` de `syncDetector.js`.
+  - Depende de 6.1 y de TX-37 8.1.
+  - **Éxito:** contrato en verde; ningún log ni rastro con la URL.
+- [ ] 14.16 Front (con 8.x):
+  - paso «Copiar fotos» con progreso, aviso de no cerrar la tienda anterior y «Copiar fotos pendientes» (lee `photos/pending`);
+  - aviso de la lista Público con su botón (pregunta 1); aviso del plan gratis (`PLAN_LIMIT`);
+  - IVA «para los productos gravados», la pregunta obligatoria «¿tus precios incluyen IVA?» con el ejemplo, y la asignación de las clases de Woo;
+  - formato detectado; pegar direcciones reales de Woo y confirmar la base;
+  - campos SEO del formulario de producto (si se aprueba la pregunta 6).
+  - Regla de diseño D-400; ninguna clase nueva con «p-».
+  - **Éxito:** `npm run build:prod` sin errores; no suben los gradientes ni los primarios prohibidos; revisión a 1440 y 390 px.
+- [ ] 14.17 FLORECER (con 12.x): medir de punta a punta con 500 productos (simulación, productos, existencias, **fotos** y redirecciones) y anotar el tiempo de la copia. **Éxito:** menos de 60 minutos, o la decisión de Daniel sobre la concurrencia.
+- [ ] 14.18 Higiene, **solo Daniel o quien él autorice** (este cambio no actualiza tickets, otras propuestas ni el contrato):
+  - **Resolución de F2-16** (#1226, cd jfhD2Pfc95VcRaoGIXbv). Solo se cambia la parte de su segunda frase sobre las variantes; lo demás (personalización, adicionales, galería, opiniones, relacionados, entrega y lo que quedó fuera) se conserva. Hoy dice: «tiene variantes (talla, color, sabor) con su foto, precio y disponibilidad, y estos cambian al elegir la variante». Texto propuesto: «tiene variantes (talla, color, sabor) con su foto y su disponibilidad, que cambian al elegir la variante. El precio es el del producto: una variante con otro precio se maneja como otro producto (D-214); el precio por variante no está hecho».
+  - **Nota en WP-INT 5** (#1290): el importador CSV usa `variantes[]`, y un comercio con la integración activa no importa hasta su decisión.
+  - **Nota en WP-INT 3** (#1288): la llave del cliente (pregunta 11).
+  - **TX-34 (`tienda-celular-y-velocidad`):** el `select` de la proyección (D1) suma `metadata.migration.migrationId` y `metadata.migration.originCreatedAt`, y el orden `novedad` (D6), la insignia y el cupo del plan gratis usan `fechaDeNovedad` (N1).
+  - **CONTRACT:** anotar T·3 y las aprobaciones de 14.0a y 14.0.
+  - La resolución de F5-30 ya se corrigió el 21-oct (14:20 UTC): no remite a «F5-30b». Verificado con `get_support_ticket`.
+- [ ] 14.19 Validación de documentos: `openspec validate importador-migracion-tiendas --strict`. La CLI no está instalada en esta máquina (21-oct); se corre donde esté. **Éxito:** pasa sin errores.
+- [ ] 14.20 **Diff aprobado (tienda).** Plan gratis (E1, pregunta 15): `plan` y `PLAN_LIMIT` en la simulación; `idsVisibles` con `fechaDeNovedad`; `TARGET_HIDDEN_BY_PLAN` en `redirects`. **Caracterización antes:** una empresa gratis sin migrados ve los mismos 50 productos que hoy. **Éxito:** `importStoreDryRun.noWrites` en verde y una empresa gratis con 38 productos que importa 500 sigue viendo sus 38.
+- [ ] 14.21b Productos sin control de existencias, **E2** (pregunta 16). Depende de 14.21a. Lee `Inventory tracker`, `Continue selling…`, `Stock`, `In stock?` y `Backorders allowed?`; `inventariable: false`, sin filas para `importInventory`, `NOT_TRACKED` y `TRACKING_MIXED`. **Éxito:** el e-book y el perfume de la plantilla entran vendibles y sin movimiento; los contract tests de inventario sin cambios.
+- [ ] 14.22 **Diff aprobado (tienda), si la pregunta 18 lo deja aquí.** Ficha de un producto migrado sin integración (E3): cada talla sigue la disponibilidad del producto. **Caracterización antes:** `precioSelectorVariantes`, `detalleComercialProducto` y «un producto de Cereza con una talla en 0 sigue agotado en esa talla». **Éxito:** suite de `tests/sitios` igual a la base, más el caso nuevo.
+- [ ] 14.23 **Diff aprobado (clientes), si la pregunta 19 lo deja aquí.** `readers/wooCustomers.js` (W5) con la normalización de 9.1; con `source: "woocommerce"`, `customers` nunca crea autorizaciones. Va con la sección 9 y su concepto legal (0.7). **Éxito:** 1.5 ampliada en verde.

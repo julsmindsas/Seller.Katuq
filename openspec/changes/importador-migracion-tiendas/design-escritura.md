@@ -66,6 +66,7 @@ El handler `importInventory` se llama en proceso con la misma sesión. La empres
   - Los productos **creados en ese lote**.
   - En modo `upsert`, los existentes, solo con `replaceExistingStock: true`.
   - Los omitidos no reciben nada, ni siquiera los ya migrados que devuelven su `cd`. Como el conteo es absoluto, repetir un lote después de una venta desharía la venta.
+  - → D-518 (pendiente de aprobación): los productos sin control de existencias tampoco reciben nada; entran no inventariables (`design-ampliacion-plan-existencias.md` E2). El mapeo de cantidades se caracteriza antes del diff de 6.2.
 - **Cantidad:** la suma por producto. Las negativas cuentan 0 y van al reporte. En `variantes[].cantidad` queda la foto inicial (pregunta 2).
 - **Si el conteo falla:** el reporte marca `INVENTORY_FAILED` con la referencia. Esas existencias se cargan con el importador de existencias que ya existe: reimportar en modo `create` omitiría el producto.
 - **Orden de los diffs:** primero el controlador de productos sin existencias (6.1, aprobado y aplicado). Después la llamada a `importInventory` (6.2). Nunca los dos juntos.
@@ -74,7 +75,7 @@ El handler `importInventory` se llama en proceso con la misma sesión. La empres
 
 | Colección | Quién escribe | Prueba que lo vigila |
 |---|---|---|
-| `products` | Solo `katuq-product-upsert` | `importStoreProducts.writeSet`. No escribe `preciosPorTipoCliente`, listas, `integrations.*` ni flows. En `upsert` conserva fechas, `user_add`, `exposicion`, `marketplace`, `ciudades`, `disponibilidad` y `_precioManualOverride`. En `create` no toca lo existente |
+| `products` | Solo `katuq-product-upsert` (→ D-518: y las fotos copiadas por la ruta `photos`, `design-fotos.md`) | `importStoreProducts.writeSet`. No escribe `preciosPorTipoCliente` (→ D-518: salvo una fila del tipo Público del mismo producto, `design-ampliacion.md` A3), listas, `integrations.*` ni flows. En `upsert` conserva fechas, `user_add`, `exposicion`, `marketplace`, `ciudades`, `disponibilidad` y `_precioManualOverride`. En `create` no toca lo existente |
 | `categorias` | Solo `guardarArbol` | Dorado de categorías y dorado de `importProducts` |
 | `inventory`, `inventoryMovement` | Solo `importInventory`, sin diff | Los contract tests actuales. Además, ningún archivo de `services/storeMigration` nombra esas colecciones, y los omitidos no generan movimiento |
 | `sites` | Solo `draft.redirecciones`, en transacción | `importStoreRedirects` |
@@ -84,4 +85,4 @@ El handler `importInventory` se llama en proceso con la misma sesión. La empres
 
 Otras pruebas: `importStore.routes`, `importStoreDryRun.noWrites`, `importStoreGuard` e `importStoreConcurrency`.
 
-**Nunca** se escriben Shopify, WooCommerce, Osmosis, `InventoryLevel`, precios por cliente, listas de precios, flows ni pedidos. La guarda de flows (`design.md`, decisión 6) impide que las existencias cargadas lleguen al `InventoryLevel` de la tienda anterior.
+**Nunca** se escriben Shopify, WooCommerce, Osmosis, `InventoryLevel`, precios por cliente, listas de precios, flows ni pedidos. → D-518 (pendiente de aprobación): la única excepción es la fila Público de A3; la existencia y el inventario no cambian. La guarda de flows (`design.md`, decisión 6) impide que las existencias cargadas lleguen al `InventoryLevel` de la tienda anterior.

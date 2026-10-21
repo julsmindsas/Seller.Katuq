@@ -21,14 +21,15 @@ THE system SHALL mostrar en la simulación:
 - los archivados y las tarjetas de regalo;
 - las categorías nuevas y las unidades por cargar;
 - las existencias que se reemplazarían;
-- las redirecciones generadas, probables, en choque con las manuales y las que no caben.
+- las redirecciones generadas, probables, en choque con las manuales y las que no caben;
+- → D-518, pendiente de aprobación: el formato del archivo, los productos exentos de IVA, las clases de impuesto sin tarifa, las ofertas que se cargarán y las que no, los precios que tapa la lista del público, los productos sin control de existencias, los productos con textos para buscadores, las fotos que se copiarán y, en el plan gratis, cuántos productos no se verán (`store-migration-plan-stock`).
 
 #### Scenario: Referencia repetida en Katuq
 - **WHEN** una referencia del archivo coincide con dos productos del comercio
 - **THEN** la simulación la cuenta como ambigua y dice que se omitirá
 
 ### Requirement: Bloqueos visibles antes de empezar
-IF la importación no puede hacerse, THEN THE system SHALL decirlo en la simulación, con un mensaje sin jerga y qué hacer. Pasa cuando una automatización publica en otra plataforma, cuando el maestro de categorías no se puede leer o cuando la bodega elegida no existe o está inactiva.
+IF la importación no puede hacerse, THEN THE system SHALL decirlo en la simulación, con un mensaje sin jerga y qué hacer. Pasa cuando una automatización publica en otra plataforma, cuando el maestro de categorías no se puede leer, cuando la bodega elegida no existe o está inactiva, o cuando el comercio tiene activa la integración con WooCommerce (→ D-518 F5-30·8, pendiente de aprobación; ver `store-migration-woocommerce`).
 
 #### Scenario: Bodega inactiva
 - **WHEN** el comercio elige una bodega inactiva
@@ -47,3 +48,12 @@ THE system SHALL dejar un registro de cada paso con el identificador de la migra
 #### Scenario: Revisar una migración
 - **WHEN** soporte revisa una migración por su identificador
 - **THEN** ve cada paso con su duración y su resultado, sin datos de clientes
+
+### Requirement: La simulación tiene un tope de frecuencia
+IF un comercio pide más de 20 simulaciones en 15 minutos, THEN THE system SHALL rechazar las siguientes sin leer su catálogo, con un mensaje que pide esperar, y SHALL NOT afectar a otros comercios.
+
+> **NUEVO (D-518, 21-oct), pendiente de aprobación.** Fuente: D-518 F5-30·9 (revisión de seguridad privada, M3).
+
+#### Scenario: Simulaciones en bucle
+- **WHEN** un administrador simula 21 veces en 15 minutos
+- **THEN** la simulación 21 responde que espere unos minutos, y otro comercio sigue simulando normalmente

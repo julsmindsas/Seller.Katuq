@@ -275,3 +275,8 @@ Para **Daniel**:
   de la tienda y de WooCommerce. Los de Shopify, Kuvo, el bot de WhatsApp u Osmosis
   descuentan inventario por caminos propios: la opción aparece deshabilitada con el motivo
   hasta decidirlo.
+
+
+## Aprobación (2026-10-21)
+
+Daniel aprobó en bloque esta propuesta («dale pues y aprobado todo», 2026-10-21). Cada pregunta abierta queda resuelta con la recomendación escrita en este documento. Las tareas [S] siguen yendo con diff y pruebas de caracterización antes de unirse.

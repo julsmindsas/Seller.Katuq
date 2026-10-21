@@ -1,3 +1,5 @@
+> **→ D-518 (21-oct), ampliación pendiente de aprobación:** `design-ampliacion.md` (formato actual de Shopify, IVA por producto, ofertas, partición y árbol de categorías), `design-ampliacion-ficha.md` («Nuevo», alt, SEO, HTML limpio y tope), `design-woocommerce.md` (fase 1c, guarda de la integración Woo y clientes de Woo), `design-fotos.md` (copia a Storage) y `design-ampliacion-plan-existencias.md` (plan gratis, productos sin control de existencias y ficha sin `variantes[].cantidad`). Donde la ampliación reemplaza algo de aquí, se marca «→ D-518».
+
 ## Context
 
 D-498 (ticket 1245, F5-30, parte importador). El punto de partida está en la propuesta («Hoy»). Las citas salen del código leído el 2026-10-18 (backend `katuq_admin_back_firebase/functions`, `backend-aws-security`, `d8f1903b`), sin consultar producción. Las columnas de los exports salen de la documentación pública; 0.4 las confirma con archivos reales. **Mientras no lleguen, las pruebas usan fixtures SINTÉTICOS** (`functions/tests/storeMigration/fixtures/`, backend privado): productos e inventario de Shopify, el export anterior con `Variant Inventory Qty` y productos de WooCommerce, con esas columnas, sin datos personales ni clientes.
@@ -19,9 +21,9 @@ Para no pasar de 3 páginas por documento (Artículo XIII), el diseño se repart
 3. **Producto migrado** (`migrationProduct.js`, puro): la forma de `importProducts`, más `variantes[] { titulo, referencia, codigoBarras, atributos, cantidad, activo }` y `metadata.migration { source, handle, externalId, migrationId, axes, compareAtPrice }`.
    - **Ejes por nombre:** Talla/Size/Tamaño → `talla`; Color/Colour → `color`. Otro eje toma la clave libre (`option1`/`option2`). Con más de dos ejes, el producto se omite.
    - **Referencia:** el SKU si el producto tiene una sola variante con SKU; si no, el `Handle`.
-   - **Precio:** el del export incluye IVA; el porcentaje lo elige el comercio (fórmula en `design-escritura.md`). `Compare At Price` y `Sale price` van al reporte y a `metadata`, nunca a una lista de precios.
-   - **Precio distinto por variante:** un producto por precio. El grupo con más variantes conserva título y referencia; los demás llevan `-2`, `-3`… y los valores que los distinguen.
-   - **Fotos:** `buildProductPhotos` (máximo 8); `Variant Image` pone el `color` de la foto. Un producto en `draft` entra inactivo.
+   - **Precio:** el del export incluye IVA; el porcentaje lo elige el comercio (fórmula en `design-escritura.md`). → D-518: el comercio responde si su archivo incluye IVA (A2, pregunta 17). `Compare At Price` y `Sale price` van al reporte y a `metadata`, nunca a una lista de precios. → D-518: tarifa por producto (A2) y oferta en la lista Público (A3).
+   - **Precio distinto por variante:** un producto por precio. → D-518: la llave es (regular, oferta, IVA) (A4). El grupo con más variantes conserva título y referencia; los demás llevan `-2`, `-3`… y los valores que los distinguen.
+   - **Fotos:** `buildProductPhotos` (máximo 8); `Variant Image` pone el `color` de la foto. Un producto en `draft` entra inactivo. → D-518: con su `alt` (N2) y copiadas después a Storage (`design-fotos.md`).
 
 4. **Escritura** (categorías, productos y existencias): ver `design-escritura.md`.
 
@@ -74,14 +76,14 @@ Para no pasar de 3 páginas por documento (Artículo XIII), el diseño se repart
 | **1a** | Shopify: productos, variantes, fotos, existencias, simulación, reporte y redirecciones | 0.1 a 0.4 |
 | **1b** | Clientes y consentimiento | 1a, preguntas 3, 4 y 19 a 21, revisión legal (0.7) |
 | **1c** | Lector de WooCommerce | 1a y un archivo real |
-| 2 | Wix, páginas (XML de WordPress) y copiar las fotos a Storage (D-501) | Archivos reales y propuestas propias |
+| 2 | Wix y páginas (XML de WordPress). → D-518: copiar las fotos pasa a esta entrega (`design-fotos.md`) | Un export real de un comercio que lo necesite (F5-30·1) |
 | Aparte | Precio o stock por variante, ficha sin `variantes[].cantidad`, borrar productos por `migrationId`, mapper de Woo, contrato canónico | Propuestas propias (D-214) |
 
 ## Risks / Trade-offs
 
 - Otro proceso (formulario, Cereza) crea la misma referencia entre la búsqueda y la creación → residual; la siguiente simulación la marca ambigua.
 - El editor del sitio abierto con una copia vieja borra lo generado al guardar → el reporte lo advierte y el paso se repite.
-- `variantes[].cantidad` queda quieta (pregunta 2). Tiempo sin medir → FLORECER. Fotos en el CDN anterior → fase 2.
+- `variantes[].cantidad` queda quieta (pregunta 2). → D-518: propuesta E3 para la ficha de un producto migrado (pregunta 18 de la ampliación). Tiempo sin medir → FLORECER. Fotos en el CDN anterior → ~~fase 2~~ → D-518: se copian en esta entrega.
 
 ## Migration Plan
 
@@ -109,9 +111,9 @@ Lo que el código decidió donde este documento no bajaba al detalle. Se revisa 
 5. **Tope de 500 redirecciones:** no se sube; primero productos.
 6. **Rutas:** las cinco `import-store/*`, con la reversa de clientes.
 7. **Bandera:** solo a mano; retiro el 2027-03-31.
-8. **Wix:** en la siguiente entrega.
+8. **Wix:** en la siguiente entrega. → D-518 F5-30·1: cuando un comercio traiga un export real.
 9. **Más de dos ejes:** se omite.
-10. **Comparación y oferta:** solo reporte y `metadata`.
+10. **Comparación y oferta:** solo reporte y `metadata`. → D-518 F5-30·4: oferta en la lista Público (A3); `metadata.migration.compareAtPrice` se conserva.
 11. **Existencias:** solo productos creados; en `upsert`, con casilla.
 12. **Inventario:** en proceso, sin diff (alternativa: servicio extraído con diff aprobado).
 13. **Límites:** 2.000 productos por simulación; 25 por lote; 2.000 productos y 1.000 colecciones en redirecciones; 500 clientes por lote.

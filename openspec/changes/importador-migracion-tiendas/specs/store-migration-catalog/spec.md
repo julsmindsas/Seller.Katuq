@@ -33,15 +33,17 @@ THE system SHALL usar como referencia el código de la variante cuando el produc
 - **WHEN** un producto con tres tallas no trae código en ninguna
 - **THEN** su referencia es su identificador en la tienda anterior
 
-### Requirement: Precio con IVA y sin listas de precios
-THE system SHALL tomar el precio del archivo como precio con IVA y calcular el valor sin IVA con el porcentaje que elige el comercio, igual que el importador de Excel. El precio de comparación y el precio de oferta SHALL ir al reporte y nunca a una lista de precios. IF las variantes de un producto tienen precios distintos, THEN THE system SHALL crear un producto por precio y avisarlo en el reporte.
+### Requirement: Precio con IVA, con la oferta solo en la lista del público
+THE system SHALL tomar el precio del archivo como precio con IVA y calcular el valor sin IVA con la tarifa del producto, igual que el importador de Excel. La tarifa es 0 % si el archivo lo marca exento y, si no, el porcentaje que elige el comercio (en WooCommerce, el de su clase de impuesto). Si el comercio dice que sus precios no incluyen IVA, se le suma. El precio del producto SHALL ser el regular. La oferta SHALL ir solo a la lista de precios del público del mismo producto y nunca a otra lista. IF las variantes de un producto tienen precios distintos, THEN THE system SHALL crear un producto por precio y avisarlo en el reporte.
+
+> → D-518 (21-oct), **cambio pendiente de aprobación**: F5-30·4 y F5-30·5. El detalle está en `store-migration-catalog-fidelity`. Texto aprobado el 18-oct, que este reemplaza: «…calcular el valor sin IVA con el porcentaje que elige el comercio… El precio de comparación y el precio de oferta SHALL ir al reporte y nunca a una lista de precios…».
 
 #### Scenario: Tallas con precio distinto
 - **WHEN** las tallas S a L cuestan 50.000 y la XL 55.000
 - **THEN** quedan dos productos: el primero con S a L conserva el nombre y la referencia, y el segundo lleva «-2» y su talla en el nombre
 
 ### Requirement: Solo se crea lo nuevo, salvo que el comercio pida actualizar
-THE system SHALL importar por defecto solo productos que no existan en Katuq y SHALL omitir y reportar los que ya existen. IF una referencia coincide con dos o más productos del comercio, THEN THE system SHALL omitirla como ambigua, sin adivinar. WHERE el comercio elige actualizar los existentes, THE system SHALL cambiar solo nombre, descripción, fotos, precio, variantes y origen de la migración. THE system SHALL conservar la fecha de creación, quién lo creó, si está activo o publicado, sus canales, ciudades, disponibilidad y categorías, y los precios curados a mano.
+THE system SHALL importar por defecto solo productos que no existan en Katuq y SHALL omitir y reportar los que ya existen. IF una referencia coincide con dos o más productos del comercio, THEN THE system SHALL omitirla como ambigua, sin adivinar. WHERE el comercio elige actualizar los existentes, THE system SHALL cambiar solo nombre, descripción, fotos, precio, variantes, título y descripción para buscadores (si el archivo los trae) y origen de la migración (→ D-518, pendiente de aprobación: se suman los textos para buscadores; la oferta solo entra si el producto no tenía fila en la lista del público). THE system SHALL conservar la fecha de creación, quién lo creó, si está activo o publicado, sus canales, ciudades, disponibilidad y categorías, y los precios curados a mano.
 
 #### Scenario: Producto que ya existe
 - **WHEN** se importa en el modo por defecto un producto cuya referencia ya existe
@@ -52,7 +54,7 @@ THE system SHALL importar por defecto solo productos que no existan en Katuq y S
 - **THEN** sigue inactivo y fuera de la tienda web, conserva su fecha de creación y su lugar en el listado, y queda registrado quién lo actualizó
 
 ### Requirement: Existencias en la bodega que elige el comercio
-THE system SHALL cargar las existencias de cada producto creado en la bodega que elige el comercio, como la suma de sus variantes. Las cantidades negativas SHALL contar como cero y quedar en el reporte. Un producto omitido SHALL NOT recibir existencias. Un producto existente SHALL recibirlas solo si el comercio marca que quiere reemplazarlas. La carga de existencias SHALL NOT cambiar el producto, sus variantes, su precio ni sus listas de precios.
+THE system SHALL cargar las existencias de cada producto creado en la bodega que elige el comercio, como la suma de sus variantes. Las cantidades negativas SHALL contar como cero y quedar en el reporte. Un producto omitido SHALL NOT recibir existencias. Un producto existente SHALL recibirlas solo si el comercio marca que quiere reemplazarlas. La carga de existencias SHALL NOT cambiar el producto, sus variantes, su precio ni sus listas de precios. (→ D-518, pendiente de aprobación: un producto que no llevaba control de existencias no recibe ninguna, `store-migration-plan-stock`.)
 
 #### Scenario: Las existencias no tocan el producto
 - **WHEN** se cargan las existencias de un producto recién creado
@@ -67,7 +69,9 @@ THE system SHALL cargar las existencias de cada producto creado en la bodega que
 - **THEN** el producto queda creado y el reporte dice qué referencia cargar con el importador de existencias
 
 ### Requirement: Fotos por enlace
-THE system SHALL guardar hasta 8 fotos por producto a partir de los enlaces del archivo, sin descargarlas, y SHALL reportar las sobrantes y las rechazadas con su motivo. La foto de una variante SHALL quedar asociada a su color.
+THE system SHALL guardar hasta 8 fotos por producto a partir de los enlaces del archivo y SHALL reportar las sobrantes y las rechazadas con su motivo. La foto de una variante SHALL quedar asociada a su color. Después de crear los productos, las fotos SHALL copiarse al almacenamiento de Katuq.
+
+> → D-518 (21-oct), **cambio pendiente de aprobación**: F5-30·2. La copia está en `store-migration-photos`. Texto aprobado el 18-oct: «…a partir de los enlaces del archivo, sin descargarlas…».
 
 #### Scenario: Producto con once fotos
 - **WHEN** un producto trae once enlaces válidos

@@ -16,7 +16,7 @@
 | `POST /batches/:id/revert` | admin | no | → 202 `{ batchId }` (lote `revert`, siempre real) |
 | `POST /revert` | admin | no | `{ productId, index? }` → 200 `{ reverted, skipped }` |
 
-Todas pasan por `auth` → `requireJwtTenant` → `requireFeature`. «¿Modo?» indica si aplica `PRODUCT_PHOTO_UNIFORM_MODE`.
+Todas pasan por `auth` → `requireJwtTenant` → `requireFeature`. «¿Modo?» indica si aplica `PRODUCT_PHOTO_UNIFORM_MODE` (con D-518 pasa a `config/feature_flags.productPhotoUniformMode`, §G.4).
 
 **Errores:**
 - 400 `INVALID_SETTINGS` o `INVALID_SELECTION`;
@@ -114,9 +114,84 @@ La tarea 0.3 confirma la lista. Un archivo nuevo que escriba el campo sin estar 
 | P9 | `Administrador` y `Super Administrador` aplican, cancelan y revierten; ver y la vista previa, cualquiera con la bandera |
 | D1 | Solo archivos del bucket propio con `metadata.company` de la empresa; los que no tienen dueño se omiten (`owner_unknown`) |
 | D2 | Topes: 100 productos, 12 fotos y 15 s. Vista previa: 3 fotos, una en curso por empresa, 10 cada 10 min y una foto a la vez por proceso |
-| D3 | Se despliega en `shadow`. Para retomar lotes, `CRON_ENABLED=true` |
+| D3 | Se despliega en `shadow`. Para retomar lotes, `CRON_ENABLED=true`. **Desvío (D-518, 21-oct):** se desplegó en `off` (sin la variable; CONTRACT, D-501 «SUBIDA APAGADA»). Con D-505 el modo pasa a `config/feature_flags.productPhotoUniformMode` (§G.4) y sombra se enciende ahí, no en el `.env` |
 | D4 | La reversión no depende del modo, pero exige la bandera y el rol. Orden de la reversa: `off` → revertir → apagar la bandera |
 | D5 | Modo efectivo = el menor entre `lote.mode` y el del servidor; si baja, el lote para |
 | D6 | Bandera con dueño Daniel y retiro el 2027-04-30; llave `processed` en inglés; rutas `/v1/product-photos/*`; solo `imagenesPrincipales` |
 | D7 | Aviso al subir solo en el editor completo; entrada por categoría con un botón junto al filtro |
 | D8 | `historial.usuario` = valor de `user_edit`. No se escribe historial antes de 0.5 |
+
+## G. Ampliación D-518 (21-oct) — NUEVO, pendiente de aprobación
+
+Diseños: [`design-ampliacion.md`](design-ampliacion.md), [`design-fase-1b.md`](design-fase-1b.md) y [`design-fase-2.md`](design-fase-2.md). Lo de §A a §F sigue vigente salvo lo que aquí se dice. Revisado el 21-oct contra la crítica.
+
+### G.1 Rutas
+
+| Ruta | Rol | ¿Modo? | Cambio |
+|---|---|---|---|
+| `GET /settings` | cualquiera | no | El modo se lee de `config/feature_flags` (§G.4). Con fase 2: `aiUsesLeft` y si «Quitar fondo» está disponible para la persona (P17, P18) |
+| `POST /preview` | cualquiera (con «Quitar fondo»: admin y modo `on`) | sí | Acepta `categoryPath: string[1..3]` (`categoryLabel` vale `[categoryLabel]`). Responde además `selectionTotal`, `parts` y `categoryUnresolved`. Con fase 2: `settings.backgroundMode`, `settings.backgroundScope` y `aiUsesNeeded`/`aiUsesLeft` |
+| `POST /batches` | admin | sí | Acepta `categoryPath` y selecciones de hasta 2.000 productos. Más de 100 → serie: 202 `{ batchId, seriesId, parts, mode, totals }` |
+| `GET /series/:id` | cualquiera | no | Nueva. `{ status, parts: [{ batchId, part, status, counters }], counters }` (suma de las partes). Siempre llega a un estado final (§G.2) |
+| `POST /series/:id/cancel` | admin | no | Nueva. Cancela la parte en curso y cierra las que esperan |
+| `POST /series/:id/revert` | admin | no | Nueva. 202 `{ batchId }`: un lote `revert` sobre todas las partes |
+
+**Errores nuevos:** 422 `SERIES_TOO_LARGE` (más de 2.000) y `AI_QUOTA_INSUFFICIENT` (fase 2); 404 `SERIES_NOT_FOUND`, también si la serie es de otra empresa; 403 por rol en la vista previa con «Quitar fondo».
+
+### G.2 Lote y serie (`product_photo_batches`)
+
+- **Parte de una serie:** los campos de §B más `series: { id, part, parts }`. Estado nuevo `waiting` (ni activo ni final: no entra en la retoma). El id es `<serieId>-p<k>`.
+- **Serie:** no tiene documento propio. Se lee por `series.id` (consulta por igualdad, sin índice compuesto).
+- **Cierre único:** todo cierre de un lote (fin, cancelación, parada, falla, cierre al revertir en `off` y cancelación sin arriendo) pasa por la misma función. Con `done`, pasa la siguiente parte a `queued` y le mueve el candado; con cualquier otro final, cierra las `waiting` con `series_stopped`.
+- **`stopCode` nuevos:** `series_stopped`, `company_has_sync` (apareció un sync al empezar una parte), `ai_quota` y `ai_unavailable`.
+- **`metrics` nuevas:** `photosCopied`, `photosWouldCopy`, `aiUsesConsumed`, `aiUsesRefunded`, `aiUsesWouldConsume`.
+
+### G.3 Datos de cada foto
+
+Además de `original` y `processed` (§B):
+- `copiedFrom: { kind: "link" | "unowned", urls?, path?, at, batchId }`: solo en fotos copiadas o adoptadas (fase 1b). Se conserva al revertir.
+- `processed.backgroundMode: "keep" | "replace"` y `processed.cutoutPath` (fase 2, solo referencia; el recorte se encuentra por la huella del origen, §G.5).
+- `processed.quality.warnings` puede traer `possible_watermark`.
+
+**Códigos nuevos:**
+- de omisión: `category_unresolved` (incluye sin categoría), `download_failed`, `not_image`, `not_adoptable`, `background_input_invalid`, `background_unclear`, `background_unavailable`;
+- de resultado: `would_copy`, `would_remove_background`;
+- de aviso: `possible_watermark`.
+
+`product_integrated` pasa a significar «vinculado a una integración que escribe fotos» (`osmosis`, `shopify`, `woocommerce`, `fulfillment`/`aliaddo`).
+
+### G.4 Configuración (D-505)
+
+| Dónde | Llave | Valores | Por defecto |
+|---|---|---|---|
+| `config/feature_flags` | `productPhotoUniformMode` | `off`, `shadow`, `on` | `off` (sin documento, otro valor o error) |
+| `config/feature_flags` | `backgroundRemovalProvider` | `""`, `"opttia"` | `""` |
+| `config/feature_flags` | `backgroundRemovalUses` | lista de usos | `["productPhotos"]` |
+| `companies.featureFlags` | `productPhotoBackground` | booleano | apagada; exige `productPhotoUniform` |
+| `config/subscriptionLimits.js` (`ai`) | `photoBackgroundsPerMonth` | entero ≥ 0 | pregunta 6; **ausente o inválido = 0** en todos los planes |
+
+- Se leen **sin caché**, una lectura por uso (`design-ampliacion.md` §A1).
+- El script escribe solo estas llaves, por rutas de campo; las demás de `config/feature_flags` (stock de WooCommerce, pago a cuotas) no cambian.
+- `PRODUCT_PHOTO_UNIFORM_MODE` y `BACKGROUND_REMOVAL_PROVIDER` dejan de leerse del `.env`.
+
+### G.5 Storage
+
+- Copias (fase 1b): `Productos/copias/<companyDocId>/<productId>/<huella>.<ext>`, con `metadata.company`, `origen` y `productoId`; nunca la URL de origen ni un correo.
+- Recorte (fase 2): `Productos/uniformes/<companyDocId>/recortes/<huella del origen>-<versión del modelo>.png`, con `metadata.company`, `productoId` y la versión, sin token de descarga. La ruta no depende del lote: sirve después de revertir y para lo que pagó la vista previa.
+- Misma regla que §D: se escribe solo si no existe y no hay función de borrar.
+
+### G.6 Valores nuevos por defecto (confirmar con Daniel)
+
+| # | Por defecto | Pregunta |
+|---|---|---|
+| P10 | Serie de hasta 2.000 productos (20 lotes de 100) | 3 |
+| P11 | Revertir una foto copiada devuelve la copia, no el enlace | 1 |
+| P12 | Adoptar = copiar; el archivo sin dueño no cambia | 2 |
+| P13 | Fase 2: modelo a 1024 px, máscara agrandada a la foto original | 7 |
+| P14 | Fase 2: cupo mensual por empresa, Freemium 10 y pagos 500; «Quitar fondo» solo en la portada por defecto | 6 |
+| P15 | Fase 2: resultado siempre sobre fondo opaco | 9 |
+| P16 | Fase 2: sin cupo a mitad, el lote o la serie para (`ai_quota`) | 10 |
+| P17 | Fase 2: vista previa con «Quitar fondo» solo con el modo en `on`; en sombra, solo la estimación | 14 |
+| P18 | Fase 2: vista previa con «Quitar fondo» solo para administradores | 14 |
+| P19 | Fase 1b: sin lista fija de hosts; los controles de descarga de la revisión privada | 12 |
+| P20 | Proporción sugerida desde el editor del sitio: la del estilo del sitio | 13 |

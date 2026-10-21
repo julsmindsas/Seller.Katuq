@@ -1,6 +1,6 @@
 # Tareas — Fotos de producto uniformes, fase 1 (D-501)
 
-> Se ejecutan después de aprobar `design.md`, `anexo.md` y la spec.
+> Se ejecutan después de aprobar `design.md`, `anexo.md` y la spec. Las secciones 0 a 6 son la fase 1 aprobada el 18-oct. **Las secciones 7 a 10 son la ampliación de D-518 (21-oct), pendiente de aprobación:** no se empieza ninguna antes de 7.0. La tarea 0.6 (interruptor a Firestore) aplica la regla ya aprobada de D-518 y va en el paso 3 de su orden de trabajo, sin esperar a 7.0.
 >
 > - **Marcas:**
 >   - `[P]`: paralelizable; no comparte archivos con otra `[P]` del grupo.
@@ -21,6 +21,7 @@
   - Hecho: aprobación en bloque de diseño, specs, tareas y valores por defecto (CONTRACT, «D-495 a D-503», línea del 2026-10-18).
 - **0.2 [P]** Medición de solo lectura: ¿fallan hoy las portadas WebP en WhatsApp y en el correo?
   - Éxito: el dato queda en la bitácora. Si no fallan, se reconsidera P7.
+  - Nota (21-oct): para WhatsApp la documentación oficial de Cloud API ya responde (las imágenes van en JPEG o PNG; WebP solo en stickers). Falta medir el correo. Meta: lo resuelve aparte F2-20 (D-518 TX-37·7).
 - **0.3 [P]** Script de solo lectura con `--dry-run`. Revisa:
   - los `provider` de `integration_configs` que escriben catálogo;
   - los tipos de nodo de los flows activos;
@@ -34,10 +35,16 @@
   - de otro bucket o enlace externo;
   - texto legacy.
   - Éxito: el dato queda en la bitácora. Si `owner_unknown` es la mayoría, Daniel decide (D1).
+  - → D-518 (TX-37·3): la fase 1b ya está decidida. El conteo sigue sirviendo para dimensionarla (tarea 8.0) y para saber si FLORECER sirve de piloto de 1b.
   - Estado (2026-10-18): el mismo script con `--company "FLORECER"` hace el conteo mirando solo metadatos (no descarga). Falta correrlo.
 - **0.5** El cambio del backend privado sobre el lector del historial de producto está desplegado y verificado.
   - Bloquea: 3.1, 3.3 y 5.4.
   - Éxito: Daniel lo confirma en la bitácora.
+  - Nota (21-oct): sigue abierto en el código. La revisión privada recomienda hacerlo ya, en un cambio propio (SD2).
+- **0.6** D-505 / D-518 (reglas comunes), sin esperar a 7.0: `services/productPhotos/config.js` con `leerModo()` **sin caché**; `leerModo` asíncrono en el router, el controlador y el runner (el runner lo relee antes de cada producto); `scripts/set-product-photos-config.js` con simulación por defecto y escritura solo por rutas de campo. Diseño: `design-ampliacion.md` §A1.
+  - Pruebas primero, en rojo: sin documento → `off` y 503 `PHOTO_UNIFORM_OFF`; error de lectura → `off`; bajar a `off` en Firestore detiene el lote antes del siguiente producto (sin esperar caché); el script en simulación no escribe; con `--execute` las demás llaves de `config/feature_flags` (stock de WooCommerce, pago a cuotas) quedan idénticas.
+  - Éxito: esas pruebas y las suites de `tests/productos/productPhotos/` en verde; `grep PRODUCT_PHOTO_UNIFORM_MODE functions/` solo en comentarios y pruebas; el desvío de 5.2 (`off` en vez de `shadow`) asentado en `specs/CONTRACT.md` bajo D-501 por quien lo apruebe.
+  - Depende de: D-518 (aprobada). Sin despliegue fuera de 5.x.
 
 ## 1. Pruebas primero (en rojo)
 
@@ -195,7 +202,7 @@ Backend: `functions/tests/productPhotos/`, con `node tests/productPhotos/<archiv
   - Depende de: 4.2.
   - Éxito: el diff se limita al botón y a abrir el diálogo.
   - Estado (2026-10-18): hecho. Sin marcar: depende de 4.2.
-- [ ] **4.4** Botón «Uniformar fotos de esta categoría» junto al filtro, solo con la bandera y una categoría real en `filtros.categoria`. Manda `categoryLabel` y muestra el tope de 100.
+- [ ] **4.4** Botón «Uniformar fotos de esta categoría» junto al filtro, solo con la bandera y una categoría real en `filtros.categoria`. Manda `categoryLabel` y muestra el tope de 100. (→ D-518: la tarea 7.12 lo cambia a `categoryPath` y quita el tope.)
   - Depende de: 4.2.
   - Éxito: el diff se limita al botón.
   - Estado (2026-10-18): hecho. Sin marcar: depende de 4.2.
@@ -217,9 +224,10 @@ Backend: `functions/tests/productPhotos/`, con `node tests/productPhotos/<archiv
 - **5.1** Revisión independiente de back y front contra el write-set y la seguridad. Los hallazgos ajenos van al backend privado.
   - Depende de: 3.5 y 4.6.
 - **5.2** `git pull`, commit por ruta y despliegue del backend con la bandera apagada y `PRODUCT_PHOTO_UNIFORM_MODE=shadow`; luego el front.
+  - **Desvío (registrado el 21-oct):** el backend salió en `off`, sin la variable (CONTRACT, D-501 «SUBIDA APAGADA»). Por D-505 ya no se pone en el `.env`: la sombra se enciende en `config/feature_flags.productPhotoUniformMode` después de 0.6. Sigue pendiente confirmar qué proceso tiene `CRON_ENABLED=true`.
   - Depende de: 5.1 y la autorización de Daniel.
   - Éxito: las rutas responden 403 sin la bandera y Daniel confirma qué proceso de producción tiene `CRON_ENABLED=true`.
-- **5.3** Daniel enciende FLORECER (simulación y `--execute`). Se corre un lote en sombra de unos 20 productos para calibrar P8 y medir `msPerPhoto` y la latencia del API.
+- **5.3** (Depende además de 0.6.) Daniel enciende FLORECER (simulación y `--execute`). Se corre un lote en sombra de unos 20 productos para calibrar P8 y medir `msPerPhoto` y la latencia del API.
   - Depende de: 5.2.
   - Éxito: las mediciones quedan registradas y el API no se degrada.
 - **5.4** Modo `on`, por decisión de Daniel. Lote de unos 10 productos y revisión de:
@@ -242,4 +250,57 @@ Backend: `functions/tests/productPhotos/`, con `node tests/productPhotos/<archiv
 - **6.1** El 2027-04-30, Daniel decide: dejar la función para todos y quitar la bandera, o retirarla.
   - Depende de: 5.4.
 
-Las fases 1b, 2, S y X tendrán sus propias tareas.
+## 7. Ampliación de la fase 1 (D-518) — NUEVO, pendiente de aprobación
+
+Diseño: `design-ampliacion.md`. Marcas como arriba. **Sensible** = escribe `products` o el registro de lotes que gobierna esas escrituras: diff aprobado por Daniel, de a uno. Pedidos, pagos, reserva, inventario y consecutivos no se tocan.
+
+- **7.0** Daniel aprueba la ampliación (`design-ampliacion.md`, `design-fase-1b.md`, `design-fase-2.md`, las specs nuevas y el anexo §G) y responde las preguntas 1 a 14 de `proposal.md`. Éxito: queda en `specs/CONTRACT.md` bajo D-518.
+- **7.1 [P]** Caracterización, sin cambiar código: `syncDetector` y `elegibilidadProducto` con las formas de OH MY STORE, CAFE ESCOBAR, ALMACEN BOMBAS (con `integrations.siigo`) y FLORECER. Éxito: en verde contra el código de hoy.
+- **7.2 [P]** Caracterización de `batchStore`: `crearLote` (candado, `BATCH_RUNNING`, idempotencia, cierre del lote de uniformar al revertir en `off`, `:81`), `cerrarLote` y `pedirCancelacion` (cierre sin arriendo, `:249`). Éxito: en verde contra el código de hoy.
+- **7.3 [P]** Pruebas en rojo: `routes.contract` con `categoryPath` y rutas de serie; `batchRunner` con partes encadenadas, parada en cascada **por cada camino de cierre** (`cerrarLote`, revertir en `off`, cancelar sin arriendo, falla), `detectarSync` al empezar cada parte (`company_has_sync`) y `waiting` fuera de la retoma; adaptador del índice a `rutaDelProducto` y ruta por prefijo (`sinCategoria` cuenta como `category_unresolved`); `NODOS_QUE_EXCLUYEN` contra el registro de nodos y `sub-flow` resuelto y sin resolver; `possible_watermark` con `watermark-vectors.v1.json`; front: entradas y progreso de serie. Depende de: 7.0.
+- **7.4** Movida a **0.6** (21-oct): el traslado a Firestore es del paso 3 del orden de D-518 y no espera la aprobación de la ampliación.
+- **7.5 Sensible** (amplía quién recibe escrituras en `products`). TX-37·5: regla de producto en `eligibility.js` y lista cerrada `NODOS_QUE_EXCLUYEN` con `sub-flow` resuelto en `syncDetector.js`, más la prueba de registro de nodos. Éxito: 7.1 cambia solo en los casos que D-518 cambia (BOMBAS entra; un flow que solo avisa o solo lleva pedidos no excluye) y OH MY STORE y CAFE ESCOBAR siguen fuera; diff aprobado. Depende de: 0.3 corrida contra producción (tipos de nodo de los flows activos), 7.1 y 7.3.
+- **7.6 [P]** TX-37·4: `productosDeCategoria` por ruta con `rutaDelProducto` de D-495, el adaptador `{ categorias: categoriasRaw, exposicion: exposicionObj }` y el árbol de `getCatalogSchemas`. Éxito: pruebas de ruta en verde, incluida la del adaptador (sin él, el lote queda vacío). Depende de: 7.3.
+- **7.7 Sensible.** Series en `batchStore`: crear las partes y el candado en una transacción; **una sola función de cierre** que usan `cerrarLote`, `crearLote` (`:81`) y `pedirCancelacion` (`:249`), y que encadena o para en cascada. Éxito: 7.2 en verde salvo lo que el diff aprobado cambia; casos de serie de 1.2 y 1.6 en verde, uno por camino de cierre. Depende de: 7.2 y 7.3.
+- **7.8** Runner, controlador y rutas de serie (`GET`, `cancel`, `revert`); `detectarSync` antes de empezar cada parte; la reversión de la serie lee los resultados parte por parte. Éxito: `routes.contract` y `batchRunner` en verde. Depende de: 0.6, 7.6 y 7.7.
+- **7.9 [P]** `possible_watermark`: función pura y su lugar en los avisos de `procesarFoto`. Éxito: vectores en verde; sin cambio de tiempo medible en `photoUniform.test.js`. Depende de: 7.3.
+- **7.10 [P]** Front: servicio y mapper (`categoryPath`, rutas de serie, mensajes de los códigos nuevos). Depende de: 7.8.
+- **7.11** Front: diálogo con progreso de serie; paso de categoría solo si la pregunta 4 dice sí; proporción sugerida solo si la pregunta 13 dice sí. Depende de: 7.10.
+- **7.12** Front, entradas: sección «Productos» del editor del sitio (y «Catálogo completo» si la pregunta 4 dice sí); detalle de Catálogos por link; lista con `categoryPath` y sin «· hasta 100». Éxito: cada diff se limita al botón, abrir el diálogo y recargar al cerrar. Depende de: 7.11.
+- **7.13** Cierre: `npm run build:prod` sin errores; degradados y primarios prohibidos de `components/productos/`, `components/sitios/` y `components/cotizaciones/` sin subir; revisión a 1440 y 390 px con la bandera en una empresa de prueba. Depende de: 7.12.
+
+## 8. Fase 1b: fotos externas y sin dueño (D-518 TX-37·3) — NUEVO, pendiente de aprobación
+
+Diseño: `design-fase-1b.md`. Seguridad: revisión privada del backend (`fotos-uniformes-producto-seguridad`), que bloquea 8.1, 8.4 y 8.5.
+
+- **8.0 [P]** Conteo de solo lectura con `--dry-run` (el script de 0.3/0.4, solo metadatos, sin descargar) en FLORECER y, si Daniel lo autoriza (pregunta 11), en ALMARA FELICIDAD: `external_link`, `owner_unknown` y `not_owned` por empresa. Éxito: el dato queda en la bitácora.
+- **8.1 [P]** `services/productPhotos/photoCopy.js`, con sus pruebas de contrato en rojo primero: controles de descarga de la revisión privada, regla de adopción (`not_adoptable`), límite de 4 descargas por proceso dentro de la pieza y descargas fuera del semáforo de CPU. Es la pieza que usa F5-30 (D-518 F5-30·2). Éxito: contrato en verde; ningún log con la URL.
+- **8.2 [P]** Tienda en un paso: caracterización de `savePhoto` en verde; luego `metadata.company` y el comentario corregido. Éxito: la caracterización cambia solo en los metadatos.
+- **8.3 [P]** `get_product_photo_upload_url`: caracterización en verde; luego el metadato obligatorio en la URL firmada. Éxito: ídem.
+- **8.4 Sensible.** `update_product_photos`: caracterización en verde (listar, agregar por ruta y por enlace, quitar, tope, aviso de sync); luego el sellado con `company` y, según la pregunta 5, la copia del enlace. Éxito: diff aprobado.
+- **8.5 Sensible.** Lote y vista previa: copiar (`on`) o medir (`shadow`, vista previa) las fotos `external_link` y `owner_unknown` adoptables, omitir sin leer las no adoptables también en la vista previa, y escribir `copiedFrom`. `writeset.contract` suma las carpetas `copias` y la prohibición de `setMetadata` y `delete`. Éxito: diff aprobado; contrato en verde. Depende de: 7.8 y 8.1.
+- **8.6 [P]** Front: mensajes de `download_failed`, `not_image`, `not_adoptable`, `would_copy` y el origen en el resumen. Depende de: 8.5.
+- **8.7** Sombra de 1b en FLORECER (después de 5.3) y `on` con unos 10 productos con fotos externas o sin dueño, por orden de Daniel. Revertir y comprobar que vuelve la copia.
+
+## 9. Fase 2: quitar el fondo con IA (D-518 TX-37·6) — NUEVO, pendiente de aprobación
+
+Diseño: `design-fase-2.md`. Requiere la fase 1 en `on` (5.4). **Nada sale a un proveedor de IA sin 9.1 y 9.2.**
+
+- **9.1** Medir el costo real: con la autorización de Daniel, 10 fotos de FLORECER por la ruta del ADK (tarea 9.5) en un entorno de prueba. Comparar la factura (`USE1-NovaCanvas-I2I-*`) con la tabla de `design-fase-2.md` y medir la calidad con la máscara a 1024 px. Éxito: costo por foto en la bitácora y **OK de Daniel al costo** (D-518 TX-37·6).
+- **9.2** Daniel confirma que la política de privacidad cubre las fotos de producto procesadas por IA. Éxito: queda en la bitácora.
+- **9.3 [P]** Caracterización: `consumeAILimit` y `getFeatureLimit` con los usos de hoy; pruebas actuales de `backgroundRemoval` en verde.
+- **9.4 [P]** Pruebas en rojo: ruta del ADK (token, tamaño, sin URL, PNG); proveedor `opttia` fuera del semáforo de CPU y con su límite de 2; lista `backgroundRemovalUses`; topes de entrada del modelo (`background_input_invalid` sin gastar); control de calidad de la máscara; logo suelto descartado; estimación del cupo con `backgroundScope`, `AI_QUOTA_INSUFFICIENT` y parada `ai_quota`; 3 fallas seguidas → `ai_unavailable` con los usos devueltos; reuso del recorte por la huella (después de la vista previa y después de revertir, sin descuento); `photoBackgroundsPerMonth` ausente → 0; vista previa con «Quitar fondo» solo admin y solo en `on`; sombra sin llamadas ni archivos.
+- **9.5** ADK (repo `kai/adk_agent`): `POST /api/ai/background-removal`. Se despliega por systemd (`kai-adk`) solo por orden de Daniel. Depende de: 9.4.
+- **9.6** `backgroundRemoval.js`: proveedor desde `config/feature_flags` (sin caché), `getProviderName` e `isConfigured` asíncronas, lista de usos y proveedor `opttia`. `fichaDesdeFoto` pasa su uso y queda sin recorte. Depende de: 0.6 y 9.4.
+- **9.7 Sensible (cupo del plan).** `photoBackgrounds` en `aiLimitsService.js` (ausente o inválido = 0, nunca `-1`), `devolverAILimit` transaccional y `photoBackgroundsPerMonth` en `freemium`, `paid` y `premium` de `config/subscriptionLimits.js`, con los valores de la pregunta 6. Éxito: 9.3 igual; diff aprobado.
+- **9.8 Sensible.** Lote y vista previa con `backgroundMode: "replace"`: recorte guardado por la huella, validar antes de gastar (topes del modelo), cupo y devolución, llamada fuera del semáforo, parada `ai_unavailable`, máscara, logo y la tubería de la fase 1. Éxito: diff aprobado; 9.4 en verde. Depende de: 9.6 y 9.7.
+- **9.9 [P]** Bandera `productPhotoBackground` en los dos catálogos (dueño Daniel, retiro 2027-06-30).
+- **9.10** Front: «Quitar fondo» en el diálogo (solo admin y en `on` para la vista previa), alcance portada o todas, usos que necesita y que quedan, y aviso del costo de la vista previa. Depende de: 9.8 y 9.9.
+- **9.11** Por orden de Daniel, después de 9.1 y 9.2: `backgroundRemovalProvider = "opttia"`, sombra y luego `on` con unos 10 productos de FLORECER. Revisar tienda, catálogo por link, `feed.xml` y cotizaciones, y revertir.
+
+## 10. Bitácora y retiro de la ampliación
+
+- **10.1** Bitácora de cada fase en `specs/CONTRACT.md` (D-518) y, si está autorizado, comentario en el ticket 1252 (cd `GByRqDwAl5X7d7qwObGP`). Por D-518 T·1, corregir el texto de la resolución del ticket, que remite a «TX-37b», un ticket que no existe: lo pendiente sigue en el mismo ticket.
+- **10.2** Retiro (Artículo XII): `productPhotoUniformMode` con la bandera de la fase 1 (6.1, 2027-04-30); `productPhotoBackground` y `backgroundRemovalUses` el 2027-06-30.
+
+**Dependencias de otros cambios:** TX-37·7 (F2-20, feed JPEG para Meta) es un arreglo aparte; la revisión de Meta de 5.4 depende de él. TX-37·8 (TX-34, `tienda-celular-y-velocidad`) pinta el `srcset` de las variantes que genera este cambio; las variantes de las fotos no uniformadas las decide su P6. F5-30 (`importador-migracion-tiendas`) usa `photoCopy` (8.1) y su límite de descargas por proceso. La revisión privada del backend (`fotos-uniformes-producto-seguridad`) bloquea 8.1, 8.4, 8.5 y 9.5 a 9.8.

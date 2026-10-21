@@ -1,8 +1,41 @@
 # Productos por suscripción en la tienda, con cobro recurrente en Wompi
 
-> Ticket 1235 (F2-43), parte 2 de 2. La parte 1 (cotizables) es D-475. Toca **pagos y
-> pedidos**: es una propuesta para aprobar, no para implementar. Decisión: D-497
-> (aprobada por Daniel el 2026-10-18).
+> Ticket F2-43, **cd `UVaf50kn4UPbI358NGMk`** (su nroTicket 1235 está repetido: se cita por
+> cd), parte 2 de 2. La parte 1 (cotizables) es D-475; sus arreglos van en
+> `openspec/changes/cotizable-arreglos`. Toca **pagos y pedidos**: es una propuesta para
+> aprobar, no para implementar. Decisión: D-497 (aprobada por Daniel el 2026-10-18; el
+> diseño, las specs, las tareas y los valores por defecto, en bloque el mismo día, D-518 T·3).
+>
+> **[21-oct] Ajuste pendiente de aprobación.** D-518 (F2-43·1) decidió un solo modelo de
+> suscripción con dos fases: primero el ticket de CAFE ESCOBAR (cd `7OaxPVn97s3dUKpkr8OA`,
+> fase A, `openspec/changes/suscripciones-desde-pedido`) y después esta tienda con cobro
+> tokenizado (fase B). Este ajuste alinea la fase B con el modelo de la fase A (su
+> `design.md`, D9 y «Cómo la amplía la fase B»), con F2-43·7 (planes sin inventario) y con
+> D-505 (interruptores en Firestore). Lo aprobado el 18-oct se conserva; cada cambio lleva
+> la marca **[21-oct]**. Las preguntas nuevas son B1-B13, al final. Revisado el mismo día con
+> una crítica verificada contra el código (HEAD `c9e74ff0` del backend, que ya incluye F2-41):
+> estados de período comunes con la fase A, pedido armado sin el núcleo de D-496, monto con
+> IVA, revisión completa antes de cobrar, fecha de entrega, «Mis planes» ligado a la ficha
+> correcta, índices y dueño de los modos.
+
+## Ajuste del 21-oct (resumen, pendiente de aprobación)
+
+| Qué | Antes (18-oct, aprobado) | Ahora (21-oct) | Fuente |
+|---|---|---|---|
+| Frecuencias | mensual o anual | semanal, cada 2 semanas, mensual, cada 2 meses o anual; el plan dice cuáles admite | F2-43·1; fase A D2 |
+| Variante y cantidad | el plan es un producto con monto fijo | el comprador elige variante (las del producto) y cantidad hasta el tope del plan; el monto por cobro es precio × cantidad, congelado | fase A D1; adjunto 3 del ticket de CAFE ESCOBAR |
+| Datos | `plan {period, amountCOP}`, `nextChargeAt` | `source: store`, `collection: card`, `items[]`, `amount`, `schedule`, `nextPeriodAt`, `pause` con razones de las dos fases | fase A D1 y D9 |
+| Calendario | propio | el puro de la fase A (`schedule.js`) más `yearly` y fin abierto | fase A D2 |
+| Planes de servicio | no se cobra si faltan existencias o bodega | no se revisan existencias de lo no inventariable; sin líneas inventariables no se exige bodega | F2-43·7 |
+| Tope del plan | las renovaciones no cuentan | cuentan (crear un pedido siempre cuenta); antes de cobrar se revisa el cupo y el estado de la empresa | fase A D19; pregunta B4 |
+| Modos globales | `STORE_SUBSCRIPTIONS_BILLING` y `_AVISOS` como variables de entorno | `config/feature_flags.storeSubscriptionBilling` y `.storeSubscriptionNotices` | D-505; D-518 |
+| Rutas del comercio y pantalla | `/v1/sites/suscripciones`, `sitios/suscripciones` | `/v1/store-subscriptions` y `ventas/suscripciones`, compartidas con la fase A | fase A D9 y D12 |
+| Estados del período | propios de B | una sola tabla para las dos fases; el reclamo común del pedido nunca cambia el estado ni el calendario de un cobro con tarjeta | fase A D1 y D5 |
+| Armado del pedido | `construirOrden` con el monto congelado | igual: sin el núcleo de D-496, que no tiene modo de precio congelado | D-496 D1 y D3; pregunta B13 |
+| Monto | monto fijo del plan | precio por unidad **con IVA** × cantidad; el IVA solo se desglosa con la tarifa congelada | D-497; adjunto 3 |
+| Antes de cobrar | existencias y bodega | además: producto de la empresa y no cotizable, pedido armado y total que cuadra | crítica del 21-oct |
+| Fecha de entrega | la de hoy, sin regla | el día del cobro o el siguiente válido según las reglas de entrega de la tienda | F2-15; pregunta B11 |
+| Orden de unión | — | después de la fase A; con D-496 solo hay orden de unión | D-518 T·2 |
 
 ## Why
 
@@ -59,6 +92,12 @@ puede hacerlo (código leído el 2026-10-17):
   (mismo patrón que `tienda.cotizables`, sin escribir en `products`), el comercio arma
   planes sobre un producto: nombre, precio, periodicidad (mensual o anual) y «Qué
   incluye». La tarjeta y la ficha muestran «Desde $X/mes» y un selector de plan.
+  - **[21-oct]** Cada plan dice qué frecuencias admite (semanal, cada 2 semanas, mensual,
+    cada 2 meses o anual), qué variantes del producto se pueden elegir y la cantidad
+    máxima. El precio es por unidad y por cobro; el comprador paga precio × cantidad, que
+    queda congelado. Un tamaño con otro precio es otro producto y otro plan, porque Katuq no
+    tiene precio por variante (D-518 F5-30·7; pregunta B1). Evora Cloud mensual y anual son
+    dos planes (pregunta B2).
 - **Alta con fuente tokenizada de Wompi, en la cuenta del comercio.**
   - Solo se ofrece si el comercio tiene Wompi propio activo, nunca con la cuenta de
     plataforma.
@@ -84,6 +123,11 @@ puede hacerlo (código leído el 2026-10-17):
 - **Aviso previo.** Correo al comprador con la marca de la tienda (`correoComprador`)
   N días antes de cada cobro, con el monto, la fecha, la tarjeta (marca y últimos 4) y el
   enlace a «Mi cuenta» para cancelar. Se marca por período para no repetirlo.
+  **[21-oct]** Los días de anticipación dependen de la frecuencia (pregunta B3).
+- **[21-oct] Sin existencias que revisar en los servicios.** Antes de cobrar no se revisan
+  existencias de los productos no inventariables (F2-43·7), y si ninguna línea es
+  inventariable no se exige bodega. Sí se revisan el cupo del plan y el estado de la
+  empresa: si el pedido no se podría crear, no se cobra (pregunta B4).
 - **Reintentos y alerta de pago fallido.** Ante un rechazo hay hasta 3 intentos en
   5 días. Cada uno avisa al comprador para que cambie la tarjeta. Al agotarlos, la
   suscripción queda «pago fallido» (no se cobra más) y el comercio recibe un aviso en la
@@ -95,8 +139,13 @@ puede hacerlo (código leído el 2026-10-17):
 - **Estado en Katuq.** Pantalla interna «Suscripciones» (base D-400) con estado (activa,
   en reintento, pago fallido, cancelada), próximo cobro, último pago y pedidos generados.
   El comercio puede cancelar desde ahí. Todo filtrado por empresa en el servidor.
+  **[21-oct]** Es la misma pantalla de la fase A (`ventas/suscripciones`), con el origen de
+  cada suscripción («Pedido» o «Tienda»); se entra también desde Sitios.
 - **Banderas** (Artículo XII, con dueño y fecha de retiro): bandera por comercio para la
   función y bandera global aparte para el job de cobro, como `BILLING_CRON_ENABLED`.
+  **[21-oct]** La bandera por comercio sigue en `companies.featureFlags.storeSubscriptions`.
+  Los dos modos globales pasan a `config/feature_flags` (D-505), no al `.env`: valor
+  ausente o desconocido = apagado, leído en cada corrida.
 
 ## Capabilities
 
@@ -105,19 +154,34 @@ puede hacerlo (código leído el 2026-10-17):
   (cancelar y cambiar tarjeta), avisos y estado para el comercio.
 - `cobro-recurrente-tienda`: cobro por período con idempotencia, reintentos, webhook,
   conciliación y un pedido por período cobrado.
+- **[21-oct]** `planes-de-suscripcion`: planes con frecuencias, variante y cantidad, la
+  elección del comprador, el calendario de cobros y la fecha de entrega de cada pedido. Recibe, ampliado, el requisito de planes
+  que estaba en `tienda-suscripciones`.
+- **[21-oct]** `operacion-cobro-tienda`: interruptor global, conciliación y cuadre,
+  observabilidad del cobro y confirmación de la pasarela. Son cuatro requisitos aprobados de
+  `cobro-recurrente-tienda`, movidos sin cambios de fondo para no pasar de 3 páginas.
 
 ### Modified Capabilities
-_(ninguna spec vigente describe el checkout de la tienda ni sus pagos)_
+_(ninguna spec vigente describe el checkout de la tienda ni sus pagos. **[21-oct]** Las
+capacidades de la fase A, `suscripcion-desde-pedido` y `entregas-de-suscripcion`, tampoco
+están archivadas; las dos fases comparten modelo, no specs)_
 
 ## No-goals
 
 - Suscripciones por ePayco, PSE, Nequi u otro medio distinto de tarjeta en Wompi.
 - Cobrar con la cuenta Wompi de plataforma.
 - Prorrateos, upgrade o downgrade entre planes a mitad de período, pausas y períodos de
-  prueba gratis.
+  prueba gratis. **[21-oct]** Tampoco la pausa manual del comercio que tiene la fase A
+  (pregunta B5); la pausa automática de D7 sigue.
 - Cambiar el precio a suscriptores existentes: el monto queda congelado al suscribirse.
 - Cupones o descuentos recurrentes.
-- Suscripciones creadas desde venta asistida, POS o WhatsApp.
+- Suscripciones creadas desde venta asistida, POS o WhatsApp. **[21-oct]** Las de un
+  pedido ya creado son la fase A (`suscripciones-desde-pedido`), sin cobro automático.
+- **[21-oct]** Cambiar de frecuencia, variante o cantidad después de suscribirse (se cancela
+  y se suscribe de nuevo), un número fijo de cobros o permanencia mínima (pregunta B9), y
+  recargo de envío por zona (pregunta B6).
+- **[21-oct]** Que el comprador se suscriba solo a un pedido de la fase A por un enlace: si
+  Jairo confirma que eso es «publicarlo» (F2-43·5), entra aquí en un ajuste aparte.
 - Tocar el motor de cobro de los planes de Katuq (`subscriptions`, `billingService`).
 
 ## Riesgos
@@ -140,6 +204,26 @@ _(ninguna spec vigente describe el checkout de la tienda ni sus pagos)_
   `orders`, `clients`, `inventory` e `inventoryMovement` solo por los caminos que ya usa
   la tienda; `integrationRawEvents` e `integrationEvents`. `products`, precios y listas
   de precios quedan en solo lectura.
+  **[21-oct]** Se suma el cupo del plan en `companies` (`currentMonthOrders` y sus campos),
+  que `createOrder` ya escribía para todo pedido aunque el diseño del 18-oct no lo listaba.
+  También `site_events` (eventos de los topes y del corte de altas de la revisión privada, con
+  ids y huellas) y una llave de `config/feature_flags`, solo con el script de interruptores y
+  a mano.
+- **[21-oct] Plata cobrada sin pedido.** Si la empresa queda suspendida o sin cupo entre el
+  cobro y el pedido, crear el pedido falla. El período queda pagado con su alerta y se
+  reintenta cada día; nunca se cobra otra vez ni se reembolsa solo (pregunta B7). La
+  revisión antes de cobrar reduce ese caso a una carrera.
+- **[21-oct] Dependencia de la fase A.** El calendario, el reclamo del período y la pantalla
+  son de la fase A. Si la fase A cambia en su aprobación (por ejemplo, el nombre de la
+  colección de períodos, su pregunta D8), este diseño la sigue. La fase A tiene que aceptar el
+  modo «tarjeta» de su reclamo del período y su tabla D9 dice que B arma con el núcleo de
+  D-496: los dos puntos se alinean en la pregunta B13.
+- **[21-oct] Inventario ya en producción.** La revisión privada encontró un defecto existente
+  en el descuento por bodega que usan el POS, la tienda, la fase A y esta fase. Va en un cambio
+  aparte y sensible (pregunta B12; ver revisión privada).
+- **[21-oct] Seguridad.** Elegir frecuencia, variante y cantidad desde la página, y cobrar
+  más seguido (semanal), amplían lo que revisa la tarea 0.7: ver revisión privada del
+  backend.
 - **Conciliación.** Barrido diario de cobros pendientes contra Wompi y alerta interna para
   los inciertos, como `billing_reconciliation_alerts`. El reporte del comercio cuadra
   los cobros aprobados con los pedidos generados.
@@ -175,3 +259,64 @@ _(ninguna spec vigente describe el checkout de la tienda ni sus pagos)_
     `storeSubscriptionCharges`)?
 12. ¿Las cuentas Wompi de los comercios tienen la URL de eventos apuntando al webhook
     principal de Katuq? Si no, el barrido diario sería la única vía de confirmación.
+
+> Las preguntas 1-12 quedaron respondidas el 18-oct con los valores por defecto de
+> `design.md` (D-518 T·3). Las 1, 4 y 12 siguen dependiendo de la fase 0 con Wompi.
+> **[21-oct]** Cambian dos respuestas por decisiones posteriores: la 7 (F2-43·7: lo no
+> inventariable no se revisa) y la 8 (pregunta B4). La 11 sigue la pregunta D8 de la fase A.
+
+### [21-oct] Preguntas nuevas para Daniel
+
+Cada una trae la recomendación, que se aplica si se aprueba sin cambios.
+
+- **B1. Variante con otro precio.** Katuq no tiene precio por variante (D-518 F5-30·7): la
+  variante es solo la etiqueta (molienda, talla). Recomiendo: el plan permite elegir
+  variante al mismo precio, y un tamaño con otro precio (Pergamino: 360 g y 500 g) es otro
+  producto y otro plan.
+- **B2. Varias frecuencias en un plan.** Recomiendo: un plan admite varias frecuencias al
+  mismo precio por cobro (el café de cada semana o cada mes), y los planes con precio
+  distinto por periodicidad (Evora Cloud mensual o anual) son planes separados.
+- **B3. Anticipación del aviso previo.** Recomiendo: 1 día en semanal, 2 en cada 2 semanas,
+  3 en mensual y cada 2 meses, y 7 en anual.
+- **B4. Tope del plan.** `createOrder` cuenta todo pedido en el cupo, así que lo de la
+  pregunta 8 («las renovaciones no cuentan») no se cumple sin tocar `limitsService`.
+  Recomiendo: que cuenten, como en la fase A (su D19), y revisar el cupo y el estado de la
+  empresa antes de cobrar: si el pedido no se podría crear, no se cobra, se avisa al comercio
+  y el período se salta al cerrar su ventana.
+- **B5. Pausa manual.** La fase A deja pausar al comercio. Recomiendo: en la fase B no, por
+  ahora (la ruta compartida responde 409); ni el comercio ni el comprador pausan un cobro con
+  tarjeta. Sigue la pausa automática.
+- **B6. Envío.** Recomiendo: mantener «el precio del plan incluye el envío» (D-497). El
+  recargo por zona de la referencia va en un ajuste aparte si un comercio lo pide.
+- **B7. Cobro aprobado sin pedido.** Si el pedido falla después del cobro (empresa
+  suspendida, cupo por una carrera), recomiendo: alerta al comercio y a Katuq, reintento
+  diario mientras siga el problema, y ningún reembolso automático; soporte decide.
+- **B8. Colección de períodos.** Recomiendo: seguir la respuesta a la pregunta D8 de la fase
+  A (`storeSubscriptionPeriods` si se renombra).
+- **B9. Duración.** Recomiendo: solo hasta que se cancele, sin número fijo de cobros ni
+  permanencia mínima.
+- **B10. Piloto.** El criterio del ticket es «Evora Cloud cada mes». No está verificado que
+  Baudio sea Premium, tenga Wompi propio activo ni tenga Evora Cloud como producto.
+  Recomiendo: probar en FLORECER (D-385) y revisar esos tres datos de Baudio en la fase 0 con
+  una lectura de solo lectura.
+- **B11. Fecha de entrega del pedido de cada período.** Hoy el pedido nacería con la fecha
+  del día (`utils/siteOrden.js:64-76`), sin mirar las reglas de entrega de la tienda (días sin
+  entregas, hora de corte y cupo del día, F2-15). Recomiendo: la fecha del cobro aprobado o, si
+  ese día no se entrega o ya pasó la hora de corte, el siguiente día válido (hasta 14 días);
+  horario «lo más pronto posible». El cupo del día no frena un período ya cobrado, pero el
+  pedido sí ocupa cupo para los demás compradores. Sin día válido en 14 días, el pedido sale con
+  la fecha del cobro y una alerta.
+- **B12. Defecto existente de inventario (ver revisión privada).** Recomiendo: abrirlo ya como
+  cambio aparte y sensible, con su diff, y que sea requisito para encender la fase A (que
+  también descuenta por ese camino), no solo esta fase.
+- **B13. Alinear la fase A.** (a) Su reclamo del período (`periodClaim.js`) debe aceptar el
+  modo «tarjeta», que reserva, recupera y anota el pedido sin tocar el estado, el calendario ni
+  el contador; (b) la fila «Crear el pedido» de su D9 debe decir «B: `construirOrden` directo,
+  con el monto congelado» en lugar de «con el núcleo de D-496»; (c) `modes.js` y el script de
+  interruptores con valores son de esta fase si la fase A no los crea. Recomiendo: aprobarlo
+  junto con la fase A y anotarlo en su `design.md` cuando se apruebe.
+
+
+## Aprobación (2026-10-21)
+
+Daniel aprobó en bloque esta propuesta («dale pues y aprobado todo», 2026-10-21). Cada pregunta abierta queda resuelta con la recomendación escrita en este documento. Las tareas [S] siguen yendo con diff y pruebas de caracterización antes de unirse.

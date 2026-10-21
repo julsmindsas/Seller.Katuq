@@ -1,6 +1,17 @@
 ## ADDED Requirements
 
 > D-495 (ticket 1234, F2-42). «La función» es la bandera por comercio. Fase entre corchetes.
+>
+> **Ampliación del 2026-10-21 (pendiente de aprobación, D-518):** los requisitos de F2
+> («Filtros con conteo correcto dentro de una categoría», «Filtros visibles, limpiables y
+> compartibles»), F4 («Comparador de hasta 4 productos») y F5 («Feed con detalles técnicos»),
+> aprobados el 18-oct, pasan reescritos a `tienda-facetas`, `tienda-comparador` y
+> `catalogo-feed-atributos`. Cambios: sin interruptores extra (F2-42·7), facetas también en
+> búsqueda y marca (F2-42·3), precio del cliente mayorista (F2-42·4), meta de 1 s (F2-42·5) y
+> Meta y JSON-LD según la documentación oficial (F2-42·6). El texto aprobado queda en el
+> historial de git (f6417dcd). Los requisitos de F1 siguen abajo; cambian, marcados, el de los
+> buscadores (criterio), el de la función apagada (plazo del feed) y el de velocidad (lectura del
+> comparador).
 
 ### Requirement: La ficha muestra las especificaciones sin escribirlas a mano [F1, criterio 2]
 
@@ -17,66 +28,27 @@ WHERE la función está encendida y el producto tiene valores válidos, THE syst
 - **WHEN** el producto guarda un valor cuyo atributo ya no existe en su categoría
 - **THEN** ese valor no aparece en la ficha
 
-### Requirement: Los buscadores reciben las especificaciones [F1]
+### Requirement: Los buscadores reciben las especificaciones [F1; criterio AMPLIADO el 21-oct, pendiente]
 
-WHEN la ficha muestra especificaciones, THE system SHALL publicarlas en los datos estructurados del producto como propiedades adicionales, con nombre, valor y unidad.
+WHEN la ficha muestra especificaciones, THE system SHALL publicarlas en los datos estructurados del producto como propiedades adicionales, cada una con nombre, valor y, si tiene, unidad. THE system SHALL NOT sumar errores ni advertencias a la prueba de resultados enriquecidos de Google frente a la ficha sin especificaciones.
 
-#### Scenario: Resultado enriquecido
+*Fuente: ticket 1234 («atributos incluidos en los datos estructurados para SEO»); D-518 F2-42·6 («el JSON-LD se valida con el Schema Markup Validator»); schema.org `additionalProperty` (Product → PropertyValue). Google no lista esa propiedad entre las de producto, así que no se promete un resultado enriquecido por ella.*
 
-- **WHEN** la ficha de un producto con especificaciones se pasa por la prueba de resultados enriquecidos de Google
-- **THEN** la prueba lee cada especificación como propiedad del producto, sin errores
+#### Scenario: Validador de schema.org
 
-### Requirement: Filtros con conteo correcto dentro de una categoría [F2, criterio 1]
+- **WHEN** la ficha de un producto con especificaciones se pasa por el Schema Markup Validator
+- **THEN** cada especificación aparece como propiedad del producto con su nombre, su valor y su unidad, sin errores
 
-WHERE la función y los filtros técnicos están encendidos y el visitante eligió una categoría, THE system SHALL ofrecer filtros por marca, precio y los atributos marcados «usar como filtro». Las listas y los sí/no SHALL mostrar el conteo por valor, y los números SHALL mostrar un rango. Cada conteo SHALL aplicar todos los filtros activos menos el suyo, con O dentro de un filtro e Y entre filtros, y solo sobre lo vendible y visible en el plan. Elegir una categoría SHALL incluir sus subcategorías.
+#### Scenario: Prueba de Google sin retroceso
 
-#### Scenario: Criterio 1 del ticket
+- **WHEN** la misma ficha se pasa por la prueba de resultados enriquecidos de Google
+- **THEN** no aparecen errores ni advertencias que no tuviera la ficha sin especificaciones
 
-- **WHEN** el visitante entra a «Networking»
-- **THEN** puede filtrar por marca, precio, tecnología WiFi y velocidad
-- **AND** cada conteo coincide con los productos que verá al marcar ese valor
+### Requirement: Con la función apagada la tienda queda como hoy [F1–F5; plazo del feed AMPLIADO el 21-oct, pendiente]
 
-#### Scenario: Cada filtro cuenta sin sí mismo
+WHILE la función está apagada para el comercio, THE system SHALL responder el catálogo, la ficha, los datos del producto para agentes y el feed exactamente como hoy, y SHALL NOT ofrecer facetas de atributos ni comparador. WHEN se apaga la función, THE system SHALL dejar de mostrar todo lo anterior en la tienda en máximo 12 minutos, y SHALL volver al feed de hoy en máximo 35 minutos.
 
-- **WHEN** el visitante marca «WiFi 6»
-- **THEN** los conteos de marca cuentan solo productos «WiFi 6»
-- **AND** el conteo de «WiFi 5» sigue visible y no baja a cero por marcar «WiFi 6»
-
-#### Scenario: La categoría incluye sus subcategorías
-
-- **WHEN** el visitante elige «Networking»
-- **THEN** aparecen también los productos de «Networking > Routers»
-
-### Requirement: Filtros visibles, limpiables y compartibles [F2]
-
-WHEN hay filtros activos, THE system SHALL mostrarlos como chips que se quitan uno a uno, ofrecer «Limpiar todo» y llevarlos en la dirección de la página, para que se puedan compartir.
-
-#### Scenario: Compartir una búsqueda filtrada
-
-- **WHEN** el visitante copia la dirección con «WiFi 6» y una marca marcadas y otra persona la abre
-- **THEN** la otra persona ve los mismos filtros y los mismos productos
-
-### Requirement: Comparador de hasta 4 productos [F4]
-
-WHERE el comercio activó el comparador, THE system SHALL permitir agregar hasta 4 productos desde las tarjetas y la ficha, guardar la selección solo en el navegador del visitante y mostrar lado a lado los atributos marcados «mostrar en comparador», resaltando los que difieren. THE system SHALL entregar datos solo de productos del mismo sitio publicado y de la misma empresa, publicables y visibles en el plan. IF se piden más de 4 productos, o uno no cumple esas condiciones, THEN THE system SHALL dejarlo fuera.
-
-#### Scenario: Producto de otra empresa
-
-- **WHEN** la comparación incluye el id de un producto de otra empresa
-- **THEN** ese producto no aparece y no se entrega ningún dato suyo
-
-### Requirement: Feed con detalles técnicos [F5]
-
-WHERE la función está encendida, WHEN se genera el feed del catálogo para Google, THE system SHALL incluir cada especificación con sección, nombre y valor, y el tipo de producto con la ruta de categoría como la escribió el comercio. IF el producto no tiene especificaciones, THEN THE system SHALL publicar su entrada como hoy, salvo el tipo de producto.
-
-#### Scenario: Comercio sin especificaciones
-
-- **WHEN** un comercio con la función apagada publica su feed
-- **THEN** el feed es idéntico al de hoy
-
-### Requirement: Con la función apagada la tienda queda como hoy [F1–F5]
-
-WHILE la función está apagada para el comercio, THE system SHALL responder el catálogo, la ficha, los datos del producto para agentes y el feed exactamente como hoy, y SHALL NOT ofrecer filtros técnicos ni comparador. WHEN se apaga la función, THE system SHALL dejar de mostrar todo lo anterior en la tienda en máximo 12 minutos.
+*Fuente del cambio: el feed se guarda 30 minutos en cachés intermedias (pregunta 14 de la propuesta).*
 
 #### Scenario: Apagar en caliente
 
@@ -86,7 +58,7 @@ WHILE la función está apagada para el comercio, THE system SHALL responder el 
 
 ### Requirement: La tienda no se vuelve más lenta [F1–F5]
 
-THE system SHALL NOT sumar lecturas a la base de datos por cada consulta del catálogo ni por cada vista de ficha; solo se permite la recarga periódica por tienda que ya existe. Un cambio de atributos SHALL verse en la tienda en el mismo plazo en que hoy se ve un cambio de producto.
+THE system SHALL NOT sumar lecturas a la base de datos por cada consulta del catálogo ni por cada vista de ficha; solo se permite la recarga periódica por tienda que ya existe. Un cambio de atributos SHALL verse en la tienda en el mismo plazo en que hoy se ve un cambio de producto. La meta de tiempo de las facetas está en `tienda-facetas`. La comparación de productos, que es una consulta aparte, SHALL leer a lo sumo los productos comparados (declarado el 21-oct, pendiente).
 
 #### Scenario: Muchas visitas a fichas
 

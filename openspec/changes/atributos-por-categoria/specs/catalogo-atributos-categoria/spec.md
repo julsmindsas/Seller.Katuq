@@ -78,14 +78,26 @@ WHERE la función está encendida, THE system SHALL mostrar al crear y al editar
 - **WHEN** el comercio cambia la categoría de «Networking > Routers» a «Accesorios»
 - **THEN** la pestaña muestra los campos de «Accesorios»
 
-### Requirement: Plantilla de importación por categoría [F3]
+> **Ampliación del 2026-10-21 (pendiente de aprobación):** el requisito «Plantilla de
+> importación por categoría [F3]», aprobado el 18-oct, pasa reescrito a
+> `catalogo-plantilla-atributos` (hoja aparte, celda vacía no cambia, export con subcategorías).
+> El texto aprobado queda en el historial de git (f6417dcd).
 
-WHEN el comercio descarga la plantilla de productos eligiendo una categoría, THE system SHALL sumar una columna por atributo, con la unidad en el encabezado, y listar las opciones válidas en las instrucciones. WHEN se importa ese archivo, THE system SHALL escribir solo los atributos que traiga cada fila y avisar por fila los valores inválidos. WHEN el comercio exporta filtrando por esa categoría, THE system SHALL traer las mismas columnas.
+### Requirement: El maestro de categorías se guarda en un solo lugar [Hallazgos H2 y H3, AMPLIADO el 21-oct, pendiente]
 
-#### Scenario: Exportar, corregir y reimportar
+WHEN el comercio guarda el árbol de categorías en Maestros, THE system SHALL guardarlo o, IF no puede, THEN THE system SHALL decirle que no se guardó y dejar el árbol anterior intacto. WHEN la importación de productos crea categorías, THE system SHALL agregarlas al mismo árbol que el comercio edita en Maestros. IF la empresa tiene más de un árbol guardado, THEN THE system SHALL usar en la importación el mismo que usa Maestros.
 
-- **WHEN** el comercio exporta «Networking», corrige valores y reimporta el archivo
-- **THEN** los atributos quedan corregidos y ningún otro valor se pierde
+*Fuente: D-518, orden de trabajo 3 («choque de categorías de D-498, 500 del árbol de categorías»); comentario 3 del ticket (diff 3.2: «ante un error responde 500»); D-498 tarea 3.1.*
+
+#### Scenario: Empresa con dos árboles
+
+- **WHEN** una empresa con dos árboles guardados importa productos con una categoría nueva
+- **THEN** la categoría nueva aparece en el árbol que se ve en Maestros
+
+#### Scenario: Guardado que falla
+
+- **WHEN** el guardado del árbol falla
+- **THEN** Maestros dice que no se guardó y el árbol anterior sigue igual
 
 ### Requirement: Con la función apagada todo queda como hoy [F1–F3]
 

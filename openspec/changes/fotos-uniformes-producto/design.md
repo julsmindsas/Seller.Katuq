@@ -1,6 +1,6 @@
 # Diseño — Fotos de producto uniformes, fase 1 (D-501, ticket 1252, TX-37)
 
-> Estado: **diseño para aprobación**. Detalla la fase 1, sin IA. Las rutas, los datos, el historial, Storage, la lista de escritores y los valores por defecto están en [`anexo.md`](anexo.md). Los criterios de aceptación, en [`specs/product-photo-uniform/spec.md`](specs/product-photo-uniform/spec.md). Verificado en el código el 2026-10-18 (front `feature/venta-asistida-mejorada`, backend `backend-aws-security`, rutas relativas a `functions/`).
+> Estado: **aprobado el 18-oct (D-501) e implementado; desplegado apagado y en `off`** (backend 9d54be86 dentro de a10d1279; front ff69f29c en 2026.10.18.12). **Ampliación D-518 del 21-oct, pendiente de aprobación:** [`design-ampliacion.md`](design-ampliacion.md) (interruptor en Firestore, exclusión solo por integraciones que escriben fotos, categoría por ruta, series de 100, entradas en el sitio y en Catálogos por link, aviso de marca de agua), [`design-fase-1b.md`](design-fase-1b.md) y [`design-fase-2.md`](design-fase-2.md). Donde la ampliación reemplaza algo de aquí, se marca «→ D-518». Detalla la fase 1, sin IA. Las rutas, los datos, el historial, Storage, la lista de escritores y los valores por defecto están en [`anexo.md`](anexo.md). Los criterios de aceptación, en [`specs/product-photo-uniform/spec.md`](specs/product-photo-uniform/spec.md). Verificado en el código el 2026-10-18 (front `feature/venta-asistida-mejorada`, backend `backend-aws-security`, rutas relativas a `functions/`).
 
 ## Decisiones
 
@@ -29,10 +29,13 @@
    - **Foto:** un objeto, no excluido por la persona, cuyo archivo es **propio**:
      - **Bucket:** debe ser `STORAGE_BUCKET`. Otro bucket, aunque sea de Firebase, es `external_link`. Lo resuelve un lector puro nuevo que devuelve `{ bucket, path }`. `resolverPathStorage` (`media.js:63`) no se exporta ni se copia, porque en las URLs `/o/…` ignora el bucket.
      - **Dueño:** `metadata.company` del archivo debe ser igual a la empresa del token, normalizada como en `duenoDelArchivo`. Si es de otra empresa: `not_owned`. Si no declara dueño: `owner_unknown`, que se omite por defecto. La tarea 0.4 cuenta esos casos y Daniel decide.
+   - → D-518: `product_integrated` pasa a ser solo «vinculado a una integración que escribe fotos» (`design-ampliacion.md` §A2); `external_link` y los `owner_unknown` con forma de foto de producto se copian en la fase 1b (`design-fase-1b.md`; los demás sin dueño siguen omitidos, ver revisión privada).
    - La regla aplica a toda ruta que salga del documento, también a `original.path` al reprocesar y al revertir. La validación detallada de multi-tenant va en un cambio del backend privado. Los códigos de omisión están en el anexo §B.
 5. **Syncs: excluir, con criterio conservador.** Responde 409 `COMPANY_HAS_PRODUCT_SYNC` si la empresa tiene:
    - un flow activo con **cualquier nodo cuyo tipo contenga `product`** (criterio de activo de `tools/updateProductPhotos.js:56`);
    - o un `integration_configs` activo de osmosis, shopify, woocommerce o fulfillment.
+
+   → D-518 (TX-37·5), pendiente: el criterio de flows pasa a una lista cerrada de nodos que escriben o llevan productos (`katuq-product-upsert` y los nodos de producto de esos proveedores), con los `sub-flow` resueltos (`design-ampliacion.md` §A2).
 
    La tarea 0.3 cierra la lista y no se toca el código de los syncs. La prueba de registro de escritores exige clasificar todo archivo que escribe `imagenesPrincipales` como «sync que excluye» o «acción manual» (anexo §E).
 6. **Datos de cada foto** (anexo §B).
@@ -53,19 +56,20 @@
        - con el modo en `off`, los lotes de uniformar quedan intactos, sin arriendo ni escrituras;
        - revertir con el modo en `off` cierra (`stopped`/`mode_changed`) el lote de uniformar que quedó activo sin arriendo, en la transacción que crea la reversión;
        - un lote corre una sola vez a la vez por proceso, y cada corrida firma el arriendo con su propio dueño.
-   - **Topes:** 100 productos (más da 422 `BATCH_TOO_LARGE`), 12 fotos por producto y 15 s por foto.
+   - **Topes:** 100 productos (más da 422 `BATCH_TOO_LARGE`), 12 fotos por producto y 15 s por foto. → D-518 (TX-37·4): más de 100 forma una serie de lotes seguidos (`design-ampliacion.md` §A4).
    - **Cancelar:** el lote para al cerrar el producto en curso.
 9. **Bandera, interruptor, sombra y reversión.**
    - **Bandera:** `productPhotoUniform`, en los dos catálogos y no en `banderasEmpresaNueva.js`. Dueño: Daniel. Retiro: 2027-04-30.
-   - **Interruptor** `PRODUCT_PHOTO_UNIFORM_MODE`: `off`, que es el valor si no está puesto y responde 503 `PHOTO_UNIFORM_OFF`; `shadow`, y `on`. Solo controla `POST /preview` y `POST /batches`.
+   - **Interruptor** `PRODUCT_PHOTO_UNIFORM_MODE` (→ D-518/D-505: pasa a `config/feature_flags.productPhotoUniformMode`, mismos valores; `design-ampliacion.md` §A1): `off`, que es el valor si no está puesto y responde 503 `PHOTO_UNIFORM_OFF`; `shadow`, y `on`. Solo controla `POST /preview` y `POST /batches`.
    - **En `shadow`:** cero escrituras en `products`, `productHistory` y Storage. Solo se escribe `product_photo_batches`: lote, candado, resultados y métricas.
-   - **Vista previa:** no escribe nada en ningún modo.
+   - **Vista previa:** no escribe nada en ningún modo. (→ D-518, pendiente: con «Quitar fondo» de la fase 2, la vista previa en `on` descuenta el cupo y guarda el recorte, para que aplicar no vuelva a pagar, como pide D-501; `design-fase-2.md` §F2.2.)
    - **Reversión, consultas y cancelación:** no dependen del modo. La reversión no crea archivos ni usa `sharp`, siempre es real y exige bandera y rol.
    - **Cadena:** `auth` → `requireJwtTenant` → `requireFeature` (con `try`, como en `routers/katuqintelligence.js:14-30`) → modo (solo vista previa y lotes) → rol → manejador.
 10. **CPU de la vista previa.**
     - **Semáforo:** uno por proceso, de una foto a la vez y compartido con el runner. Si la espera pasa de 20 s, 429 `PHOTO_BUSY`.
     - **Por empresa:** una vista previa en curso (429 `PREVIEW_RUNNING`) y 10 cada 10 min (429 `PREVIEW_RATE_LIMIT`).
     - Contadores en memoria, sin escrituras: con k procesos, el techo es de k fotos a la vez.
+    - → D-518, pendiente: el semáforo es solo para el trabajo de `sharp`. Las descargas de la fase 1b y la llamada al proveedor de la fase 2 van fuera de él, cada una con su propio límite por proceso (`design-fase-1b.md` §B1, `design-fase-2.md` §F2.2).
 11. **Front.**
     - **Servicio y piezas puras:** `shared/services/productos/product-photos.service.ts` extiende `base.service.ts`, con `SKIP_LOADER` en la consulta. Las piezas puras son `product-photos.mapper.ts` y `photo-quality.ts`.
     - **Diálogo:** standalone y OnPush en `components/productos/fotos-uniformes/`. Pasos: ajustes → vista previa de hasta 3 fotos, con «No uniformar esta» → aplicar → progreso cada 2 s (`timer` + `switchMap` + `takeUntil`) → resumen con «Revertir lote». Con el modo en `off`, solo ofrece revertir.
@@ -112,11 +116,13 @@ Las pruebas de contrato van antes del código (tareas 1.x).
 
 ## Fases siguientes y riesgos
 
-Las fases 1b (copiar al bucket los enlaces externos y las fotos sin dueño), 2 («Quitar fondo»), S y X siguen la hoja de ruta de la propuesta. La 1b espera, además, la revisión del backend privado.
+Las fases 1b (copiar al bucket los enlaces externos y las fotos sin dueño) y 2 («Quitar fondo») tienen ahora su diseño propio, pendiente de aprobación: [`design-fase-1b.md`](design-fase-1b.md) y [`design-fase-2.md`](design-fase-2.md). Las dos esperan la revisión del backend privado (`fotos-uniformes-producto-seguridad`). Corrección (21-oct): las «fases S y X» que citaba este párrafo no estaban definidas en ningún artefacto; se quitan. Llevar las fotos a Shopify y procesar `exposicion.imagenes` siguen fuera (no-goal y P3).
 
 **Riesgos** (los de la propuesta, más uno): un editor abierto antes del lote, si se guarda, devuelve las fotos viejas sin perder datos.
 
 ## Despliegue y reversa
+
+**Desvío registrado (21-oct):** el backend se desplegó con el modo en `off`, no en `shadow` (la variable no se definió; CONTRACT, D-501 «SUBIDA APAGADA»). Con D-505 el paso a sombra se hace en `config/feature_flags`, no en el `.env` (`design-ampliacion.md` §A1).
 
 **Despliegue:** backend con la bandera apagada y el modo en `shadow` → front → Daniel enciende FLORECER con `set-company-feature.js` (primero en simulación, luego con `--execute`) → sombra → `on`.
 

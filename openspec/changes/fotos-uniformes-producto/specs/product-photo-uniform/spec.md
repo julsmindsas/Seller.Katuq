@@ -1,3 +1,5 @@
+> Aprobada el 18-oct (D-501, fase 1). **Ampliación D-518 del 21-oct, pendiente de aprobación:** el requisito «Empresas con sincronización de productos» cambia (TX-37·5) y se agrega «Aviso de posible marca de agua o logo» (TX-37·2). Lo marcado con **[D-518, pendiente]** es nuevo; el resto es lo aprobado. El requisito «Interruptor general del servidor» no cambia: el diseño de D-518 lo cumple leyendo el interruptor antes de cada producto (`design-ampliacion.md` §A1). Entradas, categorías y series: `../product-photo-batch-scope/spec.md`. Fase 1b: `../product-photo-ownership/spec.md`. Fase 2: `../product-photo-background-ai/spec.md`.
+
 ## ADDED Requirements
 
 ### Requirement: La función nace apagada por comercio
@@ -30,6 +32,8 @@ WHILE el sistema esté en modo sombra, un lote SHALL procesar las fotos solo par
 - **THEN** el registro del lote muestra cuántas fotos se habrían uniformado, cuántas se omitieron y por qué, y los 20 productos, su historial y los archivos quedan idénticos
 
 ### Requirement: Vista previa sin escrituras y con límite
+**[→ D-518, pendiente: con «Quitar fondo» (fase 2) aplica la excepción de `../product-photo-background-ai/spec.md`, «La vista previa avisa su costo y no se paga dos veces». Sin «Quitar fondo», este requisito sigue igual.]**
+
 WHEN una persona pide la vista previa, el sistema SHALL mostrar el antes y el después de hasta 3 fotos y SHALL NOT escribir nada. IF la misma empresa ya tiene una vista previa en curso, o pidió demasiadas en poco tiempo, THEN el sistema SHALL pedirle que espere, sin procesar.
 
 #### Scenario: Doble clic
@@ -48,11 +52,31 @@ El sistema SHALL decidir la empresa solo por la sesión firmada y SHALL procesar
 - **THEN** esa foto se omite con su motivo y las demás siguen
 
 ### Requirement: Empresas con sincronización de productos
-IF la empresa tiene activa una sincronización que escribe productos o reacciona a sus cambios, THEN el sistema SHALL rechazar el lote con un aviso que nombre esa sincronización y SHALL NOT escribir nada.
+**[D-518, pendiente; reemplaza el texto aprobado el 18-oct: «IF la empresa tiene activa una sincronización que escribe productos o reacciona a sus cambios, THEN el sistema SHALL rechazar el lote…»]**
+
+IF la empresa tiene activa una integración que escribe las fotos de sus productos (Cereza, Shopify, WooCommerce o un operador logístico), o un flujo que las escribe o que lleva productos a una de esas integraciones, THEN el sistema SHALL rechazar la vista previa y el lote con un aviso que nombre esa integración y SHALL NOT escribir nada. IF un producto está vinculado a una de esas integraciones, THEN el sistema SHALL omitirlo con su motivo. Una integración que no escribe fotos (por ejemplo, la de facturación) SHALL NOT excluir a la empresa ni al producto.
+
+Fuente: D-518 TX-37·5 («Excluir solo las integraciones que escriben fotos (Osmosis, Shopify, WooCommerce, fulfillment). OH MY STORE y CAFE ESCOBAR siguen fuera por ahora»); D-501, No-goals («Shopify … otra propuesta»; «Syncs: no cambian … el contenido»), para los flujos que llevan productos a esas integraciones; ticket 1252, criterio 1 («un comercio uniforma las fotos de una categoría completa»).
 
 #### Scenario: OH MY STORE
-- **WHEN** OH MY STORE, con sus flujos de productos activos, intenta uniformar fotos
+- **WHEN** OH MY STORE, con sus flujos de productos de Cereza y Shopify activos, intenta uniformar fotos
 - **THEN** recibe el aviso con el nombre del flujo, y sus productos y flujos quedan como estaban
+
+#### Scenario: CAFE ESCOBAR
+- **WHEN** CAFE ESCOBAR, con la integración de WooCommerce activa, pide una vista previa
+- **THEN** recibe el aviso que nombra WooCommerce y no se procesa ninguna foto
+
+#### Scenario: Producto con código de facturación
+- **WHEN** ALMACEN BOMBAS, sin integraciones que escriban fotos, uniforma una categoría y un producto tiene guardado su código de producto del sistema de facturación
+- **THEN** ese producto entra al lote como cualquier otro
+
+#### Scenario: Flujo que solo avisa
+- **WHEN** una empresa tiene activo un flujo que, al cambiar un producto, solo manda un mensaje por WhatsApp
+- **THEN** la empresa puede uniformar sus fotos
+
+#### Scenario: Flujo que solo lleva pedidos
+- **WHEN** una empresa sin integraciones activas que escriban fotos tiene un flujo que solo envía sus pedidos a un operador
+- **THEN** la empresa puede uniformar sus fotos
 
 ### Requirement: Solo cambian las fotos del producto
 WHEN se aplica un lote, el sistema SHALL cambiar solo las fotos principales del producto (su dirección, su archivo y las marcas de original y procesado), quién y cuándo lo editó, el historial del producto y el registro del lote. SHALL NOT cambiar precios, precios por tipo de cliente, inventario, categorías, variantes, integraciones, fotos de otros canales ni datos de la empresa. Las demás fotos, su orden y su cantidad SHALL quedar iguales.
@@ -89,3 +113,16 @@ WHEN una foto tiene poca resolución o se ve borrosa, el sistema SHALL avisarlo 
 #### Scenario: Foto chica
 - **WHEN** una persona sube una foto con el lado menor bajo el umbral
 - **THEN** ve el aviso y puede guardar el producto igual
+
+### Requirement: Aviso de posible marca de agua o logo
+**[D-518, pendiente]** WHEN una foto de fondo liso tiene, separada del producto, una marca pequeña en una esquina o en un borde, el sistema SHALL avisarlo como «posible marca de agua o logo» en la vista previa y en el resumen del lote, y SHALL NOT impedir que se uniforme ni que se use. WHILE la foto tenga un fondo de escena, el sistema SHALL NOT dar ese aviso.
+
+Fuente: D-518 TX-37·2 («En la fase 1 se detectan y se avisa. Quitarlos con IA va en la fase 2»); ticket 1252, «Qué pasa hoy: … algunas traen marca de agua o logo»; adjunto del ticket 1259 (cd 3UrH47Mko7eruBnF4tak).
+
+#### Scenario: Foto de Almara con su logo
+- **WHEN** se pide la vista previa de una foto de fondo verde lima con «Almara» abajo a la derecha
+- **THEN** la muestra lleva el aviso de posible marca de agua o logo, y se puede aplicar igual
+
+#### Scenario: Foto sin marca
+- **WHEN** se uniforma una foto de fondo blanco con el producto solo
+- **THEN** no aparece ese aviso
