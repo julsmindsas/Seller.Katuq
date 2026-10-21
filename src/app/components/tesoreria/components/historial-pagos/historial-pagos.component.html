@@ -3,22 +3,22 @@
   <!-- Toolbar -->
   <div class="tk-toolbar">
     <div class="tk-field tk-field-search">
-      <label for="tk-hist-search">Buscar</label>
+      <label for="tk-hist-search">{{ 'comun.buscar' | translate }}</label>
       <input id="tk-hist-search" type="text" [(ngModel)]="search" (input)="onSearchInput()"
-             placeholder="Nro. de pedido o referencia" autocomplete="off">
+             [placeholder]="'tesoreria.historialPagos.nroDePedidoOReferencia' | translate" autocomplete="off">
     </div>
     <div class="tk-field">
-      <label for="tk-hist-status">Estado</label>
+      <label for="tk-hist-status">{{ 'tesoreria.historialPagos.estado' | translate }}</label>
       <select id="tk-hist-status" [(ngModel)]="status" (change)="applyFilters()">
         <option *ngFor="let s of statusOptions" [value]="s.value">{{ s.label }}</option>
       </select>
     </div>
     <div class="tk-field">
-      <label for="tk-hist-desde">Desde</label>
+      <label for="tk-hist-desde">{{ 'tesoreria.historialPagos.desde' | translate }}</label>
       <input id="tk-hist-desde" type="date" [(ngModel)]="fechaDesde" (change)="applyFilters()">
     </div>
     <div class="tk-field">
-      <label for="tk-hist-hasta">Hasta</label>
+      <label for="tk-hist-hasta">{{ 'tesoreria.historialPagos.hasta' | translate }}</label>
       <input id="tk-hist-hasta" type="date" [(ngModel)]="fechaHasta" (change)="applyFilters()">
     </div>
   </div>
@@ -26,21 +26,21 @@
   <p-table #dt [value]="items" dataKey="id" [lazy]="true" (onLazyLoad)="loadData($event)"
            [loading]="loading" [paginator]="true" [rows]="pageSize" [totalRecords]="totalRecords"
            [rowsPerPageOptions]="[10,25,50]" [showCurrentPageReport]="true"
-           currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pagos"
+           [currentPageReportTemplate]="'tesoreria.historialPagos.mostrandoFirstALastDe' | translate"
            [scrollable]="true" scrollHeight="calc(100vh - 400px)"
            styleClass="tk-table">
 
     <ng-template pTemplate="header">
       <tr>
-        <th style="min-width: 120px">Pedido</th>
-        <th style="min-width: 150px">Método</th>
-        <th style="min-width: 140px">Referencia</th>
-        <th class="text-end" style="min-width: 120px">Valor</th>
-        <th style="min-width: 110px">Fecha</th>
-        <th class="text-center" style="min-width: 130px">Estado</th>
-        <th style="min-width: 170px">Subido por</th>
-        <th style="min-width: 170px">Revisado por</th>
-        <th style="min-width: 200px">Notas</th>
+        <th style="min-width: 120px">{{ 'tesoreria.historialPagos.pedido' | translate }}</th>
+        <th style="min-width: 150px">{{ 'tesoreria.historialPagos.metodo' | translate }}</th>
+        <th style="min-width: 140px">{{ 'tesoreria.historialPagos.referencia' | translate }}</th>
+        <th class="text-end" style="min-width: 120px">{{ 'tesoreria.historialPagos.valor' | translate }}</th>
+        <th style="min-width: 110px">{{ 'tesoreria.historialPagos.fecha' | translate }}</th>
+        <th class="text-center" style="min-width: 130px">{{ 'tesoreria.historialPagos.estado' | translate }}</th>
+        <th style="min-width: 170px">{{ 'tesoreria.historialPagos.subidoPor' | translate }}</th>
+        <th style="min-width: 170px">{{ 'tesoreria.historialPagos.revisadoPor' | translate }}</th>
+        <th style="min-width: 200px">{{ 'tesoreria.historialPagos.notas' | translate }}</th>
       </tr>
     </ng-template>
 
@@ -55,7 +55,7 @@
         </td>
         <td>
           <button *ngIf="item?.archivoUrl; else refPlano" type="button" class="tk-ref tk-ref-link"
-                  (click)="verComprobante(item)" title="Ver comprobante">
+                  (click)="verComprobante(item)" [title]="'tesoreria.historialPagos.verComprobante' | translate">
             {{ item?.referencia || '—' }}
             <i class="pi pi-external-link"></i>
           </button>
@@ -81,7 +81,7 @@
     <ng-template pTemplate="emptymessage">
       <tr>
         <td colspan="9">
-          <div class="tk-empty"><i class="pi pi-list"></i> No hay pagos en el historial para este filtro.</div>
+          <div class="tk-empty"><i class="pi pi-list"></i> {{ 'tesoreria.historialPagos.noHayPagosEnEl' | translate }}</div>
         </td>
       </tr>
     </ng-template>

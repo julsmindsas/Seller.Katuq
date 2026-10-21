@@ -28,6 +28,7 @@ import { RevisarPagoComponent } from '../revisar-pago/revisar-pago.component';
 import { RegistrarPagoComponent } from '../registrar-pago/registrar-pago.component';
 import { CambiarEstadoPagoComponent } from '../cambiar-estado-pago/cambiar-estado-pago.component';
 
+import { TranslateService } from '@ngx-translate/core';
 type TablaModo = 'porRevisar' | 'sinPago' | 'rechazados';
 
 /** Paleta de avatares de cliente (solo presentación, ciclada por índice de fila). */
@@ -82,6 +83,7 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
     private maestro: MaestroService,
     private modal: NgbModal,
     private treasury: TreasuryService,
+    private translate: TranslateService,
   ) {
     // Rango por defecto: último año → hoy. El usuario puede ajustarlo.
     const rango = rangoPorDefecto();
@@ -300,8 +302,8 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
     if (!pago || !pago.paymentId) {
       Swal.fire({
         icon: 'info',
-        title: 'Sin pago por revisar',
-        text: 'Este pedido no tiene un comprobante pendiente de verificación.',
+        title: this.translate.instant('tesoreria.tablaPagosPedidos.sinPagoPorRevisar'),
+        text: this.translate.instant('tesoreria.tablaPagosPedidos.estePedidoNoTieneUn'),
       });
       return;
     }
@@ -310,8 +312,8 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
       // servidor lo rechaza y la ventana diría que "otro usuario ya decidió".
       Swal.fire({
         icon: 'info',
-        title: 'Este comprobante no se puede revisar aquí',
-        text: `El pago quedó registrado, pero no quedó guardado dentro del pedido ${pedido?.nroPedido || ''}, así que no se puede aprobar ni rechazar desde esta pantalla. Escríbenos por soporte con el número del pedido y lo revisamos.`,
+        title: this.translate.instant('tesoreria.tablaPagosPedidos.esteComprobanteNoSePuede'),
+        text: this.translate.instant('tesoreria.tablaPagosPedidos.elPagoQuedoRegistradoPero', { pedido: pedido?.nroPedido || '' }),
       });
       return;
     }

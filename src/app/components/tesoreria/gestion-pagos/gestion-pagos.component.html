@@ -5,14 +5,14 @@
     <div class="tk-header-id">
       <span class="tk-header-chip" aria-hidden="true"><i class="pi pi-wallet"></i></span>
       <div>
-        <h4 class="tk-page-title">Tesorería</h4>
-        <p class="tk-page-sub">Verifica comprobantes, aprueba o rechaza pagos y controla la cartera pendiente.</p>
+        <h4 class="tk-page-title">{{ 'tesoreria.gestionPagos.tesoreria' | translate }}</h4>
+        <p class="tk-page-sub">{{ 'tesoreria.gestionPagos.verificaComprobantesApruebaORechaza' | translate }}</p>
       </div>
     </div>
     <button type="button" class="tk-refresh" (click)="loadMetrics()" [disabled]="loadingMetrics"
-            aria-label="Actualizar indicadores">
+            [attr.aria-label]="'tesoreria.gestionPagos.actualizarIndicadores' | translate">
       <i class="pi" [ngClass]="loadingMetrics ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
-      Actualizar
+      {{ 'tesoreria.alertasTesoreria.actualizar' | translate }}
     </button>
   </div>
 
@@ -23,40 +23,40 @@
 
   <div *ngIf="metricsError && !loadingMetrics" class="tk-error" role="alert">
     <i class="pi pi-exclamation-triangle me-1"></i>
-    No se pudieron cargar los indicadores.
-    <button type="button" class="btn btn-sm btn-link p-0 ms-1" (click)="loadMetrics()">Reintentar</button>
+    {{ 'tesoreria.gestionPagos.noSePudieronCargarLos' | translate }}
+    <button type="button" class="btn btn-sm btn-link p-0 ms-1" (click)="loadMetrics()">{{ 'tesoreria.gestionPagos.reintentar' | translate }}</button>
   </div>
 
   <div class="tk-grid" *ngIf="metrics && !loadingMetrics && !metricsError">
     <div class="tk-card tk-accent-green">
-      <div class="tk-label">Recaudado hoy</div>
+      <div class="tk-label">{{ 'tesoreria.gestionPagos.recaudadoHoy' | translate }}</div>
       <div class="tk-value">{{ metrics.recaudadoHoy.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
-      <div class="tk-sub">{{ metrics.recaudadoHoy.cantidad | number }} pago(s) aprobado(s)</div>
+      <div class="tk-sub">{{ metrics.recaudadoHoy.cantidad | number }} {{ 'tesoreria.gestionPagos.pagoSAprobadoS' | translate }}</div>
     </div>
     <div class="tk-card tk-accent-orange">
-      <div class="tk-label">Cartera pendiente</div>
+      <div class="tk-label">{{ 'tesoreria.gestionPagos.carteraPendiente' | translate }}</div>
       <div class="tk-value">{{ metrics.carteraPendiente.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
-      <div class="tk-sub">{{ metrics.carteraPendiente.cantidad | number }} pedido(s) por cobrar</div>
+      <div class="tk-sub">{{ metrics.carteraPendiente.cantidad | number }} {{ 'tesoreria.gestionPagos.pedidoSPorCobrar' | translate }}</div>
     </div>
     <div class="tk-card tk-accent-purple">
-      <div class="tk-label">Por revisar</div>
+      <div class="tk-label">{{ 'tesoreria.gestionPagos.porRevisar' | translate }}</div>
       <div class="tk-value">{{ metrics.porRevisar.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
-      <div class="tk-sub">{{ metrics.porRevisar.cantidad | number }} comprobante(s) en cola</div>
+      <div class="tk-sub">{{ metrics.porRevisar.cantidad | number }} {{ 'tesoreria.gestionPagos.comprobanteSEnCola' | translate }}</div>
     </div>
     <div class="tk-card tk-accent-blue">
-      <div class="tk-label">Sin pago</div>
+      <div class="tk-label">{{ 'tesoreria.gestionPagos.sinPago' | translate }}</div>
       <div class="tk-value">{{ sinPagoCantidad !== null ? (sinPagoCantidad | number) : (sinPagoError ? '—' : '…') }}</div>
-      <div class="tk-sub">pedidos sin pago completo · último año</div>
+      <div class="tk-sub">{{ 'tesoreria.gestionPagos.pedidosSinPagoCompletoUltimo' | translate }}</div>
     </div>
     <div class="tk-card" [ngClass]="metrics.alertasActivas.cantidad > 0 ? 'tk-accent-red' : 'tk-accent-gray'">
-      <div class="tk-label">Alertas activas</div>
+      <div class="tk-label">{{ 'tesoreria.gestionPagos.alertasActivas' | translate }}</div>
       <div class="tk-value">{{ metrics.alertasActivas.cantidad | number }}</div>
-      <div class="tk-sub">posibles duplicados</div>
+      <div class="tk-sub">{{ 'tesoreria.gestionPagos.posiblesDuplicados' | translate }}</div>
     </div>
     <div class="tk-card tk-accent-gray">
-      <div class="tk-label">Rechazados</div>
+      <div class="tk-label">{{ 'tesoreria.gestionPagos.rechazados' | translate }}</div>
       <div class="tk-value">{{ metrics.rechazados.cantidad | number }}</div>
-      <div class="tk-sub">pagos rechazados</div>
+      <div class="tk-sub">{{ 'tesoreria.gestionPagos.pagosRechazados' | translate }}</div>
     </div>
   </div>
 
@@ -66,7 +66,7 @@
     <p-tabPanel>
       <ng-template pTemplate="header">
         <i class="pi pi-hourglass"></i>
-        <span>Por revisar</span>
+        <span>{{ 'tesoreria.gestionPagos.porRevisar' | translate }}</span>
         <span *ngIf="metrics?.porRevisar?.cantidad" class="tk-tab-badge">{{ metrics?.porRevisar?.cantidad }}</span>
       </ng-template>
       <app-tabla-pagos-pedidos
@@ -81,7 +81,7 @@
     <p-tabPanel>
       <ng-template pTemplate="header">
         <i class="pi pi-inbox"></i>
-        <span>Sin pago</span>
+        <span>{{ 'tesoreria.gestionPagos.sinPago' | translate }}</span>
       </ng-template>
       <app-tabla-pagos-pedidos
         *ngIf="activeIndex === 1"
@@ -95,7 +95,7 @@
     <p-tabPanel>
       <ng-template pTemplate="header">
         <i class="pi pi-times-circle"></i>
-        <span>Rechazados</span>
+        <span>{{ 'tesoreria.gestionPagos.rechazados' | translate }}</span>
       </ng-template>
       <app-tabla-pagos-pedidos
         *ngIf="activeIndex === 2"
@@ -109,7 +109,7 @@
     <p-tabPanel>
       <ng-template pTemplate="header">
         <i class="pi pi-list"></i>
-        <span>Historial</span>
+        <span>{{ 'tesoreria.gestionPagos.historial' | translate }}</span>
       </ng-template>
       <app-historial-pagos *ngIf="activeIndex === 3" [active]="activeIndex === 3"></app-historial-pagos>
     </p-tabPanel>
@@ -117,7 +117,7 @@
     <p-tabPanel>
       <ng-template pTemplate="header">
         <i class="pi pi-flag"></i>
-        <span>Alertas</span>
+        <span>{{ 'tesoreria.gestionPagos.alertas' | translate }}</span>
         <span *ngIf="metrics?.alertasActivas?.cantidad" class="tk-tab-badge tk-tab-badge-danger">{{ metrics?.alertasActivas?.cantidad }}</span>
       </ng-template>
       <app-alertas-tesoreria

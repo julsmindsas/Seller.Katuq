@@ -3,26 +3,26 @@
   <!-- Toolbar de filtros -->
   <div class="tk-toolbar">
     <div class="tk-field tk-field-search">
-      <label for="tk-search-{{ mode }}">Buscar</label>
+      <label for="tk-search-{{ mode }}">{{ 'comun.buscar' | translate }}</label>
       <input id="tk-search-{{ mode }}" type="text" [(ngModel)]="searchTerm" (input)="onSearchInput()"
-             placeholder="Nro. de pedido o nombre del cliente" autocomplete="off">
+             [placeholder]="'tesoreria.tablaPagosPedidos.nroDePedidoONombre' | translate" autocomplete="off">
     </div>
 
     <div class="tk-field">
-      <label for="tk-fp-{{ mode }}">Forma de pago</label>
+      <label for="tk-fp-{{ mode }}">{{ 'tesoreria.registrarPago.formaDePago' | translate }}</label>
       <select id="tk-fp-{{ mode }}" [(ngModel)]="formaPagoFilter" (change)="applyFilters()">
-        <option value="">Todas</option>
+        <option value="">{{ 'tesoreria.tablaPagosPedidos.todas' | translate }}</option>
         <option *ngFor="let fp of formasPago" [value]="fp?.nombre">{{ fp?.nombre }}</option>
       </select>
     </div>
 
     <div class="tk-field">
-      <label for="tk-desde-{{ mode }}">Desde</label>
+      <label for="tk-desde-{{ mode }}">{{ 'tesoreria.historialPagos.desde' | translate }}</label>
       <input id="tk-desde-{{ mode }}" type="date" [(ngModel)]="fechaDesde" (change)="applyFilters()">
     </div>
 
     <div class="tk-field">
-      <label for="tk-hasta-{{ mode }}">Hasta</label>
+      <label for="tk-hasta-{{ mode }}">{{ 'tesoreria.historialPagos.hasta' | translate }}</label>
       <input id="tk-hasta-{{ mode }}" type="date" [(ngModel)]="fechaHasta" (change)="applyFilters()">
     </div>
   </div>
@@ -31,18 +31,18 @@
   <p-table #dt [value]="orders" dataKey="_id" [lazy]="true" (onLazyLoad)="loadData($event)"
            [loading]="loading" [paginator]="true" [rows]="pageSize" [totalRecords]="totalRecords"
            [rowsPerPageOptions]="[10,25,50]" [showCurrentPageReport]="true"
-           currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pedidos"
+           [currentPageReportTemplate]="'tesoreria.tablaPagosPedidos.mostrandoFirstALastDe' | translate"
            [scrollable]="true" scrollHeight="calc(100vh - 430px)"
            styleClass="tk-table">
 
     <ng-template pTemplate="header">
       <tr>
-        <th style="min-width: 150px">Pedido</th>
-        <th style="min-width: 200px">Cliente</th>
-        <th style="min-width: 180px">Pago</th>
-        <th class="text-center" style="min-width: 140px">Estado</th>
-        <th style="min-width: 140px">Vendedor</th>
-        <th class="text-center" style="min-width: 160px">Acciones</th>
+        <th style="min-width: 150px">{{ 'tesoreria.historialPagos.pedido' | translate }}</th>
+        <th style="min-width: 200px">{{ 'tesoreria.tablaPagosPedidos.cliente' | translate }}</th>
+        <th style="min-width: 180px">{{ 'tesoreria.tablaPagosPedidos.pago' | translate }}</th>
+        <th class="text-center" style="min-width: 140px">{{ 'tesoreria.historialPagos.estado' | translate }}</th>
+        <th style="min-width: 140px">{{ 'tesoreria.tablaPagosPedidos.vendedor' | translate }}</th>
+        <th class="text-center" style="min-width: 160px">{{ 'tesoreria.tablaPagosPedidos.acciones' | translate }}</th>
       </tr>
     </ng-template>
 
@@ -80,7 +80,7 @@
             </div>
             <!-- Ticket 1217: el pago subido que todavía no se aprueba -->
             <div class="tk-progress-label text-muted" *ngIf="montoEnRevision(pedido) as enRevision">
-              + {{ enRevision | currency:'COP':'symbol-narrow':'1.0-0' }} en revisión
+              {{ 'tesoreria.tablaPagosPedidos.enRevision' | translate:{enRevision: (enRevision | currency:'COP':'symbol-narrow':'1.0-0')} }}
             </div>
           </div>
         </td>
@@ -89,7 +89,7 @@
         <td class="text-center">
           <span class="tk-badge tk-badge-clickable" [ngClass]="meta(pedido?.estadoPago).badgeClass"
                 (click)="abrirCambiarEstado(pedido)"
-                [attr.title]="'Cambiar estado — ' + meta(pedido?.estadoPago).descripcion">
+                [attr.title]="'tesoreria.tablaPagosPedidos.cambiarEstadoConDescripcion' | translate:{descripcion: meta(pedido?.estadoPago).descripcion}">
             <i class="pi" [ngClass]="meta(pedido?.estadoPago).icon"></i>
             {{ meta(pedido?.estadoPago).label }}
           </span>
@@ -110,19 +110,19 @@
                   class="btn btn-primary tk-btn-sm"
                   [disabled]="!puedeRevisar(pedido)"
                   (click)="abrirRevisar(pedido)">
-            <i class="pi pi-search"></i> Revisar
+            <i class="pi pi-search"></i> {{ 'tesoreria.tablaPagosPedidos.revisar' | translate }}
           </button>
 
           <button *ngIf="mode === 'sinPago'" type="button"
                   class="btn btn-primary tk-btn-sm"
                   (click)="abrirRegistrar(pedido)">
-            <i class="pi pi-plus"></i> Registrar pago
+            <i class="pi pi-plus"></i> {{ 'tesoreria.tablaPagosPedidos.registrarPago' | translate }}
           </button>
 
           <button *ngIf="mode === 'rechazados'" type="button"
                   class="btn btn-primary tk-btn-sm"
                   (click)="abrirRegistrar(pedido)">
-            <i class="pi pi-refresh"></i> Nuevo pago
+            <i class="pi pi-refresh"></i> {{ 'tesoreria.tablaPagosPedidos.nuevoPago' | translate }}
           </button>
         </td>
       </tr>
@@ -133,7 +133,7 @@
         <td colspan="6">
           <div class="tk-empty">
             <i class="pi pi-inbox"></i>
-            No hay pedidos que coincidan con este filtro.
+            {{ 'tesoreria.tablaPagosPedidos.noHayPedidosQueCoincidan' | translate }}
           </div>
         </td>
       </tr>
@@ -142,8 +142,8 @@
 
   <!-- Totales de la página -->
   <div class="tk-summary" *ngIf="orders.length > 0">
-    <span><strong>Pedidos en pantalla:</strong> {{ orders.length | number }}</span>
-    <span><strong>Anticipos:</strong> <span class="tk-summary-value">{{ totalAnticipo() | currency:'COP':'symbol-narrow':'1.0-0' }}</span></span>
-    <span><strong>Falta por pagar:</strong> <span class="tk-summary-value">{{ totalFalta() | currency:'COP':'symbol-narrow':'1.0-0' }}</span></span>
+    <span><strong>{{ 'tesoreria.tablaPagosPedidos.pedidosEnPantalla' | translate }}</strong> {{ orders.length | number }}</span>
+    <span><strong>{{ 'tesoreria.tablaPagosPedidos.anticipos' | translate }}</strong> <span class="tk-summary-value">{{ totalAnticipo() | currency:'COP':'symbol-narrow':'1.0-0' }}</span></span>
+    <span><strong>{{ 'tesoreria.tablaPagosPedidos.faltaPorPagar' | translate }}</strong> <span class="tk-summary-value">{{ totalFalta() | currency:'COP':'symbol-narrow':'1.0-0' }}</span></span>
   </div>
 </div>

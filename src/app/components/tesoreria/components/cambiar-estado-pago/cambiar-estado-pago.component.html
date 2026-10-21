@@ -1,13 +1,13 @@
 <div class="modal-header">
-  <h5 class="modal-title"><i class="pi pi-sync me-2"></i>Cambiar estado de pago — Pedido {{ pedido?.nroPedido }}</h5>
-  <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+  <h5 class="modal-title"><i class="pi pi-sync me-2"></i>{{ 'tesoreria.cambiarEstadoPago.cambiarEstadoDePagoPedido' | translate:{nroPedido: pedido?.nroPedido} }}</h5>
+  <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="activeModal.dismiss()"></button>
 </div>
 
 <div class="modal-body">
 
   <!-- Estado actual -->
   <div class="tk-actual mb-3">
-    <span class="tk-actual-label">Estado actual</span>
+    <span class="tk-actual-label">{{ 'tesoreria.cambiarEstadoPago.estadoActual' | translate }}</span>
     <span class="tk-badge" [ngClass]="meta(estadoActual).badgeClass">
       <i class="pi" [ngClass]="meta(estadoActual).icon"></i> {{ meta(estadoActual).label }}
     </span>
@@ -15,7 +15,7 @@
 
   <!-- Estados destino disponibles -->
   <div *ngIf="estadosDisponibles.length > 0; else sinTransiciones">
-    <label class="tk-block-label">Cambiar a</label>
+    <label class="tk-block-label">{{ 'tesoreria.cambiarEstadoPago.cambiarA' | translate }}</label>
     <div class="tk-estados-grid">
       <button type="button" class="tk-estado-card" *ngFor="let e of estadosDisponibles"
               [class.selected]="estadoSeleccionado === e" (click)="seleccionarEstado(e)">
@@ -33,31 +33,31 @@
 
     <!-- Motivo -->
     <div class="mt-3">
-      <label class="tk-block-label">Motivo <span class="text-danger">*</span></label>
+      <label class="tk-block-label">{{ 'tesoreria.cambiarEstadoPago.motivo' | translate }} <span class="text-danger">*</span></label>
       <div class="tk-motivos">
         <label class="tk-motivo-radio" *ngFor="let m of motivos">
           <input type="radio" name="motivo" [value]="m" [(ngModel)]="motivoSeleccionado"> <span>{{ m }}</span>
         </label>
         <label class="tk-motivo-radio">
-          <input type="radio" name="motivo" [value]="OTRO" [(ngModel)]="motivoSeleccionado"> <span>Otro</span>
+          <input type="radio" name="motivo" [value]="OTRO" [(ngModel)]="motivoSeleccionado"> <span>{{ 'tesoreria.cambiarEstadoPago.otro' | translate }}</span>
         </label>
       </div>
       <textarea *ngIf="motivoSeleccionado === OTRO" class="form-control mt-2" rows="2"
-                [(ngModel)]="motivoOtro" placeholder="Describe el motivo…"></textarea>
+                [(ngModel)]="motivoOtro" [placeholder]="'tesoreria.cambiarEstadoPago.describeElMotivo' | translate"></textarea>
     </div>
   </div>
 
   <ng-template #sinTransiciones>
     <div class="tk-empty">
       <i class="pi pi-lock"></i>
-      Desde el estado <strong>{{ meta(estadoActual).label }}</strong> no hay cambios manuales disponibles.
+      {{ 'tesoreria.cambiarEstadoPago.desdeElEstado' | translate }} <strong>{{ meta(estadoActual).label }}</strong> {{ 'tesoreria.cambiarEstadoPago.noHayCambiosManualesDisponibles' | translate }}
     </div>
   </ng-template>
 </div>
 
 <div class="modal-footer">
-  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()" [disabled]="submitting">Cancelar</button>
+  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()" [disabled]="submitting">{{ 'comun.cancelar' | translate }}</button>
   <button type="button" class="btn btn-primary" (click)="confirmar()" [disabled]="!puedeConfirmar">
-    <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check'"></i> Confirmar cambio
+    <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check'"></i> {{ 'tesoreria.cambiarEstadoPago.confirmarCambio' | translate }}
   </button>
 </div>

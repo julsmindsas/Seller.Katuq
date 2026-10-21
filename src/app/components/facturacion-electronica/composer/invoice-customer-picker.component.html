@@ -1,30 +1,30 @@
 <ng-container *ngIf="!customer">
   <div class="customer-search">
-    <label for="invoice-customer-search" class="field-label">Buscar cliente registrado</label>
+    <label for="invoice-customer-search" class="field-label">{{ 'facturacionElectronica.invoiceCustomerPicker.buscarClienteRegistrado' | translate }}</label>
     <div class="customer-search__row">
       <div class="search-field" [class.is-active]="search">
         <i class="pi pi-search"></i>
-        <input id="invoice-customer-search" type="search" [(ngModel)]="search" [ngModelOptions]="{standalone:true}" [disabled]="disabled || loading" placeholder="Nombre, NIT, cédula o correo" (keydown.enter)="$event.preventDefault(); find()">
-        <button type="button" class="btn btn-soft btn-sm" [disabled]="disabled || loading" (click)="find()">Buscar</button>
+        <input id="invoice-customer-search" type="search" [(ngModel)]="search" [ngModelOptions]="{standalone:true}" [disabled]="disabled || loading" [placeholder]="'facturacionElectronica.invoiceCustomerPicker.nombreNitCedulaOCorreo' | translate" (keydown.enter)="$event.preventDefault(); find()">
+        <button type="button" class="btn btn-soft btn-sm" [disabled]="disabled || loading" (click)="find()">{{ 'comun.buscar' | translate }}</button>
       </div>
-      <button type="button" class="btn btn-outline-primary" [disabled]="disabled || loading || creating" (click)="createCustomer()"><i class="pi pi-user-plus"></i> Crear cliente</button>
+      <button type="button" class="btn btn-outline-primary" [disabled]="disabled || loading || creating" (click)="createCustomer()"><i class="pi pi-user-plus"></i> {{ 'facturacionElectronica.invoiceCustomerPicker.crearCliente' | translate }}</button>
     </div>
   </div>
-  <p role="status" class="field-hint" *ngIf="loading"><i class="pi pi-spin pi-spinner"></i> Consultando la ficha actual…</p>
+  <p role="status" class="field-hint" *ngIf="loading"><i class="pi pi-spin pi-spinner"></i> {{ 'facturacionElectronica.invoiceCustomerPicker.consultandoLaFichaActual' | translate }}</p>
   <p role="alert" class="field-error" *ngIf="error">{{ error }}</p>
   <div class="customer-results" *ngIf="results.length">
     <button type="button" class="customer-result" *ngFor="let item of results" [disabled]="disabled" (click)="choose(item)">
       <span class="customer-avatar">{{ (item.searchName || item.nombres_completos || '?').charAt(0).toUpperCase() }}</span>
       <span class="customer-result__copy">
         <strong>{{ item.searchName || item.nombres_completos }}<ng-container *ngIf="!item.searchName"> {{ item.apellidos_completos }}</ng-container></strong>
-        <small>{{ item.searchDocument || item.documento || 'Sin documento' }} · {{ item.searchEmail || item.correo_electronico_comprador || 'sin correo' }}</small>
-        <small *ngIf="item.searchOwner">Datos de facturación guardados en la ficha de {{ item.searchOwner }}</small>
+        <small>{{ item.searchDocument || item.documento || ('facturacionElectronica.invoiceCustomerPicker.sinDocumento' | translate) }} · {{ item.searchEmail || item.correo_electronico_comprador || ('facturacionElectronica.invoiceCustomerPicker.sinCorreo' | translate) }}</small>
+        <small *ngIf="item.searchOwner">{{ 'facturacionElectronica.invoiceCustomerPicker.datosDeFacturacionGuardadosEn' | translate:{searchOwner: item.searchOwner} }}</small>
       </span>
-      <span class="composer-chip composer-chip--warn" *ngIf="!(item.searchEmail || item.correo_electronico_comprador)">Falta correo</span>
+      <span class="composer-chip composer-chip--warn" *ngIf="!(item.searchEmail || item.correo_electronico_comprador)">{{ 'facturacionElectronica.invoiceCustomerPicker.faltaCorreo' | translate }}</span>
     </button>
   </div>
-  <p class="field-hint" *ngIf="searched && !loading && !error && !results.length">No encontramos clientes. Pulsa Crear cliente para registrarlo sin salir de aquí.</p>
-  <p class="field-hint field-hint--icon" *ngIf="!searched && !loading"><i class="pi pi-info-circle"></i> Si al cliente le faltan datos fiscales te indicamos cuáles completar antes de emitir.</p>
+  <p class="field-hint" *ngIf="searched && !loading && !error && !results.length">{{ 'facturacionElectronica.invoiceCustomerPicker.noEncontramosClientesPulsaCrear' | translate }}</p>
+  <p class="field-hint field-hint--icon" *ngIf="!searched && !loading"><i class="pi pi-info-circle"></i> {{ 'facturacionElectronica.invoiceCustomerPicker.siAlClienteLeFaltan' | translate }}</p>
 </ng-container>
 
 <div *ngIf="customer">
@@ -33,29 +33,29 @@
     <div class="registered-customer__copy">
       <div class="registered-customer__name">
         <strong>{{ customer.fiscal.name || customer.name }}</strong>
-        <span class="composer-chip composer-chip--ready" *ngIf="!missingFields.length && !loading"><i class="pi pi-check"></i> Datos OK</span>
-        <span class="composer-chip composer-chip--warn" *ngIf="missingFields.length && !loading"><i class="pi pi-exclamation-triangle"></i> Faltan datos</span>
-        <span class="composer-chip" *ngIf="loading"><i class="pi pi-spin pi-spinner"></i> Consultando…</span>
+        <span class="composer-chip composer-chip--ready" *ngIf="!missingFields.length && !loading"><i class="pi pi-check"></i> {{ 'facturacionElectronica.invoiceCustomerPicker.datosOk' | translate }}</span>
+        <span class="composer-chip composer-chip--warn" *ngIf="missingFields.length && !loading"><i class="pi pi-exclamation-triangle"></i> {{ 'facturacionElectronica.invoiceCustomerPicker.faltanDatos' | translate }}</span>
+        <span class="composer-chip" *ngIf="loading"><i class="pi pi-spin pi-spinner"></i> {{ 'facturacionElectronica.invoiceCustomerPicker.consultando' | translate }}</span>
       </div>
       <span>{{ customer.fiscal.documentType }} {{ customer.fiscal.documentNumber }}<ng-container *ngIf="customer.fiscal.email"> · {{ customer.fiscal.email }}</ng-container></span>
       <small *ngIf="customer.fiscal.address && customer.fiscal.municipalityCode">{{ customer.fiscal.address }} · {{ customer.fiscal.city }} {{ customer.fiscal.department }}</small>
     </div>
-    <button type="button" class="btn btn-outline-primary btn-sm" (click)="reset()" [disabled]="disabled || loading">Cambiar</button>
+    <button type="button" class="btn btn-outline-primary btn-sm" (click)="reset()" [disabled]="disabled || loading">{{ 'facturacionElectronica.invoiceCustomerPicker.cambiar' | translate }}</button>
   </div>
 
   <div class="customer-grid" *ngIf="customer.billingProfiles.length > 1 || customer.addresses.length > 1">
-    <label *ngIf="customer.billingProfiles.length > 1"><span class="field-label">Datos fiscales</span><select class="form-select" [(ngModel)]="billingProfile" [ngModelOptions]="{standalone:true}" (change)="refresh()" [disabled]="disabled || loading"><option *ngFor="let option of customer.billingProfiles" [ngValue]="option.index">{{ option.label }}</option></select></label>
-    <label *ngIf="customer.addresses.length > 1"><span class="field-label">Dirección guardada</span><select class="form-select" [(ngModel)]="addressIndex" [ngModelOptions]="{standalone:true}" (change)="refresh()" [disabled]="disabled || loading"><option [ngValue]="undefined">Selecciona una dirección</option><option *ngFor="let option of customer.addresses" [ngValue]="option.index">{{ option.label }}</option></select></label>
+    <label *ngIf="customer.billingProfiles.length > 1"><span class="field-label">{{ 'facturacionElectronica.invoiceCustomerPicker.datosFiscales' | translate }}</span><select class="form-select" [(ngModel)]="billingProfile" [ngModelOptions]="{standalone:true}" (change)="refresh()" [disabled]="disabled || loading"><option *ngFor="let option of customer.billingProfiles" [ngValue]="option.index">{{ option.label }}</option></select></label>
+    <label *ngIf="customer.addresses.length > 1"><span class="field-label">{{ 'facturacionElectronica.invoiceCustomerPicker.direccionGuardada' | translate }}</span><select class="form-select" [(ngModel)]="addressIndex" [ngModelOptions]="{standalone:true}" (change)="refresh()" [disabled]="disabled || loading"><option [ngValue]="undefined">{{ 'facturacionElectronica.invoiceCustomerPicker.seleccionaUnaDireccion' | translate }}</option><option *ngFor="let option of customer.addresses" [ngValue]="option.index">{{ option.label }}</option></select></label>
   </div>
 
-  <p class="delivery-note" *ngIf="customer.fiscal.email && !loading"><i class="pi pi-envelope"></i> La factura llegará a <b>{{ customer.fiscal.email }}</b></p>
+  <p class="delivery-note" *ngIf="customer.fiscal.email && !loading"><i class="pi pi-envelope"></i> {{ 'facturacionElectronica.invoiceComposer.laFacturaLlegaraA' | translate }} <b>{{ customer.fiscal.email }}</b></p>
   <p role="alert" class="field-error" *ngIf="error">{{ error }}</p>
   <div class="composer-message composer-message--error" *ngIf="missingFields.length">
-    <strong>Para facturar, actualiza: {{ missingFields.join(', ') }}.</strong>
-    <p>Los datos deben quedar guardados en la ficha del cliente. Si el correo falta, la DIAN rechaza el documento.</p>
+    <strong>{{ 'facturacionElectronica.invoiceCustomerPicker.paraFacturarActualiza' | translate:{join: (missingFields.join(', '))} }}</strong>
+    <p>{{ 'facturacionElectronica.invoiceCustomerPicker.losDatosDebenQuedarGuardados' | translate }}</p>
     <div class="customer-actions">
-      <a class="btn btn-light btn-sm" routerLink="/ventas/clientes" [queryParams]="{invoiceCustomer:customer.fiscal.documentNumber || customer.documentNumber}" target="_blank" rel="noopener"><i class="pi pi-external-link"></i> Actualizar ficha completa</a>
-      <button type="button" class="btn btn-outline-primary btn-sm" (click)="refresh()" [disabled]="disabled || loading"><i class="pi pi-refresh"></i> Ya actualicé: volver a consultar</button>
+      <a class="btn btn-light btn-sm" routerLink="/ventas/clientes" [queryParams]="{invoiceCustomer:customer.fiscal.documentNumber || customer.documentNumber}" target="_blank" rel="noopener"><i class="pi pi-external-link"></i> {{ 'facturacionElectronica.invoiceCustomerPicker.actualizarFichaCompleta' | translate }}</a>
+      <button type="button" class="btn btn-outline-primary btn-sm" (click)="refresh()" [disabled]="disabled || loading"><i class="pi pi-refresh"></i> {{ 'facturacionElectronica.invoiceCustomerPicker.yaActualiceVolverAConsultar' | translate }}</button>
     </div>
   </div>
 </div>

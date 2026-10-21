@@ -1,102 +1,100 @@
 <div class="modal-header">
-  <h5 class="modal-title"><i class="pi pi-search me-2"></i>Revisar pago — Pedido {{ pedido?.nroPedido }}</h5>
-  <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+  <h5 class="modal-title"><i class="pi pi-search me-2"></i>{{ 'tesoreria.revisarPago.revisarPagoPedido' | translate:{nroPedido: pedido?.nroPedido} }}</h5>
+  <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="activeModal.dismiss()"></button>
 </div>
 
 <div class="modal-body">
 
   <!-- Banner de duplicado (aiFlag = duplicate) -->
   <div class="tk-alert-danger mb-3" *ngIf="esDuplicado">
-    <div class="fw-bold mb-1"><i class="pi pi-exclamation-triangle me-1"></i>Posible comprobante duplicado</div>
+    <div class="fw-bold mb-1"><i class="pi pi-exclamation-triangle me-1"></i>{{ 'tesoreria.revisarPago.posibleComprobanteDuplicado' | translate }}</div>
     <div *ngIf="aiDetails">
       <div *ngIf="aiDetails?.detalle">{{ aiDetails?.detalle }}</div>
       <div *ngIf="aiDetails?.pedidosInvolucrados?.length" class="mt-1">
-        <strong>Pedidos involucrados:</strong> {{ aiDetails?.pedidosInvolucrados?.join(', ') }}
+        <strong>{{ 'tesoreria.revisarPago.pedidosInvolucrados' | translate }}</strong> {{ aiDetails?.pedidosInvolucrados?.join(', ') }}
       </div>
-      <div *ngIf="aiDetails?.tipo" class="mt-1"><strong>Tipo:</strong> {{ aiDetails?.tipo }}</div>
+      <div *ngIf="aiDetails?.tipo" class="mt-1"><strong>{{ 'tesoreria.revisarPago.tipo' | translate }}</strong> {{ aiDetails?.tipo }}</div>
     </div>
   </div>
 
   <!-- Datos del pago -->
   <div class="tk-pago-grid mb-3">
-    <div class="tk-pago-item"><span class="tk-pago-label">Forma de pago</span><span class="tk-pago-value">{{ pago?.formaPago || '—' }}</span></div>
-    <div class="tk-pago-item"><span class="tk-pago-label">Referencia</span><span class="tk-pago-value">{{ pago?.numeroComprobante || '—' }}</span></div>
-    <div class="tk-pago-item"><span class="tk-pago-label">Fecha</span><span class="tk-pago-value">{{ (pago?.fecha || pago?.fechaTransaccion) | date:'dd/MM/yyyy' }}</span></div>
-    <div class="tk-pago-item"><span class="tk-pago-label">Valor de este pago</span><span class="tk-pago-value tk-money">{{ estePago | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
-    <div class="tk-pago-item"><span class="tk-pago-label">Subido por</span><span class="tk-pago-value">{{ pago?.usuarioRegistro || '—' }}</span></div>
+    <div class="tk-pago-item"><span class="tk-pago-label">{{ 'tesoreria.registrarPago.formaDePago' | translate }}</span><span class="tk-pago-value">{{ pago?.formaPago || '—' }}</span></div>
+    <div class="tk-pago-item"><span class="tk-pago-label">{{ 'tesoreria.historialPagos.referencia' | translate }}</span><span class="tk-pago-value">{{ pago?.numeroComprobante || '—' }}</span></div>
+    <div class="tk-pago-item"><span class="tk-pago-label">{{ 'tesoreria.historialPagos.fecha' | translate }}</span><span class="tk-pago-value">{{ (pago?.fecha || pago?.fechaTransaccion) | date:'dd/MM/yyyy' }}</span></div>
+    <div class="tk-pago-item"><span class="tk-pago-label">{{ 'tesoreria.revisarPago.valorDeEstePago' | translate }}</span><span class="tk-pago-value tk-money">{{ estePago | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+    <div class="tk-pago-item"><span class="tk-pago-label">{{ 'tesoreria.historialPagos.subidoPor' | translate }}</span><span class="tk-pago-value">{{ pago?.usuarioRegistro || '—' }}</span></div>
     <div class="tk-pago-item tk-pago-file">
-      <span class="tk-pago-label">Comprobante</span>
+      <span class="tk-pago-label">{{ 'tesoreria.revisarPago.comprobante' | translate }}</span>
       <button type="button" class="btn btn-sm btn-outline-secondary tk-btn-sm"
               *ngIf="pago?.archivo || pago?.archivoUrl; else sinArchivo"
               (click)="verComprobante()">
-        <i class="pi pi-external-link"></i> Ver comprobante
+        <i class="pi pi-external-link"></i> {{ 'tesoreria.historialPagos.verComprobante' | translate }}
       </button>
-      <ng-template #sinArchivo><span class="tk-pago-value text-muted">Sin archivo</span></ng-template>
+      <ng-template #sinArchivo><span class="tk-pago-value text-muted">{{ 'tesoreria.revisarPago.sinArchivo' | translate }}</span></ng-template>
     </div>
   </div>
 
   <!-- Notas del vendedor (ticket 1140): la nota que escribió quien asentó el pago en Pedidos
        llegaba a Firestore pero Tesorería nunca la mostraba, y es clave para aprobar o rechazar. -->
   <div class="tk-notas-vendedor mb-3" *ngIf="pago?.notas?.trim()">
-    <span class="tk-pago-label"><i class="pi pi-comment me-1"></i>Notas de quien registró el pago</span>
+    <span class="tk-pago-label"><i class="pi pi-comment me-1"></i>{{ 'tesoreria.revisarPago.notasDeQuienRegistroEl' | translate }}</span>
     <p class="tk-notas-texto mb-0">{{ pago.notas }}</p>
   </div>
 
   <!-- Resumen de saldo -->
   <div class="tk-resumen mb-3">
-    <div class="tk-resumen-col"><span class="tk-resumen-label">Total del pedido</span><span class="tk-resumen-num">{{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
-    <div class="tk-resumen-col"><span class="tk-resumen-label">Ya aprobado</span><span class="tk-resumen-num">{{ yaAprobado | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
-    <div class="tk-resumen-col tk-resumen-hl"><span class="tk-resumen-label">Este pago</span><span class="tk-resumen-num">{{ estePago | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
-    <div class="tk-resumen-col" *ngIf="!excedente"><span class="tk-resumen-label">Quedaría faltando</span><span class="tk-resumen-num" [class.text-danger]="quedariaFaltando > 0">{{ quedariaFaltando | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
-    <div class="tk-resumen-col" *ngIf="excedente"><span class="tk-resumen-label">Excede el total</span><span class="tk-resumen-num text-danger">{{ excedente | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+    <div class="tk-resumen-col"><span class="tk-resumen-label">{{ 'tesoreria.revisarPago.totalDelPedido' | translate }}</span><span class="tk-resumen-num">{{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+    <div class="tk-resumen-col"><span class="tk-resumen-label">{{ 'tesoreria.revisarPago.yaAprobado' | translate }}</span><span class="tk-resumen-num">{{ yaAprobado | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+    <div class="tk-resumen-col tk-resumen-hl"><span class="tk-resumen-label">{{ 'tesoreria.revisarPago.estePago' | translate }}</span><span class="tk-resumen-num">{{ estePago | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+    <div class="tk-resumen-col" *ngIf="!excedente"><span class="tk-resumen-label">{{ 'tesoreria.revisarPago.quedariaFaltando' | translate }}</span><span class="tk-resumen-num" [class.text-danger]="quedariaFaltando > 0">{{ quedariaFaltando | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+    <div class="tk-resumen-col" *ngIf="excedente"><span class="tk-resumen-label">{{ 'tesoreria.revisarPago.excedeElTotal' | translate }}</span><span class="tk-resumen-num text-danger">{{ excedente | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
   </div>
 
   <!-- Ticket 1218: este pago deja el pedido pagado por encima de su total -->
   <div class="tk-alert-warning mb-3" *ngIf="excedente">
     <i class="pi pi-exclamation-triangle me-1"></i>
-    Con este pago el pedido quedaría pagado por <strong>{{ (yaAprobado + estePago) | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>,
-    <strong>{{ excedente | currency:'COP':'symbol-narrow':'1.0-0' }}</strong> más que su total. Revisa que no sea un pago repetido
-    o un valor mal escrito antes de aprobarlo.
+    {{ 'tesoreria.revisarPago.conEstePagoElPedido' | translate }} <strong>{{ (yaAprobado + estePago) | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>,
+    <strong>{{ excedente | currency:'COP':'symbol-narrow':'1.0-0' }}</strong> {{ 'tesoreria.revisarPago.masQueSuTotalRevisa' | translate }}
   </div>
 
   <!-- Aviso de pago parcial -->
   <div class="tk-alert-warning mb-3" *ngIf="esParcial">
     <i class="pi pi-info-circle me-1"></i>
-    Si apruebas, el pedido quedará <strong>Pre-aprobado</strong> con un saldo pendiente de
+    {{ 'tesoreria.revisarPago.siApruebasElPedidoQuedara' | translate }} <strong>{{ 'tesoreria.revisarPago.preAprobado' | translate }}</strong> {{ 'tesoreria.revisarPago.conUnSaldoPendienteDe' | translate }}
     <strong>{{ quedariaFaltando | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>.
   </div>
 
   <!-- Nota fija anti-fraude -->
   <div class="tk-note mb-3">
     <i class="pi pi-shield me-1"></i>
-    La alerta <strong>no aprueba ni rechaza</strong>: verifica el dinero directamente en tu banco antes de decidir.
-    Para Nequi usa el <strong>QR Verificador</strong> (comprueba el pago real en ~30 segundos, sin iniciar sesión).
+    {{ 'tesoreria.revisarPago.laAlerta' | translate }} <strong>{{ 'tesoreria.revisarPago.noApruebaNiRechaza' | translate }}</strong>{{ 'tesoreria.revisarPago.verificaElDineroDirectamenteEn' | translate }} <strong>{{ 'tesoreria.revisarPago.qrVerificador' | translate }}</strong> {{ 'tesoreria.revisarPago.compruebaElPagoRealEn' | translate }}
   </div>
 
   <!-- Formulario de rechazo (motivo obligatorio) -->
   <div class="tk-reject-box" *ngIf="showRejectForm">
-    <label class="form-label fw-semibold" for="tk-motivo-rechazo">Motivo del rechazo <span class="text-danger">*</span></label>
+    <label class="form-label fw-semibold" for="tk-motivo-rechazo">{{ 'tesoreria.revisarPago.motivoDelRechazo' | translate }} <span class="text-danger">*</span></label>
     <textarea id="tk-motivo-rechazo" class="form-control" rows="3" [(ngModel)]="motivoRechazo"
-              placeholder="Ej: el dinero no aparece en la cuenta / comprobante alterado"></textarea>
+              [placeholder]="'tesoreria.revisarPago.ejElDineroNoAparece' | translate"></textarea>
   </div>
 </div>
 
 <div class="modal-footer">
-  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()" [disabled]="submitting">Cerrar</button>
+  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()" [disabled]="submitting">{{ 'comun.cerrar' | translate }}</button>
 
   <ng-container *ngIf="!showRejectForm">
     <button type="button" class="btn btn-outline-danger" (click)="mostrarRechazo()" [disabled]="submitting">
-      <i class="pi pi-times-circle me-1"></i> Rechazar
+      <i class="pi pi-times-circle me-1"></i> {{ 'tesoreria.revisarPago.rechazar' | translate }}
     </button>
     <button type="button" class="btn btn-success" (click)="aprobar()" [disabled]="submitting">
-      <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check-circle'"></i> Aprobar
+      <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check-circle'"></i> {{ 'tesoreria.revisarPago.aprobar' | translate }}
     </button>
   </ng-container>
 
   <ng-container *ngIf="showRejectForm">
-    <button type="button" class="btn btn-outline-secondary" (click)="showRejectForm = false" [disabled]="submitting">Volver</button>
+    <button type="button" class="btn btn-outline-secondary" (click)="showRejectForm = false" [disabled]="submitting">{{ 'comun.volver' | translate }}</button>
     <button type="button" class="btn btn-danger" (click)="confirmarRechazo()" [disabled]="submitting || !motivoRechazo.trim()">
-      <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-times-circle'"></i> Confirmar rechazo
+      <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-times-circle'"></i> {{ 'tesoreria.revisarPago.confirmarRechazo' | translate }}
     </button>
   </ng-container>
 </div>
