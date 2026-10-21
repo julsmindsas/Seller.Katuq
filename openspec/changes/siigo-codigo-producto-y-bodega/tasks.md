@@ -72,9 +72,34 @@ revisado.
       y selector de categoría SIIGO. Guarda
       `accountsMapping.accountGroupByCategory`. Diseño `cfg-*` (D-400).
       Build de producción sin errores.
-- [ ] 1b.2 Vista previa SIIGO: pintar `enSiigo` y `codigoSiigo` en cada línea
+- [x] 1b.2 Vista previa SIIGO: pintar `enSiigo` y `codigoSiigo` en cada línea
       (bloque 1229-B03). `error` se ve como «no se pudo revisar»; una línea sin
       `enSiigo` no se revisó. Los `avisos` ya se pintan hoy.
+      - `ventas/list/list.component.html` (celda del producto de `fvp-tabla`) y
+        `.scss`: solo cuando la línea trae `enSiigo`, debajo de la descripción
+        va el código del producto (`l.codigo`) en texto muted y un chip:
+        `existente` «En SIIGO», `equivalente` «En SIIGO como {codigoSiigo}»
+        (éxito; así la línea muestra A → B y el código de SIIGO va en su propio
+        span sin el UPPERCASE del chip, tal cual existe en SIIGO); `nuevo`
+        «Se creará en SIIGO» y `ambiguo` «Se creará: varios posibles en SIIGO»
+        (alerta); `error` «No se pudo revisar en SIIGO» (pizarra). Sin `enSiigo`
+        (bandera apagada, backend viejo u otro proveedor) la celda queda igual
+        que hoy, como pide la spec EARS. Solo presentación: sin cambios de TS,
+        columnas, eventos ni servicios.
+      - Decisión: con la bandera encendida, una línea que quedó sin revisar
+        (tope de 20 códigos, plazo de 15 s o corte tras el primer error) no
+        lleva chip; lo dice el aviso «Se revisaron en SIIGO k de N productos.».
+      - Diseño Katuq: clases `fv-*` sin «p-», chip radio 20px con par semántico
+        y color/tamaño propios, código con `letter-spacing: normal`; gradientes
+        y primarios prohibidos de la pantalla sin subir (scss 3/0, html 0/0).
+        Excepción de color: el texto del chip de alerta va en `#8a5300` (el de
+        `.fvp-aviso`), no en `#D9820A`: sobre `#FFF1DF` da 5.7:1 contra 2.6:1.
+        Se registra en el contrato con 3.3.
+      - Pruebas: `node --test tests/ventas/vista-previa-siigo.test.js` (14):
+        parsea la celda con `@angular/compiler` y la pinta con cada respuesta, y
+        compila el SCSS con sass. `tsc --noEmit -p tsconfig.app.json` sin
+        errores. **Pendiente:** revisión en navegador a 1440 y 390 px (no hay
+        navegador en el servidor) y la verificación real de 3.2 después de 2.5.
 
 Hecho el 2026-10-19: backend 4030ec8c y 91c5f916; front 6d7d00a1 y 55059eab.
 22 pruebas (`test:codigo-siigo`) y las pruebas SIIGO existentes en verde.
@@ -118,7 +143,9 @@ servicios.
       (`pm2 reload katuq-api`) y release del front. Requiere salir del modo automático.
 - [ ] 3.2 Vista previa de una factura de Bombas con un producto de formato
       largo: debe mostrar el código SIIGO corto y "existente", no "se creará".
-- [ ] 3.3 Actualizar D-504 en `specs/CONTRACT.md` y cerrar el ticket 1229 con
+- [ ] 3.3 Actualizar D-504 en `specs/CONTRACT.md` (incluida la excepción de
+      color del chip de alerta de 1b.2, `#8a5300`, y la revisión visual a 1440
+      y 390 px de la vista previa) y cerrar el ticket 1229 con
       la nota para el comercio: bodegas conectadas, qué falta de Medellín y el
       Excel de productos.
 

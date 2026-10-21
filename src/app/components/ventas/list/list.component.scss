@@ -6755,6 +6755,53 @@ $pd-chip-border: #e9e7f3;
     th { font-size: 11px; font-weight: 700; color: $pd-muted; text-transform: uppercase; border-color: $pd-line; }
     td { border-color: $pd-line; vertical-align: top; }
     .fvp-producto { font-weight: 600; line-height: 1.25; }
+
+    // Ticket 1229 (D-504, 1b.2): código SIIGO y estado del producto en cada línea.
+    // Clases sin la secuencia "p-" (regla global [class*="p-"]); el chip es un span
+    // con *ngSwitchCase, así que lleva color y tamaño propios (span.ng-star-inserted).
+    .fv-siigo-fila {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px 6px;
+      margin: 2px 0 1px;
+      min-width: 0;
+    }
+    .fv-codigo {
+      color: $pd-muted;
+      font-size: 11.5px;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      letter-spacing: normal;
+      overflow-wrap: anywhere;
+    }
+    .fv-siigo {
+      display: inline-block;
+      max-width: 100%;
+      padding: 1px 8px;
+      border-radius: 20px;
+      font-size: 10.5px;
+      font-weight: 700;
+      line-height: 1.5;
+      letter-spacing: .3px;
+      text-transform: uppercase;
+      overflow-wrap: anywhere;
+      // Pares semánticos del design system. Excepción declarada (1b.2): el texto
+      // de alerta va en #8a5300, el tono que ya usa .fvp-aviso, porque #D9820A
+      // sobre #FFF1DF da 2.6:1 y #8a5300 da 5.7:1 (WCAG AA a 10.5px).
+      &--ok { background: #E6F7EE; color: #1E874B; }
+      &--nuevo { background: #FFF1DF; color: #8a5300; }
+      &--sin { background: #eef0f3; color: #5A6B78; }
+    }
+    // El código SIIGO dentro del chip va tal cual existe en SIIGO (la búsqueda es
+    // exacta): sin el UPPERCASE del chip. Es raíz de un *ngIf, así que lleva
+    // color y tamaño propios (span.ng-star-inserted).
+    .fv-siigo-cod {
+      color: inherit;
+      font-size: inherit;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      text-transform: none;
+      letter-spacing: normal;
+    }
   }
 
   .fvp-totales {
