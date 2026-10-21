@@ -183,6 +183,8 @@ export class IntegrationUIHelperService {
     magento: 'fa-shopping-cart',
     prestashop: 'fa-store',
     wompi: 'fa-credit-card',
+    addi: 'fa-credit-card',
+    sistecredito: 'fa-credit-card',
     epayco: 'fa-credit-card',
     paypal: 'fa-paypal',
     stripe: 'fa-stripe',

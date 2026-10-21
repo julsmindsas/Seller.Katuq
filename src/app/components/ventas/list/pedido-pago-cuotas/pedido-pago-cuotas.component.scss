@@ -1,0 +1,163 @@
+// Pago a cuotas del pedido (D-516) — tema canónico (openspec/specs/design-system):
+// plano, superficies lila, acento #5F3FE0, labels UPPERCASE muted, estados en par
+// color fuerte / fondo suave. Cada span lleva color y tamaño propios: la regla global
+// vieja de `span.ng-star-inserted` los pinta de azul. Ninguna clase lleva "p-".
+
+$accent: #5F3FE0;
+$ink: #211F3A;
+$muted: #8f8bab;
+$chip-border: #e9e7f3;
+$surface: #faf9fe;
+$line: #ececf4;
+$info: #1E6FD9;
+$mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+$ok: #1E874B;
+$ok-soft: #E6F7EE;
+$alerta: #D9820A;
+$alerta-soft: #FFF1DF;
+$error: #D64545;
+$error-soft: #FDECEC;
+$pizarra: #5A6B78;
+$pizarra-soft: #eef0f3;
+
+:host { display: block; }
+
+.cuotas-tarjeta {
+  margin: 10px 0;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid $chip-border;
+  background: $surface;
+}
+
+.cuotas-tarjeta__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cuotas-tarjeta__ico {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 11px;
+  background: rgba(95, 63, 224, .12);
+  color: $accent;
+
+  i { font-size: 14px; color: $accent; }
+}
+
+.cuotas-tarjeta__titulos { display: flex; flex-direction: column; min-width: 0; }
+
+.cuotas-tarjeta__label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: $muted;
+}
+
+.cuotas-tarjeta__sub {
+  font-size: 12.5px;
+  color: $ink;
+
+  b { color: $ink; font-weight: 700; }
+}
+
+.cuotas-tarjeta__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cuotas-intento {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: 11px;
+  border: 1px solid $line;
+  background: #fff;
+}
+
+.cuotas-intento__ref {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: $mono;
+  font-size: 12px;
+  font-weight: 600;
+  color: $info;
+}
+
+.cuotas-estado {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 9px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  line-height: 1.6;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: default;
+
+  &.cuotas-estado--ok { background: $ok-soft; color: $ok; }
+  &.cuotas-estado--espera { background: $alerta-soft; color: $alerta; }
+  &.cuotas-estado--mal { background: $error-soft; color: $error; }
+  &.cuotas-estado--neutro { background: $pizarra-soft; color: $pizarra; }
+}
+
+.cuotas-intento__fecha {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: $muted;
+  font-variant-numeric: tabular-nums;
+}
+
+.cuotas-intento__monto {
+  flex: 1 0 100%;
+  font-size: 12px;
+  font-weight: 800;
+  color: $ink;
+}
+
+.cuotas-tarjeta__vacio {
+  display: block;
+  font-size: 12.5px;
+  color: $muted;
+}
+
+.cuotas-tarjeta__nota {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 9px 11px;
+  border-radius: 11px;
+  border: 1px solid #ddd3fb;
+  background: #efe9ff;
+  font-size: 12.5px;
+  line-height: 1.45;
+  letter-spacing: normal;
+  color: $ink;
+
+  i { flex: 0 0 auto; margin-top: 2px; font-size: 13px; color: $accent; }
+}
+
+.cuotas-tarjeta__notatxt {
+  font-size: 12.5px;
+  color: $ink;
+}

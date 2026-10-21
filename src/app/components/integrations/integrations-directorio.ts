@@ -14,6 +14,7 @@
 import { IntegrationCategory } from './integrations.service';
 import { MCP_GUIDES, McpGuideId } from './mcp-guides';
 import { FUTURE_MESSAGE_CHANNELS } from '../../shared/data/future-message-channels';
+import { CompanyFeatureFlag } from '../../shared/services/company-features.service';
 
 export type EstadoDirectorio = 'conectable' | 'pronto' | 'guia';
 
@@ -44,6 +45,10 @@ export interface EntradaDirectorio {
   logo?: string;
   /** Instructivo local: no representa una conexión guardada. */
   guideId?: McpGuideId;
+  /** Solo se muestra con esta bandera encendida (D-385). */
+  bandera?: CompanyFeatureFlag;
+  /** Con esta tarjeta visible se esconden esas otras: se cuentan una sola vez (D-500). */
+  reemplaza?: string[];
 }
 
 export interface GrupoDirectorio {
@@ -96,6 +101,10 @@ export const DIRECTORIO_INTEGRACIONES: GrupoDirectorio[] = [
     icono: 'M2 5h20v14H2z M2 10h20 M6 15h4',
     entradas: [
       { id: 'wompi', nombre: 'Wompi', queHace: 'Cobra con tarjeta, PSE, Nequi y Bancolombia.', estado: 'conectable', categoria: C.PAYMENT, fuente: 'config', logo: L + 'wompi.svg' },
+      // D-516 (ticket 1233): pago a cuotas en la tienda en línea, con las credenciales del comercio.
+      // Sin logo a propósito: solo se usará si el kit de marca de cada proveedor lo permite.
+      { id: 'addi', nombre: 'Addi', queHace: 'Tus clientes pagan a cuotas con Addi en tu tienda en línea.', estado: 'conectable', categoria: C.PAYMENT, fuente: 'config', bandera: 'storeInstallmentPayments' },
+      { id: 'sistecredito', nombre: 'Sistecrédito', queHace: 'Tus clientes pagan a cuotas con Sistecrédito en tu tienda en línea.', estado: 'conectable', categoria: C.PAYMENT, fuente: 'config', bandera: 'storeInstallmentPayments' },
       { id: 'epayco', nombre: 'ePayco', queHace: 'Cobra con tarjeta, PSE y efectivo.', estado: 'pronto', categoria: C.PAYMENT, fuente: 'ninguna', logo: L + 'epayco.svg' },
       { id: 'mercadopago', nombre: 'Mercado Pago', queHace: 'Cobra con tu cuenta de Mercado Pago.', estado: 'pronto', categoria: C.PAYMENT, fuente: 'ninguna', logo: L + 'mercadopago.svg' },
     ],
@@ -159,3 +168,14 @@ export const DIRECTORIO_INTEGRACIONES: GrupoDirectorio[] = [
     ],
   },
 ];
+
+/**
+ * Entradas que se muestran de un grupo: las que no piden bandera o la tienen encendida, menos
+ * las que reemplaza una tarjeta visible. Con todas las banderas apagadas devuelve el grupo tal
+ * cual, así el directorio, los contadores y "Mis conexiones" quedan idénticos.
+ */
+export function entradasActivas(grupo: GrupoDirectorio, banderaEncendida: (f: CompanyFeatureFlag) => boolean): EntradaDirectorio[] {
+  const visibles = grupo.entradas.filter((e) => !e.bandera || banderaEncendida(e.bandera));
+  const ocultas = new Set(visibles.flatMap((e) => e.reemplaza || []));
+  return visibles.filter((e) => !ocultas.has(e.id));
+}

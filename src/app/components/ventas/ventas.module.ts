@@ -33,6 +33,7 @@ import { NgxStarRatingModule } from "ngx-star-rating";
 import { ListOrdersComponent } from "./list/list.component";
 import { Pedido3dComponent } from "./list/pedido-3d/pedido-3d.component";
 import { PedidoRepartoComponent } from "./list/pedido-reparto/pedido-reparto.component";
+import { PedidoPagoCuotasComponent } from "./list/pedido-pago-cuotas/pedido-pago-cuotas.component";
 import { TableModule } from "primeng/table";
 import { PedidoEntregaComponent } from "./entrega/pedido-entrega.component";
 import { PedidoFacturacionComponent } from "./facturacion/pedido-facturacion.component";
@@ -147,6 +148,7 @@ import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-im
   declarations: [
     Pedido3dComponent,
     PedidoRepartoComponent,
+    PedidoPagoCuotasComponent,
     PedidoFacturacionComponent,
     ClientesListaComponent,
     ClientesCorporativosComponent,

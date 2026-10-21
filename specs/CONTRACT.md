@@ -11375,3 +11375,59 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - El importador guardaba en `precio.precioUnitarioIva` el MONTO del IVA (la ficha mostraba 7983 %). Ahora `'19'` (porcentaje, como lo leen la ficha y orderCalculationService) y el monto en `valorIva`. CAFE ESCOBAR: 0 productos afectados.
   - `services/ecommerce/index.js` hacía `.bind` de funciones que ya no existen en el adapter: el módulo reventaba al cargarse y `POST /productos/delete` borraba en Katuq, nunca en la tienda, y respondía `{}` (punto 20). Ahora solo expone `syncProduct` y `syncInventoryByProduct`.
 - Comprobado en la tienda local: editar la talla M cambió solo esa variación (padre intacto); retirar stock llegó a la variación (5 → 0); borrar la talla S borró solo la variación #12. Pruebas: `tests/integrations/woocommerceImportadorBodegaIva.test.js` y `woocommerceVariantes.test.js`. Sin commit ni deploy.
+
+
+## D-516 (2026-10-20) — Pago a cuotas en la tienda en línea con Addi y Sistecrédito (ticket 1233, F2-41) — APROBADA (Daniel, 20-oct), COMMITEADA en ramas `feature/pago-cuotas-addi-sistecredito` (backend d954a833 y front), sin desplegar y con la bandera apagada
+
+- **Por qué:**
+  - En compras de ticket alto, pagar a cuotas decide la compra. El piloto Baudio lo pide en su diseño.
+  - La tienda solo conocía `linea`, `contraentrega` y `otra:<cd>`.
+  - La pasarela caía al Wompi de la plataforma, y todo el ciclo dependía del texto «Pago en línea».
+- **Decisiones** (`openspec/changes/pagos-a-cuotas-addi-sistecredito/`):
+  - **Credenciales:** cada comercio usa su convenio y sus credenciales.
+    - Se resuelven con `getStrictProvider` (`services/paymentGateway/credito/`), que **nunca** cae a la plataforma ni a otro proveedor.
+    - `PROVIDER_PRIORITY` (Wompi, ePayco) no cambia.
+  - **Forma de pago:** nueva familia `credito:addi|sistecredito`.
+    - El pedido nace por el camino de siempre (consecutivo, D-204, estado Pendiente) con `formaDePago` «Addi» / «Sistecrédito».
+    - Se revisan antes de crear el pedido: la bandera `storeInstallmentPayments`, el interruptor `tienda.pagoCuotas`, el proveedor conectado y el rango del proveedor.
+    - Se exigen cédula, nombre con apellido, correo y celular; no se acepta factura a empresa.
+  - **Intentos:** cada uno lleva una referencia única `CUO-<pedido>-<n>-<azar>`.
+    - Va en `pagoTienda.linkIds`, junto con el `_id` de la transacción en Sistecrédito, y en `pagoTienda.intentos[]`. El pedido se ubica como con Wompi.
+    - Un rechazo solo marca el intento: el pedido sigue Pendiente para reintentar.
+    - La aprobación pasa por `aplicarPagoDeTienda` (idempotente). Un intento terminado solo puede pasar a Aprobado.
+  - **Excepción al Art. X** (ninguno de los dos firma con HMAC), aprobada con controles:
+    - **Addi:** Basic Auth del comercio dueño (tiempo constante); deben coincidir intento, monto y moneda; responde 200 con el mismo JSON.
+    - **Sistecrédito:** el estado sale SOLO de `GetTransactionResponse` con las llaves del comercio, comparando `_id`, factura y valor; siempre responde 200.
+    - En ambos, el evento crudo va a `integrationRawEvents` sin `Authorization` y sin datos personales.
+  - **Reserva (amplía D-206):** Addi 150 minutos y Sistecrédito 60, contados desde el último intento. Wompi sigue en 60.
+    - Sistecrédito se consulta antes de anular.
+    - Un pago tardío revive el pedido, como hoy.
+  - **`/pagar`, `/gracias` y recordatorio:**
+    - `/pagar` reintenta con el mismo proveedor.
+    - `/gracias` concilia Sistecrédito.
+    - El recordatorio no aplica a estos pedidos.
+  - **Conciliación de Sistecrédito** en el cron de sitios.
+    - Interruptor en Firestore: `config/feature_flags.pagoCuotasConciliacion` (D-505).
+    - Sin lease: aplicar es idempotente.
+  - **Credenciales de pruebas:** solo en las empresas de `config/feature_flags.pagoCuotasEmpresasDePrueba`.
+  - **Vitrina:** etiqueta de texto en la ficha, el checkout y el pie. Sin logos ni cuota calculada.
+- **Fuentes:**
+  - **Addi:** OpenAPI oficial de staging (copia en la propuesta) y guía de integraciones a la medida.
+  - **Sistecrédito:** API Credinet Pay no pública, documentada a partir de integraciones de terceros. **Se revisa contra las guías G-ALI del convenio (tarea 0.3) antes de activarlo con un comercio.**
+- **Bandera** `storeInstallmentPayments`: dueño Daniel; se revisa el 2027-04-30 (Art. XII).
+- **Pruebas** (backend, `tests/pagoCuotas/`): 48 nuevas en verde (15 de proveedores, 25 de servicio y 8 de `crearPedido` real con el arnés).
+  - Golden del pedido de tienda: 20/20 idéntico.
+  - `tests/sitios`: 57/57, igual que la base.
+  - Censo de integraciones y catálogo de banderas actualizados.
+- **Pendiente:**
+  - convenio y credenciales de ambos proveedores (no hay convenio aún);
+  - aprobación de los diffs sensibles (`crearPedido`, vencimiento, `/pagar`) antes de unir a `backend-aws-security`;
+  - revisión en navegador a 1440 y 390 px;
+  - piloto;
+  - métricas en el tablero.
+- **Seller (front):**
+  - Tarjetas Addi y Sistecrédito en Integraciones (grupo Cobrar, detrás de la bandera, con «Probar conexión»).
+  - Interruptores en «Cómo te pagan» del editor de sitios, con avisos si falta conectar o si las credenciales son de pruebas.
+  - Bloque «Pago a cuotas» en el detalle de «Todos los pedidos».
+  - Build de producción sin errores. Gradientes y primarios prohibidos: 0 → 0.
+  - El front replica los campos `bandera` y `reemplaza` del directorio de D-500 (commit local de otra sesión, aún sin subir). Al unir puede quedar un conflicto trivial en `integrations-list.component.ts`.

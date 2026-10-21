@@ -463,6 +463,220 @@
           </div>
         </ng-container>
 
+        <!-- Addi y Sistecrédito: pago a cuotas en la tienda en línea (D-516, ticket 1233).
+             Mismo patrón que Wompi: las claves secretas se guardan cifradas y al editar
+             llegan vacías; dejarlas así conserva las guardadas. -->
+        <ng-container *ngIf="esPagoACuotas">
+          <div class="form-group">
+            <label id="cuotasEntornoRotulo">Ambiente <span class="field-required">*</span></label>
+            <div class="kx-radios" role="radiogroup" aria-labelledby="cuotasEntornoRotulo">
+              <label class="kx-radio" [class.is-on]="entornoCuotas === 'staging'">
+                <input type="radio" id="cuotasEntornoStaging" class="visually-hidden" formControlName="environment" value="staging">
+                <span class="kx-radio__p"><span></span></span>
+                <span class="kx-radio__txt">
+                  <strong>Pruebas</strong>
+                  <small>Credenciales de pruebas de {{ nombreProveedorCuotas }}</small>
+                </span>
+              </label>
+              <label class="kx-radio" [class.is-on]="entornoCuotas === 'production'">
+                <input type="radio" id="cuotasEntornoProduccion" class="visually-hidden" formControlName="environment" value="production">
+                <span class="kx-radio__p"><span></span></span>
+                <span class="kx-radio__txt">
+                  <strong>Producción</strong>
+                  <small>Ventas reales en tu tienda</small>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="integration-info-box">
+            <i class="fa fa-info-circle"></i>
+            <span>
+              El dinero de cada compra a cuotas va directo a tu cuenta con {{ nombreProveedorCuotas }}: Katuq no lo recibe.
+              {{ entornoCuotas === 'production'
+                ? 'En Producción solo funcionan las credenciales de producción de ' + nombreProveedorCuotas + '.'
+                : 'Las credenciales de pruebas solo funcionan en empresas de prueba: con ellas tu tienda real no ofrece el pago a cuotas.' }}
+            </span>
+          </div>
+        </ng-container>
+
+        <!-- Addi Fields -->
+        <ng-container *ngIf="selectedIntegrationType === 'addi'">
+          <div class="integration-info-box">
+            <i class="fa fa-info-circle"></i>
+            <span>Todo sale del <strong>portal de aliados de Addi</strong>, del mismo ambiente que elegiste arriba. La dirección a la que Addi avisa el resultado la pone Katuq sola: no tienes que copiarla.</span>
+            <a href="https://support.addi.com/custom-integrations" target="_blank" rel="noopener" class="learn-more">
+              <i class="fa fa-external-link"></i> Ver la guía de Addi
+            </a>
+          </div>
+
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label for="addiClientId">
+                <i class="fa fa-key"></i> Client ID
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-id-card prefix-icon"></i>
+                <input type="text" id="addiClientId" formControlName="clientId" autocomplete="off" spellcheck="false">
+              </div>
+              <div *ngIf="integrationForm.get('clientId')?.invalid && integrationForm.get('clientId')?.touched"
+                class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Pega el Client ID
+              </div>
+            </div>
+
+            <div class="field-col form-group">
+              <label for="addiClientSecret">
+                <i class="fa fa-lock"></i> Client Secret
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon password-field">
+                <i class="fa fa-key prefix-icon"></i>
+                <input type="password" id="addiClientSecret" formControlName="clientSecret" autocomplete="new-password"
+                  [placeholder]="editingIntegrationId ? 'Guardado · déjalo vacío para conservarlo' : ''">
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
+              </div>
+              <div *ngIf="integrationForm.get('clientSecret')?.invalid && integrationForm.get('clientSecret')?.touched"
+                class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Pega el Client Secret
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="addiAllySlug">
+              <i class="fa fa-store"></i> Ally slug
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-tag prefix-icon"></i>
+              <input type="text" id="addiAllySlug" formControlName="allySlug" placeholder="mi-tienda" autocomplete="off" spellcheck="false">
+            </div>
+            <div *ngIf="integrationForm.get('allySlug')?.invalid && integrationForm.get('allySlug')?.touched"
+              class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Escribe el ally slug tal como aparece en el portal: letras, números y guiones
+            </div>
+            <small class="form-text text-muted">El identificador de tu tienda en Addi. Con él Katuq consulta los montos mínimo y máximo que te permite Addi.</small>
+          </div>
+
+          <div class="kx-credhead">
+            <span class="kx-credhead__t">Credenciales de notificación</span>
+            <span class="kx-rulex"></span>
+          </div>
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label for="addiCallbackUser">
+                <i class="fa fa-user"></i> Usuario
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-user prefix-icon"></i>
+                <input type="text" id="addiCallbackUser" formControlName="callbackUser" autocomplete="off" spellcheck="false">
+              </div>
+              <div *ngIf="integrationForm.get('callbackUser')?.invalid && integrationForm.get('callbackUser')?.touched"
+                class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Pega el usuario de notificación
+              </div>
+              <small class="form-text text-muted">Addi lo usa para avisarnos si aprobó o rechazó el crédito.</small>
+            </div>
+
+            <div class="field-col form-group">
+              <label for="addiCallbackPassword">
+                <i class="fa fa-lock"></i> Contraseña
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon password-field">
+                <i class="fa fa-key prefix-icon"></i>
+                <input type="password" id="addiCallbackPassword" formControlName="callbackPassword" autocomplete="new-password"
+                  [placeholder]="editingIntegrationId ? 'Guardada · déjala vacía para conservarla' : ''">
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
+              </div>
+              <div *ngIf="integrationForm.get('callbackPassword')?.invalid && integrationForm.get('callbackPassword')?.touched"
+                class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Pega la contraseña de notificación
+              </div>
+              <small class="form-text text-muted">La de «Credenciales de notificación» del portal, no la de tu cuenta de Addi.</small>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Sistecrédito Fields -->
+        <ng-container *ngIf="selectedIntegrationType === 'sistecredito'">
+          <div class="integration-info-box">
+            <i class="fa fa-info-circle"></i>
+            <span>Sistecrédito te entrega estas llaves al firmar el <strong>convenio de aliado</strong>. Usa las del mismo ambiente que elegiste arriba.</span>
+          </div>
+
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label for="sistecreditoSubscriptionKey">
+                <i class="fa fa-lock"></i> Subscription Key
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon password-field">
+                <i class="fa fa-key prefix-icon"></i>
+                <input type="password" id="sistecreditoSubscriptionKey" formControlName="subscriptionKey" autocomplete="new-password"
+                  [placeholder]="editingIntegrationId ? 'Guardada · déjala vacía para conservarla' : ''">
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
+              </div>
+              <div *ngIf="integrationForm.get('subscriptionKey')?.invalid && integrationForm.get('subscriptionKey')?.touched"
+                class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Pega la Subscription Key
+              </div>
+            </div>
+
+            <div class="field-col form-group">
+              <label for="sistecreditoApplicationKey">
+                <i class="fa fa-key"></i> Application Key
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-id-card prefix-icon"></i>
+                <input type="text" id="sistecreditoApplicationKey" formControlName="applicationKey" autocomplete="off" spellcheck="false">
+              </div>
+              <div *ngIf="integrationForm.get('applicationKey')?.invalid && integrationForm.get('applicationKey')?.touched"
+                class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Pega la Application Key
+              </div>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label for="sistecreditoApplicationToken">
+                <i class="fa fa-lock"></i> Application Token
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon password-field">
+                <i class="fa fa-key prefix-icon"></i>
+                <input type="password" id="sistecreditoApplicationToken" formControlName="applicationToken" autocomplete="new-password"
+                  [placeholder]="editingIntegrationId ? 'Guardado · déjalo vacío para conservarlo' : ''">
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
+              </div>
+              <div *ngIf="integrationForm.get('applicationToken')?.invalid && integrationForm.get('applicationToken')?.touched"
+                class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Pega el Application Token
+              </div>
+            </div>
+
+            <div class="field-col form-group">
+              <label for="sistecreditoMinAmount">
+                <i class="fa fa-money"></i> Compra mínima (opcional)
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-hashtag prefix-icon"></i>
+                <input type="number" id="sistecreditoMinAmount" formControlName="minAmount" min="0" step="1000" inputmode="numeric" placeholder="0" autocomplete="off">
+              </div>
+              <div *ngIf="integrationForm.get('minAmount')?.invalid && integrationForm.get('minAmount')?.touched"
+                class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Escribe un valor en pesos, sin puntos
+              </div>
+              <small class="form-text text-muted">En pesos, el que pactaste en tu convenio. Con compras menores, la tienda muestra Sistecrédito deshabilitado. Vacío: sin mínimo propio.</small>
+            </div>
+          </div>
+        </ng-container>
+
         <!-- ePayco Fields -->
         <ng-container *ngIf="selectedIntegrationType === 'epayco'">
           <div class="alert alert-info d-flex align-items-start mb-4">

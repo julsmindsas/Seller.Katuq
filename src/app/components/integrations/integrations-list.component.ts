@@ -20,7 +20,9 @@ import {
   DIRECTORIO_INTEGRACIONES,
   EntradaDirectorio,
   GrupoDirectorio,
+  entradasActivas,
 } from "./integrations-directorio";
+import { CompanyFeaturesService } from "../../shared/services/company-features.service";
 import { of } from "rxjs";
 import { catchError } from "rxjs/operators";
 import {
@@ -101,6 +103,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     private router: Router,
     private whatsappConfig: WhatsappIntegrationConfigService,
     private metaInbox: MetaInboxService,
+    private features: CompanyFeaturesService,
   ) {}
 
   ngOnInit(): void {
@@ -892,6 +895,11 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   resumenWhatsapp: ResumenWhatsapp | null | undefined = undefined;
   conexionesMeta: MetaConexiones | null | undefined = undefined;
 
+  /** Entradas del grupo según las banderas (D-385) y las tarjetas que reemplazan a otras (D-500). */
+  entradasDe(grupo: GrupoDirectorio): EntradaDirectorio[] {
+    return entradasActivas(grupo, (f) => this.features.isEnabled(f));
+  }
+
   private readonly idsDirectorio = new Set(
     DIRECTORIO_INTEGRACIONES.flatMap((g) =>
       g.entradas.filter((e) => e.fuente === "config").map((e) => e.id),
@@ -1001,7 +1009,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
 
   entradasVisibles(grupo: GrupoDirectorio): EntradaDirectorio[] {
     const q = this.normalizar(this.busquedaDir);
-    return grupo.entradas
+    return this.entradasDe(grupo)
       .filter((e) => !q || this.normalizar(`${e.nombre} ${e.queHace}`).includes(q))
       .filter((e) => !this.soloMias || this.esConectada(this.estadoTarjeta(e)));
   }
@@ -1018,7 +1026,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
 
   get totalConectadas(): number {
     const enDirectorio = this.directorio.reduce(
-      (n, g) => n + g.entradas.filter((e) => this.esConectada(this.estadoTarjeta(e))).length,
+      (n, g) => n + this.entradasDe(g).filter((e) => this.esConectada(this.estadoTarjeta(e))).length,
       0,
     );
     return enDirectorio + this.otrasConexiones.length;
@@ -1026,14 +1034,14 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
 
   get totalParaConectar(): number {
     return this.directorio.reduce(
-      (n, g) => n + g.entradas.filter((e) => this.estadoTarjeta(e) === "sin").length,
+      (n, g) => n + this.entradasDe(g).filter((e) => this.estadoTarjeta(e) === "sin").length,
       0,
     );
   }
 
   get totalProximamente(): number {
     return this.directorio.reduce(
-      (n, g) => n + g.entradas.filter((e) => e.estado === "pronto").length,
+      (n, g) => n + this.entradasDe(g).filter((e) => e.estado === "pronto").length,
       0,
     );
   }

@@ -2947,6 +2947,39 @@
               <span class="palanca"><span></span></span>
             </button>
 
+            <!-- D-516: pago a cuotas con Addi y Sistecrédito. Solo con la bandera del comercio;
+                 sin el proveedor conectado el interruptor no enciende y dice dónde conectarlo. -->
+            <ng-container *ngIf="cuotasHabilitadas">
+              <div class="campo">
+                <label>Pago a cuotas</label>
+                <small>El comprador paga a cuotas con su crédito y a ti el dinero te llega directo a tu
+                  cuenta con el proveedor. Solo se ofrece en compras dentro del rango que te permite cada uno.</small>
+              </div>
+              <ng-container *ngFor="let m of mediosCuotas">
+                <button type="button" class="opcion opcion--cuotas"
+                        [class.is-active]="cuotaActiva(m.id)"
+                        [class.is-bloqueada]="!estadoCuotas(m.id).configurada && !cuotaActiva(m.id)"
+                        [disabled]="!estadoCuotas(m.id).configurada && !cuotaActiva(m.id)"
+                        [attr.aria-pressed]="cuotaActiva(m.id)"
+                        (click)="alternarCuota(m.id)">
+                  <span class="opcion__texto">
+                    <strong>Pago a cuotas con {{ m.nombre }}</strong>
+                    <small *ngIf="estadoCuotas(m.id).configurada">Con tu cuenta de {{ m.nombre }}.</small>
+                  </span>
+                  <span class="palanca"><span></span></span>
+                </button>
+                <p class="aviso aviso--cuotas" *ngIf="!estadoCuotas(m.id).configurada">
+                  Conecta {{ m.nombre }} en Integraciones para ofrecerlo.
+                  <a class="aviso__enlace" routerLink="/integrations" target="_blank" rel="noopener">Ir a Integraciones</a>
+                  <button type="button" class="aviso__enlace" (click)="recargarVentaConfig()" [disabled]="cargandoVentaConfig">
+                    {{ cargandoVentaConfig ? 'Revisando…' : 'Ya lo conecté' }}</button>
+                </p>
+                <p class="aviso aviso--info aviso--cuotas" *ngIf="estadoCuotas(m.id).configurada && estadoCuotas(m.id).entorno === 'staging'">
+                  Credenciales de pruebas: solo funciona en empresas de prueba.
+                </p>
+              </ng-container>
+            </ng-container>
+
             <button class="opcion" [class.is-active]="contenido.tienda.ventaCruzada !== false"
                     (click)="contenido.tienda.ventaCruzada = contenido.tienda.ventaCruzada === false; marcarSucio()">
               <span class="opcion__texto">

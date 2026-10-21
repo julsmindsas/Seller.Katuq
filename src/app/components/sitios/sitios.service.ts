@@ -22,6 +22,11 @@ export interface TiendaSitio {
   contraEntrega: boolean;
   /** Formas de pago manuales del maestro (transferencia, Nequi...). */
   otrasFormasPago: { cd: string; nombre: string; instrucciones?: string }[];
+  /**
+   * D-516: pago a cuotas en el checkout. Apagados por omisión; además del interruptor, el
+   * servidor exige la bandera del comercio y el proveedor conectado en Integraciones.
+   */
+  pagoCuotas?: { addi: boolean; sistecredito: boolean };
   /** Venta cruzada (afines + sugerencias del carrito). Encendida por defecto. */
   ventaCruzada?: boolean;
   /** Ticket 1231: pedir opinión también a pedidos de venta asistida, POS y WhatsApp. Apagado por defecto. */
@@ -175,6 +180,24 @@ export interface VentaConfig {
   formasPago: { cd: string; nombre: string; categoria: string; nombrePublico?: string; instrucciones?: string; disponibleWeb?: boolean; interna?: boolean }[];
   /** Ticket 1213: si la empresa tiene razón social y NIT (solo si están, no los valores). */
   datosLegales?: { razonSocial: boolean; nit: boolean } | null;
+  /** D-516: bandera del comercio y estado de cada proveedor de pago a cuotas. */
+  cuotas?: CuotasVentaConfig;
+}
+
+/** Proveedores de pago a cuotas de la tienda (D-516). */
+export type ProveedorCuotas = "addi" | "sistecredito";
+
+/** Estado de un proveedor a cuotas: si está conectado y con qué credenciales. */
+export interface EstadoProveedorCuotas {
+  configurada: boolean;
+  entorno: "staging" | "production" | null;
+}
+
+export interface CuotasVentaConfig {
+  /** `storeInstallmentPayments` del comercio. Apagada, el editor no muestra los interruptores. */
+  bandera: boolean;
+  addi: EstadoProveedorCuotas;
+  sistecredito: EstadoProveedorCuotas;
 }
 
 /**

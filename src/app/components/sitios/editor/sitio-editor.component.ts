@@ -5,7 +5,7 @@ import { ToastrService } from "ngx-toastr";
 import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
-import { CategoriaSitio, ContenidoSitio, CorreosTienda, CuponSitio, PaginaSitio, PromocionSitio, PropuestaDiseno, ResenaSitio, Sitio, SitiosService, TemporadaComercial, TextoCorreo, TiendaSitio, VentaConfig } from "../sitios.service";
+import { CategoriaSitio, ContenidoSitio, CorreosTienda, CuponSitio, EstadoProveedorCuotas, PaginaSitio, PromocionSitio, PropuestaDiseno, ProveedorCuotas, ResenaSitio, Sitio, SitiosService, TemporadaComercial, TextoCorreo, TiendaSitio, VentaConfig } from "../sitios.service";
 import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
@@ -1167,9 +1167,11 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    * Config de venta de la empresa: pasarela propia o no, zonas de cobro y
    * formas de pago del maestro. Sin esto el panel dejaba encender opciones que
    * no funcionan — pago en línea sin pasarela, envío por zonas sin zonas.
+   * `forzar` la vuelve a leer aunque ya esté cargada (D-516: después de conectar
+   * Addi o Sistecrédito en Integraciones, en otra pestaña).
    */
-  private cargarVentaConfig(): void {
-    if (this.ventaConfig || this.cargandoVentaConfig) return;
+  private cargarVentaConfig(forzar = false): void {
+    if ((this.ventaConfig && !forzar) || this.cargandoVentaConfig) return;
     this.cargandoVentaConfig = true;
     this.service.ventaConfig().subscribe({
       next: (res) => {
@@ -1232,6 +1234,52 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   /** Encendida en la tienda pero el maestro dice que no es para la web (o es interna). */
   formaNoWeb(f: { disponibleWeb?: boolean; interna?: boolean }): boolean {
     return f.disponibleWeb === false;
+  }
+
+  // ── D-516: pago a cuotas con Addi y Sistecrédito ────────────────────────
+  // El editor solo guarda el interruptor (`tienda.pagoCuotas`). Que el medio salga en la
+  // tienda lo decide el servidor: bandera del comercio, proveedor conectado y rango del total.
+
+  /** Medios a cuotas que se pueden ofrecer en la tienda. */
+  readonly mediosCuotas: { id: ProveedorCuotas; nombre: string }[] = [
+    { id: "addi", nombre: "Addi" },
+    { id: "sistecredito", nombre: "Sistecrédito" },
+  ];
+
+  /** Los interruptores solo se ven con la bandera `storeInstallmentPayments` del comercio. */
+  get cuotasHabilitadas(): boolean {
+    return !!(this.ventaConfig && this.ventaConfig.cuotas && this.ventaConfig.cuotas.bandera === true);
+  }
+
+  /** Si el proveedor está conectado en Integraciones y con qué credenciales. */
+  estadoCuotas(id: ProveedorCuotas): EstadoProveedorCuotas {
+    const cuotas = this.ventaConfig && this.ventaConfig.cuotas;
+    return (cuotas && cuotas[id]) || { configurada: false, entorno: null };
+  }
+
+  /** ¿Este medio a cuotas está encendido en la tienda? */
+  cuotaActiva(id: ProveedorCuotas): boolean {
+    const t = this.contenido && this.contenido.tienda;
+    return !!(t && t.pagoCuotas && t.pagoCuotas[id] === true);
+  }
+
+  /**
+   * Enciende o apaga un medio a cuotas. Sin el proveedor conectado no se enciende (la
+   * tienda no lo mostraría); uno que quedó encendido sí se puede apagar.
+   */
+  alternarCuota(id: ProveedorCuotas): void {
+    const t = this.contenido && this.contenido.tienda;
+    if (!t) return;
+    const encender = !this.cuotaActiva(id);
+    if (encender && !this.estadoCuotas(id).configurada) return;
+    const actual = { addi: this.cuotaActiva("addi"), sistecredito: this.cuotaActiva("sistecredito") };
+    t.pagoCuotas = { ...actual, [id]: encender };
+    this.marcarSucio();
+  }
+
+  /** Vuelve a preguntar qué proveedores están conectados, sin salir del editor. */
+  recargarVentaConfig(): void {
+    this.cargarVentaConfig(true);
   }
 
   /**

@@ -3446,6 +3446,43 @@ input.is-error { border-color: #b42318 !important; }
 // Ticket 1215: forma de pago encendida que el maestro no marca para la web.
 .forma-aviso { color: #b42318 !important; font-weight: 600; }
 
+// D-516: pago a cuotas. Sin el proveedor conectado el interruptor no enciende.
+.opcion.is-bloqueada {
+  cursor: not-allowed;
+  background: var(--kb-surface-3);
+
+  .palanca { opacity: 0.45; }
+}
+
+// El reset global quita el outline de todo botón enfocado (`button:focus`, con !important).
+.opcion--cuotas:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+
+// El aviso va pegado a su interruptor, con el enlace a Integraciones y «Ya lo conecté».
+.aviso--cuotas {
+  margin-top: -4px;
+  letter-spacing: normal;
+
+  .aviso__enlace {
+    display: inline;
+    margin: 0 0 0 8px;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid currentColor;
+    border-radius: 0;
+    background: none;
+    color: var(--kb-accent);
+    font: inherit;
+    font-weight: 700;
+    letter-spacing: normal;
+    line-height: 1.2;
+    cursor: pointer;
+
+    &:hover { color: var(--kb-accent-ink); }
+    &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+    &:disabled { cursor: progress; opacity: 0.7; }
+  }
+}
+
 // ── Ticket 1232: cuándo se muestra la sección (temporadas) ──
 .programada {
   margin-left: 8px;

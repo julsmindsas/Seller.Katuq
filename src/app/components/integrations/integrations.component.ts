@@ -15,6 +15,7 @@ import { DaneCodesService } from '../../shared/services/dane-codes.service';
 import { MunicipioDane } from '../../shared/data/colombia-dane-codes';
 import { describeDianBatchStatus, DianBatchStatus } from './dian-batch-status';
 import { DIAN_SECRET_FIELDS, dianConfigError, dianNumberingError } from './dian-config-feedback';
+import { CompanyFeatureFlag, CompanyFeaturesService } from '../../shared/services/company-features.service';
 
 // Campos del formulario que el backend guarda cifrados y NO devuelve al editar
 // (espejo de PROVIDER_SCHEMAS.sensitive, con los nombres de los controles).
@@ -22,6 +23,8 @@ import { DIAN_SECRET_FIELDS, dianConfigError, dianNumberingError } from './dian-
 const CLAVES_GUARDADAS: { [proveedor: string]: string[] } = {
   shopify: ['apiSecret', 'accessToken'],
   wompi: ['privateKey', 'eventsSecret', 'integritySecret'],
+  addi: ['clientSecret', 'callbackPassword'],
+  sistecredito: ['subscriptionKey', 'applicationToken'],
   woocommerce: ['consumerSecret', 'webhookSecret'],
   enviame: ['apiKey'],
   partners_logistics: ['apiKey'],
@@ -48,6 +51,16 @@ const NOMBRES_CAMPO: { [campo: string]: string } = {
   customerId: 'número de cliente', responseUrl: 'dirección de respuesta', confirmationUrl: 'dirección de confirmación',
   clientId: 'Client ID', clientSecret: 'Client Secret', terceroInternoId: 'tercero interno',
   apiSecret: 'Client Secret', accessToken: 'token de acceso',
+  allySlug: 'Ally slug', callbackUser: 'usuario de notificación', callbackPassword: 'contraseña de notificación',
+  subscriptionKey: 'Subscription Key', applicationKey: 'Application Key', applicationToken: 'Application Token',
+  minAmount: 'monto mínimo',
+};
+
+// Proveedores que solo se ofrecen con una bandera del comercio encendida, igual que su
+// tarjeta en el directorio (D-516). Apagada, no aparecen en el catálogo del formulario.
+const BANDERA_DE_PROVEEDOR: { [proveedor: string]: CompanyFeatureFlag } = {
+  addi: 'storeInstallmentPayments',
+  sistecredito: 'storeInstallmentPayments',
 };
 
 // El catálogo DIAN asigna este mismo rango a software propio en habilitación.
@@ -204,13 +217,14 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     private daneCodesService: DaneCodesService,
     private router: Router,
     private route: ActivatedRoute,
+    private features: CompanyFeaturesService,
     @Optional() public activeModal: NgbActiveModal | null
   ) {
     this.integrationForm = this.createShopifyForm();
   }
 
   ngOnInit(): void {
-    this.availableIntegrations = this.integrationsService.getAvailableIntegrations();
+    this.availableIntegrations = this.catalogoSegunBanderas(this.integrationsService.getAvailableIntegrations());
     this.initializeFilteredIntegrations();
 
     // La ruta directa de DIAN debe pintar el asistente inmediatamente. Antes se
@@ -323,6 +337,36 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     this.selectedIntegrationName = this.getSelectedIntegrationName();
     this.documentationUrl = this.getDocumentationUrl(this.selectedIntegrationType);
     this.additionalFields = this.getAdditionalFields();
+  }
+
+  /**
+   * Quita del catálogo los proveedores cuya bandera del comercio está apagada (D-516).
+   * Sin banderas de por medio devuelve el mismo catálogo de siempre.
+   */
+  private catalogoSegunBanderas<T extends { id: string }>(catalogo: { [categoria: string]: T[] }): { [categoria: string]: T[] } {
+    const resultado: { [categoria: string]: T[] } = {};
+    for (const categoria of Object.keys(catalogo)) {
+      resultado[categoria] = (catalogo[categoria] || []).filter((p) => {
+        const bandera = BANDERA_DE_PROVEEDOR[p.id];
+        return !bandera || this.features.isEnabled(bandera);
+      });
+    }
+    return resultado;
+  }
+
+  /** Addi o Sistecrédito: pago a cuotas en la tienda en línea (D-516). */
+  get esPagoACuotas(): boolean {
+    return this.selectedIntegrationType === 'addi' || this.selectedIntegrationType === 'sistecredito';
+  }
+
+  /** Nombre del proveedor a cuotas elegido, para los textos de ayuda. */
+  get nombreProveedorCuotas(): string {
+    return this.selectedIntegrationType === 'sistecredito' ? 'Sistecrédito' : 'Addi';
+  }
+
+  /** Ambiente elegido en el formulario de Addi o Sistecrédito. */
+  get entornoCuotas(): 'staging' | 'production' {
+    return this.integrationForm?.get('environment')?.value === 'production' ? 'production' : 'staging';
   }
 
   private setupRealTimeValidation(): void {
@@ -671,6 +715,12 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       case 'wompi':
         this.integrationForm = this.createWompiForm();
         break;
+      case 'addi':
+        this.integrationForm = this.createAddiForm();
+        break;
+      case 'sistecredito':
+        this.integrationForm = this.createSistecreditoForm();
+        break;
       case 'epayco':
         this.integrationForm = this.createEpaycoForm();
         break;
@@ -791,6 +841,12 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
       case 'wompi':
         this.integrationForm = this.createWompiForm();
+        break;
+      case 'addi':
+        this.integrationForm = this.createAddiForm();
+        break;
+      case 'sistecredito':
+        this.integrationForm = this.createSistecreditoForm();
         break;
       case 'epayco':
         this.integrationForm = this.createEpaycoForm();
@@ -1009,6 +1065,41 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       integritySecret: ['', Validators.required],     // Firmar widget (homologado)
       testMode: [false],                              // Toggle test/prod
       currency: ['COP']                               // Default COP
+    });
+  }
+
+  /**
+   * Addi (D-516): todo sale del portal de aliados. Las "Credenciales de notificación" son las
+   * que Addi usa para avisar el resultado del crédito; la URL de notificación la pone Katuq.
+   * Nace en Pruebas, como las demás pasarelas nuevas (más seguro).
+   */
+  createAddiForm(): FormGroup {
+    return this.fb.group({
+      name: ['Addi', Validators.required],
+      enabled: [true],
+      environment: ['staging', Validators.required],   // 'staging' | 'production'
+      clientId: ['', Validators.required],
+      clientSecret: ['', Validators.required],         // Cifrado; no vuelve al navegador
+      // Mismo formato que valida el backend (PROVIDER_SCHEMAS.addi).
+      allySlug: ['', [Validators.required, Validators.pattern(/^\s*[a-z0-9][a-z0-9-]{1,80}\s*$/i)]],
+      callbackUser: ['', Validators.required],
+      callbackPassword: ['', Validators.required]      // Cifrado; no vuelve al navegador
+    });
+  }
+
+  /**
+   * Sistecrédito (D-516): las tres llaves de Credinet Pay que entrega Sistecrédito al firmar
+   * el convenio de aliado, y el monto mínimo de compra pactado (opcional, en pesos).
+   */
+  createSistecreditoForm(): FormGroup {
+    return this.fb.group({
+      name: ['Sistecrédito', Validators.required],
+      enabled: [true],
+      environment: ['staging', Validators.required],   // 'staging' | 'production'
+      subscriptionKey: ['', Validators.required],      // Cifrado; no vuelve al navegador
+      applicationKey: ['', Validators.required],
+      applicationToken: ['', Validators.required],     // Cifrado; no vuelve al navegador
+      minAmount: [null, Validators.min(0)]
     });
   }
 
@@ -2033,6 +2124,11 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Texto sin espacios al inicio ni al final; lo que no es texto pasa igual. */
+  private sinEspacios(valor: any): any {
+    return typeof valor === 'string' ? valor.trim() : valor;
+  }
+
   // Método centralizado para construir credenciales
   private buildCredentials(formData: any): any {
     let credentials: any = {};
@@ -2062,6 +2158,31 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           currency: formData.currency || 'COP'       // Default COP
         };
         break;
+      case 'addi':
+        // Identificadores y llaves generadas sin espacios de más (suelen venir al copiar).
+        // La contraseña de notificación va tal cual: la escribió el comercio en Addi.
+        credentials = {
+          clientId: this.sinEspacios(formData.clientId),
+          clientSecret: this.sinEspacios(formData.clientSecret),
+          allySlug: this.sinEspacios(formData.allySlug),
+          callbackUser: this.sinEspacios(formData.callbackUser),
+          callbackPassword: formData.callbackPassword,
+          environment: formData.environment === 'production' ? 'production' : 'staging'
+        };
+        break;
+      case 'sistecredito': {
+        const minimo = formData.minAmount;
+        credentials = {
+          subscriptionKey: this.sinEspacios(formData.subscriptionKey),
+          applicationKey: this.sinEspacios(formData.applicationKey),
+          applicationToken: this.sinEspacios(formData.applicationToken),
+          environment: formData.environment === 'production' ? 'production' : 'staging',
+          // Vacío = sin mínimo propio (no se manda); si no, pesos enteros.
+          minAmount: minimo === null || minimo === undefined || String(minimo).trim() === ''
+            ? undefined : Math.round(Number(minimo))
+        };
+        break;
+      }
       case 'epayco':
         credentials = {
           publicKey: formData.publicKey,
@@ -2992,6 +3113,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       'enviame': 'https://docs.enviame.io/docs/v2#tag/Envios/operation/Crear-Envios-Seller',
       'shopify': 'https://shopify.dev/docs/admin-api/getting-started',
       'wompi': 'https://docs.wompi.co/docs',
+      // Sistecrédito no tiene documentación pública: sus guías llegan con el convenio.
+      'addi': 'https://support.addi.com/custom-integrations',
       'epayco': 'https://docs.epayco.co/',
       'paypal': 'https://developer.paypal.com/docs/api/overview/',
       'stripe': 'https://stripe.com/docs/api',
@@ -3014,6 +3137,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       'enviame': 'Enviame.io',
       'shopify': 'Shopify',
       'wompi': 'Wompi',
+      'addi': 'Addi',
+      'sistecredito': 'Sistecrédito',
       'epayco': 'ePayco',
       'paypal': 'PayPal',
       'stripe': 'Stripe',

@@ -815,6 +815,8 @@ export class IntegrationsService {
       world_office:      'World Office',
       quickbooks:        'QuickBooks',
       wompi:             'Wompi',
+      addi:              'Addi',
+      sistecredito:      'Sistecrédito',
       epayco:            'ePayco',
       paypal:            'PayPal',
       stripe:            'Stripe',
@@ -836,6 +838,8 @@ export class IntegrationsService {
       case "prestashop":
         return IntegrationCategory.ECOMMERCE;
       case "wompi":
+      case "addi":
+      case "sistecredito":
       case "epayco":
       case "paypal":
       case "stripe":
@@ -1602,6 +1606,22 @@ export class IntegrationsService {
           description:
             "Pasarela de pagos digital para Colombia y Latinoamérica",
           logo: "assets/images/logos/wompi.svg",
+          active: true,
+        },
+        // D-516: pago a cuotas en la tienda en línea. Sin logo (licencia de marca pendiente).
+        // El formulario los esconde con la bandera storeInstallmentPayments apagada.
+        {
+          id: "addi",
+          name: "Addi",
+          description: "Pago a cuotas en tu tienda en línea, con tu convenio de Addi",
+          logo: "",
+          active: true,
+        },
+        {
+          id: "sistecredito",
+          name: "Sistecrédito",
+          description: "Pago a cuotas en tu tienda en línea, con tu convenio de Sistecrédito",
+          logo: "",
           active: true,
         },
         {
