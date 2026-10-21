@@ -103,7 +103,7 @@ Sin cuerpo. Misma cadena; no toma el candado.
 - **Productos:** `products[]` acepta `probable: true`, para el slug de Woo armado con el nombre (W3).
 - **Dirección pegada:** acepta `urls[]: [{ "desde": "/product/mi-producto/", "cd": "…" }]`, la lista de direcciones reales que pega el comercio. Manda sobre la probable del mismo `cd`. `desde` pasa por `normalizarRutaRedireccion`.
 - **Fuente:** `source` acepta `woocommerce`.
-- **Base de Woo:** `productBase` y `categoryBase` (por ejemplo `/producto/` y `/categoria-producto/`), cada una una ruta interna que pasa por `normalizarRutaRedireccion`. Sin ellas, la del idioma del archivo y el aviso `BASE_ASSUMED` (W3).
+- **Base de Woo:** `productBase` y `categoryBase` (por ejemplo `/producto/` y `/categoria-producto/`), cada una una ruta interna que pasa por `normalizarRutaRedireccion`. Sin ellas, la del idioma del archivo y el aviso `BASE_ASSUMED` (W3). *Nota (F530-B09):* el servidor no ve el archivo en este paso, así que sin las bases usa las de WordPress en inglés (`/product/`, `/product-category/`) y avisa `BASE_ASSUMED`; la pantalla debe mandar las del idioma del archivo (la simulación las usa para su vista previa). `SLUG_PROBABLE` sale una sola vez (`desde: null`) cuando hubo direcciones armadas con el nombre; `probable` cuenta solo las que no tienen dirección pegada.
 - **Plan gratis:** no se genera la 301 hacia un producto fuera del cupo (`TARGET_HIDDEN_BY_PLAN`).
 
 ## `POST customers`: campo nuevo (si la pregunta 19 dice que sí)
