@@ -15,7 +15,7 @@
 
   .p-dialog-header {
     padding: 12px 16px !important;
-    background: white !important;
+    background: var(--ds-surface) !important;
     border-bottom: 2px solid #e2e8f0 !important;
 
     .p-dialog-title {
@@ -96,7 +96,7 @@ $radius-lg: 12px;
     position: sticky;
     top: 36px;
     z-index: 999;
-    background: white;
+    background: var(--ds-surface);
     border-bottom: 1px solid $border;
     padding: 4px $spacing-sm;
     margin: 0;
@@ -111,7 +111,7 @@ $radius-lg: 12px;
 
       .progress-fill {
         height: 100%;
-        background: #5F3FE0;
+        background: var(--ds-accent);
         transition: width 0.3s ease;
       }
 
@@ -181,7 +181,7 @@ $radius-lg: 12px;
     align-items: center;
     gap: $spacing-xs;
     padding: 6px $spacing-sm;
-    background: white;
+    background: var(--ds-surface);
     border: 1px solid $border;
     border-radius: $radius-sm;
     cursor: pointer;
@@ -310,7 +310,7 @@ $radius-lg: 12px;
 
       &:hover {
         border-color: $border;
-        background: white;
+        background: var(--ds-surface);
       }
     }
   }
@@ -401,7 +401,7 @@ $radius-lg: 12px;
     gap: $spacing-sm;
     height: 36px;
     padding: 0 $spacing-md;
-    background: white;
+    background: var(--ds-surface);
     color: $text-primary;
     border-bottom: 2px solid $border;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -529,7 +529,7 @@ $radius-lg: 12px;
 
     // Card contenedora de toda la sección
     .shipping-type-section-card {
-      background: white;
+      background: var(--ds-surface);
       border: 1px solid $border-light;
       border-radius: $radius-lg;
       padding: $spacing-lg;
@@ -552,7 +552,7 @@ $radius-lg: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #efe9ff;
+        background: var(--ds-accent-soft);
         border-radius: $radius-lg;
         flex-shrink: 0;
 
@@ -601,7 +601,7 @@ $radius-lg: 12px;
 
       .shipping-option-compact {
         position: relative;
-        background: white;
+        background: var(--ds-surface);
         border: 2px solid #e0e0e0;
         border-radius: 8px;
         cursor: pointer;
@@ -612,27 +612,27 @@ $radius-lg: 12px;
         gap: 0.75rem;
 
         &:hover {
-          border-color: #5F3FE0;
+          border-color: var(--ds-accent-ink);
           box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
         }
 
         &.selected {
-          border-color: #5F3FE0;
+          border-color: var(--ds-accent-ink);
           background: #f0f7ff;
           box-shadow: 0 2px 12px rgba(33, 150, 243, 0.15);
 
           .option-name {
-            color: #5F3FE0;
+            color: var(--ds-accent-ink);
             font-weight: 600;
           }
 
           .option-icon {
-            color: #5F3FE0;
+            color: var(--ds-accent-ink);
             background-color: #e3f2fd;
           }
 
           .option-price {
-            color: #5F3FE0;
+            color: var(--ds-accent-ink);
             font-weight: 700;
           }
         }
@@ -650,7 +650,7 @@ $radius-lg: 12px;
           transition: all 0.2s ease;
 
           &:checked {
-            border-color: #5F3FE0;
+            border-color: var(--ds-accent-ink);
             border-width: 6px;
           }
         }
@@ -725,7 +725,7 @@ $radius-lg: 12px;
 
                 i {
                   font-size: 0.75rem;
-                  color: #5F3FE0;
+                  color: var(--ds-accent-ink);
                 }
               }
             }
@@ -751,7 +751,7 @@ $radius-lg: 12px;
           position: absolute;
           right: 0.75rem;
           font-size: 1.25rem;
-          color: #5F3FE0;
+          color: var(--ds-accent-ink);
           animation: checkPop 0.3s ease;
         }
       }
@@ -1173,7 +1173,7 @@ $radius-lg: 12px;
     .package-info-card,
     .dimensions-card,
     .description-card {
-      background: white;
+      background: var(--ds-surface);
       border: 2px solid $border;
       border-radius: $radius-lg;
       margin-bottom: $spacing-lg;
@@ -1207,7 +1207,7 @@ $radius-lg: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: white;
+          background: var(--ds-surface);
           border-radius: $radius-md;
           box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 
@@ -1282,7 +1282,7 @@ $radius-lg: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #efe9ff;
+        background: var(--ds-accent-soft);
         border-radius: $radius-md;
         flex-shrink: 0;
 
@@ -1306,7 +1306,7 @@ $radius-lg: 12px;
             border-radius: $radius-md;
             font-size: 16px;
             font-weight: 600;
-            background: white;
+            background: var(--ds-surface);
             transition: all $transition-base;
 
             &:focus {
@@ -1334,7 +1334,7 @@ $radius-lg: 12px;
             color: $text-secondary;
             pointer-events: none;
             transition: all $transition-base;
-            background: white;
+            background: var(--ds-surface);
             padding: 0 4px;
 
             .required {
@@ -1365,7 +1365,7 @@ $radius-lg: 12px;
 
           .field-unit {
             right: $spacing-md;
-            background: #5F3FE0;
+            background: var(--ds-accent);
             color: white;
             padding: 4px $spacing-sm;
             border-radius: $radius-sm;
@@ -1530,7 +1530,7 @@ $radius-lg: 12px;
       justify-content: center;
       gap: $spacing-base;
       padding: $spacing-md;
-      background: #faf9fe;
+      background: var(--ds-surface-2);
       border: 1px solid rgba($primary, 0.2);
       border-radius: $radius-md;
       margin-top: $spacing-lg;
@@ -1584,7 +1584,7 @@ $radius-lg: 12px;
         color: $text-secondary;
         pointer-events: none;
         transition: all $transition-base;
-        background: white;
+        background: var(--ds-surface);
         padding: 0 4px;
       }
 
@@ -1675,7 +1675,7 @@ $radius-lg: 12px;
           display: flex;
           flex-direction: column;
           gap: $spacing-md;
-          background: white;
+          background: var(--ds-surface);
           padding: $spacing-lg;
           border-radius: $radius-md;
           border: 2px solid transparent;
@@ -1734,7 +1734,7 @@ $radius-lg: 12px;
             border: 3px solid $border;
             border-radius: $radius-md;
             padding: $spacing-md $spacing-lg;
-            background: white;
+            background: var(--ds-surface);
             transition: all 0.3s ease;
             position: relative;
 
@@ -1760,7 +1760,7 @@ $radius-lg: 12px;
 
               &::before {
                 opacity: 1;
-                background: #faf9fe;
+                background: var(--ds-surface-2);
               }
             }
 
@@ -1795,7 +1795,7 @@ $radius-lg: 12px;
               color: white;
               font-weight: 700;
               font-size: 13px;
-              background: #5F3FE0;
+              background: var(--ds-accent);
               padding: $spacing-sm $spacing-md;
               border-radius: $radius-md;
               text-transform: uppercase;
@@ -1836,7 +1836,7 @@ $radius-lg: 12px;
       // Dimensiones
       .package-dimensions {
         margin-bottom: $spacing-xl;
-        background: white;
+        background: var(--ds-surface);
         padding: $spacing-lg;
         border-radius: $radius-md;
         border: 2px dashed $border-light;
@@ -1921,13 +1921,13 @@ $radius-lg: 12px;
 
               &:hover {
                 border-color: rgba($primary, 0.4);
-                background: white;
+                background: var(--ds-surface);
               }
 
               &:focus-within {
                 border-color: $primary;
                 box-shadow: 0 0 0 4px rgba($primary, 0.1);
-                background: white;
+                background: var(--ds-surface);
               }
 
               input {
@@ -1955,7 +1955,7 @@ $radius-lg: 12px;
                 color: $text-secondary;
                 font-weight: 600;
                 font-size: 12px;
-                background: white;
+                background: var(--ds-surface);
                 padding: 3px $spacing-xs;
                 border-radius: $radius-sm;
               }
@@ -1979,7 +1979,7 @@ $radius-lg: 12px;
 
       // Descripción
       .package-description {
-        background: white;
+        background: var(--ds-surface);
         padding: $spacing-lg;
         border-radius: $radius-md;
         border: 2px dashed $border-light;
@@ -2043,14 +2043,14 @@ $radius-lg: 12px;
 
           &:hover {
             border-color: rgba($primary, 0.4);
-            background: white;
+            background: var(--ds-surface);
           }
 
           &:focus {
             outline: none;
             border-color: $primary;
             box-shadow: 0 0 0 4px rgba($primary, 0.1);
-            background: white;
+            background: var(--ds-surface);
           }
 
           &::placeholder {
@@ -2308,7 +2308,7 @@ $radius-lg: 12px;
 
   .rate-card {
     position: relative;
-    background: white;
+    background: var(--ds-surface);
     border: 1px solid $border;
     border-radius: $radius-base;
     padding: $spacing-sm;
@@ -2563,7 +2563,7 @@ $radius-lg: 12px;
     bottom: 0;
     left: 0;
     right: 0;
-    background: white;
+    background: var(--ds-surface);
     border-top: 2px solid $border;
     padding: $spacing-base $spacing-xl;
     display: flex;
@@ -2695,7 +2695,7 @@ $radius-lg: 12px;
       gap: $spacing-sm;
       margin-bottom: $spacing-lg;
       padding: $spacing-md;
-      background: #5F3FE0;
+      background: var(--ds-accent);
       color: white;
       border-radius: $radius-md;
       font-size: 15px;
@@ -2715,7 +2715,7 @@ $radius-lg: 12px;
 
     .pedido-card-selector {
       position: relative;
-      background: white;
+      background: var(--ds-surface);
       border: 2px solid $border;
       border-radius: $radius-md;
       padding: $spacing-md;
@@ -2731,7 +2731,7 @@ $radius-lg: 12px;
 
       &.active {
         border-color: $primary;
-        background: #faf9fe;
+        background: var(--ds-surface-2);
         box-shadow: 0 0 0 3px rgba($primary, 0.1);
 
         .card-header h5 {
@@ -2816,7 +2816,7 @@ $radius-lg: 12px;
     gap: $spacing-md;
     flex-wrap: wrap;
     padding: $spacing-sm;
-    background: white;
+    background: var(--ds-surface);
     border-radius: $radius-sm;
     border: 1px solid $border;
     margin-bottom: $spacing-md;
@@ -2862,7 +2862,7 @@ $radius-lg: 12px;
     margin-top: $spacing-md;
 
     .rate-item-compact {
-      background: white;
+      background: var(--ds-surface);
       border: 2px solid $border;
       border-radius: $radius-md;
       padding: $spacing-md;
@@ -3012,7 +3012,7 @@ $radius-lg: 12px;
   .multi-confirm-action {
     margin-top: $spacing-xl;
     padding: $spacing-xl;
-    background: white;
+    background: var(--ds-surface);
     border: 2px solid $success;
     border-radius: $radius-md;
     text-align: center;
@@ -3086,7 +3086,7 @@ $radius-lg: 12px;
       .status-pending,
       .status-success {
         padding: $spacing-lg;
-        background: white;
+        background: var(--ds-surface);
         border-radius: $radius-md;
         border: 2px solid $border;
         text-align: center;
@@ -3239,7 +3239,7 @@ $radius-lg: 12px;
   // ESTILOS PARA TABS DE NG-BOOTSTRAP
   // ========================================
   .nav-tabs-custom {
-    background: white;
+    background: var(--ds-surface);
     border: 1px solid $border;
     border-radius: $radius-md $radius-md 0 0;
     padding: $spacing-xs;
@@ -3296,7 +3296,7 @@ $radius-lg: 12px;
 
   .nav-outlet {
     padding: $spacing-md;
-    background: white;
+    background: var(--ds-surface);
     border: 1px solid $border;
     border-top: none;
     border-radius: 0 0 $radius-md $radius-md;
