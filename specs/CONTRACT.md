@@ -11495,3 +11495,8 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - `conic-gradient` en `soporte.component.ts`.
 - `::ng-deep` sin `:host` que ya se filtraba a toda la app desde antes: traslados, recepción, clientes y listado de clientes. Ahora filtra colores del canon.
 - Decidir el eyebrow de Usuarios: la lista dice «Configuración» y los formularios «Seguridad», como el menú.
+- **#1260 (FE-01) cerrado el 20-oct por orden del usuario** («ciérralos, yo publico ahora o mañana»):
+  - Nota técnica interna con los commits y los pasos para publicar, y nota de cierre para el comercio.
+  - A esa hora el código estaba subido sin desplegar: `invoicing/summary` respondía 404.
+  - Los otros 13 FE siguen abiertos por la regla «no cerrar tickets sin trabajo publicado»: FE-02, 06, 08, 09, 10, 11, 12, 17, 19, 21, 22, 23 y 24. FE-03 (#1261) ya estaba archivado.
+  - FE-02 y FE-03 tienen piezas puras sin conectar (candado, reporte, estados y capacidades).
