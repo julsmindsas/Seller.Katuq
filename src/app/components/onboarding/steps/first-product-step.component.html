@@ -3,11 +3,10 @@
   <div class="step-intro optional-step">
     <div class="intro-header">
       <i class="pi pi-box"></i>
-      <h3>Crea tu Primer Producto (Opcional)</h3>
+      <h3>{{ 'onboarding.firstProductStep.creaTuPrimerProductoOpcional' | translate }}</h3>
     </div>
     <p class="intro-text">
-      Este paso es opcional. Puedes crear tu primer producto ahora para comenzar a vender inmediatamente,
-      o puedes omitir este paso y agregar productos más tarde desde el módulo de inventario.
+      {{ 'onboarding.firstProductStep.estePasoEsOpcionalPuedes' | translate }}
     </p>
   </div>
 
@@ -16,7 +15,7 @@
     <ng-template pTemplate="header">
       <div class="onb-cabeza">
         <i class="pi pi-shopping-bag"></i>
-        <span>Información del Producto</span>
+        <span>{{ 'onboarding.firstProductStep.informacionDelProducto' | translate }}</span>
       </div>
     </ng-template>
 
@@ -27,13 +26,13 @@
           <div class="form-grid">
             <!-- Nombre -->
             <div class="form-field col-12">
-              <label for="nombre" class="required">Nombre del Producto *</label>
+              <label for="nombre" class="required">{{ 'onboarding.firstProductStep.nombreDelProducto2' | translate }}</label>
               <input
                 id="nombre"
                 type="text"
                 pInputText
                 formControlName="nombre"
-                placeholder="Ej: Camiseta Polo Premium"
+                [placeholder]="'onboarding.firstProductStep.ejCamisetaPoloPremium' | translate"
                 [class.p-invalid]="hasError('nombre', 'required') || hasError('nombre', 'minlength')" />
               <small class="p-error" *ngIf="hasError('nombre', 'required') || hasError('nombre', 'minlength')">
                 {{ getErrorMessage('nombre') }}
@@ -42,13 +41,13 @@
 
             <!-- Referencia y Precio -->
             <div class="form-field col-md-6 col-12">
-              <label for="referencia" class="required">Referencia / SKU *</label>
+              <label for="referencia" class="required">{{ 'onboarding.firstProductStep.referenciaSku' | translate }}</label>
               <input
                 id="referencia"
                 type="text"
                 pInputText
                 formControlName="referencia"
-                placeholder="Ej: CAM-001"
+                [placeholder]="'onboarding.firstProductStep.ejCam001' | translate"
                 [class.p-invalid]="hasError('referencia', 'required') || hasError('referencia', 'minlength')" />
               <small class="p-error" *ngIf="hasError('referencia', 'required') || hasError('referencia', 'minlength')">
                 {{ getErrorMessage('referencia') }}
@@ -56,7 +55,7 @@
             </div>
 
             <div class="form-field col-md-6 col-12">
-              <label for="precio" class="required">Precio de Venta (COP) *</label>
+              <label for="precio" class="required">{{ 'onboarding.firstProductStep.precioDeVentaCop' | translate }}</label>
               <p-inputNumber
                 id="precio"
                 formControlName="precio"
@@ -75,7 +74,7 @@
 
             <!-- Stock -->
             <div class="form-field col-12">
-              <label for="stock">Stock Inicial</label>
+              <label for="stock">{{ 'onboarding.firstProductStep.stockInicial' | translate }}</label>
               <p-inputNumber
                 id="stock"
                 formControlName="stock"
@@ -90,21 +89,21 @@
                 placeholder="0"
                 styleClass="w-100">
               </p-inputNumber>
-              <small class="field-help">Cantidad inicial disponible en inventario</small>
+              <small class="field-help">{{ 'onboarding.firstProductStep.cantidadInicialDisponibleEnInventario' | translate }}</small>
             </div>
 
             <!-- Descripción -->
             <div class="form-field col-12">
-              <label for="descripcion">Descripción del Producto</label>
+              <label for="descripcion">{{ 'onboarding.firstProductStep.descripcionDelProducto' | translate }}</label>
               <textarea
                 id="descripcion"
                 pInputTextarea
                 formControlName="descripcion"
                 rows="4"
-                placeholder="Describe las características principales de tu producto..."
+                [placeholder]="'onboarding.firstProductStep.describeLasCaracteristicasPrincipalesDe' | translate"
                 [autoResize]="true">
               </textarea>
-              <small class="field-help">Agrega detalles que ayuden a tus clientes a conocer mejor el producto</small>
+              <small class="field-help">{{ 'onboarding.firstProductStep.agregaDetallesQueAyudenA' | translate }}</small>
             </div>
           </div>
         </div>
@@ -112,16 +111,16 @@
         <!-- Right Column - Image Upload -->
         <div class="product-image">
           <div class="image-upload-section">
-            <label>Imagen del Producto (Opcional)</label>
+            <label>{{ 'onboarding.firstProductStep.imagenDelProductoOpcional' | translate }}</label>
 
             <div class="image-preview" *ngIf="imagePreview">
-              <img [src]="imagePreview" alt="Vista previa del producto" />
+              <img [src]="imagePreview" [alt]="'onboarding.firstProductStep.vistaPreviaDelProducto' | translate" />
               <button
                 pButton
                 type="button"
                 icon="pi pi-times"
                 class="p-button-rounded p-button-danger remove-image-btn"
-                pTooltip="Eliminar imagen"
+                [pTooltip]="'onboarding.firstProductStep.eliminarImagen' | translate"
                 (click)="removeImage()">
               </button>
             </div>
@@ -133,33 +132,33 @@
                 accept="image/*"
                 [maxFileSize]="5000000"
                 [auto]="true"
-                chooseLabel="Seleccionar Imagen"
+                [chooseLabel]="'onboarding.firstProductStep.seleccionarImagen' | translate"
                 chooseIcon="pi pi-upload"
                 (onSelect)="onImageUpload($event)">
               </p-fileUpload>
               <div class="upload-info">
                 <i class="pi pi-image"></i>
-                <p>Sube una imagen de tu producto</p>
-                <small>JPG, PNG o GIF (máx. 5MB)</small>
+                <p>{{ 'onboarding.firstProductStep.subeUnaImagenDeTu' | translate }}</p>
+                <small>{{ 'onboarding.firstProductStep.jpgPngOGifMax' | translate }}</small>
               </div>
             </div>
           </div>
 
           <!-- Product Preview Card -->
           <div class="product-preview" *ngIf="isFormComplete">
-            <h4>Vista Previa</h4>
+            <h4>{{ 'onboarding.firstProductStep.vistaPrevia' | translate }}</h4>
             <div class="preview-card">
               <div class="preview-image">
-                <img *ngIf="imagePreview" [src]="imagePreview" alt="Producto" />
+                <img *ngIf="imagePreview" [src]="imagePreview" [alt]="'onboarding.firstProductStep.producto' | translate" />
                 <i *ngIf="!imagePreview" class="pi pi-image placeholder-icon"></i>
               </div>
               <div class="preview-content">
-                <h5>{{ productForm.value.nombre || 'Nombre del Producto' }}</h5>
-                <p class="preview-ref">REF: {{ productForm.value.referencia || 'SKU' }}</p>
+                <h5>{{ productForm.value.nombre || ('onboarding.firstProductStep.nombreDelProducto' | translate) }}</h5>
+                <p class="preview-ref">{{ 'onboarding.firstProductStep.ref' | translate:{referencia: (productForm.value.referencia || 'SKU')} }}</p>
                 <p class="preview-price">{{ formatCurrency(productForm.value.precio || 0) }}</p>
                 <p class="preview-stock">
                   <i class="pi pi-box"></i>
-                  Stock: {{ productForm.value.stock || 0 }} unidades
+                  {{ 'onboarding.firstProductStep.stockUnidades' | translate:{stock: (productForm.value.stock || 0)} }}
                 </p>
               </div>
             </div>
@@ -174,7 +173,7 @@
     <button
       pButton
       type="button"
-      label="Omitir Este Paso"
+      [label]="'onboarding.firstProductStep.omitirEstePaso' | translate"
       icon="pi pi-arrow-right"
       iconPos="right"
       class="cfg-btn cfg-btn--sec"
@@ -184,7 +183,7 @@
     <button
       pButton
       type="button"
-      label="Guardar y Continuar"
+      [label]="'onboarding.billingZonesStep.guardarYContinuar' | translate"
       icon="pi pi-check"
       iconPos="right"
       class="cfg-btn"
@@ -197,8 +196,7 @@
   <div class="step-hint">
     <i class="pi pi-info-circle"></i>
     <p>
-      <strong>Consejo:</strong> Puedes agregar más productos y configurar detalles avanzados
-      (categorías, variantes, imágenes adicionales) desde el módulo de Inventario.
+      <strong>{{ 'onboarding.firstProductStep.consejo' | translate }}</strong> {{ 'onboarding.firstProductStep.puedesAgregarMasProductosY' | translate }}
     </p>
   </div>
 </div>

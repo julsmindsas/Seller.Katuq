@@ -13,14 +13,14 @@
       <div class="flex align-items-center">
         <i class="pi pi-exclamation-triangle mr-2"></i>
         <div>
-          <strong>Campos obligatorios sin mapear:</strong>
+          <strong>{{ 'importador.columnMappingPreview.camposObligatoriosSinMapear' | translate }}</strong>
           <ul class="mb-0 mt-2">
             <li *ngFor="let field of unmappedRequiredFields">
               {{ getFieldLabel(field) }}
             </li>
           </ul>
           <p class="mt-2 mb-0">
-            Ajusta manualmente el mapeo o asegurate de que estos campos esten en tu archivo.
+            {{ 'importador.columnMappingPreview.ajustaManualmenteElMapeoO' | translate }}
           </p>
         </div>
       </div>
@@ -35,10 +35,10 @@
 
     <ng-template pTemplate="header">
       <tr>
-        <th style="width: 30%">Campo Katuq</th>
-        <th style="width: 25%">Columna Origen</th>
-        <th style="width: 15%">Confianza</th>
-        <th style="width: 30%">Razonamiento</th>
+        <th style="width: 30%">{{ 'importador.columnMappingPreview.campoKatuq' | translate }}</th>
+        <th style="width: 25%">{{ 'importador.columnMappingPreview.columnaOrigen' | translate }}</th>
+        <th style="width: 15%">{{ 'importador.columnMappingPreview.confianza' | translate }}</th>
+        <th style="width: 30%">{{ 'importador.columnMappingPreview.razonamiento' | translate }}</th>
       </tr>
     </ng-template>
 
@@ -72,7 +72,7 @@
             (onChange)="onMappingChange(row, row.sourceColumn)"
             [filter]="true"
             filterBy="label"
-            placeholder="Selecciona columna"
+            [placeholder]="'importador.columnMappingPreview.seleccionaColumna' | translate"
             [style]="{'width': '100%'}">
           </p-dropdown>
         </td>
@@ -100,7 +100,7 @@
         <td colspan="4" class="text-center">
           <div class="empty-state">
             <i class="pi pi-inbox vacio-icono"></i>
-            <p class="mt-2">No se encontraron mapeos</p>
+            <p class="mt-2">{{ 'importador.columnMappingPreview.noSeEncontraronMapeos' | translate }}</p>
           </div>
         </td>
       </tr>
@@ -110,7 +110,7 @@
   <!-- Warnings -->
   <div *ngIf="hasWarnings()" class="warnings-section mt-3">
     <p-accordion>
-      <p-accordionTab header="Advertencias del Analisis" [selected]="false">
+      <p-accordionTab [header]="'importador.columnMappingPreview.advertenciasDelAnalisis' | translate" [selected]="false">
         <ul class="warnings-list">
           <li *ngFor="let warning of warnings" class="warning-item">
             <i class="pi pi-exclamation-circle mr-2"></i>
@@ -124,7 +124,7 @@
   <!-- Suggestions -->
   <div *ngIf="suggestions.length > 0" class="suggestions-section mt-3">
     <p-accordion>
-      <p-accordionTab header="Sugerencias para Mejorar el Mapeo" [selected]="false">
+      <p-accordionTab [header]="'importador.columnMappingPreview.sugerenciasParaMejorarElMapeo' | translate" [selected]="false">
         <ul class="suggestions-list">
           <li *ngFor="let suggestion of suggestions" class="suggestion-item">
             <i class="pi pi-lightbulb mr-2"></i>
@@ -140,13 +140,13 @@
     <div class="footer-info">
       <p-chip
         *ngIf="mappingRows.length > 0"
-        [label]="mappingRows.length + ' campos mapeados'"
+        [label]="mappingRows.length + ' ' + ('importador.columnMappingPreview.camposMapeados' | translate)"
         icon="pi pi-check-circle"
         styleClass="mr-2">
       </p-chip>
       <p-chip
         *ngIf="hasUnmappedRequired()"
-        [label]="unmappedRequiredFields.length + ' campos requeridos faltantes'"
+        [label]="unmappedRequiredFields.length + ' ' + ('importador.columnMappingPreview.camposRequeridosFaltantes' | translate)"
         icon="pi pi-exclamation-triangle"
         [style]="{'background-color': 'var(--yellow-100)', 'color': 'var(--yellow-900)'}">
       </p-chip>
@@ -156,12 +156,12 @@
       <button
         pButton
         type="button"
-        label="Confirmar Mapeo"
+        [label]="'importador.columnMappingPreview.confirmarMapeo' | translate"
         icon="pi pi-check"
         class="cfg-btn"
         [disabled]="!canConfirm()"
         (click)="confirmMappings()"
-        pTooltip="Confirma el mapeo y procede con la importacion"
+        [pTooltip]="'importador.columnMappingPreview.confirmaElMapeoYProcede' | translate"
         tooltipPosition="top">
       </button>
     </div>
@@ -171,8 +171,8 @@
 <!-- Estado vacio cuando no hay resultado -->
 <div *ngIf="!mappingResult" class="empty-mapping-state">
   <i class="pi pi-cloud-upload vacio-icono"></i>
-  <h4 class="mt-3">Sube un archivo para comenzar</h4>
+  <h4 class="mt-3">{{ 'importador.columnMappingPreview.subeUnArchivoParaComenzar' | translate }}</h4>
   <p class="text-muted">
-    El asistente inteligente analizara automaticamente las columnas de tu archivo
+    {{ 'importador.columnMappingPreview.elAsistenteInteligenteAnalizaraAutomaticamente' | translate }}
   </p>
 </div>

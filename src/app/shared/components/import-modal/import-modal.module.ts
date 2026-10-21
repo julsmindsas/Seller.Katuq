@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 
 // PrimeNG Modules
 import { DialogModule } from 'primeng/dialog';
@@ -24,6 +25,7 @@ import { ImportModalComponent } from './import-modal.component';
   imports: [
     CommonModule,
     FormsModule,
+    TranslateModule,
     // PrimeNG
     DialogModule,
     ButtonModule,

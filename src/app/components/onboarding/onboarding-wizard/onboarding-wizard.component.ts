@@ -12,6 +12,7 @@ import {
   parseLowStockThreshold
 } from '../utils/onboarding-v2.utils';
 
+import { TranslateService } from '@ngx-translate/core';
 type StepId = 'goal' | 'context' | 'product' | 'payment' | 'result';
 type Goal = 'sell_today' | 'import_excel' | 'explore';
 type Offering = 'products' | 'services' | 'both' | 'unknown';
@@ -48,11 +49,11 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   private progressUpdatedAt = '';
 
   private readonly baseSteps: WizardStep[] = [
-    { id: 'goal', name: 'Tu primer objetivo', shortName: 'Objetivo', mins: 1 },
-    { id: 'context', name: 'Conozcamos tu forma de vender', shortName: 'Tu negocio', mins: 2 },
-    { id: 'product', name: 'Algo listo para vender', shortName: 'Producto o servicio', mins: 2 },
-    { id: 'payment', name: 'Cómo recibes el dinero', shortName: 'Cobro', mins: 1 },
-    { id: 'result', name: 'Revisemos que todo esté listo', shortName: 'Resultado', mins: 1 }
+    { id: 'goal', name: 'onboarding.onboardingWizard.paso.goal.nombre', shortName: 'onboarding.onboardingWizard.paso.goal.corto', mins: 1 },
+    { id: 'context', name: 'onboarding.onboardingWizard.paso.context.nombre', shortName: 'onboarding.onboardingWizard.paso.context.corto', mins: 2 },
+    { id: 'product', name: 'onboarding.onboardingWizard.paso.product.nombre', shortName: 'onboarding.onboardingWizard.paso.product.corto', mins: 2 },
+    { id: 'payment', name: 'onboarding.onboardingWizard.paso.payment.nombre', shortName: 'onboarding.onboardingWizard.paso.payment.corto', mins: 1 },
+    { id: 'result', name: 'onboarding.onboardingWizard.paso.result.nombre', shortName: 'onboarding.onboardingWizard.paso.result.corto', mins: 1 }
   ];
 
   activeId: StepId = 'goal';
@@ -82,10 +83,10 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   tiendaInicial: TiendaInicial | null = null;
   tipoNegocio: TipoNegocio = 'productos';
   readonly tiposNegocio: { id: TipoNegocio; label: string }[] = [
-    { id: 'productos', label: 'Vendo productos' },
-    { id: 'mayor', label: 'Por mayor' },
-    { id: 'comida', label: 'Comida' },
-    { id: 'servicios', label: 'Servicios' }
+    { id: 'productos', label: 'onboarding.onboardingWizard.tipoProductos' },
+    { id: 'mayor', label: 'onboarding.onboardingWizard.tipoMayor' },
+    { id: 'comida', label: 'onboarding.onboardingWizard.tipoComida' },
+    { id: 'servicios', label: 'onboarding.onboardingWizard.tipoServicios' }
   ];
   publicandoTienda = false;
   errorTienda = '';
@@ -118,7 +119,8 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     private onboardingService: OnboardingService,
     private messageService: MessageService,
     private loaderService: LoaderService,
-    private router: Router
+    private router: Router,
+    private translate: TranslateService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -144,7 +146,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
 
     if (!userKey || !this.companyKey) {
       this.isInitializing = false;
-      this.errorMessage = 'No pudimos identificar tu sesión o tu negocio. Vuelve a ingresar para continuar.';
+      this.errorMessage = this.translate.instant('onboarding.onboardingWizard.errSesion');
       return;
     }
 
@@ -198,7 +200,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     } catch {
       // La caché namespaced permite continuar durante una interrupción corta. El
       // siguiente guardado reintentará la sincronización canónica.
-      this.progressWarning = 'Estás trabajando con el avance guardado en este dispositivo.';
+      this.progressWarning = this.translate.instant('onboarding.onboardingWizard.avisoAvanceLocal');
     }
 
     await this.clearDeferredOnEntry();
@@ -223,7 +225,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     try {
       await this.refreshReadiness();
     } catch (error) {
-      this.errorMessage = this.errorText(error, 'No pudimos comprobar la configuración de tu negocio.');
+      this.errorMessage = this.errorText(error, this.translate.instant('onboarding.onboardingWizard.errComprobar'));
     } finally {
       this.normalizeActiveStep();
       this.saveCache();
@@ -287,7 +289,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   }
 
   get productNoun(): string {
-    return this.selectedProductType === 'servicio' ? 'servicio' : 'producto';
+    return this.translate.instant(this.selectedProductType === 'servicio' ? 'onboarding.onboardingWizard.NounServicio' : 'onboarding.onboardingWizard.NounProducto');
   }
 
   get tracksInitialInventory(): boolean {
@@ -338,37 +340,37 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
 
   get nextLabel(): string {
     if (this.activeId === 'product' && this.needsImportedInventory) {
-      return 'Cargar existencias';
+      return this.translate.instant('onboarding.onboardingWizard.cargarExistencias');
     }
     if (this.activeId === 'product' && this.isImportRoute && !this.readiness?.product_ready) {
-      return 'Ya importé, verificar';
+      return this.translate.instant('onboarding.onboardingWizard.yaImporteVerificar');
     }
     if (this.activeId === 'result') {
-      if (this.isExploreRoute) return 'Explorar Katuq';
+      if (this.isExploreRoute) return this.translate.instant('onboarding.onboardingWizard.explorarKatuq');
       return this.readiness?.ready_to_sell
-        ? 'Finalizar y hacer una venta'
-        : 'Preparar lo que falta';
+        ? this.translate.instant('onboarding.onboardingWizard.finalizarYHacerUnaVenta')
+        : this.translate.instant('onboarding.onboardingWizard.prepararLoQueFalta');
     }
-    return 'Guardar y continuar';
+    return this.translate.instant('onboarding.onboardingWizard.guardarYContinuar');
   }
 
   get nextHint(): string {
     switch (this.activeId) {
-      case 'goal': return 'Elige lo que quieres lograr primero';
+      case 'goal': return this.translate.instant('onboarding.onboardingWizard.hintElegirObjetivo');
       case 'context':
-        if (!this.offering) return 'Cuéntanos qué vendes';
-        if (!this.channel) return 'Elige cómo vendes hoy';
-        if (this.inventoryEnabled === null) return 'Indica si quieres controlar existencias';
-        if (this.inventoryEnabled && this.warehouseName.trim().length < 2) return 'Escribe dónde guardas tus productos';
-        if (!this.validThreshold) return 'El aviso de existencias debe ser un número entero desde cero';
-        return 'Completa esta información';
+        if (!this.offering) return this.translate.instant('onboarding.onboardingWizard.hintQueVendes');
+        if (!this.channel) return this.translate.instant('onboarding.onboardingWizard.hintComoVendes');
+        if (this.inventoryEnabled === null) return this.translate.instant('onboarding.onboardingWizard.hintControlarExistencias');
+        if (this.inventoryEnabled && this.warehouseName.trim().length < 2) return this.translate.instant('onboarding.onboardingWizard.hintDondeGuardas');
+        if (!this.validThreshold) return this.translate.instant('onboarding.onboardingWizard.hintAvisoExistencias');
+        return this.translate.instant('onboarding.onboardingWizard.hintCompletaInformacion');
       case 'product':
-        if (this.isImportRoute) return 'Importa el archivo y vuelve para verificarlo';
-        if (this.tracksInitialInventory && !this.validInitialQuantity) return 'Escribe cuántas unidades tienes hoy';
-        return 'Escribe un nombre y un precio mayor que cero';
-      case 'payment': return 'Elige al menos una forma de cobro';
-      case 'result': return 'Todavía falta confirmar parte de la configuración';
-      default: return 'Continuar';
+        if (this.isImportRoute) return this.translate.instant('onboarding.onboardingWizard.hintImportaArchivo');
+        if (this.tracksInitialInventory && !this.validInitialQuantity) return this.translate.instant('onboarding.onboardingWizard.hintCuantasUnidades');
+        return this.translate.instant('onboarding.onboardingWizard.hintNombreYPrecio');
+      case 'payment': return this.translate.instant('onboarding.onboardingWizard.hintFormaDeCobro');
+      case 'result': return this.translate.instant('onboarding.onboardingWizard.hintFaltaConfirmar');
+      default: return this.translate.instant('onboarding.onboardingWizard.hintContinuar');
     }
   }
 
@@ -408,22 +410,22 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   get readinessRows(): Array<{ key: string; label: string; ready: boolean }> {
     const readiness = this.readiness;
     const rows = [
-      { key: 'company', label: 'Información de tu negocio', ready: readiness?.company_ready === true },
-      { key: 'product', label: 'Producto o servicio con precio', ready: readiness?.product_ready === true },
-      { key: 'payment', label: 'Una forma de cobro', ready: readiness?.payment_ready === true },
-      { key: 'sequences', label: 'Numeración automática de ventas', ready: readiness?.sequences_ready === true }
+      { key: 'company', label: this.translate.instant('onboarding.onboardingWizard.readyNegocio'), ready: readiness?.company_ready === true },
+      { key: 'product', label: this.translate.instant('onboarding.onboardingWizard.readyProducto'), ready: readiness?.product_ready === true },
+      { key: 'payment', label: this.translate.instant('onboarding.onboardingWizard.readyCobro'), ready: readiness?.payment_ready === true },
+      { key: 'sequences', label: this.translate.instant('onboarding.onboardingWizard.readyNumeracion'), ready: readiness?.sequences_ready === true }
     ];
     if (this.requiresInventoryReadiness) {
       rows.splice(2, 0, {
         key: 'inventory',
-        label: 'Existencias iniciales',
+        label: this.translate.instant('onboarding.onboardingWizard.readyExistencias'),
         ready: readiness?.inventory_ready === true
       });
     }
     if (this.channel === 'delivery') {
       rows.splice(rows.length - 1, 0, {
         key: 'delivery',
-        label: 'Forma de entrega',
+        label: this.translate.instant('onboarding.onboardingWizard.readyEntrega'),
         ready: readiness?.delivery_ready === true
       });
     }
@@ -431,11 +433,11 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   }
 
   get missingActionLabel(): string {
-    if (this.readiness?.company_ready === false) return 'Completar datos de mi negocio';
-    if (this.readiness?.product_ready === false) return 'Volver al producto o servicio';
-    if (this.requiresInventoryReadiness && this.readiness?.inventory_ready === false) return 'Revisar mis existencias';
-    if (this.readiness?.payment_ready === false) return 'Volver a las formas de cobro';
-    if (this.channel === 'delivery' && this.readiness?.delivery_ready === false) return 'Revisar cómo entrego mis pedidos';
+    if (this.readiness?.company_ready === false) return this.translate.instant('onboarding.onboardingWizard.missCompletarNegocio');
+    if (this.readiness?.product_ready === false) return this.translate.instant('onboarding.onboardingWizard.missVolverProducto');
+    if (this.requiresInventoryReadiness && this.readiness?.inventory_ready === false) return this.translate.instant('onboarding.onboardingWizard.missRevisarExistencias');
+    if (this.readiness?.payment_ready === false) return this.translate.instant('onboarding.onboardingWizard.missVolverCobro');
+    if (this.channel === 'delivery' && this.readiness?.delivery_ready === false) return this.translate.instant('onboarding.onboardingWizard.missRevisarEntrega');
     return '';
   }
 
@@ -581,14 +583,14 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       if (this.activeId === 'payment' && this.isInactiveResourceError(error)) {
         this.paymentNeedsManualActivation = true;
         const detail = error?.error?.details ||
-          this.errorText(error, 'Ya existe una forma de cobro con ese nombre, pero está desactivada.');
-        this.errorMessage = `${detail} Revísala en Métodos de pago o elige una diferente.`;
+          this.errorText(error, this.translate.instant('onboarding.onboardingWizard.errCobroDesactivado'));
+        this.errorMessage = this.translate.instant('onboarding.onboardingWizard.errRevisaMetodos', { detalle: detail });
       } else {
-        this.errorMessage = this.errorText(error, 'No pudimos guardar este paso. Inténtalo de nuevo.');
+        this.errorMessage = this.errorText(error, this.translate.instant('onboarding.onboardingWizard.errGuardarPaso'));
       }
       this.messageService.add({
         severity: 'error',
-        summary: 'No se pudo continuar',
+        summary: this.translate.instant('onboarding.onboardingWizard.noSePudoContinuar'),
         detail: this.errorMessage
       });
     } finally {
@@ -694,7 +696,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         if (this.isImportRoute) {
           await this.refreshReadiness();
           if (!this.readiness?.product_ready) {
-            throw new Error('Aún no encontramos productos importados. Termina la importación y vuelve a verificar.');
+            throw new Error(this.translate.instant('onboarding.onboardingWizard.errSinImportados'));
           }
           return;
         }
@@ -708,7 +710,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
         }
         await this.refreshReadiness();
         if (!this.readiness?.payment_ready) {
-          throw new Error('La forma de cobro no quedó confirmada. Inténtalo nuevamente.');
+          throw new Error(this.translate.instant('onboarding.onboardingWizard.errCobroNoConfirmado'));
         }
         return;
       default:
@@ -752,7 +754,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     this.product.resourceId = created?.id || created?.cd || created?.productId || this.product.resourceId;
     await this.refreshReadiness();
     if (!this.readiness?.product_ready) {
-      throw new Error(`El ${this.productNoun} se guardó, pero todavía no aparece listo para vender.`);
+      throw new Error(this.translate.instant('onboarding.onboardingWizard.errGuardadoNoListo', { producto: this.productNoun }));
     }
   }
 
@@ -781,18 +783,18 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       sessionStorage.removeItem('onboarding_banner_dismissed');
       this.messageService.add({
         severity: 'success',
-        summary: '¡Ya puedes vender!',
+        summary: this.translate.instant('onboarding.onboardingWizard.yaPuedesVender'),
         detail: seedResult.optionalFailures.length
-          ? 'Producto, cobro y numeración están listos. Algunas opciones de equipo o entrega quedaron para después.'
-          : 'Abriremos una venta para que pruebes el flujo completo.',
+          ? this.translate.instant('onboarding.onboardingWizard.productoCobroYNumeracionEstan')
+          : this.translate.instant('onboarding.onboardingWizard.abriremosUnaVentaParaQue'),
         life: 3000
       });
       setTimeout(() => this.router.navigate(['/ventas/crear-ventas']), seedResult.optionalFailures.length ? 1200 : 600);
     } catch (error) {
-      this.errorMessage = this.errorText(error, 'No pudimos finalizar la configuración. Tu avance sigue guardado.');
+      this.errorMessage = this.errorText(error, this.translate.instant('onboarding.onboardingWizard.errFinalizar'));
       this.messageService.add({
         severity: 'error',
-        summary: 'Tu avance está a salvo',
+        summary: this.translate.instant('onboarding.onboardingWizard.tuAvanceEstaASalvo'),
         detail: this.errorMessage
       });
     } finally {
@@ -844,7 +846,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       this.normalizeActiveStep();
       await this.persistProgress();
     } catch (error) {
-      this.errorMessage = this.errorText(error, 'No pudimos volver a comprobar la configuración.');
+      this.errorMessage = this.errorText(error, this.translate.instant('onboarding.onboardingWizard.errRecomprobar'));
     }
   }
 
@@ -983,7 +985,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     if (this.progressTimer) clearTimeout(this.progressTimer);
     this.progressTimer = setTimeout(() => {
       this.persistProgress().catch(() => {
-        this.progressWarning = 'No pudimos sincronizar ahora; conservamos una copia segura en este dispositivo.';
+        this.progressWarning = this.translate.instant('onboarding.onboardingWizard.avisoSincronizar');
       });
     }, 700);
   }
@@ -997,7 +999,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       await this.onboardingService.saveV2Progress(this.buildProgress());
       this.progressWarning = '';
     } catch {
-      this.progressWarning = 'Abrimos tu avance, pero todavía no pudimos sincronizarlo.';
+      this.progressWarning = this.translate.instant('onboarding.onboardingWizard.avisoAbrimosAvance');
       this.queueProgressSync();
     }
   }
@@ -1127,18 +1129,18 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
 
   private describeMissingReadiness(): string {
     const labels: Record<string, string> = {
-      company: 'los datos del negocio',
-      product: 'un producto o servicio real',
-      payment_method: 'una forma de cobro',
-      sequences: 'la numeración automática',
-      delivery_method: 'una forma de entrega',
-      inventory: 'existencias disponibles'
+      company: this.translate.instant('onboarding.onboardingWizard.faltaNegocio'),
+      product: this.translate.instant('onboarding.onboardingWizard.faltaProducto'),
+      payment_method: this.translate.instant('onboarding.onboardingWizard.faltaCobro'),
+      sequences: this.translate.instant('onboarding.onboardingWizard.faltaNumeracion'),
+      delivery_method: this.translate.instant('onboarding.onboardingWizard.faltaEntrega'),
+      inventory: this.translate.instant('onboarding.onboardingWizard.faltaExistencias')
     };
     const missing = (this.readiness?.missing || [])
       .map(item => labels[item] || '')
       .filter(Boolean);
     return missing.length
-      ? `Aún falta confirmar ${missing.join(', ')}. Tu avance sigue guardado.`
-      : 'Todavía falta confirmar uno de los requisitos. Revisa el resumen e inténtalo de nuevo.';
+      ? this.translate.instant('onboarding.onboardingWizard.faltaConfirmar', { faltante: missing.join(', ') })
+      : this.translate.instant('onboarding.onboardingWizard.faltaRequisito');
   }
 }

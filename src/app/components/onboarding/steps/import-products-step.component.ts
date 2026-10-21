@@ -15,6 +15,7 @@ import {
 } from '../../../shared/models/column-mapping.model';
 import { MobileFileUploadComponent } from '../../../shared/components/import-components/mobile-file-upload/mobile-file-upload.component';
 
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-import-products-step',
   templateUrl: './import-products-step.component.html',
@@ -68,7 +69,8 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
   constructor(
     private messageService: MessageService,
     private http: HttpClient,
-    private columnMappingService: ColumnMappingService
+    private columnMappingService: ColumnMappingService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -104,8 +106,8 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
     if (file.size > this.maxFileSize) {
       this.messageService.add({
         severity: 'error',
-        summary: 'Archivo muy grande',
-        detail: `El archivo no debe superar ${this.maxFileSize / 1000000}MB`
+        summary: this.translate.instant('onboarding.importCustomersStep.archivoMuyGrande'),
+        detail: this.translate.instant('onboarding.importCustomersStep.archivoNoSuperar', { mb: this.maxFileSize / 1000000 })
       });
       return;
     }
@@ -138,8 +140,8 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
         if (data.length === 0) {
           this.messageService.add({
             severity: 'warn',
-            summary: 'Archivo vacío',
-            detail: 'El archivo no contiene datos'
+            summary: this.translate.instant('onboarding.importCustomersStep.archivoVacio'),
+            detail: this.translate.instant('onboarding.importCustomersStep.elArchivoNoContieneDatos')
           });
           return;
         }
@@ -157,8 +159,8 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
         console.error('Error previewing file:', error);
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo leer el archivo'
+          summary: this.translate.instant('comun.error'),
+          detail: this.translate.instant('onboarding.importCustomersStep.noSePudoLeerEl')
         });
       }
     };
@@ -198,16 +200,16 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Análisis Completado',
-        detail: `KAI analizó ${this.sourceColumns.length} columnas y sugirió ${Object.keys(this.mappingResult?.mappings || {}).length} mapeos`
+        summary: this.translate.instant('onboarding.importCustomersStep.analisisCompletado'),
+        detail: this.translate.instant('onboarding.importCustomersStep.kaiAnalizo', { columnas: this.sourceColumns.length, mapeos: Object.keys(this.mappingResult?.mappings || {}).length })
       });
 
     } catch (error: any) {
       console.error('Error analyzing columns with KAI:', error);
       this.messageService.add({
         severity: 'error',
-        summary: 'Error en Análisis',
-        detail: error?.error?.message || 'No se pudo analizar el archivo con KAI'
+        summary: this.translate.instant('onboarding.importCustomersStep.errorEnAnalisis'),
+        detail: error?.error?.message || this.translate.instant('onboarding.importCustomersStep.noSePudoAnalizarEl')
       });
     } finally {
       this.isAnalyzingColumns = false;
@@ -280,8 +282,8 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
     this.updateConfirmedMappings();
     this.messageService.add({
       severity: 'success',
-      summary: 'Mapeo Confirmado',
-      detail: 'Los mapeos han sido confirmados. Ahora puedes importar los productos.'
+      summary: this.translate.instant('onboarding.importCustomersStep.mapeoConfirmado'),
+      detail: this.translate.instant('onboarding.importProductsStep.losMapeosHanSidoConfirmados')
     });
   }
 
@@ -299,8 +301,8 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
     this.confirmedMappings = finalMappings;
     this.messageService.add({
       severity: 'info',
-      summary: 'Mapeo Confirmado',
-      detail: 'Ahora puedes importar los productos con el mapeo confirmado'
+      summary: this.translate.instant('onboarding.importCustomersStep.mapeoConfirmado'),
+      detail: this.translate.instant('onboarding.importProductsStep.ahoraPuedesImportarLosProductos')
     });
   }
 
@@ -311,8 +313,8 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
     if (!this.uploadedFile) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Sin archivo',
-        detail: 'Por favor selecciona un archivo para importar'
+        summary: this.translate.instant('onboarding.importCustomersStep.sinArchivo'),
+        detail: this.translate.instant('onboarding.importCustomersStep.porFavorSeleccionaUnArchivo')
       });
       return;
     }
@@ -320,8 +322,8 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
     if (!this.confirmedMappings || Object.keys(this.confirmedMappings).length === 0) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Mapeo no confirmado',
-        detail: 'Por favor confirma el mapeo de columnas antes de importar'
+        summary: this.translate.instant('onboarding.importProductsStep.mapeoNoConfirmado'),
+        detail: this.translate.instant('onboarding.importProductsStep.porFavorConfirmaElMapeo')
       });
       return;
     }
@@ -335,8 +337,8 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
       if (!companyId) {
         this.messageService.add({
           severity: 'error',
-          summary: 'Error de configuracion',
-          detail: 'No se encontro la empresa. Por favor cierra sesion e ingresa nuevamente.'
+          summary: this.translate.instant('onboarding.importCustomersStep.errorDeConfiguracion'),
+          detail: this.translate.instant('onboarding.importCustomersStep.noSeEncontroLaEmpresa')
         });
         this.isUploading = false;
         return;
@@ -366,8 +368,8 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Importación Completada',
-        detail: `${this.importResult.success} productos importados correctamente${this.importResult.failed > 0 ? `, ${this.importResult.failed} fallidos` : ''}`
+        summary: this.translate.instant('onboarding.importCustomersStep.importacionCompletada'),
+        detail: this.translate.instant('onboarding.importCustomersStep.productosImportados', { success: this.importResult.success }) + (this.importResult.failed > 0 ? this.translate.instant('onboarding.importCustomersStep.fallidosSufijo', { failed: this.importResult.failed }) : '')
       });
 
       this.dataChange.emit({ data: this.importResult });
@@ -377,8 +379,8 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
       console.error('Error importing products:', error);
       this.messageService.add({
         severity: 'error',
-        summary: 'Error en Importación',
-        detail: error?.error?.message || 'No se pudieron importar los productos'
+        summary: this.translate.instant('onboarding.importCustomersStep.errorEnImportacion'),
+        detail: error?.error?.message || this.translate.instant('onboarding.importProductsStep.noSePudieronImportarLos')
       });
     } finally {
       this.isUploading = false;
@@ -435,8 +437,8 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
 
     this.messageService.add({
       severity: 'success',
-      summary: 'Plantilla Descargada',
-      detail: 'Completa la plantilla con tus productos y súbela para importar'
+      summary: this.translate.instant('onboarding.importCustomersStep.plantillaDescargada'),
+      detail: this.translate.instant('onboarding.importProductsStep.completaLaPlantillaConTus')
     });
   }
 
@@ -447,8 +449,8 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
     this.stepComplete.emit({ data: { skipped: true } });
     this.messageService.add({
       severity: 'info',
-      summary: 'Paso Omitido',
-      detail: 'Podrás importar productos más tarde desde el módulo de inventarios'
+      summary: this.translate.instant('onboarding.firstProductStep.pasoOmitido'),
+      detail: this.translate.instant('onboarding.importProductsStep.podrasImportarProductosMasTarde')
     });
   }
 

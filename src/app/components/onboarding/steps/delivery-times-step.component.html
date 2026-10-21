@@ -1,96 +1,96 @@
 <div class="step-container">
   <div class="step-intro">
     <p class="intro-text">
-      Define los tiempos estimados de entrega que ofrecerás. Esto ayuda a tus clientes a planificar sus compras.
+      {{ 'onboarding.deliveryTimesStep.defineLosTiemposEstimadosDe' | translate }}
     </p>
   </div>
 
   <p-card class="templates-card">
     <ng-template pTemplate="header">
-      <div class="onb-cabeza"><i class="pi pi-th-large"></i><span>Plantillas Rápidas</span></div>
+      <div class="onb-cabeza"><i class="pi pi-th-large"></i><span>{{ 'onboarding.billingZonesStep.plantillasRapidas' | translate }}</span></div>
     </ng-template>
     <div class="templates-grid">
       <button *ngFor="let template of predefinedTemplates" pButton type="button" [label]="template.nombreExterno"
               icon="pi pi-calendar" class="cfg-btn cfg-btn--sec template-button" (click)="useTemplate(template)"></button>
     </div>
-    <small class="field-help">Haz clic en una plantilla para cargar sus datos</small>
+    <small class="field-help">{{ 'onboarding.deliveryTimesStep.hazClicEnUnaPlantilla' | translate }}</small>
   </p-card>
 
   <p-card class="mt-3">
     <ng-template pTemplate="header">
       <div class="onb-cabeza"><i class="pi pi-calendar"></i>
-        <span>{{ editingIndex !== null ? 'Editar Tiempo de Entrega' : 'Agregar Tiempo de Entrega' }}</span></div>
+        <span>{{ editingIndex !== null ? ('onboarding.deliveryTimesStep.editarTiempoDeEntrega' | translate) : ('onboarding.deliveryTimesStep.agregarTiempoDeEntrega' | translate) }}</span></div>
     </ng-template>
     <form [formGroup]="deliveryTimeForm">
       <div class="form-grid">
         <div class="form-field col-12 md:col-6">
-          <label for="nombreInterno" class="required">Nombre Interno *</label>
+          <label for="nombreInterno" class="required">{{ 'onboarding.deliveryTimesStep.nombreInterno' | translate }}</label>
           <input id="nombreInterno" type="text" pInputText formControlName="nombreInterno"
-                 placeholder="Ej: 24_horas, 2_3_dias"
+                 [placeholder]="'onboarding.deliveryTimesStep.ej24Horas23' | translate"
                  [class.p-invalid]="hasError('nombreInterno', 'required') || hasError('nombreInterno', 'minlength')" />
           <small class="p-error" *ngIf="hasError('nombreInterno', 'required') || hasError('nombreInterno', 'minlength')">
             {{ getErrorMessage('nombreInterno') }}</small>
-          <small class="field-help">Nombre para uso interno del sistema</small>
+          <small class="field-help">{{ 'onboarding.deliveryTimesStep.nombreParaUsoInternoDel' | translate }}</small>
         </div>
 
         <div class="form-field col-12 md:col-6">
-          <label for="nombreExterno" class="required">Nombre Externo *</label>
+          <label for="nombreExterno" class="required">{{ 'onboarding.deliveryTimesStep.nombreExterno' | translate }}</label>
           <input id="nombreExterno" type="text" pInputText formControlName="nombreExterno"
-                 placeholder="Ej: 24 horas, 2-3 días"
+                 [placeholder]="'onboarding.deliveryTimesStep.ej24Horas232' | translate"
                  [class.p-invalid]="hasError('nombreExterno', 'required') || hasError('nombreExterno', 'minlength')" />
           <small class="p-error" *ngIf="hasError('nombreExterno', 'required') || hasError('nombreExterno', 'minlength')">
             {{ getErrorMessage('nombreExterno') }}</small>
-          <small class="field-help">Nombre que verán los clientes</small>
+          <small class="field-help">{{ 'onboarding.deliveryTimesStep.nombreQueVeranLosClientes' | translate }}</small>
         </div>
 
         <div class="form-field col-12">
-          <label for="descripcion" class="required">Descripción *</label>
+          <label for="descripcion" class="required">{{ 'onboarding.deliveryTimesStep.descripcion' | translate }}</label>
           <textarea id="descripcion" pInputTextarea formControlName="descripcion" rows="2"
-                    placeholder="Breve descripción del tiempo de entrega" [autoResize]="true"
+                    [placeholder]="'onboarding.deliveryTimesStep.breveDescripcionDelTiempoDe' | translate" [autoResize]="true"
                     [class.p-invalid]="hasError('descripcion', 'required')"></textarea>
           <small class="p-error" *ngIf="hasError('descripcion', 'required')">
             {{ getErrorMessage('descripcion') }}</small>
         </div>
 
         <div class="form-field col-12 md:col-4">
-          <label for="minDias" class="required">Días Mínimos *</label>
+          <label for="minDias" class="required">{{ 'onboarding.deliveryTimesStep.diasMinimos' | translate }}</label>
           <p-inputNumber
             inputId="minDias"
             formControlName="minDias"
             [min]="1"
             [showButtons]="true"
-            placeholder="Ej: 1, 2, 3..."
+            [placeholder]="'onboarding.deliveryMethodsStep.ej123' | translate"
             [class.p-invalid]="hasError('minDias', 'required') || hasError('minDias', 'min')">
           </p-inputNumber>
           <small class="p-error" *ngIf="hasError('minDias', 'required') || hasError('minDias', 'min')">
             {{ getErrorMessage('minDias') }}</small>
-          <small class="field-help">Días mínimos estimados para la entrega</small>
+          <small class="field-help">{{ 'onboarding.deliveryTimesStep.diasMinimosEstimadosParaLa' | translate }}</small>
         </div>
 
         <div class="form-field col-12 md:col-4">
-          <label for="posicion" class="required">Posición *</label>
+          <label for="posicion" class="required">{{ 'onboarding.deliveryMethodsStep.posicion' | translate }}</label>
           <p-inputNumber
             inputId="posicion"
             formControlName="posicion"
             [min]="1"
             [showButtons]="true"
-            placeholder="Ej: 1, 2, 3..."
+            [placeholder]="'onboarding.deliveryMethodsStep.ej123' | translate"
             [class.p-invalid]="hasError('posicion', 'required') || hasError('posicion', 'min')">
           </p-inputNumber>
           <small class="p-error" *ngIf="hasError('posicion', 'required') || hasError('posicion', 'min')">
             {{ getErrorMessage('posicion') }}</small>
-          <small class="field-help">Orden en que aparecerá en la lista</small>
+          <small class="field-help">{{ 'onboarding.deliveryTimesStep.ordenEnQueApareceraEn' | translate }}</small>
         </div>
 
         <div class="form-field col-12 md:col-4">
-          <label for="ciudad" class="required">Ciudades *</label>
+          <label for="ciudad" class="required">{{ 'onboarding.deliveryMethodsStep.ciudades' | translate }}</label>
           <p-multiSelect
             inputId="ciudad"
             [options]="ciudades"
             formControlName="ciudad"
             optionLabel="label"
             optionValue="value"
-            placeholder="Selecciona ciudades"
+            [placeholder]="'onboarding.deliveryMethodsStep.seleccionaCiudades' | translate"
             [showClear]="true"
             [filter]="true"
             filterPlaceholder="Buscar..."
@@ -99,19 +99,19 @@
           </p-multiSelect>
           <small class="p-error" *ngIf="hasError('ciudad', 'required')">
             {{ getErrorMessage('ciudad') }}</small>
-          <small class="field-help">Ciudades donde aplica este tiempo</small>
+          <small class="field-help">{{ 'onboarding.deliveryTimesStep.ciudadesDondeAplicaEsteTiempo' | translate }}</small>
         </div>
 
         <div class="form-field col-12">
           <div class="checkbox-field">
-            <p-checkbox inputId="activo" formControlName="activo" [binary]="true" label="Activo"></p-checkbox>
+            <p-checkbox inputId="activo" formControlName="activo" [binary]="true" [label]="'onboarding.billingZonesStep.activo' | translate"></p-checkbox>
           </div>
         </div>
       </div>
       <div class="form-actions">
-        <button *ngIf="editingIndex !== null" pButton type="button" label="Cancelar" icon="pi pi-times"
+        <button *ngIf="editingIndex !== null" pButton type="button" [label]="'comun.cancelar' | translate" icon="pi pi-times"
                 class="cfg-btn cfg-btn--sec" (click)="cancelEdit()"></button>
-        <button pButton type="button" [label]="editingIndex !== null ? 'Actualizar Tiempo' : 'Agregar a Lista'"
+        <button pButton type="button" [label]="editingIndex !== null ? ('onboarding.deliveryTimesStep.actualizarTiempo' | translate) : ('onboarding.billingZonesStep.agregarALista' | translate)"
                 [icon]="editingIndex !== null ? 'pi pi-check' : 'pi pi-plus'" class="cfg-btn"
                 [disabled]="deliveryTimeForm.invalid" (click)="addDeliveryTime()"></button>
       </div>
@@ -121,25 +121,25 @@
   <p-card *ngIf="deliveryTimesList.length > 0" class="mt-3">
     <ng-template pTemplate="header">
       <div class="onb-cabeza"><i class="pi pi-list"></i>
-        <span>Tiempos de Entrega Configurados ({{ deliveryTimesList.length }})</span></div>
+        <span>{{ 'onboarding.deliveryTimesStep.tiemposDeEntregaConfigurados' | translate:{length: deliveryTimesList.length} }}</span></div>
     </ng-template>
     <p-table [value]="deliveryTimesList" styleClass="p-datatable-sm" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
-          <th>Nombre Externo</th>
-          <th>Nombre Interno</th>
-          <th>Días Mínimos</th>
-          <th>Ciudades</th>
-          <th style="width: 80px">Posición</th>
-          <th style="width: 100px">Estado</th>
-          <th style="width: 140px">Acciones</th>
+          <th>{{ 'onboarding.deliveryTimesStep.nombreExterno2' | translate }}</th>
+          <th>{{ 'onboarding.deliveryTimesStep.nombreInterno2' | translate }}</th>
+          <th>{{ 'onboarding.deliveryTimesStep.diasMinimos2' | translate }}</th>
+          <th>{{ 'onboarding.deliveryMethodsStep.ciudades2' | translate }}</th>
+          <th style="width: 80px">{{ 'onboarding.deliveryMethodsStep.posicion2' | translate }}</th>
+          <th style="width: 100px">{{ 'onboarding.billingZonesStep.estado' | translate }}</th>
+          <th style="width: 140px">{{ 'onboarding.billingZonesStep.acciones' | translate }}</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-time let-i="rowIndex">
         <tr>
           <td><strong>{{ time.nombreExterno }}</strong></td>
           <td>{{ time.nombreInterno }}</td>
-          <td><span class="badge-days">{{ time.minDias }} días</span></td>
+          <td><span class="badge-days">{{ time.minDias }} {{ 'onboarding.deliveryTimesStep.dias' | translate }}</span></td>
           <td>
             <span *ngFor="let ciudad of time.ciudad; let last = last">
               {{ ciudad }}<span *ngIf="!last">, </span>
@@ -149,15 +149,15 @@
           <td class="text-center">{{ time.posicion }}</td>
           <td>
             <span class="badge" [class.badge-active]="time.activo" [class.badge-inactive]="!time.activo">
-              {{ time.activo ? 'Activo' : 'Inactivo' }}
+              {{ time.activo ? ('onboarding.billingZonesStep.activo' | translate) : ('onboarding.billingZonesStep.inactivo' | translate) }}
             </span>
           </td>
           <td>
             <div class="action-buttons">
               <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm p-button-info"
-                      pTooltip="Editar" (click)="editDeliveryTime(i)"></button>
+                      [pTooltip]="'comun.editar' | translate" (click)="editDeliveryTime(i)"></button>
               <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger"
-                      pTooltip="Eliminar" (click)="removeDeliveryTime(i)"></button>
+                      [pTooltip]="'comun.eliminar' | translate" (click)="removeDeliveryTime(i)"></button>
             </div>
           </td>
         </tr>
@@ -166,12 +166,12 @@
   </p-card>
 
   <div class="step-actions mt-4">
-    <button pButton type="button" label="Guardar y Continuar" icon="pi pi-check" iconPos="right"
+    <button pButton type="button" [label]="'onboarding.billingZonesStep.guardarYContinuar' | translate" icon="pi pi-check" iconPos="right"
             class="cfg-btn" [disabled]="deliveryTimesList.length === 0 || isSaving"
             [loading]="isSaving" (click)="onComplete()"></button>
     <p class="form-status" *ngIf="deliveryTimesList.length === 0">
-      <i class="pi pi-info-circle"></i>Agrega al menos un tiempo de entrega para continuar</p>
+      <i class="pi pi-info-circle"></i>{{ 'onboarding.deliveryTimesStep.agregaAlMenosUnTiempo' | translate }}</p>
     <p class="form-status success" *ngIf="deliveryTimesList.length > 0">
-      <i class="pi pi-check-circle"></i>{{ deliveryTimesList.length }} tiempo(s) configurado(s) - ¡Listo!</p>
+      <i class="pi pi-check-circle"></i>{{ deliveryTimesList.length }} {{ 'onboarding.deliveryTimesStep.tiempoSConfiguradoSListo' | translate }}</p>
   </div>
 </div>

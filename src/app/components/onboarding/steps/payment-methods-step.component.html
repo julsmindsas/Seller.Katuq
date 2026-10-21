@@ -2,8 +2,7 @@
   <!-- Header Info -->
   <div class="step-intro">
     <p class="intro-text">
-      Configura los métodos de pago que aceptarás en tu tienda. Puedes usar plantillas
-      predefinidas o crear métodos personalizados según tus necesidades.
+      {{ 'onboarding.paymentMethodsStep.configuraLosMetodosDePago' | translate }}
     </p>
   </div>
 
@@ -12,7 +11,7 @@
     <ng-template pTemplate="header">
       <div class="onb-cabeza">
         <i class="pi pi-th-large"></i>
-        <span>Plantillas Rápidas</span>
+        <span>{{ 'onboarding.billingZonesStep.plantillasRapidas' | translate }}</span>
       </div>
     </ng-template>
 
@@ -28,7 +27,7 @@
         (click)="useTemplate(template)">
       </button>
     </div>
-    <small class="field-help">Haz clic en una plantilla para cargar sus datos en el formulario</small>
+    <small class="field-help">{{ 'onboarding.billingZonesStep.hazClicEnUnaPlantilla' | translate }}</small>
   </p-card>
 
   <!-- Add/Edit Payment Method Form -->
@@ -36,7 +35,7 @@
     <ng-template pTemplate="header">
       <div class="onb-cabeza">
         <i class="pi pi-credit-card"></i>
-        <span>{{ editingIndex !== null ? 'Editar Método de Pago' : 'Agregar Método de Pago' }}</span>
+        <span>{{ editingIndex !== null ? ('onboarding.paymentMethodsStep.editarMetodoDePago' | translate) : ('onboarding.paymentMethodsStep.agregarMetodoDePago' | translate) }}</span>
       </div>
     </ng-template>
 
@@ -44,13 +43,13 @@
       <div class="form-grid row">
         <!-- Nombre -->
         <div class="form-field col-md-6 col-12">
-          <label for="nombre" class="required">Nombre del Método de Pago *</label>
+          <label for="nombre" class="required">{{ 'onboarding.paymentMethodsStep.nombreDelMetodoDePago' | translate }}</label>
           <input
             id="nombre"
             type="text"
             pInputText
             formControlName="nombre"
-            placeholder="Ej: Efectivo, Tarjeta de Crédito"
+            [placeholder]="'onboarding.paymentMethodsStep.ejEfectivoTarjetaDeCredito' | translate"
             [class.p-invalid]="hasError('nombre', 'required') || hasError('nombre', 'minlength')" />
           <small class="p-error" *ngIf="hasError('nombre', 'required') || hasError('nombre', 'minlength')">
             {{ getErrorMessage('nombre') }}
@@ -59,13 +58,13 @@
 
         <!-- Posición -->
         <div class="form-field col-md-3 col-12">
-          <label for="posicion" class="required">Posición *</label>
+          <label for="posicion" class="required">{{ 'onboarding.deliveryMethodsStep.posicion' | translate }}</label>
           <input
             id="posicion"
             type="number"
             pInputText
             formControlName="posicion"
-            placeholder="Orden de visualización"
+            [placeholder]="'onboarding.paymentMethodsStep.ordenDeVisualizacion' | translate"
             min="1"
             [class.p-invalid]="hasError('posicion', 'required') || hasError('posicion', 'min')" />
           <small class="p-error" *ngIf="hasError('posicion', 'required') || hasError('posicion', 'min')">
@@ -75,27 +74,27 @@
 
         <!-- Activo -->
         <div class="form-field col-md-3 col-12">
-          <label for="activo">Estado *</label>
+          <label for="activo">{{ 'onboarding.paymentMethodsStep.estado' | translate }}</label>
           <div class="checkbox-field mt-2">
             <p-checkbox
               inputId="activo"
               formControlName="activo"
               [binary]="true"
-              label="Activo">
+              [label]="'onboarding.billingZonesStep.activo' | translate">
             </p-checkbox>
           </div>
         </div>
 
         <!-- Online/Offline -->
         <div class="form-field col-md-6 col-12">
-          <label for="online" class="required">Clasificación *</label>
+          <label for="online" class="required">{{ 'onboarding.paymentMethodsStep.clasificacion' | translate }}</label>
           <p-dropdown
             id="online"
             formControlName="online"
             [options]="onlineOptions"
             optionLabel="label"
             optionValue="value"
-            placeholder="Selecciona clasificación"
+            [placeholder]="'onboarding.paymentMethodsStep.seleccionaClasificacion' | translate"
             styleClass="w-100"
             [class.p-invalid]="hasError('online', 'required')">
           </p-dropdown>
@@ -106,29 +105,29 @@
 
         <!-- Integración -->
         <div class="form-field col-md-6 col-12">
-          <label for="integracion" class="required">Integración *</label>
+          <label for="integracion" class="required">{{ 'onboarding.paymentMethodsStep.integracion' | translate }}</label>
           <p-dropdown
             id="integracion"
             formControlName="integracion"
             [options]="integracionOptions"
             optionLabel="label"
             optionValue="value"
-            placeholder="¿Requiere integración?"
+            [placeholder]="'onboarding.paymentMethodsStep.requiereIntegracion' | translate"
             styleClass="w-100"
             [class.p-invalid]="hasError('integracion', 'required')">
           </p-dropdown>
-          <small class="field-help">Indica si requiere integración con pasarela de pagos</small>
+          <small class="field-help">{{ 'onboarding.paymentMethodsStep.indicaSiRequiereIntegracionCon' | translate }}</small>
         </div>
 
         <!-- Descripción Correo Electrónico -->
         <div class="form-field col-12">
-          <label for="descripcionCorreoElectronico" class="required">Descripción para Correo Electrónico *</label>
+          <label for="descripcionCorreoElectronico" class="required">{{ 'onboarding.paymentMethodsStep.descripcionParaCorreoElectronico' | translate }}</label>
           <textarea
             id="descripcionCorreoElectronico"
             pInputTextarea
             formControlName="descripcionCorreoElectronico"
             rows="2"
-            placeholder="Descripción que aparecerá en los correos electrónicos enviados al cliente"
+            [placeholder]="'onboarding.paymentMethodsStep.descripcionQueApareceraEnLos' | translate"
             [autoResize]="true"
             [class.p-invalid]="hasError('descripcionCorreoElectronico', 'required') || hasError('descripcionCorreoElectronico', 'minlength')">
           </textarea>
@@ -139,13 +138,13 @@
 
         <!-- Recordatorio de Cobro -->
         <div class="form-field col-12">
-          <label for="recordatorioCobro" class="required">Recordatorio de Cobro *</label>
+          <label for="recordatorioCobro" class="required">{{ 'onboarding.paymentMethodsStep.recordatorioDeCobro' | translate }}</label>
           <textarea
             id="recordatorioCobro"
             pInputTextarea
             formControlName="recordatorioCobro"
             rows="2"
-            placeholder="Mensaje de recordatorio de cobro para el cliente"
+            [placeholder]="'onboarding.paymentMethodsStep.mensajeDeRecordatorioDeCobro' | translate"
             [autoResize]="true"
             [class.p-invalid]="hasError('recordatorioCobro', 'required') || hasError('recordatorioCobro', 'minlength')">
           </textarea>
@@ -162,9 +161,9 @@
           [(ngModel)]="createForPOS"
           [ngModelOptions]="{standalone: true}"
           [binary]="true"
-          label="Crear también para POS (Punto de Venta)">
+          [label]="'onboarding.paymentMethodsStep.crearTambienParaPosPunto' | translate">
         </p-checkbox>
-        <small class="field-help">Marca esta opción si usarás estos métodos de pago en el módulo de POS</small>
+        <small class="field-help">{{ 'onboarding.paymentMethodsStep.marcaEstaOpcionSiUsaras' | translate }}</small>
       </div>
 
       <!-- Form Actions -->
@@ -173,7 +172,7 @@
           *ngIf="editingIndex !== null"
           pButton
           type="button"
-          label="Cancelar"
+          [label]="'comun.cancelar' | translate"
           icon="pi pi-times"
           class="cfg-btn cfg-btn--sec"
           (click)="cancelEdit()">
@@ -181,7 +180,7 @@
         <button
           pButton
           type="button"
-          [label]="editingIndex !== null ? 'Actualizar Método' : 'Agregar a Lista'"
+          [label]="editingIndex !== null ? ('onboarding.paymentMethodsStep.actualizarMetodo' | translate) : ('onboarding.billingZonesStep.agregarALista' | translate)"
           [icon]="editingIndex !== null ? 'pi pi-check' : 'pi pi-plus'"
           class="cfg-btn"
           [disabled]="paymentForm.invalid"
@@ -196,19 +195,19 @@
     <ng-template pTemplate="header">
       <div class="onb-cabeza">
         <i class="pi pi-list"></i>
-        <span>Métodos de Pago Configurados ({{ paymentMethodsList.length }})</span>
+        <span>{{ 'onboarding.paymentMethodsStep.metodosDePagoConfigurados' | translate:{length: paymentMethodsList.length} }}</span>
       </div>
     </ng-template>
 
     <p-table [value]="paymentMethodsList" styleClass="p-datatable-sm" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
-          <th style="width: 60px">Posición</th>
-          <th>Nombre</th>
-          <th>Clasificación</th>
-          <th style="width: 100px">Integración</th>
-          <th style="width: 100px">Estado</th>
-          <th style="width: 140px">Acciones</th>
+          <th style="width: 60px">{{ 'onboarding.deliveryMethodsStep.posicion2' | translate }}</th>
+          <th>{{ 'onboarding.categoriesStep.nombre' | translate }}</th>
+          <th>{{ 'onboarding.paymentMethodsStep.clasificacion2' | translate }}</th>
+          <th style="width: 100px">{{ 'onboarding.paymentMethodsStep.integracion2' | translate }}</th>
+          <th style="width: 100px">{{ 'onboarding.billingZonesStep.estado' | translate }}</th>
+          <th style="width: 140px">{{ 'onboarding.billingZonesStep.acciones' | translate }}</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-payment let-i="rowIndex">
@@ -223,7 +222,7 @@
           </td>
           <td>
             <span class="badge badge-info">
-              {{ payment.online?.includes('Online') ? 'Online' : 'Offline' }}
+              {{ payment.online?.includes('Online') ? ('onboarding.paymentMethodsStep.online' | translate) : ('onboarding.paymentMethodsStep.offline' | translate) }}
             </span>
           </td>
           <td class="text-center">
@@ -233,7 +232,7 @@
           </td>
           <td>
             <span class="badge" [class.badge-active]="payment.activo" [class.badge-inactive]="!payment.activo">
-              {{ payment.activo ? 'Activo' : 'Inactivo' }}
+              {{ payment.activo ? ('onboarding.billingZonesStep.activo' | translate) : ('onboarding.billingZonesStep.inactivo' | translate) }}
             </span>
           </td>
           <td>
@@ -243,7 +242,7 @@
                 type="button"
                 icon="pi pi-pencil"
                 class="p-button-text p-button-sm p-button-info"
-                pTooltip="Editar"
+                [pTooltip]="'comun.editar' | translate"
                 tooltipPosition="top"
                 (click)="editPaymentMethod(i)">
               </button>
@@ -252,7 +251,7 @@
                 type="button"
                 icon="pi pi-trash"
                 class="p-button-text p-button-sm p-button-danger"
-                pTooltip="Eliminar"
+                [pTooltip]="'comun.eliminar' | translate"
                 tooltipPosition="top"
                 (click)="removePaymentMethod(i)">
               </button>
@@ -265,7 +264,7 @@
           <td colspan="6" class="text-center">
             <div class="empty-message">
               <i class="pi pi-inbox"></i>
-              <p>No hay métodos de pago configurados aún</p>
+              <p>{{ 'onboarding.paymentMethodsStep.noHayMetodosDePago' | translate }}</p>
             </div>
           </td>
         </tr>
@@ -278,7 +277,7 @@
     <button
       pButton
       type="button"
-      label="Guardar y Continuar"
+      [label]="'onboarding.billingZonesStep.guardarYContinuar' | translate"
       icon="pi pi-check"
       iconPos="right"
       class="cfg-btn"
@@ -289,11 +288,11 @@
 
     <p class="form-status" *ngIf="paymentMethodsList.length === 0">
       <i class="pi pi-info-circle"></i>
-      Agrega al menos un método de pago para continuar
+      {{ 'onboarding.paymentMethodsStep.agregaAlMenosUnMetodo' | translate }}
     </p>
     <p class="form-status success" *ngIf="paymentMethodsList.length > 0">
       <i class="pi pi-check-circle"></i>
-      {{ paymentMethodsList.length }} método(s) de pago configurado(s) - ¡Listo para continuar!
+      {{ paymentMethodsList.length }} {{ 'onboarding.paymentMethodsStep.metodoSDePagoConfigurado' | translate }}
     </p>
   </div>
 </div>

@@ -12089,3 +12089,10 @@ Lo que queda está, sobre todo, en:
 - **de-CH:** borrador escrito por el agente (Opttia no responde en este entorno); sigue oculto hasta la revisión nativa.
 - **Sin marcar:** 13.2 a 13.7 (cierran con IDI-B12f), `build:prod` y la revisión en navegador. `tests/integrations/mcp-guides.test.js` falla desde antes del bloque (su lista de métodos no incluye `entradasDe`).
 - Sin push, despliegue ni escrituras en Firestore.
+
+### 2026-10-21 — D-540: bloque IDI-B12b, onboarding e importador (tareas 13.2 a 13.7, parcial)
+- **Qué cambió:** `components/onboarding`, `shared/components/import-modal` y `shared/components/import-components` pasan al traductor (unas 860 claves nuevas `onboarding.*` e `importador.*` en es, en, pt y de) y quedan en `modulosCerrados`: 1.075 textos sueltos antes, 0 después. Solo presentación: se inyecta `TranslateService` y no cambia ningún evento, servicio, llamada HTTP, mapeo ni valor guardado. En el asistente de inicio también se tradujeron los textos de datos (pasos, tipos de negocio, botones, errores), que el verificador no detecta.
+- **No se traduce:** los encabezados de columnas que el importador espera (`Foto principal (URL)`, `Referencia (SKU)`, `Activo`, `Página Web`, `Categoria`), los valores `SI/NO`, los mapeos enviados a `/v1/onboarding/import-*` y a KAI column-mapping, las respuestas de KAI y los métodos de pago que el asistente guarda con su nombre.
+- **de-CH:** borrador escrito por el agente (Opttia no responde en este entorno); sigue oculto hasta la revisión nativa.
+- **Pruebas:** `test:i18n` 191/191 (prueba nueva `onboarding-cierre.test.js`), tsc con candado sin errores, `tests/onboarding` 7/8: `subscription-onboarding.contract.test.js` falla desde antes del bloque (línea 65, texto de `diagnostic-survey`, de IDI-B12c).
+- **Sin marcar:** 13.2 a 13.7 (cierran con IDI-B12f), `build:prod` y la revisión en navegador. Sin push, despliegue ni escrituras en Firestore.

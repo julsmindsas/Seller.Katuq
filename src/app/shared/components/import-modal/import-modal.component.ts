@@ -19,6 +19,7 @@ import {
 } from '../../models/column-mapping.model';
 import { MobileFileUploadComponent } from '../import-components/mobile-file-upload/mobile-file-upload.component';
 
+import { TranslateService } from '@ngx-translate/core';
 interface ImportConfig {
   title: string;
   endpoint: string;
@@ -989,7 +990,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     private importApi: ImportApiService,
     private columnMappingService: ColumnMappingService,
     private maestroService: MaestroService,
-    private features: CompanyFeaturesService
+    private features: CompanyFeaturesService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -1181,8 +1183,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     if (file.size > (this.config?.maxFileSize || 5000000)) {
       this.messageService.add({
         severity: 'error',
-        summary: 'Archivo muy grande',
-        detail: `El archivo no debe superar ${(this.config?.maxFileSize || 5000000) / 1000000}MB`
+        summary: this.translate.instant('importador.importModal.archivoMuyGrande'),
+        detail: this.translate.instant('importador.importModal.archivoNoSuperar', { mb: (this.config?.maxFileSize || 5000000) / 1000000 })
       });
       return;
     }
@@ -1343,8 +1345,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         if (data.length === 0) {
           this.messageService.add({
             severity: 'warn',
-            summary: 'Archivo vacio',
-            detail: 'El archivo no contiene datos'
+            summary: this.translate.instant('importador.importModal.archivoVacio'),
+            detail: this.translate.instant('importador.importModal.elArchivoNoContieneDatos')
           });
           return;
         }
@@ -1360,8 +1362,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         console.error('Error previewing file:', error);
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo leer el archivo'
+          summary: this.translate.instant('comun.error'),
+          detail: this.translate.instant('importador.importModal.noSePudoLeerEl')
         });
       }
     };
@@ -1386,8 +1388,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         this.prepareMappingFields();
         this.messageService.add({
           severity: 'success',
-          summary: 'Plantilla estándar detectada',
-          detail: `Se mapearon ${Object.keys(standard.mappings).length} columnas automáticamente.`
+          summary: this.translate.instant('importador.importModal.plantillaEstandarDetectada'),
+          detail: this.translate.instant('importador.importModal.seMapearonColumnas', { columnas: Object.keys(standard.mappings).length })
         });
         return;
       }
@@ -1401,8 +1403,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         this.prepareMappingFields();
         this.messageService.add({
           severity: 'success',
-          summary: 'Plantilla estándar detectada',
-          detail: `Se mapearon ${Object.keys(estandarProductos.mappings).length} columnas automáticamente, sin necesidad de análisis.`
+          summary: this.translate.instant('importador.importModal.plantillaEstandarDetectada'),
+          detail: this.translate.instant('importador.importModal.seMapearonColumnasSinAnalisis', { columnas: Object.keys(estandarProductos.mappings).length })
         });
         return;
       }
@@ -1416,8 +1418,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         this.prepareMappingFields();
         this.messageService.add({
           severity: 'success',
-          summary: 'Plantilla estándar detectada',
-          detail: `Se mapearon ${Object.keys(estandarGenerico.mappings).length} columnas automáticamente, sin necesidad de análisis.`
+          summary: this.translate.instant('importador.importModal.plantillaEstandarDetectada'),
+          detail: this.translate.instant('importador.importModal.seMapearonColumnasSinAnalisis', { columnas: Object.keys(estandarGenerico.mappings).length })
         });
         return;
       }
@@ -1468,8 +1470,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Analisis Completado',
-        detail: `KAI analizo ${this.sourceColumns.length} columnas y sugirio ${Object.keys(this.mappingResult?.mappings || {}).length} mapeos`
+        summary: this.translate.instant('importador.importModal.analisisCompletado'),
+        detail: this.translate.instant('importador.importModal.kaiAnalizo', { columnas: this.sourceColumns.length, mapeos: Object.keys(this.mappingResult?.mappings || {}).length })
       });
 
     } catch (error: any) {
@@ -1492,10 +1494,10 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       const reconocidas = Object.keys(porNombre).length;
       this.messageService.add({
         severity: 'warn',
-        summary: 'Mapeo automático no disponible',
+        summary: this.translate.instant('importador.importModal.mapeoAutomaticoNoDisponible'),
         detail: reconocidas > 0
-          ? `No se pudo contactar a KAI, pero se reconocieron ${reconocidas} columnas por su nombre. Revisá el mapeo y completá lo que falte a mano.`
-          : 'No se pudo contactar a KAI. Asigná las columnas a mano; el resto de la importación funciona igual.',
+          ? this.translate.instant('importador.importModal.kaiNoContactadoReconocidas', { columnas: reconocidas })
+          : this.translate.instant('importador.importModal.noSePudoContactarA'),
         life: 10000
       });
     } finally {
@@ -1690,8 +1692,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.updateConfirmedMappings();
     this.messageService.add({
       severity: 'success',
-      summary: 'Mapeo Confirmado',
-      detail: `Los mapeos han sido confirmados. Ahora puedes importar los ${this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : 'productos'}.`
+      summary: this.translate.instant('importador.importModal.mapeoConfirmado'),
+      detail: this.translate.instant('importador.importModal.mapeosConfirmadosPuedesImportar', { tipo: this.translate.instant(this.type === 'customer' ? 'importador.importModal.tipoClientes' : this.type === 'inventory' ? 'importador.importModal.tipoInventario' : 'importador.importModal.tipoProductos') })
     });
   }
 
@@ -1703,8 +1705,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.confirmedMappings = finalMappings;
     this.messageService.add({
       severity: 'info',
-      summary: 'Mapeo Confirmado',
-      detail: `Ahora puedes importar los ${this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : 'productos'} con el mapeo confirmado`
+      summary: this.translate.instant('importador.importModal.mapeoConfirmado'),
+      detail: this.translate.instant('importador.importModal.puedesImportarConMapeo', { tipo: this.translate.instant(this.type === 'customer' ? 'importador.importModal.tipoClientes' : this.type === 'inventory' ? 'importador.importModal.tipoInventario' : 'importador.importModal.tipoProductos') })
     });
   }
 
@@ -1717,8 +1719,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     if (!this.uploadedFile) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Sin archivo',
-        detail: 'Por favor selecciona un archivo para importar'
+        summary: this.translate.instant('importador.importModal.sinArchivo'),
+        detail: this.translate.instant('importador.importModal.porFavorSeleccionaUnArchivo')
       });
       return;
     }
@@ -1727,8 +1729,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       console.log('[ImportModal] ⚠️ No hay mapeos confirmados');
       this.messageService.add({
         severity: 'warn',
-        summary: 'Mapeo no confirmado',
-        detail: 'Por favor confirma el mapeo de columnas antes de importar'
+        summary: this.translate.instant('importador.importModal.mapeoNoConfirmado'),
+        detail: this.translate.instant('importador.importModal.porFavorConfirmaElMapeo')
       });
       return;
     }
@@ -1740,8 +1742,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     if (this.debeAvisarCategoria) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Revisá el aviso de categorías',
-        detail: 'Marcá "Entiendo, importar igual" para continuar, o volvé y completá la columna Categoria.',
+        summary: this.translate.instant('importador.importModal.revisaElAvisoDeCategorias'),
+        detail: this.translate.instant('importador.importModal.marcaEntiendoImportarIgualPara'),
         life: 8000
       });
       return;
@@ -1757,8 +1759,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       if (!companyId) {
         this.messageService.add({
           severity: 'error',
-          summary: 'Error de configuracion',
-          detail: 'No se encontro la empresa. Por favor cierra sesion e ingresa nuevamente.'
+          summary: this.translate.instant('importador.importModal.errorDeConfiguracion'),
+          detail: this.translate.instant('importador.importModal.noSeEncontroLaEmpresa')
         });
         this.isUploading = false;
         return;
@@ -1867,8 +1869,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
           if (totalBatches > 1) {
             this.messageService.add({
               severity: 'info',
-              summary: `Lote ${batchIdx + 1}/${totalBatches}`,
-              detail: `${data.created || 0} creados, ${data.updated || 0} actualizados`,
+              summary: this.translate.instant('importador.importModal.loteDeTotal', { actual: batchIdx + 1, total: totalBatches }),
+              detail: this.translate.instant('importador.importModal.creadosActualizados', { creados: data.created || 0, actualizados: data.updated || 0 }),
               life: 3000
             });
           }
@@ -1928,8 +1930,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         // usuario tiene que enterarse de que su archivo no cambió nada.
         severity: (totalCreated + totalUpdated) === 0 && totalOmitted > 0 ? 'warn' : 'success',
         summary: (totalCreated + totalUpdated) === 0 && totalOmitted > 0
-          ? 'No se importó nada'
-          : 'Importacion Completada',
+          ? this.translate.instant('importador.importModal.noSeImportoNada')
+          : this.translate.instant('importador.importModal.importacionCompletada'),
         detail,
         life: totalOmitted > 0 ? 10000 : 5000
       });
@@ -1941,8 +1943,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       console.error('Error importing data:', error);
       this.messageService.add({
         severity: 'error',
-        summary: 'Error en Importacion',
-        detail: error?.error?.message || `No se pudieron importar los ${this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : 'productos'}`
+        summary: this.translate.instant('importador.importModal.errorEnImportacion'),
+        detail: error?.error?.message || this.translate.instant('importador.importModal.noSePudieronImportar', { tipo: this.translate.instant(this.type === 'customer' ? 'importador.importModal.tipoClientes' : this.type === 'inventory' ? 'importador.importModal.tipoInventario' : 'importador.importModal.tipoProductos') })
       });
     } finally {
       this.isUploading = false;
@@ -1963,14 +1965,14 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       this.importResult = null;
       this.messageService.add({
         severity: 'warn',
-        summary: 'Importacion eliminada',
-        detail: `Se eliminaron ${this.deleteResult.deleted} clientes importados`
+        summary: this.translate.instant('importador.importModal.importacionEliminada'),
+        detail: this.translate.instant('importador.importModal.seEliminaronImportados', { cantidad: this.deleteResult.deleted })
       });
     } catch (error: any) {
       this.messageService.add({
         severity: 'error',
-        summary: 'Error al eliminar',
-        detail: error?.error?.error || 'No se pudo eliminar la importacion'
+        summary: this.translate.instant('importador.importModal.errorAlEliminar'),
+        detail: error?.error?.error || this.translate.instant('importador.importModal.noSePudoEliminarLa')
       });
     } finally {
       this.isDeleting = false;
@@ -1991,14 +1993,14 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       this.importResult = null;
       this.messageService.add({
         severity: 'warn',
-        summary: 'Clientes eliminados',
-        detail: `Se eliminaron ${this.deleteResult.deleted} clientes de la empresa`
+        summary: this.translate.instant('importador.importModal.clientesEliminados'),
+        detail: this.translate.instant('importador.importModal.seEliminaronDeEmpresa', { cantidad: this.deleteResult.deleted })
       });
     } catch (error: any) {
       this.messageService.add({
         severity: 'error',
-        summary: 'Error al eliminar',
-        detail: error?.error?.error || 'No se pudieron eliminar los clientes'
+        summary: this.translate.instant('importador.importModal.errorAlEliminar'),
+        detail: error?.error?.error || this.translate.instant('importador.importModal.noSePudieronEliminarLos')
       });
     } finally {
       this.isDeleting = false;
@@ -2912,8 +2914,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
 
     this.messageService.add({
       severity: 'success',
-      summary: 'Plantilla descargada',
-      detail: `Completa la plantilla y subela para importar. Columnas obligatorias: ${requeridas || 'ninguna'}.`,
+      summary: this.translate.instant('importador.importModal.plantillaDescargada'),
+      detail: this.translate.instant('importador.importModal.completaPlantilla', { columnas: requeridas || this.translate.instant('importador.importModal.ninguna') }),
       life: 8000
     });
   }

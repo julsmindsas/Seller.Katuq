@@ -10,6 +10,7 @@ import { MaestroService } from '../../../shared/services/maestros/maestro.servic
  * Creación del primer producto - paso opcional
  */
 import { AVISO_REFERENCIA_CON_ESPACIOS, limpiarReferencia, referenciaTieneEspacios } from 'src/app/shared/utils/referencia-producto';
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-first-product-step',
   templateUrl: './first-product-step.component.html',
@@ -32,7 +33,8 @@ export class FirstProductStepComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private messageService: MessageService,
-    private maestroService: MaestroService
+    private maestroService: MaestroService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -122,8 +124,8 @@ export class FirstProductStepComponent implements OnInit, OnDestroy {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Imagen Cargada',
-        detail: 'La imagen se ha cargado correctamente'
+        summary: this.translate.instant('onboarding.firstProductStep.imagenCargada'),
+        detail: this.translate.instant('onboarding.firstProductStep.laImagenSeHaCargado')
       });
     }
   }
@@ -136,8 +138,8 @@ export class FirstProductStepComponent implements OnInit, OnDestroy {
     this.imagePreview = null;
     this.messageService.add({
       severity: 'info',
-      summary: 'Imagen Eliminada',
-      detail: 'La imagen ha sido eliminada'
+      summary: this.translate.instant('onboarding.firstProductStep.imagenEliminada'),
+      detail: this.translate.instant('onboarding.firstProductStep.laImagenHaSidoEliminada')
     });
   }
 
@@ -147,8 +149,8 @@ export class FirstProductStepComponent implements OnInit, OnDestroy {
   onSkip(): void {
     this.messageService.add({
       severity: 'info',
-      summary: 'Paso Omitido',
-      detail: 'Puedes agregar productos más tarde desde el módulo de inventario'
+      summary: this.translate.instant('onboarding.firstProductStep.pasoOmitido'),
+      detail: this.translate.instant('onboarding.firstProductStep.puedesAgregarProductosMasTarde')
     });
     this.stepComplete.emit({ data: null, skipped: true });
   }
@@ -161,8 +163,8 @@ export class FirstProductStepComponent implements OnInit, OnDestroy {
       this.markFormAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Formulario Incompleto',
-        detail: 'Por favor completa todos los campos requeridos'
+        summary: this.translate.instant('onboarding.billingZonesStep.formularioIncompleto'),
+        detail: this.translate.instant('onboarding.billingZonesStep.porFavorCompletaTodosLos')
       });
       return;
     }
@@ -174,7 +176,7 @@ export class FirstProductStepComponent implements OnInit, OnDestroy {
       this.productForm.get('referencia')?.markAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Referencia con espacios',
+        summary: this.translate.instant('onboarding.firstProductStep.referenciaConEspacios'),
         detail: AVISO_REFERENCIA_CON_ESPACIOS
       });
       return;
@@ -221,15 +223,15 @@ export class FirstProductStepComponent implements OnInit, OnDestroy {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Guardado',
-        detail: '¡Tu primer producto ha sido creado correctamente!'
+        summary: this.translate.instant('onboarding.billingZonesStep.guardado'),
+        detail: this.translate.instant('onboarding.firstProductStep.tuPrimerProductoHaSido')
       });
     } catch (error) {
       console.error('Error guardando producto:', error);
       this.messageService.add({
         severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudo guardar el producto'
+        summary: this.translate.instant('comun.error'),
+        detail: this.translate.instant('onboarding.firstProductStep.noSePudoGuardarEl')
       });
     } finally {
       this.isSaving = false;

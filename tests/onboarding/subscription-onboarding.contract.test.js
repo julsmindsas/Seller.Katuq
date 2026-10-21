@@ -53,7 +53,8 @@ const dropshippingBlock = childRoutes.slice(dropshippingStart, dropshippingStart
 assert.ok(dropshippingBlock.includes('SubscriptionGuard'), 'dropshipping debe usar SubscriptionGuard');
 assert.ok(dropshippingBlock.includes('requiresPremium: true'), 'dropshipping debe ser Premium');
 
-assert.ok(onboarding.includes('Empiezas en el plan Gratis'), 'el cierre debe confirmar el plan Gratis');
+// IDI-B12b: la plantilla del asistente pide la clave y es.json conserva el texto.
+assert.ok(muestraTexto(onboarding, 'Empiezas en el plan Gratis'), 'el cierre debe confirmar el plan Gratis');
 assert.ok(welcome.includes('Haz tu primera venta en Katuq'), 'el inicio debe guiar a la primera venta');
 assert.ok(welcome.includes('0 de {{ freeOrdersLimit }} pedidos usados') || welcome.includes('{{ freeOrdersUsed }} de {{ freeOrdersLimit }} pedidos usados'), 'el inicio debe mostrar uso Gratis');
 

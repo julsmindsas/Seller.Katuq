@@ -3,11 +3,10 @@
   <div class="mapping-header">
     <h4 class="mapping-title">
       <i class="pi pi-sparkles mr-2"></i>
-      Mapeo Inteligente de Columnas
+      {{ 'onboarding.columnMappingPreview.mapeoInteligenteDeColumnas' | translate }}
     </h4>
     <p class="mapping-subtitle">
-      KAI ha analizado {{ mappingResult.metadata?.columnsAnalyzed }} columnas usando
-      {{ mappingResult.metadata?.sampleRowsUsed }} filas de ejemplo
+      {{ 'onboarding.columnMappingPreview.kaiHaAnalizadoColumnasUsando' | translate:{columnsAnalyzed: mappingResult.metadata?.columnsAnalyzed, sampleRowsUsed: mappingResult.metadata?.sampleRowsUsed} }}
     </p>
   </div>
 
@@ -20,14 +19,14 @@
       <div class="flex align-items-center">
         <i class="pi pi-exclamation-triangle mr-2"></i>
         <div>
-          <strong>Campos obligatorios sin mapear:</strong>
+          <strong>{{ 'onboarding.columnMappingPreview.camposObligatoriosSinMapear' | translate }}</strong>
           <ul class="mb-0 mt-2">
             <li *ngFor="let field of unmappedRequiredFields">
               {{ getFieldLabel(field) }}
             </li>
           </ul>
           <p class="mt-2 mb-0">
-            Ajusta manualmente el mapeo o asegúrate de que estos campos estén en tu archivo.
+            {{ 'onboarding.columnMappingPreview.ajustaManualmenteElMapeoO' | translate }}
           </p>
         </div>
       </div>
@@ -42,10 +41,10 @@
 
     <ng-template pTemplate="header">
       <tr>
-        <th style="width: 30%">Campo Katuq</th>
-        <th style="width: 25%">Columna Origen</th>
-        <th style="width: 15%">Confianza</th>
-        <th style="width: 30%">Razonamiento</th>
+        <th style="width: 30%">{{ 'onboarding.columnMappingPreview.campoKatuq' | translate }}</th>
+        <th style="width: 25%">{{ 'onboarding.columnMappingPreview.columnaOrigen' | translate }}</th>
+        <th style="width: 15%">{{ 'onboarding.columnMappingPreview.confianza' | translate }}</th>
+        <th style="width: 30%">{{ 'onboarding.columnMappingPreview.razonamiento' | translate }}</th>
       </tr>
     </ng-template>
 
@@ -79,7 +78,7 @@
             (onChange)="onMappingChange(row, row.sourceColumn)"
             [filter]="true"
             filterBy="label"
-            placeholder="Selecciona columna"
+            [placeholder]="'onboarding.columnMappingPreview.seleccionaColumna' | translate"
             [style]="{'width': '100%'}">
           </p-dropdown>
         </td>
@@ -107,7 +106,7 @@
         <td colspan="4" class="text-center">
           <div class="empty-state">
             <i class="pi pi-inbox vacio-icono"></i>
-            <p class="mt-2">No se encontraron mapeos</p>
+            <p class="mt-2">{{ 'onboarding.columnMappingPreview.noSeEncontraronMapeos' | translate }}</p>
           </div>
         </td>
       </tr>
@@ -117,7 +116,7 @@
   <!-- Warnings -->
   <div *ngIf="hasWarnings()" class="warnings-section mt-3">
     <p-accordion>
-      <p-accordionTab header="Advertencias del Análisis" [selected]="false">
+      <p-accordionTab [header]="'onboarding.columnMappingPreview.advertenciasDelAnalisis' | translate" [selected]="false">
         <ul class="warnings-list">
           <li *ngFor="let warning of warnings" class="warning-item">
             <i class="pi pi-exclamation-circle mr-2"></i>
@@ -131,7 +130,7 @@
   <!-- Suggestions -->
   <div *ngIf="suggestions.length > 0" class="suggestions-section mt-3">
     <p-accordion>
-      <p-accordionTab header="Sugerencias para Mejorar el Mapeo" [selected]="false">
+      <p-accordionTab [header]="'onboarding.columnMappingPreview.sugerenciasParaMejorarElMapeo' | translate" [selected]="false">
         <ul class="suggestions-list">
           <li *ngFor="let suggestion of suggestions" class="suggestion-item">
             <i class="pi pi-lightbulb mr-2"></i>
@@ -147,13 +146,13 @@
     <div class="footer-info">
       <p-chip
         *ngIf="mappingRows.length > 0"
-        [label]="mappingRows.length + ' campos mapeados'"
+        [label]="mappingRows.length + ' ' + ('onboarding.columnMappingPreview.camposMapeados' | translate)"
         icon="pi pi-check-circle"
         styleClass="mr-2">
       </p-chip>
       <p-chip
         *ngIf="hasUnmappedRequired()"
-        [label]="unmappedRequiredFields.length + ' campos requeridos faltantes'"
+        [label]="unmappedRequiredFields.length + ' ' + ('onboarding.columnMappingPreview.camposRequeridosFaltantes' | translate)"
         icon="pi pi-exclamation-triangle"
         [style]="{'background-color': 'var(--yellow-100)', 'color': 'var(--yellow-900)'}">
       </p-chip>
@@ -163,12 +162,12 @@
       <button
         pButton
         type="button"
-        label="Confirmar Mapeo"
+        [label]="'onboarding.columnMappingPreview.confirmarMapeo' | translate"
         icon="pi pi-check"
         class="cfg-btn"
         [disabled]="!canConfirm()"
         (click)="confirmMappings()"
-        pTooltip="Confirma el mapeo y procede con la importación"
+        [pTooltip]="'onboarding.columnMappingPreview.confirmaElMapeoYProcede' | translate"
         tooltipPosition="top">
       </button>
     </div>
@@ -178,8 +177,8 @@
 <!-- Estado vacío cuando no hay resultado -->
 <div *ngIf="!mappingResult" class="empty-mapping-state">
   <i class="pi pi-cloud-upload vacio-icono"></i>
-  <h4 class="mt-3">Sube un archivo para comenzar</h4>
+  <h4 class="mt-3">{{ 'onboarding.columnMappingPreview.subeUnArchivoParaComenzar' | translate }}</h4>
   <p class="text-muted">
-    El asistente inteligente analizará automáticamente las columnas de tu archivo
+    {{ 'onboarding.columnMappingPreview.elAsistenteInteligenteAnalizaraAutomaticamente' | translate }}
   </p>
 </div>

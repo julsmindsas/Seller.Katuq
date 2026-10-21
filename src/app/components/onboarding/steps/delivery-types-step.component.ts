@@ -5,6 +5,7 @@ import { MessageService } from 'primeng/api';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import { TipoEntrega } from '../../../shared/models/productos/tipoentrega/tipoentrega';
 
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-delivery-types-step',
   templateUrl: './delivery-types-step.component.html',
@@ -70,7 +71,8 @@ export class DeliveryTypesStepComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private messageService: MessageService,
-    private maestroService: MaestroService
+    private maestroService: MaestroService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -109,8 +111,8 @@ export class DeliveryTypesStepComponent implements OnInit, OnDestroy {
         console.error('❌ Error cargando formas de entrega:', error);
         this.messageService.add({
           severity: 'warn',
-          summary: 'Advertencia',
-          detail: 'No se pudieron cargar las formas de entrega'
+          summary: this.translate.instant('onboarding.deliveryMethodsStep.advertencia'),
+          detail: this.translate.instant('onboarding.deliveryTypesStep.noSePudieronCargarLas')
         });
       }
     });
@@ -143,8 +145,8 @@ export class DeliveryTypesStepComponent implements OnInit, OnDestroy {
       this.markFormAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Formulario Incompleto',
-        detail: 'Por favor completa todos los campos requeridos'
+        summary: this.translate.instant('onboarding.billingZonesStep.formularioIncompleto'),
+        detail: this.translate.instant('onboarding.billingZonesStep.porFavorCompletaTodosLos')
       });
       return;
     }
@@ -157,8 +159,8 @@ export class DeliveryTypesStepComponent implements OnInit, OnDestroy {
     if (existsName) {
       this.messageService.add({
         severity: 'error',
-        summary: 'Nombre Duplicado',
-        detail: 'Ya existe un tipo de entrega con este nombre interno'
+        summary: this.translate.instant('onboarding.billingZonesStep.nombreDuplicado'),
+        detail: this.translate.instant('onboarding.deliveryTypesStep.yaExisteUnTipoDe')
       });
       return;
     }
@@ -166,10 +168,10 @@ export class DeliveryTypesStepComponent implements OnInit, OnDestroy {
     if (this.editingIndex !== null) {
       this.deliveryTypesList[this.editingIndex] = typeData;
       this.editingIndex = null;
-      this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Tipo de entrega actualizado correctamente' });
+      this.messageService.add({ severity: 'success', summary: this.translate.instant('onboarding.billingZonesStep.actualizado'), detail: this.translate.instant('onboarding.deliveryTypesStep.tipoDeEntregaActualizadoCorrectamente') });
     } else {
       this.deliveryTypesList.push(typeData);
-      this.messageService.add({ severity: 'success', summary: 'Agregado', detail: 'Tipo de entrega agregado a la lista' });
+      this.messageService.add({ severity: 'success', summary: this.translate.instant('onboarding.billingZonesStep.agregado'), detail: this.translate.instant('onboarding.deliveryTypesStep.tipoDeEntregaAgregadoA') });
     }
 
     this.deliveryTypeForm.reset({ activo: true, formaEntrega: [], cd: null });
@@ -191,7 +193,7 @@ export class DeliveryTypesStepComponent implements OnInit, OnDestroy {
     const type = this.deliveryTypesList[index];
     this.deliveryTypesList.splice(index, 1);
     this.dataChange.emit({ data: this.deliveryTypesList });
-    this.messageService.add({ severity: 'info', summary: 'Eliminado', detail: `Tipo de entrega "${type.nombreExterno}" eliminado` });
+    this.messageService.add({ severity: 'info', summary: this.translate.instant('onboarding.billingZonesStep.eliminado'), detail: this.translate.instant('onboarding.deliveryTypesStep.tipoEliminado', { nombre: type.nombreExterno }) });
     if (this.editingIndex === index) {
       this.cancelEdit();
     }
@@ -201,8 +203,8 @@ export class DeliveryTypesStepComponent implements OnInit, OnDestroy {
     if (this.deliveryTypesList.length === 0) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Configuración Incompleta',
-        detail: 'Debes agregar al menos un tipo de entrega para continuar'
+        summary: this.translate.instant('onboarding.billingZonesStep.configuracionIncompleta'),
+        detail: this.translate.instant('onboarding.deliveryTypesStep.debesAgregarAlMenosUn')
       });
       return;
     }
@@ -217,12 +219,12 @@ export class DeliveryTypesStepComponent implements OnInit, OnDestroy {
       this.stepComplete.emit({ data: this.deliveryTypesList });
       this.messageService.add({
         severity: 'success',
-        summary: 'Guardado',
-        detail: `${this.deliveryTypesList.length} tipo(s) de entrega configurado(s) correctamente`
+        summary: this.translate.instant('onboarding.billingZonesStep.guardado'),
+        detail: this.translate.instant('onboarding.deliveryTypesStep.tiposConfigurados', { cantidad: this.deliveryTypesList.length })
       });
     } catch (error) {
       console.error('Error guardando tipos de entrega:', error);
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar la configuración' });
+      this.messageService.add({ severity: 'error', summary: this.translate.instant('comun.error'), detail: this.translate.instant('onboarding.categoriesStep.noSePudoGuardarLa') });
     } finally {
       this.isSaving = false;
     }

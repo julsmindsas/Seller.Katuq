@@ -2,8 +2,7 @@
   <!-- Header Info -->
   <div class="step-intro">
     <p class="intro-text">
-      Configura al menos una bodega para gestionar tu inventario. Las bodegas te permiten
-      organizar y controlar el stock de tus productos en diferentes ubicaciones.
+      {{ 'onboarding.warehousesStep.configuraAlMenosUnaBodega' | translate }}
     </p>
   </div>
 
@@ -12,7 +11,7 @@
     <ng-template pTemplate="header">
       <div class="onb-cabeza">
         <i class="pi pi-warehouse"></i>
-        <span>{{ editingIndex !== null ? 'Editar Bodega' : 'Agregar Bodega' }}</span>
+        <span>{{ editingIndex !== null ? ('onboarding.warehousesStep.editarBodega' | translate) : ('onboarding.warehousesStep.agregarBodega' | translate) }}</span>
       </div>
     </ng-template>
 
@@ -20,13 +19,13 @@
       <div class="form-grid">
         <!-- Nombre -->
         <div class="form-field col-md-6 col-12">
-          <label for="nombre" class="required">Nombre de la Bodega *</label>
+          <label for="nombre" class="required">{{ 'onboarding.warehousesStep.nombreDeLaBodega' | translate }}</label>
           <input
             id="nombre"
             type="text"
             pInputText
             formControlName="nombre"
-            placeholder="Ej: Bodega Principal"
+            [placeholder]="'onboarding.warehousesStep.ejBodegaPrincipal' | translate"
             (blur)="onNombreChange()"
             [class.p-invalid]="hasError('nombre', 'required') || hasError('nombre', 'minlength')" />
           <small class="p-error" *ngIf="hasError('nombre', 'required') || hasError('nombre', 'minlength')">
@@ -36,15 +35,15 @@
 
         <!-- ID Bodega -->
         <div class="form-field col-md-6 col-12">
-          <label for="idBodega" class="required">ID de Bodega *</label>
+          <label for="idBodega" class="required">{{ 'onboarding.warehousesStep.idDeBodega' | translate }}</label>
           <input
             id="idBodega"
             type="text"
             pInputText
             formControlName="idBodega"
-            placeholder="BOD-PRINCIPAL"
+            [placeholder]="'onboarding.warehousesStep.bodPrincipal' | translate"
             [class.p-invalid]="hasError('idBodega', 'required') || hasError('idBodega', 'pattern')" />
-          <small class="field-help">Formato: BOD-XXX (ej: BOD-PRINCIPAL)</small>
+          <small class="field-help">{{ 'onboarding.warehousesStep.formatoBodXxxEjBod' | translate }}</small>
           <small class="p-error" *ngIf="hasError('idBodega', 'required') || hasError('idBodega', 'pattern')">
             {{ getErrorMessage('idBodega') }}
           </small>
@@ -52,29 +51,29 @@
 
         <!-- Tipo -->
         <div class="form-field col-md-6 col-12">
-          <label for="tipo" class="required">Tipo de Bodega *</label>
+          <label for="tipo" class="required">{{ 'onboarding.warehousesStep.tipoDeBodega' | translate }}</label>
           <p-dropdown
             id="tipo"
             formControlName="tipo"
             [options]="tipoOptions"
-            placeholder="Selecciona el tipo"
+            [placeholder]="'onboarding.companyInfoStep.seleccionaElTipo' | translate"
             optionLabel="label"
             optionValue="value"
             styleClass="w-100">
           </p-dropdown>
-          <small class="field-help">Física: inventario real | Transaccional: movimientos virtuales</small>
+          <small class="field-help">{{ 'onboarding.warehousesStep.fisicaInventarioRealTransaccionalMovimientos' | translate }}</small>
         </div>
 
         <!-- País -->
         <div class="form-field col-md-4 col-12" *ngIf="warehouseForm.get('tipo')?.value === 'Física'">
           <label for="pais" [class.required]="warehouseForm.get('tipo')?.value === 'Física'">
-            País {{ warehouseForm.get('tipo')?.value === 'Física' ? '*' : '' }}
+            {{ 'onboarding.warehousesStep.pais' | translate:{sica: (warehouseForm.get('tipo')?.value === 'Física' ? '*' : '')} }}
           </label>
           <p-dropdown
             id="pais"
             formControlName="pais"
             [options]="paises"
-            placeholder="Selecciona el país"
+            [placeholder]="'onboarding.warehousesStep.seleccionaElPais' | translate"
             [filter]="true"
             [showClear]="true"
             [loading]="cargandoPaises"
@@ -89,13 +88,13 @@
         <!-- Departamento -->
         <div class="form-field col-md-4 col-12" *ngIf="warehouseForm.get('tipo')?.value === 'Física'">
           <label for="departamento" [class.required]="warehouseForm.get('tipo')?.value === 'Física'">
-            Departamento {{ warehouseForm.get('tipo')?.value === 'Física' ? '*' : '' }}
+            {{ 'onboarding.warehousesStep.departamento' | translate:{sica: (warehouseForm.get('tipo')?.value === 'Física' ? '*' : '')} }}
           </label>
           <p-dropdown
             id="departamento"
             formControlName="departamento"
             [options]="departamentos"
-            placeholder="Selecciona el departamento"
+            [placeholder]="'onboarding.warehousesStep.seleccionaElDepartamento' | translate"
             [filter]="true"
             [showClear]="true"
             [loading]="cargandoDepartamentos"
@@ -111,13 +110,13 @@
         <!-- Ciudad -->
         <div class="form-field col-md-4 col-12" *ngIf="warehouseForm.get('tipo')?.value === 'Física'">
           <label for="ciudad" [class.required]="warehouseForm.get('tipo')?.value === 'Física'">
-            Ciudad {{ warehouseForm.get('tipo')?.value === 'Física' ? '*' : '' }}
+            {{ 'onboarding.warehousesStep.ciudad' | translate:{sica: (warehouseForm.get('tipo')?.value === 'Física' ? '*' : '')} }}
           </label>
           <p-dropdown
             id="ciudad"
             formControlName="ciudad"
             [options]="ciudades"
-            placeholder="Selecciona la ciudad"
+            [placeholder]="'onboarding.warehousesStep.seleccionaLaCiudad' | translate"
             [filter]="true"
             [showClear]="true"
             [loading]="cargandoCiudades"
@@ -133,14 +132,14 @@
         <!-- Dirección -->
         <div class="form-field col-md-8 col-12" *ngIf="warehouseForm.get('tipo')?.value === 'Física'">
           <label for="direccion" [class.required]="warehouseForm.get('tipo')?.value === 'Física'">
-            Dirección {{ warehouseForm.get('tipo')?.value === 'Física' ? '*' : '' }}
+            {{ 'onboarding.warehousesStep.direccion' | translate:{sica: (warehouseForm.get('tipo')?.value === 'Física' ? '*' : '')} }}
           </label>
           <input
             id="direccion"
             type="text"
             pInputText
             formControlName="direccion"
-            placeholder="Calle 123 #45-67"
+            [placeholder]="'onboarding.companyInfoStep.calle1234567' | translate"
             [class.p-invalid]="hasError('direccion', 'required')" />
           <small class="p-error" *ngIf="hasError('direccion', 'required')">
             {{ getErrorMessage('direccion') }}
@@ -150,7 +149,7 @@
         <!-- Coordenadas -->
         <div class="form-field col-md-4 col-12" *ngIf="warehouseForm.get('tipo')?.value === 'Física'">
           <label for="coordenadas" [class.required]="warehouseForm.get('tipo')?.value === 'Física'">
-            Coordenadas GPS {{ warehouseForm.get('tipo')?.value === 'Física' ? '*' : '' }}
+            {{ 'onboarding.warehousesStep.coordenadasGps' | translate:{sica: (warehouseForm.get('tipo')?.value === 'Física' ? '*' : '')} }}
           </label>
           <input
             id="coordenadas"
@@ -159,7 +158,7 @@
             formControlName="coordenadas"
             placeholder="4.7110, -74.0721"
             [class.p-invalid]="hasError('coordenadas', 'required')" />
-          <small class="field-help">Haz clic en el mapa para seleccionar</small>
+          <small class="field-help">{{ 'onboarding.warehousesStep.hazClicEnElMapa' | translate }}</small>
           <small class="p-error" *ngIf="hasError('coordenadas', 'required')">
             {{ getErrorMessage('coordenadas') }}
           </small>
@@ -167,9 +166,9 @@
 
         <!-- Mapa Leaflet -->
         <div class="form-field col-12" *ngIf="warehouseForm.get('tipo')?.value === 'Física'">
-          <label>Selecciona la ubicación en el mapa</label>
+          <label>{{ 'onboarding.warehousesStep.seleccionaLaUbicacionEnEl' | translate }}</label>
           <div #mapContainer style="height: 400px; width: 100%; border: 1px solid #ddd; border-radius: 4px; margin-top: 8px;"></div>
-          <small class="field-help">Haz clic en el mapa para establecer las coordenadas de la bodega</small>
+          <small class="field-help">{{ 'onboarding.warehousesStep.hazClicEnElMapa2' | translate }}</small>
         </div>
       </div>
 
@@ -179,7 +178,7 @@
           *ngIf="editingIndex !== null"
           pButton
           type="button"
-          label="Cancelar"
+          [label]="'comun.cancelar' | translate"
           icon="pi pi-times"
           class="cfg-btn cfg-btn--sec"
           (click)="cancelEdit()">
@@ -187,7 +186,7 @@
         <button
           pButton
           type="button"
-          [label]="editingIndex !== null ? 'Actualizar Bodega' : 'Agregar a Lista'"
+          [label]="editingIndex !== null ? ('onboarding.warehousesStep.actualizarBodega' | translate) : ('onboarding.billingZonesStep.agregarALista' | translate)"
           [icon]="editingIndex !== null ? 'pi pi-check' : 'pi pi-plus'"
           class="cfg-btn"
           [disabled]="warehouseForm.invalid"
@@ -202,19 +201,19 @@
     <ng-template pTemplate="header">
       <div class="onb-cabeza">
         <i class="pi pi-list"></i>
-        <span>Bodegas Configuradas ({{ warehousesList.length }})</span>
+        <span>{{ 'onboarding.warehousesStep.bodegasConfiguradas' | translate:{length: warehousesList.length} }}</span>
       </div>
     </ng-template>
 
     <p-table [value]="warehousesList" styleClass="p-datatable-sm" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
-          <th>Nombre</th>
-          <th>ID</th>
-          <th>Tipo</th>
-          <th>Ciudad</th>
-          <th>Dirección</th>
-          <th style="width: 140px">Acciones</th>
+          <th>{{ 'onboarding.categoriesStep.nombre' | translate }}</th>
+          <th>{{ 'onboarding.warehousesStep.id' | translate }}</th>
+          <th>{{ 'onboarding.warehousesStep.tipo' | translate }}</th>
+          <th>{{ 'onboarding.onboardingWizard.ciudad' | translate }}</th>
+          <th>{{ 'onboarding.warehousesStep.direccion2' | translate }}</th>
+          <th style="width: 140px">{{ 'onboarding.billingZonesStep.acciones' | translate }}</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-warehouse let-i="rowIndex">
@@ -240,7 +239,7 @@
                 type="button"
                 icon="pi pi-pencil"
                 class="p-button-text p-button-sm p-button-info"
-                pTooltip="Editar"
+                [pTooltip]="'comun.editar' | translate"
                 tooltipPosition="top"
                 (click)="editWarehouse(i)">
               </button>
@@ -249,7 +248,7 @@
                 type="button"
                 icon="pi pi-trash"
                 class="p-button-text p-button-sm p-button-danger"
-                pTooltip="Eliminar"
+                [pTooltip]="'comun.eliminar' | translate"
                 tooltipPosition="top"
                 (click)="removeWarehouse(i)">
               </button>
@@ -262,7 +261,7 @@
           <td colspan="6" class="text-center">
             <div class="empty-message">
               <i class="pi pi-inbox"></i>
-              <p>No hay bodegas configuradas aún</p>
+              <p>{{ 'onboarding.warehousesStep.noHayBodegasConfiguradasAun' | translate }}</p>
             </div>
           </td>
         </tr>
@@ -275,7 +274,7 @@
     <button
       pButton
       type="button"
-      label="Guardar y Continuar"
+      [label]="'onboarding.billingZonesStep.guardarYContinuar' | translate"
       icon="pi pi-check"
       iconPos="right"
       class="cfg-btn"
@@ -286,11 +285,11 @@
 
     <p class="form-status" *ngIf="warehousesList.length === 0">
       <i class="pi pi-info-circle"></i>
-      Agrega al menos una bodega para continuar
+      {{ 'onboarding.warehousesStep.agregaAlMenosUnaBodega' | translate }}
     </p>
     <p class="form-status success" *ngIf="warehousesList.length > 0">
       <i class="pi pi-check-circle"></i>
-      {{ warehousesList.length }} bodega(s) configurada(s) - ¡Listo para continuar!
+      {{ warehousesList.length }} {{ 'onboarding.warehousesStep.bodegaSConfiguradaSListo' | translate }}
     </p>
   </div>
 </div>

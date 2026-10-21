@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 
+import { TranslateService } from '@ngx-translate/core';
 interface TiempoEntrega {
   nombreInterno: string;
   nombreExterno: string;
@@ -85,7 +86,8 @@ export class DeliveryTimesStepComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private messageService: MessageService,
-    private maestroService: MaestroService
+    private maestroService: MaestroService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -177,8 +179,8 @@ export class DeliveryTimesStepComponent implements OnInit, OnDestroy {
       this.markFormAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Formulario Incompleto',
-        detail: 'Por favor completa todos los campos requeridos'
+        summary: this.translate.instant('onboarding.billingZonesStep.formularioIncompleto'),
+        detail: this.translate.instant('onboarding.billingZonesStep.porFavorCompletaTodosLos')
       });
       return;
     }
@@ -191,8 +193,8 @@ export class DeliveryTimesStepComponent implements OnInit, OnDestroy {
     if (existsName) {
       this.messageService.add({
         severity: 'error',
-        summary: 'Nombre Duplicado',
-        detail: 'Ya existe un tiempo de entrega con este nombre interno'
+        summary: this.translate.instant('onboarding.billingZonesStep.nombreDuplicado'),
+        detail: this.translate.instant('onboarding.deliveryTimesStep.yaExisteUnTiempoDe')
       });
       return;
     }
@@ -200,10 +202,10 @@ export class DeliveryTimesStepComponent implements OnInit, OnDestroy {
     if (this.editingIndex !== null) {
       this.deliveryTimesList[this.editingIndex] = timeData;
       this.editingIndex = null;
-      this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Tiempo de entrega actualizado correctamente' });
+      this.messageService.add({ severity: 'success', summary: this.translate.instant('onboarding.billingZonesStep.actualizado'), detail: this.translate.instant('onboarding.deliveryTimesStep.tiempoDeEntregaActualizadoCorrectamente') });
     } else {
       this.deliveryTimesList.push(timeData);
-      this.messageService.add({ severity: 'success', summary: 'Agregado', detail: 'Tiempo de entrega agregado a la lista' });
+      this.messageService.add({ severity: 'success', summary: this.translate.instant('onboarding.billingZonesStep.agregado'), detail: this.translate.instant('onboarding.deliveryTimesStep.tiempoDeEntregaAgregadoA') });
     }
 
     this.deliveryTimeForm.reset({ minDias: 1, activo: true, ciudad: [], cd: null });
@@ -225,7 +227,7 @@ export class DeliveryTimesStepComponent implements OnInit, OnDestroy {
     const time = this.deliveryTimesList[index];
     this.deliveryTimesList.splice(index, 1);
     this.dataChange.emit({ data: this.deliveryTimesList });
-    this.messageService.add({ severity: 'info', summary: 'Eliminado', detail: `Tiempo de entrega "${time.nombreExterno}" eliminado` });
+    this.messageService.add({ severity: 'info', summary: this.translate.instant('onboarding.billingZonesStep.eliminado'), detail: this.translate.instant('onboarding.deliveryTimesStep.tiempoEliminado', { nombre: time.nombreExterno }) });
     if (this.editingIndex === index) {
       this.cancelEdit();
     }
@@ -235,8 +237,8 @@ export class DeliveryTimesStepComponent implements OnInit, OnDestroy {
     if (this.deliveryTimesList.length === 0) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Configuración Incompleta',
-        detail: 'Debes agregar al menos un tiempo de entrega para continuar'
+        summary: this.translate.instant('onboarding.billingZonesStep.configuracionIncompleta'),
+        detail: this.translate.instant('onboarding.deliveryTimesStep.debesAgregarAlMenosUn')
       });
       return;
     }
@@ -251,12 +253,12 @@ export class DeliveryTimesStepComponent implements OnInit, OnDestroy {
       this.stepComplete.emit({ data: this.deliveryTimesList });
       this.messageService.add({
         severity: 'success',
-        summary: 'Guardado',
-        detail: `${this.deliveryTimesList.length} tiempo(s) de entrega configurado(s) correctamente`
+        summary: this.translate.instant('onboarding.billingZonesStep.guardado'),
+        detail: this.translate.instant('onboarding.deliveryTimesStep.tiemposConfigurados', { cantidad: this.deliveryTimesList.length })
       });
     } catch (error) {
       console.error('Error guardando tiempos de entrega:', error);
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar la configuración' });
+      this.messageService.add({ severity: 'error', summary: this.translate.instant('comun.error'), detail: this.translate.instant('onboarding.categoriesStep.noSePudoGuardarLa') });
     } finally {
       this.isSaving = false;
     }

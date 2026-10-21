@@ -6,6 +6,7 @@ import { ServiciosService } from '../../../shared/services/servicios.service';
 import { CategoriaData } from '../../../shared/models/productos/CategoriaData';
 import { Data } from '../../../shared/models/productos/Data';
 
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-categories-step',
   templateUrl: './categories-step.component.html',
@@ -61,7 +62,8 @@ export class CategoriesStepComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private messageService: MessageService,
-    private serviciosService: ServiciosService
+    private serviciosService: ServiciosService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -122,8 +124,8 @@ export class CategoriesStepComponent implements OnInit, OnDestroy {
     this.dataChange.emit({ data: this.categoriesTree });
     this.messageService.add({
       severity: 'success',
-      summary: 'Cargado',
-      detail: `${newCategories.length} categorías agregadas`
+      summary: this.translate.instant('onboarding.categoriesStep.cargado'),
+      detail: this.translate.instant('onboarding.categoriesStep.categoriasAgregadas', { cantidad: newCategories.length })
     });
   }
 
@@ -132,8 +134,8 @@ export class CategoriesStepComponent implements OnInit, OnDestroy {
       this.markFormAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Formulario Incompleto',
-        detail: 'Por favor completa todos los campos requeridos'
+        summary: this.translate.instant('onboarding.billingZonesStep.formularioIncompleto'),
+        detail: this.translate.instant('onboarding.billingZonesStep.porFavorCompletaTodosLos')
       });
       return;
     }
@@ -152,8 +154,8 @@ export class CategoriesStepComponent implements OnInit, OnDestroy {
     if (existsName) {
       this.messageService.add({
         severity: 'error',
-        summary: 'Nombre Duplicado',
-        detail: 'Ya existe una categoría con este nombre'
+        summary: this.translate.instant('onboarding.billingZonesStep.nombreDuplicado'),
+        detail: this.translate.instant('onboarding.categoriesStep.yaExisteUnaCategoriaCon')
       });
       return;
     }
@@ -162,7 +164,7 @@ export class CategoriesStepComponent implements OnInit, OnDestroy {
       this.editingNode.label = newCategory.label;
       this.editingNode.data = newCategory.data;
       this.editingNode = null;
-      this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Categoría actualizada correctamente' });
+      this.messageService.add({ severity: 'success', summary: this.translate.instant('onboarding.billingZonesStep.actualizado'), detail: this.translate.instant('onboarding.categoriesStep.categoriaActualizadaCorrectamente') });
     } else {
       if (this.selectedParentNode) {
         if (!this.selectedParentNode.children) {
@@ -172,7 +174,7 @@ export class CategoriesStepComponent implements OnInit, OnDestroy {
       } else {
         this.categoriesTree.push(newCategory);
       }
-      this.messageService.add({ severity: 'success', summary: 'Agregado', detail: 'Categoría agregada a la lista' });
+      this.messageService.add({ severity: 'success', summary: this.translate.instant('onboarding.billingZonesStep.agregado'), detail: this.translate.instant('onboarding.categoriesStep.categoriaAgregadaALaLista') });
     }
 
     this.categoryForm.reset({ activo: true, posicion: 1 });
@@ -211,7 +213,7 @@ export class CategoriesStepComponent implements OnInit, OnDestroy {
 
     removeFromTree(this.categoriesTree, node);
     this.dataChange.emit({ data: this.categoriesTree });
-    this.messageService.add({ severity: 'info', summary: 'Eliminado', detail: `Categoría "${node.label}" eliminada` });
+    this.messageService.add({ severity: 'info', summary: this.translate.instant('onboarding.billingZonesStep.eliminado'), detail: this.translate.instant('onboarding.categoriesStep.categoriaEliminada', { nombre: node.label }) });
     if (this.editingNode === node) {
       this.cancelEdit();
     }
@@ -221,8 +223,8 @@ export class CategoriesStepComponent implements OnInit, OnDestroy {
     if (this.categoriesTree.length === 0) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Configuración Incompleta',
-        detail: 'Debes agregar al menos una categoría para continuar'
+        summary: this.translate.instant('onboarding.billingZonesStep.configuracionIncompleta'),
+        detail: this.translate.instant('onboarding.categoriesStep.debesAgregarAlMenosUna')
       });
       return;
     }
@@ -243,12 +245,12 @@ export class CategoriesStepComponent implements OnInit, OnDestroy {
       this.stepComplete.emit({ data: this.categoriesTree });
       this.messageService.add({
         severity: 'success',
-        summary: 'Guardado',
-        detail: `${this.categoriesTree.length} categoría(s) configurada(s) correctamente`
+        summary: this.translate.instant('onboarding.billingZonesStep.guardado'),
+        detail: this.translate.instant('onboarding.categoriesStep.categoriasConfiguradasDetalle', { cantidad: this.categoriesTree.length })
       });
     } catch (error) {
       console.error('Error guardando categorías:', error);
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar la configuración' });
+      this.messageService.add({ severity: 'error', summary: this.translate.instant('comun.error'), detail: this.translate.instant('onboarding.categoriesStep.noSePudoGuardarLa') });
     } finally {
       this.isSaving = false;
     }

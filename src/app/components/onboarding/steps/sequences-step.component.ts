@@ -3,6 +3,7 @@ import { Subject } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { Consecutivo, TIPOS_CONSECUTIVO_INFO, TipoConsecutivo } from '../../../shared/models/consecutivo';
 
+import { TranslateService } from '@ngx-translate/core';
 /**
  * Step: Consecutivos Configuration
  * Configuración de consecutivos para pedidos web y POS
@@ -31,7 +32,8 @@ export class SequencesStepComponent implements OnInit, OnDestroy {
   tiposInfo = TIPOS_CONSECUTIVO_INFO;
 
   constructor(
-    private messageService: MessageService
+    private messageService: MessageService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -103,8 +105,8 @@ export class SequencesStepComponent implements OnInit, OnDestroy {
     if (!this.isValid()) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Configuración Incompleta',
-        detail: 'Debes seleccionar al menos un tipo de consecutivo para continuar'
+        summary: this.translate.instant('onboarding.billingZonesStep.configuracionIncompleta'),
+        detail: this.translate.instant('onboarding.sequencesStep.debesSeleccionarAlMenosUn')
       });
       return;
     }
@@ -145,16 +147,16 @@ export class SequencesStepComponent implements OnInit, OnDestroy {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Configuración Completa',
-        detail: `${consecutivos.length} consecutivo(s) configurado(s) correctamente`
+        summary: this.translate.instant('onboarding.sequencesStep.configuracionCompleta'),
+        detail: this.translate.instant('onboarding.sequencesStep.consecutivosConfigurados', { cantidad: consecutivos.length })
       });
 
     } catch (error) {
       console.error('Error configurando consecutivos:', error);
       this.messageService.add({
         severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudo completar la configuración de consecutivos'
+        summary: this.translate.instant('comun.error'),
+        detail: this.translate.instant('onboarding.sequencesStep.noSePudoCompletarLa')
       });
     } finally {
       this.isSaving = false;
