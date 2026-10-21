@@ -28,7 +28,7 @@
   height: 28px;
   border-radius: 9px;
   background: $cfg-accent-soft;
-  color: $cfg-accent;
+  color: $cfg-accent-ink;
   font-size: 14px;
 }
 .dsc-icono--info { background: $cfg-info-soft; color: $cfg-info; }
@@ -91,4 +91,4 @@
 
 .dsc-valor { font-size: 18px; font-weight: 800; color: $cfg-ink; }
 .dsc-valor--ok { color: $cfg-ok; }
-.dsc-valor--acento { color: $cfg-accent; }
+.dsc-valor--acento { color: $cfg-accent-ink; }

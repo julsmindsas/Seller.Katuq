@@ -9,12 +9,12 @@
   border-radius: 11px;
   background: $cfg-accent;
   border-color: $cfg-accent;
-  color: #fff;
+  color: var(--ds-on-accent);
   font-weight: 700;
   box-shadow: $cfg-shadow-btn;
 
   &:enabled:hover { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
-  .p-button-label, .p-button-icon { color: #fff; }
+  .p-button-label, .p-button-icon { color: var(--ds-on-accent); }
 }
 
 .lc-ultimo {
@@ -54,7 +54,7 @@
   display: grid;
   place-items: center;
   padding: 24px 0;
-  color: $cfg-accent;
+  color: $cfg-accent-ink;
   font-size: 1.5rem;
 }
 
