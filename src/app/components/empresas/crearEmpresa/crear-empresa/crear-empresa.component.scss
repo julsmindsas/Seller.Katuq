@@ -1,30 +1,46 @@
 // ==========================================
-// Crear Empresa - Katuq Design System
+// Crear / editar empresa — regla de diseño Katuq (D-400): base cfg-* de
+// shared/styles/_config-pagina.scss y tokens de openspec/specs/design-system.
+// Plano, fondo lila, tarjetas blancas, acento #5F3FE0. Solo presentación.
 // ==========================================
 
-$katuq-primary: #8b5cf6;
-$katuq-primary-dark: #7c3aed;
-$katuq-dark: #0f172a;
-$katuq-gray: #64748b;
-$katuq-gray-light: #e2e8f0;
-$katuq-bg: #f8fafc;
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
 
-// Card principal
-:host ::ng-deep .card {
-  border: none;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+// Tarjeta principal del formulario (sigue siendo `.card` de Bootstrap).
+:host ::ng-deep .ce-principal.card {
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  box-shadow: $cfg-shadow-panel;
+  background: #fff;
 }
 
-:host ::ng-deep .card-body {
+:host ::ng-deep .ce-principal .card-body {
   padding: 20px 24px;
 }
 
-// PrimeNG TabView override
+// Tarjetas internas (horarios): panel tintado plano.
+:host ::ng-deep .ce-principal .card-body .card {
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  background: $cfg-tint;
+  border: 1px solid #eeecf7;
+  border-radius: 11px;
+  box-shadow: none;
+}
+
+// Aviso de error de carga con su botón debajo.
+.ce-aviso-error {
+  flex-direction: column;
+  gap: 6px;
+}
+
+// Pestañas PrimeNG: activa en acento, título que hereda color (trampa span.ng-star-inserted).
 :host ::ng-deep .p-tabview {
   .p-tabview-nav-container {
-    background: #f8fafc;
-    border-radius: 10px;
+    background: $cfg-tint;
+    border: 1px solid $cfg-line-soft;
+    border-radius: 11px;
     padding: 4px;
     margin-bottom: 16px;
   }
@@ -41,46 +57,43 @@ $katuq-bg: #f8fafc;
 
       .p-tabview-nav-link {
         border: none !important;
-        border-radius: 8px !important;
+        border-radius: 11px !important;
         padding: 8px 14px !important;
         font-size: 0.75rem !important;
-        font-weight: 600 !important;
-        color: $katuq-gray !important;
+        font-weight: 700 !important;
+        color: $cfg-body !important;
         background: transparent !important;
-        transition: all 0.2s ease;
+        transition: background .15s ease, color .15s ease;
         margin: 0 !important;
+
+        .p-tabview-title { color: inherit !important; }
 
         &:hover {
           background: #fff !important;
-          color: $katuq-primary !important;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+          color: $cfg-accent !important;
         }
 
-        &:focus {
-          box-shadow: none !important;
-        }
+        &:focus { box-shadow: none !important; }
+        &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
       }
 
       &.p-highlight .p-tabview-nav-link {
         background: #fff !important;
-        color: $katuq-primary !important;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+        color: $cfg-accent !important;
+        box-shadow: $cfg-shadow-panel !important;
       }
     }
   }
 
-  // Scroll buttons
   .p-tabview-nav-prev,
   .p-tabview-nav-next {
-    background: #f8fafc !important;
+    background: $cfg-tint !important;
     border: none !important;
-    color: $katuq-gray !important;
+    color: $cfg-body !important;
     width: 28px !important;
-    border-radius: 8px;
+    border-radius: 11px;
 
-    &:hover {
-      color: $katuq-primary !important;
-    }
+    &:hover { color: $cfg-accent !important; }
   }
 
   .p-tabview-panels {
@@ -90,110 +103,124 @@ $katuq-bg: #f8fafc;
   }
 }
 
-// Section headers
-h5 {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: $katuq-dark;
+// Títulos de sección
+h4, h5 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: $cfg-ink;
   margin-bottom: 16px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid $cfg-line-soft;
 }
 
-// Form labels
+h6 {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: $cfg-muted;
+  margin-bottom: 10px;
+}
+
+p, a, li, label { letter-spacing: normal; }
+
+// Labels UPPERCASE muted
 .form-label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: $katuq-dark;
-  margin-bottom: 4px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: $cfg-muted;
+  margin-bottom: 6px;
 }
 
-// Form controls
+// Campos lilas de 40px
 .form-control,
 .form-select,
 select.form-control {
-  border: 1px solid $katuq-gray-light;
-  border-radius: 8px;
+  min-height: 40px;
+  background-color: $cfg-chip-bg;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 10px;
   padding: 8px 12px;
-  font-size: 0.82rem;
-  color: $katuq-dark;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  font-size: 13.5px;
+  color: $cfg-ink;
+  box-shadow: none;
+  transition: border-color .15s ease, background-color .15s ease;
 
-  &::placeholder {
-    color: #94a3b8;
-  }
+  &::placeholder { color: $cfg-muted; }
 
   &:focus {
-    border-color: $katuq-primary;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    background-color: #fff;
+    border-color: $cfg-accent-2;
+    box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
     outline: none;
   }
 }
 
-.select-default {
-  color: $katuq-gray;
-}
+.select-default { color: $cfg-muted; }
 
-// Buttons
+.form-check-input:checked { background-color: $cfg-accent; border-color: $cfg-accent; }
+
+// Botones Bootstrap que quedan dentro de las pestañas: principal morado, secundarios blancos.
 .btn-primary {
-  background: $katuq-primary;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.82rem;
+  background: $cfg-accent;
+  border: 1px solid $cfg-accent;
+  border-radius: 11px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
   padding: 8px 16px;
-  transition: all 0.2s ease;
+  box-shadow: $cfg-shadow-btn;
+  transition: background .15s ease, transform .15s ease;
 
-  &:hover {
-    background: $katuq-primary-dark;
+  &:hover:not(:disabled) {
+    background: $cfg-accent-hover;
+    border-color: $cfg-accent-hover;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
   }
 }
 
-.btn-success {
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.82rem;
+.btn-outline-primary {
+  background: #fff;
+  border: 1px solid #e4e2ef;
+  border-radius: 11px;
+  color: $cfg-body;
+  font-weight: 700;
+  font-size: 13px;
+
+  &:hover:not(:disabled) {
+    background: $cfg-tint;
+    border-color: #d9cffb;
+    color: $cfg-accent;
+  }
 }
 
-.btn-danger {
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.82rem;
-}
+:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
 
-.btn-info {
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.82rem;
-}
-
-// File upload button
+// Botón de subir archivo
 input[type="file"]::-webkit-file-upload-button {
-  background-color: $katuq-primary;
+  background-color: $cfg-accent;
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   padding: 6px 12px;
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background .15s ease;
 
-  &:hover {
-    background-color: $katuq-primary-dark;
-  }
+  &:hover { background-color: $cfg-accent-hover; }
 }
 
-// Tables
+// Tablas: cabeceras UPPERCASE muted
 th {
   width: 35%;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: $katuq-gray;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: $cfg-muted;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: .5px;
 }
 
 .table-container {
@@ -204,9 +231,9 @@ th {
 .file-table {
   width: 100%;
   border-collapse: collapse;
-  border-radius: 8px;
+  border-radius: 11px;
   overflow: hidden;
-  border: 1px solid #f1f5f9;
+  border: 1px solid $cfg-line-soft;
 }
 
 .file-table th,
@@ -216,77 +243,62 @@ th {
   font-size: 0.82rem;
 }
 
-.file-table thead {
-  background: $katuq-bg;
-}
+.file-table thead { background: $cfg-tint; }
+.file-table tr:nth-child(even) { background: $cfg-tint; }
+.file-table tr:hover { background: $cfg-row-hover; }
 
-.file-table tr:nth-child(even) {
-  background: $katuq-bg;
-}
-
-.file-table tr:hover {
-  background: #faf5ff;
-}
-
-// Delete button
+// Botón eliminar (par error fuerte / fondo suave)
 .delete-button {
   padding: 6px 12px;
-  border: none;
-  background: #fef2f2;
-  color: #d12b38;
-  border-radius: 6px;
+  border: 1px solid #f3c9c9;
+  background: #fff;
+  color: $cfg-err;
+  border-radius: 10px;
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background .15s ease;
 
-  &:hover {
-    background: #fee2e2;
-  }
+  &:hover { background: $cfg-err-soft; }
 }
 
-// Links
+// Enlaces
 a {
-  color: $katuq-primary;
+  color: $cfg-accent;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
 
   &:hover {
-    color: $katuq-primary-dark;
+    color: $cfg-accent-hover;
     text-decoration: underline;
   }
 }
 
-// Textarea
 textarea.form-control {
-  border-radius: 8px;
   resize: vertical;
-  min-height: 80px;
+  min-height: 88px;
 }
 
-// Image previews
-img {
-  border-radius: 8px;
+img { border-radius: 11px; }
+
+// Pie con Guardar / Editar / Volver
+.ce-pie__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-// Responsive
 @media (max-width: 767px) {
-  :host ::ng-deep .card-body {
-    padding: 16px;
-  }
+  :host ::ng-deep .ce-principal .card-body { padding: 16px; }
 
   :host ::ng-deep .p-tabview .p-tabview-nav li .p-tabview-nav-link {
     padding: 6px 12px;
     font-size: 0.75rem;
   }
 
-  .form-label {
-    font-size: 0.72rem;
-  }
-
   .form-control,
   .form-select {
-    font-size: 0.78rem;
+    font-size: 13px;
     padding: 7px 10px;
   }
 }

@@ -1,12 +1,33 @@
 // =============================================================================
 // Soporte · Mis tickets — rediseño maestro/detalle
-// Sigue el lenguaje visual comercial (acento #6C4CE0, plano sin gradientes, D-131).
+// Regla de diseño Katuq (D-400/D-131): base cfg-* y tokens del canon sobre las
+// mezclas kc-* (acento #5F3FE0, tinta #211F3A, plano sin gradientes).
 // Fuente: mockup "Mis Tickets" de Claude Design (proyecto cef2b209).
 // =============================================================================
 @import '../../../shared/styles/katuq-comercial';
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
 
 :host {
   @include kc-tokens;
+  // Tokens del canon (openspec/specs/design-system/spec.md) sobre la paleta kc.
+  --kc-accent: #{$cfg-accent};
+  --kc-accent-ink: #{$cfg-accent-hover};
+  --kc-accent-wash: #{$cfg-accent-soft};
+  --kc-ink: #{$cfg-ink};
+  --kc-ink2: #{$cfg-body};
+  --kc-muted: #{$cfg-muted};
+  --kc-line: #{$cfg-line};
+  --kc-line2: #{$cfg-line-soft};
+  --kc-canvas: #{$cfg-chip-bg};
+  --kc-green: #{$cfg-ok};
+  --kc-green-wash: #{$cfg-ok-soft};
+  --kc-blue: #{$cfg-info};
+  --kc-blue-wash: #{$cfg-info-soft};
+  --kc-orange: #{$cfg-warn};
+  --kc-orange-wash: #{$cfg-warn-soft};
+  --kc-red: #{$cfg-err};
+  --kc-red-wash: #{$cfg-err-soft};
   display: block;
   min-width: 0;
   color: var(--kc-ink);
@@ -14,7 +35,6 @@
 }
 
 .mt-page {
-  padding: 18px 22px 44px;
   min-width: 0;
 }
 
@@ -25,27 +45,10 @@
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 14px;
 }
 
 .mt-head__copy {
   min-width: 220px;
-
-  h1 {
-    font-family: var(--kc-font-head);
-    font-weight: 800;
-    font-size: 26px;
-    line-height: 1;
-    color: var(--kc-ink);
-    margin: 0;
-  }
-
-  p {
-    font-size: 13.5px;
-    color: var(--kc-muted);
-    font-weight: 600;
-    margin: 5px 0 0;
-  }
 }
 
 .mt-crumbs {
@@ -107,7 +110,6 @@
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 14px;
 }
 
 .mt-tabs {
@@ -311,7 +313,6 @@
   gap: 11px;
   background: var(--kc-surface);
   border: none;
-  border-left: 3px solid transparent;
   border-bottom: 1px solid #f5f6fa;
   padding: 13px 15px;
   cursor: pointer;
@@ -321,9 +322,10 @@
 
   &:hover { background: #fbfaff; }
 
+  // Seleccionado: fondo suave del acento, sin borde lateral de acento (D-131).
   &.is-on {
-    background: #f7f5fe;
-    border-left-color: var(--kc-accent);
+    background: $cfg-accent-soft;
+    box-shadow: inset 0 0 0 1px #ddd3fb;
   }
 
   &__icon {
@@ -751,7 +753,7 @@
     font-size: 12px;
     flex-shrink: 0;
 
-    &--mio { background: #4f5bd5; }
+    &--mio { background: $cfg-accent-2; }
   }
 
   &__body { flex: 1; min-width: 0; }
@@ -1154,10 +1156,6 @@
   .mt-res__body { padding-left: 14px; padding-right: 14px; }
   .mt-res__version { margin-left: 0; }
   .mt-confirma__acciones { flex-direction: column; align-items: stretch; }
-
-  .mt-page { padding: 14px 14px 40px; }
-
-  .mt-head__copy h1 { font-size: 22px; }
 
   .mt-head__actions { width: 100%; }
   .mt-head__actions .mt-btn { flex: 1; }

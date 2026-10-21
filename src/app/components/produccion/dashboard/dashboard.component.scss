@@ -1,7 +1,11 @@
+// Regla de diseño Katuq (D-400): página interna con cfg-pagina / cfg-cabeza / cfg-card.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
 // Variables
 // Acento del módulo: morado B2B, alineado con despachos / inventarios.
 $primary-color: #5F3FE0;
-$primary-light: rgba(92, 106, 196, 0.12);
+$primary-light: rgba(95, 63, 224, 0.12);
 $success-color: #66BB6A;
 $success-light: rgba(102, 187, 106, 0.12);
 $warning-color: #FFA726;
@@ -100,18 +104,18 @@ $transition: all 0.3s ease;
 .btn-primary {
   background: $primary-color;
   border-color: $primary-color;
-  box-shadow: 0 2px 5px rgba(92, 106, 196, 0.3);
+  box-shadow: 0 2px 5px rgba(95, 63, 224, 0.3);
   
   &:hover, &:focus {
     background: darken($primary-color, 5%);
     border-color: darken($primary-color, 5%);
-    box-shadow: 0 4px 8px rgba(92, 106, 196, 0.4);
+    box-shadow: 0 4px 8px rgba(95, 63, 224, 0.4);
   }
 }
 
 .btn-outline-primary {
   color: $primary-color;
-  border-color: rgba(92, 106, 196, 0.3);
+  border-color: rgba(95, 63, 224, 0.3);
   
   &:hover, &:focus {
     background-color: $primary-light;
@@ -151,7 +155,7 @@ $transition: all 0.3s ease;
       }
       
       &:hover {
-        background-color: rgba(92, 106, 196, 0.04);
+        background-color: rgba(95, 63, 224, 0.04);
       }
     }
     
@@ -161,7 +165,7 @@ $transition: all 0.3s ease;
       border-radius: $border-radius;
       
       &:hover {
-        background-color: rgba(92, 106, 196, 0.04);
+        background-color: rgba(95, 63, 224, 0.04);
         transform: translateY(-1px);
         box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
       }
@@ -189,7 +193,7 @@ $transition: all 0.3s ease;
         border-radius: $border-radius;
         
         &:focus {
-          box-shadow: 0 0 0 2px rgba(92, 106, 196, 0.2);
+          box-shadow: 0 0 0 2px rgba(95, 63, 224, 0.2);
         }
       }
       
@@ -205,12 +209,12 @@ $transition: all 0.3s ease;
     transition: all 0.2s ease;
     
     &:hover {
-      border-color: rgba(92, 106, 196, 0.5);
+      border-color: rgba(95, 63, 224, 0.5);
     }
     
     &:focus, &.p-focus {
       border-color: $primary-color;
-      box-shadow: 0 0 0 2px rgba(92, 106, 196, 0.2);
+      box-shadow: 0 0 0 2px rgba(95, 63, 224, 0.2);
     }
     
     .p-dropdown-label, .p-multiselect-label {
@@ -226,7 +230,7 @@ $transition: all 0.3s ease;
         transition: all 0.2s ease;
         
         &:hover {
-          background-color: rgba(92, 106, 196, 0.04);
+          background-color: rgba(95, 63, 224, 0.04);
         }
         
         &.p-highlight {
@@ -245,12 +249,12 @@ $transition: all 0.3s ease;
       transition: all 0.2s ease;
       
       &:hover {
-        border-color: rgba(92, 106, 196, 0.5);
+        border-color: rgba(95, 63, 224, 0.5);
       }
       
       &:focus {
         border-color: $primary-color;
-        box-shadow: 0 0 0 2px rgba(92, 106, 196, 0.2);
+        box-shadow: 0 0 0 2px rgba(95, 63, 224, 0.2);
       }
     }
     
@@ -311,7 +315,7 @@ $transition: all 0.3s ease;
       background-color: transparent;
       
       &:hover {
-        background-color: rgba(92, 106, 196, 0.04);
+        background-color: rgba(95, 63, 224, 0.04);
       }
     }
     
@@ -320,12 +324,12 @@ $transition: all 0.3s ease;
       border: none;
       
       &:hover {
-        background-color: rgba(92, 106, 196, 0.04);
+        background-color: rgba(95, 63, 224, 0.04);
       }
     }
     
     &:focus {
-      box-shadow: 0 0 0 2px rgba(92, 106, 196, 0.2);
+      box-shadow: 0 0 0 2px rgba(95, 63, 224, 0.2);
     }
   }
   
@@ -382,67 +386,7 @@ $transition: all 0.3s ease;
 }
 
 // Estilos específicos para el componente
-// Cabecera estándar Katuq: plana, con acento border-left (alineado a despachos/inventarios).
-.module-header {
-  background: #ffffff;
-  border-left: 4px solid $primary-color;
-
-  h4, h5 {
-    font-weight: 700;
-    color: #2c323f;
-
-    i {
-      color: $primary-color;
-    }
-  }
-
-  p {
-    color: #6c757d;
-    opacity: 0.85;
-  }
-
-  // Ícono del módulo en caja con gradiente (rediseño 1a)
-  .module-header-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 13px;
-    background: #5F3FE0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 8px 18px -6px rgba(109, 40, 217, 0.6);
-    flex-shrink: 0;
-
-    i {
-      color: #fff;
-      font-size: 1.25rem;
-    }
-  }
-
-  // Botón Mostrar/Ocultar Métricas (rediseño 1a)
-  .btn-metrics-toggle {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 12px;
-    background: #5F3FE0;
-    color: #fff;
-    font-family: inherit;
-    font-weight: 700;
-    font-size: 14px;
-    cursor: pointer;
-    box-shadow: 0 10px 22px -8px rgba(109, 40, 217, 0.7);
-    transition: filter 0.2s ease, transform 0.2s ease;
-    white-space: nowrap;
-
-    &:hover {
-      filter: brightness(1.05);
-      transform: translateY(-1px);
-    }
-  }
-}
+// La cabecera vieja (con acento lateral) se reemplazó por `cfg-cabeza` (D-400).
 
 .text-primary {
   color: $primary-color !important;
@@ -544,7 +488,7 @@ $transition: all 0.3s ease;
       border-radius: 50%;
       background-color: white;
       color: $primary-color;
-      border: 1px solid rgba(92, 106, 196, 0.3);
+      border: 1px solid rgba(95, 63, 224, 0.3);
       transition: all 0.2s ease;
       
       &:hover {
@@ -569,7 +513,7 @@ $transition: all 0.3s ease;
     border-radius: 50%;
     background-color: white;
     color: $primary-color;
-    border: 1px solid rgba(92, 106, 196, 0.3);
+    border: 1px solid rgba(95, 63, 224, 0.3);
     transition: all 0.2s ease;
     
     &:hover {
@@ -790,12 +734,12 @@ $transition: all 0.3s ease;
 .btn-modal-primary {
   background-color: $primary-color;
   color: white;
-  box-shadow: 0 2px 5px rgba(92, 106, 196, 0.25);
+  box-shadow: 0 2px 5px rgba(95, 63, 224, 0.25);
   
   &:hover:not(:disabled) {
     background-color: darken($primary-color, 5%);
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(92, 106, 196, 0.3);
+    box-shadow: 0 4px 8px rgba(95, 63, 224, 0.3);
   }
 }
 
@@ -826,7 +770,7 @@ $transition: all 0.3s ease;
     
     &:focus {
       border-color: $primary-color;
-      box-shadow: 0 0 0 3px rgba(92, 106, 196, 0.1);
+      box-shadow: 0 0 0 3px rgba(95, 63, 224, 0.1);
       outline: none;
     }
   }
@@ -847,10 +791,10 @@ $transition: all 0.3s ease;
 }
 
 .proceso-info {
-  background-color: rgba(92, 106, 196, 0.05);
+  background-color: rgba(95, 63, 224, 0.05);
   padding: 1.25rem;
   border-radius: $border-radius;
-  border-left: 4px solid $primary-color;
+  border: 1px solid rgba(95, 63, 224, 0.18);
 }
 
 .proceso-info-header {
@@ -915,12 +859,12 @@ $transition: all 0.3s ease;
   &:hover:not(.proceso-disabled) {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    background-color: rgba(92, 106, 196, 0.02);
+    background-color: rgba(95, 63, 224, 0.02);
   }
   
   &.proceso-selected {
-    background-color: rgba(92, 106, 196, 0.05);
-    border-left: 3px solid $primary-color;
+    background-color: rgba(95, 63, 224, 0.05);
+    box-shadow: inset 0 0 0 1px rgba(95, 63, 224, 0.35);
   }
   
   &.proceso-disabled {
@@ -1632,17 +1576,17 @@ $transition: all 0.3s ease;
 
   // Variantes de color
   &.metric-chip-primary {
-    background-color: #e3f2fd;
-    color: #1976d2;
+    background-color: #efe9ff;
+    color: #5F3FE0;
 
     .metric-badge {
-      background-color: #1976d2;
+      background-color: #5F3FE0;
       color: white;
     }
 
     &:hover {
-      background-color: #bbdefb;
-      border-color: #1976d2;
+      background-color: #e2d9fb;
+      border-color: #5F3FE0;
     }
   }
 
@@ -1851,7 +1795,7 @@ $transition: all 0.3s ease;
    El contenido de cada tab trae su propio espaciado, asi que el panel
    del tabview no aporta padding y el contenido aprovecha todo el ancho.
    ======================================== */
-::ng-deep .p-tabview {
+:host ::ng-deep .p-tabview {
   .p-tabview-nav li .p-tabview-nav-link {
     padding: 0.75rem 1rem;
   }
@@ -1859,4 +1803,57 @@ $transition: all 0.3s ease;
   .p-tabview-panels {
     padding: 0;
   }
+}
+
+/* ========================================
+   Regla de diseño Katuq (D-400): marco de la página
+   ======================================== */
+// Contenedor de cabecera, métricas y pestañas (antes era una `.card`); el loader se posiciona aquí.
+.prod-marco {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// Métricas: alertas en par fuerte/fondo suave.
+.metrics-container {
+  .alert {
+    border: 0;
+    border-radius: 11px;
+  }
+  .alert-warning { background: #FFF1DF; color: #D9820A; }
+  .alert-info { background: #E7F1FF; color: #1E6FD9; }
+}
+
+// KPIs planos tintados, sin border-left de acento.
+.card.prod-kpi {
+  background: #faf9fe;
+  border: 1px solid #eeecf7;
+  border-radius: 11px;
+  box-shadow: none;
+}
+
+.prod-kpi__label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: #8f8bab;
+}
+
+// Las pestañas llenan la tarjeta: el contenido de cada tab trae su propio espaciado.
+.cfg-card.prod-tabs {
+  padding: 4px 0 0;
+}
+
+:host ::ng-deep .prod-tabs .p-tabview .p-tabview-panels {
+  padding: 0;
+}
+
+// El <style> de la plantilla lee var(--primary-color) y var(--secondary-color); sin esto toma los
+// globales (lila claro e índigo). Solo se fijan los dos que ya resolvían, para no activar estilos nuevos.
+:host {
+  --primary-color: #5F3FE0;
+  --secondary-color: #5F3FE0;
 }

@@ -11,7 +11,7 @@
     color: #344767;
 
     i {
-      color: #7c3aed;
+      color: #5F3FE0;
     }
   }
 }
@@ -78,7 +78,7 @@
     right: 45px;
     top: 50%;
     transform: translateY(-50%);
-    color: #7c3aed;
+    color: #5F3FE0;
     font-size: 1rem;
     z-index: 10;
   }
@@ -107,8 +107,8 @@
   }
 
   input.p-inputtext:enabled:focus {
-    border-color: #7c3aed !important;
-    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1) !important;
+    border-color: #5F3FE0 !important;
+    box-shadow: 0 0 0 4px rgba(95, 63, 224, 0.12) !important;
     outline: none !important;
   }
 
@@ -175,7 +175,7 @@
     flex-shrink: 0;
 
     i {
-      color: #6366f1;
+      color: #5F3FE0;
       font-size: 1rem;
     }
   }

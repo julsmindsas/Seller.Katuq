@@ -23,13 +23,18 @@ import {
   selector: 'app-integration-connect-return',
   template: `
     <div class="conexion-regreso">
-      <p class="conexion-regreso__texto">{{ mensaje }}</p>
+      <div class="pub-card conexion-regreso__tarjeta">
+        <div class="pub-estado pub-estado--info" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 17H7A5 5 0 0 1 7 7h2"></path><path d="M15 7h2a5 5 0 1 1 0 10h-2"></path><path d="M8 12h8"></path>
+          </svg>
+        </div>
+        <p class="pub-lead conexion-regreso__texto" role="status">{{ mensaje }}</p>
+      </div>
     </div>
   `,
-  styles: [`
-    .conexion-regreso { padding: 40px 16px; text-align: center; font-family: inherit; }
-    .conexion-regreso__texto { margin: 0; font-size: 14px; line-height: 1.5; color: #211F3A; letter-spacing: normal; }
-  `],
+  // Ventana emergente del regreso: piezas pub-* de las pantallas públicas (D-398), sin el marco.
+  styleUrls: ['./integration-connect-return.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class IntegrationConnectReturnComponent implements OnInit {

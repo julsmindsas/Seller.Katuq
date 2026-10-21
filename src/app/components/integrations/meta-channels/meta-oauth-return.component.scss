@@ -1,0 +1,33 @@
+// Página de regreso de una conexión por ventana emergente: tarjeta centrada con las piezas pub-*
+// de las pantallas públicas (D-398). Sin el marco con el logo: la ruta vive dentro del panel.
+@import '../../../shared/components/publica/publica';
+
+:host {
+  display: block;
+  @include publica-piezas;
+
+  .conexion-regreso {
+    display: flex;
+    justify-content: center;
+    padding: 48px 16px;
+  }
+
+  .conexion-regreso__tarjeta {
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 420px;
+    padding: 32px 24px;
+    border-radius: 20px;
+    box-shadow: $pub-shadow-float;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  .conexion-regreso__texto {
+    margin: 0;
+    font-size: 15px;
+    color: $pub-ink;
+  }
+}

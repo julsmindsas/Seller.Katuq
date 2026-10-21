@@ -793,13 +793,14 @@ form[formGroup] {
       }
     }
 
+    // Verde semántico (confirmar/éxito), par del canon D-131.
     &.btn-success {
-      background: #10b981;
+      background: #1E874B;
       color: #fff;
       border: none;
 
       &:hover {
-        background: #059669;
+        background: #176a3b;
       }
     }
 
@@ -1659,3 +1660,61 @@ form[formGroup] {
 }
 
 @import "./integrations-modal-combos";
+
+// ---------------------------------------------------------------------------
+// Regla de diseño Katuq (D-400/D-131) en /integrations/configure: tarjeta del
+// formulario, avisos y paleta kc-* (asistente DIAN) con los tokens del canon. Solo presentación;
+// todo bajo .kx-modal-int (el componente usa ViewEncapsulation.None).
+// Los $cfg-* vienen de config-pagina, importado en _integrations-modal-combos.
+// ---------------------------------------------------------------------------
+.kx-modal-int,
+.kx-modal-int .dk {
+  --kc-accent: #{$cfg-accent};
+  --kc-accent-ink: #{$cfg-accent-hover};
+  --kc-accent-wash: #{$cfg-accent-soft};
+  --kc-ink: #{$cfg-ink};
+  --kc-ink2: #{$cfg-body};
+  --kc-muted: #{$cfg-muted};
+  --kc-line: #{$cfg-line};
+  --kc-line2: #{$cfg-line-soft};
+  --kc-green: #{$cfg-ok};
+  --kc-green-wash: #{$cfg-ok-soft};
+  --kc-blue: #{$cfg-info};
+  --kc-blue-wash: #{$cfg-info-soft};
+  --kc-orange: #{$cfg-warn};
+  --kc-orange-wash: #{$cfg-warn-soft};
+  --kc-red: #{$cfg-err};
+  --kc-red-wash: #{$cfg-err-soft};
+}
+
+.kx-modal-int {
+  .dk .dk-mono { color: $cfg-accent; }
+
+  // Tarjeta que envuelve el formulario y la del esquema: radio 16 y borde lila.
+  // Las tarjetas internas de .integration-form ya traen el canon (_integrations-modal-combos).
+  .card {
+    border: 1px solid $cfg-line !important;
+    border-radius: 16px !important;
+    box-shadow: $cfg-shadow-panel !important;
+  }
+
+  .schema-info-panel .card-header {
+    background: $cfg-tint !important;
+    border-bottom: 1px solid $cfg-line-soft !important;
+
+    h6 { color: $cfg-ink !important; i { color: $cfg-accent; } }
+  }
+
+  // Avisos de validación: par fuerte / fondo suave.
+  .validation-feedback-panel .alert {
+    border-radius: 11px;
+
+    &.alert-danger { background: $cfg-err-soft; color: $cfg-err; }
+    &.alert-warning { background: $cfg-warn-soft; color: $cfg-warn; }
+    &.alert-info { background: $cfg-info-soft; color: $cfg-info; }
+  }
+
+  // Estado de prueba/producción (badge Bootstrap) en par semántico.
+  .badge.bg-success { background: $cfg-ok-soft !important; color: $cfg-ok !important; }
+  .badge.bg-warning { background: $cfg-warn-soft !important; color: $cfg-warn !important; }
+}

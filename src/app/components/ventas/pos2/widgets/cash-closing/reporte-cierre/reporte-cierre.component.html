@@ -91,7 +91,7 @@
     </div>
 
     <!-- Observaciones -->
-    <div *ngIf="datosCierre?.observaciones" style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #007bff;">
+    <div *ngIf="datosCierre?.observaciones" style="margin-top: 15px; padding: 10px 12px; background-color: #faf9fe; border: 1px solid #ececf4; border-radius: 11px;">
       <strong>Observaciones:</strong>
       <p style="margin: 5px 0 0 0;">{{ datosCierre.observaciones }}</p>
     </div>
@@ -206,24 +206,24 @@
 
 <!-- BOTONES DE ACCIÓN (solo en pantalla) -->
 <div class="no-print" style="text-align: center; margin-top: 20px; padding: 20px;">
-  <button 
-    class="btn btn-primary me-3" 
-    (click)="print()" 
-    style="padding: 12px 24px; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+  <button
+    type="button"
+    class="rc-btn"
+    (click)="print()">
     <i class="fa fa-print"></i> Imprimir (PC)
   </button>
-  
-  <button 
-    class="btn btn-secondary me-3" 
-    (click)="printPOS()" 
-    style="padding: 12px 24px; background-color: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+
+  <button
+    type="button"
+    class="rc-btn rc-btn--sec"
+    (click)="printPOS()">
     <i class="fa fa-receipt"></i> Imprimir (POS)
   </button>
-  
-  <button 
-    class="btn btn-success" 
-    (click)="goBack()" 
-    style="padding: 12px 24px; background-color: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+
+  <button
+    type="button"
+    class="rc-btn rc-btn--sec"
+    (click)="goBack()">
     <i class="fa fa-arrow-left"></i> Volver
   </button>
 </div> 

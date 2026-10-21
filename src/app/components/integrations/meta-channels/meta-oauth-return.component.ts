@@ -11,10 +11,19 @@ import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'app-meta-oauth-return',
   template: `
-    <div style="padding:40px;text-align:center;font-family:inherit">
-      <p style="font-size:14px;color:#211f3a">{{ mensaje }}</p>
+    <div class="conexion-regreso">
+      <div class="pub-card conexion-regreso__tarjeta">
+        <div class="pub-estado pub-estado--info" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 17H7A5 5 0 0 1 7 7h2"></path><path d="M15 7h2a5 5 0 1 1 0 10h-2"></path><path d="M8 12h8"></path>
+          </svg>
+        </div>
+        <p class="pub-lead conexion-regreso__texto" role="status">{{ mensaje }}</p>
+      </div>
     </div>
   `,
+  // Ventana emergente del regreso: piezas pub-* de las pantallas públicas (D-398), sin el marco.
+  styleUrls: ['./meta-oauth-return.component.scss'],
 })
 export class MetaOauthReturnComponent implements OnInit {
   mensaje = 'Conectando con Meta…';

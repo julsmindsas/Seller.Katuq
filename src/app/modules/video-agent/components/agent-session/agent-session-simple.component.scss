@@ -146,8 +146,8 @@
 
 // Error banner simple
 .error-banner-elderly {
-    background: #fed7d7;
-    border-left: 4px solid #fc8181;
+    background: #FDECEC;
+    border: 1px solid #f3c9c9;
     border-radius: 8px;
     padding: 1rem 1.5rem;
     display: flex;
@@ -341,8 +341,8 @@
             }
 
             .message-content-elderly {
-                background: #ebf4ff;
-                border-left: 3px solid var(--company-primary);
+                background: #efe9ff;
+                border: 1px solid #ddd3fb;
             }
         }
 
@@ -352,8 +352,8 @@
             }
 
             .message-content-elderly {
-                background: #f0fff4;
-                border-left: 3px solid #48bb78;
+                background: #E6F7EE;
+                border: 1px solid #c9ecd8;
             }
         }
 

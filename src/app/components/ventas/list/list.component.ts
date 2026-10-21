@@ -2483,7 +2483,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   modoVista: "split" | "tabla" = "split";
   pedidoDetalle: any = null;
   private readonly avatarPalette = [
-    "#7C5CFF", "#2196F3", "#1E874B", "#E8820C",
+    "#7C5CFF", "#1E6FD9", "#1E874B", "#E8820C",
     "#9C27B0", "#0EA5A0", "#D64545", "#5A6B78",
   ];
 
@@ -7482,7 +7482,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                   showCancelButton: true,
                   confirmButtonText: 'Aplicar precio',
                   cancelButtonText: 'Usar precio base',
-                  confirmButtonColor: '#8b5cf6',
+                  confirmButtonColor: '#5F3FE0',
                   focusConfirm: false,
                   preConfirm: () => {
                     const precioInput = (document.getElementById('swal-precio-manual') as HTMLInputElement)?.value;
@@ -7523,7 +7523,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                   showCancelButton: true,
                   confirmButtonText: 'Aplicar',
                   cancelButtonText: 'Usar IVA original',
-                  confirmButtonColor: '#8b5cf6',
+                  confirmButtonColor: '#5F3FE0',
                   focusConfirm: false,
                   preConfirm: () => {
                     return (document.getElementById('swal-iva-solo') as HTMLSelectElement)?.value;

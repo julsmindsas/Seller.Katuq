@@ -147,7 +147,7 @@ select:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2p
 
 .panel-right {
   border-right: none;
-  border-left: 1px solid #ececf4;
+  box-shadow: inset 1px 0 0 #ececf4; // divisor de 1px, sin borde lateral de acento
 }
 
 .panel-section {

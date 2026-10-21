@@ -140,9 +140,9 @@
         letter-spacing: 0.5px;
 
         &.connected {
-            background: rgba(81, 187, 37, 0.12);
-            color: #51bb25;
-            border: 1px solid rgba(81, 187, 37, 0.2);
+            background: #E6F7EE;
+            color: #1E874B;
+            border: 1px solid #c9ecd8;
 
             i {
                 font-size: 0.625rem;
@@ -151,9 +151,9 @@
         }
 
         &.disconnected {
-            background: rgba(220, 53, 69, 0.12);
-            color: #dc3545;
-            border: 1px solid rgba(220, 53, 69, 0.2);
+            background: #FDECEC;
+            color: #D64545;
+            border: 1px solid #f3c9c9;
 
             i {
                 font-size: 0.625rem;
@@ -302,8 +302,8 @@
     z-index: 1000; /* Above everything */
 
     background: #ffffff;
-    border: 4px solid #dc3545;
-    color: #dc3545;
+    border: 4px solid #D64545;
+    color: #D64545;
 
     padding: 2rem;
     margin: 0;
@@ -1084,12 +1084,12 @@
             color: white;
 
             &:hover {
-                background: #47a621;
+                background: #176a3b;
             }
 
             &:active {
                 transform: scale(0.98);
-                background: #419a1e;
+                background: #145c33;
             }
         }
 
@@ -1098,12 +1098,12 @@
             color: white;
 
             &:hover {
-                background: #c92a3a;
+                background: #b83636;
             }
 
             &:active {
                 transform: scale(0.98);
-                background: #bd2738;
+                background: #a32f2f;
             }
         }
 

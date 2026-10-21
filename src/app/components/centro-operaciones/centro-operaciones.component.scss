@@ -31,7 +31,14 @@ $co-mono: 'JetBrains Mono', ui-monospace, monospace;
 
 :host { display: block; }
 
-.co-page { padding-top: 16px; padding-bottom: 24px; }
+.co-page {
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px 16px 24px;
+  box-sizing: border-box;
+
+  @media (min-width: 768px) { padding: 16px 24px 24px; }
+}
 
 .co {
   border-radius: 16px;

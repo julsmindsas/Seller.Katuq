@@ -4,11 +4,11 @@
   de dos columnas. Ningún binding se cambia. El shell <aw-wizard #wizard> OCULTO queda
   al final del template para que los @ViewChild heredados resuelvan de forma natural.
 -->
-<div class="va-page container-fluid ventas-mobile">
+<div class="va-page ventas-mobile">
 
   <!-- ===================== HEADER ===================== -->
   <div class="va-header">
-    <!-- Encabezado de página: card con borde de acento a la izquierda (marco del mockup) -->
+    <!-- Encabezado de página: card blanca plana (regla de diseño Katuq, sin borde de acento) -->
     <div class="va-page-head">
       <div class="va-page-head-main">
         <span class="va-page-ic">
@@ -668,10 +668,10 @@
     </div>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="modal.dismiss('cancel')">
       <i class="fa fa-times me-1"></i> Cancelar
     </button>
-    <button type="button" class="btn btn-success" (click)="guardarDatosEntrega()">
+    <button type="button" class="cfg-btn" (click)="guardarDatosEntrega()">
       <i class="fa fa-save me-1"></i> Guardar
     </button>
   </div>
@@ -689,10 +689,10 @@
     <!-- ... (Se mantiene el mismo contenido actual) ... -->
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="modal.dismiss('cancel')">
       <i class="fa fa-times me-1"></i> Cancelar
     </button>
-    <button type="button" class="btn btn-success" (click)="guardarDatosFacturacion()">
+    <button type="button" class="cfg-btn" (click)="guardarDatosFacturacion()">
       <i class="fa fa-save me-1"></i> Guardar
     </button>
   </div>

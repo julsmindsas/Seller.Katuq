@@ -74,7 +74,7 @@ $font-size-tiny: 11px;
   max-width: 800px;
   margin: 0 auto;
 
-  .module-header {
+  .chat-cabeza {
     flex-shrink: 0;
     border-color: $chat-border-light !important;
   }
@@ -116,7 +116,7 @@ $font-size-tiny: 11px;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
   border-color: $chat-border-dark;
 
-  .module-header {
+  .chat-cabeza {
     background-color: $chat-bg-dark !important;
     border-color: $chat-border-dark !important;
 

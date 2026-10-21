@@ -1,5 +1,4 @@
-<!-- <app-breadcrumb [title]="'Lista pedidos' | translate" [items]="['Gestor de Pedidos' | translate]" [active_item]="'Pedidos' | translate"></app-breadcrumb> -->
-<div class="container-fluid" [class.px-0]="isFromProduction">
+<div class="pedidos-pagina" [class.px-0]="isFromProduction">
     <div class="row">
         <div class="col-sm-12" [ngClass]="isFromProduction ? 'p-0' : 'p-2'">
             <br *ngIf="!isFromProduction" />
@@ -1159,7 +1158,7 @@
                                                         {{ ref.label }}
                                                         <i *ngIf="ref.hasNote"
                                                            class="pi pi-truck ml-1"
-                                                           style="font-size: 0.75rem; color: #10B981; vertical-align: middle;"
+                                                           style="font-size: 0.75rem; color: #1E874B; vertical-align: middle;"
                                                            aria-label="Con tracking"></i>
                                                     </span>
                                                     <app-pedido-reparto [pedido]="pedido" modo="chip"></app-pedido-reparto>
@@ -1416,13 +1415,13 @@
                                                                         (abrir)="abrirPedidoRepartido($event)"></app-pedido-reparto>
                                                     <!-- Card contenedora para la tabla de productos -->
                                                     <div class="card products-expansion-card">
-                                                        <div class="card-header">
+                                                        <div class="products-expansion-card__head">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <small class="card-title mb-0">
                                                                     <i class="fa fa-shopping-cart me-1"></i>
                                                                     {{ 'Productos' | translate }}
                                                                 </small>
-                                                                <span class="badge bg-primary">
+                                                                <span class="badge">
                                                                     {{ pedido.carrito?.length || 0 }}
                                                                 </span>
                                                             </div>
@@ -1546,14 +1545,14 @@
                         <ng-template *ngIf="!isFromProduction" pTemplate="emptymessage">
                             <tr>
                                 <td [attr.colspan]="getVisibleColumnsCount()" class="text-center">
-                                    <div class="p-4">
-                                        <div class="mb-3">
-                                            <i class="pi pi-database text-muted" style="font-size: 2rem;"></i>
+                                    <div class="pedidos-tabla-vacio">
+                                        <div class="pedidos-tabla-vacio__icono">
+                                            <i class="pi pi-database"></i>
                                         </div>
-                                        <span class="fs-18 text-muted d-block mb-2">
+                                        <span class="pedidos-tabla-vacio__titulo">
                                             {{'No hay datos cargados.' | translate}}
                                         </span>
-                                        <span class="fs-14 text-muted">
+                                        <span class="pedidos-tabla-vacio__texto">
                                             {{'Use los filtros de fecha y estado para cargar los pedidos.' | translate}}
                                         </span>
                                     </div>
@@ -1564,7 +1563,7 @@
                         <!-- FILA DE RESUMEN -->
                         <ng-template *ngIf="!isFromProduction" pTemplate="summary">
                             <tr class="summary-row"
-                                style="font-size: 0.85em; background-color: #f8f9fa; border-top: 2px solid #007bff;">
+                                style="font-size: 0.85em; background-color: #faf9fe; border-top: 1px solid #ececf4;">
                                 <!-- Columna Detalles -->
                                 <td *ngIf="isColumnVisible('detalles')" class="summary-cell"
                                     style="width: 2.5rem; text-align: center; font-weight: bold; color: #495057;">
@@ -1868,7 +1867,7 @@
     <div class="modal-header pdf-print-modal-header">
         <div class="d-flex align-items-center justify-content-between w-100">
             <div class="d-flex align-items-center gap-2">
-                <i class="fa fa-truck" style="color: #8b5cf6; font-size: 1.1rem;"></i>
+                <i class="fa fa-truck" style="color: #5F3FE0; font-size: 1.1rem;"></i>
                 <div>
                     <h5 class="modal-title mb-0" id="modal-basic-title">Editar dirección de entrega</h5>
                     <small class="text-muted d-none d-sm-inline">{{ pedidoSeleccionado?.nroPedido }}</small>
@@ -2546,7 +2545,7 @@
         </app-detalle-entrega>
 
         <!-- DEBUG: Si no hay datos -->
-        <div *ngIf="!pedidoEntregaData" style="background: orange; color: white; padding: 20px; text-align: center;">
+        <div *ngIf="!pedidoEntregaData" class="entrega-sin-datos">
             No hay datos de pedidoEntregaData
         </div>
     </div>
@@ -2706,7 +2705,7 @@
         </div>
 
         <!-- 3. Vencimiento (solo si la forma de pago es a crédito) -->
-        <div *ngIf="facturaEsCredito" class="ps-3 mb-2" style="border-left: 3px solid #3085d6;">
+        <div *ngIf="facturaEsCredito" class="ps-3 mb-2 factura-credito-bloque">
             <div class="form-group mb-2">
                 <label for="facturaPlazo">Plazo de crédito <span class="text-danger">*</span></label>
                 <select id="facturaPlazo" class="form-select form-control"
@@ -2972,7 +2971,7 @@
   <!-- Header del Modal -->
   <ng-template pTemplate="header">
     <div class="d-flex align-items-center w-100">
-      <i class="pi pi-history me-2" style="font-size: 1.2rem; color: var(--primary-color);"></i>
+      <i class="pi pi-history me-2" style="font-size: 1.2rem; color: #5F3FE0;"></i>
       <div class="flex-grow-1">
         <h5 class="mb-0">Historial de Estados</h5>
         <small class="text-muted" *ngIf="currentOrderForHistory">
@@ -2987,7 +2986,7 @@
     
     <!-- Estado de carga -->
     <div *ngIf="loadingHistory" class="text-center py-5">
-      <i class="pi pi-spin pi-spinner" style="font-size: 2rem; color: var(--primary-color);"></i>
+      <i class="pi pi-spin pi-spinner" style="font-size: 2rem; color: #5F3FE0;"></i>
       <p class="mt-3 text-muted">Cargando historial...</p>
     </div>
 

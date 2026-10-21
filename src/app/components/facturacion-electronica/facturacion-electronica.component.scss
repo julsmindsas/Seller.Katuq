@@ -23,7 +23,7 @@ $head: var(--kc-font-head);
 .fe-accent { color: var(--kc-accent) !important; }
 .fe-red { color: #e0483f !important; }
 .fe-dim { color: #c4c8d4; }
-.fe-mono { font-family: $head; font-size: 13px; font-weight: 700; color: var(--kc-ink2); white-space: nowrap; &--strong { font-weight: 800; font-size: 14px; color: #4f5bd5; } }
+.fe-mono { font-family: $head; font-size: 13px; font-weight: 700; color: var(--kc-ink2); white-space: nowrap; &--strong { font-weight: 800; font-size: 14px; color: var(--kc-accent); } }
 .fe-amount { font-family: $head; font-weight: 800; font-size: 15px; color: var(--kc-ink); white-space: nowrap; }
 .fe-cellnote { display: block; margin-top: 2px; font-family: var(--kc-font-body); font-size: 11.5px; font-weight: 600; color: var(--kc-muted2); white-space: normal; max-width: 220px; }
 
@@ -72,7 +72,7 @@ $head: var(--kc-font-head);
 
 // ----- Franja de estado -----
 .fe-strip {
-  @include kc-card; border-radius: 16px; border-left: 4px solid var(--fe-tone, var(--kc-accent));
+  @include kc-card; border-radius: 16px;
   display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 18px;
   &--danger { --fe-tone: #e0483f; --fe-tone-wash: #fce9e8; }
   &--warning { --fe-tone: var(--kc-orange); --fe-tone-wash: var(--kc-orange-wash); }
@@ -109,7 +109,7 @@ $head: var(--kc-font-head);
 // ----- KPIs -----
 .fe-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
 .fe-kpi {
-  @include kc-card; border-radius: 16px; border-left: 4px solid var(--fe-kpi);
+  @include kc-card; border-radius: 16px;
   display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 18px; text-align: left; cursor: pointer; font-family: inherit;
   transition: transform .12s ease, box-shadow .12s ease;
   &:hover { transform: translateY(-1px); box-shadow: 0 6px 14px -8px rgba(50, 40, 110, .35); }
@@ -179,7 +179,7 @@ $head: var(--kc-font-head);
   display: flex; align-items: center; gap: 11px;
   &__icon { @include kc-icon-chip(var(--kc-accent), var(--kc-accent-wash)); width: 34px; height: 34px; border-radius: 10px; font-size: 14px; &--note { color: var(--kc-orange); background: var(--kc-orange-wash); } }
   > div { min-width: 0; display: flex; flex-direction: column; }
-  strong { font-family: $head; font-weight: 800; font-size: 15px; color: #4f5bd5; letter-spacing: .3px; }
+  strong { font-family: $head; font-weight: 800; font-size: 15px; color: var(--kc-accent); letter-spacing: .3px; }
   small { margin-top: 1px; font-size: 11.5px; font-weight: 700; color: var(--kc-muted2); }
 }
 .fe-client { display: flex; align-items: center; gap: 9px; min-width: 0; &__name { font-size: 13px; font-weight: 700; color: var(--kc-ink2); min-width: 0; max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }

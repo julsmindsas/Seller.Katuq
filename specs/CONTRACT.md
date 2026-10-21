@@ -11575,3 +11575,63 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
 - Los reemplazos de color se hicieron con un script que exige el número exacto de apariciones por archivo.
 
 **Pendiente.** Revisar en el navegador a 1440 y 390 px con sesión de comercio. Este equipo no tiene Chromium ni Playwright.
+
+## D-519 (2026-10-21) — Pantallas que faltaban con el aspecto de Regístrese: públicas, internas y el flujo de pedidos — COMMITEADO, sin desplegar
+
+**Disparador.** El usuario (cuenta adminapps de Julsmind) pidió buscar las pantallas que faltaban por modernizar, tomar Regístrese como base y hacerlo sin más rodeos. Eso incluye las de pedidos que D-516 había dejado para ir diff por diff.
+
+**Inventario (176 pantallas con ruta).** 8 usan el marco público y 91 la base `cfg-*`. De las 77 restantes, la mayoría ya tenía diseño propio limpio. Las que conservaban la plantilla vieja se repartieron en 6 grupos.
+
+**Decisión: solo presentación, 54 archivos.**
+- **Públicas** (piezas `pub-*` de Regístrese, D-398):
+  - Promo de campaña: con `<app-publica-marco>`.
+  - Cotización pública y Catálogo público: con las piezas de Regístrese, pero **sin el marco**. Son documentos y vitrinas del comercio para su cliente, con la marca del comercio, y el logo de Katuq llevaría al login del panel. En la cotización, las clases `cp-*` caían en la trampa `[class*="p-"]` y se renombraron a `cot-*`; además se agregó `@media print`.
+  - Retornos de OAuth (integraciones y Meta): viven dentro del panel con menú, así que quedan como tarjeta `pub-card` centrada, sin marco.
+- **Internas** (base `cfg-*`):
+  - Rehechas: Crear rol y Crear/editar empresa.
+  - Solo residuos: Inicio, Centro de operaciones, Contabilidad, Facturación electrónica, Empresas, Configurar integraciones (bloque limitado a `.kx-modal-int`), Mis tickets, Chat, Chat AG-UI, Sesión del video agente y Constructor de reportes.
+- **Flujo de pedidos:**
+  - Todos los pedidos: vista Tabla con los tokens del canon, `.modern-badge` como par fuerte/fondo suave (también en la vista de tarjetas), estado vacío y modales sin cabecera índigo.
+  - Crear ventas y Venta asistida: sin `card-header` ni `btn-success`; los botones de los modales pasan a `cfg-btn`. El botón que crea el pedido vive en `app-checkout` y no se tocó.
+  - POS: la calculadora sin morado viejo ni bloques negros, y el reporte de cierre.
+  - Dashboard de Producción: base `cfg-*`; KPI, alertas y tracking sin `border-left`.
+- **Token compartido.** `_katuq-comercial.scss`: `--kc-accent` pasa de `#6c4ce0` a `#5F3FE0` (con `ink` `#4a2fc0` y `wash` `#efe9ff`). Lo usan unas 27 hojas: POS, carrito, Contabilidad, Facturación y Venta asistida.
+- **Fugas cerradas** (`::ng-deep` sin `:host`):
+  - `p-tabview` de Producción, que quitaba el padding de las pestañas en toda la app;
+  - `p-skeleton` y `row-revisada` de Todos los pedidos;
+  - `.cliente-autocomplete-full` de Crear ventas, que pisaba con `!important` el buscador de Venta asistida.
+
+**Se respeta.** Marketing conserva el mockup aprobado por Daniel (acento `#6a4dfb`, ver la decisión del rediseño de Marketing y WhatsApp). Un agente lo había pasado al canon y se revirtió. Tampoco se tocan:
+- la interfaz de alto contraste para mayores del video agente (`agent-session-elderly-ultra.scss`);
+- el verde semántico de «Completado» y «Completar cierre»;
+- `katuq-flow`;
+- las candidatas a retirar: `dashboards/classic`, `pos/ventas`, `sample-page`, `maestros` y `live-audio`.
+
+**Validación.**
+- Verificador de bindings contra HEAD sobre todos los HTML. Las únicas diferencias son:
+  - el `<app-breadcrumb>` quitado en Empresas, Crear rol, Crear ventas, Todos los pedidos y Producción;
+  - el `<app-publica-marco>` agregado en Promo;
+  - dos falsos positivos: colores hexadecimales dentro de `style`/`<style>`, que el regex de referencias `#x` confunde.
+- `npx sass` sin errores en cada hoja tocada, y una sola compilación de producción al final (ver el commit).
+
+**Medición en `src/app` sin katuq-flow (antes → después).**
+
+| Qué | Antes | Después |
+|---|---|---|
+| Azules sueltos | 30 | 8 |
+| Primarios prohibidos | 10 | 9 |
+| Gradientes | 48 | 43 |
+| `#8b5cf6`/`#a78bfa` | 106 | 77 |
+| `card-header` | 254 | 244 |
+| `btn-success` | 43 | 33 |
+| `<app-breadcrumb>` | 13 | 8 |
+
+**Pendientes.**
+- Revisar en el navegador a 1440 y 390 px, en especial:
+  - Crear empresa (pestañas);
+  - la vista Tabla y las pills de Todos los pedidos;
+  - la calculadora del POS;
+  - la pestaña Ensamble de Producción;
+  - el catálogo público en escritorio (el carrito ahora es un diálogo centrado).
+- `var(--primary-color)` en Crear ventas (unos 24 usos) toma el global `#a78bfa`. Se resuelve con la reconciliación de tokens.
+- Los `::ng-deep` sin `:host` de agent-session apuntan a un `p-sidebar` que se pinta en `body`, así que no se acotaron.

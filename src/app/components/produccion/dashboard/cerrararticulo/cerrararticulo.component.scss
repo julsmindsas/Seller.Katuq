@@ -150,10 +150,10 @@ $transition: all 0.3s ease;
   display: flex;
   align-items: center;
   padding: 1rem 1.25rem;
-  background-color: rgba(255, 167, 38, 0.12);
-  border-radius: $border-radius;
-  border-left: 4px solid $warning-color;
-  color: darken($warning-color, 15%);
+  // Aviso en par fuerte/fondo suave, sin border-left (D-131).
+  background-color: #FFF1DF;
+  border-radius: 11px;
+  color: #D9820A;
   
   i {
     font-size: 1.25rem;

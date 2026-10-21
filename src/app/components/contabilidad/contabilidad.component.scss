@@ -12,7 +12,7 @@ $head: var(--kc-font-head);
 .ct-ink { color: var(--kc-ink); font-weight: 800; }
 .ct-dim { color: #c4c8d4; }
 .ct-dim-ink { color: var(--kc-ink2); font-weight: 600; }
-.ct-mono { font-family: $head; font-weight: 700; color: var(--kc-ink2); &--strong { font-weight: 800; font-size: 14px; color: #4f5bd5; } }
+.ct-mono { font-family: $head; font-weight: 700; color: var(--kc-ink2); &--strong { font-weight: 800; font-size: 14px; color: var(--kc-accent); } }
 .ct-amount { font-family: $head; font-weight: 800; font-size: 15px; color: var(--kc-ink); white-space: nowrap; font-variant-numeric: tabular-nums; &--soft { font-weight: 700; color: var(--kc-ink2); } }
 .ct-card { @include kc-card; border-radius: 16px; }
 .ct-kicker { @include kc-label; font-size: 10.5px; letter-spacing: .6px; color: var(--kc-muted2); }
@@ -81,7 +81,7 @@ $head: var(--kc-font-head);
 
 // ----- franja de estado -----
 .ct-strip {
-  @include kc-card; border-radius: 16px; border-left: 4px solid var(--ct-tone, var(--kc-accent)); display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 18px;
+  @include kc-card; border-radius: 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 18px;
   &--danger { --ct-tone: #e0483f; --ct-tone-wash: #fce9e8; } &--warning { --ct-tone: var(--kc-orange); --ct-tone-wash: var(--kc-orange-wash); } &--info { --ct-tone: var(--kc-blue); --ct-tone-wash: var(--kc-blue-wash); } &--success { --ct-tone: var(--kc-green); --ct-tone-wash: var(--kc-green-wash); }
   &__icon { @include kc-icon-chip(var(--ct-tone), var(--ct-tone-wash)); font-size: 17px; }
   &__copy { flex: 1; min-width: 200px; display: flex; flex-direction: column; strong { font-size: 15px; font-weight: 800; color: var(--kc-ink); } span { margin-top: 2px; font-size: 12.5px; font-weight: 600; color: var(--kc-muted); text-wrap: pretty; } }
@@ -95,7 +95,7 @@ $head: var(--kc-font-head);
 // ----- KPIs -----
 .ct-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
 .ct-kpi {
-  @include kc-card; border-radius: 16px; border-left: 4px solid var(--ct-kpi); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 18px; text-align: left; cursor: pointer; font-family: inherit; transition: transform .12s ease, box-shadow .12s ease;
+  @include kc-card; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 18px; text-align: left; cursor: pointer; font-family: inherit; transition: transform .12s ease, box-shadow .12s ease;
   &:hover { transform: translateY(-1px); box-shadow: 0 6px 14px -8px rgba(50, 40, 110, .35); }
   > div { min-width: 0; display: flex; flex-direction: column; }
   strong { margin-top: 5px; font-family: $head; font-weight: 800; font-size: 26px; line-height: 1.1; color: var(--ct-kpi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

@@ -3,7 +3,7 @@
 // ==========================================
 
 // Canon D-131 (openspec/specs/design-system/spec.md): acento #5F3FE0, no los
-// $katuq-purple-* de _katuq-tokens (#8b5cf6). Tokens locales para no tocar ese archivo.
+// $katuq-purple-* de _katuq-tokens. Tokens locales para no tocar ese archivo.
 $w-accent: #5F3FE0;
 $w-accent-hover: #4a2fc0;
 $w-accent-border: #d9cffb;
@@ -22,6 +22,26 @@ $w-err: #D64545;
 $w-err-soft: #FDECEC;
 $w-info: #1E6FD9;
 $w-info-soft: #E7F1FF;
+
+// Contenedor de cada bloque (reemplaza el contenedor fluido de Bootstrap): ancho completo,
+// gutter de 16px en teléfono y 24px desde tablet.
+.wl-bloque {
+  width: 100%;
+  max-width: 1450px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+  box-sizing: border-box;
+
+  @media (min-width: 768px) {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  p, a, li { letter-spacing: normal; }
+  :focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
 
 // ==========================================
 // HERO BANNER
@@ -49,7 +69,7 @@ $w-info-soft: #E7F1FF;
 
     .hero-title {
       font-weight: 800;
-      font-size: 1.35rem;
+      font-size: 1.35rem !important; // h1 global trae 1.5rem !important
       color: $w-ink;
       margin-bottom: 6px;
       line-height: 1.2;
@@ -66,6 +86,11 @@ $w-info-soft: #E7F1FF;
     .hero-company {
       color: $w-accent-hover;
       font-weight: 600;
+    }
+
+    .hero-sep {
+      color: $w-muted;
+      font-size: inherit;
     }
 
     .hero-actions {
@@ -522,7 +547,7 @@ $w-info-soft: #E7F1FF;
 
     .hero-text {
       .hero-title {
-        font-size: 1.1rem;
+        font-size: 1.1rem !important;
       }
 
       .hero-subtitle {

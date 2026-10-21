@@ -1,28 +1,33 @@
 <!-- breadcrumb removido para ganar espacio -->
-<div class="container-fluid px-4 pt-3">
-    <div class="d-flex align-items-center gap-2 mb-3">
-        <button class="btn btn-sm btn-light" (click)="volverAlListado()" style="border: 1px solid #e2e8f0; border-radius: 8px;">
-            <i class="fa fa-arrow-left me-1"></i>Volver
-        </button>
-        <h5 class="fw-bold mb-0" style="color: #0f172a; font-size: 1.1rem; border: none; padding: 0;">
-            {{ mostrarCrear ? 'Crear Empresa' : 'Editar Empresa' }}
-        </h5>
-    </div>
+<div class="cfg-pagina">
+    <header class="cfg-cabeza">
+        <div class="cfg-cabeza__textos">
+            <span class="cfg-eyebrow">Empresas</span>
+            <h1 class="cfg-titulo">
+                {{ mostrarCrear ? 'Crear Empresa' : 'Editar Empresa' }}
+            </h1>
+        </div>
+        <div class="cfg-acciones">
+            <button class="cfg-btn cfg-btn--sec" (click)="volverAlListado()">
+                <i class="fa fa-arrow-left"></i>Volver
+            </button>
+        </div>
+    </header>
 
     <!-- Editando: mientras llega la empresa no se muestra el formulario, para que
          nadie escriba sobre campos vacíos y termine borrando sedes y contactos. -->
-    <div class="alert alert-light d-flex align-items-center gap-2" *ngIf="cargandoEmpresa">
+    <div class="cfg-aviso" *ngIf="cargandoEmpresa">
         <i class="fa fa-spinner fa-spin"></i> Cargando los datos de la empresa…
     </div>
-    <div class="alert alert-danger" *ngIf="errorCarga">
+    <div class="cfg-aviso cfg-aviso--error ce-aviso-error" *ngIf="errorCarga">
         <strong>No se pudo abrir la empresa.</strong>
         <div>{{ errorCarga }}</div>
-        <button type="button" class="btn btn-sm btn-light mt-2" (click)="volverAlListado()">Volver al listado</button>
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="volverAlListado()">Volver al listado</button>
     </div>
 
     <div class="row" *ngIf="!cargandoEmpresa && !errorCarga">
         <div class="col-sm-12">
-            <div class="card">
+            <div class="card ce-principal">
 
                 <form [formGroup]="f">
 
@@ -1092,13 +1097,13 @@
 
                             </p-tabPanel>
                             <hr class="divider my-3" />
-                            <div class="row">
-                                <div class="col-sm-3">
+                            <div class="ce-pie">
+                                <div class="ce-pie__botones">
                                     <button *ngIf="mostrarCrear" (click)="guardar()"
-                                        class="btn btn-lg btn-primary me-2">Guardar</button>
+                                        class="cfg-btn">Guardar</button>
                                     <button *ngIf="!mostrarCrear" (click)="editar()"
-                                        class="btn btn-lg btn-primary me-2">Editar</button>
-                                    <button type="button" class="btn btn-lg btn-secondary" (click)="volverAlListado()">Volver</button>
+                                        class="cfg-btn">Editar</button>
+                                    <button type="button" class="cfg-btn cfg-btn--sec" (click)="volverAlListado()">Volver</button>
                                 </div>
                             </div>
                         </p-tabView>

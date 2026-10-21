@@ -239,9 +239,9 @@
     padding: 4px 8px;
     
     &:hover {
-        border-color: #3b82f6;
-        color: #3b82f6;
-        background: #f8faff;
+        border-color: #d9cffb;
+        color: #5F3FE0;
+        background: #efe9ff;
     }
     
     .btn-label {
@@ -294,15 +294,15 @@
 }
 
 .payment-btn:hover {
-    border-color: #3b82f6;
-    color: #3b82f6;
-    background: #eff6ff;
+    border-color: #1E6FD9;
+    color: #1E6FD9;
+    background: #E7F1FF;
 }
 
 .cart-btn:hover {
-    border-color: #8b5cf6;
-    color: #8b5cf6;
-    background: #faf5ff;
+    border-color: #5F3FE0;
+    color: #5F3FE0;
+    background: #efe9ff;
 }
 
 .seller-btn:hover {
@@ -395,21 +395,7 @@
     animation: slideDown 0.3s ease;
 }
 
-/* Efectos de hover mejorados */
-.action-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
-}
-
-.action-btn:hover::before {
-    left: 100%;
-}
+/* Efectos de hover: planos (sin brillo con gradiente, D-399) */
 
 /* Indicador de estado expandido */
 .inline-actions-container.expanded::before {
