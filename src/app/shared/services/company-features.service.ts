@@ -80,6 +80,12 @@ export const COMPANY_FEATURE_FLAGS = [
   'storePaymentRetry',
   'storeDrawer',
   'storeShippingEstimate',
+  // Bot de WhatsApp con pedido directo, atención y seguimiento (ticket F4-40, D-531): mismos nombres
+  // que el backend; la llave general vive en `config/feature_flags`. Nacen apagadas.
+  // Dueño: Daniel. Se revisan el 2027-04-30.
+  'whatsappBotDirectOrder',
+  'whatsappBotAttention',
+  'whatsappBotFollowUp',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

@@ -154,7 +154,7 @@ D-496 (ticket F4-40, cd `PrDNIoDwRacCPQVcHmx1`; el número 1243 está repetido, 
 
 - [x] 5.1 [P] `whatsappBotDirectOrder` en `companyFeatureFlags.js`, con dueño y
       retiro según 0.2. Éxito: `companyFeatureFlags.test.js` en verde. Dep: 0.2.
-- [ ] 5.2 [P] Front: la misma bandera en `company-features.service.ts`.
+- [x] 5.2 [P] Front: la misma bandera en `company-features.service.ts`.
       Éxito: build de producción sin errores. Dep: 0.2.
 - [x] 5.3 [P] `bot.pedidoDirectoModo` en `whatsappCompanyConfig.js`. Prueba primero:
       un valor inválido se rechaza, ausente se lee como `sombra` y los demás campos
@@ -435,7 +435,7 @@ Ninguna tarea de esta parte empieza antes de 0.6. Las marcadas **[sensible]** es
 
 ## 16. Front y cierre
 
-- [ ] 16.1 [P] `company-features.service.ts`: `whatsappBotAttention` y `whatsappBotFollowUp` (más `whatsappBotDirectOrder` de 5.2), con su dueño y su fecha de revisión. Éxito: `npm run build:prod` sin errores. Dep: 0.6.
+- [x] 16.1 [P] `company-features.service.ts`: `whatsappBotAttention` y `whatsappBotFollowUp` (más `whatsappBotDirectOrder` de 5.2), con su dueño y su fecha de revisión. Éxito: `npm run build:prod` sin errores. Dep: 0.6.
 - [ ] 16.2 Panel del hilo (D22): `GET /:phoneHash/bot` suma `pedidoCreado`, leído de `orders` (último pedido del bot de ese `phoneHash` y esa empresa), no de la sesión. Prueba primero en el router: se ve después de la reapertura y después de `devolverAlBot`; el de otra empresa no. El componente lo muestra con `cfg-aviso`, sin gradientes ni primarios prohibidos y sin clases con «p-». Revisión a 1440 y 390 px. Éxito: build de producción sin errores y conteo de gradientes y primarios del módulo sin subir. Dep: 9.4, 0.7.
 - [ ] 16.3 Repetir 0.4 completo más `tests/agenda`, `tests/enVivo` y las pruebas de kai. Éxito: sin fallos nuevos. Dep: 8 a 16.2.
 - [ ] 16.4 Bitácora de D-496 en `specs/CONTRACT.md` y comentario técnico en el ticket F4-40 (cd `PrDNIoDwRacCPQVcHmx1`), sin detalles de seguridad. Dep: 16.3.
