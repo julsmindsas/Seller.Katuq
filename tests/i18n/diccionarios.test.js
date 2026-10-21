@@ -116,7 +116,7 @@ test('1.10: las claves que faltaban quedan traducidas (en-US neutro, pt-BR con v
   // paso 5); la traducción que se fijó en 1.10 sigue igual bajo la clave nueva.
   assert.equal(pt['notificaciones.privacyLink'], 'Política de privacidade');
   assert.equal(pt['Política de privacidad'], undefined);
-  assert.equal(pt['Ingresa tu correo y tu contraseña'], 'Digite seu e-mail e sua senha');
+  assert.equal(pt['authentication.login.lead'], 'Digite seu e-mail e sua senha'); // IDI-B02: la clave literal antigua pasó a authentication.login.lead
   assert.equal(pt['Orden de Venta'], 'Ordem de venda');
   // notificaciones.privacy_note_1 termina en espacio y privacy_note_2 empieza con espacio: la
   // plantilla pone el enlace a la política entre las dos.

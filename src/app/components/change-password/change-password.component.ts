@@ -5,6 +5,7 @@ import { UtilsService } from '../../shared/services/utils.service';
 import { MaestroService } from '../../shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
 import { OnboardingService } from '../onboarding/services/onboarding.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
     selector: 'app-change-password',
@@ -22,7 +23,8 @@ export class ChangePasswordComponent implements OnInit {
     constructor(private fb: FormBuilder, private router: Router,
         private service: MaestroService,
         private utils: UtilsService,
-        private onboardingService: OnboardingService) {
+        private onboardingService: OnboardingService,
+        private translate: TranslateService) {
         this.passwordForm = this.fb.group({
             newPassword: ['', [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)]],
             confirmPassword: ['', Validators.required]
@@ -53,8 +55,8 @@ export class ChangePasswordComponent implements OnInit {
                     sessionStorage.removeItem(ChangePasswordComponent.DEFER_KEY);
                     Swal.fire({
                         icon: 'success',
-                        title: 'Contraseña actualizada',
-                        text: result?.message || 'Tu contraseña fue actualizada correctamente.',
+                        title: this.translate.instant('changePassword.updated'),
+                        text: result?.message || this.translate.instant('changePassword.updatedText'),
                         timer: 2200,
                         showConfirmButton: false
                     });
@@ -64,8 +66,8 @@ export class ChangePasswordComponent implements OnInit {
                     console.error('Error al cambiar contraseña', err);
                     Swal.fire({
                         icon: 'error',
-                        title: 'No se pudo actualizar',
-                        text: err?.error?.message || err?.message || 'Error desconocido al actualizar la contraseña.'
+                        title: this.translate.instant('changePassword.failedTitle'),
+                        text: err?.error?.message || err?.message || this.translate.instant('changePassword.failedText')
                     });
                 }
             });

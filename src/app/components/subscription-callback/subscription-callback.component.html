@@ -4,56 +4,55 @@
     <!-- Verificando -->
     <div *ngIf="loading" class="pub-stack" role="status" aria-live="polite">
       <div class="pub-estado pub-estado--info" aria-hidden="true"><div class="sub-giro"></div></div>
-      <h1 class="pub-h1">Verificando tu pago</h1>
-      <p class="pub-lead">Espera un momento mientras confirmamos tu suscripción.</p>
+      <h1 class="pub-h1">{{ 'publica.payment.verifyingTitle' | translate }}</h1>
+      <p class="pub-lead">{{ 'publica.subscription.verifyingText' | translate }}</p>
     </div>
 
     <!-- Pago exitoso -->
     <ng-container *ngIf="!loading && success">
       <div class="pub-stack" role="status" aria-live="polite">
         <div class="pub-estado pub-estado--ok" aria-hidden="true">✓</div>
-        <h1 class="pub-h1">¡Pago exitoso!</h1>
-        <p class="pub-lead">{{ message }}</p>
+        <h1 class="pub-h1">{{ 'publica.subscription.successTitle' | translate }}</h1>
+        <p class="pub-lead">{{ message | translate }}</p>
       </div>
 
       <div class="pub-card">
-        <h2 class="pub-h2">Ya puedes disfrutar de</h2>
+        <h2 class="pub-h2">{{ 'publica.subscription.enjoy' | translate }}</h2>
         <ul class="sub-lista">
-          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">Pedidos ilimitados</div></li>
-          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">IA sin restricciones</div></li>
-          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">Múltiples bodegas</div></li>
-          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">Integraciones avanzadas</div></li>
-          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">Dropshipping</div></li>
-          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">Soporte prioritario</div></li>
+          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">{{ 'publica.subscription.unlimitedOrders' | translate }}</div></li>
+          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">{{ 'publica.subscription.unrestrictedAi' | translate }}</div></li>
+          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">{{ 'publica.subscription.multiWarehouse' | translate }}</div></li>
+          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">{{ 'publica.subscription.advancedIntegrations' | translate }}</div></li>
+          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">{{ 'publica.subscription.dropshipping' | translate }}</div></li>
+          <li class="sub-item"><div class="pub-tick" aria-hidden="true">✓</div><div class="sub-texto">{{ 'publica.subscription.prioritySupport' | translate }}</div></li>
         </ul>
       </div>
 
-      <p *ngIf="subscriptionId" class="pub-fine">ID de suscripción: {{ subscriptionId }}</p>
+      <p *ngIf="subscriptionId" class="pub-fine">{{ 'publica.subscription.subscriptionId' | translate }} {{ subscriptionId }}</p>
 
-      <button class="pub-btn" type="button" (click)="goToDashboard()">Ir al panel</button>
+      <button class="pub-btn" type="button" (click)="goToDashboard()">{{ 'publica.subscription.goPanel' | translate }}</button>
     </ng-container>
 
     <!-- Pendiente o no aprobado -->
     <ng-container *ngIf="!loading && !success">
       <div class="pub-stack" role="status" aria-live="polite">
         <div class="pub-estado" [ngClass]="failed ? 'pub-estado--error' : 'pub-estado--warn'" aria-hidden="true">{{ failed ? '✕' : '…' }}</div>
-        <h1 class="pub-h1">{{ failed ? 'Pago no aprobado' : 'Pago pendiente' }}</h1>
-        <p class="pub-lead">{{ message }}</p>
+        <h1 class="pub-h1">{{ (failed ? 'publica.subscription.failedTitle' : 'publica.payment.pendingTitle') | translate }}</h1>
+        <p class="pub-lead">{{ message | translate }}</p>
       </div>
 
       <p *ngIf="!failed" class="pub-aviso pub-aviso--info">
-        El procesamiento puede tomar algunos minutos. Recibirás un correo electrónico
-        cuando tu suscripción se active. Si el problema persiste, contacta a soporte.
+        {{ 'publica.subscription.pendingNote' | translate }}
       </p>
       <p *ngIf="failed" class="pub-aviso pub-aviso--info">
-        No se activó un nuevo cobro. Puedes revisar el medio de pago o contactar a soporte si necesitas ayuda.
+        {{ 'publica.subscription.failedNote' | translate }}
       </p>
 
-      <p *ngIf="subscriptionId" class="pub-fine">ID de suscripción: {{ subscriptionId }}</p>
+      <p *ngIf="subscriptionId" class="pub-fine">{{ 'publica.subscription.subscriptionId' | translate }} {{ subscriptionId }}</p>
 
       <div class="pub-stack">
-        <button class="pub-btn" type="button" (click)="retryCheck()">Verificar estado</button>
-        <button class="pub-btn pub-btn--sec" type="button" (click)="goToDashboard()">Ir al panel</button>
+        <button class="pub-btn" type="button" (click)="retryCheck()">{{ 'publica.subscription.retry' | translate }}</button>
+        <button class="pub-btn pub-btn--sec" type="button" (click)="goToDashboard()">{{ 'publica.subscription.goPanel' | translate }}</button>
       </div>
     </ng-container>
 

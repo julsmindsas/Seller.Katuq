@@ -3,10 +3,10 @@
     <div class="pub-estado pub-estado--info" aria-hidden="true">
       <i class="fa fa-compass"></i>
     </div>
-    <span class="pub-eyebrow">Error 404</span>
-    <h1 class="pub-h1">No encontramos esta página</h1>
-    <p class="pub-lead">Puede que se haya movido o que el enlace esté roto. Vuelve al inicio para seguir navegando.</p>
-    <a class="pub-btn" [routerLink]="'/welcome/'">Volver al inicio</a>
-    <p class="pub-fine">¿Necesitas ayuda? Contacta con nuestro equipo de soporte.</p>
+    <span class="pub-eyebrow">{{ 'publica.notFound.eyebrow' | translate }}</span>
+    <h1 class="pub-h1">{{ 'publica.notFound.title' | translate }}</h1>
+    <p class="pub-lead">{{ 'publica.notFound.text' | translate }}</p>
+    <a class="pub-btn" [routerLink]="'/welcome/'">{{ 'publica.backHome' | translate }}</a>
+    <p class="pub-fine">{{ 'publica.notFound.help' | translate }}</p>
   </div>
 </app-publica-marco>

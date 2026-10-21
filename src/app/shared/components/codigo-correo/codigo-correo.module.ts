@@ -2,11 +2,12 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CodigoCorreoComponent } from './codigo-correo.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 /** La pantalla del código que confirma el correo (D-323): registro e inicio de sesión. */
 @NgModule({
   declarations: [CodigoCorreoComponent],
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   exports: [CodigoCorreoComponent],
 })
 export class CodigoCorreoModule {}

@@ -1,13 +1,13 @@
 <app-publica-marco ancho="lectura">
   <div class="pub-stack">
-    <span class="pub-eyebrow">Legal</span>
-    <h1 class="pub-h1">Términos y condiciones</h1>
-    <p class="pub-lead">Estas son las condiciones generales de uso de KATUQ. Puedes leerlas aquí o descargar el PDF.</p>
+    <span class="pub-eyebrow">{{ 'publica.terms.eyebrow' | translate }}</span>
+    <h1 class="pub-h1">{{ 'publica.terms.title' | translate }}</h1>
+    <p class="pub-lead">{{ 'publica.terms.lead' | translate }}</p>
 
-    <a class="pub-btn pub-btn--sec" [href]="pdfUrl" download>Descargar el PDF</a>
+    <a class="pub-btn pub-btn--sec" [href]="pdfUrl" download>{{ 'publica.terms.download' | translate }}</a>
 
-    <object class="ter-visor" [data]="safePdfUrl" type="application/pdf" aria-label="Términos y condiciones generales de uso de KATUQ">
-      <p class="pub-help">Tu navegador no puede mostrar el PDF aquí. <a class="pub-link" [href]="pdfUrl" target="_blank" rel="noopener">Ábrelo en una pestaña nueva</a> o usa el botón de descargar.</p>
+    <object class="ter-visor" [data]="safePdfUrl" type="application/pdf" [attr.aria-label]="'publica.terms.viewerLabel' | translate">
+      <p class="pub-help">{{ 'publica.terms.noViewer' | translate }} <a class="pub-link" [href]="pdfUrl" target="_blank" rel="noopener">{{ 'publica.terms.openTab' | translate }}</a> {{ 'publica.terms.orDownload' | translate }}</p>
     </object>
   </div>
 </app-publica-marco>

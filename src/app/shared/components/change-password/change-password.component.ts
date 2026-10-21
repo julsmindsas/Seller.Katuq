@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { UtilsService } from '../../../shared/services/utils.service';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
     selector: 'app-shared-change-password',
@@ -17,7 +18,8 @@ export class SharedChangePasswordComponent implements OnInit {
 
     constructor(private fb: FormBuilder, private router: Router,
         private service: MaestroService,
-        private utils: UtilsService) {
+        private utils: UtilsService,
+        private translate: TranslateService) {
         this.passwordForm = this.fb.group({
             Password: ['', Validators.required],
             newPassword: ['', [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$.!%*?&])[A-Za-z\d@$.!%*?&]{8,}$/)]],
@@ -63,7 +65,7 @@ export class SharedChangePasswordComponent implements OnInit {
 
                 Swal.fire({
                     icon: 'success',
-                    title: 'Contraseña cambiada con éxito!',
+                    title: this.translate.instant('changePassword.changedOk'),
                     showConfirmButton: true
                 });
             });

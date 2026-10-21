@@ -120,7 +120,7 @@ test('tratamiento «Sie» (D7): ningún «du», «dich», «dir» ni «dein»', 
   for (const [clave, valor] of planoDe) {
     assert.doesNotMatch(comoTexto(valor), /\b(du|dich|dir|dein\w*)\b/i, clave);
   }
-  assert.equal(de['Ingresa a tu cuenta'], 'Melden Sie sich bei Ihrem Konto an');
+  assert.equal(de['authentication.login.title'], 'Melden Sie sich bei Ihrem Konto an'); // IDI-B02: la clave literal antigua pasó a authentication.login.title
 });
 
 test('glosario de D7 en todo el diccionario', () => {

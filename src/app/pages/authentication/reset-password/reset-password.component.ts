@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ServiciosService } from '../../../shared/services/servicios.service';
 import { ToastrService } from 'ngx-toastr';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-reset-password',
@@ -24,7 +25,8 @@ export class ResetPasswordComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private serviciosService: ServiciosService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private translate: TranslateService
   ) {
     this.resetPasswordForm = this.fb.group({
       newPassword: ['', [
@@ -43,7 +45,7 @@ export class ResetPasswordComponent implements OnInit {
       this.resetToken = params['token'];
       if (!this.resetToken) {
         this.tokenError = true;
-        this.toastr.error('Token de recuperación no encontrado', 'Error');
+        this.toastr.error(this.translate.instant('authentication.reset.tokenMissing'), this.translate.instant('comun.error'));
       } else {
         // Verificar si el token es válido
         this.verifyToken();
@@ -62,12 +64,12 @@ export class ResetPasswordComponent implements OnInit {
       next: (result: any) => {
         if (!result.valid) {
           this.tokenError = true;
-          this.toastr.error('El token de recuperación es inválido o ha expirado', 'Error');
+          this.toastr.error(this.translate.instant('authentication.reset.tokenInvalid'), this.translate.instant('comun.error'));
         }
       },
       error: (error) => {
         this.tokenError = true;
-        this.toastr.error('Error al verificar el token', 'Error');
+        this.toastr.error(this.translate.instant('authentication.reset.tokenVerifyFailed'), this.translate.instant('comun.error'));
         console.error('Error verifying token:', error);
       }
     });
@@ -97,7 +99,7 @@ export class ResetPasswordComponent implements OnInit {
           if (result.success) {
             this.passwordReset = true;
             this.isLoading = false;
-            this.toastr.success('Contraseña actualizada correctamente', 'Éxito');
+            this.toastr.success(this.translate.instant('authentication.reset.updated'), this.translate.instant('comun.exito'));
             
             // Redirigir al login después de 3 segundos
             setTimeout(() => {
@@ -105,13 +107,13 @@ export class ResetPasswordComponent implements OnInit {
             }, 3000);
           } else {
             this.isLoading = false;
-            this.toastr.error(result.message || 'Error al actualizar la contraseña', 'Error');
+            this.toastr.error(result.message || this.translate.instant('authentication.reset.updateFailed'), this.translate.instant('comun.error'));
           }
         },
         error: (error) => {
           this.isLoading = false;
           console.error('Error al resetear contraseña:', error);
-          this.toastr.error('Error al actualizar la contraseña. Intenta nuevamente.', 'Error');
+          this.toastr.error(this.translate.instant('authentication.reset.updateRetry'), this.translate.instant('comun.error'));
         }
       });
     }

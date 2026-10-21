@@ -28,15 +28,15 @@ assert.ok(component.includes('config.initialAmountCOP'), 'el botón debe usar ex
 assert.ok(!component.includes('isLocalEnvironment'), 'localhost no puede decidir si un cobro es de prueba');
 assert.ok(muestraTexto(modal, 'Pago real con Wompi'), 'producción debe advertir que el cobro es real');
 assert.ok(muestraTexto(modal, 'Prueba real con Wompi'), 'el monto reducido productivo debe identificarse como dinero real');
-assert.ok(modal.includes('{{ renewalLabel }}'), 'la recurrencia mensual o anual debe explicarse antes de pagar');
+assert.ok(modal.includes('shell.upgrade.summary.planMonthly') && modal.includes('shell.upgrade.summary.planYearly'), 'la recurrencia mensual o anual debe explicarse antes de pagar');
 assert.ok(modal.includes("selectBillingPeriod('yearly')"), 'el alta debe permitir seleccionar anualidad');
 assert.ok(component.includes('billingPeriod: this.billingPeriod'), 'el período elegido debe enviarse junto al token');
 assert.ok(service.includes('updateBillingPeriod'), 'un cliente activo debe poder programar mensual↔anual sin recapturar tarjeta');
 assert.ok(muestraTexto(modal, 'Cifrado seguro activo'), 'la UI debe confirmar el cifrado antes de habilitar campos');
 assert.ok(modal.includes('autocomplete="cc-number"'), 'los campos deben declarar semántica segura de tarjeta');
 assert.ok(modal.includes('isCardFormValid'), 'el botón debe bloquearse mientras haya campos inválidos');
-assert.ok(pricing.includes('Último comprobante'), 'pricing debe mostrar el último comprobante');
-assert.ok(pricing.includes('Simulación Wompi Sandbox · sin dinero real'), 'la UI debe identificar claramente la simulación');
-assert.ok(pricing.includes('Guardar para el próximo cobro'), 'pricing debe aclarar que cambiar periodicidad no cobra inmediatamente');
+assert.ok(muestraTexto(pricing, 'Último comprobante'), 'pricing debe mostrar el último comprobante');
+assert.ok(muestraTexto(pricing, 'Simulación Wompi Sandbox · sin dinero real'), 'la UI debe identificar claramente la simulación');
+assert.ok(muestraTexto(pricing, 'Guardar para el próximo cobro'), 'pricing debe aclarar que cambiar periodicidad no cobra inmediatamente');
 
 console.log('wompi-recurring-ui.contract.test.js: OK');
