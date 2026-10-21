@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ErrorImportador } from '../tipos';
+import { AVISO_NO_CERRAR_TIENDA } from '../logica/ampliacion';
 
 export interface AvanceVista {
   etapa: 'productos' | 'redirecciones' | 'fotos';
@@ -30,6 +31,7 @@ const ETAPAS = { productos: 'Trayendo tus productos', redirecciones: 'Cuidando t
         <span class="mt-fuerte">{{ error.message }}</span>
       </p>
       <p class="mt-ayuda" *ngIf="error && !error.blocking">Lo que ya se trajo queda guardado. Al reintentar seguimos desde donde se detuvo.</p>
+      <p class="cfg-aviso cfg-aviso--warn mt-sep" role="status" *ngIf="avance && avance.etapa === 'fotos'"><span class="mt-fuerte">{{ avisoTiendaAnterior }}</span></p>
       <p class="mt-ayuda" *ngIf="!error">No cierres esta ventana hasta que termine.</p>
     </section>
     <div class="cfg-form__pie" *ngIf="error">
@@ -43,6 +45,8 @@ export class PasoImportarComponent {
   @Input() error: ErrorImportador | null = null;
   @Output() reintentar = new EventEmitter<void>();
   @Output() verReporte = new EventEmitter<void>();
+
+  readonly avisoTiendaAnterior = AVISO_NO_CERRAR_TIENDA;
 
   get titulo(): string {
     return this.avance ? ETAPAS[this.avance.etapa] : 'Preparando…';

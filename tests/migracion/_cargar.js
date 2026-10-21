@@ -12,5 +12,7 @@ module.exports = {
   reporte: require(base + 'logica/reporte.ts'),
   flujo: require(base + 'logica/flujo.ts'),
   textos: require(base + 'logica/textos.ts'),
+  ampliacion: require(base + 'logica/ampliacion.ts'),
+  seo: require('../../src/app/components/productos/crear-productos/seo-producto.ts'),
   acceso: require(base + 'logica/acceso.ts'),
 };

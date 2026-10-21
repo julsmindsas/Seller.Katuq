@@ -203,7 +203,7 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
   - Depende de 6.1 y de TX-37 8.1.
   - Hecho (F530-B10): `photoCopyStep.js`, `POST photos` y `GET photos/pending`; pruebas `importStorePhotos.writeSet` y `importStorePhotos.security`. El índice compuesto está solo en `firestore.indexes.json` (el despliegue de índices sigue bloqueado; se confirma en 12.2).
   - **Éxito:** contrato en verde; ningún log ni rastro con la URL.
-- [ ] 14.16 Front (con 8.x):
+- [x] 14.16 Front (con 8.x): _Estado (F530-F03): hecho y probado con `tests/migracion/ampliacion.test.js` y `tsc`. Falta, por regla del proyecto, el `build:prod` y la revisión visual a 1440 y 390 px (no se corrieron aquí). Las redirecciones de categorías de Woo no se envían: el CSV de productos no trae sus direcciones. El cuerpo de crear producto ya manda `seo`, pero solo la edición lo sanea en el servidor._
   - paso «Copiar fotos» con progreso, aviso de no cerrar la tienda anterior y «Copiar fotos pendientes» (lee `photos/pending`);
   - aviso de la lista Público con su botón (pregunta 1); aviso del plan gratis (`PLAN_LIMIT`);
   - IVA «para los productos gravados», la pregunta obligatoria «¿tus precios incluyen IVA?» con el ejemplo, y la asignación de las clases de Woo;

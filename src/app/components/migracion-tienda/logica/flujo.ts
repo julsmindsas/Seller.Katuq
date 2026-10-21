@@ -22,6 +22,7 @@ import {
 import { AvanceLotes, OpcionesReintento, enviarConReintento, procesarLotes } from './errores';
 import { LIMITES_SIMULACION, armarLotes, partirEn } from './lotes';
 import { PerfilProveedor } from './perfiles';
+import { TarifaIva, leerDireccionesPegadas, mapaDeClases, nombreDeGrupo, normalizarBase, slugProbable } from './ampliacion';
 import { TotalesProductos, TotalesSimulacion, sumarLotes, sumarSimulaciones } from './sumas';
 
 export const IVA_PERMITIDOS: readonly number[] = Object.freeze([0, 5, 19]);
@@ -38,6 +39,14 @@ export interface ConfigImportacion {
   preciosConIva: boolean | null;
   modo: 'create' | 'upsert';
   reemplazarExistencias: boolean;
+  /** IVA elegido para cada clase de impuesto de la tienda anterior (solo las que la simulación pidió). */
+  clasesIva: { [clase: string]: TarifaIva };
+  /** Base de las direcciones de productos de la tienda anterior; vacía hasta que la persona la confirme. */
+  baseProductos: string;
+  baseCategorias: string;
+  baseConfirmada: boolean;
+  /** Direcciones reales de productos, una por línea. */
+  direccionesTexto: string;
 }
 
 export const CONFIG_INICIAL: ConfigImportacion = Object.freeze({
@@ -47,6 +56,11 @@ export const CONFIG_INICIAL: ConfigImportacion = Object.freeze({
   preciosConIva: null,
   modo: 'create',
   reemplazarExistencias: false,
+  clasesIva: Object.freeze({}),
+  baseProductos: '',
+  baseCategorias: '',
+  baseConfirmada: false,
+  direccionesTexto: '',
 }) as ConfigImportacion;
 
 /** Identificador seguro para el servidor (`[A-Za-z0-9_-]{8,64}`), único por corrida. */
@@ -77,6 +91,8 @@ export const sinErrores = (e: ErroresConfig): boolean => Object.keys(e).length =
 
 export function opcionesDe(c: ConfigImportacion, hayInventario: boolean): OpcionesImportacion {
   const o: OpcionesImportacion = { ivaPercent: c.ivaPercent, pricesIncludeTax: c.preciosConIva === true };
+  const clases = mapaDeClases(c.clasesIva);
+  if (clases) o.taxClassMap = clases;
   if (hayInventario && c.bodega.trim()) {
     o.warehouse = c.bodega.trim();
     o.replaceExistingStock = c.reemplazarExistencias === true;
@@ -174,22 +190,52 @@ export async function importarProductosPorLotes(
 export const conCd = (productos: ProductoDelLote[]): (ProductoDelLote & { cd: string })[] =>
   productos.filter((p): p is ProductoDelLote & { cd: string } => typeof p.cd === 'string' && p.cd !== '');
 
-/** Las redirecciones solo se piden si el perfil no las necesita con bases propias; WooCommerce espera al `handle` del servidor. */
-export function puedeRedirigir(ctx: Pick<ContextoFlujo, 'perfil'>): boolean {
-  return ctx.perfil.basesRedireccion === null;
+/**
+ * Las redirecciones se piden si el perfil no necesita bases propias (Shopify) o si la persona
+ * confirmó la base de sus direcciones (WooCommerce). Sin confirmar, no se genera ninguna.
+ */
+export function puedeRedirigir(ctx: Pick<ContextoFlujo, 'perfil'> & { config?: Partial<ConfigImportacion> }): boolean {
+  if (ctx.perfil.basesRedireccion === null) return true;
+  const c = ctx.config || {};
+  return c.baseConfirmada === true && normalizarBase(c.baseProductos || '') !== null;
 }
 
 export function cuerposRedirecciones(ctx: ContextoFlujo, productos: ProductoDelLote[]): CuerpoRedirecciones[] {
   if (!puedeRedirigir(ctx)) return [];
-  const lista = conCd(productos)
-    .filter((p) => !p.splitFrom)
-    .map((p) => ({ handle: p.key, cd: p.cd }));
-  return partirEn(lista, REDIRECCIONES_POR_ENVIO).map((products) => ({
-    migrationId: ctx.migrationId,
-    source: ctx.proveedor,
-    siteId: ctx.config.sitioId,
-    products,
-  }));
+  const conBase = ctx.perfil.basesRedireccion !== null;
+  const nombres = new Map<string, string>();
+  if (conBase) for (const g of ctx.grupos) nombres.set(g.key, nombreDeGrupo(g));
+  const base = conBase ? normalizarBase(ctx.config.baseProductos) : null;
+  const categorias = conBase ? normalizarBase(ctx.config.baseCategorias) : null;
+  const pegadas = conBase ? leerDireccionesPegadas(ctx.config.direccionesTexto).validas : [];
+
+  const lista: CuerpoRedirecciones['products'] = [];
+  const cdPorSlug = new Map<string, string>();
+  for (const p of conCd(productos)) {
+    if (p.splitFrom) continue;
+    if (!conBase) {
+      lista.push({ handle: p.key, cd: p.cd });
+      continue;
+    }
+    const slug = slugProbable(nombres.get(p.key) || '');
+    if (!slug || cdPorSlug.has(slug)) continue;
+    cdPorSlug.set(slug, p.cd);
+    lista.push({ handle: slug, cd: p.cd, probable: true });
+  }
+  // Una dirección real pegada manda sobre la probable; viaja en el envío que lleva a su producto.
+  return partirEn(lista, REDIRECCIONES_POR_ENVIO).map((products) => {
+    const cds = new Set(products.map((p) => p.cd));
+    const urls = pegadas.filter((d) => cdPorSlug.has(d.slug) && cds.has(cdPorSlug.get(d.slug) as string)).map((d) => ({ desde: d.desde, cd: cdPorSlug.get(d.slug) as string }));
+    return {
+      migrationId: ctx.migrationId,
+      source: ctx.proveedor,
+      siteId: ctx.config.sitioId,
+      products,
+      ...(conBase && base ? { productBase: base } : {}),
+      ...(conBase && categorias ? { categoryBase: categorias } : {}),
+      ...(urls.length ? { urls } : {}),
+    };
+  });
 }
 
 export interface ResultadoRedirecciones {

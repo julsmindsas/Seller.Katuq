@@ -5,6 +5,7 @@ import { Sobrante } from '../logica/lotes';
 import { TotalesSimulacion } from '../logica/sumas';
 import { guardasBloqueantes } from '../logica/flujo';
 import { MENSAJES_SIMULACION, contadoresDeSimulacion, mensajePlan } from '../logica/textos';
+import { AVISO_NO_CERRAR_TIENDA, textoFormato, textoListaPublico } from '../logica/ampliacion';
 
 /** Paso 2: lo que pasaría, sin escribir nada. Avisos de guardas, sobrantes y conteos. */
 @Component({
@@ -39,6 +40,16 @@ import { MENSAJES_SIMULACION, contadoresDeSimulacion, mensajePlan } from '../log
         <p class="cfg-aviso mt-sep" *ngIf="plan">
           <span class="mt-fuerte">{{ plan }}</span>
         </p>
+        <p class="cfg-aviso mt-sep" *ngIf="formato"><span class="mt-fuerte">{{ formato }}</span></p>
+        <div class="cfg-aviso cfg-aviso--warn mt-sep" *ngIf="listaPublico">
+          <span class="mt-fuerte">{{ listaPublico }}</span>
+          <div class="mt-sep">
+            <button type="button" class="cfg-btn cfg-btn--sec" (click)="tiposCliente.emit()">Ir a tipos de cliente</button>
+          </div>
+        </div>
+        <p class="cfg-aviso mt-sep" *ngIf="fotosPorCopiar > 0">
+          <span class="mt-fuerte">Vamos a copiar {{ fotosPorCopiar }} fotos a Katuq. {{ avisoTiendaAnterior }}</span>
+        </p>
 
         <div class="cfg-stats mt-sep">
           <div class="cfg-stat" *ngFor="let c of contadores">
@@ -58,6 +69,8 @@ import { MENSAJES_SIMULACION, contadoresDeSimulacion, mensajePlan } from '../log
       </ng-container>
     </section>
 
+    <ng-content select="[mtAjustes]"></ng-content>
+
     <div class="cfg-form__pie">
       <button type="button" class="cfg-btn cfg-btn--sec" (click)="volver.emit()">Volver</button>
       <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="error" (click)="reintentar.emit()">Reintentar la revisión</button>
@@ -73,6 +86,9 @@ export class PasoSimularComponent {
   @Output() volver = new EventEmitter<void>();
   @Output() reintentar = new EventEmitter<void>();
   @Output() importar = new EventEmitter<void>();
+  @Output() tiposCliente = new EventEmitter<void>();
+
+  readonly avisoTiendaAnterior = AVISO_NO_CERRAR_TIENDA;
 
   get bloqueantes() {
     return this.totales ? guardasBloqueantes(this.totales.guardas) : [];
@@ -89,6 +105,15 @@ export class PasoSimularComponent {
   }
   get plan(): string | null {
     return this.totales ? mensajePlan(this.totales.plan) : null;
+  }
+  get formato(): string | null {
+    return this.totales ? textoFormato(this.totales.formato) : null;
+  }
+  get listaPublico(): string | null {
+    return this.totales ? textoListaPublico(this.totales.ofertas.listaPublico, this.totales.ofertas.cantidad) : null;
+  }
+  get fotosPorCopiar(): number {
+    return this.totales ? this.totales.fotos.porCopiar : 0;
   }
   get avisosVisibles() {
     return this.totales ? this.totales.avisos.slice(0, 50) : [];

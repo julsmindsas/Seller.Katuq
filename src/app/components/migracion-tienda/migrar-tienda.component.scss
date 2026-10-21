@@ -59,6 +59,11 @@
   .mt-paso--actual .mt-paso__num { background: var(--ds-accent); color: var(--ds-on-accent); }
   .mt-paso--hecho .mt-paso__texto { color: var(--ds-ok); }
 
+  .mt-fila { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .mt-fila__texto { flex: 1 1 200px; margin: 0; font-size: 13.5px; font-weight: 700; color: var(--ds-body); text-transform: none; letter-spacing: normal; }
+  .mt-fila__campo { flex: 0 1 180px; }
+  textarea:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+
   .mt-barra {
     height: 10px;
     border-radius: 999px;

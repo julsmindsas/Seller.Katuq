@@ -30,6 +30,17 @@ import {
   validarConfig,
 } from './logica/flujo';
 import { resumenDeImportacion } from './logica/textos';
+import {
+  ClaseImpuesto,
+  LecturaDirecciones,
+  TarifaIva,
+  clasesParaAsignar,
+  leerDireccionesPegadas,
+  baseSugeridaPorDirecciones,
+  normalizarBase,
+  textoFotosPendientes,
+} from './logica/ampliacion';
+import { AjustesWooComponent, CambioBase } from './pasos/ajustes-woo.component';
 import { OpcionBodega, OpcionSitio, PasoSubirComponent } from './pasos/paso-subir.component';
 import { PasoSimularComponent } from './pasos/paso-simular.component';
 import { AvanceVista, PasoImportarComponent } from './pasos/paso-importar.component';
@@ -46,7 +57,7 @@ const TITULOS: { [p in Paso]: string } = { subir: 'Tus archivos', simular: 'Revi
 @Component({
   selector: 'app-migrar-tienda',
   standalone: true,
-  imports: [CommonModule, PasoSubirComponent, PasoSimularComponent, PasoImportarComponent, PasoReporteComponent],
+  imports: [CommonModule, AjustesWooComponent, PasoSubirComponent, PasoSimularComponent, PasoImportarComponent, PasoReporteComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   styleUrls: ['./migrar-tienda.component.scss'],
@@ -71,11 +82,18 @@ const TITULOS: { [p in Paso]: string } = { subir: 'Tus archivos', simular: 'Revi
         [lectura]="lectura" [productosCargados]="textoProductos !== null" [leyendo]="leyendo"
         [sitios]="sitios" [bodegas]="bodegas" [config]="config" [errores]="errores"
         (productos)="alElegirProductos($event)" (inventario)="alElegirInventario($event)"
-        (configCambia)="alCambiarConfig($event)" (continuar)="revisar()"></app-mt-paso-subir>
+        (configCambia)="alCambiarConfig($event)" (continuar)="revisar()"
+        [fotosPendientes]="fotosPendientes" (retomarFotos)="retomarFotos()"></app-mt-paso-subir>
 
       <app-mt-paso-simular *ngIf="paso === 'simular'"
         [simulando]="simulando" [totales]="simulacion" [sobrantes]="sobrantesSimulacion" [error]="errorSimulacion"
-        (volver)="irA('subir')" (reintentar)="simular()" (importar)="importar(false)"></app-mt-paso-simular>
+        (volver)="irA('subir')" (reintentar)="simular()" (importar)="importar(false)" (tiposCliente)="abrirTiposCliente()">
+        <app-mt-ajustes-woo mtAjustes *ngIf="simulacion && (clases.length || conBases)"
+          [clases]="clases" [conBases]="conBases" [baseProductos]="config.baseProductos" [baseCategorias]="config.baseCategorias"
+          [baseConfirmada]="config.baseConfirmada" [baseNormalizada]="baseNormalizada" [direccionesTexto]="config.direccionesTexto"
+          [lecturaDirecciones]="lecturaDirecciones"
+          (claseCambia)="alCambiarClase($event.clase, $event.tarifa)" (base)="alCambiarBase($event)" (revisar)="simular()"></app-mt-ajustes-woo>
+      </app-mt-paso-simular>
 
       <app-mt-paso-importar *ngIf="paso === 'importar'"
         [avance]="avance" [error]="errorImportacion"
@@ -83,7 +101,7 @@ const TITULOS: { [p in Paso]: string } = { subir: 'Tus archivos', simular: 'Revi
 
       <app-mt-paso-reporte *ngIf="paso === 'reporte' && totales"
         [totales]="totales" [resumen]="resumen" [avisoExistencias]="avisoExistencias" [extras]="extras"
-        (descargar)="descargarReporte()" (terminar)="terminar()"></app-mt-paso-reporte>
+        [copiando]="copiandoFotos" (descargar)="descargarReporte()" (terminar)="terminar()" (copiarPendientes)="copiarPendientes()"></app-mt-paso-reporte>
     </div>
   `,
 })
@@ -113,6 +131,11 @@ export class MigrarTiendaComponent implements OnInit {
   avisoExistencias: string | null = null;
   extras: ExtrasReporte = { redirecciones: null, fotos: null, detenido: null };
 
+  fotosPendientes: { migrationId: string; texto: string } | null = null;
+  copiandoFotos = false;
+  lecturaDirecciones: LecturaDirecciones = { validas: [], invalidas: 0, sobrantes: 0 };
+
+  private soloFotos = false;
   private migrationId = nuevoId('mig');
   private runId = nuevoId('run');
   private previas: RespuestaLoteProductos[] = [];
@@ -138,6 +161,11 @@ export class MigrarTiendaComponent implements OnInit {
         this.bodegas = (lista || []).filter((b) => b && b.idBodega).map((b) => ({ idBodega: String(b.idBodega), nombre: String(b.nombre || b.idBodega) }));
       })
       .catch(() => (this.bodegas = []))
+      .finally(() => this.cd.markForCheck());
+    // Fotos que quedaron por copiar de una importación anterior (solo lee). Un fallo no estorba.
+    firstValueFrom(this.servicio.fotosPendientes())
+      .then((r) => (this.fotosPendientes = textoFotosPendientes(r && r.migrations)))
+      .catch(() => (this.fotosPendientes = null))
       .finally(() => this.cd.markForCheck());
   }
 
@@ -176,6 +204,7 @@ export class MigrarTiendaComponent implements OnInit {
 
   private releer(): void {
     this.lectura = this.textoProductos === null ? null : leerTienda(this.textoProductos, this.textoInventario);
+    this.sugerirBases();
     this.simulacion = null;
     this.reiniciarCorrida();
     this.cd.markForCheck();
@@ -195,6 +224,54 @@ export class MigrarTiendaComponent implements OnInit {
     this.runId = nuevoId('run');
     this.previas = [];
     this.siguiente = 0;
+    this.soloFotos = false;
+  }
+
+  // ── Ajustes de WooCommerce (IVA por clase y base de las direcciones) ─────────────
+  get clases(): ClaseImpuesto[] {
+    return this.simulacion ? clasesParaAsignar(this.simulacion.clasesImpuesto, this.config.clasesIva) : [];
+  }
+  get conBases(): boolean {
+    return !!this.lectura && this.lectura.ok && this.lectura.perfil.basesRedireccion !== null;
+  }
+  get baseNormalizada(): string | null {
+    return normalizarBase(this.config.baseProductos);
+  }
+
+  /** Cambiar el IVA de una clase no borra la revisión: la persona la repite con el botón. */
+  alCambiarClase(clase: string, tarifa: TarifaIva | null): void {
+    const mapa = { ...this.config.clasesIva };
+    if (tarifa === null) delete mapa[clase];
+    else mapa[clase] = tarifa;
+    this.config = { ...this.config, clasesIva: mapa };
+    this.reiniciarCorrida();
+    this.cd.markForCheck();
+  }
+
+  alCambiarBase(c: CambioBase): void {
+    const cambio = { ...this.config, ...c };
+    if (c.direccionesTexto !== undefined) {
+      this.lecturaDirecciones = leerDireccionesPegadas(c.direccionesTexto);
+      const sugerida = baseSugeridaPorDirecciones(this.lecturaDirecciones);
+      if (sugerida && !c.baseProductos) {
+        cambio.baseProductos = sugerida;
+        cambio.baseConfirmada = false;
+      }
+    }
+    this.config = cambio;
+    this.cd.markForCheck();
+  }
+
+  /** La base sugerida por el idioma del archivo; la persona la confirma antes de crear redirecciones. */
+  private sugerirBases(): void {
+    const l = this.lectura;
+    if (!l || !l.ok || !l.perfil.basesRedireccion || this.config.baseProductos) return;
+    const b = l.perfil.basesRedireccion[l.idioma === 'es' ? 'es' : 'en'];
+    this.config = { ...this.config, baseProductos: b.productBase, baseCategorias: b.categoryBase, baseConfirmada: false };
+  }
+
+  abrirTiposCliente(): void {
+    window.open(this.router.serializeUrl(this.router.createUrlTree(['/proceso/tipos-cliente'])), '_blank', 'noopener');
   }
 
   get hayInventario(): boolean {
@@ -270,7 +347,7 @@ export class MigrarTiendaComponent implements OnInit {
   async importar(reanudar: boolean): Promise<void> {
     this.irA('importar');
     this.errorImportacion = null;
-    if (!reanudar) {
+    if (!reanudar && !this.soloFotos) {
       this.previas = [];
       this.siguiente = 0;
       this.extras = { redirecciones: null, fotos: null, detenido: null };
@@ -297,7 +374,7 @@ export class MigrarTiendaComponent implements OnInit {
 
   /** Redirecciones y fotos van después de los productos. Si fallan, la importación sigue valiendo: se avisa en el reporte. */
   private async pasosSiguientes(ctx: ContextoFlujo, envios: EnviosImportacion, t: TotalesProductos): Promise<void> {
-    if (puedeRedirigir(ctx)) {
+    if (!this.soloFotos && puedeRedirigir(ctx)) {
       this.progreso('redirecciones', 0, 1);
       const red = await crearRedireccionesDe(envios, ctx, t.productos, this.reintento());
       this.extras = {
@@ -305,7 +382,7 @@ export class MigrarTiendaComponent implements OnInit {
         redirecciones: { generated: red.generated, conflictsWithManual: red.conflictsWithManual, overCapacity: red.overCapacity, mensaje: red.error ? red.error.message : null },
       };
     }
-    if (t.fotos.porCopiar > 0) {
+    if (this.soloFotos || t.fotos.porCopiar > 0) {
       this.progreso('fotos', 0, 1);
       const f = await copiarFotosDe(envios, ctx, t.productos, { ...this.reintento(), progreso: (e, h, n) => this.progreso(e, h, n) });
       this.extras = {
@@ -319,6 +396,44 @@ export class MigrarTiendaComponent implements OnInit {
       };
     }
     this.cerrar(t);
+  }
+
+  /** Retoma las fotos de una importación anterior: mismo archivo, mismo migrationId, sin tocar lo ya traído. */
+  retomarFotos(): void {
+    const p = this.fotosPendientes;
+    this.errores = validarConfig(this.config, this.hayInventario);
+    if (!p || !this.lectura || !this.lectura.ok || !sinErrores(this.errores)) {
+      this.cd.markForCheck();
+      return;
+    }
+    this.config = { ...this.config, modo: 'create', reemplazarExistencias: false };
+    this.migrationId = p.migrationId;
+    this.runId = nuevoId('run');
+    this.previas = [];
+    this.siguiente = 0;
+    this.soloFotos = true;
+    void this.importar(false);
+  }
+
+  /** Vuelve a copiar las fotos que fallaron o quedaron sin copiar, con un recorrido nuevo. */
+  async copiarPendientes(): Promise<void> {
+    if (!this.totales || this.copiandoFotos) return;
+    this.copiandoFotos = true;
+    this.cd.markForCheck();
+    this.runId = nuevoId('run');
+    const f = await copiarFotosDe(this.envios(), this.contexto(), this.totales.productos, this.reintento());
+    const antes = this.extras.fotos;
+    this.extras = {
+      ...this.extras,
+      fotos: {
+        copiadas: (antes ? antes.copiadas : 0) + f.copiadas,
+        fallidas: f.fallidas,
+        pendientes: f.lotesHechos < f.lotes,
+        mensaje: f.error ? `${f.error.message} Las fotos que faltan se pueden retomar después.` : null,
+      },
+    };
+    this.copiandoFotos = false;
+    this.cd.markForCheck();
   }
 
   cerrarConLoAlcanzado(): void {

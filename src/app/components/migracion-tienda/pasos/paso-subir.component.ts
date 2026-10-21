@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
 import { CommonModule } from '@angular/common';
 import { ConfigImportacion, ErroresConfig, IVA_PERMITIDOS } from '../logica/flujo';
 import { ResultadoLectura } from '../logica/importacion';
+import { textoFormato } from '../logica/ampliacion';
 
 export interface OpcionSitio {
   id: string;
@@ -19,6 +20,13 @@ export interface OpcionBodega {
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <div class="cfg-aviso cfg-aviso--warn mt-bloque" role="status" *ngIf="fotosPendientes">
+      <span class="mt-fuerte">{{ fotosPendientes.texto }}</span>
+      <div class="mt-sep">
+        <button type="button" class="cfg-btn cfg-btn--sec" [disabled]="!lectura || !lectura.ok || leyendo" (click)="retomarFotos.emit()">Copiar fotos pendientes</button>
+      </div>
+    </div>
+
     <section class="cfg-card cfg-form mt-bloque">
       <h2 class="mt-subtitulo">1. Tus archivos</h2>
       <p class="mt-ayuda">Exporta tu tienda desde Shopify o WooCommerce y súbela tal como la descargas. Reconocemos de cuál es.</p>
@@ -38,6 +46,7 @@ export interface OpcionBodega {
         <span class="mt-fuerte">{{ lectura.perfil.nombre }}:</span>
         <span class="mt-fuerte">{{ lectura.grupos.length }} productos</span>
         <span class="mt-fuerte" *ngIf="lectura.inventario">y sus existencias</span>
+        <span class="mt-meta" *ngIf="textoFormato">· {{ textoFormato }}</span>
       </p>
       <p class="cfg-aviso cfg-aviso--warn mt-sep" *ngIf="lectura && lectura.ok && lectura.filasSinClave.length">
         <span class="mt-fuerte">{{ lectura.filasSinClave.length }} filas no tienen identificador de producto y no se envían.</span>
@@ -109,9 +118,15 @@ export class PasoSubirComponent {
   @Output() productos = new EventEmitter<File | null>();
   @Output() inventario = new EventEmitter<File | null>();
   @Output() configCambia = new EventEmitter<Partial<ConfigImportacion>>();
+  @Input() fotosPendientes: { migrationId: string; texto: string } | null = null;
   @Output() continuar = new EventEmitter<void>();
+  @Output() retomarFotos = new EventEmitter<void>();
 
   readonly ivas = IVA_PERMITIDOS;
+
+  get textoFormato(): string | null {
+    return this.lectura && this.lectura.ok ? textoFormato(this.lectura.formato) : null;
+  }
 
   elegirProductos(e: Event): void {
     this.productos.emit(archivoDe(e));
