@@ -150,7 +150,7 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
 
 ### Lo demás (después de 14.0)
 
-- [ ] 14.1b `[P]` `importStore.routes.contract` suma los códigos y las rutas de `contracts/import-store-api-d518.md` (incluidas `photos/pending`, `runId`, `pricesIncludeTax` y `taxClassMap`). **Éxito:** en rojo hasta sus tareas.
+- [ ] 14.1b `[P]` `importStore.routes.contract` suma los códigos y las rutas de `contracts/import-store-api-d518.md` (incluidas `photos/pending`, `runId`, `pricesIncludeTax` y `taxClassMap`). **Éxito:** en rojo hasta sus tareas. _Parcial (F530-B01): RATE_LIMITED y WOO_INTEGRATION_ACTIVE en verde en `routes`/`Guard`; el resto en rojo declarado en `importStore.d518Pendiente.contract.test.js` con el bloque que lo cierra._
 - [ ] 14.3b Rechazo del export «Available» (`INVENTORY_FORMAT_UNSUPPORTED`), según la pregunta 9. **Éxito:** prueba con los dos formatos.
 - [ ] 14.4 IVA por producto (A2): lectores, `precioSinIvaDesdeConIva` con la tarifa del producto, `products.taxExempt`, clases de Woo (`zero-rate` al 0 %, `taxClassMap`, `TAX_CLASS_UNMAPPED`) y `pricesIncludeTax` (pregunta 17). **Éxito:** exento al 0 % con `precioUnitarioIva: "0"`; gravado con la tarifa elegida; con `pricesIncludeTax: false`, 50.000 al 19 % queda en 59.500; sin la respuesta y con gravados, `products` da 400.
 - [ ] 14.5 **Diff aprobado (productos).** Oferta en la lista Público (A3):
@@ -176,8 +176,8 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
   - prueba: un título SEO no cambia la canónica.
   - **Éxito:** en verde.
 - [ ] 14.10 `[P]` Descripción limpia (N4) con `descripcionSegura` en los lectores. **Éxito:** la prueba 1.2 de la revisión privada en verde.
-- [ ] 14.11 `[P]` Tope de 20 simulaciones cada 15 minutos por empresa (N5) en `routers/importStore.js`. **Éxito:** las pruebas 1.3 y 2.1 de la revisión privada en verde; con la bandera apagada sigue el 403.
-- [ ] 14.12 `[P]` Guarda `WOO_INTEGRATION_ACTIVE` (W1) en la simulación y en `products`, `photos`, `redirects` y `customers`. `importStoreGuard` suma los casos activa e inactiva. **Éxito:** en verde; nunca se lee `integration_secrets`.
+- [x] 14.11 `[P]` Tope de 20 simulaciones cada 15 minutos por empresa (N5) en `routers/importStore.js`. **Éxito:** las pruebas 1.3 y 2.1 de la revisión privada en verde; con la bandera apagada sigue el 403.
+- [ ] 14.12 `[P]` Guarda `WOO_INTEGRATION_ACTIVE` (W1) en la simulación y en `products`, `photos`, `redirects` y `customers`. `importStoreGuard` suma los casos activa e inactiva. **Éxito:** en verde; nunca se lee `integration_secrets`. _Parcial (F530-B01): hecho en simulación, `products` y `redirects` (`revisarWoo` exportada); falta `photos` (F530-B10) y `customers` (F530-B15/B16)._
 - [ ] 14.13 Lector de WooCommerce (W2) y redirecciones probables (W3). Reemplaza la 10.1. Depende de 14.4 a 14.6 y de 14.21a.
   - encabezados del wiki y en español (`UNKNOWN_FORMAT` si faltan las mínimas); `Published` con los valores del wiki;
   - la regla de `sanitize_title` («Men's Shirt» → `mens-shirt`) y la base de direcciones (`productBase`, `categoryBase`, `BASE_ASSUMED`).
