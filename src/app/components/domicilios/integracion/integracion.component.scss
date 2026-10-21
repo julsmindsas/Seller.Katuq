@@ -1,0 +1,123 @@
+@import '../dom-base';
+@include dom-base;
+@include dom-tabla;
+
+.dom-columna { display: flex; flex-direction: column; gap: 16px; }
+
+.dom-seccion__textos { display: flex; flex-direction: column; gap: 6px; min-width: 0; max-width: 640px; }
+.dom-seccion__sub--plano { margin: 0; }
+
+// ── Interruptor (role="switch"): el estado se dice en palabras, no solo con el color ──
+.dom-interruptor {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 4px;
+  background: transparent;
+  border: 0;
+  border-radius: 20px;
+  cursor: pointer;
+
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+  &:disabled { opacity: .6; cursor: not-allowed; }
+}
+
+.dom-interruptor__pista {
+  position: relative;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 26px;
+  background: #d8d4ea;
+  border-radius: 20px;
+  transition: background .15s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(30, 20, 80, .25);
+    transition: transform .15s ease;
+  }
+}
+
+.dom-interruptor--activo .dom-interruptor__pista { background: $cfg-accent; }
+.dom-interruptor--activo .dom-interruptor__pista::after { transform: translateX(20px); }
+
+.dom-interruptor__texto { font-size: 13.5px; font-weight: 800; color: $cfg-ink !important; }
+
+// ── Formularios en una fila ──
+.dom-fila-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 14px; }
+.dom-campo--crece { flex: 1 1 280px; }
+
+.dom-bloque-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  padding: 14px;
+  background: $cfg-tint;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+}
+
+.dom-bloque-fila__texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 260px; }
+.dom-bloque-fila__titulo { font-size: 13.5px; font-weight: 800; color: $cfg-ink; }
+
+.dom-tabla--llaves { min-width: 44rem; }
+.dom-tabla--guia { min-width: 30rem; }
+.dom-acciones-fila { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+
+@media (max-width: 767px) {
+  .dom-tabla--llaves, .dom-tabla--guia { min-width: 0; }
+  .dom-acciones-fila { justify-content: flex-start; }
+}
+
+// ── Guía rápida ──
+.dom-guia {
+  padding: 0 14px;
+  background: $cfg-tint;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+
+  &[open] { padding-bottom: 14px; }
+}
+
+.dom-guia__titulo {
+  padding: 14px 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: $cfg-ink;
+  cursor: pointer;
+  list-style-position: inside;
+
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; border-radius: 6px; }
+}
+
+.dom-guia[open] > .dom-guia__titulo { padding-bottom: 8px; }
+.dom-guia > *:not(summary) + *:not(summary) { margin-top: 10px; }
+
+.dom-guia__texto { margin: 0; font-size: 13px; line-height: 1.55; color: $cfg-body; }
+
+.dom-guia__lista,
+.dom-guia__encabezados {
+  margin: 0;
+  padding-left: 20px;
+  list-style: decimal;
+  font-size: 13px;
+  line-height: 1.6;
+  color: $cfg-body;
+}
+
+.dom-guia__estados { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.dom-guia__estado { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.dom-guia__estado .dom-guia__texto { flex: 1 1 240px; }
+
+.dom-guia__encabezados { list-style: disc; }

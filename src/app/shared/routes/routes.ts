@@ -243,6 +243,16 @@ export const content: Routes = [
     canActivate: [AuthGuard, MensajerosIndependientesGuard],
   },
   {
+    // Domicilios: el comercio monta sus entregas (a mano o por archivo), las sigue y administra su
+    // integración por API. La pestaña Integración la cierra el backend (403) a quien no es administrador.
+    path: "domicilios",
+    loadChildren: () =>
+      import("../../components/domicilios/domicilios.module").then(
+        (m) => m.DomiciliosModule,
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     // D-381: sin "En vivo" en los menús del rol, la pantalla dice "no disponible".
     // `en-vivo/katuq` (toda la plataforma) lo cierra el backend por el token de Julsmind.
     path: "en-vivo",

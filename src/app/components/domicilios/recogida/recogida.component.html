@@ -1,0 +1,69 @@
+<div class="dom-rejilla" [formGroup]="grupo">
+  <div class="dom-campo">
+    <label class="cfg-label" [for]="id('nombre')">{{ 'Nombre del lugar' | translate }}</label>
+    <input
+      class="dom-input"
+      type="text"
+      [id]="id('nombre')"
+      formControlName="nombre"
+      maxlength="100"
+      autocomplete="off"
+      [placeholder]="'Por ejemplo, Panadería Sol' | translate"
+    />
+  </div>
+
+  <div class="dom-campo">
+    <label class="cfg-label" [for]="id('telefono')">{{ 'Teléfono' | translate }}</label>
+    <input class="dom-input" type="tel" inputmode="tel" [id]="id('telefono')" formControlName="telefono" maxlength="20" autocomplete="off" />
+  </div>
+
+  <div class="dom-campo">
+    <label class="cfg-label" [for]="id('direccion')">{{ 'Dirección' | translate }} <span class="dom-obligatorio" aria-hidden="true">*</span></label>
+    <input
+      class="dom-input"
+      type="text"
+      [id]="id('direccion')"
+      formControlName="direccion"
+      maxlength="200"
+      autocomplete="off"
+      required
+      [attr.aria-invalid]="error('direccion') ? 'true' : null"
+      [attr.aria-describedby]="error('direccion') ? id('direccion') + '-error' : null"
+    />
+    <p class="dom-error" role="alert" [id]="id('direccion') + '-error'" *ngIf="error('direccion') as e">{{ e }}</p>
+  </div>
+
+  <div class="dom-campo">
+    <label class="cfg-label" [for]="id('ciudad')">{{ 'Ciudad' | translate }} <span class="dom-obligatorio" aria-hidden="true">*</span></label>
+    <input
+      class="dom-input"
+      type="text"
+      [id]="id('ciudad')"
+      formControlName="ciudad"
+      maxlength="80"
+      autocomplete="off"
+      required
+      [attr.aria-invalid]="error('ciudad') ? 'true' : null"
+      [attr.aria-describedby]="error('ciudad') ? id('ciudad') + '-error' : null"
+    />
+    <p class="dom-error" role="alert" [id]="id('ciudad') + '-error'" *ngIf="error('ciudad') as e">{{ e }}</p>
+  </div>
+
+  <div class="dom-campo">
+    <label class="cfg-label" [for]="id('barrio')">{{ 'Barrio' | translate }}</label>
+    <input class="dom-input" type="text" [id]="id('barrio')" formControlName="barrio" maxlength="80" autocomplete="off" />
+  </div>
+
+  <div class="dom-campo">
+    <label class="cfg-label" [for]="id('indicaciones')">{{ 'Indicaciones' | translate }}</label>
+    <input
+      class="dom-input"
+      type="text"
+      [id]="id('indicaciones')"
+      formControlName="indicaciones"
+      maxlength="200"
+      autocomplete="off"
+      [placeholder]="'Por ejemplo, preguntar por Marta' | translate"
+    />
+  </div>
+</div>

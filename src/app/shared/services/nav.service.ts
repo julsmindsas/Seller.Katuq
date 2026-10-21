@@ -720,6 +720,8 @@ export class NavService implements OnDestroy {
       active: false,
       children: [
         { path: "despachos", title: "Envíos", previousTitle: "Envíos y entregas", type: "link", icon: "send" },
+        // Domicilios: pedidos de entrega a mano, por archivo o por API, para mensajeros propios o independientes.
+        { path: "domicilios", title: "Domicilios", type: "link", icon: "package" },
         // Solicitudes de quienes se inscriben solos como mensajeros: solo la operadora (Julsmind).
         {
           path: "mensajeros-independientes",

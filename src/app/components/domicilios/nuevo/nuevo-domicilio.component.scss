@@ -1,0 +1,11 @@
+@import '../dom-base';
+@include dom-base;
+
+.dom-formulario { display: flex; flex-direction: column; gap: 16px; }
+
+// En el celular el botón principal queda a la mano, abajo y a lo ancho.
+.dom-barra {
+  @media (max-width: 575px) {
+    .cfg-btn { flex: 1 1 100%; }
+  }
+}

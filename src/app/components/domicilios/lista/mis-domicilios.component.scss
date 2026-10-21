@@ -1,0 +1,99 @@
+@import '../dom-base';
+@include dom-base;
+@include dom-tabla;
+
+.dom-columna { display: flex; flex-direction: column; gap: 16px; }
+
+// ── Filtros ──
+.dom-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 14px;
+}
+
+.dom-campo--buscar { flex: 1 1 260px; }
+.dom-filtros .dom-campo:not(.dom-campo--buscar) { flex: 0 1 170px; }
+
+.dom-atajos { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+
+.dom-atajo {
+  appearance: none;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 20px;
+  background: $cfg-chip-bg;
+  color: $cfg-body;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+
+  &:hover { background: $cfg-accent-soft; border-color: #ddd3fb; color: $cfg-accent; }
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+}
+
+// ── Filtro por estado: cada estado con su par color fuerte / fondo suave, su ícono y su texto ──
+.dom-filtros-estado { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.dom-filtro {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: box-shadow .15s ease, background .15s ease, color .15s ease;
+
+  i { font-size: 12px; color: inherit; }
+  &:hover { box-shadow: inset 0 0 0 1px currentColor; }
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+}
+
+// El activo se marca con borde grueso y negrita (no solo con color), además de `aria-pressed`.
+.dom-filtro--activo,
+.dom-filtro--activo:hover { box-shadow: inset 0 0 0 2px currentColor; font-weight: 800; }
+
+.dom-filtro--todos { background: $cfg-chip-bg; border-color: $cfg-chip-border; color: $cfg-body; }
+.dom-filtro--todos.dom-filtro--activo { background: $cfg-accent; border-color: $cfg-accent; color: #fff; box-shadow: none; }
+.dom-filtro--warn { background: $cfg-warn-soft; color: $cfg-warn; }
+.dom-filtro--info { background: $cfg-info-soft; color: $cfg-info; }
+.dom-filtro--primario { background: $cfg-accent-soft; color: $cfg-accent; }
+.dom-filtro--ok { background: $cfg-ok-soft; color: $cfg-ok; }
+.dom-filtro--err { background: $cfg-err-soft; color: $cfg-err; }
+.dom-filtro--neutro { background: $dom-pizarra-soft; color: $dom-pizarra; }
+
+@media (max-width: 575px) {
+  .dom-filtros-estado { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  .dom-filtro { flex: 0 0 auto; }
+  .dom-atajos { margin-left: 0; }
+}
+
+// ── Barra de la lista ──
+.dom-barra-lista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+}
+
+.dom-conteo { font-size: 15px; font-weight: 800; color: $cfg-ink; }
+
+// ── Filas ──
+.dom-fila { cursor: pointer; }
+.dom-acciones-fila { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+
+@media (max-width: 767px) {
+  .dom-celda-cliente { grid-column: 1 / -1; }
+  .dom-acciones-fila { justify-content: flex-start; }
+}

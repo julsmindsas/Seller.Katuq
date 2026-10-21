@@ -1,0 +1,211 @@
+<div class="dom-columna">
+  <!-- Filtros -->
+  <section class="cfg-card dom-seccion" [attr.aria-label]="'Filtros de la lista' | translate">
+    <div class="dom-filtros">
+      <div class="dom-campo dom-campo--buscar">
+        <label class="cfg-label" for="lista-buscar">{{ 'Buscar' | translate }}</label>
+        <input
+          id="lista-buscar"
+          class="dom-input"
+          type="search"
+          autocomplete="off"
+          [placeholder]="'Número, cliente o id externo' | translate"
+          [ngModel]="texto"
+          (ngModelChange)="cambiarTexto($event)"
+        />
+      </div>
+
+      <div class="dom-campo">
+        <label class="cfg-label" for="lista-desde">{{ 'Desde' | translate }}</label>
+        <input
+          id="lista-desde"
+          class="dom-input"
+          type="date"
+          [ngModel]="desde"
+          (ngModelChange)="cambiarFecha('desde', $event)"
+          [attr.aria-invalid]="errorRango ? 'true' : null"
+          [attr.aria-describedby]="errorRango ? 'lista-error-rango' : null"
+        />
+      </div>
+
+      <div class="dom-campo">
+        <label class="cfg-label" for="lista-hasta">{{ 'Hasta' | translate }}</label>
+        <input
+          id="lista-hasta"
+          class="dom-input"
+          type="date"
+          [ngModel]="hasta"
+          (ngModelChange)="cambiarFecha('hasta', $event)"
+          [attr.aria-invalid]="errorRango ? 'true' : null"
+          [attr.aria-describedby]="errorRango ? 'lista-error-rango' : null"
+        />
+      </div>
+
+      <div class="dom-atajos" role="group" [attr.aria-label]="'Rangos rápidos' | translate">
+        <button type="button" class="dom-atajo" (click)="usarUltimosDias(1)">{{ 'Hoy' | translate }}</button>
+        <button type="button" class="dom-atajo" (click)="usarUltimosDias(7)">{{ '7 días' | translate }}</button>
+        <button type="button" class="dom-atajo" (click)="usarUltimosDias(31)">{{ '31 días' | translate }}</button>
+      </div>
+    </div>
+
+    <p class="dom-error" id="lista-error-rango" role="alert" *ngIf="errorRango">{{ errorRango }}</p>
+
+    <div class="dom-filtros-estado" role="group" [attr.aria-label]="'Filtrar por estado' | translate">
+      <button
+        *ngFor="let o of opcionesEstado; trackBy: trackPorOpcion"
+        type="button"
+        class="dom-filtro"
+        [ngClass]="o.tono ? 'dom-filtro--' + o.tono : 'dom-filtro--todos'"
+        [class.dom-filtro--activo]="o.valor === estado"
+        [attr.aria-pressed]="o.valor === estado"
+        (click)="cambiarEstado(o.valor)"
+      >
+        <i class="pi" [ngClass]="o.icono" aria-hidden="true"></i>{{ o.texto | translate }}
+      </button>
+    </div>
+  </section>
+
+  <!-- Lista -->
+  <section class="cfg-card dom-seccion" [attr.aria-label]="'Domicilios' | translate">
+    <div class="dom-barra-lista">
+      <div>
+        <div class="dom-conteo" aria-live="polite">{{ textoConteo }}</div>
+        <div class="dom-ayuda" *ngIf="ultimaActualizacion">
+          {{ 'Actualizado a las' | translate }} {{ ultimaActualizacion | date: 'HH:mm:ss' }} · {{ 'se actualiza sola cada' | translate }} {{ intervaloSegundos }} s
+        </div>
+      </div>
+      <div class="dom-fila-botones">
+        <button type="button" class="cfg-btn cfg-btn--sec dom-boton-chico" (click)="cargar()" [disabled]="cargando">
+          <i class="pi" [ngClass]="cargando ? 'pi-spin pi-spinner' : 'pi-refresh'" aria-hidden="true"></i>{{ 'Actualizar' | translate }}
+        </button>
+        <button type="button" class="cfg-btn cfg-btn--sec dom-boton-chico" (click)="descargarCsv()" [disabled]="!visibles.length">
+          <i class="pi pi-download" aria-hidden="true"></i>{{ 'Descargar CSV' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <div class="cfg-aviso cfg-aviso--warn dom-aviso" role="status" *ngIf="avisoRefresco">
+      <i class="pi pi-exclamation-triangle dom-aviso__icono" aria-hidden="true"></i>
+      <div class="dom-aviso__textos">{{ avisoRefresco }}</div>
+    </div>
+
+    <div class="cfg-aviso dom-aviso" role="status" *ngIf="hayMas">
+      <i class="pi pi-info-circle dom-aviso__icono" aria-hidden="true"></i>
+      <div class="dom-aviso__textos">
+        {{ 'Hay más de 100 domicilios en este rango y solo mostramos los más recientes. Acorta las fechas o filtra por estado para ver el resto.' | translate }}
+      </div>
+    </div>
+
+    <!-- Cargando -->
+    <div class="dom-estado-carga" role="status" *ngIf="cargando && !filas.length && !error">
+      <i class="pi pi-spin pi-spinner dom-estado-carga__icono" aria-hidden="true"></i>
+      <div class="dom-estado-carga__texto">{{ 'Cargando domicilios…' | translate }}</div>
+    </div>
+
+    <!-- Error -->
+    <div class="dom-estado-carga" *ngIf="error">
+      <app-domicilios-error [error]="error" titulo="No pudimos cargar los domicilios"></app-domicilios-error>
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cargar()" [disabled]="cargando">{{ 'Reintentar' | translate }}</button>
+    </div>
+
+    <!-- Vacío -->
+    <div class="cfg-vacio" *ngIf="!cargando && !error && !errorRango && yaCargo && !visibles.length">
+      <div class="cfg-vacio__icono"><i class="pi pi-inbox" aria-hidden="true"></i></div>
+      <h3 class="cfg-vacio__titulo dom-vacio__titulo">
+        {{ (filas.length ? 'Ningún domicilio coincide con tu búsqueda' : 'No hay domicilios en este rango') | translate }}
+      </h3>
+      <p class="cfg-vacio__texto">
+        {{ (filas.length ? 'Prueba con otro número, cliente o id externo.' : 'Cambia las fechas o el estado, o crea un domicilio en la pestaña Nuevo domicilio.') | translate }}
+      </p>
+    </div>
+
+    <!-- Tabla -->
+    <div class="dom-tabla-marco" *ngIf="visibles.length">
+      <table class="dom-tabla">
+        <caption class="dom-solo-lectores">{{ 'Mis domicilios' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'Número' | translate }}</th>
+            <th scope="col">{{ 'Cliente' | translate }}</th>
+            <th scope="col">{{ 'Estado' | translate }}</th>
+            <th scope="col">{{ 'Mensajero' | translate }}</th>
+            <th scope="col">{{ 'Domicilio' | translate }}</th>
+            <th scope="col">{{ 'Hora' | translate }}</th>
+            <th scope="col"><span class="dom-solo-lectores">{{ 'Acciones' | translate }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let f of visibles; trackBy: trackPorId" class="dom-fila" (click)="abrir(f)">
+            <td data-etiqueta="Número" class="dom-celda-numero">
+              <div class="dom-numero">{{ f.numero }}</div>
+              <div class="dom-celda-nota" *ngIf="f.idExterno">{{ f.idExterno }}</div>
+            </td>
+            <td data-etiqueta="Cliente" class="dom-celda-cliente">
+              <div class="dom-celda-fuerte">{{ f.cliente || '—' }}</div>
+              <div class="dom-celda-nota">{{ f.direccion }}<ng-container *ngIf="f.ciudad"> · {{ f.ciudad }}</ng-container></div>
+            </td>
+            <td data-etiqueta="Estado">
+              <span class="dom-estado" [ngClass]="'dom-estado--' + f.estadoTono"><i class="pi" [ngClass]="f.estadoIcono" aria-hidden="true"></i>{{ f.estadoEtiqueta }}</span>
+            </td>
+            <td data-etiqueta="Mensajero">
+              <ng-container *ngIf="f.mensajero as m; else sinMensajero">
+                <div class="dom-celda-fuerte">{{ m.nombre }}</div>
+                <div class="dom-celda-nota" *ngIf="m.detalle">{{ m.detalle }}</div>
+                <div class="dom-insignia" *ngIf="m.independiente"><i class="pi pi-shield" aria-hidden="true"></i>{{ 'Independiente de Katuq' | translate }}</div>
+              </ng-container>
+              <ng-template #sinMensajero><div class="dom-celda-nota">{{ 'Sin asignar' | translate }}</div></ng-template>
+            </td>
+            <td data-etiqueta="Domicilio" class="dom-dinero">{{ pesos(f.valorDomicilio) }}</td>
+            <td data-etiqueta="Hora">
+              <ng-container *ngIf="f.creado; else sinHora">
+                <div class="dom-celda-fuerte">{{ f.creado | date: 'HH:mm' }}</div>
+                <div class="dom-celda-nota">{{ f.creado | date: 'dd/MM/yyyy' }}</div>
+              </ng-container>
+              <ng-template #sinHora>—</ng-template>
+            </td>
+            <td class="dom-celda-acciones">
+              <div class="dom-acciones-fila">
+                <button
+                  type="button"
+                  class="cfg-btn cfg-btn--sec dom-boton-chico"
+                  (click)="$event.stopPropagation(); abrir(f)"
+                  [attr.aria-label]="('Ver el domicilio' | translate) + ' ' + f.numero"
+                >{{ 'Ver' | translate }}</button>
+                <button
+                  type="button"
+                  class="cfg-btn cfg-btn--peligro dom-boton-chico"
+                  *ngIf="f.puedeCancelar"
+                  (click)="$event.stopPropagation(); pedirCancelar(f)"
+                  [attr.aria-label]="('Cancelar el domicilio' | translate) + ' ' + f.numero"
+                >{{ 'Cancelar' | translate }}</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- Detalle: se crea al abrirlo y se destruye al cerrarlo -->
+<app-domicilios-detalle
+  *ngIf="seleccionada"
+  [fila]="seleccionada"
+  (cerrar)="cerrarDetalle()"
+  (cancelar)="pedirCancelar($event)"
+></app-domicilios-detalle>
+
+<!-- Confirmar la cancelación -->
+<app-domicilios-confirmar
+  *ngIf="porCancelar"
+  [titulo]="'Cancelar el domicilio ' + porCancelar.numero"
+  mensaje="El mensajero ya no lo verá o dejará de ir por él. Esto no se puede deshacer."
+  motivoEtiqueta="Motivo (opcional)"
+  textoConfirmar="Cancelar domicilio"
+  textoVolver="No cancelar"
+  [peligro]="true"
+  [ocupado]="cancelando"
+  [error]="errorCancelar"
+  (confirmar)="confirmarCancelar($event)"
+  (cerrar)="cerrarCancelar()"
+></app-domicilios-confirmar>

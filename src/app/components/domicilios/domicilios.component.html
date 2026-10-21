@@ -1,0 +1,85 @@
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">{{ 'Logística' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'Domicilios' | translate }}</h1>
+      <p class="cfg-sub">
+        {{ 'Monta tus entregas a mano o con un archivo, sigue cada domicilio y conecta tu tienda por API.' | translate }}
+      </p>
+    </div>
+  </header>
+
+  <!-- Los domicilios están apagados: sin esto, crear uno falla con un mensaje que parece raro -->
+  <div class="cfg-aviso cfg-aviso--warn dom-aviso" role="status" *ngIf="config && !config.habilitado">
+    <i class="pi pi-info-circle dom-aviso__icono" aria-hidden="true"></i>
+    <div class="dom-aviso__textos">
+      <strong class="dom-aviso__titulo">{{ 'Los domicilios están desactivados' | translate }}</strong>
+      <div class="dom-aviso__detalle">
+        {{ 'Mientras estén desactivados no puedes crear domicilios ni recibirlos por API.' | translate }}
+      </div>
+      <div class="dom-aviso__acciones" *ngIf="esAdmin">
+        <button type="button" class="cfg-btn cfg-btn--sec dom-boton-chico" (click)="seleccionar('integracion')">
+          {{ 'Activarlos en Integración' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cfg-aviso cfg-aviso--warn dom-aviso" role="status" *ngIf="avisoConfig">
+    <i class="pi pi-exclamation-triangle dom-aviso__icono" aria-hidden="true"></i>
+    <div class="dom-aviso__textos">{{ avisoConfig }}</div>
+  </div>
+
+  <!-- Pestañas -->
+  <div class="dom-pestanas" role="tablist" [attr.aria-label]="'Secciones de Domicilios' | translate" (keydown)="alTeclado($event)">
+    <button
+      *ngFor="let p of pestanas; trackBy: trackPorClave"
+      type="button"
+      role="tab"
+      class="dom-pestana"
+      [class.dom-pestana--activa]="p.clave === pestana"
+      [id]="idPestana(p.clave)"
+      [attr.aria-selected]="p.clave === pestana"
+      [attr.aria-controls]="idPanel(p.clave)"
+      [attr.tabindex]="p.clave === pestana ? 0 : -1"
+      (click)="seleccionar(p.clave)"
+    >
+      <i class="pi" [ngClass]="p.icono" aria-hidden="true"></i>{{ p.texto | translate }}
+    </button>
+  </div>
+
+  <section class="dom-panel" role="tabpanel" [id]="idPanel('nuevo')" [attr.aria-labelledby]="idPestana('nuevo')" [hidden]="pestana !== 'nuevo'">
+    <app-domicilios-nuevo
+      *ngIf="fueVisitada('nuevo')"
+      [recogida]="recogida"
+      [esAdmin]="esAdmin"
+      (verEnLista)="verEnLista($event)"
+      (irAIntegracion)="seleccionar('integracion')"
+      (recogidaGuardada)="alGuardarRecogida($event)"
+    ></app-domicilios-nuevo>
+  </section>
+
+  <section class="dom-panel" role="tabpanel" [id]="idPanel('archivo')" [attr.aria-labelledby]="idPestana('archivo')" [hidden]="pestana !== 'archivo'">
+    <app-domicilios-archivo
+      *ngIf="fueVisitada('archivo')"
+      [recogida]="recogida"
+      [esAdmin]="esAdmin"
+      (irAIntegracion)="seleccionar('integracion')"
+      (verLista)="seleccionar('lista')"
+    ></app-domicilios-archivo>
+  </section>
+
+  <section class="dom-panel" role="tabpanel" [id]="idPanel('lista')" [attr.aria-labelledby]="idPestana('lista')" [hidden]="pestana !== 'lista'">
+    <app-domicilios-lista *ngIf="fueVisitada('lista')" [activa]="pestana === 'lista'" [busqueda]="busquedaLista"></app-domicilios-lista>
+  </section>
+
+  <section
+    class="dom-panel"
+    role="tabpanel"
+    *ngIf="esAdmin && pestana === 'integracion'"
+    [id]="idPanel('integracion')"
+    [attr.aria-labelledby]="idPestana('integracion')"
+  >
+    <app-domicilios-integracion (configuracionCambio)="alCambiarConfiguracion($event)"></app-domicilios-integracion>
+  </section>
+</div>

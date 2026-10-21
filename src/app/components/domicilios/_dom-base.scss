@@ -1,0 +1,392 @@
+// Domicilios: base común de las pantallas del módulo. Parte de D-400 (config-pagina) y del tema de
+// openspec/specs/design-system/spec.md: plano, fondo lila, tarjetas blancas, acento #5F3FE0, sin degradados
+// ni borde lateral de acento. Cada componente la incluye con `@include dom-base;` (el SCSS de Angular está encapsulado).
+//
+// Trampas globales: ninguna clase de este módulo lleva «p-» dentro (el reset fuerza su tamaño de letra),
+// todo `span` creado por *ngIf lleva color con !important y los h1/h2 fijan su tamaño con !important.
+@import '../../shared/styles/config-pagina';
+
+$dom-pizarra: #5A6B78;
+$dom-pizarra-soft: #eef0f3;
+$dom-linea-tiempo: #eceaf4;
+$dom-actual: #FF9800;
+
+@mixin dom-base {
+  @include config-pagina;
+
+  :host { display: block; }
+
+  // ── Formularios ──
+  .dom-rejilla {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 16px;
+
+    @media (max-width: 575px) { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  .dom-rejilla--tres {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    @media (max-width: 991px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @media (max-width: 575px) { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  .dom-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .dom-campo--ancho { grid-column: 1 / -1; }
+
+  // Bootstrap pone margen abajo a todo `label`: aquí el espacio lo da el `gap` del campo.
+  .dom-campo .cfg-label { margin: 0; }
+
+  .dom-obligatorio { color: $cfg-err !important; font-weight: 800; }
+
+  .dom-input {
+    appearance: none;
+    box-sizing: border-box;
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    background: $cfg-chip-bg;
+    border: 1px solid $cfg-chip-border;
+    border-radius: 10px;
+    color: $cfg-ink;
+    font-size: 14px;
+    font-family: inherit;
+    letter-spacing: normal;
+    transition: border-color .15s ease, background .15s ease;
+
+    // 16px en el celular: con menos, iOS hace zoom al tocar el campo.
+    @media (max-width: 767px) { font-size: 16px; }
+
+    &::placeholder { color: #9995b3; }
+    &:hover:not(:disabled) { border-color: #d9cffb; }
+    &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; background: #fff; }
+    &:disabled { opacity: .6; cursor: not-allowed; }
+    &[aria-invalid='true'] { border-color: $cfg-err; background: #fff; }
+  }
+
+  .dom-input--area {
+    height: auto;
+    min-height: 76px;
+    padding: 10px 12px;
+    line-height: 1.45;
+    resize: vertical;
+  }
+
+  .dom-ayuda { margin: 0; font-size: 12px; line-height: 1.4; color: $cfg-muted; }
+  .dom-error { margin: 0; font-size: 12.5px; line-height: 1.4; font-weight: 700; color: $cfg-err; }
+
+  // Es un <label>: el reset global le pone 0.7rem con !important, por eso el tamaño también lleva !important.
+  .dom-casilla {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13.5px !important;
+    line-height: 1.45;
+    color: $cfg-ink;
+    cursor: pointer;
+
+    input { width: 18px; height: 18px; margin: 1px 0 0; accent-color: $cfg-accent; flex: 0 0 auto; }
+  }
+
+  // ── Secciones dentro de una tarjeta ──
+  .dom-seccion { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+  .dom-seccion__titulo {
+    margin: 0;
+    font-size: 16px !important;
+    line-height: 1.3;
+    font-weight: 800;
+    color: $cfg-ink;
+  }
+
+  .dom-seccion__sub { margin: -8px 0 0; font-size: 12.5px; line-height: 1.45; color: $cfg-muted; }
+
+  .dom-seccion__cabeza {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px 14px;
+  }
+
+  .dom-fila-botones { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+
+  // ── Avisos con título ──
+  .dom-aviso { align-items: flex-start; }
+  .dom-aviso__icono { margin-top: 2px; font-size: 16px; color: inherit; flex: 0 0 auto; }
+  .dom-aviso__textos { min-width: 0; overflow-wrap: anywhere; flex: 1 1 auto; }
+  .dom-aviso__titulo { display: block; font-weight: 800; color: inherit; }
+  .dom-aviso__detalle { margin-top: 2px; color: inherit; }
+  // El reset global quita las viñetas de todas las listas: se devuelven donde hacen falta.
+  .dom-aviso__lista { margin: 6px 0 0; padding-left: 18px; color: inherit; list-style: disc; }
+  .dom-aviso__acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+  // ── Cargando / vacío ──
+  .dom-estado-carga {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 28px 8px;
+    text-align: center;
+  }
+  .dom-estado-carga__icono { font-size: 26px; color: $cfg-accent; }
+  .dom-estado-carga__texto { font-size: 13.5px; color: $cfg-body; }
+
+  .dom-vacio__titulo { font-size: 15px !important; line-height: 1.3; }
+
+  .dom-boton-chico { min-height: 34px; padding: 0 12px; font-size: 12.5px; }
+
+  // Solo para lectores de pantalla.
+  .dom-solo-lectores {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  // ── Estado del domicilio: pastilla en par fuerte / fondo suave, con ícono y texto ──
+  .dom-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11.5px !important;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+
+    i { font-size: 11.5px; color: inherit; }
+  }
+  .dom-estado--warn { background: $cfg-warn-soft; color: $cfg-warn !important; }
+  .dom-estado--info { background: $cfg-info-soft; color: $cfg-info !important; }
+  .dom-estado--primario { background: $cfg-accent-soft; color: $cfg-accent !important; }
+  .dom-estado--ok { background: $cfg-ok-soft; color: $cfg-ok !important; }
+  .dom-estado--err { background: $cfg-err-soft; color: $cfg-err !important; }
+  .dom-estado--neutro { background: $dom-pizarra-soft; color: $dom-pizarra !important; }
+
+  // Número de domicilio: monoespaciado, color info (sistema de diseño).
+  .dom-numero {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: $cfg-info !important;
+    overflow-wrap: anywhere;
+  }
+
+  .dom-dinero { font-weight: 800; color: $cfg-ink; white-space: nowrap; }
+
+  // «Independiente de Katuq»: marca en palabras, no solo en color.
+  .dom-insignia {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 4px;
+    padding: 2px 8px;
+    background: $cfg-accent-soft;
+    border: 1px solid #ddd3fb;
+    border-radius: 20px;
+    color: $cfg-accent;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.3;
+
+    i { font-size: 11px; color: inherit; }
+  }
+
+  // Código y comandos de la guía.
+  .dom-codigo {
+    margin: 0;
+    padding: 12px 14px;
+    overflow-x: auto;
+    background: $cfg-tint;
+    border: 1px solid $cfg-line;
+    border-radius: 11px;
+    color: $cfg-ink;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    white-space: pre;
+    letter-spacing: normal;
+  }
+}
+
+// Tablas simples (vista previa del archivo, resultado del lote, lista): en el celular cada fila se vuelve una tarjeta.
+@mixin dom-tabla {
+  // ── Tablas ──
+  .dom-tabla-marco { position: relative; overflow-x: auto; border: 1px solid $cfg-line; border-radius: 11px; }
+
+  .dom-tabla {
+    width: 100%;
+    min-width: 52rem;
+    border-collapse: collapse;
+    font-size: 13px;
+    color: $cfg-ink;
+
+    th {
+      padding: 12px 14px;
+      text-align: left;
+      white-space: nowrap;
+      background: $cfg-tint;
+      border-bottom: 1px solid $cfg-line-soft;
+      color: $cfg-muted;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    td {
+      padding: 12px 14px;
+      vertical-align: top;
+      border-bottom: 1px solid $cfg-line-soft;
+      overflow-wrap: anywhere;
+    }
+
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: $cfg-row-hover; }
+  }
+
+  .dom-tabla--resultado { min-width: 40rem; }
+
+  .dom-fila--error { background: rgba(214, 69, 69, .05); }
+
+  .dom-celda-fuerte { font-weight: 700; }
+  .dom-celda-nota { margin-top: 4px; font-size: 12px; color: $cfg-muted; }
+  .dom-celda-nota--error { color: $cfg-err; font-weight: 700; }
+
+  .dom-lista-errores {
+    margin: 6px 0 0;
+    padding-left: 16px;
+    list-style: disc;
+    font-size: 12px;
+    line-height: 1.45;
+    color: $cfg-err;
+  }
+
+  // En el celular cada fila se vuelve una tarjeta: datos en dos columnas con su etiqueta arriba.
+  @media (max-width: 767px) {
+    .dom-tabla-marco { overflow-x: visible; border: 0; }
+
+    .dom-tabla {
+      min-width: 0;
+
+      thead { display: none; }
+
+      tbody tr {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 14px;
+        margin-bottom: 10px;
+        padding: 14px;
+        border: 1px solid $cfg-line;
+        border-radius: 11px;
+      }
+
+      td {
+        display: block;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+
+        &[data-etiqueta]::before {
+          content: attr(data-etiqueta);
+          display: block;
+          margin-bottom: 2px;
+          font-size: 10.5px;
+          font-weight: 800;
+          letter-spacing: .6px;
+          text-transform: uppercase;
+          color: $cfg-muted;
+        }
+
+        &:last-child { grid-column: 1 / -1; }
+      }
+    }
+  }
+}
+
+// Diálogo PrimeNG en el cuerpo de la página (los estilos globales usan !important); `dom-dialogo` lo hace exclusivo.
+@mixin dom-dialogo {
+  ::ng-deep .dom-dialogo.p-dialog {
+    border: 1px solid $cfg-line;
+    border-radius: 16px;
+    box-shadow: 0 24px 60px -20px rgba(30, 20, 80, .35);
+    overflow: hidden;
+
+    .p-dialog-header {
+      padding: 18px 22px 12px !important;
+      background: #fff;
+      color: $cfg-ink;
+
+      .p-dialog-title {
+        font-size: 18px !important;
+        font-weight: 800 !important;
+        line-height: 1.3 !important;
+        color: $cfg-ink !important;
+        overflow-wrap: anywhere;
+      }
+
+      .p-dialog-header-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+        color: $cfg-body;
+
+        &:hover { background: $cfg-tint; color: $cfg-accent; }
+        &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+      }
+    }
+
+    .p-dialog-content { padding: 4px 22px 18px !important; background: #fff; color: $cfg-ink; }
+
+    .p-dialog-footer {
+      padding: 14px 22px 18px !important;
+      background: #fff;
+      border-top: 1px solid $cfg-line-soft;
+      text-align: left;
+    }
+  }
+
+  @media (max-width: 640px) {
+    ::ng-deep .dom-dialogo.p-dialog {
+      border-radius: 0;
+      max-height: 100% !important;
+      height: 100%;
+
+      .p-dialog-header { padding: 14px 16px 10px !important; }
+      .p-dialog-content { padding: 4px 16px 16px !important; }
+      .p-dialog-footer { padding: 12px 16px 16px !important; }
+    }
+  }
+
+  // Cuerpo y pie del diálogo: fijan su tamaño porque el reset global pone 0.7rem a todo lo de PrimeNG.
+  .dom-dialogo__cuerpo,
+  .dom-dialogo__pie {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: $cfg-ink;
+    letter-spacing: normal;
+
+    div, p, a, label, strong, button, textarea, h3 { letter-spacing: normal; }
+  }
+
+  .dom-dialogo__pie { gap: 12px; }
+  .dom-dialogo__botones { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+}

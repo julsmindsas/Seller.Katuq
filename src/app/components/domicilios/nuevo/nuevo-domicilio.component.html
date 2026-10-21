@@ -1,0 +1,251 @@
+<form class="dom-formulario" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+  <!-- Recoger en -->
+  <section class="cfg-card dom-seccion" aria-labelledby="nuevo-titulo-recogida">
+    <div class="dom-seccion__cabeza">
+      <h2 class="dom-seccion__titulo" id="nuevo-titulo-recogida">{{ 'Recoger en' | translate }}</h2>
+    </div>
+    <p class="dom-seccion__sub">{{ 'Dónde recoge el pedido el mensajero. Se llena con la recogida guardada de tu comercio y puedes cambiarla.' | translate }}</p>
+
+    <app-domicilios-recogida [grupo]="recogida" [errores]="erroresPorCampo" idBase="nuevo-recogida"></app-domicilios-recogida>
+
+    <label class="dom-casilla" *ngIf="esAdmin">
+      <input type="checkbox" formControlName="guardarRecogida" />
+      <div>
+        <div>{{ 'Guardar como mi dirección de recogida' | translate }}</div>
+        <p class="dom-ayuda">{{ 'Se guarda al crear el domicilio y queda para los próximos.' | translate }}</p>
+      </div>
+    </label>
+  </section>
+
+  <!-- Entregar a -->
+  <section class="cfg-card dom-seccion" aria-labelledby="nuevo-titulo-entrega" formGroupName="entrega">
+    <div class="dom-seccion__cabeza">
+      <h2 class="dom-seccion__titulo" id="nuevo-titulo-entrega">{{ 'Entregar a' | translate }}</h2>
+    </div>
+
+    <div class="dom-rejilla">
+      <div class="dom-campo">
+        <label class="cfg-label" [for]="id('entrega.nombre')">{{ 'Nombre de quien recibe' | translate }} <span class="dom-obligatorio" aria-hidden="true">*</span></label>
+        <input
+          class="dom-input"
+          type="text"
+          [id]="id('entrega.nombre')"
+          formControlName="nombre"
+          maxlength="100"
+          autocomplete="off"
+          required
+          [attr.aria-invalid]="error('entrega.nombre') ? 'true' : null"
+          [attr.aria-describedby]="error('entrega.nombre') ? id('entrega.nombre') + '-error' : null"
+        />
+        <p class="dom-error" role="alert" [id]="id('entrega.nombre') + '-error'" *ngIf="error('entrega.nombre') as e">{{ e }}</p>
+      </div>
+
+      <div class="dom-campo">
+        <label class="cfg-label" [for]="id('entrega.telefono')">{{ 'Teléfono' | translate }} <span class="dom-obligatorio" aria-hidden="true">*</span></label>
+        <input
+          class="dom-input"
+          type="tel"
+          inputmode="tel"
+          [id]="id('entrega.telefono')"
+          formControlName="telefono"
+          maxlength="20"
+          autocomplete="off"
+          required
+          [attr.aria-invalid]="error('entrega.telefono') ? 'true' : null"
+          [attr.aria-describedby]="id('entrega.telefono') + '-ayuda' + (error('entrega.telefono') ? ' ' + id('entrega.telefono') + '-error' : '')"
+        />
+        <p class="dom-ayuda" [id]="id('entrega.telefono') + '-ayuda'">{{ 'De 7 a 15 números. Puedes escribir el celular con o sin el 57.' | translate }}</p>
+        <p class="dom-error" role="alert" [id]="id('entrega.telefono') + '-error'" *ngIf="error('entrega.telefono') as e">{{ e }}</p>
+      </div>
+
+      <div class="dom-campo">
+        <label class="cfg-label" [for]="id('entrega.direccion')">{{ 'Dirección' | translate }} <span class="dom-obligatorio" aria-hidden="true">*</span></label>
+        <input
+          class="dom-input"
+          type="text"
+          [id]="id('entrega.direccion')"
+          formControlName="direccion"
+          maxlength="200"
+          autocomplete="off"
+          required
+          [attr.aria-invalid]="error('entrega.direccion') ? 'true' : null"
+          [attr.aria-describedby]="error('entrega.direccion') ? id('entrega.direccion') + '-error' : null"
+        />
+        <p class="dom-error" role="alert" [id]="id('entrega.direccion') + '-error'" *ngIf="error('entrega.direccion') as e">{{ e }}</p>
+      </div>
+
+      <div class="dom-campo">
+        <label class="cfg-label" [for]="id('entrega.ciudad')">{{ 'Ciudad' | translate }} <span class="dom-obligatorio" aria-hidden="true">*</span></label>
+        <input
+          class="dom-input"
+          type="text"
+          [id]="id('entrega.ciudad')"
+          formControlName="ciudad"
+          maxlength="80"
+          autocomplete="off"
+          required
+          [attr.aria-invalid]="error('entrega.ciudad') ? 'true' : null"
+          [attr.aria-describedby]="id('entrega.ciudad') + '-ayuda' + (error('entrega.ciudad') ? ' ' + id('entrega.ciudad') + '-error' : '')"
+        />
+        <p class="dom-ayuda" [id]="id('entrega.ciudad') + '-ayuda'">{{ 'Escríbela como la ciudad, por ejemplo Bogotá o Medellín: de ella depende qué mensajeros lo ven.' | translate }}</p>
+        <p class="dom-error" role="alert" [id]="id('entrega.ciudad') + '-error'" *ngIf="error('entrega.ciudad') as e">{{ e }}</p>
+      </div>
+
+      <div class="dom-campo">
+        <label class="cfg-label" [for]="id('entrega.barrio')">{{ 'Barrio' | translate }}</label>
+        <input class="dom-input" type="text" [id]="id('entrega.barrio')" formControlName="barrio" maxlength="80" autocomplete="off" />
+      </div>
+
+      <div class="dom-campo">
+        <label class="cfg-label" [for]="id('entrega.indicaciones')">{{ 'Indicaciones' | translate }}</label>
+        <input
+          class="dom-input"
+          type="text"
+          [id]="id('entrega.indicaciones')"
+          formControlName="indicaciones"
+          maxlength="200"
+          autocomplete="off"
+          [placeholder]="'Por ejemplo, torre 2, portería' | translate"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- El domicilio -->
+  <section class="cfg-card dom-seccion" aria-labelledby="nuevo-titulo-valores">
+    <div class="dom-seccion__cabeza">
+      <h2 class="dom-seccion__titulo" id="nuevo-titulo-valores">{{ 'El domicilio' | translate }}</h2>
+    </div>
+
+    <div class="dom-rejilla dom-rejilla--tres">
+      <div class="dom-campo">
+        <label class="cfg-label" [for]="id('valorDomicilio')">{{ 'Valor del domicilio ($)' | translate }} <span class="dom-obligatorio" aria-hidden="true">*</span></label>
+        <input
+          class="dom-input"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          step="500"
+          [id]="id('valorDomicilio')"
+          formControlName="valorDomicilio"
+          required
+          [attr.aria-invalid]="error('valorDomicilio') ? 'true' : null"
+          [attr.aria-describedby]="id('valorDomicilio') + '-ayuda' + (error('valorDomicilio') ? ' ' + id('valorDomicilio') + '-error' : '')"
+        />
+        <p class="dom-ayuda" [id]="id('valorDomicilio') + '-ayuda'">{{ 'Lo que cuesta el envío. Hasta $ 1.000.000.' | translate }}</p>
+        <p class="dom-error" role="alert" [id]="id('valorDomicilio') + '-error'" *ngIf="error('valorDomicilio') as e">{{ e }}</p>
+      </div>
+
+      <div class="dom-campo">
+        <label class="cfg-label" [for]="id('valorPedido')">{{ 'Valor del pedido ($)' | translate }}</label>
+        <input
+          class="dom-input"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          step="500"
+          [id]="id('valorPedido')"
+          formControlName="valorPedido"
+          [attr.aria-invalid]="error('valorPedido') ? 'true' : null"
+          [attr.aria-describedby]="error('valorPedido') ? id('valorPedido') + '-error' : id('valorPedido') + '-ayuda'"
+        />
+        <p class="dom-ayuda" [id]="id('valorPedido') + '-ayuda'">{{ 'Solo informativo.' | translate }}</p>
+        <p class="dom-error" role="alert" [id]="id('valorPedido') + '-error'" *ngIf="error('valorPedido') as e">{{ e }}</p>
+      </div>
+
+      <div class="dom-campo">
+        <label class="cfg-label" [for]="id('cobrarAlEntregar')">{{ 'Cobrar al entregar ($)' | translate }}</label>
+        <input
+          class="dom-input"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          step="500"
+          [id]="id('cobrarAlEntregar')"
+          formControlName="cobrarAlEntregar"
+          [attr.aria-invalid]="error('cobrarAlEntregar') ? 'true' : null"
+          [attr.aria-describedby]="error('cobrarAlEntregar') ? id('cobrarAlEntregar') + '-error' : id('cobrarAlEntregar') + '-ayuda'"
+        />
+        <p class="dom-ayuda" [id]="id('cobrarAlEntregar') + '-ayuda'">{{ 'Lo que el mensajero cobra a tu cliente. Déjalo vacío si ya pagó.' | translate }}</p>
+        <p class="dom-error" role="alert" [id]="id('cobrarAlEntregar') + '-error'" *ngIf="error('cobrarAlEntregar') as e">{{ e }}</p>
+      </div>
+
+      <div class="dom-campo dom-campo--ancho">
+        <label class="cfg-label" [for]="id('descripcion')">{{ 'Descripción' | translate }}</label>
+        <input
+          class="dom-input"
+          type="text"
+          [id]="id('descripcion')"
+          formControlName="descripcion"
+          [attr.maxlength]="maxDescripcion"
+          autocomplete="off"
+          [placeholder]="'Por ejemplo, 2 hamburguesas' | translate"
+          [attr.aria-invalid]="error('descripcion') ? 'true' : null"
+          [attr.aria-describedby]="error('descripcion') ? id('descripcion') + '-error' : null"
+        />
+        <p class="dom-error" role="alert" [id]="id('descripcion') + '-error'" *ngIf="error('descripcion') as e">{{ e }}</p>
+      </div>
+
+      <div class="dom-campo dom-campo--ancho">
+        <label class="cfg-label" [for]="id('idExterno')">{{ 'Id externo (opcional)' | translate }}</label>
+        <input
+          class="dom-input"
+          type="text"
+          [id]="id('idExterno')"
+          formControlName="idExterno"
+          [attr.maxlength]="maxIdExterno"
+          autocomplete="off"
+          [attr.aria-invalid]="error('idExterno') ? 'true' : null"
+          [attr.aria-describedby]="id('idExterno') + '-ayuda' + (error('idExterno') ? ' ' + id('idExterno') + '-error' : '')"
+        />
+        <p class="dom-ayuda" [id]="id('idExterno') + '-ayuda'">{{ 'Tu número de pedido. Si lo repites, no creamos otro domicilio: te devolvemos el mismo.' | translate }}</p>
+        <p class="dom-error" role="alert" [id]="id('idExterno') + '-error'" *ngIf="error('idExterno') as e">{{ e }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Resultado -->
+  <div class="cfg-aviso cfg-aviso--ok dom-aviso" role="status" *ngIf="creado">
+    <i class="pi pi-check-circle dom-aviso__icono" aria-hidden="true"></i>
+    <div class="dom-aviso__textos">
+      <ng-container *ngIf="!creado.repetido; else yaExistia">
+        <strong class="dom-aviso__titulo">{{ 'Domicilio creado' | translate }}: <span class="dom-numero">{{ creado.numero }}</span></strong>
+        <div class="dom-aviso__detalle">{{ 'Ya lo ven los mensajeros. El formulario quedó listo para otro.' | translate }}</div>
+      </ng-container>
+      <ng-template #yaExistia>
+        <strong class="dom-aviso__titulo">{{ 'Ese id externo ya existía' | translate }}: <span class="dom-numero">{{ creado.numero }}</span></strong>
+        <div class="dom-aviso__detalle">{{ 'No creamos otro domicilio: este es el que ya tenías con ese número.' | translate }}</div>
+      </ng-template>
+      <div class="dom-aviso__acciones">
+        <button type="button" class="cfg-btn cfg-btn--sec dom-boton-chico" (click)="verEnLista.emit(creado.numero)">
+          {{ 'Ver en Mis domicilios' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <app-domicilios-error
+    *ngIf="errorServidor"
+    [error]="errorServidor"
+    [esAdmin]="esAdmin"
+    titulo="No se pudo crear el domicilio"
+    (irAIntegracion)="irAIntegracion.emit()"
+  ></app-domicilios-error>
+
+  <div class="cfg-aviso cfg-aviso--error dom-aviso" role="alert" *ngIf="intento && erroresCliente.length">
+    <i class="pi pi-exclamation-circle dom-aviso__icono" aria-hidden="true"></i>
+    <div class="dom-aviso__textos">
+      <strong class="dom-aviso__titulo">{{ 'Revisa estos datos antes de crear el domicilio' | translate }}</strong>
+      <ul class="dom-aviso__lista">
+        <li *ngFor="let e of erroresCliente">{{ e.mensaje }}</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="dom-fila-botones dom-barra">
+    <button type="submit" class="cfg-btn" [disabled]="enviando">
+      <i class="pi" [ngClass]="enviando ? 'pi-spin pi-spinner' : 'pi-send'" aria-hidden="true"></i>{{ (enviando ? 'Creando…' : 'Crear domicilio') | translate }}
+    </button>
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="limpiar()" [disabled]="enviando">{{ 'Limpiar' | translate }}</button>
+  </div>
+</form>

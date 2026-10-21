@@ -1,0 +1,336 @@
+<div class="dom-columna">
+  <!-- Cargando -->
+  <section class="cfg-card" *ngIf="cargando">
+    <div class="dom-estado-carga" role="status">
+      <i class="pi pi-spin pi-spinner dom-estado-carga__icono" aria-hidden="true"></i>
+      <div class="dom-estado-carga__texto">{{ 'Cargando la integración…' | translate }}</div>
+    </div>
+  </section>
+
+  <!-- Sin permiso (403) -->
+  <section class="cfg-card" *ngIf="!cargando && sinPermiso">
+    <div class="cfg-aviso cfg-aviso--warn dom-aviso" role="alert">
+      <i class="pi pi-lock dom-aviso__icono" aria-hidden="true"></i>
+      <div class="dom-aviso__textos">
+        <strong class="dom-aviso__titulo">{{ 'Solo el administrador del comercio puede ver esto' | translate }}</strong>
+        <div class="dom-aviso__detalle">
+          {{ 'Tu usuario no tiene permiso para las llaves ni para los avisos. Pídele a un administrador de tu comercio que lo haga.' | translate }}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Error al cargar -->
+  <section class="cfg-card dom-seccion" *ngIf="!cargando && errorCarga && !sinPermiso">
+    <app-domicilios-error [error]="errorCarga" titulo="No pudimos cargar la integración"></app-domicilios-error>
+    <div class="dom-fila-botones">
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cargar()">{{ 'Reintentar' | translate }}</button>
+    </div>
+  </section>
+
+  <ng-container *ngIf="!cargando && config && !sinPermiso">
+    <!-- (a) Activar domicilios -->
+    <section class="cfg-card dom-seccion" aria-labelledby="integ-titulo-activar">
+      <div class="dom-seccion__cabeza">
+        <div class="dom-seccion__textos">
+          <h2 class="dom-seccion__titulo" id="integ-titulo-activar">{{ 'Activar domicilios' | translate }}</h2>
+          <p class="dom-seccion__sub dom-seccion__sub--plano">
+            {{ 'Con los domicilios activados puedes crearlos desde esta pantalla y desde tu tienda por API. Desactivados, no se crea ninguno.' | translate }}
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          class="dom-interruptor"
+          [class.dom-interruptor--activo]="config.habilitado"
+          [attr.aria-checked]="config.habilitado"
+          aria-labelledby="integ-titulo-activar"
+          [disabled]="guardandoHabilitado"
+          (click)="alternarHabilitado()"
+        >
+          <span class="dom-interruptor__pista" aria-hidden="true"></span>
+          <span class="dom-interruptor__texto">{{ (config.habilitado ? 'Activados' : 'Desactivados') | translate }}</span>
+        </button>
+      </div>
+      <p class="dom-error" role="alert" *ngIf="errorHabilitado">{{ errorHabilitado }}</p>
+    </section>
+
+    <!-- (b) Llaves de API -->
+    <section class="cfg-card dom-seccion" aria-labelledby="integ-titulo-llaves">
+      <div class="dom-seccion__cabeza">
+        <div class="dom-seccion__textos">
+          <h2 class="dom-seccion__titulo" id="integ-titulo-llaves">{{ 'Llaves de API' | translate }}</h2>
+          <p class="dom-seccion__sub dom-seccion__sub--plano">
+            {{ 'Con una llave, tu tienda o marketplace crea domicilios a nombre de tu comercio. Cada llave sirve solo para tu empresa.' | translate }}
+          </p>
+        </div>
+      </div>
+
+      <app-domicilios-secreto-unico
+        *ngIf="secretoLlave"
+        [secreto]="secretoLlave"
+        titulo="Tu llave de API"
+        descripcion="Úsala en tu sistema como «Authorization: Bearer» seguida de la llave."
+        textoCerrar="Ya la guardé"
+        idCampo="integracion-llave"
+        (cerrar)="cerrarSecretoLlave()"
+      ></app-domicilios-secreto-unico>
+
+      <form class="dom-fila-form" (ngSubmit)="crearLlave()" novalidate>
+        <div class="dom-campo dom-campo--crece">
+          <label class="cfg-label" for="integracion-nombre-llave">{{ 'Nombre de la llave nueva' | translate }}</label>
+          <input
+            id="integracion-nombre-llave"
+            name="nombreLlave"
+            class="dom-input"
+            type="text"
+            maxlength="60"
+            autocomplete="off"
+            [placeholder]="'Por ejemplo, Mi tienda web' | translate"
+            [(ngModel)]="nombreLlave"
+            [disabled]="creandoLlave"
+            [attr.aria-invalid]="errorNombreLlave ? 'true' : null"
+            [attr.aria-describedby]="errorNombreLlave ? 'integracion-nombre-llave-error' : null"
+          />
+          <p class="dom-error" id="integracion-nombre-llave-error" role="alert" *ngIf="errorNombreLlave">{{ errorNombreLlave }}</p>
+        </div>
+        <button type="submit" class="cfg-btn" [disabled]="creandoLlave">
+          <i class="pi" [ngClass]="creandoLlave ? 'pi-spin pi-spinner' : 'pi-key'" aria-hidden="true"></i>{{ (creandoLlave ? 'Creando…' : 'Crear llave') | translate }}
+        </button>
+      </form>
+      <p class="dom-error" role="alert" *ngIf="errorLlave">{{ errorLlave }}</p>
+
+      <div class="dom-tabla-marco" *ngIf="llaves.length; else sinLlaves">
+        <table class="dom-tabla dom-tabla--llaves">
+          <caption class="dom-solo-lectores">{{ 'Llaves de API creadas' | translate }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'Nombre' | translate }}</th>
+              <th scope="col">{{ 'Llave' | translate }}</th>
+              <th scope="col">{{ 'Creada' | translate }}</th>
+              <th scope="col">{{ 'Último uso' | translate }}</th>
+              <th scope="col"><span class="dom-solo-lectores">{{ 'Acciones' | translate }}</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let f of llaves; trackBy: trackPorId">
+              <td data-etiqueta="Nombre" class="dom-celda-fuerte">{{ f.llave.nombre || '—' }}</td>
+              <td data-etiqueta="Llave"><span class="dom-numero">{{ f.llave.prefijo }}…</span></td>
+              <td data-etiqueta="Creada">{{ f.creada ? (f.creada | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
+              <td data-etiqueta="Último uso">{{ f.ultimoUso ? (f.ultimoUso | date: 'dd/MM/yyyy HH:mm') : ('Nunca' | translate) }}</td>
+              <td class="dom-celda-acciones">
+                <div class="dom-acciones-fila">
+                  <button
+                    type="button"
+                    class="cfg-btn cfg-btn--peligro dom-boton-chico"
+                    (click)="pedirRevocar(f)"
+                    [attr.aria-label]="('Revocar la llave' | translate) + ' ' + f.llave.nombre"
+                  >{{ 'Revocar' | translate }}</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #sinLlaves>
+        <div class="cfg-vacio">
+          <div class="cfg-vacio__icono"><i class="pi pi-key" aria-hidden="true"></i></div>
+          <h3 class="cfg-vacio__titulo dom-vacio__titulo">{{ 'Todavía no tienes llaves' | translate }}</h3>
+          <p class="cfg-vacio__texto">{{ 'Crea una para conectar tu tienda o tu marketplace.' | translate }}</p>
+        </div>
+      </ng-template>
+    </section>
+
+    <!-- (c) Avisos -->
+    <section class="cfg-card dom-seccion" aria-labelledby="integ-titulo-avisos">
+      <div class="dom-seccion__cabeza">
+        <div class="dom-seccion__textos">
+          <h2 class="dom-seccion__titulo" id="integ-titulo-avisos">{{ 'Avisos a tu sistema' | translate }}</h2>
+          <p class="dom-seccion__sub dom-seccion__sub--plano">
+            {{ 'Te enviamos un aviso a esta dirección cada vez que cambia un domicilio: lo toman, lo recogen, lo entregan o se cancela.' | translate }}
+          </p>
+        </div>
+      </div>
+
+      <form class="dom-fila-form" (ngSubmit)="guardarUrl()" novalidate>
+        <div class="dom-campo dom-campo--crece">
+          <label class="cfg-label" for="integracion-url">{{ 'Dirección (URL) de avisos' | translate }}</label>
+          <input
+            id="integracion-url"
+            name="urlAvisos"
+            class="dom-input"
+            type="url"
+            inputmode="url"
+            autocomplete="off"
+            placeholder="https://tu-sitio.com/avisos"
+            [(ngModel)]="urlAvisos"
+            [disabled]="guardandoUrl"
+            [attr.aria-invalid]="errorUrl ? 'true' : null"
+            aria-describedby="integracion-url-ayuda"
+          />
+          <p class="dom-ayuda" id="integracion-url-ayuda">
+            {{ 'Debe empezar con https:// y ser pública. Déjala vacía para dejar de recibir avisos.' | translate }}
+          </p>
+          <p class="dom-error" role="alert" *ngIf="errorUrl">{{ errorUrl }}</p>
+        </div>
+        <button type="submit" class="cfg-btn" [disabled]="guardandoUrl || !urlSinGuardar">
+          <i class="pi" [ngClass]="guardandoUrl ? 'pi-spin pi-spinner' : 'pi-check'" aria-hidden="true"></i>{{ (guardandoUrl ? 'Guardando…' : 'Guardar') | translate }}
+        </button>
+      </form>
+
+      <div class="dom-bloque-fila">
+        <div class="dom-bloque-fila__texto">
+          <div class="dom-bloque-fila__titulo">{{ 'Secreto de firma' | translate }}</div>
+          <p class="dom-ayuda">
+            {{ (config.webhookSecretoDefinido ? 'Ya tienes un secreto. Con él verificas que cada aviso viene de Katuq.' : 'Aún no tienes uno. Créalo para poder verificar que los avisos vienen de Katuq.') | translate }}
+          </p>
+        </div>
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="pedirSecreto()" [disabled]="creandoSecreto">
+          <i class="pi" [ngClass]="creandoSecreto ? 'pi-spin pi-spinner' : 'pi-lock'" aria-hidden="true"></i>{{ 'Crear / cambiar secreto' | translate }}
+        </button>
+      </div>
+
+      <app-domicilios-secreto-unico
+        *ngIf="secretoAvisos"
+        [secreto]="secretoAvisos"
+        titulo="Tu secreto de firma"
+        descripcion="Úsalo en tu sistema para verificar la firma de cada aviso (mira «Cómo verificar la firma» más abajo)."
+        textoCerrar="Ya lo guardé"
+        idCampo="integracion-secreto"
+        (cerrar)="cerrarSecretoAvisos()"
+      ></app-domicilios-secreto-unico>
+
+      <div class="dom-bloque-fila">
+        <div class="dom-bloque-fila__texto">
+          <div class="dom-bloque-fila__titulo">{{ 'Probar' | translate }}</div>
+          <p class="dom-ayuda">
+            {{ (!config.webhookUrl ? 'Guarda primero una dirección de avisos.' : urlSinGuardar ? 'Guarda los cambios de la dirección para probarla.' : 'Enviamos un aviso de prueba a tu dirección y te decimos cómo respondió.') | translate }}
+          </p>
+        </div>
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="probar()" [disabled]="probando || !config.webhookUrl || urlSinGuardar">
+          <i class="pi" [ngClass]="probando ? 'pi-spin pi-spinner' : 'pi-bolt'" aria-hidden="true"></i>{{ (probando ? 'Probando…' : 'Probar') | translate }}
+        </button>
+      </div>
+
+      <div class="cfg-aviso dom-aviso" [ngClass]="prueba.exitosa ? 'cfg-aviso--ok' : 'cfg-aviso--error'" role="status" *ngIf="prueba">
+        <i class="pi dom-aviso__icono" [ngClass]="prueba.exitosa ? 'pi-check-circle' : 'pi-times-circle'" aria-hidden="true"></i>
+        <div class="dom-aviso__textos">{{ prueba.texto }}</div>
+      </div>
+
+      <p class="dom-error" role="alert" *ngIf="errorAvisos">{{ errorAvisos }}</p>
+    </section>
+
+    <!-- (d) Guía rápida -->
+    <section class="cfg-card dom-seccion" aria-labelledby="integ-titulo-guia">
+      <div class="dom-seccion__cabeza">
+        <div class="dom-seccion__textos">
+          <h2 class="dom-seccion__titulo" id="integ-titulo-guia">{{ 'Guía rápida' | translate }}</h2>
+          <p class="dom-seccion__sub dom-seccion__sub--plano">
+            {{ 'Para quien conecta tu tienda o tu marketplace. Katuq no mueve dinero con esta API: el valor del domicilio sirve para calcular lo que gana el mensajero y la comisión de Katuq, que se cobra aparte a tu comercio.' | translate }}
+          </p>
+        </div>
+      </div>
+
+      <details class="dom-guia" open>
+        <summary class="dom-guia__titulo">{{ 'Para empezar' | translate }}</summary>
+        <ol class="dom-guia__lista">
+          <li>{{ 'Activa los domicilios (arriba).' | translate }}</li>
+          <li>{{ 'Crea una llave de API y guárdala: se muestra completa una sola vez.' | translate }}</li>
+          <li>{{ 'En Envíos y entregas > Transportadores, activa que tus mensajeros, o los independientes de Katuq, puedan tomar tus pedidos, y define cuánto se les paga por entrega.' | translate }}</li>
+          <li>{{ 'Opcional: guarda la dirección de avisos y copia el secreto con el que firmamos.' | translate }}</li>
+        </ol>
+        <p class="dom-guia__texto">
+          {{ 'Cada llave es de una sola empresa: la empresa sale de la llave, no de lo que envías. Un marketplace que atiende a varios comercios necesita una llave de cada uno. Hay un tope de 60 peticiones por minuto por llave.' | translate }}
+        </p>
+      </details>
+
+      <details class="dom-guia">
+        <summary class="dom-guia__titulo">{{ 'Crear un domicilio (ejemplo con curl)' | translate }}</summary>
+        <p class="dom-guia__texto">
+          {{ 'La llave va en el encabezado Authorization (también sirve X-Api-Key). El ejemplo toma la llave de la variable KATUQ_LLAVE.' | translate }}
+        </p>
+        <pre class="dom-codigo" tabindex="0"><code>{{ ejemploCurl }}</code></pre>
+        <div class="dom-fila-botones">
+          <button type="button" class="cfg-btn cfg-btn--sec dom-boton-chico" (click)="copiarEjemplo()">
+            <i class="pi" [ngClass]="copiadoEjemplo ? 'pi-check' : 'pi-copy'" aria-hidden="true"></i>{{ (copiadoEjemplo ? 'Copiado' : 'Copiar ejemplo') | translate }}
+          </button>
+        </div>
+        <p class="dom-guia__texto">
+          {{ 'Si repites el idExterno, devolvemos el mismo domicilio y no creamos otro. Para varios a la vez usa POST /v1/domicilios/lote con hasta 50.' | translate }}
+        </p>
+      </details>
+
+      <details class="dom-guia">
+        <summary class="dom-guia__titulo">{{ 'Estados de un domicilio' | translate }}</summary>
+        <ul class="dom-guia__estados">
+          <li *ngFor="let e of estados" class="dom-guia__estado">
+            <span class="dom-estado" [ngClass]="'dom-estado--' + e.tono"><i class="pi" [ngClass]="e.icono" aria-hidden="true"></i>{{ e.clave }}</span>
+            <div class="dom-guia__texto">{{ e.descripcion }}</div>
+          </li>
+        </ul>
+      </details>
+
+      <details class="dom-guia">
+        <summary class="dom-guia__titulo">{{ 'Eventos de los avisos' | translate }}</summary>
+        <div class="dom-tabla-marco">
+          <table class="dom-tabla dom-tabla--guia">
+            <caption class="dom-solo-lectores">{{ 'Eventos de los avisos' | translate }}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ 'Evento' | translate }}</th>
+                <th scope="col">{{ 'Cuándo' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let ev of eventos">
+                <td data-etiqueta="Evento"><span class="dom-numero">{{ ev.evento }}</span></td>
+                <td data-etiqueta="Cuándo">{{ ev.cuando }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="dom-guia__texto">
+          {{ 'Cada aviso es un POST con el evento y el domicilio completo. Responde con un código 2xx en menos de 10 segundos; si no, reintentamos a los 30 segundos, 5 minutos, 30 minutos y 2 horas (no reintentamos si respondes 400 o 422). Un fallo de aviso nunca frena al domicilio.' | translate }}
+        </p>
+      </details>
+
+      <details class="dom-guia">
+        <summary class="dom-guia__titulo">{{ 'Cómo verificar la firma' | translate }}</summary>
+        <p class="dom-guia__texto">{{ 'Cada aviso trae estos encabezados:' | translate }}</p>
+        <ul class="dom-guia__encabezados">
+          <li *ngFor="let h of encabezados"><span class="dom-numero">{{ h.nombre }}</span> · {{ h.para }}</li>
+        </ul>
+        <p class="dom-guia__texto">
+          {{ 'La firma es el HMAC-SHA256, con tu secreto, del texto «timestamp.cuerpo crudo». Compárala con X-Katuq-Firma y rechaza los avisos con más de 5 minutos de diferencia.' | translate }}
+        </p>
+        <pre class="dom-codigo" tabindex="0"><code>{{ ejemploFirma }}</code></pre>
+      </details>
+    </section>
+  </ng-container>
+</div>
+
+<!-- Revocar una llave -->
+<app-domicilios-confirmar
+  *ngIf="llavePorRevocar"
+  [titulo]="'Revocar la llave ' + llavePorRevocar.llave.nombre"
+  mensaje="Las aplicaciones que usen esta llave dejarán de funcionar al instante. Esto no se puede deshacer."
+  textoConfirmar="Revocar llave"
+  textoVolver="No revocar"
+  [peligro]="true"
+  [ocupado]="revocando"
+  [error]="errorRevocar"
+  (confirmar)="confirmarRevocar()"
+  (cerrar)="cerrarRevocar()"
+></app-domicilios-confirmar>
+
+<!-- Cambiar el secreto de firma -->
+<app-domicilios-confirmar
+  *ngIf="confirmandoSecreto"
+  titulo="Cambiar el secreto de firma"
+  mensaje="Si lo cambias, el secreto anterior deja de servir: tu sistema debe usar el nuevo para verificar los avisos. Te lo mostramos una sola vez."
+  textoConfirmar="Cambiar secreto"
+  textoVolver="No cambiarlo"
+  [ocupado]="creandoSecreto"
+  (confirmar)="crearSecreto()"
+  (cerrar)="cerrarConfirmarSecreto()"
+></app-domicilios-confirmar>

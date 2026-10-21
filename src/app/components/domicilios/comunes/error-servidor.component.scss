@@ -1,0 +1,5 @@
+@import '../dom-base';
+@include dom-base;
+
+// Los botones-enlace de los estilos globales traen su propio color y subrayado.
+a.cfg-btn { text-decoration: none !important; }

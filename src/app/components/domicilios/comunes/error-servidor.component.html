@@ -1,0 +1,20 @@
+<div class="cfg-aviso cfg-aviso--error dom-aviso" role="alert" *ngIf="error">
+  <i class="pi pi-exclamation-circle dom-aviso__icono" aria-hidden="true"></i>
+  <div class="dom-aviso__textos">
+    <strong class="dom-aviso__titulo">{{ titulo | translate }}</strong>
+    <div class="dom-aviso__detalle">{{ error.texto }}</div>
+
+    <div class="dom-aviso__acciones" *ngIf="error.accion === 'transportadores'">
+      <a class="cfg-btn cfg-btn--sec dom-boton-chico" routerLink="/despachos">{{ 'Ir a Envíos y entregas' | translate }}</a>
+    </div>
+
+    <div class="dom-aviso__acciones" *ngIf="error.accion === 'integracion'">
+      <button type="button" class="cfg-btn cfg-btn--sec dom-boton-chico" *ngIf="esAdmin" (click)="irAIntegracion.emit()">
+        {{ 'Ir a Integración' | translate }}
+      </button>
+      <div class="dom-aviso__detalle" *ngIf="!esAdmin">
+        {{ 'Pídele a un administrador de tu comercio que los active en la pestaña Integración.' | translate }}
+      </div>
+    </div>
+  </div>
+</div>

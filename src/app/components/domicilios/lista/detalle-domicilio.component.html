@@ -1,0 +1,102 @@
+<p-dialog
+  [visible]="true"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  [closeOnEscape]="true"
+  [dismissableMask]="false"
+  appendTo="body"
+  [style]="{ width: '760px', 'max-width': '96vw' }"
+  [breakpoints]="{ '640px': '100vw' }"
+  styleClass="dom-dialogo"
+  [header]="'Domicilio ' + fila.numero"
+  (visibleChange)="alCambiarVisibilidad($event)"
+>
+  <div class="dom-dialogo__cuerpo">
+    <!-- Estado y mensajero -->
+    <div class="dom-resumen-detalle">
+      <span class="dom-estado" [ngClass]="'dom-estado--' + fila.estadoTono"><i class="pi" [ngClass]="fila.estadoIcono" aria-hidden="true"></i>{{ fila.estadoEtiqueta }}</span>
+      <div class="dom-detalle-mensajero" *ngIf="fila.mensajero as m">
+        <div class="dom-detalle-mensajero__nombre">{{ m.nombre }}<ng-container *ngIf="m.detalle"> · {{ m.detalle }}</ng-container></div>
+        <div class="dom-insignia" *ngIf="m.independiente"><i class="pi pi-shield" aria-hidden="true"></i>{{ 'Independiente de Katuq' | translate }}</div>
+      </div>
+    </div>
+
+    <!-- Línea de tiempo -->
+    <section class="dom-bloque" aria-labelledby="detalle-titulo-tiempo">
+      <h3 class="dom-bloque__titulo" id="detalle-titulo-tiempo">{{ 'Seguimiento' | translate }}</h3>
+      <ol class="dom-tiempo">
+        <li class="dom-paso" *ngFor="let p of pasos; trackBy: trackPorClave" [ngClass]="'dom-paso--' + p.estado">
+          <div class="dom-paso__punto" aria-hidden="true"><i class="pi" [ngClass]="iconoPaso(p)"></i></div>
+          <div class="dom-paso__texto">
+            <div class="dom-paso__titulo">{{ p.titulo | translate }}<span class="dom-solo-lectores">: {{ textoPaso(p.estado) }}</span></div>
+            <div class="dom-paso__hora" *ngIf="p.fecha">{{ p.fecha | date: 'dd/MM/yyyy HH:mm' }}</div>
+            <div class="dom-paso__nota" *ngIf="p.nota">{{ p.nota }}</div>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <!-- Recogida y entrega -->
+    <div class="dom-doble">
+      <section class="dom-bloque" aria-labelledby="detalle-titulo-recogida">
+        <h3 class="dom-bloque__titulo" id="detalle-titulo-recogida">{{ 'Recoger en' | translate }}</h3>
+        <dl class="dom-datos" *ngIf="recogida.length; else sinDatos">
+          <div class="dom-dato" *ngFor="let l of recogida">
+            <dt class="cfg-label">{{ l.etiqueta | translate }}</dt>
+            <dd class="dom-dato__valor">{{ l.valor }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="dom-bloque" aria-labelledby="detalle-titulo-entrega">
+        <h3 class="dom-bloque__titulo" id="detalle-titulo-entrega">{{ 'Entregar a' | translate }}</h3>
+        <dl class="dom-datos" *ngIf="entrega.length; else sinDatos">
+          <div class="dom-dato" *ngFor="let l of entrega">
+            <dt class="cfg-label">{{ l.etiqueta | translate }}</dt>
+            <dd class="dom-dato__valor">{{ l.valor }}</dd>
+          </div>
+        </dl>
+      </section>
+    </div>
+
+    <ng-template #sinDatos><p class="dom-ayuda">{{ 'Sin datos.' | translate }}</p></ng-template>
+
+    <!-- Valores -->
+    <section class="dom-bloque" aria-labelledby="detalle-titulo-valores">
+      <h3 class="dom-bloque__titulo" id="detalle-titulo-valores">{{ 'Valores' | translate }}</h3>
+      <dl class="dom-datos dom-datos--filas">
+        <div class="dom-dato">
+          <dt class="cfg-label">{{ 'Valor del domicilio' | translate }}</dt>
+          <dd class="dom-dato__valor dom-dinero">{{ pesos(fila.domicilio.valorDomicilio) }}</dd>
+        </div>
+        <div class="dom-dato" *ngIf="fila.domicilio.valorPedido">
+          <dt class="cfg-label">{{ 'Valor del pedido' | translate }}</dt>
+          <dd class="dom-dato__valor dom-dinero">{{ pesos(fila.domicilio.valorPedido) }}</dd>
+        </div>
+        <div class="dom-dato">
+          <dt class="cfg-label">{{ 'Cobrar al entregar' | translate }}</dt>
+          <dd class="dom-dato__valor dom-dinero">{{ fila.domicilio.cobrarAlEntregar ? pesos(fila.domicilio.cobrarAlEntregar) : ('Ya está pago' | translate) }}</dd>
+        </div>
+        <div class="dom-dato" *ngIf="fila.domicilio.descripcion">
+          <dt class="cfg-label">{{ 'Descripción' | translate }}</dt>
+          <dd class="dom-dato__valor">{{ fila.domicilio.descripcion }}</dd>
+        </div>
+        <div class="dom-dato" *ngIf="fila.idExterno">
+          <dt class="cfg-label">{{ 'Id externo' | translate }}</dt>
+          <dd class="dom-dato__valor">{{ fila.idExterno }}</dd>
+        </div>
+      </dl>
+    </section>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dom-dialogo__botones">
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrar.emit()">{{ 'Cerrar' | translate }}</button>
+      <button type="button" class="cfg-btn cfg-btn--peligro" *ngIf="fila.puedeCancelar" (click)="cancelar.emit(fila)">
+        {{ 'Cancelar domicilio' | translate }}
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>

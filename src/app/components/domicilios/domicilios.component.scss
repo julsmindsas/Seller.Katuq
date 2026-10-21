@@ -1,0 +1,53 @@
+// Domicilios: pantalla con sus pestañas. Base D-400 (config-pagina): plano, fondo lila, tarjetas blancas.
+@import './dom-base';
+@include dom-base;
+
+// ── Pestañas: segmented control del sistema de diseño ──
+.dom-pestanas {
+  display: flex;
+  align-self: flex-start;
+  max-width: 100%;
+  gap: 2px;
+  padding: 3px;
+  overflow-x: auto;
+  background: $cfg-chip-bg;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 10px;
+}
+
+.dom-pestana {
+  appearance: none;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: $cfg-body;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+
+  i { font-size: 13px; color: inherit; }
+
+  &:hover { color: $cfg-accent; }
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+}
+
+.dom-pestana--activa,
+.dom-pestana--activa:hover {
+  background: #fff;
+  color: $cfg-accent;
+  box-shadow: $cfg-shadow-panel;
+}
+
+// Las pestañas ocultas siguen en la página: `hidden` no debe perder contra un `display` de las tarjetas.
+.dom-panel { min-width: 0; }
+.dom-panel[hidden] { display: none !important; }

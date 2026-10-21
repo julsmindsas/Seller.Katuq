@@ -1,0 +1,97 @@
+@import '../dom-base';
+@include dom-base;
+@include dom-dialogo;
+
+.dom-resumen-detalle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.dom-detalle-mensajero { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.dom-detalle-mensajero__nombre { font-size: 13.5px; font-weight: 700; color: $cfg-ink; }
+
+// ── Bloques ──
+.dom-bloque { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+.dom-bloque__titulo {
+  margin: 0;
+  font-size: 11px !important;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: $cfg-muted;
+}
+
+.dom-doble {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+
+  @media (max-width: 575px) { grid-template-columns: minmax(0, 1fr); }
+}
+
+.dom-datos { display: flex; flex-direction: column; gap: 10px; margin: 0; }
+
+.dom-datos--filas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+
+  @media (max-width: 575px) { grid-template-columns: minmax(0, 1fr); }
+}
+
+.dom-dato { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dom-dato__valor { margin: 0; font-size: 13.5px; font-weight: 600; color: $cfg-ink; overflow-wrap: anywhere; }
+
+// ── Línea de tiempo: completado verde, actual naranja con anillo, línea #eceaf4 ──
+.dom-tiempo { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+
+.dom-paso {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 0 12px;
+  padding-bottom: 18px;
+
+  // Línea que une este punto con el siguiente.
+  &::before {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: 28px;
+    bottom: 0;
+    width: 2px;
+    background: $dom-linea-tiempo;
+  }
+
+  &:last-child { padding-bottom: 0; }
+  &:last-child::before { display: none; }
+}
+
+.dom-paso__punto {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #d9d6e8;
+  color: #fff;
+  font-size: 12px;
+
+  i { color: inherit; font-size: 12px; }
+}
+
+.dom-paso--hecho .dom-paso__punto { background: $cfg-ok; border-color: $cfg-ok; }
+.dom-paso--actual .dom-paso__punto { background: $dom-actual; border-color: $dom-actual; box-shadow: 0 0 0 4px rgba(255, 152, 0, .18); }
+.dom-paso--fallo .dom-paso__punto { background: $cfg-err; border-color: $cfg-err; }
+
+.dom-paso__texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-top: 3px; }
+.dom-paso__titulo { font-size: 13.5px; font-weight: 800; color: $cfg-ink; }
+.dom-paso--pendiente .dom-paso__titulo { color: $cfg-muted; font-weight: 700; }
+.dom-paso__hora { font-size: 12px; color: $cfg-body; }
+.dom-paso__nota { font-size: 12.5px; line-height: 1.4; color: $cfg-body; overflow-wrap: anywhere; }

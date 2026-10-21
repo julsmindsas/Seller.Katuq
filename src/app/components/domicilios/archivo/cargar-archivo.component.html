@@ -1,0 +1,186 @@
+<div class="dom-columna">
+  <!-- Recoger en: el archivo se lee con esta recogida -->
+  <section class="cfg-card dom-seccion" aria-labelledby="archivo-titulo-recogida">
+    <div class="dom-seccion__cabeza">
+      <h2 class="dom-seccion__titulo" id="archivo-titulo-recogida">{{ 'Recoger en' | translate }}</h2>
+    </div>
+    <p class="dom-seccion__sub">
+      {{ 'Todos los domicilios del archivo se recogen aquí, salvo que el archivo traiga columnas de recogida.' | translate }}
+    </p>
+    <app-domicilios-recogida [grupo]="recogida" idBase="archivo-recogida"></app-domicilios-recogida>
+  </section>
+
+  <!-- Resultado del envío -->
+  <section class="cfg-card dom-seccion" aria-labelledby="archivo-titulo-resultado" *ngIf="resultado as r">
+    <div class="dom-seccion__cabeza">
+      <h2 class="dom-seccion__titulo" id="archivo-titulo-resultado">{{ 'Resultado del envío' | translate }}</h2>
+      <div class="dom-fila-botones">
+        <button type="button" class="cfg-btn cfg-btn--sec dom-boton-chico" (click)="verLista.emit()">{{ 'Ver en Mis domicilios' | translate }}</button>
+        <button type="button" class="cfg-btn cfg-btn--sec dom-boton-chico" (click)="otroArchivo()">{{ 'Cargar otro archivo' | translate }}</button>
+      </div>
+    </div>
+
+    <div class="cfg-aviso dom-aviso" [ngClass]="r.fallidos.length ? 'cfg-aviso--warn' : 'cfg-aviso--ok'" role="status">
+      <i class="pi dom-aviso__icono" [ngClass]="r.fallidos.length ? 'pi-exclamation-triangle' : 'pi-check-circle'" aria-hidden="true"></i>
+      <div class="dom-aviso__textos">
+        <strong class="dom-aviso__titulo">{{ r.texto }}</strong>
+        <div class="dom-aviso__detalle" *ngIf="lineasSinEnviar.length">
+          {{ lineasSinEnviar.length === 1 ? 'La línea ' : 'Las líneas ' }}{{ lineasSinEnviar.join(', ') }}
+          {{ lineasSinEnviar.length === 1 ? 'no se envió' : 'no se enviaron' }} {{ 'porque tenían errores.' | translate }}
+        </div>
+      </div>
+    </div>
+
+    <app-domicilios-error
+      *ngIf="ayudaResultado"
+      [error]="ayudaResultado"
+      [esAdmin]="esAdmin"
+      titulo="Por qué fallaron"
+      (irAIntegracion)="irAIntegracion.emit()"
+    ></app-domicilios-error>
+
+    <div class="dom-fila-botones" *ngIf="r.fallidos.length">
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="descargarFallidos()">
+        <i class="pi pi-download" aria-hidden="true"></i>{{ 'Descargar los que fallaron' | translate }}
+      </button>
+      <p class="dom-ayuda">{{ 'Corrígelos en Excel y vuelve a subir ese archivo: trae las mismas columnas de la plantilla.' | translate }}</p>
+    </div>
+
+    <div class="dom-tabla-marco">
+      <table class="dom-tabla dom-tabla--resultado">
+        <caption class="dom-solo-lectores">{{ 'Resultado de cada domicilio del archivo' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'Línea' | translate }}</th>
+            <th scope="col">{{ 'Cliente' | translate }}</th>
+            <th scope="col">{{ 'Id externo' | translate }}</th>
+            <th scope="col">{{ 'Resultado' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let i of r.items; trackBy: trackPorLinea">
+            <td data-etiqueta="Línea">{{ i.linea }}</td>
+            <td data-etiqueta="Cliente" class="dom-celda-fuerte">{{ i.cliente || '—' }}</td>
+            <td data-etiqueta="Id externo">{{ i.idExterno || '—' }}</td>
+            <td data-etiqueta="Resultado">
+              <span class="dom-estado dom-estado--ok" *ngIf="i.estado === 'creado'"><i class="pi pi-check-circle" aria-hidden="true"></i>{{ 'Creado' | translate }}</span>
+              <span class="dom-estado dom-estado--info" *ngIf="i.estado === 'repetido'"><i class="pi pi-copy" aria-hidden="true"></i>{{ 'Repetido' | translate }}</span>
+              <span class="dom-estado dom-estado--err" *ngIf="i.estado === 'fallo'"><i class="pi pi-times-circle" aria-hidden="true"></i>{{ 'Falló' | translate }}</span>
+              <div class="dom-celda-nota" *ngIf="i.numero">
+                <span class="dom-numero">{{ i.numero }}</span><ng-container *ngIf="i.estado === 'repetido'"> · {{ 'ya existía con ese id externo' | translate }}</ng-container>
+              </div>
+              <div class="dom-celda-nota dom-celda-nota--error" *ngIf="i.motivo">{{ i.motivo }}</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Subir el archivo -->
+  <section class="cfg-card dom-seccion" aria-labelledby="archivo-titulo-subir" *ngIf="!resultado">
+    <div class="dom-seccion__cabeza">
+      <h2 class="dom-seccion__titulo" id="archivo-titulo-subir">{{ 'Cargar un archivo' | translate }}</h2>
+      <button type="button" class="cfg-btn cfg-btn--sec dom-boton-chico" (click)="descargarPlantilla()">
+        <i class="pi pi-download" aria-hidden="true"></i>{{ 'Descargar plantilla' | translate }}
+      </button>
+    </div>
+    <p class="dom-seccion__sub">
+      {{ 'Llena la plantilla en Excel y guárdala como CSV. Puedes subir hasta 50 domicilios por archivo.' | translate }}
+    </p>
+
+    <label
+      class="dom-soltar"
+      [class.dom-soltar--activo]="arrastrando"
+      (dragover)="alArrastrar($event, true)"
+      (dragleave)="alArrastrar($event, false)"
+      (drop)="alSoltar($event)"
+    >
+      <input class="dom-solo-lectores" type="file" accept=".csv,text/csv" (change)="alElegir($event)" [disabled]="leyendo || enviando" />
+      <i class="pi" [ngClass]="leyendo ? 'pi-spin pi-spinner' : 'pi-upload'" aria-hidden="true"></i>
+      <strong class="dom-soltar__titulo">{{ (leyendo ? 'Leyendo el archivo…' : 'Elige un archivo .csv o suéltalo aquí') | translate }}</strong>
+      <p class="dom-ayuda">{{ 'Las columnas se reconocen por su nombre: usa las de la plantilla.' | translate }}</p>
+    </label>
+
+    <div class="cfg-aviso cfg-aviso--error dom-aviso" role="alert" *ngIf="errorArchivo">
+      <i class="pi pi-exclamation-circle dom-aviso__icono" aria-hidden="true"></i>
+      <div class="dom-aviso__textos">{{ errorArchivo }}</div>
+    </div>
+
+    <ng-container *ngIf="archivo && resumen && !archivo.errores.length">
+      <div class="dom-archivo-cabeza">
+        <div class="dom-archivo-nombre">
+          <i class="pi pi-file" aria-hidden="true"></i><strong class="dom-archivo-titulo">{{ nombreArchivo }}</strong>
+        </div>
+        <button type="button" class="cfg-btn cfg-btn--sec dom-boton-chico" (click)="quitarArchivo()" [disabled]="enviando">{{ 'Quitar archivo' | translate }}</button>
+      </div>
+
+      <div class="cfg-aviso cfg-aviso--warn dom-aviso" role="status" *ngIf="archivo.columnasIgnoradas.length">
+        <i class="pi pi-info-circle dom-aviso__icono" aria-hidden="true"></i>
+        <div class="dom-aviso__textos">
+          {{ 'No reconocimos estas columnas y las ignoramos:' | translate }} <strong>{{ archivo.columnasIgnoradas.join(', ') }}</strong>.
+        </div>
+      </div>
+
+      <p class="dom-resumen" aria-live="polite">
+        <span class="dom-resumen__bien">{{ resumen.listos.length }} {{ resumen.listos.length === 1 ? 'listo' : 'listos' }}</span>,
+        <span class="dom-resumen__mal">{{ resumen.conErrores.length }} {{ resumen.conErrores.length === 1 ? 'con error' : 'con errores' }}</span>
+      </p>
+
+      <div class="dom-tabla-marco">
+        <table class="dom-tabla">
+          <caption class="dom-solo-lectores">{{ 'Vista previa del archivo' | translate }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'Línea' | translate }}</th>
+              <th scope="col">{{ 'Cliente' | translate }}</th>
+              <th scope="col">{{ 'Teléfono' | translate }}</th>
+              <th scope="col">{{ 'Dirección' | translate }}</th>
+              <th scope="col">{{ 'Ciudad' | translate }}</th>
+              <th scope="col">{{ 'Domicilio' | translate }}</th>
+              <th scope="col">{{ 'Cobrar' | translate }}</th>
+              <th scope="col">{{ 'Estado' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let f of archivo.filas; trackBy: trackPorLinea" [class.dom-fila--error]="f.errores.length">
+              <td data-etiqueta="Línea">{{ f.linea }}</td>
+              <td data-etiqueta="Cliente" class="dom-celda-fuerte">{{ f.domicilio.entrega.nombre || '—' }}</td>
+              <td data-etiqueta="Teléfono">{{ f.domicilio.entrega.telefono || '—' }}</td>
+              <td data-etiqueta="Dirección">{{ f.domicilio.entrega.direccion || '—' }}</td>
+              <td data-etiqueta="Ciudad">{{ f.domicilio.entrega.ciudad || '—' }}</td>
+              <td data-etiqueta="Domicilio" class="dom-dinero">{{ f.domicilio.valorDomicilio ? pesos(f.domicilio.valorDomicilio) : '—' }}</td>
+              <td data-etiqueta="Cobrar" class="dom-dinero">{{ f.domicilio.cobrarAlEntregar ? pesos(f.domicilio.cobrarAlEntregar) : '—' }}</td>
+              <td data-etiqueta="Estado">
+                <span class="dom-estado dom-estado--ok" *ngIf="!f.errores.length"><i class="pi pi-check-circle" aria-hidden="true"></i>{{ 'Listo' | translate }}</span>
+                <ng-container *ngIf="f.errores.length">
+                  <span class="dom-estado dom-estado--err"><i class="pi pi-times-circle" aria-hidden="true"></i>{{ 'Con errores' | translate }}</span>
+                  <ul class="dom-lista-errores">
+                    <li *ngFor="let e of f.errores">{{ e }}</li>
+                  </ul>
+                </ng-container>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <app-domicilios-error
+        *ngIf="errorEnvio"
+        [error]="errorEnvio"
+        [esAdmin]="esAdmin"
+        titulo="No se pudo enviar el archivo"
+        (irAIntegracion)="irAIntegracion.emit()"
+      ></app-domicilios-error>
+
+      <div class="dom-fila-botones dom-barra">
+        <button type="button" class="cfg-btn" (click)="enviar()" [disabled]="enviando || !resumen.listos.length">
+          <i class="pi" [ngClass]="enviando ? 'pi-spin pi-spinner' : 'pi-send'" aria-hidden="true"></i>{{ enviando ? 'Enviando…' : 'Enviar los ' + resumen.listos.length + ' listos' }}
+        </button>
+        <p class="dom-ayuda" *ngIf="resumen.conErrores.length">
+          {{ 'Las filas con errores no se envían: corrígelas en el archivo y vuelve a subirlo.' | translate }}
+        </p>
+      </div>
+    </ng-container>
+  </section>
+</div>

@@ -1,0 +1,53 @@
+<p-dialog
+  [visible]="true"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="!ocupado"
+  [closeOnEscape]="!ocupado"
+  [dismissableMask]="false"
+  appendTo="body"
+  [style]="{ width: '480px', 'max-width': '96vw' }"
+  [breakpoints]="{ '640px': '100vw' }"
+  styleClass="dom-dialogo"
+  [header]="titulo"
+  (visibleChange)="alCambiarVisibilidad($event)"
+>
+  <div class="dom-dialogo__cuerpo">
+    <p class="dom-confirmar__mensaje">{{ mensaje }}</p>
+
+    <div class="dom-campo" *ngIf="motivoEtiqueta">
+      <label class="cfg-label" for="dom-confirmar-motivo">{{ motivoEtiqueta }}</label>
+      <textarea
+        id="dom-confirmar-motivo"
+        class="dom-input dom-input--area"
+        rows="3"
+        name="motivo"
+        [attr.maxlength]="motivoMax"
+        [(ngModel)]="motivo"
+        [disabled]="ocupado"
+      ></textarea>
+      <p class="dom-ayuda">{{ motivo.length }} / {{ motivoMax }}</p>
+    </div>
+
+    <div class="cfg-aviso cfg-aviso--error dom-aviso" role="alert" *ngIf="error">
+      <i class="pi pi-exclamation-circle dom-aviso__icono" aria-hidden="true"></i>
+      <div class="dom-aviso__textos">{{ error }}</div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dom-dialogo__botones">
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrar.emit()" [disabled]="ocupado">{{ textoVolver }}</button>
+      <button
+        type="button"
+        class="cfg-btn"
+        [class.cfg-btn--peligro]="peligro"
+        (click)="confirmar.emit(motivo.trim())"
+        [disabled]="ocupado"
+      >
+        <i class="pi pi-spin pi-spinner" aria-hidden="true" *ngIf="ocupado"></i>{{ ocupado ? 'Un momento…' : textoConfirmar }}
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>

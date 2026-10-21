@@ -1,0 +1,51 @@
+@import '../dom-base';
+@include dom-base;
+@include dom-tabla;
+
+.dom-columna { display: flex; flex-direction: column; gap: 16px; }
+
+// ── Zona para soltar el archivo ──
+.dom-soltar {
+  position: relative; // el campo de archivo (oculto) queda dentro de la zona
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 16px;
+  text-align: center;
+  background: $cfg-tint;
+  border: 2px dashed $cfg-chip-border;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+
+  i { font-size: 26px; color: $cfg-accent; }
+  &:hover { background: $cfg-accent-soft; border-color: #d9cffb; }
+  &:focus-within { outline: 3px solid $cfg-accent-2; outline-offset: 2px; }
+}
+
+.dom-soltar--activo { background: $cfg-accent-soft; border-color: $cfg-accent; }
+
+.dom-soltar__titulo { font-size: 14px; font-weight: 800; color: $cfg-ink; }
+
+// ── Archivo elegido ──
+.dom-archivo-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dom-archivo-nombre { display: flex; align-items: center; gap: 8px; min-width: 0; color: $cfg-accent; }
+.dom-archivo-titulo { min-width: 0; font-size: 13.5px; font-weight: 800; color: $cfg-ink; overflow-wrap: anywhere; }
+
+.dom-resumen { margin: 0; font-size: 15px; font-weight: 800; color: $cfg-ink; }
+.dom-resumen__bien { color: $cfg-ok !important; }
+.dom-resumen__mal { color: $cfg-err !important; }
+
+.dom-barra {
+  @media (max-width: 575px) {
+    .cfg-btn { flex: 1 1 100%; }
+  }
+}
