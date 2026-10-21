@@ -71,7 +71,12 @@
           </div>
           <div class="mi-dato">
             <div class="mi-dato__etiqueta">Correo</div>
-            <div class="mi-dato__valor">{{ solicitud.correo || '—' }}</div>
+            <div class="mi-dato__valor">
+              {{ solicitud.correo || '—' }}
+              <span *ngIf="solicitud.correo && solicitud.correoVerificado">
+                ({{ 'verificado con' | translate }} {{ solicitud.identidadProveedor === 'apple' ? 'Apple' : 'Google' }})
+              </span>
+            </div>
           </div>
           <div class="mi-dato">
             <div class="mi-dato__etiqueta">Ciudad</div>

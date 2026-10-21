@@ -53,6 +53,9 @@ export interface SolicitudMensajero {
   celular?: string;
   ciudad?: string;
   correo?: string;
+  /** Si se registró con Google o Apple, con cuál; el correo ya viene verificado por el proveedor. */
+  identidadProveedor?: 'google' | 'apple' | string;
+  correoVerificado?: boolean;
   tipoVehiculo?: string;
   placa?: string;
   estadoRegistro: EstadoSolicitud | string;
