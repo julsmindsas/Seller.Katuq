@@ -59,7 +59,7 @@ Todas: **Dep.** 0.1, 0.3. **Éxito:** corren con `node` y fallan por código aus
   - `certificateExpiresAt` sale del certificado (también si solo cambia la contraseña) y el del cliente se ignora;
   - certificado ilegible: el guardado pasa como hoy, `certificateExpiresAt: null`, sin secretos en el error;
   - `secretsChanged` trae solo nombres; `numbering.current` intacto y `preventRewind` sigue.
-- [ ] 1.5 [P] `tests/accounting/autoInvoiceFollowsChoice.contract.test.js`:
+- [x] 1.5 [P] `tests/accounting/autoInvoiceFollowsChoice.contract.test.js`:
   - modo 1: las mismas llamadas y escrituras que hoy;
   - modo 2: lo mismo, más un registro de sombra (solo con el interruptor encendido);
   - modo 3 con Siigo: una sola llamada a `createSiigoInvoiceBackground`, ninguna a `createInvoiceFromOrder`; `facturaSiigo`
@@ -139,10 +139,10 @@ Todas: **Dep.** 0.1, 0.3. **Éxito:** corren con `node` y fallan por código aus
 
 ## 5. Factura automática (pedidos)
 
-- [ ] 5.1 **Sensible (pedidos), con diff aprobado.** Preparar y mostrar el diff del bloque de `controllers/orders.js`
+- [x] 5.1 **Sensible (pedidos), con diff aprobado.** Preparar y mostrar el diff del bloque de `controllers/orders.js`
   (decisión 11: Siigo por `createSiigoInvoiceBackground`; DIAN, WO y `null` solo anotan). **Dep.** 1.5, 2.3. **Éxito:**
   aprobación explícita de Daniel.
-- [ ] 5.2 **Sensible (pedidos), con diff aprobado.** Aplicarlo. **Dep.** 5.1. **Éxito:** 1.5 pasa; `node --check` y las
+- [x] 5.2 **Sensible (pedidos), con diff aprobado.** Aplicarlo. **Dep.** 5.1. **Éxito:** 1.5 pasa; `node --check` y las
   pruebas de órdenes relacionadas, en verde.
 
 ## 6. Migración y encendido (en producción, solo con orden de Daniel)

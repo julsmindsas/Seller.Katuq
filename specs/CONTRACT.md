@@ -11405,3 +11405,49 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - El importador guardaba en `precio.precioUnitarioIva` el MONTO del IVA (la ficha mostraba 7983 %). Ahora `'19'` (porcentaje, como lo leen la ficha y orderCalculationService) y el monto en `valorIva`. CAFE ESCOBAR: 0 productos afectados.
   - `services/ecommerce/index.js` hacía `.bind` de funciones que ya no existen en el adapter: el módulo reventaba al cargarse y `POST /productos/delete` borraba en Katuq, nunca en la tienda, y respondía `{}` (punto 20). Ahora solo expone `syncProduct` y `syncInventoryByProduct`.
 - Comprobado en la tienda local: editar la talla M cambió solo esa variación (padre intacto); retirar stock llegó a la variación (5 → 0); borrar la talla S borró solo la variación #12. Pruebas: `tests/integrations/woocommerceImportadorBodegaIva.test.js` y `woocommerceVariantes.test.js`. Sin commit ni deploy.
+
+## D-499, bitácora 2026-10-20 — Fase 0 (FE-03) arranca con lo puro; JULS23–JULS40 sin explicación en los registros
+
+- **0.2:** la aprobación en bloque del 18-oct (tabla D-495 a D-503) cubre los 18 valores por defecto, el diseño y las dos specs.
+- **0.3, división con D-500, la registra la misma sesión de D-500:**
+  - D-500 es dueño del bloque de factura automática (decisión 11) y de `resolve()`.
+  - D-499 es dueño de `candadoFactura.js`, la clave por envío y `verify-invoice`.
+  - La 2.9 de D-500 (sombra en `from-order`) ya está aplicada. La 2.5 de D-499 va después, sobre el mismo archivo.
+  - Condición (b): la factura automática nunca factura ventas POS. Ya está en el diff pendiente de la 5.1 de D-500. La clave fija de la condición (a), `auto-<orderId>-paymentApproved`, está en `candadoFactura.requestIdAutomatica`.
+- **Hecho sin tocar la emisión (puro, sin uso todavía):**
+  - 1.1 y 2.1: `services/accounting/utils/candadoFactura.js` (tabla 0.2, dueño, salidas y clave). `candadoFactura.test.js` pasa 16/16.
+  - 2.8 y 5.2: banderas `invoiceIdempotency` e `invoicingTray` en los dos catálogos, apagadas.
+  - Parte pura de 1.4 y 2.9: `dian/reporteConsecutivos.js` (seis clases, evidencia, tope de 2000, solo lectura). `reporteConsecutivos.test.js` pasa 5/5.
+  - Falta la ruta `numbering-gaps`, que toca `routers/accounting.js` y va después de la 2.7.
+- **3.1, lectura de producción autorizada por el usuario el 20-oct («si es de solo lectura sí, pero no eliminar ni actualizar»):**
+  - **Reporte de Julsmind (JULS21–JULS51):** 11 aceptadas, 1 rechazada (JULS22, del 07-sep) y 19 sin registro (JULS21 y JULS23–JULS40).
+  - **`config_audit` de `Julsmind_dian`:** un solo cambio de numeración, el 2026-09-07T17:54Z, de `codex:user-authorized` («User requested saving approved JULSMIND production settings»). Pasa de habilitación (`SETP`, `current` 990000032) a producción (`JULS` 21–1000, `current` 22).
+  - JULS22 se rechazó y JULS41 se aceptó ese mismo día. Entre las dos, el consecutivo avanzó 18 números sin ningún documento, solicitud ni cambio auditado.
+  - **Conclusión:** nada en `dian_documents`, `dian_invoice_requests` ni `config_audit` lo explica. El avance no pasó por `saveConfig`, que audita: fueron reservas que no dejaron registro o una edición directa en Firestore. El commit `4a2c54fd` del mismo día no es la causa, porque la verificación del almacenamiento ya iba antes de reservar. FE-03 (candado con dueño y auditoría con `requestId`) es lo que evita que se repita sin rastro.
+  - JULS21 tampoco tiene registro: el rango empieza en 21 y la primera factura fue la 22.
+- **Fase 1 (FE-02), solo lo puro:**
+  - 4.1: «No requiere factura» sí llega al pedido. El POS guarda `generarFacturaElectronica: false` sin `facturacion` (`facturacion-pos.ts`, `camposPedido`), así que no hace falta tocar D-419.
+  - `services/accounting/estadoFacturacion.js` define los seis estados. El `nroFactura` de un POS no cuenta como factura, el candado del compositor toma el estado de su solicitud y el candado se lee con `candadoFactura`. `estadoFacturacion.test.js` pasa 9/9.
+  - 5.0 y 4.3: `capabilities` en los descriptores de D-500 (`reinvoice`, `notes`, `verifyIssued`, `documentLedger`, `requiresBuyerEmail`). La paridad con las estrategias pasa en las 3 (`invoicingCapabilities`).
+  - Falta la lectura de la bandeja (5.1), su pantalla (5.3 a 5.5) y el conteo de costo por empresa (4.5).
+- **Verificado sin datos reales:** `npm run test:invoicing` (9 suites), DIAN 60/60 y 23/23, bandeja, banderas, censo, liberar y refacturar. **Sin commit**, a la espera de confirmación del usuario.
+- **Cierre de la sesión del 20-oct (2):**
+  - **Respuesta del usuario:** commit y push; 5.1 aprobada; «solo sube cambios y desde mi PC publico».
+  - **Subido sin desplegar:** backend `46a9665f`, con la 5.1 y 5.2 aplicadas.
+    - SIIGO factura por `createInvoiceFromOrder`, el camino de «Facturar».
+    - DIAN y WO solo anotan.
+    - Las ventas POS nunca se facturan solas.
+    - Sin las banderas, el bloque de siempre.
+  - **D-499 sin conectar:** candado, reporte, estados, capacidades y banderas.
+  - **Front:** banderas `invoiceIdempotency` e `invoicingTray`, más este contrato.
+  - **Para publicar, desde el PC del usuario:**
+    1. backend (`git pull` en EC2 y `pm2 restart katuq-api`);
+    2. después el front (`npm run release`, con el candado de publicación);
+    3. con todo apagado no cambia nada para los comercios;
+    4. encender `invoicingHub` en FLORECER (`node scripts/set-company-feature.js "FLORECER" invoicingHub on`, simulación y luego `--execute`) y revisar `/integrations/facturacion` a 1440 y 390 px;
+    5. después Julsmind: `node scripts/invoicing/seed-invoicing-choice.js "Julsmind" dian` (simulación) y luego `--execute`.
+  - **Para cerrar FE-01 (#1260):** desplegado, encendido en Julsmind con la vista previa en solo lectura, y comentario técnico en el ticket.
+  - **Fuera de FE-01:**
+    - el asistente DIAN por pasos, FE-01b, propuesto y pendiente de aprobación en pantalla;
+    - el índice de `orders` (0.4);
+    - el cambio privado de permisos del Contador (0.2).

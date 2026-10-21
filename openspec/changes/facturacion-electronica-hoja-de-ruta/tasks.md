@@ -8,9 +8,9 @@
 ## 0. Decisiones y prerrequisitos
 
 - [x] 0.1 D-499 registrada en `specs/CONTRACT.md` (tabla «D-495 a D-503»).
-- [ ] 0.2 Daniel confirma los 18 valores por defecto de `design.md` (el 1 es el desvío de alcance), el diseño y las
+- [x] 0.2 Daniel confirma los 18 valores por defecto de `design.md` (el 1 es el desvío de alcance), el diseño y las
   dos specs. Sin esto no empieza ninguna tarea de código.
-- [ ] 0.3 Registrar en `CONTRACT.md`, coordinado con la sesión de D-500: el desvío de alcance o la partición, y la
+- [x] 0.3 Registrar en `CONTRACT.md`, coordinado con la sesión de D-500: el desvío de alcance o la partición, y la
   división con D-500 (dueño del bloque automático, condiciones (a)-(e), `capabilities`, orden de 2.5 frente a la 2.9 de
   D-500). Éxito: una entrada con fecha; D-500 ajusta su diseño sin que se toque su carpeta desde aquí.
 - [ ] 0.4 Cambio privado del backend con los permisos de `verify-invoice`, `numbering-gaps` e `invoicing-tray`, y la
@@ -22,7 +22,7 @@
 
 ## 1. Fase 0: pruebas primero
 
-- [ ] 1.1 [P] Unitarias de `services/accounting/utils/candadoFactura.js`: cada fila de la tabla 0.2, candado viejo sin
+- [x] 1.1 [P] Unitarias de `services/accounting/utils/candadoFactura.js`: cada fila de la tabla 0.2, candado viejo sin
   `state`, `dianRequestId` del compositor y clasificación de salidas (incluida `duplicate: true` de World Office →
   incierto). Dueño: `sentAt` rechazado si otro tomó el candado; éxito y error con candado ajeno no lo borran; éxito con
   otra factura en el pedido no la pisa. Éxito: rojo por módulo inexistente.
@@ -45,7 +45,7 @@
 
 ## 2. Fase 0: implementación (orden fijo para las SENSIBLE)
 
-- [ ] 2.1 `candadoFactura.js` hasta poner 1.1 en verde. Depende de 1.1.
+- [x] 2.1 `candadoFactura.js` hasta poner 1.1 en verde. Depende de 1.1.
 - [ ] 2.2 **SENSIBLE (pedidos).** `accountingManager.createInvoiceFromOrder`: `options.requestId`, gancho `beforeSend`
   o `sentAt` antes de `strategy.createInvoice`, las tres escrituras con dueño, `expectedTotal`, réplica, `uncertain`
   y `duplicate: true` como incierto. Bandera apagada: solo `*_shadow`. Leer completo `accountingManager.js:1487-2190`.
@@ -63,7 +63,7 @@
   por la fecha de `sentAt` y `expectedTotal`. Depende de 2.2 y 2.4.
 - [ ] 2.7 **SENSIBLE (pedidos).** Ruta, controlador y método del manager de `verify-invoice`, con eventos en
   `accounting_invoice_errors` y `dian_auditoria`. Depende de 2.6 y 0.4. Éxito: 1.3 y 1.5 en verde.
-- [ ] 2.8 [P] Bandera `invoiceIdempotency` en `services/companyFeatureFlags.js` y `company-features.service.ts`, con
+- [x] 2.8 [P] Bandera `invoiceIdempotency` en `services/companyFeatureFlags.js` y `company-features.service.ts`, con
   dueño, fecha de retiro y prueba de catálogo.
 - [ ] 2.9 `reporteConsecutivos.js`, controlador propio, ruta `numbering-gaps` y `scripts/dian-reporte-saltos.js` (solo
   lectura, sin `--execute`). Toca `routers/accounting.js`, así que va después de la 2.7. Depende de 1.4.
@@ -77,7 +77,7 @@
 
 ## 3. Fase 0: verificación y salida
 
-- [ ] 3.1 Con permiso de lectura de Daniel: correr `dian-reporte-saltos.js` para Julsmind y anotar en `CONTRACT.md`
+- [x] 3.1 Con permiso de lectura de Daniel: correr `dian-reporte-saltos.js` para Julsmind y anotar en `CONTRACT.md`
   la causa de JULS23–JULS40, con evidencia, o decir que nada lo explica. Revisar con `git log` las fechas del
   forzado SETP (`444aa4f1`) frente al salto.
 - [ ] 3.2 Desplegar el back y luego el front (candado de publicación). Dos semanas de sombra; contar `uncertain_shadow`
@@ -88,25 +88,25 @@
 
 ## 4. Fase 1: pruebas primero
 
-- [ ] 4.1 [P] Leer cómo marca D-419 la venta «No requiere factura» (`pos-order-creator.service.ts:167`) y si llega al
+- [x] 4.1 [P] Leer cómo marca D-419 la venta «No requiere factura» (`pos-order-creator.service.ts:167`) y si llega al
   pedido. Escribir las pruebas de `estadoFacturacion.js`: seis estados, factura liberada, rechazo DIAN sin
   `reemplazadaPor`, `facturaSiigo` viejo, pedido cancelado y candado del compositor según su `dian_invoice_requests`.
   Si la marca no llega al pedido, se avisa a Daniel antes de 5.1: guardarla es un cambio aparte de D-419.
 - [ ] 4.2 [P] Contract test de `invoicing-tray`: schema, 403 `FEATURE_DISABLED`, empresa del token, documento
   enmascarado, ventana máxima, cursor, tope de lecturas con `countsPartial` y `verify` del compositor.
-- [ ] 4.3 [P] Prueba de paridad: `capabilities.verifyIssued` de cada descriptor coincide con el método de su estrategia.
+- [x] 4.3 [P] Prueba de paridad: `capabilities.verifyIssued` de cada descriptor coincide con el método de su estrategia.
 - [ ] 4.4 Contract test: la bandeja no escribe nada.
 - [ ] 4.5 [P] Con permiso de Daniel, solo lectura: por empresa candidata, contar con agregación `count()` los pedidos de
   30 y 90 días y estimar las lecturas por carga. Éxito: tabla en la bitácora; es la compuerta de 6.2.
 
 ## 5. Fase 1: implementación
 
-- [ ] 5.0 Coordinada con D-500, después de su tarea 2.2: `capabilities` (`reinvoice`, `notes`, `verifyIssued`,
+- [x] 5.0 Coordinada con D-500, después de su tarea 2.2: `capabilities` (`reinvoice`, `notes`, `verifyIssued`,
   `documentLedger`, `requiresBuyerEmail`) en `services/accounting/invoicing/descriptors/*`, sin cambiar `resolve()`.
   Éxito: 4.3 y las pruebas de D-500 en verde.
 - [ ] 5.1 `estadoFacturacion.js`, servicio y controlador propios de la bandeja y ruta de lectura; índices con la receta
   viva. Depende de 4.1, 4.2, 0.4 y 0.6. Éxito: 4.1, 4.2 y 4.4 en verde.
-- [ ] 5.2 [P] Bandera `invoicingTray` en los dos catálogos, con dueño y fecha.
+- [x] 5.2 [P] Bandera `invoicingTray` en los dos catálogos, con dueño y fecha.
 - [ ] 5.3 [P] Front: `InvoicingTrayService extends BaseService` (`getTray`, `verifyInvoice`), con HTTP simulado.
 - [ ] 5.4 Front: componente standalone OnPush `facturacion-electronica/invoicing-tray/` con pestañas por estado,
   acciones por capacidades, envío en serie de hasta 20 que para ante un 429, aviso de conteos parciales, estado vacío,
