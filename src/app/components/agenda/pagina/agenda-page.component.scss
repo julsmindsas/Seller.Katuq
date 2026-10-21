@@ -25,11 +25,11 @@
   height: 34px;
   border: 1px solid $cfg-chip-border;
   border-radius: 11px;
-  background: #fff;
+  background: var(--ds-surface);
   color: $cfg-ink;
   cursor: pointer;
 
-  &:hover { border-color: $cfg-accent; color: $cfg-accent; }
+  &:hover { border-color: $cfg-accent-ink; color: $cfg-accent-ink; }
 }
 
 .ag-fecha {
@@ -98,7 +98,7 @@
   font-size: 11px !important;
   color: $cfg-muted !important;
   letter-spacing: normal;
-  background: #fff;
+  background: var(--ds-surface);
   padding: 0 2px;
 }
 
@@ -216,13 +216,13 @@
   padding: 6px 10px;
   border: 1px dashed $cfg-chip-border;
   border-radius: 11px;
-  background: #fff;
-  color: $cfg-accent !important;
+  background: var(--ds-surface);
+  color: $cfg-accent-ink !important;
   font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
 
-  &:hover { border-color: $cfg-accent; background: $cfg-accent-soft; }
+  &:hover { border-color: $cfg-accent-ink; background: $cfg-accent-soft; }
 }
 
 // ── Lista del día ────────────────────────────────────────────────────────────
@@ -247,7 +247,7 @@
   padding: 10px 12px;
   border: 1px solid $cfg-line-soft;
   border-radius: 11px;
-  background: #fff;
+  background: var(--ds-surface);
   text-align: left;
   cursor: pointer;
 
@@ -288,7 +288,7 @@
   padding: 8px;
   border: 1px solid $cfg-line-soft;
   border-radius: 11px;
-  background: #fff;
+  background: var(--ds-surface);
 
   &.ag-dia-sem--hoy { border-color: #ddd3fb; background: $cfg-tint; }
 }
