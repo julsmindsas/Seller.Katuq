@@ -32,7 +32,7 @@
   height: 40px;
   border-radius: 11px;
   background: $cfg-accent-soft;
-  color: $cfg-accent;
+  color: $cfg-accent-ink;
   font-size: 16px;
 }
 
@@ -75,7 +75,7 @@
 
 .enc-dato__valor {
   margin: 0;
-  color: $cfg-accent;
+  color: $cfg-accent-ink;
   font-size: 19px;
   font-weight: 800;
 }
@@ -119,16 +119,16 @@
   gap: 5px;
   min-height: 32px;
   padding: 0 10px;
-  border: 1px solid #e4e2ef;
+  border: 1px solid var(--ds-line-strong);
   border-radius: 9px;
-  background: #fff;
+  background: var(--ds-surface);
   color: $cfg-body;
   font-family: inherit;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 
-  &:hover { color: $cfg-accent; border-color: #d9cffb; }
+  &:hover { color: $cfg-accent-ink; border-color: #d9cffb; }
 }
 
 .enc-acciones {

@@ -33,11 +33,11 @@
 
   .pi { font-size: 13px; }
 
-  &:hover { color: $cfg-accent; }
+  &:hover { color: $cfg-accent-ink; }
 
   &.is-activa {
-    background: #fff;
-    color: $cfg-accent;
+    background: var(--ds-surface);
+    color: $cfg-accent-ink;
     box-shadow: 0 1px 3px rgba(30, 20, 80, .08);
   }
 }
