@@ -118,8 +118,8 @@
                 "inject": false
               },
               {
-                "input": "src/assets/scss/theme-md-dark-deeppurple.scss",
-                "bundleName": "md-dark-deeppurple",
+                "input": "src/assets/scss/theme-katuq-dark.scss",
+                "bundleName": "katuq-dark",
                 "inject": false
               }
             ],

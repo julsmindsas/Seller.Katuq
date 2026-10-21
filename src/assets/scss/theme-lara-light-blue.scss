@@ -16,40 +16,5 @@
     background-color: #00a5d2 !important
   }
 
-.p-datatable .p-sortable-column.p-highlight {
-    background: var(--secondary-light-color);
-    color: var(--secondary-color);
-}
-
-/* Overrides adicionales específicos para Katuq */
-.p-component {
-    font-size: 0.7rem !important;
-}
-
-.p-inputtext,
-.p-dropdown,
-.p-multiselect,
-.p-calendar,
-.p-button {
-    font-size: 0.7rem !important;
-}
-
-.p-datatable .p-datatable-thead > tr > th,
-.p-datatable .p-datatable-tbody > tr > td {
-    font-size: 0.7rem !important;
-    padding: 0.5rem !important;
-}
-
-.p-paginator {
-    font-size: 0.7rem !important;
-}
-
-.p-dialog .p-dialog-title {
-    font-size: 0.8rem !important;
-}
-
-.p-dialog .p-dialog-content,
-.p-dialog .p-dialog-footer {
-    font-size: 0.7rem !important;
-}
-
+// Tamaños comunes a los dos temas (D-502 F1): misma posición en theme-katuq-dark.scss
+@import "./primeng-katuq-base";

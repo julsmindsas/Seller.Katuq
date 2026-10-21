@@ -7,7 +7,7 @@ import { NgpThemeService } from './ngtheme.service';
 
 // D-502 (ticket 1180): los bundles de PrimeNG por tema se nombran solo aquí.
 const BUNDLE_CLARO = 'lara-light-blue';
-const BUNDLE_OSCURO = 'md-dark-deeppurple';
+const BUNDLE_OSCURO = 'katuq-dark';
 const CLASE_OSCURO = 'dark-only';
 const MAX_REDIRECCIONES = 3;
 

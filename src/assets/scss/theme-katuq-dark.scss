@@ -1,0 +1,31 @@
+// D-502 F1 (ticket 1180, tarea 3.7): tema oscuro de PrimeNG, bundle `katuq-dark` (angular.json).
+// Reemplaza a theme-md-dark-deeppurple.scss. Lo carga ThemeModeService solo en oscuro.
+// Diseño: openspec/changes/modo-oscuro-seller/design-f1.md §4. Prueba: tests/theme/primeng-dark.test.js.
+//
+// Orden: lara-dark-purple (misma familia que el claro, lara-light-blue) → primeng-overrides →
+// .backColorSwitch / .bg-swayp → _primeng-katuq-base → _primeng-dark. Las tres primeras piezas y el
+// parcial de tamaños van en la MISMA posición que en theme-lara-light-blue.scss: _primeng-katuq-base
+// tiene reglas con la misma especificidad que primeng-overrides (por ejemplo .p-component a 0.7rem
+// frente a [class*="p-"] con var(--p-font-size), que en celular vale 0.65rem), así que ponerlo antes
+// cambiaría los tamaños al alternar. _primeng-dark va de último y solo cambia colores.
+@import "primeng/resources/themes/lara-dark-purple/theme.css";
+
+/* Import PrimeNG overrides para reducir tamaños de fuente */
+@import "./primeng-overrides.scss";
+
+// Valores del oscuro anterior (theme-md-dark-deeppurple.scss), sin cambios.
+.backColorSwitch {
+    background-image: url("../images/dashboard/bg-fondo-swy.png") !important;
+    color: orange;
+    background-size: cover !important;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #471f5d !important;
+}
+
+.bg-swayp {
+    background-color: #1f465d !important;
+}
+
+@import "./primeng-katuq-base";
+@import "./primeng-dark";
