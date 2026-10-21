@@ -507,9 +507,163 @@ $fu-info-soft: #E7F1FF;
   &.fu-btn--bloque { width: 100%; }
 }
 
+// ── TX-37 · 7.11: paso de categoría, conteo del servidor y avance de la serie ──
+
+.fu-ayuda {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: $fu-muted;
+  letter-spacing: normal;
+}
+
+.fu-categorias {
+  .fu-label { display: block; margin-bottom: 6px; }
+}
+
+.fu-buscar {
+  width: 100%;
+  min-height: 40px;
+  margin-bottom: 6px;
+  padding: 8px 12px;
+  border-radius: 11px;
+  border: 1px solid $fu-sec-border;
+  background: #fff;
+  color: $fu-ink;
+  font-size: 13px;
+
+  &::placeholder { color: $fu-muted; }
+}
+
+.fu-rutas {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: 320px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid $fu-line;
+  border-radius: 11px;
+}
+
+.fu-ruta-item + .fu-ruta-item { border-top: 1px solid $fu-line-soft; }
+
+.fu-ruta {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: $fu-ink;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+
+  i { color: $fu-accent; }
+
+  .fu-ruta-texto { color: $fu-ink; font-size: 13px; font-weight: 600; }
+
+  &:hover { background: $fu-surface; }
+
+  &.fu-ruta--nivel2 { padding-left: 28px; }
+  &.fu-ruta--nivel3 { padding-left: 44px; }
+  &.fu-ruta--nivel2 .fu-ruta-texto,
+  &.fu-ruta--nivel3 .fu-ruta-texto { font-weight: 500; color: $fu-sec-text; }
+
+  // Ruta repetida en el árbol: el servidor la rechaza, así que no se puede elegir (dice por qué).
+  .fu-ruta-nota { color: $fu-alerta; font-size: 12px; font-weight: 500; flex-basis: 100%; }
+
+  &:disabled { cursor: not-allowed; }
+  &:disabled:hover { background: transparent; }
+  &:disabled i,
+  &:disabled .fu-ruta-texto { color: $fu-muted; }
+}
+
+.fu-avisos-resumen {
+  margin-top: 12px;
+
+  .fu-lista-item { align-items: center; }
+  .fu-ayuda { margin-top: 6px; }
+}
+
+.fu-elegida {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid $fu-line;
+  border-radius: 11px;
+
+  .fu-elegida-texto { color: $fu-ink; font-size: 13px; font-weight: 700; }
+}
+
+.fu-conteo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: $fu-accent-soft;
+  border-radius: 11px;
+  color: $fu-accent;
+
+  .fu-conteo-texto { color: $fu-accent; font-size: 13px; font-weight: 700; }
+}
+
+.fu-serie-texto {
+  font-size: 13px;
+  font-weight: 700;
+  color: $fu-accent;
+}
+
+.fu-partes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.fu-parte {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: $fu-chip-bg;
+  border: 1px solid $fu-chip-border;
+  color: $fu-sec-text;
+
+  .fu-parte-num { color: inherit; font-size: 11px; font-weight: 800; }
+  .fu-parte-estado { color: inherit; font-size: 11px; font-weight: 600; }
+
+  &.fu-parte--done { background: $fu-ok-soft; border-color: $fu-ok-soft; color: $fu-ok; }
+  &.fu-parte--running,
+  &.fu-parte--queued { background: $fu-accent-soft; border-color: $fu-accent-soft; color: $fu-accent; }
+  &.fu-parte--cancelled,
+  &.fu-parte--stopped { background: $fu-alerta-soft; border-color: $fu-alerta-soft; color: $fu-alerta; }
+  &.fu-parte--failed { background: $fu-error-soft; border-color: $fu-error-soft; color: $fu-error; }
+}
+
+.fu-btn.fu-btn--chico {
+  min-height: 32px;
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
 .fu-btn,
 .fu-opcion,
 .fu-cerrar,
+.fu-ruta,
+.fu-buscar,
 .fu-omitidas-titulo {
   &:focus-visible {
     outline: 3px solid $fu-accent-2 !important;
@@ -532,6 +686,8 @@ $fu-info-soft: #E7F1FF;
   .fu-pie { padding-left: 16px; padding-right: 16px; }
 
   .fu-cifras { grid-template-columns: 1fr; }
+
+  .fu-rutas { max-height: none; }
 
   .fu-pie .fu-btn { flex: 1 1 auto; }
 }
