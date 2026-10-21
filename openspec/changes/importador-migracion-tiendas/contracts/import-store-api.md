@@ -68,13 +68,14 @@ Ante `IMPORT_IN_PROGRESS`, el front espera y reenvía el mismo lote. Si ese lote
 { "success": true, "migrationId": "…", "lot": 3, "replayed": false,
   "products": [{ "key": "camiseta-basica", "row": 2, "action": "created", "cd": "…", "referencia": "CAM-01" },
                { "key": "gorra", "row": 9, "action": "skipped", "reason": "ALREADY_MIGRATED", "cd": "…" }],
-  "inventory": { "warehouse": "BOD-001", "loaded": 22, "notLoaded": 3, "failed": [{ "key": "…", "code": "INVENTORY_FAILED" }] },
+  "inventory": { "warehouse": "BOD-001", "loaded": 22, "notLoaded": 3, "failed": [{ "key": "…", "referencia": "CAM-01", "code": "INVENTORY_FAILED" }] },
   "photos": { "valid": 61, "rejected": 2, "overLimit": 4 }, "categories": { "created": ["Camisetas"] },
   "issues": [{ "row": 14, "key": "…", "code": "PHOTO_REJECTED", "message": "…" }], "durationMs": 9100 }
 ```
 
 - **`action`:** `created`, `updated` o `skipped`.
 - **`reason`:** `EXISTS`, `ALREADY_MIGRATED` (devuelve `cd`), `AMBIGUOUS_REFERENCE`, `TOO_MANY_AXES`, `ARCHIVED`, `GIFT_CARD`, `DUPLICATED_IN_FILE` o `INVALID`.
+- **`inventory`:** solo cuenta los productos creados (o, en `upsert`, los existentes con `replaceExistingStock`). `notLoaded` = sin control de existencias (`NOT_TRACKED`) o sin unidades. Un conteo fallido no tumba el lote: el producto queda creado y sale `INVENTORY_FAILED` (también en `issues`); sus existencias se cargan con el importador de existencias.
 - **Producto separado por precio:** lleva `splitFrom` con la clave original.
 - **`replayed: true`:** el lote ya había terminado y se devuelve el resultado guardado.
 
