@@ -22,3 +22,11 @@
 - [x] 3.3 `ng build --configuration production` sin errores.
 - [ ] 3.4 Revisar cada pantalla en el navegador a 1440 y 390 px con sesión de comercio (pendiente: esta sesión no tiene una).
 - [x] 3.5 Registrar el cierre en CONTRACT.md.
+
+## 4. Residuos de D-516 (D-518)
+
+- [x] 4.1 Colores en `.ts`, bindings y estilos en línea: acentos índigo/azules → `#5F3FE0`; azules de estado o categoría → Info `#1E6FD9` (`#E7F1FF`). Se dejan: paletas que elige el usuario y se guardan (zonas), el color por defecto del video agente y los módulos de 2 (venta asistida, Tabla de pedidos, POS, Producción).
+- [x] 4.2 Gradientes decorativos → planos: línea de tiempo de Envíame (pares semánticos), medidor de fuerza de credenciales, mapa de rutas y confirmación de IA, insignia del menú y botón de voz.
+- [x] 4.3 `::ng-deep` sin `:host` que se filtraba a toda la app: traslados, recepción, clientes, listado de clientes y el modal de crear cliente.
+- [x] 4.4 `ng build --configuration production` sin errores.
+- [ ] 4.5 Revisar en el navegador a 1440 y 390 px (sin navegador en esta sesión).

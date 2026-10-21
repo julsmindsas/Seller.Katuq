@@ -316,7 +316,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     const map: Record<string, string> = {
       violet: '#5b21b6',
       green:  '#15803d',
-      blue:   '#1d4ed8',
+      blue:   '#1E6FD9',
       amber:  '#b45309',
       red:    '#b91c1c',
       gray:   '#5a5470',

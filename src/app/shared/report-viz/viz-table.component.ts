@@ -298,7 +298,7 @@ interface FilterOption {
         outline: none;
       }
       .col-filter:focus {
-        border-color: #2563eb;
+        border-color: #5F3FE0;
       }
       .filter-range {
         display: grid;

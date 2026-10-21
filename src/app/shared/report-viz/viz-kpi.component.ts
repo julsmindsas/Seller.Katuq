@@ -21,9 +21,8 @@ import { ReportColumn, ReportResult } from '../../components/dashboard/model/rep
       }
       .kpi-card {
         background: #fff;
-        border: 1px solid #e5e7eb;
-        border-left: 4px solid #2563eb;
-        border-radius: 10px;
+        border: 1px solid #ececf4;
+        border-radius: 16px;
         padding: 20px;
         display: flex;
         flex-direction: column;

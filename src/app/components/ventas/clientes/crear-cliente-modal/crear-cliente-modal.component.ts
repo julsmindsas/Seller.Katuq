@@ -533,7 +533,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
 
   getTagTextColor(tag: ClientTag): string {
     const map: Record<string, string> = {
-      violet: '#5b21b6', green: '#15803d', blue: '#1d4ed8',
+      violet: '#5b21b6', green: '#15803d', blue: '#1E6FD9',
       amber: '#b45309', red: '#b91c1c', gray: '#5a5470',
     };
     return map[tag.color] || '#5a5470';

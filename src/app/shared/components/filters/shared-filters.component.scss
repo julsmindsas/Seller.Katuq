@@ -7,10 +7,10 @@
 // ===========================================
 // COLOR PALETTE - Tailwind-inspired consistency
 // ===========================================
-$color-primary: #5F3FE0;        // blue-600 (single primary blue)
-$color-primary-hover: #1d4ed8;  // blue-700
-$color-primary-light: #dbeafe;  // blue-100
-$color-primary-50: #eff6ff;     // blue-50
+$color-primary: #5F3FE0;        // acento Katuq (D-131)
+$color-primary-hover: #4a2fc0;  // hover del acento
+$color-primary-light: #efe9ff;  // fondo suave del acento
+$color-primary-50: #faf9fe;     // superficie lila
 
 $color-success: #10b981;        // emerald-500
 $color-success-hover: #059669;  // emerald-600
@@ -767,7 +767,7 @@ $transition-slow: 300ms ease;
             &.status-in-progress { background: #8b5cf6; }
             &.status-produced { background: #14b8a6; }
             &.status-packed { background: #a855f7; }
-            &.status-shipped { background: #6366f1; }
+            &.status-shipped { background: #1E6FD9; }
             &.status-delivered { background: $color-success; }
           }
 
@@ -848,7 +848,7 @@ $transition-slow: 300ms ease;
     &.status-in-progress { background: #8b5cf6; }
     &.status-produced { background: #14b8a6; }
     &.status-packed { background: #a855f7; }
-    &.status-shipped { background: #6366f1; }
+    &.status-shipped { background: #1E6FD9; }
     &.status-delivered { background: $color-success; }
   }
 }

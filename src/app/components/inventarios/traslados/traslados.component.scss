@@ -384,7 +384,7 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
 }
 
 // Estilos para ng-select
-::ng-deep {
+:host ::ng-deep {
   .ng-select {
     .ng-select-container {
       border: 2px solid $medium-gray !important;
@@ -525,7 +525,7 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
 }
 
 // PrimeNG Dropdown personalizado
-::ng-deep {
+:host ::ng-deep {
   .p-dropdown {
     border: 2px solid $medium-gray !important;
     border-radius: $border-radius !important;

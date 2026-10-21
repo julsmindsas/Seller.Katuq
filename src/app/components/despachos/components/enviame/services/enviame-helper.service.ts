@@ -336,7 +336,7 @@ export class EnviameHelperService {
    */
   getTimelineColors(status: string): { background: string; border: string; text: string } {
     const colors = {
-      'created': { background: '#e3f2fd', border: '#2196f3', text: '#1976d2' },
+      'created': { background: '#E7F1FF', border: '#1E6FD9', text: '#1E6FD9' },
       'in_transit': { background: '#fff3e0', border: '#ff9800', text: '#f57c00' },
       'out_for_delivery': { background: '#f3e5f5', border: '#9c27b0', text: '#7b1fa2' },
       'delivered': { background: '#e8f5e8', border: '#4caf50', text: '#388e3c' },

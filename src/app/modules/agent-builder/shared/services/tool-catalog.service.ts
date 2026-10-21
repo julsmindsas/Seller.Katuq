@@ -241,7 +241,7 @@ export class ToolCatalogService extends BaseService {
       inventory: '#43e97b',
       collaboration: '#4caf50'
     };
-    return colors[department] || '#667eea';
+    return colors[department] || '#5F3FE0';
   }
 
   /**

@@ -32,7 +32,7 @@ import { KatuqMetricProps, BoundValue, resolveBoundValue } from '../models/agui-
       padding: 1rem;
       background: white;
       border-radius: 0.5rem;
-      border-left: 4px solid #6366f1;
+      border: 1px solid #ececf4;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
@@ -113,7 +113,7 @@ export class KatuqMetricComponent {
   }
 
   get color(): string {
-    return this.resolve(this.props?.color) || '#6366f1';
+    return this.resolve(this.props?.color) || '#5F3FE0';
   }
 
   get trendClass(): string {

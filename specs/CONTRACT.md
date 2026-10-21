@@ -11527,3 +11527,51 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
 - Tocar el título de la sección la sigue abriendo en el menú (1232).
 
 **Validación.** `ng build --configuration production` sin errores, compilado aparte sin subir la versión. Ningún gradiente ni primario prohibido. Falta revisarlo en pantalla a 1440 y 390 px.
+
+## D-518 (2026-10-21) — Residuos de D-516: colores en código, gradientes decorativos y `::ng-deep` que se filtraba (openspec/changes/modernizar-pantallas-restantes, sección 4) — COMMITEADO, sin desplegar
+
+**Disparador.** En la sesión (cuenta adminapps de Julsmind) se revisó lo hecho en D-516 y el usuario pidió seguir con sus pendientes.
+
+**Decisión.** Solo presentación, en 51 archivos de código. No cambian eventos, servicios, datos ni textos.
+- **Colores.** Se aplica una regla para los colores escritos en `.ts`, bindings, estilos en línea y SCSS que quedaban:
+  - los acentos índigo o azules (`#6366f1`, `#667eea`, `#7366ff`, `#2563eb`, `#3b82f6`, `#7c3aed`) pasan al acento `#5F3FE0`, y su hover a `#4a2fc0`;
+  - los azules de estado o de categoría pasan al par Info del canon (`#1E6FD9` / `#E7F1FF`). Son: «en curso» de flows, «creado» de Envíame, etapas del CRM, segmento «Fiel», avatares, departamentos y herramientas de IA, «enviado» de filtros y la nota informativa de la cotización pública.
+  - Los más visibles: la barra de carga global (`app.component.html`), el menú de cuenta del encabezado, los filtros compartidos, el chip de uso de KAI, los KPI y la tabla de reportes, el diálogo «Reporte publicado» y los renderers de IA (mapa de rutas, confirmación, votación, métrica, tabla, alerta de stock, gráfico).
+  - `border-left` de acento → borde de 1 px en el KPI de reportes, la métrica de IA y las tarjetas de ruta.
+- **Gradientes decorativos → planos:**
+  - la línea de tiempo de Envíame, con un color semántico del canon por estado;
+  - el medidor de fuerza de credenciales;
+  - la cabecera del mapa de rutas y la barra de la confirmación de IA;
+  - la insignia del menú lateral y el botón de voz.
+- **`::ng-deep` sin `:host`.** Se aplicaba a toda la app después de abrir la pantalla:
+  - Traslados: `ng-select` y `p-dropdown`. Su plantilla no tiene ninguno, así que solo afectaba a otras pantallas.
+  - Recepción: `p-dropdown`, `p-autocomplete`, `p-button` y `p-confirm-dialog`.
+  - Clientes: todos los `p-inputtext`, `.modal-footer` de cualquier modal y `.search-section`.
+  - Listado de clientes: todas las `p-datatable`, `p-checkbox` y `p-paginator`.
+  - Modal de crear cliente: `p-inputtext`, `p-dropdown`, `p-calendar` y `p-button`.
+  - Arreglo: quedan con `:host ::ng-deep`. Lo que vive en la plantilla del componente (modal de resultados, menú de columnas, botón de etiquetas) pasa a un selector normal, que se sigue aplicando aunque el modal se pinte en `body`.
+
+**Se dejan a propósito.**
+- Los colores de zona que elige el usuario y se guardan (`zona-gestion-modal`).
+- El `primaryColor` por defecto del video agente, que es configuración de la empresa.
+- Los módulos que D-516 dejó para ir diff por diff: venta asistida/crear-ventas, la Tabla de Todos los pedidos, POS y Producción.
+- `katuq-flow`, los correos de `payment.service.ts`, el orbe animado de Live Audio y la esfera de Gemini (candidatos a retirar).
+- Los fades sobre imágenes y los skeletons.
+- `conic-gradient` de soporte: es el anillo de avance, un medidor y no decoración.
+- `::ng-deep .modal` del modal de crear cliente: pone `max-width: 860px` a todos los modales de NgbModal después de abrirlo. Arreglarlo pide `modalDialogClass` en quien lo abre, que es un cambio de `.ts` aparte.
+
+**Efecto a vigilar.** Los paneles flotantes de Recepción (`appendTo="body"`) ya no reciben el estilo filtrado y usan el global: `lara-light-blue` más `primeng-overrides.scss`. Por eso la opción resaltada de un desplegable puede verse azul. Lo mismo pasa en cualquier pantalla que antes «heredaba» la fuga. Se corrige en la reconciliación de tokens (`$katuq-primary` `#8b5cf6` → `#5F3FE0`, con el resaltado de paneles en el override global), que sigue pidiendo su propia propuesta.
+
+**Medición en `src/app` sin katuq-flow (HEAD → después; incluye los módulos excluidos).**
+
+| Qué | Antes | Después |
+|---|---|---|
+| Azules sueltos (`#3b82f6`, `#1d4ed8`, `#6366f1`, `#1976d2`, `#7366ff`, `rgba(102,126,234)`) | 110 | 30 |
+| Primarios prohibidos (`#2196f3`, `#4361ee`, `#2563eb`, `#5c6ac4`, `#667eea`) | 23 | 10 |
+| `linear/radial-gradient(` | 65 | 48 |
+
+**Validación.**
+- `ng build --configuration production` sin errores. Se compiló aparte, sin subir la versión.
+- Los reemplazos de color se hicieron con un script que exige el número exacto de apariciones por archivo.
+
+**Pendiente.** Revisar en el navegador a 1440 y 390 px con sesión de comercio. Este equipo no tiene Chromium ni Playwright.

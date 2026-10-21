@@ -709,7 +709,7 @@ $border-radius: 11px;
 // ==============================================
 // PRIMENG DATATABLE CUSTOMIZATION
 // ==============================================
-::ng-deep {
+:host ::ng-deep {
   .p-datatable {
     font-family: $clientes-font-primary;
     font-size: $clientes-font-size-base;
@@ -1281,7 +1281,7 @@ $border-radius: 11px;
 // ==============================================
 // CHECKBOXES FOR DATATABLE
 // ==============================================
-::ng-deep {
+:host ::ng-deep {
   // PrimeNG Checkbox Customization
   .p-checkbox {
     .p-checkbox-box {
@@ -1390,7 +1390,7 @@ $border-radius: 11px;
 // RESPONSIVE ADJUSTMENTS
 // ==============================================
 @include clientes-responsive('tablet') {
-  ::ng-deep {
+  :host ::ng-deep {
     .p-datatable {
       .p-datatable-thead > tr > th {
         padding: $clientes-spacing-sm;
@@ -1425,7 +1425,7 @@ $border-radius: 11px;
 }
 
 @include clientes-responsive('mobile') {
-  ::ng-deep {
+  :host ::ng-deep {
     .p-datatable {
       font-size: $clientes-font-size-small;
 
@@ -1555,7 +1555,7 @@ $border-radius: 11px;
 // ===================================
 // BOTÓN GESTIONAR ETIQUETAS (header)
 // ===================================
-::ng-deep .btn-tags-cfg.p-button.p-button-outlined {
+.btn-tags-cfg.p-button.p-button-outlined {
     color: #5F3FE0 !important;
     border-color: #5F3FE0 !important;
     background: transparent !important;

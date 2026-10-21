@@ -189,7 +189,7 @@ export class FlowRunsComponent implements OnInit, OnDestroy {
       case 'failed':
         return '#ef4444';
       case 'running':
-        return '#3b82f6';
+        return '#1E6FD9';
       case 'partial':
         return '#f59e0b';
       case 'cancelled':

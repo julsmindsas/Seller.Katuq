@@ -122,7 +122,7 @@ interface StockAlertProduct {
 
     .alert-action {
       padding: 0.5rem 1rem;
-      background: #6366f1;
+      background: #5F3FE0;
       color: white;
       border: none;
       border-radius: 0.375rem;

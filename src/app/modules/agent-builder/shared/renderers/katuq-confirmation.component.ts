@@ -65,7 +65,7 @@ interface ConfirmationAction {
       border-radius: 0.5rem;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       overflow: hidden;
-      border: 2px solid #6366f1;
+      border: 2px solid #5F3FE0;
     }
 
     .katuq-confirmation.expired {
@@ -86,7 +86,7 @@ interface ConfirmationAction {
       width: 2.5rem;
       height: 2.5rem;
       border-radius: 50%;
-      background: #6366f1;
+      background: #5F3FE0;
       color: white;
       display: flex;
       align-items: center;
@@ -134,7 +134,7 @@ interface ConfirmationAction {
 
     .timer-progress {
       height: 100%;
-      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      background: #5F3FE0;
       transition: width 1s linear;
     }
 
@@ -164,7 +164,7 @@ interface ConfirmationAction {
     }
 
     .btn-primary {
-      background: #6366f1;
+      background: #5F3FE0;
       color: white;
     }
 

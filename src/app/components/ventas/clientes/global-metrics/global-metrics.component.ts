@@ -104,7 +104,7 @@ export class GlobalMetricsComponent implements OnInit, OnDestroy {
   rfmColor(segmento: string): string {
     const map: Record<string, string> = {
       'Campeón': '#16a34a',
-      'Fiel': '#2563eb',
+      'Fiel': '#1E6FD9',
       'En riesgo': '#d97706',
       'Hibernando': '#6b7280',
       'Perdido': '#dc2626',

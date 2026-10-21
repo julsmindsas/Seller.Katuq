@@ -195,7 +195,7 @@ export class ArtifactRendererComponent implements OnInit, OnChanges, AfterViewIn
                         color: '#fff',
                         fontWeight: 'bold'
                     } : undefined,
-                    icon: this.getMarkerIcon(marker.color || '#3b82f6', index)
+                    icon: this.getMarkerIcon(marker.color || '#5F3FE0', index)
                 });
 
                 if (marker.info) {
@@ -216,7 +216,7 @@ export class ArtifactRendererComponent implements OnInit, OnChanges, AfterViewIn
                     new google.maps.Polyline({
                         path: route.points,
                         geodesic: true,
-                        strokeColor: route.color || '#3b82f6',
+                        strokeColor: route.color || '#5F3FE0',
                         strokeOpacity: 0.8,
                         strokeWeight: 4,
                         map: this.map
@@ -364,7 +364,7 @@ export class ArtifactRendererComponent implements OnInit, OnChanges, AfterViewIn
                     new google.maps.Polyline({
                         path: path,
                         geodesic: true,
-                        strokeColor: polylineData.color || '#3b82f6',
+                        strokeColor: polylineData.color || '#5F3FE0',
                         strokeOpacity: 0.9,
                         strokeWeight: 5,
                         map: this.map
@@ -384,7 +384,7 @@ export class ArtifactRendererComponent implements OnInit, OnChanges, AfterViewIn
             new google.maps.Polyline({
                 path: path,
                 geodesic: true,
-                strokeColor: '#3b82f6',
+                strokeColor: '#5F3FE0',
                 strokeOpacity: 0.8,
                 strokeWeight: 4,
                 icons: [{
@@ -413,7 +413,7 @@ export class ArtifactRendererComponent implements OnInit, OnChanges, AfterViewIn
 
         const data = this.dispatchMapArtifact.data;
         container.innerHTML = `
-            <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 24px; border-radius: 12px; text-align: center;">
+            <div style="background: #5F3FE0; color: white; padding: 24px; border-radius: 16px; text-align: center;">
                 <div style="font-size: 48px; margin-bottom: 12px;">🗺️</div>
                 <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">Mapa de Rutas</div>
                 <div style="font-size: 14px; opacity: 0.9;">
@@ -440,7 +440,7 @@ export class ArtifactRendererComponent implements OnInit, OnChanges, AfterViewIn
             case 'high': return '#ef4444';
             case 'medium': return '#f59e0b';
             case 'low': return '#10b981';
-            default: return '#3b82f6';
+            default: return '#5F3FE0';
         }
     }
 
@@ -608,7 +608,7 @@ export class ArtifactRendererComponent implements OnInit, OnChanges, AfterViewIn
             const y = height - 30 - barHeight;
 
             const colors = dataset.backgroundColor;
-            ctx.fillStyle = Array.isArray(colors) ? colors[i % colors.length] : colors || '#3b82f6';
+            ctx.fillStyle = Array.isArray(colors) ? colors[i % colors.length] : colors || '#5F3FE0';
             ctx.fillRect(x, y, barWidth, barHeight);
 
             // Label
@@ -623,7 +623,7 @@ export class ArtifactRendererComponent implements OnInit, OnChanges, AfterViewIn
         const dataset = data.datasets[0];
         const values = dataset.data;
         const total = values.reduce((a: number, b: number) => a + b, 0);
-        const colors = dataset.backgroundColor || ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+        const colors = dataset.backgroundColor || ['#10b981', '#5F3FE0', '#f59e0b', '#ef4444', '#8b5cf6'];
 
         const centerX = width / 2;
         const centerY = height / 2;

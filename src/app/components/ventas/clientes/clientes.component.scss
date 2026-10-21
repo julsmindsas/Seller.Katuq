@@ -722,7 +722,7 @@ input[type="checkbox"] {
 // ==============================================
 // BUSCADOR CLIENTE - ALTURA AUMENTADA
 // ==============================================
-::ng-deep .search-section {
+.search-section ::ng-deep {
   .search-input-tall,
   .search-input-tall.p-inputtext,
   .search-input-tall.p-button {
@@ -743,7 +743,7 @@ input[type="checkbox"] {
 // ==============================================
 // MODAL NOTA - BOTONES CON HOVER TEMA LILA
 // ==============================================
-::ng-deep .modal-footer {
+.modal-footer {
   .btn-primary {
     background-color: var(--primary-dark-color);
     border-color: var(--primary-dark-color);
@@ -777,7 +777,7 @@ input[type="checkbox"] {
   }
 }
 
-::ng-deep {
+:host ::ng-deep {
   .p-inputtext,
   .p-inputtext-sm {
     border: 1px solid #ececf4 !important;
@@ -1172,7 +1172,7 @@ input[type="checkbox"] {
   font-weight: 600;
 }
 
-::ng-deep .col-toggle-menu {
+.col-toggle-menu {
   min-width: 200px;
   padding: 0.5rem 0;
   border: 1px solid #efe9ff;
@@ -1208,7 +1208,7 @@ input[type="checkbox"] {
 // ==============================================
 // BOTÓN GESTIONAR ETIQUETAS (header)
 // ==============================================
-::ng-deep .btn-tags-cfg.p-button.p-button-outlined {
+.btn-tags-cfg.p-button.p-button-outlined {
   color: #5F3FE0 !important;
   border-color: #5F3FE0 !important;
   background: transparent !important;

@@ -1288,13 +1288,13 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
           <input id="pub-url" readonly value="${url}"
             style="flex:1;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;background:#f9fafb;color:#111827;" />
           <button id="copy-btn" type="button"
-            style="padding:8px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap;">
+            style="padding:8px 14px;background:#5F3FE0;color:#fff;border:none;border-radius:11px;font-size:13px;cursor:pointer;white-space:nowrap;">
             Copiar
           </button>
         </div>
         <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;">
           <a href="${url}" target="_blank"
-            style="font-size:12px;color:#2563eb;text-decoration:none;">
+            style="font-size:12px;color:#5F3FE0;text-decoration:none;">
             <i class="fa fa-external-link-alt"></i> Abrir enlace
           </a>
           <span style="color:#d1d5db;">·</span>

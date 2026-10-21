@@ -29,7 +29,7 @@ export class StepReviewComponent {
   }
 
   getDepartmentColor(): string {
-    if (!this.agentConfig.department) return '#667eea';
+    if (!this.agentConfig.department) return '#5F3FE0';
     return this.toolCatalogService.getDepartmentColor(this.agentConfig.department);
   }
 

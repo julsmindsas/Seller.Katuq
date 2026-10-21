@@ -71,7 +71,7 @@
       <ng-template pTemplate="body" let-event>
         <tr [pSelectableRow]="event" class="cursor-pointer">
           <td>
-            <i [class]="getTypeIcon(event.type)" [style.color]="event.status === 'error' ? '#EF4444' : '#6366F1'"></i>
+            <i [class]="getTypeIcon(event.type)" [style.color]="event.status === 'error' ? '#EF4444' : '#5F3FE0'"></i>
           </td>
           <td>
             <span class="fw-medium celda-texto">{{ getTypeLabel(event.type) }}</span>
