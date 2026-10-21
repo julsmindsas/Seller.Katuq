@@ -1,24 +1,24 @@
 <div class="ai-panel">
   <header>
-    <h3>Asistente IA</h3>
-    <small>Describe lo que querés automatizar</small>
+    <h3>{{ 'flows.flowAiAssist.asistenteIa' | translate }}</h3>
+    <small>{{ 'flows.flowAiAssist.describeLoQueQueresAutomatizar' | translate }}</small>
   </header>
 
   <textarea
     [(ngModel)]="prompt"
-    placeholder="Ej: cuando un pedido Shopify se cree, replicarlo a Cereza y crear factura SIIGO"
+    [placeholder]="'flows.flowAiAssist.ejCuandoUnPedidoShopify' | translate"
     rows="4"
     class="prompt-input">
   </textarea>
 
   <div class="actions">
     <button class="btn-primary" (click)="generate()" [disabled]="loading || !prompt">
-      {{ loading ? 'Generando...' : 'Generar flow' }}
+      {{ loading ? ('flows.flowAiAssist.generando' | translate) : ('flows.flowAiAssist.generarFlow' | translate) }}
     </button>
   </div>
 
   <section class="examples" *ngIf="!result">
-    <p class="hint">Ejemplos:</p>
+    <p class="hint">{{ 'flows.flowAiAssist.ejemplos' | translate }}</p>
     <ul>
       <li *ngFor="let ex of examples">
         <button class="example-link" (click)="useExample(ex)">{{ ex }}</button>
@@ -33,19 +33,19 @@
       <span class="badge" [class.kai]="result.source === 'kai'" [class.fallback]="result.source === 'fallback'">
         {{ result.source }}
       </span>
-      <span class="confidence">Confianza: {{ result.confidence }}</span>
+      <span class="confidence">{{ 'flows.flowAiAssist.confianza' | translate:{confidence: result.confidence} }}</span>
     </header>
     <h4>{{ result.flow.name }}</h4>
     <p>{{ result.flow.description }}</p>
     <div class="flow-preview">
-      <span class="node-count">{{ result.flow.graph?.nodes?.length || 0 }} nodos</span>
-      <span class="edge-count">{{ result.flow.graph?.edges?.length || 0 }} edges</span>
+      <span class="node-count">{{ result.flow.graph?.nodes?.length || 0 }} {{ 'flows.flowAiAssist.nodos' | translate }}</span>
+      <span class="edge-count">{{ result.flow.graph?.edges?.length || 0 }} {{ 'flows.flowAiAssist.edges' | translate }}</span>
     </div>
-    <button class="btn-primary" (click)="applyToCanvas()">Aplicar al canvas</button>
+    <button class="btn-primary" (click)="applyToCanvas()">{{ 'flows.flowAiAssist.aplicarAlCanvas' | translate }}</button>
   </section>
 
   <section *ngIf="history.length" class="history">
-    <h4>Historial</h4>
+    <h4>{{ 'flows.flowAiAssist.historial' | translate }}</h4>
     <ul>
       <li *ngFor="let item of history; let i = index">
         <button class="history-item" (click)="loadFromHistory(i)">

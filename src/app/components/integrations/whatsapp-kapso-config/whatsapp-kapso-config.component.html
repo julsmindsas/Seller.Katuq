@@ -2,17 +2,17 @@
   <!-- Loading -->
   <div class="wa-kapso__loading" *ngIf="loading">
     <i class="fa fa-spinner fa-spin"></i>
-    <span>Cargando configuración de WhatsApp...</span>
+    <span>{{ 'integrations.whatsappKapsoConfig.cargandoConfiguracionDeWhatsapp' | translate }}</span>
   </div>
 
   <!-- Load error -->
   <div class="wa-kapso__error" *ngIf="loadError && !loading">
     <i class="fa fa-exclamation-triangle"></i>
     <div>
-      <p class="mb-1"><strong>No pudimos cargar la configuración.</strong></p>
+      <p class="mb-1"><strong>{{ 'integrations.whatsappKapsoConfig.noPudimosCargarLaConfiguracion' | translate }}</strong></p>
       <p class="mb-2">{{ loadError }}</p>
       <button type="button" class="btn wa-kapso__test-btn" (click)="loadConfig()">
-        <i class="fa fa-refresh me-1"></i> Reintentar
+        <i class="fa fa-refresh me-1"></i> {{ 'integrations.facturacionHub.reintentar' | translate }}
       </button>
     </div>
   </div>
@@ -24,9 +24,9 @@
       <div class="wa-kapso__title">
         <i class="fa fa-whatsapp wa-kapso__title-icon"></i>
         <div>
-          <h3>WhatsApp Business</h3>
+          <h3>{{ 'integrations.whatsappKapsoConfig.whatsappBusiness' | translate }}</h3>
           <p class="wa-kapso__subtitle">
-            Notificaciones automáticas a tus clientes vía WhatsApp.
+            {{ 'integrations.whatsappKapsoConfig.notificacionesAutomaticasATusClientes' | translate }}
           </p>
         </div>
       </div>
@@ -39,8 +39,8 @@
       <!-- ============================================================ -->
       <section class="wa-kapso__section">
         <header class="wa-kapso__section-header">
-          <h4><i class="fa fa-power-off"></i> Estado</h4>
-          <p>Activa los avisos de pedidos por WhatsApp para tus clientes.</p>
+          <h4><i class="fa fa-power-off"></i> {{ 'integrations.integrations.estado' | translate }}</h4>
+          <p>{{ 'integrations.whatsappKapsoConfig.activaLosAvisosDePedidos' | translate }}</p>
         </header>
 
         <div class="wa-kapso__row wa-kapso__row--toggle">
@@ -49,8 +49,8 @@
             <span class="wa-kapso__toggle-slider"></span>
           </label>
           <div class="wa-kapso__toggle-text">
-            <strong>WhatsApp habilitado</strong>
-            <small>Actívalo para que Katuq avise a tus clientes por WhatsApp cómo va su pedido.</small>
+            <strong>{{ 'integrations.whatsappKapsoConfig.whatsappHabilitado' | translate }}</strong>
+            <small>{{ 'integrations.whatsappKapsoConfig.activaloParaQueKatuqAvise' | translate }}</small>
           </div>
 
           <button
@@ -61,7 +61,7 @@
             *ngIf="optInAccepted"
           >
             <i class="fa" [ngClass]="testing ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
-            {{ testing ? 'Enviando...' : 'Probar envío' }}
+            {{ testing ? ('integrations.whatsappKapsoConfig.enviando' | translate) : ('integrations.whatsappKapsoConfig.probarEnvio' | translate) }}
           </button>
         </div>
       </section>
@@ -73,13 +73,9 @@
         <div class="wa-kapso__optin-banner-content">
           <i class="fa fa-exclamation-triangle"></i>
           <div>
-            <strong>Acepta los términos para activar WhatsApp.</strong>
+            <strong>{{ 'integrations.whatsappKapsoConfig.aceptaLosTerminosParaActivar' | translate }}</strong>
             <p class="mb-2">
-              Al aceptar autorizas a Katuq y a Kapso a enviar avisos
-              de pedidos a tus clientes por WhatsApp Business. Tus
-              clientes deben dar consentimiento previo cuando hacen un pedido,
-              de acuerdo con la política de Meta. Tú eres responsable del
-              contenido enviado.
+              {{ 'integrations.whatsappKapsoConfig.alAceptarAutorizasAKatuq' | translate }}
             </p>
             <button
               type="button"
@@ -88,7 +84,7 @@
               [disabled]="acceptingOptIn"
             >
               <i class="fa" [ngClass]="acceptingOptIn ? 'fa-spinner fa-spin' : 'fa-check'"></i>
-              {{ acceptingOptIn ? 'Registrando...' : 'Acepto los términos' }}
+              {{ acceptingOptIn ? ('integrations.whatsappKapsoConfig.registrando' | translate) : ('integrations.whatsappKapsoConfig.aceptoLosTerminos' | translate) }}
             </button>
           </div>
         </div>
@@ -99,12 +95,12 @@
       <!-- ============================================================ -->
       <section class="wa-kapso__section">
         <header class="wa-kapso__section-header">
-          <h4><i class="fa fa-id-badge"></i> Identidad</h4>
-          <p>Qué nombre verán tus clientes en los mensajes.</p>
+          <h4><i class="fa fa-id-badge"></i> {{ 'integrations.whatsappKapsoConfig.identidad' | translate }}</h4>
+          <p>{{ 'integrations.whatsappKapsoConfig.queNombreVeranTusClientes' | translate }}</p>
         </header>
 
         <div class="wa-kapso__field">
-          <label for="wa-commercial-name">Nombre comercial</label>
+          <label for="wa-commercial-name">{{ 'integrations.whatsappKapsoConfig.nombreComercial' | translate }}</label>
           <input
             type="text"
             id="wa-commercial-name"
@@ -114,7 +110,7 @@
             autocomplete="off"
           />
           <small class="wa-kapso__hint">
-            Si lo dejas vacío, usamos el nombre actual del comercio:
+            {{ 'integrations.whatsappKapsoConfig.siLoDejasVacioUsamos' | translate }}
             <strong>{{ currentCompanyName || '—' }}</strong>
           </small>
         </div>
@@ -122,7 +118,7 @@
         <div class="wa-kapso__field wa-kapso__field--checkbox">
           <label class="wa-kapso__checkbox">
             <input type="checkbox" formControlName="commercialNameOverride" />
-            <span>Usar este nombre en vez del nombre de la empresa</span>
+            <span>{{ 'integrations.whatsappKapsoConfig.usarEsteNombreEnVez' | translate }}</span>
           </label>
         </div>
       </section>
@@ -132,8 +128,8 @@
       <!-- ============================================================ -->
       <section class="wa-kapso__section">
         <header class="wa-kapso__section-header">
-          <h4><i class="fa fa-bell"></i> Tipos de notificación habilitados</h4>
-          <p>Eventos en los que se enviará un mensaje al cliente.</p>
+          <h4><i class="fa fa-bell"></i> {{ 'integrations.whatsappKapsoConfig.tiposDeNotificacionHabilitados' | translate }}</h4>
+          <p>{{ 'integrations.whatsappKapsoConfig.eventosEnLosQueSe' | translate }}</p>
         </header>
 
         <div class="wa-kapso__notif-grid" formGroupName="enabledNotificationTypes">
@@ -155,8 +151,8 @@
       <!-- ============================================================ -->
       <section class="wa-kapso__section" formGroupName="autoRespond">
         <header class="wa-kapso__section-header">
-          <h4><i class="fa fa-reply"></i> Auto-respuesta</h4>
-          <p>Mensaje automático cuando un cliente responde al chat.</p>
+          <h4><i class="fa fa-reply"></i> {{ 'integrations.whatsappKapsoConfig.autoRespuesta' | translate }}</h4>
+          <p>{{ 'integrations.whatsappKapsoConfig.mensajeAutomaticoCuandoUnCliente' | translate }}</p>
         </header>
 
         <div class="wa-kapso__row wa-kapso__row--toggle">
@@ -165,41 +161,41 @@
             <span class="wa-kapso__toggle-slider"></span>
           </label>
           <div class="wa-kapso__toggle-text">
-            <strong>Activar auto-respuesta</strong>
-            <small>Responde con un mensaje predefinido a los entrantes.</small>
+            <strong>{{ 'integrations.whatsappKapsoConfig.activarAutoRespuesta' | translate }}</strong>
+            <small>{{ 'integrations.whatsappKapsoConfig.respondeConUnMensajePredefinido' | translate }}</small>
           </div>
         </div>
 
         <div class="wa-kapso__field">
-          <label for="wa-autorespond-message">Mensaje</label>
+          <label for="wa-autorespond-message">{{ 'integrations.whatsappKapsoConfig.mensaje' | translate }}</label>
           <textarea
             id="wa-autorespond-message"
             class="form-control"
             rows="3"
             formControlName="message"
-            placeholder="Gracias por escribir a {nombreComercio}. Un asesor te responderá pronto."
+            [placeholder]="'integrations.whatsappKapsoConfig.graciasPorEscribirANombrecomercio' | translate"
           ></textarea>
           <small class="wa-kapso__hint">
-            Puedes usar las palabras
-            <code>{{ '{nombreComercio}' }}</code> y
-            <code>{{ '{contacto}' }}</code>.
+            {{ 'integrations.whatsappKapsoConfig.puedesUsarLasPalabras' | translate }}
+            <code>{{ ('integrations.whatsappKapsoConfig.nombrecomercio' | translate) }}</code> {{ 'integrations.whatsappKapsoConfig.y' | translate }}
+            <code>{{ ('integrations.whatsappKapsoConfig.contacto' | translate) }}</code>.
           </small>
         </div>
 
         <div class="wa-kapso__field">
-          <label for="wa-autorespond-contact">Contacto para escalar</label>
+          <label for="wa-autorespond-contact">{{ 'integrations.whatsappKapsoConfig.contactoParaEscalar' | translate }}</label>
           <input
             type="text"
             id="wa-autorespond-contact"
             class="form-control"
             formControlName="contact"
-            placeholder="Ej: +57 300 123 4567 o soporte@miempresa.com"
+            [placeholder]="'integrations.whatsappKapsoConfig.ej573001234567' | translate"
             autocomplete="off"
           />
         </div>
 
         <div class="wa-kapso__preview" *ngIf="form.get('autoRespond.enabled')?.value">
-          <span class="wa-kapso__preview-label">Vista previa:</span>
+          <span class="wa-kapso__preview-label">{{ 'integrations.whatsappKapsoConfig.vistaPrevia' | translate }}</span>
           <p>{{ autoRespondPreview }}</p>
         </div>
       </section>
@@ -210,11 +206,9 @@
       <section class="wa-kapso__section wa-kapso__conexion">
         <header class="wa-kapso__section-header">
           <div>
-            <h4><i class="fa fa-phone"></i> Tu número de WhatsApp</h4>
+            <h4><i class="fa fa-phone"></i> {{ 'integrations.whatsappKapsoConfig.tuNumeroDeWhatsapp' | translate }}</h4>
             <p>
-              Conecta el número propio de tu negocio para atender clientes y
-              prender el asistente de pedidos. Sin número propio, Katuq usa su
-              número compartido solo para notificaciones.
+              {{ 'integrations.whatsappKapsoConfig.conectaElNumeroPropioDe' | translate }}
             </p>
           </div>
         </header>
@@ -222,61 +216,59 @@
         <!-- Estado de la conexión -->
         <div class="wa-kapso__conexion-estado" *ngIf="numeroVerificado">
           <span class="wa-kapso__conexion-chip is-ok">
-            <i class="fa fa-check-circle"></i> Número conectado
+            <i class="fa fa-check-circle"></i> {{ 'integrations.whatsappKapsoConfig.numeroConectado' | translate }}
           </span>
           <strong>{{ numeroVerificadoLabel }}</strong>
           <small>{{ ultimoEntranteLabel }}</small>
         </div>
         <div class="wa-kapso__conexion-estado" *ngIf="!numeroVerificado">
           <span class="wa-kapso__conexion-chip is-pending">
-            <i class="fa fa-plug"></i> Sin conectar
+            <i class="fa fa-plug"></i> {{ 'integrations.whatsappKapsoConfig.sinConectar' | translate }}
           </span>
           <small>
-            Necesitas la clave y el identificador del número que te entrega
-            Kapso al crear tu cuenta de WhatsApp Business. Si aún no los
-            tienes, escríbenos y te acompañamos en el trámite.
+            {{ 'integrations.whatsappKapsoConfig.necesitasLaClaveYEl' | translate }}
           </small>
         </div>
 
         <div formGroupName="ownCredentials">
           <div class="wa-kapso__field">
-            <label for="wa-own-apikey">1. Clave de tu cuenta (API Key)</label>
+            <label for="wa-own-apikey">{{ 'integrations.whatsappKapsoConfig.1ClaveDeTuCuenta' | translate }}</label>
             <input
               type="password"
               id="wa-own-apikey"
               class="form-control"
               formControlName="apiKey"
-              [placeholder]="hasStoredApiKey ? 'Ya está guardada — pega una nueva solo si quieres reemplazarla' : 'Pega aquí la clave que te dio Kapso'"
+              [placeholder]="hasStoredApiKey ? ('integrations.whatsappKapsoConfig.yaEstaGuardadaPegaUna' | translate) : ('integrations.whatsappKapsoConfig.pegaAquiLaClaveQue' | translate)"
               autocomplete="new-password"
             />
             <small class="wa-kapso__hint" *ngIf="hasStoredApiKey">
-              Ya hay una clave guardada. Deja el campo vacío para conservarla.
+              {{ 'integrations.whatsappKapsoConfig.yaHayUnaClaveGuardada' | translate }}
             </small>
           </div>
 
           <div class="wa-kapso__field">
-            <label for="wa-own-phone">2. Identificador del número</label>
+            <label for="wa-own-phone">{{ 'integrations.whatsappKapsoConfig.2IdentificadorDelNumero' | translate }}</label>
             <input
               type="text"
               id="wa-own-phone"
               class="form-control"
               formControlName="phoneNumberId"
-              placeholder="Ej: 123456789012345"
+              [placeholder]="'integrations.whatsappKapsoConfig.ej123456789012345' | translate"
               autocomplete="off"
             />
             <small class="wa-kapso__hint">
-              Aparece en tu panel de Kapso como "Phone Number ID".
+              {{ 'integrations.whatsappKapsoConfig.apareceEnTuPanelDe' | translate }}
             </small>
           </div>
 
           <div class="wa-kapso__field wa-kapso__field--advanced">
-            <label for="wa-own-baseurl">Dirección del servicio (solo si Kapso te lo indica)</label>
+            <label for="wa-own-baseurl">{{ 'integrations.whatsappKapsoConfig.direccionDelServicioSoloSi' | translate }}</label>
             <input
               type="text"
               id="wa-own-baseurl"
               class="form-control"
               formControlName="baseUrl"
-              placeholder="Normalmente se deja vacío"
+              [placeholder]="'integrations.whatsappKapsoConfig.normalmenteSeDejaVacio' | translate"
               autocomplete="off"
             />
           </div>
@@ -289,17 +281,17 @@
               (click)="probarConexion()"
             >
               <i class="fa" [ngClass]="verifying ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
-              {{ verifying ? 'Verificando…' : '3. Probar conexión' }}
+              {{ verifying ? ('integrations.whatsappKapsoConfig.verificando' | translate) : ('integrations.whatsappKapsoConfig.3ProbarConexion' | translate) }}
             </button>
             <button
               type="button"
               class="btn wa-kapso__test-btn"
               [disabled]="!numeroVerificado || testing"
               (click)="sendTest()"
-              title="Envía un mensaje de prueba a tu propio celular"
+              [title]="'integrations.whatsappKapsoConfig.enviaUnMensajeDePrueba' | translate"
             >
               <i class="fa" [ngClass]="testing ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
-              {{ testing ? 'Enviando…' : '4. Enviarme una prueba' }}
+              {{ testing ? ('integrations.whatsappKapsoConfig.enviando2' | translate) : ('integrations.whatsappKapsoConfig.4EnviarmeUnaPrueba' | translate) }}
             </button>
           </div>
         </div>
@@ -315,7 +307,7 @@
           [disabled]="saving || form.invalid"
         >
           <i class="fa" [ngClass]="saving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
-          {{ saving ? 'Guardando...' : 'Guardar configuración' }}
+          {{ saving ? ('integrations.integrationModal.guardando' | translate) : ('integrations.whatsappKapsoConfig.guardarConfiguracion' | translate) }}
         </button>
       </div>
     </form>

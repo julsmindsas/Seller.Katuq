@@ -6,11 +6,9 @@
         <i class="fa fa-comments-o"></i>
       </span>
       <div>
-        <h3>Bot de pedidos</h3>
+        <h3>{{ 'integrations.whatsappBotConfig.botDePedidos' | translate }}</h3>
         <p class="wa-bot__subtitle">
-          Atiende a tus clientes por WhatsApp, arma el pedido conversando y lo
-          deja como <strong>cotización en borrador</strong> para que tu equipo
-          la confirme. Nunca crea pedidos ni toca inventario.
+          {{ 'integrations.whatsappBotConfig.atiendeATusClientesPor' | translate }} <strong>{{ 'integrations.whatsappBotConfig.cotizacionEnBorrador' | translate }}</strong> {{ 'integrations.whatsappBotConfig.paraQueTuEquipoLa' | translate }}
         </p>
       </div>
     </div>
@@ -21,22 +19,22 @@
     >
       {{
         !botEncendido
-          ? "Apagado"
+          ? ('integrations.whatsappBotConfig.apagado' | translate)
           : form.get("modoSombra")?.value
-            ? "Modo sombra"
-            : "Encendido"
+            ? ('integrations.whatsappBotConfig.modoSombra' | translate)
+            : ('integrations.whatsappBotConfig.encendido' | translate)
       }}
     </span>
   </div>
 
   <div class="wa-bot__loading" *ngIf="loading">
-    <i class="fa fa-spinner fa-spin"></i> Cargando bot de pedidos...
+    <i class="fa fa-spinner fa-spin"></i> {{ 'integrations.whatsappBotConfig.cargandoBotDePedidos' | translate }}
   </div>
 
   <div class="wa-bot__error" *ngIf="loadError && !loading">
     {{ loadError }}
     <button type="button" class="btn btn-sm btn-outline-secondary ms-2" (click)="cargar()">
-      Reintentar
+      {{ 'integrations.facturacionHub.reintentar' | translate }}
     </button>
   </div>
 
@@ -49,10 +47,8 @@
     <!-- Aviso: exige número propio -->
     <div class="wa-bot__hint" *ngIf="!puedeActivarse">
       <i class="fa fa-info-circle"></i>
-      Para prender el bot, el comercio necesita su
-      <strong>propio número de WhatsApp</strong> conectado (sección
-      "Credenciales propias" de arriba). Con el número compartido, un mismo
-      mensaje llega a varias empresas y el bot contestaría duplicado.
+      {{ 'integrations.whatsappBotConfig.paraPrenderElBotEl' | translate }}
+      <strong>{{ 'integrations.whatsappBotConfig.propioNumeroDeWhatsapp' | translate }}</strong> {{ 'integrations.whatsappBotConfig.conectadoSeccionCredencialesPropiasDe' | translate }}
     </div>
 
     <!-- Interruptor principal -->
@@ -66,10 +62,9 @@
         <span class="wa-bot__toggle-slider"></span>
       </label>
       <div class="wa-bot__toggle-text">
-        <strong>Bot de pedidos encendido</strong>
+        <strong>{{ 'integrations.whatsappBotConfig.botDePedidosEncendido' | translate }}</strong>
         <small>
-          El bot responde los mensajes entrantes de este comercio. Apagarlo
-          surte efecto de inmediato.
+          {{ 'integrations.whatsappBotConfig.elBotRespondeLosMensajes' | translate }}
         </small>
       </div>
     </div>
@@ -82,11 +77,10 @@
           <span class="wa-bot__toggle-slider"></span>
         </label>
         <div class="wa-bot__toggle-text">
-          <strong>Modo sombra</strong>
+          <strong>{{ 'integrations.whatsappBotConfig.modoSombra' | translate }}</strong>
           <small>
-            El bot piensa y se registra lo que habría contestado, pero
-            <strong>no envía mensajes ni gasta saldo</strong>. Ideal para
-            revisar cómo respondería antes de soltarlo.
+            {{ 'integrations.whatsappBotConfig.elBotPiensaYSe' | translate }}
+            <strong>{{ 'integrations.whatsappBotConfig.noEnviaMensajesNiGasta' | translate }}</strong>{{ 'integrations.whatsappBotConfig.idealParaRevisarComoResponderia' | translate }}
           </small>
         </div>
       </div>
@@ -98,15 +92,15 @@
           <span class="wa-bot__toggle-slider"></span>
         </label>
         <div class="wa-bot__toggle-text">
-          <strong>Presentarse como asistente automático</strong>
-          <small>En el primer mensaje aclara que es un bot y que un asesor puede tomar la conversación.</small>
+          <strong>{{ 'integrations.whatsappBotConfig.presentarseComoAsistenteAutomatico' | translate }}</strong>
+          <small>{{ 'integrations.whatsappBotConfig.enElPrimerMensajeAclara' | translate }}</small>
         </div>
       </div>
 
       <!-- Tope de turnos -->
       <div class="wa-bot__row">
         <label class="wa-bot__label" for="botTopeTurnos">
-          Tope de mensajes del bot por conversación
+          {{ 'integrations.whatsappBotConfig.topeDeMensajesDelBot' | translate }}
         </label>
         <input
           id="botTopeTurnos"
@@ -117,15 +111,14 @@
           max="100"
         />
         <small class="wa-bot__ayuda">
-          Al llegar al tope, el bot pasa la conversación a un asesor. Cada
-          mensaje del bot descuenta saldo como uno escrito a mano.
+          {{ 'integrations.whatsappBotConfig.alLlegarAlTopeEl' | translate }}
         </small>
       </div>
 
       <!-- Mensaje de bienvenida -->
       <div class="wa-bot__row">
         <label class="wa-bot__label" for="botBienvenida">
-          Mensaje de bienvenida (opcional)
+          {{ 'integrations.whatsappBotConfig.mensajeDeBienvenidaOpcional' | translate }}
         </label>
         <textarea
           id="botBienvenida"
@@ -133,11 +126,10 @@
           formControlName="mensajeBienvenida"
           rows="2"
           maxlength="500"
-          placeholder="Ej: ¡Hola! Soy el asistente de {{ '{' }}nombre del comercio{{ '}' }}. Cuéntame qué quieres pedir."
+          [placeholder]="'integrations.whatsappBotConfig.ejHolaSoyElAsistente' | translate"
         ></textarea>
         <small class="wa-bot__ayuda">
-          Cómo abre la conversación. Si queda vacío, el bot saluda con su tono
-          normal.
+          {{ 'integrations.whatsappBotConfig.comoAbreLaConversacionSi' | translate }}
         </small>
       </div>
 
@@ -148,23 +140,23 @@
           <span class="wa-bot__toggle-slider"></span>
         </label>
         <div class="wa-bot__toggle-text">
-          <strong>Atender solo en un horario</strong>
-          <small>Fuera del horario, los mensajes quedan en el buzón para el equipo.</small>
+          <strong>{{ 'integrations.whatsappBotConfig.atenderSoloEnUnHorario' | translate }}</strong>
+          <small>{{ 'integrations.whatsappBotConfig.fueraDelHorarioLosMensajes' | translate }}</small>
         </div>
       </div>
 
       <div class="wa-bot__horario" *ngIf="form.get('horarioHabilitado')?.value">
         <div class="wa-bot__horario-horas">
           <label>
-            Desde
+            {{ 'integrations.whatsappBotConfig.desde' | translate }}
             <input type="time" class="form-control" formControlName="horarioDesde" />
           </label>
           <label>
-            Hasta
+            {{ 'integrations.whatsappBotConfig.hasta' | translate }}
             <input type="time" class="form-control" formControlName="horarioHasta" />
           </label>
         </div>
-        <div class="wa-bot__horario-dias" role="group" aria-label="Días de atención">
+        <div class="wa-bot__horario-dias" role="group" [attr.aria-label]="'integrations.whatsappBotConfig.diasDeAtencion' | translate">
           <button
             *ngFor="let d of dias"
             type="button"
@@ -181,7 +173,7 @@
     <div class="wa-bot__actions">
       <button type="submit" class="btn wa-bot__save" [disabled]="saving">
         <i class="fa" [class.fa-spinner]="saving" [class.fa-spin]="saving" [class.fa-check]="!saving"></i>
-        {{ saving ? "Guardando..." : "Guardar bot" }}
+        {{ saving ? ('integrations.whatsappBotConfig.guardando' | translate) : ('integrations.whatsappBotConfig.guardarBot' | translate) }}
       </button>
     </div>
   </form>

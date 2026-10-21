@@ -147,7 +147,8 @@ test('1.10: glosario de D7 en todo el diccionario, no solo en los valores iguale
   // Un mismo concepto con un solo término por idioma (corrección de IDI-B00d): el menú dice
   // «Envios»/«Shipments» y también sus pantallas. Se revisan todas las claves, sobrantes incluidas.
   const prohibidos = {
-    en: [/dispatch/i, /\bclients?\b/i],
+    // «Client ID» y «Client Secret» son los nombres de las credenciales OAuth del proveedor (IDI-B12a).
+    en: [/dispatch/i, /\bclients?\b(?! (id|secret)\b)/i],
     pt: [/despach/i, /armaz[ée]m|armaz[ée]ns/i, /invent[áa]ri/i, /fatura[çc][ãa]o/i],
   };
   for (const [idioma, patrones] of Object.entries(prohibidos)) {

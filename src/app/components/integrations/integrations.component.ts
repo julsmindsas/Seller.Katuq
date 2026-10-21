@@ -17,6 +17,7 @@ import { describeDianBatchStatus, DianBatchStatus } from './dian-batch-status';
 import { DIAN_SECRET_FIELDS, dianConfigError, dianNumberingError } from './dian-config-feedback';
 import { CompanyFeatureFlag, CompanyFeaturesService } from '../../shared/services/company-features.service';
 
+import { TranslateService } from '@ngx-translate/core';
 // Campos del formulario que el backend guarda cifrados y NO devuelve al editar
 // (espejo de PROVIDER_SCHEMAS.sensitive, con los nombres de los controles).
 // Al editar llegan vacíos: dejarlos así conserva la clave guardada.
@@ -218,7 +219,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private features: CompanyFeaturesService,
-    @Optional() public activeModal: NgbActiveModal | null
+    @Optional() public activeModal: NgbActiveModal | null,
+    private translate: TranslateService
   ) {
     this.integrationForm = this.createShopifyForm();
   }
@@ -1659,11 +1661,11 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     }
     Swal.fire({
       icon: 'warning',
-      title: '¿Enviar el set oficial a la DIAN?',
-      html: 'Se consumirán consecutivos y se transmitirán <strong>8 facturas, 1 nota crédito y 1 nota débito</strong>.',
+      title: this.translate.instant('integrations.integrations.enviarElSetOficialA'),
+      html: this.translate.instant('integrations.integrations.setOficialAviso'),
       showCancelButton: true,
-      confirmButtonText: 'Enviar set',
-      cancelButtonText: 'Cancelar'
+      confirmButtonText: this.translate.instant('integrations.integrations.enviarSet'),
+      cancelButtonText: this.translate.instant('comun.cancelar')
     }).then((confirmation) => {
       if (!confirmation.isConfirmed) return;
       this.dianHabilitationLoading = true;

@@ -4,82 +4,81 @@
 
     <header class="cfg-cabeza">
       <div class="cfg-cabeza__textos">
-        <span class="cfg-eyebrow">Integraciones</span>
-        <h1 class="cfg-titulo">Tareas que corren <span class="au-acento">solas</span></h1>
+        <span class="cfg-eyebrow">{{ 'flows.flowDiff.integraciones' | translate }}</span>
+        <h1 class="cfg-titulo">{{ 'flows.flowList.tareasQueCorren' | translate }} <span class="au-acento">{{ 'flows.flowList.solas' | translate }}</span></h1>
         <p class="cfg-sub">
-          Katuq mueve tus pedidos, productos y existencias entre tus sistemas sin que lo hagas a mano.
-          Aquí ves cuáles están encendidas, de dónde a dónde llevan los datos y cada cuánto.
+          {{ 'flows.flowList.katuqMueveTusPedidosProductos' | translate }}
         </p>
       </div>
       <div class="cfg-acciones">
         <label class="au-search" *ngIf="flows.length > 0">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="20" y1="20" x2="16.65" y2="16.65"></line></svg>
-          <input type="search" placeholder="Buscar automatización…" aria-label="Buscar automatización"
+          <input type="search" [placeholder]="'flows.flowList.buscarAutomatizacion' | translate" [attr.aria-label]="'flows.flowList.buscarAutomatizacion2' | translate"
                  [(ngModel)]="search" (ngModelChange)="onSearchChange()">
         </label>
         <button type="button" class="cfg-btn" (click)="goToTemplates()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          Nueva desde plantilla
+          {{ 'flows.flowList.nuevaDesdePlantilla' | translate }}
         </button>
       </div>
     </header>
 
-    <section class="au-stats" aria-label="Resumen de automatizaciones" *ngIf="loading || flows.length > 0">
+    <section class="au-stats" [attr.aria-label]="'flows.flowList.resumenDeAutomatizaciones' | translate" *ngIf="loading || flows.length > 0">
       <div class="au-stat">
-        <span class="au-stat-label">Encendidas</span>
+        <span class="au-stat-label">{{ 'flows.flowList.encendidas' | translate }}</span>
         <span class="au-stat-value">{{ loading ? '–' : contar('active') }}</span>
-        <span class="au-stat-hint">Corriendo solas ahora mismo</span>
+        <span class="au-stat-hint">{{ 'flows.flowList.corriendoSolasAhoraMismo' | translate }}</span>
       </div>
       <div class="au-stat">
-        <span class="au-stat-label">Apagadas</span>
+        <span class="au-stat-label">{{ 'flows.flowList.apagadas' | translate }}</span>
         <span class="au-stat-value au-stat-value-slate">{{ loading ? '–' : contar('inactive') + hayConError }}</span>
-        <span class="au-stat-hint">Guardadas; las prendes cuando quieras</span>
+        <span class="au-stat-hint">{{ 'flows.flowList.guardadasLasPrendesCuandoQuieras' | translate }}</span>
       </div>
       <div class="au-stat">
-        <span class="au-stat-label">Sin terminar</span>
+        <span class="au-stat-label">{{ 'flows.flowEditor.sinTerminar' | translate }}</span>
         <span class="au-stat-value au-stat-value-ink">{{ loading ? '–' : contar('draft') }}</span>
-        <span class="au-stat-hint">Les falta configurar algo para encenderlas</span>
+        <span class="au-stat-hint">{{ 'flows.flowList.lesFaltaConfigurarAlgoPara' | translate }}</span>
       </div>
     </section>
 
     <section class="au-error" *ngIf="errorMessage" role="alert">
       <span>{{ errorMessage }}</span>
-      <button type="button" class="au-btn-ghost" (click)="errorMessage = ''; refresh()">Reintentar</button>
+      <button type="button" class="au-btn-ghost" (click)="errorMessage = ''; refresh()">{{ 'flows.flowList.reintentar' | translate }}</button>
     </section>
 
     <div class="au-toolbar" *ngIf="flows.length > 0">
-      <div class="au-seg" role="group" aria-label="Qué mostrar">
-        <button type="button" [class.on]="filtro === 'todas'" [attr.aria-pressed]="filtro === 'todas'" (click)="setFiltro('todas')">Todas · {{ flows.length }}</button>
-        <button type="button" [class.on]="filtro === 'active'" [attr.aria-pressed]="filtro === 'active'" (click)="setFiltro('active')">Encendidas · {{ contar('active') }}</button>
-        <button type="button" [class.on]="filtro === 'inactive'" [attr.aria-pressed]="filtro === 'inactive'" (click)="setFiltro('inactive')">Apagadas · {{ contar('inactive') + hayConError }}</button>
-        <button type="button" [class.on]="filtro === 'draft'" [attr.aria-pressed]="filtro === 'draft'" (click)="setFiltro('draft')">Sin terminar · {{ contar('draft') }}</button>
+      <div class="au-seg" role="group" [attr.aria-label]="'flows.flowList.queMostrar' | translate">
+        <button type="button" [class.on]="filtro === 'todas'" [attr.aria-pressed]="filtro === 'todas'" (click)="setFiltro('todas')">{{ 'flows.flowList.todas' | translate:{length: flows.length} }}</button>
+        <button type="button" [class.on]="filtro === 'active'" [attr.aria-pressed]="filtro === 'active'" (click)="setFiltro('active')">{{ 'flows.flowList.encendidas2' | translate:{active: (contar('active'))} }}</button>
+        <button type="button" [class.on]="filtro === 'inactive'" [attr.aria-pressed]="filtro === 'inactive'" (click)="setFiltro('inactive')">{{ 'flows.flowList.apagadas2' | translate:{hayConError: (contar('inactive') + hayConError)} }}</button>
+        <button type="button" [class.on]="filtro === 'draft'" [attr.aria-pressed]="filtro === 'draft'" (click)="setFiltro('draft')">{{ 'flows.flowList.sinTerminar' | translate:{draft: (contar('draft'))} }}</button>
       </div>
-      <button type="button" class="au-link" (click)="goToEditor()">Crear desde cero (modo avanzado)</button>
+      <button type="button" class="au-link" (click)="goToEditor()">{{ 'flows.flowList.crearDesdeCeroModoAvanzado' | translate }}</button>
     </div>
 
     <div class="au-loading" *ngIf="loading">
       <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-      Cargando tus automatizaciones…
+      {{ 'flows.flowList.cargandoTusAutomatizaciones' | translate }}
     </div>
 
     <!-- Sin ninguna automatización -->
     <section class="au-empty" *ngIf="!loading && flows.length === 0">
-      <span class="au-empty-title">Todavía no tienes automatizaciones</span>
-      <p>Empieza con una plantilla: por ejemplo, recibir solos los pedidos de tu tienda en línea.</p>
-      <button type="button" class="au-btn-primary" (click)="goToTemplates()">Ver plantillas</button>
-      <button type="button" class="au-link" (click)="goToEditor()">O créala desde cero (modo avanzado)</button>
+      <span class="au-empty-title">{{ 'flows.flowList.todaviaNoTienesAutomatizaciones' | translate }}</span>
+      <p>{{ 'flows.flowList.empiezaConUnaPlantillaPor' | translate }}</p>
+      <button type="button" class="au-btn-primary" (click)="goToTemplates()">{{ 'flows.flowList.verPlantillas' | translate }}</button>
+      <button type="button" class="au-link" (click)="goToEditor()">{{ 'flows.flowList.oCrealaDesdeCeroModo' | translate }}</button>
     </section>
 
     <!-- Hay, pero el filtro o la búsqueda no deja ninguna -->
     <section class="au-empty" *ngIf="!loading && flows.length > 0 && tarjetas.length === 0">
-      <span class="au-empty-title">No hay automatizaciones con ese filtro</span>
-      <button type="button" class="au-btn-ghost" (click)="search = ''; setFiltro('todas')">Ver todas</button>
+      <span class="au-empty-title">{{ 'flows.flowList.noHayAutomatizacionesConEse' | translate }}</span>
+      <button type="button" class="au-btn-ghost" (click)="search = ''; setFiltro('todas')">{{ 'flows.flowList.verTodas' | translate }}</button>
     </section>
 
     <div class="au-grid" *ngIf="!loading && tarjetas.length > 0">
       <article *ngFor="let t of tarjetas; trackBy: trackById" class="au-card" [ngClass]="'is-' + t.flow.status">
         <div class="au-card-top">
-          <div class="au-ruta" *ngIf="t.de" [attr.aria-label]="'Lleva datos ' + (t.a.length ? 'de ' + t.de.nombre + ' a ' + nombresDe(t.a) : 'dentro de ' + t.de.nombre)">
+          <div class="au-ruta" *ngIf="t.de" [attr.aria-label]="('flows.flowList.llevaDatos' | translate) + (t.a.length ? ('flows.flowList.de' | translate) + t.de.nombre + ('flows.flowList.a' | translate) + nombresDe(t.a) : ('flows.flowList.dentroDe' | translate) + t.de.nombre)">
             <span class="au-sis"><span class="au-sis-dot" [style.background]="t.de.color"></span>{{ t.de.nombre }}</span>
             <ng-container *ngFor="let s of t.a">
               <svg class="au-flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
@@ -92,15 +91,15 @@
         </div>
 
         <h3>{{ t.flow.name }}</h3>
-        <p class="au-que" [title]="t.flow.description || ''">{{ t.flow.description || 'Sin descripción.' }}</p>
+        <p class="au-que" [title]="t.flow.description || ''">{{ t.flow.description || ('flows.flowList.sinDescripcion' | translate) }}</p>
 
         <dl class="au-datos">
           <div>
-            <dt>Cuándo arranca</dt>
+            <dt>{{ 'flows.flowEditor.cuandoArranca' | translate }}</dt>
             <dd>{{ t.cuando }}</dd>
           </div>
           <div *ngIf="t.de">
-            <dt>Lleva datos</dt>
+            <dt>{{ 'flows.flowList.llevaDatos' | translate }}</dt>
             <dd>{{ rutaEnPalabras(t) }}</dd>
           </div>
         </dl>
@@ -108,12 +107,12 @@
         <div class="au-card-foot">
           <button type="button" class="au-switch" [class.on]="t.flow.status === 'active'"
                   [disabled]="cambiando.has(t.flow.id)"
-                  [attr.aria-label]="(t.flow.status === 'active' ? 'Apagar ' : 'Encender ') + t.flow.name"
-                  [title]="t.flow.status === 'active' ? 'Apagar' : 'Encender'"
+                  [attr.aria-label]="(t.flow.status === 'active' ? ('flows.flowEditor.apagar' | translate) : ('flows.flowEditor.encender' | translate)) + t.flow.name"
+                  [title]="t.flow.status === 'active' ? ('flows.flowEditor.apagar' | translate) : ('flows.flowEditor.encender' | translate)"
                   (click)="toggleActive(t)"><span></span></button>
-          <button type="button" class="au-btn-ghost au-btn-sm" (click)="goToRuns(t.flow)">Historial</button>
-          <button type="button" class="au-btn-ghost au-btn-sm" (click)="goToEditor(t.flow)">Editar</button>
-          <button type="button" class="au-btn-icon" title="Duplicar" aria-label="Duplicar" (click)="duplicate(t.flow)">
+          <button type="button" class="au-btn-ghost au-btn-sm" (click)="goToRuns(t.flow)">{{ 'flows.flowAiAssist.historial' | translate }}</button>
+          <button type="button" class="au-btn-ghost au-btn-sm" (click)="goToEditor(t.flow)">{{ 'comun.editar' | translate }}</button>
+          <button type="button" class="au-btn-icon" [title]="'flows.flowList.duplicar' | translate" [attr.aria-label]="'flows.flowList.duplicar' | translate" (click)="duplicate(t.flow)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           </button>
         </div>

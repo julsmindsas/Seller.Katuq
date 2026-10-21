@@ -4,29 +4,28 @@
   <!-- Header -->
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Integraciones</span>
-      <h1 class="cfg-titulo">Mapeo de Campos</h1>
-      <p class="cfg-sub">Configuracion del mapeo entre campos de Katuq y Shopify</p>
+      <span class="cfg-eyebrow">{{ 'integrations.facturacionHub.integraciones' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'integrations.fieldMapping.mapeoDeCampos' | translate }}</h1>
+      <p class="cfg-sub">{{ 'integrations.fieldMapping.configuracionDelMapeoEntreCampos' | translate }}</p>
     </div>
   </header>
 
   <!-- Tabs -->
   <p-tabView [(activeIndex)]="activeTabIndex">
     <!-- Tab 1: Variants -->
-    <p-tabPanel header="Variantes" leftIcon="pi pi-tag">
+    <p-tabPanel [header]="'integrations.fieldMapping.variantes' | translate" leftIcon="pi pi-tag">
       <div class="tab-content-inner">
         <div class="cfg-aviso mb-3">
           <i class="pi pi-info-circle mt-1"></i>
           <div>
-            <strong>Mapeo automatico de variantes</strong>
-            <p class="mb-0 small">El mapeo de campos entre productos Katuq y Shopify se realiza automaticamente.
-              A continuacion se muestra la estructura de mapeo actual (solo lectura).</p>
+            <strong>{{ 'integrations.fieldMapping.mapeoAutomaticoDeVariantes' | translate }}</strong>
+            <p class="mb-0 small">{{ 'integrations.fieldMapping.elMapeoDeCamposEntre' | translate }}</p>
           </div>
         </div>
 
         <div *ngIf="loadingVariants" class="text-center py-4">
           <p-progressBar mode="indeterminate" [style]="{'height': '6px'}"></p-progressBar>
-          <p class="text-muted mt-2">Cargando estructura de variantes...</p>
+          <p class="text-muted mt-2">{{ 'integrations.fieldMapping.cargandoEstructuraDeVariantes' | translate }}</p>
         </div>
 
         <p-card *ngIf="!loadingVariants" styleClass="mapping-card">
@@ -36,16 +35,16 @@
     </p-tabPanel>
 
     <!-- Tab 2: Locations -->
-    <p-tabPanel header="Bodegas / Locations" leftIcon="pi pi-map-marker">
+    <p-tabPanel [header]="'integrations.fieldMapping.bodegasLocations' | translate" leftIcon="pi pi-map-marker">
       <div class="tab-content-inner">
         <div class="barra-bodegas mb-3">
-          <p class="cfg-sub">Mapea las bodegas de Katuq con las ubicaciones (locations) de Shopify</p>
+          <p class="cfg-sub">{{ 'integrations.fieldMapping.mapeaLasBodegasDeKatuq' | translate }}</p>
           <div class="cfg-acciones">
-            <button pButton type="button" label="Auto-mapear" icon="pi pi-bolt"
+            <button pButton type="button" [label]="'integrations.fieldMapping.autoMapear' | translate" icon="pi pi-bolt"
               class="p-button-outlined p-button-sm"
               [loading]="autoMapping"
               (click)="autoMapLocations()"></button>
-            <button pButton type="button" label="Agregar" icon="pi pi-plus"
+            <button pButton type="button" [label]="'integrations.fieldMapping.agregar' | translate" icon="pi pi-plus"
               class="p-button-outlined p-button-sm"
               (click)="addLocationMapping()"></button>
           </div>
@@ -53,7 +52,7 @@
 
         <div *ngIf="loadingLocations" class="text-center py-4">
           <p-progressBar mode="indeterminate" [style]="{'height': '6px'}"></p-progressBar>
-          <p class="text-muted mt-2">Cargando ubicaciones...</p>
+          <p class="text-muted mt-2">{{ 'integrations.fieldMapping.cargandoUbicaciones' | translate }}</p>
         </div>
 
         <p-card *ngIf="!loadingLocations" styleClass="mapping-card">
@@ -61,9 +60,9 @@
             *ngIf="locationMappings.length > 0">
             <ng-template pTemplate="header">
               <tr>
-                <th>Bodega Katuq</th>
+                <th>{{ 'integrations.fieldMapping.bodegaKatuq' | translate }}</th>
                 <th><i class="pi pi-arrow-right mx-2"></i></th>
-                <th>Location Shopify</th>
+                <th>{{ 'integrations.fieldMapping.locationShopify' | translate }}</th>
                 <th style="width: 60px;"></th>
               </tr>
             </ng-template>
@@ -72,7 +71,7 @@
                 <td>
                   <p-dropdown [options]="katuqWarehouses"
                     [(ngModel)]="mapping.katuqWarehouseId"
-                    placeholder="Seleccionar bodega"
+                    [placeholder]="'integrations.fieldMapping.seleccionarBodega' | translate"
                     [showClear]="true" styleClass="w-100"
                     (onChange)="onWarehouseChange(mapping, $event)"></p-dropdown>
                 </td>
@@ -82,7 +81,7 @@
                 <td>
                   <p-dropdown [options]="shopifyLocations"
                     [(ngModel)]="mapping.shopifyLocationId"
-                    placeholder="Seleccionar location"
+                    [placeholder]="'integrations.fieldMapping.seleccionarLocation' | translate"
                     [showClear]="true" styleClass="w-100"
                     (onChange)="onLocationChange(mapping, $event)"></p-dropdown>
                 </td>
@@ -90,7 +89,7 @@
                   <button pButton type="button" icon="pi pi-trash"
                     class="p-button-text p-button-danger p-button-sm p-button-rounded"
                     (click)="removeLocationMapping(rowIndex)"
-                    pTooltip="Eliminar mapeo"></button>
+                    [pTooltip]="'integrations.fieldMapping.eliminarMapeo' | translate"></button>
                 </td>
               </tr>
             </ng-template>
@@ -98,11 +97,11 @@
 
           <div *ngIf="locationMappings.length === 0" class="cfg-vacio">
             <i class="pi pi-map-marker cfg-vacio__icono"></i>
-            <p class="cfg-vacio__texto">No hay mapeos configurados. Usa "Auto-mapear" o agrega uno manualmente.</p>
+            <p class="cfg-vacio__texto">{{ 'integrations.fieldMapping.noHayMapeosConfiguradosUsa' | translate }}</p>
           </div>
 
           <div class="text-end mt-3" *ngIf="locationMappings.length > 0">
-            <button pButton type="button" label="Guardar Mapeos" icon="pi pi-save"
+            <button pButton type="button" [label]="'integrations.fieldMapping.guardarMapeos' | translate" icon="pi pi-save"
               class="p-button-sm"
               [loading]="savingLocations"
               (click)="saveLocationMappings()"></button>
@@ -112,13 +111,13 @@
     </p-tabPanel>
 
     <!-- Tab 3: Status Mapping (read-only) -->
-    <p-tabPanel header="Estados" leftIcon="pi pi-th-large">
+    <p-tabPanel [header]="'integrations.fieldMapping.estados' | translate" leftIcon="pi pi-th-large">
       <div class="tab-content-inner">
         <div class="cfg-aviso mb-3">
           <i class="pi pi-info-circle mt-1"></i>
           <div>
-            <strong>Mapeo de estados (solo lectura)</strong>
-            <p class="mb-0 small">Los estados de Shopify se mapean automaticamente a estados internos de Katuq.</p>
+            <strong>{{ 'integrations.fieldMapping.mapeoDeEstadosSoloLectura' | translate }}</strong>
+            <p class="mb-0 small">{{ 'integrations.fieldMapping.losEstadosDeShopifySe' | translate }}</p>
           </div>
         </div>
 
@@ -126,10 +125,10 @@
           <p-table [value]="statusMappings" styleClass="p-datatable-sm p-datatable-striped">
             <ng-template pTemplate="header">
               <tr>
-                <th>Campo Shopify</th>
+                <th>{{ 'integrations.fieldMapping.campoShopify' | translate }}</th>
                 <th></th>
-                <th>Campo Katuq</th>
-                <th>Descripcion</th>
+                <th>{{ 'integrations.fieldMapping.campoKatuq' | translate }}</th>
+                <th>{{ 'integrations.fieldMapping.descripcion' | translate }}</th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-mapping>

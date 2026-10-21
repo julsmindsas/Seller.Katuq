@@ -7,7 +7,7 @@ import { ValidationResult } from './integration-form-validator.service';
     <div class="credential-strength-indicator" *ngIf="validationResult">
       <!-- Barra de progreso de seguridad -->
       <div class="strength-header">
-        <span class="strength-label">Nivel de seguridad</span>
+        <span class="strength-label">{{ 'integrations.credentialStrength.nivelDeSeguridad' | translate }}</span>
         <span class="strength-score">{{ validationResult.score }}/100</span>
       </div>
       
@@ -41,12 +41,12 @@ import { ValidationResult } from './integration-form-validator.service';
       
       <!-- Recommendations -->
       <div class="strength-recommendations" *ngIf="showRecommendations && validationResult.score < 80">
-        <h6><i class="fa fa-shield-alt"></i> Recomendaciones de seguridad</h6>
+        <h6><i class="fa fa-shield-alt"></i> {{ 'integrations.credentialStrength.recomendacionesDeSeguridad' | translate }}</h6>
         <ul>
-          <li *ngIf="validationResult.score < 30">Usa credenciales más largas y complejas</li>
-          <li *ngIf="validationResult.score < 50">Configura webhooks para monitoreo en tiempo real</li>
-          <li *ngIf="validationResult.score < 70">Verifica que las credenciales coincidan con el ambiente</li>
-          <li *ngIf="validationResult.score < 80">Añade claves de integridad cuando estén disponibles</li>
+          <li *ngIf="validationResult.score < 30">{{ 'integrations.credentialStrength.usaCredencialesMasLargas' | translate }}</li>
+          <li *ngIf="validationResult.score < 50">{{ 'integrations.credentialStrength.configuraWebhooksMonitoreo' | translate }}</li>
+          <li *ngIf="validationResult.score < 70">{{ 'integrations.credentialStrength.verificaCredencialesAmbiente' | translate }}</li>
+          <li *ngIf="validationResult.score < 80">{{ 'integrations.credentialStrength.anadeClavesDeIntegridad' | translate }}</li>
         </ul>
       </div>
     </div>

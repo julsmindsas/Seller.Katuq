@@ -11,6 +11,7 @@ import {
 } from '../../../shared/services/notifications/whatsapp-integration-config.service';
 import { SecurityService } from '../../../shared/services/security/security.service';
 
+import { TranslateService } from '@ngx-translate/core';
 interface NotificationTypeOption {
   id: WhatsappNotificationType;
   label: string;
@@ -78,7 +79,8 @@ export class WhatsappKapsoConfigComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private configService: WhatsappIntegrationConfigService,
     private toastr: ToastrService,
-    private security: SecurityService
+    private security: SecurityService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -194,15 +196,15 @@ export class WhatsappKapsoConfigComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (res) => {
             this.toastr.success(
-              `Conectado: ${[res?.numero, res?.nombre].filter(Boolean).join(' — ') || 'número verificado'}`,
-              'Conexión verificada'
+              this.translate.instant('integrations.whatsappKapsoConfig.conectadoDetalle', { detalle: [res?.numero, res?.nombre].filter(Boolean).join(' — ') || this.translate.instant('integrations.whatsappKapsoConfig.numeroVerificado') }),
+              this.translate.instant('integrations.whatsappKapsoConfig.conexionVerificada')
             );
             this.loadConfig();
           },
           error: (err) => {
             this.toastr.error(
-              err?.error?.message || 'No se pudo verificar la conexión.',
-              'Verificación fallida'
+              err?.error?.message || this.translate.instant('integrations.whatsappKapsoConfig.noSePudoVerificarLa'),
+              this.translate.instant('integrations.whatsappKapsoConfig.verificacionFallida')
             );
           },
         });
@@ -227,7 +229,7 @@ export class WhatsappKapsoConfigComponent implements OnInit, OnDestroy {
           error: (err) => {
             this.verifying = false;
             this.toastr.error(
-              err?.error?.message || 'No se pudieron guardar las credenciales.',
+              err?.error?.message || this.translate.instant('integrations.whatsappKapsoConfig.noSePudieronGuardarLas'),
             );
           },
         });
@@ -378,18 +380,18 @@ export class WhatsappKapsoConfigComponent implements OnInit, OnDestroy {
           if (res?.success && res.data) {
             this.applyConfig(res.data);
             this.toastr.success(
-              'Aceptaste los términos. Ya podés activar WhatsApp.',
-              'Opt-in registrado'
+              this.translate.instant('integrations.whatsappKapsoConfig.aceptasteLosTerminosYaPodes'),
+              this.translate.instant('integrations.whatsappKapsoConfig.optInRegistrado')
             );
           } else {
             this.toastr.error(
-              res?.message || 'No fue posible registrar el opt-in.'
+              res?.message || this.translate.instant('integrations.whatsappKapsoConfig.noFuePosibleRegistrarEl')
             );
           }
         },
         error: (err) => {
           this.toastr.error(
-            err?.error?.message || err?.message || 'Error registrando opt-in.'
+            err?.error?.message || err?.message || this.translate.instant('integrations.whatsappKapsoConfig.errorRegistrandoOptIn')
           );
         },
       });
@@ -400,8 +402,8 @@ export class WhatsappKapsoConfigComponent implements OnInit, OnDestroy {
 
     if (!this.optInAccepted && this.form.get('enabled')?.value) {
       this.toastr.warning(
-        'Primero tenés que aceptar los Términos y Condiciones.',
-        'Opt-in requerido'
+        this.translate.instant('integrations.whatsappKapsoConfig.primeroTenesQueAceptarLos'),
+        this.translate.instant('integrations.whatsappKapsoConfig.optInRequerido')
       );
       return;
     }
@@ -445,12 +447,12 @@ export class WhatsappKapsoConfigComponent implements OnInit, OnDestroy {
           if (res?.success && res.data) {
             this.applyConfig(res.data);
             this.toastr.success(
-              'Configuración de WhatsApp actualizada.',
-              'Guardado'
+              this.translate.instant('integrations.whatsappKapsoConfig.configuracionDeWhatsappActualizada'),
+              this.translate.instant('integrations.fieldMapping.guardado')
             );
           } else {
             this.toastr.error(
-              res?.message || 'No fue posible guardar la configuración.'
+              res?.message || this.translate.instant('integrations.whatsappKapsoConfig.noFuePosibleGuardarLa')
             );
           }
         },
@@ -458,7 +460,7 @@ export class WhatsappKapsoConfigComponent implements OnInit, OnDestroy {
           this.toastr.error(
             err?.error?.message ||
               err?.message ||
-              'Error guardando la configuración.'
+              this.translate.instant('integrations.whatsappKapsoConfig.errorGuardandoLaConfiguracion')
           );
         },
       });
@@ -481,12 +483,12 @@ export class WhatsappKapsoConfigComponent implements OnInit, OnDestroy {
         next: (res) => {
           if (res?.success) {
             this.toastr.success(
-              res.message || 'Mensaje de prueba enviado.',
-              'Envío exitoso'
+              res.message || this.translate.instant('integrations.whatsappKapsoConfig.mensajeDePruebaEnviado'),
+              this.translate.instant('integrations.whatsappKapsoConfig.envioExitoso')
             );
           } else {
             this.toastr.warning(
-              res?.message || 'No fue posible enviar el mensaje de prueba.'
+              res?.message || this.translate.instant('integrations.whatsappKapsoConfig.noFuePosibleEnviarEl')
             );
           }
         },
@@ -494,7 +496,7 @@ export class WhatsappKapsoConfigComponent implements OnInit, OnDestroy {
           this.toastr.error(
             err?.error?.message ||
               err?.message ||
-              'Error enviando mensaje de prueba.'
+              this.translate.instant('integrations.whatsappKapsoConfig.errorEnviandoMensajeDePrueba')
           );
         },
       });

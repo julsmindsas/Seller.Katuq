@@ -25,6 +25,7 @@ import {
   FlowTriggerBinding
 } from '../interfaces/flow.interface';
 
+import { TranslateService } from '@ngx-translate/core';
 interface ScheduleConfig {
   cron?: string;
   intervalMinutes?: number;
@@ -82,7 +83,8 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
     private state: FlowsStateService,
     private loader: FlowCanvasLoaderService,
     private toastr: ToastrService,
-    private integrationsService: IntegrationsService
+    private integrationsService: IntegrationsService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -100,7 +102,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
           'No se pudo cargar el editor visual. Verificá que el bundle esté en assets/flow-canvas/. Detalle: ' +
           (err?.message || 'desconocido');
         this.errorMessage = msg;
-        this.toastr.error(msg, 'Editor no disponible', { timeOut: 8000 });
+        this.toastr.error(msg, this.translate.instant('flows.flowEditor.editorNoDisponible'), { timeOut: 8000 });
       });
 
     // Catalog from backend (or fallback).
@@ -316,7 +318,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
     const { intent, payload } = detail;
     switch (intent) {
       case 'connectionRejected':
-        this.toastr.warning(payload?.reason || 'Esos dos pasos no se pueden unir.', 'No se pudo conectar', {
+        this.toastr.warning(payload?.reason || this.translate.instant('flows.flowEditor.esosDosPasosNoSe'), this.translate.instant('flows.flowEditor.noSePudoConectar'), {
           timeOut: 4000
         });
         break;
@@ -324,7 +326,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
         // Subtle, no toast — the visual feedback in the canvas suffices.
         break;
       case 'autoLayoutApplied':
-        this.toastr.info('Pasos ordenados.', '', { timeOut: 1800 });
+        this.toastr.info(this.translate.instant('flows.flowEditor.pasosOrdenados'), '', { timeOut: 1800 });
         this.hasUnsaved = true;
         this.autosaveTrigger$.next();
         break;
@@ -343,10 +345,10 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
         // but for now the toast is short and dismissable.
         this.toastr.success(
           payload?.conectadoDespuesDe
-            ? `Quedó conectado después de «${payload.conectadoDespuesDe}». Si no va ahí, toca la línea y quítala.`
+            ? this.translate.instant('flows.flowEditor.quedoConectadoDespuesDe', { paso: payload.conectadoDespuesDe })
             : payload?.faltaUnir
-              ? 'Paso agregado. Únelo con una línea desde el punto morado del paso anterior.'
-              : 'Paso agregado.',
+              ? this.translate.instant('flows.flowEditor.pasoAgregadoUneloConUna')
+              : this.translate.instant('flows.flowEditor.pasoAgregado'),
           '',
           { timeOut: payload?.conectadoDespuesDe ? 3500 : 3000 }
         );
@@ -368,20 +370,20 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
     this.flowsService.installTemplate(slug).subscribe({
       next: (saved) => {
         if (saved) {
-          this.toastr.success('Plantilla instalada. Redirigiendo…', '', { timeOut: 2200 });
+          this.toastr.success(this.translate.instant('flows.flowEditor.plantillaInstaladaRedirigiendo'), '', { timeOut: 2200 });
           setTimeout(() => this.router.navigate(['/flows/editor', saved.id]), 600);
         } else {
           this.toastr.info(
-            'La plantilla todavía no está disponible. Prueba agregar pasos desde el catálogo.',
-            'Plantilla no disponible',
+            this.translate.instant('flows.flowEditor.laPlantillaTodaviaNoEsta'),
+            this.translate.instant('flows.flowEditor.plantillaNoDisponible'),
             { timeOut: 4500 }
           );
         }
       },
       error: () => {
         this.toastr.info(
-          'No se pudo instalar la plantilla. Prueba agregar pasos desde el catálogo.',
-          'Plantilla no disponible',
+          this.translate.instant('flows.flowEditor.noSePudoInstalarLa'),
+          this.translate.instant('flows.flowEditor.plantillaNoDisponible'),
           { timeOut: 4500 }
         );
       }
@@ -395,7 +397,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
    */
   onRunRequested(_event: Event): void {
     if (this.isNew || !this.flow) {
-      this.toastr.warning('Guarda la automatización antes de probarla.', 'Antes de ejecutar', {
+      this.toastr.warning(this.translate.instant('flows.flowEditor.guardaLaAutomatizacionAntesDe'), this.translate.instant('flows.flowEditor.antesDeEjecutar'), {
         timeOut: 3500
       });
       return;
@@ -403,7 +405,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.stopRunPolling();
     this.runStartedAt = Date.now();
-    this.toastr.info('Ejecución iniciada…', '', { timeOut: 1800 });
+    this.toastr.info(this.translate.instant('flows.flowEditor.ejecucionIniciada'), '', { timeOut: 1800 });
 
     // Disparo REAL del trigger (igual que el cron): triggerData vacío => el
     // engine ejecuta el handler real (polling Osmosis/Shopify con su propio
@@ -421,8 +423,8 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
           }
         } else {
           this.toastr.warning(
-            'El run se inició pero no pudimos leer el contexto. Revisa el historial.',
-            'Run iniciado',
+            this.translate.instant('flows.flowEditor.elRunSeInicioPero'),
+            this.translate.instant('flows.flowEditor.runIniciado'),
             { timeOut: 4500 }
           );
         }
@@ -430,7 +432,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
       error: (err) => {
         const reason =
           err?.error?.message || err?.error?.error || 'No se pudo iniciar la ejecución.';
-        this.toastr.error(reason, 'Run falló', { timeOut: 5000 });
+        this.toastr.error(reason, this.translate.instant('flows.flowEditor.runFallo'), { timeOut: 5000 });
       }
     });
   }
@@ -476,16 +478,16 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
   private notifyRunFinished(run: RunContext): void {
     const seconds = ((run.totalDurationMs ?? Date.now() - this.runStartedAt) / 1000).toFixed(1);
     if (run.status === 'success') {
-      this.toastr.success(`Run completado en ${seconds}s`, 'Éxito', { timeOut: 3500 });
+      this.toastr.success(this.translate.instant('flows.flowEditor.runCompletadoEn', { seconds }), this.translate.instant('comun.exito'), { timeOut: 3500 });
     } else if (run.status === 'failed') {
       const firstError = run.errors?.[0]?.message || 'Revisa el detalle en el historial.';
-      this.toastr.error(firstError, `Run falló (${seconds}s)`, { timeOut: 6000 });
+      this.toastr.error(firstError, this.translate.instant('flows.flowEditor.runFallo', { seconds }), { timeOut: 6000 });
     } else if (run.status === 'partial') {
-      this.toastr.warning(`Run parcial en ${seconds}s — algunos nodos fallaron.`, '', {
+      this.toastr.warning(this.translate.instant('flows.flowEditor.runParcialEn', { seconds }), '', {
         timeOut: 4500
       });
     } else if (run.status === 'cancelled') {
-      this.toastr.info(`Run cancelado en ${seconds}s`, '', { timeOut: 3000 });
+      this.toastr.info(this.translate.instant('flows.flowEditor.runCanceladoEn', { seconds }), '', { timeOut: 3000 });
     }
   }
 
@@ -539,7 +541,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
     // está vacío pero el id es real: guardar la pisaría con ese lienzo vacío.
     if (!this.isNew && !this.flow) {
       if (!opts.silent) {
-        this.toastr.error('No se guardó nada: esta automatización no se pudo cargar. Recarga la página.', '', { timeOut: 5000 });
+        this.toastr.error(this.translate.instant('flows.flowEditor.noSeGuardoNadaEsta'), '', { timeOut: 5000 });
       }
       return;
     }
@@ -576,7 +578,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
           if (saved.status) this.flowStatus = saved.status;
           this.saving = false;
           if (!opts.silent) {
-            this.toastr.success('Cambios guardados.', '', { timeOut: 1800 });
+            this.toastr.success(this.translate.instant('flows.flowEditor.cambiosGuardados'), '', { timeOut: 1800 });
           }
           if (isCreation) {
             // jump to the canonical url so refresh keeps the flow loaded.
@@ -588,7 +590,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         const msg = this.mensajeDeGuardado(err);
-        this.toastr.error(msg, 'No se guardó', { timeOut: 6000 });
+        this.toastr.error(msg, this.translate.instant('flows.flowEditor.noSeGuardo'), { timeOut: 6000 });
         this.saving = false;
         if (opts.silent) {
           // re-trigger so the user sees the failure and can retry manually
@@ -648,12 +650,12 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
       return;
     }
     Swal.fire({
-      title: `¿Apagar «${this.flow.name}»?`,
-      text: 'Mientras esté apagada, Katuq deja de mover estos datos. Puedes volver a encenderla cuando quieras.',
+      title: this.translate.instant('flows.flowEditor.apagarFlow', { nombre: this.flow.name }),
+      text: this.translate.instant('flows.flowEditor.mientrasEsteApagadaKatuqDeja'),
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Sí, apagar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('flows.flowEditor.siApagar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#B83232',
     }).then((r) => { if (r.isConfirmed) this.cambiarEncendido(); });
   }
@@ -671,9 +673,9 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
           this.flowStatus = updated.status;
           this.state.upsertFlow(updated);
           if (wasActive) {
-            this.toastr.info('Automatización apagada.', '', { timeOut: 2200 });
+            this.toastr.info(this.translate.instant('flows.flowEditor.automatizacionApagada'), '', { timeOut: 2200 });
           } else {
-            this.toastr.success('Automatización encendida.', '', { timeOut: 2200 });
+            this.toastr.success(this.translate.instant('flows.flowEditor.automatizacionEncendida'), '', { timeOut: 2200 });
           }
         }
       },
@@ -683,8 +685,8 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
           ? err.error.message
           : '';
         this.toastr.error(
-          delServidor || (wasActive ? 'No pudimos apagarla. Vuelve a intentarlo.' : 'No pudimos encenderla. Vuelve a intentarlo.'),
-          wasActive ? 'No se apagó' : 'No se encendió',
+          delServidor || (wasActive ? this.translate.instant('flows.flowEditor.noPudimosApagarlaVuelveA') : this.translate.instant('flows.flowEditor.noPudimosEncenderlaVuelveA')),
+          wasActive ? this.translate.instant('flows.flowEditor.noSeApago') : this.translate.instant('flows.flowEditor.noSeEncendio'),
           { timeOut: 6000 }
         );
       }
@@ -697,12 +699,12 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
       return;
     }
     Swal.fire({
-      title: 'Tienes cambios sin guardar',
-      text: 'Si sales ahora, se pierden.',
+      title: this.translate.instant('flows.flowEditor.tienesCambiosSinGuardar'),
+      text: this.translate.instant('flows.flowEditor.siSalesAhoraSePierden'),
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Salir sin guardar',
-      cancelButtonText: 'Seguir editando',
+      confirmButtonText: this.translate.instant('flows.flowEditor.salirSinGuardar'),
+      cancelButtonText: this.translate.instant('flows.flowEditor.seguirEditando'),
     }).then((r) => { if (r.isConfirmed) this.router.navigate(['/flows']); });
   }
 
@@ -747,8 +749,8 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
     if (!this.webhookUrl) return;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(this.webhookUrl).then(
-        () => this.toastr.success('URL copiada.', '', { timeOut: 1500 }),
-        () => this.toastr.warning('No se pudo copiar al portapapeles.', '', { timeOut: 2500 })
+        () => this.toastr.success(this.translate.instant('flows.flowEditor.urlCopiada'), '', { timeOut: 1500 }),
+        () => this.toastr.warning(this.translate.instant('flows.flowEditor.noSePudoCopiarAl'), '', { timeOut: 2500 })
       );
     }
   }

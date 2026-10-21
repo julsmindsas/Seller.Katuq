@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { IntegrationsService } from '../integrations.service';
 
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-shopify-dashboard',
   templateUrl: './shopify-dashboard.component.html',
@@ -29,7 +30,8 @@ export class ShopifyDashboardComponent implements OnInit, OnDestroy {
   constructor(
     private integrationsService: IntegrationsService,
     private messageService: MessageService,
-    private router: Router
+    private router: Router,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -72,8 +74,8 @@ export class ShopifyDashboardComponent implements OnInit, OnDestroy {
           this.lastChecked = new Date();
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo cargar el estado de Shopify'
+            summary: this.translate.instant('comun.error'),
+            detail: this.translate.instant('integrations.shopifyDashboard.noSePudoCargarEl')
           });
         }
       });
@@ -90,16 +92,16 @@ export class ShopifyDashboardComponent implements OnInit, OnDestroy {
         next: (response) => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Sincronizacion iniciada',
-            detail: `Se inicio la sincronizacion de ${this.getResourceLabel(resource)}`
+            summary: this.translate.instant('integrations.shopifyDashboard.sincronizacionIniciada'),
+            detail: this.translate.instant('integrations.shopifyDashboard.seInicioSincronizacionDe', { recurso: this.getResourceLabel(resource) })
           });
           setTimeout(() => this.loadDashboardData(), 3000);
         },
         error: (err) => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: err?.error?.message || 'Error al iniciar sincronizacion'
+            summary: this.translate.instant('comun.error'),
+            detail: err?.error?.message || this.translate.instant('integrations.shopifyDashboard.errorAlIniciarSincronizacion')
           });
         }
       });
@@ -115,7 +117,7 @@ export class ShopifyDashboardComponent implements OnInit, OnDestroy {
           this.lastChecked = new Date();
           this.messageService.add({
             severity: result.success ? 'success' : 'warn',
-            summary: result.success ? 'Conectado' : 'Sin conexion',
+            summary: result.success ? this.translate.instant('integrations.integrationsList.conectado2') : this.translate.instant('integrations.shopifyDashboard.sinConexion'),
             detail: result.message
           });
         },
@@ -124,8 +126,8 @@ export class ShopifyDashboardComponent implements OnInit, OnDestroy {
           this.lastChecked = new Date();
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo verificar la conexion'
+            summary: this.translate.instant('comun.error'),
+            detail: this.translate.instant('integrations.shopifyDashboard.noSePudoVerificarLa')
           });
         }
       });

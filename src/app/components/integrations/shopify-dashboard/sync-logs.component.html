@@ -4,12 +4,12 @@
   <!-- Header -->
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Integraciones</span>
-      <h1 class="cfg-titulo">Logs de Sincronizacion</h1>
-      <p class="cfg-sub">Historial de eventos de sincronizacion con Shopify</p>
+      <span class="cfg-eyebrow">{{ 'integrations.facturacionHub.integraciones' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'integrations.syncLogs.logsDeSincronizacion' | translate }}</h1>
+      <p class="cfg-sub">{{ 'integrations.syncLogs.historialDeEventosDeSincronizacion' | translate }}</p>
     </div>
     <div class="cfg-acciones">
-      <button pButton type="button" label="Recargar" icon="pi pi-refresh"
+      <button pButton type="button" [label]="'integrations.shopifyDashboard.recargar' | translate" icon="pi pi-refresh"
         class="p-button-outlined p-button-sm"
         [loading]="loading"
         (click)="loadLogs()"></button>
@@ -20,26 +20,26 @@
   <section class="cfg-card filtros">
   <div class="row">
     <div class="col-12 col-md-3 mb-2">
-      <label class="cfg-label">Tipo</label>
+      <label class="cfg-label">{{ 'integrations.integrations.tipo' | translate }}</label>
       <p-dropdown [options]="typeOptions" [(ngModel)]="typeFilter"
-        placeholder="Todos los tipos" [showClear]="true"
+        [placeholder]="'integrations.syncLogs.todosLosTipos' | translate" [showClear]="true"
         (onChange)="onFilterChange()" styleClass="w-100"></p-dropdown>
     </div>
     <div class="col-12 col-md-3 mb-2">
-      <label class="cfg-label">Estado</label>
+      <label class="cfg-label">{{ 'integrations.integrations.estado' | translate }}</label>
       <p-dropdown [options]="statusOptions" [(ngModel)]="statusFilter"
-        placeholder="Todos los estados" [showClear]="true"
+        [placeholder]="'integrations.syncLogs.todosLosEstados' | translate" [showClear]="true"
         (onChange)="onFilterChange()" styleClass="w-100"></p-dropdown>
     </div>
     <div class="col-12 col-md-4 mb-2">
-      <label class="cfg-label">Rango de Fechas</label>
+      <label class="cfg-label">{{ 'integrations.syncLogs.rangoDeFechas' | translate }}</label>
       <p-calendar [(ngModel)]="dateRange" selectionMode="range"
-        [readonlyInput]="true" placeholder="Seleccionar rango"
+        [readonlyInput]="true" [placeholder]="'integrations.syncLogs.seleccionarRango' | translate"
         dateFormat="dd/mm/yy" [showIcon]="true"
         (onClose)="onFilterChange()" styleClass="w-100"></p-calendar>
     </div>
     <div class="col-12 col-md-2 mb-2 d-flex align-items-end">
-      <button pButton type="button" label="Limpiar" icon="pi pi-filter-slash"
+      <button pButton type="button" [label]="'integrations.syncLogs.limpiar' | translate" icon="pi pi-filter-slash"
         class="p-button-text p-button-sm"
         (click)="clearFilters()"></button>
     </div>
@@ -52,7 +52,7 @@
       [rows]="rows" [totalRecords]="totalRecords" [loading]="loading"
       [first]="first" (onLazyLoad)="loadLogs($event)"
       [rowHover]="true" [showCurrentPageReport]="true"
-      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} eventos"
+      [currentPageReportTemplate]="'integrations.syncLogs.mostrandoFirstALastDe' | translate"
       [rowsPerPageOptions]="[10, 25, 50]"
       selectionMode="single" (onRowSelect)="showDetail($event.data)"
       styleClass="p-datatable-sm">
@@ -60,11 +60,11 @@
       <ng-template pTemplate="header">
         <tr>
           <th style="width: 40px;"></th>
-          <th>Tipo</th>
-          <th>Estado</th>
-          <th>Descripcion</th>
-          <th>Fecha</th>
-          <th style="width: 80px;">Acción</th>
+          <th>{{ 'integrations.integrations.tipo' | translate }}</th>
+          <th>{{ 'integrations.integrations.estado' | translate }}</th>
+          <th>{{ 'integrations.fieldMapping.descripcion' | translate }}</th>
+          <th>{{ 'integrations.syncLogs.fecha' | translate }}</th>
+          <th style="width: 80px;">{{ 'integrations.syncLogs.accion' | translate }}</th>
         </tr>
       </ng-template>
 
@@ -91,7 +91,7 @@
             <button pButton type="button" icon="pi pi-eye"
               class="p-button-text p-button-sm p-button-rounded"
               (click)="showDetail(event); $event.stopPropagation()"
-              pTooltip="Ver detalle"></button>
+              [pTooltip]="'integrations.syncLogs.verDetalle' | translate"></button>
           </td>
         </tr>
       </ng-template>
@@ -101,7 +101,7 @@
           <td colspan="6">
             <div class="cfg-vacio">
               <i class="pi pi-inbox cfg-vacio__icono"></i>
-              <p class="cfg-vacio__titulo">No se encontraron eventos</p>
+              <p class="cfg-vacio__titulo">{{ 'integrations.syncLogs.noSeEncontraronEventos' | translate }}</p>
             </div>
           </td>
         </tr>
@@ -111,21 +111,21 @@
 </div>
 
 <!-- Detail Dialog -->
-<p-dialog header="Detalle del Evento" [(visible)]="showDetailDialog"
+<p-dialog [header]="'integrations.syncLogs.detalleDelEvento' | translate" [(visible)]="showDetailDialog"
   [modal]="true" [style]="{'width': '700px', 'max-width': '95vw'}"
   [draggable]="false" [resizable]="false">
 
   <div *ngIf="selectedEvent" class="event-detail">
     <div class="row mb-3">
       <div class="col-6">
-        <label class="small fw-bold text-muted">Tipo</label>
+        <label class="small fw-bold text-muted">{{ 'integrations.integrations.tipo' | translate }}</label>
         <p class="mb-0">
           <i [class]="getTypeIcon(selectedEvent.type)" class="me-2"></i>
           {{ getTypeLabel(selectedEvent.type) }}
         </p>
       </div>
       <div class="col-6">
-        <label class="small fw-bold text-muted">Estado</label>
+        <label class="small fw-bold text-muted">{{ 'integrations.integrations.estado' | translate }}</label>
         <p class="mb-0">
           <p-tag [value]="getStatusLabel(selectedEvent.status)"
             [severity]="getStatusSeverity(selectedEvent.status)"></p-tag>
@@ -135,38 +135,38 @@
 
     <div class="row mb-3">
       <div class="col-6">
-        <label class="small fw-bold text-muted">Fecha</label>
+        <label class="small fw-bold text-muted">{{ 'integrations.syncLogs.fecha' | translate }}</label>
         <p class="mb-0">{{ selectedEvent.date | date:'full' }}</p>
       </div>
       <div class="col-6">
-        <label class="small fw-bold text-muted">ID</label>
+        <label class="small fw-bold text-muted">{{ 'integrations.syncLogs.id' | translate }}</label>
         <p class="mb-0 text-monospace small">{{ selectedEvent.id || '--' }}</p>
       </div>
     </div>
 
     <div class="mb-3">
-      <label class="small fw-bold text-muted">Descripcion</label>
+      <label class="small fw-bold text-muted">{{ 'integrations.fieldMapping.descripcion' | translate }}</label>
       <p class="mb-0">{{ selectedEvent.description || selectedEvent.detail || '--' }}</p>
     </div>
 
     <div *ngIf="selectedEvent.error" class="mb-3">
-      <label class="small fw-bold text-muted">Error</label>
+      <label class="small fw-bold text-muted">{{ 'comun.error' | translate }}</label>
       <div class="alert alert-danger small mb-0">
         {{ selectedEvent.error }}
       </div>
     </div>
 
     <div *ngIf="selectedEvent.payload || selectedEvent.data" class="mb-3">
-      <label class="small fw-bold text-muted">Datos (JSON)</label>
+      <label class="small fw-bold text-muted">{{ 'integrations.syncLogs.datosJson' | translate }}</label>
       <pre class="json-viewer">{{ formatJson(selectedEvent.payload || selectedEvent.data) }}</pre>
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <button pButton type="button" label="Cerrar" icon="pi pi-times"
+    <button pButton type="button" [label]="'comun.cerrar' | translate" icon="pi pi-times"
       class="p-button-text"
       (click)="showDetailDialog = false"></button>
-    <button pButton type="button" label="Reprocesar" icon="pi pi-refresh"
+    <button pButton type="button" [label]="'integrations.syncLogs.reprocesar' | translate" icon="pi pi-refresh"
       class="p-button-warning"
       *ngIf="selectedEvent?.status === 'error'"
       [loading]="reprocessing"

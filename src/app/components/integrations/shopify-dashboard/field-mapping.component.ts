@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { IntegrationsService } from '../integrations.service';
 
+import { TranslateService } from '@ngx-translate/core';
 interface LocationMapping {
   katuqWarehouseId: string;
   katuqWarehouseName: string;
@@ -53,7 +54,8 @@ export class FieldMappingComponent implements OnInit, OnDestroy {
 
   constructor(
     private integrationsService: IntegrationsService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -111,8 +113,8 @@ export class FieldMappingComponent implements OnInit, OnDestroy {
         error: () => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudieron cargar los mapeos de ubicaciones'
+            summary: this.translate.instant('comun.error'),
+            detail: this.translate.instant('integrations.fieldMapping.noSePudieronCargarLos')
           });
         }
       });
@@ -129,15 +131,15 @@ export class FieldMappingComponent implements OnInit, OnDestroy {
         next: () => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Guardado',
-            detail: 'Mapeos de ubicaciones guardados correctamente'
+            summary: this.translate.instant('integrations.fieldMapping.guardado'),
+            detail: this.translate.instant('integrations.fieldMapping.mapeosDeUbicacionesGuardadosCorrectamente')
           });
         },
         error: () => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudieron guardar los mapeos'
+            summary: this.translate.instant('comun.error'),
+            detail: this.translate.instant('integrations.fieldMapping.noSePudieronGuardarLos')
           });
         }
       });
@@ -156,16 +158,16 @@ export class FieldMappingComponent implements OnInit, OnDestroy {
             this.locationMappings = response.data?.mappings || [];
             this.messageService.add({
               severity: 'success',
-              summary: 'Auto-mapeo completado',
-              detail: `Se mapearon ${this.locationMappings.length} ubicaciones`
+              summary: this.translate.instant('integrations.fieldMapping.autoMapeoCompletado'),
+              detail: this.translate.instant('integrations.fieldMapping.seMapearonUbicaciones', { cantidad: this.locationMappings.length })
             });
           }
         },
         error: () => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo realizar el auto-mapeo'
+            summary: this.translate.instant('comun.error'),
+            detail: this.translate.instant('integrations.fieldMapping.noSePudoRealizarEl')
           });
         }
       });

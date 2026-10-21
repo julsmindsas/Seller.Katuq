@@ -5,16 +5,16 @@
   <!-- Header -->
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Integraciones</span>
-      <h1 class="cfg-titulo">Configuracion de Webhooks</h1>
-      <p class="cfg-sub">Gestiona los webhooks registrados en tu tienda Shopify</p>
+      <span class="cfg-eyebrow">{{ 'integrations.facturacionHub.integraciones' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'integrations.webhookConfig.configuracionDeWebhooks' | translate }}</h1>
+      <p class="cfg-sub">{{ 'integrations.webhookConfig.gestionaLosWebhooksRegistradosEn' | translate }}</p>
     </div>
     <div class="cfg-acciones">
-      <button pButton type="button" label="Registrar Todos" icon="pi pi-plus-circle"
+      <button pButton type="button" [label]="'integrations.webhookConfig.registrarTodos' | translate" icon="pi pi-plus-circle"
         class="p-button-sm"
         [loading]="registering"
         (click)="registerAll()"></button>
-      <button pButton type="button" label="Recargar" icon="pi pi-refresh"
+      <button pButton type="button" [label]="'integrations.shopifyDashboard.recargar' | translate" icon="pi pi-refresh"
         class="p-button-outlined p-button-secondary p-button-sm"
         [loading]="loading"
         (click)="loadWebhooks()"></button>
@@ -24,7 +24,7 @@
   <!-- Loading -->
   <div *ngIf="loading" class="text-center py-5">
     <p-progressBar mode="indeterminate" [style]="{'height': '6px'}"></p-progressBar>
-    <p class="text-muted mt-2">Cargando webhooks...</p>
+    <p class="text-muted mt-2">{{ 'integrations.webhookConfig.cargandoWebhooks' | translate }}</p>
   </div>
 
   <!-- Empty State -->
@@ -32,9 +32,9 @@
     <p-card styleClass="webhook-card">
       <div class="cfg-vacio">
         <i class="pi pi-bell-slash cfg-vacio__icono"></i>
-        <h4 class="cfg-vacio__titulo">No hay webhooks registrados</h4>
-        <p class="cfg-vacio__texto">Registra webhooks para recibir notificaciones de eventos de Shopify en tiempo real.</p>
-        <button pButton type="button" label="Registrar Webhooks" icon="pi pi-plus-circle"
+        <h4 class="cfg-vacio__titulo">{{ 'integrations.webhookConfig.noHayWebhooksRegistrados' | translate }}</h4>
+        <p class="cfg-vacio__texto">{{ 'integrations.webhookConfig.registraWebhooksParaRecibirNotificaciones' | translate }}</p>
+        <button pButton type="button" [label]="'integrations.webhookConfig.registrarWebhooks' | translate" icon="pi pi-plus-circle"
           [loading]="registering"
           (click)="registerAll()"></button>
       </div>
@@ -44,19 +44,19 @@
   <!-- Webhooks Table -->
   <p-card *ngIf="!loading && webhooks.length > 0" styleClass="webhook-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <span class="conteo">{{ webhooks.length }} webhook(s) registrado(s)</span>
+      <span class="conteo">{{ webhooks.length }} {{ 'integrations.webhookConfig.webhookSRegistradoS' | translate }}</span>
     </div>
 
     <p-table [value]="webhooks" styleClass="p-datatable-sm" [rowHover]="true">
       <ng-template pTemplate="header">
         <tr>
           <th style="width: 40px;"></th>
-          <th>Topic</th>
-          <th>Categoria</th>
-          <th>URL</th>
-          <th>Estado</th>
-          <th>Ultimo Evento</th>
-          <th style="width: 150px;">Acciones</th>
+          <th>{{ 'integrations.webhookConfig.topic' | translate }}</th>
+          <th>{{ 'integrations.webhookConfig.categoria' | translate }}</th>
+          <th>{{ 'integrations.webhookConfig.url' | translate }}</th>
+          <th>{{ 'integrations.integrations.estado' | translate }}</th>
+          <th>{{ 'integrations.webhookConfig.ultimoEvento' | translate }}</th>
+          <th style="width: 150px;">{{ 'integrations.integrations.acciones' | translate }}</th>
         </tr>
       </ng-template>
 
@@ -94,12 +94,12 @@
                 class="p-button-text p-button-sm p-button-rounded p-button-info"
                 [loading]="isTesting(webhook.id)"
                 (click)="testWebhook(webhook)"
-                pTooltip="Probar webhook"></button>
+                [pTooltip]="'integrations.webhookConfig.probarWebhook' | translate"></button>
               <button pButton type="button" icon="pi pi-trash"
                 class="p-button-text p-button-sm p-button-rounded p-button-danger"
                 [loading]="isUnregistering(webhook.id)"
                 (click)="unregisterWebhook(webhook)"
-                pTooltip="Desregistrar"></button>
+                [pTooltip]="'integrations.webhookConfig.desregistrar' | translate"></button>
             </div>
           </td>
         </tr>
@@ -108,7 +108,7 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="7" class="text-center py-4">
-            <p class="text-muted mb-0">No hay webhooks para mostrar</p>
+            <p class="text-muted mb-0">{{ 'integrations.webhookConfig.noHayWebhooksParaMostrar' | translate }}</p>
           </td>
         </tr>
       </ng-template>
@@ -121,12 +121,12 @@
       <div class="cfg-aviso">
         <i class="pi pi-info-circle mt-1"></i>
         <div>
-          <strong>Acerca de los webhooks</strong>
+          <strong>{{ 'integrations.webhookConfig.acercaDeLosWebhooks' | translate }}</strong>
           <ul class="small mb-0 mt-1">
-            <li>Los webhooks permiten recibir notificaciones en tiempo real cuando ocurren eventos en Shopify.</li>
-            <li>"Registrar Todos" creara los webhooks necesarios sin duplicar los existentes.</li>
-            <li>Si un webhook no funciona, prueba desregistrarlo y volver a registrarlo.</li>
-            <li>Las pruebas de webhook disparan una sincronizacion del recurso asociado.</li>
+            <li>{{ 'integrations.webhookConfig.losWebhooksPermitenRecibirNotificaciones' | translate }}</li>
+            <li>{{ 'integrations.webhookConfig.registrarTodosCrearaLosWebhooks' | translate }}</li>
+            <li>{{ 'integrations.webhookConfig.siUnWebhookNoFunciona' | translate }}</li>
+            <li>{{ 'integrations.webhookConfig.lasPruebasDeWebhookDisparan' | translate }}</li>
           </ul>
         </div>
       </div>

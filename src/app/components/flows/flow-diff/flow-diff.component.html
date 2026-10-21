@@ -1,78 +1,78 @@
 <div class="cfg-pagina flow-diff-page">
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <button class="fd-volver" (click)="back()">← Volver al editor</button>
-      <span class="cfg-eyebrow">Integraciones</span>
-      <h1 class="cfg-titulo">Comparar versiones</h1>
+      <button class="fd-volver" (click)="back()">{{ 'flows.flowDiff.volverAlEditor' | translate }}</button>
+      <span class="cfg-eyebrow">{{ 'flows.flowDiff.integraciones' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'flows.flowDiff.compararVersiones' | translate }}</h1>
     </div>
   </header>
 
   <section class="cfg-card fd-versiones">
     <label>
-      <span class="cfg-label">Desde versión</span>
+      <span class="cfg-label">{{ 'flows.flowDiff.desdeVersion' | translate }}</span>
       <select [(ngModel)]="fromVersion" (change)="computeDiff()">
-        <option *ngFor="let v of versions" [value]="v.version">v{{ v.version }} — {{ v.archivedAt | date:'short' }}</option>
+        <option *ngFor="let v of versions" [value]="v.version">{{ 'flows.flowDiff.v' | translate:{version: v.version, archivedAt: (v.archivedAt | date:'short')} }}</option>
       </select>
     </label>
     <span class="fd-flecha">→</span>
     <label>
-      <span class="cfg-label">Hasta versión</span>
+      <span class="cfg-label">{{ 'flows.flowDiff.hastaVersion' | translate }}</span>
       <select [(ngModel)]="toVersion" (change)="computeDiff()">
-        <option *ngFor="let v of versions" [value]="v.version">v{{ v.version }} — {{ v.archivedAt | date:'short' }}</option>
+        <option *ngFor="let v of versions" [value]="v.version">{{ 'flows.flowDiff.v' | translate:{version: v.version, archivedAt: (v.archivedAt | date:'short')} }}</option>
       </select>
     </label>
   </section>
 
-  <section *ngIf="loading" class="fd-cargando">Calculando diferencias...</section>
+  <section *ngIf="loading" class="fd-cargando">{{ 'flows.flowDiff.calculandoDiferencias' | translate }}</section>
   <section *ngIf="error" class="cfg-aviso cfg-aviso--error">{{ error }}</section>
 
   <section *ngIf="diff && !loading" class="fd-resultado">
     <div class="cfg-stats fd-resumen">
       <div class="cfg-stat fd-stat fd-stat--added">
-        <div class="cfg-stat__label">Nodes agregados</div>
+        <div class="cfg-stat__label">{{ 'flows.flowDiff.nodesAgregados' | translate }}</div>
         <div class="cfg-stat__valor">{{ diff.summary?.nodesAdded || 0 }}</div>
       </div>
       <div class="cfg-stat fd-stat fd-stat--removed">
-        <div class="cfg-stat__label">Nodes removidos</div>
+        <div class="cfg-stat__label">{{ 'flows.flowDiff.nodesRemovidos' | translate }}</div>
         <div class="cfg-stat__valor">{{ diff.summary?.nodesRemoved || 0 }}</div>
       </div>
       <div class="cfg-stat fd-stat fd-stat--modified">
-        <div class="cfg-stat__label">Nodes modificados</div>
+        <div class="cfg-stat__label">{{ 'flows.flowDiff.nodesModificados' | translate }}</div>
         <div class="cfg-stat__valor">{{ diff.summary?.nodesModified || 0 }}</div>
       </div>
       <div class="cfg-stat fd-stat fd-stat--added">
-        <div class="cfg-stat__label">Edges agregados</div>
+        <div class="cfg-stat__label">{{ 'flows.flowDiff.edgesAgregados' | translate }}</div>
         <div class="cfg-stat__valor">{{ diff.summary?.edgesAdded || 0 }}</div>
       </div>
       <div class="cfg-stat fd-stat fd-stat--removed">
-        <div class="cfg-stat__label">Edges removidos</div>
+        <div class="cfg-stat__label">{{ 'flows.flowDiff.edgesRemovidos' | translate }}</div>
         <div class="cfg-stat__valor">{{ diff.summary?.edgesRemoved || 0 }}</div>
       </div>
       <div class="cfg-stat fd-stat fd-stat--meta">
-        <div class="cfg-stat__label">Cambios meta</div>
+        <div class="cfg-stat__label">{{ 'flows.flowDiff.cambiosMeta' | translate }}</div>
         <div class="cfg-stat__valor">{{ diff.summary?.metaChanged || 0 }}</div>
       </div>
     </div>
 
     <div class="cfg-card fd-detalle" *ngIf="diff.nodes">
-      <h3 class="cfg-card__titulo">Detalles</h3>
+      <h3 class="cfg-card__titulo">{{ 'flows.flowDiff.detalles' | translate }}</h3>
       <div *ngIf="diff.nodes.added?.length" class="fd-seccion fd-seccion--added">
-        <h4>+ Nodes agregados</h4>
+        <h4>{{ 'flows.flowDiff.nodesAgregados2' | translate }}</h4>
         <ul><li *ngFor="let id of diff.nodes.added">{{ id }}</li></ul>
       </div>
       <div *ngIf="diff.nodes.removed?.length" class="fd-seccion fd-seccion--removed">
-        <h4>− Nodes removidos</h4>
+        <h4>{{ 'flows.flowDiff.nodesRemovidos2' | translate }}</h4>
         <ul><li *ngFor="let id of diff.nodes.removed">{{ id }}</li></ul>
       </div>
       <div *ngIf="diff.nodes.modified?.length" class="fd-seccion fd-seccion--modified">
-        <h4>~ Nodes modificados</h4>
+        <h4>{{ 'flows.flowDiff.nodesModificados2' | translate }}</h4>
         <ul><li *ngFor="let id of diff.nodes.modified">{{ id }}</li></ul>
       </div>
     </div>
 
     <div class="fd-rollback">
       <button class="cfg-btn cfg-btn--sec" (click)="rollback(fromVersion!)" *ngIf="fromVersion !== toVersion">
-        Hacer rollback a v{{ fromVersion }}
+        {{ 'flows.flowDiff.hacerRollbackAV' | translate:{fromVersion: fromVersion} }}
       </button>
     </div>
   </section>

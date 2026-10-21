@@ -2,33 +2,33 @@
 <div class="cfg-pagina fh">
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Integraciones</span>
-      <h1 class="cfg-titulo">Facturación electrónica</h1>
-      <p class="cfg-sub">Elige con quién factura tu empresa. Cambiar de proveedor no borra la configuración del anterior ni las facturas que ya emitiste.</p>
+      <span class="cfg-eyebrow">{{ 'integrations.facturacionHub.integraciones' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'integrations.facturacionHub.facturacionElectronica' | translate }}</h1>
+      <p class="cfg-sub">{{ 'integrations.facturacionHub.eligeConQuienFacturaTu' | translate }}</p>
     </div>
     <div class="cfg-acciones">
-      <button type="button" class="cfg-btn cfg-btn--sec" (click)="irAFacturas()">Facturas y notas</button>
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="irAFacturas()">{{ 'integrations.facturacionHub.facturasYNotas' | translate }}</button>
     </div>
   </header>
 
   <!-- Bandera apagada -->
   <section class="cfg-card cfg-vacio" *ngIf="!encendida">
     <div class="cfg-vacio__icono" aria-hidden="true"><i class="fa fa-file-text-o"></i></div>
-    <h2 class="cfg-vacio__titulo">Todavía no está activa para tu empresa</h2>
-    <p class="cfg-vacio__texto">Escríbenos por soporte y te la activamos. Mientras tanto, configura tu proveedor desde Integraciones como siempre.</p>
+    <h2 class="cfg-vacio__titulo">{{ 'integrations.facturacionHub.todaviaNoEstaActivaPara' | translate }}</h2>
+    <p class="cfg-vacio__texto">{{ 'integrations.facturacionHub.escribenosPorSoporteYTe' | translate }}</p>
   </section>
 
   <ng-container *ngIf="encendida">
     <section class="cfg-card fh-cargando" *ngIf="cargando && !resumen">
       <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-      <span class="fh-texto">Revisando tu facturación…</span>
+      <span class="fh-texto">{{ 'integrations.facturacionHub.revisandoTuFacturacion' | translate }}</span>
     </section>
 
     <section class="cfg-card cfg-vacio" *ngIf="errorCarga && !resumen">
       <div class="cfg-vacio__icono" aria-hidden="true"><i class="fa fa-exclamation-triangle"></i></div>
-      <h2 class="cfg-vacio__titulo">No pudimos revisar tu facturación</h2>
-      <p class="cfg-vacio__texto">Revisa tu internet y vuelve a intentar.</p>
-      <button type="button" class="cfg-btn" (click)="cargar()">Reintentar</button>
+      <h2 class="cfg-vacio__titulo">{{ 'integrations.facturacionHub.noPudimosRevisarTuFacturacion' | translate }}</h2>
+      <p class="cfg-vacio__texto">{{ 'integrations.facturacionHub.revisaTuInternetYVuelve' | translate }}</p>
+      <button type="button" class="cfg-btn" (click)="cargar()">{{ 'integrations.facturacionHub.reintentar' | translate }}</button>
     </section>
 
     <p class="cfg-aviso" *ngIf="aviso" role="status"
@@ -41,9 +41,9 @@
       <section class="cfg-card fh-actual" aria-labelledby="fh-actual-titulo">
         <div class="fh-actual__fila">
           <div class="fh-actual__textos">
-            <span class="cfg-label">Facturas con</span>
-            <h2 id="fh-actual-titulo" class="fh-actual__nombre">{{ r.providerName || 'Ningún proveedor' }}</h2>
-            <span class="fh-fuente" *ngIf="r.source === 'legacyOrder'">Sin elección guardada: se usa el primero configurado (DIAN, SIIGO, World Office).</span>
+            <span class="cfg-label">{{ 'integrations.facturacionHub.facturasCon' | translate }}</span>
+            <h2 id="fh-actual-titulo" class="fh-actual__nombre">{{ r.providerName || ('integrations.facturacionHub.ningunProveedor' | translate) }}</h2>
+            <span class="fh-fuente" *ngIf="r.source === 'legacyOrder'">{{ 'integrations.facturacionHub.sinEleccionGuardadaSeUsa' | translate }}</span>
           </div>
           <span class="fh-estado" [ngClass]="estado().clase"><span class="fh-punto" aria-hidden="true"></span>{{ estado().texto }}</span>
         </div>
@@ -53,55 +53,55 @@
         </ul>
 
         <dl class="fh-datos" *ngIf="r.dian">
-          <div><dt class="cfg-label">Próximo número</dt><dd class="fh-dato">{{ r.dian.prefix }}{{ r.dian.nextNumber }}</dd></div>
-          <div><dt class="cfg-label">Resolución</dt><dd class="fh-dato">{{ r.dian.resolutionNumber || '—' }}</dd></div>
-          <div><dt class="cfg-label">Vigente hasta</dt><dd class="fh-dato">{{ r.dian.validTo || '—' }}</dd></div>
-          <div *ngIf="r.certificateExpiresAt"><dt class="cfg-label">Certificado vence</dt><dd class="fh-dato">{{ r.certificateExpiresAt | date: 'yyyy-MM-dd' }}</dd></div>
-          <div *ngIf="r.emailReady === false"><dt class="cfg-label">Correo</dt><dd class="fh-dato fh-dato--error">Sin configurar en el servidor</dd></div>
+          <div><dt class="cfg-label">{{ 'integrations.facturacionHub.proximoNumero' | translate }}</dt><dd class="fh-dato">{{ r.dian.prefix }}{{ r.dian.nextNumber }}</dd></div>
+          <div><dt class="cfg-label">{{ 'integrations.facturacionHub.resolucion' | translate }}</dt><dd class="fh-dato">{{ r.dian.resolutionNumber || '—' }}</dd></div>
+          <div><dt class="cfg-label">{{ 'integrations.facturacionHub.vigenteHasta' | translate }}</dt><dd class="fh-dato">{{ r.dian.validTo || '—' }}</dd></div>
+          <div *ngIf="r.certificateExpiresAt"><dt class="cfg-label">{{ 'integrations.facturacionHub.certificadoVence' | translate }}</dt><dd class="fh-dato">{{ r.certificateExpiresAt | date: 'yyyy-MM-dd' }}</dd></div>
+          <div *ngIf="r.emailReady === false"><dt class="cfg-label">{{ 'integrations.facturacionHub.correo' | translate }}</dt><dd class="fh-dato fh-dato--error">{{ 'integrations.facturacionHub.sinConfigurarEnElServidor' | translate }}</dd></div>
         </dl>
       </section>
 
       <!-- Solo lectura para quien no configura -->
       <p class="cfg-aviso" *ngIf="!r.canConfigure">
-        <span class="fh-aviso-texto">Solo un Administrador o el Contador pueden cambiar el proveedor de facturación.</span>
+        <span class="fh-aviso-texto">{{ 'integrations.facturacionHub.soloUnAdministradorOEl' | translate }}</span>
       </p>
 
       <ng-container *ngIf="r.canConfigure">
         <!-- Bloqueo por facturas en proceso -->
         <div class="cfg-aviso cfg-aviso--warn fh-bloqueo" *ngIf="r.switchBlockedReason as b" role="status">
           <span class="fh-aviso-texto">{{ b.message }}</span>
-          <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="b.requestId || b.orderId" (click)="irAFacturas()">Consultar estado</button>
+          <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="b.requestId || b.orderId" (click)="irAFacturas()">{{ 'integrations.facturacionHub.consultarEstado' | translate }}</button>
         </div>
 
         <!-- Elegir proveedor -->
         <section class="cfg-card" aria-labelledby="fh-elegir-titulo">
-          <h2 id="fh-elegir-titulo" class="cfg-card__titulo">¿Con quién facturas?</h2>
+          <h2 id="fh-elegir-titulo" class="cfg-card__titulo">{{ 'integrations.facturacionHub.conQuienFacturas' | translate }}</h2>
 
           <div class="fh-opciones" role="radiogroup" aria-labelledby="fh-elegir-titulo">
             <label class="fh-opcion" *ngFor="let p of elegibles(); trackBy: trackId" [class.fh-opcion--on]="general === p.id">
               <input type="radio" name="fh-general" [value]="p.id" [(ngModel)]="general" [disabled]="!r.canSwitch || guardando">
               <span class="fh-opcion__nombre">{{ p.name }}</span>
-              <span class="fh-opcion__nota" *ngIf="p.testing">En pruebas</span>
+              <span class="fh-opcion__nota" *ngIf="p.testing">{{ 'integrations.facturacionHub.enPruebas' | translate }}</span>
             </label>
             <div class="fh-opcion fh-opcion--pronto" *ngFor="let c of r.comingSoon" aria-disabled="true">
               <input type="radio" disabled>
               <span class="fh-opcion__nombre">{{ c.name }}</span>
-              <span class="fh-opcion__nota">Próximamente</span>
+              <span class="fh-opcion__nota">{{ 'integrations.facturacionHub.proximamente' | translate }}</span>
             </div>
           </div>
 
           <div class="cfg-vacio" *ngIf="!elegibles().length">
-            <h3 class="cfg-vacio__titulo">Aún no tienes un proveedor configurado</h3>
-            <p class="cfg-vacio__texto">Configura uno abajo para poder elegirlo.</p>
+            <h3 class="cfg-vacio__titulo">{{ 'integrations.facturacionHub.aunNoTienesUnProveedor' | translate }}</h3>
+            <p class="cfg-vacio__texto">{{ 'integrations.facturacionHub.configuraUnoAbajoParaPoder' | translate }}</p>
           </div>
 
           <details class="fh-avanzado" *ngIf="elegibles().length > 1">
-            <summary class="fh-avanzado__titulo">Usar otro proveedor para un tipo de documento</summary>
+            <summary class="fh-avanzado__titulo">{{ 'integrations.facturacionHub.usarOtroProveedorParaUn' | translate }}</summary>
             <div class="fh-tipos">
               <label class="fh-tipo" *ngFor="let t of tipos">
                 <span class="cfg-label">{{ t.nombre }}</span>
                 <select class="fh-select" [(ngModel)]="porTipo[t.id]" [disabled]="!r.canSwitch || guardando">
-                  <option value="">Igual que el general</option>
+                  <option value="">{{ 'integrations.facturacionHub.igualQueElGeneral' | translate }}</option>
                   <option *ngFor="let p of elegibles(t.id); trackBy: trackId" [value]="p.id">{{ p.name }}</option>
                 </select>
               </label>
@@ -110,62 +110,62 @@
 
           <div class="cfg-acciones fh-guardar">
             <button type="button" class="cfg-btn" (click)="guardar()" [disabled]="!r.canSwitch || !hayCambios() || guardando">
-              {{ guardando ? 'Guardando…' : 'Guardar' }}
+              {{ guardando ? ('integrations.facturacionHub.guardando' | translate) : ('comun.guardar' | translate) }}
             </button>
             <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="puedeVolver()" (click)="volverAlAnterior()" [disabled]="!r.canSwitch || guardando">
-              Volver a {{ nombreDe(r.choice?.previousDefaultProvider) }}
+              {{ 'integrations.facturacionHub.volverA' | translate:{previousDefaultProvider: (nombreDe(r.choice?.previousDefaultProvider))} }}
             </button>
           </div>
         </section>
 
         <!-- Proveedores -->
         <section class="cfg-card" aria-labelledby="fh-prov-titulo">
-          <h2 id="fh-prov-titulo" class="cfg-card__titulo">Tus proveedores</h2>
+          <h2 id="fh-prov-titulo" class="cfg-card__titulo">{{ 'integrations.facturacionHub.tusProveedores' | translate }}</h2>
           <ul class="fh-lista">
             <li class="fh-fila" *ngFor="let p of configurados(); trackBy: trackId">
               <div class="fh-fila__textos">
                 <span class="fh-fila__nombre">{{ p.name }}</span>
                 <span class="fh-fila__nota" *ngIf="p.lastCheck">
-                  Última prueba: {{ p.lastCheck.ok ? 'funcionó' : 'falló' }} · {{ p.lastCheck.checkedAt | date: 'yyyy-MM-dd HH:mm' }}
+                  {{ 'integrations.facturacionHub.ultimaPrueba' | translate:{funciono: (p.lastCheck.ok ? ('integrations.facturacionHub.funciono' | translate) : ('integrations.facturacionHub.fallo' | translate)), checkedAt: (p.lastCheck.checkedAt | date: 'yyyy-MM-dd HH:mm')} }}
                 </span>
               </div>
               <div class="cfg-acciones">
                 <button type="button" class="cfg-btn cfg-btn--sec" (click)="probar(p.id)" [disabled]="probando[p.id]">
-                  {{ probando[p.id] ? 'Probando…' : 'Probar conexión' }}
+                  {{ probando[p.id] ? ('integrations.facturacionHub.probando' | translate) : ('integrations.facturacionHub.probarConexion' | translate) }}
                 </button>
-                <button type="button" class="cfg-btn cfg-btn--sec" (click)="configurar(p.id)">Ver y editar</button>
-                <button type="button" class="cfg-btn cfg-btn--sec" (click)="verHistorial(p.id)">Historial</button>
+                <button type="button" class="cfg-btn cfg-btn--sec" (click)="configurar(p.id)">{{ 'integrations.facturacionHub.verYEditar' | translate }}</button>
+                <button type="button" class="cfg-btn cfg-btn--sec" (click)="verHistorial(p.id)">{{ 'integrations.facturacionHub.historial' | translate }}</button>
               </div>
             </li>
             <li class="fh-fila" *ngFor="let p of porConfigurar(); trackBy: trackId">
               <div class="fh-fila__textos">
                 <span class="fh-fila__nombre">{{ p.name }}</span>
-                <span class="fh-fila__nota">Sin configurar</span>
+                <span class="fh-fila__nota">{{ 'integrations.facturacionHub.sinConfigurar' | translate }}</span>
               </div>
               <button type="button" class="cfg-btn cfg-btn--sec" (click)="configurar(p.id)">{{ etiquetaConfigurar(p.id) }}</button>
             </li>
           </ul>
           <div class="cfg-acciones">
-            <button type="button" class="cfg-btn cfg-btn--sec" (click)="verHistorial('invoicing')">Historial de la elección</button>
+            <button type="button" class="cfg-btn cfg-btn--sec" (click)="verHistorial('invoicing')">{{ 'integrations.facturacionHub.historialDeLaEleccion' | translate }}</button>
           </div>
         </section>
 
         <!-- Historial -->
         <section class="cfg-card" *ngIf="historialDe" aria-labelledby="fh-hist-titulo">
           <h2 id="fh-hist-titulo" class="cfg-card__titulo">
-            Historial · {{ historialDe === 'invoicing' ? 'elección del proveedor' : nombreDe(historialDe) }}
+            {{ 'integrations.facturacionHub.historial2' | translate:{eleccionDelProveedor: (historialDe === 'invoicing' ? ('integrations.facturacionHub.eleccionDelProveedor' | translate) : nombreDe(historialDe))} }}
           </h2>
-          <span class="fh-texto" *ngIf="cargandoHistorial">Cargando…</span>
+          <span class="fh-texto" *ngIf="cargandoHistorial">{{ 'comun.cargando' | translate }}</span>
           <div class="cfg-vacio" *ngIf="!cargandoHistorial && !historial.length">
-            <h3 class="cfg-vacio__titulo">Sin cambios registrados</h3>
+            <h3 class="cfg-vacio__titulo">{{ 'integrations.facturacionHub.sinCambiosRegistrados' | translate }}</h3>
           </div>
           <ul class="fh-lista" *ngIf="historial.length">
             <li class="fh-fila" *ngFor="let h of historial">
               <div class="fh-fila__textos">
                 <span class="fh-fila__nombre">{{ textoAccion(h.action) }}</span>
-                <span class="fh-fila__nota">{{ h.timestamp | date: 'yyyy-MM-dd HH:mm' }} · {{ h.userId || 'sistema' }}</span>
-                <span class="fh-fila__nota" *ngIf="h.fields.length">Cambió: {{ h.fields.join(', ') }}</span>
-                <span class="fh-fila__nota" *ngIf="h.secretsChanged.length">Credenciales cambiadas: {{ h.secretsChanged.join(', ') }}</span>
+                <span class="fh-fila__nota">{{ h.timestamp | date: 'yyyy-MM-dd HH:mm' }} · {{ h.userId || ('integrations.facturacionHub.sistema' | translate) }}</span>
+                <span class="fh-fila__nota" *ngIf="h.fields.length">{{ 'integrations.facturacionHub.cambio' | translate:{join: (h.fields.join(', '))} }}</span>
+                <span class="fh-fila__nota" *ngIf="h.secretsChanged.length">{{ 'integrations.facturacionHub.credencialesCambiadas' | translate:{join: (h.secretsChanged.join(', '))} }}</span>
               </div>
             </li>
           </ul>

@@ -5,14 +5,14 @@
 
     <header class="cfg-cabeza">
       <div class="cfg-cabeza__textos">
-        <button type="button" class="au-link au-volver" (click)="goBack()">← Automatizaciones</button>
-        <span class="cfg-eyebrow">Integraciones</span>
-        <h1 class="cfg-titulo">{{ flow?.name || 'Historial' }}</h1>
-        <p class="cfg-sub">Las últimas veces que corrió esta automatización y qué pasó en cada una.</p>
+        <button type="button" class="au-link au-volver" (click)="goBack()">{{ 'flows.flowRuns.automatizaciones' | translate }}</button>
+        <span class="cfg-eyebrow">{{ 'flows.flowDiff.integraciones' | translate }}</span>
+        <h1 class="cfg-titulo">{{ flow?.name || ('flows.flowAiAssist.historial' | translate) }}</h1>
+        <p class="cfg-sub">{{ 'flows.flowRuns.lasUltimasVecesQueCorrio' | translate }}</p>
       </div>
       <div class="cfg-acciones">
-        <button type="button" class="cfg-btn cfg-btn--sec" (click)="loadRuns()" [disabled]="loading">Actualizar</button>
-        <button type="button" class="cfg-btn cfg-btn--sec" (click)="goToEditor()">Editar automatización</button>
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="loadRuns()" [disabled]="loading">{{ 'flows.flowRuns.actualizar' | translate }}</button>
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="goToEditor()">{{ 'flows.flowRuns.editarAutomatizacion' | translate }}</button>
       </div>
     </header>
 
@@ -22,16 +22,16 @@
 
     <div class="au-loading" *ngIf="loading">
       <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-      Cargando el historial…
+      {{ 'flows.flowRuns.cargandoElHistorial' | translate }}
     </div>
 
     <section class="au-empty" *ngIf="!loading && runs.length === 0 && !errorMessage">
-      <span class="au-empty-title">Todavía no ha corrido</span>
-      <p>Cuando la enciendas, aquí verás cada vez que corra y si salió bien.</p>
+      <span class="au-empty-title">{{ 'flows.flowRuns.todaviaNoHaCorrido' | translate }}</span>
+      <p>{{ 'flows.flowRuns.cuandoLaEnciendasAquiVeras' | translate }}</p>
     </section>
 
     <div class="hi-layout" *ngIf="!loading && runs.length > 0">
-      <ul class="hi-lista" aria-label="Corridas">
+      <ul class="hi-lista" [attr.aria-label]="'flows.flowRuns.corridas' | translate">
         <li *ngFor="let run of runs; trackBy: trackByRunId">
           <button type="button" class="hi-fila" [class.on]="selectedRun?.runId === run.runId" (click)="selectRun(run)">
             <span class="au-estado" [ngClass]="'au-estado-' + run.status"><span class="au-dot"></span>{{ estadoTexto(run.status) }}</span>
@@ -47,34 +47,34 @@
           <span class="au-estado" [ngClass]="'au-estado-' + selectedRun.status"><span class="au-dot"></span>{{ estadoTexto(selectedRun.status) }}</span>
           <h2>{{ cuando(selectedRun.startedAt) }}</h2>
           <button *ngIf="selectedRun.status === 'running'" type="button" class="au-btn-ghost au-btn-sm hi-detener"
-                  (click)="cancel(selectedRun.runId, $event)">Detener</button>
+                  (click)="cancel(selectedRun.runId, $event)">{{ 'flows.flowRuns.detener' | translate }}</button>
         </div>
 
         <dl class="hi-datos">
-          <div><dt>Qué la arrancó</dt><dd>{{ origen(selectedRun.triggeredBy) }}</dd></div>
-          <div><dt>Resultado</dt><dd>{{ statusReasonLabel(selectedRun.statusReason) || estadoTexto(selectedRun.status) }}</dd></div>
-          <div *ngIf="duracion(selectedRun.totalDurationMs) as d"><dt>Tardó</dt><dd>{{ d }}</dd></div>
+          <div><dt>{{ 'flows.flowRuns.queLaArranco' | translate }}</dt><dd>{{ origen(selectedRun.triggeredBy) }}</dd></div>
+          <div><dt>{{ 'flows.flowRuns.resultado' | translate }}</dt><dd>{{ statusReasonLabel(selectedRun.statusReason) || estadoTexto(selectedRun.status) }}</dd></div>
+          <div *ngIf="duracion(selectedRun.totalDurationMs) as d"><dt>{{ 'flows.flowRuns.tardo' | translate }}</dt><dd>{{ d }}</dd></div>
         </dl>
 
-        <h3 class="hi-sec">Paso a paso</h3>
-        <p class="hi-nada" *ngIf="nodeStates.length === 0">En esta corrida no se ejecutó ningún paso.</p>
+        <h3 class="hi-sec">{{ 'flows.flowRuns.pasoAPaso' | translate }}</h3>
+        <p class="hi-nada" *ngIf="nodeStates.length === 0">{{ 'flows.flowRuns.enEstaCorridaNoSe' | translate }}</p>
 
         <ol class="hi-pasos">
           <li *ngFor="let n of nodeStates; trackBy: trackByNodeId" class="hi-paso" [ngClass]="'is-' + n.status">
             <div class="hi-paso-top">
               <strong>{{ nombrePaso(n.nodeId) }}</strong>
               <span class="au-estado" [ngClass]="'au-estado-' + (n.status === 'skipped' ? 'inactive' : n.status)">
-                <span class="au-dot"></span>{{ n.status === 'skipped' ? 'Omitido' : n.status === 'pending' ? 'Pendiente' : estadoTexto(n.status) }}
+                <span class="au-dot"></span>{{ n.status === 'skipped' ? ('flows.flowRuns.omitido' | translate) : n.status === 'pending' ? ('flows.flowRuns.pendiente' | translate) : estadoTexto(n.status) }}
               </span>
             </div>
             <p class="hi-paso-meta">
-              <ng-container *ngIf="registros(n) as r">{{ r }} {{ r === 1 ? 'registro' : 'registros' }} · </ng-container>
+              <ng-container *ngIf="registros(n) as r">{{ r }} {{ r === 1 ? ('flows.flowRuns.registro' | translate) : ('flows.flowRuns.registros' | translate) }} · </ng-container>
               <ng-container *ngIf="duracion(n.durationMs) as d">{{ d }}</ng-container>
-              <ng-container *ngIf="n.attempt > 1"> · intento {{ n.attempt }}</ng-container>
+              <ng-container *ngIf="n.attempt > 1"> {{ 'flows.flowRuns.intento' | translate:{attempt: n.attempt} }}</ng-container>
             </p>
             <p class="hi-paso-error" *ngIf="n.error">{{ n.error.message }}</p>
             <div class="hi-paso-aviso" *ngIf="n.errorItemCount">
-              {{ n.errorItemCount }} {{ n.errorItemCount === 1 ? 'registro no pasó' : 'registros no pasaron' }} este paso.
+              {{ n.errorItemCount }} {{ n.errorItemCount === 1 ? ('flows.flowRuns.registroNoPaso' | translate) : ('flows.flowRuns.registrosNoPasaron' | translate) }} {{ 'flows.flowRuns.estePaso' | translate }}
               <ul *ngIf="n.errorSamples?.length">
                 <li *ngFor="let m of n.errorSamples">{{ m.message }}</li>
               </ul>
@@ -83,13 +83,13 @@
         </ol>
 
         <details class="hi-tecnico">
-          <summary>Detalles técnicos</summary>
+          <summary>{{ 'flows.flowRuns.detallesTecnicos' | translate }}</summary>
           <dl>
-            <div><dt>Corrida</dt><dd>{{ selectedRun.runId }}</dd></div>
-            <div><dt>Inicio</dt><dd>{{ selectedRun.startedAt }}</dd></div>
-            <div><dt>Fin</dt><dd>{{ selectedRun.finishedAt || '—' }}</dd></div>
-            <div><dt>Versión</dt><dd>v{{ selectedRun.flowVersion }}</dd></div>
-            <div><dt>Origen</dt><dd>{{ selectedRun.triggeredBy || '—' }}</dd></div>
+            <div><dt>{{ 'flows.flowRuns.corrida' | translate }}</dt><dd>{{ selectedRun.runId }}</dd></div>
+            <div><dt>{{ 'flows.flowRuns.inicio' | translate }}</dt><dd>{{ selectedRun.startedAt }}</dd></div>
+            <div><dt>{{ 'flows.flowRuns.fin' | translate }}</dt><dd>{{ selectedRun.finishedAt || '—' }}</dd></div>
+            <div><dt>{{ 'flows.flowRuns.version' | translate }}</dt><dd>{{ 'flows.flowRuns.v' | translate:{flowVersion: selectedRun.flowVersion} }}</dd></div>
+            <div><dt>{{ 'flows.flowRuns.origen' | translate }}</dt><dd>{{ selectedRun.triggeredBy || '—' }}</dd></div>
           </dl>
           <div *ngFor="let n of nodeStates; trackBy: trackByNodeId" class="hi-tec-paso">
             <strong>{{ n.nodeId }} · {{ n.status }}</strong>

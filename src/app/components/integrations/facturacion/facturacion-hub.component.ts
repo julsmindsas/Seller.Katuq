@@ -14,6 +14,7 @@ import {
 import { ProveedorContableId, TipoDocumentoFactura } from '../../../shared/services/facturacion/facturacion-automatica.util';
 import { asistenteDe } from './facturacion-asistentes.registry';
 
+import { TranslateService } from '@ngx-translate/core';
 interface Aviso {
   tipo: 'ok' | 'warn' | 'error' | 'info';
   texto: string;
@@ -77,6 +78,7 @@ export class FacturacionHubComponent implements OnInit, OnDestroy {
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,
     features: CompanyFeaturesService,
+    private translate: TranslateService,
   ) {
     this.encendida = features.isEnabled('invoicingHub');
   }
@@ -163,14 +165,14 @@ export class FacturacionHubComponent implements OnInit, OnDestroy {
     const nuevo = this.nombreDe(this.general);
     const anterior = r.choice ? this.nombreDe(r.choice.defaultProvider) : r.providerName;
     const confirmacion = await Swal.fire({
-      title: '¿Guardar con quién facturas?',
+      title: this.translate.instant('integrations.facturacionHub.guardarConQuienFacturas'),
       text: anterior && anterior !== nuevo
-        ? `Desde ahora las facturas nuevas saldrán con ${nuevo}. La configuración de ${anterior} no se borra y puedes volver a ella.`
-        : `Las facturas nuevas saldrán con ${nuevo}.`,
+        ? this.translate.instant('integrations.facturacionHub.desdeAhoraNuevasSaldran', { nuevo, anterior })
+        : this.translate.instant('integrations.facturacionHub.nuevasSaldranCon', { nuevo }),
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Guardar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('comun.guardar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#5F3FE0',
     });
     if (!confirmacion.isConfirmed) return;

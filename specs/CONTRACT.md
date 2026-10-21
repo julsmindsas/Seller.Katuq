@@ -12082,3 +12082,10 @@ Lo que queda está, sobre todo, en:
 - **de-CH:** borrador escrito por el agente (Opttia no responde en este entorno); sigue oculto hasta la revisión nativa. Lista para el revisor: «Debitoren», «Belastungsanzeige», «Gutschrift», «Probebilanz», «E-Rechnung» y los términos contables de los 903 textos.
 - **Sin marcar:** 11.6 (falta `build:prod`) y 11.7 (revisión en navegador a 1440 y 390 px y visto bueno de Daniel, bloque sensible). Los mensajes en propiedades de los componentes auxiliares del compositor (pickers y formulario) y las etiquetas de `PAYMENT_METHODS` quedan en español como pendiente.
 - Sin push, despliegue ni escrituras en Firestore.
+
+### 2026-10-21 — D-540: bloque IDI-B12a, integraciones, flows y katuq-flow (tareas 13.1 a 13.7, parcial)
+- **Qué cambió:** `components/integrations`, `components/flows` y `components/katuq-flow` pasan al traductor (1.498 claves nuevas en es, en, pt y de) y quedan en `modulosCerrados`: 1.825 textos sueltos antes, 0 después. Solo presentación; se inyecta `TranslateService` y no cambia ningún evento, servicio, llamada HTTP, validación ni valor guardado. Los nombres de proveedores, nodos de flows y campos `integrations.<provider>.*` no se traducen.
+- **Partición del bloque 12:** IDI-B12a a IDI-B12f anotada en `tasks.md` (13.1). Quedan b a f.
+- **de-CH:** borrador escrito por el agente (Opttia no responde en este entorno); sigue oculto hasta la revisión nativa.
+- **Sin marcar:** 13.2 a 13.7 (cierran con IDI-B12f), `build:prod` y la revisión en navegador. `tests/integrations/mcp-guides.test.js` falla desde antes del bloque (su lista de métodos no incluye `entradasDe`).
+- Sin push, despliegue ni escrituras en Firestore.

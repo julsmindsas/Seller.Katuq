@@ -2,7 +2,7 @@
   <div class="modal-header-content">
     <h5 class="modal-title">
       <i class="fa" [ngClass]="isEdit ? 'fa-edit' : 'fa-plus-circle'"></i>
-      {{ isEdit ? 'Editar integración: ' + integrationData.name : 'Nueva integración' }}
+      {{ isEdit ? ('integrations.integrationModal.editarIntegracion' | translate) + integrationData.name : ('integrations.integrationModal.nuevaIntegracion' | translate) }}
       <span *ngIf="selectedCategory && !isEdit">: {{ categoryLabels[selectedCategory] }}</span>
     </h5>
     
@@ -13,34 +13,34 @@
           <div class="step-circle">
             <i class="fa" [ngClass]="currentStep > 1 ? 'fa-check' : 'fa-layer-group'"></i>
           </div>
-          <span class="step-label">Categoría</span>
+          <span class="step-label">{{ 'integrations.integrationModal.categoria' | translate }}</span>
         </div>
         <div class="step-connector" [ngClass]="{'completed': currentStep > 1}"></div>
         <div class="step" [ngClass]="{'active': currentStep === 2, 'completed': currentStep > 2}">
           <div class="step-circle">
             <i class="fa" [ngClass]="currentStep > 2 ? 'fa-check' : 'fa-puzzle-piece'"></i>
           </div>
-          <span class="step-label">Servicio</span>
+          <span class="step-label">{{ 'integrations.integrationModal.servicio' | translate }}</span>
         </div>
         <div class="step-connector" [ngClass]="{'completed': currentStep > 2}"></div>
         <div class="step" [ngClass]="{'active': currentStep === 3, 'completed': currentStep > 3}">
           <div class="step-circle">
             <i class="fa" [ngClass]="currentStep > 3 ? 'fa-check' : 'fa-cog'"></i>
           </div>
-          <span class="step-label">Configuración</span>
+          <span class="step-label">{{ 'integrations.integrationModal.configuracion' | translate }}</span>
         </div>
         <div class="step-connector" [ngClass]="{'completed': currentStep > 3}"></div>
         <div class="step" [ngClass]="{'active': currentStep === 4}">
           <div class="step-circle">
             <i class="fa fa-check-circle"></i>
           </div>
-          <span class="step-label">Verificación</span>
+          <span class="step-label">{{ 'integrations.integrationModal.verificacion' | translate }}</span>
         </div>
       </div>
     </div>
   </div>
   
-  <button type="button" class="close" (click)="closeModal()" aria-label="Close">
+  <button type="button" class="close" (click)="closeModal()" [attr.aria-label]="'integrations.integrationModal.close' | translate">
     <span aria-hidden="true">&times;</span>
   </button>
 </div>
@@ -54,8 +54,8 @@
         <span class="step-number">1</span>
       </div>
       <div class="step-info">
-        <h6 class="step-title">Selecciona una categoría de integración</h6>
-        <p class="step-description">Elige el tipo de servicio que deseas integrar con tu tienda</p>
+        <h6 class="step-title">{{ 'integrations.integrationModal.seleccionaUnaCategoriaDeIntegracion' | translate }}</h6>
+        <p class="step-description">{{ 'integrations.integrationModal.eligeElTipoDeServicio' | translate }}</p>
       </div>
     </div>
     
@@ -70,7 +70,7 @@
         <div class="category-option-content">
           <h6 class="category-option-title">{{ categoryLabels[category] }}</h6>
           <p class="category-option-description">{{ getCategoryDescription(category) }}</p>
-          <span class="category-option-count">{{ getIntegrationsCountForCategory(category) }} opciones disponibles</span>
+          <span class="category-option-count">{{ getIntegrationsCountForCategory(category) }} {{ 'integrations.integrationModal.opcionesDisponibles' | translate }}</span>
         </div>
         <div class="category-option-arrow">
           <i class="fa fa-chevron-right"></i>
@@ -89,13 +89,13 @@
         <span class="step-number">2</span>
       </div>
       <div class="step-info">
-        <h6 class="step-title">{{ isEdit ? 'Tipo de integración' : 'Selecciona el servicio' }}</h6>
-        <p class="step-description">Elige el proveedor específico que deseas configurar</p>
+        <h6 class="step-title">{{ isEdit ? ('integrations.integrationModal.tipoDeIntegracion' | translate) : ('integrations.integrationModal.seleccionaElServicio' | translate) }}</h6>
+        <p class="step-description">{{ 'integrations.integrationModal.eligeElProveedorEspecificoQue' | translate }}</p>
       </div>
       <button *ngIf="!isEdit && selectedCategory" 
               class="btn btn-sm btn-outline-primary step-back-btn" 
               (click)="goToPreviousStep()">
-        <i class="fa fa-chevron-left"></i> Cambiar categoría
+        <i class="fa fa-chevron-left"></i> {{ 'integrations.integrationModal.cambiarCategoria' | translate }}
       </button>
     </div>
     
@@ -114,7 +114,7 @@
           <div class="service-icon" *ngIf="!integration.logo || hasImageError(integration.id)">
             <i class="fa" [ngClass]="getIntegrationIcon(integration.id)"></i>
           </div>
-          <span class="popular-badge" *ngIf="integration.popular">Popular</span>
+          <span class="popular-badge" *ngIf="integration.popular">{{ 'integrations.integrationModal.popular' | translate }}</span>
         </div>
         <div class="service-option-content">
           <h6 class="service-name">{{ integration.name }}</h6>
@@ -140,13 +140,13 @@
         <span class="step-number">3</span>
       </div>
       <div class="step-info">
-        <h6 class="step-title">Configuración de credenciales</h6>
-                  <p class="step-description">Ingresa las credenciales necesarias para conectar con {{ selectedIntegrationName }}</p>
+        <h6 class="step-title">{{ 'integrations.integrationModal.configuracionDeCredenciales' | translate }}</h6>
+                  <p class="step-description">{{ 'integrations.integrationModal.ingresaLasCredencialesNecesariasPara' | translate:{selectedIntegrationName: selectedIntegrationName} }}</p>
               </div>
               <button *ngIf="!isEdit" 
                       class="btn btn-sm btn-outline-primary step-back-btn" 
                       (click)="goToPreviousStep()">
-                <i class="fa fa-chevron-left"></i> Cambiar servicio
+                <i class="fa fa-chevron-left"></i> {{ 'integrations.integrationModal.cambiarServicio' | translate }}
               </button>
             </div>
         
@@ -156,14 +156,13 @@
                   <i class="fa fa-info-circle fa-lg"></i>
                 </div>
                 <div class="flex-grow-1">
-                  <h6 class="alert-heading mb-2">¿Dónde encontrar las credenciales?</h6>
-                  <p class="mb-2">Las credenciales de API son necesarias para conectar con {{ selectedIntegrationName }}. 
-                     Puedes encontrarlas en tu panel de administración.</p>
+                  <h6 class="alert-heading mb-2">{{ 'integrations.integrationModal.dondeEncontrarLasCredenciales' | translate }}</h6>
+                  <p class="mb-2">{{ 'integrations.integrationModal.lasCredencialesDeApiSon' | translate:{selectedIntegrationName: selectedIntegrationName} }}</p>
                   <a [href]="documentationUrl" 
                      target="_blank" 
                      class="btn btn-sm btn-outline-primary"
                      *ngIf="documentationUrl">
-                    <i class="fa fa-external-link me-1"></i>Ver documentación
+                    <i class="fa fa-external-link me-1"></i>{{ 'integrations.integrationModal.verDocumentacion' | translate }}
                   </a>
                 </div>
               </div>
@@ -173,7 +172,7 @@
               <div class="card mb-4">
                 <div class="card-header bg-light">
                   <h6 class="card-title mb-0">
-                    <i class="fa fa-cog me-2"></i>Configuración General
+                    <i class="fa fa-cog me-2"></i>{{ 'integrations.integrationModal.configuracionGeneral' | translate }}
                   </h6>
                 </div>
                 <div class="card-body">
@@ -181,23 +180,23 @@
                     <!-- Nombre -->
                     <div class="col-md-6 mb-3">
                       <label for="integration-name" class="form-label fw-semibold">
-                        <i class="fa fa-tag me-2 text-primary"></i>Nombre de la integración <span class="text-danger">*</span>
+                        <i class="fa fa-tag me-2 text-primary"></i>{{ 'integrations.integrationModal.nombreDeLaIntegracion' | translate }} <span class="text-danger">*</span>
                       </label>
                       <input type="text" 
                              class="form-control" 
                              id="integration-name" 
-                             placeholder="Nombre descriptivo para identificar esta integración" 
+                             [placeholder]="'integrations.integrationModal.nombreDescriptivoParaIdentificarEsta' | translate" 
                              formControlName="name"
                              [class.is-invalid]="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
                       <div class="invalid-feedback" *ngIf="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
-                        El nombre es obligatorio
+                        {{ 'integrations.integrationModal.elNombreEsObligatorio' | translate }}
                       </div>
                     </div>
                     
                     <!-- Estado -->
                     <div class="col-md-6 mb-3">
                       <label class="form-label fw-semibold">
-                        <i class="fa fa-power-off me-2 text-primary"></i>Estado:
+                        <i class="fa fa-power-off me-2 text-primary"></i>{{ 'integrations.integrationModal.estado' | translate }}
                       </label>
                       <div class="form-check form-switch">
                         <input class="form-check-input" 
@@ -205,10 +204,10 @@
                                id="integration-enabled" 
                                formControlName="enabled">
                         <label class="form-check-label" for="integration-enabled">
-                          <span class="fw-semibold">{{ integrationForm.get('enabled')?.value ? 'Activo' : 'Inactivo' }}</span>
+                          <span class="fw-semibold">{{ integrationForm.get('enabled')?.value ? ('integrations.integrationModal.activo' | translate) : ('integrations.integrationModal.inactivo' | translate) }}</span>
                         </label>
                         <div class="form-text">
-                          Habilitar o deshabilitar esta integración
+                          {{ 'integrations.integrationModal.habilitarODeshabilitarEstaIntegracion' | translate }}
                         </div>
                       </div>
                     </div>
@@ -216,15 +215,15 @@
                     <!-- Ambiente -->
                     <div class="col-12 mb-3">
                       <label for="integration-environment" class="form-label fw-semibold">
-                        <i class="fa fa-server me-2 text-primary"></i>Ambiente
+                        <i class="fa fa-server me-2 text-primary"></i>{{ 'integrations.integrationModal.ambiente' | translate }}
                       </label>
                       <select class="form-select" id="integration-environment" formControlName="environment">
-                        <option value="production">Producción</option>
-                        <option value="development">Desarrollo</option>
-                        <option value="sandbox">Sandbox</option>
+                        <option value="production">{{ 'integrations.integrationModal.produccion' | translate }}</option>
+                        <option value="development">{{ 'integrations.integrationModal.desarrollo' | translate }}</option>
+                        <option value="sandbox">{{ 'integrations.integrationModal.sandbox' | translate }}</option>
                       </select>
                       <div class="form-text">
-                        El ambiente determina si se realizarán transacciones reales o de prueba
+                        {{ 'integrations.integrationModal.elAmbienteDeterminaSiSe' | translate }}
                       </div>
                     </div>
                   </div>
@@ -235,7 +234,7 @@
               <div class="card mb-4">
                 <div class="card-header bg-light">
                   <h6 class="card-title mb-0">
-                    <i class="fa fa-shield-alt me-2"></i>Credenciales de Acceso
+                    <i class="fa fa-shield-alt me-2"></i>{{ 'integrations.integrationModal.credencialesDeAcceso' | translate }}
                   </h6>
                 </div>
                 <div class="card-body">
@@ -243,33 +242,33 @@
                     <!-- Client ID -->
                     <div class="col-md-6 mb-3">
                       <label for="integration-clientid" class="form-label fw-semibold">
-                        <i class="fa fa-user me-2 text-primary"></i>Client ID: <span class="text-danger">*</span>
+                        <i class="fa fa-user me-2 text-primary"></i>{{ 'integrations.integrationModal.clientId' | translate }} <span class="text-danger">*</span>
                       </label>
                       <div class="input-group">
                         <span class="input-group-text"><i class="fa fa-user"></i></span>
                         <input type="text" 
                                class="form-control" 
                                id="integration-clientid" 
-                               placeholder="Ingresa tu Client ID" 
+                               [placeholder]="'integrations.integrationModal.ingresaTuClientId' | translate" 
                                formControlName="clientId"
                                [class.is-invalid]="integrationForm.get('clientId')?.invalid && integrationForm.get('clientId')?.touched">
                       </div>
                       <div class="invalid-feedback" *ngIf="integrationForm.get('clientId')?.invalid && integrationForm.get('clientId')?.touched">
-                        El Client ID es obligatorio
+                        {{ 'integrations.integrationModal.elClientIdEsObligatorio' | translate }}
                       </div>
                     </div>
                     
                     <!-- Public Key -->
                     <div class="col-md-6 mb-3">
                       <label for="integration-publickey" class="form-label fw-semibold">
-                        <i class="fa fa-key me-2 text-primary"></i>Public Key: <span class="text-danger">*</span>
+                        <i class="fa fa-key me-2 text-primary"></i>{{ 'integrations.integrationModal.publicKey' | translate }} <span class="text-danger">*</span>
                       </label>
                       <div class="input-group">
                         <span class="input-group-text"><i class="fa fa-key"></i></span>
                         <input [type]="showApiKey ? 'text' : 'password'" 
                                class="form-control" 
                                id="integration-publickey" 
-                               placeholder="Ingresa tu Public Key" 
+                               [placeholder]="'integrations.integrationModal.ingresaTuPublicKey' | translate" 
                                formControlName="apiKey"
                                [class.is-invalid]="integrationForm.get('apiKey')?.invalid && integrationForm.get('apiKey')?.touched">
                         <button class="btn btn-outline-secondary" type="button" (click)="toggleApiKeyVisibility()">
@@ -277,21 +276,21 @@
                         </button>
                       </div>
                       <div class="invalid-feedback" *ngIf="integrationForm.get('apiKey')?.invalid && integrationForm.get('apiKey')?.touched">
-                        La Public Key es obligatoria
+                        {{ 'integrations.integrationModal.laPublicKeyEsObligatoria' | translate }}
                       </div>
                     </div>
                     
                     <!-- Private Key -->
                     <div class="col-md-6 mb-3">
                       <label for="integration-privatekey" class="form-label fw-semibold">
-                        <i class="fa fa-lock me-2 text-primary"></i>Private Key: <span class="text-danger">*</span>
+                        <i class="fa fa-lock me-2 text-primary"></i>{{ 'integrations.integrationModal.privateKey' | translate }} <span class="text-danger">*</span>
                       </label>
                       <div class="input-group">
                         <span class="input-group-text"><i class="fa fa-lock"></i></span>
                         <input [type]="showApiSecret ? 'text' : 'password'" 
                                class="form-control" 
                                id="integration-privatekey" 
-                               placeholder="Ingresa tu Private Key" 
+                               [placeholder]="'integrations.integrationModal.ingresaTuPrivateKey' | translate" 
                                formControlName="apiSecret"
                                [class.is-invalid]="integrationForm.get('apiSecret')?.invalid && integrationForm.get('apiSecret')?.touched">
                         <button class="btn btn-outline-secondary" type="button" (click)="toggleApiSecretVisibility()">
@@ -299,40 +298,40 @@
                         </button>
                       </div>
                       <div class="invalid-feedback" *ngIf="integrationForm.get('apiSecret')?.invalid && integrationForm.get('apiSecret')?.touched">
-                        La Private Key es obligatoria
+                        {{ 'integrations.integrationModal.laPrivateKeyEsObligatoria' | translate }}
                       </div>
                     </div>
                     
                     <!-- P_Key adicional -->
                     <div class="col-md-6 mb-3">
                       <label for="integration-pkey" class="form-label fw-semibold">
-                        <i class="fa fa-key me-2 text-primary"></i>P_Key:
+                        <i class="fa fa-key me-2 text-primary"></i>{{ 'integrations.integrationModal.pKey' | translate }}
                       </label>
                       <div class="input-group">
                         <span class="input-group-text"><i class="fa fa-key"></i></span>
                         <input type="text" 
                                class="form-control" 
                                id="integration-pkey" 
-                               placeholder="Clave adicional (opcional)" 
+                               [placeholder]="'integrations.integrationModal.claveAdicionalOpcional' | translate" 
                                formControlName="pKey">
                       </div>
-                      <div class="form-text">Clave adicional (opcional)</div>
+                      <div class="form-text">{{ 'integrations.integrationModal.claveAdicionalOpcional' | translate }}</div>
                     </div>
                     
                     <!-- URL -->
                     <div class="col-12 mb-3" *ngIf="needsUrl()">
                       <label for="integration-url" class="form-label fw-semibold">
-                        <i class="fa fa-globe me-2 text-primary"></i>URL de la API
+                        <i class="fa fa-globe me-2 text-primary"></i>{{ 'integrations.integrationModal.urlDeLaApi' | translate }}
                       </label>
                       <div class="input-group">
                         <span class="input-group-text"><i class="fa fa-globe"></i></span>
                         <input type="url" 
                                class="form-control" 
                                id="integration-url" 
-                               placeholder="https://api.example.com/v2/" 
+                               [placeholder]="'integrations.integrationModal.httpsApiExampleComV2' | translate" 
                                formControlName="apiUrl">
                       </div>
-                      <div class="form-text">La URL base de la API del servicio</div>
+                      <div class="form-text">{{ 'integrations.integrationModal.laUrlBaseDeLa' | translate }}</div>
                     </div>
                     
                     <!-- Campos adicionales específicos -->
@@ -359,16 +358,16 @@
         <div class="card-body">
           <!-- Controles manuales -->
           <div class="manual-controls">
-            <h6 class="control-title">Herramientas de Verificación</h6>
+            <h6 class="control-title">{{ 'integrations.integrationModal.herramientasDeVerificacion' | translate }}</h6>
             <div class="btn-group">
               <button type="button" class="btn btn-sm btn-outline-primary" (click)="manualValidateCredentials()" [disabled]="integrationForm.invalid">
-                <i class="fa fa-check-circle me-1"></i> Validar
+                <i class="fa fa-check-circle me-1"></i> {{ 'integrations.integrationModal.validar' | translate }}
               </button>
               <button type="button" class="btn btn-sm btn-outline-info" (click)="manualAnalyzeCredentialStrength()" [disabled]="integrationForm.invalid">
-                <i class="fa fa-shield-alt me-1"></i> Analizar
+                <i class="fa fa-shield-alt me-1"></i> {{ 'integrations.integrationModal.analizar' | translate }}
               </button>
               <button type="button" class="btn btn-sm btn-outline-secondary" (click)="manualLoadConfigSchema()">
-                <i class="fa fa-cog me-1"></i> Esquema
+                <i class="fa fa-cog me-1"></i> {{ 'integrations.integrationModal.esquema' | translate }}
               </button>
             </div>
           </div>
@@ -377,7 +376,7 @@
           <div class="strength-indicator-wrapper">
             <div *ngIf="isAnalyzingCredentials" class="analysis-loader">
               <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-              <span>Analizando...</span>
+              <span>{{ 'integrations.integrationModal.analizando' | translate }}</span>
             </div>
             
             <app-credential-strength-indicator 
@@ -389,7 +388,7 @@
             <div *ngIf="credentialStrength" class="advanced-toggle">
               <a href="javascript:void(0)" (click)="toggleAdvancedValidation()">
                 <i class="fa" [ngClass]="showAdvancedValidation ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-                {{ showAdvancedValidation ? 'Ocultar' : 'Mostrar' }} detalles
+                {{ showAdvancedValidation ? ('comun.ocultar' | translate) : ('comun.mostrar' | translate) }} {{ 'integrations.integrationModal.detalles' | translate }}
               </a>
             </div>
           </div>
@@ -404,7 +403,7 @@
                   (click)="toggleAdvancedOptions()">
             <h6 class="card-title mb-0 d-flex align-items-center justify-content-between">
               <span>
-                <i class="fa fa-cogs me-2"></i>Opciones Avanzadas
+                <i class="fa fa-cogs me-2"></i>{{ 'integrations.integrationModal.opcionesAvanzadas' | translate }}
               </span>
               <i class="fa" [ngClass]="showAdvancedOptions ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
             </h6>
@@ -415,25 +414,25 @@
             <!-- Webhooks -->
             <div class="col-12 mb-3">
               <label for="integration-webhook" class="form-label fw-semibold">
-                <i class="fa fa-link me-2 text-primary"></i>URL de Webhook
+                <i class="fa fa-link me-2 text-primary"></i>{{ 'integrations.integrationModal.urlDeWebhook' | translate }}
               </label>
               <div class="input-group">
                 <span class="input-group-text"><i class="fa fa-link"></i></span>
                 <input type="url" 
                        class="form-control" 
                        id="integration-webhook" 
-                       placeholder="https://tutienda.com/api/webhooks/provider" 
+                       [placeholder]="'integrations.integrationModal.httpsTutiendaComApiWebhooks' | translate" 
                        formControlName="webhookUrl">
               </div>
               <div class="form-text">
-                URL donde recibirás notificaciones de eventos desde {{ getSelectedIntegrationName() }}
+                {{ 'integrations.integrationModal.urlDondeRecibirasNotificacionesDe' | translate:{getSelectedIntegrationName: (getSelectedIntegrationName())} }}
               </div>
             </div>
             
             <!-- Límite de uso -->
             <div class="col-md-6 mb-3">
               <label for="integration-limit" class="form-label fw-semibold">
-                <i class="fa fa-tachometer-alt me-2 text-primary"></i>Límite de peticiones
+                <i class="fa fa-tachometer-alt me-2 text-primary"></i>{{ 'integrations.integrationModal.limiteDePeticiones' | translate }}
               </label>
               <div class="input-group">
                 <span class="input-group-text"><i class="fa fa-tachometer-alt"></i></span>
@@ -444,14 +443,14 @@
                        min="1"
                        max="1000"
                        formControlName="rateLimit">
-                <span class="input-group-text">por minuto</span>
+                <span class="input-group-text">{{ 'integrations.integrationModal.porMinuto' | translate }}</span>
               </div>
             </div>
             
             <!-- Opciones de notificación -->
             <div class="col-md-6 mb-3">
               <label class="form-label fw-semibold">
-                <i class="fa fa-bell me-2 text-primary"></i>Notificaciones
+                <i class="fa fa-bell me-2 text-primary"></i>{{ 'integrations.integrationModal.notificaciones' | translate }}
               </label>
               <div class="form-check form-switch">
                 <input class="form-check-input" 
@@ -459,7 +458,7 @@
                        id="notify-errors" 
                        formControlName="notifyErrors">
                 <label class="form-check-label" for="notify-errors">
-                  Notificar errores por email
+                  {{ 'integrations.integrationModal.notificarErroresPorEmail' | translate }}
                 </label>
               </div>
             </div>
@@ -471,13 +470,13 @@
         <button type="button" 
                 class="btn btn-outline-secondary" 
                 (click)="goToPreviousStep()">
-          <i class="fa fa-chevron-left me-1"></i>Anterior
+          <i class="fa fa-chevron-left me-1"></i>{{ 'integrations.integrationModal.anterior' | translate }}
         </button>
         <button type="button" 
                 class="btn btn-primary" 
                 (click)="proceedToVerification()"
                 [disabled]="integrationForm.invalid">
-          Continuar<i class="fa fa-chevron-right ms-1"></i>
+          {{ 'integrations.integrationModal.continuar' | translate }}<i class="fa fa-chevron-right ms-1"></i>
         </button>
       </div>
     </form>
@@ -490,30 +489,30 @@
           <span class="step-number">4</span>
         </div>
         <div class="step-info">
-          <h6 class="step-title">Verificación y confirmación</h6>
-          <p class="step-description">Revisa la configuración antes de guardar</p>
+          <h6 class="step-title">{{ 'integrations.integrationModal.verificacionYConfirmacion' | translate }}</h6>
+          <p class="step-description">{{ 'integrations.integrationModal.revisaLaConfiguracionAntesDe' | translate }}</p>
         </div>
       </div>
       
       <div class="card">
         <div class="card-body">
           <h6 class="card-title mb-3">
-            <i class="fa fa-clipboard-list me-2"></i>Resumen de configuración
+            <i class="fa fa-clipboard-list me-2"></i>{{ 'integrations.integrationModal.resumenDeConfiguracion' | translate }}
           </h6>
           <dl class="row mb-0">
-            <dt class="col-sm-3">Nombre:</dt>
+            <dt class="col-sm-3">{{ 'integrations.integrationModal.nombre' | translate }}</dt>
             <dd class="col-sm-9">{{ integrationForm.get('name')?.value }}</dd>
             
-            <dt class="col-sm-3">Tipo:</dt>
+            <dt class="col-sm-3">{{ 'integrations.integrationModal.tipo' | translate }}</dt>
             <dd class="col-sm-9">{{ getSelectedIntegrationName() }}</dd>
             
-            <dt class="col-sm-3">Ambiente:</dt>
+            <dt class="col-sm-3">{{ 'integrations.integrationModal.ambiente2' | translate }}</dt>
             <dd class="col-sm-9">{{ integrationForm.get('environment')?.value | titlecase }}</dd>
             
-            <dt class="col-sm-3">Estado:</dt>
+            <dt class="col-sm-3">{{ 'integrations.integrationModal.estado' | translate }}</dt>
             <dd class="col-sm-9">
               <span class="badge" [ngClass]="integrationForm.get('enabled')?.value ? 'bg-success' : 'bg-warning'">
-                {{ integrationForm.get('enabled')?.value ? 'Activo' : 'Inactivo' }}
+                {{ integrationForm.get('enabled')?.value ? ('integrations.integrationModal.activo' | translate) : ('integrations.integrationModal.inactivo' | translate) }}
               </span>
             </dd>
           </dl>
@@ -533,14 +532,14 @@
         <button type="button" 
                 class="btn btn-outline-secondary" 
                 (click)="goToPreviousStep()">
-          <i class="fa fa-chevron-left me-1"></i>Anterior
+          <i class="fa fa-chevron-left me-1"></i>{{ 'integrations.integrationModal.anterior' | translate }}
         </button>
         <button type="button" 
                 class="btn btn-success" 
                 (click)="saveIntegration()"
                 [disabled]="integrationForm.invalid || isSaving">
           <i class="fa me-1" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
-          {{ isSaving ? 'Guardando...' : 'Guardar integración' }}
+          {{ isSaving ? ('integrations.integrationModal.guardando' | translate) : ('integrations.integrationModal.guardarIntegracion' | translate) }}
         </button>
       </div>
     </div>
@@ -554,7 +553,7 @@
         <button type="button" 
                 class="btn btn-outline-secondary" 
                 (click)="closeModal()">
-          <i class="fa fa-times me-2"></i>Cancelar
+          <i class="fa fa-times me-2"></i>{{ 'comun.cancelar' | translate }}
         </button>
       </div>
       
@@ -566,14 +565,14 @@
                   (click)="testConnection()" 
                   [disabled]="integrationForm.invalid || isTesting">
             <i class="fa me-2" [ngClass]="isTesting ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
-            {{ isTesting ? 'Probando...' : 'Probar conexión' }}
+            {{ isTesting ? ('integrations.integrationModal.probando' | translate) : ('integrations.facturacionHub.probarConexion' | translate) }}
           </button>
           <button type="button" 
                   class="btn btn-primary" 
                   (click)="saveIntegration()" 
                   [disabled]="integrationForm.invalid || isSaving">
             <i class="fa me-2" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
-            {{ isSaving ? 'Guardando...' : 'Guardar' }}
+            {{ isSaving ? ('integrations.integrationModal.guardando' | translate) : ('comun.guardar' | translate) }}
           </button>
         </div>
         
@@ -585,7 +584,7 @@
                   class="btn btn-primary px-4" 
                   (click)="goToNextStep()"
                   [disabled]="!canProceedToNextStep()">
-            Continuar<i class="fa fa-chevron-right ms-2"></i>
+            {{ 'integrations.integrationModal.continuar' | translate }}<i class="fa fa-chevron-right ms-2"></i>
           </button>
           
           <!-- Step 3: Configuration -->
@@ -595,13 +594,13 @@
                     (click)="testConnection()" 
                     [disabled]="integrationForm.invalid || isTesting">
               <i class="fa me-2" [ngClass]="isTesting ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
-              {{ isTesting ? 'Probando...' : 'Probar conexión' }}
+              {{ isTesting ? ('integrations.integrationModal.probando' | translate) : ('integrations.facturacionHub.probarConexion' | translate) }}
             </button>
             <button type="button" 
                     class="btn btn-primary px-4" 
                     (click)="proceedToVerification()"
                     [disabled]="integrationForm.invalid">
-              Revisar<i class="fa fa-chevron-right ms-2"></i>
+              {{ 'integrations.integrationModal.revisar' | translate }}<i class="fa fa-chevron-right ms-2"></i>
             </button>
           </div>
           

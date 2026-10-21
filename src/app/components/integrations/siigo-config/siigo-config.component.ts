@@ -7,6 +7,7 @@ import { takeUntil, catchError, finalize } from 'rxjs/operators';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import { parse } from 'flatted';
 
+import { TranslateService } from '@ngx-translate/core';
 interface SiigoMasterData {
   costCenters: any[];
   documentTypes: any[];
@@ -82,7 +83,8 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private integrationsService: IntegrationsService,
     private messageService: MessageService,
-    private maestroService: MaestroService
+    private maestroService: MaestroService,
+    private translate: TranslateService
   ) {
     this.siigoForm = this.createForm();
   }
@@ -295,8 +297,8 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
     if (this.siigoForm.get('username')?.invalid || this.siigoForm.get('accessKey')?.invalid) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Campos requeridos',
-        detail: 'Ingresa usuario y Access Key para probar conexión'
+        summary: this.translate.instant('integrations.siigoConfig.camposRequeridos'),
+        detail: this.translate.instant('integrations.siigoConfig.ingresaUsuarioYAccessKey')
       });
       return;
     }
@@ -325,8 +327,8 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
           this.connectionMessage = result.message || 'Conexión exitosa con Siigo';
           this.messageService.add({
             severity: 'success',
-            summary: 'Conexión exitosa',
-            detail: 'Las credenciales de Siigo son válidas'
+            summary: this.translate.instant('integrations.siigoConfig.conexionExitosa'),
+            detail: this.translate.instant('integrations.siigoConfig.lasCredencialesDeSiigoSon')
           });
 
           // Auto-load master data on successful connection
@@ -336,8 +338,8 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
           this.connectionMessage = result.message || 'Error de conexión';
           this.messageService.add({
             severity: 'error',
-            summary: 'Error de conexión',
-            detail: result.message || 'No se pudo conectar con Siigo'
+            summary: this.translate.instant('integrations.siigoConfig.errorDeConexion'),
+            detail: result.message || this.translate.instant('integrations.siigoConfig.noSePudoConectarCon')
           });
         }
       });
@@ -427,8 +429,8 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
 
       this.messageService.add({
         severity: 'info',
-        summary: 'Datos cargados',
-        detail: 'Datos maestros de Siigo cargados correctamente'
+        summary: this.translate.instant('integrations.siigoConfig.datosCargados'),
+        detail: this.translate.instant('integrations.siigoConfig.datosMaestrosDeSiigoCargados')
       });
     });
   }
@@ -450,8 +452,8 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
       this.siigoForm.markAllAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Formulario inválido',
-        detail: 'Por favor completa todos los campos requeridos'
+        summary: this.translate.instant('integrations.siigoConfig.formularioInvalido'),
+        detail: this.translate.instant('integrations.siigoConfig.porFavorCompletaTodosLos')
       });
       return;
     }
@@ -459,8 +461,8 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
     if (this.connectionStatus !== 'success') {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Conexión no verificada',
-        detail: 'Por favor prueba la conexión antes de guardar'
+        summary: this.translate.instant('integrations.siigoConfig.conexionNoVerificada'),
+        detail: this.translate.instant('integrations.siigoConfig.porFavorPruebaLaConexion')
       });
       return;
     }
@@ -502,15 +504,15 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
         next: (response) => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Configuración guardada',
-            detail: 'La configuración de Siigo se guardó correctamente'
+            summary: this.translate.instant('integrations.siigoConfig.configuracionGuardada'),
+            detail: this.translate.instant('integrations.siigoConfig.laConfiguracionDeSiigoSe')
           });
         },
         error: (error) => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: error.error?.message || 'Error al guardar configuración'
+            summary: this.translate.instant('comun.error'),
+            detail: error.error?.message || this.translate.instant('integrations.siigoConfig.errorAlGuardarConfiguracion')
           });
         }
       });
@@ -520,8 +522,8 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
     if (this.connectionStatus !== 'success') {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Conexión requerida',
-        detail: 'Primero verifica la conexión con Siigo'
+        summary: this.translate.instant('integrations.siigoConfig.conexionRequerida'),
+        detail: this.translate.instant('integrations.siigoConfig.primeroVerificaLaConexionCon')
       });
       return;
     }
@@ -556,15 +558,15 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
           this.syncResult = response.summary || response;
           this.messageService.add({
             severity: 'success',
-            summary: 'Sincronización completada',
-            detail: `${this.syncResult?.total || 0} productos procesados`
+            summary: this.translate.instant('integrations.siigoConfig.sincronizacionCompletada'),
+            detail: this.translate.instant('integrations.siigoConfig.productosProcesados', { total: this.syncResult?.total || 0 })
           });
         },
         error: (error) => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error de sincronización',
-            detail: error.error?.message || 'Error al sincronizar productos'
+            summary: this.translate.instant('integrations.siigoConfig.errorDeSincronizacion'),
+            detail: error.error?.message || this.translate.instant('integrations.siigoConfig.errorAlSincronizarProductos')
           });
         }
       });

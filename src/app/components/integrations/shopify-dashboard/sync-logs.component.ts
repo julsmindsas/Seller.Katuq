@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { IntegrationsService } from '../integrations.service';
 
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-sync-logs',
   templateUrl: './sync-logs.component.html',
@@ -45,7 +46,8 @@ export class SyncLogsComponent implements OnInit, OnDestroy {
 
   constructor(
     private integrationsService: IntegrationsService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -98,8 +100,8 @@ export class SyncLogsComponent implements OnInit, OnDestroy {
           this.totalRecords = 0;
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudieron cargar los logs de sincronizacion'
+            summary: this.translate.instant('comun.error'),
+            detail: this.translate.instant('integrations.syncLogs.noSePudieronCargarLos')
           });
         }
       });
@@ -137,8 +139,8 @@ export class SyncLogsComponent implements OnInit, OnDestroy {
         next: () => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Reprocesamiento iniciado',
-            detail: 'Se inicio el reprocesamiento del evento'
+            summary: this.translate.instant('integrations.syncLogs.reprocesamientoIniciado'),
+            detail: this.translate.instant('integrations.syncLogs.seInicioElReprocesamientoDel')
           });
           this.showDetailDialog = false;
           setTimeout(() => this.loadLogs(), 2000);
@@ -146,8 +148,8 @@ export class SyncLogsComponent implements OnInit, OnDestroy {
         error: () => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo reprocesar el evento'
+            summary: this.translate.instant('comun.error'),
+            detail: this.translate.instant('integrations.syncLogs.noSePudoReprocesarEl')
           });
         }
       });

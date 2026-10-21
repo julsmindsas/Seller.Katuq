@@ -1,18 +1,17 @@
 <div class="mc cfg-pagina">
   <header class="mc__head cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Integraciones</span>
-      <h1 class="mc__titulo cfg-titulo">Mensajes de Instagram y Facebook</h1>
+      <span class="cfg-eyebrow">{{ 'integrations.facturacionHub.integraciones' | translate }}</span>
+      <h1 class="mc__titulo cfg-titulo">{{ 'integrations.metaChannels.mensajesDeInstagramYFacebook' | translate }}</h1>
       <p class="mc__sub cfg-sub">
-        Conecta las cuentas de tu negocio para atender por aquí los mensajes que te
-        llegan por redes, con el cliente y sus pedidos a la vista.
+        {{ 'integrations.metaChannels.conectaLasCuentasDeTu' | translate }}
       </p>
     </div>
   </header>
 
   <div class="mc__aviso" *ngIf="aviso">{{ aviso }}</div>
 
-  <p class="mc__cargando" *ngIf="cargando">Cargando…</p>
+  <p class="mc__cargando" *ngIf="cargando">{{ 'comun.cargando' | translate }}</p>
 
   <div class="mc__tarjetas" *ngIf="!cargando">
     <article class="mc__tarjeta" *ngFor="let c of canales">
@@ -37,7 +36,7 @@
         y la gente concluía que el botón Desconectar no había funcionado.
       -->
       <div class="mc__cuenta" *ngIf="muestraCuenta(c.id)">
-        <span class="mc__etiqueta">Cuenta</span>
+        <span class="mc__etiqueta">{{ 'integrations.metaChannels.cuenta' | translate }}</span>
         <span class="mc__cuenta-nombre">{{ estadoDe(c.id)?.cuentaNombre }}</span>
       </div>
 
@@ -49,7 +48,7 @@
           [disabled]="ocupado === c.id"
           (click)="conectar(c.id)"
         >
-          {{ ocupado === c.id ? 'Abriendo Meta…' : textoBoton(c.id) }}
+          {{ ocupado === c.id ? ('integrations.metaChannels.abriendoMeta' | translate) : textoBoton(c.id) }}
         </button>
 
         <button
@@ -59,14 +58,13 @@
           [disabled]="ocupado === c.id"
           (click)="desconectar(c.id)"
         >
-          {{ ocupado === c.id ? 'Desconectando…' : 'Desconectar' }}
+          {{ ocupado === c.id ? ('integrations.metaChannels.desconectando' | translate) : ('integrations.messagingLines.desconectar' | translate) }}
         </button>
       </div>
     </article>
   </div>
 
   <p class="mc__pie">
-    Al desconectar dejas de recibir mensajes nuevos, pero las conversaciones que
-    ya tienes siguen visibles.
+    {{ 'integrations.metaChannels.alDesconectarDejasDeRecibir' | translate }}
   </p>
 </div>

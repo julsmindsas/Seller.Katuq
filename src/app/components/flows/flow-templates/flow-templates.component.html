@@ -4,16 +4,16 @@
 
     <header class="cfg-cabeza">
       <div class="cfg-cabeza__textos">
-        <button type="button" class="au-link au-volver" (click)="goBack()">← Automatizaciones</button>
-        <span class="cfg-eyebrow">Integraciones</span>
-        <h1 class="cfg-titulo">Elige qué quieres que <span class="au-acento">pase solo</span></h1>
-        <p class="cfg-sub">Cada plantilla ya viene armada. Revisamos que tengas conectado lo necesario y la enciendes en un clic.</p>
+        <button type="button" class="au-link au-volver" (click)="goBack()">{{ 'flows.flowRuns.automatizaciones' | translate }}</button>
+        <span class="cfg-eyebrow">{{ 'flows.flowDiff.integraciones' | translate }}</span>
+        <h1 class="cfg-titulo">{{ 'flows.flowTemplates.eligeQueQuieresQue' | translate }} <span class="au-acento">{{ 'flows.flowTemplates.paseSolo' | translate }}</span></h1>
+        <p class="cfg-sub">{{ 'flows.flowTemplates.cadaPlantillaYaVieneArmada' | translate }}</p>
       </div>
     </header>
 
     <!-- Spec 003.5 — filtro por sistema (AC-003.5-02) -->
-    <div class="au-seg" *ngIf="!loading && availableProviders.length > 0" role="group" aria-label="Filtrar por sistema">
-      <button type="button" [class.on]="selectedProvider === 'all'" [attr.aria-pressed]="selectedProvider === 'all'" (click)="selectProvider('all')">Todas</button>
+    <div class="au-seg" *ngIf="!loading && availableProviders.length > 0" role="group" [attr.aria-label]="'flows.flowTemplates.filtrarPorSistema' | translate">
+      <button type="button" [class.on]="selectedProvider === 'all'" [attr.aria-pressed]="selectedProvider === 'all'" (click)="selectProvider('all')">{{ 'flows.flowTemplates.todas' | translate }}</button>
       <button type="button" *ngFor="let p of availableProviders" [class.on]="selectedProvider === p" [attr.aria-pressed]="selectedProvider === p" (click)="selectProvider(p)">{{ providerLabel(p) }}</button>
     </div>
 
@@ -21,19 +21,19 @@
 
     <div class="au-loading" *ngIf="loading">
       <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-      Cargando plantillas…
+      {{ 'flows.flowTemplates.cargandoPlantillas' | translate }}
     </div>
 
     <section class="au-empty" *ngIf="!loading && filteredTemplates.length === 0">
-      <span class="au-empty-title">Todavía no hay plantillas para este sistema</span>
-      <button type="button" class="au-btn-ghost" (click)="selectProvider('all')">Ver todas</button>
+      <span class="au-empty-title">{{ 'flows.flowTemplates.todaviaNoHayPlantillasPara' | translate }}</span>
+      <button type="button" class="au-btn-ghost" (click)="selectProvider('all')">{{ 'flows.flowList.verTodas' | translate }}</button>
     </section>
 
     <div class="au-grid" *ngIf="!loading && filteredTemplates.length > 0">
       <article *ngFor="let t of filteredTemplates; trackBy: trackById" class="au-card">
         <div class="au-card-top">
           <ng-container *ngIf="ruta(t) as r">
-          <div class="au-ruta" *ngIf="r.de" [attr.aria-label]="'Lleva datos ' + (r.a.length ? 'de ' + r.de.nombre + ' a ' + nombresDe(r.a) : 'dentro de ' + r.de.nombre)">
+          <div class="au-ruta" *ngIf="r.de" [attr.aria-label]="('flows.flowList.llevaDatos' | translate) + (r.a.length ? ('flows.flowList.de' | translate) + r.de.nombre + ('flows.flowList.a' | translate) + nombresDe(r.a) : ('flows.flowList.dentroDe' | translate) + r.de.nombre)">
             <span class="au-sis"><span class="au-sis-dot" [style.background]="r.de.color"></span>{{ r.de.nombre }}</span>
             <ng-container *ngFor="let s of r.a">
               <svg class="au-flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
@@ -41,7 +41,7 @@
             </ng-container>
           </div>
           </ng-container>
-          <span class="au-estado au-estado-partial" *ngIf="t.experimental"><span class="au-dot"></span>En prueba</span>
+          <span class="au-estado au-estado-partial" *ngIf="t.experimental"><span class="au-dot"></span>{{ 'flows.flowTemplates.enPrueba' | translate }}</span>
         </div>
 
         <h3>{{ t.name }}</h3>
@@ -49,13 +49,13 @@
 
         <dl class="au-datos">
           <div>
-            <dt>Cuándo arranca</dt>
+            <dt>{{ 'flows.flowEditor.cuandoArranca' | translate }}</dt>
             <dd>{{ cuando(t) }}</dd>
           </div>
         </dl>
 
         <div class="au-card-foot">
-          <button type="button" class="au-btn-primary au-btn-sm" (click)="openWizard(t)">Usar esta plantilla</button>
+          <button type="button" class="au-btn-primary au-btn-sm" (click)="openWizard(t)">{{ 'flows.flowTemplates.usarEstaPlantilla' | translate }}</button>
         </div>
       </article>
     </div>
@@ -68,10 +68,10 @@
   <div class="au-asis">
     <div class="au-asis-head">
       <div>
-        <span class="au-eyebrow">Encender plantilla</span>
+        <span class="au-eyebrow">{{ 'flows.flowTemplates.encenderPlantilla' | translate }}</span>
         <h2>{{ wizardTemplate?.name }}</h2>
       </div>
-      <button type="button" class="au-btn-icon" (click)="closeWizard()" aria-label="Cerrar">
+      <button type="button" class="au-btn-icon" (click)="closeWizard()" [attr.aria-label]="'comun.cerrar' | translate">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg>
       </button>
     </div>
@@ -81,41 +81,41 @@
 
       <!-- Paso 1: lo que tiene que estar conectado -->
       <section class="au-asis-paso">
-        <h3><span class="au-asis-n">1</span> Lo que tiene que estar conectado</h3>
+        <h3><span class="au-asis-n">1</span> {{ 'flows.flowTemplates.loQueTieneQueEstar' | translate }}</h3>
 
-        <p class="au-asis-ayuda" *ngIf="requiredIntegrations.length === 0">No necesita conectar nada más.</p>
+        <p class="au-asis-ayuda" *ngIf="requiredIntegrations.length === 0">{{ 'flows.flowTemplates.noNecesitaConectarNadaMas' | translate }}</p>
 
         <ul class="au-asis-lista" *ngIf="requiredIntegrations.length > 0">
           <li *ngFor="let it of requiredIntegrations">
             <span class="au-asis-nombre">{{ it.label }}</span>
-            <span *ngIf="!integrationsVerified" class="au-estado au-estado-draft"><span class="au-dot"></span>Sin revisar</span>
-            <span *ngIf="integrationsVerified && it.connected" class="au-estado au-estado-active"><span class="au-dot"></span>Conectado</span>
-            <button *ngIf="integrationsVerified && !it.connected" type="button" class="au-btn-primary au-btn-sm" (click)="goToIntegrations()">Conectar</button>
+            <span *ngIf="!integrationsVerified" class="au-estado au-estado-draft"><span class="au-dot"></span>{{ 'flows.flowTemplates.sinRevisar' | translate }}</span>
+            <span *ngIf="integrationsVerified && it.connected" class="au-estado au-estado-active"><span class="au-dot"></span>{{ 'flows.flowTemplates.conectado' | translate }}</span>
+            <button *ngIf="integrationsVerified && !it.connected" type="button" class="au-btn-primary au-btn-sm" (click)="goToIntegrations()">{{ 'flows.flowTemplates.conectar' | translate }}</button>
           </li>
         </ul>
 
         <p class="au-asis-ayuda" *ngIf="!integrationsVerified && requiredIntegrations.length > 0">
-          No pudimos revisar tus conexiones. Confírmalas en
-          <button type="button" class="au-link" (click)="goToIntegrations()">Integraciones</button>.
+          {{ 'flows.flowTemplates.noPudimosRevisarTusConexiones' | translate }}
+          <button type="button" class="au-link" (click)="goToIntegrations()">{{ 'flows.flowDiff.integraciones' | translate }}</button>.
         </p>
       </section>
 
       <!-- Paso 2: cada cuánto -->
       <section class="au-asis-paso" *ngIf="pollingNodeId">
-        <h3><span class="au-asis-n">2</span> Cada cuánto revisa si hay cambios</h3>
-        <select class="au-input" [(ngModel)]="syncMinutes" aria-label="Cada cuánto">
+        <h3><span class="au-asis-n">2</span> {{ 'flows.flowTemplates.cadaCuantoRevisaSiHay' | translate }}</h3>
+        <select class="au-input" [(ngModel)]="syncMinutes" [attr.aria-label]="'flows.flowTemplates.cadaCuanto' | translate">
           <option *ngFor="let opt of freqOptions" [ngValue]="opt.value">{{ opt.label }}</option>
         </select>
-        <p class="au-asis-ayuda">Entre más seguido, más rápido se ven los cambios.</p>
+        <p class="au-asis-ayuda">{{ 'flows.flowTemplates.entreMasSeguidoMasRapido' | translate }}</p>
       </section>
     </div>
 
     <div class="au-asis-pie">
-      <button type="button" class="au-link" (click)="openInEditor()" [disabled]="wizardBusy">Abrir en modo avanzado</button>
-      <span class="au-asis-falta" *ngIf="!canActivate">Primero conecta lo que falta.</span>
+      <button type="button" class="au-link" (click)="openInEditor()" [disabled]="wizardBusy">{{ 'flows.flowTemplates.abrirEnModoAvanzado' | translate }}</button>
+      <span class="au-asis-falta" *ngIf="!canActivate">{{ 'flows.flowTemplates.primeroConectaLoQueFalta' | translate }}</span>
       <button type="button" class="au-btn-primary" (click)="activateNow()" [disabled]="wizardBusy || !canActivate">
         <span *ngIf="wizardBusy" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        {{ wizardBusy ? 'Encendiendo…' : 'Encender ahora' }}
+        {{ wizardBusy ? ('flows.flowTemplates.encendiendo' | translate) : ('flows.flowTemplates.encenderAhora' | translate) }}
       </button>
     </div>
   </div>
