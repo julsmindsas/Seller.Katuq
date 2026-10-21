@@ -560,8 +560,8 @@
   align-items: center;
   gap: 16px;
   background: #fff;
-  border: 1px solid var(--kc-line);
-  border-left: 5px solid var(--kc-green);
+  // Éxito del escaneo en par semántico (borde verde suave), sin border-left de acento (D-131).
+  border: 1px solid #bfe6cf;
   border-radius: 18px;
   box-shadow: 0 2px 10px rgba(30, 35, 60, 0.05);
   padding: 14px 18px;

@@ -1,0 +1,201 @@
+// Diseño Katuq (D-400, D-516): base compartida de pantallas internas.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+/* PrimeNG con el tema Katuq (lara trae primario azul). */
+:host ::ng-deep .p-button {
+  border-radius: 11px;
+  font-weight: 700;
+  background: #5F3FE0;
+  border-color: #5F3FE0;
+  color: #fff;
+}
+:host ::ng-deep .p-button:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; color: #fff; }
+:host ::ng-deep .p-button:focus { box-shadow: 0 0 0 3px rgba(124, 92, 255, .25); }
+:host ::ng-deep .p-button.p-button-outlined {
+  background: #fff;
+  border: 1px solid #e4e2ef;
+  color: #5b5878;
+}
+:host ::ng-deep .p-button.p-button-outlined:enabled:hover { background: #faf9fe; border-color: #d9cffb; color: #5F3FE0; }
+:host ::ng-deep .p-button.p-button-outlined.p-button-secondary { background: #fff; border-color: #e4e2ef; color: #5b5878; }
+:host ::ng-deep .p-button.p-button-text { background: transparent; border-color: transparent; color: #5F3FE0; }
+:host ::ng-deep .p-button.p-button-text:enabled:hover { background: #efe9ff; border-color: transparent; color: #5F3FE0; }
+:host ::ng-deep .p-button.p-button-text.p-button-danger { color: #D64545; }
+:host ::ng-deep .p-button.p-button-text.p-button-danger:enabled:hover { background: #FDECEC; color: #D64545; }
+
+:host ::ng-deep .p-card {
+  border-radius: 16px;
+  border: 1px solid #ececf4;
+  box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
+  color: #211F3A;
+}
+:host ::ng-deep .p-card .p-card-title { font-size: 16px; font-weight: 800; color: #211F3A; }
+
+:host ::ng-deep .p-tag {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  background: #efe9ff;
+  color: #5F3FE0;
+}
+:host ::ng-deep .p-tag.p-tag-success { background: #E6F7EE; color: #1E874B; }
+:host ::ng-deep .p-tag.p-tag-danger { background: #FDECEC; color: #D64545; }
+:host ::ng-deep .p-tag.p-tag-warning { background: #FFF1DF; color: #D9820A; }
+:host ::ng-deep .p-tag.p-tag-info { background: #E7F1FF; color: #1E6FD9; }
+
+:host ::ng-deep .p-progressbar { background: #efe9ff; border-radius: 20px; }
+:host ::ng-deep .p-progressbar .p-progressbar-value { background: #5F3FE0; }
+
+:host ::ng-deep .p-datatable .p-datatable-wrapper { overflow-x: auto; border-radius: 11px; }
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  background: #faf9fe;
+  color: #8f8bab;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  border-color: #f1f0f7;
+}
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr { color: #211F3A; }
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td { border-color: #f1f0f7; font-size: 13px; }
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr:not(.p-highlight):hover { background: #faf9ff !important; }
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr.p-highlight { background: #efe9ff; color: #5F3FE0; }
+:host ::ng-deep .p-paginator { background: transparent; border: 0; }
+:host ::ng-deep .p-paginator .p-paginator-pages .p-paginator-page { border-radius: 9px; }
+:host ::ng-deep .p-paginator .p-paginator-pages .p-paginator-page.p-highlight { background: #5F3FE0; border-color: #5F3FE0; color: #fff; }
+
+:host ::ng-deep .p-dropdown,
+:host ::ng-deep .p-calendar .p-inputtext {
+  border-radius: 10px;
+  border-color: #e9e7f3;
+  background: #f5f4fa;
+}
+:host ::ng-deep .p-dropdown:not(.p-disabled).p-focus,
+:host ::ng-deep .p-inputtext:enabled:focus {
+  border-color: #7C5CFF;
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
+}
+:host ::ng-deep .p-calendar .p-datepicker-trigger { background: #5F3FE0; border-color: #5F3FE0; }
+
+/* ── Dashboard Shopify ── */
+.metricas { row-gap: 0; }
+
+:host ::ng-deep .dashboard-card.p-card,
+:host ::ng-deep .dashboard-card .p-card {
+  height: 100%;
+}
+
+:host ::ng-deep .dashboard-card .p-card-body {
+  padding: 1.25rem;
+}
+
+.card-content {
+  padding: 0.5rem 0;
+}
+
+/* Status Icon */
+.status-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 2rem;
+}
+
+.status-icon i { font-size: 2rem; }
+
+.status-connected {
+  background: #E6F7EE;
+  color: #1E874B;
+}
+
+.status-disconnected {
+  background: #FDECEC;
+  color: #D64545;
+}
+
+.status-checking {
+  background: #efe9ff;
+  color: #5F3FE0;
+}
+
+/* Metrics */
+.metric-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #211F3A;
+}
+
+.metric-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: #8f8bab;
+}
+
+.metric-icon {
+  display: inline-block;
+  font-size: 2rem;
+}
+
+.metric-icon--acento { color: #5F3FE0; }
+.metric-icon--ok { color: #1E874B; }
+.metric-icon--alerta { color: #D9820A; }
+
+/* Actions */
+.action-btn {
+  text-align: left;
+}
+
+.nav-links .p-button {
+  justify-content: flex-start;
+}
+
+hr { border-color: #ececf4; opacity: 1; }
+
+/* Timeline */
+.timeline-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
+}
+
+.marker-success {
+  background: #E6F7EE;
+  color: #1E874B;
+}
+
+.marker-error {
+  background: #FDECEC;
+  color: #D64545;
+}
+
+.marker-info {
+  background: #efe9ff;
+  color: #5F3FE0;
+}
+
+.event-item {
+  padding-bottom: 0.75rem;
+  color: #211F3A;
+}
+
+:host ::ng-deep .p-timeline .p-timeline-event-connector { background: #ececf4; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dashboard-header {
+    align-items: flex-start;
+  }
+}

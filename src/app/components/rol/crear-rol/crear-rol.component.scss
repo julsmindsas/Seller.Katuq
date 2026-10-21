@@ -1,0 +1,3 @@
+// Crear rol — regla de diseño Katuq (D-400): base cfg-* de shared/styles/_config-pagina.scss.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;

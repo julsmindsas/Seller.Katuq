@@ -1,33 +1,20 @@
-<!--<app-breadcrumb [title]="'Productos'" [items]="['Maestros']" [active_item]="'Productos'"></app-breadcrumb>-->
-
-<div class="container-fluid">
-    <div class="alert alert-info d-flex align-items-center justify-content-between gap-3 mb-3"
+<div class="cfg-pagina">
+    <div class="cfg-aviso pk-aviso-onb"
          *ngIf="onboardingReturnUrl" role="status">
-        <span><i class="pi pi-arrow-circle-left me-2"></i>Estás cargando tus productos para completar la configuración inicial.</span>
-        <button type="button" class="btn btn-sm btn-outline-primary" (click)="returnToOnboarding()">
+        <span class="pk-aviso-onb__texto"><i class="pi pi-arrow-circle-left me-2"></i>Estás cargando tus productos para completar la configuración inicial.</span>
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="returnToOnboarding()">
             Volver a la configuración
         </button>
     </div>
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="loader-box" *ngIf="cargando">
-                    <div class="loader-8"></div>
-                </div>
 
-                <!-- Header Katuq Standard -->
-                <div class="module-header pk-header px-4 py-3 border-bottom">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <div class="d-flex align-items-center gap-3 mb-2 mb-md-0">
-                            <span class="pk-header-icon">
-                                <i class="pi pi-box"></i>
-                            </span>
-                            <div>
-                                <h4 class="pk-title mb-0">{{ "Productos" | translate }}</h4>
-                                <p class="pk-subtitle mb-0">{{ "Administra tu catálogo de productos" | translate }}</p>
-                            </div>
+                <!-- Encabezado de la pantalla (D-400) -->
+                <header class="cfg-cabeza">
+                        <div class="cfg-cabeza__textos">
+                                <span class="cfg-eyebrow">Productos</span>
+                                <h1 class="cfg-titulo">{{ "Productos" | translate }}</h1>
+                                <p class="cfg-sub">{{ "Administra tu catálogo de productos" | translate }}</p>
                         </div>
-                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="cfg-acciones">
                             <!-- Crear Producto abre el desplegable; no navega por su cuenta.
                                  Si el botón llevara al formulario completo Y el menú lo
                                  ofreciera otra vez, la misma acción estaría en dos lados y
@@ -41,7 +28,7 @@
                                  permiso que la acción de edición rápida de cada fila. -->
                             <div class="btn-group" ngbDropdown
                                  *ngIf="puedeEdicionRapida; else crearProductoSimple">
-                                <button type="button" class="pk-btn pk-btn-primary pk-btn-dropdown"
+                                <button type="button" class="cfg-btn pk-btn-dropdown"
                                         ngbDropdownToggle>
                                     <i class="pi pi-plus"></i>{{ "Crear Producto" | translate }}
                                 </button>
@@ -65,14 +52,14 @@
                                 </div>
                             </div>
                             <ng-template #crearProductoSimple>
-                                <button type="button" class="pk-btn pk-btn-primary"
+                                <button type="button" class="cfg-btn"
                                         (click)="crearProducto()">
                                     <i class="pi pi-plus"></i>{{ "Crear Producto" | translate }}
                                 </button>
                             </ng-template>
                             <!-- Split: Importar Excel + dropdown integraciones -->
                             <div class="btn-group pk-split" ngbDropdown>
-                                <button type="button" class="pk-btn pk-btn-outline pk-split-main"
+                                <button type="button" class="cfg-btn cfg-btn--sec pk-split-main"
                                         (click)="openImportModal()">
                                     <i class="pi pi-upload pk-ico-accent"></i>{{ "Importar" | translate }}
                                 </button>
@@ -105,7 +92,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <button type="button" class="pk-btn pk-btn-outline"
+                            <button type="button" class="cfg-btn cfg-btn--sec"
                                     (click)="exportToExcel()">
                                 <i class="pi pi-download pk-ico-success"></i>{{ "Exportar" | translate }}
                             </button>
@@ -116,17 +103,21 @@
                             </button>
                             <!-- Acción irreversible: solo familia Administrador.
                                  El backend la valida igual (requireRole). -->
-                            <button type="button" class="pk-btn pk-btn-danger-soft"
+                            <button type="button" class="cfg-btn cfg-btn--peligro"
                                     *ngIf="puedeEliminarBaseDatos"
                                     (click)="limpiarProductosComercio()"
                                     ngbTooltip="Eliminar todos los productos del comercio">
                                 <i class="pi pi-trash"></i>Eliminar Base de Datos
                             </button>
                         </div>
-                    </div>
+                </header>
+
+            <section class="cfg-card pk-card">
+                <div class="loader-box" *ngIf="cargando">
+                    <div class="loader-8"></div>
                 </div>
 
-                <div class="card-body p-4 custom-datatable">
+                <div class="custom-datatable">
 
                     <!-- ====== SISTEMA DE FILTROS ====== -->
                     <div class="filtros-wrapper mb-3">
@@ -858,15 +849,13 @@
                         </ng-template>
                     </p-table>
                 </div>
-            </div>
-        </div>
-    </div>
+            </section>
 </div>
 
 <!-- Botón de Acción Flotante (FAB) para Móvil -->
 <button
     type="button"
-    class="btn btn-primary btn-fab d-lg-none"
+    class="btn btn-fab d-lg-none"
     placement="left"
     ngbTooltip="{{ 'Crear Producto' | translate }}"
     (click)="crearProducto()"
@@ -905,9 +894,9 @@
         <div class="d-flex justify-content-between align-items-center mb-2">
             <label class="fw-semibold">Columnas a incluir</label>
             <div class="d-flex gap-2">
-                <a href="javascript:void(0)" class="small text-primary" (click)="selectAllExportColumns(true)">Todas</a>
+                <a href="javascript:void(0)" class="small pk-enlace" (click)="selectAllExportColumns(true)">Todas</a>
                 <span class="text-muted small">|</span>
-                <a href="javascript:void(0)" class="small text-secondary" (click)="selectAllExportColumns(false)">Ninguna</a>
+                <a href="javascript:void(0)" class="small pk-enlace pk-enlace--sec" (click)="selectAllExportColumns(false)">Ninguna</a>
             </div>
         </div>
         <div class="row g-2">
@@ -934,8 +923,8 @@
             <i class="pi pi-spin pi-spinner me-1"></i>
             Trayendo productos… <strong>{{ exportProgress }}</strong><span *ngIf="exportTotal"> / {{ exportTotal }}</span>
         </div>
-        <button type="button" class="btn btn-secondary btn-sm me-2" (click)="showExportDialog = false" [disabled]="exportando">Cancelar</button>
-        <button type="button" class="btn btn-success btn-sm" (click)="doExport()" [disabled]="exportando">
+        <button type="button" class="cfg-btn cfg-btn--sec me-2" (click)="showExportDialog = false" [disabled]="exportando">Cancelar</button>
+        <button type="button" class="cfg-btn" (click)="doExport()" [disabled]="exportando">
             <i class="icofont icofont-file-excel me-1" *ngIf="!exportando"></i>
             <i class="pi pi-spin pi-spinner me-1" *ngIf="exportando"></i>
             {{ exportando ? 'Exportando…' : 'Descargar Excel' }}
@@ -971,8 +960,8 @@
         </div>
     </div>
     <ng-template pTemplate="footer">
-        <button type="button" class="btn btn-secondary btn-sm me-2" (click)="showColConfigDialog = false">Cancelar</button>
-        <button type="button" class="btn btn-primary btn-sm" (click)="saveColConfig()">
+        <button type="button" class="cfg-btn cfg-btn--sec me-2" (click)="showColConfigDialog = false">Cancelar</button>
+        <button type="button" class="cfg-btn" (click)="saveColConfig()">
             <i class="pi pi-save me-1"></i>Guardar configuración
         </button>
     </ng-template>

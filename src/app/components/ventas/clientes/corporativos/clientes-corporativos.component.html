@@ -1,32 +1,34 @@
-<div class="corp-page">
+<div class="cfg-pagina corporativos-pagina">
   <p-toast></p-toast>
 
-  <!-- Header -->
-  <div class="corp-header">
-    <div>
-      <h2 class="corp-title">Clientes corporativos</h2>
-      <p class="corp-subtitle">Prospectos B2B que alimentan el CRM. Lista independiente de los clientes habituales.</p>
+  <!-- Header (D-516: marco canónico) -->
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Clientes</span>
+      <h1 class="cfg-titulo">Clientes corporativos</h1>
+      <p class="cfg-sub">Prospectos B2B que alimentan el CRM. Lista independiente de los clientes habituales.</p>
     </div>
-    <div class="corp-header-actions">
-      <button class="btn btn-outline-success" (click)="exportarExcel()" [disabled]="!corporativos.length"
+    <div class="cfg-acciones">
+      <button class="cfg-btn cfg-btn--sec" (click)="exportarExcel()" [disabled]="!corporativos.length"
               pTooltip="Exportar a Excel" tooltipPosition="bottom">
         <i class="pi pi-download"></i> Exportar
       </button>
-      <button class="btn btn-outline-info" (click)="descargarPlantilla()"
+      <button class="cfg-btn cfg-btn--sec" (click)="descargarPlantilla()"
               pTooltip="Descargar plantilla de importación" tooltipPosition="bottom">
         <i class="pi pi-file-excel"></i> Plantilla
       </button>
-      <button class="btn btn-outline-secondary" (click)="fileInput.click()"
+      <button class="cfg-btn cfg-btn--sec" (click)="fileInput.click()"
               pTooltip="Importar desde Excel (.xlsx, .csv)" tooltipPosition="bottom">
         <i class="pi pi-upload"></i> Importar
       </button>
       <input #fileInput type="file" accept=".xlsx,.xls,.csv" hidden (change)="onFileImport($event)" />
-      <button class="btn btn-primary" (click)="openCrearModal()">
+      <button class="cfg-btn" (click)="openCrearModal()">
         <i class="pi pi-plus"></i> Nuevo corporativo
       </button>
     </div>
-  </div>
+  </header>
 
+  <section class="cfg-card corporativos-tabla">
   <!-- Toolbar: búsqueda + filtros de estado -->
   <div class="corp-toolbar">
     <span class="p-input-icon-left search-box">
@@ -98,11 +100,14 @@
     <ng-template pTemplate="emptymessage">
       <tr>
         <td colspan="6" class="empty">
-          <i class="pi pi-briefcase"></i>
-          <p>No hay clientes corporativos todavía.</p>
-          <button class="btn btn-outline-primary btn-sm" (click)="openCrearModal()">Crear el primero</button>
+          <div class="cfg-vacio">
+            <span class="cfg-vacio__icono"><i class="pi pi-briefcase"></i></span>
+            <p class="cfg-vacio__titulo">No hay clientes corporativos todavía.</p>
+            <button class="cfg-btn cfg-btn--sec" (click)="openCrearModal()">Crear el primero</button>
+          </div>
         </td>
       </tr>
     </ng-template>
   </p-table>
+  </section>
 </div>

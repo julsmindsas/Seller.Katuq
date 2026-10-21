@@ -4,7 +4,7 @@
 
     <header class="cb-head">
       <div class="cb-head-txt">
-        <span class="cb-eyebrow">Productos · Combos</span>
+        <span class="cb-eyebrow">Productos</span>
         <h1 class="cb-title">Combos que se venden <span>en una sola línea</span></h1>
         <p class="cb-sub">
           Junta los productos que tus clientes llevan juntos. En la cotización y en el pedido el cliente
@@ -105,7 +105,7 @@
               <span class="cb-prods-count">{{ (c.productos || []).length }} producto(s)</span>
               <span class="cb-chips">
                 <span class="cb-chip" *ngFor="let p of productosVisibles(c)" [title]="p.nombre">{{ p.nombre }}</span>
-                <span class="cb-chip cb-chip-more" *ngIf="productosRestantes(c) > 0">+{{ productosRestantes(c) }}</span>
+                <span class="cb-chip cb-mas" *ngIf="productosRestantes(c) > 0">+{{ productosRestantes(c) }}</span>
               </span>
             </span>
 

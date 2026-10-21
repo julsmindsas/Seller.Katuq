@@ -146,7 +146,7 @@ import {
     }
 
     .a2ui-button.primary {
-      background: #6366f1;
+      background: #5F3FE0;
       color: white;
     }
 

@@ -367,7 +367,7 @@ export class AgUiService {
                 name: personName,
                 displayName: personName,
                 department: this.mapDepartment(dept),
-                color: backendSpeaker.color || '#6366f1',
+                color: backendSpeaker.color || '#5F3FE0',
                 icon: this.mapAvatarToIcon(backendSpeaker.avatar),
                 emoji: this.getEmojiForDepartment(dept)
             };
@@ -1079,7 +1079,7 @@ export class AgUiService {
                 name: personName,
                 displayName: personName,
                 department: this.mapDepartment(dept),
-                color: backendSpeaker.color || '#6366f1',
+                color: backendSpeaker.color || '#5F3FE0',
                 icon: this.mapAvatarToIcon(backendSpeaker.avatar),
                 emoji: this.getEmojiForDepartment(dept)
             };

@@ -1,13 +1,11 @@
-<div class="modal-header">
-    <h4 class="modal-title">
+<div class="modal-header te-cabeza">
+    <h4 class="modal-title te-titulo">
         <i class="icofont icofont-truck"></i>&nbsp;{{ isEditing ? 'Editar' : 'Crear' }} tipo de entrega
     </h4>
-    <button type="button" class="btn-close " aria-label="Close" (click)="activeModal.dismiss()"></button>
+    <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
 
-<div class="modal-body">
-    <div class="card">
-        <div class="card-body p-4">
+<div class="modal-body cfg-form">
             <form [formGroup]="form">
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -35,23 +33,21 @@
                         <label class="form-label" for="number">Posición</label>&nbsp;
                         <span type="button" class="help" placement="top"
                             ngbPopover="{{'tipo numerico. Es la posicion que toma el tipo de entrega que estas creando en la lista de tipos de entrega ' | translate}}">
-                            <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i></span>
+                            <i class="icon-help-alt cfg-ayuda"></i></span>
                         <input type="number" class="form-control" id="number" formControlName="posicion">
                     </div>
                 </div>
 
-                <div class="mb-3">
+                <div class="mb-3 te-activo">
                     <input type="checkbox" class="checkboxK" id="checkbox" formControlName="activo">
                     <label class="form-label" for="checkbox">Activo/Inactivo</label>
                 </div>
             </form>
-        </div>
-    </div>
 </div>
 
-<div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss('Cancel click')">Cancelar</button>
-    <button type="button" class="btn btn-primary" (click)="onSubmit()" [disabled]="!form.valid">
+<div class="modal-footer te-pie">
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="activeModal.dismiss('Cancel click')">Cancelar</button>
+    <button type="button" class="cfg-btn" (click)="onSubmit()" [disabled]="!form.valid">
         <i class="icofont icofont-save"></i>&nbsp; {{ isEditing ? 'Actualizar' : 'Guardar' }}
     </button>
 </div>

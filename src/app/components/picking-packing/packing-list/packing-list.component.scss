@@ -1,19 +1,6 @@
-.card {
-  margin-bottom: 1.5rem;
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-}
-
-.card-header {
-  background-color: #fff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
-  padding: 1rem;
-
-  .card-title {
-    margin-bottom: 0;
-    color: #333;
-    font-weight: 600;
-  }
-}
+// Regla de diseño Katuq (D-400): base común de pantallas internas de lista.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
 
 .filters {
   .p-dropdown,
@@ -22,67 +9,71 @@
   }
 }
 
+// Estados en pill: par color fuerte / fondo suave (las clases bg-* llegan por [ngClass]).
 .badge {
-  padding: 0.5em 0.75em;
-  font-size: 0.875em;
-  font-weight: 500;
-  border-radius: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  background: #eef0f3;
+  color: #5A6B78;
 
-  &.badge-warning {
-    background-color: #ffc107;
-    color: #000;
-  }
-
-  &.badge-info {
-    background-color: #c4b5fd;
-    color: #fff;
-  }
-
-  &.badge-success {
-    background-color: #28a745;
-    color: #fff;
-  }
-
-  &.badge-danger {
-    background-color: #dc3545;
-    color: #fff;
-  }
-
-  &.badge-secondary {
-    background-color: #6c757d;
-    color: #fff;
-  }
+  &.bg-warning, &.badge-warning { background: #FFF1DF !important; color: #D9820A !important; }
+  &.bg-primary, &.badge-info { background: #efe9ff !important; color: #5F3FE0 !important; }
+  &.bg-success, &.badge-success { background: #E6F7EE !important; color: #1E874B !important; }
+  &.bg-danger, &.badge-danger { background: #FDECEC !important; color: #D64545 !important; }
+  &.bg-secondary, &.badge-secondary { background: #eef0f3 !important; color: #5A6B78 !important; }
 }
 
 :host ::ng-deep {
-  .p-datatable {
-    .p-datatable-header {
-      background: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-width: 1px 0;
-    }
+  // Tablas anchas: scroll dentro de la tarjeta, nunca en la página (390 px).
+  .cfg-card .p-datatable-wrapper { overflow-x: auto; }
 
-    .p-datatable-thead > tr > th {
-      background: #f8f9fa;
-      color: #495057;
-      font-weight: 600;
-      padding: 1rem;
-    }
+  .cfg-acciones .p-button,
+  .p-button.p-button-primary {
+    background: #5F3FE0;
+    border-color: #5F3FE0;
+    color: #fff;
+    border-radius: 11px;
+    font-weight: 700;
+    box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
 
-    .p-datatable-tbody > tr > td {
-      padding: 1rem;
-      border: 1px solid #dee2e6;
-    }
+    &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
+  }
 
-    .p-datatable-tbody > tr:hover {
-      background: #f8f9fa;
+  .p-button.p-button-secondary {
+    background: #fff;
+    border: 1px solid #e4e2ef;
+    color: #5b5878;
+    border-radius: 11px;
+    font-weight: 700;
+
+    &:enabled:hover { background: #faf9fe; border-color: #d9cffb; color: #5F3FE0; }
+  }
+
+  // Acciones de fila: íconos redondos en acento suave.
+  .p-button.p-button-rounded {
+    width: 2.5rem;
+    height: 2.5rem;
+
+    &.p-button-info,
+    &.p-button-success {
+      background: #efe9ff;
+      border-color: #efe9ff;
+      color: #5F3FE0;
+
+      &:enabled:hover { background: #5F3FE0; border-color: #5F3FE0; color: #fff; }
     }
   }
 
-  .p-button {
-    &.p-button-rounded {
-      width: 2.5rem;
-      height: 2.5rem;
-    }
+  .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+    background: #5F3FE0;
+    border-color: #5F3FE0;
+    color: #fff;
+    border-radius: 9px;
   }
-} 
+}

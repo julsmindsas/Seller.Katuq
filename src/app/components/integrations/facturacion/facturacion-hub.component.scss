@@ -1,0 +1,107 @@
+// D-500: Facturación electrónica en Integraciones. Base D-400, plana, sin gradientes.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.fh { max-width: 960px; margin: 0 auto; }
+
+.fh-texto,
+.fh-aviso-texto { color: inherit; font-size: 13.5px; }
+
+.fh-cargando { display: flex; align-items: center; gap: 10px; color: $cfg-body; }
+
+// ── Estado actual ──
+.fh-actual__fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.fh-actual__textos { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.fh-actual__nombre { margin: 0; font-size: 18px; font-weight: 800; color: $cfg-ink; }
+.fh-fuente { font-size: 12.5px; color: $cfg-muted; }
+
+.fh-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.fh-punto { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.fh-estado--ok { color: #1E874B; background: #E6F7EE; }
+.fh-estado--prueba { color: #1E6FD9; background: #E7F1FF; }
+.fh-estado--error { color: #D64545; background: #FDECEC; }
+.fh-estado--sin { color: #5A6B78; background: #eef0f3; }
+
+.fh-motivos { margin: 12px 0 0; padding-left: 18px; }
+.fh-motivo { color: $cfg-err; font-size: 13px; line-height: 1.5; }
+
+.fh-datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 16px 0 0;
+
+  div { display: flex; flex-direction: column; gap: 2px; }
+  dd { margin: 0; }
+}
+.fh-dato { font-size: 14px; font-weight: 700; color: $cfg-ink; word-break: break-word; }
+.fh-dato--error { color: $cfg-err; }
+
+.fh-bloqueo { align-items: center; justify-content: space-between; flex-wrap: wrap; }
+
+// ── Elegir ──
+.fh-opciones { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.fh-opcion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  background: #fff;
+  cursor: pointer;
+
+  input { accent-color: $cfg-accent; }
+}
+.fh-opcion--on { border-color: $cfg-accent; background: $cfg-accent-soft; }
+.fh-opcion--pronto { cursor: not-allowed; background: $cfg-tint; }
+.fh-opcion__nombre { font-size: 14px; font-weight: 700; color: $cfg-ink; }
+.fh-opcion__nota { margin-left: auto; font-size: 11.5px; font-weight: 700; color: $cfg-muted; }
+
+.fh-avanzado { margin-top: 14px; }
+.fh-avanzado__titulo { cursor: pointer; font-size: 13.5px; font-weight: 700; color: $cfg-accent; }
+.fh-tipos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 12px; }
+.fh-tipo { display: flex; flex-direction: column; gap: 6px; }
+.fh-select {
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid #e4e2ef;
+  border-radius: 11px;
+  background: #fff;
+  color: $cfg-ink;
+  font-size: 13.5px;
+}
+
+.fh-guardar { margin-top: 16px; }
+
+// ── Proveedores e historial ──
+.fh-lista { list-style: none; margin: 0 0 12px; padding: 0; }
+.fh-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid $cfg-line-soft;
+
+  &:last-child { border-bottom: 0; }
+}
+.fh-fila__textos { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fh-fila__nombre { font-size: 14px; font-weight: 700; color: $cfg-ink; }
+.fh-fila__nota { font-size: 12.5px; color: $cfg-muted; word-break: break-word; }

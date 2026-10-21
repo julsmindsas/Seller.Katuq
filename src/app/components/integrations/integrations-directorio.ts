@@ -23,9 +23,10 @@ export type EstadoDirectorio = 'conectable' | 'pronto' | 'guia';
  * - 'config': listado de /v1/integration/config (solo trae las activas).
  * - 'whatsapp' / 'whatsapp_bot': configuración de WhatsApp del comercio.
  * - 'meta': conexiones de Instagram y Facebook.
+ * - 'facturacion': resumen del servidor de la facturación electrónica (D-500).
  * - 'ninguna': no hay forma de saberlo desde aquí; no se muestra estado.
  */
-export type FuenteEstado = 'config' | 'whatsapp' | 'whatsapp_bot' | 'meta' | 'ninguna';
+export type FuenteEstado = 'config' | 'whatsapp' | 'whatsapp_bot' | 'meta' | 'facturacion' | 'ninguna';
 
 export interface EntradaDirectorio {
   /** Identificador de la tarjeta. En las de fuente 'config' es el `type` con el que se guarda. */
@@ -132,6 +133,19 @@ export const DIRECTORIO_INTEGRACIONES: GrupoDirectorio[] = [
     ayuda: 'Cada venta sale facturada y llega sola a tu programa contable.',
     icono: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M8 13h8 M8 17h5',
     entradas: [
+      // D-500 (ticket 1260, FE-01): una sola tarjeta para elegir con quién factura la empresa.
+      // Con la bandera apagada no aparece y las tres de abajo siguen como siempre.
+      {
+        id: 'facturacion',
+        nombre: 'Facturación electrónica',
+        queHace: 'Elige con quién facturas: Katuq DIAN directa, SIIGO o World Office.',
+        estado: 'conectable',
+        categoria: C.ACCOUNTING,
+        fuente: 'facturacion',
+        ruta: '/integrations/facturacion',
+        bandera: 'invoicingHub',
+        reemplaza: ['siigo', 'world_office', 'dian'],
+      },
       { id: 'siigo', nombre: 'SIIGO', queHace: 'Envía tus facturas y tus clientes a SIIGO.', estado: 'conectable', categoria: C.ACCOUNTING, fuente: 'config', logo: L + 'siigo.svg' },
       { id: 'world_office', nombre: 'World Office', queHace: 'Envía tus facturas y consulta tu cartera en World Office.', estado: 'conectable', categoria: C.ACCOUNTING, fuente: 'config', logo: L + 'world-office.svg' },
       { id: 'dian', nombre: 'Factura electrónica DIAN', queHace: 'Factura directo ante la DIAN, sin otro programa.', estado: 'conectable', categoria: C.ACCOUNTING, fuente: 'config', ruta: '/integrations/configure?provider=dian' },

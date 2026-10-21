@@ -95,6 +95,10 @@
               <button type="button" class="combo-btn" (click)="cerrarCombo(comboDe(itemCarrito)?.grupo || '')">
                 Cerrar combo
               </button>
+              <!-- Ticket 1321: quitar el combo completo sin cerrarlo primero. -->
+              <button type="button" class="combo-btn combo-btn--quitar" (click)="quitarComboAbierto(comboDe(itemCarrito)?.grupo || '')">
+                Quitar combo
+              </button>
             </td>
           </tr>
 

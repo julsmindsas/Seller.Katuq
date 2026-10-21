@@ -2,7 +2,7 @@
 @import '../../../../../assets/scss/utils/katuq-tokens';
 
 // Variables
-$primary-color: $katuq-primary;
+$primary-color: #5F3FE0;
 $success-color: $katuq-success;
 $warning-color: $katuq-warning;
 $danger-color: $katuq-danger;
@@ -147,6 +147,15 @@ $transition: all 0.3s ease;
   padding: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
+
+  // Acciones de dibujo con el acento del canon (sin verde de la plantilla vieja)
+  .btn-primary {
+    background: #5F3FE0;
+    border-color: #5F3FE0;
+    color: #fff;
+
+    &:hover:not(:disabled) { background: #4a2fc0; border-color: #4a2fc0; }
+  }
 
   .btn-group-vertical {
     .btn {

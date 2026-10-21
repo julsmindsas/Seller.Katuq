@@ -1,19 +1,19 @@
-<div class="mt-page">
+<div class="mt-page cfg-pagina">
 
   <!-- ===== Encabezado ===== -->
-  <header class="mt-head">
-    <div class="mt-head__copy">
+  <header class="mt-head cfg-cabeza">
+    <div class="mt-head__copy cfg-cabeza__textos">
       <nav class="mt-crumbs">
         <i class="pi pi-home"></i>
         <a routerLink="/soporte">Soporte</a>
         <span class="mt-crumbs__sep">/</span>
         <span class="mt-crumbs__here">Mis tickets</span>
       </nav>
-      <h1>Mis tickets</h1>
-      <p>Sigue tus solicitudes de soporte y responde a los agentes.</p>
+      <h1 class="cfg-titulo">Mis tickets</h1>
+      <p class="cfg-sub">Sigue tus solicitudes de soporte y responde a los agentes.</p>
     </div>
 
-    <div class="mt-head__actions">
+    <div class="mt-head__actions cfg-acciones">
       <button type="button" class="mt-iconbtn" (click)="recargar()" [disabled]="isLoading"
               title="Actualizar" aria-label="Actualizar tickets">
         <i class="pi" [ngClass]="isLoading ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>

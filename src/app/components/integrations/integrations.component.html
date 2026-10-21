@@ -28,15 +28,18 @@
     <!-- Selection view -->
     <ng-container *ngIf="!showOnlyForm && !editingIntegrationId">
       <!-- El resto del contenido del formulario permanece igual -->
-      <div class="page-header" *ngIf="!isModalMode">
-        <div>
-          <h2>Configuración de Integraciones</h2>
-          <p class="subtitle">Conecta tu tienda con múltiples plataformas y pasarelas de pago</p>
+      <header class="int-cabeza cfg-cabeza" *ngIf="!isModalMode">
+        <div class="cfg-cabeza__textos">
+          <span class="cfg-eyebrow">Integraciones</span>
+          <h1 class="cfg-titulo">Configuración de Integraciones</h1>
+          <p class="subtitle cfg-sub">Conecta tu tienda con múltiples plataformas y pasarelas de pago</p>
         </div>
-        <button class="btn btn-sm btn-primary" *ngIf="savedIntegrations.length > 0" (click)="resetForm()">
-          <i class="fa fa-plus"></i> Nueva integración
-        </button>
-      </div>
+        <div class="cfg-acciones">
+          <button class="cfg-btn" *ngIf="savedIntegrations.length > 0" (click)="resetForm()">
+            <i class="fa fa-plus"></i> Nueva integración
+          </button>
+        </div>
+      </header>
 
       <!-- Status Messages -->
       <div *ngIf="statusMessage" class="status" [ngClass]="'status-' + statusMessage.type">
@@ -3204,9 +3207,9 @@
     </div>
 
     <!-- Solo mostrar la lista de integraciones cuando NO está en modo modal -->
-    <div *ngIf="savedIntegrations.length > 0 && !isModalMode && !dianDirectMode" class="card">
-      <div class="card-header">
-        <h3><i class="fa fa-list"></i> Integraciones configuradas</h3>
+    <section *ngIf="savedIntegrations.length > 0 && !isModalMode && !dianDirectMode" class="cfg-card int-guardadas">
+      <div class="int-guardadas__cabeza">
+        <h3 class="cfg-card__titulo"><i class="fa fa-list"></i> Integraciones configuradas</h3>
         <div class="header-actions">
           <div class="search-box">
             <i class="fa fa-search"></i>
@@ -3215,6 +3218,7 @@
         </div>
       </div>
 
+      <div class="int-tabla-scroll">
       <table class="integration-table">
         <thead>
           <tr>
@@ -3249,14 +3253,14 @@
             </td>
             <td>
               <div class="action-buttons">
-                <button class="btn btn-sm btn-info" (click)="editIntegration(integration)" title="Editar">
+                <button class="cfg-btn cfg-btn--sec int-accion" (click)="editIntegration(integration)" title="Editar">
                   <i class="fa fa-edit"></i>
                 </button>
-                <button class="btn btn-sm btn-test" (click)="testExistingIntegration(integration)"
+                <button class="btn-test cfg-btn cfg-btn--sec int-accion" (click)="testExistingIntegration(integration)"
                   title="Probar conexión">
                   <i class="fa fa-plug"></i>
                 </button>
-                <button class="btn btn-sm btn-danger" (click)="deleteIntegration(integration)" title="Eliminar">
+                <button class="cfg-btn cfg-btn--peligro int-accion" (click)="deleteIntegration(integration)" title="Eliminar">
                   <i class="fa fa-trash"></i>
                 </button>
               </div>
@@ -3264,14 +3268,15 @@
           </tr>
         </tbody>
       </table>
+      </div>
 
-      <div *ngIf="savedIntegrations.length === 0" class="empty-state">
-        <i class="fa fa-plug"></i>
-        <p>No hay integraciones configuradas</p>
-        <button class="btn btn-primary" (click)="onSelectIntegrationType('shopify')">
+      <div *ngIf="savedIntegrations.length === 0" class="empty-state cfg-vacio">
+        <i class="fa fa-plug cfg-vacio__icono"></i>
+        <p class="cfg-vacio__titulo">No hay integraciones configuradas</p>
+        <button class="cfg-btn" (click)="onSelectIntegrationType('shopify')">
           <i class="fa fa-plus"></i> Configurar primera integración
         </button>
       </div>
-    </div>
+    </section>
   </div>
 </div>

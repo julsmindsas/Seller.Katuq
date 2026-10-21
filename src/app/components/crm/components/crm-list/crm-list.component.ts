@@ -1071,10 +1071,10 @@ export class CrmListComponent implements OnInit, OnDestroy {
   getStageColor(stage: string): string {
     const colors: Record<string, string> = {
       // Company stages
-      registro: '#6b7280', contactado: '#3b82f6', demo: '#8b5cf6',
+      registro: '#6b7280', contactado: '#1E6FD9', demo: '#8b5cf6',
       trial: '#D35400', activo: '#27AE60', premium: '#7c3aed', churned: '#d12b38',
       // Client stages
-      nuevo: '#6b7280', calificado: '#27AE60', propuesta: '#3b82f6',
+      nuevo: '#6b7280', calificado: '#27AE60', propuesta: '#1E6FD9',
       negociacion: '#D35400', convertido: '#7c3aed', perdido: '#d12b38',
     };
     return colors[stage] || '#6b7280';

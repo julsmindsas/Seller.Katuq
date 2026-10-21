@@ -112,3 +112,18 @@
   border: 1px solid $cfg-accent;
   border-radius: 9px;
 }
+
+// Modal de confirmación: el [ngClass] pone btn-danger al borrar; se pinta como peligro.
+// (la otra clase del mismo [ngClass], la verde de guardar, queda cubierta por .cfg-btn, el principal morado.)
+.modal-footer {
+  gap: 8px;
+
+  .cfg-btn.btn-danger {
+    background: #fff;
+    color: $cfg-err !important;
+    border-color: #f3c9c9;
+    box-shadow: none;
+
+    &:hover:not(:disabled) { background: $cfg-err-soft; border-color: $cfg-err; }
+  }
+}

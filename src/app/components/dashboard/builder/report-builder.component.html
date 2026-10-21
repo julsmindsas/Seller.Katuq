@@ -26,16 +26,16 @@
 
     <span class="spacer"></span>
 
-    <button type="button" class="btn-outline" (click)="exportExcel()" [disabled]="!result || exporting">
+    <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="exportExcel()" [disabled]="!result || exporting">
       <i class="fa fa-file-excel"></i> Excel
     </button>
-    <button type="button" class="btn-outline" (click)="exportPng()" [disabled]="!result || exporting">
+    <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="exportPng()" [disabled]="!result || exporting">
       <i class="fa fa-file-image"></i> PNG
     </button>
-    <button type="button" class="btn-outline" (click)="exportPdf()" [disabled]="!result || exporting">
+    <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="exportPdf()" [disabled]="!result || exporting">
       <i class="fa fa-file-pdf"></i> PDF
     </button>
-    <button type="button" class="btn-outline" (click)="openShareModal()">
+    <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="openShareModal()">
       <i class="fa fa-users"></i> Compartir
     </button>
     <button type="button"
@@ -46,10 +46,10 @@
       <i class="fa" [class.fa-globe]="!isPublic" [class.fa-check-circle]="isPublic"></i>
       {{ publishing ? 'Publicando…' : (isPublic ? 'Publicado' : 'Publicar') }}
     </button>
-    <button type="button" class="btn-outline" (click)="save()" [disabled]="saving">
+    <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="save()" [disabled]="saving">
       <i class="fa fa-floppy-disk"></i> {{ saving ? 'Guardando…' : 'Guardar' }}
     </button>
-    <button type="button" class="btn-primary" (click)="run()" [disabled]="running">
+    <button type="button" class="cfg-btn rb-btn" (click)="run()" [disabled]="running">
       <i class="fa" [class.fa-play]="!running" [class.fa-spinner]="running" [class.fa-spin]="running"></i>
       {{ running ? 'Ejecutando…' : 'Ejecutar' }}
     </button>
@@ -244,7 +244,7 @@
                    [ngModel]="rowsLimit"
                    (ngModelChange)="onLimitChange($event)"
                    class="form-control form-control-sm" />
-            <button type="button" class="btn btn-sm btn-primary" (click)="run()">Actualizar</button>
+            <button type="button" class="cfg-btn rb-btn" (click)="run()">Actualizar</button>
           </div>
         </div>
       </div>

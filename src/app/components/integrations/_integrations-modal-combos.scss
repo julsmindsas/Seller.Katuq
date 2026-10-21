@@ -312,3 +312,113 @@
 @media (max-width: 600px) {
   .kx-modal-int .integration-info-box > span { flex-basis: 100%; }
 }
+
+// ---------------------------------------------------------------------------
+// Diseño Katuq (D-516): restos de Bootstrap del formulario y la vista de página
+// (/integrations/configure). Solo presentación; todo bajo .kx-modal-int.
+// ---------------------------------------------------------------------------
+@import '../../shared/styles/config-pagina';
+@include config-pagina;
+
+.kx-modal-int {
+  // Vista de página (sin modal): fondo lila y encabezado cfg-cabeza.
+  .integration-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px 16px 32px;
+    background: $cb-canvas;
+    box-sizing: border-box;
+
+    @media (min-width: 768px) { padding: 24px 24px 40px; }
+  }
+
+  // Sin la clase `page-header`: el tema global la usa para la barra superior fija.
+  .int-cabeza { p, span, button, li, label { letter-spacing: normal; } }
+  .integration-container :focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+
+  // Botones Bootstrap del interior del formulario → lenguaje Katuq.
+  .btn {
+    border-radius: 11px;
+    font-weight: 700;
+    letter-spacing: normal;
+    box-shadow: none;
+  }
+  .btn-primary, .btn-info, .btn-success {
+    background: $cfg-accent !important;
+    border-color: $cfg-accent !important;
+    color: #fff !important;
+    &:hover:not(:disabled) { background: $cfg-accent-hover !important; border-color: $cfg-accent-hover !important; }
+  }
+  .btn-outline-primary, .btn-outline-info, .btn-outline-secondary, .btn-secondary {
+    background: #fff !important;
+    border: 1px solid $cb-ghost-border !important;
+    color: $cb-body !important;
+    &:hover:not(:disabled) { background: $cb-tint !important; border-color: $cb-accent-line !important; color: $cfg-accent !important; }
+  }
+  .btn-link, .btn-link.text-info { color: $cfg-accent !important; text-decoration: none; &:hover { text-decoration: underline; } }
+  .text-primary, .text-info { color: $cfg-accent !important; }
+  .card-header.bg-light, .bg-light { background: $cb-tint !important; }
+
+  // Lista de integraciones guardadas (vista de página).
+  .int-guardadas { display: flex; flex-direction: column; gap: 12px; }
+  .int-guardadas__cabeza {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    .cfg-card__titulo { margin: 0; display: flex; align-items: center; gap: 8px; i { color: $cfg-accent; } }
+    .search-box {
+      display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px;
+      border-radius: 11px; border: 1px solid $cb-chip-border; background: $cb-chip-bg; color: $cb-muted;
+      input { border: 0; outline: none; background: transparent; font-size: 13.5px; color: $cb-ink; min-width: 0; }
+    }
+  }
+
+  .int-tabla-scroll { width: 100%; overflow-x: auto; }
+
+  .integration-table {
+    width: 100%;
+    min-width: 640px;
+    border-collapse: separate;
+    border-spacing: 0;
+
+    th {
+      padding: 12px 14px;
+      background: $cfg-tint;
+      border-bottom: 1px solid $cfg-line-soft;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      color: $cfg-muted;
+      white-space: nowrap;
+      i { margin-right: 4px; color: inherit; }
+    }
+    th:first-child { border-top-left-radius: 11px; }
+    th:last-child { border-top-right-radius: 11px; }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid $cfg-line-soft;
+      font-size: 13px;
+      color: $cfg-ink;
+    }
+    tbody tr:hover { background: $cfg-row-hover; }
+
+    .integration-name-cell { display: flex; align-items: center; gap: 8px; i { color: $cfg-accent; } span { color: $cfg-ink; font-size: 13px; font-weight: 700; } }
+    .date-cell { color: $cfg-muted; font-size: 12.5px; }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 20px;
+      font-size: 10.5px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
+    }
+    .badge.badge-success { background: $cfg-ok-soft; color: $cfg-ok; }
+    .badge.badge-danger { background: $cfg-err-soft; color: $cfg-err; }
+
+    .action-buttons { display: flex; gap: 6px; }
+    .int-accion { min-height: 34px; padding: 0 10px; }
+  }
+}

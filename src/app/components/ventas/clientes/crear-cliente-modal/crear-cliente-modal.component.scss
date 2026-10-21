@@ -159,7 +159,7 @@ $bg-light:     #f8f9fa;
 }
 
 // ── Inputs PrimeNG ───────────────────────────────────────────────
-::ng-deep {
+:host ::ng-deep {
   .p-inputtext {
     border: 1px solid $border-color !important;
     border-radius: 6px;

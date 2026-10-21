@@ -11344,6 +11344,36 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
     - `test:dian-config` pasa 23/23 (6 nuevas, tarea 1.4) y `test:dian-invoice` sigue en 60/60. El diff se probó primero en una copia aparte.
   - **Cierre de la sesión, 20-oct (el usuario: «aprobado cierra»):** subidos a origin el backend `b8d7b3cf` (rebasado sobre `e9c4f1b7`, D-513 a D-515) y el front `8b267b9e`. Hubo un conflicto en el catálogo de banderas con `wooStockPublish` (D-515); se resolvió conservando las tres, así que el catálogo queda en 29. Después del rebase se volvieron a correr las suites y todas pasan. **Sin desplegar.**
   - **Próxima sesión:** 2.9, la sombra en `from-order`, sensible y con diff aprobado; el PR del índice de `orders` (0.4); el front base (3.x); y las pantallas (4.x). D-499 fase 0 (FE-03, idempotencia) puede ir en paralelo con las pruebas primero.
+- **D-500, bitácora 2026-10-20 (2), objetivo del usuario «cerrar estos tickets de factura»:**
+  - **Regla:** un ticket se cierra solo con su trabajo hecho y publicado (memoria del 20-oct). FE-01 (#1260) se cierra cuando D-500 esté desplegada y encendida. Los otros 13 FE siguen la hoja D-499, y cada fase lleva su propia propuesta.
+  - **Front, no sensible (bandera apagada = igual que hoy):**
+    - 3.1: `facturacion-integracion.service.ts` (extiende `BaseService`).
+    - 3.2: `FacturacionAutomaticaService.resolverProveedorPara(tipo)`. Sin la bandera hace las mismas peticiones que hoy y no trae motivo; con ella decide el servidor y nunca se prueba otro proveedor.
+    - 4.1: tarjeta única «Facturación electrónica» en el directorio, con `bandera` y `reemplaza`. El filtro `entradasActivas` alimenta los contadores, «Mis conexiones» y la búsqueda; Siigo, World Office y DIAN no caen en «Otras conexiones».
+    - 4.2 y 4.3: pantalla `/integrations/facturacion` (módulo lazy, `OnPush`, base D-400) y registro de asistentes.
+    - 4.6: SIIGO se configura en `/integrations/siigo`. World Office se abre en el listado con `?abrir=world_office`.
+    - 4.7: el proveedor y su estado en la franja de «Facturación electrónica».
+    - 1.7: spec de `resolverConServidor`. Karma no corre en esta máquina (no hay Chrome); la lógica se verificó compilando el util con `tsc` y corriéndolo en Node (5/5).
+  - **Verificado:** `tsc` sin errores en `src/`. `ng build --configuration production` termina sin errores y sin subir la versión (salida en el scratchpad, no en `dist/cuba`); la pantalla nueva sale en un chunk aparte. Sin gradientes ni primarios prohibidos. Ninguna clase con «p-».
+  - **Desvío en 4.8:** Integraciones no usa i18n (todo en español), así que la pantalla sigue esa convención y no trae EN ni PT. Falta la revisión visual a 1440 y 390 px, en FLORECER con la bandera encendida.
+  - **Sensibles, preparadas con diff y esperando aprobación:**
+    - 2.9: medición en `from-order` y `from-order-async`. Corre después de responder y se traga sus errores. `invoiceShadow.contract` 7/7, sin regresión.
+    - 3.3: venta asistida usa `orderInvoice` y el POS `posInvoice`.
+    - 3.4: «Todos los pedidos» decide con `proveedorDe(pedido)`. Sin la bandera devuelve exactamente lo de antes; con ella, el del tipo de la fila o el motivo. Ya no usa `|| 'siigo'`.
+    - Las tres compilan; se probaron en una copia aparte y no se aplicaron.
+- **Hallazgo 20-oct (D-500 5.1 y D-499 0.5), confirmado en el código y no en los logs:**
+  - La factura automática de SIIGO al aprobar el pago (`controllers/orders.js`, «FACTURACIÓN AUTOMÁTICA SIIGO») llama `AccountingManager.createInvoice(...)` sobre la clase. Ese método es de instancia (`typeof AccountingManager.createInvoice === 'undefined'`).
+  - Desde `01f902c6` (2025-10-24), cada intento lanza `TypeError`, se captura y queda como `SIIGO_AUTO_INVOICE_ERROR`. Ninguna empresa con `enableAutoInvoicing` ha recibido factura automática por ese camino.
+  - Repararlo empezaría a emitir facturas reales solas, así que lo decide Daniel. Antes hay que ver, en solo lectura, qué empresas tienen `enableAutoInvoicing` encendido en SIIGO.
+  - Mientras tanto, «modo 1 idéntico a hoy» de la 5.1 conserva ese comportamiento.
+  - **Lectura de producción (aprobada por el usuario, 20-oct; solo `companyId`, `status` y banderas públicas):** hay 3 configuraciones SIIGO activas, de ALMACEN BOMBAS, ALMARA FELICIDAD y OH MY STORE, y ninguna tiene `enableAutoInvoicing` ni `facturacionAutomatica`. El camino roto nunca se ejecuta: sale antes. Repararlo no emite nada hasta que alguien encienda la facturación automática. Propuesta: corregirlo dentro del diff de la 5.1, con `new AccountingManager().createInvoice(...)`.
+  - **Subido:** backend `8aab3507` (2.9 aprobada, medición en `from-order`; script 6.1). Sin desplegar.
+  - **Segundo hallazgo (no reparar a medias):** el `createInvoice` de SIIGO devuelve `{ success, invoice, invoiceId, invoiceNumber, pdfUrl }`, pero `createSiigoInvoiceBackground` lee `result.data.id/name/date`. Corregir solo la llamada estática crearía la factura en SIIGO y fallaría antes de guardar `facturaSiigo`, y un reintento la duplicaría. Ese camino tampoco usa el candado de `createInvoiceFromOrder`. Propuesta para la 5.1, pendiente de Daniel porque cambia la decisión 11:
+    - en el modo 3, SIIGO factura por `AccountingManager.createInvoiceFromOrder`, el mismo camino de «Facturar» en Todos los pedidos, con candado y `facturacionElectronica`;
+    - el bloque viejo queda como está para el modo 1, donde no corre porque nadie tiene la automática encendida, y se retira en la 7.4.
+- **3.3 y 3.4 aprobadas por el usuario (20-oct) y aplicadas:** venta asistida (`orderInvoice`), POS (`posInvoice`) y Todos los pedidos (`proveedorDe(pedido)`, sin `|| 'siigo'`). `tsc` limpio y `ng build` de producción sin errores (3.5 y 4.9).
+- **Backend, no sensible:** script `scripts/invoicing/seed-invoicing-choice.js` y núcleo `seedChoice.js` (6.1, sin correr contra producción). Prueba `seedInvoicingChoice` 8/8 (1.6), incluida en `test:invoicing`. Sin commit, a la espera de confirmación.
+
 ## D-513 (2026-10-20) — WooCommerce: cerrar rutas sin sesión y exigir firma (puntos 25, 26 y 27 del reporte del 19-10) — IMPLEMENTADA LOCAL
 
 - Propuesta y tareas en el backend: `openspec/changes/woocommerce-cerrar-rutas-abiertas/`. Aprobada por la usuaria tras leer el Word del Escritorio.
@@ -11376,8 +11406,239 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - `services/ecommerce/index.js` hacía `.bind` de funciones que ya no existen en el adapter: el módulo reventaba al cargarse y `POST /productos/delete` borraba en Katuq, nunca en la tienda, y respondía `{}` (punto 20). Ahora solo expone `syncProduct` y `syncInventoryByProduct`.
 - Comprobado en la tienda local: editar la talla M cambió solo esa variación (padre intacto); retirar stock llegó a la variación (5 → 0); borrar la talla S borró solo la variación #12. Pruebas: `tests/integrations/woocommerceImportadorBodegaIva.test.js` y `woocommerceVariantes.test.js`. Sin commit ni deploy.
 
+## D-499, bitácora 2026-10-20 — Fase 0 (FE-03) arranca con lo puro; JULS23–JULS40 sin explicación en los registros
 
-## D-517 (2026-10-20) — Pago a cuotas en la tienda en línea con Addi y Sistecrédito (ticket 1233, F2-41) — APROBADA (Daniel, 20-oct), COMMITEADA en la rama `feature/tickets-web` (backend d954a833, front f8b985d4), sin desplegar y con la bandera apagada
+- **0.2:** la aprobación en bloque del 18-oct (tabla D-495 a D-503) cubre los 18 valores por defecto, el diseño y las dos specs.
+- **0.3, división con D-500, la registra la misma sesión de D-500:**
+  - D-500 es dueño del bloque de factura automática (decisión 11) y de `resolve()`.
+  - D-499 es dueño de `candadoFactura.js`, la clave por envío y `verify-invoice`.
+  - La 2.9 de D-500 (sombra en `from-order`) ya está aplicada. La 2.5 de D-499 va después, sobre el mismo archivo.
+  - Condición (b): la factura automática nunca factura ventas POS. Ya está en el diff pendiente de la 5.1 de D-500. La clave fija de la condición (a), `auto-<orderId>-paymentApproved`, está en `candadoFactura.requestIdAutomatica`.
+- **Hecho sin tocar la emisión (puro, sin uso todavía):**
+  - 1.1 y 2.1: `services/accounting/utils/candadoFactura.js` (tabla 0.2, dueño, salidas y clave). `candadoFactura.test.js` pasa 16/16.
+  - 2.8 y 5.2: banderas `invoiceIdempotency` e `invoicingTray` en los dos catálogos, apagadas.
+  - Parte pura de 1.4 y 2.9: `dian/reporteConsecutivos.js` (seis clases, evidencia, tope de 2000, solo lectura). `reporteConsecutivos.test.js` pasa 5/5.
+  - Falta la ruta `numbering-gaps`, que toca `routers/accounting.js` y va después de la 2.7.
+- **3.1, lectura de producción autorizada por el usuario el 20-oct («si es de solo lectura sí, pero no eliminar ni actualizar»):**
+  - **Reporte de Julsmind (JULS21–JULS51):** 11 aceptadas, 1 rechazada (JULS22, del 07-sep) y 19 sin registro (JULS21 y JULS23–JULS40).
+  - **`config_audit` de `Julsmind_dian`:** un solo cambio de numeración, el 2026-09-07T17:54Z, de `codex:user-authorized` («User requested saving approved JULSMIND production settings»). Pasa de habilitación (`SETP`, `current` 990000032) a producción (`JULS` 21–1000, `current` 22).
+  - JULS22 se rechazó y JULS41 se aceptó ese mismo día. Entre las dos, el consecutivo avanzó 18 números sin ningún documento, solicitud ni cambio auditado.
+  - **Conclusión:** nada en `dian_documents`, `dian_invoice_requests` ni `config_audit` lo explica. El avance no pasó por `saveConfig`, que audita: fueron reservas que no dejaron registro o una edición directa en Firestore. El commit `4a2c54fd` del mismo día no es la causa, porque la verificación del almacenamiento ya iba antes de reservar. FE-03 (candado con dueño y auditoría con `requestId`) es lo que evita que se repita sin rastro.
+  - JULS21 tampoco tiene registro: el rango empieza en 21 y la primera factura fue la 22.
+- **Fase 1 (FE-02), solo lo puro:**
+  - 4.1: «No requiere factura» sí llega al pedido. El POS guarda `generarFacturaElectronica: false` sin `facturacion` (`facturacion-pos.ts`, `camposPedido`), así que no hace falta tocar D-419.
+  - `services/accounting/estadoFacturacion.js` define los seis estados. El `nroFactura` de un POS no cuenta como factura, el candado del compositor toma el estado de su solicitud y el candado se lee con `candadoFactura`. `estadoFacturacion.test.js` pasa 9/9.
+  - 5.0 y 4.3: `capabilities` en los descriptores de D-500 (`reinvoice`, `notes`, `verifyIssued`, `documentLedger`, `requiresBuyerEmail`). La paridad con las estrategias pasa en las 3 (`invoicingCapabilities`).
+  - Falta la lectura de la bandeja (5.1), su pantalla (5.3 a 5.5) y el conteo de costo por empresa (4.5).
+- **Verificado sin datos reales:** `npm run test:invoicing` (9 suites), DIAN 60/60 y 23/23, bandeja, banderas, censo, liberar y refacturar. **Sin commit**, a la espera de confirmación del usuario.
+- **Cierre de la sesión del 20-oct (2):**
+  - **Respuesta del usuario:** commit y push; 5.1 aprobada; «solo sube cambios y desde mi PC publico».
+  - **Subido sin desplegar:** backend `46a9665f`, con la 5.1 y 5.2 aplicadas.
+    - SIIGO factura por `createInvoiceFromOrder`, el camino de «Facturar».
+    - DIAN y WO solo anotan.
+    - Las ventas POS nunca se facturan solas.
+    - Sin las banderas, el bloque de siempre.
+  - **D-499 sin conectar:** candado, reporte, estados, capacidades y banderas.
+  - **Front:** banderas `invoiceIdempotency` e `invoicingTray`, más este contrato.
+  - **Para publicar, desde el PC del usuario:**
+    1. backend (`git pull` en EC2 y `pm2 restart katuq-api`);
+    2. después el front (`npm run release`, con el candado de publicación);
+    3. con todo apagado no cambia nada para los comercios;
+    4. encender `invoicingHub` en FLORECER (`node scripts/set-company-feature.js "FLORECER" invoicingHub on`, simulación y luego `--execute`) y revisar `/integrations/facturacion` a 1440 y 390 px;
+    5. después Julsmind: `node scripts/invoicing/seed-invoicing-choice.js "Julsmind" dian` (simulación) y luego `--execute`.
+  - **Para cerrar FE-01 (#1260):** desplegado, encendido en Julsmind con la vista previa en solo lectura, y comentario técnico en el ticket.
+  - **Fuera de FE-01:**
+    - el asistente DIAN por pasos, FE-01b, propuesto y pendiente de aprobación en pantalla;
+    - el índice de `orders` (0.4);
+    - el cambio privado de permisos del Contador (0.2).
+
+## D-516 (2026-10-20) — Pantallas internas restantes con la regla de diseño Katuq (openspec/changes/modernizar-pantallas-restantes) — COMMITEADO, sin desplegar
+
+**Disparador.** Pedido en sesión (cuenta adminapps de Julsmind): revisar qué pantallas faltaba pasar al diseño nuevo para tener un estándar, y luego «dale, actualiza el diseño».
+
+**Inventario (solo lectura, 174 pantallas con ruta).** Unas 71 ya seguían la regla (D-398, D-399, D-400 y los módulos rehechos). Faltaban 93: 18 solo con residuos y 75 con la plantilla vieja (`container-fluid` + `card`/`card-header`/`module-header`, botones de Bootstrap, `fc-secondary`, `#8b5cf6` escrito en el HTML, azules sueltos, `border-left` de acento).
+
+**Decisión.**
+- La base `_config-pagina.scss` suma `cfg-pill`, `cfg-stats`/`cfg-stat`, `cfg-form` y las pestañas PrimeNG dentro de `cfg-pagina`. Son clases nuevas y ninguna pantalla de D-400 las usaba.
+- Se migran unas 90 pantallas en 8 grupos: productos, clientes/CRM/prospectos, inventario, logística (despachos, picking/packing, dropshipping), formularios «crear» de Configuración y seguridad, integraciones (con Shopify), flows/precios/facturación/planes, IA (agent builder, video agente) e inicio/dashboards/otras.
+- Solo presentación. Un verificador compara los bindings de cada HTML contra el commit anterior (eventos, propiedades, `*ngIf/*ngFor`, referencias, interpolaciones, `formControlName`/`ngModel`, `<app-*>`/`<p-*>`) y no encuentra ninguna diferencia. La única excepción es el `<app-breadcrumb>` activo de 8 pantallas, reemplazado por `cfg-cabeza`.
+- Los únicos `.ts` tocados son los `styleUrls` de las 4 pantallas de Shopify: pasan de `.css` a `.scss` para usar la base y no copiarla a mano.
+
+**Fuera de este cambio.**
+- Venta asistida, crear-ventas, la vista Tabla de Todos los pedidos, POS (`ventas-pos`) y el dashboard de Producción van diff por diff: son de más de 4.000 líneas y están en el flujo de pedidos.
+- La reconciliación de `_katuq-tokens.scss` (`#8b5cf6`) con el canon `#5F3FE0` pide su propia propuesta.
+- Candidatas a retirar: `dashboards/classic`, `pos/ventas`, `sample-page`, `maestros`, `live-audio`.
+
+**Medición en el front (antes → después).**
+
+| Qué | Antes | Después |
+|---|---|---|
+| Azules sueltos | 193 | 44 |
+| `#8b5cf6`/`#a78bfa` | 195 | 88 |
+| Gradientes (sin katuq-flow) | 64 | 44 |
+| `btn-success` | 27 | 19 |
+| `fc-secondary` | 5 | 1 |
+| `card-header` | 165 | 128 |
+| Primarios prohibidos | 4 | 4 |
+| HTML con `cfg-pagina` | 34 | 93 |
+
+**Validación.**
+- `ng build --configuration production` sin errores. El aviso del presupuesto del bundle inicial ya estaba antes.
+- El primer build marcó que `variables.component.html` usaba `userNit`, que no existe en el componente. Compilaba porque estaba dentro de un `*ngIf`. Las acciones vuelven a `*ngIf="!cargando"`, como antes.
+- Un segundo chequeo compara la cadena de `*ngIf`/`*ngFor` de los ancestros de cada elemento con bindings. Encontró un solo cambio, «Volver» en la config de dropshipping de productos, que también volvió a su `*ngIf="!loading"`.
+
+**Pendientes.**
+- Revisar cada pantalla en el navegador a 1440 y 390 px con sesión de comercio. En esta sesión no hubo navegador: Chromium pide librerías del sistema.
+- Colores que viven en bindings o en `.ts` y no se tocaron:
+  - `[style.color]` en inventario por bodega, CRM, sync-logs y artifact-renderer.
+  - `#2563eb` en `report-builder.component.ts`.
+  - `conic-gradient` en `soporte.component.ts`.
+- `::ng-deep` sin `:host` que ya se filtraba a toda la app desde antes: traslados, recepción, clientes y listado de clientes. Ahora filtra colores del canon.
+- Decidir el eyebrow de Usuarios: la lista dice «Configuración» y los formularios «Seguridad», como el menú.
+- **#1260 (FE-01) cerrado el 20-oct por orden del usuario** («ciérralos, yo publico ahora o mañana»):
+  - Nota técnica interna con los commits y los pasos para publicar, y nota de cierre para el comercio.
+  - A esa hora el código estaba subido sin desplegar: `invoicing/summary` respondía 404.
+  - Los otros 13 FE siguen abiertos por la regla «no cerrar tickets sin trabajo publicado»: FE-02, 06, 08, 09, 10, 11, 12, 17, 19, 21, 22, 23 y 24. FE-03 (#1261) ya estaba archivado.
+  - FE-02 y FE-03 tienen piezas puras sin conectar (candado, reporte, estados y capacidades).
+- **D-499 2.2 aprobada por el usuario y aplicada (backend, ver el último commit de `backend-aws-security`):**
+  - `createInvoiceFromOrder` usa `utils/emisionConCandado.js`.
+  - **Apagada:** todo idéntico a hoy, más `uncertain_shadow` cuando un envío sale sin respuesta.
+  - **Encendida:** clave por envío, réplica de una clave aceptada, `uncertain` que no vence, dueño en cada escritura y `duplicate_detected`.
+  - **Siguen, sensibles y con diff:**
+    - 2.3: `pedidoYaFacturado` con `candadoFactura`;
+    - 2.4: `beforeSend` y `submittedToDian` en DIAN;
+    - 2.5: `requestId` y códigos en `from-order`;
+    - 2.6 y 2.7: `verify-invoice`;
+    - 2.11: `requestId` desde el front.
+
+## D-517 (2026-10-21) — Punto Verde Vidagas: eliminar en el carrito (ticket 1321) y pantallas de una sección en Favoritos (ticket 1322) — PUBLICADO: front 2026.10.21.1 (ca4436ae)
+
+**1321: «no me deja eliminar el producto del combo».**
+- El botón de eliminar existía en cada producto del combo. La tabla del carrito mide unos 850–900 px y la tarjeta la recortaba (`overflow: hidden`). Con el menú lateral abierto se perdían Subtotal y Acciones, y con ellas el botón de eliminar y «Cerrar combo». Le pasaba a cualquier producto, no solo a los combos.
+- `carrito.component.scss`:
+  - la tarjeta se desplaza a lo ancho (`overflow-x: auto`);
+  - las 4 acciones van en una grilla de 2×2, que cabe en la columna de 96 px.
+- Nuevo «Quitar combo» en el encabezado del combo abierto (`quitarComboAbierto`). Quita todos sus productos, igual que la papelera del combo cerrado.
+- El mismo carrito se usa en venta asistida, crear venta y POS.
+
+**1322: favorito de una sección.**
+- Debajo de la sección salen sus pantallas, por ejemplo Pedidos → Todos los pedidos y Pedidos POS. Salen del menú ya cargado (`enlacesDeFavorito`), así respetan el rol.
+- `localStorage['sidebarFavoriteItems']` no cambia, y el límite sigue en 5 favoritos.
+- Tocar el título de la sección la sigue abriendo en el menú (1232).
+
+**Validación.** `ng build --configuration production` sin errores, compilado aparte sin subir la versión. Ningún gradiente ni primario prohibido. Falta revisarlo en pantalla a 1440 y 390 px.
+
+## D-518 (2026-10-21) — Residuos de D-516: colores en código, gradientes decorativos y `::ng-deep` que se filtraba (openspec/changes/modernizar-pantallas-restantes, sección 4) — COMMITEADO, sin desplegar
+
+**Disparador.** En la sesión (cuenta adminapps de Julsmind) se revisó lo hecho en D-516 y el usuario pidió seguir con sus pendientes.
+
+**Decisión.** Solo presentación, en 51 archivos de código. No cambian eventos, servicios, datos ni textos.
+- **Colores.** Se aplica una regla para los colores escritos en `.ts`, bindings, estilos en línea y SCSS que quedaban:
+  - los acentos índigo o azules (`#6366f1`, `#667eea`, `#7366ff`, `#2563eb`, `#3b82f6`, `#7c3aed`) pasan al acento `#5F3FE0`, y su hover a `#4a2fc0`;
+  - los azules de estado o de categoría pasan al par Info del canon (`#1E6FD9` / `#E7F1FF`). Son: «en curso» de flows, «creado» de Envíame, etapas del CRM, segmento «Fiel», avatares, departamentos y herramientas de IA, «enviado» de filtros y la nota informativa de la cotización pública.
+  - Los más visibles: la barra de carga global (`app.component.html`), el menú de cuenta del encabezado, los filtros compartidos, el chip de uso de KAI, los KPI y la tabla de reportes, el diálogo «Reporte publicado» y los renderers de IA (mapa de rutas, confirmación, votación, métrica, tabla, alerta de stock, gráfico).
+  - `border-left` de acento → borde de 1 px en el KPI de reportes, la métrica de IA y las tarjetas de ruta.
+- **Gradientes decorativos → planos:**
+  - la línea de tiempo de Envíame, con un color semántico del canon por estado;
+  - el medidor de fuerza de credenciales;
+  - la cabecera del mapa de rutas y la barra de la confirmación de IA;
+  - la insignia del menú lateral y el botón de voz.
+- **`::ng-deep` sin `:host`.** Se aplicaba a toda la app después de abrir la pantalla:
+  - Traslados: `ng-select` y `p-dropdown`. Su plantilla no tiene ninguno, así que solo afectaba a otras pantallas.
+  - Recepción: `p-dropdown`, `p-autocomplete`, `p-button` y `p-confirm-dialog`.
+  - Clientes: todos los `p-inputtext`, `.modal-footer` de cualquier modal y `.search-section`.
+  - Listado de clientes: todas las `p-datatable`, `p-checkbox` y `p-paginator`.
+  - Modal de crear cliente: `p-inputtext`, `p-dropdown`, `p-calendar` y `p-button`.
+  - Arreglo: quedan con `:host ::ng-deep`. Lo que vive en la plantilla del componente (modal de resultados, menú de columnas, botón de etiquetas) pasa a un selector normal, que se sigue aplicando aunque el modal se pinte en `body`.
+
+**Se dejan a propósito.**
+- Los colores de zona que elige el usuario y se guardan (`zona-gestion-modal`).
+- El `primaryColor` por defecto del video agente, que es configuración de la empresa.
+- Los módulos que D-516 dejó para ir diff por diff: venta asistida/crear-ventas, la Tabla de Todos los pedidos, POS y Producción.
+- `katuq-flow`, los correos de `payment.service.ts`, el orbe animado de Live Audio y la esfera de Gemini (candidatos a retirar).
+- Los fades sobre imágenes y los skeletons.
+- `conic-gradient` de soporte: es el anillo de avance, un medidor y no decoración.
+- `::ng-deep .modal` del modal de crear cliente: pone `max-width: 860px` a todos los modales de NgbModal después de abrirlo. Arreglarlo pide `modalDialogClass` en quien lo abre, que es un cambio de `.ts` aparte.
+
+**Efecto a vigilar.** Los paneles flotantes de Recepción (`appendTo="body"`) ya no reciben el estilo filtrado y usan el global: `lara-light-blue` más `primeng-overrides.scss`. Por eso la opción resaltada de un desplegable puede verse azul. Lo mismo pasa en cualquier pantalla que antes «heredaba» la fuga. Se corrige en la reconciliación de tokens (`$katuq-primary` `#8b5cf6` → `#5F3FE0`, con el resaltado de paneles en el override global), que sigue pidiendo su propia propuesta.
+
+**Medición en `src/app` sin katuq-flow (HEAD → después; incluye los módulos excluidos).**
+
+| Qué | Antes | Después |
+|---|---|---|
+| Azules sueltos (`#3b82f6`, `#1d4ed8`, `#6366f1`, `#1976d2`, `#7366ff`, `rgba(102,126,234)`) | 110 | 30 |
+| Primarios prohibidos (`#2196f3`, `#4361ee`, `#2563eb`, `#5c6ac4`, `#667eea`) | 23 | 10 |
+| `linear/radial-gradient(` | 65 | 48 |
+
+**Validación.**
+- `ng build --configuration production` sin errores. Se compiló aparte, sin subir la versión.
+- Los reemplazos de color se hicieron con un script que exige el número exacto de apariciones por archivo.
+
+**Pendiente.** Revisar en el navegador a 1440 y 390 px con sesión de comercio. Este equipo no tiene Chromium ni Playwright.
+
+## D-519 (2026-10-21) — Pantallas que faltaban con el aspecto de Regístrese: públicas, internas y el flujo de pedidos — COMMITEADO, sin desplegar
+
+**Disparador.** El usuario (cuenta adminapps de Julsmind) pidió buscar las pantallas que faltaban por modernizar, tomar Regístrese como base y hacerlo sin más rodeos. Eso incluye las de pedidos que D-516 había dejado para ir diff por diff.
+
+**Inventario (176 pantallas con ruta).** 8 usan el marco público y 91 la base `cfg-*`. De las 77 restantes, la mayoría ya tenía diseño propio limpio. Las que conservaban la plantilla vieja se repartieron en 6 grupos.
+
+**Decisión: solo presentación, 54 archivos.**
+- **Públicas** (piezas `pub-*` de Regístrese, D-398):
+  - Promo de campaña: con `<app-publica-marco>`.
+  - Cotización pública y Catálogo público: con las piezas de Regístrese, pero **sin el marco**. Son documentos y vitrinas del comercio para su cliente, con la marca del comercio, y el logo de Katuq llevaría al login del panel. En la cotización, las clases `cp-*` caían en la trampa `[class*="p-"]` y se renombraron a `cot-*`; además se agregó `@media print`.
+  - Retornos de OAuth (integraciones y Meta): viven dentro del panel con menú, así que quedan como tarjeta `pub-card` centrada, sin marco.
+- **Internas** (base `cfg-*`):
+  - Rehechas: Crear rol y Crear/editar empresa.
+  - Solo residuos: Inicio, Centro de operaciones, Contabilidad, Facturación electrónica, Empresas, Configurar integraciones (bloque limitado a `.kx-modal-int`), Mis tickets, Chat, Chat AG-UI, Sesión del video agente y Constructor de reportes.
+- **Flujo de pedidos:**
+  - Todos los pedidos: vista Tabla con los tokens del canon, `.modern-badge` como par fuerte/fondo suave (también en la vista de tarjetas), estado vacío y modales sin cabecera índigo.
+  - Crear ventas y Venta asistida: sin `card-header` ni `btn-success`; los botones de los modales pasan a `cfg-btn`. El botón que crea el pedido vive en `app-checkout` y no se tocó.
+  - POS: la calculadora sin morado viejo ni bloques negros, y el reporte de cierre.
+  - Dashboard de Producción: base `cfg-*`; KPI, alertas y tracking sin `border-left`.
+- **Token compartido.** `_katuq-comercial.scss`: `--kc-accent` pasa de `#6c4ce0` a `#5F3FE0` (con `ink` `#4a2fc0` y `wash` `#efe9ff`). Lo usan unas 27 hojas: POS, carrito, Contabilidad, Facturación y Venta asistida.
+- **Fugas cerradas** (`::ng-deep` sin `:host`):
+  - `p-tabview` de Producción, que quitaba el padding de las pestañas en toda la app;
+  - `p-skeleton` y `row-revisada` de Todos los pedidos;
+  - `.cliente-autocomplete-full` de Crear ventas, que pisaba con `!important` el buscador de Venta asistida.
+
+**Se respeta.** Marketing conserva el mockup aprobado por Daniel (acento `#6a4dfb`, ver la decisión del rediseño de Marketing y WhatsApp). Un agente lo había pasado al canon y se revirtió. Tampoco se tocan:
+- la interfaz de alto contraste para mayores del video agente (`agent-session-elderly-ultra.scss`);
+- el verde semántico de «Completado» y «Completar cierre»;
+- `katuq-flow`;
+- las candidatas a retirar: `dashboards/classic`, `pos/ventas`, `sample-page`, `maestros` y `live-audio`.
+
+**Validación.**
+- Verificador de bindings contra HEAD sobre todos los HTML. Las únicas diferencias son:
+  - el `<app-breadcrumb>` quitado en Empresas, Crear rol, Crear ventas, Todos los pedidos y Producción;
+  - el `<app-publica-marco>` agregado en Promo;
+  - dos falsos positivos: colores hexadecimales dentro de `style`/`<style>`, que el regex de referencias `#x` confunde.
+- `npx sass` sin errores en cada hoja tocada, y una sola compilación de producción al final (ver el commit).
+
+**Medición en `src/app` sin katuq-flow (antes → después).**
+
+| Qué | Antes | Después |
+|---|---|---|
+| Azules sueltos | 30 | 8 |
+| Primarios prohibidos | 10 | 9 |
+| Gradientes | 48 | 43 |
+| `#8b5cf6`/`#a78bfa` | 106 | 77 |
+| `card-header` | 254 | 244 |
+| `btn-success` | 43 | 33 |
+| `<app-breadcrumb>` | 13 | 8 |
+
+**Pendientes.**
+- Revisar en el navegador a 1440 y 390 px, en especial:
+  - Crear empresa (pestañas);
+  - la vista Tabla y las pills de Todos los pedidos;
+  - la calculadora del POS;
+  - la pestaña Ensamble de Producción;
+  - el catálogo público en escritorio (el carrito ahora es un diálogo centrado).
+- `var(--primary-color)` en Crear ventas (unos 24 usos) toma el global `#a78bfa`. Se resuelve con la reconciliación de tokens.
+- Los `::ng-deep` sin `:host` de agent-session apuntan a un `p-sidebar` que se pinta en `body`, así que no se acotaron.
+
+> **Renumeración (2026-10-21).** Al unir la rama principal, D-517 y D-518 ya eran otras decisiones (Punto Verde Vidagas y residuos de D-516). En la rama `feature/tickets-web`, lo que sus documentos y commits llaman «D-517» (pago a cuotas Addi y Sistecrédito) es **D-530**, y lo que llaman «D-518» (las 70 decisiones de los tickets Web) es **D-531**. Los números D-520 a D-529 quedan libres para la rama principal.
+
+## D-530 (2026-10-20) — Pago a cuotas en la tienda en línea con Addi y Sistecrédito (ticket 1233, F2-41) — APROBADA (Daniel, 20-oct), COMMITEADA en la rama `feature/tickets-web` (backend d954a833, front f8b985d4), sin desplegar y con la bandera apagada
 
 > Renumerada el 2026-10-21: nació como D-516, número que en la rama principal ya era «Pantallas internas restantes» (df58cd6d). Los comentarios del código y la propuesta dicen D-517.
 
@@ -11434,7 +11695,7 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - Build de producción sin errores. Gradientes y primarios prohibidos: 0 → 0.
   - El front replica los campos `bandera` y `reemplaza` del directorio de D-500 (commit local de otra sesión, aún sin subir). Al unir puede quedar un conflicto trivial en `integrations-list.component.ts`.
 
-## D-518 (2026-10-21) — Tickets «Web ·» reabiertos: requerimiento leído de la fuente y decisiones aprobadas — APROBADA (Daniel, 21-oct: «aprobado»)
+## D-531 (2026-10-21) — Tickets «Web ·» reabiertos: requerimiento leído de la fuente y decisiones aprobadas — APROBADA (Daniel, 21-oct: «aprobado»)
 
 - **Por qué:** los 7 tickets «Web ·» del constructor (F2-42, TX-37, F4-40, F2-43, F5-29, TX-34, F5-30) se cerraron el 20-oct como parciales remitiendo a tickets «…b» que nunca se crearon, y F2-41 (D-517) se entregó con recortes que el ticket no autorizaba. Daniel pidió reabrirlos y completarlos.
 - **Cómo se leyó:** un lector y un crítico por ticket (16 agentes) leyeron descripción, todos los comentarios, adjuntos, tickets relacionados de cualquier canal, propuesta OpenSpec, contrato y código. Los hallazgos graves se verificaron otra vez en el código. Informe privado: https://claude.ai/artifact/LdLfeJQQ49Qegy3omsHMpC.

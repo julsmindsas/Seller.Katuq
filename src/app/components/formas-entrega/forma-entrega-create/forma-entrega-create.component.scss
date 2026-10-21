@@ -1,0 +1,54 @@
+// Modal de Configuración (D-516): base compartida cfg-* sin página completa.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.fe-cabeza { border-bottom: 1px solid #ececf4; padding: 16px 20px; }
+.fe-titulo { margin: 0; font-size: 18px; font-weight: 800; color: #211F3A; letter-spacing: normal; }
+.fe-pie { border-top: 1px solid #f1f0f7; gap: 8px; padding: 12px 20px; }
+.modal-body { padding: 20px; color: #211F3A; }
+.cfg-ayuda { color: #5F3FE0; cursor: pointer; font-size: 13px; }
+.checkboxK { accent-color: #5F3FE0; width: 18px; height: 18px; }
+
+.fe-horarios { margin-top: 8px; }
+.fe-horarios__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.fe-horarios__titulo { margin-bottom: 4px; }
+.fe-tabla {
+  overflow-x: auto;
+
+  .table { margin: 0; }
+  th {
+    background: #faf9fe;
+    color: #8f8bab;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    padding: 12px 14px;
+    border-bottom: 1px solid #f1f0f7;
+  }
+  td { padding: 10px 14px; font-size: 13px; color: #211F3A; border-color: #f1f0f7; vertical-align: middle; }
+}
+.fe-acciones { display: flex; gap: 6px; }
+.fe-icono {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #e4e2ef;
+  border-radius: 11px;
+  background: #fff;
+  color: #5F3FE0;
+  cursor: pointer;
+
+  &:hover { background: #efe9ff; border-color: #ddd3fb; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+.fe-icono--peligro { color: #D64545; &:hover { background: #FDECEC; border-color: #f3c9c9; } }
+.modal-body p, .modal-body label, .modal-body span, .modal-body a { letter-spacing: normal; }

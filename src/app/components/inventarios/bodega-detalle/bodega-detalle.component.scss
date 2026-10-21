@@ -1,14 +1,58 @@
-.module-header {
-  background: #f8fafc;
-  border-left: 4px solid #8b5cf6;
-}
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+// Detalle por bodega (D-516): marco cfg-pagina, stats planos y colores del canon.
+:host { display: block; background: $cfg-tint; }
 
 .stat-card {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  position: relative;
+  padding-right: 44px;
+}
+.stat-icono {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  font-size: 1.3rem;
+  color: $cfg-accent;
+  opacity: .35;
+}
+.stat-card--agotados {
+  .cfg-stat__valor, .stat-icono { color: $cfg-err !important; }
+}
+
+.etiqueta-ff { vertical-align: middle; }
+.etiqueta-listas { cursor: pointer; }
+
+.icono-acento, .texto-acento { color: $cfg-accent; }
+.icono-info, .texto-info { color: $cfg-info; }
+.icono-vacio { font-size: 3rem; color: $cfg-accent; opacity: .3; }
+
+.detalle-expandido {
+  background: $cfg-tint;
+  border-radius: 11px;
+}
+.tabla-listas__cabeza {
+  background: $cfg-accent-soft;
+  th {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $cfg-muted;
   }
+}
+
+:host ::ng-deep .boton-consultar.p-button { color: $cfg-info; }
+
+.detalle-pie {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid $cfg-line-soft;
+  font-size: 12.5px;
+  color: $cfg-body;
+
+  > div { flex-wrap: wrap; gap: 8px; }
 }
 
 .loader-box {
@@ -18,8 +62,11 @@
   right: 0;
   bottom: 0;
   background: rgba(255,255,255,0.8);
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
 }
+
+:host ::ng-deep .cfg-card .p-datatable-wrapper { overflow-x: auto; }

@@ -1,4 +1,81 @@
 // ═══════════════════════════════════════════════════════════
+// Marco canónico (D-516): cfg-pagina / cfg-cabeza / cfg-card
+// ═══════════════════════════════════════════════════════════
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.crm-pagina { min-width: 0; }
+
+.crm-cabeza { align-items: center; }
+
+.crm-buscador {
+  flex: 1 1 260px;
+  max-width: 420px;
+  min-width: 0;
+
+  .input-group-text, .form-control {
+    min-height: 40px;
+    background: #f5f4fa;
+    border: 1px solid #e9e7f3;
+    color: #211F3A;
+    font-size: 13.5px;
+  }
+  .input-group-text { color: #8f8bab; border-radius: 10px 0 0 10px; }
+  .form-control { border-radius: 0 10px 10px 0; box-shadow: none; }
+  .form-control:focus { background: #fff; border-color: #7C5CFF; box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
+}
+
+.crm-buscador__icono i { color: #8f8bab; }
+
+.crm-btn-icono { padding: 0 12px; }
+
+// Selector Kanban / Tabla: el [ngClass] alterna btn-primary / btn-outline-secondary.
+.crm-vista {
+  .btn {
+    min-height: 40px;
+    padding: 0 12px;
+    font-size: 13.5px;
+    box-shadow: none;
+  }
+  .btn.btn-primary { background: #5F3FE0; border-color: #5F3FE0; color: #fff; }
+  .btn.btn-outline-secondary { background: #fff; border-color: #e4e2ef; color: #5b5878; }
+  .btn.btn-outline-secondary:hover { background: #faf9fe; border-color: #d9cffb; color: #5F3FE0; }
+  .btn:first-child { border-radius: 11px 0 0 11px; }
+  .btn:last-child { border-radius: 0 11px 11px 0; }
+}
+
+.crm-cabeza__tabs { flex-basis: 100%; }
+
+.crm-badge-cerrados {
+  background: #efe9ff;
+  color: #5F3FE0 !important;
+  font-size: 11px !important;
+  font-weight: 800;
+  border-radius: 20px;
+}
+
+.crm-cuerpo {
+  padding: 8px !important;
+  overflow-x: auto;
+}
+
+.crm-seleccion { background: #faf9fe; border-radius: 11px; }
+
+.crm-valor { color: #5F3FE0 !important; font-weight: 700; }
+.crm-acento { color: #5F3FE0 !important; }
+.crm-rojo { color: #D64545 !important; }
+.crm-verde { color: #1E874B !important; }
+.crm-tinta { color: #211F3A !important; }
+.crm-muted { color: #8f8bab !important; }
+.crm-ok-icono { font-size: 2.5rem; color: #1E874B; }
+.crm-vacio-icono { font-size: 1.5rem; color: #c9c5dc; }
+.crm-vacio-icono--grande { font-size: 2rem; }
+
+.crm-par--ok { background-color: #E6F7EE !important; color: #1E874B !important; }
+.crm-par--warn { background-color: #FFF1DF !important; color: #D9820A !important; }
+.crm-par--error { background-color: #FDECEC !important; color: #D64545 !important; }
+
+// ═══════════════════════════════════════════════════════════
 // Tabs: Pipeline activo / Cerrados
 // ═══════════════════════════════════════════════════════════
 
@@ -12,26 +89,25 @@
   align-items: center;
   padding: 0.45rem 1rem;
   font-size: 0.85rem;
-  font-weight: 500;
-  color: #6b7280;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  border-left: 3px solid transparent;
-  border-radius: 6px;
+  font-weight: 700;
+  color: #5b5878;
+  background: #fff;
+  border: 1px solid #e4e2ef;
+  border-radius: 11px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 
   &:hover:not(.active) {
-    background: #e5e7eb;
-    color: #374151;
+    background: #faf9fe;
+    border-color: #d9cffb;
+    color: #5F3FE0;
   }
 
   &.active {
-    background: #ede9fe;
-    color: #5b21b6;
-    border-color: #ddd6fe;
-    border-left-color: #7c3aed;
-    font-weight: 600;
+    background: #efe9ff;
+    color: #5F3FE0;
+    border-color: #ddd3fb;
+    font-weight: 800;
   }
 }
 
@@ -71,21 +147,21 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 0.75rem;
-  background: #f8f9fa;
-  border-radius: 6px 6px 0 0;
-  border-top: 3px solid #6b7280;
+  background: #faf9fe;
+  border-radius: 11px 11px 0 0;
+  border-top: 3px solid #8f8bab;
 
   .kanban-column-title {
     font-weight: 600;
     font-size: 0.8rem;
-    color: #334155;
+    color: #5b5878;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
 
   .kanban-column-count {
-    background: #e5e7eb;
-    color: #374151;
+    background: #efe9ff;
+    color: #5F3FE0;
     font-size: 0.7rem;
     font-weight: 700;
     padding: 0.1rem 0.45rem;
@@ -96,8 +172,8 @@
 .kanban-cards {
   flex: 1;
   overflow-y: auto;
-  background: #f1f3f5;
-  border-radius: 0 0 6px 6px;
+  background: #f5f4fa;
+  border-radius: 0 0 11px 11px;
   padding: 0.5rem;
   min-height: 100px;
 
@@ -110,23 +186,23 @@
 
 .kanban-card {
   background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border: 1px solid #ececf4;
+  border-radius: 11px;
   padding: 0.6rem 0.75rem;
   margin-bottom: 0.5rem;
   cursor: pointer;
   transition: box-shadow 0.15s, border-color 0.15s;
 
   &:hover {
-    border-color: #8b5cf6;
-    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.12);
+    border-color: #d9cffb;
+    box-shadow: 0 6px 16px -8px rgba(95, 63, 224, 0.35);
   }
 
   // Dragula: mientras se arrastra
   &.gu-mirror {
     opacity: 0.9;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    border-color: #8b5cf6;
+    box-shadow: 0 12px 28px -10px rgba(95, 63, 224, 0.45);
+    border-color: #7C5CFF;
   }
 }
 
@@ -139,12 +215,12 @@
   .kanban-card-link {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #1f2937;
+    color: #211F3A;
     line-height: 1.3;
     cursor: pointer;
     text-decoration: none;
 
-    &:hover { color: #8b5cf6; text-decoration: underline; }
+    &:hover { color: #5F3FE0; text-decoration: underline; }
   }
 }
 
@@ -181,7 +257,7 @@
   gap: 0.35rem;
   padding-top: 0.4rem;
   margin-top: 0.3rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #f1f0f7;
   flex-wrap: wrap;
 }
 
@@ -189,9 +265,9 @@
   display: inline-flex;
   align-items: center;
   padding: 0.2rem 0.5rem;
-  border-radius: 12px;
-  background: #f1f3f5;
-  color: #495057;
+  border-radius: 20px;
+  background: #f5f4fa;
+  color: #5b5878;
   font-size: 0.65rem;
   font-weight: 600;
   cursor: pointer;
@@ -199,32 +275,32 @@
   text-decoration: none;
   white-space: nowrap;
 
-  &:hover { background: #e5e7eb; color: #1f2937; text-decoration: none; }
-  &.action-btn-wa { background: #f0fdf4; color: #27AE60; }
-  &.action-btn-wa:hover { background: #dcfce7; color: #16a34a; }
-  &.action-btn-detail { background: #ede9fe; color: #7c3aed; }
-  &.action-btn-detail:hover { background: #ddd6fe; color: #6d28d9; }
+  &:hover { background: #efe9ff; color: #5F3FE0; text-decoration: none; }
+  &.action-btn-wa { background: #E6F7EE; color: #1E874B; }
+  &.action-btn-wa:hover { background: #d3f0df; color: #176b3b; }
+  &.action-btn-detail { background: #efe9ff; color: #5F3FE0; }
+  &.action-btn-detail:hover { background: #ddd3fb; color: #4a2fc0; }
   // Cotizar: lleva los datos del lead al editor, sin volverlo cliente (D-111).
-  &.action-btn-cotizar { background: #ecfeff; color: #0e7490; }
-  &.action-btn-cotizar:hover { background: #cffafe; color: #155e75; }
+  &.action-btn-cotizar { background: #E7F1FF; color: #1E6FD9; }
+  &.action-btn-cotizar:hover { background: #d4e6ff; color: #1859b0; }
   // Pedido: promueve el lead a cliente y abre la venta asistida (D-111).
-  &.action-btn-pedido { background: #e8f0fe; color: #1d4ed8; }
-  &.action-btn-pedido:hover { background: #d7e3fc; color: #1e40af; }
-  &.action-btn-delete { background: #fef2f2; color: #d12b38; }
-  &.action-btn-delete:hover { background: #fee2e2; color: #b91c1c; }
-  &.action-btn-won { background: #f0fdf4; color: #27AE60; }
-  &.action-btn-won:hover { background: #dcfce7; color: #16a34a; }
-  &.action-btn-lost { background: #fef2f2; color: #d12b38; }
-  &.action-btn-lost:hover { background: #fee2e2; color: #b91c1c; }
-  &.action-btn-block { background: #fffbeb; color: #d97706; }
-  &.action-btn-block:hover { background: #fef3c7; color: #b45309; }
-  &.action-btn-unblock { background: #f0fdf4; color: #16a34a; }
-  &.action-btn-unblock:hover { background: #dcfce7; color: #15803d; }
+  &.action-btn-pedido { background: #5F3FE0; color: #fff; }
+  &.action-btn-pedido:hover { background: #4a2fc0; color: #fff; }
+  &.action-btn-delete { background: #FDECEC; color: #D64545; }
+  &.action-btn-delete:hover { background: #f9d9d9; color: #b83636; }
+  &.action-btn-won { background: #E6F7EE; color: #1E874B; }
+  &.action-btn-won:hover { background: #d3f0df; color: #176b3b; }
+  &.action-btn-lost { background: #FDECEC; color: #D64545; }
+  &.action-btn-lost:hover { background: #f9d9d9; color: #b83636; }
+  &.action-btn-block { background: #FFF1DF; color: #D9820A; }
+  &.action-btn-block:hover { background: #fde2bf; color: #b06a08; }
+  &.action-btn-unblock { background: #E6F7EE; color: #1E874B; }
+  &.action-btn-unblock:hover { background: #d3f0df; color: #176b3b; }
 }
 
 // Column value
 .kanban-column-value {
-  color: #8b5cf6;
+  color: #5F3FE0;
   font-weight: 600;
   font-size: 0.7rem;
 }
@@ -242,28 +318,28 @@
   justify-content: center;
   width: 26px;
   height: 26px;
-  border-radius: 6px;
-  background: #f1f3f5;
-  color: #495057;
+  border-radius: 9px;
+  background: #f5f4fa;
+  color: #5b5878;
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.15s;
   text-decoration: none;
 
-  &:hover { background: #e5e7eb; color: #1f2937; text-decoration: none; }
-  &.action-btn-wa { background: #f0fdf4; color: #27AE60; }
-  &.action-btn-wa:hover { background: #dcfce7; color: #16a34a; }
-  &.action-btn-delete-table { background: #fef2f2; color: #d12b38; }
-  &.action-btn-delete-table:hover { background: #fee2e2; color: #b91c1c; }
-  &.action-btn-block-table { background: #fffbeb; color: #d97706; }
-  &.action-btn-block-table:hover { background: #fef3c7; color: #b45309; }
-  &.action-btn-unblock-table { background: #f0fdf4; color: #16a34a; }
-  &.action-btn-unblock-table:hover { background: #dcfce7; color: #15803d; }
+  &:hover { background: #efe9ff; color: #5F3FE0; text-decoration: none; }
+  &.action-btn-wa { background: #E6F7EE; color: #1E874B; }
+  &.action-btn-wa:hover { background: #d3f0df; color: #176b3b; }
+  &.action-btn-delete-table { background: #FDECEC; color: #D64545; }
+  &.action-btn-delete-table:hover { background: #f9d9d9; color: #b83636; }
+  &.action-btn-block-table { background: #FFF1DF; color: #D9820A; }
+  &.action-btn-block-table:hover { background: #fde2bf; color: #b06a08; }
+  &.action-btn-unblock-table { background: #E6F7EE; color: #1E874B; }
+  &.action-btn-unblock-table:hover { background: #d3f0df; color: #176b3b; }
   // Cotizar / Pedido (D-111) — mismos colores que sus pills del kanban.
-  &.action-btn-cotizar-table { background: #ecfeff; color: #0e7490; }
-  &.action-btn-cotizar-table:hover { background: #cffafe; color: #155e75; }
-  &.action-btn-pedido-table { background: #e8f0fe; color: #1d4ed8; }
-  &.action-btn-pedido-table:hover { background: #d7e3fc; color: #1e40af; }
+  &.action-btn-cotizar-table { background: #E7F1FF; color: #1E6FD9; }
+  &.action-btn-cotizar-table:hover { background: #d4e6ff; color: #1859b0; }
+  &.action-btn-pedido-table { background: #5F3FE0; color: #fff; }
+  &.action-btn-pedido-table:hover { background: #4a2fc0; color: #fff; }
 }
 
 .cursor-pointer { cursor: pointer; }
@@ -273,13 +349,13 @@
   display: inline-flex;
   align-items: center;
   padding: 0.2rem 0.55rem;
-  border-radius: 12px;
+  border-radius: 20px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
 
-  &.stat-badge-primary { background: #ede9fe; color: #7c3aed; }
-  &.stat-badge-warning { background: #fff7ed; color: #D35400; }
+  &.stat-badge-primary { background: #efe9ff; color: #5F3FE0; }
+  &.stat-badge-warning { background: #FFF1DF; color: #D9820A; }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -302,13 +378,15 @@
 
 // ─── Indicadores de gestión (dashboard) ─────────────────────
 .crm-dashboard {
-  background: #fbfbfd;
+  background: transparent;
 
   .dash-title {
-    font-weight: 700;
-    color: #334155;
-    font-size: 0.9rem;
-    i { color: #8b5cf6; }
+    font-weight: 800;
+    color: #8f8bab;
+    font-size: 10.5px;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    i { color: #5F3FE0; }
   }
 }
 
@@ -318,38 +396,43 @@
   gap: 0.6rem;
 }
 
+// Métricas planas tintadas (sin border-left de acento, D-131).
 .dash-card {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-left: 4px solid #c7ccd6;
-  border-radius: 8px;
-  padding: 0.55rem 0.75rem;
+  background: #faf9fe;
+  border: 1px solid #eeecf7;
+  border-radius: 11px;
+  padding: 0.6rem 0.8rem;
+  transition: transform .15s ease;
+
+  &:hover { transform: translateY(-1px); }
 
   .dash-label {
-    font-size: 0.7rem;
+    font-size: 10.5px;
     text-transform: uppercase;
-    letter-spacing: 0.02em;
-    color: #6b7280;
-    font-weight: 600;
+    letter-spacing: .5px;
+    color: #8f8bab;
+    font-weight: 800;
   }
   .dash-value {
     font-size: 1.25rem;
-    font-weight: 700;
-    color: #1f2937;
+    font-weight: 800;
+    color: #5F3FE0;
     line-height: 1.3;
   }
   .dash-sub {
     font-size: 0.7rem;
-    color: #9ca3af;
+    color: #8f8bab;
   }
 
-  &.dash-blue   { border-left-color: #5F3FE0; }
-  &.dash-indigo { border-left-color: #4f46e5; }
-  &.dash-green  { border-left-color: #059669; }
-  &.dash-red    { border-left-color: #dc2626; }
-  &.dash-orange { border-left-color: #d97706; }
-  &.dash-cyan   { border-left-color: #0891b2; }
-  &.dash-gray   { border-left-color: #c7ccd6; }
+  &.dash-blue   .dash-value { color: #5F3FE0; }
+  &.dash-indigo .dash-value { color: #5F3FE0; }
+  &.dash-green  .dash-value { color: #1E874B; }
+  &.dash-red    { background: #FDECEC; border-color: #f6d3d3; }
+  &.dash-red    .dash-value { color: #D64545; }
+  &.dash-orange { background: #FFF1DF; border-color: #fbe0bd; }
+  &.dash-orange .dash-value { color: #D9820A; }
+  &.dash-cyan   .dash-value { color: #1E6FD9; }
+  &.dash-gray   .dash-value { color: #8f8bab; }
 }
 
 // ─── Etiquetas / tags ────────────────────────────────────────
@@ -364,23 +447,23 @@
   align-items: center;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  border: 1px solid #e5e7eb;
-  background: #f8f9fa;
-  color: #6b7280;
+  border: 1px solid #ececf4;
+  background: #f5f4fa;
+  color: #8f8bab;
   font-size: 0.78rem;
   cursor: pointer;
   user-select: none;
   transition: all 0.15s ease;
 
-  &:hover { border-color: #c4b5fd; }
+  &:hover { border-color: #d9cffb; }
   &.tag-chip-selected { border-color: transparent; font-weight: 600; }
 }
 
 .tags-empty-hint {
   font-size: 0.78rem;
-  color: #9ca3af;
-  background: #f8f9fa;
-  border: 1px dashed #e5e7eb;
+  color: #8f8bab;
+  background: #f5f4fa;
+  border: 1px dashed #ececf4;
   border-radius: 6px;
   padding: 0.45rem 0.65rem;
 }
@@ -406,9 +489,9 @@
   align-items: center;
   padding: 0.12rem 0.55rem;
   border-radius: 999px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ececf4;
   background: #fff;
-  color: #6b7280;
+  color: #8f8bab;
   font-size: 0.75rem;
   cursor: pointer;
   user-select: none;

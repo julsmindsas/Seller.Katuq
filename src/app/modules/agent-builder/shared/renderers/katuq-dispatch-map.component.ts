@@ -131,7 +131,7 @@ interface DispatchRoute {
       align-items: center;
       gap: 0.5rem;
       padding: 0.5rem 1rem;
-      background: #3b82f6;
+      background: #5F3FE0;
       color: white;
       border: none;
       border-radius: 0.375rem;
@@ -141,7 +141,7 @@ interface DispatchRoute {
     }
 
     .btn-dispatch:hover {
-      background: #2563eb;
+      background: #4a2fc0;
     }
 
     .map-container {
@@ -192,7 +192,7 @@ interface DispatchRoute {
       padding: 0.75rem;
       background: #f9fafb;
       border-radius: 0.5rem;
-      border-left: 4px solid #6366f1;
+      border: 1px solid #ececf4;
     }
 
     .route-header {
@@ -448,7 +448,7 @@ export class KatuqDispatchMapComponent implements AfterViewInit, OnChanges {
 
   getRouteColor(index: number): string {
     const colors = [
-      '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+      '#5F3FE0', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
       '#06b6d4', '#ec4899', '#84cc16'
     ];
     return colors[index % colors.length];

@@ -1,122 +1,93 @@
-// Google Material Design 3 Variables
-$google-blue: #1a73e8;
-$google-grey-100: #f1f3f4;
-$google-grey-300: #dadce0;
-$google-grey-800: #202124;
-$surface-color: #ffffff;
-$background-color: #f8f9fa;
+// Asistente de creación de agentes: tema canónico Katuq (D-131, D-400). Plano, sin gradientes.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+:host { display: block; background: $cfg-tint; min-height: 100%; }
 
 .google-wizard-container {
   min-height: 100vh;
-  background-color: $background-color;
-  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
-  color: $google-grey-800;
-  display: flex;
-  flex-direction: column;
+  color: $cfg-ink;
 
-  // HEADER
+  // ENCABEZADO
   .wizard-header {
-    background-color: $surface-color;
-    height: 72px;
-    display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 0 32px;
-    border-bottom: 1px solid $google-grey-300;
-    position: sticky;
-    top: 0;
-    z-index: 100;
 
     .header-content {
       display: flex;
       align-items: center;
-      gap: 24px;
+      gap: 14px;
+      min-width: 0;
 
       .back-button {
+        flex: 0 0 auto;
         width: 40px;
         height: 40px;
-        border-radius: 50%;
+        border-radius: 11px;
+        border: 1px solid #e4e2ef;
+        background: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        color: #5f6368;
-        transition: background 0.2s;
+        color: $cfg-body;
+        transition: background .15s ease, color .15s ease, border-color .15s ease;
 
         &:hover {
-          background-color: $google-grey-100;
-          color: $google-grey-800;
+          background: $cfg-tint;
+          border-color: #d9cffb;
+          color: $cfg-accent;
         }
 
-        i {
-          font-size: 20px;
-        }
-      }
-
-      .title-section {
-        h1 {
-          font-size: 20px;
-          font-weight: 500;
-          margin: 0;
-          color: $google-grey-800;
-        }
-
-        p {
-          font-size: 14px;
-          color: #5f6368;
-          margin: 0;
-        }
+        i { font-size: 16px; }
       }
     }
 
     .step-indicator {
-      font-size: 14px;
-      font-weight: 500;
-      color: #5f6368;
-      background: $google-grey-100;
-      padding: 8px 16px;
-      border-radius: 16px;
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      color: $cfg-accent;
+      background: $cfg-accent-soft;
+      padding: 5px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
     }
   }
 
-  // MAIN CONTENT
+  // CONTENIDO
   .wizard-main {
-    flex: 1;
-    padding: 32px;
     display: flex;
     justify-content: center;
     align-items: flex-start;
+    min-width: 0;
 
     .wizard-card {
-      background: $surface-color;
-      border-radius: 24px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
       width: 100%;
       max-width: 900px;
+      padding: 0;
       overflow: hidden;
       display: flex;
       flex-direction: column;
 
       .stepper-wrapper {
-        padding: 32px 32px 0;
-        margin-bottom: 24px;
+        padding: 24px 24px 0;
+        margin-bottom: 20px;
+        overflow-x: auto;
       }
 
       .step-content-area {
-        padding: 0 32px 32px;
+        padding: 0 24px 24px;
         min-height: 400px;
       }
     }
   }
 
-  // LOADING OVERLAY
+  // CARGANDO
   .loading-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.9);
+    inset: 0;
+    background: rgba(250, 249, 254, .92);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -126,17 +97,17 @@ $background-color: #f8f9fa;
     .google-spinner {
       width: 48px;
       height: 48px;
-      border: 4px solid $google-grey-100;
+      border: 4px solid $cfg-accent-soft;
       border-radius: 50%;
-      border-top-color: $google-blue;
+      border-top-color: $cfg-accent;
       animation: spin 1s ease-in-out infinite;
       margin-bottom: 16px;
     }
 
     p {
-      font-size: 16px;
-      color: #5f6368;
-      font-weight: 500;
+      font-size: 15px;
+      color: $cfg-body;
+      font-weight: 700;
     }
   }
 }
@@ -147,7 +118,7 @@ $background-color: #f8f9fa;
   }
 }
 
-// PRIME NG STEPS OVERRIDE
+// PASOS PRIMENG
 ::ng-deep {
   .google-steps.p-steps {
     .p-steps-item {
@@ -164,42 +135,38 @@ $background-color: #f8f9fa;
           width: 32px;
           height: 32px;
           font-size: 14px;
-          background: $surface-color;
-          border: 2px solid $google-grey-300;
-          color: #5f6368;
-          font-weight: 500;
+          background: #fff;
+          border: 2px solid $cfg-line;
+          color: $cfg-muted;
+          font-weight: 800;
         }
 
         .p-steps-title {
-          color: #5f6368;
-          font-weight: 500;
-          font-size: 12px;
+          color: $cfg-muted;
+          font-weight: 800;
+          font-size: 10.5px;
+          text-transform: uppercase;
+          letter-spacing: .5px;
         }
       }
 
       &.p-highlight .p-menuitem-link {
         .p-steps-number {
-          background: $google-blue;
-          border-color: $google-blue;
-          color: white;
-          box-shadow: 0 2px 5px rgba(26, 115, 232, 0.3);
+          background: $cfg-accent;
+          border-color: $cfg-accent;
+          color: #fff;
+          box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
         }
 
         .p-steps-title {
-          color: $google-blue;
-          font-weight: 600;
+          color: $cfg-accent;
         }
       }
-
-      // Completed steps (custom logic if needed, usually p-highlight handles active)
-      // PrimeNG doesn't have a 'completed' class by default for previous steps easily accessible without custom logic
-      // But we can style standard state vs highlight
     }
 
-    // Connector lines
-    &:before {
-      border-top-color: $google-grey-300;
-      margin-top: -1px; // Adjust alignment
+    // Líneas de unión
+    .p-steps-item:before {
+      border-top-color: $cfg-line;
     }
   }
 }
@@ -207,37 +174,9 @@ $background-color: #f8f9fa;
 // RESPONSIVE
 @media (max-width: 768px) {
   .google-wizard-container {
-    .wizard-header {
-      padding: 0 16px;
-      height: 64px;
-
-      .header-content {
-        gap: 16px;
-
-        .title-section p {
-          display: none;
-        }
-      }
-
-      .step-indicator {
-        display: none;
-      }
-    }
-
-    .wizard-main {
-      padding: 16px;
-
-      .wizard-card {
-        border-radius: 16px;
-
-        .stepper-wrapper {
-          padding: 24px 16px 0;
-        }
-
-        .step-content-area {
-          padding: 0 16px 24px;
-        }
-      }
+    .wizard-main .wizard-card {
+      .stepper-wrapper { padding: 20px 16px 0; }
+      .step-content-area { padding: 0 16px 20px; }
     }
   }
 }

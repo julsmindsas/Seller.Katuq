@@ -1,235 +1,428 @@
-.cp-page {
+// Cotización pública (`/c/:token`): documento que el comercio le envía a su cliente.
+//
+// Lleva el encabezado y el pie del comercio, así que NO usa `<app-publica-marco>` (logo de Katuq):
+// toma los tokens y las piezas `pub-*` de Regístrese (D-398) sobre una hoja propia, ancho de documento.
+// Tema canónico, plano, sin gradientes. Ninguna clase lleva "p-" (trampa global `[class*="p-"]`).
+@import '../../shared/components/publica/publica';
+
+$cot-fondo: #f5f4fa;
+$cot-pad: 28px;
+$cot-pad-movil: 18px;
+
+:host {
+  display: block;
+  @include publica-piezas;
+}
+
+.cot-pagina {
   min-height: 100vh;
-  background: #f4f5f7;
-  padding: 24px 12px;
+  min-height: 100dvh;
+  background: $cot-fondo;
+  padding: 24px 16px 40px;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  color: #1f2937;
+  box-sizing: border-box;
 }
 
-.cp-card {
+.cot-hoja {
   width: 100%;
-  max-width: 720px;
+  max-width: 960px;
   background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  padding: 24px;
+  border: 1px solid $pub-line;
+  border-radius: 20px;
+  box-shadow: $pub-shadow-float;
+  padding: $cot-pad;
   overflow: hidden;
+  box-sizing: border-box;
+  font-size: 14.5px;
+  color: $pub-ink;
 }
 
-// Banners (paridad con la factura del pedido): encabezado/pie de empresa + Katuq.
-// Full-bleed: contrarrestan el padding de 24px de la tarjeta.
-.cp-banner {
+// Banners del comercio (paridad con la factura del pedido): de borde a borde de la hoja.
+.cot-banner {
   display: block;
-  width: calc(100% + 48px);
-  max-width: calc(100% + 48px);
-  margin-left: -24px;
-  margin-right: -24px;
+  width: calc(100% + #{2 * $cot-pad});
+  max-width: calc(100% + #{2 * $cot-pad});
+  margin-left: -$cot-pad;
+  margin-right: -$cot-pad;
   height: auto;
   border: 0;
 
-  &.cp-banner-top { margin-top: -24px; margin-bottom: 18px; }
-  &.cp-banner-foot { margin-top: 22px; }
-  &.cp-banner-ad { margin-top: 12px; }
+  &--arriba { margin-top: -$cot-pad; margin-bottom: 22px; }
+  &--pie { margin-top: 26px; }
+  &--publicidad { margin-top: 12px; }
 }
 
-.cp-center {
+// Estados de carga y "no encontrada": ícono, título y texto corto.
+.cot-centro {
+  max-width: 480px;
+  margin-top: 8vh;
+  padding: 48px 24px;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
   text-align: center;
-  padding: 56px 24px;
 }
-.cp-icon { font-size: 40px; margin-bottom: 8px; }
-.cp-muted { color: #6b7280; }
 
-.cp-spinner {
-  width: 32px; height: 32px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #5F3FE0;
+.cot-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid $pub-accent-soft;
+  border-top-color: $pub-accent;
   border-radius: 50%;
-  margin: 0 auto 12px;
-  animation: cp-spin 0.8s linear infinite;
+  animation: cot-giro .8s linear infinite;
 }
-@keyframes cp-spin { to { transform: rotate(360deg); } }
 
-.cp-header {
+@keyframes cot-giro { to { transform: rotate(360deg); } }
+
+.cot-muted { color: $pub-muted; }
+
+// ── Encabezado ────────────────────────────────────────────────────────────
+.cot-cabeza {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  border-bottom: 1px solid #eef0f3;
-  padding-bottom: 14px;
-  margin-bottom: 14px;
   gap: 12px;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid $pub-line;
 }
-.cp-empresa { font-size: 18px; font-weight: 700; }
-.cp-nro { color: #6b7280; font-size: 14px; margin-top: 2px; }
 
-.cp-badge {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #eef2ff;
-  color: #3730a3;
+.cot-cabeza__textos { min-width: 0; }
+
+.cot-empresa {
+  font-family: $pub-display;
+  font-size: 22px;
+  line-height: 1.2;
+  color: $pub-ink;
+}
+
+.cot-nro {
+  margin-top: 4px;
+  font-size: 14px;
+  color: $pub-body;
+
+  strong { color: $pub-ink; }
+}
+
+// Estado como pill: par fuerte / fondo suave, UPPERCASE.
+.cot-estado {
+  flex: none;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-family: $pub-display;
+  font-size: 11px;
+  letter-spacing: .6px;
+  text-transform: uppercase;
   white-space: nowrap;
-}
-.cp-badge[data-estado="aceptada"] { background: #ecfdf5; color: #065f46; }
-.cp-badge[data-estado="rechazada"] { background: #fef2f2; color: #991b1b; }
-.cp-badge[data-estado="vencida"] { background: #fffbeb; color: #92400e; }
-.cp-badge[data-estado="convertida"] { background: #eff6ff; color: #1e40af; }
+  background: $pub-accent-soft;
+  color: $pub-accent;
 
-.cp-meta {
+  &[data-estado="aceptada"] { background: $pub-ok-soft; color: $pub-ok; }
+  &[data-estado="rechazada"] { background: $pub-err-soft; color: $pub-err; }
+  &[data-estado="vencida"] { background: #FFF1DF; color: #D9820A; }
+  &[data-estado="convertida"] { background: $pub-info-soft; color: $pub-info; }
+}
+
+// ── Datos del documento ───────────────────────────────────────────────────
+.cot-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px 28px;
-  margin-bottom: 16px;
-  font-size: 14px;
-  div { display: flex; flex-direction: column; }
+  gap: 16px 32px;
+  margin-bottom: 20px;
+  padding: 16px 18px;
+  background: $pub-tint;
+  border: 1px solid $pub-line;
+  border-radius: 16px;
+
+  > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 }
-.cp-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; }
-.cp-asesor-link {
-  color: #5F3FE0;
+
+.cot-label {
+  font-family: $pub-display;
+  font-size: 11px;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: $pub-muted;
+}
+
+.cot-valor {
+  font-size: 14.5px;
+  color: $pub-ink;
+}
+
+.cot-asesor-link {
+  color: $pub-accent;
   font-size: 14px;
   letter-spacing: normal;
   text-decoration: none;
-  &:hover { text-decoration: underline; }
+  word-break: break-word;
+
+  &:hover { text-decoration: underline; color: $pub-accent-hover; }
 }
 
-.cp-result {
-  border-radius: 8px;
-  padding: 12px 14px;
-  font-size: 14px;
-  margin-bottom: 16px;
-  border-left: 4px solid;
-}
-.cp-ok { background: #ecfdf5; border-color: #10b981; color: #065f46; }
-.cp-no { background: #fef2f2; border-color: #ef4444; color: #991b1b; }
-.cp-warn { background: #fffbeb; border-color: #f59e0b; color: #92400e; }
-.cp-info { background: #eff6ff; border-color: #3b82f6; color: #1e40af; }
+// ── Avisos ────────────────────────────────────────────────────────────────
+.cot-aviso {
+  margin-bottom: 18px;
 
-.cp-table-scroll {
+  // `.pub-aviso strong` es un título en bloque; aquí el estado va dentro de la frase.
+  strong { display: inline; font-family: inherit; font-weight: 700; }
+}
+
+.cot-aviso__texto { color: inherit; font-size: inherit; }
+
+// ── Tabla ─────────────────────────────────────────────────────────────────
+.cot-tabla-scroll {
   overflow-x: auto;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
+  border: 1px solid $pub-line;
+  border-radius: 16px;
 }
 
-.cp-table {
+.cot-tabla {
   width: 100%;
-  min-width: 720px;
+  min-width: 760px;
   border-collapse: collapse;
   font-size: 14px;
   white-space: nowrap;
+
   th {
     text-align: left;
-    font-size: 11px;
+    padding: 12px 10px;
+    background: $pub-tint;
+    border-bottom: 1px solid $pub-line;
+    font-family: $pub-display;
+    font-weight: normal;
+    font-size: 10.5px;
+    letter-spacing: .6px;
     text-transform: uppercase;
-    letter-spacing: .04em;
-    color: #9ca3af;
-    border-bottom: 2px solid #eef0f3;
-    padding: 8px 6px;
+    color: $pub-muted;
   }
-  td { padding: 10px 6px; border-bottom: 1px solid #f3f4f6; }
-}
-.cp-c { text-align: center; }
-.cp-r { text-align: right; }
 
-.cp-totales {
-  margin-left: auto;
-  max-width: 300px;
-  font-size: 14px;
-  div { display: flex; justify-content: space-between; padding: 4px 0; }
+  td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #f1f0f7;
+    color: $pub-ink;
+    vertical-align: top;
+  }
+
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: #faf9ff; }
 }
-.cp-total {
-  border-top: 2px solid #eef0f3;
-  margin-top: 4px;
-  padding-top: 8px !important;
+
+.cot-c { text-align: center !important; }
+.cot-r { text-align: right !important; }
+
+// Ticket 1097: rótulo de la fila de un combo cerrado (span de *ngIf: color y tamaño propios).
+.cot-combo {
+  color: $pub-accent;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 12px;
 }
 
-.cp-terminos {
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid #eef0f3;
-  p { white-space: pre-wrap; font-size: 13px; color: #4b5563; margin-top: 6px; }
-  a { color: #5F3FE0; text-decoration: underline; word-break: break-word; }
+// Ticket 1095: detalle escrito para esta cotización.
+.cot-detalle {
+  margin-top: 2px;
+  font-size: 12px;
+  color: $pub-body;
+  white-space: pre-line;
 }
 
-.cp-acciones {
+// ── Totales ───────────────────────────────────────────────────────────────
+.cot-totales {
+  margin-left: auto;
+  max-width: 320px;
+  font-size: 14px;
+  color: $pub-body;
+
+  > div { display: flex; justify-content: space-between; gap: 16px; padding: 5px 0; }
+}
+
+.cot-total {
+  margin-top: 6px;
+  padding-top: 10px !important;
+  border-top: 1px solid $pub-line;
+  font-family: $pub-display;
+  font-size: 18px;
+  color: $pub-ink;
+
+  span:last-child { color: $pub-accent; }
+}
+
+// ── Términos y anexo ──────────────────────────────────────────────────────
+.cot-terminos {
   margin-top: 22px;
   padding-top: 18px;
-  border-top: 1px solid #eef0f3;
-}
-.cp-acciones-hint { font-weight: 600; margin-bottom: 12px; }
-.cp-btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  border-top: 1px solid $pub-line;
 
-.cp-btn {
-  border: 0;
-  border-radius: 8px;
-  padding: 11px 18px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  background: #e5e7eb;
-  color: #111827;
-  &:disabled { opacity: .6; cursor: not-allowed; }
-}
-.cp-btn-ok { background: #10b981; color: #fff; }
-.cp-btn-no { background: #ef4444; color: #fff; }
-.cp-btn-light { background: #f3f4f6; color: #374151; }
-
-.cp-form { margin-top: 4px; }
-.cp-form-title { font-weight: 700; margin-bottom: 10px; }
-.cp-field {
-  display: block;
-  margin-bottom: 12px;
-  span { display: block; font-size: 13px; color: #4b5563; margin-bottom: 4px; }
-  input, textarea {
-    width: 100%;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-size: 14px;
-    box-sizing: border-box;
+  p {
+    margin: 8px 0 0;
+    white-space: pre-wrap;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: $pub-body;
   }
-  input:focus, textarea:focus { outline: none; border-color: #5F3FE0; }
-}
-.cp-error { color: #b91c1c; font-size: 13px; margin-bottom: 10px; }
 
-.cp-footer {
-  margin-top: 22px;
-  padding-top: 14px;
-  border-top: 1px solid #eef0f3;
-  text-align: center;
-  font-size: 12px;
-  color: #9ca3af;
+  a { color: $pub-accent; text-decoration: underline; word-break: break-word; }
 }
 
-/* Ticket 1081: documento anexo de condiciones comerciales */
-.cp-anexo {
+// Ticket 1081: documento anexo de condiciones comerciales.
+.cot-terminos .cot-anexo {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 12px;
   padding: 10px 14px;
   border-radius: 11px;
-  border: 1px solid #E6E2F5;
-  background: #F6F4FC;
-  color: #5F3FE0;
+  border: 1px solid $pub-chip-border;
+  background: $pub-tile;
+  color: $pub-accent;
   font-weight: 700;
   text-decoration: none;
+
+  &:hover { background: $pub-accent-soft; }
 }
 
-// Ticket 1095: detalle escrito para esta cotización
-.cp-detalle {
-  font-size: 12px;
-  color: #6B7280;
-  white-space: pre-line;
-  margin-top: 2px;
+.cot-anexo__icono { color: inherit; font-size: inherit; }
+
+// ── Respuesta del cliente ─────────────────────────────────────────────────
+.cot-acciones {
+  margin-top: 24px;
+  padding: 20px;
+  background: $pub-tint;
+  border: 1px solid $pub-line;
+  border-radius: 16px;
 }
 
-// Ticket 1097: rótulo de la fila de un combo cerrado.
-.cp-combo {
-  color: #5F3FE0;
-  font-weight: 600;
+.cot-acciones .cot-pregunta {
+  margin: 0 0 14px;
+  font-family: $pub-display;
+  font-size: 16px;
+  color: $pub-ink;
+}
+
+.cot-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cot-btn {
+  flex: 1 1 180px;
+  width: auto;
+  min-height: 50px;
+  font-size: 15px;
+}
+
+// Aceptar = confirmar (verde semántico); Rechazar = secundario en el par de error.
+.cot-btn--ok {
+  background: $pub-ok;
+  box-shadow: none;
+
+  &:hover:not(:disabled) { background: #176b3b; }
+}
+
+.cot-btn--no {
+  color: $pub-err;
+  border-color: #f3c4c4;
+
+  &:hover:not(:disabled) { background: $pub-err-soft; color: $pub-err; }
+}
+
+// Botón de confirmar: las clases las pone el binding `[class.cp-btn-*]` (no se renombran) y contienen
+// "p-", así que el tamaño se repone con !important frente a la regla global `[class*="p-"]`.
+.cot-btn.cp-btn-ok,
+.cot-btn.cp-btn-no {
+  font-size: 15px !important;
+  line-height: 1.2 !important;
+  box-shadow: none;
+}
+
+.cot-btn.cp-btn-ok {
+  background: $pub-ok;
+
+  &:hover:not(:disabled) { background: #176b3b; }
+}
+
+.cot-btn.cp-btn-no {
+  background: $pub-err;
+
+  &:hover:not(:disabled) { background: #b83636; }
+}
+
+.cot-form { display: grid; gap: 14px; }
+
+.cot-form__titulo { margin: 0; }
+
+.cot-campo {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+
+  input,
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1.5px solid $pub-chip-border;
+    border-radius: 11px;
+    font-family: $pub-text;
+    font-size: 16px;
+    color: $pub-ink;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+
+    &::placeholder { color: #b4b0cb; }
+
+    &:focus {
+      border-color: $pub-accent;
+      box-shadow: 0 0 0 4px rgba(95, 63, 224, .12);
+    }
+  }
+
+  textarea { resize: vertical; }
+}
+
+.cot-error { margin: 0; }
+
+.cot-pie {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid $pub-line;
+  text-align: center;
   font-size: 12px;
+  color: $pub-muted;
+}
+
+@media (max-width: 600px) {
+  .cot-hoja { padding: $cot-pad-movil; border-radius: 16px; }
+
+  .cot-banner {
+    width: calc(100% + #{2 * $cot-pad-movil});
+    max-width: calc(100% + #{2 * $cot-pad-movil});
+    margin-left: -$cot-pad-movil;
+    margin-right: -$cot-pad-movil;
+
+    &--arriba { margin-top: -$cot-pad-movil; }
+  }
+
+  .cot-cabeza { flex-wrap: wrap; }
+  .cot-empresa { font-size: 19px; }
+  .cot-totales { max-width: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cot-spinner { animation: none; }
+}
+
+// Al imprimir: solo el documento, sin fondo de página ni los botones de respuesta.
+@media print {
+  .cot-pagina { background: #fff; padding: 0; min-height: 0; }
+  .cot-hoja { max-width: none; border: 0; box-shadow: none; border-radius: 0; }
+  .cot-acciones { display: none; }
+  .cot-tabla-scroll { overflow: visible; }
+  .cot-tabla { min-width: 0; white-space: normal; }
+  .cot-tabla tbody tr:hover td { background: none; }
 }

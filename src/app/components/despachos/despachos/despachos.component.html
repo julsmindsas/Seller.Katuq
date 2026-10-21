@@ -6,11 +6,9 @@
 ></app-breadcrumb>-->
 
 <!-- Sección principal -->
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm-12">
+<div class="cfg-pagina despachos-pagina">
             <!-- Título de la pantalla (D-400): mismo nombre que en el menú -->
-            <header class="cfg-cabeza despachos-cabeza">
+            <header class="cfg-cabeza">
                 <div class="cfg-cabeza__textos">
                     <span class="cfg-eyebrow">{{ 'Logística' | translate }}</span>
                     <h1 class="cfg-titulo">{{ 'Envíos y entregas' | translate }}</h1>
@@ -19,7 +17,7 @@
             </header>
 
             <!-- Card principal -->
-            <div class="card shadow-sm border-0 mb-4">
+            <section class="cfg-card despachos-card">
                 <!-- Loader -->
                 <div class="loader-box" *ngIf="loading">
                     <div class="loader-8"></div>
@@ -254,9 +252,7 @@
                     </p-tabPanel>
                 </p-tabView>
 
-            </div>
-        </div>
-    </div>
+            </section>
 </div>
 
 <!-- Botón de Acción Flotante (FAB) para Móvil -->

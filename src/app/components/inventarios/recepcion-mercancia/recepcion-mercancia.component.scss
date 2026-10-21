@@ -1,16 +1,19 @@
-// Variables Katuq
-$primary-color: #5F3FE0;
-$secondary-color: #6c7ae0;
-$success-color: #36b37e;
-$warning-color: #ff991f;
-$danger-color: #de350b;
-$info-color: #0065ff;
-$text-color: #172b4d;
-$light-gray: #f8fafc;
-$medium-gray: #dfe1e6;
-$error-color: #de350b;
-$border-radius: 8px;
-$box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+// Variables Katuq (tokens del canon, D-516)
+$primary-color: $cfg-accent;
+$secondary-color: $cfg-accent-2;
+$success-color: $cfg-ok;
+$warning-color: $cfg-warn;
+$danger-color: $cfg-err;
+$info-color: $cfg-info;
+$text-color: $cfg-ink;
+$light-gray: $cfg-tint;
+$medium-gray: $cfg-line;
+$error-color: $cfg-err;
+$border-radius: 11px;
+$box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
 
 // Mixins
 @mixin card {
@@ -24,14 +27,14 @@ $box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: $box-shadow;
   }
 }
 
 // Estilos principales
 .dashboard-container {
   padding: 30px;
-  background-color: #f7f8fa;
+  background-color: $cfg-tint;
   min-height: calc(100vh - 100px);
 }
 
@@ -197,7 +200,7 @@ $box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
     .producto-ref {
       font-size: 0.8rem;
-      color: #6b778c;
+      color: $cfg-muted;
     }
 
     .producto-precio {
@@ -288,7 +291,7 @@ $box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
       .producto-ref {
         font-size: 0.85rem;
-        color: #6b778c;
+        color: $cfg-muted;
       }
     }
   }
@@ -321,7 +324,7 @@ $box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
   p {
-    color: #6b778c;
+    color: $cfg-muted;
     margin-bottom: 0;
   }
 }
@@ -355,7 +358,7 @@ $box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 // PrimeNG Customizations
-::ng-deep {
+:host ::ng-deep {
   // Dropdown
   .p-dropdown {
     border: 2px solid $medium-gray !important;
@@ -590,4 +593,75 @@ $box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
       font-size: 2.5rem;
     }
   }
+}
+
+
+// ── Marco cfg-pagina (D-516) ──
+:host { display: block; background: $cfg-tint; }
+
+.cfg-card > .loader-box { border-radius: 16px; }
+
+.pill-bodega { font-size: 11px !important; padding: 6px 12px; }
+.pill-grande { font-size: 12px !important; padding: 6px 12px; }
+
+.stat-card {
+  position: relative;
+  padding-right: 44px;
+}
+.stat-icono {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  font-size: 1.3rem;
+  color: $cfg-accent;
+  opacity: .35;
+}
+.stat-texto { font-size: 14px !important; max-width: 100%; }
+.stat-card--ok { .cfg-stat__valor, .stat-icono { color: $cfg-ok !important; } }
+.stat-card--info { .cfg-stat__valor, .stat-icono { color: $cfg-info !important; } }
+.stat-card--warn { .cfg-stat__valor, .stat-icono { color: $cfg-warn !important; } }
+
+.icono-acento, .texto-acento { color: $cfg-accent; }
+
+.busqueda-producto-section {
+  background: $cfg-tint;
+  border: 1px solid #eeecf7;
+  border-radius: 16px;
+}
+.addon-buscar {
+  background-color: $cfg-accent !important;
+  border-color: $cfg-accent !important;
+  color: #fff !important;
+}
+
+.recepcion-pie {
+  background: $cfg-tint;
+  border: 1px solid #eeecf7;
+  border-radius: 16px;
+}
+
+:host ::ng-deep {
+  .boton-recargar.p-button { color: $cfg-accent; }
+
+  .boton-principal.p-button {
+    background: $cfg-accent;
+    border-color: $cfg-accent;
+    border-radius: 11px;
+    font-weight: 700;
+    box-shadow: $cfg-shadow-btn;
+
+    &:enabled:hover { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
+  }
+  .boton-secundario.p-button {
+    background: #fff;
+    color: $cfg-body;
+    border-color: #e4e2ef;
+    border-radius: 11px;
+    font-weight: 700;
+
+    &:enabled:hover { background: $cfg-tint; color: $cfg-accent; border-color: #d9cffb; }
+  }
+
+  .cfg-card .p-datatable-wrapper { overflow-x: auto; }
 }

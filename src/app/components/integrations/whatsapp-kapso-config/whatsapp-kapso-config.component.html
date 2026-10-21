@@ -11,7 +11,7 @@
     <div>
       <p class="mb-1"><strong>No pudimos cargar la configuración.</strong></p>
       <p class="mb-2">{{ loadError }}</p>
-      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadConfig()">
+      <button type="button" class="btn wa-kapso__test-btn" (click)="loadConfig()">
         <i class="fa fa-refresh me-1"></i> Reintentar
       </button>
     </div>
@@ -55,7 +55,7 @@
 
           <button
             type="button"
-            class="btn btn-outline-success wa-kapso__test-btn"
+            class="btn wa-kapso__test-btn"
             (click)="sendTest()"
             [disabled]="!canSendTest || testing"
             *ngIf="optInAccepted"
@@ -83,7 +83,7 @@
             </p>
             <button
               type="button"
-              class="btn btn-warning"
+              class="btn wa-kapso__save-btn"
               (click)="acceptOptIn()"
               [disabled]="acceptingOptIn"
             >

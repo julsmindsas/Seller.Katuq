@@ -183,6 +183,18 @@
               <i class="fa fa-times" aria-hidden="true"></i>
             </button>
           </a>
+          <!-- Ticket 1322: las pantallas de la sección quedan a un clic. -->
+          <ul class="favorite-children" *ngIf="enlacesDeFavorito(favorite).length" role="list">
+            <li *ngFor="let enlace of enlacesDeFavorito(favorite)" role="listitem">
+              <a [routerLink]="rutaMenu(enlace.path)"
+                 (click)="onMenuItemClick(enlace); onMobileLinkClick()"
+                 routerLinkActive="active"
+                 class="favorite-link favorite-link--hijo"
+                 [attr.aria-label]="'Ir a ' + (enlace.title | translate)">
+                <span>{{enlace.title | translate}}</span>
+              </a>
+            </li>
+          </ul>
         </ng-template>
       </li>
     </ul>

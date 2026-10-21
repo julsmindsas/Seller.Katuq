@@ -39,7 +39,7 @@
 
       &.active {
         background: #fff;
-        color: $katuq-primary;
+        color: #5F3FE0;
         box-shadow: 0 1px 2px rgba(0,0,0,0.1);
       }
 
@@ -254,7 +254,7 @@
       transition: background-color 0.15s ease;
 
       &:hover {
-        background: rgba($katuq-primary, 0.04);
+        background: rgba(#5F3FE0, 0.04);
       }
 
       &:last-child {
@@ -311,8 +311,8 @@
                 &:hover { transform: translateY(-1px); }
 
                 &.btn-outline-primary {
-                  background: $katuq-primary-bg; border-color: $katuq-primary-border; color: $katuq-primary;
-                  &:hover { background: $katuq-purple-100; color: $katuq-primary-dark; }
+                  background: #efe9ff; border-color: #ddd3fb; color: #5F3FE0;
+                  &:hover { background: $katuq-purple-100; color: #4a2fc0; }
                 }
                 &.btn-outline-success {
                   background: $katuq-success-light; border-color: #a7f3d0; color: $katuq-success-dark;
@@ -362,21 +362,21 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: $katuq-primary;
+      color: #5F3FE0;
       transition: all 0.15s;
       cursor: pointer;
       font-size: 0.8rem;
 
       &:hover,
       &.expanded {
-        background: $katuq-primary-bg;
-        color: $katuq-primary-dark;
+        background: #efe9ff;
+        color: #4a2fc0;
       }
     }
 
     .order-number {
       font-weight: 800;
-      color: $katuq-primary-dark;
+      color: #4a2fc0;
       font-size: 0.9rem;
     }
 
@@ -478,7 +478,7 @@
       .order-info {
         .order-number {
           font-weight: 600;
-          color: $katuq-primary;
+          color: #5F3FE0;
           margin: 0;
           font-size: 1rem;
         }
@@ -517,7 +517,7 @@
         }
 
         i {
-          color: $katuq-primary;
+          color: #5F3FE0;
           width: 16px;
         }
       }
@@ -650,8 +650,8 @@
         transition: all 0.2s;
 
         &:focus {
-          border-color: $katuq-primary;
-          box-shadow: 0 0 0 0.2rem rgba($katuq-primary, 0.25);
+          border-color: #5F3FE0;
+          box-shadow: 0 0 0 0.2rem rgba(#5F3FE0, 0.25);
         }
       }
 
@@ -677,8 +677,8 @@
         transition: all 0.2s;
 
         &.btn-primary {
-          background-color: $katuq-primary !important;
-          border-color: $katuq-primary !important;
+          background-color: #5F3FE0 !important;
+          border-color: #5F3FE0 !important;
           color: #ffffff !important;
 
           span, i {
@@ -686,11 +686,11 @@
           }
 
           &:hover:not(:disabled) {
-            background-color: $katuq-primary-dark !important;
-            border-color: $katuq-primary-dark !important;
+            background-color: #4a2fc0 !important;
+            border-color: #4a2fc0 !important;
             color: #ffffff !important;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba($katuq-primary, 0.3);
+            box-shadow: 0 4px 12px rgba(#5F3FE0, 0.3);
 
             span, i {
               color: #ffffff !important;
@@ -844,9 +844,9 @@
         font-size: 0.8rem;
 
         &.active {
-          background-color: $katuq-primary;
+          background-color: #5F3FE0;
           color: white;
-          border-color: $katuq-primary;
+          border-color: #5F3FE0;
         }
       }
     }
@@ -944,8 +944,8 @@
     .alert {
       border: none;
       border-radius: 12px;
-      background: $katuq-primary-bg;
-      border-left: 4px solid $katuq-primary;
+      background: #efe9ff;
+      border-left: 4px solid #5F3FE0;
     }
   }
 
@@ -976,13 +976,13 @@
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-      border-color: $katuq-primary-light;
+      border-color: #7C5CFF;
     }
 
     &.selected {
-      border-color: $katuq-primary;
-      background: $katuq-primary-bg;
-      box-shadow: 0 4px 15px rgba($katuq-primary, 0.15);
+      border-color: #5F3FE0;
+      background: #efe9ff;
+      box-shadow: 0 4px 15px rgba(#5F3FE0, 0.15);
 
       &::before {
         content: '';
@@ -991,7 +991,7 @@
         left: 0;
         right: 0;
         height: 4px;
-        background: $katuq-primary;
+        background: #5F3FE0;
         border-radius: 12px 12px 0 0;
       }
     }
@@ -1090,7 +1090,7 @@
       }
 
       &:hover {
-        background: $katuq-primary-bg;
+        background: #efe9ff;
         transform: translateX(5px);
       }
 
@@ -1114,13 +1114,13 @@
       transition: all 0.3s ease;
 
       &.btn-primary {
-        background: $katuq-primary;
+        background: #5F3FE0;
         border: none;
 
         &:hover:not(:disabled) {
-          background: $katuq-primary-dark;
+          background: #4a2fc0;
           transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba($katuq-primary, 0.3);
+          box-shadow: 0 4px 12px rgba(#5F3FE0, 0.3);
         }
 
         &:disabled {
@@ -1204,23 +1204,23 @@
     gap: 1rem;
 
     &:hover {
-      border-color: $katuq-primary;
-      box-shadow: 0 2px 8px rgba($katuq-primary, 0.1);
+      border-color: #5F3FE0;
+      box-shadow: 0 2px 8px rgba(#5F3FE0, 0.1);
     }
 
     &.transporter-selected {
-      border-color: $katuq-primary;
-      background-color: $katuq-primary-bg;
-      box-shadow: 0 2px 12px rgba($katuq-primary, 0.15);
+      border-color: #5F3FE0;
+      background-color: #efe9ff;
+      box-shadow: 0 2px 12px rgba(#5F3FE0, 0.15);
 
       .transporter-icon {
-        color: $katuq-primary;
+        color: #5F3FE0;
         background-color: $katuq-purple-100;
       }
 
       .transporter-radio .form-check-input {
-        background-color: $katuq-primary;
-        border-color: $katuq-primary;
+        background-color: #5F3FE0;
+        border-color: #5F3FE0;
       }
     }
 

@@ -1,26 +1,23 @@
-<app-breadcrumb [title]="'Procesos'" [items]="['Empresa','Modulo Variable','Produccion']"
-    [active_item]="'Procesos'"></app-breadcrumb>
-
-<div class="container-fluid">
-    <div class="row">
-
-        <div class="col-sm-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-sm-9"></div>
-                        <div class="col-sm-3">
-                            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button"
+<div class="cfg-pagina">
+    <header class="cfg-cabeza">
+        <div class="cfg-cabeza__textos">
+            <span class="cfg-eyebrow">Configuración</span>
+            <h1 class="cfg-titulo">Procesos</h1>
+            <p class="cfg-sub">Módulos variables · Producción</p>
+        </div>
+        <div class="cfg-acciones">
+                            <button class="cfg-btn" type="button"
                                 (click)="open(myModal)">
-                                <span style="color: white;">{{'Crear Nuevo Proceso' | translate}}</span>
+                                <span>{{'Crear Nuevo Proceso' | translate}}</span>
                                 <i placement="top"
-                                    style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
                                     class="icofont icofont-plus"></i>
                             </button>
-                        </div>
-                    </div>
+        </div>
+    </header>
+
+    <section class="cfg-card">
                     <div class="row">
-                        <div class="col-sm-12">
+                        <div class="col-sm-12 pr-organigrama">
                             <p-organizationChart [value]="procesosConCentrosTrabajos" selectionMode="single"
                                 [(selection)]="selectedNode" (onNodeSelect)="onNodeSelect($event)" styleClass="company">
                                 <ng-template let-node pTemplate="person">
@@ -32,29 +29,26 @@
                             </p-organizationChart>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    </section>
 </div>
 
 <!--crear modal para crear procesos y centros de trabajo-->
 <ng-template #myModal let-modal>
     <!-- <div class="modal-dialog" role="document"> -->
     <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">{{'Crear Proceso o Centro de Trabajo' | translate}}</h5>
-            <button type="button" class="close" (click)="modal.dismiss('Cross click')">
-                <span aria-hidden="true">&times;</span>
+        <div class="modal-header mo-cabeza">
+            <h5 class="modal-title mo-titulo">{{'Crear Proceso o Centro de Trabajo' | translate}}</h5>
+            <button type="button" class="close mo-cerrar" (click)="modal.dismiss('Cross click')">
+                <span aria-hidden="true" class="mo-cerrar__x">&times;</span>
             </button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body cfg-form">
             <div class="form-group">
                 <label for="exampleInputEmail1">{{'Nombre' | translate}}</label>
                 <input type="text" class="form-control" id="exampleInputEmail1" [(ngModel)]="procesoNuevo.nombre"
                     aria-describedby="emailHelp" placeholder="{{'Nombre del proceso o centro de trabajo' | translate}}">
             </div>
-            <hr>
+            <hr class="mo-linea">
             <!-- Aquí puedes poner el formulario para crear el proceso o centro de trabajo -->
             <p-pickList [source]="centrosTrabajoSource" [target]="procesoNuevo.centrosTrabajo"
                 sourceHeader="{{'Centros de trabajo disponible' | translate}}" targetHeader="{{'Centros de trabajo seleccionados' | translate}}"
@@ -68,9 +62,9 @@
                 </ng-template>
             </p-pickList>
         </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="cerrarModal()">{{'Cerrar' | translate}}</button>
-            <button type="button" class="btn btn-primary" (click)="createProcessAndCentroTrabajo()">{{'Guardar cambios' | translate}}</button>
+        <div class="modal-footer mo-pie">
+            <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrarModal()">{{'Cerrar' | translate}}</button>
+            <button type="button" class="cfg-btn" (click)="createProcessAndCentroTrabajo()">{{'Guardar cambios' | translate}}</button>
         </div>
     </div>
     <!-- </div> -->
@@ -80,13 +74,13 @@
 
 <ng-template #editDeleteModal let-modal>
     <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">{{'Editar o Eliminar Proceso' | translate}}</h5>
-            <button type="button" class="close" (click)="modal.dismiss('Cross click')">
-                <span aria-hidden="true">&times;</span>
+        <div class="modal-header mo-cabeza">
+            <h5 class="modal-title mo-titulo">{{'Editar o Eliminar Proceso' | translate}}</h5>
+            <button type="button" class="close mo-cerrar" (click)="modal.dismiss('Cross click')">
+                <span aria-hidden="true" class="mo-cerrar__x">&times;</span>
             </button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body cfg-form">
             <!-- dos botones opciones eliminar o editar -->
             <div class="container ">
                 <div class="row">
@@ -94,10 +88,10 @@
                     <div class="col-sm-8">
                         <div class="row">
                             <div class="col-6">
-                                <button class="btn btn-danger" (click)="deleteProcess()">{{'Eliminar' | translate}}</button>
+                                <button class="cfg-btn cfg-btn--peligro w-100" (click)="deleteProcess()">{{'Eliminar' | translate}}</button>
                             </div>
                             <div class="col-6">
-                                <button class="btn btn-primary" (click)="editProcess()">{{'Editar' | translate}}</button>
+                                <button class="cfg-btn w-100" (click)="editProcess()">{{'Editar' | translate}}</button>
                             </div>
                         </div>
                     </div>
@@ -108,7 +102,7 @@
             </div>
 
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer mo-pie">
 
         </div>
     </div>

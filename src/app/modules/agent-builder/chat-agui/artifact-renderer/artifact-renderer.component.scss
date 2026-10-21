@@ -4,17 +4,17 @@
  */
 
 // Colors (matching AG-UI chat theme)
-$primary: #a78bfa;
-$success: #10b981;
-$warning: #f59e0b;
-$danger: #ef4444;
-$info: #3b82f6;
-$text-dark: #242934;
-$text-gray: #64748b;
-$text-light: #94a3b8;
-$bg-page: #f8f8f8;
+$primary: #5F3FE0;
+$success: #1E874B;
+$warning: #D9820A;
+$danger: #D64545;
+$info: #1E6FD9;
+$text-dark: #211F3A;
+$text-gray: #5b5878;
+$text-light: #8f8bab;
+$bg-page: #faf9fe;
 $bg-white: #ffffff;
-$border: #e5e7eb;
+$border: #ececf4;
 
 .artifact-container {
     background: $bg-white;
@@ -562,7 +562,7 @@ $border: #e5e7eb;
     .dispatch-map-container {
         width: 100%;
         height: 350px;
-        background: #1e40af;
+        background: #efe9ff;
         position: relative;
     }
 
@@ -622,16 +622,18 @@ $border: #e5e7eb;
             align-items: center;
             gap: 8px;
             padding: 10px 14px;
-            background: #1e40af;
-            color: white;
+            background: #efe9ff;
+            color: #211F3A;
 
             i {
                 font-size: 16px;
+                color: $primary;
             }
 
             span {
                 font-size: 13px;
-                font-weight: 600;
+                font-weight: 700;
+                color: #211F3A;
             }
         }
 

@@ -44,7 +44,7 @@
 
                         <!-- HEADER: Encabezados y filtros -->
                         <ng-template pTemplate="header">
-                            <tr class="p-table-tr-th" style="font-size: 0.8rem; background-color: #f8f9fa; font-weight: 600;">
+                            <tr class="p-table-tr-th" style="font-size: 0.8rem; background-color: #faf9fe; font-weight: 600;">
                                 <!-- Checkbox de selección masiva -->
                                 <th style="width: 3rem">
                                     <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
@@ -539,7 +539,7 @@
 
                         <!-- FOOTER: Totales (adaptar el colspan en función del número de columnas visibles) -->
                         <ng-template pTemplate="summary">
-                            <tr class="summary-row" style="font-size: 0.85em; background-color: #f8f9fa; border-top: 2px solid #007bff;" *ngIf="getVisibleColumnsCount() > 0">
+                            <tr class="summary-row" style="font-size: 0.85em; background-color: #faf9fe; border-top: 2px solid #ddd3fb;" *ngIf="getVisibleColumnsCount() > 0">
                                 <td [attr.colspan]="getVisibleColumnsCount() + 1" class="text-end" style="padding: 1rem; font-weight: bold;">
                                     <strong>{{ 'Total Envío:' | translate }}</strong> {{ calculateTotalEnvio(orders) | currency }} | 
                                     <strong>{{ 'Falta Por Pagar:' | translate }}</strong> {{ calculateFaltaPorPagar(orders) | currency }}

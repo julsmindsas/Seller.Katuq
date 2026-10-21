@@ -1,13 +1,11 @@
-<div class="modal-header">
-    <h4 class="modal-title">
+<div class="modal-header fe-cabeza">
+    <h4 class="modal-title fe-titulo">
       <i class="icofont icofont-truck"></i>&nbsp;{{ isEditing ? 'Editar' : 'Crear' }} forma de entrega
     </h4>
-    <button type="button" class="btn-close " aria-label="Close" (click)="activeModal.dismiss()"></button>
+    <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
   </div>
   
-  <div class="modal-body">
-    <div class="card">
-      <div class="card-body p-4">
+  <div class="modal-body cfg-form">
         <form [formGroup]="form2">
           <div class="row">
             <div class="col-md-4 col-sm-6 mb-3">
@@ -18,7 +16,7 @@
               <label class="form-label" for="">Posición</label>&nbsp;
               <span type="button" class="help" placement="top"
                 ngbPopover="{{'Valor numérico: Define con un numero la posicion de la forma de entrega en el listado de formas de entrega.' | translate}}">
-                <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i></span>
+                <i class="icon-help-alt cfg-ayuda"></i></span>
               <input class="form-control" formControlName="posicion" id="checkThree" type="number" />
             </div>
   
@@ -26,7 +24,7 @@
               <label class="form-label" for="time1">Ciudades</label>&nbsp;
               <span type="button" class="help" placement="top"
                 ngbPopover="{{'Selecciona las ciudades para las que aplica esta forma de pago.' | translate}}">
-                <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i></span>
+                <i class="icon-help-alt cfg-ayuda"></i></span>
               <ng-select [items]="empresaActual?.ciudadess?.ciudadesEntrega"
                 style="font-family: roboto;color: #ffffff !important;" [multiple]="true"
                 formControlName="ciudad" [closeOnSelect]="false">
@@ -45,22 +43,19 @@
             </div>
           </div>
   
-          <div class="card p-4 mt-3">
-            <div class="row col-sm-12 mb-4">
-              <div class="col-sm-8">
-                <p class="text-left fc-secondary fs-20 m-0 p-0"><i class="icofont icofont-time"></i>&nbsp;Crear horario</p>
-                <p class="text-left text-muted fs-18 m-0 p-0">
+          <section class="cfg-card fe-horarios">
+            <div class="fe-horarios__cabeza">
+              <div>
+                <h5 class="cfg-card__titulo fe-horarios__titulo"><i class="icofont icofont-time"></i>&nbsp;Crear horario</h5>
+                <p class="cfg-sub">
                   Utiliza esta opción para ver y crear los horarios disponibles.
                 </p>
               </div>
-            </div>
-  
-            <div class="col-sm-3 col-md-2 p-1 mb-3">
-              <button type="Button" class="btn btn-primary" (click)="addHorario()">
+              <button type="Button" class="cfg-btn" (click)="addHorario()">
                 <i class="icofont icofont-time"></i>&nbsp;Crear horario
               </button>
             </div>
-            <div>
+            <div class="fe-tabla">
               <table class="table">
                 <thead>
                   <th>Nombre Horario</th>
@@ -70,12 +65,12 @@
                   <tr *ngFor="let item of horarioSeleccionados;let i = index">
                     <td>{{item}}</td>
                     <td>
-                      <div class="row col-sm-12">
-                        <button class="btn w-25 pull-right" (click)="eliminar(i,item)">
-                          <i class="icofont icofont-ui-edit fc-primary"></i>
+                      <div class="fe-acciones">
+                        <button class="fe-icono" (click)="eliminar(i,item)">
+                          <i class="icofont icofont-ui-edit"></i>
                         </button>
-                        <button class="btn w-25 pull-right" (click)="deleter(i,item)">
-                          <i class="icofont icofont-ui-delete fc-danger"></i>
+                        <button class="fe-icono fe-icono--peligro" (click)="deleter(i,item)">
+                          <i class="icofont icofont-ui-delete"></i>
                         </button>
                       </div>
                     </td>
@@ -83,15 +78,13 @@
                 </tbody>
               </table>
             </div>
-          </div>
+          </section>
         </form>
-      </div>
-    </div>
   </div>
   
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss('Cancel click')">Cancelar</button>
-    <button type="button" class="btn btn-primary" (click)="submit()" [disabled]="!form2.valid">
+  <div class="modal-footer fe-pie">
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="activeModal.dismiss('Cancel click')">Cancelar</button>
+    <button type="button" class="cfg-btn" (click)="submit()" [disabled]="!form2.valid">
       <i class="icofont icofont-save"></i>&nbsp; {{ isEditing ? 'Actualizar' : 'Guardar' }}
     </button>
   </div>

@@ -2395,7 +2395,7 @@ button.kpi:hover {
 /* Cada clase de pedido con su color: en una tabla larga, "qué nos piden más"
    se responde mirando, sin contar. */
 .chip--tipo {
-  &[data-tipo='integracion'] { background: #EAF2FE; color: #1D4ED8; }
+  &[data-tipo='integracion'] { background: #E7F1FF; color: #1E6FD9; }
   &[data-tipo='modulo']      { background: $acento-suave; color: $acento; }
   &[data-tipo='reporte']     { background: $exito-suave; color: $exito; }
   &[data-tipo='correccion']  { background: $alerta-suave; color: $alerta; }

@@ -1,58 +1,40 @@
-.form-group {
-    display: flex;
-    flex-direction: column;
-    align-items: right;
-  }
+// Modal de Configuración (D-516): base compartida cfg-* sin página completa.
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
 
-input[type="checkbox"] {
-  width: 25%;
-}
-input[type="checkbox"] {
-    transform: scale(2);
-  }
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    align-items: right;
-  }
+.mo-cabeza { border-bottom: 1px solid #ececf4; padding: 16px 20px; }
+.mo-titulo { margin: 0; font-size: 18px; font-weight: 800; color: #211F3A; letter-spacing: normal; }
+.mo-pie { border-top: 1px solid #f1f0f7; gap: 8px; padding: 12px 20px; }
+.modal-body { padding: 20px; color: #211F3A; }
+.modal-body p, .modal-body label, .modal-body span, .modal-body a { letter-spacing: normal; }
+.mo-texto { color: #8f8bab; font-size: 13px; }
+.mo-cargando { color: #5F3FE0; }
+.mo-estado { color: #8f8bab !important; font-size: 13px !important; font-weight: 600; }
+.mo-estado--ok { color: #1E874B !important; }
+.cfg-form .form-check-label { text-transform: none; font-size: 13.5px; letter-spacing: normal; margin: 0; }
 
-input[type="checkbox"] {
-  width: 25%;
-}
-input[type="checkbox"] {
-    transform: scale(2);
-  }
-  .file-upload-label {
-    cursor: pointer;
-    transition: all 0.3s;
+@media (max-width: 768px) {
+  .modal-body { padding: 16px; }
+  .row.g-4 { --bs-gutter-x: 0.5rem; }
 }
 
-/* Estilos para el toggle switch */
+/* Interruptor Activo */
+.cfg-form .toggle-switch { margin-bottom: 0; }
 .toggle-switch {
   position: relative;
   display: inline-block;
   width: 50px;
   height: 28px;
 }
-
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
 .slider {
   position: absolute;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
+  inset: 0;
+  background-color: #e4e2ef;
   transition: .4s;
   border-radius: 34px;
 }
-
 .slider:before {
   position: absolute;
   content: "";
@@ -60,32 +42,36 @@ input[type="checkbox"] {
   width: 20px;
   left: 4px;
   bottom: 4px;
-  background-color: white;
+  background-color: #fff;
   transition: .4s;
   border-radius: 50%;
 }
+input:checked + .slider { background-color: #5F3FE0; }
+input:checked + .slider:before { transform: translateX(22px); }
+input:focus-visible + .slider { outline: 3px solid #7C5CFF; outline-offset: 2px; }
 
-input:checked + .slider {
-  background-color: #0d6efd;
-}
-
-input:checked + .slider:before {
-  transform: translateX(22px);
-}
-
-/* Estilos para la carga de archivos */
-.file-upload-label {
+/* Carga de archivos */
+.cfg-form .file-upload-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px dashed #d9cffb;
+  border-radius: 11px;
+  background-color: #faf9fe;
+  color: #5b5878;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
   cursor: pointer;
-  transition: all 0.3s;
-  border: 1px dashed #ced4da;
-  background-color: #f8f9fa;
-}
+  transition: background-color .15s ease, border-color .15s ease;
 
-.file-upload-label:hover {
-  background-color: #e9ecef;
-  border-color: #adb5bd;
+  i { color: #5F3FE0; }
+  &:hover { background-color: #efe9ff; border-color: #7C5CFF; }
 }
-
 .file-upload-text {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -93,4 +79,7 @@ input:checked + .slider:before {
   display: inline-block;
   max-width: 80%;
   vertical-align: middle;
+  color: #5b5878 !important;
+  font-size: 13.5px !important;
 }
+.file-upload-info { color: #8f8bab; font-size: 12px; }

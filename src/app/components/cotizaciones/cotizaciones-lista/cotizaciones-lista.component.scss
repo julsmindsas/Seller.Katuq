@@ -1,26 +1,26 @@
 :host {
   // Paleta del diseño "Listado de Cotizaciones"
-  --accent: #6c4ce0;
-  --accent-ink: #533bc4;
-  --accent-bg: #eee9fd;
-  --ink: #2a2e3c;
-  --body: #232733;
-  --muted: #8a90a2;
-  --muted2: #9199ac;
-  --line: #ecedf3;
-  --line2: #f0f1f6;
-  --surface: #f7f8fc;
+  --accent: #5F3FE0;
+  --accent-ink: #4a2fc0;
+  --accent-bg: #efe9ff;
+  --ink: #211F3A;
+  --body: #211F3A;
+  --muted: #8f8bab;
+  --muted2: #8f8bab;
+  --line: #ececf4;
+  --line2: #f1f0f7;
+  --surface: #faf9fe;
 
-  --green: #17994f;
-  --green-bg: #e3f6ec;
-  --blue: #2f6fe0;
-  --blue-bg: #e7f0fd;
+  --green: #1E874B;
+  --green-bg: #E6F7EE;
+  --blue: #1E6FD9;
+  --blue-bg: #E7F1FF;
   --teal: #0e9384;
   --teal-bg: #e1f3f1;
-  --orange: #e0891b;
-  --orange-bg: #fdf1dd;
-  --red: #d6455b;
-  --red-bg: #fdeceb;
+  --orange: #D9820A;
+  --orange-bg: #FFF1DF;
+  --red: #D64545;
+  --red-bg: #FDECEC;
   --grey: #6b7280;
   --grey-bg: #f1f2f5;
 
@@ -33,12 +33,14 @@
   font-feature-settings: "tnum" 1;
 }
 
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
 .cotizaciones-lista {
-  padding: 8px 4px 40px;
-  display: flex;
-  flex-direction: column;
   gap: 18px;
 }
+
+.cotz-head-main { min-width: 0; }
 
 // ===================== Encabezado =====================
 .cotz-head {
@@ -58,7 +60,7 @@
 .cotz-head-icon {
   width: 46px;
   height: 46px;
-  border-radius: 13px;
+  border-radius: 11px;
   background: var(--accent-bg);
   color: var(--accent);
   display: flex;
@@ -138,8 +140,8 @@
   position: relative;
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 18px;
-  box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(30, 20, 80, 0.04);
   padding: 20px 22px;
   overflow: hidden;
   display: flex;
@@ -147,14 +149,8 @@
   justify-content: space-between;
   gap: 12px;
 
-  .kpi-bar {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 5px;
-    background: var(--accent);
-  }
+  // Barra lateral de acento retirada (D-131: sin border-left); el color queda en valor e ícono.
+  .kpi-bar { display: none; }
 
   .kpi-label {
     font-size: 13px;
@@ -181,7 +177,7 @@
   .kpi-icon {
     width: 40px;
     height: 40px;
-    border-radius: 12px;
+    border-radius: 11px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -229,7 +225,7 @@
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 20px;
-  box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04);
+  box-shadow: 0 1px 3px rgba(30, 20, 80, 0.04);
   overflow: hidden;
 }
 
@@ -299,7 +295,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border-radius: 12px;
+  border-radius: 11px;
   padding: 10px 16px;
   font-family: var(--font-body);
   font-weight: 800;
@@ -321,7 +317,7 @@
   background: var(--accent);
   color: #fff;
   border: none;
-  box-shadow: 0 6px 16px rgba(108, 76, 224, 0.28);
+  box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
 
   &:hover { filter: brightness(1.05); }
   &.sm { padding: 8px 14px; font-size: 12.5px; }
@@ -330,7 +326,7 @@
 .icon-btn {
   width: 40px;
   height: 40px;
-  border-radius: 12px;
+  border-radius: 11px;
   background: var(--surface);
   border: 1px solid var(--line);
   display: flex;
@@ -368,7 +364,7 @@
   gap: 10px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 11px;
   padding: 11px 14px;
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
 
@@ -835,7 +831,7 @@
   overflow-y: auto;
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 11px;
   box-shadow: 0 12px 30px rgba(33, 31, 58, 0.12);
   padding: 6px;
 }
@@ -896,7 +892,7 @@
 }
 .indicador {
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
@@ -970,7 +966,7 @@
   gap: 14px;
   padding: 0 20px 18px;
 }
-.grafica { border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; min-width: 0; }
+.grafica { border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px; min-width: 0; }
 .grafica-titulo { margin: 0 0 6px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; color: var(--muted2); }
 .grafica-lienzo { width: 100%; height: 240px; }
 .grafica-lienzo--alta { height: 320px; }

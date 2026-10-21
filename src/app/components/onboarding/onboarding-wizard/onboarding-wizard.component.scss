@@ -582,8 +582,7 @@ input:focus-visible {
   margin-top: 12px;
   padding: 12px 14px;
   border: 1px solid #ddd3fb;
-  border-left: 4px solid var(--kc-accent);
-  border-radius: 10px;
+  border-radius: 11px;
   background: #faf8ff;
 
   span,
@@ -595,8 +594,9 @@ input:focus-visible {
   a:focus-visible { text-decoration: underline; }
 }
 
-.btn-primary { @include kc-btn-primary; }
-.btn-ghost { @include kc-btn-ghost; }
+// Nombres propios: el global `.btn-primary { background: var(--primary-color) !important }` pisaba el acento.
+.ow-btn { @include kc-btn-primary; }
+.ow-btn.ow-btn--sec { @include kc-btn-ghost; box-shadow: none; }
 
 .wizard-footer {
   flex: none;
@@ -620,7 +620,7 @@ input:focus-visible {
   font-weight: 700;
 }
 
-.footer-shell .btn-primary { margin-left: auto; }
+.footer-shell .ow-btn:not(.ow-btn--sec) { margin-left: auto; }
 
 .mobile-header,
 .nav-backdrop { display: none; }
@@ -690,12 +690,12 @@ input:focus-visible {
   .field--full { grid-column: auto; }
   .choice-card { align-items: flex-start; padding: 14px; }
   .choice-icon { width: 40px; height: 40px; border-radius: 12px; }
-  .import-panel .btn-primary { width: 100%; }
-  .result-actions .btn-ghost { width: 100%; justify-content: center; }
+  .import-panel .ow-btn { width: 100%; }
+  .result-actions .ow-btn--sec { width: 100%; justify-content: center; }
   .free-plan-note { align-items: flex-start; flex-direction: column; }
   .footer-shell { gap: 8px; }
-  .footer-shell .btn-primary { flex: 1; padding-inline: 12px; }
-  .footer-shell .btn-ghost { padding-inline: 12px; }
+  .footer-shell .ow-btn:not(.ow-btn--sec) { flex: 1; padding-inline: 12px; }
+  .footer-shell .ow-btn--sec { padding-inline: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

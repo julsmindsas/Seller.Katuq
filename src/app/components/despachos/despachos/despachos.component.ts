@@ -4118,7 +4118,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
         pedidosHtml += `
           <tr>
             <td colspan="6" style="padding:3px 6px;background:#eef2ff;border:1px solid #c7d2fe;font-weight:700;font-size:10px;color:#4338ca;">
-              ${escapeHtml(zona)} <span style="font-weight:400;color:#6366f1;margin-left:8px;">${pedidosZona.length} pedido${pedidosZona.length > 1 ? 's' : ''} &bull; ${formatCurrency(subtotalZona)}</span>
+              ${escapeHtml(zona)} <span style="font-weight:400;color:#5F3FE0;margin-left:8px;">${pedidosZona.length} pedido${pedidosZona.length > 1 ? 's' : ''} &bull; ${formatCurrency(subtotalZona)}</span>
             </td>
           </tr>`;
       }

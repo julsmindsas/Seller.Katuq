@@ -1,12 +1,16 @@
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
 // Tema canónico (openspec/specs/design-system): plano, sin gradientes ni border-left.
-$accent: #5F3FE0;
-$ink: #211F3A;
-$muted: #8f8bab;
-$line: #ececf4;
+// Marco cfg-pagina (D-516).
+$accent: $cfg-accent;
+$ink: $cfg-ink;
+$muted: $cfg-muted;
+$line: $cfg-line;
 
-:host { display: block; }
+:host { display: block; background: $cfg-tint; }
 
-.ca { padding-top: 8px; padding-bottom: 24px; color: $ink; }
+.ca { color: $ink; }
 
 .ca-label {
   font-size: 10.5px;
@@ -77,6 +81,8 @@ $line: #ececf4;
 
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 }
+
+.ca-loading__texto { color: $muted; font-size: 13px; }
 
 .ca-loading {
   display: flex;
@@ -160,5 +166,5 @@ $line: #ececf4;
 
 @media (max-width: 576px) {
   .ca-stats { grid-template-columns: 1fr; }
-  .ca-head__actions { width: 100%; }
+  .ca .cfg-acciones { width: 100%; }
 }

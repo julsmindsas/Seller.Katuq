@@ -1,19 +1,21 @@
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-sm-12 p-2">
-      <div class="card">
+<div class="cfg-pagina">
 
-        <!-- Header -->
-        <div class="rol-header">
-          <div class="rol-header-left">
-            <h2 class="rol-title">{{ 'Roles' | translate }}</h2>
-            <p class="rol-subtitle">{{ 'Administra los roles y permisos de tus usuarios.' | translate }}</p>
-          </div>
-          <button class="btn btn-crear" type="button" (click)="crearRol()">
-            <i class="icofont icofont-plus"></i>
-            {{ 'Crear Rol' | translate }}
-          </button>
-        </div>
+  <!-- Header -->
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Seguridad</span>
+      <h1 class="cfg-titulo">{{ 'Roles' | translate }}</h1>
+      <p class="cfg-sub">{{ 'Administra los roles y permisos de tus usuarios.' | translate }}</p>
+    </div>
+    <div class="cfg-acciones">
+      <button class="cfg-btn" type="button" (click)="crearRol()">
+        <i class="icofont icofont-plus"></i>
+        {{ 'Crear Rol' | translate }}
+      </button>
+    </div>
+  </header>
+
+  <section class="cfg-card">
 
         <!-- Loader -->
         <div class="loader-box" *ngIf="cargando">
@@ -55,7 +57,7 @@
                     {{ 'Editado por' | translate }}
                     <p-sortIcon field="user_edit"></p-sortIcon>
                   </th>
-                  <th style="width: 100px;">{{ 'Acciones' | translate }}</th>
+                  <th class="rol-col-acciones">{{ 'Acciones' | translate }}</th>
                 </tr>
               </ng-template>
 
@@ -96,10 +98,10 @@
               <ng-template pTemplate="emptymessage">
                 <tr>
                   <td colspan="5">
-                    <div class="empty-state">
-                      <i class="icofont icofont-people empty-icon"></i>
-                      <p class="empty-text">{{ 'No hay roles configurados' | translate }}</p>
-                      <p class="empty-hint">Crea un rol para asignar permisos a tus usuarios.</p>
+                    <div class="cfg-vacio">
+                      <i class="icofont icofont-people cfg-vacio__icono"></i>
+                      <p class="cfg-vacio__titulo">{{ 'No hay roles configurados' | translate }}</p>
+                      <p class="cfg-vacio__texto">Crea un rol para asignar permisos a tus usuarios.</p>
                     </div>
                   </td>
                 </tr>
@@ -109,7 +111,5 @@
           </div>
         </div>
 
-      </div>
-    </div>
-  </div>
+  </section>
 </div>

@@ -1,6 +1,6 @@
 /* SCSS */
 :host {
-    --primary-color: #a78bfa;
+    --primary-color: #5F3FE0;
     --success-color: #28a745;
     --warning-color: #ffc107;
     --danger-color: #dc3545;
@@ -180,8 +180,8 @@
 
 /* Variables */
 $primary-color: #5F3FE0;
-$primary-light: rgba(33, 150, 243, 0.12);
-$primary-dark: #1976D2;
+$primary-light: rgba(95, 63, 224, 0.12);
+$primary-dark: #4a2fc0;
 $success-color: #66BB6A;
 $success-light: rgba(102, 187, 106, 0.12);
 $warning-color: #FFA726;
@@ -288,9 +288,8 @@ $transition: all 0.3s ease;
       }
     }
     
+    // Sin border-left de acento (D-131): el estado lo dan el ícono y el valor.
     &.total-items {
-      border-left: 4px solid $primary-color;
-      
       .summary-icon {
         background-color: $primary-light;
         
@@ -305,8 +304,6 @@ $transition: all 0.3s ease;
     }
     
     &.completed-items {
-      border-left: 4px solid $success-color;
-      
       .summary-icon {
         background-color: $success-light;
         
@@ -321,8 +318,6 @@ $transition: all 0.3s ease;
     }
     
     &.in-progress-items {
-      border-left: 4px solid $warning-color;
-      
       .summary-icon {
         background-color: $warning-light;
         
@@ -337,8 +332,6 @@ $transition: all 0.3s ease;
     }
     
     &.pending-items {
-      border-left: 4px solid $danger-color;
-      
       .summary-icon {
         background-color: $danger-light;
         
@@ -740,7 +733,8 @@ $transition: all 0.3s ease;
             }
             
             .timeline-content {
-              border-left: 4px solid $primary-color;
+              background-color: #faf9fe;
+              box-shadow: inset 0 0 0 1px rgba(95, 63, 224, 0.3);
             }
           }
         }

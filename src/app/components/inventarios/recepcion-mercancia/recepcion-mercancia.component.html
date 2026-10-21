@@ -1,105 +1,70 @@
-<div class="container-fluid p-0">
-    <div class="card shadow-sm border-0">
+<div class="cfg-pagina">
+    <!-- Header Moderno Katuq -->
+    <header class="cfg-cabeza">
+        <div class="cfg-cabeza__textos">
+            <span class="cfg-eyebrow">Inventarios</span>
+            <h1 class="cfg-titulo">{{ 'Ajustes de Inventario' | translate }}</h1>
+            <p class="cfg-sub">{{ 'Ingreso y ajuste de productos en bodega' | translate }}</p>
+        </div>
+        <div class="cfg-acciones">
+            <span class="cfg-pill pill-bodega"
+                  *ngIf="productoForm.get('bodegaSeleccionada')?.value">
+                <i class="pi pi-building"></i>
+                {{ productoForm.get('bodegaSeleccionada')?.value?.nombre }}
+            </span>
+            <button pButton type="button"
+                    icon="pi pi-refresh"
+                    class="p-button-rounded p-button-text p-button-lg boton-recargar"
+                    (click)="cargarBodegas()"
+                    [disabled]="cargando"
+                    pTooltip="Actualizar datos"></button>
+        </div>
+    </header>
+
+    <!-- Stats Bar - Solo visible cuando hay productos -->
+    <div class="cfg-stats" *ngIf="productos.length > 0">
+        <div class="cfg-stat stat-card">
+            <span class="cfg-stat__label">{{ 'Productos' | translate }}</span>
+            <span class="cfg-stat__valor">{{ productos.length }}</span>
+            <i class="pi pi-box stat-icono"></i>
+        </div>
+        <div class="cfg-stat stat-card stat-card--ok">
+            <span class="cfg-stat__label">{{ 'Total Unidades' | translate }}</span>
+            <span class="cfg-stat__valor">{{ calcularTotalItems() }}</span>
+            <i class="pi pi-check-circle stat-icono"></i>
+        </div>
+        <div class="cfg-stat stat-card stat-card--info">
+            <span class="cfg-stat__label">{{ 'Tipo Movimiento' | translate }}</span>
+            <span class="cfg-stat__valor stat-texto text-truncate">
+                {{ getTipoMovimientoLabel() }}
+            </span>
+            <i class="pi pi-tag stat-icono"></i>
+        </div>
+        <div class="cfg-stat stat-card stat-card--warn">
+            <span class="cfg-stat__label">{{ 'Bodega Destino' | translate }}</span>
+            <span class="cfg-stat__valor stat-texto text-truncate">
+                {{ productoForm.get('bodegaSeleccionada')?.value?.nombre || '-' }}
+            </span>
+            <i class="pi pi-building stat-icono"></i>
+        </div>
+    </div>
+
+    <section class="cfg-card">
         <!-- Loader -->
         <div class="loader-box" *ngIf="cargando || buscandoProducto || guardandoRecepcion">
             <div class="loader-8"></div>
         </div>
 
-        <!-- Header Moderno Katuq -->
-        <div class="module-header px-4 py-3 border-bottom"
-             style="background: #f8fafc; border-left: 4px solid #5F3FE0;">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="mb-2 mb-md-0">
-                    <h4 class="mb-1 fw-bold text-dark">
-                        <i class="pi pi-download me-2" style="color: #5F3FE0;"></i>
-                        {{ 'Ajustes de Inventario' | translate }}
-                    </h4>
-                    <p class="text-muted small mb-0">
-                        {{ 'Ingreso y ajuste de productos en bodega' | translate }}
-                    </p>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge d-flex align-items-center gap-1 px-3 py-2"
-                          style="background-color: #5F3FE0;"
-                          *ngIf="productoForm.get('bodegaSeleccionada')?.value">
-                        <i class="pi pi-building"></i>
-                        {{ productoForm.get('bodegaSeleccionada')?.value?.nombre }}
-                    </span>
-                    <button pButton type="button"
-                            icon="pi pi-refresh"
-                            class="p-button-rounded p-button-text p-button-lg"
-                            style="color: #5F3FE0;"
-                            (click)="cargarBodegas()"
-                            [disabled]="cargando"
-                            pTooltip="Actualizar datos"></button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Stats Bar - Solo visible cuando hay productos -->
-        <div class="stats-bar px-4 py-3 bg-light border-bottom" *ngIf="productos.length > 0">
-            <div class="row g-3">
-                <div class="col-md-3 col-6">
-                    <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-2" style="border-color: #5F3FE0 !important;">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h3 class="mb-0 fw-bold" style="color: #5F3FE0;">{{ productos.length }}</h3>
-                                <small class="text-muted">{{ 'Productos' | translate }}</small>
-                            </div>
-                            <i class="pi pi-box" style="font-size: 1.5rem; opacity: 0.4; color: #5F3FE0;"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-success border-2">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h3 class="mb-0 fw-bold text-success">{{ calcularTotalItems() }}</h3>
-                                <small class="text-muted">{{ 'Total Unidades' | translate }}</small>
-                            </div>
-                            <i class="pi pi-check-circle text-success" style="font-size: 1.5rem; opacity: 0.4;"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-info border-2">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h3 class="mb-0 fw-bold text-info text-truncate" style="max-width: 120px; font-size: 0.9rem;">
-                                    {{ getTipoMovimientoLabel() }}
-                                </h3>
-                                <small class="text-muted">{{ 'Tipo Movimiento' | translate }}</small>
-                            </div>
-                            <i class="pi pi-tag text-info" style="font-size: 1.5rem; opacity: 0.4;"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-warning border-2">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h3 class="mb-0 fw-bold text-warning text-truncate" style="max-width: 120px; font-size: 0.9rem;">
-                                    {{ productoForm.get('bodegaSeleccionada')?.value?.nombre || '-' }}
-                                </h3>
-                                <small class="text-muted">{{ 'Bodega Destino' | translate }}</small>
-                            </div>
-                            <i class="pi pi-building text-warning" style="font-size: 1.5rem; opacity: 0.4;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Contenido Principal -->
-        <div class="card-body p-4">
+        <div class="recepcion-cuerpo">
 
             <!-- Formulario de Configuración -->
-            <form [formGroup]="productoForm" class="mb-4">
+            <form [formGroup]="productoForm" class="mb-4 cfg-form">
                 <div class="row g-3">
                     <!-- Selector de Bodega -->
                     <div class="col-md-4">
-                        <label class="form-label fw-bold mb-2">
-                            <i class="pi pi-building me-1" style="color: #5F3FE0;"></i>
+                        <label class="form-label mb-2">
+                            <i class="pi pi-building me-1 icono-acento"></i>
                             {{ 'Seleccionar Bodega' | translate }}
                         </label>
                         <p-dropdown [options]="bodegas"
@@ -113,7 +78,7 @@
                                     appendTo="body">
                             <ng-template pTemplate="selectedItem" let-bodega>
                                 <div class="d-flex align-items-center gap-2" *ngIf="bodega">
-                                    <i class="pi pi-building" style="color: #5F3FE0;"></i>
+                                    <i class="pi pi-building icono-acento"></i>
                                     <span>{{ bodega.nombre }}</span>
                                 </div>
                             </ng-template>
@@ -133,8 +98,8 @@
 
                     <!-- Selector de Tipo de Movimiento -->
                     <div class="col-md-4">
-                        <label class="form-label fw-bold mb-2">
-                            <i class="pi pi-tag me-1" style="color: #5F3FE0;"></i>
+                        <label class="form-label mb-2">
+                            <i class="pi pi-tag me-1 icono-acento"></i>
                             {{ 'Tipo de Movimiento' | translate }}
                         </label>
                         <p-dropdown [options]="tiposMovimientoRecepcion"
@@ -160,8 +125,8 @@
 
                     <!-- Observaciones -->
                     <div class="col-md-4">
-                        <label class="form-label fw-bold mb-2">
-                            <i class="pi pi-comment me-1" style="color: #5F3FE0;"></i>
+                        <label class="form-label mb-2">
+                            <i class="pi pi-comment me-1 icono-acento"></i>
                             {{ 'Observaciones' | translate }}
                         </label>
                         <input pInputText type="text"
@@ -173,13 +138,13 @@
             </form>
 
             <!-- Sección de Búsqueda de Productos -->
-            <div class="busqueda-producto-section p-4 border rounded mb-4" style="background: #f8fafc;">
-                <label class="form-label fw-bold mb-3">
-                    <i class="pi pi-search me-2" style="color: #5F3FE0;"></i>
+            <div class="busqueda-producto-section p-4 mb-4">
+                <label class="form-label cfg-label mb-3">
+                    <i class="pi pi-search me-2 icono-acento"></i>
                     {{ 'Buscar y agregar productos' | translate }}
                 </label>
                 <div class="p-inputgroup">
-                    <span class="p-inputgroup-addon" style="background-color: #5F3FE0; color: white;">
+                    <span class="p-inputgroup-addon addon-buscar">
                         <i class="pi pi-search"></i>
                     </span>
                     <p-autoComplete [(ngModel)]="busquedaInput"
@@ -220,7 +185,7 @@
                     </p-autoComplete>
                     <button pButton type="button"
                             icon="pi pi-plus"
-                            class="p-button-success"
+                            class="boton-principal"
                             (click)="buscarProducto()"
                             [disabled]="buscandoProducto || !busquedaInput || busquedaInput.length < 3"
                             [loading]="buscandoProducto"
@@ -289,7 +254,7 @@
                             </td>
                             <!-- Precio -->
                             <td class="text-end">
-                                <span class="fw-bold" style="color: #5F3FE0;">
+                                <span class="fw-bold texto-acento">
                                     {{ item.producto.precio?.precioUnitarioConIva | currency:'COP':'symbol-narrow':'1.0-0' || 'N/A' }}
                                 </span>
                             </td>
@@ -347,10 +312,10 @@
                     <ng-template pTemplate="summary">
                         <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between p-2">
                             <div class="d-flex align-items-center gap-2">
-                                <span class="badge px-3 py-2" style="background-color: #5F3FE0;">
+                                <span class="cfg-pill">
                                     {{ productos.length }} {{ 'productos' | translate }}
                                 </span>
-                                <span class="badge bg-success px-3 py-2" *ngIf="productos.length > 0">
+                                <span class="cfg-pill cfg-pill--ok" *ngIf="productos.length > 0">
                                     {{ calcularTotalItems() }} {{ 'unidades' | translate }}
                                 </span>
                             </div>
@@ -360,12 +325,12 @@
             </div>
 
             <!-- Botones de Acción -->
-            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-4 p-3 bg-light border rounded gap-3">
+            <div class="recepcion-pie d-flex flex-column flex-sm-row justify-content-between align-items-center mt-4 p-3 gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <span class="badge fs-6 px-3 py-2" style="background-color: #5F3FE0;">
+                    <span class="cfg-pill pill-grande">
                         {{ productos.length }} {{ 'productos' | translate }}
                     </span>
-                    <span class="badge bg-success fs-6 px-3 py-2">
+                    <span class="cfg-pill cfg-pill--ok pill-grande">
                         {{ calcularTotalItems() }} {{ 'unidades' | translate }}
                     </span>
                 </div>
@@ -373,14 +338,14 @@
                     <button pButton type="button"
                             [label]="'Limpiar lista' | translate"
                             icon="pi pi-trash"
-                            class="p-button-outlined p-button-secondary"
+                            class="p-button-outlined p-button-secondary boton-secundario"
                             (click)="limpiarLista()"
                             [disabled]="productos.length === 0">
                     </button>
                     <button pButton type="button"
                             [label]="guardandoRecepcion ? ('Guardando...' | translate) : ('Guardar Recepción' | translate)"
                             icon="pi pi-check"
-                            class="p-button-success"
+                            class="boton-principal"
                             [loading]="guardandoRecepcion"
                             [disabled]="productos.length === 0 || productoForm.invalid || guardandoRecepcion"
                             (click)="confirmarGuardado()">
@@ -388,7 +353,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 </div>
 
 <!-- Dialog de Confirmación -->

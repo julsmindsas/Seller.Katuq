@@ -1,78 +1,50 @@
+// Formulario de Seguridad (D-400 / D-516): base compartida cfg-*.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+$rl-accent: #5F3FE0;
+$rl-accent-2: #7C5CFF;
+$rl-accent-soft: #efe9ff;
+$rl-ink: #211F3A;
+$rl-body: #5b5878;
+$rl-muted: #8f8bab;
+$rl-line: #ececf4;
+$rl-line-soft: #f1f0f7;
+$rl-tint: #faf9fe;
+$rl-err: #D64545;
+
 .section-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #8b5cf6;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: $rl-muted;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: .6px;
   margin-bottom: 12px;
-  padding-bottom: 6px;
-  border-bottom: 2px solid #f0ecff;
+  padding-bottom: 8px;
+  border-bottom: 1px solid $rl-line-soft;
 }
 
-.form-group {
-  margin-bottom: 16px;
+.form-group { margin-bottom: 16px; }
 
-  label {
-    font-weight: 500;
-    font-size: 13px;
-    color: #495057;
-    margin-bottom: 4px;
-  }
-}
+.cfg-form .form-control.is-invalid { border-color: $rl-err; }
 
-.form-control {
-  border-radius: 6px;
-  border: 1px solid #dee2e6;
-  transition: border-color 0.2s;
-
-  &:focus {
-    border-color: #a78bfa;
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
-  }
-
-  &.is-invalid {
-    border-color: #d12b38;
-  }
-}
+.rl-tenue { color: $rl-muted !important; font-size: 12px; letter-spacing: normal; }
+.rl-obligatorio { color: $rl-err !important; }
+.rl-btn-chico { min-height: 34px; padding: 0 12px; font-size: 12.5px; }
 
 .menu-item {
   display: flex;
   align-items: center;
   padding: 2px 0;
   font-size: 13px;
+  color: $rl-ink;
 
-  &.menu-parent {
-    color: #8b5cf6;
-  }
+  span { color: inherit !important; font-size: 13px !important; }
+
+  &.menu-parent { color: $rl-accent; }
 }
 
-.btn-primary {
-  background-color: #8b5cf6;
-  border-color: #8b5cf6;
-
-  &:hover {
-    background-color: #7c3aed;
-    border-color: #7c3aed;
-  }
-
-  &:disabled {
-    background-color: #c4b5fd;
-    border-color: #c4b5fd;
-  }
-}
-
-.btn-outline-secondary {
-  border-color: #dee2e6;
-  color: #6c757d;
-
-  &:hover {
-    background-color: #f8f9fa;
-    border-color: #adb5bd;
-    color: #495057;
-  }
-}
-
-// PrimeNG PickList overrides
+// PrimeNG PickList: ocultar controles (comportamiento existente, no se cambia su alcance)
 ::ng-deep .p-picklist-buttons .p-button {
   display: none;
 }
@@ -82,18 +54,22 @@
   display: inline-flex;
 }
 
-::ng-deep .p-picklist {
+// PrimeNG PickList: tema
+:host ::ng-deep .p-picklist {
   .p-picklist-header {
-    background: #f8f6ff;
-    color: #495057;
-    font-weight: 600;
-    font-size: 13px;
-    border-bottom: 2px solid #ede9fe;
+    background: $rl-tint;
+    color: $rl-muted;
+    font-weight: 800;
+    font-size: 10.5px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    border-color: $rl-line;
+    border-radius: 11px 11px 0 0;
   }
 
   .p-picklist-list {
-    border: 1px solid #dee2e6;
-    border-radius: 0 0 6px 6px;
+    border: 1px solid $rl-line;
+    border-radius: 0 0 11px 11px;
   }
 
   .p-picklist-item {
@@ -101,37 +77,46 @@
     font-size: 13px;
 
     &.p-highlight {
-      background: #ede9fe;
-      color: #7c3aed;
+      background: $rl-accent-soft;
+      color: $rl-accent;
     }
   }
 
+  .p-picklist-buttons .p-button {
+    background: $rl-accent;
+    border-color: $rl-accent;
+    border-radius: 11px;
+
+    &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
+  }
+
   .p-picklist-filter-container .p-inputtext {
-    border-radius: 6px;
+    border-radius: 10px;
     font-size: 13px;
+    background: #f5f4fa;
+    border: 1px solid #e9e7f3;
+
+    &:enabled:focus { border-color: $rl-accent-2; box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
   }
 }
 
-.gap-2 {
-  gap: 8px;
-}
-
-// ===== Config Banner (clickable, in-form) =====
+// ===== Banner de configuraciones (clic) =====
 .config-banner {
   display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   align-items: center;
   justify-content: space-between;
   padding: 14px 18px;
-  border: 1px solid #ede9fe;
-  border-left: 3px solid #8b5cf6;
-  border-radius: 8px;
-  background: #faf8ff;
+  border: 1px solid #ddd3fb;
+  border-radius: 11px;
+  background: $rl-tint;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background .15s ease, border-color .15s ease;
 
   &:hover {
-    background: #f3efff;
-    border-color: #c4b5fd;
+    background: $rl-accent-soft;
+    border-color: $rl-accent-2;
   }
 }
 
@@ -142,21 +127,21 @@
 
   > i {
     font-size: 22px;
-    color: #8b5cf6;
+    color: $rl-accent;
   }
 }
 
 .config-banner-title {
   display: block;
-  font-weight: 600;
-  font-size: 14px;
-  color: #374151;
+  font-weight: 700;
+  font-size: 14px !important;
+  color: $rl-ink !important;
 }
 
 .config-banner-desc {
   display: block;
-  font-size: 12px;
-  color: #9ca3af;
+  font-size: 12px !important;
+  color: $rl-muted !important;
 }
 
 .config-banner-right {
@@ -165,45 +150,52 @@
   gap: 10px;
 
   > i {
-    color: #9ca3af;
+    color: $rl-muted;
     font-size: 14px;
   }
 }
 
 .config-badge {
   display: inline-block;
-  padding: 2px 10px;
-  border-radius: 12px;
-  background: #ede9fe;
-  color: #7c3aed;
-  font-size: 12px;
-  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: $rl-accent-soft;
+  color: $rl-accent !important;
+  font-size: 10.5px !important;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
 }
 
-// ===== Config Modal =====
-::ng-deep .config-modal-header {
-  background: #faf8ff;
-  border-bottom: 2px solid #ede9fe;
+// ===== Modal de configuraciones =====
+.config-modal-header {
+  background: #fff;
+  border-bottom: 1px solid $rl-line;
+  padding: 16px 20px;
 
   .modal-title {
-    color: #8b5cf6;
-    font-weight: 600;
-    font-size: 16px;
+    color: $rl-ink;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: normal;
 
-    i {
-      font-size: 18px;
-    }
+    i { font-size: 18px; color: $rl-accent; }
   }
 }
 
+.rl-cerrar { background: transparent; border: 0; padding: 0 4px; line-height: 1; cursor: pointer; }
+.rl-cerrar__x { color: $rl-muted !important; font-size: 24px !important; }
+.rl-cerrar:hover .rl-cerrar__x { color: $rl-accent !important; }
+.rl-modal-pie { border-top: 1px solid $rl-line-soft; padding: 12px 20px; }
+
 .config-section {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid $rl-line;
+  border-radius: 11px;
   margin-bottom: 12px;
   overflow: hidden;
 
   &.config-section-disabled {
-    opacity: 0.5;
+    opacity: .5;
     pointer-events: none;
   }
 }
@@ -213,15 +205,17 @@
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
-  font-weight: 600;
+  background: $rl-tint;
+  border-bottom: 1px solid $rl-line-soft;
+  font-weight: 700;
   font-size: 14px;
-  color: #374151;
+  color: $rl-ink;
+
+  > span { color: $rl-ink !important; font-size: 14px !important; }
 
   > i {
     font-size: 16px;
-    color: #8b5cf6;
+    color: $rl-accent;
   }
 }
 
@@ -229,176 +223,178 @@
   padding: 16px;
 }
 
-.coming-soon-badge {
+.config-section-header > .coming-soon-badge {
   margin-left: auto;
-  padding: 2px 8px;
-  border-radius: 10px;
-  background: #f3f4f6;
-  color: #9ca3af;
-  font-size: 11px;
-  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #eef0f3;
+  color: #5A6B78 !important;
+  font-size: 10.5px !important;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
 }
 
 // ─── Banner "Crear desde plantilla" ──────────────────────────────────────
 .template-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: $rl-accent-soft;
+  border: 1px solid #ddd3fb;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, transform .15s ease;
+
+  &:hover {
+    border-color: $rl-accent-2;
+    transform: translateY(-1px);
+  }
+
+  .template-banner-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 11px;
+    background: #fff;
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 16px 20px;
-    background: #f0f7ff;
-    border: 1px solid #c7d8f7;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.15s;
+    justify-content: center;
+    color: $rl-accent;
+    flex-shrink: 0;
 
-    &:hover {
-        background: #e7f1ff;
-        border-color: #80bdff;
-        transform: translateY(-1px);
+    i { font-size: 22px; }
+  }
+
+  .template-banner-text {
+    flex: 1 1 220px;
+    min-width: 0;
+
+    strong {
+      font-size: 14px;
+      color: $rl-ink;
     }
 
-    .template-banner-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        background: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #7c4dff;
-        flex-shrink: 0;
-        box-shadow: 0 2px 6px rgba(124, 77, 255, 0.15);
-
-        i {
-            font-size: 22px;
-        }
+    small {
+      font-size: 12px;
+      margin-top: 2px;
     }
+  }
 
-    .template-banner-text {
-        flex: 1;
-        strong {
-            font-size: 14px;
-            color: #1f2937;
-        }
-        small {
-            font-size: 12px;
-            margin-top: 2px;
-        }
-    }
-
-    .template-banner-action {
-        flex-shrink: 0;
-    }
+  .template-banner-action { flex-shrink: 0; }
 }
 
 // ─── Modal de selector de plantillas ─────────────────────────────────────
 .template-modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.55);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1060;
-    padding: 20px;
+  position: fixed;
+  inset: 0;
+  background: rgba(33, 31, 58, .55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1060;
+  padding: 16px;
 }
 
 .template-modal-box {
-    background: #fff;
-    border-radius: 12px;
-    width: 100%;
-    max-width: 880px;
-    max-height: 90vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  background: #fff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 880px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px -20px rgba(95, 63, 224, .35);
 }
 
 .template-modal-header {
-    padding: 18px 22px;
-    border-bottom: 1px solid #e9ecef;
-    position: relative;
+  padding: 18px 48px 18px 22px;
+  border-bottom: 1px solid $rl-line;
+  position: relative;
 
-    h5 {
-        font-weight: 600;
-        color: #1f2937;
-    }
+  h5 {
+    font-weight: 800;
+    color: $rl-ink;
 
-    small {
-        font-size: 12px;
-    }
+    i { color: $rl-accent; }
+  }
 
-    .btn-close {
-        position: absolute;
-        top: 18px;
-        right: 18px;
-    }
+  small { font-size: 12px; }
+
+  .btn-close {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+  }
 }
 
 .template-modal-body {
-    padding: 18px 22px;
-    overflow-y: auto;
-    flex: 1;
+  padding: 18px 22px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .template-modal-footer {
-    padding: 14px 22px;
-    border-top: 1px solid #e9ecef;
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
+  padding: 14px 22px;
+  border-top: 1px solid $rl-line-soft;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .template-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
 }
 
+// El color de cada plantilla llega por [style.border-left-color]; el borde queda de 1px
+// (sin acento grueso a la izquierda, D-131).
 .template-card {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid $rl-line;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, transform .15s ease;
+  background: #fff;
+
+  &:hover {
+    border-color: #ddd3fb;
+    background: $rl-tint;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -14px rgba(95, 63, 224, .35);
+  }
+
+  .template-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
     display: flex;
-    gap: 12px;
-    padding: 14px;
-    border: 1px solid #e9ecef;
-    border-left: 4px solid #ccc;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.15s;
-    background: #fff;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+  }
 
-    &:hover {
-        border-color: #80bdff;
-        background: #f8fbff;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  .template-card-body {
+    flex: 1;
+    min-width: 0;
+
+    strong {
+      display: block;
+      font-size: 14px;
+      color: $rl-ink;
+      margin-bottom: 4px;
     }
 
-    .template-card-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        font-size: 18px;
+    p {
+      font-size: 12px;
+      line-height: 1.4;
+      letter-spacing: normal;
     }
-
-    .template-card-body {
-        flex: 1;
-        min-width: 0;
-
-        strong {
-            display: block;
-            font-size: 14px;
-            color: #1f2937;
-            margin-bottom: 4px;
-        }
-
-        p {
-            font-size: 12px;
-            line-height: 1.4;
-        }
-    }
+  }
 }

@@ -1,32 +1,32 @@
 // ==============================================
 // KATUQ CLIENTES MODULE - SHARED VARIABLES
 // ==============================================
-// Clean, professional design system without gradients
-// Following Katuq's established patterns
+// Alineado al canon Katuq (openspec/specs/design-system/spec.md, D-131/D-516):
+// acento #5F3FE0, tinta #211F3A, muted #8f8bab, línea #ececf4, radios 16/11/20.
 
-// Color Palette - Katuq Purple Light System
-$clientes-primary: #6c4ce0; // Acento Katuq (Cotizaciones)
-$clientes-primary-dark: #533bc4; // Acento oscuro
-$clientes-primary-light: #8c6bff; // Acento claro
-$clientes-secondary: #6c4ce0; // Acento
-$clientes-secondary-dark: #533bc4; // Acento oscuro
-$clientes-tertiary: #eee9fd; // Acento wash
-$clientes-success: #27AE60;
-$clientes-success-dark: #209050;
-$clientes-warning: #D35400;
-$clientes-warning-dark: #B34700;
-$clientes-error: #d12b38;
-$clientes-error-dark: #B3242F;
+// Color Palette - canon Katuq
+$clientes-primary: #5F3FE0; // Acento canónico (D-131)
+$clientes-primary-dark: #4a2fc0; // Acento oscuro
+$clientes-primary-light: #7C5CFF; // Acento claro
+$clientes-secondary: #5F3FE0; // Acento
+$clientes-secondary-dark: #4a2fc0; // Acento oscuro
+$clientes-tertiary: #efe9ff; // Acento wash
+$clientes-success: #1E874B;
+$clientes-success-dark: #176b3b;
+$clientes-warning: #D9820A;
+$clientes-warning-dark: #b06a08;
+$clientes-error: #D64545;
+$clientes-error-dark: #b83636;
 
 // Neutral Colors
-$clientes-dark: #2F2F3B;
-$clientes-dark-light: #495057;
-$clientes-grey: #6c757d;
-$clientes-grey-light: #8B92A0;
-$clientes-border: #E3E6EA;
-$clientes-border-light: #F0F2F5;
-$clientes-bg-light: #F8F9FA;
-$clientes-bg-lighter: #FCFCFD;
+$clientes-dark: #211F3A;
+$clientes-dark-light: #5b5878;
+$clientes-grey: #8f8bab;
+$clientes-grey-light: #a9a6c2;
+$clientes-border: #e4e2ef;
+$clientes-border-light: #ececf4;
+$clientes-bg-light: #f5f4fa;
+$clientes-bg-lighter: #faf9fe;
 $clientes-white: #FFFFFF;
 
 // Typography
@@ -50,18 +50,18 @@ $clientes-spacing-xl: 2rem;
 $clientes-spacing-xxl: 3rem;
 
 // Border and Radius
-$clientes-border-radius: 6px;
-$clientes-border-radius-sm: 4px;
-$clientes-border-radius-lg: 8px;
-$clientes-border-radius-pill: 50px;
+$clientes-border-radius: 11px;
+$clientes-border-radius-sm: 10px;
+$clientes-border-radius-lg: 16px;
+$clientes-border-radius-pill: 20px;
 $clientes-border-width: 1px;
 
 // Shadows - Subtle and professional
-$clientes-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
-$clientes-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
-$clientes-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.1);
-$clientes-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.12);
-$clientes-shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
+$clientes-shadow-sm: 0 1px 3px rgba(30, 20, 80, 0.04);
+$clientes-shadow-md: 0 6px 16px -8px rgba(95, 63, 224, 0.35);
+$clientes-shadow-lg: 0 10px 24px -12px rgba(95, 63, 224, 0.3);
+$clientes-shadow-hover: 0 10px 24px -12px rgba(95, 63, 224, 0.3);
+$clientes-shadow-card: 0 1px 3px rgba(30, 20, 80, 0.04);
 
 // Transitions
 $clientes-transition-fast: all 0.15s ease;

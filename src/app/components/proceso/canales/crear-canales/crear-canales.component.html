@@ -1,14 +1,14 @@
-<div class="modal-header">
-  <h5 class="modal-title">{{ mostrarCrear ? 'Crear Canal de Venta' : 'Editar Canal de Venta' }}</h5>
+<div class="modal-header mo-cabeza">
+  <h5 class="modal-title mo-titulo">{{ mostrarCrear ? 'Crear Canal de Venta' : 'Editar Canal de Venta' }}</h5>
   <button type="button" class="btn-close" (click)="activeModal.dismiss()"></button>
 </div>
 
-<div class="modal-body">
+<div class="modal-body cfg-form">
   <div *ngIf="loading" class="text-center my-3">
-    <div class="spinner-border text-primary" role="status">
+    <div class="spinner-border mo-cargando" role="status">
       <span class="visually-hidden">Cargando...</span>
     </div>
-    <p class="mt-2">Cargando información...</p>
+    <p class="mt-2 mo-texto">Cargando información...</p>
   </div>
 
   <form [formGroup]="canalForm" *ngIf="!loading">
@@ -39,20 +39,20 @@
       <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" id="activo" formControlName="activo">
         <label class="form-check-label" for="activo">
-          <span *ngIf="f['activo'].value" class="text-success">Activo</span>
-          <span *ngIf="!f['activo'].value" class="text-secondary">Inactivo</span>
+          <span *ngIf="f['activo'].value" class="mo-estado mo-estado--ok">Activo</span>
+          <span *ngIf="!f['activo'].value" class="mo-estado">Inactivo</span>
         </label>
       </div>
     </div>
   </form>
 </div>
 
-<div class="modal-footer">
-  <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">Cancelar</button>
-  <button type="button" class="btn btn-primary" 
+<div class="modal-footer mo-pie">
+  <button type="button" class="cfg-btn cfg-btn--sec" (click)="activeModal.dismiss()">Cancelar</button>
+  <button type="button" class="cfg-btn" 
           [disabled]="canalForm.invalid || loading" 
           (click)="mostrarCrear ? guardar() : editar()">
-    <span *ngIf="loading" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+    <span *ngIf="loading" class="spinner-border spinner-border-sm me-1 mo-girando" role="status" aria-hidden="true"></span>
     {{ mostrarCrear ? 'Guardar' : 'Actualizar' }}
   </button>
 </div> 

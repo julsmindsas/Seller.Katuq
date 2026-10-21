@@ -3,16 +3,16 @@
 <div class="au-page">
   <div class="au-wrap">
 
-    <header class="au-head">
-      <div class="au-head-txt">
+    <header class="cfg-cabeza">
+      <div class="cfg-cabeza__textos">
         <button type="button" class="au-link au-volver" (click)="goBack()">← Automatizaciones</button>
-        <span class="au-eyebrow">Historial</span>
-        <h1 class="au-title">{{ flow?.name || 'Historial' }}</h1>
-        <p class="au-sub">Las últimas veces que corrió esta automatización y qué pasó en cada una.</p>
+        <span class="cfg-eyebrow">Integraciones</span>
+        <h1 class="cfg-titulo">{{ flow?.name || 'Historial' }}</h1>
+        <p class="cfg-sub">Las últimas veces que corrió esta automatización y qué pasó en cada una.</p>
       </div>
-      <div class="au-head-actions">
-        <button type="button" class="au-btn-ghost" (click)="loadRuns()" [disabled]="loading">Actualizar</button>
-        <button type="button" class="au-btn-ghost" (click)="goToEditor()">Editar automatización</button>
+      <div class="cfg-acciones">
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="loadRuns()" [disabled]="loading">Actualizar</button>
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="goToEditor()">Editar automatización</button>
       </div>
     </header>
 

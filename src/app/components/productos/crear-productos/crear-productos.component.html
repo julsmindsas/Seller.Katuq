@@ -1,13 +1,8 @@
-<!--<app-breadcrumb [title]="getPageTitle()" [items]="['Maestros/Productos']"
-	[active_item]="getBreadcrumbActiveItem()">
-</app-breadcrumb>-->
-<div class="container-fluid">
-	<div class="row">
-		<div class="col-sm-12">
-			<div class="card">
+<div class="maestro-pagina">
+			<section class="maestro-panel">
 				<!-- <form cForm [formGroup]="formGeneral"> -->
 
-				<div class="card-body mp-body" [ngClass]="{'dropshipping-config-mode': isDropshippingConfigMode}">
+				<div class="mp-body" [ngClass]="{'dropshipping-config-mode': isDropshippingConfigMode}">
 					<!-- Encabezado maestro de productos -->
 					<div class="mp-header">
 						<div class="mp-header__left">
@@ -25,7 +20,7 @@
 								<input #fotoFicha type="file" accept="image/*" class="d-none"
 									aria-label="Foto del producto para llenar el formulario"
 									(change)="alElegirFotoFicha($event)" />
-								<button type="button" class="btn mp-btn mp-btn--ghost"
+								<button type="button" class="cfg-btn cfg-btn--sec"
 									[disabled]="fichaCargando || saving || uploadingImages || procesandoImagenes"
 									[attr.aria-busy]="fichaCargando" (click)="fotoFicha.click()"
 									title="Suba una foto y se llena el formulario. Usted revisa y corrige antes de guardar.">
@@ -33,15 +28,15 @@
 									{{ fichaCargando ? 'Leyendo la foto...' : 'Llenar con una foto' }}
 								</button>
 							</ng-container>
-							<button class="btn mp-btn mp-btn--ghost" (click)="viewProduct()">
+							<button class="cfg-btn cfg-btn--sec" (click)="viewProduct()">
 								<i class="pi pi-eye"></i> Vista Previa
 							</button>
-							<button *ngIf="mostrarCrear" class="btn mp-btn mp-btn--primary" (click)="guardarProductos()"
+							<button *ngIf="mostrarCrear" class="cfg-btn" (click)="guardarProductos()"
 								[disabled]="saving || uploadingImages || procesandoImagenes || fichaCargando">
 								<i class="pi" [ngClass]="(saving || uploadingImages || procesandoImagenes) ? 'pi-spin pi-spinner' : 'pi-check'"></i>
 								Guardar
 							</button>
-							<button *ngIf="!mostrarCrear" class="btn mp-btn mp-btn--primary" (click)="editarProducto()"
+							<button *ngIf="!mostrarCrear" class="cfg-btn" (click)="editarProducto()"
 								[disabled]="saving || uploadingImages || procesandoImagenes">
 								<i class="pi" [ngClass]="(saving || uploadingImages || procesandoImagenes) ? 'pi-spin pi-spinner' : 'pi-check'"></i>
 								Editar producto
@@ -337,7 +332,7 @@
 											<div class="card" style="width: 10rem;">
 												<img src="{{img.urls | imagenProducto}}" class="card-img-top" alt="Image"
 													style="width: 100%; height: auto;">
-												<div class="text-center" style="font-size:0.7rem; color:#666; padding:2px;">Guardada</div>
+												<div class="text-center maestro-nota">Guardada</div>
 												<button class="btn btn-danger btn-sm" (click)="deleteImg(img?.path,i)">
 													Eliminar
 												</button>
@@ -349,7 +344,7 @@
 											<div class="card" style="width: 10rem; border: 2px dashed #f0ad4e;">
 												<img [src]="img.preview" class="card-img-top" alt="Preview"
 													style="width: 100%; height: auto;">
-												<div class="text-center" style="font-size:0.7rem; color:#f0ad4e; padding:2px;">
+												<div class="text-center maestro-nota maestro-nota--aviso">
 													Pendiente ({{img.tipo}})
 												</div>
 												<button class="btn btn-warning btn-sm" (click)="removePendingImage(i)">
@@ -1229,7 +1224,6 @@
 
 												<ng-select [items]="ocasiones" bindLabel="name" bindValue="id"
 													placeholder="Seleccione una ocasión"
-													style="font-family: roboto;color: #ffffff !important;"
 													[multiple]="true" formControlName="ocasion" [closeOnSelect]="false">
 													<!-- Ticket 1236: marcar o quitar todas las ocasiones de una vez -->
 													<ng-template ng-header-tmp>
@@ -1267,7 +1261,6 @@
 											<div class="col-sm-6">
 												<ng-select [items]="generos" bindLabel="name" bindValue="id"
 													placeholder="Seleccione un genero"
-													style="font-family: roboto;color: #ffffff !important;"
 													[multiple]="true" formControlName="genero" [closeOnSelect]="false">
 												</ng-select>
 												<div *ngIf="procesoComercial.controls['genero'].invalid && procesoComercial.controls['genero'].touched"
@@ -1381,7 +1374,6 @@
 											</div>
 											<div class="col-sm-6">
 												<ng-select [items]="formasPago" bindLabel="nombre" bindValue="id"
-													style="font-family: roboto;color: #ffffff !important;"
 													[multiple]="true" formControlName="pago" [closeOnSelect]="false">
 
 												</ng-select>
@@ -1444,7 +1436,7 @@
 																	*ngIf="node.data.tipoImagen != 'adicion'"
 																	[ngStyle]="{'width': '100%'}"
 																	[(ngModel)]="node.data.titulo"
-																	style="border-color: black;">
+																	class="maestro-celda">
 
 																<ng-select *ngIf="node.data.tipoImagen == 'adicion'"
 																	[items]="adicionesPreferencias" bindLabel="titulo"
@@ -1465,7 +1457,7 @@
 																<input pInputText type="text"
 																	[ngStyle]="{'width': '100%'}"
 																	[(ngModel)]="node.data.subtitulo"
-																	style="border-color: black;">
+																	class="maestro-celda">
 
 															</ng-template>
 															<ng-template pTemplate="output">{{node.data.subtitulo}}
@@ -1494,7 +1486,7 @@
 																<input pInputFile type="file"
 																	[ngStyle]="{'width': '100%'}"
 																	(change)="onFileSelectedByNode($event,node)"
-																	style="border-color: black;">
+																	class="maestro-celda">
 															</ng-template>
 															<ng-template pTemplate="output"><img
 																	*ngIf="node.data.imagen" [src]="node.data.imagen"
@@ -1510,7 +1502,7 @@
 																	[(ngModel)]="node.data.valorUnitarioSinIva"
 																	(ngModelChange)="onValorUnitarioSinIvaChanged(node, $event)"
 																	[ngStyle]="{'width': '100%'}"
-																	style="border-color: black;">
+																	class="maestro-celda">
 															</ng-template>
 															<ng-template pTemplate="output">
 																{{node.data.valorUnitarioSinIva |
@@ -1686,7 +1678,7 @@
 										<!-- Selector tradicional -->
 										<ng-container *ngIf="!usarDaneCiudades">
 											<ng-select [items]="empresaActual?.ciudadess?.ciudadesOrigen"
-												style="font-family: roboto;color: #ffffff !important;" [multiple]="true"
+												[multiple]="true"
 												formControlName="ciudadesOrigen" [closeOnSelect]="false">
 											</ng-select>
 										</ng-container>
@@ -1741,7 +1733,7 @@
 										<!-- Selector tradicional -->
 										<ng-container *ngIf="!usarDaneCiudades">
 											<ng-select [items]="empresaActual?.ciudadess?.ciudadesEntrega"
-												style="font-family: roboto;color: #ffffff !important;" [multiple]="true"
+												[multiple]="true"
 												formControlName="ciudadesEntrega" [closeOnSelect]="false">
 											</ng-select>
 										</ng-container>
@@ -1801,7 +1793,7 @@
 											</ng-template>
 											<ng-template ngbPanelContent>
 												<div class="row">
-													<div class="col-sm-12" style="color: black;">
+													<div class="col-sm-12 maestro-tinta">
 
 														<div class="row">
 															<div class="col-sm-4">
@@ -1945,7 +1937,7 @@
 											</ng-template>
 											<ng-template ngbPanelContent>
 												<div class="row">
-													<div class="col-sm-12" style="color: black;">
+													<div class="col-sm-12 maestro-tinta">
 
 														<div class="row">
 															<div class="col-sm-4">
@@ -2129,9 +2121,7 @@
 
 				</div>
 				<!-- </form> -->
-			</div>
-		</div>
-	</div>
+			</section>
 </div>
 
 <ng-template #NuevoProcesoModal let-modal>

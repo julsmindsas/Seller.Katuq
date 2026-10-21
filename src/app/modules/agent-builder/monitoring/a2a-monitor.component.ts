@@ -265,7 +265,7 @@ export class A2aMonitorComponent implements OnInit, OnDestroy {
   getDepartmentColor(department: string): string {
     switch (department) {
       case 'sales':
-        return '#3b82f6'; // blue
+        return '#1E6FD9'; // info
       case 'inventory':
         return '#10b981'; // green
       case 'logistics':

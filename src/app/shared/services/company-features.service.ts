@@ -60,6 +60,10 @@ export const COMPANY_FEATURE_FLAGS = [
   // Pago a cuotas en la tienda en línea con Addi y Sistecrédito (D-517, ticket 1233): cada comercio
   // con su convenio y sus credenciales. Dueño: Daniel. Se retira el 2027-04-30.
   'storeInstallmentPayments',
+  // Un envío, una clave (D-499 fase 0, FE-03). Dueño: Daniel. Se retira el 2027-03-31.
+  'invoiceIdempotency',
+  // Bandeja única de facturación (D-499 fase 1, FE-02). Dueño: Daniel. Se retira el 2027-03-31.
+  'invoicingTray',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

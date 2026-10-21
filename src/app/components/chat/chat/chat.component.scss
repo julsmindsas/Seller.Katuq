@@ -2,36 +2,37 @@
 @import '../../../../assets/scss/utils/variables';
 
 /* Variables de Chat optimizadas con valores de Katuq */
-$chat-primary: $primary-color; // #459BD1
-$chat-primary-light: $primary-light-color;
-$chat-primary-dark: darken($primary-color, 10%);
-$chat-secondary: $secondary-color; // #4555D1
+// Tema canónico Katuq (D-131): acento #5F3FE0, tinta #211F3A, superficies lila.
+$chat-primary: #5F3FE0;
+$chat-primary-light: #efe9ff;
+$chat-primary-dark: #4a2fc0;
+$chat-secondary: #5F3FE0;
 
 // Colores de fondo
-$chat-bg-light: $body-color; // #f8f8f8
-$chat-bg-medium-light: $light-gray; // #ecf3fa
-$chat-bg-dark: $dark-body-background; // #1d1e26
-$chat-bg-medium-dark: $dark-card-background; // #262932
+$chat-bg-light: #faf9fe;
+$chat-bg-medium-light: #f3f1fb;
+$chat-bg-dark: #1a1830; // modo oscuro con tinte lila
+$chat-bg-medium-dark: #221f3a;
 
 // Texto
-$chat-text-light: $theme-body-font-color; // #2b2b2b
-$chat-text-secondary-light: $dark-gray; // #898989
+$chat-text-light: #211F3A;
+$chat-text-secondary-light: #8f8bab;
 $chat-text-dark: $white; // #fff
 $chat-text-secondary-dark: $dark-small-font-color; // #98a6ad
 
 // Burbujas de mensajes
 $assistant-bubble-light: $white;
-$assistant-bubble-dark: $dark-card-inbox; // #323846
+$assistant-bubble-dark: #2a2745;
 $assistant-text-light: $chat-text-light;
 $assistant-text-dark: $chat-text-dark;
-$user-bubble-gradient: $secondary-color;
+$user-bubble-gradient: $chat-primary; // plano
 $user-text-light: $white;
 $user-text-dark: $white;
 
 // Input
 $chat-input-bg-light: $white;
-$chat-input-bg-dark: $dark-card-inbox;
-$chat-border-light: $light-gray;
+$chat-input-bg-dark: #2a2745;
+$chat-border-light: #ececf4;
 $chat-border-dark: $dark-border-color;
 
 // Espaciados
@@ -63,8 +64,8 @@ $font-size-tiny: 11px;
   background-color: $chat-bg-light;
   color: $chat-text-light;
   border-radius: 16px;
-  border: none;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid $chat-border-light;
+  box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
   overflow: hidden;
   position: relative;
   font-family: $font-family-chat;
@@ -73,8 +74,39 @@ $font-size-tiny: 11px;
   max-width: 800px;
   margin: 0 auto;
 
-  .module-header {
+  .chat-cabeza {
     flex-shrink: 0;
+    border-color: $chat-border-light !important;
+  }
+
+  p, span, button { letter-spacing: normal; }
+
+  // Encabezado: nombre, insignia y estado
+  .kai-nombre {
+    color: $chat-text-light;
+    font-weight: 800;
+
+    i { color: $chat-primary; }
+  }
+
+  .kai-insignia {
+    background: $chat-primary-light;
+    color: $chat-primary !important;
+    font-size: 10.5px !important;
+    font-weight: 800;
+    border-radius: 20px;
+  }
+
+  .kai-estado {
+    color: $chat-text-secondary-light !important;
+    font-size: 12.5px !important;
+  }
+
+  .kai-estado--escribiendo { color: $chat-primary !important; }
+
+  .kai-punto {
+    font-size: 0.5rem;
+    color: #1E874B;
   }
 }
 
@@ -84,7 +116,7 @@ $font-size-tiny: 11px;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
   border-color: $chat-border-dark;
 
-  .module-header {
+  .chat-cabeza {
     background-color: $chat-bg-dark !important;
     border-color: $chat-border-dark !important;
 
@@ -111,7 +143,7 @@ $font-size-tiny: 11px;
   .message-time { color: $chat-text-secondary-dark; }
 
   .input-area {
-    background-color: rgba(31, 41, 55, 0.95);
+    background-color: rgba(26, 24, 48, 0.95);
     border-color: $chat-border-dark;
   }
 
@@ -121,7 +153,7 @@ $font-size-tiny: 11px;
 
     &:focus-within {
       border-color: $chat-primary;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+      box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.2);
     }
   }
 
@@ -162,7 +194,7 @@ $font-size-tiny: 11px;
   }
 
   .typing-indicator .message-bubble.typing {
-    background-color: rgba(55, 65, 81, 0.95);
+    background-color: rgba(42, 39, 69, 0.95);
 
     .dots-container .dot {
       background-color: $chat-primary-light;
@@ -431,7 +463,7 @@ section.messages-area {
 
   &.drag-over {
     border-color: $chat-primary;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.15);
   }
 }
 
@@ -494,7 +526,7 @@ section.messages-area {
 
   &:focus-within {
     border-color: $chat-primary;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.15);
     transform: translateY(-1px);
   }
 }
@@ -568,7 +600,7 @@ section.messages-area {
   justify-content: center;
   gap: 10px;
   color: $chat-primary-dark;
-  background: rgba(99, 102, 241, 0.06);
+  background: rgba(124, 92, 255, 0.06);
   border: 2px dashed $chat-primary;
   border-radius: $radius-md;
   pointer-events: none;

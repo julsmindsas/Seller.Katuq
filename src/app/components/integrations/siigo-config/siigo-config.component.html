@@ -1,13 +1,14 @@
-<div class="siigo-config-container">
+<div class="siigo-config-container cfg-pagina">
   <p-toast></p-toast>
 
   <!-- Header -->
-  <div class="config-header">
+  <header class="config-header cfg-cabeza">
     <div class="header-content">
       <img src="assets/images/logos/siigo.svg" alt="Siigo" class="siigo-logo">
-      <div class="header-text">
-        <h2>Configuracion de Siigo</h2>
-        <p>Conecta tu cuenta de Siigo para facturacion electronica y sincronizacion de inventario</p>
+      <div class="header-text cfg-cabeza__textos">
+        <span class="cfg-eyebrow">Integraciones</span>
+        <h1 class="cfg-titulo">Configuracion de Siigo</h1>
+        <p class="cfg-sub">Conecta tu cuenta de Siigo para facturacion electronica y sincronizacion de inventario</p>
       </div>
     </div>
 
@@ -16,7 +17,7 @@
       <i class="pi" [ngClass]="getConnectionStatusIcon()"></i>
       <span>{{ getConnectionStatusMessage() }}</span>
     </div>
-  </div>
+  </header>
 
   <!-- Loading Overlay -->
   <div class="loading-overlay" *ngIf="isLoading">
@@ -505,7 +506,7 @@
           type="button"
           label="Sincronizar Ahora"
           icon="pi pi-sync"
-          class="p-button-secondary"
+          class="p-button-outlined"
           [loading]="isSyncing"
           [disabled]="connectionStatus !== 'success'"
           (click)="syncProducts()">
@@ -547,7 +548,7 @@
         type="submit"
         label="Guardar Configuracion"
         icon="pi pi-save"
-        class="p-button-success"
+        class="boton-guardar"
         [loading]="isSaving"
         [disabled]="connectionStatus !== 'success'">
       </button>

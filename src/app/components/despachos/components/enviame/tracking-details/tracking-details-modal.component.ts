@@ -645,15 +645,15 @@ export class TrackingDetailsModalComponent implements OnInit {
 
   private getTimelineColors(status: TrackingStatus | string): any {
     const colorMap = {
-      [TrackingStatus.CREATED]: { border: '#6c757d', background: 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)', text: '#ffffff' },
-      [TrackingStatus.PROCESSING]: { border: '#007bff', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', text: '#ffffff' },
-      [TrackingStatus.PICKED_UP]: { border: '#17a2b8', background: 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)', text: '#ffffff' },
-      [TrackingStatus.IN_TRANSIT]: { border: '#17a2b8', background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', text: '#ffffff' },
-      [TrackingStatus.OUT_FOR_DELIVERY]: { border: '#6f42c1', background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', text: '#ffffff' },
-      [TrackingStatus.DELIVERED]: { border: '#28a745', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', text: '#ffffff' },
-      [TrackingStatus.EXCEPTION]: { border: '#ffc107', background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', text: '#ffffff' },
-      [TrackingStatus.CANCELLED]: { border: '#dc3545', background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', text: '#ffffff' },
-      [TrackingStatus.RETURNED]: { border: '#fd7e14', background: 'linear-gradient(135deg, #fb923c 0%, #ea580c 100%)', text: '#ffffff' }
+      [TrackingStatus.CREATED]: { border: '#6c757d', background: '#5A6B78', text: '#ffffff' },
+      [TrackingStatus.PROCESSING]: { border: '#007bff', background: '#5F3FE0', text: '#ffffff' },
+      [TrackingStatus.PICKED_UP]: { border: '#17a2b8', background: '#3B82C4', text: '#ffffff' },
+      [TrackingStatus.IN_TRANSIT]: { border: '#17a2b8', background: '#1E6FD9', text: '#ffffff' },
+      [TrackingStatus.OUT_FOR_DELIVERY]: { border: '#6f42c1', background: '#8E27B0', text: '#ffffff' },
+      [TrackingStatus.DELIVERED]: { border: '#28a745', background: '#1E874B', text: '#ffffff' },
+      [TrackingStatus.EXCEPTION]: { border: '#ffc107', background: '#D9820A', text: '#ffffff' },
+      [TrackingStatus.CANCELLED]: { border: '#dc3545', background: '#D64545', text: '#ffffff' },
+      [TrackingStatus.RETURNED]: { border: '#fd7e14', background: '#D9820A', text: '#ffffff' }
     };
     return colorMap[status] || colorMap[TrackingStatus.PROCESSING];
   }

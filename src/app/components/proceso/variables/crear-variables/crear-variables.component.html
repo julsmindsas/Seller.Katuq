@@ -1,46 +1,35 @@
-<app-breadcrumb [title]="'Crear Variables'" [items]="['Proceso/Variables']" [active_item]="'Crear Variables'">
-</app-breadcrumb>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="card">
-                <div class="card-body">
-                    <form [formGroup]="variableForm">
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <label for="id">ID</label>
-                                <input class="form-control" type="text" id="id" formControlName="id">
-                            </div>
-                            <div class="col-sm-6">
-                                <label for="image">Título</label>
-                                <input class="form-control" type="text" id="image" formControlName="titulo">
-                            </div>
-                            
+<div class="cfg-pagina">
+    <header class="cfg-cabeza">
+        <div class="cfg-cabeza__textos">
+            <span class="cfg-eyebrow">Configuración</span>
+            <h1 class="cfg-titulo">Crear Variables</h1>
+        </div>
+    </header>
 
-                        </div>
-                        <br>
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <label for="name">Variable</label>
-                                <input class="form-control" type="text" id="name" formControlName="variable">
-                            </div>
-                            <div class="form-group col-sm-6">
-                                <label for="position">Valor</label>
-                                <input class="form-control" type="text" id="position" formControlName="valor">
-                            </div>
-                            
-                        </div>
-                        
-
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <button (click)="guardar()" class="btn btn-primary" type="submit">Crear Género</button>
-                            </div>
-                        </div>
-
-                    </form>
+    <section class="cfg-card">
+        <form class="cfg-form" [formGroup]="variableForm">
+            <div class="cfg-form__grupo">
+                <div>
+                    <label for="id">ID</label>
+                    <input class="form-control" type="text" id="id" formControlName="id">
+                </div>
+                <div>
+                    <label for="image">Título</label>
+                    <input class="form-control" type="text" id="image" formControlName="titulo">
+                </div>
+                <div>
+                    <label for="name">Variable</label>
+                    <input class="form-control" type="text" id="name" formControlName="variable">
+                </div>
+                <div>
+                    <label for="position">Valor</label>
+                    <input class="form-control" type="text" id="position" formControlName="valor">
                 </div>
             </div>
-        </div>
-    </div>
+
+            <div class="cfg-form__pie">
+                <button (click)="guardar()" class="cfg-btn" type="submit">Crear Género</button>
+            </div>
+        </form>
+    </section>
 </div>

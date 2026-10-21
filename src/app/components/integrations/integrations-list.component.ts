@@ -23,6 +23,10 @@ import {
   entradasActivas,
 } from "./integrations-directorio";
 import { CompanyFeaturesService } from "../../shared/services/company-features.service";
+import {
+  FacturacionIntegracionService,
+  ResumenFacturacion,
+} from "../../shared/services/facturacion/facturacion-integracion.service";
 import { of } from "rxjs";
 import { catchError } from "rxjs/operators";
 import {
@@ -104,6 +108,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     private whatsappConfig: WhatsappIntegrationConfigService,
     private metaInbox: MetaInboxService,
     private features: CompanyFeaturesService,
+    private facturacionIntegracion: FacturacionIntegracionService,
   ) {}
 
   ngOnInit(): void {
@@ -135,6 +140,18 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     this.loadIntegrations();
     this.cargarEstadosExternos();
     this.abrirConexionPendiente();
+    this.abrirPorParametro();
+  }
+
+  /**
+   * D-500: `/integrations?abrir=<id>` abre esa tarjeta (lo usa la pantalla de Facturación
+   * electrónica para configurar World Office con el mismo formulario de siempre).
+   */
+  private abrirPorParametro(): void {
+    const id = this.router.parseUrl(this.router.url).queryParams["abrir"];
+    if (!id) return;
+    const entrada = this.directorio.reduce((todas, g) => todas.concat(g.entradas), [] as EntradaDirectorio[]).find((e) => e.id === id);
+    if (entrada && entrada.estado === "conectable" && !entrada.ruta) this.abrirEntrada(entrada);
   }
 
   /**
@@ -894,6 +911,8 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   /** undefined = cargando; null = no se pudo saber. */
   resumenWhatsapp: ResumenWhatsapp | null | undefined = undefined;
   conexionesMeta: MetaConexiones | null | undefined = undefined;
+  /** D-500: estado de la tarjeta de facturación. undefined = cargando; null = no se pudo saber. */
+  resumenFacturacion: ResumenFacturacion | null | undefined = undefined;
 
   /** Entradas del grupo según las banderas (D-385) y las tarjetas que reemplazan a otras (D-500). */
   entradasDe(grupo: GrupoDirectorio): EntradaDirectorio[] {
@@ -918,6 +937,16 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
       .obtenerConexiones()
       .pipe(takeUntil(this.destroy$))
       .subscribe((c) => (this.conexionesMeta = c));
+    // Sin la bandera la ruta responde 403: ni se pregunta.
+    if (this.features.isEnabled("invoicingHub")) {
+      this.facturacionIntegracion
+        .resumen()
+        .pipe(
+          catchError(() => of(null)),
+          takeUntil(this.destroy$),
+        )
+        .subscribe((r) => (this.resumenFacturacion = r));
+    }
   }
 
   private tipoDe(i: Integration): string {
@@ -946,6 +975,14 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
         if (bot?.enabled) return bot.modoSombra ? "prueba" : "ok";
         return "sin";
       }
+      case "facturacion": {
+        const f = this.resumenFacturacion;
+        if (!f) return "desconocido";
+        if (f.status === "connected") return "ok";
+        if (f.status === "testing") return "prueba";
+        if (f.status === "error") return "atencion";
+        return "sin";
+      }
       case "meta": {
         const c = this.conexionesMeta;
         if (!c) return "desconocido";
@@ -960,6 +997,10 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   }
 
   textoEstado(entrada: EntradaDirectorio, estado: EstadoTarjeta): string {
+    if (entrada.fuente === "facturacion") {
+      const textos: Partial<Record<EstadoTarjeta, string>> = { ok: "Conectado", prueba: "En pruebas", atencion: "Con error", sin: "Sin configurar" };
+      return textos[estado] || "";
+    }
     const bot = entrada.fuente === "whatsapp_bot";
     switch (estado) {
       case "guia": return "Desde tu IA";
@@ -974,6 +1015,9 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
 
   /** Línea extra bajo la descripción cuando aporta algo concreto. */
   detalleTarjeta(entrada: EntradaDirectorio, estado: EstadoTarjeta): string {
+    if (entrada.fuente === "facturacion" && this.resumenFacturacion?.providerName && estado !== "sin") {
+      return `Con ${this.resumenFacturacion.providerName}`;
+    }
     const wa = this.resumenWhatsapp;
     if (entrada.fuente === "whatsapp" && estado === "ok" && wa) {
       return wa.numeroPropio ? `Con tu número ${wa.numeroPropio}` : "Con el número de Katuq";
@@ -990,7 +1034,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   textoBoton(entrada: EntradaDirectorio, estado: EstadoTarjeta): string {
     if (estado === "guia") return "Ver instructivo";
     if (entrada.ruta) {
-      if (estado === "atencion") return "Reconectar";
+      if (estado === "atencion") return entrada.fuente === "facturacion" ? "Revisar" : "Reconectar";
       if (estado === "sin") return "Conectar";
       return "Abrir";
     }

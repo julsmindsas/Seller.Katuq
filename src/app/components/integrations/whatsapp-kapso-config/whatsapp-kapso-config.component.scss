@@ -1,18 +1,25 @@
 // =============================================================
-// WhatsApp Kapso Config — estilo plano (sin gradientes),
-// border-left 4px verde Katuq.
+// WhatsApp Kapso Config — diseño Katuq (D-131, D-516): plano, acento
+// #5F3FE0, superficies lila, bordes completos (sin borde izquierdo de acento).
+// El verde queda solo para estados de éxito.
 // =============================================================
 
-$wa-green: #10b981;            // verde Katuq / success
-$wa-green-dark: #047857;
-$wa-green-soft: #ecfdf5;
-$wa-yellow: #f59e0b;
-$wa-yellow-soft: #fef3c7;
-$wa-text: #1f2937;
-$wa-text-muted: #6b7280;
-$wa-border: #e5e7eb;
+$wa-accent: #5F3FE0;           // acento Katuq
+$wa-accent-hover: #4a2fc0;
+$wa-accent-soft: #efe9ff;
+$wa-accent-line: #ddd3fb;
+$wa-green: #1E874B;            // éxito
+$wa-green-dark: #1E874B;
+$wa-green-soft: #E6F7EE;
+$wa-yellow: #D9820A;           // alerta
+$wa-yellow-soft: #FFF1DF;
+$wa-yellow-ink: #8A5200;
+$wa-text: #211F3A;
+$wa-text-muted: #8f8bab;
+$wa-body: #5b5878;
+$wa-border: #ececf4;
 $wa-bg-surface: #ffffff;
-$wa-bg-subtle: #f9fafb;
+$wa-bg-subtle: #faf9fe;
 
 .wa-kapso {
   display: block;
@@ -26,19 +33,20 @@ $wa-bg-subtle: #f9fafb;
     align-items: center;
     gap: 12px;
     padding: 24px;
-    border-radius: 8px;
+    border-radius: 16px;
     background: $wa-bg-subtle;
     border: 1px solid $wa-border;
 
     i {
-      color: $wa-green;
+      color: $wa-accent;
       font-size: 20px;
     }
   }
 
   &__error {
-    border-left: 4px solid $wa-yellow;
+    border-color: #F6DDB0;
     background: $wa-yellow-soft;
+    color: $wa-yellow-ink;
 
     i { color: $wa-yellow; }
   }
@@ -47,9 +55,8 @@ $wa-bg-subtle: #f9fafb;
   &__card {
     background: $wa-bg-surface;
     border: 1px solid $wa-border;
-    border-left: 4px solid $wa-green;   // acento Katuq
-    border-radius: 8px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
     overflow: hidden;
   }
 
@@ -71,7 +78,7 @@ $wa-bg-subtle: #f9fafb;
     h3 {
       margin: 0;
       font-size: 18px;
-      font-weight: 600;
+      font-weight: 800;
       color: $wa-text;
     }
   }
@@ -82,9 +89,9 @@ $wa-bg-subtle: #f9fafb;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: $wa-green-soft;
-    color: $wa-green-dark;
-    border-radius: 8px;
+    background: $wa-accent-soft;
+    color: $wa-accent;
+    border-radius: 11px;
     font-size: 22px;
   }
 
@@ -103,11 +110,11 @@ $wa-bg-subtle: #f9fafb;
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: .4px;
 
   &--success {
     background: $wa-green-soft;
@@ -116,11 +123,11 @@ $wa-bg-subtle: #f9fafb;
   }
   &--warning {
     background: $wa-yellow-soft;
-    color: #92400e;
+    color: $wa-yellow-ink;
     border: 1px solid rgba($wa-yellow, 0.3);
   }
   &--muted {
-    background: #f3f4f6;
+    background: #f5f4fa;
     color: $wa-text-muted;
     border: 1px solid $wa-border;
   }
@@ -140,18 +147,18 @@ $wa-bg-subtle: #f9fafb;
   h4 {
     margin: 0;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 800;
     color: $wa-text;
     display: flex;
     align-items: center;
     gap: 8px;
 
-    i { color: $wa-green; font-size: 14px; }
+    i { color: $wa-accent; font-size: 14px; }
   }
 
   p {
     margin: 4px 0 0 0;
-    color: $wa-text-muted;
+    color: $wa-body;
     font-size: 13px;
   }
 }
@@ -163,20 +170,24 @@ $wa-bg-subtle: #f9fafb;
   label {
     display: block;
     margin-bottom: 6px;
-    font-weight: 500;
-    font-size: 13px;
-    color: $wa-text;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $wa-text-muted;
   }
 
   .form-control {
-    border-radius: 6px;
-    border: 1px solid $wa-border;
+    border-radius: 10px;
+    border: 1px solid #e9e7f3;
+    background: #f5f4fa;
     padding: 8px 12px;
     font-size: 14px;
 
     &:focus {
-      border-color: $wa-green;
-      box-shadow: 0 0 0 3px rgba($wa-green, 0.15);
+      background: #fff;
+      border-color: #7C5CFF;
+      box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
       outline: none;
     }
   }
@@ -195,9 +206,9 @@ $wa-bg-subtle: #f9fafb;
   code {
     background: $wa-bg-subtle;
     padding: 1px 6px;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 12px;
-    color: $wa-green-dark;
+    color: $wa-accent;
   }
 }
 
@@ -209,7 +220,7 @@ $wa-bg-subtle: #f9fafb;
   padding: 12px 14px;
   background: $wa-bg-subtle;
   border: 1px solid $wa-border;
-  border-radius: 8px;
+  border-radius: 11px;
 
   & + .wa-kapso__field { margin-top: 14px; }
 }
@@ -236,7 +247,11 @@ $wa-bg-subtle: #f9fafb;
     height: 0;
 
     &:checked + .wa-kapso__toggle-slider {
-      background: $wa-green;
+      background: $wa-accent;
+    }
+    &:focus-visible + .wa-kapso__toggle-slider {
+      outline: 3px solid #7C5CFF;
+      outline-offset: 2px;
     }
     &:checked + .wa-kapso__toggle-slider::before {
       transform: translateX(18px);
@@ -247,8 +262,8 @@ $wa-bg-subtle: #f9fafb;
 .wa-kapso__toggle-slider {
   position: absolute;
   inset: 0;
-  background: #cbd5e1;
-  border-radius: 999px;
+  background: #d9d6e6;
+  border-radius: 20px;
   transition: background 0.18s ease;
   cursor: pointer;
 
@@ -274,18 +289,15 @@ $wa-bg-subtle: #f9fafb;
   font-size: 13px;
   color: $wa-text;
 
-  input { accent-color: $wa-green; transform: scale(1.05); }
+  input { accent-color: $wa-accent; transform: scale(1.05); }
 }
 
-// ---------- Test button ----------
+// ---------- Test button (secundario: blanco con borde) ----------
 .wa-kapso__test-btn {
-  border-color: $wa-green;
-  color: $wa-green-dark;
-
   &:hover:not(:disabled) {
-    background: $wa-green-soft;
-    border-color: $wa-green;
-    color: $wa-green-dark;
+    background: $wa-bg-subtle;
+    border-color: #d9cffb;
+    color: $wa-accent;
   }
   &:disabled { opacity: 0.6; }
 }
@@ -294,7 +306,6 @@ $wa-bg-subtle: #f9fafb;
 .wa-kapso__optin-banner {
   background: $wa-yellow-soft;
   border-bottom: 1px solid rgba($wa-yellow, 0.3);
-  border-left: 4px solid $wa-yellow;
 }
 
 .wa-kapso__optin-banner-content {
@@ -308,8 +319,8 @@ $wa-bg-subtle: #f9fafb;
     margin-top: 2px;
   }
 
-  strong { display: block; margin-bottom: 4px; color: #78350f; }
-  p { margin: 0 0 8px 0; color: #78350f; font-size: 13px; line-height: 1.5; }
+  strong { display: block; margin-bottom: 4px; color: $wa-yellow-ink; }
+  p { margin: 0 0 8px 0; color: $wa-yellow-ink; font-size: 13px; line-height: 1.5; letter-spacing: normal; }
 }
 
 // ---------- Notification grid ----------
@@ -325,19 +336,19 @@ $wa-bg-subtle: #f9fafb;
   gap: 10px;
   padding: 12px;
   border: 1px solid $wa-border;
-  border-radius: 8px;
+  border-radius: 11px;
   background: $wa-bg-surface;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 
   &:hover {
     background: $wa-bg-subtle;
-    border-color: rgba($wa-green, 0.3);
+    border-color: $wa-accent-line;
   }
 
   input {
     margin-top: 2px;
-    accent-color: $wa-green;
+    accent-color: $wa-accent;
     transform: scale(1.05);
   }
 }
@@ -355,9 +366,9 @@ $wa-bg-subtle: #f9fafb;
 .wa-kapso__preview {
   margin-top: 12px;
   padding: 12px 14px;
-  background: $wa-green-soft;
-  border: 1px solid rgba($wa-green, 0.25);
-  border-radius: 8px;
+  background: $wa-accent-soft;
+  border: 1px solid $wa-accent-line;
+  border-radius: 11px;
 
   p {
     margin: 4px 0 0 0;
@@ -368,11 +379,11 @@ $wa-bg-subtle: #f9fafb;
 }
 
 .wa-kapso__preview-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: $wa-green-dark;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: $wa-accent;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: .5px;
 }
 
 // ---------- Avanzado (collapse) ----------
@@ -387,7 +398,7 @@ $wa-bg-subtle: #f9fafb;
   margin-bottom: 0;
   user-select: none;
 
-  &:hover h4 { color: $wa-green-dark; }
+  &:hover h4 { color: $wa-accent; }
 }
 
 .wa-kapso__advanced-chevron {
@@ -400,7 +411,7 @@ $wa-bg-subtle: #f9fafb;
   padding: 16px;
   background: $wa-bg-surface;
   border: 1px solid $wa-border;
-  border-radius: 8px;
+  border-radius: 11px;
 }
 
 .wa-kapso__warning-box {
@@ -410,11 +421,10 @@ $wa-bg-subtle: #f9fafb;
   padding: 10px 12px;
   background: $wa-yellow-soft;
   border: 1px solid rgba($wa-yellow, 0.3);
-  border-left: 3px solid $wa-yellow;
-  border-radius: 6px;
+  border-radius: 11px;
   margin-bottom: 14px;
   font-size: 13px;
-  color: #78350f;
+  color: $wa-yellow-ink;
 
   i { color: $wa-yellow; margin-top: 2px; }
 }
@@ -429,19 +439,20 @@ $wa-bg-subtle: #f9fafb;
 }
 
 .wa-kapso__save-btn {
-  background: $wa-green;
-  border: 1px solid $wa-green;
+  background: $wa-accent;
+  border: 1px solid $wa-accent;
   color: #fff;
   padding: 10px 24px;
-  font-weight: 600;
-  border-radius: 6px;
+  font-weight: 700;
+  border-radius: 11px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
 
   &:hover:not(:disabled) {
-    background: $wa-green-dark;
-    border-color: $wa-green-dark;
+    background: $wa-accent-hover;
+    border-color: $wa-accent-hover;
     color: #fff;
   }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -456,9 +467,9 @@ $wa-bg-subtle: #f9fafb;
   flex-direction: column;
   gap: 6px;
   align-items: flex-start;
-  background: #f8f9fb;
+  background: $wa-bg-subtle;
   border: 1px solid $wa-border;
-  border-radius: 8px;
+  border-radius: 11px;
   padding: 14px 16px;
   margin-bottom: 16px;
 
@@ -468,7 +479,7 @@ $wa-bg-subtle: #f9fafb;
   }
 
   small {
-    color: #6b7280;
+    color: $wa-text-muted;
     font-size: 12px;
     line-height: 1.45;
   }
@@ -478,26 +489,26 @@ $wa-bg-subtle: #f9fafb;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 10.5px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: .4px;
   padding: 4px 10px;
-  border-radius: 99px;
+  border-radius: 20px;
 
   &.is-ok {
-    background: rgba(37, 211, 102, 0.12);
-    color: #128c4b;
+    background: $wa-green-soft;
+    color: $wa-green;
   }
 
   &.is-pending {
-    background: #fef3c7;
-    color: #92400e;
+    background: $wa-yellow-soft;
+    color: $wa-yellow-ink;
   }
 }
 
 .wa-kapso__field--advanced label {
-  color: #9ca3af;
+  color: $wa-text-muted;
 }
 
 .wa-kapso__conexion-acciones {
@@ -508,19 +519,21 @@ $wa-bg-subtle: #f9fafb;
 }
 
 .wa-kapso__verify-btn {
-  background: #fff;
-  border: 1px solid $wa-green;
-  color: $wa-green;
+  background: $wa-accent;
+  border: 1px solid $wa-accent;
+  color: #fff;
   padding: 9px 18px;
-  font-weight: 600;
-  border-radius: 6px;
+  font-weight: 700;
+  border-radius: 11px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
 
   &:hover:not(:disabled) {
-    background: rgba(37, 211, 102, 0.08);
-    color: $wa-green;
+    background: $wa-accent-hover;
+    border-color: $wa-accent-hover;
+    color: #fff;
   }
 
   &:disabled {
@@ -530,11 +543,11 @@ $wa-bg-subtle: #f9fafb;
 
 .wa-kapso__test-btn {
   background: #fff;
-  border: 1px solid $wa-border;
-  color: #4b5563;
+  border: 1px solid #e4e2ef;
+  color: $wa-body;
   padding: 9px 18px;
-  font-weight: 600;
-  border-radius: 6px;
+  font-weight: 700;
+  border-radius: 11px;
   display: inline-flex;
   align-items: center;
   gap: 8px;

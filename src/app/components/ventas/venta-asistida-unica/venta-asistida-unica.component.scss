@@ -20,6 +20,9 @@
 // =============================================================================
 
 @import '../../../shared/styles/katuq-comercial';
+// Regla de diseño Katuq (D-400): cfg-btn / cfg-btn--sec en los modales.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
 
 :host {
   @include kc-tokens;
@@ -57,10 +60,9 @@
   margin-bottom: 20px;
 }
 
-// Encabezado de página (card con borde de acento izquierdo — marco del mockup)
+// Encabezado de página (card blanca plana; sin borde de acento, D-131)
 .va-page-head {
   @include kc-card;
-  border-left: 4px solid var(--kc-accent);
   padding: 16px 20px;
   display: flex;
   align-items: center;
@@ -127,13 +129,12 @@
   letter-spacing: -0.01em;
   line-height: 1;
   color: var(--kc-ink);
-
-  &.fc-secondary { color: var(--kc-ink); }
 }
 
 // En el encabezado de página el título es más compacto (20px, como el mockup).
+// !important: el h1 global trae font-size 1.5rem !important.
 .va-page-head .va-title {
-  font-size: 20px;
+  font-size: 20px !important;
   line-height: 1.1;
 }
 
@@ -1337,22 +1338,6 @@
 
 .modal-footer {
   border-top: 1px solid var(--kc-line2);
-
-  .btn-success {
-    background: var(--kc-accent);
-    border-color: var(--kc-accent);
-    border-radius: 11px;
-    font-weight: 800;
-
-    &:hover { filter: brightness(1.05); }
-  }
-
-  .btn-outline-secondary {
-    border-radius: 11px;
-    border-color: #d9dbe6;
-    color: var(--kc-ink2);
-    font-weight: 800;
-  }
 }
 
 // =============================================================================
@@ -3129,7 +3114,6 @@
   .alert.alert-warning {
     background: var(--kc-orange-wash) !important;
     border: 1px solid #f7e2be !important;
-    border-left: 3px solid var(--kc-orange) !important;
     border-radius: 12px !important;
     color: #a9660d !important;
     font-size: 13px;

@@ -1,54 +1,50 @@
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-sm-12 p-2">
-      <br />
-      <div class="card">
+<!-- D-516: marco canónico (config-pagina) -->
+<div class="cfg-pagina crm-pagina">
 
         <!-- Header -->
-        <div class="card-header bg-white">
-          <div class="row align-items-center">
-            <div class="col-md-4">
-              <h5 class="mb-0 fw-bold" style="color: #334155;">
-                <i class="fa fa-bullseye me-2" style="color: #8b5cf6;"></i>
+        <header class="cfg-cabeza crm-cabeza">
+            <div class="cfg-cabeza__textos">
+              <span class="cfg-eyebrow">CRM</span>
+              <h1 class="cfg-titulo">
                 {{ getTitle() }}
-              </h5>
-              <small class="text-muted">Arrastra las tarjetas para cambiar de etapa</small>
+              </h1>
+              <p class="cfg-sub">Arrastra las tarjetas para cambiar de etapa</p>
             </div>
-            <div class="col-md-4">
+            <div class="crm-buscador">
               <div class="input-group">
-                <span class="input-group-text"><i class="fa fa-search"></i></span>
+                <span class="input-group-text crm-buscador__icono"><i class="fa fa-search"></i></span>
                 <input type="text" class="form-control" [value]="searchTerm"
                   (input)="onSearch($any($event.target).value)"
                   placeholder="Buscar por nombre, correo, NIT..." />
               </div>
             </div>
-            <div class="col-md-4 text-end d-flex align-items-center justify-content-end gap-2">
+            <div class="cfg-acciones">
               <!-- Crear lead -->
-              <button class="btn btn-primary btn-sm d-flex align-items-center gap-1" (click)="openCreateDialog()"
+              <button class="cfg-btn" (click)="openCreateDialog()"
                 pTooltip="Agregar nuevo lead al pipeline" tooltipPosition="bottom">
                 <i class="fa fa-plus"></i> Nuevo lead
               </button>
               <!-- Export / Import -->
-              <button class="btn btn-outline-success btn-sm" (click)="exportToExcel()"
+              <button class="cfg-btn cfg-btn--sec crm-btn-icono" (click)="exportToExcel()"
                 pTooltip="Exportar a Excel" tooltipPosition="bottom" [disabled]="leads.length === 0">
                 <i class="fa fa-download"></i>
               </button>
-              <button class="btn btn-outline-info btn-sm" (click)="downloadCrmTemplate()"
+              <button class="cfg-btn cfg-btn--sec crm-btn-icono" (click)="downloadCrmTemplate()"
                 pTooltip="Descargar plantilla de importación" tooltipPosition="bottom">
                 <i class="fa fa-file-excel-o"></i>
               </button>
-              <button class="btn btn-outline-secondary btn-sm" (click)="fileInput.click()"
+              <button class="cfg-btn cfg-btn--sec crm-btn-icono" (click)="fileInput.click()"
                 pTooltip="Importar desde Excel" tooltipPosition="bottom">
                 <i class="fa fa-upload"></i>
               </button>
               <input #fileInput type="file" accept=".xlsx,.xls,.csv" hidden (change)="onFileImport($event)" />
               <!-- Duplicados -->
-              <button class="btn btn-outline-warning btn-sm" (click)="openDuplicatesDialog()"
+              <button class="cfg-btn cfg-btn--sec crm-btn-icono" (click)="openDuplicatesDialog()"
                 pTooltip="Limpiar duplicados" tooltipPosition="bottom" [disabled]="leads.length === 0">
                 <i class="fa fa-clone"></i>
               </button>
               <!-- Vista -->
-              <div class="btn-group btn-group-sm">
+              <div class="btn-group btn-group-sm crm-vista">
                 <button class="btn" [ngClass]="viewMode === 'kanban' ? 'btn-primary' : 'btn-outline-secondary'"
                   (click)="viewMode = 'kanban'" pTooltip="Vista Kanban" tooltipPosition="bottom">
                   <i class="fa fa-columns"></i>
@@ -59,23 +55,22 @@
                 </button>
               </div>
             </div>
-          </div>
 
           <!-- Tabs: Pipeline activo / Cerrados -->
-          <div class="row mt-2">
-            <div class="col-12">
+          <div class="crm-cabeza__tabs">
               <div class="crm-tabs-btn-group" role="group">
                 <button type="button" class="crm-tab-btn" [class.active]="activeTab === 'active'" (click)="setActiveTab('active')">
                   <i class="fa fa-columns me-1"></i>Pipeline activo
                 </button>
                 <button type="button" class="crm-tab-btn" [class.active]="activeTab === 'closed'" (click)="setActiveTab('closed')">
                   <i class="fa fa-archive me-1"></i>Cerrados
-                  <span class="badge bg-secondary ms-1" *ngIf="closedLoaded">{{ closedLeads.length }}</span>
+                  <span class="badge crm-badge-cerrados ms-1" *ngIf="closedLoaded">{{ closedLeads.length }}</span>
                 </button>
               </div>
-            </div>
           </div>
-        </div>
+        </header>
+
+      <section class="cfg-card crm-cuerpo">
 
         <!-- ═══════ Indicadores de gestión ═══════ -->
         <div class="card-body py-2 border-bottom crm-dashboard" *ngIf="stats">
@@ -266,7 +261,7 @@
                       <span class="crm-puntaje-etiqueta">puntaje</span>
                       <span class="crm-sugerido" *ngIf="lead.stageAutoPropuesta">Sugerido: {{ getStageLabel(lead.stageAutoPropuesta.stage) }}</span>
                     </small>
-                    <small class="d-block fw-semibold" style="color: #8b5cf6;" *ngIf="lead.estimatedValue">
+                    <small class="d-block fw-semibold crm-valor" *ngIf="lead.estimatedValue">
                       <i class="fa fa-dollar me-1"></i>{{ formatCurrency(lead.estimatedValue) }}
                     </small>
                     <div class="card-tags mt-1" *ngIf="lead.etiquetas?.length">
@@ -345,7 +340,7 @@
 
                 <!-- Columna vacía -->
                 <div class="kanban-empty" *ngIf="getStageCount(stage.key) === 0">
-                  <i class="fa fa-inbox" style="font-size:1.5rem; color:#d1d5db;"></i>
+                  <i class="fa fa-inbox crm-vacio-icono"></i>
                   <small class="d-block text-muted mt-1">Sin leads en esta etapa</small>
                 </div>
               </div>
@@ -355,15 +350,15 @@
         </div>
 
         <!-- Barra selección masiva -->
-        <div class="card-body py-2 border-bottom bg-light" *ngIf="activeTab === 'active' && selectedCount > 0">
+        <div class="card-body py-2 border-bottom crm-seleccion" *ngIf="activeTab === 'active' && selectedCount > 0">
           <div class="d-flex align-items-center gap-3">
-            <span class="fw-semibold" style="color: #334155;">
+            <span class="fw-semibold crm-tinta">
               <i class="fa fa-check-square-o me-1"></i>{{ selectedCount }} seleccionado(s)
             </span>
-            <button class="btn btn-danger btn-sm" (click)="deleteSelectedFromTable()" [disabled]="deletingLeads">
+            <button class="cfg-btn cfg-btn--peligro" (click)="deleteSelectedFromTable()" [disabled]="deletingLeads">
               <i class="fa fa-trash me-1"></i>Eliminar seleccionados
             </button>
-            <button class="btn btn-outline-secondary btn-sm" (click)="clearSelection()">
+            <button class="cfg-btn cfg-btn--sec" (click)="clearSelection()">
               <i class="fa fa-times me-1"></i>Limpiar selección
             </button>
           </div>
@@ -445,7 +440,7 @@
                 </td>
                 <td (click)="$event.stopPropagation()" style="cursor:default"><small>{{ duenoEfectivo(lead) ? nombreComercial(duenoEfectivo(lead)) : '-' }}</small></td>
                 <td>
-                  <small *ngIf="lead.estimatedValue" style="color:#8b5cf6; font-weight:600;">
+                  <small *ngIf="lead.estimatedValue" class="crm-valor">
                     {{ formatCurrency(lead.estimatedValue) }}
                   </small>
                 </td>
@@ -480,7 +475,7 @@
             <ng-template pTemplate="emptymessage">
               <tr>
                 <td [attr.colspan]="entityType === 'company' ? 11 : 9" class="text-center p-4">
-                  <i class="fa fa-inbox" style="font-size:2rem; color:#9ca3af;"></i>
+                  <i class="fa fa-inbox crm-vacio-icono crm-vacio-icono--grande"></i>
                   <p class="text-muted mt-2 mb-0">No hay leads que mostrar</p>
                 </td>
               </tr>
@@ -525,29 +520,27 @@
                     [style]="{'font-size':'0.75rem'}"></p-tag>
                 </td>
                 <td>
-                  <span class="stat-badge badge-sm" *ngIf="lead.verifiedBuyer"
-                    style="background-color:#f0fdf4; color:#27AE60;">
+                  <span class="stat-badge badge-sm crm-par--ok" *ngIf="lead.verifiedBuyer">
                     <i class="fa fa-check-circle me-1"></i>Comprador verificado
                   </span>
-                  <span class="stat-badge badge-sm" *ngIf="lead.verifiedBuyer === false"
-                    style="background-color:#fff7ed; color:#c2410c;">
+                  <span class="stat-badge badge-sm crm-par--warn" *ngIf="lead.verifiedBuyer === false">
                     <i class="fa fa-exclamation-triangle me-1"></i>Sin verificar
                   </span>
                   <div *ngIf="lead.forcedReason" class="text-muted" style="font-size:0.72rem; margin-top:3px;"
                     [pTooltip]="'Cierre forzado por ' + (lead.forcedBy || 'usuario') + (lead.forcedAt ? (' · ' + (lead.forcedAt | date:'short')) : '')"
                     tooltipPosition="top">
-                    <i class="fa fa-comment-o me-1" style="color:#8b5cf6;"></i>Motivo: {{ lead.forcedReason }}
+                    <i class="fa fa-comment-o me-1 crm-acento"></i>Motivo: {{ lead.forcedReason }}
                   </div>
                   <div *ngIf="lead.lostReason" class="text-muted" style="font-size:0.72rem; margin-top:3px;"
                     [pTooltip]="'Perdido por ' + (lead.lostBy || 'usuario') + (lead.lostAt ? (' · ' + (lead.lostAt | date:'short')) : '')"
                     tooltipPosition="top">
-                    <i class="fa fa-times-circle me-1" style="color:#dc2626;"></i>Motivo pérdida: {{ lead.lostReason }}
+                    <i class="fa fa-times-circle me-1 crm-rojo"></i>Motivo pérdida: {{ lead.lostReason }}
                   </div>
                   <small class="text-muted" *ngIf="lead.verifiedBuyer === undefined && !lead.forcedReason && !lead.lostReason">—</small>
                 </td>
                 <td><small>{{ lead.lastContactedAt ? (lead.lastContactedAt | date:'short') : '-' }}</small></td>
                 <td>
-                  <small *ngIf="lead.estimatedValue" style="color:#8b5cf6; font-weight:600;">
+                  <small *ngIf="lead.estimatedValue" class="crm-valor">
                     {{ formatCurrency(lead.estimatedValue) }}
                   </small>
                 </td>
@@ -570,7 +563,7 @@
             <ng-template pTemplate="emptymessage">
               <tr>
                 <td colspan="7" class="text-center p-4">
-                  <i class="fa fa-archive" style="font-size:2rem; color:#9ca3af;"></i>
+                  <i class="fa fa-archive crm-vacio-icono crm-vacio-icono--grande"></i>
                   <p class="text-muted mt-2 mb-0">Todavía no hay leads cerrados</p>
                 </td>
               </tr>
@@ -578,9 +571,7 @@
           </p-table>
         </div>
 
-      </div>
-    </div>
-  </div>
+      </section>
 </div>
 
 <!-- ═══════ DIALOG CREAR LEAD ═══════ -->
@@ -599,10 +590,10 @@
   <div *ngIf="!loadingDuplicates" class="mb-3">
     <div class="d-flex gap-3 align-items-center flex-wrap">
       <span class="stat-badge stat-badge-primary">{{ duplicateStats.totalLeads }} leads totales</span>
-      <span class="stat-badge" style="background-color:#fff7ed; color:#D35400;">
+      <span class="stat-badge crm-par--warn">
         {{ duplicateStats.duplicateGroups }} grupo(s) duplicados
       </span>
-      <span class="stat-badge" style="background-color:#fef2f2; color:#d12b38;">
+      <span class="stat-badge crm-par--error">
         {{ duplicateStats.duplicateLeads }} leads duplicados
       </span>
       <button *ngIf="selectedForDeletion.size > 0"
@@ -614,8 +605,8 @@
   </div>
 
   <div *ngIf="!loadingDuplicates && duplicateGroups.length === 0" class="text-center py-4">
-    <i class="fa fa-check-circle" style="font-size: 2.5rem; color: #27AE60;"></i>
-    <p class="mt-2 fw-semibold" style="color: #334155;">No se encontraron duplicados</p>
+    <i class="fa fa-check-circle crm-ok-icono"></i>
+    <p class="mt-2 fw-semibold crm-tinta">No se encontraron duplicados</p>
     <p class="text-muted">Todos los leads son únicos.</p>
   </div>
 
@@ -623,7 +614,7 @@
     style="max-height: 55vh; overflow-y: auto;">
     <div *ngFor="let group of duplicateGroups; let gi = index" class="mb-3">
       <div class="d-flex align-items-center justify-content-between mb-1">
-        <small class="fw-semibold" style="color: #64748b;">
+        <small class="fw-semibold crm-muted">
           Grupo {{ gi + 1 }} — coincide por: {{ group.matchedBy.join(', ') }}
         </small>
         <div class="d-flex gap-1">
@@ -694,15 +685,15 @@
   </div>
 
   <div *ngIf="!loadingTasks && pendingTasks.length === 0" class="text-center py-4">
-    <i class="fa fa-check-circle" style="font-size: 2.5rem; color: #27AE60;"></i>
-    <p class="mt-2 fw-semibold" style="color: #334155;">Sin resultados para "{{ tasksDialogTitle }}"</p>
+    <i class="fa fa-check-circle crm-ok-icono"></i>
+    <p class="mt-2 fw-semibold crm-tinta">Sin resultados para "{{ tasksDialogTitle }}"</p>
   </div>
 
   <div *ngIf="!loadingTasks && pendingTasks.length > 0" style="max-height: 60vh; overflow-y: auto;">
     <div *ngFor="let task of pendingTasks"
       class="d-flex align-items-center justify-content-between gap-2 py-2 px-1 border-bottom">
       <div class="flex-grow-1" style="min-width:0;">
-        <div class="fw-semibold text-truncate" style="color:#334155;">{{ task.title }}</div>
+        <div class="fw-semibold text-truncate crm-tinta">{{ task.title }}</div>
         <small class="text-muted d-block">
           <i class="fa fa-user-o me-1"></i>{{ taskLeadName(task) }}
           <span *ngIf="task.dueDate"><i class="fa fa-calendar-o ms-2 me-1"></i>{{ task.dueDate | date:'dd/MM/yyyy' }}</span>
@@ -751,8 +742,8 @@
         <tr *ngFor="let row of conversionRows">
           <td>{{ row.assignedTo === 'Sin asignar' ? 'Sin asignar' : nombreComercial(row.assignedTo) }}</td>
           <td class="text-end">{{ row.total }}</td>
-          <td class="text-end" style="color:#059669;">{{ row.won }}</td>
-          <td class="text-end" style="color:#dc2626;">{{ row.lost }}</td>
+          <td class="text-end crm-verde">{{ row.won }}</td>
+          <td class="text-end crm-rojo">{{ row.lost }}</td>
           <td class="text-end">
             <span class="stat-badge badge-sm"
               [style.background-color]="row.rate >= 50 ? '#f0fdf4' : '#fff7ed'"
@@ -815,8 +806,8 @@
       <span class="d-flex align-items-center gap-2">
         <span class="stage-color-dot" [style.background-color]="getStageColor(stage.key)"></span>
         {{ stage.label }}
-        <span class="stat-badge badge-sm" *ngIf="stage.isWon" style="background-color:#f0fdf4; color:#27AE60;">Ganada</span>
-        <span class="stat-badge badge-sm" *ngIf="stage.isLost" style="background-color:#fef2f2; color:#d12b38;">Perdida</span>
+        <span class="stat-badge badge-sm crm-par--ok" *ngIf="stage.isWon">Ganada</span>
+        <span class="stat-badge badge-sm crm-par--error" *ngIf="stage.isLost">Perdida</span>
       </span>
       <p-inputSwitch [(ngModel)]="stage.active" [ngModelOptions]="{standalone: true}"
         [trueValue]="true" [falseValue]="false" (onChange)="toggleStageActive(i)"></p-inputSwitch>

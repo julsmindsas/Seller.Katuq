@@ -1,4 +1,5 @@
-<div class="container-fluid px-0">
+<!-- D-516: marco canónico (config-pagina) -->
+<div class="cfg-pagina prospect-pagina">
   <!-- Indicador de carga -->
   <div *ngIf="loading" class="loading-overlay">
     <div class="spinner-container">
@@ -9,18 +10,17 @@
     </div>
   </div>
 
-  <div class="card customer-card p-2">
     <!-- Cabecera -->
-    <div class="card-header">
-      <div class="header-main">
+    <header class="cfg-cabeza prospect-cabeza">
         <!-- Información del módulo -->
-        <div class="header-info">
-          <h2 class="header-title">Gestión de Prospectos</h2>
-          <p class="header-subtitle">Gestiona y da seguimiento a tus prospectos web</p>
+        <div class="cfg-cabeza__textos">
+          <span class="cfg-eyebrow">Gestión General</span>
+          <h1 class="cfg-titulo">Gestión de Prospectos</h1>
+          <p class="cfg-sub">Gestiona y da seguimiento a tus prospectos web</p>
         </div>
         
         <!-- Controles y acciones -->
-        <div class="header-controls">
+        <div class="prospect-controles">
           <!-- Buscador mejorado -->
           <div class="search-container">
             <div class="search-box">
@@ -37,7 +37,7 @@
                   </select>
                   <input #searchInput class="form-control search-input" type="text" 
                          placeholder="Buscar prospecto..." formControlName="searchTerm">
-                  <button type="submit" class="btn btn-primary search-btn">
+                  <button type="submit" class="cfg-btn search-btn">
                     <i class="fa fa-search"></i>
                   </button>
                 </div>
@@ -46,9 +46,9 @@
           </div>
           
           <!-- Botones de acción -->
-          <div class="action-buttons">
-            <div class="dropdown me-2">
-              <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+          <div class="cfg-acciones">
+            <div class="dropdown">
+              <button class="cfg-btn cfg-btn--sec dropdown-toggle" type="button" 
                       data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fa fa-sort"></i>
                 <span>Ordenar</span>
@@ -71,25 +71,24 @@
                 </a></li>
               </ul>
             </div>
-            <button class="btn btn-outline-info me-2" (click)="exportToCSV()" ngbTooltip="Exportar datos">
+            <button class="cfg-btn cfg-btn--sec" (click)="exportToCSV()" ngbTooltip="Exportar datos">
               <i class="fa fa-file-export"></i>
               <span>Exportar</span>
             </button>
-            <button class="btn btn-info refresh-btn me-2" (click)="loadProspects()" ngbTooltip="Refrescar Lista">
+            <button class="cfg-btn cfg-btn--sec" (click)="loadProspects()" ngbTooltip="Refrescar Lista">
               <i class="fa fa-sync-alt"></i>
               <span>Refrescar</span>
             </button>
-            <button class="btn btn-success create-btn" (click)="createNewProspect()">
+            <button class="cfg-btn" (click)="createNewProspect()">
               <i class="fa fa-plus"></i>
               <span>Nuevo Prospecto</span>
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </header>
 
     <!-- Panel de Estadísticas -->
-    <div class="card-body stats-panel p-3 mb-3" *ngIf="!loading">
+    <div class="cfg-card stats-panel" *ngIf="!loading">
       <div class="row g-3">
         <!-- Progreso general -->
         <div class="col-md-3">
@@ -172,7 +171,7 @@
     </div>
 
     <!-- Contenido Principal -->
-    <div class="card-body p-0">
+    <div class="cfg-card prospect-contenido">
       <!-- Mensaje de no resultados -->
       <div *ngIf="!loading && filteredProspects.length === 0" class="empty-state p-5">
         <div class="text-center">
@@ -660,7 +659,6 @@
         </div>
       </div>
     </div>
-  </div>
 </div>
 
 <!-- Modal de Programar Tarea -->

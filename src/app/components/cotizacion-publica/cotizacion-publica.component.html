@@ -1,75 +1,81 @@
-<div class="cp-page">
+<!-- Documento del comercio para su cliente: lleva el encabezado y el pie del comercio, por eso no usa el
+     marco con el logo de Katuq (D-398); toma las piezas pub-* sobre una hoja propia. -->
+<div class="cot-pagina">
   <!-- Cargando -->
-  <div *ngIf="loading" class="cp-card cp-center">
-    <div class="cp-spinner"></div>
-    <p>Cargando tu cotización…</p>
+  <div *ngIf="loading" class="cot-hoja cot-centro" role="status">
+    <div class="cot-spinner" aria-hidden="true"></div>
+    <p class="pub-fine">Cargando tu cotización…</p>
   </div>
 
   <!-- No encontrada -->
-  <div *ngIf="!loading && notFound" class="cp-card cp-center">
-    <div class="cp-icon">🔍</div>
-    <h2>Cotización no encontrada</h2>
-    <p class="cp-muted">El enlace no es válido o ya no está disponible.</p>
+  <div *ngIf="!loading && notFound" class="cot-hoja cot-centro">
+    <div class="pub-estado pub-estado--info" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
+      </svg>
+    </div>
+    <h2 class="pub-h2">Cotización no encontrada</h2>
+    <p class="pub-fine">El enlace no es válido o ya no está disponible.</p>
   </div>
 
   <!-- Cotización -->
-  <div *ngIf="!loading && cot" class="cp-card">
+  <div *ngIf="!loading && cot" class="cot-hoja">
     <img
       *ngIf="cot.branding?.encabezado"
       [src]="cot.branding!.encabezado"
       alt="Encabezado"
-      class="cp-banner cp-banner-top">
-    <header class="cp-header">
-      <div>
-        <div class="cp-empresa">{{ cot.empresaNombre }}</div>
-        <div class="cp-nro">Cotización <strong>{{ cot.nroCotizacion || "—" }}</strong></div>
+      class="cot-banner cot-banner--arriba">
+    <header class="cot-cabeza">
+      <div class="cot-cabeza__textos">
+        <div class="cot-empresa">{{ cot.empresaNombre }}</div>
+        <div class="cot-nro">Cotización <strong>{{ cot.nroCotizacion || "—" }}</strong></div>
       </div>
-      <span class="cp-badge" [attr.data-estado]="estadoMostrado">{{ estadoLabel(estadoMostrado) }}</span>
+      <span class="cot-estado" [attr.data-estado]="estadoMostrado">{{ estadoLabel(estadoMostrado) }}</span>
     </header>
 
-    <section class="cp-meta">
-      <div><span class="cp-label">Cliente</span><span>{{ cot.clienteNombre || "—" }}</span></div>
-      <div><span class="cp-label">Emisión</span><span>{{ fecha(cot.fechaEmision) }}</span></div>
-      <div><span class="cp-label">Válida hasta</span><span>{{ fecha(cot.fechaVencimiento) }}</span></div>
+    <section class="cot-meta">
+      <div><span class="cot-label">Cliente</span><span class="cot-valor">{{ cot.clienteNombre || "—" }}</span></div>
+      <div><span class="cot-label">Emisión</span><span class="cot-valor">{{ fecha(cot.fechaEmision) }}</span></div>
+      <div><span class="cot-label">Válida hasta</span><span class="cot-valor">{{ fecha(cot.fechaVencimiento) }}</span></div>
       <!-- Ticket 1213: a quién llamar si el cliente tiene dudas. -->
-      <div *ngIf="cot.asesor" class="cp-asesor">
-        <span class="cp-label">Te atiende</span>
-        <span>{{ cot.asesor.nombre || cot.asesor.email }}</span>
-        <a *ngIf="cot.asesor.celular" class="cp-asesor-link" [href]="'tel:' + telefonoMarcable(cot.asesor.celular)">{{ cot.asesor.celular }}</a>
-        <a *ngIf="cot.asesor.email && cot.asesor.nombre" class="cp-asesor-link" [href]="'mailto:' + cot.asesor.email">{{ cot.asesor.email }}</a>
+      <div *ngIf="cot.asesor" class="cot-asesor">
+        <span class="cot-label">Te atiende</span>
+        <span class="cot-valor">{{ cot.asesor.nombre || cot.asesor.email }}</span>
+        <a *ngIf="cot.asesor.celular" class="cot-asesor-link" [href]="'tel:' + telefonoMarcable(cot.asesor.celular)">{{ cot.asesor.celular }}</a>
+        <a *ngIf="cot.asesor.email && cot.asesor.nombre" class="cot-asesor-link" [href]="'mailto:' + cot.asesor.email">{{ cot.asesor.email }}</a>
       </div>
     </section>
 
     <!-- Resultado tras responder -->
-    <div *ngIf="resultadoEstado === 'aceptada'" class="cp-result cp-ok">
+    <div *ngIf="resultadoEstado === 'aceptada'" class="pub-aviso pub-aviso--ok cot-aviso" role="status">
       ✅ ¡Gracias! Aceptaste esta cotización. Nos pondremos en contacto para continuar.
     </div>
-    <div *ngIf="resultadoEstado === 'rechazada'" class="cp-result cp-no">
+    <div *ngIf="resultadoEstado === 'rechazada'" class="pub-aviso pub-aviso--error cot-aviso" role="status">
       Registramos que rechazaste esta cotización. ¡Gracias por tu respuesta!
     </div>
 
     <!-- Avisos de estado (no accionable) -->
-    <div *ngIf="!resultadoEstado && cot.vencida" class="cp-result cp-warn">
+    <div *ngIf="!resultadoEstado && cot.vencida" class="pub-aviso pub-aviso--warn cot-aviso">
       ⏳ Esta cotización venció el {{ fecha(cot.fechaVencimiento) }}. Contáctanos para renovarla.
     </div>
-    <div *ngIf="!resultadoEstado && !cot.vencida && cot.estado !== 'enviada'" class="cp-result cp-info">
-      Esta cotización está <strong>{{ estadoLabel(cot.estado) }}</strong>.
+    <div *ngIf="!resultadoEstado && !cot.vencida && cot.estado !== 'enviada'" class="pub-aviso pub-aviso--info cot-aviso">
+      <span class="cot-aviso__texto">Esta cotización está <strong>{{ estadoLabel(cot.estado) }}</strong>.</span>
     </div>
 
     <!-- Tabla de ítems -->
-    <div class="cp-table-scroll">
-      <table class="cp-table">
+    <div class="cot-tabla-scroll">
+      <table class="cot-tabla">
         <thead>
           <tr>
             <th>Descripción</th>
-            <th class="cp-c">Cant.</th>
-            <th class="cp-r">Valor Bruto</th>
-            <th class="cp-r">Descuento</th>
-            <th class="cp-r">Precio Unitario (sin IVA)</th>
-            <th class="cp-r">Porcentaje IVA</th>
-            <th class="cp-r">Valor IVA</th>
-            <th class="cp-r">Precio unitario Total(con IVA)</th>
-            <th class="cp-r">Subtotal</th>
+            <th class="cot-c">Cant.</th>
+            <th class="cot-r">Valor Bruto</th>
+            <th class="cot-r">Descuento</th>
+            <th class="cot-r">Precio Unitario (sin IVA)</th>
+            <th class="cot-r">Porcentaje IVA</th>
+            <th class="cot-r">Valor IVA</th>
+            <th class="cot-r">Precio unitario Total(con IVA)</th>
+            <th class="cot-r">Subtotal</th>
           </tr>
         </thead>
         <tbody>
@@ -77,72 +83,72 @@
             <td>
               {{ it.titulo }}
               <!-- Ticket 1097: un combo cerrado llega ya sumado en una sola fila -->
-              <span class="cp-combo" *ngIf="it.esCombo">· Combo</span>
+              <span class="cot-combo" *ngIf="it.esCombo">· Combo</span>
               <!-- Ticket 1095: detalle escrito para esta cotización -->
-              <div class="cp-detalle" *ngIf="it.descripcion">{{ it.descripcion }}</div>
+              <div class="cot-detalle" *ngIf="it.descripcion">{{ it.descripcion }}</div>
             </td>
-            <td class="cp-c">{{ it.cantidad }}</td>
-            <td class="cp-r">{{ money(it.valorBruto) }}</td>
-            <td class="cp-r">{{ it.descuentoPct > 0 ? money(it.descuentoUnitario) : '—' }}</td>
-            <td class="cp-r">{{ money(it.precioUnitarioSinIva) }}</td>
-            <td class="cp-r">{{ it.porcentajeIva === null ? 'Varios' : it.porcentajeIva + '%' }}</td>
-            <td class="cp-r">{{ money(it.valorIva) }}</td>
-            <td class="cp-r">{{ money(it.precioUnitarioConIva) }}</td>
-            <td class="cp-r">{{ money(it.subtotal) }}</td>
+            <td class="cot-c">{{ it.cantidad }}</td>
+            <td class="cot-r">{{ money(it.valorBruto) }}</td>
+            <td class="cot-r">{{ it.descuentoPct > 0 ? money(it.descuentoUnitario) : '—' }}</td>
+            <td class="cot-r">{{ money(it.precioUnitarioSinIva) }}</td>
+            <td class="cot-r">{{ it.porcentajeIva === null ? 'Varios' : it.porcentajeIva + '%' }}</td>
+            <td class="cot-r">{{ money(it.valorIva) }}</td>
+            <td class="cot-r">{{ money(it.precioUnitarioConIva) }}</td>
+            <td class="cot-r">{{ money(it.subtotal) }}</td>
           </tr>
           <tr *ngIf="!cot.items?.length">
-            <td colspan="9" class="cp-muted cp-c">Sin ítems.</td>
+            <td colspan="9" class="cot-muted cot-c">Sin ítems.</td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <!-- Totales -->
-    <div class="cp-totales">
+    <div class="cot-totales">
       <div><span>Subtotal</span><span>{{ money(cot.subtotal) }}</span></div>
       <div *ngIf="cot.totalDescuento > 0"><span>Descuento</span><span>- {{ money(cot.totalDescuento) }}</span></div>
       <div><span>Base gravable</span><span>{{ money(cot.baseGravable) }}</span></div>
       <div><span>IVA</span><span>{{ money(cot.totalImpuesto) }}</span></div>
-      <div class="cp-total"><span>Total</span><span>{{ money(cot.total) }}</span></div>
+      <div class="cot-total"><span>Total</span><span>{{ money(cot.total) }}</span></div>
     </div>
 
     <!-- Términos -->
-    <section *ngIf="cot.terminos || cot.anexo" class="cp-terminos">
-      <div class="cp-label">Términos y condiciones</div>
+    <section *ngIf="cot.terminos || cot.anexo" class="cot-terminos">
+      <div class="cot-label">Términos y condiciones</div>
       <p *ngIf="cot.terminos" [innerHTML]="cot.terminos | linkify"></p>
       <!-- Ticket 1081: documento anexo de condiciones comerciales -->
-      <a *ngIf="cot.anexo as anexo" class="cp-anexo" [href]="anexo.url" target="_blank" rel="noopener">
-        <span aria-hidden="true">📄</span> {{ anexo.nombre }} (PDF)
+      <a *ngIf="cot.anexo as anexo" class="cot-anexo" [href]="anexo.url" target="_blank" rel="noopener">
+        <span class="cot-anexo__icono" aria-hidden="true">📄</span> {{ anexo.nombre }} (PDF)
       </a>
     </section>
 
     <!-- Acciones del cliente -->
-    <section *ngIf="puedeResponder" class="cp-acciones">
+    <section *ngIf="puedeResponder" class="cot-acciones">
       <ng-container *ngIf="!accionActiva">
-        <p class="cp-acciones-hint">¿Deseas aprobar esta cotización?</p>
-        <div class="cp-btn-row">
-          <button class="cp-btn cp-btn-ok" (click)="iniciarAccion('aceptar')">✓ Aceptar</button>
-          <button class="cp-btn cp-btn-no" (click)="iniciarAccion('rechazar')">✕ Rechazar</button>
+        <p class="cot-pregunta">¿Deseas aprobar esta cotización?</p>
+        <div class="cot-botones">
+          <button class="pub-btn cot-btn cot-btn--ok" (click)="iniciarAccion('aceptar')">✓ Aceptar</button>
+          <button class="pub-btn pub-btn--sec cot-btn cot-btn--no" (click)="iniciarAccion('rechazar')">✕ Rechazar</button>
         </div>
       </ng-container>
 
-      <div *ngIf="accionActiva" class="cp-form">
-        <p class="cp-form-title">
+      <div *ngIf="accionActiva" class="cot-form">
+        <p class="pub-h2 cot-form__titulo">
           {{ accionActiva === 'aceptar' ? 'Confirmar aceptación' : 'Confirmar rechazo' }}
         </p>
-        <label class="cp-field">
-          <span>Tu número de documento</span>
+        <label class="cot-campo">
+          <span class="pub-label">Tu número de documento</span>
           <input type="text" [(ngModel)]="documento" placeholder="Ej. 1234567890" autocomplete="off" />
         </label>
-        <label *ngIf="accionActiva === 'rechazar'" class="cp-field">
-          <span>Motivo (opcional)</span>
+        <label *ngIf="accionActiva === 'rechazar'" class="cot-campo">
+          <span class="pub-label">Motivo (opcional)</span>
           <textarea [(ngModel)]="motivo" rows="2" placeholder="Cuéntanos por qué"></textarea>
         </label>
-        <div *ngIf="errorAccion" class="cp-error">{{ errorAccion }}</div>
-        <div class="cp-btn-row">
-          <button class="cp-btn cp-btn-light" (click)="cancelarAccion()" [disabled]="enviando">Cancelar</button>
+        <div *ngIf="errorAccion" class="pub-error cot-error" role="alert">{{ errorAccion }}</div>
+        <div class="cot-botones">
+          <button class="pub-btn pub-btn--sec cot-btn" (click)="cancelarAccion()" [disabled]="enviando">Cancelar</button>
           <button
-            class="cp-btn"
+            class="pub-btn cot-btn"
             [class.cp-btn-ok]="accionActiva === 'aceptar'"
             [class.cp-btn-no]="accionActiva === 'rechazar'"
             (click)="confirmar()"
@@ -158,13 +164,13 @@
       *ngIf="cot.branding?.piepagina"
       [src]="cot.branding!.piepagina"
       alt="Pie de página"
-      class="cp-banner cp-banner-foot">
+      class="cot-banner cot-banner--pie">
     <img
       *ngIf="cot.branding?.publicidad"
       [src]="cot.branding!.publicidad"
       alt="Katuq"
-      class="cp-banner cp-banner-ad">
+      class="cot-banner cot-banner--publicidad">
 
-    <footer class="cp-footer">Cotización generada por {{ cot.empresaNombre }} · Katuq</footer>
+    <footer class="cot-pie">Cotización generada por {{ cot.empresaNombre }} · Katuq</footer>
   </div>
 </div>

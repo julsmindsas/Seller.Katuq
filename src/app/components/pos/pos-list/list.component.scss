@@ -3,7 +3,47 @@
 @include config-pagina;
 
 .titulo-pantalla {
-  margin: 8px 0 16px;
+  margin: 0;
+}
+
+// La cabecera y la tabla son dos bloques hermanos: se unen sin doble padding.
+.pos-lista-cabeza { padding-bottom: 0; }
+.pos-lista-cuerpo { padding-top: 16px; }
+.pos-lista-tabla { min-width: 0; overflow-x: auto; }
+
+// Botones pButton de la cabecera de la tabla con el tema canónico.
+:host ::ng-deep .pos-lista-card {
+  .p-datatable .p-datatable-header {
+    background: #fff;
+    border: 0;
+    padding: 0 0 12px;
+  }
+
+  .p-datatable-header label {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: #8f8bab;
+    margin-bottom: 6px;
+  }
+
+  .p-button.p-button-outlined {
+    background: #fff;
+    color: #5b5878;
+    border: 1px solid #e4e2ef;
+    border-radius: 11px;
+    font-weight: 700;
+
+    &:enabled:hover { background: #faf9fe; border-color: #d9cffb; color: #5F3FE0; }
+  }
+
+  .p-button.p-button-text { color: #5F3FE0; }
+  .p-button:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+
+  .p-calendar .p-button { background: #5F3FE0; border-color: #5F3FE0; }
+  .p-calendar .p-inputtext,
+  .p-autocomplete .p-inputtext { border-radius: 10px; border-color: #e9e7f3; background: #f5f4fa; }
 }
 
 .p-table-tr-th>th {
@@ -89,13 +129,13 @@
 }
 
 .p-button-success {
-  background-color: #28a745;
-  border-color: #28a745;
+  background-color: #1E874B;
+  border-color: #1E874B;
 }
 
 .p-button-warning {
-  background-color: #ffc107;
-  border-color: #ffc107;
+  background-color: #D9820A;
+  border-color: #D9820A;
 }
 
 .p-input-icon-right {
@@ -153,13 +193,13 @@
 }
 
 .btn-primary {
-  background-color: #484848;
-  border-color: #484848;
+  background-color: #5F3FE0;
+  border-color: #5F3FE0;
 }
 
 .btn-primary:hover {
-  background-color: #0056b3;
-  border-color: #0056b3;
+  background-color: #4a2fc0;
+  border-color: #4a2fc0;
 }
 
 .pdb-3 {
@@ -254,8 +294,7 @@
 }
 
 .btn-imprimir {
-  background-color: #a78bfa;
-  /* Color de fondo azul */
+  background-color: #5F3FE0;
   color: white;
   /* Color del texto blanco */
   border: none;
@@ -264,8 +303,7 @@
   /* Relleno */
   margin: 5px 0;
   /* Margen */
-  border-radius: 5px;
-  /* Bordes redondeados */
+  border-radius: 11px;
   cursor: pointer;
   /* Manito al pasar el ratón */
   font-size: 16px;
@@ -274,8 +312,7 @@
 
 /* Estilo al pasar el ratón sobre el botón */
 .btn-imprimir:hover {
-  background-color: #0056b3;
-  /* Color de fondo azul oscuro */
+  background-color: #4a2fc0;
 }
 
 .tabs {

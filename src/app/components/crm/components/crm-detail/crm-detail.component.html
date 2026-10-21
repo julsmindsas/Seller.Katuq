@@ -4,28 +4,27 @@
 
 <!-- Error / not found -->
 <div *ngIf="!loading && !lead" class="text-center p-5">
-  <i class="pi pi-exclamation-triangle" style="font-size:2rem; color:#d12b38;"></i>
+  <i class="pi pi-exclamation-triangle crm-icono-error"></i>
   <p class="mt-2">No se pudo cargar el lead. Verifica que el backend esté corriendo en localhost:3300.</p>
   <button pButton label="Volver al listado" icon="pi pi-arrow-left" class="p-button-text" (click)="goBack()"></button>
 </div>
 
-<div class="container-fluid p-3" *ngIf="!loading && lead">
+<div class="cfg-pagina crm-detalle" *ngIf="!loading && lead">
 
-  <!-- Header -->
-  <div class="detail-header mb-3">
-    <div class="d-flex align-items-center gap-3 mb-2">
+  <!-- Header (D-516: marco canónico) -->
+  <header class="cfg-cabeza crm-detalle__cabeza">
+    <span class="cfg-eyebrow">CRM</span>
+    <div class="d-flex align-items-center flex-wrap gap-3">
       <button pButton icon="pi pi-arrow-left" class="p-button-text p-button-sm" (click)="goBack()"></button>
-      <h5 class="mb-0">{{ entityName }}</h5>
+      <h1 class="cfg-titulo">{{ entityName }}</h1>
       <p-tag [value]="getStageLabel(currentStage)" [severity]="getStageSeverity(currentStage)"></p-tag>
-      <span class="stat-badge badge-sm" *ngIf="lead.pipeline?.verifiedBuyer === true"
-        style="background-color:#f0fdf4; color:#27AE60;">
+      <span class="stat-badge badge-sm crm-par--ok" *ngIf="lead.pipeline?.verifiedBuyer === true">
         <i class="fa fa-check-circle me-1"></i>Comprador verificado
       </span>
-      <span class="stat-badge badge-sm" *ngIf="lead.pipeline?.verifiedBuyer === false"
-        style="background-color:#fff7ed; color:#c2410c;">
+      <span class="stat-badge badge-sm crm-par--warn" *ngIf="lead.pipeline?.verifiedBuyer === false">
         <i class="fa fa-exclamation-triangle me-1"></i>Sin verificar
       </span>
-      <span class="text-muted ms-2" *ngIf="lead.entity?.email">{{ lead.entity.email }}</span>
+      <span class="crm-detalle__correo ms-2" *ngIf="lead.entity?.email">{{ lead.entity.email }}</span>
       <button pButton icon="pi pi-pencil" label="{{ 'Editar' | translate }}" class="p-button-text p-button-sm ms-auto"
         pTooltip="Corregir los datos ingresados de este lead" tooltipPosition="bottom"
         (click)="openEditDialog()"></button>
@@ -43,9 +42,10 @@
         (click)="changeStage(stage.key)">
       </button>
     </div>
-  </div>
+  </header>
 
   <!-- Tabs -->
+  <section class="cfg-card">
   <p-tabView [(activeIndex)]="activeTab">
 
     <!-- Tab: Info -->
@@ -230,6 +230,7 @@
     </p-tabPanel>
 
   </p-tabView>
+  </section>
 </div>
 
 <!-- ═══════ DIALOG EDITAR LEAD ═══════ -->
@@ -276,7 +277,7 @@
 
       <div class="col-12">
         <label class="form-label fw-semibold">
-          <i class="fa fa-tag me-1" style="color:#8b5cf6;"></i>{{ '¿Qué le vas a vender?' | translate }}
+          <i class="fa fa-tag me-1 crm-acento"></i>{{ '¿Qué le vas a vender?' | translate }}
         </label>
         <textarea pInputTextarea formControlName="productoInteres" rows="2"
           placeholder="Ej: Plan básico de ventas por WhatsApp, arreglos florales por catálogo digital, suscripción mensual..."
@@ -286,7 +287,7 @@
       <!-- Etiquetas -->
       <div class="col-12">
         <label class="form-label fw-semibold mb-1">
-          <i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ 'Etiquetas' | translate }}
+          <i class="pi pi-tags me-1 crm-acento"></i>{{ 'Etiquetas' | translate }}
         </label>
         <div class="tags-picker" *ngIf="clientTagsCatalog.length > 0">
           <span *ngFor="let tag of clientTagsCatalog" class="tag-chip"

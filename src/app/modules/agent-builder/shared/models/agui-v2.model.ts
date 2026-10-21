@@ -315,7 +315,7 @@ export const AGUI_V2_SPEAKERS: Record<string, AgUiSpeaker> = {
     name: 'Ana',
     displayName: 'Ana (Logistica)',
     department: 'logistics',
-    color: '#3b82f6',
+    color: '#1E6FD9',
     avatar: 'truck',
     type: 'department'
   }

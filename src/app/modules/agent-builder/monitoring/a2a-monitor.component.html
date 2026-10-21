@@ -1,11 +1,14 @@
-<div class="a2a-monitor">
-  <!-- Header -->
-  <div class="monitor-header">
-    <h2>
-      <i class="pi pi-chart-line"></i>
-      Monitor A2A
-    </h2>
-    <div class="header-actions">
+<div class="cfg-pagina a2a-monitor">
+  <!-- Encabezado -->
+  <header class="cfg-cabeza monitor-header">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Agent Builder</span>
+      <h1 class="cfg-titulo">
+        <i class="pi pi-chart-line"></i>
+        Monitor A2A
+      </h1>
+    </div>
+    <div class="cfg-acciones header-actions">
       <button pButton type="button" icon="pi pi-refresh"
               class="p-button-rounded p-button-text"
               (click)="refresh()"
@@ -15,12 +18,13 @@
               class="p-button-rounded p-button-text"
               pTooltip="Settings"></button>
     </div>
-  </div>
+  </header>
 
   <!-- Error Message -->
   <p-message *ngIf="error" severity="error" [text]="error" styleClass="w-full mb-3"></p-message>
 
   <!-- Tabs -->
+  <section class="cfg-card monitor-card">
   <p-tabView [(activeIndex)]="activeTab" styleClass="a2a-tabs">
 
     <!-- Tab 1: Metrics -->
@@ -279,4 +283,5 @@
     </p-tabPanel>
 
   </p-tabView>
+  </section>
 </div>

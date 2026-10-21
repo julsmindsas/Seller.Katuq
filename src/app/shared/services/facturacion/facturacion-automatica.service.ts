@@ -1,7 +1,17 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { IntegrationsService } from '../../../components/integrations/integrations.service';
-import { opcionesDeFactura, ProveedorContable, resolverProveedorCon } from './facturacion-automatica.util';
+import { CompanyFeaturesService } from '../company-features.service';
+import { FacturacionIntegracionService } from './facturacion-integracion.service';
+import {
+  opcionesDeFactura,
+  ProveedorContable,
+  ProveedorResuelto,
+  resolverConServidor,
+  resolverProveedorCon,
+  TipoDocumentoFactura,
+} from './facturacion-automatica.util';
 
 export * from './facturacion-automatica.util';
 
@@ -17,11 +27,29 @@ export * from './facturacion-automatica.util';
  */
 @Injectable({ providedIn: 'root' })
 export class FacturacionAutomaticaService {
-  constructor(private integrationsService: IntegrationsService) {}
+  constructor(
+    private integrationsService: IntegrationsService,
+    private features: CompanyFeaturesService,
+    private facturacionIntegracion: FacturacionIntegracionService,
+  ) {}
 
   /** Primer proveedor contable configurado de la empresa, o null si no hay. */
   resolverProveedor(): Observable<ProveedorContable | null> {
     return resolverProveedorCon((p) => this.integrationsService.getIntegration(p));
+  }
+
+  /**
+   * D-500 (decisión 12): proveedor del tipo de documento, con el motivo si no hay uno.
+   * - Con la bandera `invoicingHub`: lo decide el servidor y nunca se prueba otro.
+   * - Sin la bandera: el orden fijo de hoy (mismas peticiones que `resolverProveedor`) y sin
+   *   motivo, para que cada pantalla siga mostrando exactamente lo de hoy.
+   */
+  resolverProveedorPara(documentType: TipoDocumentoFactura): Observable<ProveedorResuelto> {
+    const getIntegration = (p: string) => this.integrationsService.getIntegration(p);
+    if (this.features.isEnabled('invoicingHub')) {
+      return resolverConServidor(this.facturacionIntegracion.resolver(documentType), getIntegration);
+    }
+    return resolverProveedorCon(getIntegration).pipe(map((proveedor) => ({ proveedor, motivo: null })));
   }
 
   /**

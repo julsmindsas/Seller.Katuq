@@ -27,7 +27,9 @@
 .cart-table-wrap {
   border: 1px solid var(--kc-line);
   border-radius: 16px;
-  overflow: hidden;
+  // Ticket 1321: con el menú lateral abierto la tabla es más ancha que la tarjeta.
+  // `hidden` recortaba Subtotal y Acciones (el botón de eliminar); ahora se desplaza.
+  overflow-x: auto;
   background: var(--kc-surface);
   box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04);
 }
@@ -292,8 +294,9 @@
 
 // ─── Action buttons ──────────────────────────────────────────────────────────
 .item-actions {
-  display: flex;
-  align-items: center;
+  // Ticket 1321: las 4 acciones en 2×2 caben en la columna de 96px; en fila medían ~143px.
+  display: grid;
+  grid-template-columns: repeat(2, 32px);
   gap: 5px;
   justify-content: center;
 
@@ -584,4 +587,9 @@
 
   .combo-head-sub { color: var(--kc-muted); margin-right: 8px; }
   .combo-btn { margin-top: 0; }
+  .combo-btn + .combo-btn { margin-left: 6px; }
+  .combo-btn--quitar {
+    color: var(--kc-red);
+    &:hover { border-color: #f3c6cc; background: var(--kc-red-wash); }
+  }
 }

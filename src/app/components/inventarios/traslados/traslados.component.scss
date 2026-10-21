@@ -1,16 +1,19 @@
-// Variables Katuq
-$primary-color: #5F3FE0;
-$secondary-color: #6c7ae0;
-$success-color: #36b37e;
-$warning-color: #ff991f;
-$danger-color: #de350b;
-$info-color: #0065ff;
-$text-color: #172b4d;
-$light-gray: #f8fafc;
-$medium-gray: #dfe1e6;
-$error-color: #de350b;
-$border-radius: 8px;
-$box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
+
+// Variables Katuq (tokens del canon, D-516)
+$primary-color: $cfg-accent;
+$secondary-color: $cfg-accent-2;
+$success-color: $cfg-ok;
+$warning-color: $cfg-warn;
+$danger-color: $cfg-err;
+$info-color: $cfg-info;
+$text-color: $cfg-ink;
+$light-gray: $cfg-tint;
+$medium-gray: $cfg-line;
+$error-color: $cfg-err;
+$border-radius: 11px;
+$box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
 
 // Mixins
 @mixin card {
@@ -24,14 +27,14 @@ $box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: $box-shadow;
   }
 }
 
 // Estilos principales
 .dashboard-container {
   padding: 30px;
-  background-color: #f7f8fa;
+  background-color: $cfg-tint;
   min-height: calc(100vh - 100px);
 }
 
@@ -381,7 +384,7 @@ $box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 // Estilos para ng-select
-::ng-deep {
+:host ::ng-deep {
   .ng-select {
     .ng-select-container {
       border: 2px solid $medium-gray !important;
@@ -522,7 +525,7 @@ $box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 // PrimeNG Dropdown personalizado
-::ng-deep {
+:host ::ng-deep {
   .p-dropdown {
     border: 2px solid $medium-gray !important;
     border-radius: $border-radius !important;
@@ -645,7 +648,84 @@ $box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 10px 14px;
   border: 1px solid #ddd6f5;
   border-radius: 11px;
-  background: #f4f1fd;
-  color: #211f3a;
+  background: $cfg-accent-soft;
+  color: $cfg-ink;
   font-size: 13.5px;
+}
+
+// ── Marco cfg-pagina (D-516) ──
+:host { display: block; background: $cfg-tint; }
+
+.cfg-card > .loader-box { border-radius: 16px; }
+
+.bodega-card {
+  background: $cfg-tint;
+  border: 1px solid #eeecf7;
+  border-radius: 16px;
+
+  &:hover { border-color: #ddd3fb; }
+}
+.bodega-card__titulo {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: $cfg-muted;
+}
+.bodega-icon {
+  width: 48px;
+  height: 48px;
+
+  i { font-size: 1.2rem; }
+}
+.bodega-icon--origen { background-color: $cfg-accent-soft; i { color: $cfg-accent; } }
+.bodega-icon--destino { background-color: $cfg-ok-soft; i { color: $cfg-ok; } }
+
+.flecha-traslado { font-size: 1.5rem; color: $cfg-accent; }
+.icono-acento, .texto-acento { color: $cfg-accent; }
+.texto-producto { color: $cfg-ink; font-size: 13px; }
+
+.tabla-traslado {
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  overflow-x: auto;
+}
+.tabla-traslado__cabeza th {
+  background: $cfg-tint;
+  color: $cfg-muted;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  border-color: $cfg-line-soft;
+}
+.tabla-traslado__pie { background: $cfg-tint; }
+
+.miniatura {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: $cfg-tile;
+}
+
+:host ::ng-deep {
+  .boton-trasladar.p-button {
+    background: $cfg-accent;
+    border-color: $cfg-accent;
+    border-radius: 11px;
+    font-weight: 700;
+    box-shadow: $cfg-shadow-btn;
+
+    &:enabled:hover { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
+  }
+  .boton-cancelar.p-button {
+    background: #fff;
+    color: $cfg-body;
+    border-color: #e4e2ef;
+    border-radius: 11px;
+    font-weight: 700;
+
+    &:enabled:hover { background: $cfg-tint; color: $cfg-accent; border-color: #d9cffb; }
+  }
 }

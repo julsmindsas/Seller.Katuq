@@ -327,7 +327,7 @@ Por favor asigna el transportador y actualiza el estado de estos pedidos a "Desp
     }
 
     getSpeakerColor(message: AgUiMessage): string {
-        return message.speaker?.color || '#6366f1';
+        return message.speaker?.color || '#5F3FE0';
     }
 
     getSpeakerDepartment(message: AgUiMessage): string {
@@ -741,10 +741,10 @@ Por favor asigna el transportador y actualiza el estado de estos pedidos a "Desp
      */
     getDepartmentColor(department: string): string {
         const colors: Record<string, string> = {
-            'ceo': '#6366f1',
+            'ceo': '#5F3FE0',
             'sales': '#10b981',
             'inventory': '#f59e0b',
-            'logistics': '#3b82f6'
+            'logistics': '#1E6FD9'
         };
         return colors[department] || '#6b7280';
     }

@@ -4,30 +4,30 @@
  */
 
 // Colores Katuq (mismos que Chat Pro)
-$primary: #a78bfa;
-$secondary: #4555D1;
-$text-dark: #242934;
-$text-gray: #64748b;
-$text-light: #94a3b8;
-$bg-page: #f8f8f8;
+$primary: #5F3FE0;
+$secondary: #7C5CFF;
+$text-dark: #211F3A;
+$text-gray: #5b5878;
+$text-light: #8f8bab;
+$bg-page: #faf9fe;
 $bg-white: #ffffff;
-$border: #e5e7eb;
-$success: #51bb25;
-$danger: #dc3545;
-$warning: #f59e0b;
+$border: #ececf4;
+$success: #1E874B;
+$danger: #D64545;
+$warning: #D9820A;
 
 // Department colors
-$color-ceo: #a78bfa;
-$color-sales: #10b981;
-$color-inventory: #f59e0b;
-$color-logistics: #3b82f6;
+$color-ceo: #5F3FE0;
+$color-sales: #1E874B;
+$color-inventory: #D9820A;
+$color-logistics: #1E6FD9;
 
 :host {
   display: flex;
   flex-direction: column;
   height: 100%;
   padding: 20px;
-  background: #f1f5f9;
+  background: #faf9fe;
   box-sizing: border-box;
 }
 
@@ -40,7 +40,8 @@ $color-logistics: #3b82f6;
   background: $bg-white;
   font-family: 'Montserrat', sans-serif;
   border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid $border;
+  box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
   overflow: hidden;
   position: relative;
 }
@@ -482,7 +483,7 @@ $color-logistics: #3b82f6;
 
     &.final-message {
       .message-content {
-        border-left: 3px solid $success;
+        border: 1px solid rgba($success, 0.35);
       }
     }
   }
@@ -647,7 +648,7 @@ $color-logistics: #3b82f6;
       align-items: center;
       justify-content: center;
       font-size: 20px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 4px 12px rgba(50, 40, 110, 0.15);
       transition: all 0.3s ease;
     }
 
@@ -882,7 +883,7 @@ $color-logistics: #3b82f6;
     min-width: 280px;
 
     &:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 12px rgba(50, 40, 110, 0.08);
     }
 
     .vote-avatar {
@@ -893,7 +894,7 @@ $color-logistics: #3b82f6;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 2px 8px rgba(50, 40, 110, 0.12);
 
       .avatar-emoji {
         font-size: 22px;
@@ -910,7 +911,7 @@ $color-logistics: #3b82f6;
         align-items: center;
         justify-content: center;
         border: 2px solid $bg-white;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 2px 4px rgba(50, 40, 110, 0.15);
 
         i {
           font-size: 11px;
@@ -962,18 +963,18 @@ $color-logistics: #3b82f6;
     }
 
     &.approve {
-      border-left: 3px solid $success;
-      background: rgba($success, 0.02);
+      border: 1px solid rgba($success, 0.3);
+      background: #E6F7EE;
     }
 
     &.reject {
-      border-left: 3px solid $danger;
-      background: rgba($danger, 0.02);
+      border: 1px solid rgba($danger, 0.3);
+      background: #FDECEC;
     }
 
     &.pending {
-      border-left: 3px solid $warning;
-      background: rgba($warning, 0.02);
+      border: 1px solid rgba($warning, 0.3);
+      background: #FFF1DF;
     }
   }
 
@@ -988,7 +989,7 @@ $color-logistics: #3b82f6;
       border-radius: 6px;
       overflow: hidden;
       margin-bottom: 8px;
-      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+      box-shadow: inset 0 1px 3px rgba(50, 40, 110, 0.1);
 
       .progress-approve {
         background: $success;
@@ -1404,7 +1405,7 @@ $color-logistics: #3b82f6;
           border-radius: 12px;
           font-size: 10px;
           font-weight: 700;
-          color: #059669;
+          color: #1E874B;
           text-transform: uppercase;
           letter-spacing: 0.5px;
           margin-bottom: 4px;
@@ -1414,7 +1415,7 @@ $color-logistics: #3b82f6;
           margin: 0;
           font-size: 16px;
           font-weight: 700;
-          color: #047857;
+          color: #1E874B;
         }
       }
     }
@@ -1471,7 +1472,7 @@ $color-logistics: #3b82f6;
             align-items: center;
             justify-content: center;
             font-size: 14px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 6px rgba(50, 40, 110, 0.1);
           }
         }
 
@@ -1502,7 +1503,7 @@ $color-logistics: #3b82f6;
         background: rgba($bg-white, 0.5);
         border-radius: 6px;
         overflow: hidden;
-        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        box-shadow: inset 0 1px 3px rgba(50, 40, 110, 0.1);
 
         .stats-approve {
           background: #1E874B;
@@ -1540,7 +1541,7 @@ $color-logistics: #3b82f6;
         gap: 6px;
         font-size: 12px;
         font-weight: 600;
-        color: #059669;
+        color: #1E874B;
         margin-bottom: 10px;
 
         i {
@@ -1658,7 +1659,7 @@ $color-logistics: #3b82f6;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 8px rgba(50, 40, 110, 0.12);
 
     .avatar-emoji {
       font-size: 18px;
@@ -1850,7 +1851,7 @@ $color-logistics: #3b82f6;
 .tool-calls-panel {
   width: 260px;
   background: $bg-page;
-  border-left: 1px solid $border;
+  box-shadow: inset 1px 0 0 $border; // divisor de 1px, sin borde lateral de acento
   display: flex;
   flex-direction: column;
 
@@ -1973,7 +1974,7 @@ $color-logistics: #3b82f6;
 
 .quick-actions-bar {
   padding: 8px 16px;
-  background: linear-gradient(to bottom, transparent, rgba($bg-page, 0.8));
+  background: $bg-page;
   border-top: 1px solid rgba($border, 0.5);
 
   .quick-actions-scroll {
@@ -2132,7 +2133,7 @@ $color-logistics: #3b82f6;
   width: 320px;
   height: 100vh;
   background: $bg-white;
-  box-shadow: -2px 0 16px rgba(0, 0, 0, 0.1);
+  box-shadow: -2px 0 16px rgba(50, 40, 110, 0.1);
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -2223,7 +2224,7 @@ $color-logistics: #3b82f6;
     justify-content: space-between;
     padding: 12px 16px;
     cursor: pointer;
-    border-left: 3px solid transparent;
+    border-radius: 11px;
     transition: all 0.2s ease;
 
     &:hover {
@@ -2231,8 +2232,8 @@ $color-logistics: #3b82f6;
     }
 
     &.active {
-      background: rgba($primary, 0.08);
-      border-left-color: $primary;
+      background: #efe9ff;
+      box-shadow: inset 0 0 0 1px #ddd3fb;
     }
 
     .session-info {
@@ -2475,7 +2476,7 @@ $color-logistics: #3b82f6;
   align-items: center;
   gap: 16px;
   padding: 12px 20px;
-  background: #f8fafc;
+  background: #faf9fe;
   border-bottom: 1px solid $border;
   min-height: 60px;
 
@@ -2513,14 +2514,14 @@ $color-logistics: #3b82f6;
     &.speaking {
       .avatar-circle {
         transform: scale(1.15);
-        box-shadow: 0 0 0 3px rgba(var(--agent-color-rgb, 167, 139, 250), 0.3);
+        box-shadow: 0 0 0 3px rgba(var(--agent-color-rgb, 95, 63, 224), 0.3);
       }
     }
 
     &.thinking {
       .avatar-circle {
         animation: thinking-pulse 1.5s ease-in-out infinite;
-        box-shadow: 0 0 0 3px rgba(var(--agent-color-rgb, 167, 139, 250), 0.2);
+        box-shadow: 0 0 0 3px rgba(var(--agent-color-rgb, 95, 63, 224), 0.2);
       }
     }
   }
@@ -2534,7 +2535,7 @@ $color-logistics: #3b82f6;
     align-items: center;
     justify-content: center;
     border: 2px solid white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 8px rgba(50, 40, 110, 0.15);
     transition: all 0.3s ease;
 
     .avatar-emoji {
@@ -2572,7 +2573,7 @@ $color-logistics: #3b82f6;
     padding: 8px 16px;
     background: white;
     border-radius: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(50, 40, 110, 0.08);
     position: relative;
     overflow: hidden;
 
@@ -2638,10 +2639,10 @@ $color-logistics: #3b82f6;
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: #f8fafc;
+  background: #faf9fe;
   border-radius: 12px;
   margin: 8px 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(50, 40, 110, 0.06);
 
   .active-agents-avatars {
     display: flex;
@@ -2656,7 +2657,7 @@ $color-logistics: #3b82f6;
       align-items: center;
       justify-content: center;
       border: 2px solid white;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 6px rgba(50, 40, 110, 0.15);
       transition: all 0.3s ease;
       margin-left: -8px;
 
@@ -2671,7 +2672,7 @@ $color-logistics: #3b82f6;
       &.speaking {
         transform: scale(1.15);
         z-index: 10;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.3), 0 4px 12px rgba(50, 40, 110, 0.2);
         animation: speaking-pulse 1.5s ease-in-out infinite;
       }
     }
@@ -2737,7 +2738,7 @@ $color-logistics: #3b82f6;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 8px rgba(50, 40, 110, 0.1);
 
       span {
         font-size: 18px;
@@ -2771,7 +2772,7 @@ $color-logistics: #3b82f6;
     border-radius: 16px;
     padding: 16px;
     max-width: 420px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 12px rgba(50, 40, 110, 0.06);
 
     &.resolving {
       background: rgba($color-inventory, 0.1);
@@ -2918,7 +2919,7 @@ $color-logistics: #3b82f6;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 8px rgba(50, 40, 110, 0.1);
 
       .voter-emoji {
         font-size: 20px;

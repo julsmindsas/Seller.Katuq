@@ -1,21 +1,24 @@
-<div class="appointments-container">
+<div class="cfg-pagina appointments-container">
   <p-toast></p-toast>
 
-  <!-- Header -->
-  <div class="appointments-header">
-    <div class="header-title">
-      <h2>
+  <!-- Encabezado -->
+  <header class="cfg-cabeza appointments-header">
+    <div class="cfg-cabeza__textos header-title">
+      <span class="cfg-eyebrow">Video Agent</span>
+      <div class="title-row">
+      <h1 class="cfg-titulo">
         <i class="pi pi-calendar"></i>
         Agenda de Citas
-      </h2>
+      </h1>
       <p-tag
         [value]="currentMode"
         [severity]="currentMode === 'DEMO' ? 'warning' : 'success'"
         [icon]="currentMode === 'DEMO' ? 'pi pi-bolt' : 'pi pi-check-circle'">
       </p-tag>
+      </div>
     </div>
 
-    <div class="header-actions">
+    <div class="cfg-acciones header-actions">
       <button pButton
               type="button"
               label="Cambiar Modo"
@@ -41,7 +44,7 @@
               (click)="clearAllAppointments()">
       </button>
     </div>
-  </div>
+  </header>
 
   <!-- Estadísticas -->
   <div class="stats-grid">
@@ -97,7 +100,7 @@
   </div>
 
   <!-- Filtros -->
-  <div class="filters-section">
+  <section class="cfg-card filters-section">
     <div class="filter-group">
       <label>Estado</label>
       <p-dropdown
@@ -126,19 +129,19 @@
           [(ngModel)]="searchText"
           (input)="onSearchChange()"
           placeholder="Nombre, confirmación, dispositivo..."
-          style="width: 300px">
+          class="search-input">
       </span>
     </div>
-  </div>
+  </section>
 
   <!-- Lista de Citas -->
   <div class="appointments-list" *ngIf="!loading">
 
     <!-- Sin resultados -->
-    <div class="empty-state" *ngIf="filteredAppointments.length === 0">
-      <i class="pi pi-calendar-times"></i>
-      <h3>No hay citas</h3>
-      <p>{{ searchText || selectedStatus !== 'all' ? 'No se encontraron citas con los filtros aplicados' : 'Aún no hay citas agendadas' }}</p>
+    <div class="cfg-card cfg-vacio empty-state" *ngIf="filteredAppointments.length === 0">
+      <i class="pi pi-calendar-times cfg-vacio__icono"></i>
+      <h3 class="cfg-vacio__titulo">No hay citas</h3>
+      <p class="cfg-vacio__texto">{{ searchText || selectedStatus !== 'all' ? 'No se encontraron citas con los filtros aplicados' : 'Aún no hay citas agendadas' }}</p>
     </div>
 
     <!-- Cards de Citas -->

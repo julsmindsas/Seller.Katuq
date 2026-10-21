@@ -1,74 +1,77 @@
-<div class="flow-diff-page">
-  <header class="diff-header">
-    <button class="btn-link" (click)="back()">← Volver al editor</button>
-    <h2>Comparar versiones</h2>
+<div class="cfg-pagina flow-diff-page">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <button class="fd-volver" (click)="back()">← Volver al editor</button>
+      <span class="cfg-eyebrow">Integraciones</span>
+      <h1 class="cfg-titulo">Comparar versiones</h1>
+    </div>
   </header>
 
-  <section class="version-selector">
+  <section class="cfg-card fd-versiones">
     <label>
-      <span>Desde versión</span>
+      <span class="cfg-label">Desde versión</span>
       <select [(ngModel)]="fromVersion" (change)="computeDiff()">
         <option *ngFor="let v of versions" [value]="v.version">v{{ v.version }} — {{ v.archivedAt | date:'short' }}</option>
       </select>
     </label>
-    <span class="arrow">→</span>
+    <span class="fd-flecha">→</span>
     <label>
-      <span>Hasta versión</span>
+      <span class="cfg-label">Hasta versión</span>
       <select [(ngModel)]="toVersion" (change)="computeDiff()">
         <option *ngFor="let v of versions" [value]="v.version">v{{ v.version }} — {{ v.archivedAt | date:'short' }}</option>
       </select>
     </label>
   </section>
 
-  <section *ngIf="loading" class="loading">Calculando diferencias...</section>
-  <section *ngIf="error" class="error">{{ error }}</section>
+  <section *ngIf="loading" class="fd-cargando">Calculando diferencias...</section>
+  <section *ngIf="error" class="cfg-aviso cfg-aviso--error">{{ error }}</section>
 
-  <section *ngIf="diff && !loading" class="diff-result">
-    <div class="summary-cards">
-      <div class="card added">
-        <div class="card-label">Nodes agregados</div>
-        <div class="card-value">{{ diff.summary?.nodesAdded || 0 }}</div>
+  <section *ngIf="diff && !loading" class="fd-resultado">
+    <div class="cfg-stats fd-resumen">
+      <div class="cfg-stat fd-stat fd-stat--added">
+        <div class="cfg-stat__label">Nodes agregados</div>
+        <div class="cfg-stat__valor">{{ diff.summary?.nodesAdded || 0 }}</div>
       </div>
-      <div class="card removed">
-        <div class="card-label">Nodes removidos</div>
-        <div class="card-value">{{ diff.summary?.nodesRemoved || 0 }}</div>
+      <div class="cfg-stat fd-stat fd-stat--removed">
+        <div class="cfg-stat__label">Nodes removidos</div>
+        <div class="cfg-stat__valor">{{ diff.summary?.nodesRemoved || 0 }}</div>
       </div>
-      <div class="card modified">
-        <div class="card-label">Nodes modificados</div>
-        <div class="card-value">{{ diff.summary?.nodesModified || 0 }}</div>
+      <div class="cfg-stat fd-stat fd-stat--modified">
+        <div class="cfg-stat__label">Nodes modificados</div>
+        <div class="cfg-stat__valor">{{ diff.summary?.nodesModified || 0 }}</div>
       </div>
-      <div class="card added">
-        <div class="card-label">Edges agregados</div>
-        <div class="card-value">{{ diff.summary?.edgesAdded || 0 }}</div>
+      <div class="cfg-stat fd-stat fd-stat--added">
+        <div class="cfg-stat__label">Edges agregados</div>
+        <div class="cfg-stat__valor">{{ diff.summary?.edgesAdded || 0 }}</div>
       </div>
-      <div class="card removed">
-        <div class="card-label">Edges removidos</div>
-        <div class="card-value">{{ diff.summary?.edgesRemoved || 0 }}</div>
+      <div class="cfg-stat fd-stat fd-stat--removed">
+        <div class="cfg-stat__label">Edges removidos</div>
+        <div class="cfg-stat__valor">{{ diff.summary?.edgesRemoved || 0 }}</div>
       </div>
-      <div class="card meta">
-        <div class="card-label">Cambios meta</div>
-        <div class="card-value">{{ diff.summary?.metaChanged || 0 }}</div>
+      <div class="cfg-stat fd-stat fd-stat--meta">
+        <div class="cfg-stat__label">Cambios meta</div>
+        <div class="cfg-stat__valor">{{ diff.summary?.metaChanged || 0 }}</div>
       </div>
     </div>
 
-    <div class="diff-detail" *ngIf="diff.nodes">
-      <h3>Detalles</h3>
-      <div *ngIf="diff.nodes.added?.length" class="detail-section added">
+    <div class="cfg-card fd-detalle" *ngIf="diff.nodes">
+      <h3 class="cfg-card__titulo">Detalles</h3>
+      <div *ngIf="diff.nodes.added?.length" class="fd-seccion fd-seccion--added">
         <h4>+ Nodes agregados</h4>
         <ul><li *ngFor="let id of diff.nodes.added">{{ id }}</li></ul>
       </div>
-      <div *ngIf="diff.nodes.removed?.length" class="detail-section removed">
+      <div *ngIf="diff.nodes.removed?.length" class="fd-seccion fd-seccion--removed">
         <h4>− Nodes removidos</h4>
         <ul><li *ngFor="let id of diff.nodes.removed">{{ id }}</li></ul>
       </div>
-      <div *ngIf="diff.nodes.modified?.length" class="detail-section modified">
+      <div *ngIf="diff.nodes.modified?.length" class="fd-seccion fd-seccion--modified">
         <h4>~ Nodes modificados</h4>
         <ul><li *ngFor="let id of diff.nodes.modified">{{ id }}</li></ul>
       </div>
     </div>
 
-    <div class="rollback-actions">
-      <button class="btn-secondary" (click)="rollback(fromVersion!)" *ngIf="fromVersion !== toVersion">
+    <div class="fd-rollback">
+      <button class="cfg-btn cfg-btn--sec" (click)="rollback(fromVersion!)" *ngIf="fromVersion !== toVersion">
         Hacer rollback a v{{ fromVersion }}
       </button>
     </div>

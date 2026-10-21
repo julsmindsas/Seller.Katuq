@@ -1,8 +1,10 @@
-<div class="grid" *ngIf="isJulsmindUser">
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5>Proveedores de dropshipping</h5>
+<div class="cfg-pagina" *ngIf="isJulsmindUser">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Dropshipping</span>
+      <h1 class="cfg-titulo">Proveedores de dropshipping</h1>
+    </div>
+    <div class="cfg-acciones">
         <button 
           pButton 
           type="button" 
@@ -11,9 +13,10 @@
           class="p-button-primary"
           (click)="crearProveedor()">
         </button>
-      </div>
+    </div>
+  </header>
 
-      <div class="card-body">
+  <section class="cfg-card">
         <!-- Filtros -->
         <div class="row mb-3">
           <div class="col-md-4">
@@ -58,18 +61,18 @@
             <tr>
               <td>
                 <div class="d-flex align-items-center">
-                  <i class="pi pi-building me-2 text-primary"></i>
+                  <i class="pi pi-building me-2 lv-icono"></i>
                   <strong>{{ proveedor.nombre }}</strong>
                 </div>
               </td>
               <td>{{ proveedor.contacto }}</td>
               <td>
-                <a [href]="'mailto:' + proveedor.email" class="text-primary">
+                <a [href]="'mailto:' + proveedor.email" class="lv-enlace">
                   {{ proveedor.email }}
                 </a>
               </td>
               <td>
-                <span class="badge bg-info">
+                <span class="cfg-pill cfg-pill--info">
                   {{ proveedor.comision_porcentaje }}%
                 </span>
               </td>
@@ -131,9 +134,7 @@
             </tr>
           </ng-template>
         </p-table>
-      </div>
-    </div>
-  </div>
+  </section>
 </div>
 
 <!-- Toast Messages -->

@@ -589,12 +589,12 @@ export const AGUI_TOOL_DISPLAY: Record<string, { icon: string; label: string; co
     get_low_stock_products: { icon: 'pi-exclamation-triangle', label: 'Stock bajo', color: '#ef4444' },
 
     // Logistics tools (legacy)
-    get_pending_dispatches: { icon: 'pi-truck', label: 'Despachos pendientes', color: '#3b82f6' },
-    get_transporters_available: { icon: 'pi-users', label: 'Transportadores', color: '#3b82f6' },
+    get_pending_dispatches: { icon: 'pi-truck', label: 'Despachos pendientes', color: '#1E6FD9' },
+    get_transporters_available: { icon: 'pi-users', label: 'Transportadores', color: '#1E6FD9' },
 
     // MCP Logistics tools
-    get_transporters: { icon: 'pi-users', label: 'Transportadores', color: '#3b82f6' },
-    get_delivery_status: { icon: 'pi-map-marker', label: 'Estado entrega', color: '#3b82f6' },
+    get_transporters: { icon: 'pi-users', label: 'Transportadores', color: '#1E6FD9' },
+    get_delivery_status: { icon: 'pi-map-marker', label: 'Estado entrega', color: '#1E6FD9' },
 
     // MCP Write tools (HITL)
     update_order_status: { icon: 'pi-pencil', label: 'Actualizar estado', color: '#8b5cf6' },
@@ -602,15 +602,15 @@ export const AGUI_TOOL_DISPLAY: Record<string, { icon: string; label: string; co
     adjust_stock: { icon: 'pi-plus-circle', label: 'Ajustar stock', color: '#8b5cf6' },
 
     // Dispatch/Routes tools (múltiples variaciones)
-    plan_routes: { icon: 'pi-map', label: 'Planificar rutas', color: '#3b82f6' },
-    plan_dispatch_routes: { icon: 'pi-map', label: 'Rutas de despacho', color: '#3b82f6' },
-    planificar_rutas: { icon: 'pi-map', label: 'Planificar rutas', color: '#3b82f6' },
-    optimize_routes: { icon: 'pi-directions', label: 'Optimizar rutas', color: '#3b82f6' },
-    create_dispatch_plan: { icon: 'pi-truck', label: 'Plan de despacho', color: '#3b82f6' },
-    create_dispatch: { icon: 'pi-send', label: 'Crear despacho', color: '#3b82f6' },
+    plan_routes: { icon: 'pi-map', label: 'Planificar rutas', color: '#1E6FD9' },
+    plan_dispatch_routes: { icon: 'pi-map', label: 'Rutas de despacho', color: '#1E6FD9' },
+    planificar_rutas: { icon: 'pi-map', label: 'Planificar rutas', color: '#1E6FD9' },
+    optimize_routes: { icon: 'pi-directions', label: 'Optimizar rutas', color: '#1E6FD9' },
+    create_dispatch_plan: { icon: 'pi-truck', label: 'Plan de despacho', color: '#1E6FD9' },
+    create_dispatch: { icon: 'pi-send', label: 'Crear despacho', color: '#1E6FD9' },
 
     // Generic
-    transfer_to_agent: { icon: 'pi-arrow-right', label: 'Transferir', color: '#6366f1' }
+    transfer_to_agent: { icon: 'pi-arrow-right', label: 'Transferir', color: '#5F3FE0' }
 };
 
 /**
@@ -657,7 +657,7 @@ export const AGUI_SPEAKER_CONFIG: Record<string, AgUiSpeaker> = {
         name: 'Carlos',
         displayName: 'Carlos',
         department: 'ceo',
-        color: '#6366f1',
+        color: '#5F3FE0',
         icon: 'pi-briefcase',
         emoji: '👔'
     },
@@ -666,7 +666,7 @@ export const AGUI_SPEAKER_CONFIG: Record<string, AgUiSpeaker> = {
         name: 'Carlos',
         displayName: 'Carlos',
         department: 'ceo',
-        color: '#6366f1',
+        color: '#5F3FE0',
         icon: 'pi-briefcase',
         emoji: '👔'
     },
@@ -675,7 +675,7 @@ export const AGUI_SPEAKER_CONFIG: Record<string, AgUiSpeaker> = {
         name: 'Carlos',
         displayName: 'Carlos',
         department: 'ceo',
-        color: '#6366f1',
+        color: '#5F3FE0',
         icon: 'pi-briefcase',
         emoji: '👔'
     },
@@ -726,7 +726,7 @@ export const AGUI_SPEAKER_CONFIG: Record<string, AgUiSpeaker> = {
         name: 'Ana',
         displayName: 'Ana',
         department: 'logistics',
-        color: '#3b82f6',
+        color: '#1E6FD9',
         icon: 'pi-truck',
         emoji: '🚚'
     },
@@ -735,7 +735,7 @@ export const AGUI_SPEAKER_CONFIG: Record<string, AgUiSpeaker> = {
         name: 'Ana',
         displayName: 'Ana',
         department: 'logistics',
-        color: '#3b82f6',
+        color: '#1E6FD9',
         icon: 'pi-truck',
         emoji: '🚚'
     },
@@ -778,7 +778,7 @@ export function getSpeakerConfig(agentId: string): AgUiSpeaker {
         name: agentId,
         displayName: agentId,
         department: 'ceo',
-        color: '#6366f1',
+        color: '#5F3FE0',
         icon: 'pi-cpu',
         emoji: '🤖'
     };
@@ -858,7 +858,7 @@ export const AGUI_TOOL_ARTIFACT_MAP: AgUiToolArtifactConfig[] = [
                     datasets: [{
                         label: 'Ventas',
                         data: products.map((p: any) => p.sales || p.quantity || p.total || 0),
-                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
+                        backgroundColor: ['#10b981', '#1E6FD9', '#f59e0b', '#ef4444', '#8b5cf6']
                     }]
                 }
             } as AgUiChartArtifact;
@@ -1026,7 +1026,7 @@ export const AGUI_TOOL_ARTIFACT_MAP: AgUiToolArtifactConfig[] = [
                         datasets: [{
                             label: 'Cantidad',
                             data: topProducts.slice(0, 5).map((p: any) => p.quantity || p.count || p.sales || 0),
-                            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
+                            backgroundColor: ['#10b981', '#1E6FD9', '#f59e0b', '#ef4444', '#8b5cf6']
                         }]
                     }
                 } as AgUiChartArtifact;
@@ -1164,7 +1164,7 @@ export const AGUI_TOOL_ARTIFACT_MAP: AgUiToolArtifactConfig[] = [
                     datasets: [{
                         label: 'Stock',
                         data: data.slice(0, 6).map((d: any) => d.stock || d.quantity || d.total || 0),
-                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#6b7280']
+                        backgroundColor: ['#10b981', '#1E6FD9', '#f59e0b', '#ef4444', '#8b5cf6', '#6b7280']
                     }]
                 }
             } as AgUiChartArtifact;
@@ -1213,7 +1213,7 @@ export const AGUI_TOOL_ARTIFACT_MAP: AgUiToolArtifactConfig[] = [
                         lng: d.lng,
                         label: d.nroPedido || d.id,
                         info: d.address || d.direccion,
-                        color: '#3b82f6'
+                        color: '#1E6FD9'
                     }))
                 }
             } as AgUiMapArtifact;
@@ -1240,11 +1240,11 @@ export const AGUI_TOOL_ARTIFACT_MAP: AgUiToolArtifactConfig[] = [
                         lng: m.lng,
                         label: `${i + 1}`,
                         info: m.address || m.direccion,
-                        color: '#3b82f6'
+                        color: '#1E6FD9'
                     })),
                     routes: routes.map((r: any, i: number) => ({
                         points: r.points || r.path || [],
-                        color: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'][i % 4],
+                        color: ['#1E6FD9', '#10b981', '#f59e0b', '#ef4444'][i % 4],
                         label: r.name || `Ruta ${i + 1}`
                     }))
                 }

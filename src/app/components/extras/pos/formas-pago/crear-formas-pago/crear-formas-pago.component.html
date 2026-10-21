@@ -1,25 +1,20 @@
-<app-breadcrumb
-    [title]="'Crear Formas de Pago'"
-    [items]="['Extras/Formas de Pago']"
-    [active_item]="'Crear Formas de Pago'"
->
-</app-breadcrumb>
-
-<div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-lg-10 col-xl-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0">
+<div class="cfg-pagina fpos-pagina">
+    <header class="cfg-cabeza">
+        <div class="cfg-cabeza__textos">
+            <span class="cfg-eyebrow">Configuración</span>
+            <h1 class="cfg-titulo">
                         <i class="icofont icofont-credit-card me-2"></i>
                         {{
                             editando
                                 ? "Editar Forma de Pago"
                                 : "Crear Nueva Forma de Pago"
                         }}
-                    </h5>
-                </div>
-                <div class="card-body p-4">
+            </h1>
+            <p class="cfg-sub">Métodos de pago POS</p>
+        </div>
+    </header>
+
+    <section class="cfg-card cfg-form">
                     <form [formGroup]="fomrasPagoForm" novalidate>
                         <!-- ID y Clasificación -->
                         <div class="row mb-4">
@@ -31,7 +26,7 @@
                                     ID
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light">
+                                    <span class="input-group-text">
                                         <i class="icofont icofont-hash"></i>
                                     </span>
                                     <input
@@ -52,7 +47,7 @@
                                     Clasificación forma de pago
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light">
+                                    <span class="input-group-text">
                                         <i class="icofont icofont-list"></i>
                                     </span>
                                     <select
@@ -117,7 +112,7 @@
                                     Título/Nombre
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light">
+                                    <span class="input-group-text">
                                         <i
                                             class="icofont icofont-pencil-alt-2"
                                         ></i>
@@ -159,7 +154,7 @@
                                     Posición
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light">
+                                    <span class="input-group-text">
                                         <i class="icofont icofont-numbered"></i>
                                     </span>
                                     <input
@@ -197,7 +192,7 @@
                                     Integración
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light">
+                                    <span class="input-group-text">
                                         <i
                                             class="icofont icofont-connection"
                                         ></i>
@@ -225,15 +220,14 @@
                         <!-- Estado Activo -->
                         <div class="row mb-4">
                             <div class="col-md-12">
-                                <div class="card border-light bg-light">
-                                    <div class="card-body py-3">
+                                <div class="fpos-estado">
+                                    <div>
                                         <div class="form-check form-switch">
                                             <input
                                                 class="form-check-input"
                                                 type="checkbox"
                                                 id="activoSwitch"
                                                 formControlName="activo"
-                                                style="transform: scale(1.5)"
                                             />
                                             <label
                                                 class="form-check-label fw-bold ms-2"
@@ -332,7 +326,7 @@
                                     Imagen Interna
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light">
+                                    <span class="input-group-text">
                                         <i
                                             class="icofont icofont-upload-alt"
                                         ></i>
@@ -356,7 +350,7 @@
                                     Imagen Carrito
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light">
+                                    <span class="input-group-text">
                                         <i
                                             class="icofont icofont-upload-alt"
                                         ></i>
@@ -378,10 +372,10 @@
                         <!-- Botones de Acción -->
                         <div class="row">
                             <div class="col-12">
-                                <div class="d-flex gap-3 justify-content-end">
+                                <div class="cfg-form__pie fpos-pie">
                                     <button
                                         type="button"
-                                        class="btn btn-outline-secondary"
+                                        class="cfg-btn cfg-btn--sec"
                                         (click)="cancelar()"
                                     >
                                         <i
@@ -393,7 +387,7 @@
                                         *ngIf="!editando"
                                         type="button"
                                         (click)="guardar()"
-                                        class="btn btn-primary"
+                                        class="cfg-btn"
                                         [disabled]="
                                             fomrasPagoForm.invalid || guardando
                                         "
@@ -416,7 +410,7 @@
                                         *ngIf="editando"
                                         type="button"
                                         (click)="editar()"
-                                        class="btn btn-success"
+                                        class="cfg-btn"
                                         [disabled]="
                                             fomrasPagoForm.invalid || guardando
                                         "
@@ -439,69 +433,5 @@
                             </div>
                         </div>
                     </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    </section>
 </div>
-
-<!-- Estilos adicionales -->
-<style>
-    .required::after {
-        content: " *";
-        color: #dc3545;
-    }
-
-    .form-label {
-        margin-bottom: 0.75rem;
-    }
-
-    .input-group-text {
-        border-right: none;
-    }
-
-    .input-group .form-control,
-    .input-group .form-select {
-        border-left: none;
-    }
-
-    .input-group .form-control:focus,
-    .input-group .form-select:focus {
-        border-color: #86b7fe;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-    }
-
-    .card {
-        border: none;
-        border-radius: 12px;
-    }
-
-    .card-header {
-        border-radius: 12px 12px 0 0 !important;
-    }
-
-    .form-check-input:checked {
-        background-color: #28a745;
-        border-color: #28a745;
-    }
-
-    .btn {
-        border-radius: 8px;
-        padding: 0.6rem 1.5rem;
-        font-weight: 500;
-    }
-
-    .btn-primary {
-        background: #5F3FE0;
-        border: none;
-    }
-
-    .btn-success {
-        background: #1E874B;
-        border: none;
-    }
-
-    .invalid-feedback {
-        display: block;
-    }
-</style>

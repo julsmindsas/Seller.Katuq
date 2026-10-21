@@ -27,20 +27,20 @@
   thead th {
     position: sticky;
     top: 0;
-    background: #f8f9fa;
+    background: #faf9fe;
     z-index: 2;
-    border-bottom: 2px solid #a78bfa;
-    font-weight: 600;
-    color: #2c3e50;
+    border-bottom: 1px solid #ececf4;
+    font-weight: 800;
+    color: #8f8bab;
   }
   tbody tr:nth-child(even) {
-    background: #f6fafd;
+    background: #faf9fe;
   }
   tbody tr:hover {
-    background: #e3f2fd;
+    background: #faf9ff;
   }
   td:last-child, th:last-child {
-    background: #f3f6fb;
+    background: #f5f4fa;
     text-align: center;
   }
 }
@@ -58,7 +58,7 @@
   background: #5F3FE0;
   color: #fff;
   border-color: #5F3FE0;
-  box-shadow: 0 2px 8px rgba(59,130,246,0.12);
+  box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
 }
 
 .descripcion-ellipsis {
@@ -99,136 +99,40 @@
 }
 
 // ESTILOS PARA BADGES MODERNOS
+// Pills del canon (design-system): par fuerte / fondo suave, UPPERCASE, radio 20px.
+// Sin brillo con gradiente ni sombra dura; las clases badge-* no cambian.
 .modern-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.3rem 0.5rem;
+  padding: 0.3rem 0.6rem;
   border-radius: 20px;
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 800;
   letter-spacing: 0.3px;
   text-transform: uppercase;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
+  background: #eef0f3;
+  color: #5A6B78;
+  border: none;
+  box-shadow: none;
+  transition: transform 0.2s ease;
   position: relative;
-  overflow: hidden;
   cursor: default;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.4),
-      transparent
-    );
-    transition: left 0.5s;
-  }
-
-  &:hover::before {
-    left: 100%;
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.6);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  &:hover::after {
-    opacity: 1;
-    animation: pulse 1.5s infinite;
-  }
 
   .status-icon {
     font-size: 0.6rem;
     margin-right: 0.2rem;
-    animation: pulse 2s infinite;
     flex-shrink: 0;
+    color: currentColor;
   }
 
-  // Estados de Pago
-  &.badge-success {
-    background: #1E874B;
-    color: white;
-    border: 2px solid rgba(40, 167, 69, 0.3);
-
-    .status-icon {
-      color: rgba(255, 255, 255, 0.9);
-    }
-  }
-
-  &.badge-warning {
-    background: #ffc107;
-    color: #212529;
-    border: 2px solid rgba(255, 193, 7, 0.3);
-
-    .status-icon {
-      color: rgba(33, 37, 41, 0.8);
-    }
-  }
-
-  &.badge-danger {
-    background: #D64545;
-    color: white;
-    border: 2px solid rgba(220, 53, 69, 0.3);
-
-    .status-icon {
-      color: rgba(255, 255, 255, 0.9);
-    }
-  }
-
-  &.badge-info {
-    background: #1E6FD9;
-    color: white;
-    border: 2px solid rgba(23, 162, 184, 0.3);
-
-    .status-icon {
-      color: rgba(255, 255, 255, 0.9);
-    }
-  }
-
-  &.badge-primary {
-    background: #5F3FE0;
-    color: white;
-    border: 2px solid rgba(33, 150, 243, 0.3);
-
-    .status-icon {
-      color: rgba(255, 255, 255, 0.9);
-    }
-  }
-
-  &.badge-secondary {
-    background: #6c757d;
-    color: white;
-    border: 2px solid rgba(108, 117, 125, 0.3);
-
-    .status-icon {
-      color: rgba(255, 255, 255, 0.9);
-    }
-  }
-
-  &.badge-dark {
-    background: #343a40;
-    color: white;
-    border: 2px solid rgba(52, 58, 64, 0.3);
-
-    .status-icon {
-      color: rgba(255, 255, 255, 0.9);
-    }
-  }
+  // Estados de Pago y de proceso
+  &.badge-success   { background: #E6F7EE; color: #1E874B; }
+  &.badge-warning   { background: #FFF1DF; color: #D9820A; }
+  &.badge-danger    { background: #FDECEC; color: #D64545; }
+  &.badge-info      { background: #E7F1FF; color: #1E6FD9; }
+  &.badge-primary   { background: #efe9ff; color: #5F3FE0; }
+  &.badge-secondary { background: #eef0f3; color: #5A6B78; }
+  &.badge-dark      { background: #ececf4; color: #211F3A; }
 
   // Badge especial para validación
   &.validation-badge {
@@ -257,57 +161,39 @@
 }
 
 /* ESTILO PARA FILAS REVISADAS (solo visible para Brenda) */
-::ng-deep .p-datatable .p-datatable-tbody > tr.row-revisada {
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr.row-revisada {
   background-color: #d4edda !important;
   border-left: 4px solid #28a745 !important;
   transition: background-color 0.3s ease !important;
 }
 
-::ng-deep .p-datatable .p-datatable-tbody > tr.row-revisada:hover {
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr.row-revisada:hover {
   background-color: #c3e6cb !important;
 }
 
-::ng-deep .p-datatable .p-datatable-tbody > tr.row-revisada:nth-child(even) {
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr.row-revisada:nth-child(even) {
   background-color: #c8e6c9 !important;
 }
 
-::ng-deep .p-datatable .p-datatable-tbody > tr.row-revisada:nth-child(even):hover {
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr.row-revisada:nth-child(even):hover {
   background-color: #b8dfc0 !important;
 }
 
 // ESTILOS ESPECÍFICOS PARA BADGE DE REVISADO
+// Pill de éxito del canon (par fuerte / fondo suave) sobre el .badge de Bootstrap.
 .revisado-badge {
-  background: #1E874B !important;
-  border: 2px solid rgba(40, 167, 69, 0.3);
-  box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
+  background: #E6F7EE !important;
+  color: #1E874B;
+  border: none;
+  border-radius: 20px;
+  box-shadow: none;
   animation: fadeInScale 0.5s ease-out;
-  transition: all 0.3s ease;
+  transition: transform 0.2s ease;
   position: relative;
   overflow: hidden;
 
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.4),
-      transparent
-    );
-    transition: left 0.6s ease;
-  }
-
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
-
-    &::before {
-      left: 100%;
-    }
   }
 
   .fa-check-circle {
@@ -436,17 +322,17 @@
 
   // Variantes de color
   &.metric-chip-primary {
-    background-color: #e3f2fd;
-    color: #1976d2;
+    background-color: #efe9ff;
+    color: #5F3FE0;
 
     .metric-badge {
-      background-color: #1976d2;
+      background-color: #5F3FE0;
       color: white;
     }
 
     &:hover {
-      background-color: #bbdefb;
-      border-color: #1976d2;
+      background-color: #e4dcff;
+      border-color: #5F3FE0;
     }
   }
 
@@ -696,7 +582,7 @@
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 6px 14px -8px rgba(50, 40, 110, .35);
   }
 }
 

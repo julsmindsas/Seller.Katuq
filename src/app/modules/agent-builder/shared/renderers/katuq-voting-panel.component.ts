@@ -95,7 +95,7 @@ interface Voter {
       border-radius: 0.5rem;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       overflow: hidden;
-      border-top: 4px solid #6366f1;
+      border-top: 4px solid #5F3FE0;
     }
 
     .katuq-voting-panel.consensus {
@@ -119,7 +119,7 @@ interface Voter {
       width: 2.5rem;
       height: 2.5rem;
       border-radius: 50%;
-      background: #6366f1;
+      background: #5F3FE0;
       color: white;
       display: flex;
       align-items: center;
@@ -226,8 +226,8 @@ interface Voter {
     }
 
     .status-badge.thinking {
-      background: #dbeafe;
-      color: #1d4ed8;
+      background: #E7F1FF;
+      color: #1E6FD9;
     }
 
     .status-badge.voted.approve {

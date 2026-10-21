@@ -38,9 +38,9 @@
 // ========================================
 // VARIABLES
 // ========================================
-$primary: $katuq-primary;
-$primary-dark: $katuq-primary-dark;
-$primary-light: $katuq-primary-bg;
+$primary: #5F3FE0;
+$primary-dark: #4a2fc0;
+$primary-light: #efe9ff;
 $secondary: #64748b;
 $success: #10b981;
 $warning: #f59e0b;
@@ -612,27 +612,27 @@ $radius-lg: 12px;
         gap: 0.75rem;
 
         &:hover {
-          border-color: $katuq-primary;
+          border-color: #5F3FE0;
           box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
         }
 
         &.selected {
-          border-color: $katuq-primary;
+          border-color: #5F3FE0;
           background: #f0f7ff;
           box-shadow: 0 2px 12px rgba(33, 150, 243, 0.15);
 
           .option-name {
-            color: $katuq-primary;
+            color: #5F3FE0;
             font-weight: 600;
           }
 
           .option-icon {
-            color: $katuq-primary;
+            color: #5F3FE0;
             background-color: #e3f2fd;
           }
 
           .option-price {
-            color: $katuq-primary;
+            color: #5F3FE0;
             font-weight: 700;
           }
         }
@@ -650,7 +650,7 @@ $radius-lg: 12px;
           transition: all 0.2s ease;
 
           &:checked {
-            border-color: $katuq-primary;
+            border-color: #5F3FE0;
             border-width: 6px;
           }
         }
@@ -725,7 +725,7 @@ $radius-lg: 12px;
 
                 i {
                   font-size: 0.75rem;
-                  color: $katuq-primary;
+                  color: #5F3FE0;
                 }
               }
             }
@@ -751,7 +751,7 @@ $radius-lg: 12px;
           position: absolute;
           right: 0.75rem;
           font-size: 1.25rem;
-          color: $katuq-primary;
+          color: #5F3FE0;
           animation: checkPop 0.3s ease;
         }
       }

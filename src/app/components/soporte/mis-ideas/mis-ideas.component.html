@@ -1,26 +1,27 @@
 <app-breadcrumb [title]="'Ideas'" [items]="['Mis Ideas']" [active_item]="'Mis ideas'"></app-breadcrumb>
 
-<div class="tickets-dashboard" [class.loading]="isLoading">
+<div class="cfg-pagina tickets-dashboard" [class.loading]="isLoading">
   <!-- Loading overlay when fetching data -->
   <div class="loading-overlay" *ngIf="isLoading">
     <div class="spinner"></div>
   </div>
 
   <!-- Header Stats Section -->
-  <div class="dashboard-header">
-    <div class="dashboard-title">
-      <h1><i class="fa fa-lightbulb"></i> Mis Ideas</h1>
-      <p class="text-muted">Gestiona tus ideas y sugerencias para la plataforma</p>
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Soporte</span>
+      <h1 class="cfg-titulo"><i class="fa fa-lightbulb"></i> Mis Ideas</h1>
+      <p class="cfg-sub">Gestiona tus ideas y sugerencias para la plataforma</p>
     </div>
-    <div class="dashboard-actions">
-      <button class="btn-create" routerLink="/nueva-idea">
+    <div class="cfg-acciones">
+      <button class="cfg-btn" routerLink="/nueva-idea">
         <i class="fa fa-plus"></i> Nueva Idea
       </button>
     </div>
-  </div>
+  </header>
 
   <!-- Filters Section -->
-  <div class="filters-section">
+  <div class="cfg-form filters-section">
     <div class="filters-header">
       <h5><i class="fa fa-filter"></i> Filtros</h5>
     </div>
@@ -107,13 +108,13 @@
   </div>
 
   <!-- No ideas message -->
-  <div class="empty-state" *ngIf="filteredTasks?.length === 0">
-    <div class="empty-icon">
+  <div class="cfg-vacio empty-state" *ngIf="filteredTasks?.length === 0">
+    <div class="cfg-vacio__icono">
       <i class="fa fa-lightbulb"></i>
     </div>
-    <h3>No hay ideas que mostrar</h3>
-    <p>No se encontraron ideas con los filtros actuales</p>
-    <button class="btn-primary" routerLink="/nueva-idea">Proponer una idea</button>
+    <h3 class="cfg-vacio__titulo">No hay ideas que mostrar</h3>
+    <p class="cfg-vacio__texto">No se encontraron ideas con los filtros actuales</p>
+    <button class="cfg-btn" routerLink="/nueva-idea">Proponer una idea</button>
   </div>
 
   <!-- Ideas List -->
@@ -227,7 +228,7 @@
             <!-- File Upload -->
             <div class="file-upload-section">
               <div class="upload-button-wrap">
-                <button class="upload-button" (click)="fileInput.click()">
+                <button class="cfg-btn cfg-btn--sec upload-button" (click)="fileInput.click()">
                   <i class="fa fa-paperclip"></i> Adjuntar archivos
                 </button>
                 <input #fileInput type="file" multiple (change)="onFileSelected($event)" class="hidden-file-input" />
@@ -247,7 +248,7 @@
             </div>
             
             <div class="form-actions">
-              <button class="btn-submit" [disabled]="!newComment.trim() && imagePreviews.length === 0" (click)="addNewComment(idea)">
+              <button class="cfg-btn btn-submit" [disabled]="!newComment.trim() && imagePreviews.length === 0" (click)="addNewComment(idea)">
                 <i class="fa fa-paper-plane"></i> Enviar comentario
               </button>
             </div>

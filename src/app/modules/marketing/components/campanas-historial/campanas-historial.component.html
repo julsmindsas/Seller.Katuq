@@ -1,22 +1,23 @@
-<div class="container-fluid campanas-historial">
-  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-    <div>
-      <h4 class="mb-0">{{ canal === 'correo' ? 'Campañas de correo' : 'Campañas de WhatsApp' }}</h4>
-      <small class="text-muted" *ngIf="canal === 'whatsapp'">Historial y conversión — un contacto "convierte" si compra dentro de los 30 días después del envío</small>
-      <small class="text-muted" *ngIf="canal === 'correo'">Correos con el nombre de tu tienda a quienes autorizaron recibirlos</small>
+<div class="cfg-pagina campanas-historial">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Marketing</span>
+      <h1 class="cfg-titulo">{{ canal === 'correo' ? 'Campañas de correo' : 'Campañas de WhatsApp' }}</h1>
+      <small class="cfg-sub" *ngIf="canal === 'whatsapp'">Historial y conversión — un contacto "convierte" si compra dentro de los 30 días después del envío</small>
+      <small class="cfg-sub" *ngIf="canal === 'correo'">Correos con el nombre de tu tienda a quienes autorizaron recibirlos</small>
     </div>
-    <div class="d-flex gap-2">
-      <a routerLink="/marketing" class="btn btn-outline-secondary btn-sm">← Dashboard</a>
+    <div class="cfg-acciones">
+      <a routerLink="/marketing" class="cfg-btn cfg-btn--sec">← Dashboard</a>
       <ng-container *ngIf="canal === 'whatsapp'">
-        <button class="btn btn-outline-secondary btn-sm" (click)="cargar()" [disabled]="loading"><i class="fa fa-refresh"></i></button>
-        <a routerLink="/marketing/campanas/whatsapp" class="btn btn-primary btn-sm"><i class="fa fa-paper-plane me-1"></i>Nueva campaña</a>
+        <button class="cfg-btn cfg-btn--sec" (click)="cargar()" [disabled]="loading"><i class="fa fa-refresh"></i></button>
+        <a routerLink="/marketing/campanas/whatsapp" class="cfg-btn"><i class="fa fa-paper-plane"></i>Nueva campaña</a>
       </ng-container>
       <ng-container *ngIf="canal === 'correo'">
-        <a routerLink="/marketing/suscriptores" class="btn btn-outline-secondary btn-sm"><i class="fa fa-users me-1"></i>Suscriptores</a>
-        <a routerLink="/marketing/campanas/correo" class="btn btn-primary btn-sm"><i class="fa fa-envelope me-1"></i>Nueva campaña de correo</a>
+        <a routerLink="/marketing/suscriptores" class="cfg-btn cfg-btn--sec"><i class="fa fa-users"></i>Suscriptores</a>
+        <a routerLink="/marketing/campanas/correo" class="cfg-btn"><i class="fa fa-envelope"></i>Nueva campaña de correo</a>
       </ng-container>
     </div>
-  </div>
+  </header>
 
   <!-- Canal (la pestaña de correo solo existe si el servidor ya la tiene, D-318) -->
   <div class="canales" *ngIf="correoDisponible">
@@ -25,7 +26,7 @@
   </div>
 
   <!-- ═══ Correo ═══ -->
-  <div class="panel-card" *ngIf="canal === 'correo'">
+  <div class="cfg-card panel-card" *ngIf="canal === 'correo'">
     <div *ngIf="cargandoCorreo" class="panel-loading"><i class="fa fa-spinner fa-spin"></i> Cargando campañas…</div>
     <div *ngIf="!cargandoCorreo && campanasCorreo.length === 0" class="panel-empty">
       Aún no has enviado campañas de correo.
@@ -46,9 +47,9 @@
         </thead>
         <tbody>
           <tr *ngFor="let c of campanasCorreo" class="fila-link" [routerLink]="['/marketing/campanas/correo', c.id]">
-            <td class="fw-semibold">{{ c.nombre }}<div class="text-muted small">{{ c.asunto }}</div></td>
+            <td class="fw-semibold">{{ c.nombre }}<div class="ch-tenue small">{{ c.asunto }}</div></td>
             <td><span class="estado-correo is-{{ c.estado }}">{{ etiquetaEstado(c.estado) }}</span></td>
-            <td class="text-muted">{{ (c.programadaPara || c.creadoEn) | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td class="ch-tenue">{{ (c.programadaPara || c.creadoEn) | date: 'dd/MM/yyyy HH:mm' }}</td>
             <td class="text-end">{{ c.totales.destinatarios || 0 }}</td>
             <td class="text-end">{{ c.totales.enviados || 0 }}</td>
             <td class="text-end">{{ c.totales.clics || 0 }}</td>
@@ -63,7 +64,7 @@
   <ng-container *ngIf="canal === 'whatsapp'">
 
   <!-- Totales -->
-  <div class="row g-3 mb-3" *ngIf="campanas.length > 0">
+  <div class="row g-3" *ngIf="campanas.length > 0">
     <div class="col-6 col-lg-3">
       <div class="stat-card accent-primary">
         <span class="stat-label">Campañas</span>
@@ -93,7 +94,7 @@
     </div>
   </div>
 
-  <div class="panel-card">
+  <div class="cfg-card panel-card">
     <div *ngIf="loading" class="panel-loading"><i class="fa fa-spinner fa-spin"></i> Cargando campañas…</div>
     <div *ngIf="!loading && error" class="panel-empty">No se pudo cargar el historial</div>
     <div *ngIf="!loading && !error && campanas.length === 0" class="panel-empty">
@@ -119,14 +120,14 @@
         <tbody>
           <tr *ngFor="let c of campanas">
             <td class="fw-semibold">{{ c.campaignName }}</td>
-            <td class="text-muted">{{ c.firstAt ? (c.firstAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
-            <td class="text-muted">{{ c.templateName || '—' }}</td>
+            <td class="ch-tenue">{{ c.firstAt ? (c.firstAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
+            <td class="ch-tenue">{{ c.templateName || '—' }}</td>
             <td class="text-end">{{ c.destinatarios }}</td>
-            <td class="text-end">{{ c.enviados }}<span *ngIf="c.mocks > 0" class="text-muted small"> ({{ c.mocks }} prueba)</span></td>
+            <td class="text-end">{{ c.enviados }}<span *ngIf="c.mocks > 0" class="ch-tenue ch-prueba"> ({{ c.mocks }} prueba)</span></td>
             <td class="text-end">{{ c.costoCOP | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
             <td class="text-end">{{ c.convertidos }}</td>
             <td class="text-end">
-              <span class="badge" [class.bg-success]="c.tasaConversion >= 10" [class.bg-secondary]="c.tasaConversion < 10">{{ c.tasaConversion }}%</span>
+              <span class="badge ch-tasa" [class.bg-success]="c.tasaConversion >= 10" [class.bg-secondary]="c.tasaConversion < 10">{{ c.tasaConversion }}%</span>
             </td>
             <td class="text-end">{{ c.ventasAtribuidasCOP | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
           </tr>

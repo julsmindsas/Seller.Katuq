@@ -1,23 +1,23 @@
-<div class="container-fluid usuarios-form">
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="card">
-                <div class="card-body">
+<div class="cfg-pagina usuarios-form">
 
                     <!-- Header de la página -->
-                    <div class="page-header">
-                        <button type="button" class="btn-back" (click)="irAlListado()"
-                                placement="top" ngbTooltip="{{ 'Regresar al listado' | translate }}">
-                            <i class="icofont icofont-arrow-left"></i>
-                        </button>
-                        <div>
-                            <h4 class="mb-1">Crear / Editar Usuario</h4>
-                            <p class="text-muted small mb-0">
+                    <header class="cfg-cabeza">
+                        <div class="cfg-cabeza__textos">
+                            <span class="cfg-eyebrow">Seguridad</span>
+                            <h1 class="cfg-titulo">Crear / Editar Usuario</h1>
+                            <p class="cfg-sub">
                                 Información personal, accesos al sistema y configuración avanzada del usuario.
                             </p>
                         </div>
-                    </div>
+                        <div class="cfg-acciones">
+                        <button type="button" class="cfg-btn cfg-btn--sec" (click)="irAlListado()"
+                                placement="top" ngbTooltip="{{ 'Regresar al listado' | translate }}">
+                            <i class="icofont icofont-arrow-left"></i>
+                        </button>
+                        </div>
+                    </header>
 
+    <section class="cfg-card cfg-form">
                     <form cForm [formGroup]="f">
 
                         <!-- ─── SECCIÓN 1: Datos personales ─── -->
@@ -26,7 +26,7 @@
                                 <i class="fa fa-user-circle section-icon"></i>
                                 <div>
                                     <h6 class="mb-0">Datos personales</h6>
-                                    <small class="text-muted">Nombre completo e identificación.</small>
+                                    <small class="us-tenue">Nombre completo e identificación.</small>
                                 </div>
                             </div>
                             <div class="row g-3">
@@ -63,7 +63,7 @@
                                 <i class="fa fa-lock section-icon"></i>
                                 <div>
                                     <h6 class="mb-0">Acceso al sistema</h6>
-                                    <small class="text-muted">Credenciales y rol del usuario.</small>
+                                    <small class="us-tenue">Credenciales y rol del usuario.</small>
                                 </div>
                             </div>
                             <div class="row g-3">
@@ -76,7 +76,7 @@
                                     <label class="form-label" for="password">
                                         Contraseña
                                         <span class="req" *ngIf="!esModoEdicion">*</span>
-                                        <small class="text-muted ms-1" *ngIf="esModoEdicion">(opcional al editar)</small>
+                                        <small class="us-tenue ms-1" *ngIf="esModoEdicion">(opcional al editar)</small>
                                     </label>
                                     <input formControlName="password" autocomplete="new-password" class="form-control"
                                            id="password" type="password"
@@ -112,28 +112,28 @@
                                 <i class="fa fa-phone section-icon"></i>
                                 <div>
                                     <h6 class="mb-0">Contacto</h6>
-                                    <small class="text-muted">Teléfonos para contactar al usuario.</small>
+                                    <small class="us-tenue">Teléfonos para contactar al usuario.</small>
                                 </div>
                             </div>
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Teléfono fijo</label>
                                     <div class="d-flex gap-2">
-                                        <select formControlName="indicativoFijoLocal" class="form-control select-default flex-shrink-0" style="max-width: 160px;">
+                                        <select formControlName="indicativoFijoLocal" class="form-control select-default flex-shrink-0 us-indicativo">
                                             <option disabled selected class="select-default">Indicativo</option>
                                             <option value="{{item.CodigoArea}}" *ngFor="let item of indicativosLocales">
                                                 {{item.Ciudad}} (+{{item.CodigoArea}})
                                             </option>
                                         </select>
                                         <input formControlName="fijo" class="form-control" type="number" placeholder="Número fijo">
-                                        <input formControlName="extensionFijo" class="form-control flex-shrink-0" style="max-width: 100px;"
+                                        <input formControlName="extensionFijo" class="form-control flex-shrink-0 us-extension"
                                                type="number" placeholder="Ext.">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Celular</label>
                                     <div class="d-flex gap-2">
-                                        <select formControlName="indicativoCel" class="form-control select-default flex-shrink-0" style="max-width: 160px;">
+                                        <select formControlName="indicativoCel" class="form-control select-default flex-shrink-0 us-indicativo">
                                             <option disabled selected class="select-default">País</option>
                                             <option value="{{item.phone_code}}" *ngFor="let item of indicativos">
                                                 {{item.nombre}} (+{{item.phone_code}})
@@ -151,7 +151,7 @@
                                 <i class="fa fa-cog section-icon"></i>
                                 <div>
                                     <h6 class="mb-0">Configuración avanzada</h6>
-                                    <small class="text-muted">Opciones específicas para este usuario.</small>
+                                    <small class="us-tenue">Opciones específicas para este usuario.</small>
                                 </div>
                             </div>
 
@@ -161,7 +161,7 @@
                                     <i class="fa fa-link"></i>
                                     <span>Vendedor en World Office</span>
                                 </div>
-                                <small class="text-muted d-block mb-2">
+                                <small class="us-tenue d-block mb-2">
                                     Si este usuario es vendedor en WO, asigná el mapeo. Sus reportes WO se filtrarán
                                     automáticamente para que solo vea SUS ventas.
                                 </small>
@@ -187,10 +187,10 @@
                                     <i class="fa fa-home"></i>
                                     <span>Pantalla de bienvenida</span>
                                 </div>
-                                <small class="text-muted d-block mb-2">
+                                <small class="us-tenue d-block mb-2">
                                     Al iniciar sesión, este usuario verá: <strong>{{ bienvenidaLabelActual }}</strong>
                                 </small>
-                                <button type="button" class="btn btn-outline-secondary btn-sm"
+                                <button type="button" class="cfg-btn cfg-btn--sec us-btn-chico"
                                         (click)="abrirBienvenidaModal()">
                                     <i class="fa fa-cog"></i> Cambiar pantalla de bienvenida
                                 </button>
@@ -198,27 +198,25 @@
                         </div>
 
                         <!-- Footer con acciones -->
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-light btn-lg" (click)="irAlListado()">Cancelar</button>
-                            <button type="button" (click)="guardar()" class="btn btn-primary btn-lg">
+                        <div class="cfg-form__pie">
+                            <button type="button" class="cfg-btn cfg-btn--sec" (click)="irAlListado()">Cancelar</button>
+                            <button type="button" (click)="guardar()" class="cfg-btn">
                                 <i class="fa fa-save me-1"></i> Guardar usuario
                             </button>
                         </div>
 
                     </form>
-
-                </div>
-            </div>
+    </section>
 
             <!-- Modal: configurar pantalla de bienvenida -->
             <div class="modal-overlay" *ngIf="showBienvenidaModal" (click)="cerrarBienvenidaModal()">
                 <div class="modal-box" (click)="$event.stopPropagation()">
                     <div class="modal-header">
-                        <h5 class="mb-0"><i class="fa fa-home"></i> Pantalla de bienvenida</h5>
+                        <h5 class="mb-0 us-modal-titulo"><i class="fa fa-home"></i> Pantalla de bienvenida</h5>
                         <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrarBienvenidaModal()"></button>
                     </div>
-                    <div class="modal-body-custom">
-                        <p class="text-muted small">Elegí a qué pantalla irá este usuario justo después de iniciar sesión.</p>
+                    <div class="modal-body-custom cfg-form">
+                        <p class="us-tenue small">Elegí a qué pantalla irá este usuario justo después de iniciar sesión.</p>
 
                         <div class="bienvenida-option">
                             <input class="form-check-input" type="radio" id="bienvDefault"
@@ -226,7 +224,7 @@
                                    [(ngModel)]="bienvenidaTipoSeleccionado" />
                             <label class="form-check-label" for="bienvDefault">
                                 <strong>Pantalla de bienvenida (Default)</strong>
-                                <br><small class="text-muted">Va a la pantalla con accesos rápidos y resumen del día.</small>
+                                <br><small class="us-tenue">Va a la pantalla con accesos rápidos y resumen del día.</small>
                             </label>
                         </div>
 
@@ -250,7 +248,7 @@
                                    [(ngModel)]="bienvenidaTipoSeleccionado" />
                             <label class="form-check-label" for="bienvReporte">
                                 <strong>Un reporte guardado</strong>
-                                <br><small class="text-muted">Va directo al reporte ejecutado con sus datos filtrados.</small>
+                                <br><small class="us-tenue">Va directo al reporte ejecutado con sus datos filtrados.</small>
                             </label>
                             <select class="form-select form-select-sm mt-2" *ngIf="bienvenidaTipoSeleccionado === 'reporte'"
                                     [(ngModel)]="bienvenidaReporteSeleccionado">
@@ -258,16 +256,14 @@
                                 <option *ngFor="let r of reportesGuardados" [value]="r.id">{{ r.nombre }}</option>
                             </select>
                             <small *ngIf="bienvenidaTipoSeleccionado === 'reporte' && reportesGuardados.length === 0"
-                                   class="text-muted d-block mt-2">No hay reportes guardados todavía.</small>
+                                   class="us-tenue d-block mt-2">No hay reportes guardados todavía.</small>
                         </div>
                     </div>
                     <div class="modal-footer-custom">
-                        <button type="button" class="btn btn-light" (click)="cerrarBienvenidaModal()">Cancelar</button>
-                        <button type="button" class="btn btn-primary" (click)="guardarBienvenida()">Guardar</button>
+                        <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrarBienvenidaModal()">Cancelar</button>
+                        <button type="button" class="cfg-btn" (click)="guardarBienvenida()">Guardar</button>
                     </div>
                 </div>
             </div>
 
-        </div>
-    </div>
 </div>

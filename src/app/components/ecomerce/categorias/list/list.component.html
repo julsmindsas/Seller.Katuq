@@ -1,5 +1,3 @@
-<!-- <app-breadcrumb [title]="'Categorias'" [items]="['Maestros']" [active_item]="'Categorias'"></app-breadcrumb> -->
-
 <!-- Faltaba: el componente emitía mensajes con su propio MessageService pero no
      había dónde pintarlos, así que ninguna acción de esta pantalla daba señal. -->
 <p-toast [position]="position"></p-toast>
@@ -195,9 +193,9 @@
         <p>{{ confirmationMessage }}</p>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-secondary btn-lg mr-2" (click)="modal.dismiss()">Cancelar</button>
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="modal.dismiss()">Cancelar</button>
         <!-- Rojo solo cuando se está por borrar; guardar no es destructivo. -->
-        <button type="button" class="btn btn-lg"
+        <button type="button" class="cfg-btn"
             [ngClass]="nodeToDelete ? 'btn-danger' : 'btn-success'"
             (click)="modal.close('confirm')">Confirmar</button>
     </div>

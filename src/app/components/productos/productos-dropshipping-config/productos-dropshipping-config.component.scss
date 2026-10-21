@@ -1,30 +1,5 @@
-.form-check-input {
-  transform: scale(1.2);
-  margin-top: 0.2rem;
-}
-
-.form-check-label {
-  font-weight: 500;
-  margin-left: 0.5rem;
-}
-
-.alert-info {
-  background-color: #f8f9fa;
-  border-color: #dee2e6;
-  color: #495057;
-}
-
-.h5 {
-  font-weight: 600;
-}
-
-.text-success {
-  color: #28a745 !important;
-}
-
-.text-primary {
-  color: #a78bfa !important;
-}
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
 
 .loader-box {
   display: flex;
@@ -33,56 +8,87 @@
   min-height: 300px;
 }
 
-.card-header {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
+.dsc-ref { margin-left: 6px; }
+
+// Títulos de sección del formulario.
+.dsc-seccion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 800;
+  color: $cfg-ink;
 }
 
-.badge-secondary {
-  background-color: #6c757d;
-  color: #fff;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.875rem;
+.dsc-icono {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: $cfg-accent-soft;
+  color: $cfg-accent;
+  font-size: 14px;
+}
+.dsc-icono--info { background: $cfg-info-soft; color: $cfg-info; }
+.dsc-icono--ok { background: $cfg-ok-soft; color: $cfg-ok; }
+.dsc-icono--warn { background: $cfg-warn-soft; color: $cfg-warn; }
+
+.dsc-req { color: $cfg-err; font-size: inherit; }
+
+.dsc-ayuda {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: $cfg-muted;
 }
 
-.form-switch .form-check-input {
-  width: 3rem;
-  height: 1.5rem;
-  border-radius: 1.5rem;
-}
+.cfg-form {
+  .form-group { margin-bottom: 14px; }
 
-.input-group-text {
-  background-color: #e9ecef;
-  border-color: #ced4da;
-}
-
-.is-invalid {
-  border-color: #dc3545;
-  padding-right: calc(1.5em + 0.75rem);
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right calc(0.375em + 0.1875rem) center;
-  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
-}
-
-.invalid-feedback {
-  width: 100%;
-  margin-top: 0.25rem;
-  font-size: 0.875rem;
-  color: #dc3545;
-}
-
-@media (max-width: 768px) {
-  .text-right {
-    text-align: center !important;
+  // Los labels del switch y del check no van en UPPERCASE: son la frase del control.
+  .form-check-label {
+    margin-left: .5rem;
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: normal;
+    text-transform: none;
+    color: $cfg-ink;
   }
-  
-  .card-header .row {
-    text-align: center;
+
+  .form-check-input { transform: scale(1.2); margin-top: .2rem; }
+
+  .form-switch .form-check-input {
+    width: 3rem;
+    height: 1.5rem;
+    border-radius: 1.5rem;
   }
-  
-  .card-header .col-md-4:last-child {
-    margin-top: 1rem;
-  }
+
+  .is-invalid { border-color: $cfg-err; }
+  .invalid-feedback { width: 100%; margin-top: 4px; }
 }
+
+.dsc-sufijo {
+  background: $cfg-tile;
+  border-color: $cfg-chip-border;
+  color: $cfg-muted;
+  font-size: 13px;
+}
+
+// Calculadora de precios: panel tintado plano.
+.dsc-calculo {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid #eeecf7;
+  border-radius: 11px;
+  background: $cfg-tint;
+  color: $cfg-body;
+  font-size: 13px;
+
+  strong { color: $cfg-muted; font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
+}
+
+.dsc-valor { font-size: 18px; font-weight: 800; color: $cfg-ink; }
+.dsc-valor--ok { color: $cfg-ok; }
+.dsc-valor--acento { color: $cfg-accent; }

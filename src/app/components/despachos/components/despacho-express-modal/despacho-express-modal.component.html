@@ -8,52 +8,52 @@
   [draggable]="false">
 
   <!-- Loading suggestions -->
-  <div *ngIf="loading" style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding: 8px 12px; background: #eef2ff; border-radius: 6px;">
-    <i class="pi pi-spin pi-spinner" style="color: #6366f1;"></i>
-    <span style="font-size: 0.85rem; color: #4338ca;">Buscando transportadores sugeridos...</span>
+  <div *ngIf="loading" class="dx-cargando">
+    <i class="pi pi-spin pi-spinner dx-icono"></i>
+    <span class="dx-cargando__texto">Buscando transportadores sugeridos...</span>
   </div>
 
   <!-- Summary Header -->
   <div style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
-    <div style="background: #f0f4ff; border-radius: 8px; padding: 12px 20px; flex: 1; min-width: 150px;">
-      <div style="font-size: 0.8rem; color: #666;">Pedidos</div>
-      <div style="font-size: 1.4rem; font-weight: 700; color: #1a1a2e;">{{totalPedidos}}</div>
+    <div class="dx-dato">
+      <div class="dx-dato__label">Pedidos</div>
+      <div class="dx-dato__valor">{{totalPedidos}}</div>
     </div>
-    <div style="background: #f0fff4; border-radius: 8px; padding: 12px 20px; flex: 1; min-width: 150px;">
-      <div style="font-size: 0.8rem; color: #666;">Grupos por zona</div>
-      <div style="font-size: 1.4rem; font-weight: 700; color: #16a34a;">{{grupos.length}}</div>
+    <div class="dx-dato dx-dato--ok">
+      <div class="dx-dato__label">Grupos por zona</div>
+      <div class="dx-dato__valor">{{grupos.length}}</div>
     </div>
-    <div style="background: #fffbeb; border-radius: 8px; padding: 12px 20px; flex: 1; min-width: 150px;">
-      <div style="font-size: 0.8rem; color: #666;">Valor total</div>
-      <div style="font-size: 1.4rem; font-weight: 700; color: #d97706;">{{totalValor | currency:'COP':'symbol-narrow':'1.0-0'}}</div>
+    <div class="dx-dato dx-dato--warn">
+      <div class="dx-dato__label">Valor total</div>
+      <div class="dx-dato__valor">{{totalValor | currency:'COP':'symbol-narrow':'1.0-0'}}</div>
     </div>
   </div>
 
   <!-- Warning for orders already in shipping orders -->
   <div *ngIf="pedidosConOrden.length > 0"
-       style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;">
-    <i class="pi pi-exclamation-triangle" style="color: #856404; margin-right: 8px;"></i>
-    <span style="color: #856404;">
+       class="dx-aviso">
+    <i class="pi pi-exclamation-triangle dx-aviso__icono"></i>
+    <span class="dx-aviso__texto">
       {{pedidosConOrden.length}} pedido(s) ya tienen orden de envio y seran reasignados.
     </span>
   </div>
 
   <!-- Groups -->
   <div *ngFor="let grupo of grupos; let i = index"
-       style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-bottom: 12px;">
+       class="dx-grupo">
 
     <!-- Group Header -->
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
       <div>
-        <span style="font-weight: 600; font-size: 1.05rem;">
-          <i class="pi pi-map-marker" style="color: #6366f1; margin-right: 6px;"></i>
+        <span class="dx-grupo__titulo">
+          <i class="pi pi-map-marker dx-icono dx-icono--sep"></i>
           {{grupo.ciudad}} &mdash; {{grupo.zona}}
         </span>
-        <span style="background: #e0e7ff; color: #4338ca; border-radius: 12px; padding: 2px 10px; font-size: 0.8rem; margin-left: 8px;">
+        <span class="dx-conteo">
           {{grupo.pedidos.length}} pedido{{grupo.pedidos.length > 1 ? 's' : ''}}
         </span>
       </div>
-      <span style="font-weight: 600; color: #059669;">
+      <span class="dx-grupo__valor">
         {{grupo.totalValor | currency:'COP':'symbol-narrow':'1.0-0'}}
       </span>
     </div>
@@ -61,7 +61,7 @@
     <!-- Transporter & Method Selection -->
     <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
       <div style="min-width: 180px;">
-        <label style="font-size: 0.8rem; color: #666; display: block; margin-bottom: 4px;">Metodo</label>
+        <label class="dx-label">Metodo</label>
         <p-dropdown
           [options]="[{label: 'Mensajero propio', value: 'mensajeroPropio'}, {label: 'Transportadora', value: 'transportadora'}, {label: 'Recoge en tienda', value: 'recogeEnTienda'}]"
           [(ngModel)]="grupo.metodoEnvio"
@@ -73,7 +73,7 @@
         </p-dropdown>
       </div>
       <div *ngIf="grupo.metodoEnvio !== 'recogeEnTienda'" style="flex: 1; min-width: 250px;">
-        <label style="font-size: 0.8rem; color: #666; display: block; margin-bottom: 4px;">Transportador</label>
+        <label class="dx-label">Transportador</label>
         <p-dropdown
           [options]="vendorOptions"
           [(ngModel)]="grupo.transportadorId"
@@ -89,8 +89,8 @@
         </p-dropdown>
       </div>
       <div *ngIf="grupo.metodoEnvio === 'recogeEnTienda'" style="flex: 1; min-width: 250px; display: flex; align-items: center; padding-top: 18px;">
-        <i class="pi pi-home" style="color: #6366f1; margin-right: 8px;"></i>
-        <span style="color: #666; font-size: 0.9rem;">El cliente recoge en tienda</span>
+        <i class="pi pi-home dx-icono dx-icono--sep"></i>
+        <span class="dx-recoge">El cliente recoge en tienda</span>
       </div>
     </div>
 
@@ -107,13 +107,13 @@
 
     <!-- Collapsed pedidos list -->
     <details style="margin-top: 8px;">
-      <summary style="cursor: pointer; font-size: 0.85rem; color: #6b7280;">
+      <summary class="dx-resumen-lista">
         Ver pedidos del grupo
       </summary>
       <div style="margin-top: 8px; max-height: 200px; overflow-y: auto;">
         <table style="width: 100%; font-size: 0.85rem; border-collapse: collapse;">
           <thead>
-            <tr style="background: #f9fafb;">
+            <tr class="dx-tabla__cab">
               <th style="padding: 4px 8px; text-align: left;">Nro</th>
               <th style="padding: 4px 8px; text-align: left;">Cliente</th>
               <th style="padding: 4px 8px; text-align: right;">Valor</th>
@@ -121,7 +121,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let p of grupo.pedidos" style="border-bottom: 1px solid #f3f4f6;">
+            <tr *ngFor="let p of grupo.pedidos" class="dx-tabla__fila">
               <td style="padding: 4px 8px;">{{p.nroPedido}}</td>
               <td style="padding: 4px 8px;">{{p.cliente?.nombres_completos || p.clienteNombre || '-'}}</td>
               <td style="padding: 4px 8px; text-align: right;">{{(p.faltaPorPagar || p.totalPedidoConDescuento || 0) | currency:'COP':'symbol-narrow':'1.0-0'}}</td>

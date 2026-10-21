@@ -17,9 +17,9 @@
 
   <ng-template pTemplate="header">
     <div class="d-flex align-items-center gap-2">
-      <i [class]="isReplacementMode ? 'pi pi-credit-card' : 'pi pi-bolt'" style="color: #8b5cf6; font-size: 1.2rem;"></i>
+      <i [class]="isReplacementMode ? 'pi pi-credit-card' : 'pi pi-bolt'" style="color: #5F3FE0; font-size: 1.2rem;"></i>
       <div>
-        <h5 class="mb-0 fw-bold" style="color: #0f172a;">
+        <h5 class="mb-0 fw-bold" style="color: #211F3A;">
           {{ step === 'info' ? (isReplacementMode ? 'Actualizar medio de pago' : 'Activar Plan Pago') : step === 'card' ? 'Medio de Pago' : step === 'pending' ? 'Verificando Pago' : (isReplacementMode ? 'Tarjeta actualizada' : 'Plan Activado') }}
         </h5>
         <small class="text-muted">
@@ -72,42 +72,42 @@
     <div *ngIf="cardError" class="alert alert-danger py-2 mb-3" style="font-size: 0.8rem;">
       <i class="pi pi-exclamation-circle me-1"></i>{{ cardError }}
     </div>
-    <div *ngIf="!isReplacementMode" class="mb-3 p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-      <h6 class="fw-bold mb-3" style="color: #0f172a; font-size: 0.85rem;">
-        <i class="pi pi-info-circle me-1" style="color: #8b5cf6;"></i>Cómo funciona
+    <div *ngIf="!isReplacementMode" class="mb-3 p-3 rounded" style="background: #faf9fe; border: 1px solid #ececf4;">
+      <h6 class="fw-bold mb-3" style="color: #211F3A; font-size: 0.85rem;">
+        <i class="pi pi-info-circle me-1" style="color: #5F3FE0;"></i>Cómo funciona
       </h6>
       <div class="d-flex align-items-start gap-2 mb-2">
         <span class="badge rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-              style="width: 20px; height: 20px; background: #8b5cf6; font-size: 0.65rem;">1</span>
-        <small style="color: #334155;">Usas Katuq sin restricciones — todo ilimitado.</small>
+              style="width: 20px; height: 20px; background: #5F3FE0; font-size: 0.65rem;">1</span>
+        <small style="color: #5b5878;">Usas Katuq sin restricciones — todo ilimitado.</small>
       </div>
       <div class="d-flex align-items-start gap-2 mb-2">
         <span class="badge rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-              style="width: 20px; height: 20px; background: #8b5cf6; font-size: 0.65rem;">2</span>
-        <small style="color: #334155;">Al cierre del mes, sumamos tus ventas y determinamos tu tramo.</small>
+              style="width: 20px; height: 20px; background: #5F3FE0; font-size: 0.65rem;">2</span>
+        <small style="color: #5b5878;">Al cierre del mes, sumamos tus ventas y determinamos tu tramo.</small>
       </div>
       <div class="d-flex align-items-start gap-2">
         <span class="badge rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-              style="width: 20px; height: 20px; background: #8b5cf6; font-size: 0.65rem;">3</span>
-        <small style="color: #334155;">Te cobramos según lo que vendiste. El plan anual aplica 20% de descuento sobre 12 mensualidades.</small>
+              style="width: 20px; height: 20px; background: #5F3FE0; font-size: 0.65rem;">3</span>
+        <small style="color: #5b5878;">Te cobramos según lo que vendiste. El plan anual aplica 20% de descuento sobre 12 mensualidades.</small>
       </div>
     </div>
 
     <table *ngIf="!isReplacementMode" class="table table-sm mb-3" style="font-size: 0.8rem;">
-      <thead style="background: #f8fafc;">
+      <thead style="background: #faf9fe;">
         <tr>
-          <th style="color: #64748b; font-weight: 600;">Plan</th>
-          <th class="text-center" style="color: #64748b; font-weight: 600;">Ventas hasta</th>
-          <th class="text-center" style="color: #64748b; font-weight: 600;">Precio</th>
+          <th style="color: #8f8bab; font-weight: 600;">Plan</th>
+          <th class="text-center" style="color: #8f8bab; font-weight: 600;">Ventas hasta</th>
+          <th class="text-center" style="color: #8f8bab; font-weight: 600;">Precio</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td>Base</td><td class="text-center">$15M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$27 USD</td></tr>
-        <tr><td>Origen</td><td class="text-center">$30M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$47 USD</td></tr>
-        <tr><td>Esencia</td><td class="text-center">$60M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$77 USD</td></tr>
-        <tr><td>Impulso</td><td class="text-center">$150M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$147 USD</td></tr>
-        <tr><td>Expansión</td><td class="text-center">$300M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$247 USD</td></tr>
-        <tr><td>Liderazgo</td><td class="text-center">$500M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$427 USD</td></tr>
+        <tr><td>Base</td><td class="text-center">$15M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$27 USD</td></tr>
+        <tr><td>Origen</td><td class="text-center">$30M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$47 USD</td></tr>
+        <tr><td>Esencia</td><td class="text-center">$60M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$77 USD</td></tr>
+        <tr><td>Impulso</td><td class="text-center">$150M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$147 USD</td></tr>
+        <tr><td>Expansión</td><td class="text-center">$300M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$247 USD</td></tr>
+        <tr><td>Liderazgo</td><td class="text-center">$500M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$427 USD</td></tr>
       </tbody>
     </table>
 
@@ -259,9 +259,9 @@
   <!-- STEP 3: Pending webhook confirmation -->
   <div *ngIf="step === 'pending'" class="p-4 text-center">
     <div class="mb-3">
-      <i class="pi pi-spin pi-spinner" style="font-size: 3rem; color: #8b5cf6;"></i>
+      <i class="pi pi-spin pi-spinner" style="font-size: 3rem; color: #5F3FE0;"></i>
     </div>
-    <h5 class="fw-bold" style="color: #0f172a;">Verificando tu pago</h5>
+    <h5 class="fw-bold" style="color: #211F3A;">Verificando tu pago</h5>
     <p class="text-muted mb-2">{{ pendingMessage }}</p>
     <small class="text-muted">Mientras tanto, tu cuenta continúa funcionando con el plan Gratis.</small>
   </div>
@@ -269,9 +269,9 @@
   <!-- STEP 4: Success -->
   <div *ngIf="step === 'success'" class="p-4 text-center">
     <div class="mb-3">
-      <i class="pi pi-check-circle" style="font-size: 3rem; color: #27ae60;"></i>
+      <i class="pi pi-check-circle" style="font-size: 3rem; color: #1E874B;"></i>
     </div>
-    <h5 class="fw-bold" style="color: #0f172a;">{{ isReplacementMode ? 'Medio de pago actualizado' : 'Plan activado exitosamente' }}</h5>
+    <h5 class="fw-bold" style="color: #211F3A;">{{ isReplacementMode ? 'Medio de pago actualizado' : 'Plan activado exitosamente' }}</h5>
     <p *ngIf="!isReplacementMode" class="text-muted">Wompi confirmó el pago. Ya tienes acceso a Premium y enviamos el comprobante PDF a <strong>{{ receiptEmail }}</strong>.</p>
     <p *ngIf="isReplacementMode" class="text-muted">La nueva tarjeta quedó tokenizada para tus próximos cobros. No realizamos ningún cargo ahora.</p>
   </div>
@@ -283,7 +283,7 @@
         <button pButton type="button" label="Cancelar" icon="pi pi-times"
                 class="p-button-text p-button-secondary" (click)="closeModal()"></button>
         <button pButton type="button" label="Continuar" icon="pi pi-arrow-right" iconPos="right"
-                style="background: #8b5cf6; border-color: #8b5cf6;"
+                style="background: #5F3FE0; border-color: #5F3FE0;"
                 [disabled]="configLoading || !initialAmountCOP || !!cardError"
                 (click)="goToCardStep()"></button>
       </ng-container>
@@ -296,7 +296,7 @@
         <button pButton type="button"
                 [label]="paymentButtonLabel"
                 icon="pi pi-lock"
-                style="background: #8b5cf6; border-color: #8b5cf6;"
+                style="background: #5F3FE0; border-color: #5F3FE0;"
                 [loading]="loading"
                 [disabled]="loading || !securityReady || !termsReady || !isCardFormValid || !acceptedPolicy || !acceptedPersonalData"
                 (click)="submitCard()"></button>
@@ -313,10 +313,10 @@
       <ng-container *ngIf="step === 'success'">
         <span></span>
         <button *ngIf="!isReplacementMode" pButton type="button" label="Ir al Dashboard" icon="pi pi-home"
-                style="background: #8b5cf6; border-color: #8b5cf6;"
+                style="background: #5F3FE0; border-color: #5F3FE0;"
                 (click)="closeModal()" routerLink="/welcome"></button>
         <button *ngIf="isReplacementMode" pButton type="button" label="Listo" icon="pi pi-check"
-                style="background: #8b5cf6; border-color: #8b5cf6;"
+                style="background: #5F3FE0; border-color: #5F3FE0;"
                 (click)="closeModal()"></button>
       </ng-container>
     </div>

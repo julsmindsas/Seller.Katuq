@@ -1,241 +1,183 @@
-// ─── Form maestro de usuarios — UNA card con secciones internas ───────────
-.usuarios-form {
-    padding: 10px 0;
+// Formulario de Seguridad (D-400 / D-516): base compartida cfg-*.
+// Una sola tarjeta con secciones internas.
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
 
-    .card {
-        border: 1px solid #e9ecef;
-        border-radius: 10px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-    }
-}
+$us-accent: #5F3FE0;
+$us-accent-2: #7C5CFF;
+$us-accent-soft: #efe9ff;
+$us-ink: #211F3A;
+$us-body: #5b5878;
+$us-muted: #8f8bab;
+$us-line: #ececf4;
+$us-line-soft: #f1f0f7;
+$us-tint: #faf9fe;
+$us-err: #D64545;
 
-.page-header {
+.us-tenue { color: $us-muted !important; font-size: 12px; letter-spacing: normal; }
+.us-btn-chico { min-height: 34px; padding: 0 12px; font-size: 12.5px; }
+.us-indicativo { max-width: 160px; }
+.us-extension { max-width: 100px; }
+
+// Secciones dentro de la tarjeta (sin cards anidadas)
+.form-section {
+  margin-bottom: 24px;
+
+  &:last-of-type { margin-bottom: 0; }
+
+  .section-title {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding-bottom: 16px;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #e9ecef;
-
-    .btn-back {
-        background: #fff;
-        border: 1px solid #e0e4e8;
-        border-radius: 50%;
-        width: 38px;
-        height: 38px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #007bff;
-        cursor: pointer;
-        transition: all 0.15s;
-        flex-shrink: 0;
-
-        &:hover {
-            background: #007bff;
-            color: #fff;
-            border-color: #007bff;
-        }
-
-        i {
-            font-size: 16px;
-        }
-    }
-
-    h4 {
-        font-weight: 600;
-        color: #1f2937;
-    }
-}
-
-// Secciones dentro de la card (sin bordes/cards anidadas)
-.form-section {
-    margin-bottom: 24px;
-
-    &:last-of-type {
-        margin-bottom: 0;
-    }
-
-    .section-title {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 14px;
-        padding-bottom: 8px;
-        border-bottom: 1px dashed #e9ecef;
-
-        .section-icon {
-            font-size: 16px;
-            color: #007bff;
-            background: #e7f1ff;
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        h6 {
-            font-weight: 600;
-            color: #1f2937;
-            font-size: 14px;
-        }
-    }
-
-    .form-label {
-        font-size: 13px;
-        font-weight: 500;
-        color: #4b5563;
-        margin-bottom: 4px;
-
-        .req {
-            color: #dc3545;
-            margin-left: 2px;
-        }
-    }
-
-    .form-control {
-        border-radius: 6px;
-        border-color: #d1d5db;
-        transition: border-color 0.15s, box-shadow 0.15s;
-
-        &:focus {
-            border-color: #80bdff;
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
-        }
-    }
-
-    .form-check-input {
-        cursor: pointer;
-    }
-
-    .form-check-label {
-        cursor: pointer;
-        color: #4b5563;
-    }
-}
-
-// Bloques anidados dentro de "Configuración avanzada"
-.advanced-block {
-    padding: 12px 14px;
-    border: 1px solid #e9ecef;
-    border-left: 3px solid #6c757d;
-    border-radius: 6px;
-    margin-bottom: 10px;
-    background: #fafbfc;
-
-    &:last-child {
-        margin-bottom: 0;
-    }
-
-    .advanced-label {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-weight: 600;
-        color: #1f2937;
-        font-size: 13px;
-        margin-bottom: 4px;
-
-        i {
-            color: #6c757d;
-        }
-    }
-}
-
-// Footer de acciones — dentro de la card
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
     gap: 12px;
-    padding-top: 20px;
-    margin-top: 24px;
-    border-top: 1px solid #e9ecef;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid $us-line-soft;
 
-    .btn-lg {
-        padding: 10px 24px;
-        font-weight: 500;
+    .section-icon {
+      font-size: 16px;
+      color: $us-accent;
+      background: $us-accent-soft;
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
+
+    h6 {
+      font-weight: 800;
+      color: $us-ink;
+      font-size: 14px;
+    }
+  }
+
+  .form-label .req {
+    color: $us-err !important;
+    font-size: 12px !important;
+    margin-left: 2px;
+  }
+
+  .form-check-input { cursor: pointer; }
+
+  .form-check-label {
+    cursor: pointer;
+    color: $us-body;
+    text-transform: none;
+    font-size: 13.5px;
+    font-weight: 500;
+    letter-spacing: normal;
+    margin: 0;
+  }
 }
 
-// Selectores con placeholder estilo gris
-.select-default {
-    color: gray;
+// Bloques dentro de "Configuración avanzada": borde lila completo, sin acento a la izquierda.
+.advanced-block {
+  padding: 12px 14px;
+  border: 1px solid $us-line;
+  border-radius: 11px;
+  margin-bottom: 10px;
+  background: $us-tint;
+
+  &:last-child { margin-bottom: 0; }
+
+  .advanced-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: $us-ink;
+    font-size: 13px;
+    margin-bottom: 4px;
+
+    span { color: $us-ink !important; font-size: 13px !important; }
+    i { color: $us-accent; }
+  }
 }
+
+// Selectores con placeholder tenue
+.select-default { color: $us-muted; }
 select ::selection {
-    background-color: transparent;
-    color: gray;
+  background-color: transparent;
+  color: $us-muted;
 }
 
 // ─── Modal de pantalla de bienvenida ──────────────────────────────────────
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1050;
+  position: fixed;
+  inset: 0;
+  background: rgba(33, 31, 58, .55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 16px;
 }
 
 .modal-box {
-    background: #fff;
-    border-radius: 10px;
-    width: 100%;
-    max-width: 540px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  background: #fff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px -20px rgba(95, 63, 224, .35);
 
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px 20px;
-        border-bottom: 1px solid #e9ecef;
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid $us-line;
+  }
 
-        h5 {
-            font-weight: 600;
-        }
-    }
+  .modal-body-custom { padding: 18px 20px; }
 
-    .modal-body-custom {
-        padding: 18px 20px;
-    }
+  .modal-footer-custom {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 14px 20px;
+    border-top: 1px solid $us-line-soft;
+  }
+}
 
-    .modal-footer-custom {
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-        padding: 14px 20px;
-        border-top: 1px solid #e9ecef;
-    }
+.us-modal-titulo {
+  font-weight: 800;
+  font-size: 17px;
+  color: $us-ink;
+
+  i { color: $us-accent; }
 }
 
 .bienvenida-option {
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 12px 14px;
-    margin-bottom: 10px;
-    transition: border-color 0.15s, background 0.15s;
+  border: 1px solid $us-line;
+  border-radius: 11px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  transition: border-color .15s, background .15s;
 
-    .form-check-input {
-        margin-right: 10px;
-        cursor: pointer;
-        transform: translateY(3px);
-    }
+  .form-check-input {
+    margin-right: 10px;
+    cursor: pointer;
+    transform: translateY(3px);
 
-    .form-check-label {
-        cursor: pointer;
-    }
+    &:checked { background-color: $us-accent; border-color: $us-accent; }
+  }
 
-    &:hover {
-        border-color: #80bdff;
-        background: #f8fbff;
-    }
+  .form-check-label {
+    cursor: pointer;
+    text-transform: none;
+    font-size: 13.5px;
+    font-weight: 500;
+    letter-spacing: normal;
+    color: $us-ink;
+    margin: 0;
+  }
+
+  &:hover {
+    border-color: #ddd3fb;
+    background: $us-tint;
+  }
 }

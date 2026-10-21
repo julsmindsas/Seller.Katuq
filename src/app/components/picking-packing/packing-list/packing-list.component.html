@@ -1,12 +1,15 @@
-<div class="container-fluid">
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <h5 class="card-title">Órdenes de packing</h5>
-          <button pButton type="button" icon="pi pi-plus" label="Nuevo Packing" class="p-button-primary" (click)="iniciarNuevoPacking()"></button>
-        </div>
-        <div class="card-body">
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Picking y packing</span>
+      <h1 class="cfg-titulo">Órdenes de packing</h1>
+    </div>
+    <div class="cfg-acciones">
+      <button pButton type="button" icon="pi pi-plus" label="Nuevo Packing" class="p-button-primary" (click)="iniciarNuevoPacking()"></button>
+    </div>
+  </header>
+
+  <section class="cfg-card">
           <form [formGroup]="filtroForm" (ngSubmit)="aplicarFiltros()">
             <div class="row mb-3">
               <div class="col-md-3">
@@ -46,13 +49,9 @@
               </div>
             </div>
           </form>
-        </div>
-      </div>
-    </div>
-  </div>
+  </section>
 
-  <div class="row">
-    <div class="col-12">
+  <section class="cfg-card">
       <p-table [value]="packingList" [loading]="loading" styleClass="p-datatable-gridlines p-datatable-striped" responsiveLayout="scroll">
         <ng-template pTemplate="header">
           <tr>
@@ -99,6 +98,5 @@
       </p-table>
       <p-paginator [rows]="10" [totalRecords]="packingList.length" 
                   [rowsPerPageOptions]="[5,10,25,50]"></p-paginator>
-    </div>
-  </div>
+  </section>
 </div> 

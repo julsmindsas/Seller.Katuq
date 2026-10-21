@@ -93,9 +93,9 @@ import { ValidationResult } from './integration-form-validator.service';
       border-radius: 4px;
     }
 
-    .strength-low { background: linear-gradient(90deg, #dc3545, #fd7e83); }
-    .strength-medium { background: linear-gradient(90deg, #ffc107, #ffda6a); }
-    .strength-high { background: linear-gradient(90deg, #28a745, #71dd8a); }
+    .strength-low { background: #D64545; }
+    .strength-medium { background: #D9820A; }
+    .strength-high { background: #1E874B; }
 
     .strength-level {
       display: flex;

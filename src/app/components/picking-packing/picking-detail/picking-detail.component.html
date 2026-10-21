@@ -1,26 +1,26 @@
-<div class="container-fluid">
-  <div class="row mb-3">
-    <div class="col-12">
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Picking y packing</span>
+      <h1 class="cfg-titulo">Órdenes de picking</h1>
+    </div>
+    <div class="cfg-acciones">
       <button pButton type="button" icon="pi pi-arrow-left" label="Volver"
               class="p-button-secondary" (click)="volverALista()"></button>
     </div>
-  </div>
+  </header>
 
-  <div *ngIf="loading" class="row">
-    <div class="col-12 text-center">
+  <section *ngIf="loading" class="cfg-card detalle-cargando">
       <p-progressSpinner></p-progressSpinner>
-      <p>Cargando información...</p>
-    </div>
-  </div>
+      <p class="detalle-texto">Cargando información...</p>
+  </section>
 
   <!-- Elegir el pedido a alistar -->
-  <div *ngIf="isNuevo && !loading" class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <h5 class="card-title">Elegir el pedido a alistar</h5>
+  <section *ngIf="isNuevo && !loading" class="cfg-card cfg-form">
+        <div class="detalle-cabeza">
+          <h2 class="cfg-card__titulo">Elegir el pedido a alistar</h2>
         </div>
-        <div class="card-body">
+        <div class="detalle-cuerpo">
           <div class="row mb-3">
             <div class="col-md-6">
               <label for="nroPedidoElegido">Pedido *</label>
@@ -44,23 +44,17 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+  </section>
 
   <!-- Pedido a alistar -->
-  <div *ngIf="!isNuevo && !loading && order" class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="card-title">Pedido: {{ order.nroPedido }}</h5>
-            <span class="badge bg-primary">
+  <section *ngIf="!isNuevo && !loading && order" class="cfg-card">
+        <div class="detalle-cabeza">
+            <h2 class="cfg-card__titulo">Pedido: {{ order.nroPedido }}</h2>
+            <span class="cfg-pill">
               {{ textoEstadoPedido(order.estadoProceso) }}
             </span>
-          </div>
         </div>
-        <div class="card-body">
+        <div class="detalle-cuerpo">
           <div class="row mb-3">
             <div class="col-md-4">
               <p><strong>Cliente:</strong> {{ order.cliente?.nombres_completos }}</p>
@@ -75,7 +69,7 @@
 
           <div class="row mb-4">
             <div class="col-12">
-              <h6>Productos del Pedido</h6>
+              <h3 class="detalle-subtitulo">Productos del Pedido</h3>
               <p-table [value]="productosSeleccionados" [scrollable]="true" scrollHeight="250px">
                 <ng-template pTemplate="header">
                   <tr>
@@ -107,7 +101,7 @@
 
           <div class="row mb-3" *ngIf="!picking">
             <div class="col-12">
-              <h6>Iniciar Picking para este Pedido</h6>
+              <h3 class="detalle-subtitulo">Iniciar Picking para este Pedido</h3>
               <form [formGroup]="pickingForm">
                 <div class="row mb-3">
                   <div class="col-md-6">
@@ -141,17 +135,12 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+  </section>
 
   <!-- Alistamiento del pedido (ya iniciado o completado) -->
-  <div *ngIf="!isNuevo && !loading && picking" class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="card-title">Alistamiento del pedido {{ nroPedido }}</h5>
+  <section *ngIf="!isNuevo && !loading && picking" class="cfg-card">
+        <div class="detalle-cabeza">
+            <h2 class="cfg-card__titulo">Alistamiento del pedido {{ nroPedido }}</h2>
             <span class="badge" [ngClass]="{
               'bg-warning': picking.estado === 'pendiente',
               'bg-primary': picking.estado === 'en_proceso',
@@ -160,9 +149,8 @@
             }">
               {{ textoEstadoAlistamiento(picking.estado) }}
             </span>
-          </div>
         </div>
-        <div class="card-body">
+        <div class="detalle-cuerpo">
           <div class="row mb-3">
             <div class="col-md-4">
               <p><strong>Bodega:</strong> {{ nombreBodega(picking.bodegaId) || picking.bodegaId }}</p>
@@ -177,7 +165,7 @@
 
           <div class="row mb-4">
             <div class="col-12">
-              <h6>Productos a Recolectar</h6>
+              <h3 class="detalle-subtitulo">Productos a Recolectar</h3>
               <p-table [value]="picking.productos" [scrollable]="true" scrollHeight="250px">
                 <ng-template pTemplate="header">
                   <tr>
@@ -216,7 +204,5 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+  </section>
 </div>

@@ -1,83 +1,73 @@
-<div class="page-wrapper">
-  <div class="page-header">
-    <div>
-      <h3 class="mb-1">Costos de inventario</h3>
-      <p class="text-muted mb-0">
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Inventarios y Productos</span>
+      <h1 class="cfg-titulo">Costos de inventario</h1>
+      <p class="cfg-sub">
         Importa los costos desde tu proveedor de fulfillment (Prindel/Aliaddo).
         Los costos alimentan el valor del inventario y el informe de utilidad.
       </p>
     </div>
-    <div>
+    <div class="cfg-acciones">
       <p-menu #accionesMenu [model]="accionesMenuItems" [popup]="true" [appendTo]="'body'"></p-menu>
       <button pButton type="button"
               icon="pi pi-ellipsis-v"
               label="Acciones"
-              class="p-button-sm"
+              class="p-button-sm lc-acciones"
               (click)="accionesMenu.toggle($event)"
               pTooltip="Importar / Exportar Excel"
               tooltipPosition="bottom"></button>
     </div>
-  </div>
+  </header>
 
   <!-- Resumen del último import -->
-  <div *ngIf="ultimoImport" class="card last-import-card mt-3">
-    <div class="card-body">
-      <div class="d-flex justify-content-between align-items-start mb-2">
-        <div>
-          <small class="text-muted">Último import</small>
-          <h5 class="mb-0">{{ ultimoImport.fileName || ultimoImport.id }}</h5>
-        </div>
-        <span class="badge bg-secondary">{{ ultimoImport.fuente }}</span>
+  <section *ngIf="ultimoImport" class="cfg-card">
+    <div class="lc-ultimo">
+      <div>
+        <small class="cfg-label">Último import</small>
+        <h5 class="lc-archivo">{{ ultimoImport.fileName || ultimoImport.id }}</h5>
       </div>
-      <div class="row g-2 mt-3">
-        <div class="col-md-3">
-          <div class="stat stat-success">
-            <small>Productos actualizados</small>
-            <div class="stat-value">{{ ultimoImport.totalProcesados || 0 }}</div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="stat stat-info">
-            <small>Sin cambios</small>
-            <div class="stat-value">{{ ultimoImport.summary?.noChange || 0 }}</div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="stat stat-warning">
-            <small>No encontrados</small>
-            <div class="stat-value">{{ ultimoImport.summary?.unmatched || 0 }}</div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="stat stat-neutral">
-            <small>Delta inventario</small>
-            <div class="stat-value">{{ formatCOP(ultimoImport.summary?.deltaTotal) }}</div>
-          </div>
-        </div>
-      </div>
-      <small class="text-muted mt-3 d-block">
-        Importado por <b>{{ ultimoImport.importedBy }}</b> · {{ formatDate(ultimoImport.importedAt || ultimoImport.importedAtISO) }}
-      </small>
+      <span class="cfg-pill cfg-pill--neutro">{{ ultimoImport.fuente }}</span>
     </div>
-  </div>
+    <div class="cfg-stats lc-stats">
+      <div class="cfg-stat lc-stat--ok">
+        <small class="cfg-stat__label">Productos actualizados</small>
+        <div class="cfg-stat__valor">{{ ultimoImport.totalProcesados || 0 }}</div>
+      </div>
+      <div class="cfg-stat lc-stat--info">
+        <small class="cfg-stat__label">Sin cambios</small>
+        <div class="cfg-stat__valor">{{ ultimoImport.summary?.noChange || 0 }}</div>
+      </div>
+      <div class="cfg-stat lc-stat--warn">
+        <small class="cfg-stat__label">No encontrados</small>
+        <div class="cfg-stat__valor">{{ ultimoImport.summary?.unmatched || 0 }}</div>
+      </div>
+      <div class="cfg-stat lc-stat--neutro">
+        <small class="cfg-stat__label">Delta inventario</small>
+        <div class="cfg-stat__valor">{{ formatCOP(ultimoImport.summary?.deltaTotal) }}</div>
+      </div>
+    </div>
+    <small class="lc-pie">
+      Importado por <b>{{ ultimoImport.importedBy }}</b> · {{ formatDate(ultimoImport.importedAt || ultimoImport.importedAtISO) }}
+    </small>
+  </section>
 
   <!-- Historial -->
-  <div class="card mt-4">
-    <div class="card-header">
-      <h5 class="mb-0">Histórico de imports</h5>
+  <section class="cfg-card">
+    <h5 class="cfg-card__titulo">Histórico de imports</h5>
+
+    <div *ngIf="cargando" class="lc-cargando">
+      <i class="pi pi-spin pi-spinner"></i>
     </div>
-    <div class="card-body p-0">
-      <div *ngIf="cargando" class="text-center py-4">
-        <i class="pi pi-spin pi-spinner" style="font-size: 1.5rem;"></i>
-      </div>
 
-      <div *ngIf="!cargando && imports.length === 0" class="text-center py-5 text-muted">
-        <i class="pi pi-inbox" style="font-size: 3rem;"></i>
-        <p class="mt-2 mb-0">Aún no has importado costos.</p>
-        <small>Empieza con el botón "Importar Excel".</small>
-      </div>
+    <div *ngIf="!cargando && imports.length === 0" class="cfg-vacio">
+      <i class="pi pi-inbox cfg-vacio__icono"></i>
+      <p class="cfg-vacio__titulo">Aún no has importado costos.</p>
+      <small class="cfg-vacio__texto">Empieza con el botón "Importar Excel".</small>
+    </div>
 
-      <table *ngIf="!cargando && imports.length > 0" class="table table-hover mb-0">
+    <div class="lc-tabla-scroll" *ngIf="!cargando && imports.length > 0">
+      <table class="table lc-tabla mb-0">
         <thead>
           <tr>
             <th>Archivo</th>
@@ -91,7 +81,7 @@
         <tbody>
           <tr *ngFor="let imp of imports">
             <td>{{ imp.fileName || imp.id }}</td>
-            <td><span class="badge bg-secondary">{{ imp.fuente }}</span></td>
+            <td><span class="cfg-pill cfg-pill--neutro">{{ imp.fuente }}</span></td>
             <td class="text-end">{{ imp.totalProcesados || 0 }}</td>
             <td class="text-end">{{ formatCOP(imp.summary?.deltaTotal) }}</td>
             <td>{{ imp.importedBy }}</td>
@@ -100,5 +90,5 @@
         </tbody>
       </table>
     </div>
-  </div>
+  </section>
 </div>

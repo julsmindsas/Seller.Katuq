@@ -2,39 +2,39 @@
 
   <!-- Cargando -->
   <div class="vit__estado" *ngIf="cargando">
-    <div class="vit__spinner"></div>
-    <p class="vit__muted">Cargando catálogo…</p>
+    <div class="vit__spinner" aria-hidden="true"></div>
+    <p class="pub-fine">Cargando catálogo…</p>
   </div>
 
   <!-- Enlace inválido, apagado o vencido -->
   <div class="vit__estado" *ngIf="!cargando && error">
-    <div class="vit__estado-ic">
+    <div class="pub-estado pub-estado--info" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
         <rect x="4" y="10" width="16" height="10" rx="2" />
         <path d="M8 10V7a4 4 0 0 1 8 0v3" />
       </svg>
     </div>
-    <h2>{{ error }}</h2>
-    <p class="vit__muted">Pídele al vendedor un enlace nuevo.</p>
+    <h2 class="pub-h2">{{ error }}</h2>
+    <p class="pub-fine">Pídele al vendedor un enlace nuevo.</p>
   </div>
 
   <!-- Confirmación -->
   <div class="vit__estado" *ngIf="referencia">
-    <div class="vit__estado-ic vit__estado-ic--ok">
+    <div class="pub-estado pub-estado--ok" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M20 6 9 17l-5-5" />
       </svg>
     </div>
-    <h2>Recibimos tu pedido</h2>
+    <h2 class="pub-h2">Recibimos tu pedido</h2>
     <p class="vit__ref">{{ referencia }}</p>
-    <p class="vit__muted">El vendedor te contactará para confirmar precios y entrega.</p>
+    <p class="pub-fine">El vendedor te contactará para confirmar precios y entrega.</p>
   </div>
 
   <!-- Vitrina -->
   <ng-container *ngIf="!cargando && !error && !referencia && catalogo">
     <header class="vit__head">
-      <h1>{{ catalogo.nombre }}</h1>
-      <p *ngIf="catalogo.descripcion">{{ catalogo.descripcion }}</p>
+      <h1 class="vit__titulo">{{ catalogo.nombre }}</h1>
+      <p class="vit__desc" *ngIf="catalogo.descripcion">{{ catalogo.descripcion }}</p>
     </header>
 
     <!-- Buscador pegajoso: con catálogos largos, bajar hasta encontrar algo
@@ -67,9 +67,14 @@
       </p>
     </div>
 
-    <p class="vit__vacio" *ngIf="productosFiltrados.length === 0">
-      Nada coincide con “{{ filtro }}”.
-    </p>
+    <div class="vit__vacio" *ngIf="productosFiltrados.length === 0">
+      <span class="vit__vacio-ic" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+        </svg>
+      </span>
+      <p class="vit__vacio-txt">Nada coincide con “{{ filtro }}”.</p>
+    </div>
 
     <section class="vit__grid">
       <article
@@ -91,7 +96,7 @@
 
         <div class="vit__card-body">
           <p class="vit__ref-prod" *ngIf="p.referencia">{{ p.referencia }}</p>
-          <h3>{{ p.titulo }}</h3>
+          <h3 class="vit__nombre">{{ p.titulo }}</h3>
         </div>
 
         <div class="vit__card-foot">
@@ -118,7 +123,7 @@
     <div class="vit__cta" *ngIf="totalItems > 0 && !mostrandoCarrito">
       <div class="vit__cta-info">
         <strong>{{ totalItems }}</strong>
-        <span class="vit__muted">{{ totalItems === 1 ? 'producto' : 'productos' }}</span>
+        <span class="vit__muted vit__cta-unidad">{{ totalItems === 1 ? 'producto' : 'productos' }}</span>
         <span class="vit__cta-total">{{ totalEstimado | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
       </div>
       <button type="button" class="vit__btn vit__btn--primario" (click)="mostrandoCarrito = true">
@@ -132,7 +137,7 @@
         <div class="vit__hoja-asa"></div>
 
         <div class="vit__hoja-head">
-          <h2>Tu pedido</h2>
+          <h2 class="pub-h2">Tu pedido</h2>
           <button type="button" class="vit__cerrar" (click)="mostrandoCarrito = false" aria-label="Cerrar">✕</button>
         </div>
 

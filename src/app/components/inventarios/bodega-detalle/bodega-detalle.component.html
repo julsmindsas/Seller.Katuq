@@ -1,47 +1,36 @@
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-sm-12">
-      <!-- Card principal -->
-      <div class="card shadow-sm position-relative">
-        <!-- Loader -->
-        <div class="loader-box" *ngIf="loading">
-          <div class="loader-8"></div>
-        </div>
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Inventarios</span>
+      <h1 class="cfg-titulo">{{ 'Detalle por bodega' | translate }}</h1>
+      <p class="cfg-sub">{{ 'Detalle de productos y stock por bodega' | translate }}</p>
+    </div>
+    <div class="cfg-acciones">
+      <button class="cfg-btn cfg-btn--sec"
+              (click)="cargarDetalle()"
+              [disabled]="loading || !bodegaSeleccionadaId">
+        <i class="pi pi-refresh"></i>{{ 'Recargar' | translate }}
+      </button>
+      <button class="cfg-btn cfg-btn--sec"
+              (click)="exportarExcel()"
+              [disabled]="loading || !productos.length">
+        <i class="pi pi-file-excel"></i>{{ 'Excel' | translate }}
+      </button>
+    </div>
+  </header>
 
-        <!-- Header -->
-        <div class="module-header px-4 py-3 border-bottom">
-          <div class="d-flex justify-content-between align-items-center flex-wrap">
-            <div class="mb-2 mb-md-0">
-              <h4 class="mb-1 fw-bold text-dark">
-                <i class="pi pi-building me-2" style="color: #8b5cf6;"></i>{{ 'Detalle por bodega' | translate }}
-              </h4>
-              <p class="text-muted small mb-0">
-                {{ 'Detalle de productos y stock por bodega' | translate }}
-              </p>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-              <button class="btn btn-outline-primary btn-sm"
-                      (click)="cargarDetalle()"
-                      [disabled]="loading || !bodegaSeleccionadaId"
-                      style="border-color: #8b5cf6; color: #8b5cf6;">
-                <i class="pi pi-refresh me-1"></i>{{ 'Recargar' | translate }}
-              </button>
-              <button class="btn btn-outline-primary btn-sm"
-                      (click)="exportarExcel()"
-                      [disabled]="loading || !productos.length"
-                      style="border-color: #8b5cf6; color: #8b5cf6;">
-                <i class="pi pi-file-excel me-1"></i>{{ 'Excel' | translate }}
-              </button>
-            </div>
-          </div>
-        </div>
+  <!-- Card principal -->
+  <section class="cfg-card">
+    <!-- Loader -->
+    <div class="loader-box" *ngIf="loading">
+      <div class="loader-8"></div>
+    </div>
 
-        <!-- Card body -->
-        <div class="card-body px-4 py-3">
+    <div class="detalle-cuerpo">
           <!-- Selector de bodega -->
-          <div class="row mb-3">
+          <div class="row mb-3 cfg-form">
             <div class="col-md-6 col-lg-4">
-              <label class="form-label fw-semibold text-dark">{{ 'Seleccionar bodega' | translate }}</label>
+              <label class="form-label cfg-label">{{ 'Seleccionar bodega' | translate }}</label>
               <select class="form-select" [(ngModel)]="bodegaSeleccionadaId" (change)="onBodegaChange()">
                 <option value="">{{ '-- Seleccione una bodega --' | translate }}</option>
                 <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
@@ -52,54 +41,30 @@
           </div>
 
           <!-- Stats bar -->
-          <div class="row g-2 mb-3" *ngIf="bodegaSeleccionadaId && bodegaInfo">
+          <div class="cfg-stats mb-3" *ngIf="bodegaSeleccionadaId && bodegaInfo">
             <!-- SKUs -->
-            <div class="col-lg-3 col-md-6">
-              <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-4" style="border-color: #8b5cf6 !important;">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h3 class="mb-0 fw-bold" style="color: #8b5cf6;">{{ totales.totalSKUs | number }}</h3>
-                    <small class="text-muted">{{ 'SKUs' | translate }}</small>
-                  </div>
-                  <i class="pi pi-box" style="font-size: 1.5rem; color: #8b5cf6; opacity: 0.5;"></i>
-                </div>
-              </div>
+            <div class="cfg-stat stat-card">
+              <span class="cfg-stat__label">{{ 'SKUs' | translate }}</span>
+              <span class="cfg-stat__valor">{{ totales.totalSKUs | number }}</span>
+              <i class="pi pi-box stat-icono"></i>
             </div>
             <!-- Unidades -->
-            <div class="col-lg-3 col-md-6">
-              <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-4" style="border-color: #00e5cc !important;">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h3 class="mb-0 fw-bold" style="color: #00e5cc;">{{ totales.totalUnidades | number }}</h3>
-                    <small class="text-muted">{{ 'Unidades' | translate }}</small>
-                  </div>
-                  <i class="pi pi-hashtag" style="font-size: 1.5rem; color: #00e5cc; opacity: 0.5;"></i>
-                </div>
-              </div>
+            <div class="cfg-stat stat-card">
+              <span class="cfg-stat__label">{{ 'Unidades' | translate }}</span>
+              <span class="cfg-stat__valor">{{ totales.totalUnidades | number }}</span>
+              <i class="pi pi-hashtag stat-icono"></i>
             </div>
             <!-- Valor Total -->
-            <div class="col-lg-3 col-md-6">
-              <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-4" style="border-color: #f59e0b !important;">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h3 class="mb-0 fw-bold" style="color: #f59e0b;">{{ totales.valorTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</h3>
-                    <small class="text-muted">{{ 'Valor Total' | translate }}</small>
-                  </div>
-                  <i class="pi pi-dollar" style="font-size: 1.5rem; color: #f59e0b; opacity: 0.5;"></i>
-                </div>
-              </div>
+            <div class="cfg-stat stat-card">
+              <span class="cfg-stat__label">{{ 'Valor Total' | translate }}</span>
+              <span class="cfg-stat__valor">{{ totales.valorTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+              <i class="pi pi-dollar stat-icono"></i>
             </div>
             <!-- Agotados -->
-            <div class="col-lg-3 col-md-6">
-              <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-4" style="border-color: #ef4444 !important;">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h3 class="mb-0 fw-bold" style="color: #ef4444;">{{ totales.agotados | number }}</h3>
-                    <small class="text-muted">{{ 'Agotados' | translate }}</small>
-                  </div>
-                  <i class="pi pi-exclamation-triangle" style="font-size: 1.5rem; color: #ef4444; opacity: 0.5;"></i>
-                </div>
-              </div>
+            <div class="cfg-stat stat-card stat-card--agotados">
+              <span class="cfg-stat__label">{{ 'Agotados' | translate }}</span>
+              <span class="cfg-stat__valor">{{ totales.agotados | number }}</span>
+              <i class="pi pi-exclamation-triangle stat-icono"></i>
             </div>
           </div>
 
@@ -170,7 +135,7 @@
                 </td>
                 <td>
                   {{ producto.nombre }}
-                  <span *ngIf="producto.tieneFulfillment" class="badge ms-1" style="background: #eef0fb; color: #8b5cf6; font-size: 0.6rem; vertical-align: middle;">FF</span>
+                  <span *ngIf="producto.tieneFulfillment" class="cfg-pill ms-1 etiqueta-ff">FF</span>
                 </td>
                 <td class="text-end">
                   <span [class.text-danger]="producto.cantidad === 0"
@@ -184,7 +149,7 @@
                 </td>
                 <td class="text-end">
                   <span *ngIf="producto.preciosPorTipoCliente?.length > 0"
-                        class="badge" style="background: #f3f0ff; color: #8b5cf6; cursor: pointer;"
+                        class="cfg-pill etiqueta-listas"
                         [pRowToggler]="producto">
                     {{ producto.preciosPorTipoCliente.length }} lista(s)
                   </span>
@@ -201,13 +166,13 @@
             <ng-template pTemplate="rowexpansion" let-producto>
               <tr>
                 <td [attr.colspan]="8">
-                  <div class="p-3" style="background: #fafbfc;">
+                  <div class="p-3 detalle-expandido">
                     <div class="row g-3">
                       <!-- Listas de Precios -->
                       <div class="col-md-6" *ngIf="producto.preciosPorTipoCliente?.length > 0">
-                        <h6 class="fw-bold small mb-2"><i class="pi pi-tag me-1" style="color: #8b5cf6;"></i>Listas de Precios</h6>
+                        <h6 class="fw-bold small mb-2"><i class="pi pi-tag me-1 icono-acento"></i>Listas de Precios</h6>
                         <table class="table table-sm table-bordered mb-0" style="font-size: 0.8rem;">
-                          <thead style="background: #f0ecff;">
+                          <thead class="tabla-listas__cabeza">
                             <tr>
                               <th>Tipo Cliente</th>
                               <th class="text-end">Precio sin IVA</th>
@@ -220,18 +185,18 @@
                               <td>{{ p.tipoClienteNombre }}</td>
                               <td class="text-end">{{ p.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                               <td class="text-end fw-semibold">{{ p.precioConIva | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-                              <td class="text-end fw-bold" style="color: #8b5cf6;">{{ p.valorTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                              <td class="text-end fw-bold texto-acento">{{ p.valorTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                             </tr>
                           </tbody>
                         </table>
                       </div>
                       <!-- Fulfillment info -->
                       <div class="col-md-6" *ngIf="producto.tieneFulfillment">
-                        <h6 class="fw-bold small mb-2"><i class="pi pi-cloud me-1" style="color: #00e5cc;"></i>Fulfillment</h6>
+                        <h6 class="fw-bold small mb-2"><i class="pi pi-cloud me-1 icono-info"></i>Fulfillment</h6>
                         <div class="border rounded p-2" style="font-size: 0.8rem;">
                           <div class="d-flex justify-content-between mb-1">
                             <span class="text-muted">Enlace:</span>
-                            <span class="badge" style="background: #e0faf5; color: #0d9488;">Vinculado</span>
+                            <span class="cfg-pill cfg-pill--ok">Vinculado</span>
                           </div>
                           <div class="d-flex justify-content-between mb-1">
                             <span class="text-muted">Stock Katuq:</span>
@@ -239,7 +204,7 @@
                           </div>
                           <div class="d-flex justify-content-between align-items-center">
                             <span class="text-muted">Stock Fulfillment:</span>
-                            <span *ngIf="producto._ffStock !== undefined && producto._ffStock !== null" class="fw-bold" style="color: #00e5cc;">
+                            <span *ngIf="producto._ffStock !== undefined && producto._ffStock !== null" class="fw-bold texto-info">
                               {{ producto._ffStock | number }}
                               <span *ngIf="producto._ffStock !== producto.cantidad"
                                     class="badge ms-1"
@@ -252,10 +217,10 @@
                             <span *ngIf="producto._ffStock === undefined || producto._ffStock === null">
                               <button *ngIf="!producto._ffLoading" pButton type="button"
                                       icon="pi pi-sync" label="Consultar"
-                                      class="p-button-text p-button-sm"
-                                      style="color: #00e5cc; padding: 0.2rem 0.5rem; font-size: 0.75rem;"
+                                      class="p-button-text p-button-sm boton-consultar"
+                                      style="padding: 0.2rem 0.5rem; font-size: 0.75rem;"
                                       (click)="consultarStockFF(producto)"></button>
-                              <i *ngIf="producto._ffLoading" class="pi pi-spin pi-spinner" style="color: #00e5cc;"></i>
+                              <i *ngIf="producto._ffLoading" class="pi pi-spin pi-spinner icono-info"></i>
                             </span>
                           </div>
                         </div>
@@ -282,19 +247,19 @@
 
           <!-- Empty state: no bodega selected -->
           <div *ngIf="!bodegaSeleccionadaId" class="text-center py-5">
-            <i class="pi pi-building" style="font-size: 3rem; color: #8b5cf6; opacity: 0.3;"></i>
+            <i class="pi pi-building icono-vacio"></i>
             <p class="text-muted mt-3 mb-0">{{ 'Seleccione una bodega para ver el detalle de inventario' | translate }}</p>
           </div>
 
           <!-- Empty state: bodega selected but no products -->
           <div *ngIf="bodegaSeleccionadaId && !loading && productos.length === 0 && bodegaInfo" class="text-center py-5">
-            <i class="pi pi-inbox" style="font-size: 3rem; color: #8b5cf6; opacity: 0.3;"></i>
+            <i class="pi pi-inbox icono-vacio"></i>
             <p class="text-muted mt-3 mb-0">{{ 'No hay productos registrados en esta bodega' | translate }}</p>
           </div>
         </div>
 
         <!-- Footer with pagination info -->
-        <div class="card-footer bg-light px-4 py-2 border-top" *ngIf="bodegaSeleccionadaId && pagination.totalItems > 0">
+        <div class="detalle-pie" *ngIf="bodegaSeleccionadaId && pagination.totalItems > 0">
           <div class="d-flex justify-content-between align-items-center">
             <small class="text-muted">
               {{ 'Total' | translate }}: {{ pagination.totalItems | number }} {{ 'productos' | translate }}
@@ -307,7 +272,5 @@
             </small>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+  </section>
 </div>

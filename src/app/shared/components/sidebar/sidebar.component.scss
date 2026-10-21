@@ -419,6 +419,30 @@
       .remove-favorite-btn:hover { color: var(--ktq-red); }
     }
   }
+
+  // Ticket 1322: pantallas de una sección favorita, sangradas bajo su título.
+  .favorite-children {
+    list-style: none;
+    margin: 0 0 2px 28px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .favorite-link--hijo {
+    padding: 6px 10px;
+    font-size: 12.5px;
+    font-weight: 500;
+
+    span { color: inherit; font-size: inherit; letter-spacing: normal; }
+
+    &.active {
+      background: var(--ktq-hover);
+      color: var(--ktq-primary-deep);
+      font-weight: 700;
+    }
+  }
 }
 
 // =====================================================================
@@ -1558,7 +1582,7 @@ body.dark-only {
   padding: 3px 6px;
   border-radius: 99px;
   color: #fff;
-  background: linear-gradient(135deg, #7c5cff, #a78bfa);
+  background: #5F3FE0;
   text-transform: uppercase;
   margin-left: 6px;
 

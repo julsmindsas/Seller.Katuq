@@ -1,26 +1,16 @@
 <p-toast position="bottom-right"></p-toast>
 
-<!-- Header del módulo estilo Katuq -->
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="card shadow-sm border-0 mb-4">
-                <!-- Loader -->
-                <div class="loader-box" *ngIf="cargando">
-                    <div class="loader-8"></div>
-                </div>
-
-                <!-- Header del módulo -->
-                <div class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center flex-wrap">
-                    <div class="mb-2 mb-md-0">
-                        <h5 class="mb-1 fw-bold d-flex align-items-center gap-2" style="color: #8b5cf6;">
-                            <i class="pi pi-users" style="color: #8b5cf6;"></i>{{ "Listado de clientes" | translate }}
-                        </h5>
-                        <p class="text-muted mb-0" style="font-size: 0.95rem;">
+<!-- D-516: marco canónico (config-pagina) -->
+<div class="cfg-pagina cli-lista">
+            <header class="cfg-cabeza">
+                    <div class="cfg-cabeza__textos">
+                        <span class="cfg-eyebrow">Clientes</span>
+                        <h1 class="cfg-titulo">{{ "Listado de clientes" | translate }}</h1>
+                        <p class="cfg-sub">
                             {{ "Consulta, filtra y gestiona tus clientes" | translate }}
                         </p>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
+                    <div class="cfg-acciones">
                         <button pButton type="button"
                                 icon="pi pi-upload"
                                 label="{{ 'Importar' | translate }}"
@@ -48,11 +38,17 @@
                         <button pButton type="button"
                                 icon="pi pi-file-excel"
                                 label="{{ 'Exportar Excel' | translate }}"
-                                class="p-button-success p-button-sm d-none d-md-flex"
+                                class="p-button-outlined p-button-sm cli-btn-excel d-none d-md-flex"
                                 (click)="exportarExcel()"
                                 [disabled]="clientes.length === 0"
                                 pTooltip="{{ 'Exportar todos los clientes a Excel' | translate }}"></button>
                     </div>
+            </header>
+
+            <section class="cfg-card cli-lista__card">
+                <!-- Loader -->
+                <div class="loader-box" *ngIf="cargando">
+                    <div class="loader-8"></div>
                 </div>
 
                 <!-- Panel de métricas globales de clientes -->
@@ -62,15 +58,15 @@
                 <div class="px-3 pt-2"><app-modulo-ia modulo="clientes"></app-modulo-ia></div>
 
                 <!-- Panel de Filtros Colapsable -->
-                <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 cursor-pointer"
+                <div class="cli-filtros-cabeza d-flex justify-content-between align-items-center cursor-pointer"
                      (click)="toggleFiltros()">
-                    <h6 class="m-0 fw-bold" style="color: #8b5cf6;">
+                    <h6 class="m-0 cli-subtitulo">
                         {{ "Filtros de búsqueda" | translate }}
                     </h6>
-                    <i [class]="mostrarFiltros ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" style="color: #8b5cf6;"></i>
+                    <i [class]="mostrarFiltros ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" class="cli-acento"></i>
                 </div>
 
-                <div class="card-body" [hidden]="!mostrarFiltros">
+                <div class="cli-filtros-cuerpo cfg-form" [hidden]="!mostrarFiltros">
                     <form [formGroup]="formFiltros" (ngSubmit)="buscarClientes()">
                         <div class="row g-3">
                             <!-- Cliente -->
@@ -149,11 +145,10 @@
                         <div class="row mt-3" *ngIf="availableTagsForFilter.length > 0">
                             <div class="col-12">
                                 <label class="form-label fw-semibold">
-                                    <i class="pi pi-tag me-1" style="color: #8b5cf6;"></i>
+                                    <i class="pi pi-tag me-1 cli-acento"></i>
                                     {{ "Etiquetas" | translate }}
                                     <span *ngIf="selectedTagNames.length > 0"
-                                          class="ms-1 badge"
-                                          style="background:#8b5cf6; color:white; font-size:0.7rem;">
+                                          class="ms-1 badge cli-badge-activas">
                                         {{selectedTagNames.length}} activa(s)
                                     </span>
                                 </label>
@@ -192,7 +187,7 @@
                 </div>
 
                 <!-- Panel de Métricas Breadcrumb -->
-                <div class="metrics-breadcrumb-panel bg-white border-top border-bottom py-3 px-3">
+                <div class="metrics-breadcrumb-panel py-3 px-1">
                     <div class="metrics-scroll-container">
                         <div class="d-flex align-items-center gap-2 flex-nowrap">
                             <!-- Todos -->
@@ -233,7 +228,7 @@
                             <!-- Tags activos como chips removibles -->
                             <ng-container *ngIf="selectedTagNames.length > 0">
                                 <span class="separator">/</span>
-                                <span class="text-muted small me-1" style="font-size: 0.78rem; white-space: nowrap;">
+                                <span class="small me-1 cli-texto-muted">
                                     <i class="pi pi-tag"></i> Etiquetas:
                                 </span>
                                 <ng-container *ngFor="let tagName of selectedTagNames">
@@ -257,10 +252,10 @@
                 </div>
 
                 <!-- Toolbar de la tabla -->
-                <div class="table-toolbar px-3 py-2 bg-light border-bottom">
+                <div class="table-toolbar px-1 py-2">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <div class="d-flex align-items-center gap-2">
-                            <h6 class="m-0 fw-bold" style="color: #8b5cf6;">
+                            <h6 class="m-0 cli-subtitulo">
                                 {{ "Resultados" | translate }}
                             </h6>
                             <span class="badge-count">{{totalRecords}}</span>
@@ -290,7 +285,7 @@
                 </div>
 
                 <!-- Tabla PrimeNG -->
-                <div class="table-container p-3">
+                <div class="table-container">
                     <p-table #dt
                              [value]="clientes"
                              [loading]="cargando"
@@ -394,11 +389,10 @@
                                 <!-- Tipo de Cliente -->
                                 <td>
                                     <span *ngIf="cliente.categoria?.nombre || cliente.tipoCliente; else sinTipo"
-                                          class="badge"
-                                          style="background:#ede9fe; color:#7c3aed; font-size:0.75rem; font-weight:600; border-radius:12px; padding:0.25rem 0.6rem;">
+                                          class="badge cli-tipo-chip">
                                         {{ cliente.categoria?.nombre || cliente.tipoCliente }}
                                     </span>
-                                    <ng-template #sinTipo><span class="text-muted" style="font-size:0.8rem">—</span></ng-template>
+                                    <ng-template #sinTipo><span class="cli-texto-muted">—</span></ng-template>
                                 </td>
 
                                 <!-- Etiquetas -->
@@ -418,7 +412,7 @@
                                             +{{cliente.etiquetas.length - 2}}
                                         </span>
                                     </div>
-                                    <ng-template #sinEtiquetas><span class="text-muted" style="font-size:0.8rem">—</span></ng-template>
+                                    <ng-template #sinEtiquetas><span class="cli-texto-muted">—</span></ng-template>
                                 </td>
 
                                 <!-- Acciones -->
@@ -560,16 +554,16 @@
                         <ng-template pTemplate="emptymessage">
                             <tr>
                                 <td [attr.colspan]="viewMode === 'detailed' ? 7 : 6" class="text-center py-5">
-                                    <i class="pi pi-inbox" style="font-size: 3rem; color: #ccc;"></i>
-                                    <p class="mt-3 text-muted">{{ "No se encontraron clientes" | translate }}</p>
+                                    <div class="cfg-vacio">
+                                        <span class="cfg-vacio__icono"><i class="pi pi-inbox"></i></span>
+                                        <p class="cfg-vacio__titulo">{{ "No se encontraron clientes" | translate }}</p>
+                                    </div>
                                 </td>
                             </tr>
                         </ng-template>
                     </p-table>
                 </div>
-            </div>
-        </div>
-    </div>
+            </section>
 </div>
 
 <!-- Panel lateral: Detalles del cliente -->
@@ -581,7 +575,7 @@
            [autoZIndex]="true"
            (onHide)="cerrarDetallePanel()">
     <ng-template pTemplate="header">
-        <span class="fw-bold" style="color:#8b5cf6; font-size:1rem;">
+        <span class="fw-bold cli-sidebar-titulo">
             <i class="pi pi-user me-2"></i>Detalles del cliente
         </span>
     </ng-template>
@@ -592,7 +586,7 @@
         <div class="d-flex align-items-center gap-3 mb-4">
             <div class="detalle-avatar">{{ getInitialsDetalle(clienteDetalle) }}</div>
             <div>
-                <h6 class="mb-0 fw-bold" style="color:#111;">
+                <h6 class="mb-0 fw-bold cli-tinta">
                     {{ clienteDetalle.nombres_completos }} {{ clienteDetalle.apellidos_completos }}
                 </h6>
                 <small class="text-muted">{{ clienteDetalle.tipo_documento_comprador }}: {{ clienteDetalle.documento }}</small><br>

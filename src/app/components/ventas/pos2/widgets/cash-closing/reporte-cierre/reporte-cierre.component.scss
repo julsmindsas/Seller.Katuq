@@ -343,44 +343,46 @@
   .reporte-cierre {
     max-width: 800px;
     margin: 20px auto;
-    border: 2px solid #ddd;
-    border-radius: 8px;
+    border: 1px solid #ececf4;
+    border-radius: 16px;
     padding: 30px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
     background: white;
-    
-    &:hover {
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-    }
   }
-  
+
+  // Botones de pantalla con la regla de diseño Katuq: principal morado, secundarios blancos con borde.
   .no-print {
-    button {
-      transition: all 0.3s ease;
-      margin: 0 8px;
-      font-weight: 500;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      }
-      
-      &.btn-primary:hover {
-        background-color: #0056b3 !important;
-      }
-      
-      &.btn-secondary:hover {
-        background-color: #545b62 !important;
-      }
-      
-      &.btn-success:hover {
-        background-color: #1e7e34 !important;
-      }
-      
-      i {
-        margin-right: 6px;
-      }
+    .rc-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 44px;
+      margin: 4px 8px;
+      padding: 0 22px;
+      border: 1px solid #5F3FE0;
+      border-radius: 11px;
+      background: #5F3FE0;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: normal;
+      box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+      cursor: pointer;
+      transition: background .15s ease, transform .15s ease;
+
+      &:hover { background: #4a2fc0; border-color: #4a2fc0; transform: translateY(-1px); }
+      &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+
+      i { color: inherit; }
+    }
+
+    .rc-btn--sec {
+      background: #fff;
+      color: #5b5878;
+      border-color: #e4e2ef;
+      box-shadow: none;
+
+      &:hover { background: #faf9fe; border-color: #d9cffb; color: #5F3FE0; }
     }
   }
 }

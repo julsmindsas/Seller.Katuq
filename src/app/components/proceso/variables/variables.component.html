@@ -1,72 +1,63 @@
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Configuración</span>
+      <h1 class="cfg-titulo">Variables</h1>
+    </div>
 
-<app-breadcrumb [title]="'Ocasiones'" [items]="['Proceso/Ocasiones']" [active_item]="'Ocasiones'"></app-breadcrumb>
+    <!-- Como antes del rediseño, las acciones solo se muestran con los datos cargados. -->
+    <div class="cfg-acciones" *ngIf="!cargando">
+      <button class="cfg-btn" type="button" (click)="crearVariables()">
+        <i placement="top" ngbTooltip="Nuevo" class="icofont icofont-plus"></i>
+        <span>{{'Crear Variables' | translate}}</span>
+      </button>
+      <button class="cfg-btn cfg-btn--sec" *ngIf="userNit === '1'" type="button"
+        (click)="crear()">{{'New' |
+        translate}}
+        <i placement="top" ngbTooltip="{{'New' | translate}}" class="icofont icofont-plus"></i>
+      </button>
+    </div>
+  </header>
 
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-sm-12">
-      <div class="card">
-        <i class="icon-bg" width="80" height="80"
-          style="opacity: 0.4;position: absolute; color: #6ec0d4; top: 10px; left: 10px;" data-feather="briefcase"></i>
-        <div class="loader-box" *ngIf="cargando">
-          <div class="loader-8"></div>
-        </div>
+  <section class="cfg-card">
+    <div class="loader-box" *ngIf="cargando">
+      <div class="loader-8"></div>
+    </div>
 
-        <div class="card-body custom-datatable" *ngIf="!cargando">
-          <div class="row">
-            <div class="col-sm-6">
-              <input type='text' class="filter-ngx form-control mb-3"
-                placeholder="{{'Escribe el texto que desees filtrar' | translate}}" (keyup)='updateFilter($event)' />
-            </div>
-            <div class="col-sm-6 mb-3" style="text-align: end;">
-
-              <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="crearVariables()">
-                <span style="color: white; ;">{{'Crear Variables' | translate}}</span>
-                <i placement="top" ngbTooltip="Nuevo"
-                  style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
-                  class="icofont icofont-plus"></i>
-              </button>
-            </div>
-            <div class="col-sm-6 mb-3" style="text-align: end;">
-
-              <button class="btn btn-primary btn-previous ml-3" *ngIf="userNit === '1'" type="button"
-                (click)="crear()">{{'New' |
-                translate}}
-                <i placement="top" ngbTooltip="{{'New' | translate}}"
-                  style="font-size: 18px; margin-left: 10px; color:white; cursor: pointer;"
-                  class="icofont icofont-plus"></i>
-              </button>
-            </div>
-          </div>
-          <div class="datatable-scroll">
-            <ngx-datatable #table class='material' [columns]="columns" [columnMode]="ColumnMode.force"
-              [headerHeight]="30" [footerHeight]="50" rowHeight="auto" [limit]="10" [rows]="rows"
-              [sorts]="[{ prop: 'nit', dir: 'asc' }]">
-              <ngx-datatable-column name="{{'Id' | translate}}" *ngIf="!isMobile" class="datatable-header">
-                <ng-template let-row="row" ngx-datatable-cell-template>
-                  {{ row.id }}
-                </ng-template>
-              </ngx-datatable-column>
-              <ngx-datatable-column name="{{'Título' | translate}}">
-                <ng-template let-row="row" ngx-datatable-cell-template>
-                  {{ row.titulo }}
-                </ng-template>
-              </ngx-datatable-column>
-              <ngx-datatable-column name="{{'Variable' | translate}}">
-                <ng-template let-row="row" ngx-datatable-cell-template>
-                  {{ row.variable }}
-                </ng-template>
-              </ngx-datatable-column>
-              <ngx-datatable-column name="{{'Valor' | translate}}">
-                <ng-template let-row="row" ngx-datatable-cell-template>
-                  {{ row.valor }}
-                </ng-template>
-              </ngx-datatable-column>
-            </ngx-datatable>
-          </div>
-          <br>
-          <button class="btn btn-primary" style="color: white;"><i class="icofont icofont-file-excel"></i>Excel</button>
-        </div>
+    <div class="custom-datatable" *ngIf="!cargando">
+      <div class="var-filtro">
+        <input type='text' class="filter-ngx form-control"
+          placeholder="{{'Escribe el texto que desees filtrar' | translate}}" (keyup)='updateFilter($event)' />
+      </div>
+      <div class="datatable-scroll">
+        <ngx-datatable #table class='material' [columns]="columns" [columnMode]="ColumnMode.force"
+          [headerHeight]="30" [footerHeight]="50" rowHeight="auto" [limit]="10" [rows]="rows"
+          [sorts]="[{ prop: 'nit', dir: 'asc' }]">
+          <ngx-datatable-column name="{{'Id' | translate}}" *ngIf="!isMobile" class="datatable-header">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row.id }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'Título' | translate}}">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row.titulo }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'Variable' | translate}}">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row.variable }}
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column name="{{'Valor' | translate}}">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              {{ row.valor }}
+            </ng-template>
+          </ngx-datatable-column>
+        </ngx-datatable>
+      </div>
+      <div class="var-pie">
+        <button class="cfg-btn cfg-btn--sec"><i class="icofont icofont-file-excel"></i>Excel</button>
       </div>
     </div>
-  </div>
+  </section>
 </div>

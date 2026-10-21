@@ -8,7 +8,7 @@ import { IntegrationsService } from '../integrations.service';
 @Component({
   selector: 'app-shopify-dashboard',
   templateUrl: './shopify-dashboard.component.html',
-  styleUrls: ['./shopify-dashboard.component.css'],
+  styleUrls: ['./shopify-dashboard.component.scss'],
   providers: [MessageService]
 })
 export class ShopifyDashboardComponent implements OnInit, OnDestroy {
