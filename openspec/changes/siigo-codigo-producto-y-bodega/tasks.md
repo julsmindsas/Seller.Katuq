@@ -35,6 +35,36 @@ revisado.
 - [x] 1.7 `grupoContableSiigo` en `codigoSiigo.js` con pruebas (D6).
 - [x] 1.8 `findOrCreateProduct` pasa la categoría resuelta; `createProduct`
       respeta `stock_control` del mapper. Pruebas con un httpClient falso.
+- [x] 1.9 Aviso de productos en la vista previa SIIGO (recomendación 5 del
+      informe del 1229, aprobada por Daniel el 2026-10-21; bloque 1229-B02).
+      Solo lectura: no cambia lo que se factura. Diseño D7; requisito «La vista
+      previa dice qué pasará con cada producto en SIIGO» en la spec.
+      - `codigoSiigo.js`: `resolverProductoSiigo` (misma regla que
+        `findOrCreateProduct`: búsqueda exacta; candidatos solo sin código
+        guardado y con la bandera; uno solo y con código exacto),
+        `revisarProductosEnSiigo` (código en el orden del proveedor, sin
+        repetidos, uno a la vez, tope 20, plazo 15 s, corte en el primer
+        error), `avisosProductosSiigo` (singular o plural) y
+        `anotarLineasVistaPrevia` (por el código de la línea, no por índice).
+      - `previewInvoiceFromOrder`: **solo con `siigoProductEquivalence`**;
+        apagada, la vista previa es la de hoy. **Desvío** de la recomendación 5
+        (búsqueda exacta para todos), por la regla de que lo nuevo nace apagado
+        y porque el circuit breaker de SIIGO es compartido por todas las
+        empresas. Lecturas con `findProductByCode` sin reintentos y con timeout
+        de 5 s. Cada línea lleva `enSiigo` y `codigoSiigo` cuando va con un
+        equivalente. Nunca llama `findOrCreateProduct` ni `createProduct`; si la
+        revisión falla, la vista previa sale como antes. El envío no se revisa
+        (no está en el carrito).
+      - Pruebas: `tests/accounting/vistaPreviaProductosSiigo.test.js` (125), en
+        `npm run test:codigo-siigo`, con contract test contra
+        `findOrCreateProduct` (incluye productos que solo traen `code` y la
+        divergencia declarada cuando SIIGO falla) y la vista previa de punta a
+        punta (Firestore en memoria, sin escrituras). Las 22 de `codigoSiigo`,
+        las 4 de `siigoClienteNitConDv`, `candadoFactura` (16) y
+        `emisionConCandado` (15) siguen igual.
+      - Con esto 3.2 se puede comprobar después de 2.5: un producto con código
+        guardado existente sale con `enSiigo: 'existente'` y sin aviso de
+        creación. La pantalla que lo pinta es 1b.2.
 
 ## 1b. Front (Seller.Katuq)
 
@@ -42,6 +72,9 @@ revisado.
       y selector de categoría SIIGO. Guarda
       `accountsMapping.accountGroupByCategory`. Diseño `cfg-*` (D-400).
       Build de producción sin errores.
+- [ ] 1b.2 Vista previa SIIGO: pintar `enSiigo` y `codigoSiigo` en cada línea
+      (bloque 1229-B03). `error` se ve como «no se pudo revisar»; una línea sin
+      `enSiigo` no se revisó. Los `avisos` ya se pintan hoy.
 
 Hecho el 2026-10-19: backend 4030ec8c y 91c5f916; front 6d7d00a1 y 55059eab.
 22 pruebas (`test:codigo-siigo`) y las pruebas SIIGO existentes en verde.

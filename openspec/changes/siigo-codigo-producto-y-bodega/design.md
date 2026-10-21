@@ -130,6 +130,27 @@ inventario, costo de venta, ingreso y devolución. Hoy `createProduct` usa
   (BOMBAS, MOTOR…) o las nuevas (1647–1679).
 - **No cambia** la categoría de los productos que ya existen en SIIGO.
 
+## D7. Vista previa: qué pasará con cada producto (tarea 1.9)
+
+- `codigoSiigo.js` replica la decisión de `findOrCreateProduct` en funciones
+  puras con `buscar` inyectado (`strategy.findProductByCode`): búsqueda exacta;
+  candidatos solo sin código guardado y con la bandera; uno solo y con código
+  exacto. El código buscado sale en el orden del proveedor (con `code` antes de
+  `_id`); la línea se anota por el código del mapper (`codigosLinea`), no por
+  índice. Un contract test compara la decisión con la del proveedor real.
+- **Detrás de `siigoProductEquivalence`.** Apagada, la vista previa es la de
+  hoy (nada nuevo nace encendido). Desvío de la recomendación 5 del informe,
+  que pedía la búsqueda exacta para todos: así no cambia la latencia ni los
+  avisos de OH MY STORE ni de ALMARA. 3.2 se verifica después de 2.5.
+- **Acotada.** Tope de 20 códigos, plazo de 15 s, `retryAttempts: 0` y timeout
+  de 5 s solo para estas lecturas, y corte en el primer error. El circuit
+  breaker de `ResilientHttpClient` es uno por proveedor para todas las empresas
+  y se abre con 5 fallas seguidas: la vista previa aporta como mucho una.
+- **Divergencia declarada.** Si una consulta falla, la factura sigue y crea; la
+  vista previa marca `error` y avisa que no revisó todo, sin afirmar nada.
+- No cambia lo que se factura: no toca el proveedor, el mapper ni
+  `createInvoiceFromOrder`.
+
 ## Pruebas
 
 - `grupoContableSiigo`: las tres formas de `categorias`, la ruta completa
