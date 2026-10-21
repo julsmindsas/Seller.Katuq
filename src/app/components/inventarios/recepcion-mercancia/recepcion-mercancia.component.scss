@@ -2,11 +2,13 @@
 @include config-pagina;
 
 // Variables Katuq (tokens del canon, D-516)
-$primary-color: $cfg-accent;
+// D-502 F2a: alias en hex (el valor claro de su token) porque este archivo les aplica rgba()/darken(),
+// que no aceptan var(). Su oscuro llega con la pantalla en F3 (inventario).
+$primary-color: #5F3FE0; // = $cfg-accent en claro
 $secondary-color: $cfg-accent-2;
-$success-color: $cfg-ok;
-$warning-color: $cfg-warn;
-$danger-color: $cfg-err;
+$success-color: #1E874B; // = $cfg-ok en claro
+$warning-color: #D9820A; // = $cfg-warn en claro
+$danger-color: #D64545; // = $cfg-err en claro
 $info-color: $cfg-info;
 $text-color: $cfg-ink;
 $light-gray: $cfg-tint;
