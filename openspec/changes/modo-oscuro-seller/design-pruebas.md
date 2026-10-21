@@ -16,7 +16,7 @@
 - **`tests/theme/conteos.test.js`.**
   - Gradientes y primarios prohibidos no suben. Línea base del 2026-10-18 (gradientes / primarios): `dark-mode.scss` 1 / 0, `styles.scss` 2 / 10, `sidebar.component.scss` 2 / 0, `shared-filters` 0 / 3, `tracking-details-modal` 5 / 0, `crear-formas-pago` 0 / 1, `general-chat` 1 / 0, y los demás 0 / 0.
   - En `dark-mode.scss` no queda ninguno de los seis patrones de la familia del azul: `#6AB5E8`, `rgba(106, 181, 232`, `rgb(106, 181, 232`, `#5AA5D8`, `#8AC5F8` y `#4A95C8`. Esta parte falla hasta F1.
-- **Script `test:theme`.** Lista los archivos uno por uno, como `test:dian-*`: `node --test tests/theme/theme-mode.test.js tests/theme/users-edit-contract.test.js tests/theme/user-writers.test.js tests/theme/conteos.test.js`. En Windows, npm usa cmd.exe, que no expande `*`, y Node 20 no acepta globs en `--test`. En F1 se agregan `theme-tokens.test.js` y `comparar-claro.test.js` a la misma línea, el bloque TEMA-B02 suma `rutas-marco.test.js` y `auditoria-puras.test.js`, TEMA-B05 suma `marco-tokens.test.js` y TEMA-B06 suma `primeng-dark.test.js`.
+- **Script `test:theme`.** Lista los archivos uno por uno, como `test:dian-*`: `node --test tests/theme/theme-mode.test.js tests/theme/users-edit-contract.test.js tests/theme/user-writers.test.js tests/theme/conteos.test.js`. En Windows, npm usa cmd.exe, que no expande `*`, y Node 20 no acepta globs en `--test`. En F1 se agregan `theme-tokens.test.js` y `comparar-claro.test.js` a la misma línea, el bloque TEMA-B02 suma `rutas-marco.test.js` y `auditoria-puras.test.js`, TEMA-B05 suma `marco-tokens.test.js`, TEMA-B06 suma `primeng-dark.test.js` y TEMA-B07 suma `config-pagina-tokens.test.js`.
 
 ## Fase 1
 
@@ -40,6 +40,17 @@
   - el cableado: `angular.json`, `ThemeModeService`, el tema viejo borrado y `firebase.json` sin caché para `katuq-dark.css` y con el redirect 302 de `/md-dark-deeppurple.css`;
   - la región generada coincide con `primeng-dark-generar.js`.
 - **`conteos.test.js`**, segunda parte, en verde.
+
+## Fase 2a (base `config-pagina`, [`design-f2a.md`](design-f2a.md))
+
+- **`tests/theme/config-pagina-tokens.test.js`** (tarea 4.1, bloque TEMA-B07). No usa `git` ni `grep`. Compila un componente sintético con `@include config-pagina` y comprueba:
+  - el mapeo `$cfg-*` → `--ds-*`;
+  - el claro idéntico frente a la referencia fija `tests/theme/fixtures/config-pagina-claro-4ac9a459.css` (funciones de `comparar-claro.js`);
+  - en oscuro: ningún fondo `#fff` ni casi blanco fuera de lo pendiente, cada texto ≥ 4,5:1 sobre su fondo o sobre las 6 superficies donde puede caer, los bordes de controles e indicadores ≥ 3:1 (los 2 pendientes de Daniel, nombrados) y el acento de relleno separado del de texto;
+  - el escenario «Ocasiones en oscuro» sobre Ocasiones, Géneros y Tipos de cliente compilados;
+  - que la base no tiene blancos literales, gradientes, primarios prohibidos ni clases con «p-», y que `.p-tabview-title` lleva `inherit`;
+  - en los consumidores: ninguno aplica funciones de color de Sass, aritmética ni condiciones a `$cfg-*` ni a sus alias, y todos compilan sin dejar funciones CSS inválidas sobre tokens;
+  - la compuerta de 4.1.4: las reglas con fondo claro literal y texto de token no suben de su techo por archivo.
 
 ## Auditoría en navegador (`tests/theme/auditoria-tema.js`)
 

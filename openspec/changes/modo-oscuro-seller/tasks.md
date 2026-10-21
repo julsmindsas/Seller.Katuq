@@ -198,6 +198,48 @@ Cada una tiene su diseño corto, su delta, sus tareas y su aprobación antes de 
   - **Barrido listo (2026-10-21, bloque TEMA-B02), sin correr:** `auditoria-tema.js --todas` recorre en oscuro las 164 rutas de pantalla que `tests/theme/rutas-marco.js` enumera desde la configuración real, incluidas las 24 con `:param`. De las 118 hojas que incluyen `config-pagina`, el barrido abre 107; las 11 que no son pantalla de ninguna ruta (borradores de venta, horario de entrega y otros diálogos) salen nombradas en `coberturaCfg.sinRuta` para revisarlas a mano. Mide los criterios 2 y 3, los fondos casi blancos, los controles que no se separan 3:1 y el scroll, con solo las banderas de los guards prendidas. `reporte.json` sale ordenado por violaciones, con el módulo de cada ruta y la lista de revisión manual: Ventas, POS, Formas de pago, Despachos, Inventarios, Bodegas y Ocasiones. El criterio 4 sigue con `comparar-claro.js` y las capturas. La línea base del barrido se toma antes del diff de la base.
   - **Tamaño al 2026-10-21:** 120 pantallas con el mixin y 53 archivos con `$cfg-*` directo, más las piezas de 8bae2ba0 (`design-f1.md` §7). Un solo diff en la base y los consumidores por módulo (pregunta 1). El «claro idéntico» de cada diff se revisa con `tests/theme/comparar-claro.js`.
   - Dependencias: 3.9.
+  - [x] **4.1.1 Diseño corto, delta y tareas.** Son `design-f2a.md` (el mapeo, el acento de relleno y el de texto, las preguntas abiertas para Daniel, la compuerta de publicación y el write-set), el delta «Pantallas de configuración legibles en oscuro» en `specs/design-system/spec.md` y estas subtareas. Los aprobó Daniel dentro de la aprobación en bloque del 2026-10-21 (pregunta 1), y así se anota.
+  - [x] **4.1.2 Pruebas: `tests/theme/config-pagina-tokens.test.js`, en `test:theme`.** Tiene 15 pruebas y no usa `git` ni `grep`, así que corre igual en un clon superficial y en Windows. Contra el árbol anterior (4ac9a459) fallan 8 y pasan 7, que son invariantes que ya se cumplían. Con el cambio pasan 15 de 15. Comprueba:
+    - el claro idéntico contra la referencia fija `tests/theme/fixtures/config-pagina-claro-4ac9a459.css`;
+    - en oscuro, el contraste del texto contra 6 superficies (canvas, surface, surface-2, row-hover, tile y chip-bg);
+    - bordes de controles e indicadores ≥ 3:1, con los 2 pendientes de Daniel nombrados;
+    - el escenario «Ocasiones en oscuro», sobre Ocasiones, Géneros y Tipos de cliente compilados;
+    - la compuerta de los consumidores (techo por archivo).
+
+    Mutaciones hechas en una copia aislada, cada una con su prueba en rojo:
+    - la tarjeta otra vez en `#fff`;
+    - `$cfg-ink` apuntando a `ink-2`;
+    - el borde del check marcado con el acento de relleno;
+    - el borde de `--sec` resuelto sin sacarlo de los pendientes;
+    - un fondo `#fff` con `$cfg-ink` en Ocasiones;
+    - sin la referencia fija.
+
+    `theme-tokens.test.js` lleva fijo el hex anterior de cada `$cfg-*` (sin `git show`) y exige que cada variable apunte a su token.
+  - [ ] **4.1.3 Prerrequisito en dos consumidores (inventario, sensible: solo `.scss`).** **Parcial (2026-10-21, bloque TEMA-B07): código hecho, falta el visto bueno de Daniel al diff.** Ninguno aplicaba funciones de color directo a `$cfg-*`, pero dos lo hacían sobre alias: `traslados.component.scss` (`rgba()` y `darken()` sobre `$primary-color` y `$secondary-color`) y `recepcion-mercancia.component.scss` (`rgba()` y `darken()` sobre `$primary-color`, `$success-color`, `$warning-color` y `$danger-color`).
+    - Con `var()`, la compilación se rompía. Se verificó: «`$color: var(--ds-accent) is not a color`».
+    - Esos 6 alias quedan en el mismo hex, y `comparar-claro.js` da «claro idéntico» en los dos. Su oscuro llega en TEMA-B17.
+    - Va en un commit propio, antes del de la base. Es un desvío de «no se tocan consumidores», justificado porque el encargo pide resolver esos casos en el consumidor antes del cambio.
+  - [ ] **4.1.4 Diff de la base `_config-pagina.scss`.** **Parcial (2026-10-21, bloque TEMA-B07): código hecho.**
+    - Los `$cfg-*` pasan a `var(--ds-*)` y se suma `$cfg-accent-ink`.
+    - Los 6 fondos `#fff` pasan a `var(--ds-surface)` y los 2 textos sobre relleno a `var(--ds-on-accent)`. `#e4e2ef` pasa a `var(--ds-line-strong)`.
+    - El check marcado conserva el relleno `$cfg-accent` y el borde pasa a `$cfg-accent-ink`.
+    - **Caracterización:** el CSS compilado antes y después de la base sintética y de los 121 consumidores que compilan solos está en el scratchpad de la sesión (`f2a/antes` y `f2a/despues`). `comparar-claro.js --base 4ac9a459` da «claro idéntico» en los 121, también en Ocasiones, Bodegas, `pos-list`, `borradores-venta`, despachos e `integrations.component`.
+    - **Compuerta de publicación (`design-f2a.md`): no se publica sola.** Si sale sin sus consumidores, el oscuro empeora en dos casos:
+      - 42 reglas con fondo claro literal y texto de token, en 25 archivos (`borradores-venta`, la agenda, especificaciones y otros). La prueba les fija un techo por archivo.
+      - 308 reglas con texto literal oscuro sin fondo propio, en 62 archivos (`bodegas .texto-celda`, Tipos de cliente y los alias de inventario).
+
+      Sale en el mismo release que TEMA-B08 a B10 y B17, y solo si el barrido `--todas` no empeora frente a su línea base.
+    - **Pendiente para cerrarla:**
+      - el visto bueno de Daniel al diff, porque es sensible, y sus respuestas a las 3 preguntas de `design-f2a.md`, que no están decididas: los literales claros sin token, el borde de `--sec` y el carril del interruptor;
+      - la compuerta de arriba;
+      - el build sin errores;
+      - el barrido `--todas` en oscuro, con su línea base tomada antes del diff;
+      - la revisión manual a 1440 y 390 px de ventas, POS, formas de pago, despachos, inventarios, bodegas y Ocasiones;
+      - las capturas en claro.
+
+      Los corre el orquestador.
+  - [ ] **4.1.5 Consumidores por módulo:** TEMA-B08 a B10 y B17. Cada uno con su propio diff; ventas, POS, despachos e inventario, con diff aprobado.
+  - [ ] **4.1.6 Cierre de F2a:** las pruebas del cierre de fase (`design-pruebas.md`), la entrada en `CONTRACT.md` y el comentario de avance en el ticket 1180.
 - [ ] **4.2 F2b `_katuq-builder.scss` y `sitios-lista`.** Coordinar con el trabajo de sitios.
   - Dependencias: 3.9.
 - [ ] **4.3 F2c `_katuq-modal.scss`.** **Sensible:** widgets de pago de POS2, un widget por diff aprobado.
