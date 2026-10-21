@@ -50,7 +50,7 @@
   o `sentAt` antes de `strategy.createInvoice`, las tres escrituras con dueño, `expectedTotal`, réplica, `uncertain`
   y `duplicate: true` como incierto. Bandera apagada: solo `*_shadow`. Leer completo `accountingManager.js:1487-2190`.
   Depende de 2.1, 2.8 y 1.5. Éxito: 1.1 y 1.5 en verde, 1.6 sin regresión.
-- [ ] 2.3 **SENSIBLE (pedidos).** `utils/pedidoYaFacturado.js` usa `candadoFactura.js` y deja de copiar `LOCK_TTL_MS`:
+- [x] 2.3 **SENSIBLE (pedidos).** `utils/pedidoYaFacturado.js` usa `candadoFactura.js` y deja de copiar `LOCK_TTL_MS`:
   un `uncertain` bloquea aunque tenga más de 3 min. Depende de 2.1. Éxito: `test:pedido-ya-facturado` con casos nuevos.
 - [ ] 2.4 **SENSIBLE (consecutivos).** `providers/dianXMLProvider.js`: `beforeSend` con `{ number, cufe }`,
   `requestId` y `submittedToDian` en toda auditoría, `error.document` después de enviar y números del set anotados.
