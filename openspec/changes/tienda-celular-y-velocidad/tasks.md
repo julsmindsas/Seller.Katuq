@@ -29,6 +29,8 @@
   unirlo.
 - [ ] 0.4 Revalidar las citas archivo:línea de `design.md` sobre la punta de
   `feature/tickets-web` (hoy con F2-41 sin commit). **Éxito:** citas corregidas en el diseño.
+  - Parte de D12 y del regreso a `/gracias` (bloque **Pago**): hecha el 21-oct (bloque TX34-B01).
+    Falta el resto del diseño.
 - [ ] 0.5 Lectura de producción, solo lectura y sin ejecutar JavaScript de las páginas:
   - HTML en frío y en caliente de FLORECER, OH MY STORE y lino-y-lona (`curl`, 5 veces);
   - número de productos y pedidos de 30 días por empresa con tienda publicada (para dimensionar
@@ -144,6 +146,9 @@
 - [ ] 4.0 Revalidar las citas de D12 y D13 sobre la punta de la rama (con F2-41, D-496 y
   suscripciones unidos) y confirmar que la tarea privada 2.0 entró en F2-41 y que el registro del
   enlace de pago ya no lleva datos personales (revisión privada). **Éxito:** diseño al día.
+  - Las dos confirmaciones de la revisión privada están en la rama (bloque TX34-B01, commit
+    local sin unir, pendiente de la aprobación de Daniel). Falta revalidar D12 y D13 cuando
+    entren D-496 y suscripciones.
 - [ ] 4.1 [S] Diff 1: regreso de `crearPedido` y `retomarPago` a `/gracias` con el regreso que
   fija la revisión privada (el mismo que F2-41 ya trae corregido), y `crearPedido` lo devuelve al
   script. Sin tocar la rama del pedido del bot (F4-40 D11).
