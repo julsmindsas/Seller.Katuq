@@ -2,62 +2,58 @@
 @include config-pagina;
 
 // Bodegas por canal (D-400 / D-516): paneles planos con el tema canónico, sin card-header ni bg-*.
-$bxc-accent: #5F3FE0;
-$bxc-accent-2: #7C5CFF;
-$bxc-accent-soft: #efe9ff;
-$bxc-ink: #211F3A;
-$bxc-body: #5b5878;
-$bxc-muted: #8f8bab;
-$bxc-line: #ececf4;
-$bxc-line-soft: #f1f0f7;
-$bxc-chip-bg: #f5f4fa;
-$bxc-chip-border: #e9e7f3;
-$bxc-tint: #faf9fe;
-$bxc-ok: #1E874B;
-$bxc-ok-soft: #E6F7EE;
-$bxc-err: #D64545;
-$bxc-err-soft: #FDECEC;
-
-// Dark theme variables
-$dark-body-bg: #1d1e26;
-$dark-card-bg: #262932;
-$dark-text: rgba(255, 255, 255, 0.9);
-$dark-text-muted: rgba(255, 255, 255, 0.6);
-$dark-border: #374558;
+// D-502 F2a (ticket 1180, TEMA-B09): superficies, texto y líneas toman los tokens --ds-* (claro idéntico, oscuro por
+// body.dark-only). Sin juego oscuro propio. $bxc-accent es relleno; el acento como texto, ícono o borde va en $bxc-accent-ink.
+$bxc-accent: var(--ds-accent);
+$bxc-accent-ink: var(--ds-accent-ink);
+$bxc-accent-2: var(--ds-focus);
+$bxc-accent-soft: var(--ds-accent-soft);
+$bxc-ink: var(--ds-ink);
+$bxc-body: var(--ds-body);
+$bxc-muted: var(--ds-muted);
+$bxc-line: var(--ds-line);
+$bxc-line-soft: var(--ds-line-soft);
+$bxc-chip-bg: var(--ds-chip-bg);
+$bxc-chip-border: var(--ds-control-border);
+$bxc-tint: var(--ds-surface-2);
+$bxc-ok: var(--ds-ok);
+$bxc-ok-soft: var(--ds-ok-soft);
+$bxc-err: var(--ds-err);
+$bxc-err-soft: var(--ds-err-soft);
 
 // ── Selector de canal ──
 .form-label.cfg-label { display: block; margin-bottom: 6px; }
 
 .form-select {
   min-height: 40px;
-  background-color: var(--input-bg, #{$bxc-chip-bg});
-  border: 1px solid var(--input-border, #{$bxc-chip-border});
-  color: var(--text-primary, #{$bxc-ink});
+  background-color: $bxc-chip-bg;
+  border: 1px solid $bxc-chip-border;
+  color: $bxc-ink;
   border-radius: 10px;
   font-size: 13.5px;
   transition: border-color .15s ease, background-color .15s ease;
 
   &:focus {
-    background-color: var(--card-bg, #fff);
+    background-color: var(--ds-surface);
     border-color: $bxc-accent-2;
     box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
     outline: none;
   }
 
-  option { color: $bxc-ink; background-color: #fff; }
+  option { color: $bxc-ink; background-color: var(--ds-surface); }
 }
 
 .bxc-error { color: $bxc-err !important; font-size: 12px; font-weight: 600; }
-.bxc-tenue { color: var(--text-muted, #{$bxc-muted}) !important; font-size: 12.5px !important; letter-spacing: normal; }
+.bxc-tenue { color: $bxc-muted !important; font-size: 12.5px !important; letter-spacing: normal; }
 
 // ── Canal seleccionado ──
 .bxc-canal {
   padding: 12px 16px;
-  background: var(--tint-bg, #{$bxc-tint});
+  background: $bxc-tint;
   border: 1px solid #ddd3fb;
   border-radius: 11px;
 }
-.bxc-canal__nombre { color: var(--text-primary, #{$bxc-ink}); font-size: 15px; font-weight: 800; }
+.bxc-canal__nombre { color: $bxc-ink; font-size: 15px; font-weight: 800; }
 
 // Estado del canal: [ngClass] sigue poniendo bg-success / bg-secondary; aquí se pintan como pill.
 .bxc-estado.bg-success { background: $bxc-ok-soft !important; color: $bxc-ok !important; }
@@ -68,14 +64,14 @@ $dark-border: #374558;
   display: flex;
   flex-direction: column;
   min-height: 450px;
-  background: var(--card-bg, #fff);
-  border: 1px solid var(--card-border, #{$bxc-line});
+  background: var(--ds-surface);
+  border: 1px solid $bxc-line;
   border-radius: 16px;
   overflow: hidden;
 }
 .bxc-panel__cabeza {
   padding: 14px 16px;
-  background: var(--tint-bg, #{$bxc-tint});
+  background: $bxc-tint;
   border-bottom: 1px solid $bxc-line-soft;
 }
 .bxc-panel__titulo {
@@ -86,14 +82,14 @@ $dark-border: #374558;
   margin: 0;
   font-size: 14px;
   font-weight: 800;
-  color: var(--text-primary, #{$bxc-ink});
+  color: $bxc-ink;
 }
 .bxc-panel__cuerpo { padding: 16px; flex: 1 1 auto; }
-.bxc-icono { color: $bxc-accent; font-size: 16px; }
+.bxc-icono { color: $bxc-accent-ink; font-size: 16px; }
 .bxc-icono--ok { color: $bxc-ok; }
 
 .bxc-girando {
-  color: $bxc-accent !important;
+  color: $bxc-accent-ink !important;
   width: 2.5rem;
   height: 2.5rem;
   border-width: 3px;
@@ -102,8 +98,8 @@ $dark-border: #374558;
 // Bodega items
 .bodega-item {
   padding: 12px 14px;
-  background: var(--bodega-item-bg, #ffffff);
-  border: 1px solid var(--bodega-item-border, #{$bxc-line});
+  background: var(--ds-surface);
+  border: 1px solid $bxc-line;
   border-radius: 11px;
   transition: background .15s ease, border-color .15s ease, transform .15s ease;
 
@@ -121,19 +117,19 @@ $dark-border: #374558;
     margin-top: 2px;
   }
 }
-.bxc-bodega__nombre { color: var(--text-primary, #{$bxc-ink}); font-weight: 700; font-size: 14px; margin-bottom: 2px; }
+.bxc-bodega__nombre { color: $bxc-ink; font-weight: 700; font-size: 14px; margin-bottom: 2px; }
 
 // Assigned bodega style
 .bodega-asignada {
   opacity: .6;
-  background: var(--bodega-assigned-bg, #{$bxc-chip-bg});
-  border-color: var(--bodega-assigned-border, #{$bxc-chip-border});
+  background: $bxc-chip-bg;
+  border-color: $bxc-chip-border;
   cursor: not-allowed;
 
   &:hover {
     transform: none;
-    background: var(--bodega-assigned-bg, #{$bxc-chip-bg});
-    border-color: var(--bodega-assigned-border, #{$bxc-chip-border});
+    background: $bxc-chip-bg;
+    border-color: $bxc-chip-border;
   }
 }
 
@@ -145,8 +141,8 @@ $dark-border: #374558;
   height: 36px;
   flex: 0 0 auto;
   border-radius: 11px;
-  background: #fff;
-  border: 1px solid #e4e2ef;
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-line-strong);
   cursor: pointer;
   transition: background .15s ease, border-color .15s ease;
 
@@ -169,7 +165,7 @@ $dark-border: #374558;
   padding-right: 6px;
 
   &::-webkit-scrollbar { width: 8px; height: 8px; }
-  &::-webkit-scrollbar-track { background: var(--scrollbar-track, #{$bxc-line-soft}); border-radius: 4px; }
+  &::-webkit-scrollbar-track { background: $bxc-line-soft; border-radius: 4px; }
   &::-webkit-scrollbar-thumb {
     background: rgba(95, 63, 224, .4);
     border-radius: 4px;
@@ -184,27 +180,7 @@ $dark-border: #374558;
   align-items: center;
   min-height: 200px;
 
-  .loader-8 { border-color: $bxc-accent; }
-}
-
-// Dark theme support
-:host-context(.dark-only),
-:host-context([data-theme="dark"]) {
-  --card-bg: #{$dark-card-bg};
-  --tint-bg: rgba(95, 63, 224, 0.16);
-  --text-primary: #{$dark-text};
-  --text-muted: #{$dark-text-muted};
-  --input-bg: #{lighten($dark-card-bg, 5%)};
-  --input-border: #{$dark-border};
-  --card-border: #{$dark-border};
-  --bodega-item-bg: #{lighten($dark-card-bg, 3%)};
-  --bodega-item-border: #{$dark-border};
-  --bodega-assigned-bg: #{$dark-body-bg};
-  --bodega-assigned-border: #{$dark-border};
-  --scrollbar-track: #{$dark-body-bg};
-
-  .form-select option { background-color: $dark-card-bg; color: $dark-text; }
-  .bodega-item:hover { background: rgba(95, 63, 224, 0.25); }
+  .loader-8 { border-color: $bxc-accent-ink; }
 }
 
 // Responsive adjustments

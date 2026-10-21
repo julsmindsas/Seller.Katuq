@@ -2,15 +2,15 @@
 @import '../../../../shared/styles/config-pagina';
 @include config-pagina;
 
-.mo-cabeza { border-bottom: 1px solid #ececf4; padding: 16px 20px; }
-.mo-titulo { margin: 0; font-size: 18px; font-weight: 800; color: #211F3A; letter-spacing: normal; }
-.mo-pie { border-top: 1px solid #f1f0f7; gap: 8px; padding: 12px 20px; }
-.modal-body { padding: 20px; color: #211F3A; }
+.mo-cabeza { border-bottom: 1px solid var(--ds-line); padding: 16px 20px; }
+.mo-titulo { margin: 0; font-size: 18px; font-weight: 800; color: var(--ds-ink); letter-spacing: normal; }
+.mo-pie { border-top: 1px solid var(--ds-line-soft); gap: 8px; padding: 12px 20px; }
+.modal-body { padding: 20px; color: var(--ds-ink); }
 .modal-body p, .modal-body label, .modal-body span, .modal-body a { letter-spacing: normal; }
-.mo-texto { color: #8f8bab; font-size: 13px; }
-.mo-cargando { color: #5F3FE0; }
-.mo-estado { color: #8f8bab !important; font-size: 13px !important; font-weight: 600; }
-.mo-estado--ok { color: #1E874B !important; }
+.mo-texto { color: var(--ds-muted); font-size: 13px; }
+.mo-cargando { color: var(--ds-accent-ink); }
+.mo-estado { color: var(--ds-muted) !important; font-size: 13px !important; font-weight: 600; }
+.mo-estado--ok { color: var(--ds-ok) !important; }
 .cfg-form .form-check-label { text-transform: none; font-size: 13.5px; letter-spacing: normal; margin: 0; }
 
 @media (max-width: 768px) {

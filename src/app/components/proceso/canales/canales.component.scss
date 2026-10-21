@@ -45,13 +45,13 @@
   width: 14px;
   left: 3px;
   bottom: 3px;
-  background-color: white;
+  background-color: var(--ds-on-accent);
   transition: .4s;
   border-radius: 50%;
 }
 
 input:checked + .switch-state {
-  background-color: #5F3FE0;
+  background-color: var(--ds-accent);
 }
 
 input:focus + .switch-state {
