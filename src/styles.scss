@@ -652,13 +652,14 @@ input.p-inputtext {
   box-shadow: none !important;
 }
 
-// DARK MODE - Header
+// DARK MODE - Header. D-502 F1 (tarea 3.6): lienzo oscuro a .72 y línea desde los tokens --ds-*,
+// con el mismo valor que tenían (rgba(20, 18, 28, .72) y #262233). El claro de arriba no cambia.
 body.dark-only .page-wrapper .page-header,
 .dark-only .page-wrapper .page-header {
-  background: rgba(20, 18, 28, 0.72) !important;
+  background: rgba(var(--ds-canvas-rgb), 0.72) !important;
   backdrop-filter: blur(14px) !important;
   -webkit-backdrop-filter: blur(14px) !important;
-  border-bottom: 1px solid #262233 !important;
+  border-bottom: 1px solid var(--ds-line) !important;
   box-shadow: none !important;
 }
 

@@ -5,7 +5,7 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const {
-  esSelectorOscuro, sustituirTokens, normalizarValor, normalizarCss, leerTokensClaros, compararLineas,
+  esSelectorOscuro, sustituirTokens, normalizarValor, normalizarCss, leerTokens, leerTokensClaros, compararLineas,
   compararVersiones,
 } = require('./comparar-claro');
 
@@ -125,4 +125,43 @@ test('compararVersiones: sin declaraciones en ningún lado es «vacío», no «i
   const r = compararVersiones('', TOKENS, '/* solo mixins */', TOKENS);
   assert.equal(r.vacio, true);
   assert.equal(compararVersiones(null, TOKENS, '.x{color:red}', TOKENS).vacio, false);
+});
+
+// --tema oscuro (tarea 3.6, bloque TEMA-B05): «mismo valor» al pasar un literal oscuro a token.
+const PARCIAL = ':root{--ds-surface:#fff;--ds-line:#ececf4;--ds-canvas-rgb:244, 243, 250;--ds-accent:#5F3FE0}'
+  + 'body.dark-only{--ds-surface:#1b1826;--ds-line:#262233;--ds-canvas-rgb:20, 18, 28}';
+
+test('leerTokens oscuro: el de body.dark-only encima del claro; lo que no redefine hereda el claro', () => {
+  const oscuro = leerTokens(PARCIAL, 'oscuro');
+  assert.equal(oscuro.get('surface'), '#1b1826');
+  assert.equal(oscuro.get('canvas-rgb'), '20, 18, 28');
+  assert.equal(oscuro.get('accent'), '#5F3FE0');
+  assert.equal(leerTokens(PARCIAL).get('surface'), '#fff');
+  assert.throws(() => leerTokens(PARCIAL, 'gris'), /tema desconocido/);
+});
+
+test('normalizarCss oscuro: conserva las reglas oscuras y las claras, descarta las definiciones --ds-*', () => {
+  const oscuro = leerTokens(PARCIAL, 'oscuro');
+  const css = PARCIAL + '.x{color:#211F3A}body.dark-only .x{background:var(--ds-surface)}'
+    + 'body.dark-only{--glass-bg:var(--ds-surface)}';
+  assert.deepEqual(normalizarCss(css, oscuro, 'oscuro'), [
+    '.x { color: #211f3a }',
+    'body.dark-only .x { background: #1b1826 }',
+    'body.dark-only { --glass-bg: #1b1826 }',
+  ]);
+  assert.deepEqual(normalizarCss(css, leerTokens(PARCIAL), 'claro'), ['.x { color: #211f3a }']);
+});
+
+test('compararVersiones oscuro: literal -> token con el mismo valor es idéntico; con otro valor, no', () => {
+  const oscuro = leerTokens(PARCIAL, 'oscuro');
+  const base = 'body.dark-only .page-header{background:rgba(20, 18, 28, .72)!important;border-bottom:1px solid #262233}';
+  const igual = 'body.dark-only .page-header{background:rgba(var(--ds-canvas-rgb), 0.72)!important;'
+    + 'border-bottom:1px solid var(--ds-line)}';
+  assert.equal(compararVersiones(base, oscuro, igual, oscuro, 'oscuro').igual, true);
+  // En claro las dos no tienen nada que comparar: el oscuro se descarta.
+  assert.equal(compararVersiones(base, oscuro, igual, oscuro, 'claro').vacio, true);
+  const otro = igual.replace('var(--ds-line)', 'var(--ds-surface)');
+  const r = compararVersiones(base, oscuro, otro, oscuro, 'oscuro');
+  assert.equal(r.igual, false);
+  assert.deepEqual(r.soloActual, ['body.dark-only .page-header { border-bottom: 1px solid #1b1826 }']);
 });

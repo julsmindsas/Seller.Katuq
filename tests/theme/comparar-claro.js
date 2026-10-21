@@ -8,13 +8,17 @@
 // claro cambió, 0 si es idéntico y 2 si hubo un error de uso o de compilación.
 //
 // Uso (desde la raíz del front; compilar styles.scss es pesado, va con flock):
-//   node tests/theme/comparar-claro.js --base <commit> --tmp <scratchpad> [--max <n>] <ruta.scss> [<ruta.scss> ...]
+//   node tests/theme/comparar-claro.js --base <commit> --tmp <scratchpad> [--tema claro|oscuro] [--max <n>] <ruta.scss> [<ruta.scss> ...]
 //
 //   --base  commit, rama o tag contra el que se compara (obligatorio).
 //   --tmp   scratchpad de la sesión (obligatorio): ahí se extraen las hojas de estilo del commit base, en
 //           `comparar-claro/<sha>`. La extracción se hace en una carpeta temporal y se renombra al final,
 //           así que dos corridas a la vez sobre el mismo sha nunca leen una copia a medias. Se reutiliza.
 //   --max   cuántas líneas distintas mostrar por lado (por defecto 40).
+//   --tema  claro (por defecto) u oscuro. Con `oscuro` (tarea 3.6, bloque TEMA-B05) compara lo que se ve en
+//           el tema oscuro: conserva también las reglas body.dark-only y sustituye var(--ds-X) por el valor
+//           OSCURO de cada lado (el de body.dark-only, o el de :root si el oscuro no lo redefine). Sirve para
+//           comprobar que pasar un literal oscuro a token no cambia el oscuro («mismo valor»).
 //
 // Si las dos versiones compiladas no tienen ninguna declaración (por ejemplo, un parcial que solo
 // define mixins), no hay nada que comparar: sale con 2 en vez de dar un falso «idéntico».
@@ -130,15 +134,36 @@ function normalizarSelector(selector) {
   return String(selector).trim().replace(/\s+/g, ' ').replace(/\s*([>+~])\s*/g, ' $1 ');
 }
 
-// Lee el juego claro (:root) de un CSS compilado del parcial de tokens.
-function leerTokensClaros(css) {
+const TEMAS = ['claro', 'oscuro'];
+
+function validarTema(tema) {
+  if (!TEMAS.includes(tema)) throw new Error(`tema desconocido «${tema}» (claro u oscuro)`);
+  return tema;
+}
+
+// Selectores que definen el juego de tokens: :root (claro) y body.dark-only / .dark-only (oscuro).
+function esReglaDeTokens(regla) {
+  return regla.selectors.every(s => [':root', 'body.dark-only', '.dark-only'].includes(s.trim()));
+}
+
+// Lee un juego de tokens de un CSS compilado del parcial. `claro`: el de :root. `oscuro`: el de :root con
+// lo que redefine body.dark-only encima (un token que el oscuro no redefine hereda el claro).
+function leerTokens(css, tema = 'claro') {
+  validarTema(tema);
   const postcss = requerir('postcss');
+  const raiz = postcss.parse(css);
   const tokens = new Map();
-  postcss.parse(css).walkRules(regla => {
-    if (!regla.selectors.map(s => s.trim()).includes(':root')) return;
+  const leerDe = selector => raiz.walkRules(regla => {
+    if (!regla.selectors.map(s => s.trim()).includes(selector)) return;
     regla.walkDecls(/^--ds-/, d => tokens.set(d.prop.slice(5), d.value.trim()));
   });
+  leerDe(':root');
+  if (tema === 'oscuro') leerDe('body.dark-only');
   return tokens;
+}
+
+function leerTokensClaros(css) {
+  return leerTokens(css, 'claro');
 }
 
 function contexto(nodo) {
@@ -149,16 +174,20 @@ function contexto(nodo) {
   return partes.join(' > ');
 }
 
-// CSS compilado -> líneas normalizadas del tema claro.
-function normalizarCss(css, tokens) {
+// CSS compilado -> líneas normalizadas del tema pedido. En claro se descartan las reglas oscuras; en
+// oscuro se conservan todas (las claras también aplican en oscuro si nada las pisa).
+function normalizarCss(css, tokens, tema = 'claro') {
+  validarTema(tema);
   const postcss = requerir('postcss');
   const raiz = postcss.parse(css);
   raiz.walkComments(c => c.remove());
-  raiz.walkRules(regla => {
-    const claros = regla.selectors.filter(s => !esSelectorOscuro(s));
-    if (claros.length === 0) { regla.remove(); return; }
-    if (claros.length !== regla.selectors.length) regla.selectors = claros;
-  });
+  if (tema === 'claro') {
+    raiz.walkRules(regla => {
+      const claros = regla.selectors.filter(s => !esSelectorOscuro(s));
+      if (claros.length === 0) { regla.remove(); return; }
+      if (claros.length !== regla.selectors.length) regla.selectors = claros;
+    });
+  }
   const lineas = [];
   raiz.walk(nodo => {
     if (nodo.type === 'atrule' && !nodo.nodes) {
@@ -168,7 +197,7 @@ function normalizarCss(css, tokens) {
     if (nodo.type !== 'decl') return;
     const padre = nodo.parent;
     const selector = padre.type === 'rule' ? padre.selectors.map(normalizarSelector).join(', ') : '';
-    if (padre.type === 'rule' && /^--ds-/.test(nodo.prop) && padre.selectors.every(s => s.trim() === ':root')) return;
+    if (padre.type === 'rule' && /^--ds-/.test(nodo.prop) && esReglaDeTokens(padre)) return;
     const valor = normalizarValor(sustituirTokens(nodo.value, tokens)) + (nodo.important ? ' !important' : '');
     const ctx = contexto(nodo);
     lineas.push(`${ctx ? ctx + ' | ' : ''}${selector} { ${nodo.prop.trim()}: ${valor} }`);
@@ -193,11 +222,11 @@ function compararLineas(base, actual) {
   return { soloBase, soloActual, ordenCambio, igual: mismoConjunto && !ordenCambio };
 }
 
-// Compara dos CSS compilados, cada uno sustituido con los tokens claros de su propio árbol.
+// Compara dos CSS compilados, cada uno sustituido con los tokens del tema pedido de su propio árbol.
 // `vacio` es true si ninguno de los dos tiene declaraciones (no hay nada que comparar).
-function compararVersiones(cssBase, tokensBase, cssActual, tokensActual) {
-  const base = cssBase === null ? [] : normalizarCss(cssBase, tokensBase);
-  const actual = normalizarCss(cssActual, tokensActual);
+function compararVersiones(cssBase, tokensBase, cssActual, tokensActual, tema = 'claro') {
+  const base = cssBase === null ? [] : normalizarCss(cssBase, tokensBase, tema);
+  const actual = normalizarCss(cssActual, tokensActual, tema);
   return { ...compararLineas(base, actual), declaraciones: actual.length, vacio: base.length === 0 && actual.length === 0 };
 }
 
@@ -261,20 +290,21 @@ function extraerBase(sha, tmp) {
   return destino;
 }
 
-// Tokens claros de un árbol (actual o extraído); null si ese árbol no tiene el parcial.
-function tokensDe(raizArbol) {
+// Tokens del tema pedido de un árbol (actual o extraído); null si ese árbol no tiene el parcial.
+function tokensDe(raizArbol, tema = 'claro') {
   const archivo = path.join(raizArbol, TOKENS_REL);
   if (!fs.existsSync(archivo)) return null;
-  return leerTokensClaros(compilar(archivo, path.join(raizArbol, 'src')));
+  return leerTokens(compilar(archivo, path.join(raizArbol, 'src')), tema);
 }
 
 function argumentos(argv) {
-  const opciones = { base: null, tmp: null, max: 40, rutas: [] };
+  const opciones = { base: null, tmp: null, max: 40, tema: 'claro', rutas: [] };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--base') opciones.base = argv[++i];
     else if (a === '--tmp') opciones.tmp = argv[++i];
     else if (a === '--max') opciones.max = Number(argv[++i]);
+    else if (a === '--tema') opciones.tema = argv[++i];
     else opciones.rutas.push(a);
   }
   return opciones;
@@ -282,22 +312,23 @@ function argumentos(argv) {
 
 function main(argv) {
   const op = argumentos(argv);
-  if (!op.base || !op.tmp || op.rutas.length === 0) {
-    process.stderr.write('Uso: node tests/theme/comparar-claro.js --base <commit> --tmp <scratchpad> [--max <n>] <ruta.scss> [...]\n');
+  if (!op.base || !op.tmp || op.rutas.length === 0 || !TEMAS.includes(op.tema)) {
+    process.stderr.write('Uso: node tests/theme/comparar-claro.js --base <commit> --tmp <scratchpad> [--tema claro|oscuro] [--max <n>] <ruta.scss> [...]\n');
     return 2;
   }
+  const tema = op.tema;
   const sha = git(['rev-parse', '--verify', `${op.base}^{commit}`]).toString().trim();
   const dirBase = extraerBase(sha, path.resolve(op.tmp));
-  const tokensActual = tokensDe(RAIZ) || new Map();
+  const tokensActual = tokensDe(RAIZ, tema) || new Map();
   // Sin parcial en la base tampoco hay consumidores var(--ds-*) en ella: da igual con qué mapa se sustituya.
-  const tokensBase = tokensDe(dirBase) || tokensActual;
+  const tokensBase = tokensDe(dirBase, tema) || tokensActual;
   let cambios = 0;
   let vacios = 0;
   for (const ruta of op.rutas) {
     const rel = path.relative(RAIZ, path.resolve(RAIZ, ruta)).split(path.sep).join('/');
     const archivoBase = path.join(dirBase, rel);
     const cssBase = fs.existsSync(archivoBase) ? compilar(archivoBase, path.join(dirBase, 'src')) : null;
-    const r = compararVersiones(cssBase, tokensBase, compilar(path.join(RAIZ, rel), path.join(RAIZ, 'src')), tokensActual);
+    const r = compararVersiones(cssBase, tokensBase, compilar(path.join(RAIZ, rel), path.join(RAIZ, 'src')), tokensActual, tema);
     if (r.vacio) {
       vacios++;
       process.stderr.write(`SIN DATOS: ${rel} no produce ninguna declaración ni en la base ni en el árbol actual `
@@ -305,11 +336,11 @@ function main(argv) {
       continue;
     }
     if (r.igual) {
-      process.stdout.write(`OK claro idéntico: ${rel} (${r.declaraciones} declaraciones, base ${sha.slice(0, 8)})\n`);
+      process.stdout.write(`OK ${tema} idéntico: ${rel} (${r.declaraciones} declaraciones, base ${sha.slice(0, 8)})\n`);
       continue;
     }
     cambios++;
-    process.stdout.write(`CAMBIÓ el claro: ${rel} (base ${sha.slice(0, 8)}${fs.existsSync(archivoBase) ? '' : ', no existía en la base'})\n`);
+    process.stdout.write(`CAMBIÓ el ${tema}: ${rel} (base ${sha.slice(0, 8)}${fs.existsSync(archivoBase) ? '' : ', no existía en la base'})\n`);
     if (r.ordenCambio) process.stdout.write('  mismas declaraciones en otro orden (la cascada puede cambiar)\n');
     process.stdout.write(`  solo en la base: ${r.soloBase.length}; solo en el árbol actual: ${r.soloActual.length}\n`);
     for (const l of r.soloBase.slice(0, op.max)) process.stdout.write(`  - ${l}\n`);
@@ -319,7 +350,7 @@ function main(argv) {
   return vacios > 0 ? 2 : 0;
 }
 
-module.exports = { esSelectorOscuro, sustituirTokens, normalizarValor, normalizarSelector, leerTokensClaros, normalizarCss, compararLineas, compararVersiones };
+module.exports = { esSelectorOscuro, sustituirTokens, normalizarValor, normalizarSelector, leerTokens, leerTokensClaros, normalizarCss, compararLineas, compararVersiones };
 
 if (require.main === module) {
   try {
