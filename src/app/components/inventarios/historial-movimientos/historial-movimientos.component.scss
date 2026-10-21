@@ -18,7 +18,7 @@ $border-radius: 11px;
 // HEADER DEL MÓDULO
 // ===================================
 .module-header {
-    background: white;
+    background: var(--ds-surface);
     transition: all 0.3s ease;
 
     h5 {
@@ -93,7 +93,7 @@ $border-radius: 11px;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
     border-radius: 11px;
-    background: white;
+    background: var(--ds-surface);
     border: 1px solid $cfg-line;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -111,7 +111,7 @@ $border-radius: 11px;
 
     .metric-badge {
         background: $cfg-accent-soft;
-        color: $cfg-accent;
+        color: var(--ds-accent-ink);
         padding: 0.125rem 0.5rem;
         border-radius: 10px;
         font-size: 0.75rem;
@@ -130,16 +130,16 @@ $border-radius: 11px;
 
     // Estilos por tipo
     &.metric-chip-primary.active {
-        border-color: $cfg-accent;
+        border-color: var(--ds-accent-ink);
         background: $cfg-accent-soft;
 
         .metric-label {
-            color: $cfg-accent;
+            color: var(--ds-accent-ink);
             font-weight: 700;
         }
 
         .metric-badge {
-            background: $cfg-accent;
+            background: var(--ds-accent);
             color: white;
         }
     }
@@ -202,7 +202,7 @@ $border-radius: 11px;
     height: 24px;
     padding: 0.25rem 0.5rem;
     background-color: $cfg-accent-soft;
-    color: $cfg-accent;
+    color: var(--ds-accent-ink);
     border: 1px solid #ddd3fb;
     border-radius: 20px;
     font-size: 0.75rem;
@@ -218,7 +218,7 @@ $border-radius: 11px;
 // CONTENEDOR DE LA TABLA
 // ===================================
 .table-container {
-    background: white;
+    background: var(--ds-surface);
 }
 
 // ===================================
@@ -271,11 +271,11 @@ $border-radius: 11px;
     // Secundario - Morado pastel muy claro (matching tema principal)
     &.badge-secondary {
         background-color: $cfg-accent-soft !important;
-        color: $cfg-accent !important;
+        color: var(--ds-accent-ink) !important;
         border: 1px solid #ddd3fb !important;
 
         i {
-            color: $cfg-accent !important;
+            color: var(--ds-accent-ink) !important;
         }
 
         &:hover {
@@ -325,13 +325,13 @@ $border-radius: 11px;
     height: 32px;
     border-radius: 50%;
     border: 1px solid #dee2e6;
-    background-color: #fff;
+    background-color: var(--ds-surface);
     cursor: pointer;
     transition: all 0.2s ease;
 
     &:hover {
         background-color: #f8f9fa;
-        border-color: #5F3FE0;
+        border-color: var(--ds-accent-ink);
         transform: scale(1.05);
     }
 
@@ -344,7 +344,7 @@ $border-radius: 11px;
 .list-actions {
     position: fixed;
     width: 200px;
-    background-color: #fff;
+    background-color: var(--ds-surface);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border-radius: 6px;
     margin: 0;
@@ -374,10 +374,10 @@ $border-radius: 11px;
 
         &:hover {
             background-color: #f8f9fa;
-            color: #5F3FE0;
+            color: var(--ds-accent-ink);
 
             i {
-                color: #5F3FE0;
+                color: var(--ds-accent-ink);
             }
         }
 
@@ -458,7 +458,7 @@ $border-radius: 11px;
         border-radius: 5px;
 
         &:hover {
-            background: #5F3FE0;
+            background: var(--ds-accent);
         }
     }
 }
@@ -476,7 +476,7 @@ $border-radius: 11px;
     padding: 0.75rem;
     border: 1px solid #e9ecef;
     border-radius: 8px;
-    background-color: white;
+    background-color: var(--ds-surface);
 
     &:last-child {
         margin-bottom: 0;
@@ -491,7 +491,7 @@ $border-radius: 11px;
     padding-bottom: 0.5rem;
 
     i {
-        color: #5F3FE0;
+        color: var(--ds-accent-ink);
     }
 }
 
@@ -689,8 +689,8 @@ $border-radius: 11px;
 
 :host ::ng-deep {
   .boton-principal.p-button {
-    background: $cfg-accent;
-    border-color: $cfg-accent;
+    background: var(--ds-accent);
+    border-color: var(--ds-accent-ink);
     border-radius: 11px;
     font-weight: 700;
     box-shadow: $cfg-shadow-btn;
@@ -698,9 +698,9 @@ $border-radius: 11px;
     &:enabled:hover { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
   }
   .boton-secundario.p-button {
-    background: #fff;
+    background: var(--ds-surface);
     color: $cfg-body;
-    border: 1px solid #e4e2ef;
+    border: 1px solid var(--ds-line-strong);
     border-radius: 11px;
     font-weight: 700;
 
