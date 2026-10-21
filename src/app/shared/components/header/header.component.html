@@ -7,16 +7,16 @@
        style="font-size: 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.06);">
     <i class="pi pi-info-circle" style="font-size: 0.7rem;"></i>
     <span *ngIf="(subscriptionService.usage$ | async) as usage">
-      Plan Gratuito — {{ usage.orders?.remaining >= 0 ? usage.orders?.remaining : 0 }} pedidos restantes este mes
+      {{ (usage.orders?.remaining === 1 ? 'shell.header.freePlanOrdersLeft.one' : 'shell.header.freePlanOrdersLeft.other') | translate: { count: usage.orders?.remaining >= 0 ? usage.orders?.remaining : 0 } }}
     </span>
     <a routerLink="/pricing" style="font-weight: 600; text-decoration: underline; cursor: pointer;">
-      Actualizar
+      {{ 'shell.header.upgrade' | translate }}
     </a>
   </div>
 </div>
 
 <!-- Page Header Start - CLEAN VERSION -->
-<div class="page-header" [class.close_icon]="navServices.collapseSidebar" role="banner" aria-label="Encabezado principal">
+<div class="page-header" [class.close_icon]="navServices.collapseSidebar" role="banner" [attr.aria-label]="'shell.header.ariaBanner' | translate">
   <div class="header-wrapper row m-0">
     <!-- Search component (hidden) -->
     <app-search></app-search>
@@ -50,19 +50,19 @@
 
         <!-- Dark Mode Toggle -->
         <li>
-          <button class="mode" type="button" (click)="layoutToggle()" [attr.aria-pressed]="dark" aria-label="Cambiar tema">
+          <button class="mode" type="button" (click)="layoutToggle()" [attr.aria-pressed]="dark" [attr.aria-label]="'shell.header.toggleTheme' | translate">
             <i class="fa fa-moon-o" *ngIf="!dark" aria-hidden="true"></i>
             <i class="fa fa-lightbulb-o" *ngIf="dark" aria-hidden="true"></i>
           </button>
         </li>
 
         <!-- Notifications -->
-        <li class="onhover-dropdown" aria-label="Notificaciones">
+        <li class="onhover-dropdown" [attr.aria-label]="'shell.header.notifications' | translate">
           <app-notification-center></app-notification-center>
         </li>
 
         <!-- Profile + Logout -->
-        <li class="profile-nav onhover-dropdown p-0" aria-label="Mi cuenta">
+        <li class="profile-nav onhover-dropdown p-0" [attr.aria-label]="'shell.header.myAccount' | translate">
           <app-my-account></app-my-account>
         </li>
       </ul>

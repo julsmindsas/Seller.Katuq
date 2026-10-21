@@ -128,7 +128,8 @@ test('glosario de D7 en todo el diccionario', () => {
     [/\bpedidos?\b/i, /Bestell/, 'Pedido → Bestellung'],
     [/\bdesp?achos?\b|\bdespach/i, /Versand|versend/i, 'Despacho → Versand'],
     [/\bbodegas?\b/i, /lager/i, 'Bodega → Lager'],
-    [/\bclientes?\b/i, /Kund/, 'Cliente → Kunde'],
+    // IDI-B01a: «Firmenkunden» (Clientes corporativos) lleva «kunden» en minúscula dentro del compuesto.
+    [/\bclientes?\b/i, /Kund|kund/, 'Cliente → Kunde'],
     [/\binventarios?\b/i, /lager/i, 'Inventario → Lagerbestand'],
     [/\bcotizaci[oó]n/i, /Offerte/, 'Cotización → Offerte'],
     [/facturaci[oó]n electr[oó]nica/i, /E-Rechnung/, 'Factura electrónica → E-Rechnung'],

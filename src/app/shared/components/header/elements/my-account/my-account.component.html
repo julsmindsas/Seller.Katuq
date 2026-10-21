@@ -5,13 +5,13 @@
      (keydown.enter)="toggleAccount()"
      (keydown.space)="$event.preventDefault(); toggleAccount()">
   <div class="avatar-wrapper">
-    <img *ngIf="user?.image" [src]="user.image" alt="profile" class="avatar-img">
+    <img *ngIf="user?.image" [src]="user.image" [alt]="'shell.account.avatarAlt' | translate" class="avatar-img">
     <div *ngIf="!user?.image" class="avatar-placeholder">
-      {{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}
+      {{ user?.name?.charAt(0)?.toUpperCase() || ('shell.account.initialFallback' | translate) }}
     </div>
     <span class="status-dot"></span>
   </div>
-  <span class="trigger-name d-none d-md-inline">{{ user?.name?.split(' ')[0] || 'Usuario' }}</span>
+  <span class="trigger-name d-none d-md-inline">{{ user?.name?.split(' ')[0] || ('shell.account.userFallback' | translate) }}</span>
   <i class="fa fa-chevron-down trigger-chevron d-none d-md-inline" aria-hidden="true"></i>
 </div>
 
@@ -20,15 +20,15 @@
   <!-- Header con info del usuario -->
   <div class="dropdown-header">
     <div class="user-avatar-large">
-      <img *ngIf="user?.image" [src]="user.image" alt="profile">
+      <img *ngIf="user?.image" [src]="user.image" [alt]="'shell.account.avatarAlt' | translate">
       <div *ngIf="!user?.image" class="avatar-placeholder-lg">
-        {{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}
+        {{ user?.name?.charAt(0)?.toUpperCase() || ('shell.account.initialFallback' | translate) }}
       </div>
     </div>
     <div class="user-info">
-      <span class="user-name">{{ user?.name || 'Usuario' }}</span>
-      <span class="user-company">{{ user?.company || 'Sin empresa' }}</span>
-      <span class="user-role">{{ user?.rol || 'Usuario' }}</span>
+      <span class="user-name">{{ user?.name || ('shell.account.userFallback' | translate) }}</span>
+      <span class="user-company">{{ user?.company || ('shell.account.noCompany' | translate) }}</span>
+      <span class="user-role">{{ user?.rol || ('shell.account.userFallback' | translate) }}</span>
     </div>
   </div>
 
@@ -42,7 +42,7 @@
       <div class="item-icon">
         <app-feather-icons [icon]="accountMenuItem.icon"></app-feather-icons>
       </div>
-      <span>{{ accountMenuItem.label }}</span>
+      <span>{{ accountMenuItem.label | translate }}</span>
       <app-feather-icons [icon]="'chevron-right'" class="chevron"></app-feather-icons>
     </a>
 
@@ -52,7 +52,7 @@
       <div class="item-icon">
         <app-feather-icons [icon]="item.icon"></app-feather-icons>
       </div>
-      <span>{{ item.label }}</span>
+      <span>{{ item.label | translate }}</span>
       <app-feather-icons [icon]="'chevron-right'" class="chevron"></app-feather-icons>
     </a>
   </div>
@@ -65,6 +65,6 @@
     <div class="item-icon logout-icon">
       <app-feather-icons [icon]="'log-out'"></app-feather-icons>
     </div>
-    <span>{{ 'Cerrar sesión' | translate }}</span>
+    <span>{{ 'shell.account.logout' | translate }}</span>
   </a>
 </div>

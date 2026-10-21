@@ -1,0 +1,671 @@
+{
+  "_nota": "IDI-B01a (D-532, tarea 2.2): títulos, encabezados, rutas e insignias del menú tomados de nav.service.ts en 6e6d67bd (sin cambios desde 96b9fef1), antes del bloque. Excepción D3: no cambian.",
+  "MENUITEMS": [
+    {
+      "headTitle1": "Configuración Plataforma"
+    },
+    {
+      "title": "Gestión General"
+    },
+    {
+      "path": "superadmin/campanas",
+      "title": "Campañas de registro"
+    },
+    {
+      "path": "prospectos/lista",
+      "title": "Prospectos"
+    },
+    {
+      "headTitle1": "Gestión Comercial"
+    },
+    {
+      "title": "Clientes"
+    },
+    {
+      "path": "ventas/clientes",
+      "title": "Crear cliente"
+    },
+    {
+      "path": "ventas/clienteslista",
+      "title": "Listado de clientes"
+    },
+    {
+      "path": "ventas/clientes-corporativos",
+      "title": "Clientes corporativos"
+    },
+    {
+      "title": "Ventas"
+    },
+    {
+      "path": "ventas/venta-asistida",
+      "title": "Venta asistida"
+    },
+    {
+      "path": "ventas/carga-ventas",
+      "title": "Ventas masivas"
+    },
+    {
+      "path": "ventas/ventas-pos",
+      "title": "Ventas POS"
+    },
+    {
+      "title": "Cotizaciones"
+    },
+    {
+      "path": "cotizaciones",
+      "title": "Listado de cotizaciones"
+    },
+    {
+      "path": "cotizaciones/editor",
+      "title": "Nueva cotización"
+    },
+    {
+      "path": "cotizaciones/catalogos",
+      "title": "Catálogos por link",
+      "badgeValue": "NUEVO"
+    },
+    {
+      "title": "Mi página web"
+    },
+    {
+      "path": "sitios",
+      "title": "Mis sitios"
+    },
+    {
+      "path": "sitios/catalogos",
+      "title": "Catálogos",
+      "badgeValue": "NUEVO"
+    },
+    {
+      "title": "Dropshipping"
+    },
+    {
+      "path": "dropshipping/dashboard",
+      "title": "Dashboard"
+    },
+    {
+      "path": "dropshipping/proveedores",
+      "title": "Proveedores"
+    },
+    {
+      "path": "dropshipping/productos",
+      "title": "Productos"
+    },
+    {
+      "path": "dropshipping/ordenes",
+      "title": "Órdenes"
+    },
+    {
+      "title": "CRM"
+    },
+    {
+      "path": "crm/list",
+      "title": "Pipeline"
+    },
+    {
+      "path": "crm/tasks",
+      "title": "Seguimiento"
+    },
+    {
+      "title": "NPS"
+    },
+    {
+      "path": "nps/resultados",
+      "title": "Resultados"
+    },
+    {
+      "path": "nps/encuestas",
+      "title": "Encuestas"
+    },
+    {
+      "path": "nps/seguimiento",
+      "title": "Seguimiento"
+    },
+    {
+      "headTitle1": "Finanzas"
+    },
+    {
+      "title": "Finanzas"
+    },
+    {
+      "path": "facturacion-electronica",
+      "title": "Facturación electrónica",
+      "badgeValue": "NUEVO"
+    },
+    {
+      "path": "tesoreria",
+      "title": "Tesorería"
+    },
+    {
+      "path": "cartera",
+      "title": "Cartera (CxC)",
+      "badgeValue": "NUEVO"
+    },
+    {
+      "path": "contabilidad",
+      "title": "Contabilidad",
+      "badgeValue": "NUEVO"
+    },
+    {
+      "headTitle1": "Operaciones"
+    },
+    {
+      "title": "Pedidos"
+    },
+    {
+      "path": "ventas/pedidos",
+      "title": "Todos los pedidos"
+    },
+    {
+      "path": "pos/list-ventas",
+      "title": "Pedidos POS"
+    },
+    {
+      "title": "Producción"
+    },
+    {
+      "path": "produccion/dashboard",
+      "title": "Órdenes de producción"
+    },
+    {
+      "title": "Agenda"
+    },
+    {
+      "path": "agenda",
+      "title": "Citas"
+    },
+    {
+      "path": "agenda/configuracion",
+      "title": "Horario y personas"
+    },
+    {
+      "title": "Logística"
+    },
+    {
+      "path": "despachos",
+      "title": "Envíos y entregas"
+    },
+    {
+      "path": "centro-operaciones",
+      "title": "Centro de operaciones"
+    },
+    {
+      "title": "En vivo"
+    },
+    {
+      "path": "en-vivo",
+      "title": "En vivo"
+    },
+    {
+      "path": "en-vivo/katuq",
+      "title": "Katuq en vivo"
+    },
+    {
+      "headTitle1": "Inventarios y Productos"
+    },
+    {
+      "title": "Productos"
+    },
+    {
+      "path": "productos",
+      "title": "Productos"
+    },
+    {
+      "path": "ecommerce/adiciones/listar",
+      "title": "Adiciones"
+    },
+    {
+      "path": "proceso/combos",
+      "title": "Combos"
+    },
+    {
+      "title": "Inventarios"
+    },
+    {
+      "path": "inventario/inventario-catalogo",
+      "title": "Inventario por bodega"
+    },
+    {
+      "path": "inventario/bodega-detalle",
+      "title": "Detalle por bodega"
+    },
+    {
+      "path": "inventario/recepcion-mercancia",
+      "title": "Ajustes de inventario"
+    },
+    {
+      "path": "inventario/traslados",
+      "title": "Traslados entre bodegas"
+    },
+    {
+      "path": "inventario/central-abastecimiento",
+      "title": "Central de Abastecimiento"
+    },
+    {
+      "path": "inventario/historial-movimientos",
+      "title": "Historial de movimientos"
+    },
+    {
+      "path": "inventario/indicadores",
+      "title": "Indicadores de bodega"
+    },
+    {
+      "path": "inventario/ubicaciones",
+      "title": "Mapa de la bodega"
+    },
+    {
+      "path": "inventario/conteos",
+      "title": "Conteos de inventario"
+    },
+    {
+      "title": "Compras"
+    },
+    {
+      "path": "compras/reposicion",
+      "title": "Qué comprar"
+    },
+    {
+      "path": "inventario/ordenes-compra",
+      "title": "Órdenes de compra"
+    },
+    {
+      "path": "compras/proveedores",
+      "title": "Proveedores"
+    },
+    {
+      "title": "Lista de precios"
+    },
+    {
+      "path": "lista-precios/lista-precios",
+      "title": "Lista de precios"
+    },
+    {
+      "title": "Picking y packing"
+    },
+    {
+      "path": "picking-packing/picking",
+      "title": "Órdenes de picking"
+    },
+    {
+      "path": "picking-packing/packing",
+      "title": "Órdenes de packing"
+    },
+    {
+      "headTitle1": "Marketing"
+    },
+    {
+      "title": "Dashboard de Marketing",
+      "path": "/marketing"
+    },
+    {
+      "title": "Campañas",
+      "path": "/marketing/campanas"
+    },
+    {
+      "title": "Pauta",
+      "path": "/marketing/pauta"
+    },
+    {
+      "title": "Mensajes"
+    },
+    {
+      "path": "/notificaciones/whatsapp/inbox",
+      "title": "WhatsApp"
+    },
+    {
+      "path": "/notificaciones/instagram/inbox",
+      "title": "Instagram"
+    },
+    {
+      "path": "/notificaciones/facebook/inbox",
+      "title": "Facebook"
+    },
+    {
+      "headTitle1": "Inteligencia de Negocios"
+    },
+    {
+      "title": "Indicadores"
+    },
+    {
+      "path": "dashboards",
+      "title": "Dashboard gerencial"
+    },
+    {
+      "path": "dashboards/builder",
+      "title": "Constructor de reportes"
+    },
+    {
+      "title": "Agent Builder"
+    },
+    {
+      "path": "agent-builder/chat-agui",
+      "title": "KAI Chat"
+    },
+    {
+      "path": "agent-builder/general-chat",
+      "title": "Chat Básico"
+    },
+    {
+      "path": "agent-builder/library",
+      "title": "Mis Agentes IA"
+    },
+    {
+      "path": "agent-builder/wizard",
+      "title": "Crear Agente"
+    },
+    {
+      "path": "agent-builder/monitor",
+      "title": "Monitor A2A"
+    },
+    {
+      "headTitle1": "Configuración"
+    },
+    {
+      "title": "Seguridad"
+    },
+    {
+      "path": "rol",
+      "title": "Roles y permisos"
+    },
+    {
+      "path": "usuarios",
+      "title": "Usuarios"
+    },
+    {
+      "title": "Empresa"
+    },
+    {
+      "path": "empresas",
+      "title": "Mi Empresa"
+    },
+    {
+      "path": "kuvo",
+      "title": "Mi comercio en Kuvo"
+    },
+    {
+      "path": "pricing",
+      "title": "Planes y suscripciones"
+    },
+    {
+      "path": "extras/formasPago",
+      "title": "Medios de pago"
+    },
+    {
+      "path": "billing",
+      "title": "Facturación"
+    },
+    {
+      "path": "empresas/modulovariable/produccion/opciones",
+      "title": "Activación Módulos"
+    },
+    {
+      "title": "Módulos Variables"
+    },
+    {
+      "path": "empresas/modulovariable/produccion/opciones",
+      "title": "Producción"
+    },
+    {
+      "path": "empresas/modulovariable/dropshipping/configuracion",
+      "title": "Dropshipping"
+    },
+    {
+      "path": "empresas/modulovariable/campos-personalizados",
+      "title": "Campos Personalizados"
+    },
+    {
+      "title": "Inventarios y productos"
+    },
+    {
+      "path": "categorias",
+      "title": "Categorías de productos"
+    },
+    {
+      "path": "inventario/bodegas",
+      "title": "Bodegas"
+    },
+    {
+      "path": "proceso/canales",
+      "title": "Canales de venta"
+    },
+    {
+      "path": "proceso/bodegas-por-canal",
+      "title": "Bodegas por canal"
+    },
+    {
+      "title": "Producto"
+    },
+    {
+      "path": "proceso/ocasiones",
+      "title": "Ocasiones"
+    },
+    {
+      "path": "proceso/generos",
+      "title": "Géneros"
+    },
+    {
+      "path": "proceso/tipos-cliente",
+      "title": "Tipos de Cliente"
+    },
+    {
+      "path": "proceso/descuentos-promociones",
+      "title": "Descuentos y Promociones"
+    },
+    {
+      "title": "Logística"
+    },
+    {
+      "path": "formasEntrega",
+      "title": "Formas de entrega"
+    },
+    {
+      "path": "formasEntrega/tipoentrega/lista",
+      "title": "Tipos de entrega"
+    },
+    {
+      "path": "tiempoentrega",
+      "title": "Tiempos de entrega"
+    },
+    {
+      "path": "extras/zonasCobro",
+      "title": "Zonas de cobro"
+    },
+    {
+      "title": "Pagos"
+    },
+    {
+      "path": "extras/formasPago",
+      "title": "Métodos de pago"
+    },
+    {
+      "path": "extras/pos/formasPago",
+      "title": "Métodos de pago POS"
+    },
+    {
+      "title": "Integraciones"
+    },
+    {
+      "path": "integrations",
+      "title": "Integraciones"
+    },
+    {
+      "path": "flows",
+      "title": "Automatizaciones"
+    },
+    {
+      "title": "Notificaciones"
+    },
+    {
+      "path": "notificaciones",
+      "title": "Notificaciones"
+    },
+    {
+      "headTitle1": "Katuq"
+    }
+  ],
+  "MEGAMENUITEMS": [
+    {
+      "title": "Error Pages"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Error Page 400"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Error Page 401"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Error Page 403"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Error Page 404"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Error Page 500"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Error Page 503"
+    },
+    {
+      "title": "Authentication"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Login Simple"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Login BG Image"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Login BG Video"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Simple Register"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Register BG Image"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Register BG Video"
+    },
+    {
+      "title": "Usefull Pages"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Search Pages"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Unlock User"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Forgot Password"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Reset Password"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Maintenance"
+    },
+    {
+      "title": "Email templates"
+    },
+    {
+      "path": "http://admin.pixelstrap.com/cuba/theme/basic-template.html",
+      "title": "Basic Email"
+    },
+    {
+      "path": "http://admin.pixelstrap.com/cuba/theme/email-header.html",
+      "title": "Basic With Header"
+    },
+    {
+      "path": "http://admin.pixelstrap.com/cuba/theme/template-email.html",
+      "title": "Ecomerce Template"
+    },
+    {
+      "path": "http://admin.pixelstrap.com/cuba/theme/template-email-2.html",
+      "title": "Email Template 2"
+    },
+    {
+      "path": "http://admin.pixelstrap.com/cuba/theme/ecommerce-templates.html",
+      "title": "Ecommerce Email"
+    },
+    {
+      "path": "http://admin.pixelstrap.com/cuba/theme/email-order-success.html",
+      "title": "Order Success"
+    },
+    {
+      "title": "Coming Soon"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Coming Simple"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Coming BG Image"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Coming BG Video"
+    }
+  ],
+  "LEVELMENUITEMS": [
+    {
+      "path": "javascript:void(0);",
+      "title": "File Manager"
+    },
+    {
+      "title": "Users"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "All Users"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "User Profile"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Edit Profile"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Bookmarks"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Calender"
+    },
+    {
+      "path": "javascript:void(0);",
+      "title": "Social App"
+    }
+  ],
+  "canales": [
+    {
+      "title": "TikTok"
+    },
+    {
+      "title": "Correo"
+    },
+    {
+      "title": "Llamadas"
+    }
+  ]
+}

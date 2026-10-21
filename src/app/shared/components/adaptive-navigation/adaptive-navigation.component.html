@@ -22,7 +22,7 @@
     </div>
     
     <div class="mini-tab-content">
-      <span class="mini-tab-text">Menú</span>
+      <span class="mini-tab-text">{{ 'shell.adaptiveNav.menu' | translate }}</span>
       <i class="fa fa-chevron-up mini-tab-icon" aria-hidden="true"></i>
     </div>
   </div>
@@ -51,15 +51,15 @@
         <button class="back-btn" 
                 *ngIf="expandedSection"
                 (click)="collapseSection()"
-                [attr.aria-label]="'Volver a menú principal'">
+                [attr.aria-label]="'shell.adaptiveNav.backToMain' | translate">
           <i class="fa fa-chevron-left" aria-hidden="true"></i>
         </button>
         
-        <h2>{{expandedSection ? expandedSection.title : 'Menú Principal'}}</h2>
+        <h2>{{ (expandedSection ? expandedSection.title : 'shell.adaptiveNav.mainMenu') | translate }}</h2>
         
         <button class="close-cards-btn" 
                 (click)="returnToMiniTab()"
-                [attr.aria-label]="'Cerrar menú'">
+                [attr.aria-label]="'shell.adaptiveNav.close' | translate">
           <i class="fa fa-times" aria-hidden="true"></i>
         </button>
       </div>
@@ -78,7 +78,7 @@
                [style.--card-color]="section.color"
                (click)="openSection(section)"
                (touchend)="$event.preventDefault(); openSection(section)"
-               [attr.aria-label]="section.title"
+               [attr.aria-label]="section.title | translate"
                role="button"
                tabindex="0">
             
@@ -86,8 +86,8 @@
               <div class="card-icon">
                 <i [class]="section.icon" aria-hidden="true"></i>
               </div>
-              <div class="card-title">{{section.title}}</div>
-              <div class="card-subtitle">{{section.subtitle}}</div>
+              <div class="card-title">{{section.title | translate}}</div>
+              <div class="card-subtitle">{{section.subtitle | translate}}</div>
             </div>
             
             <div class="card-badge" *ngIf="section.badge">
@@ -102,7 +102,7 @@
                *ngFor="let item of expandedSection.items"
                (click)="navigateToItem(item)"
                (touchend)="$event.preventDefault(); navigateToItem(item)"
-               [attr.aria-label]="item.title"
+               [attr.aria-label]="item.title | translate"
                role="button"
                tabindex="0">
             
@@ -111,7 +111,7 @@
             </div>
             
             <div class="sub-item-content">
-              <div class="sub-item-title">{{item.title}}</div>
+              <div class="sub-item-title">{{item.title | translate}}</div>
             </div>
             
             <i class="fa fa-chevron-right sub-item-arrow" aria-hidden="true"></i>
@@ -127,10 +127,10 @@
 
 <!-- Age Group Selector (for development/testing - remove in production) -->
 <div class="age-selector" *ngIf="false">
-  <label>Grupo de edad:</label>
+  <label>{{ 'shell.adaptiveNav.ageGroup' | translate }}</label>
   <select [value]="userAge" (change)="setUserAgeGroup($any($event.target).value)">
-    <option value="young">Joven (14-25)</option>
-    <option value="middle">Adulto (26-50)</option>
-    <option value="senior">Senior (51-70)</option>
+    <option value="young">{{ 'shell.adaptiveNav.ageYoung' | translate }}</option>
+    <option value="middle">{{ 'shell.adaptiveNav.ageAdult' | translate }}</option>
+    <option value="senior">{{ 'shell.adaptiveNav.ageSenior' | translate }}</option>
   </select>
 </div>

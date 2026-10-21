@@ -196,10 +196,53 @@ Tamaños medidos el 2026-10-21 (plantillas / con pipe / mensajes en TS) para dim
 
 Carpetas de D10. `shared` tiene 58 plantillas (5 con pipe) y 136 mensajes; `notificaciones` 11/1/32; `dashboard` 4/1/21. Menú: 153 títulos, 119 sin traducción en `en.json`.
 
-- [ ] **2.1 Línea base** (receta, paso 1).
+- [x] **2.1 Línea base** (receta, paso 1).
+  - **Hecho (IDI-B01a, 2026-10-21)**, medido sobre 6e6d67bd con `npm run i18n:check -- --modulo <carpeta>`. Textos sueltos por carpeta (texto / atributo / interpolación / mensaje en `Swal`, `toastr` o `messageService`):
+    - `shared/components/header`: 52 (28 / 17 / 7 / 0). De ellos, 24 son de `bookmark`, `cart`, `mega-menu`, `message-box` y `notification`, componentes de la plantilla Cuba que ninguna plantilla pinta.
+    - `shared/components/sidebar`: 54 (23 / 29 / 2 / 0).
+    - `shared/components/bottom-navigation`: 1 (0 / 1 / 0 / 0).
+    - `shared/components/breadcrumb`: 0. Los textos los pasa cada pantalla que lo usa (maestros, formas de entrega, soporte), así que se migran en el bloque de esa pantalla.
+    - `shared/components/adaptive-navigation`: 8 (5 / 2 / 1 / 0). No está en D10, pero el encargo de IDI-B01a la incluye. Ninguna plantilla la pinta.
+    - `shared/services/nav.service.ts`: 0. Los títulos son claves literales (excepción D3) y la plantilla del menú ya los pasaba por el pipe.
+    - Bloque IDI-B01 completo (`--modulo IDI-B01`, carpetas de D10): 695 (381 / 122 / 78 / 114). Con `adaptive-navigation`, que la corrección de IDI-B01a sumó a `bloques["IDI-B01 Shell"]` de `scripts/i18n-check.config.json` para que el cierre (2.7) la mida: 703.
+  - Menú: 123 claves visibles en `MENUITEMS` (títulos, 9 encabezados y la insignia «NUEVO»), más los 3 canales futuros de Mensajes y «Próximamente». Faltaban 107 en `es.json`. 153 es el total de títulos distintos de todo el archivo, incluidos los de `MEGAMENUITEMS` y `LEVELMENUITEMS`, que solo usa `app-mega-menu` y nadie pinta.
+  - Después de IDI-B01a: header 24 (solo los componentes Cuba sin uso), sidebar 0, bottom-navigation 0, adaptive-navigation 0 y bloque IDI-B01 612 (351 / 78 / 69 / 114). El resto es de IDI-B01b. En el repo, `claveInexistenteAbierta` baja de 1.403 a 1.353 y `claveSobrante` de 360 a 350.
 - [ ] **2.2 Menú.** Los 153 títulos de `nav.service.ts` siguen siendo claves literales (excepción D3: favoritos, secciones plegadas y `item.title === "Mensajes"` usan el título). Se agregan a los cuatro diccionarios y se corrige su ortografía solo en el valor de `es.json`. Los `aria-label` armados por concatenación del sidebar (`'Ir a ' + …`) pasan a claves con parámetro. `badgeValue: "Próximamente"` se traduce al mostrarse, no en el dato.
   - Criterio: con el panel en inglés, todo el menú visible está en inglés; favoritos y secciones plegadas se conservan al cambiar de idioma.
+  - **Código y pruebas hechos (IDI-B01a, 2026-10-21); falta el criterio en el navegador.** Queda sin marcar, como 1.9, hasta la revisión en es/en a 1440 y 390 px de 2.7 (menú expandido, plegado con su submenú flotante y móvil). `nav.service.ts` y `future-message-channels.ts` no cambian.
+    - Diccionarios: las 107 claves del menú que faltaban, más los canales TikTok, Correo y Llamadas (110 en total), se agregan a `es`, `en`, `pt` y `de`, antes de `comun.*` y en el mismo orden en `es` y `de`. En `en` y `pt` se conservan los valores que ya había como sobrantes («POS Sales», «Production»…). En `en`, «Géneros» pasa de «Genres» a «Genders»: en el panel es el género del destinatario.
+    - Ortografía, solo en el valor de `es` y en minúscula de oración, como el resto del menú: «Configuración Plataforma» pasa a «Configuración plataforma», «Activación Módulos» a «Activación módulos» y «Central de Abastecimiento» a «Central de abastecimiento». Cambian 16 valores, todos solo en mayúsculas. La corrección del bloque retiró dos cambios de redacción («Configuración de la plataforma», «Activación de módulos»): la receta solo pide tildes, mayúsculas y puntuación, y los buscadores del menú comparan sin mayúsculas contra la clave, así que en español lo que se lee se sigue encontrando. Una prueba lo fija. «Dashboard» → «Tablero» ya estaba en `es.json` antes del bloque.
+    - **Desvío por aprobar (Daniel):** de los 153 títulos, se agregan los que el panel pinta (`MENUITEMS` y los canales futuros). Los 26 de `MEGAMENUITEMS` y `LEVELMENUITEMS` («Error Pages», «All Users», «Edit Profile»…) son de la plantilla Cuba y solo los usa `app-mega-menu`, que nadie pinta; tampoco entran en los buscadores, que leen `navServices.items` (`MENUITEMS`). Se retiran con los componentes Cuba sin uso, en un cambio aparte. La prueba fija que `app-mega-menu` no se pinta en ninguna plantilla.
+    - El submenú flotante del menú plegado, que se arma en TS con `Renderer2`, muestra el título y «Próximamente» con `translate.instant` dentro del manejador del clic. El dato sigue siendo la clave.
+    - Los `aria-label` y `title` por concatenación pasan a claves con parámetro: `shell.sidebar.goTo`, `removeFavoriteNamed`, `openInMenu` y `externalLink`, con `{{title}}`. La insignia se traduce al mostrarla (`badgeValue | translate` y `'Próximamente' | translate`).
+    - `scripts/i18n-check.config.json`: `igualesPermitidos.todos` suma CRM, NPS, Pipeline, Dropshipping, Marketing, Agent Builder, Instagram, Facebook y TikTok. `en`, `pt` y `de` suman los cognados del menú y del shell (por ejemplo, pt «Catálogos», «Logística»; en y de «Senior (51-70)»).
+    - Prueba nueva `tests/i18n/menu-titulos.test.js` (16 casos), con el extractor `tests/i18n/menu-titulos.js` y el snapshot `tests/i18n/fixtures/menu-titulos.snapshot.json`, tomado antes del bloque. Comprueba:
+      - que los títulos, encabezados, rutas e insignias de los tres arreglos son idénticos al snapshot;
+      - que cada clave visible está en los cuatro diccionarios, sin «igual al español», con el glosario de D7 y sin «ß»;
+      - que la ortografía solo cambia en el valor, y en el menú solo en mayúsculas;
+      - que los textos del shell en español conservan su redacción;
+      - con un traductor en inglés, que el submenú flotante del menú plegado muestra títulos y «Próximamente» en inglés sin tocar el dato (detecta la vuelta a `childItem.title` sin traducir);
+      - que no queda ninguna concatenación en los atributos;
+      - y, con un traductor en inglés, que favoritos y secciones plegadas se guardan por el título original.
+    - Criterio en el navegador (es/en a 1440 y 390 px, menú plegado y móvil): queda para la revisión de 2.7.
+    - `test:i18n` suma `tests/i18n/menu-titulos.test.js`. Se agregó cuando `package.json` quedó sin cambios ajenos (35717c33 hizo commit del `test:theme` de otro agente). La aserción del script en `i18n-check.test.js` pasa de seis a siete pruebas.
 - [ ] **2.3 HTML** del encabezado, perfil (`usuarios/edit-profile`), notificaciones e inicio (receta, paso 2).
+  - **Parte de IDI-B01a hecha (2026-10-21): encabezado, selector de idioma, cuenta, buscador, logo de la empresa, menú lateral, barra inferior y navegación adaptable.** Perfil, notificaciones e inicio quedan para IDI-B01b.
+    - Claves `shell.languages.*`, `shell.header.*`, `shell.account.*`, `shell.search.*`, `shell.company.*`, `shell.bottomNav.*`, `shell.sidebar.*` (incluida la tarjeta del plan) y `shell.adaptiveNav.*`: 100 en los cuatro diccionarios.
+    - Selector: `aria-label` con `shell.languages.selector` y `'Cambiar a ' + lang.language` con `shell.languages.switchTo` y `{{language}}`. Los nombres de idioma no se traducen.
+    - Plurales de D3 con `.one`/`.other`: «pedidos restantes» del aviso del plan gratuito y «(N días)» de la tarjeta del plan. El español corrige «1 pedidos» y «1 días».
+    - Español del shell: solo tildes, mayúsculas, puntuación («...» → «…», comillas latinas) y los plurales. La corrección del bloque devolvió la redacción original a «Plan gratuito — N pedidos restantes este mes», «Deslizar para abrir menú», «Pase el cursor…», «Ir a inicio», «Buscar menú…», «Pedidos se renuevan», «Volver a menú principal», «Analytics y KPIs» y «Senior (51-70)».
+    - Textos que se arman en TS y la plantilla pasa por el pipe (D4): las etiquetas de la barra inferior y de la cuenta, el saludo del menú y las secciones de la navegación adaptable guardan la clave. En la barra inferior se retira `getAriaLabel`, cuyo único uso era la plantilla.
+    - **Desvío de D9 punto 2 (cambios en TS además de `instant`), por aprobar:** la fecha de renovación sin valor pasa de `'No definida'` a `null` (`formatDate` devuelve `string | null`), y la plantilla muestra `shell.sidebar.plan.notDefined` con `??`. `getDaysLeft` da 0 en los dos casos, como antes, y el valor inicial `''` se sigue mostrando vacío. `renewalDate` no se guarda ni se envía. Además, el saludo guarda la clave y la barra inferior retira `getAriaLabel`.
+    - `i18n-ignorar` solo en `v{{version}}` y en el código de moneda «COP» de la tarjeta del plan.
+    - Lo que no se tocó:
+      - Los 24 textos de `bookmark`, `cart`, `mega-menu`, `message-box` y `notification` (Cuba, sin uso; la prueba fija que nadie los pinta). Se retiran en un cambio aparte, porque borrar componentes no es «solo textos».
+      - `breadcrumb`, que no tiene textos propios.
+      - El buscador del menú y el del encabezado siguen comparando contra el título en español. Buscar por el título traducido cambia un filtro: es un no-objetivo de `proposal.md` («Búsqueda del menú por el texto traducido… va aparte si se pide»). Se rastrea como pendiente del ticket Traducción: con el panel en en/pt/de, buscar «orders» no encuentra «All orders».
+      - El nombre de respaldo «Usuario» del saludo del menú, que se calcula en TS junto con las iniciales (IDI-B01b, 2.4).
+    - Pruebas ajenas adaptadas sin cambiar lo que comprueban: `tests/navigation/sidebar-menu.test.js` le da al submenú flotante un traductor identidad, y `tests/subscriptions/free-plan-ui.contract.test.js` busca los textos de la tarjeta del plan en la plantilla o en el `es.json` de la clave que la plantilla pide. `tests/i18n/aleman.test.js` acepta «kund» dentro de un compuesto («Firmenkunden»).
+    - de-CH, borrador sin revisión nativa (0.5 y 14.1). Corregido en el bloque: «Kunden (Firmen)» → «Firmenkunden», «Agenda» → «Termine» (en alemán «Agenda» es el orden del día), «Gratis-Plan» → «Kostenloser Plan» (igual que «Kostenlos» de la tarjeta) y «Upgraden» → «Upgrade». Para el revisor nativo: «Treasury» (Tesorería; préstamo usual en finanzas, confirmar para pymes), «Lagerbestandskorrekturen», «Lagerbestandszählungen», «Firmenkunden» y «Termine».
+    - `en`: «Customer List» y «Create Customer», que ya estaban, pasan a mayúscula solo inicial como el resto del menú.
 - [ ] **2.4 Mensajes en TS** (receta, paso 3), incluido el aviso «Tienes notificaciones pendientes» de `app.component.ts`.
 - [ ] **2.5 Ortografía** (receta, paso 4).
 - [ ] **2.6 Traducciones en/pt/de** (receta, paso 5).

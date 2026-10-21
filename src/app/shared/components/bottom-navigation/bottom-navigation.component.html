@@ -1,12 +1,12 @@
 <nav class="bottom-navigation" 
      role="navigation" 
-     aria-label="Navegación principal inferior">
+     [attr.aria-label]="'shell.bottomNav.aria' | translate">
   
   <div class="nav-container">
     <div class="nav-item" 
          *ngFor="let item of navigationItems; trackBy: trackByItemId"
          [class.active]="item.isActive"
-         [attr.aria-label]="getAriaLabel(item)"
+         [attr.aria-label]="(item.isActive ? 'shell.bottomNav.goToCurrent' : 'shell.bottomNav.goTo') | translate: { label: (item.label | translate) }"
          [attr.data-item-id]="item.id"
          (click)="navigateTo(item)"
          (keydown)="onKeyDown($event, item)"
@@ -31,7 +31,7 @@
       <!-- Label -->
       <span class="nav-label" 
             [class.active-label]="item.isActive">
-        {{ item.label }}
+        {{ item.label | translate }}
       </span>
       
       <!-- Ripple Effect Container -->

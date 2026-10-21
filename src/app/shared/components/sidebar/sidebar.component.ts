@@ -10,6 +10,7 @@ import { NotificationStatus } from '../../services/notifications/notification.ty
 import { Subject, Subscription } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { SubscriptionService } from '../../services/subscription.service';
+import { TranslateService } from '@ngx-translate/core';
 // Asegúrate de que PlanSelectorComponent esté importado si aún no lo está
 // import { PlanSelectorComponent } from '../plan-selector/plan-selector.component';
 
@@ -201,7 +202,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public userName: string = '';
   public userInitials: string = '';
   public userAvatarUrl: string = '';
-  public greeting: string = 'Hola'; // saludo dinámico en español según la hora
+  public greeting: string = 'shell.sidebar.greetingHello'; // clave del saludo según la hora (D-532: la plantilla la traduce)
 
   // Solo el primer nombre, para un saludo más limpio
   get firstName(): string {
@@ -258,7 +259,8 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     private elementRef: ElementRef,
     private notificationManager: NotificationManagerService,
     private subscriptionService: SubscriptionService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private translate: TranslateService
   ) {
     // Procesar items del menú en secciones cada vez que cambian
     this.navServices.items.pipe(takeUntil(this.destroy$)).subscribe(menuItems => {
@@ -770,7 +772,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
         this.currentPlan.renewalDate = renewalDate
           ? this.formatDate(renewalDate)
-          : 'No definida';
+          : null; // D-532: sin fecha, la plantilla muestra «No definida» traducido
         this.currentPlan.daysLeft = renewalDate
           ? this.calculateDaysUntilReset(renewalDate)
           : 0;
@@ -836,12 +838,12 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  private formatDate(date: any): string {
+  private formatDate(date: any): string | null {
     try {
       const d = new Date(date);
       return d.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
     } catch {
-      return 'No definida';
+      return null;
     }
   }
 
@@ -2310,9 +2312,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   // Saludo en español según la franja horaria
   private computeGreeting(): string {
     const h = new Date().getHours();
-    if (h < 12) return 'Buenos días';
-    if (h < 19) return 'Buenas tardes';
-    return 'Buenas noches';
+    if (h < 12) return 'shell.sidebar.greetingMorning';
+    if (h < 19) return 'shell.sidebar.greetingAfternoon';
+    return 'shell.sidebar.greetingEvening';
   }
 
   onAvatarError(event: Event): void {
@@ -2460,7 +2462,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
       this.renderer.addClass(itemElement, 'collapsed-submenu-item');
       this.renderer.setAttribute(itemElement, 'role', 'menuitem');
-      this.renderer.setAttribute(itemElement, 'title', childItem.title || '');
+      // D-532: el submenú flotante muestra el título traducido; el dato sigue siendo la clave en español.
+      const tituloVisible = childItem.title ? this.translate.instant(childItem.title) : '';
+      this.renderer.setAttribute(itemElement, 'title', tituloVisible);
       this.renderer.setStyle(itemElement, 'animation-delay', `${index * 0.05} s`);
 
       // Crear wrapper de icono
@@ -2485,14 +2489,14 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       // Crear texto principal
       const textElement = this.renderer.createElement('span');
       this.renderer.addClass(textElement, 'submenu-text');
-      this.renderer.appendChild(textElement, this.renderer.createText(childItem.title || ''));
+      this.renderer.appendChild(textElement, this.renderer.createText(tituloVisible));
 
       this.renderer.appendChild(contentWrapper, textElement);
 
       if (informational) {
         const label = this.renderer.createElement('span');
         this.renderer.addClass(label, 'submenu-future-label');
-        this.renderer.appendChild(label, this.renderer.createText('Próximamente'));
+        this.renderer.appendChild(label, this.renderer.createText(this.translate.instant('Próximamente')));
         this.renderer.appendChild(contentWrapper, label);
       }
 
