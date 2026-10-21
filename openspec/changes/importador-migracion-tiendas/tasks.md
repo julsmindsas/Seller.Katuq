@@ -78,8 +78,9 @@
 
 ## 8. Front (fase 1a)
 
-- [ ] 8.1 `[P]` Lógica pura en `src/app/components/migracion-tienda/logica/`, probada en `tests/migracion/`: ningún producto partido entre lotes, inventario unido por `Handle`, suma de respuestas, CSV sin datos personales y sin `if` por proveedor. Depende de 0.4.
-- [ ] 8.2 `MigracionTiendaService` (`providedIn: 'root'`, `extends BaseService`, `postSinLoader`) y `MigracionTiendaGuard`. **Éxito:** sin `HttpClient` en componentes ni `HttpClientModule` en el módulo.
+- [x] 8.1 `[P]` Lógica pura en `src/app/components/migracion-tienda/logica/`, probada en `tests/migracion/`: ningún producto partido entre lotes, inventario unido por `Handle`, suma de respuestas, CSV sin datos personales y sin `if` por proveedor. Depende de 0.4.
+  *Estado (F530-F01):* hecha con perfiles por tabla de alias (Shopify actual y anterior, WooCommerce), pruebas en `tests/migracion/logica.test.js` con CSV sintéticos; los encabezados de WooCommerce en español siguen sin export real (0.4). Rechaza de entrada el CSV de inventario sin columna «Available».
+- [x] 8.2 `MigracionTiendaService` (`providedIn: 'root'`, `extends BaseService`, `postSinLoader`) y `MigracionTiendaGuard`. **Éxito:** sin `HttpClient` en componentes ni `HttpClientModule` en el módulo.
 - [ ] 8.3 Módulo lazy `migrar-tienda`, un componente standalone OnPush por paso (D-400), con avisos de guardas, sobrantes, `INVENTORY_FAILED` y descarga del reporte. Botón «Traer mi tienda» en Mis sitios y Productos, solo con la bandera. Depende de 8.1 y 8.2.
 - [ ] 8.4 `npm run build:prod` sin errores; no suben los conteos de gradientes ni de primarios prohibidos; revisión a 1440 y 390 px.
 
