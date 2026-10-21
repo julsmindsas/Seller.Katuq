@@ -614,3 +614,27 @@
     padding: 12px 0;
   }
 }
+
+// D-536: cada línea del ticket lleva su editor de precio/IVA/descuento debajo;
+// el separador pasa de la fila a la línea completa.
+.cart-summary-sticky .ticket-linea {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f5f6fa;
+
+  .order-details-wrapper { border-bottom: 0; padding-bottom: 4px; }
+}
+
+.cart-summary-sticky .marca-editado {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 20px;
+  background: var(--kc-accent-wash, rgba(95, 63, 224, 0.1));
+  color: var(--kc-accent, #5F3FE0) !important;
+  font-family: inherit;
+  font-size: 10px !important;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}

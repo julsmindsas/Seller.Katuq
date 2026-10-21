@@ -11,6 +11,7 @@ import { FacturacionAutomaticaService } from '../facturacion/facturacion-automat
 import { camposPedido, FacturacionPos } from '../../utils/facturacion-pos';
 import { FacturaTirillaComponent } from '../../../components/pos/factura-tirilla/factura-tirilla.component';
 import Swal from 'sweetalert2';
+import { lineaPedidoPos, sinClavesDeEdicion } from '../../utils/pos-linea-precio';
 
 @Injectable({
   providedIn: 'root'
@@ -41,13 +42,14 @@ export class PosOrderCreatorService {
       bodegaId: warehouse?.idBodega || '',
       company: customer?.company || '',
       cliente: this.formatCustomerData(customer),
+      // D-536: precio manual, IVA manual y descuento van a nivel de línea (como la
+      // venta asistida); el snapshot del producto queda sin esas claves.
       carrito: this.cartService.posCartItems.map(item => ({
-        producto: item,
-        cantidad: item.cantidad,
+        ...lineaPedidoPos(item),
         estadoProcesoProducto: EstadoProceso.SinProducir,
         // Configuración por defecto para POS: entrega en tienda el mismo día
         configuracion: {
-          producto: item,
+          producto: sinClavesDeEdicion(item),
           datosEntrega: {
             tipoEntrega: 'SOLO RECOGE',
             formaEntrega: 'Recoge en tienda',

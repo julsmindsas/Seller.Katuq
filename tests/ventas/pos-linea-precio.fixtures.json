@@ -1,0 +1,74 @@
+{
+  "_nota": "D-536. Casos de referencia de una línea de pedido con precio manual, IVA manual y descuento de línea. Copia idéntica en Seller.Katuq/tests/ventas/pos-linea-precio.fixtures.json (la compara scripts/check-fixtures-pos-linea.js). Sin descuento global ni envío. esperado: bruto = totalPedidoSinDescuento, descuento = totalDescuento, subtotal = bruto - descuento, totalImpuesto, total = subtotal + IVA.",
+  "casos": [
+    {
+      "nombre": "línea sin cambios",
+      "carrito": [
+        { "cantidad": 2, "producto": { "cd": "P1", "precio": { "precioUnitarioSinIva": 10000, "precioUnitarioIva": "19", "precioUnitarioConIva": 11900 }, "procesoComercial": { "permitePrecioManual": true } } }
+      ],
+      "esperado": { "bruto": 20000, "descuento": 0, "subtotal": 20000, "totalImpuesto": 3800, "total": 23800 }
+    },
+    {
+      "nombre": "precio manual permitido, IVA del producto",
+      "carrito": [
+        { "cantidad": 3, "_precioManualOverride": 8000, "producto": { "cd": "P1", "precio": { "precioUnitarioSinIva": 10000, "precioUnitarioIva": "19", "precioUnitarioConIva": 11900 }, "procesoComercial": { "permitePrecioManual": true } } }
+      ],
+      "esperado": { "bruto": 24000, "descuento": 0, "subtotal": 24000, "totalImpuesto": 4560, "total": 28560 }
+    },
+    {
+      "nombre": "solo IVA manual 0 %",
+      "carrito": [
+        { "cantidad": 1, "_ivaManualOverride": 0, "producto": { "cd": "P2", "precio": { "precioUnitarioSinIva": 10000, "precioUnitarioIva": "19", "precioUnitarioConIva": 11900 } } }
+      ],
+      "esperado": { "bruto": 10000, "descuento": 0, "subtotal": 10000, "totalImpuesto": 0, "total": 10000 }
+    },
+    {
+      "nombre": "solo descuento de línea 10 %",
+      "carrito": [
+        { "cantidad": 2, "descuentoLinea": 10, "producto": { "cd": "P2", "precio": { "precioUnitarioSinIva": 10000, "precioUnitarioIva": "19", "precioUnitarioConIva": 11900 } } }
+      ],
+      "esperado": { "bruto": 20000, "descuento": 2000, "subtotal": 18000, "totalImpuesto": 3420, "total": 21420 }
+    },
+    {
+      "nombre": "precio manual + IVA 5 % + descuento 10 %",
+      "carrito": [
+        { "cantidad": 2, "_precioManualOverride": 5000, "_ivaManualOverride": 5, "descuentoLinea": 10, "producto": { "cd": "P1", "precio": { "precioUnitarioSinIva": 10000, "precioUnitarioIva": "19", "precioUnitarioConIva": 11900 }, "procesoComercial": { "permitePrecioManual": true } } }
+      ],
+      "esperado": { "bruto": 10000, "descuento": 1000, "subtotal": 9000, "totalImpuesto": 450, "total": 9450 }
+    },
+    {
+      "nombre": "precio manual 0 (regalo, ticket 1018)",
+      "carrito": [
+        { "cantidad": 1, "_precioManualOverride": 0, "producto": { "cd": "P1", "precio": { "precioUnitarioSinIva": 10000, "precioUnitarioIva": "19", "precioUnitarioConIva": 11900 }, "procesoComercial": { "permitePrecioManual": true } } }
+      ],
+      "esperado": { "bruto": 0, "descuento": 0, "subtotal": 0, "totalImpuesto": 0, "total": 0 }
+    },
+    {
+      "nombre": "precio manual en producto sin permiso: se ignora",
+      "carrito": [
+        { "cantidad": 1, "_precioManualOverride": 5000, "producto": { "cd": "P2", "precio": { "precioUnitarioSinIva": 10000, "precioUnitarioIva": "19", "precioUnitarioConIva": 11900 }, "procesoComercial": { "permitePrecioManual": false } } }
+      ],
+      "esperado": { "bruto": 10000, "descuento": 0, "subtotal": 10000, "totalImpuesto": 1900, "total": 11900 }
+    },
+    {
+      "nombre": "escalón de volumen + IVA manual 5 %",
+      "carrito": [
+        { "cantidad": 10, "_ivaManualOverride": 5, "producto": { "cd": "P3", "precio": { "precioUnitarioSinIva": 11000, "precioUnitarioIva": "19", "precioUnitarioConIva": 13090, "preciosVolumen": [
+          { "numeroUnidadesInicial": 1, "numeroUnidadesLimite": 9, "valorUnitarioPorVolumenSinIVA": 10000, "valorIVAPorVolumen": "19" },
+          { "numeroUnidadesInicial": 10, "numeroUnidadesLimite": null, "valorUnitarioPorVolumenSinIVA": 9000, "valorIVAPorVolumen": "19" }
+        ] } } }
+      ],
+      "esperado": { "bruto": 90000, "descuento": 0, "subtotal": 90000, "totalImpuesto": 4500, "total": 94500 }
+    },
+    {
+      "nombre": "ticket POS de cuatro líneas (sin cambios, precio manual, IVA 0 %, desc. 10 %)",
+      "carrito": [
+        { "cantidad": 2, "producto": { "cd": "P1", "precio": { "precioUnitarioSinIva": 10000, "precioUnitarioIva": "19", "precioUnitarioConIva": 11900 }, "procesoComercial": { "permitePrecioManual": true } } },
+        { "cantidad": 3, "_precioManualOverride": 8000, "producto": { "cd": "P1", "precio": { "precioUnitarioSinIva": 10000, "precioUnitarioIva": "19", "precioUnitarioConIva": 11900 }, "procesoComercial": { "permitePrecioManual": true } } },
+        { "cantidad": 1, "_ivaManualOverride": 0, "producto": { "cd": "P2", "precio": { "precioUnitarioSinIva": 10000, "precioUnitarioIva": "19", "precioUnitarioConIva": 11900 } } },
+        { "cantidad": 2, "descuentoLinea": 10, "producto": { "cd": "P2", "precio": { "precioUnitarioSinIva": 10000, "precioUnitarioIva": "19", "precioUnitarioConIva": 11900 } } }
+      ],
+      "esperado": { "bruto": 74000, "descuento": 2000, "subtotal": 72000, "totalImpuesto": 11780, "total": 83780 }
+    }
+  ]
+}

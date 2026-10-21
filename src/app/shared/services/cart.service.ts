@@ -3,6 +3,7 @@ import { ToastrService } from 'ngx-toastr';
 
 import { cartItems } from '../../../assets/data/cart';
 import Swal from 'sweetalert2';
+import { precioUnitarioPos } from '../utils/pos-linea-precio';
 // import { posOrder } from '../../../assets/data/pos';
 // import { OrderDetailsProduct } from '../../shared/models/pos/order';
 //interface/order';
@@ -172,8 +173,10 @@ export class CartService {
 
   getPOSSubTotal() {
     if (this.posCartItems) {
+      // D-536: una línea con precio, IVA o descuento editado se cobra como la
+      // guarda el servidor; sin cambios, igual que antes.
       const subTotal = this.posCartItems.reduce((acc, item) => {
-        const price = item.discount_price ? item.discount_price : item.precio.precioUnitarioConIva || 0;
+        const price = precioUnitarioPos(item);
         const quantity = item.cantidad || 0;
         return acc + (price * quantity);
       }, 0)

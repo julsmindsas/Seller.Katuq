@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CartService } from '../../../../../shared/services/cart.service';
 import { imagenDeProducto } from '../../../../../shared/utils/imagen-producto';
+import { lineaDesdeItemPos, precioUnitarioPos, tieneCambios } from '../../../../../shared/utils/pos-linea-precio';
 
 @Component({
   selector: 'app-cart-summary',
@@ -22,6 +23,15 @@ export class CartSummaryComponent {
   get totalNumerico(): number {
     const raw = this.cartService.getPOSSubTotal();
     return parseFloat(String(raw ?? '0').replace(/[^0-9.-]/g, '')) || 0;
+  }
+
+  /** D-536: precio unitario con IVA que se cobra (con los cambios de la línea, si hay). */
+  precioUnitario(item: any): number {
+    return precioUnitarioPos(item);
+  }
+
+  lineaEditada(item: any): boolean {
+    return tieneCambios(lineaDesdeItemPos(item));
   }
 
   /**

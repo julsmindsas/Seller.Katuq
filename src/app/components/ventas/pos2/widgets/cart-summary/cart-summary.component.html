@@ -9,7 +9,7 @@
     <div class="order-quantity p-b-10 border-bottom">
       <div class="custom-scrollbar cart-items-container">
         <div *ngIf="cartService.posCartItems && cartService.posCartItems.length">
-          <div *ngFor="let item of cartService.posCartItems; track item">
+          <div *ngFor="let item of cartService.posCartItems; track item" class="ticket-linea">
             <div class="order-details-wrapper">
               <div class="left-details">
                 <div class="order-img widget-hover">
@@ -20,7 +20,9 @@
                 <div class="order-details-right">
                   <h6 class="f-14 f-w-500 mb-2">{{ item.crearProducto?.titulo || 'Producto sin nombre' }}</h6>
                   <div class="last-order-detail">
-                                          <h6 class="txt-primary">${{ item.precio?.precioUnitarioConIva | number:'1.2-2' }}</h6>
+                    <h6 class="txt-primary">${{ precioUnitario(item) | number:'1.2-2' }}
+                      <span *ngIf="lineaEditada(item)" class="marca-editado">Editado</span>
+                    </h6>
                     <a href="javascript:void(0)">
                       <i class="fa fa-trash trash-remove" (click)="cartService.posRemoveCartItem(item)"></i>
                     </a>
@@ -39,9 +41,10 @@
                 </div>
               </div>
             </div>
+            <app-pos-linea-precio [item]="item"></app-pos-linea-precio>
           </div>
         </div>
-        
+
         <!-- Carrito vacío. El GIF antiguo medía 241px y no cabía en la franja
              de la lista; se reemplaza por el estado vacío del mockup. -->
         <div *ngIf="!(cartService.posCartItems && cartService.posCartItems.length)" class="empty-cart">

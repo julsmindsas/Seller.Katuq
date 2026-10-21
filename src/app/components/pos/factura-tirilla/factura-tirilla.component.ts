@@ -3,6 +3,7 @@ import { POSPedido } from '../pos-modelo/pedido';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { PosCheckoutService } from '../../../shared/services/ventas/pos-checkout.service';
 import { CartService } from '../../../shared/services/cart.service';
+import { lineaDesdePedido, resolverLineaPos, sanearDescuento, tieneCambios } from '../../../shared/utils/pos-linea-precio';
 
 @Component({
   selector: 'app-factura-tirilla',
@@ -216,7 +217,22 @@ export class FacturaTirillaComponent implements OnInit, AfterViewInit {
    * Calcula el total de un producto en el carrito
    */
   calcularTotalProducto(item: any): number {
-    return (item.cantidad || 0) * (item.producto?.precio?.precioUnitarioConIva || 0);
+    return (item.cantidad || 0) * this.precioUnitarioLinea(item);
+  }
+
+  /**
+   * D-536: precio unitario con IVA de la línea. Con precio, IVA o descuento
+   * editado sale del mismo cálculo del ticket; si el servidor dejó los campos
+   * resueltos (motor canónico), se prefieren. Sin cambios, el de siempre.
+   */
+  precioUnitarioLinea(item: any): number {
+    const linea = lineaDesdePedido(item);
+    if (!tieneCambios(linea)) return item?.producto?.precio?.precioUnitarioConIva || 0;
+    if (item?.precioSinIvaResuelto != null && item?.tarifaEfectiva != null) {
+      const desc = sanearDescuento(item.descuentoLinea) / 100;
+      return Number(item.precioSinIvaResuelto) * (1 + Number(item.tarifaEfectiva) / 100) * (1 - desc);
+    }
+    return resolverLineaPos(linea).conIvaUnitarioNeto;
   }
 
   /**

@@ -11892,3 +11892,26 @@ Lo que queda está, sobre todo, en:
 - **19:** `getProductVariations` pide de a 100 hasta la página corta; antes WooCommerce mandaba 10.
 - Pruebas: `functions/tests/integrations/woocommercePruebaConexion.test.js` y `woocommerceVariacionesPaginadas.test.js`.
 - Consecuencia a tener presente: una tienda sin https ya no pasa "Probar conexión" (antes «pasaba» sin probar). Guardar no cambia.
+
+## D-536 (2026-10-19) — Ventas POS edita precio base, IVA y descuento por línea como la venta asistida, y el servidor guarda y valida esos valores — COMMITEADO, sin desplegar
+
+- **Por qué:** el CEO pidió que en Ventas POS (`pos2`) se pueda cambiar el precio y el IVA de una línea, igual que en el carrito de la venta asistida, con los valores íntegros de punta a punta.
+- **Hallazgos (código del 19-oct, sin leer ni escribir producción):**
+  1. El POS ignora todo override: total, cobro y tirilla salen del precio de lista.
+  2. `getSubTotalPedido` y `getSubTotalNetoPedido` (`orderCalculationService.js`) no leen `_precioManualOverride`, pero `getTotalImpuesto` sí: subtotal de lista con IVA del precio manual. Ya pasa en la venta asistida.
+  3. `/v1/orders/create` no valida `_ivaManualOverride`, precios negativos ni descuentos, y confía en el `permitePrecioManual` del snapshot.
+  4. World Office divide el precio manual por el IVA (`worldOfficeDataMapper.js:429-431`); el resto del sistema lo trata como precio sin IVA.
+- **Decisión:**
+  - Front: editor por línea en el ticket del POS (precio base solo si `permitePrecioManual`, selector de IVA 0/5/8/19, Desc. %), con los mismos campos de la venta asistida. Una línea sin cambios se calcula igual que hoy.
+  - Back: subtotal con la misma prioridad de precio manual que el IVA; validación al crear (IVA manual ∈ {0,5,8,19}, precio ≥ 0, descuento 0-100 → 400 sin consumir consecutivo); permiso de precio manual leído del producto real de la empresa de la sesión; World Office con el precio manual sin IVA.
+  - La validación solo revisa el IVA elegido a mano, no el del producto: un producto con tarifa vieja sin override sigue como hoy. La venta asistida y el POS usan selector, así que no pueden mandar otro valor; el 400 cubre otros clientes y peticiones armadas a mano.
+- **No toca:** líneas sin cambios, `ivaCalcUnificado`, `IVA_PERSIST_CANONICAL`, pedidos viejos (sin backfill), permisos por rol, edición de pedidos ya creados, cupón del POS.
+- **Efecto visible:** los pedidos nuevos con precio manual guardan el subtotal correcto (distinto al de hoy). Avisar a los comercios que usan precio manual.
+- **Orden (módulo `orders`, un cambio a la vez):** verificación de clientes del endpoint → backend con pruebas y diff aprobado → front → prueba funcional en FLORECER con permiso.
+- **Número:** se reservó como D-507 el 19-oct sin commitear; otra sesión publicó D-507 (número de ticket de soporte, ticket 1243). Se renumera a D-536 el 21-oct en código, pruebas y artefactos.
+- **Estado (21-oct):** backend `af6e2925` y front commiteados, sin push ni despliegue.
+  - Pruebas: `npm run test:precio-manual-pos` (back) y `node --test tests/ventas/pos-linea-precio.test.js` (front, 15 casos), con los mismos casos de referencia en los dos repos. Regresión del back en verde.
+  - Build de producción del front sin errores. Gradientes y primarios prohibidos en `pos2` y la tirilla: 0 en origin, 0 con el cambio.
+  - Ajuste al diseño: las clases del editor usan el prefijo `lin-`, porque `lp-` contiene "p-" (trampa de `_reset.scss`).
+  - Falta: prueba funcional en FLORECER (escribe pedidos, requiere permiso), revisión visual a 1440 y 390 px, y despliegue (primero el backend).
+- [Propuesta](../openspec/changes/pos-editar-precio-iva/proposal.md) · [Diseño](../openspec/changes/pos-editar-precio-iva/design.md) · [Tareas](../openspec/changes/pos-editar-precio-iva/tasks.md)

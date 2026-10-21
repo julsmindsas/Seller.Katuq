@@ -80,6 +80,7 @@ import { DireccionEstructuradaComponent } from "./entrega/direccion-estructurada
 import { CustomerSectionComponent } from "./pos2/widgets/customer-section/customer-section.component";
 import { PosFacturacionComponent } from "./pos2/widgets/pos-facturacion/pos-facturacion.component";
 import { CartSummaryComponent } from "./pos2/widgets/cart-summary/cart-summary.component";
+import { PosLineaPrecioComponent } from "./pos2/widgets/pos-linea-precio/pos-linea-precio.component";
 import { PaymentSelectorComponent } from "./pos2/widgets/payment-selector/payment-selector.component";
 import {
   PosCheckoutService,
@@ -183,6 +184,7 @@ import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-im
     CustomerSectionComponent,
     PosFacturacionComponent,
     CartSummaryComponent,
+    PosLineaPrecioComponent,
     OrderHistoryTimelineComponent, // NUEVO: 2025-10-21 - Componente de timeline de historial
     PaymentSelectorComponent,
     ListProduccionComponent,
