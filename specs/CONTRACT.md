@@ -11511,7 +11511,7 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
     - 2.6 y 2.7: `verify-invoice`;
     - 2.11: `requestId` desde el front.
 
-## D-517 (2026-10-21) — Punto Verde Vidagas: eliminar en el carrito (ticket 1321) y pantallas de una sección en Favoritos (ticket 1322) — COMMITEADO, sin desplegar
+## D-517 (2026-10-21) — Punto Verde Vidagas: eliminar en el carrito (ticket 1321) y pantallas de una sección en Favoritos (ticket 1322) — PUBLICADO: front 2026.10.21.1 (ca4436ae)
 
 **1321: «no me deja eliminar el producto del combo».**
 - El botón de eliminar existía en cada producto del combo. La tabla del carrito mide unos 850–900 px y la tarjeta la recortaba (`overflow: hidden`). Con el menú lateral abierto se perdían Subtotal y Acciones, y con ellas el botón de eliminar y «Cerrar combo». Le pasaba a cualquier producto, no solo a los combos.
