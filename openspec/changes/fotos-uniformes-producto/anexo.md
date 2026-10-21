@@ -166,6 +166,7 @@ Además de `original` y `processed` (§B):
 | Dónde | Llave | Valores | Por defecto |
 |---|---|---|---|
 | `config/feature_flags` | `productPhotoUniformMode` | `off`, `shadow`, `on` | `off` (sin documento, otro valor o error) |
+| `config/feature_flags` | `productPhotoCopyMode` | `off`, `shadow`, `on` (fase 1b: lote, vista previa y `update_product_photos`) | `off` (sin documento, otro valor o error) |
 | `config/feature_flags` | `backgroundRemovalProvider` | `""`, `"opttia"` | `""` |
 | `config/feature_flags` | `backgroundRemovalUses` | lista de usos | `["productPhotos"]` |
 | `companies.featureFlags` | `productPhotoBackground` | booleano | apagada; exige `productPhotoUniform` |

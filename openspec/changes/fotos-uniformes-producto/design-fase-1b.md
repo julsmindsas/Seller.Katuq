@@ -47,6 +47,8 @@ En `batchRunner.uniformarProducto` (`batchRunner.js:71-161`), antes de leer la f
 | `shadow` | Igual que la vista previa: mide cuántas se podrían copiar y cuántas fallan (enlaces muertos). Resultado `would_copy` o el código de falla. Cero escrituras en Storage |
 | `on` | Copia (B1), después uniforma desde la copia y escribe el producto en la misma transacción de siempre (`batchStore.aplicarProducto`) |
 
+- **Desvío registrado (2026-10-21, corrector del bloque TX37-B09):** la fase 1b tiene su propio interruptor, `config/feature_flags.productPhotoCopyMode` (`off` | `shadow` | `on`; ausente o inválido = `off`, D-505), que también apaga la copia de `update_product_photos` (B4). En el lote vale el menor entre este interruptor y el modo del lote. Motivo: sin él, encender la fase 1 (5.3, 5.4) encendía también las descargas y las copias, sin la compuerta propia de 8.7 y sin forma de apagar solo 1b.
+
 **Datos de la foto (anexo §G.3):**
 - `original = { urls, path }` apunta a la **copia** (archivo propio): reprocesar y revertir siguen la regla de pertenencia sin excepción.
 - Llave nueva `copiedFrom = { kind: "link" | "unowned", urls?, path?, at, batchId }`: `urls` para el enlace, `path` para el archivo sin dueño. Sobrevive a la reversión (`fotoRevertida` conserva las demás llaves, `eligibility.js:166-169`).
