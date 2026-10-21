@@ -166,7 +166,8 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
   - *Estado (F530-B06):* parcial. Hecho: el lote lee `tiposPrecios` de la empresa del token y escribe como máximo una fila Público (`loaded`/`kept`/`skipped`), con `OFFER_KEPT`, `PRICE_SHADOWED_BY_PUBLIC_LIST` y aviso global si la lista falta o es ambigua; `importStoreProducts.oferta.test.js` y el write-set (M7, seo, `nuevo:false`, `paginaWeb`) en verde; upsert sin diff. Falta solo el caso de oferta de `wooProducts.test.js`, que se cierra con el lector de WooCommerce (B09, 14.13); al cerrarlo se marca [x].
   - *Estado (F530-B09):* cerrada. El caso de oferta de `wooProducts.test.js` ya está en verde: la oferta de Woo (`Sale price` con sus fechas) llega al lote como antes/ahora y se escribe en la fila Público (`importStoreWoo.integracion.test.js`).
 - [x] 14.6 Partición por (regular, oferta, IVA) (A4) en `separarPorPrecio` (`readers/comun.js`). **Éxito:** tallas con distinta oferta dan dos productos.
-- [ ] 14.7 **Diff aprobado (tienda).** «Nuevo» (N1):
+- [x] 14.7 **Diff aprobado (tienda).** «Nuevo» (N1):
+  - Estado: hecho en el backend (`fechaDeNovedad` + `esNuevo`, prueba `tests/sitios/fechaDeNovedad.test.js`). Pendiente de la fila de la tienda: proyección/select de TX-34 y orden `novedad` en `sites.js` (espera la fila de la tienda).
   - `nuevoProducto` con `exposicion.nuevo: false` y `metadata.migration.originCreatedAt`;
   - `fechaDeNovedad` en `utils/vitrinaProducto.js` y `esNuevo` con ella.
   - **Caracterización antes:** `tests/sitios/detalleComercialProducto.test.js` y `precioSelectorVariantes.test.js` en verde; una prueba nueva fija que un producto no migrado de 10 días sigue «Nuevo», y otra que un migrado leído solo con los campos del `select` de TX-34 D1 más `metadata.migration.migrationId` y `originCreatedAt` no sale «Nuevo».
