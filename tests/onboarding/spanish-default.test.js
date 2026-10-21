@@ -29,7 +29,7 @@ const auth = compact("../../src/app/shared/services/firebase/auth.service.ts");
 const translateModule = compact("../../src/app/shared/modules/translate.module.ts");
 
 assert.match(appModule, /defaultLanguage: 'es'/);
-assert.match(auth, /result\.lang = this\.setLanguage\(result\.lang\)/);
+assert.match(auth, /result\.lang = this\.setLanguage\(result\.lang, result\.visibleLanguages\)/);
 assert.match(auth, /SignOut\(\).*?this\.setLanguage\(DEFAULT_APP_LANGUAGE\)/);
 assert.doesNotMatch(translateModule, /TranslateModule\.forRoot/);
 

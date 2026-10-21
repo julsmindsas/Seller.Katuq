@@ -8,7 +8,12 @@ import { MaestroService } from '../../../../services/maestros/maestro.service';
 import {
   APP_LANGUAGES,
   AppLanguage,
+  AppLanguageCode,
   DEFAULT_APP_LANGUAGE,
+  DEFAULT_VISIBLE_LANGUAGES,
+  StoredAppLanguage,
+  idiomaParaGuardar,
+  idiomasVisibles,
   normalizeAppLanguage
 } from '../../../../utils/app-language.utils';
 
@@ -22,7 +27,10 @@ export class LanguagesComponent implements OnInit, OnDestroy {
 
   public language: boolean = false;
 
-  public languages: ReadonlyArray<AppLanguage> = APP_LANGUAGES;
+  // D-532: solo los idiomas visibles para este usuario (Deutsch (CH) nace oculto).
+  public languages: ReadonlyArray<AppLanguage> = APP_LANGUAGES.filter(l => DEFAULT_VISIBLE_LANGUAGES.includes(l.code));
+
+  private visibles: AppLanguageCode[] = [...DEFAULT_VISIBLE_LANGUAGES];
 
   public selectedLanguage: AppLanguage = { ...DEFAULT_APP_LANGUAGE };
 
@@ -43,21 +51,25 @@ export class LanguagesComponent implements OnInit, OnDestroy {
       this.UserLogged = null;
     }
 
-    this.selectedLanguage = normalizeAppLanguage(this.UserLogged?.lang);
+    // D-532: un idioma oculto se muestra en español sin reescribir users.lang.
+    this.visibles = idiomasVisibles(this.UserLogged);
+    this.languages = APP_LANGUAGES.filter(l => this.visibles.includes(l.code));
+    this.selectedLanguage = normalizeAppLanguage(this.UserLogged?.lang, this.visibles);
     this.translate.setDefaultLang(DEFAULT_APP_LANGUAGE.code);
     this.translate.use(this.selectedLanguage.code);
-    document.documentElement.lang = this.selectedLanguage.code;
+    document.documentElement.lang = this.selectedLanguage.htmlLang;
   }
 
   changeLanguage(lang: unknown) {
-    this.selectedLanguage = normalizeAppLanguage(lang);
+    this.selectedLanguage = normalizeAppLanguage(lang, this.visibles);
     this.translate.setDefaultLang(DEFAULT_APP_LANGUAGE.code);
     this.translate.use(this.selectedLanguage.code);
-    document.documentElement.lang = this.selectedLanguage.code;
-    this.guardarLenguaje(this.selectedLanguage);
+    document.documentElement.lang = this.selectedLanguage.htmlLang;
+    // D-532: users.lang conserva su forma de siempre, sin htmlLang.
+    this.guardarLenguaje(idiomaParaGuardar(this.selectedLanguage));
   }
 
-  async guardarLenguaje(lang: AppLanguage) {
+  async guardarLenguaje(lang: StoredAppLanguage) {
     if (!this.UserLogged) return;
     this.UserLogged.lang = lang;
 
