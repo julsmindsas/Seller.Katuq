@@ -10,17 +10,17 @@
   height: 90px;
   width: auto;
   border-radius: 16px;
-  border: 1px solid #ececf4;
+  border: 1px solid var(--ds-line);
 }
 
-.perfil-nombre { font-size: 18px; font-weight: 800; color: #211F3A; }
-.perfil-empresa { font-size: 14px; font-weight: 600; color: #5b5878; }
+.perfil-nombre { font-size: 18px; font-weight: 800; color: var(--ds-ink); }
+.perfil-empresa { font-size: 14px; font-weight: 600; color: var(--ds-body); }
 .perfil-rol {
   display: inline-block;
   padding: 3px 10px;
   border-radius: 20px;
-  background: #efe9ff;
-  color: #5F3FE0;
+  background: var(--ds-accent-soft);
+  color: var(--ds-accent-ink);
   font-size: 10.5px;
   font-weight: 800;
   letter-spacing: .4px;
@@ -28,7 +28,7 @@
 }
 
 .perfil-subir { margin: 0; }
-.perfil-linea { margin: 28px 0; border-color: #ececf4; opacity: 1; }
+.perfil-linea { margin: 28px 0; border-color: var(--ds-line); opacity: 1; }
 .perfil-ayuda { margin-bottom: 12px; }
 .perfil-acciones { display: flex; justify-content: flex-end; }
 
