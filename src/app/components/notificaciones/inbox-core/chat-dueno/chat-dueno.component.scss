@@ -54,7 +54,7 @@ $warn-soft: #FFF1DF;
   width: 30px;
   height: 30px;
   border-radius: 11px;
-  background: #fff;
+  background: var(--ds-surface);
   color: $accent !important;
   font-size: 16px !important;
 
@@ -110,12 +110,12 @@ $warn-soft: #FFF1DF;
 }
 
 .dueno-franja__btn--sec {
-  background: #fff;
-  border-color: #e4e2ef;
+  background: var(--ds-surface);
+  border-color: var(--ds-line-strong);
   color: $body !important;
 
   &:hover:not(:disabled) { background: $accent-soft; border-color: #d9cffb; color: $accent !important; }
-  &:disabled { background: #fff; color: $muted !important; }
+  &:disabled { background: var(--ds-surface); color: $muted !important; }
 }
 
 .dueno-franja__pasar {
