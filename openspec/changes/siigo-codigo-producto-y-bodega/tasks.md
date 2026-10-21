@@ -88,3 +88,53 @@ servicios.
 - [ ] 3.3 Actualizar D-504 en `specs/CONTRACT.md` y cerrar el ticket 1229 con
       la nota para el comercio: bodegas conectadas, qué falta de Medellín y el
       Excel de productos.
+
+## S. Seguridad
+
+- [x] S.1 Candado de empresa en la emisión de facturas (hallazgo de
+      planificación del 2026-10-21, bloque 1229-B01). `from-order` y
+      `from-order-async` solo tenían `auth` + `validateCompany`, que le cree al
+      header `company`: una sesión de un comercio podía emitir en el proveedor
+      (SIIGO) de otro y, con `siigoProductEquivalence` encendida, guardar
+      códigos SIIGO en sus productos. La vista previa ya usaba
+      `requireJwtTenant`. **Lo que S.1 cierra:** la empresa de la petición
+      queda atada a la del JWT. **Lo que NO cierra:** que el `orderId` sea de
+      esa empresa (ver S.2).
+      - `functions/middleware/candadoEmpresaFactura.js`, después de `auth` solo
+        en esas dos rutas (`routers/accounting.js`). Julsmind entra a cualquier
+        empresa (D-359).
+      - Interruptor global `invoiceTenantLock` en `config/feature_flags`
+        (D-505, catálogo de `services/platformFlags.js`): `off` | `shadow` |
+        `on`, **nace en `off`** (sin el campo, igual que hoy). `shadow` deja
+        pasar y anota `tenant_mismatch_shadow` en `accounting_invoice_errors`
+        (empresa del JWT, empresa pedida, ruta, `requestedOrderId` y huella
+        del usuario; sin correo). `on` responde 403 `TENANT_MISMATCH` o
+        `TENANT_NOT_IN_JWT` con `error`/`code` de `requireJwtTenant` más un
+        `message` en español para el comercio. Revisa también
+        `query.companyId` (lo leen `validateCompany` y el controlador). El modo
+        se lee con `interruptorSync`: la emisión no espera a Firestore.
+      - Ningún llamador interno usa esas rutas por HTTP con API key: la
+        herramienta MCP llama al manager en el mismo proceso y el front manda
+        el JWT con el header `company` de la sesión.
+      - Pruebas: `npm run test:candado-empresa-factura` (caracterización del
+        router antes y después, decisión en los tres modos y middleware).
+      - **Encenderlo es decisión de Daniel:** primero `shadow`
+        (`node scripts/platform-flags.js invoiceTenantLock shadow --execute`),
+        revisar los eventos y después `on`. Va antes de prender
+        `siigoProductEquivalence` en ALMACEN BOMBAS (2.5). La decisión D-XXX va
+        en el contrato con el bloque 1229-B05, junto con el requisito EARS del
+        candado (off/shadow/on, 403, Julsmind, API key) en
+        `specs/siigo-codigo-producto/spec.md`.
+      - Antes de pasar a `on`: el interceptor del front muestra el 403 con el
+        título fijo «Suscripción»; decidir si se mapea `TENANT_MISMATCH` a un
+        título propio (cambio de front aparte).
+- [ ] S.2 Comprobar que el pedido es de la empresa de la sesión al emitir y en
+      la vista previa. Hoy `AccountingManager.createInvoiceFromOrder` (y el
+      preview) leen `orders/{orderId}` por id sin comparar el `company` del
+      pedido con `companyId`: con S.1 en `on`, una sesión de A todavía puede
+      facturar en su propio SIIGO un pedido de B conociendo su docId, y deja en
+      ese pedido el lock y `facturacionElectronica` (B lo ve como facturado).
+      Hallazgo de la revisión de 1229-B01. Es un cambio de comportamiento en
+      facturación (módulo sensible): necesita propuesta, su propio interruptor
+      (nace en `off`, sombra primero) y aprobación de Daniel. Debe quedar
+      resuelto, o al menos en sombra sin desajustes, antes de 2.5.
