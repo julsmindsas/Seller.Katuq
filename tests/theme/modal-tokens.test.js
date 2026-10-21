@@ -3,7 +3,7 @@
 // D-502 F2c (ticket 1180, tarea 4.3, bloque TEMA-B12): _katuq-modal.scss, los cinco widgets de pago/cierre de
 // caja de POS2 y el modal Opinar sobre los tokens --ds-*. Solo presentación, solo .scss. Comprueba:
 //   1) claro idéntico: las líneas del CSS claro (con las variables --kc-*/--km-* resueltas) son iguales a las del
-//      commit c18c863b (fixture), en cada uno de los seis consumidores;
+//      commit 5a1982da (fixture), en cada uno de los seis consumidores;
 //   2) el oscuro: cada --km-* tiene su par oscuro y todos los pares son var(--ds-*) existentes; los juegos
 //      se emiten con :host-context(body.dark-only) (el modal cuelga del <body>);
 //   3) contraste en oscuro >= 4,5:1 de los textos y >= 3:1 del texto del botón sobre el relleno de acento;

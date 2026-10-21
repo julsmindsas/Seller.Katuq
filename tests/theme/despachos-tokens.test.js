@@ -1,7 +1,7 @@
 'use strict';
 
 // D-502 F3 (ticket 1180, tarea 4.4.3, bloque TEMA-B15): despachos sobre los tokens --ds-*. Solo .scss.
-// Comprueba contra el fixture de e74d73e3:
+// Comprueba contra el fixture de 5a1982da:
 //   1) claro idéntico (en tracking-details, var(--primary-color) vale #5F3FE0 = accent, por lo que se compara resuelto);
 //   2) sin fondos blancos literales ni #5F3FE0 / var(--primary-color) sueltos como fondo, color o borde;
 //   3) el modal de seguimiento tiene par oscuro con tokens que existen en los dos temas;
@@ -15,7 +15,7 @@ const { compararLineas, leerTokens } = require('./comparar-claro');
 const { ARCHIVOS, compilar, lineasClaro } = require('./despachos-claro');
 
 const RAIZ = path.resolve(__dirname, '../..');
-const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'despachos-claro-e74d73e3.json'), 'utf8'));
+const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'despachos-claro-5a1982da.json'), 'utf8'));
 const tokensCss = compilar('src/app/shared/styles/_theme-tokens.scss');
 const claros = leerTokens(tokensCss, 'claro');
 const oscuros = leerTokens(tokensCss, 'oscuro');
@@ -23,7 +23,7 @@ const fuente = rel => fs.readFileSync(path.join(RAIZ, rel), 'utf8');
 const TRACKING = ARCHIVOS.find(f => /tracking-details/.test(f));
 const TECHO = { 'tracking-details-modal.component.scss': [4, 0] }; // medido antes: 4 gradientes, 0 primarios
 
-test('1) claro idéntico al de e74d73e3', () => {
+test('1) claro idéntico al de 5a1982da', () => {
   for (const f of ARCHIVOS) {
     const base = fixture.archivos[f].map(l => l.replace(/var\(--primary-color\)/g, '#5f3fe0'));
     const actual = lineasClaro(f).map(l => l.replace(/var\(--primary-color\)/g, '#5f3fe0'));

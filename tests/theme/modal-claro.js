@@ -7,10 +7,11 @@
 // se resuelven en los dos lados antes de comparar: cada --kc-*/--km-* definida en un selector claro (:host)
 // se sustituye por su valor en todos los usos (hasta 6 pasadas, por las variables que apuntan a otras) y se
 // quitan sus definiciones. Después se normaliza igual que comparar-claro (tokens --ds-* del árbol, hex,
-// sin reglas oscuras) y se compara. La referencia del antes es un fixture con las líneas de commit c18c863b.
+// sin reglas oscuras) y se compara. La referencia del antes es un fixture con las líneas de commit 5a1982da.
 //
+// Foto vigente: la de D-520 (5a1982da); se generó con --base HEAD tras comprobar que el claro del árbol es el de D-520.
 // Uso para regenerar el fixture (solo si cambia a propósito el claro, con visto bueno de Daniel):
-//   node tests/theme/modal-claro.js --base c18c863b --tmp <scratchpad>
+//   node tests/theme/modal-claro.js --base 5a1982da --tmp <scratchpad>
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -30,7 +31,7 @@ const ARCHIVOS = [
   W + 'cash-closing-history/cash-closing-history.component.scss',
   'src/app/shared/components/opinar-modal/opinar-modal.component.scss',
 ];
-const FIXTURE = path.join(__dirname, 'fixtures', 'modal-claro-c18c863b.json');
+const FIXTURE = path.join(__dirname, 'fixtures', 'modal-claro-5a1982da.json');
 const TOKENS_REL = 'src/app/shared/styles/_theme-tokens.scss';
 const PROPIAS = /^--(kc|km)-/;
 

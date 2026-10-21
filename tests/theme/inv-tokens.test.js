@@ -1,7 +1,7 @@
 'use strict';
 
 // D-502 F3 (ticket 1180, tarea 4.4.5, bloque TEMA-B17): inventario y bodegas sobre los tokens --ds-*. Solo .scss.
-// Contra el fixture de 97fac7ff:
+// Contra el fixture de 5a1982da:
 //   1) claro idéntico;  2) sin fondos blancos literales ni acento literal en fondo o borde;
 //   3) el catálogo tiene el par oscuro de --kc-* con tokens que existen en los dos temas;
 //   4) el oscuro de bodegas usa solo tokens (cierra el 1,75:1 de las etiquetas #90caf9);
@@ -15,14 +15,14 @@ const { compararLineas, leerTokens } = require('./comparar-claro');
 const { ARCHIVOS, compilar, lineasClaro } = require('./inv-claro');
 
 const RAIZ = path.resolve(__dirname, '../..');
-const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'inv-claro-97fac7ff.json'), 'utf8'));
+const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'inv-claro-5a1982da.json'), 'utf8'));
 const tokensCss = compilar('src/app/shared/styles/_theme-tokens.scss');
 const claros = leerTokens(tokensCss, 'claro');
 const oscuros = leerTokens(tokensCss, 'oscuro');
 const fuente = rel => fs.readFileSync(path.join(RAIZ, rel), 'utf8');
 const P = 'src/app/components/inventarios/';
 
-test('1) claro idéntico al de 97fac7ff', () => {
+test('1) claro idéntico al de 5a1982da', () => {
   for (const f of ARCHIVOS) {
     const d = compararLineas(fixture.archivos[f], lineasClaro(f));
     assert.deepEqual([f, d.soloBase.slice(0, 5), d.soloActual.slice(0, 5)], [f, [], []]);

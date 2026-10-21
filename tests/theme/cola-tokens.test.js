@@ -3,7 +3,7 @@
 // D-502 F3 (ticket 1180, tarea 4.4, bloque TEMA-B19): cola «todas las paginas», lote 1. Solo .scss.
 // Pantallas con marco en modulos no sensibles: formas-entrega, dropshipping, picking-packing (solo presentacion),
 // usuarios, rol, notificaciones, crm, prospect-manager, produccion, tiempos-entrega, dashboard (sin home) y productos
-// (sin fotos-uniformes, que tiene otro cambio en curso). Contra el fixture de 977e9ba3:
+// (sin fotos-uniformes, que tiene otro cambio en curso). Contra el fixture de 5a1982da:
 //   1) claro identico;  2) sin fondos blancos literales (salvo las dos hojas con texto oscuro literal propio);
 //   3) todo var(--ds-*) existe en los dos temas;  4) gradientes y primarios prohibidos no suben (eran 0 y 0);
 //   5) el priorizador estatico (cola-paginas.js) mide, ordena y deja fuera las pantallas sin menu.
@@ -17,7 +17,7 @@ const { ARCHIVOS, compilar, lineasClaro } = require('./cola-claro');
 const { medir, cola, porModulo, SIEMPRE_CLARO } = require('./cola-paginas');
 
 const RAIZ = path.resolve(__dirname, '../..');
-const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'cola-claro-977e9ba3.json'), 'utf8'));
+const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'cola-claro-5a1982da.json'), 'utf8'));
 const tokensCss = compilar('src/app/shared/styles/_theme-tokens.scss');
 const claros = leerTokens(tokensCss, 'claro');
 const oscuros = leerTokens(tokensCss, 'oscuro');
@@ -28,7 +28,7 @@ const BLANCOS_CON_TEXTO_PROPIO = new Set([
   'src/app/components/dashboard/legacy-dashboard.component.scss',
 ]);
 
-test('1) claro idéntico al de 977e9ba3', () => {
+test('1) claro idéntico al de 5a1982da', () => {
   assert.ok(ARCHIVOS.length >= 40);
   for (const f of ARCHIVOS) {
     assert.ok(fixture.archivos[f], `${f}: falta en el fixture`);

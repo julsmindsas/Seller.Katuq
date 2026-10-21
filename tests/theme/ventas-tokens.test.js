@@ -1,7 +1,7 @@
 'use strict';
 
 // D-502 F3 (ticket 1180, tarea 4.4.2, bloque TEMA-B14): crear venta y venta asistida sobre los tokens --ds-*.
-// Solo presentación, solo .scss. Comprueba contra el fixture de 31bf8dbb:
+// Solo presentación, solo .scss. Comprueba contra el fixture de 5a1982da:
 //   1) claro idéntico (normalizado como comparar-claro); lo único nuevo es --primary-ink, con el valor claro de --primary-color;
 //   2) sin fondos blancos literales (los gradientes con #fff no cuentan: no son fondo plano);
 //   3) las variables propias (:root / :host) tienen su par oscuro con var(--ds-*) existentes en los dos temas;
@@ -16,25 +16,22 @@ const { compararLineas, leerTokens } = require('./comparar-claro');
 const { ARCHIVOS, compilar, lineasClaro } = require('./ventas-claro');
 
 const RAIZ = path.resolve(__dirname, '../..');
-const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'ventas-claro-31bf8dbb.json'), 'utf8'));
+const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'ventas-claro-5a1982da.json'), 'utf8'));
 const tokensCss = compilar('src/app/shared/styles/_theme-tokens.scss');
 const claros = leerTokens(tokensCss, 'claro');
 const oscuros = leerTokens(tokensCss, 'oscuro');
 const fuente = rel => fs.readFileSync(path.join(RAIZ, rel), 'utf8');
 const CON_RAIZ = ARCHIVOS.filter(f => /crear-ventas\.component|checkout\.component|ecomerce-products/.test(f));
-const TECHO = { // gradientes y primarios prohibidos de 31bf8dbb
+const TECHO = { // gradientes y primarios prohibidos de 5a1982da
   'venta-asistida-unica.component.scss': [2, 0],
   'ecomerce-products.component.scss': [2, 2],
 };
 
-test('1) claro idéntico al de 31bf8dbb', () => {
+test('1) claro idéntico al de 5a1982da', () => {
+  // La foto de D-520 ya trae --primary-ink (el commit de D-520 lo definía en :root), así que el claro es idéntico sin ajustes.
   for (const f of ARCHIVOS) {
-    const base = fixture.archivos[f].map(l => l.replace(/\{ color: var\(--primary-color/g, "{ color: var(--primary-ink"));
-    const actual = lineasClaro(f);
-    const d = compararLineas(base, actual);
-    const nuevas = d.soloActual.filter(l => !/^(:root|:host) \{ --primary-ink: #6c4ce0 \}$/.test(l));
-    assert.deepEqual([f, d.soloBase.slice(0, 5), nuevas.slice(0, 5)], [f, [], []]);
-    assert.ok(d.soloActual.length === (CON_RAIZ.includes(f) ? 1 : 0), `${f}: líneas nuevas ${d.soloActual.length}`);
+    const d = compararLineas(fixture.archivos[f], lineasClaro(f));
+    assert.deepEqual([f, d.soloBase.slice(0, 5), d.soloActual.slice(0, 5)], [f, [], []]);
   }
 });
 

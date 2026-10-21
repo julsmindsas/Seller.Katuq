@@ -1,7 +1,7 @@
 'use strict';
 
 // D-502 F3 (ticket 1180, tarea 4.4.4, bloque TEMA-B16): la pantalla POS (pos2, sin los widgets de pago de B12)
-// sobre los tokens --ds-*. Solo .scss. Comprueba contra el fixture de 22085d8e:
+// sobre los tokens --ds-*. Solo .scss. Comprueba contra el fixture de 5a1982da:
 //   1) claro idéntico;  2) sin fondos blancos literales ni acento literal en fondo o borde;
 //   3) cada raíz con kc-tokens tiene su par oscuro y los tokens existen en los dos temas;
 //   4) gradientes y primarios prohibidos no suben (eran 0 y 0);  5) la calculadora conserva el literal que darken() exige.
@@ -14,14 +14,14 @@ const { compararLineas, leerTokens } = require('./comparar-claro');
 const { ARCHIVOS, compilar, lineasClaro } = require('./pos-claro');
 
 const RAIZ = path.resolve(__dirname, '../..');
-const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'pos-claro-22085d8e.json'), 'utf8'));
+const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'pos-claro-5a1982da.json'), 'utf8'));
 const tokensCss = compilar('src/app/shared/styles/_theme-tokens.scss');
 const claros = leerTokens(tokensCss, 'claro');
 const oscuros = leerTokens(tokensCss, 'oscuro');
 const fuente = rel => fs.readFileSync(path.join(RAIZ, rel), 'utf8');
 const PARCIAL = 'src/app/components/ventas/pos2/_pos-oscuro.scss';
 
-test('1) claro idéntico al de 22085d8e', () => {
+test('1) claro idéntico al de 5a1982da', () => {
   for (const f of ARCHIVOS) {
     const d = compararLineas(fixture.archivos[f], lineasClaro(f));
     assert.deepEqual([f, d.soloBase.slice(0, 5), d.soloActual.slice(0, 5)], [f, [], []]);
