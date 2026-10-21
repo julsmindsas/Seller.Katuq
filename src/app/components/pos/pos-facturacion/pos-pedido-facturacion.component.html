@@ -9,7 +9,7 @@
         <div class="col">
           <!-- (change)="generarFacturacionElectronica()" -->
           <input type="checkbox" (click)="generarFacturaElectronica($event)">
-          Generar Facturación Electronica
+          Generar Facturación Electrónica
 
         </div>
       </div>
@@ -24,7 +24,7 @@
           <tr>
             <th></th>
             <th>Referencia</th>
-            <th>Nombres/Razon Social</th>
+            <th>Nombres/Razón social</th>
             <th>Tipo Documento</th>
             <th>Documento</th>
             <th>Dirección</th>
@@ -70,7 +70,7 @@
   </p-tabPanel>
   <p-tabPanel header="Crear Datos de Facturación">
     <input [(ngModel)]="facturacionElectronica" type="checkbox" (change)="datosFacElect($event)" />
-    <label class="form-label" for="razon_social">Los datos de facturacion electronica son iguales a
+    <label class="form-label" for="razon_social">Los datos de facturación electrónica son iguales a
       los del cliente</label>
 
     <div class="row">
@@ -177,7 +177,7 @@
       </div>
       <div class="col-md-4 mb-3">
         <button class="btn btn-primary" (click)="redirectToPostalCode()">
-          Conoce Tu Codigo Postal
+          Conoce tu código postal
         </button>
       </div>
     </div>
@@ -297,7 +297,7 @@
         </div>
         <div class="col-md-4 mb-3">
           <button class="btn btn-primary" (click)="redirectToPostalCode()">
-            Conoce Tu Codigo Postal
+            Conoce tu código postal
           </button>
         </div>
       </div>
