@@ -281,18 +281,20 @@ Ninguna tarea de esta parte empieza antes de 0.6. Las marcadas **[sensible]** es
 
 ## 8. Repo kai (`adk_agent/channels/whatsapp`), D23
 
-- [ ] 8.1 Prueba primero (pytest): sin `capacidades`, `construir_instrucciones` devuelve exactamente el texto de hoy, y las herramientas son las mismas de hoy. El golden se toma del commit que corre en producción (no de 25ddfda: `feat/claude-agent-sdk` no está en `origin/main`). Éxito: verde contra ese commit. Dep: 0.6 y la respuesta a la pregunta 15 (rama y commit de producción).
-- [ ] 8.2 `adk_agent/endpoints/whatsapp_bot_endpoint.py` (≈63-140) valida y recorta los campos nuevos (`comercio.capacidades` como tres booleanos, `comercio.politicas` con tope de 1.500 caracteres por página, `cotizacionesRecientes` con tope de 3 y de largo por campo), como ya hace con `formasPago`. `pipeline.py` y la llamada a `construir_agente` los aceptan. Ausentes, se comporta igual. Prueba: cuerpos con campos de más, largos o de otro tipo se recortan o se ignoran. Éxito: 8.1 en verde. Dep: 8.1.
-- [ ] 8.3 Con `pedidoDirecto`:
+- [x] 8.1 Prueba primero (pytest): sin `capacidades`, `construir_instrucciones` devuelve exactamente el texto de hoy, y las herramientas son las mismas de hoy. El golden se toma del commit que corre en producción (no de 25ddfda: `feat/claude-agent-sdk` no está en `origin/main`). Éxito: verde contra ese commit. Dep: 0.6 y la respuesta a la pregunta 15 (rama y commit de producción).
+- [x] 8.2 `adk_agent/endpoints/whatsapp_bot_endpoint.py` (≈63-140) valida y recorta los campos nuevos (`comercio.capacidades` como tres booleanos, `comercio.politicas` con tope de 1.500 caracteres por página, `cotizacionesRecientes` con tope de 3 y de largo por campo), como ya hace con `formasPago`. `pipeline.py` y la llamada a `construir_agente` los aceptan. Ausentes, se comporta igual. Prueba: cuerpos con campos de más, largos o de otro tipo se recortan o se ignoran. Éxito: 8.1 en verde. Dep: 8.1.
+- [x] 8.3 Con `pedidoDirecto`:
       - reglas 3 y de cierre (`agent.py:1088-1090`, :1169), docstring de `cerrar_pedido` (:383) y `bloque_pagos` (:886-897) sin «un asesor lo confirma» ni «el pago se coordina con el asesor»;
       - «no cobras, no pides datos de tarjeta» y «no aplicas descuentos» se mantienen;
       - pasada la reserva: «armarlo otra vez» (D14).
 
       Prueba: golden por capacidad. Dep: 8.2.
-- [ ] 8.4 Con `atencion`: regla 3 (:1088-1090) con «informas el tiempo de entrega publicado, sin prometer fecha» (D17), regla 5 informativa (:1098-1101), bloque de políticas como datos, bloque de cotizaciones recientes y docstring de `pasar_a_un_asesor` (:763). Prueba: golden por capacidad, más la prueba de la revisión privada. Dep: 8.2, 0.7.
-- [ ] 8.5 Con `agenda`: herramienta `pedir_cita(motivo, fecha_preferida)` que solo anota `pedir_agenda`, y su salida en `pipeline.py` (:268). Prueba: la herramienta no está sin la capacidad. Dep: 8.2.
-- [ ] 8.6 La lista blanca MCP (`agent.py:33-48`) no cambia. Prueba que falla si aparece `get_appointments`, `get_orders` o `search_orders`. [P]
+- [x] 8.4 Con `atencion`: regla 3 (:1088-1090) con «informas el tiempo de entrega publicado, sin prometer fecha» (D17), regla 5 informativa (:1098-1101), bloque de políticas como datos, bloque de cotizaciones recientes y docstring de `pasar_a_un_asesor` (:763). Prueba: golden por capacidad, más la prueba de la revisión privada. Dep: 8.2, 0.7.
+- [x] 8.5 Con `agenda`: herramienta `pedir_cita(motivo, fecha_preferida)` que solo anota `pedir_agenda`, y su salida en `pipeline.py` (:268). Prueba: la herramienta no está sin la capacidad. Dep: 8.2.
+- [x] 8.6 La lista blanca MCP (`agent.py:33-48`) no cambia. Prueba que falla si aparece `get_appointments`, `get_orders` o `search_orders`. [P]
 - [ ] 8.7 Commit en la rama que defina Daniel (pregunta 15). Despliegue por Daniel con `sudo systemctl restart kai-adk`, **antes** del backend: sin `capacidades` no cambia nada. Éxito: un turno real de ALMARA o FLORECER con las banderas apagadas responde igual. Dep: 8.1 a 8.6.
+
+> Nota de avance, bloque F440-B10 (repo `wt-kai-tickets-web`, rama `feature/tickets-web`): 8.1 a 8.6 hechas y probadas con `adk_agent/tests/test_whatsapp_capacidades.py` (17 casos, sin red; no hay pytest instalado en la máquina, corre también como script). 8.1: el golden `tests/golden/whatsapp_instrucciones_base.json` se tomó del commit base de la rama (0317715), NO del que corre en producción; antes del despliegue hay que regenerarlo contra producción (instrucción en `tests/golden/_generar_whatsapp_golden.py`). 8.7 queda abierta: el commit está hecho, falta el despliegue de Daniel (`sudo systemctl restart kai-adk`, antes del backend) y la prueba real con ALMARA o FLORECER. El tono de Mi marca (pregunta 9) entra como `comercio.tono`, tope de 300 caracteres.
 - [ ] 8.8 Backend `services/whatsappBotClient.js` (≈33-60): manda `capacidades`, `politicas` y `cotizacionesRecientes` solo con su bandera, y lee `pedirAgenda`. Prueba: con las banderas apagadas el cuerpo enviado es idéntico al de hoy. Dep: 8.2, 5.4 y 8.7 (kai desplegado antes de que el backend mande algo nuevo).
 
 ## 9. Pago: enlace, confirmación y recordatorio (D10 a D14)
