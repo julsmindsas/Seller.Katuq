@@ -30,6 +30,12 @@ El valor claro de cada token es el hex que tenía la variable, así que el claro
 - **Interpolaciones `#{$cfg-*}`.** Solo van en `--kc-*` y dejan pasar el `var()` intacto. Para B08-B10: `--kc-accent-ink: #{$cfg-accent-hover}` (`integrations.component.scss:1673`) es un acento de texto que apunta al relleno. En oscuro el hover de sus enlaces da 2,04:1 y debe pasar a `$cfg-accent-ink`. Ya pasaba antes de F2a.
 - **Compuerta.** Al oscurecer la base, en oscuro empeoran las reglas de los consumidores que tienen un fondo claro literal con texto de token: 42 reglas en 25 archivos, entre ellas `borradores-venta`, la agenda y especificaciones. También empeora el texto literal oscuro sin fondo propio, como `bodegas .texto-celda`, Tipos de cliente y los alias de inventario: 308 reglas en 62 archivos. **4.1.4 no se publica sola:** sale en el mismo release que los consumidores TEMA-B08 a B10 y B17, y solo si el barrido `--todas` no empeora frente a su línea base. La prueba fija un techo por archivo a las 42 reglas, así que ese techo no puede subir.
 
+## Preguntas abiertas de TEMA-B08 (integrations)
+
+- **Token de texto fuerte (`--ds-muted-strong`) y paleta slate heredada:** quedan en literal `.dk-btn--danger-ghost`, el `.form-control` del grupo de entrada, el `.btn-secondary` del pie y `.wc-webhook-box__url` (4 blancos con texto oscuro literal).
+- **Fondo del modal (`--kc-canvas`, `#f6f5fb`):** no existe token con ese valor claro. Las reglas con `--kc-canvas` y texto `--kc-ink` (campos, upload, `.dk-batch`, pasos) se ven claras con texto claro en oscuro hasta ampliar la tabla. Ídem hovers/seleccionados del asistente DIAN (`#f7f5fe`, `#f2fbf6`, `#e4dcfc`) y `.dk-done`.
+- **`--kc-accent-ink`** pasa a `$cfg-accent-ink` (lo manda este documento): en claro el hover de enlaces del modal pasa de `#4a2fc0` a `#5F3FE0`.
+
 ## Write-set
 
 `_config-pagina.scss`, las líneas de alias de los dos `.scss` de inventario, `tests/theme/config-pagina-tokens.test.js` con su referencia `tests/theme/fixtures/config-pagina-claro-4ac9a459.css`, `theme-tokens.test.js` con el hex anterior fijo, la línea `test:theme` y estos documentos. Las pruebas están en `design-pruebas.md` (Fase 2a). **Reversa:** revertir los commits.

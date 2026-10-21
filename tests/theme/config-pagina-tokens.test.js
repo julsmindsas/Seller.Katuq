@@ -75,20 +75,9 @@ const PANTALLAS_OCASIONES = {
 
 // Compuerta (6): reglas de consumidores con fondo claro literal y texto con token, por archivo, medidas el
 // 2026-10-21 sobre el árbol de F2a (42 en 25 archivos). Solo pueden bajar: al migrar cada pantalla
-// (TEMA-B08 a B10 y B17) se baja su número aquí.
+// (TEMA-B08 a B10 y B17) se baja su número aquí. TEMA-B08 (agenda, billing, cotizaciones, ecomerce,
+// empresas, integrations) los dejó en 0: ya no figuran (42 -> 19 en 13 archivos).
 const TECHO_FONDO_CLARO_TEXTO_TOKEN = {
-  'src/app/components/agenda/cita-form/cita-form.component.scss': 2,
-  'src/app/components/agenda/cita-panel/cita-panel.component.scss': 2,
-  'src/app/components/agenda/config/agenda-config.component.scss': 3,
-  'src/app/components/agenda/pagina/agenda-page.component.scss': 4,
-  'src/app/components/billing/billing.component.scss': 2,
-  'src/app/components/cotizaciones/catalogos-link/detalle/catalogo-link-detalle.component.scss': 1,
-  'src/app/components/ecomerce/categorias/categoria-atributos/categoria-atributos.component.scss': 2,
-  'src/app/components/ecomerce/categorias/list/list.component.scss': 2,
-  'src/app/components/empresas/crearEmpresa/crear-empresa/crear-empresa.component.scss': 2,
-  'src/app/components/integrations/facturacion/facturacion-hub.component.scss': 1,
-  'src/app/components/integrations/messaging-lines/messaging-lines.component.scss': 1,
-  'src/app/components/integrations/siigo-config/siigo-config.component.scss': 1,
   'src/app/components/inventarios/historial-movimientos/historial-movimientos.component.scss': 1,
   'src/app/components/inventarios/recepcion-mercancia/recepcion-mercancia.component.scss': 1,
   'src/app/components/inventarios/traslados/traslados.component.scss': 2,
@@ -494,7 +483,7 @@ test('6) compuerta: las reglas con fondo claro literal y texto con token no sube
     if (n > techo) fallos.push(`${rel}: ${n} > techo ${techo}`);
   }
   assert.deepEqual(fallos, []);
-  assert.ok(total <= 42, `total ${total}`);
+  assert.ok(total <= 19, `total ${total}`);
 });
 
 module.exports = { usosIncompatibles, revisarOscuro, fondoClaroConTextoToken };
