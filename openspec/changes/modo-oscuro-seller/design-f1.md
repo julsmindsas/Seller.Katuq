@@ -100,9 +100,17 @@ Nuevo `src/assets/scss/theme-katuq-dark.scss`, que junta cuatro piezas en este o
 
 `theme-katuq-dark.scss` conserva `.backColorSwitch` y `.bg-swayp` del oscuro actual.
 
+**Implementación (bloque TEMA-B06, 2026-10-21).** Tres ajustes sobre este punto, que salen de su propio criterio («los tamaños no cambian al alternar»):
+
+- **Orden real:** lara-dark-purple → `primeng-overrides.scss` → `.backColorSwitch`/`.bg-swayp` → `_primeng-katuq-base.scss` → `_primeng-dark.scss`. Es la misma posición del claro, donde el bloque va después de `primeng-overrides`. Con la base antes, se invertía la cascada entre reglas de igual especificidad (`.p-component` y `[class*="p-"]`, entre otras): en celular los campos, botones y celdas bajaban de `0.7rem` a `0.65rem`.
+- **Paridad de geometría:** lara-dark-purple difiere de lara-light-blue en 20 declaraciones (bordes y esquinas del paginador, bordes de los encabezados de tabla, mensajes en línea y el peso del título del calendario). `_primeng-dark.scss` les devuelve el valor del claro.
+- **Superficies, explícitas y generadas:** lara escribe sus colores a mano (azul marino `#071426`/`#040d19`/`#0b213f`/`#091a32`/`#233752` y el lila `#C4B5FD`). `_primeng-dark.scss` lleva un override por regla, con el mismo selector y solo color, para los componentes que usa la app. La región la escribe `tests/theme/primeng-dark-generar.js`, que documenta los roles, y la prueba exige que coincida. Las variables `--surface-*` y `--text-color*` de lara que usa la app apuntan a tokens en `body.dark-only`.
+- **Revisión del bloque:** las opciones de `p-selectButton` y `p-toggleButton` son `div.p-button` sin severidad y el primario (`.p-button:not(…)`, 0,10,0) les ganaba a la región; `_primeng-dark.scss` las repite con la misma cadena `:not` delante para que la opción marcada (`accent`) se distinga de la no marcada (`surface`). La lista de componentes del generador suma `p-toggleButton`, `p-avatar`, `p-organizationChart`, `p-inputNumber`, `p-message` y `p-toast`, y la prueba la contrasta con las etiquetas de las plantillas.
+- **Pendiente de ratificación de Daniel:** el orden real y las dos piezas de arriba (paridad y región generada) cambian el texto aprobado de este punto.
+
 **Asimetría declarada (valor por defecto 8).** En claro, el botón PrimeNG sigue en `#8b5cf6` (blanco encima: 4,23:1) hasta la propuesta de `_katuq-tokens.scss`. Cambiarlo aquí rompería el criterio 4. En oscuro va en `#5F3FE0` (6,41:1).
 
-En `angular.json`, el bundle `md-dark-deeppurple` se cambia por `katuq-dark` (sin hash; lo cubre el `no-cache` de `firebase.json`). Se borra `theme-md-dark-deeppurple.scss` y se cambia la constante del servicio.
+En `angular.json`, el bundle `md-dark-deeppurple` se cambia por `katuq-dark` (sin hash; lo cubre el `no-cache` de `firebase.json`, que además redirige `/md-dark-deeppurple.css` a `/katuq-dark.css` con 302 para las sesiones abiertas antes de publicar). Se borra `theme-md-dark-deeppurple.scss` y se cambia la constante del servicio.
 
 ## 5. Write-set de F1
 
@@ -114,6 +122,7 @@ En `angular.json`, el bundle `md-dark-deeppurple` se cambia por `katuq-dark` (si
 - La entrada del bundle en `angular.json` y la constante de `theme-mode.service.ts`.
 - `tests/theme/theme-tokens.test.js` (nuevo) y la línea `test:theme` de `package.json`.
 - Se borra `theme-md-dark-deeppurple.scss`.
+- 3.7 (bloque TEMA-B06): `tests/theme/primeng-dark-generar.js` (escribe la región de superficies de `_primeng-dark.scss`), `tests/theme/primeng-dark.test.js` (en `test:theme`) y `tests/theme/theme-mode.test.js:46` (`katuq-dark.css`). `firebase.json` suma solo el redirect 302 del nombre viejo (revisión del bloque).
 
 ## 6. Pruebas de F1
 

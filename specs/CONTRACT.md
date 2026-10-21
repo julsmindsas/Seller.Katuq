@@ -1346,6 +1346,29 @@ Orden = prioridad. La spec piloto siempre encabeza.
 
 > Resumen breve de cada sesión: qué hicimos, qué queda. Evita perder hilo.
 
+### 2026-10-21 — D-502 F1: implementada, sin publicar (ticket 1180, cd CCNcDB3JQKPTb8XtYLuK, bloques TEMA-B01 a TEMA-B06)
+- **Hecho, en `feature/tickets-web` y sin desplegar:**
+  - tokens `--ds-*` en `_theme-tokens.scss` (3.1 y 3.2);
+  - `dark-mode.scss` sobre los tokens: variables, la familia del azul (169) y los siete grises (3.3 a 3.5);
+  - sidebar, header y toasts en `var(--ds-*)` (3.6);
+  - PrimeNG oscuro `katuq-dark` sobre lara-dark-purple (3.7): `_primeng-katuq-base.scss` en la misma posición en los dos temas, `_primeng-dark.scss`, bundle `katuq-dark` en `angular.json`, `BUNDLE_OSCURO` y `theme-md-dark-deeppurple.scss` borrado. En claro, el botón PrimeNG sigue en `#8b5cf6` (valor por defecto 8).
+- **Desvío registrado en 3.7:** el orden de `design-f1.md` §4 cambiaba los tamaños en celular. `_primeng-katuq-base` va después de `primeng-overrides`, como en el claro, y `_primeng-dark` iguala las 20 declaraciones de geometría en que lara-dark difiere de lara-light. Las superficies de lara (azul marino y lila) se pisan regla por regla en una región generada por `tests/theme/primeng-dark-generar.js`. Daniel debe ratificar el desvío y esas dos piezas: la aprobación en bloque no cubre desvíos.
+- **Correcciones de la revisión de 3.7:** las opciones de `p-selectButton` y `p-toggleButton` (div.p-button sin severidad) quedaban todas en `accent` porque el primario de 10 clases les ganaba por especificidad; ahora la marcada se distingue. El generador suma `p-toggleButton`, `p-avatar`, `p-organizationChart`, `p-inputNumber`, `p-message` y `p-toast`, que conservaban el azul marino de lara. `firebase.json` redirige `/md-dark-deeppurple.css` a `/katuq-dark.css` (302) para las sesiones abiertas antes de publicar.
+- **Pruebas:**
+  - `npm run test:theme`: 115 de 115 (suma `primeng-dark.test.js`, 19);
+  - `comparar-claro.js` da «claro idéntico» en `theme-lara-light-blue.scss` (base 35717c33) y, en los bloques anteriores, en `src/styles.scss`;
+  - `sass` compila `theme-katuq-dark.scss`;
+  - `tsc` sin errores (con candado);
+  - conteos sin subir.
+  - Deuda medida de rellenos con `var(--primary-color)`: 42 en 16 archivos (detalle en 3.9 de `tasks.md`).
+- **Pendiente, sin lo cual F1 no se publica ni se cierra:**
+  - el build sin errores, con `katuq-dark.css` en `dist/cuba`;
+  - la línea base nueva de 0.2;
+  - la auditoría sobre el build: `f1RellenosPrimarios`, `f1TamanosPrimeNG`, `f1SinAzulHeredado`, axe en oscuro del marco y de Inicio, y los toasts;
+  - las capturas de terceros (3.8), con su base tomada sobre el build de F0;
+  - la revisión de Daniel, que incluye los puntos abiertos de 3.4 (rellenos sin texto), 3.5 (textos grises, bordes de control y capas) y 3.8 (ECharts y CKEditor en lugar de ApexCharts, Quill y FullCalendar).
+- Por la pregunta 2, F1 sale en el mismo release que D-516 y D-519 o después. El ticket sigue abierto; el comentario de avance va cuando se publique. Sin push ni despliegue.
+
 ### 2026-10-21 — D-504 y D-533: ticket 1229 SIIGO de ALMACEN BOMBAS (cd nF3GLH3F2sZGnKsqNODM), bloques 1229-B01 a 1229-B05
 - D-504 pasa a APROBADA (Daniel, 21-oct, en bloque) y EN PRODUCCIÓN con `siigoProductEquivalence` apagada (nace apagada; no se releyó Firestore): backend ee5ee2e7 y front 2026.10.21.2. Los desvíos (bandera por comercio, `stock_control` solo en servicios y la vista previa entera detrás de la bandera, con cambio de front) quedan en `design.md`.
 - D-533 (candado de emisión) queda como PROPUESTA commiteada y apagada: no estaba en lo aprobado en bloque y Daniel la ratifica antes de 3.1.

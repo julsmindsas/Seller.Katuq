@@ -16,7 +16,7 @@
 - **`tests/theme/conteos.test.js`.**
   - Gradientes y primarios prohibidos no suben. Línea base del 2026-10-18 (gradientes / primarios): `dark-mode.scss` 1 / 0, `styles.scss` 2 / 10, `sidebar.component.scss` 2 / 0, `shared-filters` 0 / 3, `tracking-details-modal` 5 / 0, `crear-formas-pago` 0 / 1, `general-chat` 1 / 0, y los demás 0 / 0.
   - En `dark-mode.scss` no queda ninguno de los seis patrones de la familia del azul: `#6AB5E8`, `rgba(106, 181, 232`, `rgb(106, 181, 232`, `#5AA5D8`, `#8AC5F8` y `#4A95C8`. Esta parte falla hasta F1.
-- **Script `test:theme`.** Lista los archivos uno por uno, como `test:dian-*`: `node --test tests/theme/theme-mode.test.js tests/theme/users-edit-contract.test.js tests/theme/user-writers.test.js tests/theme/conteos.test.js`. En Windows, npm usa cmd.exe, que no expande `*`, y Node 20 no acepta globs en `--test`. En F1 se agregan `theme-tokens.test.js` y `comparar-claro.test.js` a la misma línea, el bloque TEMA-B02 suma `rutas-marco.test.js` y `auditoria-puras.test.js`, y TEMA-B05 suma `marco-tokens.test.js`.
+- **Script `test:theme`.** Lista los archivos uno por uno, como `test:dian-*`: `node --test tests/theme/theme-mode.test.js tests/theme/users-edit-contract.test.js tests/theme/user-writers.test.js tests/theme/conteos.test.js`. En Windows, npm usa cmd.exe, que no expande `*`, y Node 20 no acepta globs en `--test`. En F1 se agregan `theme-tokens.test.js` y `comparar-claro.test.js` a la misma línea, el bloque TEMA-B02 suma `rutas-marco.test.js` y `auditoria-puras.test.js`, TEMA-B05 suma `marco-tokens.test.js` y TEMA-B06 suma `primeng-dark.test.js`.
 
 ## Fase 1
 
@@ -28,6 +28,17 @@
 - **`tests/theme/comparar-claro.js`** (CLI, no es prueba de `node --test`): el chequeo «claro idéntico» sin build. Compila un `.scss` en un commit base y en el árbol actual, sustituye `var(--ds-*)` por el valor claro de los tokens de cada lado, descarta lo oscuro y sale con 1 si el claro cambió (2 si no hay nada que comparar). Lo usa cada bloque de F1 y F2 sobre su consumidor o sobre `src/styles.scss`; no reemplaza las capturas ni el build del cierre. Sus funciones puras se prueban en `comparar-claro.test.js`.
   - **`--tema oscuro`** (bloque TEMA-B05): conserva también las reglas `body.dark-only` y sustituye `var(--ds-*)` por el valor oscuro de cada lado (el de `body.dark-only`, o el de `:root` si el oscuro no lo redefine). Comprueba el «mismo valor» al pasar un literal oscuro a token.
 - **`tests/theme/marco-tokens.test.js`** (tarea 3.6). Sidebar y header: en sus reglas oscuras no queda ningún literal con token, cada `var(--ds-*)` existe, y el oscuro resuelto es igual al de la base fija 6e6d67bd en todas las declaraciones oscuras que siguen existiendo, también las que quedaron literales (se salta, con aviso, sin ese commit o sin el bloque). Toasts: ningún color oscuro propio, las reglas oscuras de `p-toast` con `!important` (el `p-toast` por severidad de `dark-mode.scss` sigue hasta 4.5), cada color del claro tiene su par en oscuro, cada texto da ≥ 4,5:1 sobre su fondo (los fondos translúcidos, compuestos sobre la superficie) y el foco ≥ 3:1, y el claro de `_avisos.scss` es igual al de la base.
+- **`tests/theme/primeng-dark.test.js`** (tarea 3.7). Arma cada bundle como Angular (el `theme.css` de lara más lo compilado) y simula la cascada por selector exacto. Comprueba:
+  - el claro compila igual que en la base fija 35717c33;
+  - los dos temas importan `_primeng-katuq-base` en la misma posición;
+  - la geometría final (tamaños, espaciados, anchos de borde y radios) es la misma en los dos temas;
+  - el botón primario es `var(--ds-accent)` con `on-accent` en oscuro y sigue `#8b5cf6` en claro;
+  - ningún color de lara-dark-purple queda como valor final en los componentes que usa la app, y cada componente de las plantillas (`<p-*>`, `pButton`, `pInputText`, `pTooltip`) con colores de lara tiene su sección en el generador (la lista no sale del mismo generador);
+  - con una cascada que modela especificidad (`css-select` y `postcss-selector-parser`), la opción marcada y la no marcada de `p-selectButton` y `p-toggleButton` se distinguen (`accent` / `surface`) y el primario sigue en `accent`;
+  - `_primeng-dark.scss` solo usa `var(--ds-*)` existentes, y cada texto con fondo propio da ≥ 4,5:1 con los tokens oscuros;
+  - las `--surface-*`/`--text-color*` que usa `src/app` tienen valor oscuro;
+  - el cableado: `angular.json`, `ThemeModeService`, el tema viejo borrado y `firebase.json` sin caché para `katuq-dark.css` y con el redirect 302 de `/md-dark-deeppurple.css`;
+  - la región generada coincide con `primeng-dark-generar.js`.
 - **`conteos.test.js`**, segunda parte, en verde.
 
 ## Auditoría en navegador (`tests/theme/auditoria-tema.js`)
