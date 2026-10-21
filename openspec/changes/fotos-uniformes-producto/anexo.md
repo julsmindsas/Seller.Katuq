@@ -154,7 +154,8 @@ Además de `original` y `processed` (§B):
 - `processed.quality.warnings` puede traer `possible_watermark`.
 
 **Códigos nuevos:**
-- de omisión: `category_unresolved` (incluye sin categoría), `download_failed`, `not_image`, `not_adoptable`, `background_input_invalid`, `background_unclear`, `background_unavailable`;
+- de omisión: `download_failed`, `not_image`, `not_adoptable`, `background_input_invalid`, `background_unclear`, `background_unavailable`;
+- `category_unresolved` (incluye sin categoría) **no es un código por producto** sino un conteo de toda la empresa: `categoryUnresolved` en la vista previa y `totals.categoryUnresolved` en el lote por categoría (los productos sin ubicar no entran al lote, así que no tienen resultado). El diálogo lo muestra con el texto de §A3: «N productos no se pudieron ubicar en tu árbol de categorías».
 - de resultado: `would_copy`, `would_remove_background`;
 - de aviso: `possible_watermark`.
 

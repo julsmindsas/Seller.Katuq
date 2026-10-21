@@ -141,6 +141,8 @@ export const MENSAJES_AVISO: Record<string, string> = {
   trim_skipped: 'No encontramos bordes que recortar',
   low_resolution: 'Se ve pequeña',
   blurry: 'Parece borrosa',
+  // TX-37 · 7.9 (D-518 TX-37·2): lo detecta el servidor; adelantado de 7.10 para que el chip no salga vacío.
+  possible_watermark: 'Posible marca de agua o logo',
 };
 
 /** Por qué se detuvo un lote. */
