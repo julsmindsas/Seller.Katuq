@@ -25,7 +25,7 @@
 .mguide-status:empty { display: none; }
 .mguide-steps { margin: 0; padding: 0; list-style: none; counter-reset: guide; display: grid; gap: 12px; }
 .mguide-step { counter-increment: guide; }
-.mguide-step h3::before { content: counter(guide) '. '; color: $cfg-accent; }
+.mguide-step h3::before { content: counter(guide) '. '; color: $cfg-accent-ink; }
 .mguide-step, .mguide-help, .mguide-terminal {
   h3 { margin: 0 0 8px; color: $cfg-ink; font-size: 15px; font-weight: 800; }
   p { margin: 0 0 8px; color: $cfg-body; font-size: 13px; line-height: 1.65; }
@@ -35,7 +35,7 @@
 .mguide-footer {
   display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between;
   p { margin: 0; color: $cfg-muted; font-size: 12px; }
-  a { color: $cfg-accent; font-size: 12px; text-decoration: underline; overflow-wrap: anywhere; }
+  a { color: $cfg-accent-ink; font-size: 12px; text-decoration: underline; overflow-wrap: anywhere; }
 }
 @media (max-width: 600px) {
   .mguide-page.cfg-pagina { padding: 12px; }
