@@ -65,7 +65,8 @@
 
 ## 6. Lote de productos
 
-- [ ] 6.1 **Diff aprobado** (productos). Ruta `products` sin existencias: candado, lote repetido, guarda, categorías (3.1), todas las coincidencias y `katuq-product-upsert.execute` sin modificarlo. Depende de 5.1. **Éxito:** 1.3 y 1.9 en verde; `git diff` vacío en `katuq-product-upsert.action.js`.
+- [x] 6.1 **Diff aprobado** (productos). Ruta `products` sin existencias: candado, lote repetido, guarda, categorías (3.1), todas las coincidencias y `katuq-product-upsert.execute` sin modificarlo. Depende de 5.1. **Éxito:** 1.3 y 1.9 en verde; `git diff` vacío en `katuq-product-upsert.action.js`.
+  - *Estado (F530-B05):* hecho. `controllers/importStore.js` (ruta `products`), `services/storeMigration/candado.js` y `loteProductos.js`; `auditoria.js` guarda el lote terminado con la empresa en el id y lo compara al leerlo (M1). 1.3 y 1.9 en verde (con `pricesIncludeTax` y el write-set del lote ajustados a D-518); `katuq-product-upsert.action.js` sin diff. Sin existencias (6.2) ni fila Público (14.5). Un lote con productos que no se guardaron queda `partial` y no se reproduce.
 - [ ] 6.2 **Diff aprobado** (inventario), después de aplicar 6.1: `importInventory` en proceso, solo para los creados (o los existentes con la casilla), y `INVENTORY_FAILED` en el reporte. **Éxito:** contract tests de inventario sin cambios y en verde; `git diff` vacío en `importInventory` y sus pruebas.
 - [ ] 6.3 Repetición: el mismo archivo dos veces no duplica productos ni movimientos y devuelve los `cd`; con una venta en medio, la bodega conserva lo vendido.
 

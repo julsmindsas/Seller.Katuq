@@ -67,7 +67,7 @@
 | `ATTRIBUTES_NOT_IMPORTED` | dry-run, products | Atributos que no definen variantes (pregunta 12) |
 | `SLUG_PROBABLE` | dry-run, redirects | La dirección vieja de Woo se armó con el nombre |
 
-`reason` de los omitidos suma `TYPE_NOT_SUPPORTED`.
+`reason` de los omitidos suma `TYPE_NOT_SUPPORTED` y `WRITE_FAILED` (el producto no se pudo guardar; reenviar el lote lo reintenta). `products` acepta `runId` opcional (formato de `migrationId`): otro recorrido del mismo lote tiene su propio resultado guardado.
 
 ## `POST photos` (nueva; requiere aprobación, pregunta 8)
 
@@ -114,3 +114,4 @@ Sin cuerpo. Misma cadena; no toma el candado.
 - `step` suma `photos`; el registro del lote de fotos lleva `runId`.
 - `counts` suma `copied`, `failed`, `offers`, `taxExempt` y `withSeo`.
 - Sigue con solo números: sin enlaces, nombres ni datos personales (`auditoria.js`, `soloNumeros`).
+- Excepción (F530-B05): el registro de un lote de `products` terminado guarda además el campo `respuesta` (el resultado que se devuelve con `replayed: true`: clave del producto, referencia, `cd`, códigos; sin enlaces ni datos personales). `counts` sigue siendo solo números, y suma `failedByCode` (conteo por código de causa de `WRITE_FAILED`). `user_add`/`user_edit` guardan el correo del token, igual que `importProducts` (`autorDe`); el rastro guarda el `sub`. `TYPE_NOT_SUPPORTED` llega con el lector de WooCommerce (W2).
