@@ -173,10 +173,12 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
   - **Caracterización antes:** `tests/sitios/detalleComercialProducto.test.js` y `precioSelectorVariantes.test.js` en verde; una prueba nueva fija que un producto no migrado de 10 días sigue «Nuevo», y otra que un migrado leído solo con los campos del `select` de TX-34 D1 más `metadata.migration.migrationId` y `originCreatedAt` no sale «Nuevo».
   - **Éxito:** la suite de `tests/sitios` igual a la base.
 - [ ] 14.8 **Diff aprobado (tienda).** Texto alternativo (N2):
+  - Estado (F530-B14, parcial): hecho el lector, el saneo al importar y al editar (`utils/textoSeguroPagina.js`, `exports.edit`), `todasLasImagenes` con `alt` y la caracterización de la edición (`tests/productos/editarSeoAlt.test.js`). Pendiente, espera la fila de la tienda: uso del alt en ficha y tarjeta (`siteHtml.js`) y las pruebas M6 de render (escritas como `todo` en `tests/sitios/altFotoVitrina.test.js`).
   - el lector toma el alt de cada foto; `todasLasImagenes` lo pasa; la ficha y la tarjeta lo usan;
   - **caracterización del formulario de producto del Seller** (`crear-productos.component.ts:3295-3296`): un producto con `alt` se edita y se guarda, y el `alt` sigue ahí.
   - **Éxito:** pruebas en verde.
 - [ ] 14.9 **Diff aprobado (tienda).** SEO (N3). Espera a que F2-41 haga commit de `controllers/sites.js`.
+  - Estado (F530-B14, parcial): `seo` en la raíz con saneo 70/320 al importar y al editar, con prueba (`tests/storeMigration/seoAltSaneo.test.js`). Pendiente, espera la fila de la tienda: `fichaSeo`, canónica por título y escape en `<title>`/meta/JSON-LD (`sites.js`, `siteHtml.js`); campos SEO del formulario del Seller solo si la pregunta 6 los aprueba (F530-F03).
   - `seo` en la raíz del producto desde el lector;
   - `fichaSeo` lo usa; la URL canónica pasa a armarse con el título del producto (`producto.titulo`) y no con `fichaSeo.titulo`; la ruta y el JSON-LD siguen con el título;
   - los campos del formulario del Seller, solo si la pregunta 6 los aprueba;
