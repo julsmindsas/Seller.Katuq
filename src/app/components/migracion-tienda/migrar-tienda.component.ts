@@ -45,9 +45,10 @@ import { OpcionBodega, OpcionSitio, PasoSubirComponent } from './pasos/paso-subi
 import { PasoSimularComponent } from './pasos/paso-simular.component';
 import { AvanceVista, PasoImportarComponent } from './pasos/paso-importar.component';
 import { ExtrasReporte, PasoReporteComponent } from './pasos/paso-reporte.component';
+import { PasoClientesComponent } from './pasos/paso-clientes.component';
 
-type Paso = 'subir' | 'simular' | 'importar' | 'reporte';
-const TITULOS: { [p in Paso]: string } = { subir: 'Tus archivos', simular: 'Revisión', importar: 'Importación', reporte: 'Reporte' };
+type Paso = 'subir' | 'simular' | 'importar' | 'reporte' | 'clientes';
+const TITULOS: { [p in Paso]: string } = { subir: 'Tus archivos', simular: 'Revisión', importar: 'Importación', reporte: 'Reporte', clientes: 'Clientes' };
 
 /**
  * «Traer mi tienda»: sube el CSV de Shopify o WooCommerce, revisa qué pasaría y lo trae por lotes.
@@ -57,7 +58,7 @@ const TITULOS: { [p in Paso]: string } = { subir: 'Tus archivos', simular: 'Revi
 @Component({
   selector: 'app-migrar-tienda',
   standalone: true,
-  imports: [CommonModule, AjustesWooComponent, PasoSubirComponent, PasoSimularComponent, PasoImportarComponent, PasoReporteComponent],
+  imports: [CommonModule, AjustesWooComponent, PasoSubirComponent, PasoSimularComponent, PasoImportarComponent, PasoReporteComponent, PasoClientesComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   styleUrls: ['./migrar-tienda.component.scss'],
@@ -71,7 +72,7 @@ const TITULOS: { [p in Paso]: string } = { subir: 'Tus archivos', simular: 'Revi
         </div>
       </header>
 
-      <ol class="mt-pasos" aria-label="Pasos">
+      <ol class="mt-pasos" aria-label="Pasos" *ngIf="paso !== 'clientes'">
         <li *ngFor="let p of pasos; let i = index" class="mt-paso" [class.mt-paso--actual]="p === paso" [class.mt-paso--hecho]="indice(p) < indice(paso)">
           <span class="mt-paso__num">{{ i + 1 }}</span>
           <span class="mt-paso__texto">{{ titulo(p) }}</span>
@@ -83,7 +84,7 @@ const TITULOS: { [p in Paso]: string } = { subir: 'Tus archivos', simular: 'Revi
         [sitios]="sitios" [bodegas]="bodegas" [config]="config" [errores]="errores"
         (productos)="alElegirProductos($event)" (inventario)="alElegirInventario($event)"
         (configCambia)="alCambiarConfig($event)" (continuar)="revisar()"
-        [fotosPendientes]="fotosPendientes" (retomarFotos)="retomarFotos()"></app-mt-paso-subir>
+        [fotosPendientes]="fotosPendientes" (retomarFotos)="retomarFotos()" (soloClientes)="irA('clientes')"></app-mt-paso-subir>
 
       <app-mt-paso-simular *ngIf="paso === 'simular'"
         [simulando]="simulando" [totales]="simulacion" [sobrantes]="sobrantesSimulacion" [error]="errorSimulacion"
@@ -101,7 +102,9 @@ const TITULOS: { [p in Paso]: string } = { subir: 'Tus archivos', simular: 'Revi
 
       <app-mt-paso-reporte *ngIf="paso === 'reporte' && totales"
         [totales]="totales" [resumen]="resumen" [avisoExistencias]="avisoExistencias" [extras]="extras"
-        [copiando]="copiandoFotos" (descargar)="descargarReporte()" (terminar)="terminar()" (copiarPendientes)="copiarPendientes()"></app-mt-paso-reporte>
+        [copiando]="copiandoFotos" (descargar)="descargarReporte()" (terminar)="terminar()" (copiarPendientes)="copiarPendientes()" (traerClientes)="irA('clientes')"></app-mt-paso-reporte>
+
+      <app-mt-paso-clientes *ngIf="paso === 'clientes'" [sitios]="sitios" [sitioInicial]="config.sitioId" (volver)="irA(totales ? 'reporte' : 'subir')"></app-mt-paso-clientes>
     </div>
   `,
 })

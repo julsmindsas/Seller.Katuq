@@ -90,7 +90,8 @@
 - [x] 9.1 `readers/shopifyCustomers.js` y su normalización, con prueba sobre el fixture. Depende de 0.4. Hecho en B15 (`readers/shopifyCustomers.js`, fixture `shopify-clientes.csv` sintético; las columnas siguen sin export real, 0.4).
 - [x] 9.2 El origen `importacion` y `registrarImportacion` (`design-clientes.md`). **Éxito:** las pruebas de suscripción existentes y la nueva, en verde. Hecho en B15: origen `importacion`, `registrarImportacion` y la bandera `storeMigrationCustomerConsent` (D-505), APAGADA: sin el concepto legal 0.7 los clientes entran sin suscripción.
 - [x] 9.3 Las rutas `customers` y `DELETE customers/:batchId`. Depende de 9.1, 9.2 y 6.1. **Éxito:** 1.5 en verde. Hecho en B16 (`services/storeMigration/clientesPaso.js`; contrato en `contracts/import-store-api.md`). *Pendiente de documentar:* que un cliente con `documento` vacío sea facturable no se pudo verificar desde el código (sí es editable por su `cd`, `clients.editClient`, y la tienda en línea ya los crea así); confirmarlo en el ticket 1167. Los clientes importados no se escriben en el índice de búsqueda (`clients_search_index`), igual que `importCustomers` y la tienda: el backfill los cubre.
-- [ ] 9.4 El paso de clientes en el front, con la casilla de declaración. Build sin errores.
+- [x] 9.4 El paso de clientes en el front, con la casilla de declaración. Build sin errores.
+  - *Estado (F530-B04/F530-F04):* paso opcional `paso-clientes` (desde el reporte o «Solo traer mis clientes»), lector de Shopify y WooCommerce por tabla, lotes de 500, casilla de declaración sin marcar (no viaja con WooCommerce), reporte con conteos y «Deshacer este lote» con confirmación SweetAlert. Solo conteos y códigos en pantalla; Note, gasto y etiquetas no salen del navegador. Verificado con `tests/migracion/clientes.test.js` y tsc del front; falta la revisión visual a 1440 y 390 px (orquestador).
 
 ## 10. Fase 1c: WooCommerce
 

@@ -46,6 +46,7 @@ export interface ExtrasReporte {
     </section>
 
     <div class="cfg-form__pie">
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="traerClientes.emit()">Traer también mis clientes</button>
       <button type="button" class="cfg-btn cfg-btn--sec" (click)="descargar.emit()">Descargar reporte (CSV)</button>
       <button type="button" class="cfg-btn" (click)="terminar.emit()">Ir a mis productos</button>
     </div>
@@ -60,6 +61,7 @@ export class PasoReporteComponent {
   @Input() copiando = false;
   @Output() terminar = new EventEmitter<void>();
   @Output() copiarPendientes = new EventEmitter<void>();
+  @Output() traerClientes = new EventEmitter<void>();
 
   readonly avisoTiendaAnterior = AVISO_NO_CERRAR_TIENDA;
 

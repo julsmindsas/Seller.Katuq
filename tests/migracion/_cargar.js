@@ -15,4 +15,5 @@ module.exports = {
   ampliacion: require(base + 'logica/ampliacion.ts'),
   seo: require('../../src/app/components/productos/crear-productos/seo-producto.ts'),
   acceso: require(base + 'logica/acceso.ts'),
+  clientes: require(base + 'logica/clientes.ts'),
 };

@@ -103,6 +103,7 @@ export interface OpcionBodega {
     </section>
 
     <div class="cfg-form__pie">
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="soloClientes.emit()">Solo traer mis clientes</button>
       <button type="button" class="cfg-btn" [disabled]="!lectura || !lectura.ok || leyendo" (click)="continuar.emit()">Revisar antes de importar</button>
     </div>
   `,
@@ -121,6 +122,7 @@ export class PasoSubirComponent {
   @Input() fotosPendientes: { migrationId: string; texto: string } | null = null;
   @Output() continuar = new EventEmitter<void>();
   @Output() retomarFotos = new EventEmitter<void>();
+  @Output() soloClientes = new EventEmitter<void>();
 
   readonly ivas = IVA_PERMITIDOS;
 

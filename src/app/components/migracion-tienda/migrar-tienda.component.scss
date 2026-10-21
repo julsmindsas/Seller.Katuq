@@ -23,6 +23,7 @@
   .mt-check { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
   .mt-texto-check { font-size: 13.5px; font-weight: 600; color: var(--ds-body); text-transform: none; letter-spacing: normal; }
   .mt-lista { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+  .mt-lote { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 8px; }
 
   .mt-pasos {
     display: flex;
