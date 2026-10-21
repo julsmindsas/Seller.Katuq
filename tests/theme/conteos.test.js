@@ -72,7 +72,7 @@ test('dark-mode.scss sin ninguno de los seis patrones del azul heredado', () => 
 // Trinquete: si sube, falla; si baja, también falla hasta que se baje el techo en el mismo commit, así
 // lo migrado no deja hueco para regresiones posteriores.
 const { contarEnTexto, medirDeuda } = require('./deuda-primary');
-const TECHO_DEUDA_PRIMARY = 42;
+const TECHO_DEUDA_PRIMARY = 37;
 
 test('deuda-primary cuenta background y background-color con var(--primary-color), con respaldo y sin comentarios', () => {
   const hoja = [
