@@ -16,13 +16,13 @@
   font-weight: 800;
   letter-spacing: .6px;
   text-transform: uppercase;
-  color: #5F3FE0;
-  border-bottom: 1px solid #ececf4;
+  color: var(--ds-accent-ink);
+  border-bottom: 1px solid var(--ds-line);
   padding-bottom: 0.5rem;
 }
 
-.cfg-form .text-muted { color: #8f8bab !important; font-size: 12px; }
-.cfg-form .p-error { color: #D64545; font-size: 12px; }
+.cfg-form .text-muted { color: var(--ds-muted) !important; font-size: 12px; }
+.cfg-form .p-error { color: var(--ds-err); font-size: 12px; }
 
 :host ::ng-deep {
   .p-inputnumber {
@@ -43,7 +43,7 @@
     }
 
     &.p-inputswitch-checked .p-inputswitch-slider {
-      background-color: #5F3FE0;
+      background-color: var(--ds-accent);
     }
   }
 
@@ -53,20 +53,20 @@
     min-height: 40px;
 
     &.p-button-primary {
-      background: #5F3FE0;
-      border-color: #5F3FE0;
+      background: var(--ds-accent);
+      border-color: var(--ds-accent-ink);
       color: #fff;
       box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
 
-      &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
+      &:enabled:hover { background: var(--ds-accent-hover); border-color: #4a2fc0; }
     }
 
     &.p-button-secondary {
-      background: #fff;
-      border: 1px solid #e4e2ef;
-      color: #5b5878;
+      background: var(--ds-surface);
+      border: 1px solid var(--ds-line-strong);
+      color: var(--ds-body);
 
-      &:enabled:hover { background: #faf9fe; border-color: #d9cffb; color: #5F3FE0; }
+      &:enabled:hover { background: var(--ds-surface-2); border-color: #d9cffb; color: var(--ds-accent-ink); }
     }
   }
 }

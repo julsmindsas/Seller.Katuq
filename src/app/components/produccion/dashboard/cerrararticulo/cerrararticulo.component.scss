@@ -35,7 +35,7 @@ $transition: all 0.3s ease;
 
 /* Tarjeta de configuración */
 .configuration-card {
-  background-color: #fff;
+  background-color: var(--ds-surface);
   border-radius: $border-radius;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   overflow: hidden;
@@ -52,9 +52,9 @@ $transition: all 0.3s ease;
     align-items: center;
     gap: 11px;
     padding: 16px 20px;
-    background-color: #fff;
-    border-bottom: 1px solid #ececf4;
-    color: #211F3A;
+    background-color: var(--ds-surface);
+    border-bottom: 1px solid var(--ds-line);
+    color: var(--ds-ink);
     font-weight: 800;
     font-size: 16px;
 
@@ -66,12 +66,12 @@ $transition: all 0.3s ease;
       flex-shrink: 0;
       margin-right: 0 !important;
       border-radius: 11px;
-      background: #efe9ff;
+      background: var(--ds-accent-soft);
       color: $primary-color;
       font-size: 16px;
     }
 
-    > span:not(.disabled-label) { color: #211F3A; font-size: 16px; }
+    > span:not(.disabled-label) { color: var(--ds-ink); font-size: 16px; }
   }
   
   .card-content {
@@ -165,9 +165,9 @@ $transition: all 0.3s ease;
   align-items: center;
   padding: 1rem 1.25rem;
   // Aviso en par fuerte/fondo suave, sin border-left (D-131).
-  background-color: #FFF1DF;
+  background-color: var(--ds-warn-soft);
   border-radius: 11px;
-  color: #D9820A;
+  color: var(--ds-warn);
   
   i {
     font-size: 1.25rem;
@@ -229,7 +229,7 @@ $transition: all 0.3s ease;
 }
 
 .order-card {
-  background-color: white;
+  background-color: var(--ds-surface);
   border-radius: $border-radius;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   overflow: hidden;

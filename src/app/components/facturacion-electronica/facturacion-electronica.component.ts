@@ -10,6 +10,7 @@ import { VentasService } from '../../shared/services/ventas/ventas.service';
 import { splitDianDocumentList } from './dian-document-list';
 import { InvoiceComposerComponent } from './composer/invoice-composer.component';
 
+import { TranslateService } from '@ngx-translate/core';
 type DianDocumentType = 'invoice' | 'creditNote' | 'debitNote';
 type DianStatus = 'accepted' | 'rejected' | 'failed' | string;
 type DianStatusGroup = 'accepted' | 'rejected' | 'pending';
@@ -110,6 +111,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     private changeDetector: ChangeDetectorRef,
     private features: CompanyFeaturesService,
     private facturacionIntegracion: FacturacionIntegracionService,
+    private translate: TranslateService,
   ) {}
 
   /** D-500 (FE-01, tarea 4.7): estado del proveedor de facturación, solo con `invoicingHub`. */
@@ -390,7 +392,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     const cufe = document.cufe || document.cude || '';
     if (!cufe) return;
     navigator.clipboard?.writeText(cufe).then(
-      () => Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'CUFE copiado', showConfirmButton: false, timer: 1800 }),
+      () => Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: this.translate.instant('facturacionElectronica.facturacionElectronica.cufeCopiado'), showConfirmButton: false, timer: 1800 }),
       () => undefined,
     );
   }
@@ -410,15 +412,15 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   async reenviarCorreo(document: DianDocument): Promise<void> {
     if (!document.number || document.status !== 'accepted') return;
     const r = await Swal.fire({
-      title: 'Reenviar por correo',
+      title: this.translate.instant('facturacionElectronica.facturacionElectronica.reenviarPorCorreo'),
       input: 'email',
-      inputLabel: 'Correo del comprador',
+      inputLabel: this.translate.instant('facturacionElectronica.facturacionElectronica.correoDelComprador'),
       inputValue: document.emailDelivery?.recipient || '',
       showCancelButton: true,
-      confirmButtonText: 'Reenviar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('facturacionElectronica.facturacionElectronica.reenviar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#5F3FE0',
-      validationMessage: 'Escribe un correo válido.',
+      validationMessage: this.translate.instant('facturacionElectronica.facturacionElectronica.escribeUnCorreoValido'),
     });
     if (!r.isConfirmed || !r.value) return;
     this.reenviando = true;
@@ -427,13 +429,13 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         this.reenviando = false;
         const envio = res && res.data;
         if (envio) document.emailResends = [...(document.emailResends || []), envio];
-        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Documento reenviado a ' + r.value, showConfirmButton: false, timer: 2500 });
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: this.translate.instant('facturacionElectronica.facturacionElectronica.documentoReenviadoA', { correo: r.value }), showConfirmButton: false, timer: 2500 });
       },
       error: (e) => {
         this.reenviando = false;
         const envio = e?.error?.data;
         if (envio) document.emailResends = [...(document.emailResends || []), envio];
-        Swal.fire({ icon: 'error', title: 'No se pudo reenviar', text: e?.error?.message || 'Intenta de nuevo.' });
+        Swal.fire({ icon: 'error', title: this.translate.instant('facturacionElectronica.facturacionElectronica.noSePudoReenviar'), text: e?.error?.message || this.translate.instant('facturacionElectronica.facturacionElectronica.intentaDeNuevo') });
       },
     });
   }
@@ -484,7 +486,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     );
     const documents$ = defer(() => this.integrationsService.listDianDocuments(undefined, 200)).pipe(
       catchError((error) => {
-        this.documentsError = this.errorMessage(error, 'No fue posible cargar los documentos DIAN.');
+        this.documentsError = this.errorMessage(error, this.translate.instant('facturacionElectronica.facturacionElectronica.noFuePosibleCargarLosDocumentos'));
         return of(null);
       }),
     );
@@ -495,7 +497,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
       false,
     )).pipe(
       catchError((error) => {
-        this.ordersError = this.errorMessage(error, 'No fue posible cargar los pedidos pendientes.');
+        this.ordersError = this.errorMessage(error, this.translate.instant('facturacionElectronica.facturacionElectronica.noFuePosibleCargarLosPedidos'));
         return of({ orders: [], pagination: null } as any);
       }),
     );
@@ -605,12 +607,12 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     const total = orders.reduce((sum, order) => sum + this.orderTotal(order), 0);
     Swal.fire({
       icon: 'question',
-      title: orders.length === 1 ? '¿Enviar esta factura a la DIAN?' : `¿Enviar ${orders.length} facturas a la DIAN?`,
-      html: `<p>${orders.length === 1 ? 'Pedido' : 'Pedidos'} <strong>${orders.map((order) => this.escapeHtml(order.nroPedido || this.orderId(order))).join(', ')}</strong></p>`
-        + `<p>Total ${this.escapeHtml(this.formatCop(total))}. Cada pedido consume un consecutivo real. Revisa cliente, productos e impuestos antes de confirmar.</p>`,
+      title: orders.length === 1 ? this.translate.instant('facturacionElectronica.facturacionElectronica.enviarEstaFacturaALa') : this.translate.instant('facturacionElectronica.facturacionElectronica.enviarVariasFacturasALa', { cantidad: orders.length }),
+      html: `<p>${this.translate.instant(orders.length === 1 ? 'facturacionElectronica.facturacionElectronica.pedido' : 'facturacionElectronica.facturacionElectronica.pedidosTitulo')} <strong>${orders.map((order) => this.escapeHtml(order.nroPedido || this.orderId(order))).join(', ')}</strong></p>`
+        + `<p>${this.translate.instant('facturacionElectronica.facturacionElectronica.totalCadaPedidoConsumeUn', { total: this.escapeHtml(this.formatCop(total)) })}</p>`,
       showCancelButton: true,
-      confirmButtonText: orders.length === 1 ? 'Sí, facturar' : 'Sí, emitir todos',
-      cancelButtonText: 'Todavía no',
+      confirmButtonText: orders.length === 1 ? this.translate.instant('facturacionElectronica.facturacionElectronica.siFacturar') : this.translate.instant('facturacionElectronica.facturacionElectronica.siEmitirTodos'),
+      cancelButtonText: this.translate.instant('facturacionElectronica.facturacionElectronica.todaviaNo'),
       confirmButtonColor: '#6c4ce0',
     }).then((confirmation) => {
       if (!confirmation.isConfirmed) return;
@@ -618,9 +620,9 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
       this.selectedOrders.clear();
       Swal.fire({
         icon: 'success',
-        title: orders.length === 1 ? 'Factura enviada a procesar' : `${orders.length} facturas enviadas a procesar`,
-        text: 'Katuq las firmará, las enviará a la DIAN y actualizará cada pedido. Puedes seguir trabajando.',
-        confirmButtonText: 'Entendido',
+        title: orders.length === 1 ? this.translate.instant('facturacionElectronica.facturacionElectronica.facturaEnviadaAProcesar') : this.translate.instant('facturacionElectronica.facturacionElectronica.variasFacturasEnviadasAProcesar', { cantidad: orders.length }),
+        text: this.translate.instant('facturacionElectronica.facturacionElectronica.katuqLasFirmaraLasEnviara'),
+        confirmButtonText: this.translate.instant('comun.entendido'),
       });
     });
   }
@@ -629,16 +631,16 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     if (!this.isConfigured) { this.askForConfiguration(); return; }
     const orderId = this.orderId(order);
     if (!orderId) {
-      Swal.fire({ icon: 'error', title: 'Pedido sin identificación', text: 'No fue posible identificar este pedido.' });
+      Swal.fire({ icon: 'error', title: this.translate.instant('facturacionElectronica.facturacionElectronica.pedidoSinIdentificacion'), text: this.translate.instant('facturacionElectronica.facturacionElectronica.noFuePosibleIdentificarEste') });
       return;
     }
     Swal.fire({
       icon: 'question',
-      title: '¿Enviar esta factura a la DIAN?',
-      html: `<p>Pedido <strong>${this.escapeHtml(order.nroPedido || orderId)}</strong></p><p>Revisa antes que el cliente, los productos y los impuestos estén correctos.</p>`,
+      title: this.translate.instant('facturacionElectronica.facturacionElectronica.enviarEstaFacturaALa'),
+      html: this.translate.instant('facturacionElectronica.facturacionElectronica.pedidoRevisaAntesQueElCliente', { pedido: this.escapeHtml(order.nroPedido || orderId) }),
       showCancelButton: true,
-      confirmButtonText: 'Sí, facturar',
-      cancelButtonText: 'Todavía no',
+      confirmButtonText: this.translate.instant('facturacionElectronica.facturacionElectronica.siFacturar'),
+      cancelButtonText: this.translate.instant('facturacionElectronica.facturacionElectronica.todaviaNo'),
       confirmButtonColor: '#6c4ce0',
     }).then((confirmation) => {
       if (!confirmation.isConfirmed) return;
@@ -653,35 +655,35 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
    */
   explicarRechazo(document: DianDocument): void {
     if (!document.number) return;
-    Swal.fire({ title: 'KAI está revisando el rechazo…', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: this.translate.instant('facturacionElectronica.facturacionElectronica.kaiEstaRevisandoElRechazo'), allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     this.integrationsService.explicarRechazoDian(document.number).subscribe({
       next: (response: any) => {
         const r = response?.data || {};
         const reemplazo = r.reemplazo?.numero ? String(r.reemplazo.numero) : '';
         Swal.fire({
-          title: `Por qué la DIAN rechazó ${this.escapeHtml(document.number || '')}`,
+          title: this.translate.instant('facturacionElectronica.facturacionElectronica.porQueLaDianRechazo', { numero: this.escapeHtml(document.number || '') }),
           html: `<div class="kai-rechazo"><p>${this.escapeHtml(r.explicacion || '')}</p>`
-            + `<p><strong>Qué hacer:</strong> ${this.escapeHtml(r.correccion || '')}</p>`
+            + `<p><strong>${this.translate.instant('facturacionElectronica.facturacionElectronica.queHacer')}</strong> ${this.escapeHtml(r.correccion || '')}</p>`
             + (r.mensajes?.length ? `<p class="kai-rechazo__dian">DIAN: ${this.escapeHtml(r.mensajes.join(' · '))}</p>` : '')
             + '</div>',
           showCancelButton: !!reemplazo,
-          confirmButtonText: reemplazo ? `Marcar como reemplazada por ${this.escapeHtml(reemplazo)}` : 'Entendido',
-          cancelButtonText: 'Ahora no',
+          confirmButtonText: reemplazo ? this.translate.instant('facturacionElectronica.facturacionElectronica.marcarComoReemplazadaPor', { numero: this.escapeHtml(reemplazo) }) : this.translate.instant('comun.entendido'),
+          cancelButtonText: this.translate.instant('facturacionElectronica.facturacionElectronica.ahoraNo'),
         }).then((res) => {
           if (res.isConfirmed && reemplazo) this.marcarReemplazada(document, reemplazo);
         });
       },
-      error: (error) => Swal.fire({ icon: 'error', title: 'KAI no pudo revisarlo', text: this.errorMessage(error, 'Intenta de nuevo en un momento.') }),
+      error: (error) => Swal.fire({ icon: 'error', title: this.translate.instant('facturacionElectronica.facturacionElectronica.kaiNoPudoRevisarlo'), text: this.errorMessage(error, this.translate.instant('facturacionElectronica.facturacionElectronica.intentaDeNuevoEnUn')) }),
     });
   }
 
   private marcarReemplazada(document: DianDocument, por: string): void {
     this.integrationsService.marcarRechazoReemplazado(document.number || '', por).subscribe({
       next: () => {
-        Swal.fire({ icon: 'success', title: 'Listo', text: `${document.number} quedó cerrada como reemplazada por ${por}.` });
+        Swal.fire({ icon: 'success', title: this.translate.instant('facturacionElectronica.facturacionElectronica.listo'), text: this.translate.instant('facturacionElectronica.facturacionElectronica.quedoCerradaComoReemplazadaPor', { numero: document.number, por }) });
         this.loadDashboard();
       },
-      error: (error) => Swal.fire({ icon: 'error', title: 'No se pudo marcar', text: this.errorMessage(error, 'Revisa que tengas permiso de facturación.') }),
+      error: (error) => Swal.fire({ icon: 'error', title: this.translate.instant('facturacionElectronica.facturacionElectronica.noSePudoMarcar'), text: this.errorMessage(error, this.translate.instant('facturacionElectronica.facturacionElectronica.revisaQueTengasPermisoDeFacturacion')) }),
     });
   }
 
@@ -711,9 +713,9 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         if (notify) {
           Swal.fire({
             icon: 'success',
-            title: 'Factura enviada a procesar',
-            text: 'Katuq la firmará, la enviará a la DIAN y actualizará el pedido. Puedes continuar trabajando.',
-            confirmButtonText: 'Entendido',
+            title: this.translate.instant('facturacionElectronica.facturacionElectronica.facturaEnviadaAProcesar'),
+            text: this.translate.instant('facturacionElectronica.facturacionElectronica.katuqLaFirmaraLaEnviara'),
+            confirmButtonText: this.translate.instant('comun.entendido'),
           });
         }
       },
@@ -721,8 +723,8 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         this.queuedOrders.delete(orderId);
         Swal.fire({
           icon: 'error',
-          title: `No se pudo iniciar la factura del pedido ${order.nroPedido || orderId}`,
-          text: this.errorMessage(error, 'Revisa los datos del pedido e inténtalo nuevamente.'),
+          title: this.translate.instant('facturacionElectronica.facturacionElectronica.noSePudoIniciarLaFactura', { pedido: order.nroPedido || orderId }),
+          text: this.errorMessage(error, this.translate.instant('facturacionElectronica.facturacionElectronica.revisaLosDatosDelPedidoE')),
         });
       },
     });
@@ -731,11 +733,11 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   private askForConfiguration(): void {
     Swal.fire({
       icon: 'info',
-      title: 'Primero activa la conexión con la DIAN',
-      text: 'Abre Configuración DIAN y completa el asistente del comercio.',
+      title: this.translate.instant('facturacionElectronica.facturacionElectronica.primeroActivaLaConexionCon'),
+      text: this.translate.instant('facturacionElectronica.facturacionElectronica.abreConfiguracionDianYCompleta'),
       showCancelButton: true,
-      confirmButtonText: 'Ir a configuración',
-      cancelButtonText: 'Ahora no',
+      confirmButtonText: this.translate.instant('facturacionElectronica.facturacionElectronica.irAConfiguracion'),
+      cancelButtonText: this.translate.instant('facturacionElectronica.facturacionElectronica.ahoraNo'),
     }).then((result) => {
       if (result.isConfirmed) this.goToConfiguration();
     });
@@ -747,10 +749,10 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     this.openMenu = '';
     const trackId = document.cufe || document.cude;
     if (!trackId) {
-      Swal.fire({ icon: 'info', title: 'Sin código de seguimiento', text: 'Este intento no alcanzó a generar CUFE o CUDE.' });
+      Swal.fire({ icon: 'info', title: this.translate.instant('facturacionElectronica.facturacionElectronica.sinCodigoDeSeguimiento'), text: this.translate.instant('facturacionElectronica.facturacionElectronica.esteIntentoNoAlcanzoA') });
       return;
     }
-    Swal.fire({ title: 'Consultando a la DIAN…', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: this.translate.instant('facturacionElectronica.facturacionElectronica.consultandoALaDian'), allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     this.integrationsService.getDianDocumentStatus(trackId).subscribe({
       next: (response: any) => {
         const data = response?.data || response;
@@ -758,14 +760,14 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         const messages = data?.errorMessages || data?.statusMessages || [];
         Swal.fire({
           icon: accepted ? 'success' : 'info',
-          title: accepted ? 'Documento aceptado por la DIAN' : 'Respuesta de la DIAN',
+          title: accepted ? this.translate.instant('facturacionElectronica.facturacionElectronica.documentoAceptadoPorLaDian') : this.translate.instant('facturacionElectronica.facturacionElectronica.respuestaDeLaDian'),
           html: `<p><strong>${this.escapeHtml(document.number || '')}</strong></p><p>${this.escapeHtml(messages.length ? messages.join(' · ') : (data?.statusDescription || 'Consulta completada.'))}</p>`,
         });
       },
       error: (error) => Swal.fire({
         icon: 'error',
-        title: 'No se pudo consultar la DIAN',
-        text: this.errorMessage(error, 'Inténtalo nuevamente.'),
+        title: this.translate.instant('facturacionElectronica.facturacionElectronica.noSePudoConsultarLa'),
+        text: this.errorMessage(error, this.translate.instant('facturacionElectronica.facturacionElectronica.intentaloNuevamente')),
       }),
     });
   }
@@ -774,7 +776,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     this.openMenu = '';
     if (!document.number) return;
     if (document.status !== 'accepted') {
-      Swal.fire({ icon: 'info', title: 'Archivo no disponible', text: 'Solo los documentos aceptados por la DIAN tienen PDF y XML.' });
+      Swal.fire({ icon: 'info', title: this.translate.instant('facturacionElectronica.facturacionElectronica.archivoNoDisponible'), text: this.translate.instant('facturacionElectronica.facturacionElectronica.soloLosDocumentosAceptadosPor') });
       return;
     }
     this.integrationsService.downloadDianArtifact(document.number, kind).subscribe({
@@ -789,8 +791,8 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
       },
       error: (error) => Swal.fire({
         icon: 'error',
-        title: 'Archivo no disponible',
-        text: this.errorMessage(error, 'El documento no tiene todavía este archivo.'),
+        title: this.translate.instant('facturacionElectronica.facturacionElectronica.archivoNoDisponible'),
+        text: this.errorMessage(error, this.translate.instant('facturacionElectronica.facturacionElectronica.elDocumentoNoTieneTodaviaEste')),
       }),
     });
   }
@@ -817,10 +819,10 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         this.descargandoContador = null;
         Swal.fire({
           icon: 'error',
-          title: 'No pudimos descargarlo',
+          title: this.translate.instant('facturacionElectronica.facturacionElectronica.noPudimosDescargarlo'),
           text: formato === 'zip'
-            ? 'Si el período tiene muchos documentos, prueba con uno más corto.'
-            : 'Intenta de nuevo en un momento.',
+            ? this.translate.instant('facturacionElectronica.facturacionElectronica.siElPeriodoTieneMuchos')
+            : this.translate.instant('facturacionElectronica.facturacionElectronica.intentaDeNuevoEnUn'),
         });
       },
     });
@@ -833,13 +835,13 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   notaDesdeAfuera(tipo: 'credit' | 'debit'): void {
     const facturas = this.documents.filter((d) => d.type === 'invoice' && d.status === 'accepted' && d.number && d.cufe);
     Swal.fire({
-      title: tipo === 'credit' ? 'Nota crédito: ¿qué factura corriges?' : 'Nota débito: ¿qué factura corriges?',
+      title: tipo === 'credit' ? this.translate.instant('facturacionElectronica.facturacionElectronica.notaCreditoQueFacturaCorriges') : this.translate.instant('facturacionElectronica.facturacionElectronica.notaDebitoQueFacturaCorriges'),
       input: 'text',
-      inputLabel: 'Número de la factura, nombre o documento del cliente, o CUFE',
-      inputPlaceholder: 'Ejemplo: JULS41',
+      inputLabel: this.translate.instant('facturacionElectronica.facturacionElectronica.numeroDeLaFacturaNombre'),
+      inputPlaceholder: this.translate.instant('facturacionElectronica.facturacionElectronica.ejemploJuls41'),
       showCancelButton: true,
-      confirmButtonText: 'Buscar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('comun.buscar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       inputValidator: (value) => (value || '').trim() ? null : 'Escribe qué factura buscas',
     }).then((result) => {
       if (!result.isConfirmed) return;
@@ -850,7 +852,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         || (d.cliente?.nombre || '').toLowerCase().includes(texto)
         || (d.cliente?.documento || '').toLowerCase().includes(texto));
       if (!encontradas.length) {
-        Swal.fire({ icon: 'info', title: 'No la encontramos', text: 'Solo se citan facturas aceptadas por la DIAN. Revisa el número o búscala en «Facturas y notas».' });
+        Swal.fire({ icon: 'info', title: this.translate.instant('facturacionElectronica.facturacionElectronica.noLaEncontramos'), text: this.translate.instant('facturacionElectronica.facturacionElectronica.soloSeCitanFacturasAceptadas') });
         return;
       }
       if (encontradas.length === 1) {
@@ -863,12 +865,12 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         opciones[d.number || ''] = this.escapeHtml(`${d.number} · ${d.cliente?.nombre || 'sin cliente'} · ${this.money(d.saldo ? d.saldo.saldo : d.amount)}`);
       });
       Swal.fire({
-        title: 'Elige la factura',
+        title: this.translate.instant('facturacionElectronica.facturacionElectronica.eligeLaFactura'),
         input: 'select',
         inputOptions: opciones,
         showCancelButton: true,
-        confirmButtonText: 'Continuar',
-        cancelButtonText: 'Cancelar',
+        confirmButtonText: this.translate.instant('facturacionElectronica.facturacionElectronica.continuar'),
+        cancelButtonText: this.translate.instant('comun.cancelar'),
       }).then((r) => {
         const elegida = r.isConfirmed ? encontradas.find((d) => d.number === r.value) : null;
         if (elegida) this.iniciarNota(elegida, tipo);
@@ -885,12 +887,12 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
       return;
     }
     Swal.fire({
-      title: '¿La nota crédito es por toda la factura?',
+      title: this.translate.instant('facturacionElectronica.facturacionElectronica.laNotaCreditoEsPor'),
       input: 'select',
       inputOptions: { credit_adjust: 'No: una parte (por línea o por valor)', credit_full: 'Sí: anular toda la factura' },
       showCancelButton: true,
-      confirmButtonText: 'Continuar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('facturacionElectronica.facturacionElectronica.continuar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
     }).then((result) => {
       if (!result.isConfirmed) return;
       if (result.value === 'credit_full') this.confirmFullCreditNote(document);
@@ -910,7 +912,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         ? { type: 'invoice', status: 'accepted', number: ref.number, cufe: ref.cufe, issueDate: ref.issueDate, orderId: nota.orderId } as DianDocument
         : null);
     if (!factura) {
-      Swal.fire({ icon: 'error', title: 'No encontramos la factura', text: 'Esta nota no tiene guardada la factura que corregía. Haz la nota desde la factura.' });
+      Swal.fire({ icon: 'error', title: this.translate.instant('facturacionElectronica.facturacionElectronica.noEncontramosLaFactura'), text: this.translate.instant('facturacionElectronica.facturacionElectronica.estaNotaNoTieneGuardada') });
       return;
     }
     const tipo: 'credit' | 'debit' = nota.type === 'creditNote' ? 'credit' : 'debit';
@@ -921,22 +923,22 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     }
     const ajuste = nota.adjustment && Number(nota.adjustment.baseAmount) > 0 ? nota.adjustment : null;
     const que = ajuste
-      ? `${this.escapeHtml(ajuste.description || correccion.description)} por ${this.formatCop(Number(ajuste.baseAmount))} más IVA del ${Number(ajuste.taxRate || 0)}%`
-      : (tipo === 'credit' && correccion.code === '2' ? 'anular toda la factura' : this.escapeHtml(correccion.description));
+      ? this.translate.instant('facturacionElectronica.facturacionElectronica.ajustePorValorMasIva', { descripcion: this.escapeHtml(ajuste.description || correccion.description), valor: this.formatCop(Number(ajuste.baseAmount)), iva: Number(ajuste.taxRate || 0) })
+      : (tipo === 'credit' && correccion.code === '2' ? this.translate.instant('facturacionElectronica.facturacionElectronica.anularTodaLaFacturaMinuscula') : this.escapeHtml(correccion.description));
     Swal.fire({
       icon: 'question',
-      title: `Reenviar la ${tipo === 'credit' ? 'nota crédito' : 'nota débito'}`,
-      html: `<p>Sobre la factura <strong>${this.escapeHtml(factura.number || '')}</strong>: ${que}.</p><p>Sale con un número nuevo; la rechazada no tiene efecto ante la DIAN.</p>`,
+      title: this.translate.instant(tipo === 'credit' ? 'facturacionElectronica.facturacionElectronica.reenviarLaNotaCredito' : 'facturacionElectronica.facturacionElectronica.reenviarLaNotaDebito'),
+      html: this.translate.instant('facturacionElectronica.facturacionElectronica.sobreLaFacturaSaleConUn', { factura: this.escapeHtml(factura.number || ''), que }),
       showCancelButton: true,
       showDenyButton: true,
-      confirmButtonText: 'Reenviar igual',
-      denyButtonText: 'Cambiarla',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('facturacionElectronica.facturacionElectronica.reenviarIgual'),
+      denyButtonText: this.translate.instant('facturacionElectronica.facturacionElectronica.cambiarla'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
     }).then((r) => {
       if (r.isDenied) { this.iniciarNota(factura, tipo); return; }
       if (!r.isConfirmed) return;
       if (tipo === 'credit' && !ajuste && this.hasAcceptedCreditNote(factura)) {
-        Swal.fire({ icon: 'info', title: 'Esta factura ya tiene nota crédito', text: 'Revisa la nota en la bandeja antes de generar otra corrección.' });
+        Swal.fire({ icon: 'info', title: this.translate.instant('facturacionElectronica.facturacionElectronica.estaFacturaYaTieneNota'), text: this.translate.instant('facturacionElectronica.facturacionElectronica.revisaLaNotaEnLa') });
         return;
       }
       this.sendNote(factura, tipo, { code: String(correccion.code), description: String(correccion.description) },
@@ -970,7 +972,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   private facturaCitable(document: DianDocument): boolean {
     if (document.type !== 'invoice' || document.status !== 'accepted') return false;
     if (!document.number || !document.cufe) {
-      Swal.fire({ icon: 'error', title: 'Factura incompleta', text: 'No se encontró el número o el CUFE de la factura original.' });
+      Swal.fire({ icon: 'error', title: this.translate.instant('facturacionElectronica.facturacionElectronica.facturaIncompleta'), text: this.translate.instant('facturacionElectronica.facturacionElectronica.noSeEncontroElNumero') });
       return false;
     }
     return true;
@@ -1116,16 +1118,16 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
 
   private confirmFullCreditNote(document: DianDocument): void {
     if (this.hasAcceptedCreditNote(document)) {
-      Swal.fire({ icon: 'info', title: 'Esta factura ya tiene nota crédito', text: 'Revisa la nota en la bandeja antes de generar otra corrección.' });
+      Swal.fire({ icon: 'info', title: this.translate.instant('facturacionElectronica.facturacionElectronica.estaFacturaYaTieneNota'), text: this.translate.instant('facturacionElectronica.facturacionElectronica.revisaLaNotaEnLa') });
       return;
     }
     Swal.fire({
       icon: 'warning',
-      title: '¿Anular toda la factura?',
-      html: `<p>Se enviará una nota crédito por el total de <strong>${this.escapeHtml(document.number || '')}</strong>.</p><p>Esta operación fiscal no se puede deshacer.</p>`,
+      title: this.translate.instant('facturacionElectronica.facturacionElectronica.anularTodaLaFactura'),
+      html: this.translate.instant('facturacionElectronica.facturacionElectronica.seEnviaraUnaNotaCredito', { numero: this.escapeHtml(document.number || '') }),
       showCancelButton: true,
-      confirmButtonText: 'Sí, anular factura',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('facturacionElectronica.facturacionElectronica.siAnularFactura'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#c23934',
     }).then((result) => {
       if (!result.isConfirmed) return;
@@ -1138,7 +1140,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
 
   /** Ticket 1279: carga las líneas de la factura (si se puede) y abre la nota. */
   private openAdjustmentForm(document: DianDocument, noteType: 'credit' | 'debit'): void {
-    Swal.fire({ title: 'Cargando la factura…', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: this.translate.instant('facturacionElectronica.facturacionElectronica.cargandoLaFactura'), allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     this.integrationsService.getDianInvoiceLines(document.number || '').subscribe({
       next: (response: any) => this.mostrarFormularioNota(document, noteType, response?.data?.lineas || []),
       // Sin líneas la nota sigue disponible por valor.
@@ -1148,41 +1150,41 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
 
   private mostrarFormularioNota(document: DianDocument, noteType: 'credit' | 'debit', lineas: LineaFactura[]): void {
     const causes = noteType === 'credit'
-      ? [['1', 'Devolución parcial'], ['3', 'Rebaja o descuento'], ['4', 'Ajuste de precio'], ['5', 'Otro motivo']]
-      : [['1', 'Intereses'], ['2', 'Gastos por cobrar'], ['3', 'Cambio del valor'], ['4', 'Otro motivo']];
+      ? [['1', this.translate.instant('facturacionElectronica.facturacionElectronica.causaDevolucionParcial')], ['3', this.translate.instant('facturacionElectronica.facturacionElectronica.causaRebajaODescuento')], ['4', this.translate.instant('facturacionElectronica.facturacionElectronica.causaAjusteDePrecio')], ['5', this.translate.instant('facturacionElectronica.facturacionElectronica.causaOtroMotivo')]]
+      : [['1', this.translate.instant('facturacionElectronica.facturacionElectronica.causaIntereses')], ['2', this.translate.instant('facturacionElectronica.facturacionElectronica.causaGastosPorCobrar')], ['3', this.translate.instant('facturacionElectronica.facturacionElectronica.causaCambioDelValor')], ['4', this.translate.instant('facturacionElectronica.facturacionElectronica.causaOtroMotivo')]];
     const options = causes.map(([code, label]) => `<option value="${code}">${code} — ${label}</option>`).join('');
     const saldo = document.saldo ? document.saldo.saldo : Number(document.amount || 0);
     const opcionesLinea = lineas.map((l) =>
       `<option value="${Number(l.linea)}">${Number(l.linea)} — ${this.escapeHtml(String(l.descripcion || ''))} · ${Number(l.cantidad)} × ${this.escapeHtml(this.money(l.valorUnitario))} + IVA ${Number(l.tarifaIva)}%</option>`).join('');
     const bloqueLinea = lineas.length ? `
-          <label for="dian-note-line">¿Sobre qué línea de la factura?</label>
-          <select id="dian-note-line" class="swal2-select"><option value="">Ninguna: escribo el valor</option>${opcionesLinea}</select>
+          <label for="dian-note-line">${this.translate.instant('facturacionElectronica.facturacionElectronica.sobreQueLineaDeLa')}</label>
+          <select id="dian-note-line" class="swal2-select"><option value="">${this.translate.instant('facturacionElectronica.facturacionElectronica.ningunaEscriboElValor')}</option>${opcionesLinea}</select>
           <div id="dian-note-qty-box" style="display:none">
-            <label for="dian-note-qty">Cantidad</label>
+            <label for="dian-note-qty">${this.translate.instant('facturacionElectronica.facturacionElectronica.cantidad')}</label>
             <input id="dian-note-qty" type="number" min="0.001" step="any" class="swal2-input">
           </div>` : '';
     const textoSaldo = noteType === 'credit'
-      ? `<p class="dian-note-saldo">Saldo disponible de ${this.escapeHtml(document.number || 'la factura')}: <strong>${this.escapeHtml(this.money(saldo))}</strong></p>`
+      ? `<p class="dian-note-saldo">${this.translate.instant('facturacionElectronica.facturacionElectronica.saldoDisponibleDe', { factura: this.escapeHtml(document.number || this.translate.instant('facturacionElectronica.facturacionElectronica.laFactura')) })} <strong>${this.escapeHtml(this.money(saldo))}</strong></p>`
       : '';
 
     Swal.fire({
-      title: noteType === 'credit' ? 'Nueva nota crédito' : 'Nueva nota débito',
+      title: noteType === 'credit' ? this.translate.instant('facturacionElectronica.facturacionElectronica.nuevaNotaCredito') : this.translate.instant('facturacionElectronica.facturacionElectronica.nuevaNotaDebito'),
       html: `
         <div class="dian-note-form">
           ${textoSaldo}
           ${bloqueLinea}
-          <label for="dian-note-cause">Motivo</label>
+          <label for="dian-note-cause">${this.translate.instant('facturacionElectronica.facturacionElectronica.motivo')}</label>
           <select id="dian-note-cause" class="swal2-select">${options}</select>
-          <label for="dian-note-description">Explica el ajuste</label>
-          <input id="dian-note-description" class="swal2-input" placeholder="Ejemplo: descuento acordado con el cliente">
-          <label for="dian-note-base">Valor antes de IVA</label>
+          <label for="dian-note-description">${this.translate.instant('facturacionElectronica.facturacionElectronica.explicaElAjuste')}</label>
+          <input id="dian-note-description" class="swal2-input" placeholder="${this.translate.instant('facturacionElectronica.facturacionElectronica.ejemploDescuentoAcordadoConEl')}">
+          <label for="dian-note-base">${this.translate.instant('facturacionElectronica.facturacionElectronica.valorAntesDeIva')}</label>
           <input id="dian-note-base" type="number" min="0.01" step="0.01" class="swal2-input" placeholder="0">
-          <label for="dian-note-tax">IVA</label>
+          <label for="dian-note-tax">${this.translate.instant('facturacionElectronica.facturacionElectronica.iva')}</label>
           <select id="dian-note-tax" class="swal2-select"><option value="0">0%</option><option value="5">5%</option><option value="19">19%</option></select>
         </div>`,
       showCancelButton: true,
-      confirmButtonText: 'Revisar y enviar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('facturacionElectronica.facturacionElectronica.revisarYEnviar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       didOpen: (popup) => this.conectarLineaDeNota(popup, lineas, noteType),
       preConfirm: () => {
         const popup = Swal.getPopup();
@@ -1193,13 +1195,13 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         const linea = lineas.find((l) => String(l.linea) === (popup?.querySelector('#dian-note-line') as HTMLSelectElement)?.value);
         const cantidad = Number((popup?.querySelector('#dian-note-qty') as HTMLInputElement)?.value);
         if (linea && (!Number.isFinite(cantidad) || cantidad <= 0 || cantidad > linea.cantidad)) {
-          return Swal.showValidationMessage(`La cantidad debe estar entre 0 y ${linea.cantidad}`);
+          return Swal.showValidationMessage(this.translate.instant('facturacionElectronica.facturacionElectronica.laCantidadDebeEstarEntre', { maximo: linea.cantidad }));
         }
-        if (!description) return Swal.showValidationMessage('Escribe por qué necesitas el ajuste');
-        if (!Number.isFinite(baseAmount) || baseAmount <= 0) return Swal.showValidationMessage('Ingresa un valor mayor que cero');
+        if (!description) return Swal.showValidationMessage(this.translate.instant('facturacionElectronica.facturacionElectronica.escribePorQueNecesitasEl'));
+        if (!Number.isFinite(baseAmount) || baseAmount <= 0) return Swal.showValidationMessage(this.translate.instant('facturacionElectronica.facturacionElectronica.ingresaUnValorMayorQue'));
         const total = Math.round(baseAmount * (1 + taxRate / 100) * 100) / 100;
         if (noteType === 'credit' && total > saldo + 1) {
-          return Swal.showValidationMessage(`Con IVA son ${this.money(total)} y el saldo de la factura es ${this.money(saldo)}`);
+          return Swal.showValidationMessage(this.translate.instant('facturacionElectronica.facturacionElectronica.conIvaSonYElSaldo', { total: this.money(total), saldo: this.money(saldo) }));
         }
         return { code, description, baseAmount, taxRate };
       },
@@ -1257,10 +1259,10 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   ): void {
     const issueDate = document.issueDate || this.dateOnly(document.createdAt);
     if (!document.number || !document.cufe || !issueDate) {
-      Swal.fire({ icon: 'error', title: 'Faltan datos fiscales', text: 'No se pudo identificar completamente la factura original.' });
+      Swal.fire({ icon: 'error', title: this.translate.instant('facturacionElectronica.facturacionElectronica.faltanDatosFiscales'), text: this.translate.instant('facturacionElectronica.facturacionElectronica.noSePudoIdentificarCompletamente') });
       return;
     }
-    Swal.fire({ title: 'Transmitiendo a la DIAN…', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: this.translate.instant('facturacionElectronica.facturacionElectronica.transmitiendoALaDian'), allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     this.integrationsService.createDianNote(noteType, {
       // Ticket 1279: una factura libre no tiene pedido; el servidor la ubica por número y CUFE.
       ...(document.orderId ? { orderId: document.orderId } : {}),
@@ -1272,14 +1274,14 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         const note = response?.data || response;
         Swal.fire({
           icon: 'success',
-          title: noteType === 'credit' ? 'Nota crédito aceptada' : 'Nota débito aceptada',
-          text: `${note?.number || 'La nota'} fue recibida por la DIAN.`,
+          title: noteType === 'credit' ? this.translate.instant('facturacionElectronica.facturacionElectronica.notaCreditoAceptada') : this.translate.instant('facturacionElectronica.facturacionElectronica.notaDebitoAceptada'),
+          text: this.translate.instant('facturacionElectronica.facturacionElectronica.fueRecibidaPorLaDian', { numero: note?.number || this.translate.instant('facturacionElectronica.facturacionElectronica.laNota') }),
         }).then(() => this.loadDashboard());
       },
       error: (error) => Swal.fire({
         icon: 'error',
-        title: 'La nota no pudo completarse',
-        text: this.errorMessage(error, 'Revisa los datos e inténtalo nuevamente.'),
+        title: this.translate.instant('facturacionElectronica.facturacionElectronica.laNotaNoPudoCompletarse'),
+        text: this.errorMessage(error, this.translate.instant('facturacionElectronica.facturacionElectronica.revisaLosDatosEIntentalo')),
       }),
     });
   }

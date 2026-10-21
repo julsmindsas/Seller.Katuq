@@ -11731,7 +11731,7 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
 
 > **Renumeración (2026-10-21).** Al unir la rama principal, D-517 y D-518 ya eran otras decisiones (Punto Verde Vidagas y residuos de D-516). En la rama `feature/tickets-web`, lo que sus documentos y commits llaman «D-517» (pago a cuotas Addi y Sistecrédito) es **D-530**, y lo que llaman «D-518» (las 70 decisiones de los tickets Web) es **D-531**. Los números D-520 a D-529 quedan libres para la rama principal.
 >
-> **Renumeración (2026-10-21, segunda).** Al unir `origin/feature/venta-asistida-mejorada` por segunda vez, D-532, D-533, D-534 y D-535 ya eran decisiones de la rama principal (WooCommerce, export de productos). En la rama `feature/tickets-web`, lo que sus documentos y commits llaman «D-532» (idiomas del panel Seller, ticket «Traducción») es **D-540**, y lo que llaman «D-533» (candado de empresa en la emisión, ticket 1229) es **D-541**. Los comentarios de código y los commits ya hechos conservan el número viejo; los archivos que solo tocó esta rama se corrigieron en la unión.
+> **Renumeración (2026-10-21, segunda).** Al unir `origin/feature/venta-asistida-mejorada` por segunda vez, D-540, D-541, D-534 y D-535 ya eran decisiones de la rama principal (WooCommerce, export de productos). En la rama `feature/tickets-web`, lo que sus documentos y commits llaman «D-540» (idiomas del panel Seller, ticket «Traducción») es **D-540**, y lo que llaman «D-541» (candado de empresa en la emisión, ticket 1229) es **D-541**. Los comentarios de código y los commits ya hechos conservan el número viejo; los archivos que solo tocó esta rama se corrigieron en la unión.
 
 ## D-530 (2026-10-20) — Pago a cuotas en la tienda en línea con Addi y Sistecrédito (ticket 1233, F2-41) — APROBADA (Daniel, 20-oct), COMMITEADA en la rama `feature/tickets-web` (backend d954a833, front f8b985d4), sin desplegar y con la bandera apagada
 
@@ -12075,3 +12075,10 @@ Lo que queda está, sobre todo, en:
 - **19:** `getProductVariations` pide de a 100 hasta la página corta; antes WooCommerce mandaba 10.
 - Pruebas: `functions/tests/integrations/woocommercePruebaConexion.test.js` y `woocommerceVariacionesPaginadas.test.js`.
 - Consecuencia a tener presente: una tienda sin https ya no pasa "Probar conexión" (antes «pasaba» sin probar). Guardar no cambia.
+
+### 2026-10-21 — D-540: bloque IDI-B10, facturación electrónica, cartera, tesorería, contabilidad y billing (tareas 11.1 a 11.5)
+- **Qué cambió:** las cinco carpetas pasan al traductor (903 claves nuevas en es, en, pt y de) y quedan en `modulosCerrados`: 953 textos sueltos antes, 0 después. Solo presentación; se inyecta `TranslateService` y no cambia ningún evento, servicio, validación ni valor guardado.
+- **Lo que viaja a la DIAN no se traduce:** observaciones de las plantillas del compositor, descripción de la nota de anulación y mensaje de WhatsApp. Prueba de caracterización `tests/i18n/facturacion-caracterizacion.test.js` (sin emitir): el payload que arma el compositor es idéntico con `translate` en `es` y en `en`; `test:dian-config` 37/37 y `test:dian-invoice` con las mismas 9 fallas previas (del arnés de pruebas) antes y después.
+- **de-CH:** borrador escrito por el agente (Opttia no responde en este entorno); sigue oculto hasta la revisión nativa. Lista para el revisor: «Debitoren», «Belastungsanzeige», «Gutschrift», «Probebilanz», «E-Rechnung» y los términos contables de los 903 textos.
+- **Sin marcar:** 11.6 (falta `build:prod`) y 11.7 (revisión en navegador a 1440 y 390 px y visto bueno de Daniel, bloque sensible). Los mensajes en propiedades de los componentes auxiliares del compositor (pickers y formulario) y las etiquetas de `PAYMENT_METHODS` quedan en español como pendiente.
+- Sin push, despliegue ni escrituras en Firestore.

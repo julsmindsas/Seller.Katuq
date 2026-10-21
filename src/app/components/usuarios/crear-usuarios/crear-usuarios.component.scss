@@ -116,7 +116,7 @@ select ::selection {
 }
 
 .modal-box {
-  background: #fff;
+  background: var(--ds-surface);
   border-radius: 20px;
   width: 100%;
   max-width: 540px;

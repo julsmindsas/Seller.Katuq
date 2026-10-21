@@ -2,11 +2,11 @@
 @import '../../../shared/styles/config-pagina';
 @include config-pagina;
 
-.te-cabeza { border-bottom: 1px solid #ececf4; padding: 16px 20px; }
-.te-titulo { margin: 0; font-size: 18px; font-weight: 800; color: #211F3A; letter-spacing: normal; }
-.te-pie { border-top: 1px solid #f1f0f7; gap: 8px; padding: 12px 20px; }
+.te-cabeza { border-bottom: 1px solid var(--ds-line); padding: 16px 20px; }
+.te-titulo { margin: 0; font-size: 18px; font-weight: 800; color: var(--ds-ink); letter-spacing: normal; }
+.te-pie { border-top: 1px solid var(--ds-line-soft); gap: 8px; padding: 12px 20px; }
 .te-activo { display: flex; align-items: center; gap: 8px; label { margin: 0; } }
-.cfg-ayuda { color: #5F3FE0; cursor: pointer; font-size: 13px; }
+.cfg-ayuda { color: var(--ds-accent-ink); cursor: pointer; font-size: 13px; }
 .checkboxK { accent-color: #5F3FE0; width: 18px; height: 18px; }
-.modal-body { padding: 20px; color: #211F3A; }
+.modal-body { padding: 20px; color: var(--ds-ink); }
 .modal-body p, .modal-body label, .modal-body span, .modal-body a { letter-spacing: normal; }

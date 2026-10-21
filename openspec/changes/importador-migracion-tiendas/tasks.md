@@ -33,7 +33,7 @@
 - [x] 1.6 `[P]` Dorado de categorías: con lotes de prueba, `importProducts` escribe el mismo árbol, `categorias` y `categoriasIndex` que en `HEAD`, y responde el mismo 409. Los valores salen del código actual. El dorado de fotos sigue en verde.
   - *Estado:* `categoriasImportProducts.golden.test.js`, con los valores sacados de `HEAD` en `fixtures/dorado-categorias-importProducts.json`; en verde antes y después de 3.1.
 - [ ] 1.7 `[P]` Pruebas de los lectores sobre los fixtures de 0.4: `shopifyProducts.test.js` y `wooProducts.test.js`. Cubren agrupación, ejes por nombre, separación por precio, más de dos ejes, color de la foto, estado, referencia, suma de cantidades y la tabla de precio sin IVA tomada del modal. Depende de 0.4.
-  - *Estado:* escritas sobre los fixtures sintéticos. Shopify en verde; WooCommerce **en rojo hasta 10.1**. Sin marcar hasta repetirlas con los exports reales (0.4).
+  - *Estado:* escritas sobre los fixtures sintéticos. Shopify en verde; WooCommerce en verde desde F530-B09 (14.13). Sin marcar hasta repetirlas con los exports reales (0.4).
   - → D-518: Shopify suma la plantilla oficial actual (14.1). En `wooProducts.test.js`, «la oferta va al reporte y a metadata» cambia por la fila Público (14.5), y se suman la unión por SKU del padre y los tipos no soportados (14.13).
 - [x] 1.8 `[P]` `importStoreGuard.contract.test.js`: 409 con `katuq-product-changed` → `shopify-product-upsert` y con `katuq-inventory-changed` → `shopify-inventory-adjust`, también en sombra; sin 409 sin flows o con flows que solo traen datos a Katuq. `PUBLISHING_NODE_TYPES` cubre todo nodo de acción de Shopify o Woo que publique productos, existencias o listas.
 - [x] 1.9 `[P]` `importStoreConcurrency.contract.test.js`: dos envíos simultáneos (mismo lote o dos `migrationId`) dan un resultado y un 409 `IMPORT_IN_PROGRESS`, sin repetidos; un lote terminado reenviado devuelve `replayed: true` sin escribir; un candado vencido se vuelve a tomar.
@@ -94,6 +94,7 @@
 
 - [ ] 10.1 `readers/woocommerce.js` y su perfil en el front. Depende de 0.4 y 4.1. **Éxito:** 1.7 (Woo) en verde, sin cambios en las rutas.
   - → D-518: el alcance pasa a la tarea 14.13 (`design-woocommerce.md`).
+  - *Estado (F530-B09):* el lector de WooCommerce del backend está hecho y `wooProducts.test.js` pasa a verde (ver 14.13). Queda el perfil del front (F530-F01).
 
 ## 11. Revisión
 
@@ -156,13 +157,14 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
 - [ ] 14.1b `[P]` `importStore.routes.contract` suma los códigos y las rutas de `contracts/import-store-api-d518.md` (incluidas `photos/pending`, `runId`, `pricesIncludeTax` y `taxClassMap`). **Éxito:** en rojo hasta sus tareas. _Parcial (F530-B01): RATE_LIMITED y WOO_INTEGRATION_ACTIVE en verde en `routes`/`Guard`; el resto en rojo declarado en `importStore.d518Pendiente.contract.test.js` con el bloque que lo cierra._
 - [x] 14.3b Rechazo del export «Available» (`INVENTORY_FORMAT_UNSUPPORTED`), según la pregunta 9. **Éxito:** prueba con los dos formatos.
 - [ ] 14.4 IVA por producto (A2): lectores, `precioSinIvaDesdeConIva` con la tarifa del producto, `products.taxExempt`, clases de Woo (`zero-rate` al 0 %, `taxClassMap`, `TAX_CLASS_UNMAPPED`) y `pricesIncludeTax` (pregunta 17). **Éxito:** exento al 0 % con `precioUnitarioIva: "0"`; gravado con la tarifa elegida; con `pricesIncludeTax: false`, 50.000 al 19 % queda en 59.500; sin la respuesta y con gravados, `products` da 400.
-- [ ] 14.5 **Diff aprobado (productos).** Oferta en la lista Público (A3):
+- [x] 14.5 **Diff aprobado (productos).** Oferta en la lista Público (A3):
   - la simulación lee `tiposPrecios` con `active == true` (`offers.publicList`);
   - `nuevoProducto` y `actualizacionAcotada` arman la fila; en Shopify, el precio base según la pregunta 2;
   - `importStoreProducts.writeSet`: como máximo una fila, del tipo Público y de la misma empresa; nunca `tiposPrecios`; en `upsert`, `OFFER_KEPT` y `PRICE_SHADOWED_BY_PUBLIC_LIST`;
   - `wooProducts.test.js` se actualiza.
   - **Éxito:** escrituras de prueba en verde, y `git diff` vacío en `katuq-product-upsert.action.js`.
   - *Estado (F530-B06):* parcial. Hecho: el lote lee `tiposPrecios` de la empresa del token y escribe como máximo una fila Público (`loaded`/`kept`/`skipped`), con `OFFER_KEPT`, `PRICE_SHADOWED_BY_PUBLIC_LIST` y aviso global si la lista falta o es ambigua; `importStoreProducts.oferta.test.js` y el write-set (M7, seo, `nuevo:false`, `paginaWeb`) en verde; upsert sin diff. Falta solo el caso de oferta de `wooProducts.test.js`, que se cierra con el lector de WooCommerce (B09, 14.13); al cerrarlo se marca [x].
+  - *Estado (F530-B09):* cerrada. El caso de oferta de `wooProducts.test.js` ya está en verde: la oferta de Woo (`Sale price` con sus fechas) llega al lote como antes/ahora y se escribe en la fila Público (`importStoreWoo.integracion.test.js`).
 - [x] 14.6 Partición por (regular, oferta, IVA) (A4) en `separarPorPrecio` (`readers/comun.js`). **Éxito:** tallas con distinta oferta dan dos productos.
 - [ ] 14.7 **Diff aprobado (tienda).** «Nuevo» (N1):
   - `nuevoProducto` con `exposicion.nuevo: false` y `metadata.migration.originCreatedAt`;
@@ -186,13 +188,15 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
   - encabezados del wiki y en español (`UNKNOWN_FORMAT` si faltan las mínimas); `Published` con los valores del wiki;
   - la regla de `sanitize_title` («Men's Shirt» → `mens-shirt`) y la base de direcciones (`productBase`, `categoryBase`, `BASE_ASSUMED`).
   - **Éxito:** `wooProducts.test.js` ampliado en verde; perfil del front sin `if` por proveedor.
-- [ ] 14.15 **Diff aprobado (productos).** Rutas `photos` y `photos/pending` (`design-fotos.md`):
+  - *Estado (F530-B09):* parcial. Hecho en el backend: `readers/woocommerce.js` (tabla de alias en inglés y español, tipos, ejes por nombre, unión por SKU del padre, oferta con fechas, IVA por estado y clase con `taxClassMap`, existencias E2, estado, fotos, categorías), `slugProbable` (`sanitize_title`), bases y `urls[]` en `redirects` (`BASE_ASSUMED`, `SLUG_PROBABLE`), `wooProducts.test.js` ampliado (18 pruebas) e `importStoreWoo.integracion.test.js`. Los encabezados en español son una suposición hasta el export real (0.4). Falta el perfil del front sin `if` por proveedor (F530-F01, tareas 8.x): al cerrarlo se marca [x].
+- [x] 14.15 **Diff aprobado (productos).** Rutas `photos` y `photos/pending` (`design-fotos.md`):
   - contrato e `importStorePhotos.writeSet.contract.test.js` en rojo primero;
   - `runId` en la llave del lote: retomar con otro `runId` copia lo pendiente; repetir el mismo lote devuelve `replayed`;
   - `photos/pending` solo lee y responde números; índice compuesto de `migration_audit` en `firestore.indexes.json`;
   - usa `photoCopy.js` de TX-37 (su tarea 8.1, que se adelanta si hace falta, con su revisión privada);
   - el archivo nuevo entra en `manual` de `syncDetector.js`.
   - Depende de 6.1 y de TX-37 8.1.
+  - Hecho (F530-B10): `photoCopyStep.js`, `POST photos` y `GET photos/pending`; pruebas `importStorePhotos.writeSet` y `importStorePhotos.security`. El índice compuesto está solo en `firestore.indexes.json` (el despliegue de índices sigue bloqueado; se confirma en 12.2).
   - **Éxito:** contrato en verde; ningún log ni rastro con la URL.
 - [ ] 14.16 Front (con 8.x):
   - paso «Copiar fotos» con progreso, aviso de no cerrar la tienda anterior y «Copiar fotos pendientes» (lee `photos/pending`);

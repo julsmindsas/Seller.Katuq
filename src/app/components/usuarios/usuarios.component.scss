@@ -11,19 +11,19 @@
 .cfg-icono-accion {
   margin-left: 10px;
   font-size: 18px;
-  color: #5F3FE0;
+  color: var(--ds-accent-ink);
   cursor: pointer;
 
-  &:hover { color: #4a2fc0; }
+  &:hover { color: var(--ds-accent-hover); }
 
-  &--peligro { color: #D64545; &:hover { color: #b93030; } }
+  &--peligro { color: var(--ds-err); &:hover { color: #b93030; } }
 }
 
 // D-349: estado "solo propias" del botón de métricas del equipo (relleno en acento).
 .cfg-btn.metricas-equipo-btn--propias {
-  background: #5F3FE0;
-  border-color: #5F3FE0;
+  background: var(--ds-accent);
+  border-color: var(--ds-accent-ink);
   color: #fff !important;
 
-  &:hover:not(:disabled) { background: #4a2fc0; border-color: #4a2fc0; color: #fff !important; }
+  &:hover:not(:disabled) { background: var(--ds-accent-hover); border-color: #4a2fc0; color: #fff !important; }
 }

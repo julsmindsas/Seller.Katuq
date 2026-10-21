@@ -1,0 +1,23 @@
+// D-502 F3 (ticket 1180, tarea 4.4.4, bloque TEMA-B16): juego oscuro de --kc-* para la pantalla POS.
+// Solo se usa dentro de :host-context(body.dark-only); el claro sigue siendo el de kc-tokens.
+@mixin pos-kc-oscuro {
+  --kc-accent: var(--ds-accent);
+  --kc-accent-ink: var(--ds-accent-ink);
+  --kc-accent-wash: var(--ds-accent-soft);
+  --kc-ink: var(--ds-ink);
+  --kc-ink2: var(--ds-ink-2);
+  --kc-muted: var(--ds-muted);
+  --kc-muted2: var(--ds-muted);
+  --kc-line: var(--ds-line);
+  --kc-line2: var(--ds-line-soft);
+  --kc-canvas: var(--ds-surface-2);
+  --kc-surface: var(--ds-surface);
+  --kc-green: var(--ds-ok);
+  --kc-green-wash: var(--ds-ok-soft);
+  --kc-blue: var(--ds-info);
+  --kc-blue-wash: var(--ds-info-soft);
+  --kc-orange: var(--ds-warn);
+  --kc-orange-wash: var(--ds-warn-soft);
+  --kc-red: var(--ds-err);
+  --kc-red-wash: var(--ds-err-soft);
+}

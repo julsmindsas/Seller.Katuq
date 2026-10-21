@@ -205,7 +205,8 @@ test('3.4: los 28 rellenos van en var(--ds-accent) y su texto en var(--ds-on-acc
     /^background(-color)?$/.test(d.prop) && d.value === 'var(--ds-accent)').length, 0);
   // 28 rellenos de la familia del azul (design-f1.md §2) + los dos botones de driver.js (una regla)
   // + el .btn-primary deshabilitado genérico + el slider del p-inputSwitch encendido (corrector TEMA-B03).
-  assert.equal(declsRelleno, 31, `rellenos en var(--ds-accent): ${declsRelleno}`);
+  // + el botón de confirmar de SweetAlert2 (TEMA-B18, 3.8).
+  assert.equal(declsRelleno, 32, `rellenos en var(--ds-accent): ${declsRelleno}`);
   for (const r of rellenos) {
     const color = decl(r, 'color');
     if (color) assert.equal(color.value, 'var(--ds-on-accent)', `${r.selectores[0]}: texto ${color.value} sobre el relleno`);

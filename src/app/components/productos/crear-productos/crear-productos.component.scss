@@ -8,15 +8,15 @@
 
 .form-label {
   font-weight: bold;
-  color: #211F3A;
+  color: var(--ds-ink);
 }
 
 // Dropshipping configuration mode styles
 .dropshipping-config-mode {
   .p-tabview-nav li:nth-child(7) { // Tab de Dropshipping (índice 6, pero nth-child es 1-indexed)
     .p-tabview-nav-link {
-      background-color: #efe9ff !important;
-      border-color: #5F3FE0 !important;
+      background-color: var(--ds-accent-soft) !important;
+      border-color: var(--ds-accent-ink) !important;
       font-weight: bold !important;
     }
   }
@@ -28,11 +28,11 @@
 }
 
 .currencyDivInfoTax {
-  color: #D64545;
+  color: var(--ds-err);
 }
 
 .currencyDivInfoNumber {
-  color: #1E874B;
+  color: var(--ds-ok);
 }
 
 .ng-select.custom .ng-select-container {
@@ -41,35 +41,35 @@
 }
 
 .ng-dropdown-panel {
-  background-color: white;
+  background-color: var(--ds-surface);
 }
 
 .ng-option {
-  background-color: white !important;
+  background-color: var(--ds-surface) !important;
 }
 
 .ng-dropdown-panel .ng-dropdown-panel-items .ng-option.ng-option-selected,
 .ng-dropdown-panel .ng-dropdown-panel-items .ng-option.ng-option-selected.ng-option-marked {
   color: #fff !important;
-  background-color: #5F3FE0 !important;
+  background-color: var(--ds-accent) !important;
 }
 
 .ng-select.custom {
 
   height: 38px;
 
-  background-color: white !important;
+  background-color: var(--ds-surface) !important;
   font-size: 1rem;
 
   font-family: sans-serif;
 }
 
 .ng-select.custom .ng-option {
-  background-color: #FDECEC !important;
+  background-color: var(--ds-err-soft) !important;
 }
 
 .error-message {
-  color: #D64545;
+  color: var(--ds-err);
 }
 
 .notaprecio {
@@ -99,7 +99,7 @@ h4 {
 
 
 .redasteris {
-  color: #D64545;
+  color: var(--ds-err);
 }
 
 .btn-small {
@@ -107,20 +107,20 @@ h4 {
 }
 
 .form-control {
-  color: #211F3A;
+  color: var(--ds-ink);
 }
 
 td {
-  color: #211F3A;
+  color: var(--ds-ink);
 }
 
 #tbodyArticulos {
-  color: #211F3A;
+  color: var(--ds-ink);
 }
 
 #tbodyArticulos>tr>td.right-align {
   text-align: right;
-  color: #211F3A;
+  color: var(--ds-ink);
 }
 
 .ai-button-image {
@@ -131,7 +131,7 @@ td {
   padding: 2px;
   /* Añade un poco de espacio alrededor de la imagen */
   cursor: pointer;
-  border: 1px solid #5F3FE0;
+  border: 1px solid var(--ds-accent-ink);
   transition: transform 0.2s, box-shadow 0.2s, border 0.2s;
   border-radius: 50%;
   /* Hace que la imagen sea circular */
@@ -142,7 +142,7 @@ td {
   /* Aumenta el tamaño al pasar el ratón */
   box-shadow: 0 0 15px rgba(95, 63, 224, 0.35);
   /* Añade un efecto de iluminación verde */
-  border: 2px solid #5F3FE0;
+  border: 2px solid var(--ds-accent-ink);
   /* Añade un borde verde */
 }
 
@@ -152,7 +152,7 @@ td {
   display: flex;
   align-items: center;
   padding: 10px 20px;
-  background-color: #5F3FE0;
+  background-color: var(--ds-accent);
   color: white;
   border: none;
   border-radius: 11px;
@@ -166,7 +166,7 @@ td {
 }
 
 .btn-ia:hover {
-  background-color: #4a2fc0;
+  background-color: var(--ds-accent-hover);
 }
 
 // fin nueva ia
@@ -212,13 +212,13 @@ td {
 
   @media (min-width: 768px) { padding: 24px 24px 40px; }
 
-  :focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  :focus-visible { outline: 3px solid var(--ds-focus) !important; outline-offset: 2px; }
 }
 
 .maestro-panel {
   position: relative;
-  background: #fff;
-  border: 1px solid #ececf4;
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-line);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
   max-width: 1360px;
@@ -232,35 +232,35 @@ td {
   padding: 2px;
   font-size: .7rem;
   font-weight: 700;
-  color: #8f8bab;
+  color: var(--ds-muted);
 
-  &--aviso { color: #D9820A; }
+  &--aviso { color: var(--ds-warn); }
 }
 
 // Texto de los paneles de acordeón (antes `style="color: black"`).
-.maestro-tinta { color: #211F3A; }
+.maestro-tinta { color: var(--ds-ink); }
 
 // Celdas editables de la tabla de imágenes (antes `style="border-color: black"`).
-.maestro-celda { border-color: #e9e7f3; }
+.maestro-celda { border-color: var(--ds-control-border); }
 
 // Botones Bootstrap del interior: el primario global es el morado viejo del tema legacy.
 .mp-body,
 .modal-footer {
   .btn-primary {
-    background: #5F3FE0;
-    border-color: #5F3FE0;
+    background: var(--ds-accent);
+    border-color: var(--ds-accent-ink);
     color: #fff;
     border-radius: 11px;
 
-    &:hover:not(:disabled) { background: #4a2fc0; border-color: #4a2fc0; }
+    &:hover:not(:disabled) { background: var(--ds-accent-hover); border-color: #4a2fc0; }
   }
 
   .btn-outline-primary {
-    color: #5F3FE0;
+    color: var(--ds-accent-ink);
     border-color: #ddd3fb;
     border-radius: 11px;
 
-    &:hover:not(:disabled) { background: #efe9ff; color: #5F3FE0; border-color: #5F3FE0; }
+    &:hover:not(:disabled) { background: var(--ds-accent-soft); color: var(--ds-accent-ink); border-color: var(--ds-accent-ink); }
   }
 }
 
@@ -347,7 +347,7 @@ td {
   }
 
   &--ghost {
-    background: #fff;
+    background: var(--ds-surface);
     color: var(--mp-text);
     border-color: #e4e1f0;
 
@@ -377,7 +377,7 @@ td {
 .mp-progress__fill {
   height: 100%;
   border-radius: 99px;
-  background: #5F3FE0;
+  background: var(--ds-accent);
   transition: width .45s ease;
 }
 
@@ -423,7 +423,7 @@ td {
   .pi { font-size: 10px; }
 
   &:hover {
-    background: #fff;
+    background: var(--ds-surface);
     border-color: var(--mp-accent);
     color: var(--mp-accent);
   }
@@ -445,7 +445,7 @@ td {
 
     &:focus {
       border-color: var(--mp-accent);
-      background: #fff;
+      background: var(--ds-surface);
       box-shadow: 0 0 0 4px rgba(95, 63, 224, .1);
       outline: none;
     }
@@ -548,7 +548,7 @@ td {
 }
 
 :host ::ng-deep .p-tabview .p-tabview-nav li:not(.p-highlight) .p-tabview-nav-link:hover {
-  background: #fff;
+  background: var(--ds-surface);
   color: var(--mp-text);
 }
 
@@ -560,7 +560,7 @@ td {
 
 // Sección activa
 :host ::ng-deep .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
-  background: #fff;
+  background: var(--ds-surface);
   color: var(--mp-text);
   border-color: #eee7ff;
   box-shadow: 0 3px 12px rgba(95, 63, 224, .12);
@@ -582,7 +582,7 @@ td {
   flex: 1 1 auto;
   min-width: 0;
   padding: 26px 30px 30px;
-  background: #fff;
+  background: var(--ds-surface);
   border: none;
 }
 
@@ -729,7 +729,7 @@ td {
   select.ng-invalid.ng-touched,
   textarea.ng-invalid.ng-touched {
     border-color: var(--mp-req);
-    background: #FDECEC;
+    background: var(--ds-err-soft);
 
     &:focus {
       border-color: var(--mp-req);
@@ -789,7 +789,7 @@ td {
     border: 1px solid var(--mp-border);
     border-radius: 14px;
     overflow: auto;
-    background: #fff;
+    background: var(--ds-surface);
   }
 
   table.table {
@@ -804,7 +804,7 @@ td {
       position: sticky;
       top: 0;
       z-index: 1;
-      background: #faf9fe;
+      background: var(--ds-surface-2);
       border: none;
       border-bottom: 1px solid var(--mp-border);
       padding: 11px 12px;
@@ -834,7 +834,7 @@ td {
 
     > tbody > tr:hover > td,
     > tbody > tr:hover > th {
-      background: #faf9ff;
+      background: var(--ds-row-hover);
     }
 
     // Controles dentro de celdas: compactos y sin desbordar la columna.
@@ -881,7 +881,7 @@ td {
   }
 
   th {
-    background: #faf9fe !important;
+    background: var(--ds-surface-2) !important;
     border: none !important;
     border-bottom: 1px solid var(--mp-border) !important;
     padding: 11px 12px !important;
@@ -956,9 +956,9 @@ td {
   gap: 12px;
   margin: 4px 0 16px;
   padding: 12px 14px;
-  border: 1px solid #ececf4;
+  border: 1px solid var(--ds-line);
   border-radius: 16px;
-  background: #faf9fe;
+  background: var(--ds-surface-2);
 }
 
 .tipo-item__etiqueta {
@@ -966,7 +966,7 @@ td {
   font-weight: 800;
   letter-spacing: .6px !important;
   text-transform: uppercase;
-  color: #8f8bab !important;
+  color: var(--ds-muted) !important;
 }
 
 .tipo-item__opciones { display: inline-flex; gap: 8px; }
@@ -978,20 +978,20 @@ td {
   gap: 8px;
   min-height: 38px;
   padding: 0 14px;
-  border: 1px solid #e9e7f3;
+  border: 1px solid var(--ds-control-border);
   border-radius: 11px;
-  background: #fff;
-  color: #211F3A;
+  background: var(--ds-surface);
+  color: var(--ds-ink);
   font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
 
-  &:hover { border-color: #5F3FE0; color: #5F3FE0; }
-  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  &:hover { border-color: var(--ds-accent-ink); color: var(--ds-accent-ink); }
+  &:focus-visible { outline: 3px solid var(--ds-focus) !important; outline-offset: 2px; }
 
   &.tipo-item__opcion--activa {
-    background: #5F3FE0;
-    border-color: #5F3FE0;
+    background: var(--ds-accent);
+    border-color: var(--ds-accent-ink);
     color: #fff;
   }
 }
@@ -1014,7 +1014,7 @@ td {
   gap: 8px;
   min-height: 38px;
   margin: 0;
-  color: #211F3A;
+  color: var(--ds-ink);
   font-weight: 700;
   cursor: pointer;
 
@@ -1034,17 +1034,17 @@ td {
   margin: 8px 0 12px;
   padding: 10px 12px;
   border-radius: 11px;
-  background: #E7F1FF;
-  color: #1E6FD9;
+  background: var(--ds-info-soft);
+  color: var(--ds-info);
   font-size: 12.5px;
 
-  .fu-aviso-subida-texto { flex: 1 1 auto; color: #1E6FD9; font-size: 12.5px; line-height: 1.45; letter-spacing: normal; }
+  .fu-aviso-subida-texto { flex: 1 1 auto; color: var(--ds-info); font-size: 12.5px; line-height: 1.45; letter-spacing: normal; }
 }
 
 .fu-aviso-subida-cerrar {
   border: 0;
   background: transparent;
-  color: #1E6FD9;
+  color: var(--ds-info);
   cursor: pointer;
   border-radius: 8px;
 }
@@ -1058,18 +1058,18 @@ td {
   min-height: 40px;
   padding: 8px 14px;
   border-radius: 11px;
-  border: 1px solid #e4e2ef;
-  background: #fff;
-  color: #5F3FE0;
+  border: 1px solid var(--ds-line-strong);
+  background: var(--ds-surface);
+  color: var(--ds-accent-ink);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 
-  .fu-entrada-texto { color: #5F3FE0; font-size: 13px; }
+  .fu-entrada-texto { color: var(--ds-accent-ink); font-size: 13px; }
 
-  &:hover:not(:disabled) { background: #faf9fe; }
+  &:hover:not(:disabled) { background: var(--ds-surface-2); }
   &:disabled { opacity: 0.55; cursor: default; }
 }
 
 .fu-entrada-editor:focus-visible,
-.fu-aviso-subida-cerrar:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+.fu-aviso-subida-cerrar:focus-visible { outline: 3px solid var(--ds-focus) !important; outline-offset: 2px; }

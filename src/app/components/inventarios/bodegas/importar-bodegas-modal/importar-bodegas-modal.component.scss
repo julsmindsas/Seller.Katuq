@@ -27,7 +27,7 @@ $gray-900: #211F3A;
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: #fff;
+  background: var(--ds-surface);
   border-bottom: 1px solid $gray-200;
 
   .header-content {
@@ -39,7 +39,7 @@ $gray-900: #211F3A;
   .header-icon {
     width: 40px;
     height: 40px;
-    background: #efe9ff;
+    background: var(--ds-accent-soft);
     border-radius: 11px;
     display: flex;
     align-items: center;
@@ -81,13 +81,13 @@ $gray-900: #211F3A;
     justify-content: center;
 
     &:hover {
-      background: #FDECEC;
+      background: var(--ds-err-soft);
       border-color: #f3c9c9;
-      color: #D64545;
+      color: var(--ds-err);
     }
 
     &:focus-visible {
-      outline: 3px solid #7C5CFF !important;
+      outline: 3px solid var(--ds-focus) !important;
       outline-offset: 2px;
     }
 
@@ -130,7 +130,7 @@ $gray-900: #211F3A;
       width: 100%;
       min-height: 40px;
       padding: 10px 40px 10px 44px;
-      border: 1px solid #e9e7f3;
+      border: 1px solid var(--ds-control-border);
       border-radius: 11px;
       font-size: 13.5px;
       color: $gray-800;
@@ -139,8 +139,8 @@ $gray-900: #211F3A;
 
       &:focus {
         outline: none;
-        background: #fff;
-        border-color: #7C5CFF;
+        background: var(--ds-surface);
+        border-color: var(--ds-focus);
         box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
       }
 
@@ -186,7 +186,7 @@ $gray-900: #211F3A;
       padding: 8px 16px;
       border: 1px solid $gray-300;
       border-radius: 20px;
-      background: white;
+      background: var(--ds-surface);
       font-size: 13px;
       font-weight: 500;
       color: $gray-600;
@@ -222,7 +222,7 @@ $gray-900: #211F3A;
   align-items: center;
   gap: 16px;
   padding: 12px 16px;
-  background: white;
+  background: var(--ds-surface);
   border: 1px solid $gray-200;
   border-radius: 11px;
   margin-bottom: 16px;
@@ -288,7 +288,7 @@ $gray-900: #211F3A;
           left: 3px;
           width: 18px;
           height: 18px;
-          background: white;
+          background: var(--ds-surface);
           border-radius: 50%;
           transition: all 0.3s ease;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -388,7 +388,7 @@ $gray-900: #211F3A;
   align-items: center;
   gap: 16px;
   padding: 16px;
-  background: white;
+  background: var(--ds-surface);
   border: 1px solid $gray-200;
   border-radius: 16px;
   cursor: pointer;
@@ -477,7 +477,7 @@ $gray-900: #211F3A;
 
       .provider-badge {
         padding: 3px 10px;
-        background: #efe9ff;
+        background: var(--ds-accent-soft);
         border-radius: 20px;
         font-size: 10.5px;
         font-weight: 800;
@@ -550,8 +550,8 @@ $gray-900: #211F3A;
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
-  background: white;
-  border-top: 1px solid #f1f0f7;
+  background: var(--ds-surface);
+  border-top: 1px solid var(--ds-line-soft);
   border-radius: 0 0 16px 16px;
 
   .footer-actions-left {
@@ -566,7 +566,7 @@ $gray-900: #211F3A;
       padding: 0 14px;
       border: 1px solid $gray-300;
       border-radius: 11px;
-      background: white;
+      background: var(--ds-surface);
       font-size: 13px;
       font-weight: 700;
       color: $gray-600;
@@ -593,7 +593,7 @@ $gray-900: #211F3A;
       min-height: 40px;
       padding: 0 16px;
       border: 1px solid $gray-300;
-      background: #fff;
+      background: var(--ds-surface);
       border-radius: 11px;
       font-size: 13.5px;
       font-weight: 700;

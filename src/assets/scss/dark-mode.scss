@@ -4080,4 +4080,85 @@ body.dark-only {
       }
     }
   }
+
+  // D-502 F3 (ticket 1180, tarea 3.8, bloque TEMA-B18): terceros en oscuro, solo con tokens --ds-*.
+  // El claro no cambia (todo cuelga de body.dark-only). ApexCharts y FullCalendar no estan en las plantillas
+  // ni instalados; Quill solo trae su CSS. Se cubren por si aparecen, sin tocar sus datos.
+  // ng-select: panel y opcion marcada.
+  .ng-select .ng-select-container {
+    background: var(--ds-surface);
+    border-color: var(--ds-control-border);
+    color: var(--ds-ink);
+  }
+
+  .ng-dropdown-panel {
+    background: var(--ds-surface);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink);
+
+    .ng-dropdown-panel-items .ng-option {
+      background: var(--ds-surface);
+      color: var(--ds-ink-2);
+
+      &.ng-option-marked {
+        background: var(--ds-row-hover);
+        color: var(--ds-ink);
+      }
+
+      &.ng-option-selected,
+      &.ng-option-selected.ng-option-marked {
+        background: var(--ds-accent-soft);
+        color: var(--ds-accent-ink);
+      }
+
+      &.ng-option-disabled {
+        color: var(--ds-muted);
+      }
+    }
+  }
+
+  // SweetAlert2: popup, titulo y boton de confirmar.
+  .swal2-popup {
+    background: var(--ds-surface);
+    color: var(--ds-ink-2);
+
+    .swal2-title { color: var(--ds-ink); }
+    .swal2-html-container { color: var(--ds-body); }
+
+    .swal2-styled.swal2-confirm {
+      background: var(--ds-accent);
+      color: var(--ds-on-accent);
+    }
+  }
+
+  // Quill: barra de herramientas y editor.
+  .ql-toolbar.ql-snow {
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
+
+    .ql-stroke { stroke: var(--ds-ink-2); }
+    .ql-fill { fill: var(--ds-ink-2); }
+    .ql-picker { color: var(--ds-ink-2); }
+  }
+
+  .ql-container.ql-snow {
+    background: var(--ds-surface);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink);
+
+    .ql-editor.ql-blank::before { color: var(--ds-muted); }
+  }
+
+  // FullCalendar (v5+ lee variables --fc-*): celdas, hoy y eventos.
+  .fc {
+    --fc-page-bg-color: var(--ds-surface);
+    --fc-neutral-bg-color: var(--ds-surface-2);
+    --fc-border-color: var(--ds-line-strong);
+    --fc-today-bg-color: var(--ds-accent-soft);
+    --fc-event-bg-color: var(--ds-accent);
+    --fc-event-border-color: var(--ds-accent);
+    --fc-event-text-color: var(--ds-on-accent);
+
+    color: var(--ds-ink-2);
+  }
 }

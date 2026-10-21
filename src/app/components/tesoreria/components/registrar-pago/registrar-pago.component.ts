@@ -10,6 +10,7 @@ import { TreasuryService } from '../../../../shared/services/treasury/treasury.s
 import { MaestroService } from '../../../../shared/services/maestros/maestro.service';
 import { SubmitPaymentPayload } from '../../../../shared/services/treasury/treasury.models';
 
+import { TranslateService } from '@ngx-translate/core';
 /**
  * Spec 013 — Tesorería MVP. Modal "Registrar Pago" del tesorero (T-17, CA-08).
  * Pago desde cero, aprobado directo (origen "tesorero"). Calcula SHA-256 del
@@ -37,6 +38,7 @@ export class RegistrarPagoComponent implements OnInit {
     private maestro: MaestroService,
     private treasury: TreasuryService,
     private toastr: ToastrService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -132,17 +134,17 @@ export class RegistrarPagoComponent implements OnInit {
       this.treasury.directPayment(payload).subscribe({
         next: () => {
           this.submitting = false;
-          this.toastr.success('Pago registrado y aprobado.');
+          this.toastr.success(this.translate.instant('tesoreria.registrarPago.pagoRegistradoYAprobado'));
           this.activeModal.close({ changed: true });
         },
         error: () => {
           this.submitting = false;
-          Swal.fire({ icon: 'error', title: 'No se pudo registrar', text: 'Ocurrió un error al registrar el pago.' });
+          Swal.fire({ icon: 'error', title: this.translate.instant('tesoreria.registrarPago.noSePudoRegistrar'), text: this.translate.instant('tesoreria.registrarPago.ocurrioUnErrorAlRegistrar') });
         },
       });
     } catch (e) {
       this.submitting = false;
-      Swal.fire({ icon: 'error', title: 'Error al subir el archivo', text: 'No se pudo procesar el comprobante. Inténtalo de nuevo.' });
+      Swal.fire({ icon: 'error', title: this.translate.instant('tesoreria.registrarPago.errorAlSubirElArchivo'), text: this.translate.instant('tesoreria.registrarPago.noSePudoProcesarEl') });
     }
   }
 

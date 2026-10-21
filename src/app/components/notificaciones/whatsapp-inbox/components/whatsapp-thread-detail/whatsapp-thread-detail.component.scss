@@ -554,10 +554,10 @@
   margin-bottom: 9px;
   padding: 10px 12px;
   border-radius: 11px;
-  background: #FFF1DF;
-  color: #D9820A;
+  background: var(--ds-warn-soft);
+  color: var(--ds-warn);
 
-  i { margin-top: 2px; font-size: 13px; color: #D9820A; }
+  i { margin-top: 2px; font-size: 13px; color: var(--ds-warn); }
 }
 
 .thread-detail__lectura-texto {
@@ -565,7 +565,7 @@
   line-height: 1.45;
   font-weight: 600;
   letter-spacing: normal;
-  color: #D9820A !important;
+  color: var(--ds-warn) !important;
 }
 
 .thread-detail__header-info app-linea-chip { margin-top: 3px; }

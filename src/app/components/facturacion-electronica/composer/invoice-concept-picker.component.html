@@ -1,19 +1,19 @@
 <div [formGroup]="item" class="concept-picker">
-  <input class="form-control" [class.is-filled]="item.get('description')?.value" formControlName="description" [readOnly]="disabled || saving" [attr.aria-label]="'Concepto ' + (index + 1)" placeholder="Escribe o busca: Mensualidad Katuq…" maxlength="300" autocomplete="off" (input)="search()" (keydown.escape)="dismiss()" (keydown.enter)="$event.preventDefault()">
-  <small class="field-hint" *ngIf="loading" role="status">Buscando conceptos…</small>
-  <div class="concept-suggestions" *ngIf="results.length" aria-label="Conceptos sugeridos">
+  <input class="form-control" [class.is-filled]="item.get('description')?.value" formControlName="description" [readOnly]="disabled || saving" [attr.aria-label]="'facturacionElectronica.invoiceConceptPicker.concepto' | translate:{numero: index + 1}" [placeholder]="'facturacionElectronica.invoiceConceptPicker.escribeOBuscaMensualidadKatuq' | translate" maxlength="300" autocomplete="off" (input)="search()" (keydown.escape)="dismiss()" (keydown.enter)="$event.preventDefault()">
+  <small class="field-hint" *ngIf="loading" role="status">{{ 'facturacionElectronica.invoiceConceptPicker.buscandoConceptos' | translate }}</small>
+  <div class="concept-suggestions" *ngIf="results.length" [attr.aria-label]="'facturacionElectronica.invoiceConceptPicker.conceptosSugeridos' | translate">
     <button type="button" *ngFor="let concept of results" (click)="choose(concept)" [disabled]="disabled || saving">
       <strong>{{ concept.description }}</strong>
-      <small>{{ concept.unitPrice | currency:'COP':'symbol-narrow':'1.2-2' }} sin IVA · IVA {{ concept.taxRate }} % · {{ concept.source === 'saved' ? 'Guardado' : 'Facturado antes' }}</small>
+      <small>{{ concept.unitPrice | currency:'COP':'symbol-narrow':'1.2-2' }} {{ 'facturacionElectronica.invoiceConceptPicker.sinIvaIva' | translate:{taxRate: concept.taxRate, guardado: (concept.source === 'saved' ? ('facturacionElectronica.invoiceConceptPicker.guardado' | translate) : ('facturacionElectronica.invoiceConceptPicker.facturadoAntes' | translate))} }}</small>
     </button>
-    <button type="button" (click)="dismiss()">Cerrar sugerencias</button>
+    <button type="button" (click)="dismiss()">{{ 'facturacionElectronica.invoiceConceptPicker.cerrarSugerencias' | translate }}</button>
   </div>
   <div class="concept-details">
     <div class="concept-reference">
-      <label [attr.for]="'invoice-concept-reference-' + index">Referencia <span>Opcional</span></label>
-      <input class="form-control reference-input" [id]="'invoice-concept-reference-' + index" formControlName="reference" [readOnly]="disabled || saving" [attr.aria-label]="'Referencia del concepto ' + (index + 1) + ' (opcional)'" placeholder="Referencia (opcional)" maxlength="50">
+      <label [attr.for]="'invoice-concept-reference-' + index">{{ 'facturacionElectronica.invoiceConceptPicker.referencia' | translate }} <span>{{ 'facturacionElectronica.invoiceComposer.opcional' | translate }}</span></label>
+      <input class="form-control reference-input" [id]="'invoice-concept-reference-' + index" formControlName="reference" [readOnly]="disabled || saving" [attr.aria-label]="'facturacionElectronica.invoiceConceptPicker.referenciaDelConcepto' | translate:{numero: index + 1}" [placeholder]="'facturacionElectronica.invoiceConceptPicker.referenciaOpcional' | translate" maxlength="50">
     </div>
-    <button type="button" class="btn concept-save" (click)="save()" [disabled]="disabled || saving"><i class="pi" aria-hidden="true" [ngClass]="saving ? 'pi-spin pi-spinner' : 'pi-bookmark'"></i> {{ saving ? 'Guardando…' : 'Guardar concepto' }}</button>
+    <button type="button" class="btn concept-save" (click)="save()" [disabled]="disabled || saving"><i class="pi" aria-hidden="true" [ngClass]="saving ? 'pi-spin pi-spinner' : 'pi-bookmark'"></i> {{ saving ? ('facturacionElectronica.invoiceConceptPicker.guardando' | translate) : ('facturacionElectronica.invoiceConceptPicker.guardarConcepto' | translate) }}</button>
   </div>
   <small class="field-hint" *ngIf="message" role="status">{{ message }}</small>
 </div>

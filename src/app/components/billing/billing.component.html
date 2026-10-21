@@ -2,17 +2,17 @@
   <!-- Header -->
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Configuración</span>
-      <h1 class="cfg-titulo">{{ 'Facturación y consumo' | translate }}</h1>
+      <span class="cfg-eyebrow">{{ 'billing.billing.configuracion' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'billing.billing.facturacionYConsumo' | translate }}</h1>
       <p class="cfg-sub">
-        {{ 'Historial de facturacion y consumo de tu plan' | translate }}
+        {{ 'billing.billing.historialDeFacturacionYConsumo' | translate }}
       </p>
     </div>
     <div class="cfg-acciones">
       <button pButton type="button" icon="pi pi-refresh"
               class="p-button-rounded p-button-outlined bi-btn-icono"
               (click)="loadData()" [disabled]="loading"></button>
-      <button pButton type="button" label="Ver Planes" icon="pi pi-th-large"
+      <button pButton type="button" [label]="'billing.billing.verPlanes' | translate" icon="pi pi-th-large"
               class="p-button-outlined p-button-sm bi-btn-sec"
               routerLink="/pricing"></button>
     </div>
@@ -28,33 +28,33 @@
     <!-- KPIs del mes actual -->
     <div class="cfg-stats" *ngIf="billingInfo">
       <div class="cfg-stat">
-        <small class="cfg-stat__label">Ventas del Mes</small>
+        <small class="cfg-stat__label">{{ 'billing.billing.ventasDelMes' | translate }}</small>
         <div class="cfg-stat__valor">${{ billingInfo.currentMonthSales | number:'1.0-0' }}</div>
         <small class="bi-stat-nota">COP</small>
       </div>
       <div class="cfg-stat bi-stat--ok">
-        <small class="cfg-stat__label">Tramo Actual</small>
-        <div class="cfg-stat__valor">{{ billingInfo.currentTierName || 'Freemium' }}</div>
-        <small class="bi-stat-nota">${{ billingInfo.projectedAmountUSD || 0 }} USD/mes</small>
+        <small class="cfg-stat__label">{{ 'billing.billing.tramoActual' | translate }}</small>
+        <div class="cfg-stat__valor">{{ billingInfo.currentTierName || ('billing.billing.freemium' | translate) }}</div>
+        <small class="bi-stat-nota">{{ 'billing.billing.usdMes' | translate:{projectedAmountUSD: (billingInfo.projectedAmountUSD || 0)} }}</small>
       </div>
       <div class="cfg-stat bi-stat--warn">
-        <small class="cfg-stat__label">Facturación proyectada</small>
+        <small class="cfg-stat__label">{{ 'billing.billing.facturacionProyectada' | translate }}</small>
         <div class="cfg-stat__valor">${{ billingInfo.projectedAmount | number:'1.0-0' }}</div>
         <!-- El precio del plan está en dólares y se convierte con la
              TRM. Decir solo "COP" hacía parecer que este número está
              cerrado, y cambia cada día hasta el corte: ahí se fija y
              ya no se mueve. Un cliente que ve un valor y le llega otro
              llama a preguntar, con razón. -->
-        <small class="bi-stat-nota">COP · valor estimado</small>
+        <small class="bi-stat-nota">{{ 'billing.billing.copValorEstimado' | translate }}</small>
         <small class="bi-stat-nota bi-stat-nota--fina"
                *ngIf="billingInfo.trmSeFijaEl">
-          Se fija el {{ billingInfo.trmSeFijaEl | date:'d MMM' }} con la TRM de ese día
+          {{ 'billing.billing.seFijaElConLa' | translate:{trmSeFijaEl: (billingInfo.trmSeFijaEl | date:'d MMM')} }}
         </small>
       </div>
       <div class="cfg-stat bi-stat--neutro">
-        <small class="cfg-stat__label">TRM del Dia</small>
+        <small class="cfg-stat__label">{{ 'billing.billing.trmDelDia' | translate }}</small>
         <div class="cfg-stat__valor">${{ billingInfo.trm | number:'1.2-2' }}</div>
-        <small class="bi-stat-nota">USD/COP</small>
+        <small class="bi-stat-nota">{{ 'billing.billing.usdCop' | translate }}</small>
       </div>
     </div>
 
@@ -63,9 +63,9 @@
       <div class="bi-card-cabeza">
         <div>
           <h6 class="cfg-card__titulo bi-card-titulo">
-            <i class="pi pi-chart-bar bi-icono"></i>Consumo del Mes
+            <i class="pi pi-chart-bar bi-icono"></i>{{ 'billing.billing.consumoDelMes' | translate }}
           </h6>
-          <small class="bi-nota">Ventas acumuladas vs tope de tu tramo actual</small>
+          <small class="bi-nota">{{ 'billing.billing.ventasAcumuladasVsTopeDe' | translate }}</small>
         </div>
         <div class="text-end">
           <span class="bi-porcentaje">
@@ -88,7 +88,7 @@
         <div class="d-flex justify-content-between mt-1">
           <small class="bi-marca">$0</small>
           <small class="bi-marca bi-marca--actual">
-            ${{ billingInfo.currentMonthSales | number:'1.0-0' }} COP
+            {{ 'billing.billing.cop' | translate:{currentMonthSales: (billingInfo.currentMonthSales | number:'1.0-0')} }}
           </small>
           <small class="bi-marca">
             ${{ getCurrentTierMax() | number:'1.0-0' }}
@@ -116,9 +116,9 @@
       <div class="bi-card-cabeza">
         <div>
           <h6 class="cfg-card__titulo bi-card-titulo">
-            <i class="pi pi-chart-bar bi-icono"></i>Uso del Plan Gratuito
+            <i class="pi pi-chart-bar bi-icono"></i>{{ 'billing.billing.usoDelPlanGratuito' | translate }}
           </h6>
-          <small class="bi-nota">Pedidos usados este mes</small>
+          <small class="bi-nota">{{ 'billing.billing.pedidosUsadosEsteMes' | translate }}</small>
         </div>
         <div class="text-end">
           <span class="bi-porcentaje" *ngIf="(subscriptionService.usage$ | async) as usage">
@@ -137,8 +137,8 @@
         </div>
       </div>
       <div class="d-flex justify-content-between mt-1">
-        <small class="bi-marca">0 pedidos</small>
-        <small class="bi-marca">15 pedidos</small>
+        <small class="bi-marca">{{ 'billing.billing.0Pedidos' | translate }}</small>
+        <small class="bi-marca">{{ 'billing.billing.15Pedidos' | translate }}</small>
       </div>
     </section>
 
@@ -146,25 +146,25 @@
     <section class="cfg-card" *ngIf="billingInfo?.tiers">
       <div class="bi-card-titulo-fila">
         <i class="pi pi-th-large bi-icono"></i>
-        <span class="bi-card-titulo-texto">Escala de Facturacion</span>
+        <span class="bi-card-titulo-texto">{{ 'billing.billing.escalaDeFacturacion' | translate }}</span>
       </div>
       <div class="bi-tabla-scroll">
         <table class="table bi-tabla mb-0">
           <thead>
             <tr>
-              <th class="ps-3">Plan</th>
-              <th class="text-center">Ventas hasta</th>
-              <th class="text-center">Precio USD</th>
+              <th class="ps-3">{{ 'billing.billing.plan' | translate }}</th>
+              <th class="text-center">{{ 'billing.billing.ventasHasta' | translate }}</th>
+              <th class="text-center">{{ 'billing.billing.precioUsd' | translate }}</th>
               <!-- El precio de lista es el de dólares; el de pesos es una
                    conversión del día y se dice, para que nadie lo tome
                    como un valor cerrado. -->
               <th class="text-center">
-                Precio COP
+                {{ 'billing.billing.precioCop' | translate }}
                 <small class="d-block fw-normal bi-th-nota">
-                  aprox. · TRM de hoy
+                  {{ 'billing.billing.aproxTrmDeHoy' | translate }}
                 </small>
               </th>
-              <th class="text-center">Estado</th>
+              <th class="text-center">{{ 'billing.billing.estado' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -173,7 +173,7 @@
               <td class="ps-3 fw-semibold">{{ tier.name }}</td>
               <td class="text-center">
                 <span class="bi-celda" *ngIf="!tier.custom">${{ tier.maxSalesCOP | number:'1.0-0' }}</span>
-                <span class="bi-celda" *ngIf="tier.custom">Personalizado</span>
+                <span class="bi-celda" *ngIf="tier.custom">{{ 'billing.billing.personalizado' | translate }}</span>
               </td>
               <td class="text-center">${{ tier.priceUSD }}</td>
               <td class="text-center">
@@ -182,7 +182,7 @@
               </td>
               <td class="text-center">
                 <span *ngIf="billingInfo.currentTier === tier.id" class="cfg-pill">
-                  Actual
+                  {{ 'billing.billing.actual' | translate }}
                 </span>
               </td>
             </tr>
@@ -195,20 +195,20 @@
     <section class="cfg-card">
       <div class="bi-card-titulo-fila">
         <i class="pi pi-file bi-icono"></i>
-        <span class="bi-card-titulo-texto">Historial de Facturas</span>
+        <span class="bi-card-titulo-texto">{{ 'billing.billing.historialDeFacturas' | translate }}</span>
         <span class="cfg-pill ms-auto">{{ invoices.length }}</span>
       </div>
       <div class="bi-tabla-scroll" *ngIf="invoices.length > 0">
         <table class="table bi-tabla mb-0">
           <thead>
             <tr>
-              <th class="ps-3">Periodo</th>
-              <th class="text-center">Ventas COP</th>
-              <th class="text-center">Plan</th>
-              <th class="text-center">Monto COP</th>
-              <th class="text-center">TRM</th>
-              <th class="text-center">Estado</th>
-              <th class="text-center">Fecha</th>
+              <th class="ps-3">{{ 'billing.billing.periodo' | translate }}</th>
+              <th class="text-center">{{ 'billing.billing.ventasCop' | translate }}</th>
+              <th class="text-center">{{ 'billing.billing.plan' | translate }}</th>
+              <th class="text-center">{{ 'billing.billing.montoCop' | translate }}</th>
+              <th class="text-center">{{ 'billing.billing.trm' | translate }}</th>
+              <th class="text-center">{{ 'billing.billing.estado' | translate }}</th>
+              <th class="text-center">{{ 'billing.billing.fecha' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -232,17 +232,17 @@
       <!-- Empty state -->
       <div *ngIf="invoices.length === 0" class="cfg-vacio">
         <i class="pi pi-inbox cfg-vacio__icono"></i>
-        <p class="cfg-vacio__titulo">Aun no tienes facturas</p>
-        <small class="cfg-vacio__texto">Las facturas se generan automaticamente cada mes</small>
+        <p class="cfg-vacio__titulo">{{ 'billing.billing.aunNoTienesFacturas' | translate }}</p>
+        <small class="cfg-vacio__texto">{{ 'billing.billing.lasFacturasSeGeneranAutomaticamente' | translate }}</small>
       </div>
     </section>
 
     <!-- Freemium CTA -->
     <div class="text-center" *ngIf="currentPlan === 'freemium'">
       <section class="cfg-card bi-cta">
-        <h5 class="bi-cta__titulo">Activa tu plan pago</h5>
-        <p class="bi-cta__texto">Desbloquea pedidos ilimitados y todas las funcionalidades</p>
-        <button pButton label="Ver Planes" icon="pi pi-bolt"
+        <h5 class="bi-cta__titulo">{{ 'billing.billing.activaTuPlanPago' | translate }}</h5>
+        <p class="bi-cta__texto">{{ 'billing.billing.desbloqueaPedidosIlimitadosYTodas' | translate }}</p>
+        <button pButton [label]="'billing.billing.verPlanes' | translate" icon="pi pi-bolt"
                 class="bi-btn-primario"
                 routerLink="/pricing"></button>
       </section>

@@ -4,50 +4,50 @@
   <header class="ct-header">
     <div class="ct-header__copy">
       <div class="ct-eyebrow">
-        <span class="ct-eyebrow__brand">FINANZAS</span>
-        <span class="ct-env" *ngIf="overview?.initialized" [class.ct-env--success]="isReady" [class.ct-env--warning]="!isReady"><span class="ct-env__dot"></span>{{ isReady ? 'Activa' : 'Por confirmar' }}</span>
+        <span class="ct-eyebrow__brand">{{ 'contabilidad.contabilidad.finanzas' | translate }}</span>
+        <span class="ct-env" *ngIf="overview?.initialized" [class.ct-env--success]="isReady" [class.ct-env--warning]="!isReady"><span class="ct-env__dot"></span>{{ isReady ? ('contabilidad.contabilidad.activa' | translate) : ('contabilidad.contabilidad.porConfirmar' | translate) }}</span>
       </div>
-      <h1>Contabilidad</h1>
-      <p>Organiza facturas, notas y movimientos del comercio en un libro que siempre debe cuadrar.</p>
+      <h1>{{ 'contabilidad.contabilidad.contabilidad' | translate }}</h1>
+      <p>{{ 'contabilidad.contabilidad.organizaFacturasNotasYMovimientos' | translate }}</p>
     </div>
     <div class="ct-header__actions" *ngIf="overview?.initialized">
       <button *ngIf="isReady" type="button" class="ct-btn ct-btn--primary" (click)="openManualEntry()">
-        <i class="pi pi-plus"></i> Nuevo comprobante
+        <i class="pi pi-plus"></i> {{ 'contabilidad.contabilidad.nuevoComprobante' | translate }}
       </button>
-      <button type="button" class="ct-iconbtn ct-iconbtn--accent" title="Actualizar" aria-label="Actualizar" (click)="loadAll()" [disabled]="loading">
+      <button type="button" class="ct-iconbtn ct-iconbtn--accent" [title]="'contabilidad.contabilidad.actualizar' | translate" [attr.aria-label]="'contabilidad.contabilidad.actualizar' | translate" (click)="loadAll()" [disabled]="loading">
         <i class="pi pi-refresh" [class.pi-spin]="loading"></i>
       </button>
       <button type="button" class="ct-btn ct-btn--ghost" (click)="syncMovements()" [disabled]="saving">
-        <i class="pi pi-sync ct-accent"></i> Sincronizar movimientos
+        <i class="pi pi-sync ct-accent"></i> {{ 'contabilidad.contabilidad.sincronizarMovimientos' | translate }}
       </button>
     </div>
   </header>
 
   <div class="ct-card ct-state" *ngIf="loading">
-    <i class="pi pi-spin pi-spinner"></i><span>Cargando la contabilidad del comercio…</span>
+    <i class="pi pi-spin pi-spinner"></i><span>{{ 'contabilidad.contabilidad.cargandoLaContabilidadDelComercio' | translate }}</span>
   </div>
 
   <div class="ct-alert ct-alert--error" *ngIf="!loading && error">
     <i class="pi pi-exclamation-triangle"></i>
-    <div><strong>No pudimos cargar esta información</strong><span>{{ error }}</span></div>
-    <button type="button" class="ct-btn ct-btn--danger-ghost" (click)="loadAll()">Intentar nuevamente</button>
+    <div><strong>{{ 'contabilidad.contabilidad.noPudimosCargarEstaInformacion' | translate }}</strong><span>{{ error }}</span></div>
+    <button type="button" class="ct-btn ct-btn--danger-ghost" (click)="loadAll()">{{ 'contabilidad.contabilidad.intentarNuevamente' | translate }}</button>
   </div>
 
   <!-- ===== Bienvenida (sin inicializar) ===== -->
   <section class="ct-card ct-welcome" *ngIf="!loading && !error && !overview?.initialized">
     <span class="ct-welcome__icon"><i class="pi pi-book"></i></span>
-    <span class="ct-kicker">Configuración inicial · 3 pasos</span>
-    <h2>Prepara la contabilidad de este comercio</h2>
-    <p>No necesitas cargar un archivo ni conocer códigos. Katuq crea una plantilla inicial y podrás revisarla antes de que se contabilice algo.</p>
+    <span class="ct-kicker">{{ 'contabilidad.contabilidad.configuracionInicial3Pasos' | translate }}</span>
+    <h2>{{ 'contabilidad.contabilidad.preparaLaContabilidadDeEste' | translate }}</h2>
+    <p>{{ 'contabilidad.contabilidad.noNecesitasCargarUnArchivo' | translate }}</p>
     <div class="ct-steps">
-      <article><span class="ct-stepdot">1</span><div><strong>Preparar las cuentas</strong><small>Caja, clientes, IVA, ventas, inventario, proveedores y gastos.</small></div></article>
-      <article><span class="ct-stepdot">2</span><div><strong>Revisar y activar</strong><small>Confirma las siete cuentas principales con tu contador o persona responsable.</small></div></article>
-      <article><span class="ct-stepdot">3</span><div><strong>Trabajar normalmente</strong><small>Las facturas, notas DIAN y pagos aprobados crearán su comprobante automáticamente.</small></div></article>
+      <article><span class="ct-stepdot">1</span><div><strong>{{ 'contabilidad.contabilidad.prepararLasCuentas' | translate }}</strong><small>{{ 'contabilidad.contabilidad.cajaClientesIvaVentasInventario' | translate }}</small></div></article>
+      <article><span class="ct-stepdot">2</span><div><strong>{{ 'contabilidad.contabilidad.revisarYActivar' | translate }}</strong><small>{{ 'contabilidad.contabilidad.confirmaLasSieteCuentasPrincipales' | translate }}</small></div></article>
+      <article><span class="ct-stepdot">3</span><div><strong>{{ 'contabilidad.contabilidad.trabajarNormalmente' | translate }}</strong><small>{{ 'contabilidad.contabilidad.lasFacturasNotasDianY' | translate }}</small></div></article>
     </div>
     <button type="button" class="ct-btn ct-btn--primary ct-btn--lg" (click)="initialize()" [disabled]="saving">
-      <i class="pi" [ngClass]="saving ? 'pi-spin pi-spinner' : 'pi-bolt'"></i> Preparar mi contabilidad
+      <i class="pi" [ngClass]="saving ? 'pi-spin pi-spinner' : 'pi-bolt'"></i> {{ 'contabilidad.contabilidad.prepararMiContabilidad' | translate }}
     </button>
-    <small class="ct-welcome__note">La plantilla es editable y debe validarse según la realidad tributaria del comercio.</small>
+    <small class="ct-welcome__note">{{ 'contabilidad.contabilidad.laPlantillaEsEditableY' | translate }}</small>
   </section>
 
   <ng-container *ngIf="!loading && !error && overview?.initialized">
@@ -66,38 +66,38 @@
       <div class="ct-strip__meta">
         <span class="ct-strip__state" [class.is-ok]="isReady" [class.is-warn]="!isReady">
           <i class="pi" [ngClass]="isReady ? 'pi-check' : 'pi-exclamation-circle'"></i>
-          {{ isReady ? 'Contabilización automática activa' : 'Contabilización en borrador' }}
+          {{ isReady ? ('contabilidad.contabilidad.contabilizacionAutomaticaActiva' | translate) : ('contabilidad.contabilidad.contabilizacionEnBorrador' | translate) }}
         </span>
         <span class="ct-strip__period"><i class="pi pi-calendar"></i> {{ periodFrom | date:'dd/MM/yyyy' }} – {{ periodTo | date:'dd/MM/yyyy' }}</span>
       </div>
     </section>
 
     <!-- ===== KPIs ===== -->
-    <div class="ct-kpis" aria-label="Resumen contable">
+    <div class="ct-kpis" [attr.aria-label]="'contabilidad.contabilidad.resumenContable' | translate">
       <button type="button" class="ct-kpi" [ngClass]="isReady ? 'ct-kpi--green' : 'ct-kpi--orange'" (click)="selectTab('settings')">
-        <div><span class="ct-kpi__label">Estado</span><strong>{{ isReady ? 'Activa' : 'Por confirmar' }}</strong><small>{{ overview?.accounts || 0 }} cuentas preparadas</small></div>
+        <div><span class="ct-kpi__label">{{ 'contabilidad.contabilidad.estado' | translate }}</span><strong>{{ isReady ? ('contabilidad.contabilidad.activa' | translate) : ('contabilidad.contabilidad.porConfirmar' | translate) }}</strong><small>{{ overview?.accounts || 0 }} {{ 'contabilidad.contabilidad.cuentasPreparadas' | translate }}</small></div>
         <span class="ct-kpi__icon"><i class="pi" [ngClass]="isReady ? 'pi-shield' : 'pi-clock'"></i></span>
       </button>
       <button type="button" class="ct-kpi ct-kpi--accent" (click)="selectTab('journal')">
-        <div><span class="ct-kpi__label">Contabilizados</span><strong>{{ overview?.journal?.posted || 0 }}</strong><small>comprobantes en el libro</small></div>
+        <div><span class="ct-kpi__label">{{ 'contabilidad.contabilidad.contabilizados' | translate }}</span><strong>{{ overview?.journal?.posted || 0 }}</strong><small>{{ 'contabilidad.contabilidad.comprobantesEnElLibro' | translate }}</small></div>
         <span class="ct-kpi__icon"><i class="pi pi-book"></i></span>
       </button>
       <button type="button" class="ct-kpi ct-kpi--orange" (click)="selectTab('journal')">
-        <div><span class="ct-kpi__label">Por revisar</span><strong>{{ overview?.journal?.drafts || 0 }}</strong><small>borradores sin afectar saldos</small></div>
+        <div><span class="ct-kpi__label">{{ 'contabilidad.contabilidad.porRevisar' | translate }}</span><strong>{{ overview?.journal?.drafts || 0 }}</strong><small>{{ 'contabilidad.contabilidad.borradoresSinAfectarSaldos' | translate }}</small></div>
         <span class="ct-kpi__icon"><i class="pi pi-pencil"></i></span>
       </button>
       <button type="button" class="ct-kpi" [ngClass]="balanceOk ? 'ct-kpi--green' : 'ct-kpi--red'" (click)="selectTab('balance')">
-        <div><span class="ct-kpi__label">Cuadre del período</span><strong>{{ balanceOk ? 'Correcto' : ((balance?.difference || 0) | currency:'COP':'symbol-narrow':'1.0-0') }}</strong><small>débitos y créditos {{ balanceOk ? 'coinciden' : 'no coinciden' }}</small></div>
+        <div><span class="ct-kpi__label">{{ 'contabilidad.contabilidad.cuadreDelPeriodo' | translate }}</span><strong>{{ balanceOk ? ('contabilidad.contabilidad.correcto' | translate) : ((balance?.difference || 0) | currency:'COP':'symbol-narrow':'1.0-0') }}</strong><small>{{ 'contabilidad.contabilidad.debitosYCreditos' | translate:{coinciden: (balanceOk ? ('contabilidad.contabilidad.coinciden' | translate) : ('contabilidad.contabilidad.noCoinciden' | translate))} }}</small></div>
         <span class="ct-kpi__icon"><i class="pi" [ngClass]="balanceOk ? 'pi-check' : 'pi-exclamation-triangle'"></i></span>
       </button>
     </div>
 
     <!-- ===== Pestañas ===== -->
-    <nav class="ct-tabs" aria-label="Secciones de contabilidad">
-      <button type="button" [class.is-active]="activeTab === 'summary'" (click)="selectTab('summary')"><i class="pi pi-home"></i> Resumen</button>
-      <button type="button" [class.is-active]="activeTab === 'journal'" (click)="selectTab('journal')"><i class="pi pi-book"></i> Comprobantes <span class="ct-tabs__count">{{ entries.length }}</span></button>
-      <button type="button" [class.is-active]="activeTab === 'balance'" (click)="selectTab('balance')"><i class="pi pi-chart-bar"></i> Balance de prueba</button>
-      <button type="button" [class.is-active]="activeTab === 'settings'" (click)="selectTab('settings')"><i class="pi pi-cog"></i> Configuración</button>
+    <nav class="ct-tabs" [attr.aria-label]="'contabilidad.contabilidad.seccionesDeContabilidad' | translate">
+      <button type="button" [class.is-active]="activeTab === 'summary'" (click)="selectTab('summary')"><i class="pi pi-home"></i> {{ 'contabilidad.contabilidad.resumen' | translate }}</button>
+      <button type="button" [class.is-active]="activeTab === 'journal'" (click)="selectTab('journal')"><i class="pi pi-book"></i> {{ 'contabilidad.contabilidad.comprobantes' | translate }} <span class="ct-tabs__count">{{ entries.length }}</span></button>
+      <button type="button" [class.is-active]="activeTab === 'balance'" (click)="selectTab('balance')"><i class="pi pi-chart-bar"></i> {{ 'contabilidad.contabilidad.balanceDePrueba' | translate }}</button>
+      <button type="button" [class.is-active]="activeTab === 'settings'" (click)="selectTab('settings')"><i class="pi pi-cog"></i> {{ 'contabilidad.contabilidad.configuracion' | translate }}</button>
     </nav>
 
     <!-- ===== Resumen ===== -->
@@ -105,31 +105,31 @@
       <article class="ct-card ct-panel">
         <div class="ct-panel__head">
           <span class="ct-panel__icon ct-panel__icon--accent"><i class="pi pi-sitemap"></i></span>
-          <div><h2>¿Cómo funciona?</h2><p>Qué asiento crea cada movimiento del comercio</p></div>
+          <div><h2>{{ 'contabilidad.contabilidad.comoFunciona' | translate }}</h2><p>{{ 'contabilidad.contabilidad.queAsientoCreaCadaMovimiento' | translate }}</p></div>
         </div>
         <div class="ct-how">
-          <div class="ct-how__row"><span class="ct-how__icon ct-how__icon--accent"><i class="pi pi-file"></i></span><div><strong>Factura aceptada</strong><small>Aumenta lo que el cliente debe, el ingreso y el IVA generado.</small></div></div>
-          <div class="ct-how__row"><span class="ct-how__icon ct-how__icon--orange"><i class="pi pi-replay"></i></span><div><strong>Nota crédito aceptada</strong><small>Disminuye la cuenta por cobrar y revierte venta e IVA.</small></div></div>
-          <div class="ct-how__row"><span class="ct-how__icon ct-how__icon--blue"><i class="pi pi-plus-circle"></i></span><div><strong>Nota débito aceptada</strong><small>Aumenta la cuenta por cobrar y el mayor valor facturado.</small></div></div>
-          <div class="ct-how__row"><span class="ct-how__icon ct-how__icon--green"><i class="pi pi-wallet"></i></span><div><strong>Pago aprobado</strong><small>Aumenta caja o bancos y disminuye lo que el cliente debe. Si aún no hay factura, queda como anticipo y se aplica cuando la DIAN la acepte.</small></div></div>
+          <div class="ct-how__row"><span class="ct-how__icon ct-how__icon--accent"><i class="pi pi-file"></i></span><div><strong>{{ 'contabilidad.contabilidad.facturaAceptada' | translate }}</strong><small>{{ 'contabilidad.contabilidad.aumentaLoQueElCliente' | translate }}</small></div></div>
+          <div class="ct-how__row"><span class="ct-how__icon ct-how__icon--orange"><i class="pi pi-replay"></i></span><div><strong>{{ 'contabilidad.contabilidad.notaCreditoAceptada' | translate }}</strong><small>{{ 'contabilidad.contabilidad.disminuyeLaCuentaPorCobrar' | translate }}</small></div></div>
+          <div class="ct-how__row"><span class="ct-how__icon ct-how__icon--blue"><i class="pi pi-plus-circle"></i></span><div><strong>{{ 'contabilidad.contabilidad.notaDebitoAceptada' | translate }}</strong><small>{{ 'contabilidad.contabilidad.aumentaLaCuentaPorCobrar' | translate }}</small></div></div>
+          <div class="ct-how__row"><span class="ct-how__icon ct-how__icon--green"><i class="pi pi-wallet"></i></span><div><strong>{{ 'contabilidad.contabilidad.pagoAprobado' | translate }}</strong><small>{{ 'contabilidad.contabilidad.aumentaCajaOBancosY' | translate }}</small></div></div>
         </div>
       </article>
 
       <article class="ct-card ct-panel">
         <div class="ct-panel__head">
           <span class="ct-panel__icon ct-panel__icon--green"><i class="pi pi-history"></i></span>
-          <div><h2>Últimos comprobantes</h2><p>Actividad reciente del libro</p></div>
-          <button type="button" class="ct-link" (click)="selectTab('journal')">Ver todos <i class="pi pi-arrow-right"></i></button>
+          <div><h2>{{ 'contabilidad.contabilidad.ultimosComprobantes' | translate }}</h2><p>{{ 'contabilidad.contabilidad.actividadRecienteDelLibro' | translate }}</p></div>
+          <button type="button" class="ct-link" (click)="selectTab('journal')">{{ 'contabilidad.contabilidad.verTodos' | translate }} <i class="pi pi-arrow-right"></i></button>
         </div>
         <div class="ct-empty ct-empty--sm" *ngIf="!overview?.recentEntries?.length">
           <span class="ct-empty__icon"><i class="pi pi-book"></i></span>
-          <strong>Todavía no hay comprobantes</strong>
-          <span>Aparecerán aquí cuando se contabilice una factura, nota o movimiento manual.</span>
+          <strong>{{ 'contabilidad.contabilidad.todaviaNoHayComprobantes' | translate }}</strong>
+          <span>{{ 'contabilidad.contabilidad.apareceranAquiCuandoSeContabilice' | translate }}</span>
         </div>
         <button *ngFor="let entry of overview?.recentEntries; trackBy: trackById" type="button" class="ct-recent" (click)="openEntry(entry)">
           <span class="ct-recent__icon" [class.ct-recent__icon--manual]="entry.sourceType === 'manual'"><i class="pi" [ngClass]="entry.sourceType === 'manual' ? 'pi-pencil' : 'pi-file'"></i></span>
           <div class="ct-recent__copy"><strong>{{ entry.description }}</strong><small>{{ entry.date }} · {{ sourceLabel(entry.sourceType) }}</small></div>
-          <span class="ct-pill" [ngClass]="entry.status === 'draft' ? 'ct-pill--warning' : 'ct-pill--success'">{{ entry.status === 'posted' ? 'Contabilizado' : 'Borrador' }}</span>
+          <span class="ct-pill" [ngClass]="entry.status === 'draft' ? 'ct-pill--warning' : 'ct-pill--success'">{{ entry.status === 'posted' ? ('contabilidad.contabilidad.contabilizado' | translate) : ('contabilidad.contabilidad.borrador' | translate) }}</span>
           <span class="ct-amount">{{ entry.totalDebit | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
         </button>
       </article>
@@ -139,20 +139,20 @@
     <section class="ct-card ct-list" *ngIf="activeTab === 'journal'">
       <div class="ct-list__head">
         <div class="ct-list__title">
-          <h2>Comprobantes contables</h2>
-          <p>Libro diario · cada comprobante debe tener el mismo total en débitos y créditos</p>
+          <h2>{{ 'contabilidad.contabilidad.comprobantesContables' | translate }}</h2>
+          <p>{{ 'contabilidad.contabilidad.libroDiarioCadaComprobanteDebe' | translate }}</p>
         </div>
         <div class="ct-list__tools">
           <label class="ct-search" [class.is-active]="search">
             <i class="pi pi-search"></i>
-            <input type="search" [(ngModel)]="search" placeholder="Número, documento o concepto" aria-label="Buscar comprobantes">
+            <input type="search" [(ngModel)]="search" [placeholder]="'contabilidad.contabilidad.numeroDocumentoOConcepto' | translate" [attr.aria-label]="'contabilidad.contabilidad.buscarComprobantes' | translate">
           </label>
-          <div class="ct-segment" role="group" aria-label="Filtrar por estado">
-            <button type="button" [class.is-active]="entryFilter === 'all'" (click)="entryFilter = 'all'">Todos <b>{{ entries.length }}</b></button>
-            <button type="button" [class.is-active]="entryFilter === 'posted'" (click)="entryFilter = 'posted'">Contabilizados <b>{{ postedCount }}</b></button>
-            <button type="button" [class.is-active]="entryFilter === 'draft'" (click)="entryFilter = 'draft'">Borradores <b>{{ draftCount }}</b></button>
+          <div class="ct-segment" role="group" [attr.aria-label]="'contabilidad.contabilidad.filtrarPorEstado' | translate">
+            <button type="button" [class.is-active]="entryFilter === 'all'" (click)="entryFilter = 'all'">{{ 'contabilidad.contabilidad.todos' | translate }} <b>{{ entries.length }}</b></button>
+            <button type="button" [class.is-active]="entryFilter === 'posted'" (click)="entryFilter = 'posted'">{{ 'contabilidad.contabilidad.contabilizados' | translate }} <b>{{ postedCount }}</b></button>
+            <button type="button" [class.is-active]="entryFilter === 'draft'" (click)="entryFilter = 'draft'">{{ 'contabilidad.contabilidad.borradores' | translate }} <b>{{ draftCount }}</b></button>
           </div>
-          <button *ngIf="isReady" type="button" class="ct-btn ct-btn--primary" (click)="showManualEntry = !showManualEntry"><i class="pi" [ngClass]="showManualEntry ? 'pi-times' : 'pi-plus'"></i> {{ showManualEntry ? 'Cerrar' : 'Nuevo comprobante' }}</button>
+          <button *ngIf="isReady" type="button" class="ct-btn ct-btn--primary" (click)="showManualEntry = !showManualEntry"><i class="pi" [ngClass]="showManualEntry ? 'pi-times' : 'pi-plus'"></i> {{ showManualEntry ? ('comun.cerrar' | translate) : ('contabilidad.contabilidad.nuevoComprobante' | translate) }}</button>
         </div>
       </div>
 
@@ -160,37 +160,37 @@
       <div class="ct-manual" *ngIf="showManualEntry">
         <div class="ct-manual__head">
           <span class="ct-stepdot"><i class="pi pi-pencil"></i></span>
-          <div><h3>Comprobante manual</h3><p>Un movimiento que no viene de una factura ni de un pago registrado.</p></div>
+          <div><h3>{{ 'contabilidad.contabilidad.comprobanteManual' | translate }}</h3><p>{{ 'contabilidad.contabilidad.unMovimientoQueNoViene' | translate }}</p></div>
         </div>
         <div class="ct-manual__row">
-          <label><span class="ct-label">Fecha</span><input class="ct-input" type="date" [(ngModel)]="manual.date"></label>
-          <label><span class="ct-label">¿Qué ocurrió?</span><input class="ct-input" type="text" [(ngModel)]="manual.description" placeholder="Ej. Pago de servicio de internet" [class.is-filled]="manual.description"></label>
+          <label><span class="ct-label">{{ 'contabilidad.contabilidad.fecha' | translate }}</span><input class="ct-input" type="date" [(ngModel)]="manual.date"></label>
+          <label><span class="ct-label">{{ 'contabilidad.contabilidad.queOcurrio' | translate }}</span><input class="ct-input" type="text" [(ngModel)]="manual.description" [placeholder]="'contabilidad.contabilidad.ejPagoDeServicioDe' | translate" [class.is-filled]="manual.description"></label>
         </div>
         <div class="ct-lines">
-          <div class="ct-lines__head"><span>Cuenta</span><span>Detalle</span><span class="text-end">Débito</span><span class="text-end">Crédito</span><span></span></div>
+          <div class="ct-lines__head"><span>{{ 'contabilidad.contabilidad.cuenta' | translate }}</span><span>{{ 'contabilidad.contabilidad.detalle' | translate }}</span><span class="text-end">{{ 'contabilidad.contabilidad.debito' | translate }}</span><span class="text-end">{{ 'contabilidad.contabilidad.credito' | translate }}</span><span></span></div>
           <div *ngFor="let line of manual.lines; let i = index" class="ct-lines__row">
-            <select class="ct-input" [(ngModel)]="line.accountCode" [class.is-filled]="line.accountCode" [attr.aria-label]="'Cuenta de la línea ' + (i + 1)"><option value="">Selecciona una cuenta…</option><option *ngFor="let account of accounts" [value]="account.code" [disabled]="account.active === false">{{ account.code }} · {{ account.name }}</option></select>
-            <input class="ct-input" type="text" [(ngModel)]="line.description" placeholder="Detalle (opcional)" [attr.aria-label]="'Detalle de la línea ' + (i + 1)">
-            <div class="ct-money" [class.is-filled]="line.debit > 0"><span>$</span><input type="number" min="0" step="0.01" [(ngModel)]="line.debit" (ngModelChange)="line.credit = $event > 0 ? 0 : line.credit" placeholder="0" [attr.aria-label]="'Débito de la línea ' + (i + 1)"></div>
-            <div class="ct-money" [class.is-filled]="line.credit > 0"><span>$</span><input type="number" min="0" step="0.01" [(ngModel)]="line.credit" (ngModelChange)="line.debit = $event > 0 ? 0 : line.debit" placeholder="0" [attr.aria-label]="'Crédito de la línea ' + (i + 1)"></div>
-            <button type="button" class="ct-trash" (click)="removeLine(i)" [disabled]="manual.lines.length <= 2" aria-label="Quitar línea" title="Quitar"><i class="pi pi-trash"></i></button>
+            <select class="ct-input" [(ngModel)]="line.accountCode" [class.is-filled]="line.accountCode" [attr.aria-label]="'contabilidad.contabilidad.cuentaDeLaLinea' | translate:{numero: i + 1}"><option value="">{{ 'contabilidad.contabilidad.seleccionaUnaCuenta' | translate }}</option><option *ngFor="let account of accounts" [value]="account.code" [disabled]="account.active === false">{{ account.code }} · {{ account.name }}</option></select>
+            <input class="ct-input" type="text" [(ngModel)]="line.description" [placeholder]="'contabilidad.contabilidad.detalleOpcional' | translate" [attr.aria-label]="'contabilidad.contabilidad.detalleDeLaLinea' | translate:{numero: i + 1}">
+            <div class="ct-money" [class.is-filled]="line.debit > 0"><span>$</span><input type="number" min="0" step="0.01" [(ngModel)]="line.debit" (ngModelChange)="line.credit = $event > 0 ? 0 : line.credit" placeholder="0" [attr.aria-label]="'contabilidad.contabilidad.debitoDeLaLinea' | translate:{numero: i + 1}"></div>
+            <div class="ct-money" [class.is-filled]="line.credit > 0"><span>$</span><input type="number" min="0" step="0.01" [(ngModel)]="line.credit" (ngModelChange)="line.debit = $event > 0 ? 0 : line.debit" placeholder="0" [attr.aria-label]="'contabilidad.contabilidad.creditoDeLaLinea' | translate:{numero: i + 1}"></div>
+            <button type="button" class="ct-trash" (click)="removeLine(i)" [disabled]="manual.lines.length <= 2" [attr.aria-label]="'contabilidad.contabilidad.quitarLinea' | translate" [title]="'contabilidad.contabilidad.quitar' | translate"><i class="pi pi-trash"></i></button>
           </div>
         </div>
         <div class="ct-manual__foot">
-          <button type="button" class="ct-btn ct-btn--soft" (click)="addLine()"><i class="pi pi-plus"></i> Agregar línea</button>
+          <button type="button" class="ct-btn ct-btn--soft" (click)="addLine()"><i class="pi pi-plus"></i> {{ 'contabilidad.contabilidad.agregarLinea' | translate }}</button>
           <div class="ct-totals">
-            <span><small>Débitos</small><b>{{ manualTotals.debit | currency:'COP':'symbol-narrow':'1.0-0' }}</b></span>
-            <span><small>Créditos</small><b>{{ manualTotals.credit | currency:'COP':'symbol-narrow':'1.0-0' }}</b></span>
-            <span [class.is-bad]="manualTotals.difference !== 0" [class.is-ok]="manualTotals.difference === 0 && manualTotals.debit > 0"><small>Diferencia</small><b>{{ manualTotals.difference | currency:'COP':'symbol-narrow':'1.0-0' }}</b></span>
+            <span><small>{{ 'contabilidad.contabilidad.debitos' | translate }}</small><b>{{ manualTotals.debit | currency:'COP':'symbol-narrow':'1.0-0' }}</b></span>
+            <span><small>{{ 'contabilidad.contabilidad.creditos' | translate }}</small><b>{{ manualTotals.credit | currency:'COP':'symbol-narrow':'1.0-0' }}</b></span>
+            <span [class.is-bad]="manualTotals.difference !== 0" [class.is-ok]="manualTotals.difference === 0 && manualTotals.debit > 0"><small>{{ 'contabilidad.contabilidad.diferencia' | translate }}</small><b>{{ manualTotals.difference | currency:'COP':'symbol-narrow':'1.0-0' }}</b></span>
           </div>
-          <button type="button" class="ct-btn ct-btn--primary" (click)="saveManualEntry()" [disabled]="saving || manualTotals.difference !== 0 || manualTotals.debit <= 0"><i class="pi pi-check"></i> Contabilizar comprobante</button>
+          <button type="button" class="ct-btn ct-btn--primary" (click)="saveManualEntry()" [disabled]="saving || manualTotals.difference !== 0 || manualTotals.debit <= 0"><i class="pi pi-check"></i> {{ 'contabilidad.contabilidad.contabilizarComprobante' | translate }}</button>
         </div>
       </div>
 
       <div class="ct-empty" *ngIf="!filteredEntries.length">
         <span class="ct-empty__icon"><i class="pi" [ngClass]="entries.length ? 'pi-search' : 'pi-book'"></i></span>
-        <strong>{{ entries.length ? 'Ningún comprobante coincide' : 'No hay comprobantes para mostrar' }}</strong>
-        <span>{{ entries.length ? 'Ajusta la búsqueda o el filtro de estado' : 'Cuando se contabilice una factura, una nota o un movimiento manual aparecerá aquí.' }}</span>
+        <strong>{{ entries.length ? ('contabilidad.contabilidad.ningunComprobanteCoincide' | translate) : ('contabilidad.contabilidad.noHayComprobantesParaMostrar' | translate) }}</strong>
+        <span>{{ entries.length ? ('contabilidad.contabilidad.ajustaLaBusquedaOEl' | translate) : ('contabilidad.contabilidad.cuandoSeContabiliceUnaFactura' | translate) }}</span>
       </div>
 
       <div class="ct-entries" *ngIf="filteredEntries.length">
@@ -201,13 +201,13 @@
               <strong>{{ entry.description }}</strong>
               <small><span class="ct-mono">{{ entry.number }}</span> · {{ entry.date }} · {{ sourceLabel(entry.sourceType) }}<ng-container *ngIf="entry.documentNumber"> · {{ entry.documentNumber }}</ng-container></small>
             </div>
-            <span class="ct-pill" [ngClass]="entry.status === 'draft' ? 'ct-pill--warning' : 'ct-pill--success'"><i class="pi" [ngClass]="entry.status === 'draft' ? 'pi-clock' : 'pi-check'"></i>{{ entry.status === 'posted' ? 'Contabilizado' : 'Borrador' }}</span>
+            <span class="ct-pill" [ngClass]="entry.status === 'draft' ? 'ct-pill--warning' : 'ct-pill--success'"><i class="pi" [ngClass]="entry.status === 'draft' ? 'pi-clock' : 'pi-check'"></i>{{ entry.status === 'posted' ? ('contabilidad.contabilidad.contabilizado' | translate) : ('contabilidad.contabilidad.borrador' | translate) }}</span>
             <span class="ct-amount">{{ entry.totalDebit | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
             <i class="pi pi-chevron-down ct-entry__chev"></i>
           </button>
           <div class="ct-entry__detail" *ngIf="expandedEntryId === entry.id">
             <table class="ct-table ct-table--detail">
-              <thead><tr><th>Cuenta</th><th>Detalle</th><th class="text-end">Débito</th><th class="text-end">Crédito</th></tr></thead>
+              <thead><tr><th>{{ 'contabilidad.contabilidad.cuenta' | translate }}</th><th>{{ 'contabilidad.contabilidad.detalle' | translate }}</th><th class="text-end">{{ 'contabilidad.contabilidad.debito' | translate }}</th><th class="text-end">{{ 'contabilidad.contabilidad.credito' | translate }}</th></tr></thead>
               <tbody>
                 <tr *ngFor="let line of entry.lines">
                   <td><span class="ct-mono ct-mono--strong">{{ line.accountCode }}</span> <span class="ct-dim-ink">{{ line.accountName }}</span></td>
@@ -216,14 +216,14 @@
                   <td class="text-end ct-amount">{{ line.credit ? (line.credit | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</td>
                 </tr>
               </tbody>
-              <tfoot><tr><td colspan="2">Total</td><td class="text-end">{{ entry.totalDebit | currency:'COP':'symbol-narrow':'1.0-0' }}</td><td class="text-end">{{ entry.totalCredit | currency:'COP':'symbol-narrow':'1.0-0' }}</td></tr></tfoot>
+              <tfoot><tr><td colspan="2">{{ 'contabilidad.contabilidad.total' | translate }}</td><td class="text-end">{{ entry.totalDebit | currency:'COP':'symbol-narrow':'1.0-0' }}</td><td class="text-end">{{ entry.totalCredit | currency:'COP':'symbol-narrow':'1.0-0' }}</td></tr></tfoot>
             </table>
           </div>
         </article>
       </div>
 
       <div class="ct-list__foot" *ngIf="entries.length">
-        <span>Mostrando <b>{{ filteredEntries.length }}</b> de <b>{{ entries.length }}</b> comprobantes</span>
+        <span>{{ 'contabilidad.contabilidad.mostrando' | translate }} <b>{{ filteredEntries.length }}</b> {{ 'contabilidad.contabilidad.de' | translate }} <b>{{ entries.length }}</b> {{ 'contabilidad.contabilidad.comprobantes2' | translate }}</span>
       </div>
     </section>
 
@@ -231,24 +231,24 @@
     <section class="ct-card ct-list" *ngIf="activeTab === 'balance'">
       <div class="ct-list__head">
         <div class="ct-list__title">
-          <h2>Balance de prueba</h2>
-          <p>Solo incluye comprobantes contabilizados. Los borradores no afectan estos valores.</p>
+          <h2>{{ 'contabilidad.contabilidad.balanceDePrueba' | translate }}</h2>
+          <p>{{ 'contabilidad.contabilidad.soloIncluyeComprobantesContabilizadosLos' | translate }}</p>
         </div>
         <div class="ct-list__tools ct-period">
-          <label><span class="ct-label">Desde</span><input class="ct-input" type="date" [(ngModel)]="periodFrom"></label>
-          <label><span class="ct-label">Hasta</span><input class="ct-input" type="date" [(ngModel)]="periodTo"></label>
-          <button type="button" class="ct-btn ct-btn--soft" (click)="loadAll()"><i class="pi pi-refresh"></i> Actualizar</button>
+          <label><span class="ct-label">{{ 'contabilidad.contabilidad.desde' | translate }}</span><input class="ct-input" type="date" [(ngModel)]="periodFrom"></label>
+          <label><span class="ct-label">{{ 'contabilidad.contabilidad.hasta' | translate }}</span><input class="ct-input" type="date" [(ngModel)]="periodTo"></label>
+          <button type="button" class="ct-btn ct-btn--soft" (click)="loadAll()"><i class="pi pi-refresh"></i> {{ 'contabilidad.contabilidad.actualizar' | translate }}</button>
         </div>
       </div>
 
       <div class="ct-alert" [ngClass]="balanceOk ? 'ct-alert--success' : 'ct-alert--error'">
         <i class="pi" [ngClass]="balanceOk ? 'pi-check-circle' : 'pi-exclamation-triangle'"></i>
-        <div><strong>{{ balanceOk ? 'El balance está cuadrado' : 'El balance requiere revisión' }}</strong><span>{{ balance?.entries || 0 }} comprobantes incluidos entre {{ periodFrom | date:'dd/MM/yyyy' }} y {{ periodTo | date:'dd/MM/yyyy' }}.</span></div>
+        <div><strong>{{ balanceOk ? ('contabilidad.contabilidad.elBalanceEstaCuadrado' | translate) : ('contabilidad.contabilidad.elBalanceRequiereRevision' | translate) }}</strong><span>{{ balance?.entries || 0 }} {{ 'contabilidad.contabilidad.comprobantesIncluidosEntreY' | translate:{periodFrom: (periodFrom | date:'dd/MM/yyyy'), periodTo: (periodTo | date:'dd/MM/yyyy')} }}</span></div>
       </div>
 
       <div class="ct-table-wrap" *ngIf="balance?.rows?.length">
         <table class="ct-table">
-          <thead><tr><th>Cuenta</th><th>Nombre</th><th class="text-end">Débitos</th><th class="text-end">Créditos</th><th class="text-end">Saldo</th></tr></thead>
+          <thead><tr><th>{{ 'contabilidad.contabilidad.cuenta' | translate }}</th><th>{{ 'contabilidad.contabilidad.nombre' | translate }}</th><th class="text-end">{{ 'contabilidad.contabilidad.debitos' | translate }}</th><th class="text-end">{{ 'contabilidad.contabilidad.creditos' | translate }}</th><th class="text-end">{{ 'contabilidad.contabilidad.saldo' | translate }}</th></tr></thead>
           <tbody>
             <tr *ngFor="let row of balance?.rows">
               <td><span class="ct-mono ct-mono--strong">{{ row.accountCode }}</span></td>
@@ -260,10 +260,10 @@
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="2">Totales</td>
+              <td colspan="2">{{ 'contabilidad.contabilidad.totales' | translate }}</td>
               <td class="text-end">{{ balance?.totalDebit | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
               <td class="text-end">{{ balance?.totalCredit | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-              <td class="text-end" [class.ct-red]="!balanceOk">Diferencia {{ balance?.difference | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+              <td class="text-end" [class.ct-red]="!balanceOk">{{ 'contabilidad.contabilidad.diferencia2' | translate:{difference: (balance?.difference | currency:'COP':'symbol-narrow':'1.0-0')} }}</td>
             </tr>
           </tfoot>
         </table>
@@ -271,8 +271,8 @@
 
       <div class="ct-empty" *ngIf="!balance?.rows?.length">
         <span class="ct-empty__icon"><i class="pi pi-chart-bar"></i></span>
-        <strong>El período todavía no tiene movimientos</strong>
-        <span>Cambia las fechas o espera a que se contabilicen documentos.</span>
+        <strong>{{ 'contabilidad.contabilidad.elPeriodoTodaviaNoTiene' | translate }}</strong>
+        <span>{{ 'contabilidad.contabilidad.cambiaLasFechasOEspera' | translate }}</span>
       </div>
     </section>
 
@@ -281,14 +281,14 @@
       <article class="ct-card ct-panel">
         <div class="ct-panel__head">
           <span class="ct-stepdot" [class.is-done]="isReady"><i class="pi pi-check" *ngIf="isReady; else st1"></i><ng-template #st1>1</ng-template></span>
-          <div><h2>Revisa las cuentas principales</h2><p>No necesitas revisar las {{ accounts.length }} para comenzar. Estas siete controlan facturas, notas electrónicas, recaudos y anticipos.</p></div>
+          <div><h2>{{ 'contabilidad.contabilidad.revisaLasCuentasPrincipales' | translate }}</h2><p>{{ 'contabilidad.contabilidad.noNecesitasRevisarLasPara' | translate:{length: accounts.length} }}</p></div>
         </div>
         <label *ngFor="let item of mappings" class="ct-mapping">
           <div><strong>{{ item.label }}</strong><small>{{ item.help }}</small></div>
           <select class="ct-input" [(ngModel)]="accountMapping[item.key]" [class.is-filled]="accountMapping[item.key]"><option *ngFor="let account of accounts" [value]="account.code" [disabled]="account.active === false">{{ account.code }} · {{ account.name }}</option></select>
         </label>
         <div class="ct-panel__foot">
-          <button type="button" class="ct-btn ct-btn--soft" (click)="saveMapping()" [disabled]="saving"><i class="pi pi-save"></i> Guardar selección</button>
+          <button type="button" class="ct-btn ct-btn--soft" (click)="saveMapping()" [disabled]="saving"><i class="pi pi-save"></i> {{ 'contabilidad.contabilidad.guardarSeleccion' | translate }}</button>
         </div>
       </article>
 
@@ -296,40 +296,40 @@
         <article class="ct-card ct-panel" [class.ct-panel--ready]="isReady">
           <div class="ct-panel__head">
             <span class="ct-stepdot" [class.is-done]="isReady"><i class="pi pi-check" *ngIf="isReady; else st2"></i><ng-template #st2>2</ng-template></span>
-            <div><h2>{{ isReady ? 'Contabilización automática activa' : 'Activa cuando termines la revisión' }}</h2>
-              <p *ngIf="!isReady">Al activar, Katuq revisará documentos DIAN y pagos aprobados, y contabilizará los que tengan información completa.</p>
-              <p *ngIf="isReady">Las nuevas facturas, notas y pagos aprobados crearán un comprobante una sola vez. Los pagos anteriores a la factura se manejan como anticipos.</p>
+            <div><h2>{{ isReady ? ('contabilidad.contabilidad.contabilizacionAutomaticaActiva' | translate) : ('contabilidad.contabilidad.activaCuandoTerminesLaRevision' | translate) }}</h2>
+              <p *ngIf="!isReady">{{ 'contabilidad.contabilidad.alActivarKatuqRevisaraDocumentos' | translate }}</p>
+              <p *ngIf="isReady">{{ 'contabilidad.contabilidad.lasNuevasFacturasNotasY' | translate }}</p>
             </div>
           </div>
           <ul class="ct-safe">
-            <li><i class="pi pi-check-circle"></i> Cada comercio tiene su propio plan y sus propios libros.</li>
-            <li><i class="pi pi-check-circle"></i> Un documento repetido no duplica el asiento.</li>
-            <li><i class="pi pi-check-circle"></i> Una factura aceptada no se invalida si falla el registro contable.</li>
+            <li><i class="pi pi-check-circle"></i> {{ 'contabilidad.contabilidad.cadaComercioTieneSuPropio' | translate }}</li>
+            <li><i class="pi pi-check-circle"></i> {{ 'contabilidad.contabilidad.unDocumentoRepetidoNoDuplica' | translate }}</li>
+            <li><i class="pi pi-check-circle"></i> {{ 'contabilidad.contabilidad.unaFacturaAceptadaNoSe' | translate }}</li>
           </ul>
-          <button *ngIf="!isReady" type="button" class="ct-btn ct-btn--primary ct-btn--cta" (click)="activate()" [disabled]="saving"><i class="pi pi-shield"></i> Confirmar y activar</button>
-          <button *ngIf="isReady" type="button" class="ct-btn ct-btn--ghost ct-btn--cta" (click)="syncMovements()" [disabled]="saving"><i class="pi pi-sync"></i> Sincronizar movimientos anteriores</button>
+          <button *ngIf="!isReady" type="button" class="ct-btn ct-btn--primary ct-btn--cta" (click)="activate()" [disabled]="saving"><i class="pi pi-shield"></i> {{ 'contabilidad.contabilidad.confirmarYActivar' | translate }}</button>
+          <button *ngIf="isReady" type="button" class="ct-btn ct-btn--ghost ct-btn--cta" (click)="syncMovements()" [disabled]="saving"><i class="pi pi-sync"></i> {{ 'contabilidad.contabilidad.sincronizarMovimientosAnteriores' | translate }}</button>
         </article>
 
         <div class="ct-note">
           <i class="pi pi-info-circle"></i>
-          <span>Esta es una plantilla inicial. Retenciones, costos, inventarios, centros de costo y cuentas especiales deben configurarse según la operación real del comercio.</span>
+          <span>{{ 'contabilidad.contabilidad.estaEsUnaPlantillaInicial' | translate }}</span>
         </div>
       </div>
 
       <article class="ct-card ct-list ct-grid__wide">
         <div class="ct-list__head">
-          <div class="ct-list__title"><h2>Plan de cuentas</h2><p>{{ accounts.length }} cuentas del comercio</p></div>
+          <div class="ct-list__title"><h2>{{ 'contabilidad.contabilidad.planDeCuentas' | translate }}</h2><p>{{ accounts.length }} {{ 'contabilidad.contabilidad.cuentasDelComercio' | translate }}</p></div>
         </div>
         <div class="ct-table-wrap">
           <table class="ct-table">
-            <thead><tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Naturaleza</th><th class="text-center">Estado</th></tr></thead>
+            <thead><tr><th>{{ 'contabilidad.contabilidad.codigo' | translate }}</th><th>{{ 'contabilidad.contabilidad.nombre' | translate }}</th><th>{{ 'contabilidad.contabilidad.tipo' | translate }}</th><th>{{ 'contabilidad.contabilidad.naturaleza' | translate }}</th><th class="text-center">{{ 'contabilidad.contabilidad.estado' | translate }}</th></tr></thead>
             <tbody>
               <tr *ngFor="let account of accounts; trackBy: trackById" [class.is-inactive]="account.active === false">
                 <td><span class="ct-mono ct-mono--strong">{{ account.code }}</span></td>
                 <td><strong class="ct-ink">{{ account.name }}</strong></td>
                 <td class="ct-dim-ink">{{ accountTypeLabel(account.type) }}</td>
-                <td class="ct-dim-ink">{{ account.nature === 'debit' ? 'Débito' : 'Crédito' }}</td>
-                <td class="text-center"><span class="ct-pill" [ngClass]="account.active === false ? 'ct-pill--muted' : 'ct-pill--success'">{{ account.active === false ? 'Inactiva' : 'Activa' }}</span></td>
+                <td class="ct-dim-ink">{{ account.nature === 'debit' ? ('contabilidad.contabilidad.debito' | translate) : ('contabilidad.contabilidad.credito' | translate) }}</td>
+                <td class="text-center"><span class="ct-pill" [ngClass]="account.active === false ? 'ct-pill--muted' : 'ct-pill--success'">{{ account.active === false ? ('contabilidad.contabilidad.inactiva' | translate) : ('contabilidad.contabilidad.activa' | translate) }}</span></td>
               </tr>
             </tbody>
           </table>

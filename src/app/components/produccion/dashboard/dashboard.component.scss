@@ -132,7 +132,7 @@ $transition: all 0.3s ease;
     animation: fadeIn 0.5s ease;
     
     .p-datatable-header {
-      background-color: white;
+      background-color: var(--ds-surface);
       border: none;
       padding: 1rem;
     }
@@ -160,7 +160,7 @@ $transition: all 0.3s ease;
     }
     
     .p-datatable-tbody > tr {
-      background-color: white;
+      background-color: var(--ds-surface);
       transition: all 0.2s ease;
       border-radius: $border-radius;
       
@@ -184,7 +184,7 @@ $transition: all 0.3s ease;
     
     .p-paginator {
       padding: 1rem;
-      background-color: white;
+      background-color: var(--ds-surface);
       border: none;
       border-bottom-left-radius: $border-radius;
       border-bottom-right-radius: $border-radius;
@@ -486,7 +486,7 @@ $transition: all 0.3s ease;
       width: 2.2rem;
       height: 2.2rem;
       border-radius: 50%;
-      background-color: white;
+      background-color: var(--ds-surface);
       color: $primary-color;
       border: 1px solid rgba(95, 63, 224, 0.3);
       transition: all 0.2s ease;
@@ -511,7 +511,7 @@ $transition: all 0.3s ease;
     width: 2.2rem;
     height: 2.2rem;
     border-radius: 50%;
-    background-color: white;
+    background-color: var(--ds-surface);
     color: $primary-color;
     border: 1px solid rgba(95, 63, 224, 0.3);
     transition: all 0.2s ease;
@@ -652,7 +652,7 @@ $transition: all 0.3s ease;
   display: flex;
   align-items: center;
   padding: 16px 20px;
-  background: #fff;
+  background: var(--ds-surface);
   border-bottom: 1px solid $cfg-line;
 
   .modal-title {
@@ -759,9 +759,9 @@ $transition: all 0.3s ease;
 }
 
 .btn-modal-secondary {
-  background-color: #fff;
+  background-color: var(--ds-surface);
   color: $cfg-body;
-  border-color: #e4e2ef;
+  border-color: var(--ds-line-strong);
   
   &:hover:not(:disabled) {
     background-color: $cfg-tint;
@@ -868,7 +868,7 @@ $transition: all 0.3s ease;
   align-items: center;
   padding: 1rem;
   border-radius: $border-radius;
-  background-color: white;
+  background-color: var(--ds-surface);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   transition: $transition;
   cursor: pointer;
@@ -1148,7 +1148,7 @@ $transition: all 0.3s ease;
 /* Inspirados en ventas/list pero adaptados para producción */
 
 .modern-filters-container {
-  background: #ffffff;
+  background: var(--ds-surface);
   border-radius: $border-radius;
   border: 1px solid #e9ecef;
   margin-bottom: 1rem;
@@ -1264,7 +1264,7 @@ $transition: all 0.3s ease;
       margin-top: 1rem;
 
       .filter-group {
-        background-color: white;
+        background-color: var(--ds-surface);
         border: 1px solid #e9ecef;
         border-radius: 8px;
         padding: 1rem;
@@ -1509,7 +1509,7 @@ $transition: all 0.3s ease;
    ======================================== */
 
 .metrics-breadcrumb-panel {
-  background: #ffffff;
+  background: var(--ds-surface);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   .d-flex {
@@ -1593,17 +1593,17 @@ $transition: all 0.3s ease;
 
   // Variantes de color
   &.metric-chip-primary {
-    background-color: #efe9ff;
-    color: #5F3FE0;
+    background-color: var(--ds-accent-soft);
+    color: var(--ds-accent-ink);
 
     .metric-badge {
-      background-color: #5F3FE0;
+      background-color: var(--ds-accent);
       color: white;
     }
 
     &:hover {
       background-color: #e2d9fb;
-      border-color: #5F3FE0;
+      border-color: var(--ds-accent-ink);
     }
   }
 
@@ -1839,13 +1839,13 @@ $transition: all 0.3s ease;
     border: 0;
     border-radius: 11px;
   }
-  .alert-warning { background: #FFF1DF; color: #D9820A; }
-  .alert-info { background: #E7F1FF; color: #1E6FD9; }
+  .alert-warning { background: var(--ds-warn-soft); color: var(--ds-warn); }
+  .alert-info { background: var(--ds-info-soft); color: var(--ds-info); }
 }
 
 // KPIs planos tintados, sin border-left de acento.
 .card.prod-kpi {
-  background: #faf9fe;
+  background: var(--ds-surface-2);
   border: 1px solid #eeecf7;
   border-radius: 11px;
   box-shadow: none;
@@ -1856,7 +1856,7 @@ $transition: all 0.3s ease;
   font-weight: 800;
   letter-spacing: .5px;
   text-transform: uppercase;
-  color: #8f8bab;
+  color: var(--ds-muted);
 }
 
 // Las pestañas llenan la tarjeta: el contenido de cada tab trae su propio espaciado.

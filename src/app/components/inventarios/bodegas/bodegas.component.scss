@@ -160,103 +160,64 @@ $green-text: #2e7d32;
 }
 
 .texto-celda {
-  color: #211F3A;
+  color: var(--ds-ink);
 }
 
 // =============================================
 // DARK MODE
 // =============================================
 :host-context(body.dark-only) {
-  .tag-blue {
-    background-color: rgba(#1565c0, 0.15);
-    color: #90caf9;
-  }
-
-  .tag-purple {
-    background-color: rgba(#7b1fa2, 0.15);
-    color: #ce93d8;
-  }
-
-  .tag-amber {
-    background-color: rgba(#f57f17, 0.15);
-    color: #ffcc80;
-  }
-
-  .tag-gray {
-    background-color: rgba(#616161, 0.2);
-    color: #bdbdbd;
-  }
-
-  .tag-teal {
-    background-color: rgba(#00796b, 0.15);
-    color: #80cbc4;
-  }
-
-  .tag-green {
-    background-color: rgba(#2e7d32, 0.15);
-    color: #a5d6a7;
-  }
-
-  .tag-text-muted {
-    color: #9e9e9e;
-  }
+  // D-502 F3 (ticket 1180, 4.4.5, TEMA-B17): pares texto/fondo suave de los tokens --ds-*
+  // (antes etiquetas azul claro y similares pensadas para una tarjeta oscura que no existía).
+  .tag-blue { background-color: var(--ds-info-soft); color: var(--ds-info); }
+  .tag-purple { background-color: var(--ds-accent-soft); color: var(--ds-accent-ink); }
+  .tag-amber { background-color: var(--ds-warn-soft); color: var(--ds-warn); }
+  .tag-gray { background-color: var(--ds-chip-bg); color: var(--ds-body); }
+  .tag-teal { background-color: var(--ds-tile); color: var(--ds-ink-2); }
+  .tag-green { background-color: var(--ds-ok-soft); color: var(--ds-ok); }
+  .tag-text-muted { color: var(--ds-muted); }
 
   .btn-icon {
-    color: #bdbdbd;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
+    color: var(--ds-body);
+    &:hover { background: var(--ds-row-hover); }
   }
 
   .btn-icon-edit {
-    color: #b6a3ff;
-
-    &:hover {
-      background: rgba(#5F3FE0, 0.15);
-      color: #b6a3ff;
-    }
+    color: var(--ds-accent-ink);
+    &:hover { background: var(--ds-accent-soft); color: var(--ds-accent-ink); }
   }
 
   .btn-icon-warn {
-    color: #ffb74d;
-
-    &:hover {
-      background: rgba(#ffa726, 0.15);
-      color: #ffcc80;
-    }
+    color: var(--ds-warn);
+    &:hover { background: var(--ds-warn-soft); color: var(--ds-warn); }
   }
 
   .btn-icon-danger {
-    color: #ef5350;
-
-    &:hover {
-      background: rgba(#ef5350, 0.15);
-      color: #e57373;
-    }
+    color: var(--ds-err);
+    &:hover { background: var(--ds-err-soft); color: var(--ds-err); }
   }
 
   .custom-datatable {
     ::ng-deep {
       .p-datatable {
         .p-datatable-thead > tr > th {
-          background: #2a2640;
-          color: #e0e0e0;
-          border-bottom-color: #3d3856;
+          background: var(--ds-surface-2);
+          color: var(--ds-muted);
+          border-bottom-color: var(--ds-line);
         }
 
         .p-datatable-tbody > tr > td {
-          color: #e0e0e0;
-          border-bottom-color: #3d3856;
+          color: var(--ds-body);
+          border-bottom-color: var(--ds-line);
         }
 
         .p-datatable-tbody > tr:hover {
-          background: rgba(255, 255, 255, 0.05);
+          background: var(--ds-row-hover);
         }
 
         .p-paginator {
           .p-paginator-element:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--ds-row-hover);
           }
         }
       }
@@ -265,5 +226,5 @@ $green-text: #2e7d32;
 }
 
 // Colores que estaban escritos en el HTML (D-516)
-.icono-acento { color: $cfg-accent; }
+.icono-acento { color: $cfg-accent-ink; }
 .tag-inactiva { vertical-align: middle; }

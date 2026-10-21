@@ -27,6 +27,7 @@ import {
   RiskFilter,
 } from '../../cartera.constants';
 
+import { TranslateService } from '@ngx-translate/core';
 /** Una fila de la descarga: un pedido con saldo (ticket 1130). */
 interface FilaCartera {
   cliente: string;
@@ -107,7 +108,7 @@ export class CarteraClientesComponent implements OnChanges {
   /** Documento del cliente cuyo detalle está expandido (null = ninguno). */
   expandedDoc: string | null = null;
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(private cdr: ChangeDetectorRef, private translate: TranslateService) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
@@ -316,7 +317,7 @@ export class CarteraClientesComponent implements OnChanges {
       });
       pdf.save(`${this.nombreArchivo()}.pdf`);
     } catch {
-      Swal.fire({ icon: 'error', title: 'No se pudo generar el PDF', text: 'Intenta de nuevo en un momento.' });
+      Swal.fire({ icon: 'error', title: this.translate.instant('cartera.carteraClientes.noSePudoGenerarEl'), text: this.translate.instant('cartera.carteraClientes.intentaDeNuevoEnUn') });
     } finally {
       this.generandoPdf = false;
       this.cdr.markForCheck();

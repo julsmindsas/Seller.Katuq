@@ -5,28 +5,28 @@
     <div class="cx-header-id">
       <span class="cx-header-icon"><i class="pi pi-chart-line"></i></span>
       <div>
-        <h4 class="cx-page-title">Cartera (CxC)</h4>
-        <p class="cx-page-sub">Cuánto te debe cada cliente, hace cuánto y la antigüedad de la deuda.</p>
+        <h4 class="cx-page-title">{{ 'cartera.cartera.carteraCxc' | translate }}</h4>
+        <p class="cx-page-sub">{{ 'cartera.cartera.cuantoTeDebeCadaCliente' | translate }}</p>
       </div>
     </div>
     <button type="button" class="cx-refresh" (click)="load()" [disabled]="loading"
-            aria-label="Actualizar cartera">
+            [attr.aria-label]="'cartera.cartera.actualizarCartera' | translate">
       <i class="pi" [ngClass]="loading ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
-      Actualizar
+      {{ 'cartera.cartera.actualizar' | translate }}
     </button>
   </div>
 
   <!-- Error de permisos (403) -->
   <div *ngIf="forbidden && !loading" class="cx-error cx-error-perms" role="alert">
     <i class="pi pi-lock"></i>
-    No tienes permiso para ver la cartera. Esta pantalla es para roles Tesorero o Administrador.
+    {{ 'cartera.cartera.noTienesPermisoParaVer' | translate }}
   </div>
 
   <!-- Error genérico -->
   <div *ngIf="error && !loading" class="cx-error" role="alert">
     <i class="pi pi-exclamation-triangle"></i>
-    No se pudo cargar la cartera.
-    <button type="button" class="cx-retry" (click)="load()">Reintentar</button>
+    {{ 'cartera.cartera.noSePudoCargarLa' | translate }}
+    <button type="button" class="cx-retry" (click)="load()">{{ 'cartera.cartera.reintentar' | translate }}</button>
   </div>
 
   <!-- Skeleton de carga -->
@@ -45,12 +45,12 @@
       <button type="button" role="tab" class="cx-tab" [class.is-active]="activeIndex === 0"
               [attr.aria-selected]="activeIndex === 0" (click)="onTabChange({ index: 0 })">
         <i class="pi pi-users"></i>
-        <span>Cartera por Cliente</span>
+        <span>{{ 'cartera.cartera.carteraPorCliente' | translate }}</span>
       </button>
       <button type="button" role="tab" class="cx-tab" [class.is-active]="activeIndex === 1"
               [attr.aria-selected]="activeIndex === 1" (click)="onTabChange({ index: 1 })">
         <i class="pi pi-clock"></i>
-        <span>Aging (Antigüedad)</span>
+        <span>{{ 'cartera.cartera.agingAntiguedad' | translate }}</span>
       </button>
     </div>
 

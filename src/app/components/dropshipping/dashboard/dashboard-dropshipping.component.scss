@@ -25,8 +25,8 @@
   align-items: flex-start;
   gap: 6px;
   padding: 16px;
-  background: #fff;
-  border: 1px solid #ececf4;
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-line);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
   min-width: 0;
@@ -54,7 +54,7 @@
   font-size: 26px !important;
   font-weight: 800;
   line-height: 1.15;
-  color: #211F3A;
+  color: var(--ds-ink);
   word-break: break-word;
 }
 
@@ -64,7 +64,7 @@
   font-weight: 800;
   letter-spacing: .5px;
   text-transform: uppercase;
-  color: #8f8bab;
+  color: var(--ds-muted);
 }
 
 // Métricas adicionales
@@ -74,13 +74,13 @@
   gap: 12px;
 }
 
-.dsh-dos .cfg-label { font-size: 10.5px !important; color: #8f8bab !important; }
+.dsh-dos .cfg-label { font-size: 10.5px !important; color: var(--ds-muted) !important; }
 
 .dsh-cifra {
   margin-top: 4px;
   font-size: 20px;
   font-weight: 800;
-  color: #5F3FE0;
+  color: var(--ds-accent-ink);
 }
 
 .dsh-cifra__icono {
@@ -89,17 +89,17 @@
   width: 48px;
   height: 48px;
   border-radius: 11px;
-  background: #efe9ff;
-  color: #5F3FE0;
+  background: var(--ds-accent-soft);
+  color: var(--ds-accent-ink);
   font-size: 22px;
 
   .pi { font-size: 22px; }
 }
 
 // Estado del sistema
-.dsh-estado--ok { color: #1E874B; }
-.dsh-estado--info { color: #1E6FD9; }
-.dsh-estado__texto { font-size: 13.5px; color: #5b5878; }
+.dsh-estado--ok { color: var(--ds-ok); }
+.dsh-estado--info { color: var(--ds-info); }
+.dsh-estado__texto { font-size: 13.5px; color: var(--ds-body); }
 
 // Loading state
 .loading-overlay {
@@ -115,7 +115,7 @@
     height: 20px;
     margin: -10px 0 0 -10px;
     border: 2px solid #efe9ff;
-    border-top: 2px solid #5F3FE0;
+    border-top: 2px solid var(--ds-accent-ink);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     z-index: 1000;
@@ -129,22 +129,22 @@
 
 // Acciones rápidas: botones secundarios blancos con borde; el ícono conserva el tono de su destino.
 :host ::ng-deep .cfg-card .p-button.p-button-outlined {
-  background: #fff;
-  border: 1px solid #e4e2ef;
-  color: #5b5878;
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-line-strong);
+  color: var(--ds-body);
   border-radius: 11px;
   font-weight: 700;
   min-height: 40px;
   transition: background .15s ease, border-color .15s ease, color .15s ease;
 
-  .p-button-icon { color: #5F3FE0; }
-  &.p-button-info .p-button-icon { color: #1E6FD9; }
-  &.p-button-warning .p-button-icon { color: #D9820A; }
+  .p-button-icon { color: var(--ds-accent-ink); }
+  &.p-button-info .p-button-icon { color: var(--ds-info); }
+  &.p-button-warning .p-button-icon { color: var(--ds-warn); }
 
   &:enabled:hover {
-    background: #faf9fe;
+    background: var(--ds-surface-2);
     border-color: #d9cffb;
-    color: #5F3FE0;
+    color: var(--ds-accent-ink);
   }
 }
 

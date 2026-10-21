@@ -103,8 +103,10 @@
 // handleEWalletPayment) y el estado selectedMethod.
 // =============================================================================
 @import '../../../../../shared/styles/katuq-comercial';
+@import '../../pos-oscuro';
 
 :host { @include kc-tokens; display: block; }
+:host-context(body.dark-only) { @include pos-kc-oscuro; }
 
 .card.payment-methods-sticky {
   margin: 0;
@@ -112,7 +114,7 @@
   border-top: 1px solid var(--kc-line);
   border-radius: 0;
   box-shadow: none;
-  background: #fff;
+  background: var(--ds-surface);
 
   &:hover { box-shadow: none; }
 
@@ -153,7 +155,7 @@
   align-items: center;
   gap: 5px;
   padding: 10px 6px;
-  background: #fff;
+  background: var(--ds-surface);
   border: 1.5px solid var(--kc-line);
   border-radius: 12px;
   transition: border-color 0.15s ease, background 0.15s ease;

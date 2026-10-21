@@ -91,6 +91,7 @@
 
 - `failed[].code` sale de la pieza `photoCopy`: `download_failed`, `not_image`, `too_large` o `unreadable`.
 - Nunca se devuelve ni se registra la URL de origen.
+- `429 RATE_LIMITED`: 120 lotes cada 15 minutos por empresa del token; `photos/pending` cuenta en el mismo tope. Un enlace que falló no se reintenta más de 3 veces por migración: el cuarto recorrido lo informa como `download_failed` sin descargar. Cualquier llave distinta de `migrationId`, `runId`, `lot` y `products[].cd` en el cuerpo da 400 `INVALID_PAYLOAD`. Guardas como `products`: `WOO_INTEGRATION_ACTIVE` y `FLOW_PUBLISHES_PRODUCTS` (409) e `IMPORT_IN_PROGRESS` (409).
 
 ## `GET photos/pending` (nueva; requiere aprobación, pregunta 8)
 
@@ -103,7 +104,7 @@ Sin cuerpo. Misma cadena; no toma el candado.
 - **Productos:** `products[]` acepta `probable: true`, para el slug de Woo armado con el nombre (W3).
 - **Dirección pegada:** acepta `urls[]: [{ "desde": "/product/mi-producto/", "cd": "…" }]`, la lista de direcciones reales que pega el comercio. Manda sobre la probable del mismo `cd`. `desde` pasa por `normalizarRutaRedireccion`.
 - **Fuente:** `source` acepta `woocommerce`.
-- **Base de Woo:** `productBase` y `categoryBase` (por ejemplo `/producto/` y `/categoria-producto/`), cada una una ruta interna que pasa por `normalizarRutaRedireccion`. Sin ellas, la del idioma del archivo y el aviso `BASE_ASSUMED` (W3).
+- **Base de Woo:** `productBase` y `categoryBase` (por ejemplo `/producto/` y `/categoria-producto/`), cada una una ruta interna que pasa por `normalizarRutaRedireccion`. Sin ellas, la del idioma del archivo y el aviso `BASE_ASSUMED` (W3). *Nota (F530-B09):* el servidor no ve el archivo en este paso, así que sin las bases usa las de WordPress en inglés (`/product/`, `/product-category/`) y avisa `BASE_ASSUMED`; la pantalla debe mandar las del idioma del archivo (la simulación las usa para su vista previa). `SLUG_PROBABLE` sale una sola vez (`desde: null`) cuando hubo direcciones armadas con el nombre; `probable` cuenta solo las que no tienen dirección pegada.
 - **Plan gratis:** no se genera la 301 hacia un producto fuera del cupo (`TARGET_HIDDEN_BY_PLAN`).
 
 ## `POST customers`: campo nuevo (si la pregunta 19 dice que sí)

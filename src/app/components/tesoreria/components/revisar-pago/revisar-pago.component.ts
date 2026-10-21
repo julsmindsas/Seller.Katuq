@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import { TreasuryService } from '../../../../shared/services/treasury/treasury.service';
 import { ReviewAction } from '../../../../shared/services/treasury/treasury.models';
 
+import { TranslateService } from '@ngx-translate/core';
 /**
  * Spec 013 — Tesorería MVP. Modal "Revisar Pago" (T-16, CA-03/04/05, CA-13).
  * Muestra el comprobante y el resumen del saldo; aprueba o rechaza (motivo
@@ -40,6 +41,7 @@ export class RevisarPagoComponent implements OnInit {
     public activeModal: NgbActiveModal,
     private treasury: TreasuryService,
     private toastr: ToastrService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -86,7 +88,7 @@ export class RevisarPagoComponent implements OnInit {
 
   private decidir(action: ReviewAction, motivo = ''): void {
     if (!this.paymentId) {
-      Swal.fire({ icon: 'error', title: 'Sin identificador', text: 'No se pudo identificar el pago a revisar.' });
+      Swal.fire({ icon: 'error', title: this.translate.instant('tesoreria.revisarPago.sinIdentificador'), text: this.translate.instant('tesoreria.revisarPago.noSePudoIdentificarEl') });
       return;
     }
     this.submitting = true;
@@ -94,9 +96,9 @@ export class RevisarPagoComponent implements OnInit {
       next: (res) => {
         this.submitting = false;
         if (action === 'approve') {
-          this.toastr.success(res?.alreadyDecided ? 'El pago ya estaba aprobado.' : 'Pago aprobado.');
+          this.toastr.success(res?.alreadyDecided ? this.translate.instant('tesoreria.revisarPago.elPagoYaEstabaAprobado') : this.translate.instant('tesoreria.revisarPago.pagoAprobado'));
         } else {
-          this.toastr.success(res?.alreadyDecided ? 'El pago ya estaba rechazado.' : 'Pago rechazado.');
+          this.toastr.success(res?.alreadyDecided ? this.translate.instant('tesoreria.revisarPago.elPagoYaEstabaRechazado') : this.translate.instant('tesoreria.revisarPago.pagoRechazado'));
         }
         this.activeModal.close({ changed: true });
       },
@@ -105,10 +107,10 @@ export class RevisarPagoComponent implements OnInit {
         const conflict = err?.status === 409;
         Swal.fire({
           icon: 'warning',
-          title: conflict ? 'Decisión en conflicto' : 'No se pudo procesar',
+          title: conflict ? this.translate.instant('tesoreria.revisarPago.decisionEnConflicto') : this.translate.instant('tesoreria.revisarPago.noSePudoProcesar'),
           text: conflict
-            ? 'Otro usuario ya tomó una decisión distinta sobre este pago. Actualiza la lista.'
-            : 'Ocurrió un error al registrar la decisión. Inténtalo de nuevo.',
+            ? this.translate.instant('tesoreria.revisarPago.otroUsuarioYaTomoUna')
+            : this.translate.instant('tesoreria.revisarPago.ocurrioUnErrorAlRegistrar'),
         });
       },
     });

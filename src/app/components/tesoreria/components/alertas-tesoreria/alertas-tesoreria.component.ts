@@ -15,6 +15,7 @@ import Swal from 'sweetalert2';
 import { TreasuryService } from '../../../../shared/services/treasury/treasury.service';
 import { TreasuryAlert } from '../../../../shared/services/treasury/treasury.models';
 
+import { TranslateService } from '@ngx-translate/core';
 /** Chips de pedidos afectados que se muestran antes de colapsar en "+N más". */
 const MAX_PEDIDOS_VISIBLES = 12;
 
@@ -46,6 +47,7 @@ export class AlertasTesoreriaComponent implements OnChanges, OnDestroy {
   constructor(
     private treasury: TreasuryService,
     private toastr: ToastrService,
+    private translate: TranslateService,
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -104,11 +106,11 @@ export class AlertasTesoreriaComponent implements OnChanges, OnDestroy {
     if (!alert?.id) return;
     Swal.fire({
       icon: 'question',
-      title: '¿Marcar como resuelta?',
-      text: 'Confirma que ya verificaste esta alerta de duplicado.',
+      title: this.translate.instant('tesoreria.alertasTesoreria.marcarComoResuelta'),
+      text: this.translate.instant('tesoreria.alertasTesoreria.confirmaQueYaVerificasteEsta'),
       showCancelButton: true,
-      confirmButtonText: 'Resolver',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('tesoreria.alertasTesoreria.resolver'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#5F3FE0',
       cancelButtonColor: '#8f8bab',
     }).then((result) => {
@@ -118,12 +120,12 @@ export class AlertasTesoreriaComponent implements OnChanges, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
-            this.toastr.success('Alerta resuelta.');
+            this.toastr.success(this.translate.instant('tesoreria.alertasTesoreria.alertaResuelta'));
             this.load();
             this.changed.emit();
           },
           error: () => {
-            Swal.fire({ icon: 'error', title: 'No se pudo resolver', text: 'Inténtalo de nuevo.' });
+            Swal.fire({ icon: 'error', title: this.translate.instant('tesoreria.alertasTesoreria.noSePudoResolver'), text: this.translate.instant('tesoreria.alertasTesoreria.intentaloDeNuevo') });
           },
         });
     });

@@ -4,6 +4,7 @@
 // La pantalla de caja no tiene scroll de página: el scroll vive en .cat-scroll.
 // =============================================================================
 @import '../../../../../shared/styles/katuq-comercial';
+@import '../../pos-oscuro';
 
 :host {
   @include kc-tokens;
@@ -12,6 +13,7 @@
   min-height: 0;
   flex: 1;
 }
+:host-context(body.dark-only) { @include pos-kc-oscuro; }
 
 .pos-catalog {
   display: flex;
@@ -37,7 +39,7 @@
   display: flex;
   align-items: center;
   gap: 11px;
-  background: #fff;
+  background: var(--ds-surface);
   border: 2px solid var(--kc-line);
   border-radius: 13px;
   padding: 8px 14px;
@@ -146,7 +148,7 @@
   &:hover { color: var(--kc-ink2); }
 
   &.is-active {
-    background: #fff;
+    background: var(--ds-surface);
     color: var(--kc-accent);
     box-shadow: 0 1px 4px rgba(30, 35, 60, 0.1);
   }
@@ -200,7 +202,7 @@
 }
 
 .cat-card {
-  background: #fff;
+  background: var(--ds-surface);
   border: 1.5px solid var(--kc-line);
   border-radius: 15px;
   padding: 9px;
@@ -333,7 +335,7 @@
   height: 22px;
   border: none;
   border-radius: 7px;
-  background: #fff;
+  background: var(--ds-surface);
   color: var(--kc-accent);
   display: flex;
   align-items: center;
@@ -393,7 +395,7 @@
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  background: #fff;
+  background: var(--ds-surface);
   color: var(--kc-orange);
   display: flex;
   align-items: center;
@@ -457,7 +459,7 @@
   display: flex;
   justify-content: center;
   padding: 9px 16px 12px;
-  background: #fff;
+  background: var(--ds-surface);
   border-top: 1px solid var(--kc-line);
   flex-shrink: 0;
 
@@ -490,7 +492,7 @@
 
   .page-item.disabled .page-link {
     color: #c9cedb;
-    background: #fff;
+    background: var(--ds-surface);
   }
 }
 
@@ -559,7 +561,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  background: #fff;
+  background: var(--ds-surface);
   // Éxito del escaneo en par semántico (borde verde suave), sin border-left de acento (D-131).
   border: 1px solid #bfe6cf;
   border-radius: 18px;
@@ -650,7 +652,7 @@
 .scan-log {
   flex: 1;
   min-height: 0;
-  background: #fff;
+  background: var(--ds-surface);
   border: 1px solid var(--kc-line);
   border-radius: 18px;
   box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04);
@@ -877,7 +879,7 @@
   left: 0;
   right: 0;
   z-index: 60;
-  background: #fff;
+  background: var(--ds-surface);
   border: 1px solid var(--kc-line);
   border-radius: 14px;
   box-shadow: 0 14px 36px rgba(30, 35, 60, 0.18);
@@ -1115,7 +1117,7 @@
     padding: 0.3rem 0.4rem;
     border-radius: 8px;
     font-size: 0.8rem;
-    color: #211F3A;
+    color: var(--ds-ink);
 
     &:nth-child(odd) { background: #F7F5FF; }
     &.ebx-actual {
@@ -1128,7 +1130,7 @@
     margin-left: 6px;
     font-size: 0.7rem;
     font-weight: 600;
-    color: #5F3FE0;
+    color: var(--ds-accent-ink);
   }
   .ebx-cant { font-weight: 700; font-variant-numeric: tabular-nums; }
 }

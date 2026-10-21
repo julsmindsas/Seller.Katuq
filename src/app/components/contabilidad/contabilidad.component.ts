@@ -10,6 +10,7 @@ import {
   TrialBalance,
 } from '../../shared/services/bookkeeping/bookkeeping.models';
 
+import { TranslateService } from '@ngx-translate/core';
 type AccountingTab = 'summary' | 'journal' | 'balance' | 'settings';
 
 @Component({
@@ -45,7 +46,7 @@ export class ContabilidadComponent implements OnInit {
     { key: 'customerAdvances', label: 'Anticipos de clientes', help: 'Dinero recibido antes de facturar o por encima del saldo pendiente.' },
   ];
 
-  constructor(private bookkeeping: BookkeepingService) {}
+  constructor(private bookkeeping: BookkeepingService, private translate: TranslateService) {}
 
   ngOnInit(): void {
     this.loadAll();
@@ -128,7 +129,7 @@ export class ContabilidadComponent implements OnInit {
           this.accountMapping = { ...(overview.settings?.accountMapping || {}) };
           this.loadDetails();
         },
-        error: (error) => this.error = this.errorMessage(error, 'No fue posible cargar la contabilidad.'),
+        error: (error) => this.error = this.errorMessage(error, this.translate.instant('contabilidad.contabilidad.noFuePosibleCargarLa')),
       });
   }
 
@@ -143,18 +144,18 @@ export class ContabilidadComponent implements OnInit {
         this.entries = entries;
         this.balance = balance;
       },
-      error: (error) => this.error = this.errorMessage(error, 'No fue posible cargar los libros del período.'),
+      error: (error) => this.error = this.errorMessage(error, this.translate.instant('contabilidad.contabilidad.noFuePosibleCargarLos')),
     });
   }
 
   initialize(): void {
     Swal.fire({
       icon: 'question',
-      title: '¿Crear el plan contable inicial?',
-      html: '<p>Katuq preparará 14 cuentas básicas para ventas, recaudos, IVA, clientes, caja, bancos, inventario y gastos.</p><p class="mb-0"><strong>Todavía no contabilizará automáticamente:</strong> primero podrá revisarlas.</p>',
+      title: this.translate.instant('contabilidad.contabilidad.crearElPlanContableInicial'),
+      html: this.translate.instant('contabilidad.contabilidad.katuqPreparara14CuentasBasicas'),
       showCancelButton: true,
-      confirmButtonText: 'Sí, preparar contabilidad',
-      cancelButtonText: 'Ahora no',
+      confirmButtonText: this.translate.instant('contabilidad.contabilidad.siPrepararContabilidad'),
+      cancelButtonText: this.translate.instant('contabilidad.contabilidad.ahoraNo'),
       confirmButtonColor: '#6c4ce0',
     }).then((result) => {
       if (!result.isConfirmed) return;
@@ -163,9 +164,9 @@ export class ContabilidadComponent implements OnInit {
         next: () => {
           this.activeTab = 'settings';
           this.loadAll();
-          Swal.fire({ icon: 'success', title: 'Plan inicial preparado', text: 'Revise las siete cuentas principales y active cuando estén correctas.' });
+          Swal.fire({ icon: 'success', title: this.translate.instant('contabilidad.contabilidad.planInicialPreparado'), text: this.translate.instant('contabilidad.contabilidad.reviseLasSieteCuentasPrincipales') });
         },
-        error: (error) => Swal.fire({ icon: 'error', title: 'No se pudo preparar', text: this.errorMessage(error, 'Inténtelo nuevamente.') }),
+        error: (error) => Swal.fire({ icon: 'error', title: this.translate.instant('contabilidad.contabilidad.noSePudoPreparar'), text: this.errorMessage(error, this.translate.instant('contabilidad.contabilidad.intenteloNuevamente')) }),
       });
     });
   }
@@ -173,15 +174,15 @@ export class ContabilidadComponent implements OnInit {
   activate(): void {
     Swal.fire({
       icon: 'warning',
-      title: 'Confirmar y activar contabilidad',
-      html: '<p>Desde este momento las facturas, notas DIAN y pagos aprobados crearán comprobantes contabilizados.</p><p>Confirme que revisó las cuentas con la persona responsable de la contabilidad.</p>',
+      title: this.translate.instant('contabilidad.contabilidad.confirmarYActivarContabilidad'),
+      html: this.translate.instant('contabilidad.contabilidad.desdeEsteMomentoLasFacturas'),
       input: 'checkbox',
       inputValue: 0,
-      inputPlaceholder: 'Sí, revisé las cuentas principales',
-      inputValidator: (value) => value ? null : 'Debe confirmar la revisión para continuar.',
+      inputPlaceholder: this.translate.instant('contabilidad.contabilidad.siReviseLasCuentasPrincipales'),
+      inputValidator: (value) => value ? null : this.translate.instant('contabilidad.contabilidad.debeConfirmarLaRevisionPara'),
       showCancelButton: true,
-      confirmButtonText: 'Activar contabilidad',
-      cancelButtonText: 'Seguir revisando',
+      confirmButtonText: this.translate.instant('contabilidad.contabilidad.activarContabilidad'),
+      cancelButtonText: this.translate.instant('contabilidad.contabilidad.seguirRevisando'),
       confirmButtonColor: '#198754',
     }).then((result) => {
       if (!result.isConfirmed) return;
@@ -191,9 +192,9 @@ export class ContabilidadComponent implements OnInit {
           this.activeTab = 'summary';
           this.loadAll();
           const created = (response?.sync?.dian?.created || 0) + (response?.sync?.treasury?.created || 0);
-          Swal.fire({ icon: 'success', title: 'Contabilidad activada', text: `${created} movimiento${created === 1 ? '' : 's'} anterior${created === 1 ? '' : 'es'} fue${created === 1 ? '' : 'ron'} incorporado${created === 1 ? '' : 's'}.` });
+          Swal.fire({ icon: 'success', title: this.translate.instant('contabilidad.contabilidad.contabilidadActivada'), text: this.translate.instant(created === 1 ? 'contabilidad.contabilidad.movimientoAnteriorIncorporado' : 'contabilidad.contabilidad.movimientosAnterioresIncorporados', { cantidad: created }) });
         },
-        error: (error) => Swal.fire({ icon: 'error', title: 'No se pudo activar', text: this.errorMessage(error, 'Revise las cuentas e inténtelo nuevamente.') }),
+        error: (error) => Swal.fire({ icon: 'error', title: this.translate.instant('contabilidad.contabilidad.noSePudoActivar'), text: this.errorMessage(error, this.translate.instant('contabilidad.contabilidad.reviseLasCuentasEIntentelo')) }),
       });
     });
   }
@@ -208,9 +209,9 @@ export class ContabilidadComponent implements OnInit {
     }).pipe(finalize(() => this.saving = false)).subscribe({
       next: () => {
         this.loadAll();
-        Swal.fire({ icon: 'success', title: 'Configuración guardada', timer: 1600, showConfirmButton: false });
+        Swal.fire({ icon: 'success', title: this.translate.instant('contabilidad.contabilidad.configuracionGuardada'), timer: 1600, showConfirmButton: false });
       },
-      error: (error) => Swal.fire({ icon: 'error', title: 'No se pudo guardar', text: this.errorMessage(error, 'Revise la selección de cuentas.') }),
+      error: (error) => Swal.fire({ icon: 'error', title: this.translate.instant('contabilidad.contabilidad.noSePudoGuardar'), text: this.errorMessage(error, this.translate.instant('contabilidad.contabilidad.reviseLaSeleccionDeCuentas')) }),
     });
   }
 
@@ -223,16 +224,16 @@ export class ContabilidadComponent implements OnInit {
         const created = (data.dian?.created || 0) + (data.treasury?.created || 0);
         const existing = (data.dian?.existing || 0) + (data.treasury?.existing || 0);
         const skipped = (data.dian?.skipped || 0) + (data.treasury?.skipped || 0);
-        Swal.fire({ icon: 'success', title: 'Movimientos revisados', text: `Nuevos: ${created}. Ya existentes: ${existing}. Históricos incompletos: ${skipped}.` });
+        Swal.fire({ icon: 'success', title: this.translate.instant('contabilidad.contabilidad.movimientosRevisados'), text: this.translate.instant('contabilidad.contabilidad.nuevosYaExistentesHistoricosIncompletos', { nuevos: created, existentes: existing, omitidos: skipped }) });
       },
-      error: (error) => Swal.fire({ icon: 'error', title: 'No se pudo sincronizar', text: this.errorMessage(error, 'Inténtelo nuevamente.') }),
+      error: (error) => Swal.fire({ icon: 'error', title: this.translate.instant('contabilidad.contabilidad.noSePudoSincronizar'), text: this.errorMessage(error, this.translate.instant('contabilidad.contabilidad.intenteloNuevamente')) }),
     });
   }
 
   saveManualEntry(): void {
     const totals = this.manualTotals;
     if (!this.manual.description.trim() || totals.debit <= 0 || Math.abs(totals.difference) > 0.009) {
-      Swal.fire({ icon: 'info', title: 'El comprobante todavía no está listo', text: 'Escriba el concepto y verifique que débitos y créditos sean iguales.' });
+      Swal.fire({ icon: 'info', title: this.translate.instant('contabilidad.contabilidad.elComprobanteTodaviaNoEsta'), text: this.translate.instant('contabilidad.contabilidad.escribaElConceptoYVerifique') });
       return;
     }
     this.saving = true;
@@ -244,9 +245,9 @@ export class ContabilidadComponent implements OnInit {
           this.manual = this.emptyManualEntry();
           this.showManualEntry = false;
           this.loadAll();
-          Swal.fire({ icon: 'success', title: 'Comprobante contabilizado', timer: 1800, showConfirmButton: false });
+          Swal.fire({ icon: 'success', title: this.translate.instant('contabilidad.contabilidad.comprobanteContabilizado'), timer: 1800, showConfirmButton: false });
         },
-        error: (error) => Swal.fire({ icon: 'error', title: 'No se pudo contabilizar', text: this.errorMessage(error, 'Revise los movimientos.') }),
+        error: (error) => Swal.fire({ icon: 'error', title: this.translate.instant('contabilidad.contabilidad.noSePudoContabilizar'), text: this.errorMessage(error, this.translate.instant('contabilidad.contabilidad.reviseLosMovimientos')) }),
       });
   }
 

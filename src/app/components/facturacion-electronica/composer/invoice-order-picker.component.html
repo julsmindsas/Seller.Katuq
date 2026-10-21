@@ -1,5 +1,5 @@
 <section class="invoice-panel">
-  <div class="invoice-panel__heading"><span class="step-dot"><i class="pi pi-search"></i></span><div><h3>Busca el pedido que quieres facturar</h3><p>Como en Todos los pedidos: busca por número o cliente y filtra por fecha de creación.</p></div></div>
+  <div class="invoice-panel__heading"><span class="step-dot"><i class="pi pi-search"></i></span><div><h3>{{ 'facturacionElectronica.invoiceOrderPicker.buscaElPedidoQueQuieres' | translate }}</h3><p>{{ 'facturacionElectronica.invoiceOrderPicker.comoEnTodosLosPedidos' | translate }}</p></div></div>
   <fieldset [disabled]="disabled">
     <app-shared-filters
       [showColumnSelector]="false" [showStatusFilters]="false" [showExportButton]="false" [showAdvancedButton]="false"
@@ -10,24 +10,24 @@
     </app-shared-filters>
   </fieldset>
   <div class="composer-message composer-message--error" role="alert" *ngIf="error">{{ error }}</div>
-  <div class="composer-empty" *ngIf="loading" role="status"><i class="pi pi-spin pi-spinner"></i><p>Buscando en los pedidos de este comercio…</p></div>
-  <div class="composer-empty" *ngIf="!loading && !error && !orders.length"><i class="pi pi-search"></i><h4>No encontramos pedidos</h4><p>Prueba otro número o cambia las fechas. También puedes usar Factura libre.</p></div>
+  <div class="composer-empty" *ngIf="loading" role="status"><i class="pi pi-spin pi-spinner"></i><p>{{ 'facturacionElectronica.invoiceOrderPicker.buscandoEnLosPedidosDe' | translate }}</p></div>
+  <div class="composer-empty" *ngIf="!loading && !error && !orders.length"><i class="pi pi-search"></i><h4>{{ 'facturacionElectronica.invoiceOrderPicker.noEncontramosPedidos' | translate }}</h4><p>{{ 'facturacionElectronica.invoiceOrderPicker.pruebaOtroNumeroOCambia' | translate }}</p></div>
   <div class="table-responsive" *ngIf="!loading && orders.length">
     <table class="table composer-table orders-picker">
-      <thead><tr><th>Pedido</th><th>Cliente</th><th class="text-end">Total del pedido</th><th>Estado</th><th><span class="visually-hidden">Seleccionar</span></th></tr></thead>
+      <thead><tr><th>{{ 'facturacionElectronica.invoiceComposer.pedido' | translate }}</th><th>{{ 'facturacionElectronica.invoiceOrderPicker.cliente' | translate }}</th><th class="text-end">{{ 'facturacionElectronica.invoiceOrderPicker.totalDelPedido' | translate }}</th><th>{{ 'facturacionElectronica.invoiceOrderPicker.estado' | translate }}</th><th><span class="visually-hidden">{{ 'facturacionElectronica.invoiceOrderPicker.seleccionar' | translate }}</span></th></tr></thead>
       <tbody><tr *ngFor="let order of orders; trackBy: trackByOrder" [class.row-unavailable]="unavailable(order)">
         <td><strong>{{ order.nroPedido || id(order) }}</strong><small>{{ order.facturacionElectronica?.invoiceNumber || order.nroFactura || '' }}</small></td>
         <td><div class="customer-cell"><span class="customer-avatar">{{ customer(order).charAt(0).toUpperCase() }}</span><span>{{ customer(order) }}</span></div></td>
         <td class="text-end line-amount">{{ amount(order) | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
-        <td><span class="composer-chip" [class.composer-chip--ready]="!unavailable(order)">{{ unavailable(order) || 'Por facturar' }}</span></td>
-        <td class="text-end"><button class="btn btn-sm btn-outline-primary" type="button" [disabled]="disabled || !!unavailable(order)" (click)="choose(order)">Revisar <i class="pi pi-arrow-right"></i></button></td>
+        <td><span class="composer-chip" [class.composer-chip--ready]="!unavailable(order)">{{ unavailable(order) || ('facturacionElectronica.invoiceOrderPicker.porFacturar' | translate) }}</span></td>
+        <td class="text-end"><button class="btn btn-sm btn-outline-primary" type="button" [disabled]="disabled || !!unavailable(order)" (click)="choose(order)">{{ 'facturacionElectronica.invoiceOrderPicker.revisar' | translate }} <i class="pi pi-arrow-right"></i></button></td>
       </tr></tbody>
     </table>
   </div>
   <div class="picker-pagination" *ngIf="!loading && !error">
-    <small>{{ total }} pedidos encontrados · Página {{ page }}</small>
-    <div><button class="btn btn-light btn-sm" type="button" [disabled]="disabled || page <= 1" (click)="load(page - 1)"><i class="pi pi-angle-left"></i> Anterior</button>
-      <button class="btn btn-light btn-sm" type="button" [disabled]="disabled || !hasNext" (click)="load(page + 1)">Siguiente <i class="pi pi-angle-right"></i></button></div>
+    <small>{{ total }} {{ 'facturacionElectronica.invoiceOrderPicker.pedidosEncontradosPagina' | translate:{page: page} }}</small>
+    <div><button class="btn btn-light btn-sm" type="button" [disabled]="disabled || page <= 1" (click)="load(page - 1)"><i class="pi pi-angle-left"></i> {{ 'facturacionElectronica.invoiceOrderPicker.anterior' | translate }}</button>
+      <button class="btn btn-light btn-sm" type="button" [disabled]="disabled || !hasNext" (click)="load(page + 1)">{{ 'facturacionElectronica.invoiceOrderPicker.siguiente' | translate }} <i class="pi pi-angle-right"></i></button></div>
   </div>
-  <p class="field-hint">Los pedidos ya facturados aparecen identificados y no se pueden seleccionar de nuevo.</p>
+  <p class="field-hint">{{ 'facturacionElectronica.invoiceOrderPicker.losPedidosYaFacturadosAparecen' | translate }}</p>
 </section>
