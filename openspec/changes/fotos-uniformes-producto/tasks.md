@@ -188,8 +188,9 @@ Backend: `functions/tests/productPhotos/`, con `node tests/productPhotos/<archiv
   - Estado (2026-10-18): código listo y 1.1 en verde; `/v1/media` y `/v1/productos` sin cambios. Sin marcar: depende de 3.2 y 3.3.
 - [ ] **3.5** Observabilidad: una línea JSON con `correlationId`, sin `console.log` de telemetría, sin URLs con token ni imágenes.
   - Depende de: 3.4.
-  - Éxito: grep limpio en `services/productPhotos/`.
+  - Éxito: grep limpio en `services/productPhotos/`, `utils/productPhoto*.js`, `services/media/backgroundRemoval.js`, el controlador, el router y la herramienta `update_product_photos`, con `observabilidad.test.js` en verde.
   - Estado (2026-10-18): grep limpio. Sin marcar: depende de 3.4.
+  - Estado (2026-10-21, TX37-B15): revisado de nuevo sobre `services/productPhotos/` (con `config.js` y `photoCopy.js`), `utils/productPhoto*.js`, `services/media/backgroundRemoval.js`, el controlador, el router y la herramienta `update_product_photos`. Cero `console.log`; los tres avisos que eran texto libre (recorte de fondo, compuerta de banderas del router y rechazo de aprobación de la herramienta) ahora son una línea JSON con `scope`, `event` y `code`. Prueba nueva `observabilidad.test.js` (4 casos). Sigue sin [x] por la cadena de 3.4 (3.2 y 3.3 esperan el diff aprobado).
 
 ## 4. Front
 
@@ -227,6 +228,7 @@ Backend: `functions/tests/productPhotos/`, con `node tests/productPhotos/<archiv
 
 - **5.1** Revisión independiente de back y front contra el write-set y la seguridad. Los hallazgos ajenos van al backend privado.
   - Depende de: 3.5 y 4.6.
+  - Estado (2026-10-21, TX37-B15): hecha la revisión independiente del diff de B01 a B14 contra el write-set, el aislamiento por empresa y la lista de controles. Los hallazgos y el estado de cada control quedaron solo en la revisión privada del backend. Sin [x]: falta la revisión del front en el navegador y la de los diffs sensibles por Daniel.
 - **5.2** `git pull`, commit por ruta y despliegue del backend con la bandera apagada y `PRODUCT_PHOTO_UNIFORM_MODE=shadow`; luego el front.
   - **Desvío (registrado el 21-oct):** el backend salió en `off`, sin la variable (CONTRACT, D-501 «SUBIDA APAGADA»). Por D-505 ya no se pone en el `.env`: la sombra se enciende en `config/feature_flags.productPhotoUniformMode` después de 0.6. Sigue pendiente confirmar qué proceso tiene `CRON_ENABLED=true`.
   - Depende de: 5.1 y la autorización de Daniel.
@@ -417,7 +419,7 @@ Diseño: `design-fase-2.md`. Requiere la fase 1 en `on` (5.4). **Nada sale a un 
 
 ## 10. Bitácora y retiro de la ampliación
 
-- **10.1** Bitácora de cada fase en `specs/CONTRACT.md` (D-518) y, si está autorizado, comentario en el ticket 1252 (cd `GByRqDwAl5X7d7qwObGP`). Por D-518 T·1, corregir el texto de la resolución del ticket, que remite a «TX-37b», un ticket que no existe: lo pendiente sigue en el mismo ticket.
+- **10.1** (Estado 2026-10-21, TX37-B15: asentada la entrada del cierre de B01 a B14 en `specs/CONTRACT.md`, con el desvío de 5.2. Quedan sin hacer el comentario en el ticket, que esta sesión no puede escribir, y la bitácora de cada fase cuando se encienda.) Bitácora de cada fase en `specs/CONTRACT.md` (D-518) y, si está autorizado, comentario en el ticket 1252 (cd `GByRqDwAl5X7d7qwObGP`). Por D-518 T·1, corregir el texto de la resolución del ticket, que remite a «TX-37b», un ticket que no existe: lo pendiente sigue en el mismo ticket.
 - **10.2** Retiro (Artículo XII): `productPhotoUniformMode` con la bandera de la fase 1 (6.1, 2027-04-30); `productPhotoBackground` y `backgroundRemovalUses` el 2027-06-30.
 
 **Dependencias de otros cambios:** TX-37·7 (F2-20, feed JPEG para Meta) es un arreglo aparte; la revisión de Meta de 5.4 depende de él. TX-37·8 (TX-34, `tienda-celular-y-velocidad`) pinta el `srcset` de las variantes que genera este cambio; las variantes de las fotos no uniformadas las decide su P6. F5-30 (`importador-migracion-tiendas`) usa `photoCopy` (8.1) y su límite de descargas por proceso. La revisión privada del backend (`fotos-uniformes-producto-seguridad`) bloquea 8.1, 8.4, 8.5 y 9.5 a 9.8.

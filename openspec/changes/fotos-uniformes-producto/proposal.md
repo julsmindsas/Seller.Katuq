@@ -4,7 +4,9 @@
 >
 > **Fase 1: implementada y desplegada apagada.** Backend 9d54be86, en producción dentro de a10d1279; front ff69f29c, en la versión 2026.10.18.12. Sin la bandera `productPhotoUniform`, las rutas responden 403 y la pantalla no muestra nada. El modo quedó en **`off`**, no en `shadow` como decía el diseño, porque la variable no se definió (desvío registrado en `design.md`, anexo §F D3 y tarea 5.2). Falta para encender: 0.2 a 0.5, la revisión en el navegador y la orden de Daniel.
 >
-> **Ampliación D-518 (21-oct): aprobada en bloque por Daniel el 21-oct** (front 014d1b62; falta asentarla en `specs/CONTRACT.md`, tarea 7.0). El ticket se reabrió el 20-oct y Daniel aprobó las decisiones TX-37·1 a TX-37·7 de D-518. Esta propuesta las diseña en la sección «Ampliación D-518» (abajo), en `design-ampliacion.md`, `design-fase-1b.md`, `design-fase-2.md`, tres specs nuevas, el anexo §G y las tareas 7 a 10. Lo aprobado el 18-oct no cambia salvo donde se marca «→ D-518».
+> **Estado de la ampliación (21-oct, bloques TX37-B01 a B15): implementada en commits locales y apagada** (interruptores `productPhotoUniformMode`, `productPhotoCopyMode` y bandera `productPhotoBackground` en Firestore, sin proveedor de IA). Falta el visto bueno de Daniel a los diffs sensibles, la revisión en el navegador y encenderla. Entrada de cierre en `specs/CONTRACT.md`.
+>
+> **Ampliación D-518 (21-oct): aprobada en bloque por Daniel el 21-oct** (front 014d1b62; asentada en `specs/CONTRACT.md` con la entrada del cierre; 7.0 sigue sin [x] hasta que Daniel la confirme). El ticket se reabrió el 20-oct y Daniel aprobó las decisiones TX-37·1 a TX-37·7 de D-518. Esta propuesta las diseña en la sección «Ampliación D-518» (abajo), en `design-ampliacion.md`, `design-fase-1b.md`, `design-fase-2.md`, tres specs nuevas, el anexo §G y las tareas 7 a 10. Lo aprobado el 18-oct no cambia salvo donde se marca «→ D-518».
 
 ## Por qué
 
