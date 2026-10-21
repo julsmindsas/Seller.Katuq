@@ -107,22 +107,37 @@ Ante `IMPORT_IN_PROGRESS`, el front espera y reenvía el mismo lote. Si ese lote
 ### `POST customers` (fase 1b)
 
 ```json
-{ "migrationId": "uuid", "source": "shopify", "siteId": "…", "lot": 1, "declaration": true,
+{ "migrationId": "uuid", "source": "shopify", "siteId": "…", "lot": 1, "declaration": true, "exportedAt": "2026-10-01",
   "rows": [{ "row": 2, "data": { "…": "columnas conocidas" } }] }
 ```
 
 **→ 200:**
 
 ```json
-{ "success": true, "importBatchId": "<migrationId>_c1", "created": 410, "completed": 70, "skipped": 20,
-  "subscriptions": { "created": 300, "noConsent": 150, "existing": 25, "suppressed": 5 },
-  "issues": [{ "row": 31, "code": "NO_CONTACT" }] }
+{ "success": true, "importBatchId": "<migrationId>_c1", "created": 410, "completed": 70, "resumed": 0, "skipped": 20,
+  "subscriptions": { "created": 300, "noConsent": 150, "existing": 25, "suppressed": 5, "failed": 0 },
+  "issues": [{ "row": 31, "code": "NO_CONTACT" }], "issuesTotal": 1, "durationMs": 840 }
 ```
 
-Sin `declaration: true`, el lote entra sin crear ninguna suscripción.
+Sin `declaration: true`, el lote entra sin crear ninguna suscripción. Lo mismo con la bandera `storeMigrationCustomerConsent` apagada (D-505, hasta el concepto legal 0.7) y con `source: "woocommerce"`, cuyo archivo no trae consentimiento: ahí `subscriptions.created` es siempre 0.
+
+Notas (F530-B16, tarea 9.3):
+
+- `source` acepta `shopify` y `woocommerce` (lector de clientes por plataforma). `exportedAt` es opcional (fecha del export, solo para la evidencia). La empresa sale del token; `companyId` o `company` en el cuerpo se ignoran.
+- Orden: validación (400/413) → lote repetido (`replayed: true`) → guarda `409 WOO_INTEGRATION_ACTIVE` → `404 SITE_NOT_FOUND` (el sitio debe ser de la empresa del token) → candado compartido (`409 IMPORT_IN_PROGRESS`).
+- Un archivo con columnas que no se reconocen responde `400 INVALID_PAYLOAD` con el mensaje de la plataforma. Más de 500 filas: `413 TOO_MANY`.
+- `completed` cuenta los clientes que ya existían en la empresa (se completan sin pisar y sin `importBatchId`); `resumed`, los que este mismo lote ya había creado en un envío anterior que no alcanzó a cerrar. `skipped` son las filas por fuera del lector (`NO_CONTACT`, `DUPLICATE_IN_FILE`); `issues` trae hasta 500 avisos con solo fila y código.
+- Un lote con un fallo de escritura responde 500 y no deja escritura parcial de clientes (un solo batch de máximo 500). Reenviarlo es seguro.
+- Rastro: `migration_audit` paso `customers` con solo números (`created`, `completed`, `resumed`, `skipped`, `subscriptions*`).
 
 ### `DELETE customers/:batchId` (fase 1b)
 
-**→ 200:** `{ "success": true, "clientsDeleted": 410, "subscribersDeleted": 290, "subscribersKept": 10 }`.
+**→ 200:** `{ "success": true, "clientsDeleted": 410, "clientsKept": 2, "subscribersDeleted": 290, "subscribersKept": 10 }`.
 
-Si el lote no es de la empresa, responde 404 `BATCH_NOT_FOUND`.
+Si el lote no es de la empresa (o ya no tiene nada), responde 404 `BATCH_NOT_FOUND`. Un `batchId` que no es `<migrationId>_c<lote>` responde 400. Comparte el candado (`409 IMPORT_IN_PROGRESS`). Conserva:
+
+- los clientes que alguien editó después de la importación o que ya tienen un pedido (`clientsKept`);
+- las suscripciones en baja, suprimidas o cuyo origen ya no es `importacion` (`subscribersKept`);
+- los clientes que ya existían (nunca llevaron el `importBatchId`).
+
+Borra en tandas de 500 escrituras. No hace falta que el front lo divida. La reversa no aplica la guarda de WooCommerce (solo quita lo que la propia importación creó). Rastro: paso `customers-undo`, solo números.
