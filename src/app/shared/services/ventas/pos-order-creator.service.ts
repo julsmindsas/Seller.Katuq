@@ -251,10 +251,11 @@ export class PosOrderCreatorService {
       avisarPendiente('No se recibió el id del pedido.');
       return;
     }
-    this.facturacionAutomatica.resolverProveedor().subscribe({
-      next: (proveedor) => {
+    // D-500: con la bandera invoicingHub la decide el servidor para la factura POS.
+    this.facturacionAutomatica.resolverProveedorPara('posInvoice').subscribe({
+      next: ({ proveedor, motivo }) => {
         if (!proveedor) {
-          avisarPendiente('La empresa no tiene un sistema de facturación configurado.');
+          avisarPendiente(motivo || 'La empresa no tiene un sistema de facturación configurado.');
           return;
         }
         this.facturacionAutomatica.encolar(proveedor, orderId).subscribe({

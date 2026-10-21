@@ -66,12 +66,12 @@ Todas: **Dep.** 0.1, 0.3. **Éxito:** corren con `node` y fallan por código aus
     y el ajuste en Siigo (con `autoSyncInventory`) idénticos al modo 1;
   - modo 3 con DIAN, WO o `null`: ninguna emisión ni llamada a Siigo, un registro `factura_automatica_omitida`;
   - ya facturado: ninguna llamada; el bloque no agrega escrituras propias en `orders`.
-- [ ] 1.6 [P] `tests/accounting/seedInvoicingChoice.test.js`: la simulación no escribe; `--execute` escribe sobre documento
+- [x] 1.6 [P] `tests/accounting/seedInvoicingChoice.test.js`: la simulación no escribe; `--execute` escribe sobre documento
   ausente o sin elección y se niega con elección; `--revert` con compare-and-set de `version` y sin borrar `health`; nunca
   imprime secretos.
 - [x] 1.7 [P] Specs del front de `facturacion-integracion.service.ts` y `resolverProveedor(documentType)`, con y sin bandera,
   y del cálculo de contadores del directorio (receta de un solo spec de Karma).
-- [ ] 1.8 [P] `tests/accounting/invoiceShadow.contract.test.js`, para `from-order` y `from-order-async`:
+- [x] 1.8 [P] `tests/accounting/invoiceShadow.contract.test.js`, para `from-order` y `from-order-async`:
   - status y cuerpo 201/202 idénticos con la sombra encendida o apagada (salvo `timestamp`);
   - escrituras en `orders` idénticas; la sombra solo escribe `dian_auditoria`, un registro por factura (`igual`,
     `divergente` u `omitido`);
@@ -94,11 +94,11 @@ Todas: **Dep.** 0.1, 0.3. **Éxito:** corren con `node` y fallan por código aus
   `/dian/...` y `/:provider/invoices/*` responden igual (prueba de humo).
 - [x] 2.8 **Sensible (consecutivos), con diff aprobado.** `prepareConfigUpdate`/`saveConfig`: `certificateExpiresAt` (decisión 8)
   y `secretsChanged`. **Dep.** 1.4. **Éxito:** 1.4 pasa y las suites DIAN siguen verdes.
-- [ ] 2.9 **Sensible (facturación de pedidos), con diff aprobado.** Sombra de la decisión 10 en `createInvoiceFromOrder` y su
+- [x] 2.9 **Sensible (facturación de pedidos), con diff aprobado.** Sombra de la decisión 10 en `createInvoiceFromOrder` y su
   variante async, después de responder. **Dep.** 1.8, 2.3. **Éxito:** 1.8 pasa.
 - [x] 2.10 [P] Id reservado `invoicing` en las rutas genéricas, `listConfigs` y el censo (decisión 1). **Dep.** 1.3. **Éxito:**
   pasan sus casos de 1.3; el listado de integraciones de una empresa sin elección no cambia.
-- [ ] 2.11 `node --check` de lo tocado y las suites `dianConfigPersistence`, `pedidoYaFacturado`, `reemplazarFactura`,
+- [x] 2.11 `node --check` de lo tocado y las suites `dianConfigPersistence`, `pedidoYaFacturado`, `reemplazarFactura`,
   `liberarFactura`, `dianAlertasPreventivas`. **Dep.** 2.1-2.10. **Éxito:** todo verde.
 
 ## 3. Front base (sin bandera = igual que hoy)
@@ -106,13 +106,13 @@ Todas: **Dep.** 0.1, 0.3. **Éxito:** corren con `node` y fallan por código aus
 - [x] 3.1 `facturacion-integracion.service.ts`, que extiende `base.service.ts`. **Dep.** 1.7, 2.7. **Éxito:** pasa su spec.
 - [x] 3.2 `FacturacionAutomaticaService.resolverProveedor(documentType)`. **Dep.** 3.1, 2.1. **Éxito:** 1.7 pasa; sin bandera,
   mismas peticiones que hoy.
-- [ ] 3.3 **Sensible (pedidos), con diff aprobado.** Venta asistida pasa `'orderInvoice'` y el POS `'posInvoice'`. **Dep.** 3.2.
+- [x] 3.3 **Sensible (pedidos), con diff aprobado.** Venta asistida pasa `'orderInvoice'` y el POS `'posInvoice'`. **Dep.** 3.2.
   **Éxito:** sin bandera, la pestaña de red muestra las mismas peticiones.
-- [ ] 3.4 **Sensible (pedidos), con diff aprobado.** `list.component.ts` (decisión 12): con bandera, `orderInvoice` y
+- [x] 3.4 **Sensible (pedidos), con diff aprobado.** `list.component.ts` (decisión 12): con bandera, `orderInvoice` y
   `posInvoice` una vez por carga, cada fila según su `typeOrder`, sin `|| 'siigo'` y con el motivo si es `null`; sin bandera,
   el código de hoy. **Dep.** 3.2. **Éxito:** mismo proveedor que hoy en tres empresas de prueba (DIAN, Siigo y ninguna);
   con un proveedor elegido inactivo, no ofrece facturar con otro.
-- [ ] 3.5 `npm run build` sin errores. **Dep.** 3.1-3.4.
+- [x] 3.5 `npm run build` sin errores. **Dep.** 3.1-3.4.
 
 ## 4. Pantallas con bandera
 
@@ -135,7 +135,7 @@ Todas: **Dep.** 0.1, 0.3. **Éxito:** corren con `node` y fallan por código aus
   **Dep.** 3.1. **Éxito:** sin la bandera, igual que hoy.
 - [ ] 4.8 Textos EN y PT, trampas de CSS global y conteo de gradientes y primarios prohibidos (no sube). **Dep.** 4.1-4.7.
   **Éxito:** revisado en 1440 y 390 px, sin scroll horizontal ni texto invisible.
-- [ ] 4.9 `npm run build:prod` sin errores, sin dos builds a la vez. **Dep.** 4.8.
+- [x] 4.9 `npm run build:prod` sin errores, sin dos builds a la vez. **Dep.** 4.8.
 
 ## 5. Factura automática (pedidos)
 

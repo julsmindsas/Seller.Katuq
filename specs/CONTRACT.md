@@ -11361,6 +11361,18 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
     - 3.3: venta asistida usa `orderInvoice` y el POS `posInvoice`.
     - 3.4: «Todos los pedidos» decide con `proveedorDe(pedido)`. Sin la bandera devuelve exactamente lo de antes; con ella, el del tipo de la fila o el motivo. Ya no usa `|| 'siigo'`.
     - Las tres compilan; se probaron en una copia aparte y no se aplicaron.
+- **Hallazgo 20-oct (D-500 5.1 y D-499 0.5), confirmado en el código y no en los logs:**
+  - La factura automática de SIIGO al aprobar el pago (`controllers/orders.js`, «FACTURACIÓN AUTOMÁTICA SIIGO») llama `AccountingManager.createInvoice(...)` sobre la clase. Ese método es de instancia (`typeof AccountingManager.createInvoice === 'undefined'`).
+  - Desde `01f902c6` (2025-10-24), cada intento lanza `TypeError`, se captura y queda como `SIIGO_AUTO_INVOICE_ERROR`. Ninguna empresa con `enableAutoInvoicing` ha recibido factura automática por ese camino.
+  - Repararlo empezaría a emitir facturas reales solas, así que lo decide Daniel. Antes hay que ver, en solo lectura, qué empresas tienen `enableAutoInvoicing` encendido en SIIGO.
+  - Mientras tanto, «modo 1 idéntico a hoy» de la 5.1 conserva ese comportamiento.
+  - **Lectura de producción (aprobada por el usuario, 20-oct; solo `companyId`, `status` y banderas públicas):** hay 3 configuraciones SIIGO activas, de ALMACEN BOMBAS, ALMARA FELICIDAD y OH MY STORE, y ninguna tiene `enableAutoInvoicing` ni `facturacionAutomatica`. El camino roto nunca se ejecuta: sale antes. Repararlo no emite nada hasta que alguien encienda la facturación automática. Propuesta: corregirlo dentro del diff de la 5.1, con `new AccountingManager().createInvoice(...)`.
+  - **Subido:** backend `8aab3507` (2.9 aprobada, medición en `from-order`; script 6.1). Sin desplegar.
+  - **Segundo hallazgo (no reparar a medias):** el `createInvoice` de SIIGO devuelve `{ success, invoice, invoiceId, invoiceNumber, pdfUrl }`, pero `createSiigoInvoiceBackground` lee `result.data.id/name/date`. Corregir solo la llamada estática crearía la factura en SIIGO y fallaría antes de guardar `facturaSiigo`, y un reintento la duplicaría. Ese camino tampoco usa el candado de `createInvoiceFromOrder`. Propuesta para la 5.1, pendiente de Daniel porque cambia la decisión 11:
+    - en el modo 3, SIIGO factura por `AccountingManager.createInvoiceFromOrder`, el mismo camino de «Facturar» en Todos los pedidos, con candado y `facturacionElectronica`;
+    - el bloque viejo queda como está para el modo 1, donde no corre porque nadie tiene la automática encendida, y se retira en la 7.4.
+- **3.3 y 3.4 aprobadas por el usuario (20-oct) y aplicadas:** venta asistida (`orderInvoice`), POS (`posInvoice`) y Todos los pedidos (`proveedorDe(pedido)`, sin `|| 'siigo'`). `tsc` limpio y `ng build` de producción sin errores (3.5 y 4.9).
+- **Backend, no sensible:** script `scripts/invoicing/seed-invoicing-choice.js` y núcleo `seedChoice.js` (6.1, sin correr contra producción). Prueba `seedInvoicingChoice` 8/8 (1.6), incluida en `test:invoicing`. Sin commit, a la espera de confirmación.
 
 ## D-513 (2026-10-20) — WooCommerce: cerrar rutas sin sesión y exigir firma (puntos 25, 26 y 27 del reporte del 19-10) — IMPLEMENTADA LOCAL
 

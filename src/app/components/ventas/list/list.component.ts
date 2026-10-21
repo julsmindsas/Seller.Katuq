@@ -11,6 +11,7 @@ import {
   HostListener,
   OnDestroy,
   ChangeDetectorRef,
+  inject,
 } from "@angular/core";
 import {
   trigger,
@@ -68,6 +69,11 @@ import { Observable, Subject, firstValueFrom, forkJoin, of } from "rxjs";
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap, takeUntil } from "rxjs/operators";
 import { OrdenVentaComponent } from "../orden-venta/orden-venta.component";
 import { IntegrationsService } from "../../integrations/integrations.service";
+import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
+import {
+  FacturacionAutomaticaService,
+  ProveedorResuelto,
+} from "../../../shared/services/facturacion/facturacion-automatica.service";
 import { TreasuryService } from "../../../shared/services/treasury/treasury.service";
 import { debePreguntarSiVolvio, preguntarSiVolvio } from "../../../shared/utils/pedido-mercancia-devuelta";
 
@@ -142,6 +148,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   // Integración de facturación electrónica
   hasInvoicingIntegration: boolean = false;
   activeAccountingProvider: string = null;
+  /**
+   * D-500 (decisión 12): con la bandera invoicingHub, el proveedor que resuelve el servidor para
+   * cada tipo, una vez por carga. null sin la bandera: se usa el código de antes.
+   */
+  private proveedorPorTipo: { orderInvoice: ProveedorResuelto; posInvoice: ProveedorResuelto } | null = null;
+  // Con inject() para no cambiar el constructor.
+  private companyFeatures = inject(CompanyFeaturesService);
+  private facturacionAutomatica = inject(FacturacionAutomaticaService);
 
   // ===== Modal de facturación SIIGO: forma de pago + vencimiento de crédito (D-042) =====
   @ViewChild("facturaSiigoModal") facturaSiigoModal: any;
@@ -954,6 +968,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Verifica si hay una integración de facturación electrónica configurada
    */
   private checkInvoicingIntegration(): void {
+    // D-500: con la bandera, el servidor decide el proveedor de cada tipo (sin `|| 'siigo'`).
+    if (this.companyFeatures.isEnabled("invoicingHub")) {
+      forkJoin({
+        orderInvoice: this.facturacionAutomatica.resolverProveedorPara("orderInvoice"),
+        posInvoice: this.facturacionAutomatica.resolverProveedorPara("posInvoice"),
+      }).subscribe((r) => {
+        this.proveedorPorTipo = r;
+        this.hasInvoicingIntegration = !!(r.orderInvoice.proveedor || r.posInvoice.proveedor);
+        this.activeAccountingProvider = r.orderInvoice.proveedor?.provider || r.posInvoice.proveedor?.provider || null;
+        this.changeDetectorRef.markForCheck();
+      });
+      return;
+    }
     // Verificar proveedores contables: SIIGO y World Office
     const accountingProviders = ['dian', 'siigo', 'world_office'];
     let found = false;
@@ -1006,15 +1033,34 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Retorna el nombre legible del proveedor contable activo
+   * (D-500: con la bandera, el del tipo de ese pedido).
    */
-  getAccountingProviderDisplayName(): string {
+  getAccountingProviderDisplayName(pedido?: Pedido): string {
     const names: { [key: string]: string } = {
       'siigo': 'Siigo',
       'world_office': 'World Office',
       'dian': 'DIAN directo',
       'alegra': 'Alegra'
     };
-    return names[this.activeAccountingProvider] || 'Sistema Contable';
+    const provider = this.proveedorPorTipo && pedido ? this.proveedorDe(pedido) : this.activeAccountingProvider;
+    return names[provider] || 'Sistema Contable';
+  }
+
+  /**
+   * D-500: proveedor con el que se factura ESTE pedido. Sin la bandera, exactamente lo de antes
+   * (`activeAccountingProvider || 'siigo'`). Con ella, el que el servidor resolvió para su tipo
+   * (venta POS o pedido), o null: entonces no se ofrece otro.
+   */
+  proveedorDe(pedido: Pedido | null | undefined): string | null {
+    if (!this.proveedorPorTipo) return this.activeAccountingProvider || 'siigo';
+    const tipo = (pedido as any)?.typeOrder === 'POS' ? 'posInvoice' : 'orderInvoice';
+    return this.proveedorPorTipo[tipo].proveedor?.provider || null;
+  }
+
+  /** D-500: por qué este pedido no tiene proveedor (solo con la bandera). */
+  private motivoSinProveedor(pedido: Pedido): string {
+    const tipo = (pedido as any)?.typeOrder === 'POS' ? 'posInvoice' : 'orderInvoice';
+    return this.proveedorPorTipo?.[tipo]?.motivo || 'No hay un proveedor de facturación disponible para este pedido.';
   }
 
   /**
@@ -1060,7 +1106,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   puedeRefacturar(pedido: Pedido): boolean {
     if (!this.hasInvoicingIntegration || !this.puedeLiberarFactura(pedido) || (pedido as any)?._facturando) return false;
-    const provider = this.activeAccountingProvider || 'siigo';
+    const provider = this.proveedorDe(pedido);
     if (provider !== 'siigo' && provider !== 'world_office') return false;
     const fiscal = (pedido as any)?.facturacionElectronica || {};
     return !fiscal.provider || fiscal.provider === provider;
@@ -1092,8 +1138,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private abrirVentanaFactura(pedido: Pedido): void {
-    const providerDisplayName = this.getAccountingProviderDisplayName();
-    const provider = this.activeAccountingProvider || 'siigo';
+    const providerDisplayName = this.getAccountingProviderDisplayName(pedido);
+    const provider = this.proveedorDe(pedido);
+
+    // D-500: con la bandera, si el proveedor de este pedido no se puede usar, se explica y no se
+    // ofrece otro.
+    if (!provider) {
+      Swal.fire({ icon: 'warning', title: 'No se puede facturar este pedido', text: this.motivoSinProveedor(pedido), confirmButtonColor: '#5F3FE0' });
+      return;
+    }
 
     if (provider === 'dian') {
       this.mostrarConfirmacionFactura(pedido, providerDisplayName);
@@ -1418,7 +1471,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const opciones = this.facturaOpcionesActuales();
     const pedidoId = this.facturaPedido._id;
     const firma = JSON.stringify({ pedidoId, ...opciones });
-    const provider = this.activeAccountingProvider || 'siigo';
+    const provider = this.proveedorDe(this.facturaPedido);
     this.facturaVistaPreviaCargando = true;
     this.facturaVistaPreviaError = '';
     // Revisión 1074: si mientras llega la respuesta se abrió la ventana de otro pedido,
@@ -1643,7 +1696,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.facturaReemplazo = null;
 
     // Usar endpoint async para no bloquear (responde 202 inmediato)
-    const provider = this.activeAccountingProvider || 'siigo';
+    const provider = this.proveedorDe(pedido);
     const invoiceCall = this.integrationsService.createAccountingInvoiceAsync(provider, pedido._id, options);
 
     invoiceCall.subscribe({

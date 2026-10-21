@@ -342,6 +342,8 @@ export class CrearVentasComponent
   // Con inject() para no cambiar el constructor (VentaAsistidaUnicaComponent lo extiende).
   private facturacionAutomatica = inject(FacturacionAutomaticaService);
   private proveedorContable: ProveedorContable | null = null;
+  /** D-500: por qué no hay proveedor (solo con la bandera invoicingHub; sin ella queda null). */
+  private motivoSinProveedor: string | null = null;
   public siigoConfig: any = null;
   public siigoEnabled: boolean = false;
   public activeAccountingProvider: string = null;
@@ -1099,8 +1101,10 @@ export class CrearVentasComponent
   cargarConfiguracionSiigo(): void {
     // D-419: misma regla de siempre (DIAN directo, Siigo, World Office), ahora
     // en FacturacionAutomaticaService para que el POS use exactamente la misma.
-    this.facturacionAutomatica.resolverProveedor().subscribe((proveedor) => {
+    // D-500: con la bandera invoicingHub la decide el servidor para la factura de pedido.
+    this.facturacionAutomatica.resolverProveedorPara('orderInvoice').subscribe(({ proveedor, motivo }) => {
       this.proveedorContable = proveedor;
+      this.motivoSinProveedor = motivo;
       if (!proveedor) {
         this.siigoConfig = null;
         this.siigoEnabled = false;
@@ -1143,6 +1147,14 @@ export class CrearVentasComponent
     }
     if (!this.proveedorContable) {
       console.warn('⚠️ No hay proveedor contable configurado; la venta se puede facturar desde Pedidos.');
+      // D-500: con la bandera, la persona ve el motivo (nunca se factura con otro proveedor).
+      if (this.motivoSinProveedor) {
+        this.toastrService.warning(
+          `${this.motivoSinProveedor} Puedes facturar el pedido ${nroPedido} desde Todos los pedidos.`,
+          'Factura no generada',
+          { timeOut: 10000 }
+        );
+      }
       return;
     }
 
