@@ -31,6 +31,21 @@
       (fileCleared)="clearFile()">
     </app-mobile-file-upload>
 
+    <!-- En la plantilla una casilla SI/NO vacía cuenta como NO (ver `esCasilla`):
+         Activo y Página Web vacíos dejan el producto sin poder venderse. -->
+    <div class="aviso-categorias mt-4" *ngIf="type === 'product'">
+      <h6>
+        <i class="pi pi-exclamation-triangle me-2"></i>Escriba SI o NO en las casillas
+      </h6>
+      <p class="mb-2">
+        En las columnas que dicen <strong>(SI/NO)</strong> escriba SI o NO en cada fila. Una casilla vacía cuenta como NO.
+      </p>
+      <p class="aviso-detalle mb-0">
+        Revise sobre todo <strong>Activo</strong> y <strong>Página Web</strong>: en NO o vacías, el producto queda
+        apagado, no sale en la tienda en línea y su stock no se le envía a la tienda.
+      </p>
+    </div>
+
     <div class="template-section mt-4">
       <p-divider></p-divider>
       <div class="template-info">

@@ -876,6 +876,8 @@
 <p-dialog
     header="Exportar productos"
     [(visible)]="showExportDialog"
+    appendTo="body"
+    [baseZIndex]="10000"
     [modal]="true"
     [style]="{width: '480px'}"
     [draggable]="false"
@@ -936,6 +938,8 @@
 <p-dialog
     header="Configurar columnas"
     [(visible)]="showColConfigDialog"
+    appendTo="body"
+    [baseZIndex]="10000"
     [modal]="true"
     [style]="{width: '400px'}"
     [draggable]="false"

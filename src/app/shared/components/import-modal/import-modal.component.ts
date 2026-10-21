@@ -733,28 +733,28 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     // referencia → producto y bodega.
     templateColumns: [
       { field: 'referencia', header: 'Referencia (SKU)', required: true, example: 'PROD001' , help: "El código único del producto. Es la llave: si ya existe, el producto se actualiza en vez de duplicarse." },
-      { field: 'codigoBarras', header: 'Codigo de Barras', required: false, example: '7701234567890' },
-      { field: 'titulo', header: 'Titulo', required: true, example: 'Camiseta Basica' , help: "El nombre del producto tal como lo ve el cliente." },
-      { field: 'descripcion', header: 'Descripcion', required: false, example: 'Camiseta de algodon' },
+      { field: 'codigoBarras', header: 'Código de Barras', required: false, example: '7701234567890' },
+      { field: 'titulo', header: 'Título', required: true, example: 'Camiseta Basica' , help: "El nombre del producto tal como lo ve el cliente." },
+      { field: 'descripcion', header: 'Descripción', required: false, example: 'Camiseta de algodon', help: 'Texto del producto. Si viene de Exportar y no la cambia, se conservan sus negrillas y viñetas. Si la cambia aquí, entra como texto sin formato; para darle formato, edítela desde la ficha del producto.' },
       { field: 'marca', header: 'Marca', required: false, example: 'MiMarca' },
       { field: 'fechaInicial', header: 'Fecha Inicial (AAAA-MM-DD)', required: false, example: '2026-01-01' , help: "Desde cuándo se vende. Formato AAAA-MM-DD (2026-01-31)." },
       { field: 'fechaFinal', header: 'Fecha Final (AAAA-MM-DD)', required: false, example: '2026-12-31' , help: "Hasta cuándo se vende. Formato AAAA-MM-DD." },
       // Categorías: los tres niveles del árbol. Nivel 2 y 3 son opcionales —
       // las empresas que no manejan subcategorías dejan las celdas vacías y
       // el producto queda colgado del nivel que sí llenaron.
-      { field: 'categoria', header: 'Categoria', required: false, example: 'Ropa' , help: "La categoría principal. Si no existe, se crea sola y se te avisa al terminar." },
-      { field: 'subcategoria', header: 'Subcategoria (Nivel 2)', required: false, example: 'Hombre' , help: "Opcional. Solo si tu empresa maneja subcategorías; si no, dejala vacía." },
-      { field: 'subsubcategoria', header: 'Sub-subcategoria (Nivel 3)', required: false, example: 'Camisetas' , help: "Opcional. Tercer nivel del árbol de categorías." },
-      { field: 'categoriaConsecutivo', header: 'Id Categoria (opcional, enlace a SIIGO)', required: false, example: '1005' , help: "Solo si enlazás la categoría con SIIGO. Si no usás SIIGO, dejala vacía." },
+      { field: 'categoria', header: 'Categoría', required: false, example: 'Ropa' , help: "La categoría principal. Si no existe, se crea sola y se te avisa al terminar." },
+      { field: 'subcategoria', header: 'Subcategoría (Nivel 2)', required: false, example: 'Hombre' , help: "Opcional. Solo si tu empresa maneja subcategorías; si no, dejala vacía." },
+      { field: 'subsubcategoria', header: 'Sub-subcategoría (Nivel 3)', required: false, example: 'Camisetas' , help: "Opcional. Tercer nivel del árbol de categorías." },
+      { field: 'categoriaConsecutivo', header: 'Id Categoría (opcional, enlace a SIIGO)', required: false, example: '1005' , help: "Solo si enlazás la categoría con SIIGO. Si no usás SIIGO, dejala vacía." },
       { field: 'precioUnitarioSinIva', header: 'Precio sin IVA', required: true, example: '50000' , help: "Precio base, sin impuesto. El precio con IVA lo calcula el sistema." },
       { field: 'valorIva', header: 'IVA (%)', required: false, example: '19' },
-      { field: 'cantidadMinVenta', header: 'Cantidad Minima de Venta', required: false, example: '1' },
+      { field: 'cantidadMinVenta', header: 'Cantidad Mínima de Venta', required: false, example: '1' },
       { field: 'inventarioSeguridad', header: 'Inventario de Seguridad', required: false, example: '10' },
-      { field: 'inventariable', header: 'Inventariable (SI/NO)', required: false, example: 'SI' },
+      { field: 'inventariable', header: 'Inventariable (SI/NO)', required: false, example: 'SI', help: 'Escriba SI o NO. SI = el producto lleva inventario y se descuenta al vender. Vacío cuenta como NO.' },
       // D-491: un servicio no maneja existencias ni se despacha; gana sobre "Inventariable".
       { field: 'tipoItem', header: 'Tipo (Producto/Servicio)', required: false, example: 'Producto', help: "Servicio = no maneja existencias ni se despacha. Vacío = Producto." },
-      { field: 'activar', header: 'Activo (SI/NO)', required: false, example: 'SI' },
-      { field: 'disponible', header: 'Disponible (SI/NO)', required: false, example: 'SI' },
+      { field: 'activar', header: 'Activo (SI/NO)', required: false, example: 'SI', help: 'IMPORTANTE: escriba SI o NO. Con NO, o con la casilla vacía, el producto queda APAGADO: no aparece para vender en ningún canal.' },
+      { field: 'disponible', header: 'Disponible (SI/NO)', required: false, example: 'SI', help: 'Escriba SI o NO. Vacío cuenta como NO.' },
       // Los dos son SELECTS que se llenan del maestro de la empresa, y cada
       // empresa define los suyos con texto libre. El ejemplo se completa con
       // una opción REAL de la empresa al descargar la plantilla; el que había
@@ -767,25 +767,25 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       { field: 'anchoProductoCm', header: 'Ancho (cm)', required: false, example: '20' },
       { field: 'pesoUnitarioProductoKg', header: 'Peso (kg)', required: false, example: '0.5' },
       { field: 'etiquetas', header: 'Etiquetas (separadas por coma)', required: false, example: 'algodon, basica, unisex' },
-      { field: 'garantiasProducto', header: 'Garantias', required: false, example: 'Garantia de 1 año' },
-      { field: 'caracAdicionales', header: 'Caracteristicas Adicionales', required: false, example: 'Material 100% algodon' },
+      { field: 'garantiasProducto', header: 'Garantías', required: false, example: 'Garantia de 1 año' },
+      { field: 'caracAdicionales', header: 'Características Adicionales', required: false, example: 'Material 100% algodon' },
       { field: 'restriccionesProducto', header: 'Restricciones', required: false, example: 'No apto para menores de 3 años' },
       { field: 'cuidadoConsumo', header: 'Cuidado y Consumo', required: false, example: 'Lavar en agua fria' },
-      { field: 'seProduceInternamente', header: 'Requiere Produccion (SI/NO)', required: false, example: 'NO' },
-      { field: 'integraConProduccion', header: 'Integra Software Produccion? (SI/NO)', required: false, example: 'NO' },
-      { field: 'tiempoProduccion', header: 'Tiempo Produccion', required: false, example: '3 dias' },
-      { field: 'softwareProduccion', header: 'Software Produccion', required: false, example: 'ERP Interno' },
+      { field: 'seProduceInternamente', header: 'Requiere Producción (SI/NO)', required: false, example: 'NO' },
+      { field: 'integraConProduccion', header: '¿Integra Software Producción? (SI/NO)', required: false, example: 'NO' },
+      { field: 'tiempoProduccion', header: 'Tiempo Producción', required: false, example: '3 dias' },
+      { field: 'softwareProduccion', header: 'Software Producción', required: false, example: 'ERP Interno' },
       // --- Exposición (las casillas de la pestaña Exposición del formulario) ---
-      { field: 'posicion', header: 'Posicion', required: false, example: '1' },
+      { field: 'posicion', header: 'Posición', required: false, example: '1' },
       { field: 'oferta', header: 'En Oferta (SI/NO)', required: false, example: 'NO' },
       { field: 'recomendado', header: 'Recomendado (SI/NO)', required: false, example: 'NO' },
       { field: 'destacado', header: 'Destacado (SI/NO)', required: false, example: 'NO' },
       { field: 'nuevo', header: 'Nuevo (SI/NO)', required: false, example: 'SI' },
-      { field: 'masvendido', header: 'Mas Vendido (SI/NO)', required: false, example: 'NO' },
+      { field: 'masvendido', header: 'Más Vendido (SI/NO)', required: false, example: 'NO' },
       // --- Canales de venta ---
-      { field: 'sellerCenter', header: 'Seller Center (SI/NO)', required: false, example: 'SI' },
-      { field: 'paginaWeb', header: 'Pagina Web (SI/NO)', required: false, example: 'SI' },
-      { field: 'puntoDeVenta', header: 'Punto de Venta (SI/NO)', required: false, example: 'SI' },
+      { field: 'sellerCenter', header: 'Seller Center (SI/NO)', required: false, example: 'SI', help: 'Escriba SI o NO. SI = se puede vender desde Seller Center (venta asistida). Vacío cuenta como NO.' },
+      { field: 'paginaWeb', header: 'Página Web (SI/NO)', required: false, example: 'SI', help: 'IMPORTANTE: escriba SI o NO. Con NO, o con la casilla vacía, el producto no sale en la tienda en línea (página web, WooCommerce o Shopify) y su stock no se le envía a la tienda.' },
+      { field: 'puntoDeVenta', header: 'Punto de Venta (SI/NO)', required: false, example: 'SI', help: 'Escriba SI o NO. SI = aparece en el POS. Vacío cuenta como NO.' },
       // --- Ciudad ---
       // Si la cobertura nacional va en SI, la lista de ciudades se ignora
       // (mismo comportamiento que el toggle en pantalla, que limpia la lista).
@@ -2827,6 +2827,17 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       ['3. NO escriba 0, ni "N/A", ni guiones para rellenar. Vacío significa "no aplica" y el sistema lo respeta;', '', '', ''],
       ['   un 0 se toma como un dato real (por ejemplo, un peso o una medida en 0 hace que se cotice mal el envío).', '', '', ''],
       ['4. Lo que deje vacío se puede completar después, producto por producto, desde el módulo de Productos.', '', '', ''],
+      // Excepción a la regla 2: en una casilla SI/NO el vacío NO es "no aplica",
+      // es "sin chulear" (ver `esCasilla`). Las dos que más daño hacen vacías
+      // van con nombre propio.
+      ...(this.type === 'product'
+        ? [
+            ['5. IMPORTANTE: en las columnas que dicen (SI/NO) escriba SI o NO en cada fila. Una casilla VACÍA cuenta como NO.', '', '', ''],
+            ['   Revise sobre todo "Activo (SI/NO)" y "Página Web (SI/NO)":', '', '', ''],
+            ['   - Activo en NO o vacío: el producto queda apagado y no aparece para vender.', '', '', ''],
+            ['   - Página Web en NO o vacío: el producto no sale en la tienda en línea y su stock no se le envía a la tienda.', '', '', ''],
+          ]
+        : []),
       ['', '', '', ''],
       // El atajo de la Creación rápida solo aplica a productos: las otras
       // plantillas (clientes, inventario, categorías) no tienen esa pantalla.
@@ -2835,7 +2846,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       ...(this.type === 'product'
         ? [
             ['Si solo necesita lo mismo que pide la pantalla de Creación rápida, llene únicamente estas seis columnas', '', '', ''],
-            ['y deje TODAS las demás vacías:  Referencia (SKU)  |  Titulo  |  Descripcion  |  Precio sin IVA  |  IVA (%)  |  Categoria', '', '', ''],
+            ['y deje TODAS las demás vacías:  Referencia (SKU)  |  Título  |  Descripción  |  Precio sin IVA  |  IVA (%)  |  Categoría', '', '', ''],
             ['', '', '', ''],
           ]
         : []),

@@ -11845,3 +11845,50 @@ Lo que queda está, sobre todo, en:
   - las barras de `usage-widget`.
 - **Código muerto para borrar en un cambio aparte:** `onboarding/steps/*`, `onboarding/components/*`, `integrations-list.component.css`, `integration-modal.component.html`, `voice-sales-demo`/`voice-sales-wizard`, `usage-widget` y el overlay Live Audio de `floating-button`.
 - **Revisión en el navegador a 1440 y 390 px:** en especial los modales de despachos, la tarifa de Envíame (cabecera sticky de 52 px), Cierre de caja, el modal de efectivo del POS, el importador y los filtros compartidos.
+## D-532 (2026-10-21) — WooCommerce: los productos importados nacen listos para vender (punto 12 del reporte del 19-10) + plantilla de productos con SI/NO explicado — APROBADA (usuaria, 21-oct: «sí a las dos»), CÓDIGO LOCAL, SIN COMMIT NI DEPLOY
+
+- Propuesta y tareas en el backend: `openspec/changes/woocommerce-importar-activo-web/`.
+- **Importador WooCommerce** (`controllers/woocommerceIntegration.js`, `import-all`): solo al CREAR un producto, `exposicion.activar`/`activo` = publicado en la tienda (la talla exige ella y su padre publicados), `marketplace.paginaWeb`, `sellerCenter` y `puntoDeVenta` = `true` (lo mismo que guarda la ficha) y `disponibilidad.inventariable` = `true`. Antes nacían sin `activar` ni `paginaWeb` y Katuq nunca les devolvía el stock a la tienda (`canProcess` y el nodo de D-515 los omiten).
+  - Decisión 1: Punto de venta y Seller Center también en `true`.
+  - Decisión 2: el padre de un producto variable NO se marca (no tiene stock propio; activo saldría en el POS sin unidades).
+  - Un producto que ya existe y se reimporta conserva sus marcas: solo se vincula.
+- Sin corrección de datos: en producción (lectura del 21-oct) los 5 importados de CAFE ESCOBAR ya estaban marcados a mano; Mi Campo Verde es cortesía y su tienda no existe.
+- Prueba: `functions/tests/integrations/woocommerceImportarActivoWeb.test.js` (falla con el código viejo). Probado en FLORECER con la tienda local: la Gorra (nueva) y la talla M (recreada) nacieron marcadas, y el nodo de D-515 le publicó stock a la Gorra (7 → 6 → 7) sin tocar nada a mano.
+- **Plantilla de productos (Excel)**, pedido de la usuaria: tildes en 17 encabezados (Título, Descripción, Categoría, Página Web…) sin cambiar palabras, en el import (`import-modal`) y en el export (`productos.component.ts`), que deben seguir idénticos. El import compara encabezados sin tildes ni signos, así que los archivos viejos y los exportados siguen casando (verificado por el script que los cambió). Ayuda en la hoja "Instrucciones" para las casillas SI/NO, regla 5 nueva («una casilla VACÍA cuenta como NO», con Activo y Página Web por nombre) y el mismo aviso en la pantalla de importar productos.
+- Hallazgo sin tocar: el export escribe `Tiempo de Entrega (dias)` y la plantilla `Tiempo de Entrega`; normalizados no casan, así que reimportar un export no reconoce esa columna por plantilla.
+
+### 2026-10-21 — D-515: probado el envío a la tienda; el índice sigue faltando
+
+- La cuenta de servicio del backend NO puede crear índices (`PERMISSION_DENIED`) y la usuaria tampoco tiene acceso: lo pidió a quien administra Firebase con el enlace de la consola.
+- Instalado en FLORECER como borrador (`flows/woo-stock-katuq-to-woo-florecer`, binding `pending`): NO activarlo, porque el cron de producción lo correría con código viejo contra la tienda local. Bandera `wooStockPublish` encendida solo en FLORECER (la corrió la usuaria); se apaga al limpiar.
+- Nodo probado con la tienda local: bandera apagada → cero llamadas; encendida → la talla L pasó de 5 a 3 (café y padre intactos, inventario de Katuq sin tocar, `inventory_audit` «publicado»); la tienda se devolvió a 5.
+
+## D-533 (2026-10-21) — Export de productos: la descripción sale como texto, y reimportarla no le quita el formato — APROBADA (usuaria, 21-oct: opción «1»), CÓDIGO LOCAL, SIN COMMIT NI DEPLOY
+
+- La descripción es el único campo de la ficha con editor de formato (CKEditor) y se guarda como HTML. El export la escribía tal cual y la empresa veía `<p>`, `<ul><li>`, `<h3><strong>` en el Excel.
+- **Front** (`components/productos/productos.component.ts`, `textoDeDescripcion`): el export saca el texto, cada párrafo y viñeta en su línea (viñetas con «• »).
+- **Servidor** (`services/catalogImport/descripcionConFormato.js`, usado en `controllers/onboarding.js` al ACTUALIZAR un producto existente): si la descripción del Excel no trae HTML, la guardada sí, y las dos dicen lo mismo (comparando solo letras y números, sin tildes), se conserva la guardada con su formato. Si el texto cambió, entra el nuevo tal cual (sin formato). Si el Excel trae HTML o la columna no viene, todo sigue como antes.
+- Opciones descartadas: solo texto limpio (reimportar un export le quitaba el formato a todo el catálogo) y dejar el código.
+- Verificado contra producción (solo lectura): de las descripciones con formato, ALMARA FELICIDAD 2.217/2.217, FLORECER 2.124/2.124 y CAFE ESCOBAR 58/58 conservarían el formato al exportar y reimportar sin tocarlas.
+- La plantilla explica en la columna Descripción qué pasa si se cambia en el Excel.
+- Prueba: `functions/tests/catalogImport/descripcionConFormato.test.js`; `tests/onboarding/importProductsPhotos.test.js` sigue pasando.
+
+### 2026-10-21 — Productos: los diálogos Exportar y Configurar columnas quedaban debajo de la barra superior
+
+- `productos.component.html`: `appendTo="body"` y `[baseZIndex]="10000"` en los dos `p-dialog`, como los demás diálogos de la app. La barra del buscador tapaba el título y la X. Solo presentación.
+
+## D-534 (2026-10-21) — WooCommerce: desconectar la tienda corta el envío sin reiniciar, tiempo límite y error con su causa real (puntos 22, 24 y 14 del reporte del 19-10) — APROBADA (usuaria, 21-oct), CÓDIGO LOCAL, SIN COMMIT NI DEPLOY
+
+- Propuesta en el backend: `openspec/changes/woocommerce-conexion-tienda/`.
+- **22:** `services/woocommerceService.js` ya no guarda el cliente para siempre: cada llamada lee la config de `integrationConfigService` (caché de 5 min que se borra al guardar o desactivar). Integración no activa → no se llama a la tienda (`WC_INTEGRATION_INACTIVE`).
+- **24:** tope de 20 s en toda llamada a la tienda.
+- **14:** el error de la tienda conserva código HTTP y mensaje («WooCommerce respondió 401 (…)», «no respondió en 20 s», «no se pudo conectar»), nunca las llaves. En el ajuste manual de inventario (`ecommerceAdapter.syncForSingleChannel`) el `catch` ya no revienta por `channelData` fuera de alcance, y el motivo queda en `integration_audit` (`ecommerce_sync_inventory_error`).
+- Prueba: `functions/tests/integrations/woocommerceConexionTienda.test.js`. Comprobado con la tienda local apagada: `inventory_audit` registró «connect ECONNREFUSED 127.0.0.1:9400».
+
+## D-535 (2026-10-21) — WooCommerce: "Probar conexión" prueba de verdad y se importan todas las variaciones (puntos 21 y 19 del reporte del 19-10) — APROBADA (usuaria, 21-oct), CÓDIGO LOCAL, SIN COMMIT NI DEPLOY
+
+- Propuesta en el backend: `openspec/changes/woocommerce-probar-conexion-y-variaciones/`.
+- **21:** `POST /v1/integration/config/test` con `provider: woocommerce` respondía éxito sin llamar a la tienda. Ahora usa `probarTiendaWoo` (la lógica de `/v1/woocommerce/test-connection` de D-513, separada en una función): solo https, nunca direcciones internas, GET a `system_status`. La pantalla recibe el mensaje real (401 → «verificá Consumer Key y Secret», http → «debe empezar por https://»).
+- **19:** `getProductVariations` pide de a 100 hasta la página corta; antes WooCommerce mandaba 10.
+- Pruebas: `functions/tests/integrations/woocommercePruebaConexion.test.js` y `woocommerceVariacionesPaginadas.test.js`.
+- Consecuencia a tener presente: una tienda sin https ya no pasa "Probar conexión" (antes «pasaba» sin probar). Guardar no cambia.
