@@ -1362,6 +1362,12 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - Pruebas: caracterización 7/7 antes y después, contrato 0/10 → 13/13 y golden de sitios 20/20. `passwordResetRoutes.contract.test.js` ya estaba en rojo (aserción vieja sobre `diagnostics.js` desde D-319); queda pendiente fuera de este bloque.
 - Siguen IDI-B00b a IDI-B00f (front base) y los bloques de módulo. Sin push ni despliegue.
 
+### 2026-10-21 — D-532: bloque IDI-B00c, verificación `npm run i18n:check`
+- `scripts/i18n-check.js` (Node puro) y `scripts/i18n-check.config.json`: las revisiones de D6, `--modulo`, `--bloques` y `--json`. `modulosCerrados` vacío. Mientras `de.json` no exista, su falta es un aviso. No se engancha a `prebuild` ni a `predeploy` (se decide en 2.8).
+- Pruebas: `tests/i18n/i18n-check.test.js` 22/23 en rojo antes y 23/23 después; `test:i18n` 66/66; tsc sin errores; menos de 1 s sobre `src/app`.
+- Corrección del bloque: `claveInexistente` es error solo en los módulos cerrados y aviso (`claveInexistenteAbierta`) en el resto, para leer juntas D3 y D6 (**pendiente de ratificar por Daniel**); listas separadas para «igual al español» (`igualesPermitidos`, por idioma) y para textos sueltos (`nombresPropios`, `textosIgnorados`); detecta el ternario sin paréntesis antes de `| translate`, plantillas en línea, `swal`/`toast`/`toster`/`notificationService` y más atributos de texto (`ngbTooltip`, `alt`, textos de PrimeNG); configuración ilegible sale con 2; fixtures con `.gitkeep`; `auth/login` a IDI-B02 y `components/ventas/clientes` a IDI-B05. Pruebas 29/29 y `test:i18n` 72/72.
+- Línea base en `tasks.md` 1.8: 28 errores (claves faltantes en en/pt, 1.10), 2.257 avisos (1.405 usos de claves literales que no están en `es.json`, cada bloque deja en cero las suyas) y 20.192 textos sueltos repartidos por bloque de D10. Sin push ni despliegue.
+
 ### 2026-10-02 (sesión tiket-apoyo — OH MY STORE en cero)
 - **1087 cerrado solo con configuración:** el envío de las facturas de OH MY STORE sale con el producto SIIGO `TSV` "TRANSPORTE DOMICILIO EN VENTAS" (código encontrado recorriendo su catálogo SIIGO en solo lectura; guardado con `IntegrationConfigService.saveConfig`, verificado con la vista previa del ORE-001355).
 - **1110 cerrado:** ver D-340. OH MY STORE queda sin tickets abiertos.
@@ -11855,6 +11861,7 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
     - Pruebas del script: 6/6.
     - Golden de `tests/sitios`: 20/20 idéntico.
     - Se corre con `npm run test:idiomas-login`.
+  - `IDI-B00c` (tareas 1.3 y 1.8), en el front: `npm run i18n:check` (`scripts/i18n-check.js` y su configuración), con las pruebas de `tests/i18n/i18n-check.test.js` en `test:i18n`. Línea base anotada en la tarea 1.8.
   - Sin push ni despliegue. La configuración no se escribió en ninguna base.
 
 ## D-533 (2026-10-21) — Candado de empresa en la emisión de facturas, interruptor `invoiceTenantLock` (ticket 1229, cd nF3GLH3F2sZGnKsqNODM, tarea S.1) — PROPUESTA, COMMITEADA en la rama `feature/tickets-web` (backend cb6aad91, front 693069ce), sin desplegar y APAGADA; pendiente de ratificar por Daniel

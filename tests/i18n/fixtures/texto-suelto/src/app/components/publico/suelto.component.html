@@ -1,0 +1,14 @@
+<div>
+  <h1>{{ 'ventas.titulo' | translate }}</h1>
+  <p>Guardar cambios</p>
+  <input placeholder="Buscar pedido" type="text">
+  <p-button [label]="'Crear'"></p-button>
+  <span [pTooltip]="activo ? 'Activo' : 'Inactivo'"></span>
+  <span>{{ activo ? 'Sí' : 'No' }}</span>
+  <p-dialog header="Detalle {{ numero }}"></p-dialog>
+  <button [attr.aria-label]="'Cerrar'">&times;</button>
+  <span>Katuq</span>
+  <span>{{ fecha | date:'dd/MM/yyyy' }}</span>
+  <a [attr.aria-label]="'Ir a ' + (destino | translate)" [title]="(abierto ? 'comun.guardar' : 'ventas.titulo') | translate"></a>
+  <span [pTooltip]="'Cierre ' + (fecha | date:'short') + (hora ? (' · ' + (hora | date:'HH:mm')) : '')"></span>
+</div>

@@ -1,0 +1,11 @@
+{
+  "comun.guardar": "Speichern",
+  "ventas.saludo": "Hallo {{nombre}}",
+  "ventas.titulo": "Bestellungen grosse Grüße",
+  "ventas.usoPos": "POS",
+  "Correo": "Email",
+  "primeng": {
+    "today": "Heute",
+    "dayNamesMin": ["So", "Mo"]
+  }
+}

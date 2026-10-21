@@ -1,0 +1,16 @@
+{
+  "comun.guardar": "Speichern",
+  "ventas.saludo": "Hallo {{nombre}}",
+  "ventas.titulo": "Bestellungen",
+  "ventas.usoPos": "POS",
+  "ventas.total": "Gesamt",
+  "Correo": "Email",
+  "primeng": {
+    "today": "Heute",
+    "dayNamesMin": [
+      "So",
+      "Mo"
+    ]
+  },
+  "ventas.nadieLaUsa": "Niemand"
+}

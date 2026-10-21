@@ -1,0 +1,51 @@
+{
+  "_nota": "Configuración de los fixtures de tests/i18n/i18n-check.test.js (D-532, tarea 1.3). Misma forma que scripts/i18n-check.config.json.",
+  "diccionarios": "src/assets/i18n",
+  "codigo": "src/app",
+  "referencia": "es",
+  "idiomas": [
+    "es",
+    "en",
+    "pt",
+    "de"
+  ],
+  "idiomasOpcionales": [
+    "de"
+  ],
+  "nombresPropios": [
+    "POS",
+    "SKU",
+    "NIT",
+    "Katuq",
+    "WhatsApp",
+    "World Office"
+  ],
+  "igualesPermitidos": {
+    "todos": [
+      "Email"
+    ],
+    "pt": [
+      "Total"
+    ]
+  },
+  "textosIgnorados": [
+    "cm"
+  ],
+  "prefijosDinamicos": [
+    "primeng."
+  ],
+  "modulosCerrados": [
+    "components/cerrado"
+  ],
+  "fueraDeAlcance": [
+    "components/publico"
+  ],
+  "bloques": {
+    "IDI-B90 Cerrado": [
+      "components/cerrado"
+    ],
+    "IDI-B91 Abierto": [
+      "components/abierto"
+    ]
+  }
+}

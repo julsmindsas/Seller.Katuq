@@ -1,0 +1,13 @@
+<!-- Un comentario con texto que no cuenta -->
+<div class="cfg-pagina">
+  <h1 class="cfg-titulo">{{ 'ventas.titulo' | translate }}</h1>
+  <input [placeholder]="'comun.guardar' | translate" title="{{ 'comun.guardar' | translate }}" type="text">
+  <span>{{ total | number:'1.0-0' }} &nbsp; × {{ fecha | date:'dd/MM/yyyy' }}</span>
+  <span>Katuq POS</span>
+  <span>{{ 'ventas.usoPos' | translate }}</span>
+  <span>{{ 'ventas.total' | translate }}</span>
+  <span *ngIf="a > b">{{ cliente?.nombre }}</span>
+  <p-button [label]="(editando ? 'comun.guardar' : 'ventas.titulo') | translate"></p-button>
+  <span translate>Correo</span>
+  <style>.x { content: "Texto de estilo"; }</style>
+</div>
