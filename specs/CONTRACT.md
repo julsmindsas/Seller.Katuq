@@ -12356,3 +12356,63 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Verificado:** CAFÉ ESCOBAR, Mi Campo Verde y la demo usan https (siguen permitidas). FLORECER local queda bloqueada en producción, donde igual no era alcanzable. Contra la tienda local con axios real, la respuesta llegó con llaves solo en la cabecera.
 - **Pruebas:** `woocommerceLlavesEnCabecera.test.js` nueva; `woocommercePruebaConexion` ajustada a los dos intentos; las 11 de WooCommerce y `webhooksVivosRegresion` en verde.
 - **Sin desplegar.**
+
+_(Renumeradas el 26-oct al ponerse al día con la rama viva: antes D-518 a D-523.)_
+
+## D-566 (2026-10-18) — El registro exige un nombre de comercio único — PUBLICADO: backend c432a18d
+
+_(Antes D-507 en los OpenSpec del backend; el número se reasignó el 20-oct porque otras sesiones tomaron D-507 a D-512.)_
+
+- **Regla:** el registro público de comercios rechaza un nombre que ya usa otra empresa o que está reservado. Responde 409 con `error: "NOMBRE_YA_EXISTE"` y un mensaje que invita a pedir acceso al administrador de esa empresa o a usar un nombre que distinga al comercio. Entre empresas la comparación ignora mayúsculas y espacios repetidos.
+- **Reservados:** el nombre de la operadora y el de la empresa de mensajeros independientes (`Julsmind Independientes`) no los puede tomar ningún comercio. Para los reservados la comparación además ignora tildes y signos.
+- **Front:** sin cambios; el formulario no tiene lógica propia para este código ni valida el nombre por su cuenta.
+- **Sin cambios en empresas existentes:** solo aplica a registros nuevos. Quien ya tiene empresa no se toca.
+
+## D-567 (2026-10-18) — La app de mensajeros admite mensajeros independientes con revisión previa — backend `f73ed0d` publicado y apagado; app y pantalla sin publicar
+
+_(Antes D-508 en los OpenSpec del backend.)_
+
+- **Qué es:** un mensajero puede inscribirse solo desde la app (`com.katuq.mensajeros`), sin que lo cree un comercio. Queda en la empresa `Julsmind Independientes` (`tipo: "independiente"`) y solo opera cuando la operadora lo aprueba.
+- **Interruptor:** el documento `config/registro_independientes` de Firestore (D-505), con `habilitado`, `terminosVersion` y `privacidadVersion`; apagado si no existe. Apagado, las rutas de registro responden 404 y `GET /v1/logistica/independientes/disponible` responde `habilitado:false`, que es como la app decide si muestra el botón.
+- **Pasos del mensajero:** formulario → código por SMS al celular → documentos (cédula por ambos lados, selfie, y para moto o carro licencia, SOAT y foto del vehículo) → envío a revisión → aprobado, rechazado (con motivo; puede corregir y reenviar hasta 3 veces) o suspendido.
+- **Documentos:** privados en Storage; el Seller los ve con enlaces firmados de 10 minutos y no se guardan en ningún otro lado.
+- **Pantalla del Seller:** «Mensajeros independientes» en Operaciones > Logística. Solo la ve y la usa un Super Administrador de la operadora (Julsmind); el servidor lo exige igual. Lista por estado y detalle con documentos; desde ahí se aprueba, se rechaza con motivo o se suspende.
+- **Sin tocar:** el login y los pedidos de los mensajeros de los comercios no cambian. Los pedidos para independientes están en D-568.
+- **Pendiente antes de abrirlo:** términos y tratamiento de datos definitivos, y la ficha de la tienda de aplicaciones al día.
+- **Spec:** `openspec/changes/registro-mensajeros-independientes/` en el repo del backend.
+
+## D-568 (2026-10-19) — Pedidos para mensajeros independientes: el comercio decide y Katuq lleva el registro de la comisión — backend `c3c5dfe6` en producción (verificado el 20-oct: las rutas nuevas responden 401 sin sesión); app y pantallas sin publicar
+
+_(Antes D-509 en los OpenSpec del backend.)_
+
+- **Decisiones de Daniel (19-oct):** el comercio decide si ofrece sus pedidos; no se mueve dinero dentro de la app; la comisión de Katuq es de 7 % del valor del domicilio.
+- **Comercio:** en Despachos > Transportadores, tarjeta «Ofrecer mis pedidos a mensajeros independientes de Katuq» (`companyConfig/{empresa}.ofrecerAIndependientes`). Apagado por defecto y solo se puede encender si el comercio ya definió cuánto le paga al mensajero por entrega (si no, el servidor responde 400 `PAGO_REQUERIDO`). Es independiente de «mensajeros toman pedidos».
+- **Mensajero:** ve y toma los pedidos listos de su ciudad que ofrecen los comercios; el valor que gana se le muestra antes de tomar. Al tomar, el pedido guarda su id, el pago y la comisión. Recoger, soltar y entregar se autorizan por ese id, nunca por el nombre.
+- **Comisión:** `config/independientes.comisionPorcentaje` (por defecto 7) sobre `totalEnvio`; se cobra al comercio con corte mensual, por fuera de la app. El mensajero no la ve ni la paga; el comercio le paga directo al mensajero.
+- **Operadora:** pestaña «Liquidación» en «Mensajeros independientes» (solo Super Administrador de la operadora): rango de fechas, totales, tabla por comercio y detalle de entregas, con descarga en CSV.
+- **App:** «Mis ganancias» y «Eliminar mi cuenta» (requisito de Google Play) para el mensajero independiente; aviso push de pedidos nuevos a los independientes en línea de la ciudad.
+- **Sin tocar:** los pedidos y los mensajeros de cada comercio siguen igual. Nada cobra ni paga dinero.
+- **Spec:** `openspec/changes/pedidos-mensajeros-independientes/` en el repo del backend.
+
+## D-569 (2026-10-20) — Mapa de Despachos: qué pedidos lleva cada mensajero, también los independientes — implementada en la rama `feature/mensajeros-independientes`; sin publicar
+
+- **Disparador.** Daniel: «en el traking deberiamos ver que pedidos lleva el mensajero». La sesión de marketing se lo pasó a la de mensajeros el 20-oct.
+- **Qué se ve.** En el panel «Mensajeros» del mapa, cada mensajero muestra bajo su nombre los pedidos que sigue llevando (empacado, para despachar, en despacho o en camino): número, cliente y estado, con los 6 primeros y «+N más»; el que va navegando se resalta. La ficha del mensajero en el mapa suma una fila «Pedidos». La lista sale de los pedidos que el Seller ya tiene, también los que aún no se ubican en el mapa; la app no manda nada nuevo para esto.
+- **Cómo se une.** Mensajero de empresa: por nombre, armando la clave con la misma regla de la app. Independiente: por el id de su ficha, que el pedido guarda al tomarlo (`transportadorId`); nunca por nombre.
+- **Independientes en el mapa del comercio.** Un independiente no es de ningún comercio, así que hasta hoy no aparecía en ningún mapa. Decisión de Daniel («dale», 20-oct): aparece en el mapa de un comercio solo mientras lleva un pedido de ese comercio, y se va cuando lo entrega.
+- **App de mensajeros (v29, sin publicar).** La clave con la que un independiente publica su ubicación incluye el id de su ficha (`nombre_<id>_empresa`), para que dos con el mismo nombre no compartan punto. Los mensajeros de empresa no cambian.
+- **Arreglo de paso.** El pedido que toma un mensajero desde la app guarda el nombre como texto; el mapa lo leía como objeto y lo dejaba vacío. Ahora acepta las dos formas.
+- **Pruebas.** `entregas-mensajero.spec.ts` (16) y las 23 de `ubicacion-mensajero.spec.ts`, compiladas con esbuild y corridas con jasmine; tsc/ngc sin errores nuevos. Sin probar en pantalla con mensajeros reales.
+- **Pendiente.** Probarlo con un mensajero real en la calle; publicar junto con la pantalla de independientes (D-567 y D-568).
+
+## D-570 (2026-10-20) — Domicilios: pantalla para que los comercios monten sus entregas y API para marketplaces y otros sistemas — backend `fa913413` y `8df7e6ab` (local, sin desplegar); pantalla en la rama `feature/mensajeros-independientes`; sin publicar
+
+- **Disparador.** Daniel: «necesito esto funcionando para mensajeros independientes y una interface donde los comercios monten sus pedidos, y una api para que se integren otros market place y demas».
+- **Qué es un domicilio.** Un pedido ligero de entrega (sin carrito ni inventario) con recogida propia, valor del domicilio y, si aplica, lo que el mensajero cobra al entregar. Entra al mismo circuito de los mensajeros de hoy: los de la empresa, y los independientes si el comercio los habilitó (D-568). Nada cobra ni paga dinero: sigue «solo registro» y la comisión de Katuq sobre el valor del domicilio.
+- **API pública** `/v1/domicilios` (contrato en `docs/APIs/API-DOMICILIOS.md` del backend): crear uno o un lote de hasta 50 (con `idExterno`, que evita duplicados), consultar, listar y cancelar. Estados: pendiente, asignado, en camino, entregado, no entregado y cancelado. Del mensajero solo se muestra el nombre de pila, el vehículo y la placa. Autenticación por llave de API de cada empresa (se muestra una sola vez, se revoca al instante, 60 peticiones por minuto) o por la sesión del Seller.
+- **Avisos.** El comercio guarda una URL https y recibe un aviso firmado (HMAC-SHA256) cuando el domicilio es asignado, liberado, recogido, entregado, no entregado o cancelado, con reintentos.
+- **Pantalla del Seller** «Domicilios» (Logística): nuevo domicilio, carga por archivo CSV, lista con estado en vivo y cancelación, e «Integración» (activar, llaves de API, URL de avisos, guía). Apagado por defecto: cada comercio lo activa y solo un administrador maneja llaves y avisos.
+- **Sin colecciones nuevas.** Los domicilios son pedidos (`origen: "domicilio"`); la configuración y las llaves van en `companyConfig/{empresa}` (D-505).
+- **Límites conocidos.** Los domicilios aparecen en los reportes de pedidos y de ventas del comercio; el cobro del mensajero al entregar no se asienta como pago en Tesorería; el tope por llave vive en la memoria del servidor.
+- **Pruebas y revisión.** 35 puras y de contrato más 31 contra el emulador de Firestore (ciclo completo con un independiente, entrega real, avisos con reintentos y en orden), verificadas rompiendo a propósito 14 protecciones, y la pantalla con 99 pruebas de lógica. Un agente aparte revisó la API como atacante (3 hallazgos altos, 14 medios y 13 bajos) y casi todo se corrigió antes de este commit; lo que quedó está en el diseño del OpenSpec. El primer despliegue necesita una prueba real con un comercio de prueba y un celular.
+- **Spec:** `openspec/changes/domicilios-api-y-pantalla/` en el repo del backend.
