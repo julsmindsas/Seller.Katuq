@@ -203,7 +203,7 @@ D-496 (ticket F4-40, cd `PrDNIoDwRacCPQVcHmx1`; el número 1243 está repetido, 
       Dep: 0.3.
 - [x] 6.4 Mutaciones de sesión, todas en transacción. Éxito: 6.3 en verde. Dep: 6.3.
       (F440-B04: además `seguimiento` con `marcarSeguimiento`, `borrarSeguimiento`, `registrarEnvio` y `posponer`; el cableado del despachador es de F440-B09. 10.2 sigue abierta.)
-- [ ] 6.5 Prueba primero, en `whatsappBotDispatcher.test.js`:
+- [x] 6.5 (F440-B06: la caracterización con llaves apagadas está en `whatsappBotDispatcher.test.js`; los casos nuevos, en `whatsappBotDispatcherPedidoDirecto.test.js` con el arnés `_pedidoDirectoHarness.js`; 17 casos en verde) Prueba primero, en `whatsappBotDispatcher.test.js`:
       - llaves apagadas: la cotización de hoy, byte a byte, y el «sí» post-cierre reabre como hoy;
       - sombra: cotización, evento `sombra` y cero escrituras en `orders`;
       - activo y elegible: propuesta sin cotización;
@@ -217,7 +217,7 @@ D-496 (ticket F4-40, cd `PrDNIoDwRacCPQVcHmx1`; el número 1243 está repetido, 
       - pasarela de plataforma: cotización;
       - «Hablar con asesor»: cotización y traspaso.
       Dep: 6.2, 6.4.
-- [ ] 6.6 Prueba primero: contract test de punta a punta
+- [x] 6.6 (F440-B06: hecha para el camino directo, la propuesta, la sombra, las llaves apagadas y el barrido modelado con la lista cerrada; el cron del recordatorio y las filas D13/D15/D18 se suman en `FILAS_EXTRA` con 9.8, 11.x y 12.x; gancho `F440_NUCLEO=real` para el núcleo real) Prueba primero: contract test de punta a punta
       (`whatsappBotPedidoDirecto.contract.test.js`), con la lista blanca del
       diseño cerrada por 2.1 (incluye el barrido) y sin efectos de página. Cubre
       el camino directo, el pago y el cron del recordatorio. Falla con escrituras
@@ -225,7 +225,7 @@ D-496 (ticket F4-40, cd `PrDNIoDwRacCPQVcHmx1`; el número 1243 está repetido, 
       `site_events`, `prospects` o cualquier colección no listada. Éxito: falla
       contra 6.5 porque el despachador aún no crea pedidos, no por errores de
       montaje. Dep: 2.1, 4.6, 6.4. **[21-oct]** 4.6 está SUPERSEDED: Dep pasa a 2.1, 4.4 y 6.4. El cron del recordatorio del bot lo cubre la ampliación de 6.6 en 9.8.
-- [ ] 6.7 **[sensible]** Despachador, en tres puntos:
+- [x] 6.7 (F440-B06: hecho en `services/whatsappBotDispatcher.js` con la llave de la empresa y el interruptor general; sin el núcleo `crearPedidoDeTienda` —espera la fila de la tienda— el servicio da `nucleo_no_disponible` y el cierre sigue en cotización) **[sensible]** Despachador, en tres puntos:
       - el gancho de repetición, después de `obtenerOCrear` (≈740) y antes de la reapertura (≈753): primero `registrarTurno`, luego `repetir`;
       - la rama del cierre (≈1148);
       - el bloque de confirmación, después de la rama `opcionId` (≈940-1044) y antes de `pedirTurno` (≈1054), con la clase `pedidoDirecto` y el «sí» escrito.
