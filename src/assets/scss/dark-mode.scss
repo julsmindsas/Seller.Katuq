@@ -8,13 +8,13 @@ body.dark-only {
   --primary-light-color: rgba(var(--ds-accent-ink-rgb), 0.15);
   --primary-dark-color: var(--ds-accent);
 
-  --secondary-color: #7A8FE8;
-  --secondary-light-color: rgba(122, 143, 232, 0.15);
-  --secondary-dark-color: #5A6FC8;
+  --secondary-color: var(--ds-info);
+  --secondary-light-color: var(--ds-info-soft);
+  --secondary-dark-color: var(--ds-info);
 
-  --tertiary-color: #4AC5E2;
-  --tertiary-light-color: rgba(74, 197, 226, 0.15);
-  --tertiary-dark-color: #2AA5C2;
+  --tertiary-color: var(--ds-info);
+  --tertiary-light-color: var(--ds-info-soft);
+  --tertiary-dark-color: var(--ds-info);
 
   // Background colors
   --white-color: var(--ds-canvas);
@@ -37,7 +37,7 @@ body.dark-only {
   // rgba(37, 40, 48, .9) es --ds-surface a .9, rgba(224, 224, 224, α) es --ds-ink-2 a α y #2d313980
   // es --ds-surface-2 a .5. La de .loader (--ds-canvas a .9) sí usa --ds-canvas-rgb.
   --theme-default: var(--ds-accent-ink);
-  --theme-secondary: #4AC5E2;
+  --theme-secondary: var(--ds-info);
   --light-background: rgba(37, 40, 48, .9);
   --body-font-color: var(--ds-ink-2);
   --chart-border: var(--ds-surface-2);
@@ -352,9 +352,9 @@ body.dark-only {
     }
 
     &.alert-info {
-      background-color: rgba(74, 197, 226, 0.15);
-      border-color: #4AC5E2;
-      color: #6AD5F2;
+      background-color: var(--ds-info-soft);
+      border-color: var(--ds-info);
+      color: var(--ds-info);
     }
   }
 
@@ -383,7 +383,7 @@ body.dark-only {
     }
 
     &.bg-info {
-      background-color: #4AC5E2 !important;
+      background-color: var(--ds-info) !important;
     }
 
     &.bg-light {
@@ -731,10 +731,6 @@ body.dark-only {
     border-color: var(--ds-line-strong);
   }
 
-  .pre-scrollable {
-    background-color: var(--ds-surface);
-    border-color: var(--ds-line-strong);
-  }
 
   // Blockquotes
   blockquote {
@@ -1403,47 +1399,6 @@ body.dark-only {
     }
   }
 
-  // PrimeNG Toast
-  .p-toast {
-    .p-toast-message {
-      background: var(--ds-surface-2);
-      border-color: var(--ds-line-strong);
-      color: var(--ds-ink-2);
-
-      &.p-toast-message-info {
-        background: rgba(74, 197, 226, 0.95);
-        border-color: #4AC5E2;
-        color: var(--ds-canvas);
-      }
-
-      &.p-toast-message-success {
-        background: rgba(92, 184, 92, 0.95);
-        border-color: #5cb85c;
-        color: var(--ds-canvas);
-      }
-
-      &.p-toast-message-warn {
-        background: rgba(255, 179, 71, 0.95);
-        border-color: #ffb347;
-        color: var(--ds-canvas);
-      }
-
-      &.p-toast-message-error {
-        background: rgba(255, 107, 125, 0.95);
-        border-color: #ff6b7d;
-        color: var(--ds-canvas);
-      }
-
-      .p-toast-icon-close {
-        color: currentColor;
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.1);
-        }
-      }
-    }
-  }
-
   // PrimeNG Checkbox & Radio
   .p-checkbox {
     .p-checkbox-box {
@@ -1699,12 +1654,12 @@ body.dark-only {
   // PrimeNG Message
   .p-message {
     &.p-message-info {
-      background: rgba(74, 197, 226, 0.15);
-      border-color: #4AC5E2;
-      color: #6AD5F2;
+      background: var(--ds-info-soft);
+      border-color: var(--ds-info);
+      color: var(--ds-info);
 
       .p-message-icon {
-        color: #4AC5E2;
+        color: var(--ds-info);
       }
     }
 
@@ -1753,7 +1708,7 @@ body.dark-only {
   // PrimeNG Badge
   .p-badge {
     &.p-badge-info {
-      background: #4AC5E2;
+      background: var(--ds-info);
       color: var(--ds-canvas);
     }
 
@@ -1776,8 +1731,8 @@ body.dark-only {
   // PrimeNG Tag
   .p-tag {
     &.p-tag-info {
-      background: rgba(74, 197, 226, 0.15);
-      color: #4AC5E2;
+      background: var(--ds-info-soft);
+      color: var(--ds-info);
     }
 
     &.p-tag-success {
@@ -1917,57 +1872,7 @@ body.dark-only {
   }
 
   // PrimeNG ConfirmDialog
-  .p-confirmdialog {
-    .p-dialog-content {
-      background: var(--ds-surface);
-      color: var(--ds-ink-2);
-    }
 
-    .p-dialog-header {
-      background: var(--ds-surface-2);
-      border-bottom-color: var(--ds-line-strong);
-      color: var(--ds-ink);
-    }
-
-    .p-dialog-footer {
-      background: var(--ds-surface-2);
-      border-top-color: var(--ds-line-strong);
-    }
-
-    .p-confirmdialog-message {
-      color: var(--ds-ink-2);
-    }
-
-    .p-confirmdialog-icon {
-      color: #ffb347;
-    }
-  }
-
-  .p-confirmpopup {
-    background: var(--ds-surface-2);
-    border-color: var(--ds-line-strong);
-    color: var(--ds-ink-2);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-
-    .p-confirmpopup-content {
-      .p-confirmpopup-icon {
-        color: #ffb347;
-      }
-
-      .p-confirmpopup-message {
-        color: var(--ds-ink-2);
-      }
-    }
-
-    .p-confirmpopup-footer {
-      border-top-color: var(--ds-line-strong);
-    }
-
-    &:before,
-    &:after {
-      border-color: transparent transparent var(--ds-surface-2) transparent;
-    }
-  }
 
   // PrimeNG ColumnFilter
   .p-column-filter-menu {
@@ -1975,9 +1880,6 @@ body.dark-only {
     border-color: var(--ds-line-strong);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 
-    .p-column-filter-header {
-      border-bottom-color: var(--ds-line-strong);
-    }
 
     .p-column-filter-clear-button {
       color: var(--ds-ink-2);
@@ -2101,24 +2003,6 @@ body.dark-only {
 
   // PrimeNG OrganizationChart
   .p-organizationchart {
-    .p-organizationchart-node {
-      background: var(--ds-surface-2);
-      border-color: var(--ds-line-strong);
-      color: var(--ds-ink-2);
-
-      &:hover {
-        background: #33363f;
-      }
-
-      &.p-highlight {
-        background: rgba(var(--ds-accent-ink-rgb), 0.15);
-        border-color: var(--ds-accent-ink);
-
-        .p-node-toggler {
-          color: var(--ds-accent-ink);
-        }
-      }
-    }
 
     .p-organizationchart-line-down,
     .p-organizationchart-line-left,
@@ -2164,13 +2048,6 @@ body.dark-only {
       }
     }
 
-    .p-password-toggle-icon {
-      color: #b0b0b0;
-
-      &:hover {
-        color: var(--ds-ink-2);
-      }
-    }
   }
 
   .p-password-panel {
@@ -2280,15 +2157,6 @@ body.dark-only {
     }
   }
 
-  .p-progress-spinner-determinate {
-    .p-progress-spinner-circle {
-      stroke: var(--ds-line-strong);
-    }
-
-    .p-progress-spinner-value {
-      stroke: var(--ds-accent-ink);
-    }
-  }
 
   // PrimeNG Slider
   .p-slider {
@@ -2631,9 +2499,6 @@ body.dark-only {
       background: var(--glass-bg-secondary, #231d35);
       border-bottom-color: var(--glass-border, rgba(167, 139, 250, 0.15));
 
-      .company-name {
-        color: var(--glass-text-primary, #ffffff);
-      }
 
       .logo {
         filter: brightness(1.2);
@@ -2763,29 +2628,7 @@ body.dark-only {
       }
 
       .header-right {
-        .header-item {
-          color: #b0b0b0;
 
-          &:hover {
-            background: rgba(var(--ds-accent-ink-rgb), 0.1);
-            color: var(--ds-ink-2);
-          }
-
-          .notification-badge {
-            background: #ff6b7d;
-            color: var(--ds-canvas);
-          }
-        }
-
-        .user-menu {
-          .user-avatar {
-            border-color: var(--ds-line-strong);
-          }
-
-          .user-name {
-            color: var(--ds-ink-2);
-          }
-        }
       }
     }
   }
@@ -2800,23 +2643,8 @@ body.dark-only {
       color: var(--ds-accent-ink);
     }
 
-    .card-value {
-      color: var(--ds-ink);
-    }
 
-    .card-label {
-      color: #808080;
-    }
 
-    .card-trend {
-      &.trend-up {
-        color: #5cb85c;
-      }
-
-      &.trend-down {
-        color: #ff6b7d;
-      }
-    }
   }
 
   // Charts - ApexCharts Complete Dark Mode
@@ -3010,76 +2838,21 @@ body.dark-only {
   }
 
   // ChartJS (si se usa)
-  canvas.chartjs {
-    filter: brightness(0.9);
-  }
 
   // Chart.js específico
-  .chartjs-render-monitor {
-    filter: brightness(0.9);
-  }
 
-  .chartjs-tooltip {
-    background: #33363f !important;
-    border-color: var(--ds-line-strong) !important;
-    color: var(--ds-ink-2) !important;
-  }
 
   // HighCharts (si se usa)
-  .highcharts-background {
-    fill: transparent;
-  }
 
-  .highcharts-plot-background {
-    fill: transparent;
-  }
 
-  .highcharts-grid-line {
-    stroke: var(--ds-line-strong);
-  }
 
-  .highcharts-axis-line,
-  .highcharts-tick {
-    stroke: var(--ds-line-strong);
-  }
 
-  .highcharts-axis-labels text,
-  .highcharts-axis-title {
-    fill: #808080 !important;
-  }
 
-  .highcharts-legend-item text {
-    fill: #b0b0b0 !important;
-  }
 
-  .highcharts-tooltip {
-    filter: none;
 
-    .highcharts-tooltip-box {
-      fill: #33363f;
-      stroke: var(--ds-line-strong);
-    }
 
-    text {
-      fill: var(--ds-ink-2) !important;
-    }
-  }
 
-  .highcharts-data-label text {
-    fill: var(--ds-ink-2) !important;
-  }
 
-  .highcharts-drilldown-axis-label {
-    fill: #b0b0b0 !important;
-  }
-
-  .highcharts-drilldown-data-label text {
-    fill: var(--ds-ink-2) !important;
-  }
-
-  .highcharts-no-data text {
-    fill: #808080 !important;
-  }
 
   // POS Components
   .pos-container {
@@ -3142,108 +2915,8 @@ body.dark-only {
           }
         }
 
-        .category-tabs {
-          background: var(--ds-surface);
-          border-bottom-color: var(--ds-line-strong);
-
-          .category-tab {
-            color: #b0b0b0;
-            border-bottom-color: transparent;
-
-            &:hover {
-              background: rgba(var(--ds-accent-ink-rgb), 0.1);
-              color: var(--ds-ink-2);
-            }
-
-            &.active {
-              color: var(--ds-accent-ink);
-              border-bottom-color: var(--ds-accent-ink);
-            }
-          }
-        }
       }
 
-      .cart-section {
-        background: var(--ds-surface);
-        border-left-color: var(--ds-line-strong);
-
-        .cart-header {
-          background: var(--ds-surface-2);
-          border-bottom-color: var(--ds-line-strong);
-
-          .cart-title {
-            color: var(--ds-ink);
-          }
-
-          .customer-info {
-            background: #33363f;
-            border-color: var(--ds-line-strong);
-            color: var(--ds-ink-2);
-          }
-        }
-
-        .cart-items {
-          .cart-item {
-            background: var(--ds-surface);
-            border-bottom-color: var(--ds-line-strong);
-
-            &:hover {
-              background: var(--ds-surface-2);
-            }
-
-            .item-name {
-              color: var(--ds-ink-2);
-            }
-
-            .item-price {
-              color: var(--ds-accent-ink);
-            }
-
-            .item-quantity {
-              background: var(--ds-surface-2);
-              border-color: var(--ds-line-strong);
-              color: var(--ds-ink-2);
-
-              button {
-                background: #33363f;
-                border-color: var(--ds-line-strong);
-                color: var(--ds-ink-2);
-
-                &:hover {
-                  background: var(--ds-line-strong);
-                }
-              }
-            }
-
-            .item-remove {
-              color: #ff6b7d;
-
-              &:hover {
-                color: #ff8b9d;
-              }
-            }
-          }
-        }
-
-        .cart-summary {
-          background: var(--ds-surface-2);
-          border-top-color: var(--ds-line-strong);
-
-          .summary-row {
-            color: var(--ds-ink-2);
-
-            &.total {
-              color: var(--ds-ink);
-              border-top-color: var(--ds-line-strong);
-            }
-          }
-        }
-
-        .cart-actions {
-          background: var(--ds-surface-2);
-          border-top-color: var(--ds-line-strong);
-        }
-      }
     }
   }
 
@@ -3282,8 +2955,8 @@ body.dark-only {
           }
 
           &.status-processing {
-            background: rgba(74, 197, 226, 0.15);
-            color: #4AC5E2;
+            background: var(--ds-info-soft);
+            color: var(--ds-info);
           }
 
           &.status-completed {
@@ -3301,198 +2974,12 @@ body.dark-only {
   }
 
   // Checkout & Payment
-  .checkout-container {
-    background: var(--ds-canvas);
-
-    .checkout-step {
-      background: var(--ds-surface);
-      border-color: var(--ds-line-strong);
-
-      &.active {
-        border-color: var(--ds-accent-ink);
-      }
-
-      .step-header {
-        background: var(--ds-surface-2);
-        border-bottom-color: var(--ds-line-strong);
-
-        .step-number {
-          background: var(--ds-line-strong);
-          color: var(--ds-ink-2);
-
-          &.completed {
-            background: #5cb85c;
-            color: var(--ds-canvas);
-          }
-
-          &.active {
-            background: var(--ds-accent);
-            color: var(--ds-on-accent);
-          }
-        }
-
-        .step-title {
-          color: var(--ds-ink);
-        }
-      }
-
-      .step-content {
-        color: var(--ds-ink-2);
-      }
-    }
-
-    .payment-method {
-      background: var(--ds-surface-2);
-      border-color: var(--ds-line-strong);
-
-      &:hover {
-        background: #33363f;
-        border-color: #4d5159;
-      }
-
-      &.selected {
-        background: rgba(var(--ds-accent-ink-rgb), 0.15);
-        border-color: var(--ds-accent-ink);
-      }
-
-      .method-icon {
-        color: #808080;
-      }
-
-      .method-name {
-        color: var(--ds-ink-2);
-      }
-    }
-  }
 
   // Inventory Components
-  .inventory-grid {
-    .inventory-item {
-      background: var(--ds-surface);
-      border-color: var(--ds-line-strong);
-
-      &:hover {
-        background: var(--ds-surface-2);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-      }
-
-      .item-image {
-        background: var(--ds-surface-2);
-        border-bottom-color: var(--ds-line-strong);
-      }
-
-      .item-details {
-        .item-name {
-          color: var(--ds-ink-2);
-        }
-
-        .item-sku {
-          color: #808080;
-        }
-
-        .item-stock {
-          &.in-stock {
-            color: #5cb85c;
-          }
-
-          &.low-stock {
-            color: #ffb347;
-          }
-
-          &.out-of-stock {
-            color: #ff6b7d;
-          }
-        }
-
-        .item-price {
-          color: var(--ds-accent-ink);
-        }
-      }
-    }
-  }
 
   // Production Module
-  .production-board {
-    background: var(--ds-canvas);
-
-    .production-column {
-      background: var(--ds-surface);
-      border-color: var(--ds-line-strong);
-
-      .column-header {
-        background: var(--ds-surface-2);
-        border-bottom-color: var(--ds-line-strong);
-        color: var(--ds-ink);
-
-        .column-count {
-          background: var(--ds-line-strong);
-          color: var(--ds-ink-2);
-        }
-      }
-
-      .production-card {
-        background: var(--ds-surface-2);
-        border-color: var(--ds-line-strong);
-
-        &:hover {
-          background: #33363f;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .card-priority {
-          &.priority-high {
-            background: rgba(255, 107, 125, 0.15);
-            color: #ff6b7d;
-          }
-
-          &.priority-medium {
-            background: rgba(255, 179, 71, 0.15);
-            color: #ffb347;
-          }
-
-          &.priority-low {
-            background: rgba(92, 184, 92, 0.15);
-            color: #5cb85c;
-          }
-        }
-
-        .card-title {
-          color: var(--ds-ink-2);
-        }
-
-        .card-meta {
-          color: #808080;
-        }
-      }
-    }
-  }
 
   // Settings & Configuration
-  .settings-panel {
-    background: var(--ds-surface);
-
-    .settings-section {
-      border-bottom-color: var(--ds-line-strong);
-
-      .section-title {
-        color: var(--ds-ink);
-      }
-
-      .setting-item {
-        .setting-label {
-          color: #b0b0b0;
-        }
-
-        .setting-value {
-          color: var(--ds-ink-2);
-        }
-
-        .setting-description {
-          color: #808080;
-        }
-      }
-    }
-  }
 
   // Notifications
   .notification-dropdown {
@@ -3542,9 +3029,6 @@ body.dark-only {
       border-top-color: var(--ds-accent-ink);
     }
 
-    .loader-text {
-      color: var(--ds-ink-2);
-    }
   }
 
   // Empty states
@@ -3604,21 +3088,9 @@ body.dark-only {
     border-color: #ffb347;
     color: #ffc367;
 
-    .warning-icon {
-      color: #ffb347;
-    }
   }
 
   // Info states
-  .info-message {
-    background: rgba(74, 197, 226, 0.15);
-    border-color: #4AC5E2;
-    color: #6AD5F2;
-
-    .info-icon {
-      color: #4AC5E2;
-    }
-  }
 
   // ===== COMPONENTES PRIMENG ADICIONALES - p-avatar y p-chip =====
 
@@ -3631,9 +3103,6 @@ body.dark-only {
       border-radius: 50%;
     }
 
-    &.p-avatar-square {
-      border-radius: 6px;
-    }
 
     &.p-avatar-lg {
       width: 4rem;
@@ -3712,22 +3181,6 @@ body.dark-only {
       border-radius: 50%;
     }
 
-    .p-chip-remove-icon {
-      color: #b0b0b0;
-      margin-left: 0.5rem;
-      border-radius: 50%;
-      transition: all 0.2s ease;
-
-      &:hover {
-        color: var(--ds-ink-2);
-        background: rgba(255, 255, 255, 0.1);
-      }
-
-      &:focus {
-        outline: 0 none;
-        box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
-      }
-    }
 
     // Chip con imagen
     &.p-chip-image {
@@ -3737,55 +3190,10 @@ body.dark-only {
     }
 
     // Variantes de color para Chip
-    &.p-chip-primary {
-      background: rgba(var(--ds-accent-ink-rgb), 0.15);
-      color: var(--ds-accent-ink);
 
-      .p-chip-icon,
-      .p-chip-remove-icon {
-        color: var(--ds-accent-ink);
-      }
-    }
 
-    &.p-chip-success {
-      background: rgba(92, 184, 92, 0.15);
-      color: #5cb85c;
 
-      .p-chip-icon,
-      .p-chip-remove-icon {
-        color: #5cb85c;
-      }
-    }
 
-    &.p-chip-warning {
-      background: rgba(255, 179, 71, 0.15);
-      color: #ffb347;
-
-      .p-chip-icon,
-      .p-chip-remove-icon {
-        color: #ffb347;
-      }
-    }
-
-    &.p-chip-danger {
-      background: rgba(255, 107, 125, 0.15);
-      color: #ff6b7d;
-
-      .p-chip-icon,
-      .p-chip-remove-icon {
-        color: #ff6b7d;
-      }
-    }
-
-    &.p-chip-info {
-      background: rgba(74, 197, 226, 0.15);
-      color: #4AC5E2;
-
-      .p-chip-icon,
-      .p-chip-remove-icon {
-        color: #4AC5E2;
-      }
-    }
   }
 
   // ===== MÓDULO VENTAS - CLIENTES OVERRIDES =====
@@ -3831,24 +3239,6 @@ body.dark-only {
         }
       }
 
-      .cliente-type-selector {
-        .type-option {
-          background: var(--ds-surface-2);
-          border-color: var(--ds-line-strong);
-          color: var(--ds-ink-2);
-
-          &:hover {
-            background: #33363f;
-            border-color: #4d5159;
-          }
-
-          &.selected {
-            background: rgba(var(--ds-accent-ink-rgb), 0.15);
-            border-color: var(--ds-accent-ink);
-            color: var(--ds-accent-ink);
-          }
-        }
-      }
     }
 
     .modal-footer {
@@ -3861,210 +3251,11 @@ body.dark-only {
   .clientes-lista {
     background: var(--ds-surface);
 
-    .clientes-header {
-      background: var(--ds-surface-2);
-      border-bottom-color: var(--ds-line-strong);
 
-      .search-box {
-        input {
-          background: #33363f;
-          border-color: var(--ds-line-strong);
-          color: var(--ds-ink-2);
 
-          &::placeholder {
-            color: #808080;
-          }
-
-          &:focus {
-            border-color: var(--ds-accent-ink);
-            box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
-          }
-        }
-      }
-
-      .filter-dropdown {
-        background: var(--ds-surface-2);
-        border-color: var(--ds-line-strong);
-        color: var(--ds-ink-2);
-
-        &:hover {
-          background: #33363f;
-        }
-      }
-    }
-
-    .clientes-table {
-      .table {
-        background: var(--ds-surface);
-
-        thead {
-          background: var(--ds-surface-2);
-
-          th {
-            background: var(--ds-surface-2);
-            border-color: var(--ds-line-strong);
-            color: var(--ds-ink);
-          }
-        }
-
-        tbody {
-          tr {
-            background: var(--ds-surface);
-            border-color: var(--ds-line-strong);
-
-            &:nth-child(even) {
-              background: #22252d;
-            }
-
-            &:hover {
-              background: #33363f !important;
-            }
-
-            td {
-              border-color: var(--ds-line-strong);
-              color: var(--ds-ink-2);
-
-              .cliente-nombre {
-                color: var(--ds-ink-2);
-              }
-
-              .cliente-email {
-                color: #808080;
-              }
-
-              .cliente-badge {
-                &.badge-active {
-                  background: rgba(92, 184, 92, 0.15);
-                  color: #5cb85c;
-                }
-
-                &.badge-inactive {
-                  background: rgba(255, 107, 125, 0.15);
-                  color: #ff6b7d;
-                }
-              }
-
-              .action-buttons {
-                .btn-action {
-                  background: var(--ds-surface-2);
-                  border-color: var(--ds-line-strong);
-                  color: #b0b0b0;
-
-                  &:hover {
-                    background: #33363f;
-                    color: var(--ds-ink-2);
-                  }
-
-                  &.btn-edit {
-                    &:hover {
-                      color: var(--ds-accent-ink);
-                    }
-                  }
-
-                  &.btn-delete {
-                    &:hover {
-                      color: #ff6b7d;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    .clientes-pagination {
-      background: var(--ds-surface-2);
-      border-top-color: var(--ds-line-strong);
-
-      .pagination {
-        .page-item {
-          .page-link {
-            background: var(--ds-surface-2);
-            border-color: var(--ds-line-strong);
-            color: var(--ds-ink-2);
-
-            &:hover {
-              background: #33363f;
-              border-color: #4d5159;
-            }
-          }
-
-          &.active .page-link {
-            background: var(--ds-accent);
-            border-color: var(--ds-accent);
-            color: var(--ds-on-accent);
-          }
-        }
-      }
-    }
   }
 
   // Detalle de cliente
-  .cliente-detalle {
-    background: var(--ds-surface);
-
-    .cliente-header {
-      background: var(--ds-surface-2);
-      border-bottom-color: var(--ds-line-strong);
-
-      .cliente-avatar {
-        background: var(--ds-line-strong);
-        border-color: #4d5159;
-        color: var(--ds-ink-2);
-      }
-
-      .cliente-info {
-        .cliente-nombre {
-          color: var(--ds-ink);
-        }
-
-        .cliente-meta {
-          color: #808080;
-        }
-      }
-    }
-
-    .cliente-tabs {
-      .nav-tabs {
-        background: var(--ds-surface-2);
-        border-bottom-color: var(--ds-line-strong);
-
-        .nav-link {
-          color: #b0b0b0;
-          border-color: transparent;
-
-          &:hover {
-            background: rgba(var(--ds-accent-ink-rgb), 0.1);
-            color: var(--ds-ink-2);
-          }
-
-          &.active {
-            background: var(--ds-surface);
-            border-color: var(--ds-line-strong) var(--ds-line-strong) var(--ds-surface);
-            color: var(--ds-accent-ink);
-          }
-        }
-      }
-
-      .tab-content {
-        background: var(--ds-surface);
-
-        .info-row {
-          border-bottom-color: var(--ds-line-strong);
-
-          .info-label {
-            color: #808080;
-          }
-
-          .info-value {
-            color: var(--ds-ink-2);
-          }
-        }
-      }
-    }
-  }
 
   // D-502 F1 (3.4): botones del tour (driver.js). styles.scss los pinta con var(--primary-color),
   // que en oscuro es el tinte de texto (#a48bff) y con blanco encima no llega a 4,5:1. Se pisan aquí

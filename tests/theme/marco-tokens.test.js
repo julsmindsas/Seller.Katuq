@@ -232,9 +232,8 @@ test('3.6 toasts: no queda el juego oscuro propio y cada color oscuro es un var(
   assert.deepEqual(literales.map(d => `${d.selector} { ${d.prop}: ${d.valor} }`), []);
 });
 
-// dark-mode.scss todavía tiene su propio p-toast oscuro por severidad (fondos al 95 % y bordes saturados,
-// sin efecto hoy; se retira en 4.5). Sus selectores son más específicos que los de _avisos.scss, que solo
-// gana por !important: si una regla oscura de p-toast pierde el !important, vuelve ese juego.
+// El p-toast oscuro por severidad de dark-mode.scss (fondos al 95 % y bordes saturados) se retiró en 4.5
+// (TEMA-B20). Se conserva el !important de _avisos.scss: es el seguro frente a otros p-toast más específicos.
 test('3.6 toasts: las reglas oscuras de p-toast llevan !important (le ganan al p-toast de dark-mode.scss)', () => {
   const sinImportant = declaracionesOscuras(cssAvisos())
     .filter(d => d.selector.includes('.p-toast') && (PROPS_COLOR.test(d.prop) || d.prop === 'box-shadow') && !d.important)

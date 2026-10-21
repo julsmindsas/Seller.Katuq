@@ -72,7 +72,7 @@ test('dark-mode.scss sin ninguno de los seis patrones del azul heredado', () => 
 // Trinquete: si sube, falla; si baja, también falla hasta que se baje el techo en el mismo commit, así
 // lo migrado no deja hueco para regresiones posteriores.
 const { contarEnTexto, medirDeuda } = require('./deuda-primary');
-const TECHO_DEUDA_PRIMARY = 37;
+const TECHO_DEUDA_PRIMARY = 33; // 4.5 (TEMA-B20): el retiro de bloques sin consumidor bajó 4 (de 37).
 
 test('deuda-primary cuenta background y background-color con var(--primary-color), con respaldo y sin comentarios', () => {
   const hoja = [
@@ -168,12 +168,14 @@ test('3.3: las variables de body.dark-only apuntan a los tokens (primario) y el 
     '--light-shade-primary': 'rgba(var(--ds-accent-ink-rgb), 0.1)',
     '--primary-70': 'rgba(var(--ds-accent-ink-rgb), .7)',
     '--rgb-primary': 'rgb(var(--ds-accent-ink-rgb))',
-    // secundario y terciario son del retiro (4.5): siguen igual
-    '--secondary-color': '#7A8FE8',
-    '--secondary-dark-color': '#5A6FC8',
-    '--tertiary-color': '#4AC5E2',
-    '--tertiary-dark-color': '#2AA5C2',
-    '--theme-secondary': '#4AC5E2',
+    // secundario y terciario pasaron al token info en el retiro (4.5, TEMA-B20)
+    '--secondary-color': 'var(--ds-info)',
+    '--secondary-light-color': 'var(--ds-info-soft)',
+    '--secondary-dark-color': 'var(--ds-info)',
+    '--tertiary-color': 'var(--ds-info)',
+    '--tertiary-light-color': 'var(--ds-info-soft)',
+    '--tertiary-dark-color': 'var(--ds-info)',
+    '--theme-secondary': 'var(--ds-info)',
   };
   for (const [prop, valor] of Object.entries(esperado)) {
     assert.equal(decl(raiz, prop)?.value, valor, `${prop}`);
@@ -206,7 +208,8 @@ test('3.4: los 28 rellenos van en var(--ds-accent) y su texto en var(--ds-on-acc
   // 28 rellenos de la familia del azul (design-f1.md §2) + los dos botones de driver.js (una regla)
   // + el .btn-primary deshabilitado genérico + el slider del p-inputSwitch encendido (corrector TEMA-B03).
   // + el botón de confirmar de SweetAlert2 (TEMA-B18, 3.8).
-  assert.equal(declsRelleno, 32, `rellenos en var(--ds-accent): ${declsRelleno}`);
+  // 4.5 (TEMA-B20): el retiro de bloques sin consumidor quitó 2 de esos rellenos (32 a 30).
+  assert.equal(declsRelleno, 30, `rellenos en var(--ds-accent): ${declsRelleno}`);
   for (const r of rellenos) {
     const color = decl(r, 'color');
     if (color) assert.equal(color.value, 'var(--ds-on-accent)', `${r.selectores[0]}: texto ${color.value} sobre el relleno`);
@@ -234,7 +237,7 @@ test('3.4: hovers en var(--ds-accent-hover), translúcidos sobre --ds-accent-ink
   // 10 hovers #5AA5D8 de la familia del azul + el hover de driver.js
   assert.equal((css.match(/var\(--ds-accent-hover\)/g) || []).length, 11);
   // 47 rgba(106, 181, 232, α) y el rgb() de --rgb-primary
-  assert.equal((css.match(/rgba\(var\(--ds-accent-ink-rgb\), [\d.]+\)/g) || []).length, 47);
+  assert.equal((css.match(/rgba\(var\(--ds-accent-ink-rgb\), [\d.]+\)/g) || []).length, 38); // 4.5 (TEMA-B20): eran 47; 9 estaban en bloques sin consumidor
   assert.equal((css.match(/rgb\(var\(--ds-accent-ink-rgb\)\)/g) || []).length, 1);
 });
 
