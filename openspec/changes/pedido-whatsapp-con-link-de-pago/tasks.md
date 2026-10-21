@@ -146,9 +146,10 @@ D-496 (ticket F4-40, cd `PrDNIoDwRacCPQVcHmx1`; el número 1243 está repetido, 
       Éxito: falla contra 4.4. Dep: 2.3, 4.2.
 - [ ] 4.6 **SUPERSEDED (21-oct) por F4-40·5.** La reemplazan 9.4 y 9.8. Texto original, sin efecto: filtro en `sitePagoPendiente.debeRecordar` y
       `retomarPago` (D4). Éxito: 4.5 y 2.3 en verde. Dep: 4.5, 0.5.
-- [ ] 4.7 [P] Revisar quién lee `order.vendedor.email`. Confirmar que `kai` no se
+- [x] 4.7 [P] Revisar quién lee `order.vendedor.email`. Confirmar que `kai` no se
       usa como dirección y protegerlo si hace falta, como `contactoVendedor`.
       Éxito: hallazgos en «Desvíos», con prueba si hubo cambio. Dep: 0.3.
+      Hecho (2026-10-21, F440-B05): desvío 13 de `design.md`. Nadie lee `order.vendedor.email`; sin cambio ni prueba.
 
 ## 5. Bandera, modo e interruptor
 
@@ -180,7 +181,7 @@ D-496 (ticket F4-40, cd `PrDNIoDwRacCPQVcHmx1`; el número 1243 está repetido, 
 
 ## 6. Servicio del bot y despachador
 
-- [ ] 6.1 Prueba primero, `whatsappBotPedidoDirecto.test.js`, sin red:
+- [x] 6.1 Prueba primero, `whatsappBotPedidoDirecto.test.js`, sin red:
       - `hashCarrito` y `llaveIdempotencia`;
       - `esConfirmacionCorta` y `esPideLink`: «sí», «dale», «listo», «pagar» y «link» confirman; «sí pero cambia…» no;
       - `zonaPorCiudad`: única, ambigua o ninguna;
@@ -189,8 +190,9 @@ D-496 (ticket F4-40, cd `PrDNIoDwRacCPQVcHmx1`; el número 1243 está repetido, 
       - `esRepeticion`: cerrada, creado, menos de 30 min y botón de la misma propuesta dan sí; a los 31 min, con otra propuesta o con las llaves apagadas, no. **[21-oct, D14]** El límite pasa a `RESERVA_TIENDA_MINUTOS`: a los 40 min sí, a los 61 no.
       - **[21-oct]** Tope del celular: ver revisión privada.
       Dep: 4.2, 5.1, 5.3.
-- [ ] 6.2 **[sensible]** `services/whatsappBotPedidoDirecto.js` (D5-D8).
+- [x] 6.2 **[sensible]** `services/whatsappBotPedidoDirecto.js` (D5-D8).
       Éxito: 6.1 en verde. Dep: 6.1, 0.5.
+      Hecho (2026-10-21, F440-B05): `services/whatsappBotPedidoDirecto.js` y `tests/notifications/whatsappBotPedidoDirecto.test.js` (35 casos, sin red). El núcleo llega por inyección (`crearPedidoDeTienda`); sin él, `evaluar` da `nucleo_no_disponible` y el cierre sigue en cotización. Quedan fuera hasta la fila de la tienda: la extracción del núcleo, `/pagar` y `/gracias` para el pedido del bot y el cableado en el despachador (6.5 y 6.7). Sumó a la sesión `liberarCreacion` y `reintentos` en `guardarPropuesta` (pedían el 409 de D8).
 - [x] 6.3 Prueba primero, en `whatsappBotSession.test.js`:
       - `guardarPropuesta`;
       - `reclamarCreacion`: lease, y dos llamadas a la vez dan un solo `creando`;
@@ -295,8 +297,8 @@ Ninguna tarea de esta parte empieza antes de 0.6. Las marcadas **[sensible]** es
 
 ## 9. Pago: enlace, confirmación y recordatorio (D10 a D14)
 
-- [ ] 9.1 Prueba primero (`whatsappBotPedidoDirecto.test.js`): `evaluar` con un cotizable en el carrito da `motivo: "cotizable"` y todo el carrito va a cotización; con cotizables de otra tienda, no. Dep: 6.1.
-- [ ] 9.2 Implementar D10 en `evaluar`. Éxito: 9.1 y 6.1 en verde. Dep: 9.1, 6.2.
+- [x] 9.1 Prueba primero (`whatsappBotPedidoDirecto.test.js`): `evaluar` con un cotizable en el carrito da `motivo: "cotizable"` y todo el carrito va a cotización; con cotizables de otra tienda, no. Dep: 6.1.
+- [x] 9.2 Implementar D10 en `evaluar`. Éxito: 9.1 y 6.1 en verde. Dep: 9.1, 6.2.
 - [ ] 9.3 Prueba primero, con el arnés de 2.1:
       - `/pagar` de un pedido del bot pendiente lleva al link vigente;
       - rechazado: genera uno nuevo sobre la misma reserva;

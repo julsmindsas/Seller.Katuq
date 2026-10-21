@@ -281,6 +281,8 @@ Lectura de la tarea 0.3, hecha el 2026-10-19 sobre la punta local de `backend-aw
 
     Se comprobó sin tocar la prueba: con un doble de ese módulo en el contexto, pasan los 8 con las mismas aserciones. Por eso «las 4 pruebas en verde con las mismas aserciones» de 3.1 solo se cumple si antes se arregla el montaje. Puede hacerse al pasarla al arnés de 2.1, que ya trae ese doble, o sumando el doble al contexto. Se cambia el montaje y las aserciones quedan como están. Si después del arreglo alguna aserción falla, es un hallazgo: se escala y no se ajusta la aserción.
 
+13. **Nadie lee `order.vendedor.email` en el backend (tarea 4.7, 2026-10-21).** Se buscó en `functions/` (controllers, services, utils, handlers). El campo solo se escribe: `utils/siteOrden.js` (tienda), `controllers/catalogos.js` y el cierre del bot en la cotización (`kai`). Los filtros por vendedor de `controllers/orders.js` y de tesorería leen `asesorAsignado`, no `vendedor.email`. Las lecturas de `vendedor.email` que existen son de cotizaciones y ya tratan `kai` como no-correo (`contactoVendedor`). Sin cambio de código ni prueba. Cuando el núcleo guarde el vendedor KAI del pedido del bot, quien lea ese campo en un envío de correo deberá exigir que tenga `@`.
+
 **Línea base de la tarea 0.4 (2026-10-19).** Se corrieron 132 archivos de `tests/sitios`, `notifications`, `cotizaciones`, `integrations`, `orders` y `companies`: 124 pasaron. Fallos previos, ninguno de este cambio:
 
 - `sitios/carritoWhatsapp`: falla en la prueba 46 con «Route.get() requires a callback».
