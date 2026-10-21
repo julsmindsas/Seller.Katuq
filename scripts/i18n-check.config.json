@@ -1,5 +1,5 @@
 {
-  "_nota": "Configuración de scripts/i18n-check.js (npm run i18n:check). D-532, ticket Traducción (cd CMNdBkVZXgYoOCvqfGZc), design.md D6 y D10. Rutas de modulosCerrados, fueraDeAlcance y bloques relativas a src/app. Al cerrar un bloque de módulo (receta, paso 6) se agregan sus carpetas a modulosCerrados. idiomasOpcionales: mientras de.json no exista su falta es un aviso; se quita 'de' de esta lista en IDI-B00f (tarea 1.14). Valores que pueden quedar iguales al español: nombresPropios (D4) más igualesPermitidos.todos y los del idioma (igualesPermitidos.en|pt|de). Textos sueltos que no cuentan: solo nombresPropios o textosIgnorados (igualesPermitidos no los silencia). atributosTexto es opcional (por omisión, los de D4 más ngbTooltip, alt y los textos de PrimeNG). Bloques: IDI-B02 suma el login real del panel (auth/login, ruta /login) y shared/components/change-password; IDI-B05 toma los formularios de cliente, que viven en components/ventas/clientes (clientes-shared.module), como dice tasks.md sección 6. IDI-B00d (1.10): igualesPermitidos.todos suma siglas, formatos y nombres técnicos que no se traducen (DV, RUT, IVA, URL, PDF, Seller Center, piezas de la plantilla Cuba); igualesPermitidos.en y .pt traen solo valores que ya son inglés o portugués correctos e iguales al español (cognados).",
+  "_nota": "Configuración de scripts/i18n-check.js (npm run i18n:check). D-532, ticket Traducción (cd CMNdBkVZXgYoOCvqfGZc), design.md D6 y D10. Rutas de modulosCerrados, fueraDeAlcance y bloques relativas a src/app. Al cerrar un bloque de módulo (receta, paso 6) se agregan sus carpetas a modulosCerrados. idiomasOpcionales: idiomas cuyo diccionario puede faltar (su falta es un aviso); desde IDI-B00f (tarea 1.14) está vacía: de.json existe y su falta es error. Valores que pueden quedar iguales al español: nombresPropios (D4) más igualesPermitidos.todos y los del idioma (igualesPermitidos.en|pt|de). Textos sueltos que no cuentan: solo nombresPropios o textosIgnorados (igualesPermitidos no los silencia). atributosTexto es opcional (por omisión, los de D4 más ngbTooltip, alt y los textos de PrimeNG). Bloques: IDI-B02 suma el login real del panel (auth/login, ruta /login) y shared/components/change-password; IDI-B05 toma los formularios de cliente, que viven en components/ventas/clientes (clientes-shared.module), como dice tasks.md sección 6. IDI-B00d (1.10): igualesPermitidos.todos suma siglas, formatos y nombres técnicos que no se traducen (DV, RUT, IVA, URL, PDF, Seller Center, piezas de la plantilla Cuba); igualesPermitidos.en y .pt traen solo valores que ya son inglés o portugués correctos e iguales al español (cognados). IDI-B00f (1.14): igualesPermitidos.de suma Editor y Total, alemán correcto (de-CH usa «das Total»).",
   "diccionarios": "src/assets/i18n",
   "codigo": "src/app",
   "referencia": "es",
@@ -9,9 +9,7 @@
     "pt",
     "de"
   ],
-  "idiomasOpcionales": [
-    "de"
-  ],
+  "idiomasOpcionales": [],
   "nombresPropios": [
     "Katuq",
     "Opttia",
@@ -142,7 +140,10 @@
       "Zona",
       "Zona de Entrega"
     ],
-    "de": []
+    "de": [
+      "Editor",
+      "Total"
+    ]
   },
   "textosIgnorados": [],
   "prefijosDinamicos": [

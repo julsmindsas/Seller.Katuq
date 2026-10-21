@@ -298,6 +298,22 @@ test('mientras de.json no exista, su falta es un aviso y no un error', () => {
   assert.equal(correr('sin-de').status, 0);
 });
 
+test('IDI-B00f (1.14): con idiomasOpcionales vacío, como el repo, la falta de de.json es error y sale con 1', () => {
+  const base = JSON.parse(fs.readFileSync(CONFIG, 'utf8'));
+  const dir = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'i18n-sin-opcionales-'));
+  const config = path.join(dir, 'config.json');
+  fs.writeFileSync(config, JSON.stringify({ ...base, idiomasOpcionales: [] }));
+  try {
+    const r = revisar('sin-de', { config });
+    assert.deepEqual(r.avisos.filter(x => x.tipo === 'diccionarioAusente'), []);
+    assert.deepEqual(r.errores.map(x => [x.tipo, x.idioma, x.archivo]), [['jsonInvalido', 'de', 'src/assets/i18n/de.json']]);
+    const p = spawnSync(process.execPath, [SCRIPT, '--raiz', path.join(FIXTURES, 'sin-de'), '--config', config], { encoding: 'utf8' });
+    assert.equal(p.status, 1, p.stdout + p.stderr);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('igualesPermitidos.<idioma> vale para el valor completo; las siglas de todos, por palabra (IDI-B00d)', () => {
   // Un cognado corto de la lista («de», «Pedidos», «Valor») no silencia una frase que sigue en
   // español; las siglas de igualesPermitidos.todos sí se quitan por palabra («Formato JSON»).
@@ -372,13 +388,13 @@ test('configuración del repo: lista permitida, prefijos dinámicos, módulos ce
   }
 });
 
-test('package.json: i18n:check y test:i18n con las cinco pruebas, sin engancharse a prebuild ni predeploy', () => {
+test('package.json: i18n:check y test:i18n con las seis pruebas, sin engancharse a prebuild ni predeploy', () => {
   const { scripts } = JSON.parse(fs.readFileSync(path.join(RAIZ, 'package.json'), 'utf8'));
   assert.equal(scripts['i18n:check'], 'node scripts/i18n-check.js');
   assert.equal(
     scripts['test:i18n'],
     'node --test tests/i18n/app-language.test.js tests/i18n/primeng-i18n.test.js tests/i18n/i18n-check.test.js' +
-      ' tests/i18n/diccionarios.test.js tests/i18n/ortografia-claves.test.js',
+      ' tests/i18n/diccionarios.test.js tests/i18n/ortografia-claves.test.js tests/i18n/aleman.test.js',
   );
   for (const gancho of ['prebuild', 'prebuild:prod', 'predeploy', 'prerelease']) {
     assert.doesNotMatch(scripts[gancho] || '', /i18n/, gancho);
