@@ -160,6 +160,7 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
   - `importStoreProducts.writeSet`: como máximo una fila, del tipo Público y de la misma empresa; nunca `tiposPrecios`; en `upsert`, `OFFER_KEPT` y `PRICE_SHADOWED_BY_PUBLIC_LIST`;
   - `wooProducts.test.js` se actualiza.
   - **Éxito:** escrituras de prueba en verde, y `git diff` vacío en `katuq-product-upsert.action.js`.
+  - *Estado (F530-B06):* parcial. Hecho: el lote lee `tiposPrecios` de la empresa del token y escribe como máximo una fila Público (`loaded`/`kept`/`skipped`), con `OFFER_KEPT`, `PRICE_SHADOWED_BY_PUBLIC_LIST` y aviso global si la lista falta o es ambigua; `importStoreProducts.oferta.test.js` y el write-set (M7, seo, `nuevo:false`, `paginaWeb`) en verde; upsert sin diff. Falta solo el caso de oferta de `wooProducts.test.js`, que se cierra con el lector de WooCommerce (B09, 14.13); al cerrarlo se marca [x].
 - [x] 14.6 Partición por (regular, oferta, IVA) (A4) en `separarPorPrecio` (`readers/comun.js`). **Éxito:** tallas con distinta oferta dan dos productos.
 - [ ] 14.7 **Diff aprobado (tienda).** «Nuevo» (N1):
   - `nuevoProducto` con `exposicion.nuevo: false` y `metadata.migration.originCreatedAt`;

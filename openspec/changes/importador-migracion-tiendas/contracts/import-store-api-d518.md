@@ -42,6 +42,7 @@
 
 **`products` → 200, campos nuevos:**
 - `products[].offer`: `loaded`, `kept`, `none` o `skipped`.
+- `offers` (en la respuesta del lote): `{ publicList, loaded, kept, skipped }`; con `missing` o `ambiguous` no se escribe ninguna oferta y sale un aviso global.
 - `products[].taxExempt`: booleano.
 - `photosPending`: cuántas fotos de los creados quedan por copiar.
 
