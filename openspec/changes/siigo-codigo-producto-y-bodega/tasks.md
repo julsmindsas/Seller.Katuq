@@ -117,7 +117,24 @@ servicios.
       Antes la revisa Laura (Bombas) con el Excel `Codigos SIIGO ALMACEN
       BOMBAS.xlsx` (19-oct: 666 asignados, 2 ambiguos, 618 sin equivalente,
       38 repetidos).
-- [x] 2.4 Script de precarga de la conexión de categorías de Bombas (mayoría
+      **Código listo (bloque 1229-B04, 2026-10-21); falta la ejecución**, que
+      sigue bloqueada por la revisión de Laura y una sesión con permiso de
+      escritura. `--apply` exige `--aprobado "<xlsx>"`: solo escribe los
+      productos cuyo par (Referencia, Código en SIIGO) de la hoja «Asignados»
+      coincide con el emparejamiento recalculado; las filas que cambiaron,
+      desaparecieron o ya tenían código, y las asignadas hoy que no están en el
+      Excel («no aprobada (borrada o nueva)»), se informan (hoja «No se
+      escriben») y no se escriben. El Excel de salida nunca es el aprobado: se
+      niega si `--out` apunta a él, sin `--out` no reemplaza un archivo que ya
+      existe y, con `--aprobado`, la hoja recalculada se llama «Asignados
+      recalculados». Si leer el Excel altera los prototipos de JavaScript
+      (xlsx 0.18.5, CVE-2023-30533) se detiene antes de Firebase. Relee cada lote con `getAll`, salta los que ya
+      tienen código o no son de la empresa, y escribe con `updateCodigoSiigo`
+      y la precondición `lastUpdateTime`. `--verificar 10` toma una foto antes y
+      relee después (fuera de `integrations.siigo` no puede cambiar nada); sin
+      `--apply` relee una carga ya hecha. `--dry-run` siempre gana. Orden exacto
+      en el encabezado de `scripts/siigo/cargarCodigosSiigo.js`.
+- [ ] 2.4 Script de precarga de la conexión de categorías de Bombas (mayoría
       sobre los emparejados), primero sin escribir. Aplicar cuando el comercio
       confirme si van las categorías viejas o las nuevas. Prueba del 19-oct
       con `--katuq-desde 2026-09-01`: 8 conexiones (BOMBAS > Bomba/Kit → 378,
@@ -134,8 +151,44 @@ servicios.
       Sello. Laura la revisa con `Categorias SIIGO ALMACEN BOMBAS.xlsx` y
       confirma que las categorías nuevas tienen las cuentas de inventario,
       costo, ingreso y devolución. Luego `--apply`.
+      **Código listo (bloque 1229-B04, 2026-10-21); falta la ejecución**
+      (bloqueada por la confirmación de Laura). `--apply` exige `--conexiones`
+      (la mayoría queda solo para la prueba). Al guardar, `fusionarConexiones`
+      cuenta una sola vez la misma categoría escrita distinto (llave normalizada
+      como en `grupoContableSiigo`) y lo que ya eligió el comercio gana; relee la
+      configuración sin caché y manda `accountsMapping` completo a `saveConfig`
+      (conserva `accountGroup` y las demás llaves; el resto de la configuración
+      queda igual). Solo guarda si la integración SIIGO ya está activa, porque
+      `saveConfig` siempre deja `status: 'active'`. Efectos de `saveConfig`
+      aceptados por D6: sube `version`/`updatedAt`/`updatedBy`, reescribe el
+      documento de secretos con los mismos secretos y deja su auditoría.
+      `--verificar` relee y compara lo guardado con el archivo; termina con
+      salida 1 si una conexión falta o quedó distinta. Durante la carga nadie
+      debe guardar en Integraciones → SIIGO (esa pantalla manda
+      `accountGroupByCategory` entero) y se vuelve a correr `--verificar` justo
+      antes de 2.5.
 - [ ] 2.5 Prender `siigoProductEquivalence` para ALMACEN BOMBAS
       (`scripts/set-company-feature.js`).
+- [x] 2.6 Pruebas de los scripts de carga (bloque 1229-B04). La lógica pasó a
+      `scripts/siigo/planCargaSiigo.js` (sin efectos al cargarse; los scripts
+      solo ejecutan con `require.main === module`). Pruebas en
+      `tests/accounting/emparejarCodigosSiigo.test.js` (38), dentro de
+      `npm run test:codigo-siigo`: `normalizado`, `largoDeKatuq`, emparejador
+      (código igual, regla sin bloques, ambiguo, el repetido de Katuq no gana,
+      `repetidos()`), clasificación idéntica a la del script anterior
+      (caracterización antes y después), `planDeCarga` (coincide, cambió,
+      desapareció, no aprobada, ya tenía código), Excel de salida que nunca pisa
+      el aprobado, guarda contra la contaminación de prototipos al leerlo,
+      escritura con db falso (salta los que
+      ya tienen código o son de otra empresa, update de solo las 3 rutas,
+      precondición y relectura si otro proceso escribe), verificación de la
+      muestra, `fusionarConexiones`, `saveConfig` con un servicio falso (y no
+      guarda con la integración apagada), `require` de los scripts en un proceso
+      aparte, y el write-set del código de carga: toda llamada que escribe va
+      sobre un receptor permitido, solo `products.integrations.siigo.productCode*`
+      y, por `saveConfig`, `accountsMapping.accountGroupByCategory` de
+      `integration_configs/{empresa}_siigo` (más los metadatos y la auditoría
+      que `saveConfig` siempre escribe).
 
 ## 3. Cierre
 
