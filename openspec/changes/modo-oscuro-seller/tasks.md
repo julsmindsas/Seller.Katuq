@@ -16,6 +16,7 @@
   - Criterio: respuestas anotadas en `CONTRACT.md`, bajo D-502. El delta queda aprobado antes de cualquier código (Art. I). Si cambia un valor por defecto, primero se ajustan el delta y el diseño.
   - Dependencias: ninguna. Sin 0.1 no se implementa nada.
 - [x] **0.2 Tomar la línea base visual.** Hecha el 2026-10-18 con `auditoria-tema.js` sobre el build 2026.10.17.12 (commit 6efb605c): `tmp/d502-linea-base-2026-10-18/` (fuera de git). Tiene 19 capturas, el `json` de axe de cada pantalla a 1440 px y `reporte.json`. El login después de cerrar sesión en oscuro está solo a 1440 px.
+  - **2026-10-21: esa línea base ya no sirve para comparar el claro.** D-516, D-518 y D-519 rediseñaron unas 90 pantallas más con la base `cfg-*` después del 18-oct. La línea base nueva la toma el orquestador con `auditoria-tema.js` sobre el build de la punta de `feature/tickets-web`, fuera de git; su ruta se anota aquí cuando exista. Mientras tanto, el «claro idéntico» de cada bloque se revisa sin build con `tests/theme/comparar-claro.js` (ver 3.2).
   - Qué: capturas en claro y oscuro, a 1440 y 390 px, del marco, Ocasiones, Bodegas, Todos los pedidos, Inicio y el login después de cerrar sesión en oscuro, más el axe en claro de esas pantallas.
   - Criterio: carpeta de evidencia fechada con capturas y el `json` de axe. Es la referencia de «claro idéntico» y de «ninguna violación nueva».
   - Dependencias: 0.1.
@@ -90,7 +91,7 @@
   - Qué: `general-chat.component.scss` sigue a `body.dark-only`, y `chat.component.ts` lee `isDark$` en vez de `matchMedia`.
   - Criterio: con el sistema en oscuro y la app en claro, el chat se ve claro. Build sin errores.
   - Dependencias: 2.2.
-- [ ] **2.12 Cierre de F0.**
+- [x] **2.12 Cierre de F0.** F0 publicada en el front 2026.10.18.12 (commit d82947a1, ya en `feature/tickets-web`). La entrada del contrato ya existe en la sección «D-495 a D-503» de `CONTRACT.md` («D-502 modo oscuro, F0: PUBLICADA»). `npm run test:theme`: 28 pruebas, 27 pasan y 1 `todo` (F1, tarea 3.4). El ticket 1180 tiene su comentario de avance y sigue abierto.
   - Qué: lo de «Cierre de cada fase» en `design-pruebas.md`, más la entrada «D-502 F0» en la bitácora de `CONTRACT.md`.
   - Criterio: los criterios 1 y 6 de la propuesta se cumplen en el marco, y los requisitos del delta para F0 se verifican en la auditoría.
   - Publicar solo con la orden de Daniel y respetando el candado: `git pull`, build desde la punta y deploy enseguida.
@@ -98,11 +99,12 @@
 
 ## 3. Fase 1: tokens (`design-f1.md`)
 
-- [ ] **3.1 `tests/theme/theme-tokens.test.js` y su archivo en la línea `test:theme`.**
+- [x] **3.1 `tests/theme/theme-tokens.test.js` y su archivo en la línea `test:theme`.** Commit afded547. Antes del parcial: 7 pruebas, 1 pasa (la referencia del cálculo WCAG) y 6 fallan con «falta src/app/shared/styles/_theme-tokens.scss». Con `sass` 1.54.4 del front comprueba: (a) los 35 `--ds-*` de `design-f1.md` §1 en `:root` y `body.dark-only` con su valor, el claro igual a los `$cfg-*` de `_config-pagina.scss` y al marco (`--ktq-bg`, `--ktq-shadow-card`) y los `-rgb` iguales a su color; (b) en oscuro, `ink`, `ink-2`, `body`, `muted`, `accent-ink` y los cuatro semánticos ≥ 4,5:1, y `control-border` y `focus` ≥ 3:1, contra las 8 superficies; (c) `on-accent` ≥ 4,5:1 sobre `accent` y `accent-hover` en los dos juegos, y cada semántico ≥ 4,5:1 sobre su `-soft` en oscuro (el claro de los pares semánticos es del cambio aparte, 4.6).
   - Qué: compila el parcial con `sass` y mide cada token contra **cada** superficie oscura.
   - Criterio: falla porque el parcial todavía no existe.
   - Dependencias: 2.12.
-- [ ] **3.2 Crear `src/app/shared/styles/_theme-tokens.scss` e importarlo en `src/styles.scss`, antes de `dark-mode.scss`.**
+- [ ] **3.2 Crear `src/app/shared/styles/_theme-tokens.scss` e importarlo en `src/styles.scss`, antes de `dark-mode.scss`.** **Parcial (2026-10-21, bloque TEMA-B01, commit afded547):** el parcial está creado con los valores de `design-f1.md` §1 e importado justo antes de `dark-mode.scss`; las bases no lo importan y en F1 no tiene consumidores. 3.1 en verde (7 de 7) y `test:theme` con 46 pruebas: 45 pasan y 1 `todo` (3.4). Claro sin build: `comparar-claro.js --base 3e330d83 src/styles.scss` da «claro idéntico» (33006 declaraciones). **Pendiente para cerrarla:** el build sin errores y las capturas en claro contra la línea base nueva de 0.2; los corre el orquestador. Hasta entonces, 3.3 a 3.9 pueden avanzar sobre el parcial, pero 3.2 no cuenta como cerrada para 3.9 ni para el contrato.
+  - **Herramienta para todos los bloques: `tests/theme/comparar-claro.js`.** Compila con `sass` un `.scss` en el commit base (extrae las hojas de `src/` con `git archive` a `<--tmp>/comparar-claro/<sha>`, con rename atómico) y en el árbol actual, con `loadPaths` `[src, node_modules]` y el prefijo `~`. `--tmp` es obligatorio y apunta al scratchpad de la sesión. Normaliza: `var(--ds-X)` pasa a su valor claro de `_theme-tokens.scss` **de cada lado** (la base con los tokens de la base y el árbol actual con los suyos, así que cambiar el valor claro de un token se detecta), descarta los selectores `body.dark-only`, `.dark-only` y `:host-context(body.dark-only)` y las definiciones `--ds-*` de `:root`, y unifica hex, `white`/`black`, `rgb()`, decimales y espacios. Sale con 1 si el claro cambió (lista lo que solo está en la base y lo que solo está en el árbol actual) y con 2 si hay error o si el archivo no produce ninguna declaración en ningún lado («SIN DATOS», nunca un falso «idéntico»). Uso: `flock <scratchpad>/pesado.lock node --max_old_space_size=6144 tests/theme/comparar-claro.js --base <commit> --tmp <scratchpad> <ruta.scss> [...]`. Compara el consumidor (la pantalla o `src/styles.scss`): un parcial que solo define mixins, como `_config-pagina.scss`, da «SIN DATOS». Sus funciones puras tienen prueba en `tests/theme/comparar-claro.test.js`, dentro de `test:theme`.
   - Criterio: 3.1 en verde; las capturas en claro siguen iguales a las de 0.2; build sin errores.
   - Dependencias: 3.1.
 - [ ] **3.3 `dark-mode.scss`: las variables de las líneas 5-75 apuntan a tokens.**
@@ -115,9 +117,9 @@
 - [ ] **3.5 `dark-mode.scss`: los grises pasan a tokens.** Solo si se confirma el valor por defecto 3.
   - Criterio: no quedan los siete grises; axe sin violaciones de `color-contrast` en oscuro en el marco y en Inicio; capturas en oscuro revisadas por Daniel.
   - Dependencias: 3.4.
-- [ ] **3.6 [P] Sidebar y header: sus oscuros pasan a `var(--ds-*)` con el mismo valor.**
-  - Archivos: `sidebar.component.scss:1434+` y el header oscuro de `styles.scss:654-661`. Lo que no tiene token queda literal.
-  - Criterio: las capturas del marco en oscuro quedan iguales antes y después, y los conteos no suben.
+- [ ] **3.6 [P] Sidebar, header y toasts: sus oscuros pasan a `var(--ds-*)` con el mismo valor.**
+  - Archivos: `sidebar.component.scss:1434+`, el header oscuro de `styles.scss:654-661` y el bloque `body.dark-only` de `src/assets/scss/components/_avisos.scss` (línea 211 en adelante: toasts de ngx-toastr y `p-toast`; pregunta 3 del informe, aprobada en bloque el 2026-10-21). Su juego oscuro propio (`#262633`, `#ECEBF5`, `#b9b6cf`, `#34344a` y los íconos) pasa a `--ds-*`. Lo que no tiene token queda literal.
+  - Criterio: las capturas del marco en oscuro quedan iguales antes y después, y los conteos no suben. Toasts: el claro no cambia (`comparar-claro.js` sobre `src/styles.scss` sin diferencias) y en oscuro cada texto da ≥ 4,5:1 sobre su fondo, medido en la auditoría.
   - Dependencias: 3.2.
 - [ ] **3.7 [P] PrimeNG oscuro.**
   - Qué: lo del punto 4 de `design-f1.md` (parcial de tamaños, `theme-katuq-dark.scss`, `_primeng-dark.scss` con overrides explícitos, `angular.json`, constante del servicio y borrar el tema viejo). Si gana la alternativa del valor por defecto 8, solo se agrega `_primeng-dark.scss` al tema actual.
@@ -138,6 +140,7 @@ Cada una tiene su diseño corto, su delta, sus tareas y su aprobación antes de 
 
 - [ ] **4.1 F2a `_config-pagina.scss`.** **Sensible:** la base también pinta despachos, la lista de POS, formas de pago, borradores, carga de ventas y bodegas. Va con diff aprobado.
   - Pruebas primero: la auditoría de los criterios 2, 3 y 4 sobre las 38 pantallas y la revisión, una por una, de los 22 archivos que usan `$cfg-*`. Consume `--ds-chip-bg` y `--ds-shadow-*` de F1.
+  - **Tamaño al 2026-10-21:** 120 pantallas con el mixin y 53 archivos con `$cfg-*` directo, más las piezas de 8bae2ba0 (`design-f1.md` §7). Un solo diff en la base y los consumidores por módulo (pregunta 1). El «claro idéntico» de cada diff se revisa con `tests/theme/comparar-claro.js`.
   - Dependencias: 3.9.
 - [ ] **4.2 F2b `_katuq-builder.scss` y `sitios-lista`.** Coordinar con el trabajo de sitios.
   - Dependencias: 3.9.
@@ -149,7 +152,22 @@ Cada una tiene su diseño corto, su delta, sus tareas y su aprobación antes de 
 - [ ] **4.5 Retiro de los bloques ya migrados de `dark-mode.scss` y `themes/_dark.scss`.**
   - Dependencias: 4.4 de cada pantalla.
 - [ ] **4.6 Escalar aparte**, cada uno con su propuesta o ticket: el contraste en claro (valor por defecto 6), el guardado de `tema` para todos los roles (backend privado), `_katuq-tokens.scss` (incluye igualar el botón PrimeNG claro) y el PrimeNG claro (`#3B82F6`).
-- [ ] **4.7 Solo si Daniel rechaza el valor por defecto 7:** F2d para `publica` (10 pantallas), con la misma regla de F2.
-- [ ] **4.8 Solo si Daniel pide el escudo C (valor por defecto 1).**
+- [ ] **4.7 Solo si Daniel rechaza el valor por defecto 7:** F2d para `publica` (10 pantallas), con la misma regla de F2. **No aplica:** el valor por defecto 7 quedó aprobado (las pantallas sin menú siguen siempre en claro).
+- [ ] **4.8 Solo si Daniel pide el escudo C (valor por defecto 1).** **No aplica:** sin escudo C (pregunta 7, resuelta el 2026-10-21).
   - Qué: crearlo con dueño y fecha de retiro (Art. XII), y retirarlo en 4.1.
   - Criterio: en `CONTRACT.md` quedan el dueño, la fecha y la tarea de retiro.
+
+## Preguntas del informe del 2026-10-21, resueltas
+
+Daniel aprobó en bloque el 2026-10-21 la recomendación escrita de cada pregunta del informe del ticket 1180:
+
+1. **Tamaño de F2a** (de 38 a 120 pantallas): un solo diff en la base `_config-pagina.scss`, con el barrido automático de las 120 pantallas como prueba. Los 53 archivos que usan `$cfg-*` directo van en subcambios por módulo; los de ventas, POS y despachos, con su diff aprobado aparte.
+2. **F1 y D-516/D-519:** F1 sale en el mismo release que D-516 y D-519 o después, para que la línea base clara incluya las pantallas rediseñadas.
+3. **Toasts de `_avisos.scss`:** entran en F1, dentro de la tarea 3.6 (agregado al write-set de `design-f1.md` §5).
+4. **Cierre del ticket:** el 1180 sigue abierto hasta publicar F3 completa, con un comentario por cada fase publicada. El retiro (4.5) va en el mismo ticket; lo de 4.6 sale en tickets propios.
+5. **«Todas las páginas»:** las pantallas que no están en F2 ni en F3 van como cola después de F3, con un barrido axe en oscuro de las rutas con marco, priorizado por cantidad de violaciones y publicado por lotes con su diff.
+6. **Conteo de usuarios con `tema: true`:** lo corre quien tenga acceso, con un script de solo lectura que devuelve solo el total. No bloquea F1 ni F2; solo ordena F3.
+7. **Escudo C:** no se pone (valor por defecto 1), así que 4.8 no aplica.
+8. **Seguir al sistema operativo:** no (valor por defecto 4); se revisa después de F3.
+
+Además, 4.7 no aplica porque se mantiene el valor por defecto 7.

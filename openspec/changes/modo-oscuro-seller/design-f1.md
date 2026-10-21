@@ -109,19 +109,21 @@ En `angular.json`, el bundle `md-dark-deeppurple` se cambia por `katuq-dark` (si
 - Nuevos: `_theme-tokens.scss`, `_primeng-katuq-base.scss`, `_primeng-dark.scss` y `theme-katuq-dark.scss`.
 - `theme-lara-light-blue.scss`: solo se mueve su bloque al parcial.
 - `styles.scss`, `dark-mode.scss` y `sidebar.component.scss`.
+- `src/assets/scss/components/_avisos.scss`: solo el bloque `body.dark-only` de la línea 211 en adelante (toasts de ngx-toastr y `p-toast`, commit 287daaff del 2026-10-20). Su oscuro propio (`#262633`, `#ECEBF5`, `#b9b6cf`, `#34344a`) pasa a `--ds-*` dentro de la tarea 3.6, para que haya una sola fuente de colores por tema (pregunta 3 del informe del 2026-10-21, aprobada en bloque). El claro de los toasts no se toca.
+- `tests/theme/comparar-claro.js` (nuevo, CLI) y su prueba `tests/theme/comparar-claro.test.js`: el chequeo «claro idéntico» sin build que usan todos los bloques.
 - La entrada del bundle en `angular.json` y la constante de `theme-mode.service.ts`.
 - `tests/theme/theme-tokens.test.js` (nuevo) y la línea `test:theme` de `package.json`.
 - Se borra `theme-md-dark-deeppurple.scss`.
 
 ## 6. Pruebas de F1
 
-En [`design-pruebas.md`](design-pruebas.md): `theme-tokens.test.js` mide cada token contra todas las superficies oscuras, `conteos.test.js` exige cero azules y la auditoría revisa los rellenos `#5F3FE0` y que tamaños y espaciados de PrimeNG no cambien.
+En [`design-pruebas.md`](design-pruebas.md): `theme-tokens.test.js` mide cada token contra todas las superficies oscuras (y cada semántico contra su `-soft`), `conteos.test.js` exige cero azules y la auditoría revisa los rellenos `#5F3FE0` y que tamaños y espaciados de PrimeNG no cambien. Entre build y build, cada bloque revisa el «claro idéntico» con `tests/theme/comparar-claro.js` (CLI) sobre su consumidor o sobre `src/styles.scss`; las capturas y el build siguen siendo el criterio de cierre.
 
 ## 7. Fases siguientes
 
 | Fase | Qué | Depende de | Notas |
 |---|---|---|---|
-| F2a | `_config-pagina.scss`: `$cfg-*` pasa a `var(--ds-*)`, se separa el acento de relleno del de texto y `#fff` pasa a `var(--ds-surface)` | F1 | 38 archivos incluyen el mixin (las 40 coincidencias traen 2 comentarios) y 22 usan `$cfg-*` directo, algunos sin el mixin (`agenda/cita-form`). La base también pinta despachos, la lista de POS, formas de pago, borradores y carga de ventas: diff aprobado |
+| F2a | `_config-pagina.scss`: `$cfg-*` pasa a `var(--ds-*)`, se separa el acento de relleno del de texto y `#fff` pasa a `var(--ds-surface)`. Incluye las piezas que sumó 8bae2ba0: `cfg-pill` (y sus variantes), `cfg-stats`/`cfg-stat`, `cfg-form` y las pestañas PrimeNG dentro de `cfg-pagina`, todas con blancos y `$cfg-*` fijos | F1 | **Tamaño al 2026-10-21** (después de D-516, D-518 y D-519): 120 archivos `.scss` con `@include config-pagina` y 53 con `$cfg-*` directo (8 de ellos sin el mixin, como `agenda/cita-form`). Al diseñar eran 38 y 22. Un solo diff en la base y los consumidores por módulo (pregunta 1, aprobada en bloque el 2026-10-21). La base también pinta despachos, la lista de POS, formas de pago, borradores, carga de ventas y bodegas: diff aprobado |
 | F2b | `_katuq-builder.scss` (juego oscuro de `--kb-*`) y los 14 `#fff` de `sitios-lista` | F1 | Coordinar con el trabajo de sitios |
 | F2c | `_katuq-modal.scss` | F1 | Widgets de pago de POS2: diff aprobado, uno por vez |
 | F3 | Todos los pedidos, crear venta / venta asistida, despachos, POS, inventario e inicio | F1 (despachos, también F2a) | Una pantalla por cambio, solo SCSS, capturas en los dos temas y diff aprobado. Incluye pasar a `--ds-accent` los rellenos con `var(--primary-color)` de cada pantalla |

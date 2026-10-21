@@ -16,14 +16,16 @@
 - **`tests/theme/conteos.test.js`.**
   - Gradientes y primarios prohibidos no suben. Línea base del 2026-10-18 (gradientes / primarios): `dark-mode.scss` 1 / 0, `styles.scss` 2 / 10, `sidebar.component.scss` 2 / 0, `shared-filters` 0 / 3, `tracking-details-modal` 5 / 0, `crear-formas-pago` 0 / 1, `general-chat` 1 / 0, y los demás 0 / 0.
   - En `dark-mode.scss` no queda ninguno de los seis patrones de la familia del azul: `#6AB5E8`, `rgba(106, 181, 232`, `rgb(106, 181, 232`, `#5AA5D8`, `#8AC5F8` y `#4A95C8`. Esta parte falla hasta F1.
-- **Script `test:theme`.** Lista los archivos uno por uno, como `test:dian-*`: `node --test tests/theme/theme-mode.test.js tests/theme/users-edit-contract.test.js tests/theme/user-writers.test.js tests/theme/conteos.test.js`. En Windows, npm usa cmd.exe, que no expande `*`, y Node 20 no acepta globs en `--test`. En F1 se agrega `theme-tokens.test.js` a la misma línea.
+- **Script `test:theme`.** Lista los archivos uno por uno, como `test:dian-*`: `node --test tests/theme/theme-mode.test.js tests/theme/users-edit-contract.test.js tests/theme/user-writers.test.js tests/theme/conteos.test.js`. En Windows, npm usa cmd.exe, que no expande `*`, y Node 20 no acepta globs en `--test`. En F1 se agregan `theme-tokens.test.js` y `comparar-claro.test.js` a la misma línea.
 
 ## Fase 1
 
 - **`tests/theme/theme-tokens.test.js`.** Compila `_theme-tokens.scss` con `sass` y comprueba:
   - cada `--ds-*` existe en los dos juegos;
   - en oscuro, cada token de texto da ≥ 4,5:1, y `control-border` y `focus` dan ≥ 3:1 contra **cada** superficie (`canvas`, `surface`, `surface-2`, `row-hover`, `tile`, `chip-bg`, `sidebar` y `accent-soft`), no solo contra `surface`;
-  - `on-accent` sobre `accent` y sobre `accent-hover` da ≥ 4,5:1.
+  - `on-accent` sobre `accent` y sobre `accent-hover` da ≥ 4,5:1, y en oscuro cada semántico (`ok`, `warn`, `err`, `info`) da ≥ 4,5:1 sobre su `-soft`;
+  - el claro es igual a los `$cfg-*` de `_config-pagina.scss` y al marco, y los `-rgb` coinciden con su color.
+- **`tests/theme/comparar-claro.js`** (CLI, no es prueba de `node --test`): el chequeo «claro idéntico» sin build. Compila un `.scss` en un commit base y en el árbol actual, sustituye `var(--ds-*)` por el valor claro de los tokens de cada lado, descarta lo oscuro y sale con 1 si el claro cambió (2 si no hay nada que comparar). Lo usa cada bloque de F1 y F2 sobre su consumidor o sobre `src/styles.scss`; no reemplaza las capturas ni el build del cierre. Sus funciones puras se prueban en `comparar-claro.test.js`.
 - **`conteos.test.js`**, segunda parte, en verde.
 
 ## Auditoría en navegador (`tests/theme/auditoria-tema.js`)
