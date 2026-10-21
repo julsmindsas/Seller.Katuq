@@ -4,6 +4,7 @@
 // Tema canónico (openspec/specs/design-system): plano, sin gradientes ni border-left.
 // Marco cfg-pagina (D-516).
 $accent: $cfg-accent;
+$accent-ink: $cfg-accent-ink;
 $ink: $cfg-ink;
 $muted: $cfg-muted;
 $line: $cfg-line;
@@ -36,30 +37,30 @@ $line: $cfg-line;
 
 .ca-segmented {
   display: inline-flex;
-  background: #f5f4fa;
-  border: 1px solid #e9e7f3;
+  background: var(--ds-chip-bg);
+  border: 1px solid var(--ds-control-border);
   border-radius: 10px;
   padding: 3px;
 
   button {
     border: 0;
     background: transparent;
-    color: #5b5878;
+    color: var(--ds-body);
     font-weight: 700;
     font-size: 12.5px;
     padding: 6px 12px;
     border-radius: 8px;
     cursor: pointer;
 
-    &.is-active { background: #fff; color: $accent; box-shadow: 0 2px 8px rgba(95, 63, 224, 0.12); }
+    &.is-active { background: var(--ds-surface); color: $accent-ink; box-shadow: 0 2px 8px rgba(95, 63, 224, 0.12); }
   }
 }
 
 .ca-btn {
   border-radius: 11px;
-  border: 1px solid #e4e2ef;
-  background: #fff;
-  color: #5b5878;
+  border: 1px solid var(--ds-line-strong);
+  background: var(--ds-surface);
+  color: var(--ds-body);
   font-weight: 700;
   font-size: 13px;
   padding: 8px 14px;
@@ -69,11 +70,11 @@ $line: $cfg-line;
   cursor: pointer;
   transition: background 0.15s ease;
 
-  &:hover { background: #faf9ff; color: $accent; }
+  &:hover { background: var(--ds-row-hover); color: $accent-ink; }
 
   &.is-primary {
     background: $accent;
-    border-color: $accent;
+    border-color: $accent-ink;
     color: #fff;
     box-shadow: 0 6px 16px rgba(95, 63, 224, 0.22);
     &:hover { background: #4a2fc0; color: #fff; }
@@ -102,7 +103,7 @@ $line: $cfg-line;
 }
 
 .ca-stat {
-  background: #faf9fe;
+  background: var(--ds-surface-2);
   border: 1px solid #eeecf7;
   border-radius: 14px;
   padding: 14px 16px;
@@ -113,7 +114,7 @@ $line: $cfg-line;
 
   &:hover { transform: translateY(-1px); }
 
-  strong { font-size: 19px; font-weight: 800; color: $accent; }
+  strong { font-size: 19px; font-weight: 800; color: $accent-ink; }
   strong.is-danger { color: #D64545; }
   strong.is-warning { color: #D9820A; }
   small { font-size: 12px; color: $muted; }
@@ -123,7 +124,7 @@ $line: $cfg-line;
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  background: #fff;
+  background: var(--ds-surface);
   border: 1px solid #d9cffb;
   border-radius: 16px;
   padding: 14px 16px;
@@ -137,8 +138,8 @@ $line: $cfg-line;
   width: 34px;
   height: 34px;
   border-radius: 11px;
-  background: #efe9ff;
-  color: $accent;
+  background: var(--ds-accent-soft);
+  color: $accent-ink;
   display: inline-flex;
   align-items: center;
   justify-content: center;
