@@ -3,10 +3,10 @@
 @import '../../../../shared/styles/config-pagina';
 @include config-pagina;
 
-$accent: #5F3FE0;
-$ink: #211F3A;
-$muted: #8f8bab;
-$line: #ececf4;
+$accent: var(--ds-accent-ink); // solo texto y borde (D-502)
+$ink: var(--ds-ink);
+$muted: var(--ds-muted);
+$line: var(--ds-line);
 
 .corporativos-pagina {
   min-width: 0;
@@ -44,8 +44,8 @@ $line: #ececf4;
       width: 320px;
       max-width: 100%;
       min-height: 40px;
-      background: #f5f4fa;
-      border: 1px solid #e9e7f3;
+      background: var(--ds-chip-bg);
+      border: 1px solid var(--ds-control-border);
       border-radius: 10px;
       padding-left: 2.4rem !important;
     }
@@ -59,7 +59,7 @@ $line: #ececf4;
 
   .chip {
     border: 1px solid $line;
-    background: #fff;
+    background: var(--ds-surface);
     color: $muted;
     border-radius: 20px;
     padding: 0.3rem 0.85rem;
@@ -70,7 +70,7 @@ $line: #ececf4;
 
     &:hover { border-color: $accent; color: $accent; }
     &.active {
-      background: #efe9ff;
+      background: var(--ds-accent-soft);
       border-color: #ddd3fb;
       color: $accent;
     }
@@ -83,7 +83,7 @@ $line: #ececf4;
     font-size: 0.68rem;
     font-weight: 700;
     color: $accent;
-    background: #efe9ff;
+    background: var(--ds-accent-soft);
     border-radius: 20px;
     padding: 0.05rem 0.35rem;
     margin-right: 0.35rem;
@@ -104,9 +104,9 @@ $line: #ececf4;
   .tag {
     display: inline-block;
     font-size: 0.72rem;
-    background: #f5f4fa;
+    background: var(--ds-chip-bg);
     color: $ink;
-    border: 1px solid #e9e7f3;
+    border: 1px solid var(--ds-control-border);
     border-radius: 20px;
     padding: 0.1rem 0.45rem;
     margin: 0.1rem 0.15rem 0.1rem 0;
@@ -118,14 +118,14 @@ $line: #ececf4;
     font-weight: 800;
     letter-spacing: .4px;
     text-transform: uppercase;
-    color: #1E874B;
-    background: #E6F7EE;
+    color: var(--ds-ok);
+    background: var(--ds-ok-soft);
     border-radius: 20px;
     padding: 3px 10px;
 
     &.bloqueado {
-      color: #D64545;
-      background: #FDECEC;
+      color: var(--ds-err);
+      background: var(--ds-err-soft);
     }
   }
 
@@ -153,19 +153,19 @@ $line: #ececf4;
 
       &.btn-action-info {
         color: $accent;
-        &:hover { background-color: #efe9ff; }
+        &:hover { background-color: var(--ds-accent-soft); }
       }
       &.btn-action-danger {
-        color: #D64545;
-        &:hover { background-color: #FDECEC; }
+        color: var(--ds-err);
+        &:hover { background-color: var(--ds-err-soft); }
       }
       &.btn-action-warn {
-        color: #D9820A;
-        &:hover { background-color: #FFF1DF; }
+        color: var(--ds-warn);
+        &:hover { background-color: var(--ds-warn-soft); }
       }
       &.btn-action-success {
-        color: #1E874B;
-        &:hover { background-color: #E6F7EE; }
+        color: var(--ds-ok);
+        &:hover { background-color: var(--ds-ok-soft); }
       }
     }
   }

@@ -3,18 +3,6 @@
 @import '../../../../../shared/styles/config-pagina';
 @include config-pagina;
 
-$fpos-accent: #5F3FE0;
-$fpos-accent-2: #7C5CFF;
-$fpos-accent-soft: #efe9ff;
-$fpos-ink: #211F3A;
-$fpos-body: #5b5878;
-$fpos-muted: #8f8bab;
-$fpos-line: #ececf4;
-$fpos-chip-bg: #f5f4fa;
-$fpos-chip-border: #e9e7f3;
-$fpos-tint: #faf9fe;
-$fpos-err: #D64545;
-
 .fpos-pagina {
   max-width: 1040px;
   margin: 0 auto;
@@ -27,11 +15,11 @@ $fpos-err: #D64545;
   align-items: center;
   gap: 4px;
 
-  i { color: $fpos-muted; font-size: 13px; }
+  i { color: var(--ds-muted); font-size: 13px; }
 
   &.required::after {
     content: " *";
-    color: $fpos-err;
+    color: var(--ds-err);
     font-weight: 800;
   }
 }
@@ -41,11 +29,11 @@ $fpos-err: #D64545;
   flex-wrap: nowrap;
 
   .input-group-text {
-    background-color: $fpos-tint;
-    border: 1px solid $fpos-chip-border;
+    background-color: var(--ds-surface-2);
+    border: 1px solid var(--ds-control-border);
     border-right: none;
     border-radius: 10px 0 0 10px;
-    color: $fpos-muted;
+    color: var(--ds-muted);
     min-height: 40px;
 
     i { font-size: 14px; }
@@ -58,13 +46,13 @@ $fpos-err: #D64545;
 
     &::placeholder { color: #b3afc8; }
 
-    &.is-invalid { border-color: $fpos-err; }
+    &.is-invalid { border-color: var(--ds-err); }
   }
 
   &:focus-within .input-group-text {
-    border-color: $fpos-accent-2;
-    background-color: $fpos-accent-soft;
-    color: $fpos-accent;
+    border-color: var(--ds-focus);
+    background-color: var(--ds-accent-soft);
+    color: var(--ds-accent-ink);
   }
 }
 
@@ -77,13 +65,13 @@ $fpos-err: #D64545;
 // ── Estado activo (switch) ──
 .fpos-estado {
   padding: 14px 16px;
-  background: $fpos-tint;
-  border: 1px solid $fpos-line;
+  background: var(--ds-surface-2);
+  border: 1px solid var(--ds-line);
   border-radius: 11px;
 
   .form-check-input {
     cursor: pointer;
-    &:checked { background-color: $fpos-accent; border-color: $fpos-accent; }
+    &:checked { background-color: var(--ds-accent); border-color: var(--ds-accent); }
     &:focus { box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
   }
 
@@ -91,11 +79,11 @@ $fpos-err: #D64545;
     text-transform: none;
     font-size: 13.5px;
     letter-spacing: normal;
-    color: $fpos-ink;
+    color: var(--ds-ink);
     margin: 0;
     cursor: pointer;
 
-    i { color: $fpos-accent; margin-right: 4px; }
+    i { color: var(--ds-accent-ink); margin-right: 4px; }
   }
 }
 
@@ -104,14 +92,14 @@ $fpos-err: #D64545;
   display: block !important;
   font-size: 12px;
   font-weight: 600;
-  color: $fpos-err;
+  color: var(--ds-err);
   margin-top: 6px;
 }
 
 .text-muted {
   display: block;
   font-size: 12px;
-  color: $fpos-muted !important;
+  color: var(--ds-muted) !important;
   margin-top: 4px;
   letter-spacing: normal;
 }
@@ -132,34 +120,4 @@ $fpos-err: #D64545;
   }
 
   .fpos-pie .cfg-btn { flex: 1 1 100%; }
-}
-
-// ── Modo oscuro: sigue el botón de Katuq, no el sistema operativo (D-502) ──
-:host-context(body.dark-only) {
-  .cfg-cabeza,
-  .cfg-card {
-    background-color: #2d3748;
-    border-color: #4a5568;
-    color: #e2e8f0;
-  }
-
-  .cfg-titulo { color: #e2e8f0; }
-
-  .form-control,
-  .form-select {
-    background-color: #4a5568;
-    border-color: #4a5568;
-    color: #e2e8f0;
-
-    &::placeholder { color: #a0aec0; }
-  }
-
-  .input-group-text,
-  .fpos-estado {
-    background-color: #4a5568;
-    border-color: #4a5568;
-    color: #a0aec0;
-  }
-
-  .fpos-estado .form-check-label { color: #e2e8f0; }
 }

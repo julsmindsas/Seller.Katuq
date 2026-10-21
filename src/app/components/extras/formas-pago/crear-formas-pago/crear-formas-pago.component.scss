@@ -3,11 +3,11 @@
 @include config-pagina;
 
 .cfg-form .form-group { margin-bottom: 14px; }
-.cfg-ayuda { color: #5F3FE0; cursor: pointer; font-size: 13px; }
+.cfg-ayuda { color: var(--ds-accent-ink); cursor: pointer; font-size: 13px; }
 
 input[type="checkbox"] {
     transform: scale(2);
-    accent-color: #5F3FE0;
+    accent-color: var(--ds-accent);
   }
 
 // Ticket 1215: forma de pago disponible en la tienda web.
@@ -19,4 +19,4 @@ input[type="checkbox"] {
   gap: 6px 8px;
   label { margin: 0; font-weight: 700; }
 }
-.web-pago-ayuda { display: block; width: 100%; font-size: 12px; color: #8f8bab; letter-spacing: normal; }
+.web-pago-ayuda { display: block; width: 100%; font-size: 12px; color: var(--ds-muted); letter-spacing: normal; }
