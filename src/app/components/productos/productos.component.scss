@@ -179,7 +179,7 @@ $pk-warning-soft: #FFF1DF;
 }
 
 .pk-btn-outline {
-    background: #fff;
+    background: var(--ds-surface);
     color: $pk-text-mid;
     border-color: $pk-border-2;
 
@@ -198,7 +198,7 @@ $pk-warning-soft: #FFF1DF;
     width: 40px;
     height: 40px;
     border-radius: 11px;
-    background: #fff;
+    background: var(--ds-surface);
     border: 1px solid $pk-border-2;
     color: $pk-accent;
     display: inline-flex;
@@ -468,7 +468,7 @@ $fs-active-border: $pk-accent-border;
 
     // sobre el panel gris, los selects van blancos para distinguirse
     .fs-select:not(.fs-active):not(.fs-active-sub) {
-        background: #fff;
+        background: var(--ds-surface);
         border-color: $pk-border-2;
     }
 }
@@ -525,7 +525,7 @@ $fs-active-border: $pk-accent-border;
     font-weight: 700;
     border: 1px solid $pk-border-2;
     border-radius: $fs-radius;
-    background: #fff;
+    background: var(--ds-surface);
     color: $pk-text-mid;
     cursor: pointer;
     white-space: nowrap;
@@ -568,7 +568,7 @@ $fs-active-border: $pk-accent-border;
     font-weight: 700;
     border: 1px solid $pk-danger-border;
     border-radius: $fs-radius;
-    background: #fff;
+    background: var(--ds-surface);
     color: $pk-danger;
     cursor: pointer;
     white-space: nowrap;
@@ -591,7 +591,7 @@ $fs-active-border: $pk-accent-border;
     font-size: $fs-font;
     border: 1px solid $fs-border;
     border-radius: $fs-radius;
-    background: #fff;
+    background: var(--ds-surface);
     padding: 0 8px;
     text-align: right;
     &:focus {
@@ -677,7 +677,7 @@ $fs-active-border: $pk-accent-border;
     font-size: 0.8rem;
     border: 1px solid $pk-border-2;
     border-radius: 9px;
-    background: #fff;
+    background: var(--ds-surface);
     color: $pk-accent;
     cursor: pointer;
     &:hover { background: $pk-accent-soft; border-color: $pk-accent-border; }
@@ -732,13 +732,13 @@ $fs-active-border: $pk-accent-border;
 
 .pk-btn-sm-success   { background: $pk-success-soft; color: $pk-success; border-color: #bfe8d0; &:hover:not(:disabled) { background: #d3f0e0; } }
 .pk-btn-sm-danger    { background: $pk-danger; color: #fff; &:hover:not(:disabled) { background: #c93b33; } }
-.pk-btn-sm-danger-outline { background: #fff; color: $pk-danger; border-color: $pk-danger-border; &:hover:not(:disabled) { background: $pk-danger-soft; } }
+.pk-btn-sm-danger-outline { background: var(--ds-surface); color: $pk-danger; border-color: $pk-danger-border; &:hover:not(:disabled) { background: $pk-danger-soft; } }
 .pk-btn-sm-info      { background: $pk-info-soft; color: $pk-info; border-color: #c4e6f2; &:hover:not(:disabled) { background: #d6eef7; } }
 .pk-btn-sm-muted     { background: #F1F2F5; color: $pk-text-mid; border-color: $pk-border-2; &:hover:not(:disabled) { background: #e7e8ee; } }
-.pk-btn-sm-ghost     { background: #fff; color: $pk-text-mid; border-color: $pk-border-2; &:hover:not(:disabled) { background: $pk-bg-soft; } }
+.pk-btn-sm-ghost     { background: var(--ds-surface); color: $pk-text-mid; border-color: $pk-border-2; &:hover:not(:disabled) { background: $pk-bg-soft; } }
 
 // D-501: entradas a «Uniformar fotos»; el reset global quita el outline del foco.
-.fu-entrada:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+.fu-entrada:focus-visible { outline: 3px solid var(--ds-focus) !important; outline-offset: 2px; }
 
 // ====================================================
 // PILLS Y CHIPS DE LA TABLA
@@ -885,7 +885,7 @@ $fs-active-border: $pk-accent-border;
 // El menú se adjunta a <body> (container="body") → estilos globales
 ::ng-deep .pk-actions-menu {
     min-width: 188px;
-    border: 1px solid #ececf4;
+    border: 1px solid var(--ds-line);
     border-radius: 14px;
     box-shadow: 0 12px 32px rgba(30, 35, 60, 0.16);
     padding: 6px;
@@ -899,27 +899,27 @@ $fs-active-border: $pk-accent-border;
         padding: 9px 12px;
         font-weight: 700;
         font-size: 0.85rem;
-        color: #5b5878;
+        color: var(--ds-body);
 
         i { font-size: 0.85rem; }
 
-        &:hover { background: #faf9fe; color: #5F3FE0; }
+        &:hover { background: var(--ds-surface-2); color: var(--ds-accent-ink); }
 
         &.pk-item-danger {
-            color: #D64545;
-            i { color: #D64545; }
-            &:hover { background: #FDECEC; color: #D64545; }
+            color: var(--ds-err);
+            i { color: var(--ds-err); }
+            &:hover { background: var(--ds-err-soft); color: var(--ds-err); }
         }
     }
 
     .dropdown-divider {
         margin: 4px 6px;
-        border-color: #f1f0f7;
+        border-color: var(--ds-line-soft);
     }
 
-    .pk-ico-accent { color: #5F3FE0; }
-    .pk-ico-success { color: #1E874B; }
-    .pk-ico-info { color: #1E6FD9; }
+    .pk-ico-accent { color: var(--ds-accent-ink); }
+    .pk-ico-success { color: var(--ds-ok); }
+    .pk-ico-info { color: var(--ds-info); }
 }
 
 // ====================================================
@@ -1003,7 +1003,7 @@ $fs-active-border: $pk-accent-border;
             margin: 0 3px;
             border-radius: 9px;
             border: 1px solid $pk-border-2;
-            background: #fff;
+            background: var(--ds-surface);
             color: $pk-text-mid;
             font-weight: 700;
             font-size: 0.82rem;

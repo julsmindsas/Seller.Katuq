@@ -42,7 +42,7 @@
 }
 
 .lite-panel {
-  background: #fff;
+  background: var(--ds-surface);
   border: 1px solid var(--k-line);
   border-radius: 16px;
   box-shadow: var(--k-shadow-panel);
@@ -150,7 +150,7 @@
   }
 
   &--ghost {
-    background: #fff;
+    background: var(--ds-surface);
     color: var(--k-ink);
     border-color: var(--k-chip-border);
 
@@ -231,7 +231,7 @@
 
   &:focus {
     border-color: var(--k-accent);
-    background: #fff;
+    background: var(--ds-surface);
     box-shadow: 0 0 0 3px rgba(95, 63, 224, .12);
     outline: none;
   }
@@ -671,7 +671,7 @@ textarea.lite-input { resize: vertical; }
 }
 
 .lite-kai .lite-input {
-  background: #fff;
+  background: var(--ds-surface);
   border-color: #ded4ff;
 }
 
@@ -708,7 +708,7 @@ textarea.lite-input { resize: vertical; }
 // Lo que la foto sugirió y el formulario no tiene dónde mostrar.
 .lite-foto__resumen {
   align-items: flex-start;
-  background: #fff;
+  background: var(--ds-surface);
   border-color: #ded4ff;
   color: var(--k-ink);
   line-height: 1.55;
@@ -725,18 +725,18 @@ textarea.lite-input { resize: vertical; }
   appearance: none;
   min-height: 38px;
   padding: 0 16px;
-  border: 1px solid #e9e7f3;
+  border: 1px solid var(--ds-control-border);
   border-radius: 11px;
-  background: #fff;
-  color: #211F3A;
+  background: var(--ds-surface);
+  color: var(--ds-ink);
   font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
 
-  &:hover { border-color: #5F3FE0; color: #5F3FE0; }
-  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  &:hover { border-color: var(--ds-accent-ink); color: var(--ds-accent-ink); }
+  &:focus-visible { outline: 3px solid var(--ds-focus) !important; outline-offset: 2px; }
 
-  &.lite-tipo__opcion--activa { background: #5F3FE0; border-color: #5F3FE0; color: #fff; }
+  &.lite-tipo__opcion--activa { background: var(--ds-accent); border-color: var(--ds-accent-ink); color: #fff; }
 }
 
 .lite-tipo__txt { color: inherit !important; font-size: inherit; letter-spacing: normal; }
