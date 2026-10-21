@@ -23,7 +23,8 @@
  *   claveInexistenteAbierta  lo mismo que claveInexistente fuera de los módulos cerrados: D3
  *                       mantiene las claves literales antiguas hasta que se migra su módulo
  *   igualAlEspanol      valor de en/pt/de igual al de `es`, salvo que sea solo nombres propios
- *                       (`nombresPropios`) o valores de `igualesPermitidos` (todos o por idioma)
+ *                       (`nombresPropios`) y siglas de `igualesPermitidos.todos` (por palabra), o
+ *                       que el valor completo esté en `igualesPermitidos.<idioma>` (IDI-B00d)
  *   claveSobrante       clave de en/pt/de que no está en `es`
  *   claveSinUso         clave de `es` que no aparece en el código (ni como literal ni por un
  *                       prefijo dinámico permitido)
@@ -125,23 +126,33 @@ function textoVisible(s) {
 
 const escaparRegex = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-/** Verdadero si, quitando las frases dadas (enteras, sin distinguir mayúsculas), no quedan letras. */
-function soloFrases(frases) {
+/** Texto visible sin las frases dadas (enteras, sin distinguir mayúsculas). */
+function quitarFrases(frases) {
   const lista = [...new Set(frases.map(f => String(f).trim()).filter(Boolean))].sort((a, b) => b.length - a.length);
   const re = lista.length
     ? new RegExp(`(?<![\\p{L}\\p{N}])(?:${lista.map(escaparRegex).join('|')})(?![\\p{L}\\p{N}])`, 'giu')
     : null;
   return texto => {
     const visible = textoVisible(texto);
-    if (!tieneLetra(visible)) return true;
-    return re ? !tieneLetra(visible.replace(re, ' ')) : false;
+    return re ? visible.replace(re, ' ') : visible;
   };
 }
 
+/** Verdadero si, quitando las frases dadas (enteras, sin distinguir mayúsculas), no quedan letras. */
+function soloFrases(frases) {
+  const quitar = quitarFrases(frases);
+  return texto => !tieneLetra(quitar(texto));
+}
+
+/** Solo letras en minúscula y espacios simples: «Documento:» y «documento» son iguales. */
+const soloLetras = t => String(t).replace(/[^\p{L}]+/gu, ' ').trim().toLowerCase();
+
 /**
  * Dos listas separadas (hallazgo de la corrección de IDI-B00c):
- * - `iguales(texto, idioma)`: el valor traducido puede ser igual al español (nombres propios,
- *   `igualesPermitidos` para todos o por idioma).
+ * - `iguales(texto, idioma)`: el valor traducido puede ser igual al español. `nombresPropios` e
+ *   `igualesPermitidos.todos` (siglas, formatos) se quitan por palabra; `igualesPermitidos.<idioma>`
+ *   (cognados) solo vale si es el valor completo, para que una palabra corta («de», «Tipo») no
+ *   silencie frases enteras que siguen en español (corrección de IDI-B00d).
  * - `ignorado(texto)`: un texto suelto no necesita traductor (sin letras, solo nombres propios o
  *   en `textosIgnorados`). Los cognados de `igualesPermitidos` no lo silencian.
  */
@@ -150,15 +161,22 @@ function crearPermitidos(config) {
   const ip = config.igualesPermitidos || [];
   const igualesTodos = Array.isArray(ip) ? ip : (ip.todos || []);
   const porIdioma = Array.isArray(ip) ? {} : ip;
-  const igualesDe = {};
-  const igualesPara = idioma => {
-    if (!igualesDe[idioma]) igualesDe[idioma] = soloFrases([...propios, ...igualesTodos, ...(porIdioma[idioma] || [])]);
-    return igualesDe[idioma];
+  const sinSiglas = quitarFrases([...propios, ...igualesTodos]);
+  const completosDe = {};
+  const completosPara = idioma => {
+    if (!completosDe[idioma]) completosDe[idioma] = new Set((porIdioma[idioma] || []).map(f => soloLetras(sinSiglas(f))));
+    return completosDe[idioma];
+  };
+  // Se quitan nombres propios y siglas por palabra; lo que queda debe ser vacío o, entero, un
+  // cognado de la lista del idioma («Formato JSON» queda «formato»; «Error 404», «error»).
+  const iguales = (texto, idioma) => {
+    const resto = soloLetras(sinSiglas(texto));
+    return !resto || completosPara(idioma).has(resto);
   };
   const soloPropios = soloFrases(propios);
   const exactos = new Set((config.textosIgnorados || []).map(t => t.trim().toLowerCase()));
   return {
-    iguales: (texto, idioma) => igualesPara(idioma)(texto),
+    iguales,
     ignorado: texto => exactos.has(String(texto).trim().toLowerCase()) || soloPropios(texto),
   };
 }

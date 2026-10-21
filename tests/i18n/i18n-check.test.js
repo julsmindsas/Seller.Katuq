@@ -298,6 +298,33 @@ test('mientras de.json no exista, su falta es un aviso y no un error', () => {
   assert.equal(correr('sin-de').status, 0);
 });
 
+test('igualesPermitidos.<idioma> vale para el valor completo; las siglas de todos, por palabra (IDI-B00d)', () => {
+  // Un cognado corto de la lista («de», «Pedidos», «Valor») no silencia una frase que sigue en
+  // español; las siglas de igualesPermitidos.todos sí se quitan por palabra («Formato JSON»).
+  const os = require('node:os');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'i18n-iguales-'));
+  try {
+    const dic = path.join(dir, 'src/assets/i18n');
+    fs.mkdirSync(dic, { recursive: true });
+    fs.mkdirSync(path.join(dir, 'src/app'), { recursive: true });
+    const es = {
+      'Pedidos': 'Pedidos', 'de': 'de', 'Valor': 'Valor', 'Valor de Pedidos': 'Valor de Pedidos',
+      'Documento:': 'Documento:', 'Formato JSON': 'Formato JSON', 'Error 404': 'Error 404', 'IVA 19%:': 'IVA 19%:',
+    };
+    fs.writeFileSync(path.join(dic, 'es.json'), JSON.stringify(es, null, 4));
+    fs.writeFileSync(path.join(dic, 'pt.json'), JSON.stringify(es, null, 2));
+    const config = path.join(dir, 'config.json');
+    fs.writeFileSync(config, JSON.stringify({
+      idiomas: ['es', 'pt'],
+      igualesPermitidos: { todos: ['JSON'], pt: ['Pedidos', 'de', 'Valor', 'Documento', 'Formato', 'Error', 'IVA'] },
+    }));
+    const r = cargar().ejecutar({ raiz: dir, config });
+    assert.deepEqual(porTipo(r.avisos, 'igualAlEspanol').map(x => x.clave), ['Valor de Pedidos']);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 // ---------------------------------------------------------------- código de salida
 
 test('con errores la salida es 1', () => {
