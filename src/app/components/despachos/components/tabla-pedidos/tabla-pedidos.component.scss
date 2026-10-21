@@ -15,7 +15,7 @@ $border-radius: 6px;
 
   .p-datatable-header {
     padding: 0.25rem 0.5rem;
-    background-color: white;
+    background-color: var(--ds-surface);
     border-bottom: 1px solid #e5e5e5;
     min-height: auto;
   }
@@ -66,7 +66,7 @@ $border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
     padding: 0.625rem !important;
     min-width: 160px !important;
-    background: white !important;
+    background: var(--ds-surface) !important;
 
     .p-column-filter-constraint {
       padding: 0 !important;
@@ -199,7 +199,7 @@ $border-radius: 6px;
     .nested-table {
       margin-top: 0.5rem;
       margin-bottom: 1rem;
-      background: white;
+      background: var(--ds-surface);
       border: 1px solid #e0e0e0;
       border-radius: 4px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -400,7 +400,7 @@ $border-radius: 6px;
   height: 32px;
   border-radius: 50%;
   border: none;
-  background-color: #fff;
+  background-color: var(--ds-surface);
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
@@ -478,11 +478,11 @@ $border-radius: 6px;
     }
     
     &.p-button-info {
-      border-color: #5F3FE0 !important;
-      color: #5F3FE0 !important;
+      border-color: var(--ds-accent-ink) !important;
+      color: var(--ds-accent-ink) !important;
 
       &:hover {
-        background-color: #5F3FE0 !important;
+        background-color: var(--ds-accent) !important;
         color: white !important;
       }
     }
@@ -674,7 +674,7 @@ $border-radius: 6px;
     top: 100%;
     width: 200px;
     min-width: max-content;
-    background-color: #fff;
+    background-color: var(--ds-surface);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     border-radius: 6px;
     margin: 5px 0 0;
@@ -784,7 +784,7 @@ $border-radius: 6px;
     }
 
     .p-datatable-tbody > tr {
-      background: #ffffff !important;
+      background: var(--ds-surface) !important;
       border: 1px solid #e9ecef;
       border-radius: $border-radius;
       margin-bottom: 1rem;
@@ -877,7 +877,7 @@ $border-radius: 6px;
         width: 44px !important;   // ✅ WCAG 2.1 compliant (min 44x44px)
         height: 44px !important;  // ✅ WCAG 2.1 compliant
         border-radius: 50% !important;
-        background: #ffffff !important;
+        background: var(--ds-surface) !important;
         border: 1px solid #dee2e6 !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
         transition: all 0.2s ease !important;
@@ -943,7 +943,7 @@ $border-radius: 6px;
       padding: 0.75rem;
 
       .expanded-table {
-        background: #ffffff;
+        background: var(--ds-surface);
         border-radius: 6px;
         overflow: hidden;
         box-shadow: 0 1px 3px rgba(0,0,0,0.08);
@@ -999,12 +999,12 @@ $border-radius: 6px;
 
     // Primary button (Tracking) - SOLID COLOR, BETTER CONTRAST
     &.p-button-primary {
-      background: #5F3FE0 !important;
-      border: 1px solid #5F3FE0 !important;
+      background: var(--ds-accent) !important;
+      border: 1px solid var(--ds-accent-ink) !important;
       color: #ffffff !important; // Ensure white text for contrast
 
       &:hover:not(:disabled) {
-        background: #4a2fc0 !important;
+        background: var(--ds-accent-hover) !important;
         border-color: #4a2fc0 !important;
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(#5F3FE0, 0.25);
@@ -1017,8 +1017,8 @@ $border-radius: 6px;
       // Outlined variant
       &.p-button-outlined {
         background: transparent !important;
-        color: #5F3FE0 !important;
-        border: 1px solid #5F3FE0 !important;
+        color: var(--ds-accent-ink) !important;
+        border: 1px solid var(--ds-accent-ink) !important;
 
         &:hover:not(:disabled) {
           background: rgba(#5F3FE0, 0.08) !important;
@@ -1419,7 +1419,7 @@ $border-radius: 6px;
   box-shadow: none !important;
 
   &:focus {
-    border-color: #5F3FE0 !important;
+    border-color: var(--ds-accent-ink) !important;
     box-shadow: none !important;
   }
 }
@@ -1771,7 +1771,7 @@ $border-radius: 6px;
 
     &.p-highlight,
     &.p-highlight:hover {
-      background-color: #efe9ff !important;
+      background-color: var(--ds-accent-soft) !important;
     }
   }
 
@@ -1782,8 +1782,8 @@ $border-radius: 6px;
 
     &.p-highlight {
       border-radius: 6px !important;
-      background: #5F3FE0 !important;
-      border-color: #5F3FE0 !important;
+      background: var(--ds-accent) !important;
+      border-color: var(--ds-accent-ink) !important;
     }
   }
 
@@ -1804,8 +1804,8 @@ $border-radius: 6px;
       margin: 0 2px;
 
       &.p-highlight {
-        background: #5F3FE0 !important;
-        border-color: #5F3FE0 !important;
+        background: var(--ds-accent) !important;
+        border-color: var(--ds-accent-ink) !important;
         color: #fff !important;
         font-weight: 800;
       }
@@ -1821,10 +1821,10 @@ $border-radius: 6px;
     height: 30px !important;
     border-radius: 9px !important;
     background: $katuq-gray-100 !important;
-    color: #5F3FE0 !important;
+    color: var(--ds-accent-ink) !important;
 
     &:hover {
-      background: #efe9ff !important;
+      background: var(--ds-accent-soft) !important;
       color: #4a2fc0 !important;
     }
   }
@@ -1910,7 +1910,7 @@ $border-radius: 6px;
   height: 28px;
   min-width: 28px;
   border-radius: 50%;
-  background: #5F3FE0;
+  background: var(--ds-accent);
   color: #fff;
   font-weight: 800;
   font-size: 0.72rem;
@@ -1923,7 +1923,7 @@ $border-radius: 6px;
 // Se le da respiración y se alinean todos los controles a 40px, como el mockup.
 :host ::ng-deep .p-datatable-header {
   padding: 0 !important;                 // el padding real lo pone .table-header-actions
-  background: #fff !important;
+  background: var(--ds-surface) !important;
 }
 
 :host ::ng-deep .table-header-actions {
@@ -1955,14 +1955,14 @@ $border-radius: 6px;
     background-color: $katuq-gray-50 !important;
     border: 1px solid $katuq-gray-200 !important;
     border-radius: 12px !important;
-    color: #5F3FE0 !important;
+    color: var(--ds-accent-ink) !important;
 
     .p-button-icon {
       font-size: 1rem !important;
     }
 
     &:hover {
-      background-color: #efe9ff !important;
+      background-color: var(--ds-accent-soft) !important;
       border-color: #ddd3fb !important;
     }
   }
