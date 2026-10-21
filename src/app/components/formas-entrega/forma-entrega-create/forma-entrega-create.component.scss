@@ -2,11 +2,11 @@
 @import '../../../shared/styles/config-pagina';
 @include config-pagina;
 
-.fe-cabeza { border-bottom: 1px solid #ececf4; padding: 16px 20px; }
-.fe-titulo { margin: 0; font-size: 18px; font-weight: 800; color: #211F3A; letter-spacing: normal; }
-.fe-pie { border-top: 1px solid #f1f0f7; gap: 8px; padding: 12px 20px; }
-.modal-body { padding: 20px; color: #211F3A; }
-.cfg-ayuda { color: #5F3FE0; cursor: pointer; font-size: 13px; }
+.fe-cabeza { border-bottom: 1px solid var(--ds-line); padding: 16px 20px; }
+.fe-titulo { margin: 0; font-size: 18px; font-weight: 800; color: var(--ds-ink); letter-spacing: normal; }
+.fe-pie { border-top: 1px solid var(--ds-line-soft); gap: 8px; padding: 12px 20px; }
+.modal-body { padding: 20px; color: var(--ds-ink); }
+.cfg-ayuda { color: var(--ds-accent-ink); cursor: pointer; font-size: 13px; }
 .checkboxK { accent-color: #5F3FE0; width: 18px; height: 18px; }
 
 .fe-horarios { margin-top: 8px; }
@@ -24,16 +24,16 @@
 
   .table { margin: 0; }
   th {
-    background: #faf9fe;
-    color: #8f8bab;
+    background: var(--ds-surface-2);
+    color: var(--ds-muted);
     font-size: 10.5px;
     font-weight: 800;
     letter-spacing: .5px;
     text-transform: uppercase;
     padding: 12px 14px;
-    border-bottom: 1px solid #f1f0f7;
+    border-bottom: 1px solid var(--ds-line-soft);
   }
-  td { padding: 10px 14px; font-size: 13px; color: #211F3A; border-color: #f1f0f7; vertical-align: middle; }
+  td { padding: 10px 14px; font-size: 13px; color: var(--ds-ink); border-color: var(--ds-line-soft); vertical-align: middle; }
 }
 .fe-acciones { display: flex; gap: 6px; }
 .fe-icono {
@@ -41,14 +41,14 @@
   place-items: center;
   width: 34px;
   height: 34px;
-  border: 1px solid #e4e2ef;
+  border: 1px solid var(--ds-line-strong);
   border-radius: 11px;
-  background: #fff;
-  color: #5F3FE0;
+  background: var(--ds-surface);
+  color: var(--ds-accent-ink);
   cursor: pointer;
 
-  &:hover { background: #efe9ff; border-color: #ddd3fb; }
-  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  &:hover { background: var(--ds-accent-soft); border-color: #ddd3fb; }
+  &:focus-visible { outline: 3px solid var(--ds-focus) !important; outline-offset: 2px; }
 }
-.fe-icono--peligro { color: #D64545; &:hover { background: #FDECEC; border-color: #f3c9c9; } }
+.fe-icono--peligro { color: var(--ds-err); &:hover { background: var(--ds-err-soft); border-color: #f3c9c9; } }
 .modal-body p, .modal-body label, .modal-body span, .modal-body a { letter-spacing: normal; }

@@ -5,36 +5,36 @@
 .lh-filtro {
   width: 100% !important;
   min-height: 40px;
-  background-color: #f5f4fa;
-  border: 1px solid #e9e7f3;
+  background-color: var(--ds-chip-bg);
+  border: 1px solid var(--ds-control-border);
   border-radius: 10px;
-  color: #211F3A;
+  color: var(--ds-ink);
   font-size: 13.5px;
 
-  &:focus { background-color: #fff; border-color: #7C5CFF; box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
+  &:focus { background-color: var(--ds-surface); border-color: var(--ds-focus); box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
 }
 .lh-acciones { display: flex; justify-content: flex-end; align-items: flex-start; }
 .lh-tabla { overflow-x: auto; }
 .lh-excel { margin-top: 12px; }
-.lh-editar { font-size: 18px; margin-left: 10px; color: #5F3FE0; cursor: pointer; }
+.lh-editar { font-size: 18px; margin-left: 10px; color: var(--ds-accent-ink); cursor: pointer; }
 
 :host ::ng-deep .lh-tabla .ngx-datatable.bootstrap {
   border-radius: 11px;
   overflow: hidden;
 
   .datatable-header {
-    background: #faf9fe;
-    border-bottom: 1px solid #f1f0f7;
+    background: var(--ds-surface-2);
+    border-bottom: 1px solid var(--ds-line-soft);
 
     .datatable-header-cell, .datatable-header-cell-label {
-      color: #8f8bab;
+      color: var(--ds-muted);
       font-size: 10.5px;
       font-weight: 800;
       letter-spacing: .5px;
       text-transform: uppercase;
     }
   }
-  .datatable-body-row { border-color: #f1f0f7; color: #211F3A; font-size: 13px; }
-  .datatable-body-row:hover { background: #faf9ff; }
-  .datatable-footer { background: transparent; color: #8f8bab; }
+  .datatable-body-row { border-color: var(--ds-line-soft); color: var(--ds-ink); font-size: 13px; }
+  .datatable-body-row:hover { background: var(--ds-row-hover); }
+  .datatable-footer { background: transparent; color: var(--ds-muted); }
 }
