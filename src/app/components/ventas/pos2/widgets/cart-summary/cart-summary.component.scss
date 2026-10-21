@@ -110,7 +110,7 @@
 
 .common-search {
   .input-group-text {
-    background-color: #fff;
+    background-color: var(--ds-surface);
     border-right: none;
   }
   
@@ -173,6 +173,7 @@
 // Sin cambios de lógica — mismos bindings del carrito.
 // =============================================================================
 @import '../../../../../shared/styles/katuq-comercial';
+@import '../../pos-oscuro';
 
 :host {
   @include kc-tokens;
@@ -181,6 +182,7 @@
   min-height: 0;
   height: 100%;
 }
+:host-context(body.dark-only) { @include pos-kc-oscuro; }
 
 .card.cart-summary-sticky {
   display: flex;
@@ -191,7 +193,7 @@
   border: none;
   border-radius: 0;
   box-shadow: none;
-  background: #fff;
+  background: var(--ds-surface);
 
   > .card-header {
     flex-shrink: 0;
@@ -332,7 +334,7 @@
     width: 24px;
     height: 24px;
     border-radius: 7px;
-    background: #fff;
+    background: var(--ds-surface);
     border: none;
     color: var(--kc-accent);
     display: flex;
@@ -380,7 +382,7 @@
   background: #fbfcfe;
 
   .input-group-text {
-    background: #fff;
+    background: var(--ds-surface);
     border: 1px solid #e4e5ee;
     border-right: none;
     border-radius: 10px 0 0 10px;
