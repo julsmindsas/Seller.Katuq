@@ -13,7 +13,8 @@
   - *0.1 a 0.3:* aprobadas en bloque el 18-oct (CONTRACT, D-495 a D-503: «diseño, specs, tareas y valores por defecto»). Se marcan por D-518 T·3. Falta la anotación en el contrato con la fecha de la aprobación; la hace la sesión que edita el contrato (14.18).
 - [ ] 0.4 Exports reales (productos, inventario aparte si existe y clientes de Shopify; productos de WooCommerce), anonimizados como fixtures en `functions/tests/storeMigration/fixtures/`, solo en el backend privado y sin datos personales reales. **Éxito:** columnas reales anotadas en `design.md`. Bloquea 1.7, 4.1 y 8.1.
   - *Estado 2026-10-19:* sin exports reales. Hay fixtures **sintéticos** (productos e inventario de Shopify, export anterior con `Variant Inventory Qty` y productos de WooCommerce) armados con las columnas de la documentación pública, sin datos personales y sin clientes. Se reemplazan por los reales cuando lleguen.
-- [ ] 0.5 Verificar la tarea 3.2 de `banderas-por-comercio`. **Éxito:** estado anotado; sin cerrarla no se enciende nada.
+- [x] 0.5 Verificar la tarea 3.2 de `banderas-por-comercio`. **Éxito:** estado anotado; sin cerrarla no se enciende nada.
+  - *Estado (F530-R01, 2026-10-21):* verificada en el código, sin cerrar la tarea 3.2 de `banderas-por-comercio` (esa casilla sigue en su propio cambio). `services/companies/sanitizeCompanyUpdate.js` filtra por la raíz de la llave (`raizDeCampo`) y `quitarBanderas` se aplica en `createCompany` y `editCompany` de `controllers/companies.js`; `featureFlagsProtegidos`, `sanitizeCompanyUpdate` y `companyFeatureFlags` pasan. Nada se enciende por esto: `storeMigrationImport` sigue apagada.
 - [x] 0.6 Acordar con D-495 quién toca primero `categoriaTreeHelper.js` y el bloque de categorías. **Éxito:** orden anotado aquí.
   - *Orden (2026-10-19):* sin choque de archivos. D-495 toca `controllers/categorias.js`, `routers/categorias.js` y `createCategoria`. Este cambio toca `services/catalogImport/categoryAssignment.js` (nuevo) y el bloque de categorías de `importProducts` (3.1). Ninguno de los dos modifica `categoriaTreeHelper.js`; los dos lo usan tal como está.
 - [ ] 0.7 Concepto legal (Ley 1581) sobre el consentimiento traído de la tienda anterior. **Éxito:** queda en D-498; si dice que no, la fase 1b entra sin suscripciones (sale 9.2). Bloquea la sección 9.
@@ -95,14 +96,17 @@
 
 ## 10. Fase 1c: WooCommerce
 
-- [ ] 10.1 `readers/woocommerce.js` y su perfil en el front. Depende de 0.4 y 4.1. **Éxito:** 1.7 (Woo) en verde, sin cambios en las rutas.
+- [x] 10.1 `readers/woocommerce.js` y su perfil en el front. Depende de 0.4 y 4.1. **Éxito:** 1.7 (Woo) en verde, sin cambios en las rutas.
+  - *Estado (F530-R01, 2026-10-21):* cerrada con 14.13: lector de WooCommerce en el backend y perfil del front por tabla de alias, sin `if` por proveedor (vigilado por `tests/migracion`). Los encabezados en español siguen sin export real (0.4).
   - → D-518: el alcance pasa a la tarea 14.13 (`design-woocommerce.md`).
   - *Estado (F530-B09):* el lector de WooCommerce del backend está hecho y `wooProducts.test.js` pasa a verde (ver 14.13). Queda el perfil del front (F530-F01).
 
 ## 11. Revisión
 
-- [ ] 11.1 Revisión independiente (otra sesión o una persona) del diff del backend —aislamiento entre empresas, write-set, datos personales, concurrencia y repetición— y del front.
+- [x] 11.1 Revisión independiente (otra sesión o una persona) del diff del backend —aislamiento entre empresas, write-set, datos personales, concurrencia y repetición— y del front.
+  - *Estado (F530-R01, 2026-10-21):* revisión independiente hecha por otra sesión sobre el diff del backend y del front. Aislamiento entre empresas (toda lectura y escritura filtra por la empresa del token y los registros de lote se comparan con ella al leerlos), write-set (ningún archivo de `services/storeMigration` escribe `inventory`, `inventoryMovement` ni `InventoryLevel`; `katuq-product-upsert.action.js` e `importInventory` sin diff), datos personales (rastro solo con números; reporte y avisos sin correos ni teléfonos) y concurrencia y repetición (candado por empresa, lote terminado devuelto con `replayed`). Front: sin `HttpClient` directo, sin `console`, sin gradientes ni primarios prohibidos. No se editaron `sites.js`, `siteHtml.js` ni `siteTienda.js`. Sin hallazgos que bloqueen; las observaciones menores quedaron en los pendientes del bloque.
 - [ ] 11.2 En verde las pruebas 1.x y las existentes de onboarding, inventario, sitios, flows y suscripciones; el backend local reinicia sin errores; `openspec validate --strict` pasa si cambió algún documento.
+  - *Estado (F530-R01, 2026-10-21, parcial):* en verde todo `tests/storeMigration` (29 archivos), `tests/onboarding`, `tests/inventory` (contract tests de inventario e `importInventory`), `tests/sitios` (golden `pedidoTiendaCaracterizacion` idéntico), `tests/flows`, `tests/companies` y banderas, `tests/productos`, `tests/catalogImport` y `tests/shopify`; `node --check` limpio en todo archivo tocado; los módulos de rutas y controladores cargan con un Firestore sin credenciales; front: `tsc --noEmit -p tsconfig.app.json` sin errores y `tests/migracion` 88 de 88. **Fallos que ya estaban antes de este cambio** (comprobados contra el commit anterior al primer bloque): `onboarding/tiendaAlRegistrarse`, `sitios/carritoWhatsapp`, `sitios/tiendaEnUnPaso`, `flows/shopifyPrecioTachado`, `subscriptions/subscriptionBillingRetrySafety` y `companies/soloLectura`. Falta: arranque completo del backend (`index.js`, necesita credenciales), `openspec validate --strict` (la CLI no está instalada aquí), y no hay más prueba de suscripciones que la de `importStoreCustomers`.
 
 ## 12. FLORECER (la bandera la enciende Daniel)
 
@@ -115,6 +119,7 @@
 ## 13. Cierre
 
 - [ ] 13.1 Commit por repo, archivo por archivo, con el sello; registrar en D-498 la medición y los desvíos.
+  - *Estado (F530-R01):* commits locales por bloque en backend y front, sin push, con lista exacta de archivos. Falta el registro en D-498 (medición y desvíos), que hace quien edita `specs/CONTRACT.md`; sigue sin marcar.
 - [ ] 13.2 Encender comercio por comercio, nunca OH MY STORE. **Requisito:** la ficha sin `variantes[].cantidad` aprobada e implementada (pregunta 2). Si la medición cumple, pasa a `banderasEmpresaNueva`.
   - → D-518: ese requisito queda en este cambio como E3 (14.22), según la pregunta 18 de la ampliación.
 - [ ] 13.3 Retirar la bandera el 2027-03-31 (Artículo XII) y abrir las propuestas aparte: ficha sin `variantes[].cantidad`, borrado por `migrationId`, Wix y copia de fotos.
@@ -138,12 +143,15 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
 
 ### Arreglos sin diseño nuevo (después de 14.0a)
 
-- [ ] 14.1 `[P]` Pruebas primero (Artículo VIII) del lector:
+- [x] 14.1 `[P]` Pruebas primero (Artículo VIII) del lector:
+  - *Estado (F530-R01, 2026-10-21):* cubierta por `shopify-plantilla-oficial.csv` y las pruebas de `shopifyProducts.test.js` y `lectoresD518.test.js`, en verde.
   - la plantilla oficial de Shopify (pública, sin datos personales) entra como fixture `shopify-plantilla-oficial.csv`;
   - `shopifyProducts.test.js` suma: camiseta en un producto con 12 variantes; e-book partido en 3 por precio; perfume activo y fuera de la tienda web; el mismo catálogo con encabezados viejos da lo mismo.
   - **Éxito:** las nuevas en rojo; las de hoy, igual.
-- [ ] 14.2 Lector de Shopify con la tabla de alias (`readers/comun.js`, `readers/shopify.js`): códigos de barras con prefijo, `Status`, `Published on online store` y `format` en la simulación. Depende de 14.1. **Éxito:** 14.1 en verde; los fixtures sintéticos siguen en verde.
-- [ ] 14.21a `[P]` **Caracterización del mapeo de cantidades** (solo pruebas; antes de 14.3a, 14.13, 14.21b y del diff de 6.2): una tabla fija qué cantidad recibe `importInventory` en cada caso (Shopify actual y anterior, inventario aparte y Woo). **Éxito:** en verde con el código de hoy; los contract tests de inventario sin cambios.
+- [x] 14.2 Lector de Shopify con la tabla de alias (`readers/comun.js`, `readers/shopify.js`): códigos de barras con prefijo, `Status`, `Published on online store` y `format` en la simulación. Depende de 14.1. **Éxito:** 14.1 en verde; los fixtures sintéticos siguen en verde.
+  - *Estado (F530-R01, 2026-10-21):* lector de Shopify con tabla de alias en verde sobre los fixtures sintéticos y la plantilla oficial.
+- [x] 14.21a `[P]` **Caracterización del mapeo de cantidades** (solo pruebas; antes de 14.3a, 14.13, 14.21b y del diff de 6.2): una tabla fija qué cantidad recibe `importInventory` en cada caso (Shopify actual y anterior, inventario aparte y Woo). **Éxito:** en verde con el código de hoy; los contract tests de inventario sin cambios.
+  - *Estado (F530-R01, 2026-10-21):* `cantidadesMapeo.characterization.test.js` en verde; los contract tests de inventario sin cambios.
 - [x] 14.3a CSV de inventario de Shopify: alias `Option 1 Value`. Depende de 14.21a. **Éxito:** la unión por opciones funciona con los dos nombres y las cantidades de los fixtures no cambian.
 - [x] 14.14 **Diff aprobado (categorías).** `leerArbol` con `documentoQueEditaElMaestro` (A5). El dorado de `importProducts` suma varios documentos con y sin `categoryAttributes`. **Éxito:** sin la bandera, el dorado no cambia.
   - Hecho (2026-10-21, `feature/tickets-web`, sin desplegar; Daniel aprobó A5 y la pregunta 13 de D-495 con «aprobado todo»): `leerArbol` lee los documentos de la empresa y elige con `documentoQueEditaElMaestro` (la bandera solo se consulta si hay más de uno). `guardarArbol` guarda en una transacción que vuelve a leer el documento y repite las rutas del archivo sobre el árbol fresco, así no pisa lo que Maestros guardó en el intervalo; si el documento quedó ilegible o de otra empresa no escribe, e `importProducts` responde el mismo 409. Sin documento, `add` como siempre. Pruebas: `tests/storeMigration/categoriasArbolMaestro.test.js` (9, rojo antes del arreglo) y el dorado sin cambios (4).
@@ -157,9 +165,11 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
 
 ### Lo demás (después de 14.0)
 
-- [ ] 14.1b `[P]` `importStore.routes.contract` suma los códigos y las rutas de `contracts/import-store-api-d518.md` (incluidas `photos/pending`, `runId`, `pricesIncludeTax` y `taxClassMap`). **Éxito:** en rojo hasta sus tareas. _Parcial (F530-B01): RATE_LIMITED y WOO_INTEGRATION_ACTIVE en verde en `routes`/`Guard`; el resto en rojo declarado en `importStore.d518Pendiente.contract.test.js` con el bloque que lo cierra._
+- [x] 14.1b `[P]` `importStore.routes.contract` suma los códigos y las rutas de `contracts/import-store-api-d518.md` (incluidas `photos/pending`, `runId`, `pricesIncludeTax` y `taxClassMap`). **Éxito:** en rojo hasta sus tareas. _Parcial (F530-B01): RATE_LIMITED y WOO_INTEGRATION_ACTIVE en verde en `routes`/`Guard`; el resto en rojo declarado en `importStore.d518Pendiente.contract.test.js` con el bloque que lo cierra._
+  - *Estado (F530-R01, 2026-10-21):* las rutas y los códigos de `contracts/import-store-api-d518.md` están cubiertos: `importStore.d518Pendiente.contract.test.js` ya no tiene rojos declarados y `routes`, `Guard`, `Concurrency` y `noWrites` pasan.
 - [x] 14.3b Rechazo del export «Available» (`INVENTORY_FORMAT_UNSUPPORTED`), según la pregunta 9. **Éxito:** prueba con los dos formatos.
-- [ ] 14.4 IVA por producto (A2): lectores, `precioSinIvaDesdeConIva` con la tarifa del producto, `products.taxExempt`, clases de Woo (`zero-rate` al 0 %, `taxClassMap`, `TAX_CLASS_UNMAPPED`) y `pricesIncludeTax` (pregunta 17). **Éxito:** exento al 0 % con `precioUnitarioIva: "0"`; gravado con la tarifa elegida; con `pricesIncludeTax: false`, 50.000 al 19 % queda en 59.500; sin la respuesta y con gravados, `products` da 400.
+- [x] 14.4 IVA por producto (A2): lectores, `precioSinIvaDesdeConIva` con la tarifa del producto, `products.taxExempt`, clases de Woo (`zero-rate` al 0 %, `taxClassMap`, `TAX_CLASS_UNMAPPED`) y `pricesIncludeTax` (pregunta 17). **Éxito:** exento al 0 % con `precioUnitarioIva: "0"`; gravado con la tarifa elegida; con `pricesIncludeTax: false`, 50.000 al 19 % queda en 59.500; sin la respuesta y con gravados, `products` da 400.
+  - *Estado (F530-R01, 2026-10-21):* cubierto por `lectoresD518`, `migrationProduct`, `wooProducts`, `importStore.routes` y `importStoreDryRun.ampliada` (59.500 con `pricesIncludeTax: false`, exento en 0, `taxExempt` en la simulación y 400 sin la respuesta).
 - [x] 14.5 **Diff aprobado (productos).** Oferta en la lista Público (A3):
   - la simulación lee `tiposPrecios` con `active == true` (`offers.publicList`);
   - `nuevoProducto` y `actualizacionAcotada` arman la fila; en Shopify, el precio base según la pregunta 2;
@@ -187,10 +197,13 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
   - los campos del formulario del Seller, solo si la pregunta 6 los aprueba;
   - prueba: un título SEO no cambia la canónica.
   - **Éxito:** en verde.
-- [ ] 14.10 `[P]` Descripción limpia (N4) con `descripcionSegura` en los lectores. **Éxito:** la prueba 1.2 de la revisión privada en verde.
+- [x] 14.10 `[P]` Descripción limpia (N4) con `descripcionSegura` en los lectores. **Éxito:** la prueba 1.2 de la revisión privada en verde.
+  - *Estado (F530-R01, 2026-10-21):* la descripción se limpia en los dos lectores y se vuelve a comprobar en el producto; prueba con `<script>`, `onerror` e `<iframe>` en verde (`lectoresD518`, `shopifyProducts`, `migrationProduct`).
 - [x] 14.11 `[P]` Tope de 20 simulaciones cada 15 minutos por empresa (N5) en `routers/importStore.js`. **Éxito:** las pruebas 1.3 y 2.1 de la revisión privada en verde; con la bandera apagada sigue el 403.
-- [ ] 14.12 `[P]` Guarda `WOO_INTEGRATION_ACTIVE` (W1) en la simulación y en `products`, `photos`, `redirects` y `customers`. `importStoreGuard` suma los casos activa e inactiva. **Éxito:** en verde; nunca se lee `integration_secrets`. _Parcial (F530-B01): hecho en simulación, `products` y `redirects` (`revisarWoo` exportada); falta `photos` (F530-B10) y `customers` (F530-B15/B16)._
-- [ ] 14.13 Lector de WooCommerce (W2) y redirecciones probables (W3). Reemplaza la 10.1. Depende de 14.4 a 14.6 y de 14.21a.
+- [x] 14.12 `[P]` Guarda `WOO_INTEGRATION_ACTIVE` (W1) en la simulación y en `products`, `photos`, `redirects` y `customers`. `importStoreGuard` suma los casos activa e inactiva. **Éxito:** en verde; nunca se lee `integration_secrets`. _Parcial (F530-B01): hecho en simulación, `products` y `redirects` (`revisarWoo` exportada); falta `photos` (F530-B10) y `customers` (F530-B15/B16)._
+  - *Estado (F530-R01, 2026-10-21):* guarda presente en la simulación, `products`, `photos`, `redirects` y `customers`, con casos activa e inactiva; nunca se lee `integration_secrets`. La reversa de clientes (DELETE) no la aplica a propósito: solo quita lo que creó la propia importación (ver 9.3).
+- [x] 14.13 Lector de WooCommerce (W2) y redirecciones probables (W3). Reemplaza la 10.1. Depende de 14.4 a 14.6 y de 14.21a.
+  - *Estado (F530-R01, 2026-10-21):* backend y perfil del front hechos y en verde; falta repetir con exports reales (0.4). Con WooCommerce el front no envía todavía redirecciones de colecciones.
   - encabezados del wiki y en español (`UNKNOWN_FORMAT` si faltan las mínimas); `Published` con los valores del wiki;
   - la regla de `sanitize_title` («Men's Shirt» → `mens-shirt`) y la base de direcciones (`productBase`, `categoryBase`, `BASE_ASSUMED`).
   - **Éxito:** `wooProducts.test.js` ampliado en verde; perfil del front sin `if` por proveedor.
