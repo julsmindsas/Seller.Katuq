@@ -3,6 +3,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
+import { TranslateService } from '@ngx-translate/core';
 import { MetaInboxService } from '../../meta-inbox.service';
 import { MetaCanal, MetaPerfilContacto } from '../../models/meta-thread.model';
 
@@ -41,6 +42,7 @@ export class MetaContactPanelComponent implements OnChanges, OnDestroy {
   constructor(
     private servicio: MetaInboxService,
     private maestros: MaestroService,
+    private translate: TranslateService,
   ) {
     this.busqueda$
       .pipe(debounceTime(300), takeUntil(this.destroy$))
@@ -104,7 +106,7 @@ export class MetaContactPanelComponent implements OnChanges, OnDestroy {
       cliente?.nombre_completo ||
       cliente?.nombre ||
       cliente?.razon_social ||
-      'Cliente sin nombre'
+      this.translate.instant('notificaciones.meta.unnamedCustomer')
     );
   }
 

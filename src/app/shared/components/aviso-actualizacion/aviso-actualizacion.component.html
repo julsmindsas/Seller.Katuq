@@ -13,24 +13,24 @@
 
     <div class="act-texto">
       <div class="act-linea1">
-        <span class="act-version"><span class="act-version-pre">Actualización </span>{{ versionNueva }}</span>
-        <span class="act-badge">NUEVO</span>
+        <span class="act-version"><span class="act-version-pre">{{ 'shell.update.label' | translate }} </span>{{ versionNueva }}</span>
+        <span class="act-badge">{{ 'shell.update.badgeNew' | translate }}</span>
       </div>
-      <div class="act-linea2">Mejoras y correcciones nuevas</div>
+      <div class="act-linea2">{{ 'shell.update.summary' | translate }}</div>
     </div>
 
     <span class="act-sep"></span>
 
     <button type="button" class="act-notas-btn" *ngIf="notas.length" (click)="verNotas()">
-      {{ notasAbiertas ? 'Ocultar' : 'Ver notas' }}
+      {{ (notasAbiertas ? 'shell.update.hideNotes' : 'shell.update.showNotes') | translate }}
     </button>
 
     <button type="button" class="act-actualizar" (click)="actualizar()">
-      Actualizar
+      {{ 'shell.update.apply' | translate }}
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
     </button>
 
-    <button type="button" class="act-cerrar" title="Recordar más tarde" (click)="recordarLuego()">
+    <button type="button" class="act-cerrar" [title]="'shell.update.remindLater' | translate" (click)="recordarLuego()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
     </button>
   </ng-container>
@@ -40,20 +40,20 @@
     <span class="act-spin"></span>
     <div class="act-texto">
       <div class="act-linea1">
-        <span class="act-version">Actualizando a {{ versionNueva }}…</span>
+        <span class="act-version">{{ 'shell.update.applying' | translate: { version: versionNueva } }}</span>
       </div>
-      <div class="act-linea2">{{ pasoTexto }}</div>
+      <div class="act-linea2">{{ pasoTexto | translate }}</div>
     </div>
   </ng-container>
 
   <!-- Notas de la versión -->
   <div class="act-notas-pop" *ngIf="notasAbiertas && !aplicando">
     <div class="act-notas-head">
-      <span class="act-notas-titulo">Novedades de {{ versionNueva }}</span>
+      <span class="act-notas-titulo">{{ 'shell.update.notesTitle' | translate: { version: versionNueva } }}</span>
       <span class="act-notas-fecha" *ngIf="publicadaTexto">{{ publicadaTexto }}</span>
     </div>
     <div class="act-nota" *ngFor="let n of notas">
-      <span [ngClass]="claseEtiqueta(n.tipo)">{{ textoEtiqueta(n.tipo) }}</span>
+      <span [ngClass]="claseEtiqueta(n.tipo)">{{ textoEtiqueta(n.tipo) | translate }}</span>
       <span class="act-nota-texto">{{ n.texto }}</span>
     </div>
   </div>

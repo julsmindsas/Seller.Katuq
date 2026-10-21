@@ -4,6 +4,8 @@ import { Subject, of } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import { ReportsService } from '../../../shared/services/dashboard/reports.service';
 import { findSource } from '../model/source-catalog';
+import { TranslateService } from '@ngx-translate/core';
+import { traducirCatalogo } from '../model/catalog-i18n';
 import { ReportResult, SavedReport, SourceDef, VizType } from '../model/report-spec.interfaces';
 import { REPORT_PRESETS, ReportPreset } from './preset-reports';
 
@@ -31,7 +33,11 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
 
   presets: ReportPreset[] = REPORT_PRESETS;
 
-  constructor(private reportsService: ReportsService, private router: Router) {}
+  constructor(private reportsService: ReportsService, private router: Router, private translate: TranslateService) {}
+
+  cat(texto: string | undefined | null): string {
+    return traducirCatalogo(this.translate, texto);
+  }
 
   /**
    * Navega al builder con la spec del preset pre-cargada via query params.
@@ -50,7 +56,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((err) => {
-          this.loadError = err?.error?.message || 'No se pudo cargar la lista de reportes.';
+          this.loadError = err?.error?.message || 'dashboard.home.loadError';
           return of([] as SavedReport[]);
         }),
       )
@@ -86,7 +92,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((err) => {
-          this.previewError = err?.error?.error || err?.message || 'Error al ejecutar.';
+          this.previewError = err?.error?.error || err?.message || 'dashboard.home.runError';
           return of(null);
         }),
         finalize(() => (this.previewRunning = false)),

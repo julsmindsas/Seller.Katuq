@@ -1,5 +1,5 @@
 <div class="contact-panel" *ngIf="phoneHash; else emptyState">
-  <p *ngIf="loading" class="contact-panel__state">Cargando contacto…</p>
+  <p *ngIf="loading" class="contact-panel__state">{{ 'notificaciones.whatsapp.contact.loading' | translate }}</p>
 
   <ng-container *ngIf="!loading && profile">
     <!-- Identidad -->
@@ -18,11 +18,11 @@
           [class.is-unverified]="!profile.isClienteRegistrado && !profile.hasOrderHistory"
         >
           {{
-            profile.isClienteRegistrado
-              ? "Cliente registrado"
+            (profile.isClienteRegistrado
+              ? 'notificaciones.whatsapp.contact.registered'
               : profile.hasOrderHistory
-                ? "Cliente con pedidos"
-                : "No verificado"
+                ? 'notificaciones.whatsapp.contact.withOrders'
+                : 'notificaciones.whatsapp.contact.unverified') | translate
           }}
         </span>
       </div>
@@ -30,26 +30,26 @@
 
     <!-- Este cliente: indicadores (mockup) -->
     <section class="contact-panel__section">
-      <h5 class="contact-panel__label">Este cliente</h5>
+      <h5 class="contact-panel__label">{{ 'notificaciones.whatsapp.contact.thisCustomer' | translate }}</h5>
       <div class="contact-panel__stats">
         <div class="contact-panel__stat">
           <span class="contact-panel__stat-icon is-green"><i class="fa fa-usd" aria-hidden="true"></i></span>
           <div class="contact-panel__stat-info">
-            <span class="contact-panel__stat-label">Le has vendido</span>
+            <span class="contact-panel__stat-label">{{ 'notificaciones.whatsapp.contact.soldTotal' | translate }}</span>
             <strong>{{ totalVendido | currency: "COP" : "symbol-narrow" : "1.0-0" }}</strong>
           </div>
         </div>
         <div class="contact-panel__stat">
           <span class="contact-panel__stat-icon is-accent"><i class="fa fa-shopping-bag" aria-hidden="true"></i></span>
           <div class="contact-panel__stat-info">
-            <span class="contact-panel__stat-label">Pedidos hechos</span>
+            <span class="contact-panel__stat-label">{{ 'notificaciones.whatsapp.contact.ordersCount' | translate }}</span>
             <strong>{{ orders.length }}</strong>
           </div>
         </div>
         <div class="contact-panel__stat">
           <span class="contact-panel__stat-icon is-orange"><i class="fa fa-clock-o" aria-hidden="true"></i></span>
           <div class="contact-panel__stat-info">
-            <span class="contact-panel__stat-label">Última compra</span>
+            <span class="contact-panel__stat-label">{{ 'notificaciones.whatsapp.contact.lastPurchase' | translate }}</span>
             <strong>{{ ultimaCompraLabel }}</strong>
           </div>
         </div>
@@ -58,7 +58,7 @@
 
     <!-- Últimos pedidos -->
     <section class="contact-panel__section">
-      <h5 class="contact-panel__label">Últimos pedidos</h5>
+      <h5 class="contact-panel__label">{{ 'notificaciones.whatsapp.contact.lastOrders' | translate }}</h5>
 
       <div class="contact-panel__orders" *ngIf="visibleOrders.length > 0">
         <a
@@ -66,7 +66,7 @@
           class="contact-panel__order"
           [routerLink]="['/ventas/pedidos']"
           [queryParams]="orderQueryParams(order)"
-          [title]="'Abrir el pedido ' + order.nroPedido"
+          [title]="'notificaciones.whatsapp.contact.openOrder' | translate: { numero: order.nroPedido }"
         >
           <div class="contact-panel__order-top">
             <span class="contact-panel__order-num">{{ order.nroPedido }}</span>
@@ -96,16 +96,16 @@
         class="contact-panel__link contact-panel__link--full"
         [routerLink]="['/ventas/pedidos']"
         [queryParams]="allOrdersQueryParams"
-        title="Abrir el módulo de pedidos"
+        [title]="'notificaciones.whatsapp.contact.openOrdersModule' | translate"
       >
-        Ver todos los pedidos →
+        {{ 'notificaciones.whatsapp.contact.viewAllOrders' | translate }}
       </a>
 
       <p
         *ngIf="visibleOrders.length === 0"
         class="contact-panel__muted contact-panel__empty-line"
       >
-        Sin pedidos previos
+        {{ 'notificaciones.whatsapp.contact.noOrders' | translate }}
       </p>
     </section>
 
@@ -115,52 +115,52 @@
         *ngIf="profile.isClienteRegistrado"
         class="contact-panel__cta contact-panel__cta--ghost"
         [routerLink]="['/ventas/clienteslista']"
-        title="Ver ficha del cliente en el módulo de ventas"
+        [title]="'notificaciones.whatsapp.contact.viewCustomerTitle' | translate"
       >
-        Ver ficha del cliente
+        {{ 'notificaciones.whatsapp.contact.viewCustomer' | translate }}
       </a>
       <a
         *ngIf="hasLead && profile.lead?.id"
         class="contact-panel__link contact-panel__link--full"
         [routerLink]="['/katuq-flow/leads', profile.lead?.id]"
-        title="Abrir el lead en el CRM"
+        [title]="'notificaciones.whatsapp.contact.openLeadTitle' | translate"
       >
-        Abrir lead en CRM →
+        {{ 'notificaciones.whatsapp.contact.openLead' | translate }}
       </a>
 
       <!-- [D-098] Opt-out de marketing -->
       <div class="contact-panel__optout">
-        <span *ngIf="profile.optedOut" class="contact-panel__optout-badge">🚫 No contactar</span>
+        <span *ngIf="profile.optedOut" class="contact-panel__optout-badge">🚫 {{ 'notificaciones.whatsapp.contact.doNotContact' | translate }}</span>
         <button
           type="button"
           class="contact-panel__optout-btn"
           [class.is-active]="profile.optedOut"
           [disabled]="togglingOptOut"
           (click)="toggleOptOut()"
-          [title]="profile.optedOut ? 'Volver a permitir campañas y plantillas a este contacto' : 'Excluir a este contacto de campañas y plantillas'"
+          [title]="(profile.optedOut ? 'notificaciones.whatsapp.contact.allowAgainTitle' : 'notificaciones.whatsapp.contact.excludeTitle') | translate"
         >
-          <span *ngIf="togglingOptOut">Guardando…</span>
-          <span *ngIf="!togglingOptOut">{{ profile.optedOut ? 'Permitir mensajes de nuevo' : 'Marcar como "No contactar"' }}</span>
+          <span *ngIf="togglingOptOut">{{ 'notificaciones.whatsapp.contact.saving' | translate }}</span>
+          <span *ngIf="!togglingOptOut">{{ (profile.optedOut ? 'notificaciones.whatsapp.contact.allowAgain' : 'notificaciones.whatsapp.contact.markDoNotContact') | translate }}</span>
         </button>
       </div>
     </section>
 
     <!-- Lead CRM -->
     <section class="contact-panel__section">
-      <h5 class="contact-panel__label">Lead CRM</h5>
+      <h5 class="contact-panel__label">{{ 'notificaciones.whatsapp.contact.leadTitle' | translate }}</h5>
 
       <!-- Caso A: lead existente -->
       <div *ngIf="hasLead" class="contact-panel__lead">
         <p class="contact-panel__lead-name">{{ profile.lead?.name }}</p>
         <p class="contact-panel__muted">
-          Etapa: <strong>{{ profile.lead?.stage }}</strong>
+          {{ 'notificaciones.whatsapp.contact.stage' | translate }} <strong>{{ profile.lead?.stage }}</strong>
         </p>
         <p class="contact-panel__muted">
-          Owner: <strong>{{ profile.lead?.ownerName }}</strong>
+          {{ 'notificaciones.whatsapp.contact.owner' | translate }} <strong>{{ profile.lead?.ownerName }}</strong>
         </p>
 
         <div class="contact-panel__rating-block">
-          <span class="contact-panel__rating-label">Calificación:</span>
+          <span class="contact-panel__rating-label">{{ 'notificaciones.whatsapp.contact.rating' | translate }}</span>
           <div
             class="contact-panel__stars"
             (mouseleave)="onLeaveStars()"
@@ -195,7 +195,7 @@
           </span>
         </div>
         <p class="contact-panel__muted contact-panel__draft-note">
-          Calificación guardada, aún no se ha creado el Lead.
+          {{ 'notificaciones.whatsapp.contact.ratingDraft' | translate }}
         </p>
       </div>
 
@@ -210,7 +210,7 @@
           (click)="saveToCrm()"
           [disabled]="savingToCrm"
         >
-          {{ savingToCrm ? "Guardando..." : "Guardar en CRM" }}
+          {{ (savingToCrm ? 'notificaciones.whatsapp.contact.saving' : 'notificaciones.whatsapp.contact.saveToCrm') | translate }}
         </button>
 
         <div
@@ -229,7 +229,7 @@
         </div>
 
         <p class="contact-panel__muted contact-panel__draft-note">
-          Califica al contacto o guárdalo en CRM para enriquecer el perfil.
+          {{ 'notificaciones.whatsapp.contact.rateHint' | translate }}
         </p>
       </div>
     </section>
@@ -238,6 +238,6 @@
 
 <ng-template #emptyState>
   <div class="contact-panel__placeholder">
-    <p>Selecciona un hilo para ver el contacto.</p>
+    <p>{{ 'notificaciones.whatsapp.contact.selectThread' | translate }}</p>
   </div>
 </ng-template>

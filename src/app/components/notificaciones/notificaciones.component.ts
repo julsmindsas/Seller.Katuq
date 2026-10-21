@@ -4,6 +4,7 @@ import { takeUntil } from 'rxjs/operators';
 import { NotificationType } from '../../shared/services/notifications/notification.types';
 import { MaestroService } from '../../shared/services/maestros/maestro.service';
 import { ToastrService } from 'ngx-toastr';
+import { TranslateService } from '@ngx-translate/core';
 
 export interface NotificationPreferenceView {
   id: string;
@@ -41,8 +42,8 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
   public preferences: NotificationPreferenceView[] = [
     {
       id: 'order_created',
-      title: 'Pedido Confirmado',
-      description: 'Notifica al cliente cuando su pedido ha sido creado y confirmado exitosamente.',
+      title: 'notificaciones.prefs.orderCreated.title',
+      description: 'notificaciones.prefs.orderCreated.description',
       types: [
         NotificationType.ORDER_CREATED
       ],
@@ -50,8 +51,8 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
     },
     {
       id: 'payment_approved',
-      title: 'Pago Aprobado',
-      description: 'Notifica al cliente cuando su pago ha sido confirmado y aprobado.',
+      title: 'notificaciones.prefs.paymentApproved.title',
+      description: 'notificaciones.prefs.paymentApproved.description',
       types: [
         NotificationType.PAYMENT_APPROVED
       ],
@@ -59,8 +60,8 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
     },
     {
       id: 'order_produced',
-      title: 'Pedido Producido',
-      description: 'Notifica al cliente cuando su pedido ha completado el proceso de producción y está listo para despacho.',
+      title: 'notificaciones.prefs.orderProduced.title',
+      description: 'notificaciones.prefs.orderProduced.description',
       types: [
         NotificationType.PRODUCTION_COMPLETED
       ],
@@ -68,8 +69,8 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
     },
     {
       id: 'order_dispatched',
-      title: 'Pedido Despachado',
-      description: 'Notifica al cliente cuando su pedido ha sido despachado y está en camino a su dirección de entrega.',
+      title: 'notificaciones.prefs.orderDispatched.title',
+      description: 'notificaciones.prefs.orderDispatched.description',
       types: [
         NotificationType.ORDER_DISPATCHED
       ],
@@ -77,8 +78,8 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
     },
     {
       id: 'order_delivered',
-      title: 'Pedido Entregado',
-      description: 'Notifica al cliente cuando su pedido ha sido entregado exitosamente, incluyendo evidencia fotográfica.',
+      title: 'notificaciones.prefs.orderDelivered.title',
+      description: 'notificaciones.prefs.orderDelivered.description',
       types: [
         NotificationType.ORDER_DELIVERED
       ],
@@ -86,8 +87,8 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
     },
     {
       id: 'order_rejected',
-      title: 'Pedido Rechazado',
-      description: 'Notifica al cliente cuando su pedido no pudo ser procesado o fue rechazado.',
+      title: 'notificaciones.prefs.orderRejected.title',
+      description: 'notificaciones.prefs.orderRejected.description',
       types: [
         NotificationType.ORDER_PROCESS_REJECTED
       ],
@@ -97,7 +98,8 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
 
   constructor(
     private maestroService: MaestroService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private translate: TranslateService
   ) { }
 
   ngOnInit(): void {
@@ -205,16 +207,16 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
     const correo = (this.nuevoCorreoAviso || '').trim().toLowerCase();
     if (!correo || this.guardandoAvisos) return;
     if (!this.correoValido.test(correo)) {
-      this.toastr.warning('Escribe un correo completo, por ejemplo logistica@tuempresa.com.', 'Pedidos nuevos');
+      this.toastr.warning(this.translate.instant('notificaciones.teamAlerts.invalidEmail'), this.translate.instant('notificaciones.teamAlerts.toastTitle'));
       return;
     }
     if (this.avisosPedidoNuevo.includes(correo)) {
-      this.toastr.info('Ese correo ya está en la lista.', 'Pedidos nuevos');
+      this.toastr.info(this.translate.instant('notificaciones.teamAlerts.duplicate'), this.translate.instant('notificaciones.teamAlerts.toastTitle'));
       this.nuevoCorreoAviso = '';
       return;
     }
     if (this.avisosPedidoNuevo.length >= this.maxAvisos) {
-      this.toastr.warning(`Puedes avisar hasta a ${this.maxAvisos} personas. Quita una para agregar otra.`, 'Pedidos nuevos');
+      this.toastr.warning(this.translate.instant('notificaciones.teamAlerts.limit', { max: this.maxAvisos }), this.translate.instant('notificaciones.teamAlerts.toastTitle'));
       return;
     }
     const anterior = [...this.avisosPedidoNuevo];
@@ -242,12 +244,12 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.guardandoAvisos = false;
-          this.toastr.success('Lista guardada.', 'Pedidos nuevos');
+          this.toastr.success(this.translate.instant('notificaciones.teamAlerts.saved'), this.translate.instant('notificaciones.teamAlerts.toastTitle'));
         },
         error: () => {
           this.guardandoAvisos = false;
           this.avisosPedidoNuevo = anterior;
-          this.toastr.error('No se pudo guardar la lista. Intenta de nuevo.', 'Pedidos nuevos');
+          this.toastr.error(this.translate.instant('notificaciones.teamAlerts.saveError'), this.translate.instant('notificaciones.teamAlerts.toastTitle'));
         }
       });
   }
@@ -275,12 +277,12 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.isSaving = false;
-          this.toastr.success('Preferencias actualizadas', 'Notificaciones');
+          this.toastr.success(this.translate.instant('notificaciones.prefs.saved'), this.translate.instant('notificaciones.page.title'));
         },
         error: (err) => {
           this.isSaving = false;
           if (rollback) rollback();
-          this.toastr.error('Error al guardar preferencias', 'Notificaciones');
+          this.toastr.error(this.translate.instant('notificaciones.prefs.saveError'), this.translate.instant('notificaciones.page.title'));
           console.error('Error guardando preferencias:', err);
         }
       });

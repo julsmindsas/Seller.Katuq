@@ -7,6 +7,11 @@ const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 
 const modalTs = read('src/app/shared/components/upgrade-modal/upgrade-modal.component.ts');
 const modalHtml = read('src/app/shared/components/upgrade-modal/upgrade-modal.component.html');
+// D-532 (IDI-B01b): el modal de pago pasa sus textos por el traductor; el texto en español vive en
+// es.json bajo la clave que pide la plantilla (puede llevar variables alrededor).
+const esDic = JSON.parse(read('src/assets/i18n/es.json'));
+const muestraTexto = (html, texto) => html.includes(texto)
+  || Object.entries(esDic).some(([clave, valor]) => typeof valor === 'string' && valor.includes(texto) && html.includes(`'${clave}'`));
 const guard = read('src/app/shared/guards/subscription.guard.ts');
 const appRoutes = read('src/app/app-routing.module.ts');
 const childRoutes = read('src/app/shared/routes/routes.ts');
@@ -23,9 +28,9 @@ assert.ok(!modalHtml.includes('Omitir tarjeta'), 'la UI no debe ofrecer Premium 
 assert.ok(modalTs.includes('getPaymentStatus'), 'el modal debe esperar confirmación del webhook');
 assert.ok(modalHtml.includes("step === 'pending'"), 'la UI debe explicar el estado pendiente');
 assert.ok(modalTs.includes('initialAmountCOP'), 'el modal debe exponer el monto exacto calculado por backend');
-assert.ok(modalHtml.includes('Pago real con Wompi'), 'la UI debe advertir claramente cuando el cobro mueve dinero real');
-assert.ok(modalHtml.includes('No mueve dinero real'), 'la UI debe diferenciar Sandbox del ambiente productivo');
-assert.ok(modalHtml.includes('Correo para el comprobante') && modalHtml.includes('Aquí llegará el comprobante PDF'), 'el usuario debe elegir dónde recibir el comprobante');
+assert.ok(muestraTexto(modalHtml, 'Pago real con Wompi'), 'la UI debe advertir claramente cuando el cobro mueve dinero real');
+assert.ok(muestraTexto(modalHtml, 'No mueve dinero real'), 'la UI debe diferenciar Sandbox del ambiente productivo');
+assert.ok(muestraTexto(modalHtml, 'Correo para el comprobante') && muestraTexto(modalHtml, 'Aquí llegará el comprobante PDF'), 'el usuario debe elegir dónde recibir el comprobante');
 assert.ok(subscriptionService.includes('getPaymentConfig('), 'el frontend debe obtener del backend el ambiente público de Wompi');
 assert.ok(modalTs.includes("'https://sandbox.wompi.co/v1'"), 'sandbox debe estar permitido explícitamente');
 assert.ok(modalTs.includes("'https://production.wompi.co/v1'"), 'producción debe estar permitida explícitamente');

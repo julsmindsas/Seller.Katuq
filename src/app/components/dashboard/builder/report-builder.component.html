@@ -1,27 +1,27 @@
 <div class="builder-container">
   <!-- Toolbar -->
   <header class="builder-toolbar">
-    <button type="button" class="btn-icon" (click)="goHome()" title="Volver">
+    <button type="button" class="btn-icon" (click)="goHome()" [title]="'dashboard.common.back' | translate">
       <i class="fa fa-arrow-left"></i>
     </button>
 
     <!-- Título de la pantalla: mismo nombre que en el menú -->
-    <h1 class="builder-heading">Constructor de reportes</h1>
+    <h1 class="builder-heading">{{ 'dashboard.builder.title' | translate }}</h1>
 
-    <input type="text" class="title-input" [(ngModel)]="reportName" placeholder="Nombre del reporte" />
+    <input type="text" class="title-input" [(ngModel)]="reportName" [placeholder]="'dashboard.builder.namePlaceholder' | translate" />
 
     <div class="date-filter">
       <i class="fa fa-calendar date-icon"></i>
-      <input type="date" class="date-input" [(ngModel)]="dateFrom" title="Desde" />
+      <input type="date" class="date-input" [(ngModel)]="dateFrom" [title]="'dashboard.builder.from' | translate" />
       <span class="date-sep">—</span>
-      <input type="date" class="date-input" [(ngModel)]="dateTo" title="Hasta" />
+      <input type="date" class="date-input" [(ngModel)]="dateTo" [title]="'dashboard.builder.to' | translate" />
     </div>
 
     <!-- Comparativo (Harmony Lens punto 5) -->
-    <select class="date-input" [(ngModel)]="compareMode" title="Comparar contra">
-      <option value="none">Sin comparar</option>
-      <option value="prev_month">vs mes anterior</option>
-      <option value="prev_year">vs año anterior</option>
+    <select class="date-input" [(ngModel)]="compareMode" [title]="'dashboard.builder.compareTitle' | translate">
+      <option value="none">{{ 'dashboard.builder.compareNone' | translate }}</option>
+      <option value="prev_month">{{ 'dashboard.builder.comparePrevMonth' | translate }}</option>
+      <option value="prev_year">{{ 'dashboard.builder.comparePrevYear' | translate }}</option>
     </select>
 
     <span class="spacer"></span>
@@ -36,7 +36,7 @@
       <i class="fa fa-file-pdf"></i> PDF
     </button>
     <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="openShareModal()">
-      <i class="fa fa-users"></i> Compartir
+      <i class="fa fa-users"></i> {{ 'dashboard.builder.share' | translate }}
     </button>
     <button type="button"
       class="btn-publish"
@@ -44,38 +44,36 @@
       (click)="publish()"
       [disabled]="publishing">
       <i class="fa" [class.fa-globe]="!isPublic" [class.fa-check-circle]="isPublic"></i>
-      {{ publishing ? 'Publicando…' : (isPublic ? 'Publicado' : 'Publicar') }}
+      {{ (publishing ? 'dashboard.builder.publishing' : (isPublic ? 'dashboard.builder.published' : 'dashboard.builder.publish')) | translate }}
     </button>
     <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="save()" [disabled]="saving">
-      <i class="fa fa-floppy-disk"></i> {{ saving ? 'Guardando…' : 'Guardar' }}
+      <i class="fa fa-floppy-disk"></i> {{ (saving ? 'dashboard.builder.saving' : 'comun.guardar') | translate }}
     </button>
     <button type="button" class="cfg-btn rb-btn" (click)="run()" [disabled]="running">
       <i class="fa" [class.fa-play]="!running" [class.fa-spinner]="running" [class.fa-spin]="running"></i>
-      {{ running ? 'Ejecutando…' : 'Ejecutar' }}
+      {{ (running ? 'dashboard.builder.running' : 'dashboard.builder.run') | translate }}
     </button>
   </header>
 
   <!-- Banner para usuarios con rol Vendedor: filtro server-side aplicado -->
   <div *ngIf="isSeller && sourceHasSellerField" class="seller-banner">
     <i class="fa fa-user-shield me-1"></i>
-    <span>
-      Estás viendo solo <strong>tus ventas</strong>. Los pedidos y facturas de otros vendedores no aparecen en este reporte.
-    </span>
+    <span [innerHTML]="'dashboard.builder.sellerBanner' | translate"></span>
   </div>
 
   <div class="builder-body">
     <!-- Panel izquierdo: source + campos -->
     <aside class="panel-left">
       <div class="panel-section">
-        <label class="panel-label">Fuente de datos</label>
+        <label class="panel-label">{{ 'dashboard.builder.source' | translate }}</label>
         <select class="panel-select" [ngModel]="source?.id" (ngModelChange)="selectSourceById($event)">
-          <option *ngFor="let s of catalog" [value]="s.id">{{ s.label }}</option>
+          <option *ngFor="let s of catalog" [value]="s.id">{{ cat(s.label) }}</option>
         </select>
-        <p class="panel-hint" *ngIf="source">{{ source.description }}</p>
+        <p class="panel-hint" *ngIf="source">{{ cat(source.description) }}</p>
       </div>
 
       <div class="panel-section" *ngIf="source">
-        <label class="panel-label">Dimensiones</label>
+        <label class="panel-label">{{ 'dashboard.builder.dimensions' | translate }}</label>
         <ul class="field-list" cdkDropList id="palette" [cdkDropListData]="dimFields" [cdkDropListConnectedTo]="['rows-zone','cols-zone']" [cdkDropListSortingDisabled]="true">
           <li *ngFor="let d of dimFields"
               class="field-pill"
@@ -85,13 +83,13 @@
               [cdkDragData]="d"
               (click)="addToZone('rows', d)">
             <i class="fa" [class.fa-calendar]="d.dataType==='date'" [class.fa-hashtag]="d.dataType==='number'" [class.fa-font]="d.dataType==='string'" [class.fa-toggle-on]="d.dataType==='boolean'"></i>
-            <span>{{ d.label }}</span>
+            <span>{{ cat(d.label) }}</span>
           </li>
         </ul>
       </div>
 
       <div class="panel-section" *ngIf="source">
-        <label class="panel-label">Medidas</label>
+        <label class="panel-label">{{ 'dashboard.builder.measures' | translate }}</label>
         <ul class="field-list" cdkDropList id="palette-m" [cdkDropListData]="measFields" [cdkDropListConnectedTo]="['values-zone']" [cdkDropListSortingDisabled]="true">
           <li *ngFor="let m of measFields"
               class="field-pill is-measure"
@@ -99,7 +97,7 @@
               [cdkDragData]="m"
               (click)="addToZone('values', m)">
             <i class="fa fa-ruler"></i>
-            <span>{{ m.label }}</span>
+            <span>{{ cat(m.label) }}</span>
           </li>
         </ul>
       </div>
@@ -114,13 +112,13 @@
           [cdkDropListData]="rows"
           [cdkDropListConnectedTo]="['cols-zone','values-zone','palette','palette-m']"
           (cdkDropListDropped)="drop($event,'rows')">
-          <h4 class="zone-title"><i class="fa fa-grip-lines me-1"></i> Filas</h4>
+          <h4 class="zone-title"><i class="fa fa-grip-lines me-1"></i> {{ 'dashboard.builder.rows' | translate }}</h4>
           <div class="zone-content">
             <ng-container *ngIf="rows.length === 0">
-              <span class="zone-empty">Arrastra una dimensión aquí</span>
+              <span class="zone-empty">{{ 'dashboard.builder.dropDimension' | translate }}</span>
             </ng-container>
             <div *ngFor="let f of rows; let i = index" class="zone-pill" cdkDrag [cdkDragData]="f">
-              <span>{{ f.label }}</span>
+              <span>{{ cat(f.label) }}</span>
               <select *ngIf="f.dataType === 'date'" [ngModel]="f.granularity" (ngModelChange)="changeGranularity(f, $event)" class="pill-select">
                 <option *ngFor="let g of availableGranularities(f)" [value]="g">{{ g }}</option>
               </select>
@@ -135,13 +133,13 @@
           [cdkDropListData]="cols"
           [cdkDropListConnectedTo]="['rows-zone','values-zone','palette','palette-m']"
           (cdkDropListDropped)="drop($event,'cols')">
-          <h4 class="zone-title"><i class="fa fa-grip-lines-vertical me-1"></i> Columnas</h4>
+          <h4 class="zone-title"><i class="fa fa-grip-lines-vertical me-1"></i> {{ 'dashboard.builder.columns' | translate }}</h4>
           <div class="zone-content">
             <ng-container *ngIf="cols.length === 0">
-              <span class="zone-empty">Opcional · cada valor genera una columna (pivot Excel)</span>
+              <span class="zone-empty">{{ 'dashboard.builder.columnsHelp' | translate }}</span>
             </ng-container>
             <div *ngFor="let f of cols; let i = index" class="zone-pill" cdkDrag [cdkDragData]="f">
-              <span>{{ f.label }}</span>
+              <span>{{ cat(f.label) }}</span>
               <select *ngIf="f.dataType === 'date'" [ngModel]="f.granularity" (ngModelChange)="changeGranularity(f, $event)" class="pill-select">
                 <option *ngFor="let g of availableGranularities(f)" [value]="g">{{ g }}</option>
               </select>
@@ -157,25 +155,25 @@
           [cdkDropListConnectedTo]="['rows-zone','cols-zone','palette','palette-m']"
           (cdkDropListDropped)="drop($event,'values')">
           <h4 class="zone-title">
-            <i class="fa fa-ruler me-1"></i> Valores
-            <button type="button" class="btn-calc-add" (click)="openCalcModal()" title="Crear medida calculada (fórmula)">
-              <i class="fa fa-calculator"></i> + Cálculo
+            <i class="fa fa-ruler me-1"></i> {{ 'dashboard.builder.values' | translate }}
+            <button type="button" class="btn-calc-add" (click)="openCalcModal()" [title]="'dashboard.builder.calcButtonTitle' | translate">
+              <i class="fa fa-calculator"></i> {{ 'dashboard.builder.calcButton' | translate }}
             </button>
           </h4>
           <div class="zone-content">
             <ng-container *ngIf="values.length === 0 && calculated.length === 0">
-              <span class="zone-empty">Arrastra una medida aquí</span>
+              <span class="zone-empty">{{ 'dashboard.builder.dropMeasure' | translate }}</span>
             </ng-container>
             <div *ngFor="let f of values; let i = index" class="zone-pill is-measure" cdkDrag [cdkDragData]="f">
               <select [ngModel]="f.agg" (ngModelChange)="changeAgg(f, $event)" class="pill-select">
                 <option *ngFor="let a of availableAggs(f)" [value]="a">{{ a }}</option>
               </select>
-              <span>{{ f.label }}</span>
+              <span>{{ cat(f.label) }}</span>
               <button type="button" class="pill-x" (click)="removeFromZone('values', i)">×</button>
             </div>
-            <div *ngFor="let c of calculated" class="zone-pill is-calc" (click)="openCalcModal(c)" title="Clic para editar">
+            <div *ngFor="let c of calculated" class="zone-pill is-calc" (click)="openCalcModal(c)" [title]="'dashboard.builder.clickToEdit' | translate">
               <i class="fa fa-calculator"></i>
-              <span>{{ c.label }}</span>
+              <span>{{ cat(c.label) }}</span>
               <button type="button" class="pill-x" (click)="removeCalc(c.id); $event.stopPropagation()">×</button>
             </div>
           </div>
@@ -184,17 +182,17 @@
 
       <section class="result-area" #vizContainer>
         <div *ngIf="errorMsg" class="result-error">
-          <i class="fa fa-triangle-exclamation me-1"></i>{{ errorMsg }}
+          <i class="fa fa-triangle-exclamation me-1"></i>{{ errorMsg | translate }}
         </div>
 
         <div *ngIf="!result && !running && !errorMsg" class="result-empty">
           <i class="fa fa-magnifying-glass-chart"></i>
-          <p>Configura filas, columnas y valores. Después haz clic en <strong>Ejecutar</strong>.</p>
+          <p [innerHTML]="'dashboard.builder.emptyResult' | translate"></p>
         </div>
 
         <div *ngIf="running" class="result-empty">
           <i class="fa fa-spinner fa-spin fa-3x"></i>
-          <p>Calculando…</p>
+          <p>{{ 'dashboard.builder.calculating' | translate }}</p>
         </div>
 
         <ng-container *ngIf="result && !running">
@@ -210,8 +208,8 @@
 
     <!-- Panel derecho: visualización (multi-selección) -->
     <aside class="panel-right">
-      <label class="panel-label">Visualizaciones</label>
-      <p class="panel-hint">Selecciona una o más</p>
+      <label class="panel-label">{{ 'dashboard.builder.visualizations' | translate }}</label>
+      <p class="panel-hint">{{ 'dashboard.builder.selectOneOrMore' | translate }}</p>
       <div class="viz-options">
         <button type="button"
           *ngFor="let v of vizOptions"
@@ -230,21 +228,21 @@
       </div>
 
       <div *ngIf="result" class="result-meta">
-        <h5>Detalle</h5>
-        <p><strong>{{ result.meta.totalRows }}</strong> filas</p>
+        <h5>{{ 'dashboard.builder.detail' | translate }}</h5>
+        <p><strong>{{ result.meta.totalRows }}</strong> {{ 'dashboard.builder.rowsLabel' | translate }}</p>
         <p><strong>{{ result.meta.durationMs }}</strong> ms</p>
         <div *ngIf="result.meta.truncated" class="truncated-notice">
           <p class="info">
             <i class="fa fa-info-circle me-1"></i>
-            Se muestran las primeras {{ rowsLimit }} filas. Aumenta el límite o agrega filtros para ver más.
+            {{ 'dashboard.builder.truncated' | translate: { limit: rowsLimit } }}
           </p>
           <div class="limit-control">
-            <label for="limitInput">Límite de filas:</label>
+            <label for="limitInput">{{ 'dashboard.builder.rowLimit' | translate }}</label>
             <input id="limitInput" type="number" min="100" max="10000" step="100"
                    [ngModel]="rowsLimit"
                    (ngModelChange)="onLimitChange($event)"
                    class="form-control form-control-sm" />
-            <button type="button" class="cfg-btn rb-btn" (click)="run()">Actualizar</button>
+            <button type="button" class="cfg-btn rb-btn" (click)="run()">{{ 'dashboard.builder.refresh' | translate }}</button>
           </div>
         </div>
       </div>

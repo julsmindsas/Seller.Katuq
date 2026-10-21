@@ -7,6 +7,7 @@ import {
   Output,
 } from "@angular/core";
 import { Subscription, interval } from "rxjs";
+import { TranslateService } from "@ngx-translate/core";
 
 import { WhatsappInboxService } from "../../whatsapp-inbox.service";
 import { BotSesionResumen } from "../../models/whatsapp-thread.model";
@@ -40,7 +41,10 @@ export class WhatsappPedidosListComponent implements OnInit, OnDestroy {
 
   private refreshSub: Subscription | null = null;
 
-  constructor(private readonly inbox: WhatsappInboxService) {}
+  constructor(
+    private readonly inbox: WhatsappInboxService,
+    private readonly translate: TranslateService,
+  ) {}
 
   ngOnInit(): void {
     this.cargar();
@@ -85,7 +89,7 @@ export class WhatsappPedidosListComponent implements OnInit, OnDestroy {
           return {
             ...s,
             contactName:
-              hilo?.contactName || `Contacto ${s.phoneHash.slice(0, 6)}…`,
+              hilo?.contactName || this.translate.instant('notificaciones.whatsapp.orders.contactFallback', { id: s.phoneHash.slice(0, 6) }),
             phoneMasked: hilo?.phoneMasked || "",
           };
         });
@@ -93,7 +97,7 @@ export class WhatsappPedidosListComponent implements OnInit, OnDestroy {
       error: () => {
         this.sesiones = sesiones.map((s) => ({
           ...s,
-          contactName: `Contacto ${s.phoneHash.slice(0, 6)}…`,
+          contactName: this.translate.instant('notificaciones.whatsapp.orders.contactFallback', { id: s.phoneHash.slice(0, 6) }),
           phoneMasked: "",
         }));
       },
@@ -119,20 +123,20 @@ export class WhatsappPedidosListComponent implements OnInit, OnDestroy {
   }
 
   estadoEtiqueta(s: BotSesionResumen): string {
-    if (s.estado === "cerrada") return "Cotización lista";
-    if (s.estado === "humano") return "Con un asesor";
-    return "Atendiendo el bot";
+    if (s.estado === "cerrada") return "notificaciones.whatsapp.orders.stateQuoteReady";
+    if (s.estado === "humano") return "notificaciones.whatsapp.orders.stateAgent";
+    return "notificaciones.whatsapp.orders.stateBot";
   }
 
   haceCuanto(ms?: number | null): string {
     if (!ms) return "";
     const diff = Date.now() - ms;
     const min = Math.floor(diff / 60000);
-    if (min < 1) return "ahora";
-    if (min < 60) return `hace ${min} min`;
+    if (min < 1) return this.translate.instant('notificaciones.whatsapp.orders.now');
+    if (min < 60) return this.translate.instant('notificaciones.whatsapp.list.minutesAgo', { n: min });
     const h = Math.floor(min / 60);
-    if (h < 24) return `hace ${h} h`;
-    return `hace ${Math.floor(h / 24)} d`;
+    if (h < 24) return this.translate.instant('notificaciones.whatsapp.list.hoursAgo', { n: h });
+    return this.translate.instant('notificaciones.whatsapp.list.daysAgo', { n: Math.floor(h / 24) });
   }
 
   trackSesion(_i: number, s: BotSesionResumen): string {

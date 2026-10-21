@@ -2,7 +2,7 @@
     <div class="modal-overlay" (click)="close()"></div>
     <div class="modal-container no-scroll">
       <div class="modal-header">
-        <h4>Selecciona tu plan</h4>
+        <h4>{{ 'shell.planSelector.title' | translate }}</h4>
         <button class="close-btn" (click)="close()">
           <i class="fa fa-times"></i>
         </button>
@@ -18,81 +18,81 @@
           <div class="plan-header">
             <h5>{{plan.name}}</h5>
             <div class="plan-price">
-              <span class="amount">{{plan.price}}</span>
+              <span class="amount">{{ plan.price | translate }}</span>
             </div>
             <div *ngIf="plan.subtitle" class="plan-subtitle">
-              {{plan.subtitle}}
+              {{ plan.subtitle | translate }}
             </div>
             <div *ngIf="plan.isPromo" class="promo-ribbon">
-              <span>¡Oferta Limitada!</span>
+              <span>{{ 'shell.planSelector.limitedOffer' | translate }}</span>
             </div>
           </div>
           
           <ul class="plan-features">
             <li *ngFor="let feature of plan.features">
-              <i class="fa fa-check"></i> {{feature}}
+              <i class="fa fa-check"></i> {{ feature | translate }}
             </li>
           </ul>
           
           <button class="select-btn" (click)="selectPlan(plan.id)">
-            {{selectedPlan === plan.id ? 'Seleccionado' : 'Seleccionar'}}
+            {{ (selectedPlan === plan.id ? 'shell.planSelector.selected' : 'shell.planSelector.select') | translate }}
           </button>
         </div>
       </div>
       
       <div class="modal-footer">
-        <button class="cancel-btn" (click)="close()">Cancelar</button>
+        <button class="cancel-btn" (click)="close()">{{ 'comun.cancelar' | translate }}</button>
         <button class="confirm-btn" (click)="confirmSelection()" [disabled]="!selectedPlan">
-          Confirmar Selección
+          {{ 'shell.planSelector.confirm' | translate }}
         </button>
       </div>
       
       <div class="plan-info">
         <div class="escalamiento-section">
-          <h5>ESCALONAMIENTO DE PRECIOS</h5>
+          <h5>{{ 'shell.planSelector.tiersTitle' | translate }}</h5>
           <div class="escalamiento-grid">
             <div class="escalamiento-row header">
-              <div class="escalamiento-cell">Ventas</div>
-              <div class="escalamiento-cell">Plan #1</div>
-              <div class="escalamiento-cell">Plan #2</div>
-              <div class="escalamiento-cell">Plan #3</div>
+              <div class="escalamiento-cell">{{ 'shell.planSelector.sales' | translate }}</div>
+              <div class="escalamiento-cell">{{ 'shell.planSelector.planNumber' | translate: { n: 1 } }}</div>
+              <div class="escalamiento-cell">{{ 'shell.planSelector.planNumber' | translate: { n: 2 } }}</div>
+              <div class="escalamiento-cell">{{ 'shell.planSelector.planNumber' | translate: { n: 3 } }}</div>
             </div>
             <div class="escalamiento-row">
-              <div class="escalamiento-cell">60M - 150M</div>
-              <div class="escalamiento-cell">150 USD</div>
-              <div class="escalamiento-cell">90 USD + 0.8% T.E</div>
-              <div class="escalamiento-cell">2.49% x T.E</div>
+              <div class="escalamiento-cell">60M - 150M</div><!-- i18n-ignorar: cifras -->
+              <div class="escalamiento-cell">150 USD</div><!-- i18n-ignorar: cifras -->
+              <div class="escalamiento-cell">{{ 'shell.planSelector.tierFee' | translate: { base: '90 USD' } }}</div>
+              <div class="escalamiento-cell">{{ 'shell.planSelector.tierPercent' | translate: { pct: '2.49%' } }}</div>
             </div>
             <div class="escalamiento-row">
-              <div class="escalamiento-cell">150M - ></div>
-              <div class="escalamiento-cell">230 USD</div>
-              <div class="escalamiento-cell">137 USD + 0.8% T.E</div>
-              <div class="escalamiento-cell">1.99% x T.E</div>
+              <div class="escalamiento-cell">150M - ></div><!-- i18n-ignorar: cifras -->
+              <div class="escalamiento-cell">230 USD</div><!-- i18n-ignorar: cifras -->
+              <div class="escalamiento-cell">{{ 'shell.planSelector.tierFee' | translate: { base: '137 USD' } }}</div>
+              <div class="escalamiento-cell">{{ 'shell.planSelector.tierPercent' | translate: { pct: '1.99%' } }}</div>
             </div>
           </div>
           <div class="escalamiento-note">
-            T.E = Transacción Exitosa
+            {{ 'shell.planSelector.teLegend' | translate }}
           </div>
         </div>
         
         <div class="beneficios-section">
-          <h5>TODOS LOS PLANES INCLUYEN</h5>
+          <h5>{{ 'shell.planSelector.includesTitle' | translate }}</h5>
           <div class="beneficio-items">
             <div class="beneficio-item">
               <i class="fa fa-headset"></i>
-              <p>Asistencia y Soporte 24/7<br>Configuraciones abiertas</p>
+              <p [innerHTML]="'shell.planSelector.benefitSupport' | translate"></p>
             </div>
             <div class="beneficio-item">
               <i class="fa fa-users"></i>
-              <p>Usuarios ilimitados<br>Seguridad y roles ilimitados</p>
+              <p [innerHTML]="'shell.planSelector.benefitUsers' | translate"></p>
             </div>
             <div class="beneficio-item">
               <i class="fa fa-clipboard-list"></i>
-              <p>Creación de pedidos, clientes y<br>productos ilimitados</p>
+              <p [innerHTML]="'shell.planSelector.benefitCreation' | translate"></p>
             </div>
             <div class="beneficio-item">
               <i class="fa fa-chart-bar"></i>
-              <p>Dashboards para ver, entender<br>y descargar tus cifras</p>
+              <p [innerHTML]="'shell.planSelector.benefitDashboards' | translate"></p>
             </div>
           </div>
         </div>

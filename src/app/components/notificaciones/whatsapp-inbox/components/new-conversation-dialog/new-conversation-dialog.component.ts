@@ -7,6 +7,8 @@ import {
   SimpleChanges,
 } from "@angular/core";
 
+import { TranslateService } from "@ngx-translate/core";
+
 import { KapsoTemplate, WhatsappInboxService } from "../../whatsapp-inbox.service";
 
 /**
@@ -38,7 +40,10 @@ export class WhatsappNewConversationDialogComponent implements OnChanges {
   errorMsg = "";
   successMsg = "";
 
-  constructor(private readonly inbox: WhatsappInboxService) {}
+  constructor(
+    private readonly inbox: WhatsappInboxService,
+    private readonly translate: TranslateService,
+  ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["visible"] && this.visible) {
@@ -110,9 +115,10 @@ export class WhatsappNewConversationDialogComponent implements OnChanges {
       .subscribe({
         next: (body) => {
           this.sending = false;
-          this.successMsg = `Mensaje enviado a +${phoneNorm}. Saldo: $${(
-            body?.balanceAfter || 0
-          ).toLocaleString("es-CO")}.`;
+          this.successMsg = this.translate.instant('notificaciones.whatsapp.newConversation.sent', {
+            phone: phoneNorm,
+            balance: (body?.balanceAfter || 0).toLocaleString("es-CO"),
+          });
           this.sent.emit({ phone: phoneNorm, templateName: t.name });
           setTimeout(() => this.onCancel(), 1500);
         },
@@ -120,7 +126,7 @@ export class WhatsappNewConversationDialogComponent implements OnChanges {
           this.sending = false;
           this.errorMsg =
             err?.error?.message ||
-            (err?.status ? "No se pudo enviar el mensaje." : "Error de red al enviar.");
+            (err?.status ? this.translate.instant('notificaciones.whatsapp.newConversation.sendError') : this.translate.instant('notificaciones.whatsapp.newConversation.networkError'));
         },
       });
   }
@@ -138,8 +144,7 @@ export class WhatsappNewConversationDialogComponent implements OnChanges {
       },
       error: () => {
         this.loadingTemplates = false;
-        this.errorMsg =
-          "No se pudieron cargar las plantillas. Verifica config Kapso del comercio.";
+        this.errorMsg = this.translate.instant('notificaciones.whatsapp.newConversation.templatesError');
       },
     });
   }

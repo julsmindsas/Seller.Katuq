@@ -112,7 +112,7 @@ export class AppComponent implements OnInit, OnDestroy {
       .subscribe(
         notifications => {
           if (notifications.length > 0) {
-            this.toastrService.info("Tienes notificaciones pendientes", 'Notification', {
+            this.toastrService.info(translate.instant('shell.app.pendingNotifications'), translate.instant('shell.app.pendingNotificationsTitle'), {
               timeOut: 5000,
               progressBar: true,
               positionClass: 'toast-top-right'

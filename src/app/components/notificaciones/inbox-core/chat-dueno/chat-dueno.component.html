@@ -3,23 +3,23 @@
     <div class="dueno-franja__info">
       <span class="dueno-franja__icono" aria-hidden="true"><i class="fa fa-user-circle-o"></i></span>
       <div class="dueno-franja__textos">
-        <span class="dueno-franja__titulo">{{ titulo }}</span>
-        <span class="dueno-franja__motivo" *ngIf="motivo">{{ motivo }}</span>
+        <span class="dueno-franja__titulo">{{ titulo | translate: { nombre: dueno?.nombre || dueno?.email } }}</span>
+        <span class="dueno-franja__motivo" *ngIf="motivo">{{ motivo | translate: { nombre: dueno?.nombre || dueno?.email } }}</span>
       </div>
     </div>
 
     <div class="dueno-franja__acciones">
       <button type="button" class="dueno-franja__btn" *ngIf="!dueno"
               (click)="tomar.emit()" [disabled]="ocupado">
-        Tomar
+        {{ 'notificaciones.owner.take' | translate }}
       </button>
       <button type="button" class="dueno-franja__btn dueno-franja__btn--sec" *ngIf="dueno && (esMio || esAdministrador)"
               (click)="soltar.emit()" [disabled]="ocupado">
-        {{ esMio ? 'Soltar' : 'Quitar dueño' }}
+        {{ (esMio ? 'notificaciones.owner.release' : 'notificaciones.owner.removeOwner') | translate }}
       </button>
       <button type="button" class="dueno-franja__btn dueno-franja__btn--sec" *ngIf="esAdministrador && !modoPasar"
               (click)="abrirPasar()" [disabled]="ocupado">
-        Pasar
+        {{ 'notificaciones.owner.pass' | translate }}
       </button>
     </div>
   </div>
@@ -31,14 +31,14 @@
         [emails]="destino"
         (emailsChange)="destino = $event"
         [excluir]="dueno ? [dueno.email] : []"
-        placeholder="¿A quién se lo pasas?"
+        [placeholder]="'notificaciones.owner.passTo' | translate"
       ></app-selector-equipo>
     </div>
     <button type="button" class="dueno-franja__btn" (click)="confirmarPasar()" [disabled]="!destino.length || ocupado">
-      Pasar chat
+      {{ 'notificaciones.owner.passChat' | translate }}
     </button>
     <button type="button" class="dueno-franja__btn dueno-franja__btn--sec" (click)="cancelarPasar()">
-      Cancelar
+      {{ 'comun.cancelar' | translate }}
     </button>
   </div>
 </div>

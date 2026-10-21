@@ -114,7 +114,7 @@ export class AvisoActualizacionComponent implements OnInit, OnDestroy {
 
   textoEtiqueta(tipo?: string): string {
     const t = (tipo || '').toUpperCase();
-    return t === 'MEJORA' || t === 'CORRIGE' ? t : 'NUEVO';
+    return t === 'MEJORA' ? 'shell.update.tagImprovement' : t === 'CORRIGE' ? 'shell.update.tagFix' : 'shell.update.tagNew';
   }
 
   /** Aplica la actualización. Los pasos son reales, no una barra simulada. */
@@ -122,11 +122,11 @@ export class AvisoActualizacionComponent implements OnInit, OnDestroy {
     if (this.aplicando) return;
     this.aplicando = true;
 
-    this.pasoTexto = 'Limpiando archivos guardados…';
+    this.pasoTexto = 'shell.update.cleaning';
     await this.versionCheck.aplicarActualizacion().catch(() => {
       // aplicarActualizacion ya recarga; si algo falla, se deja reintentar.
       this.aplicando = false;
-      this.pasoTexto = 'No se pudo actualizar. Intenta de nuevo.';
+      this.pasoTexto = 'shell.update.error';
     });
   }
 

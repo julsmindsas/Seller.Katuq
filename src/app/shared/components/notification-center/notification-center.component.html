@@ -17,13 +17,13 @@
     <div class="header-left">
       <h3>
         <i class="fa fa-bell"></i>
-        Notificaciones
+        {{ 'shell.notificationCenter.title' | translate }}
         <span class="connection-status" [class.offline]="!connectionStatus">
           <i class="fa" [class.fa-wifi]="connectionStatus" [class.fa-wifi-slash]="!connectionStatus"></i>
         </span>
       </h3>
       <p class="header-subtitle" *ngIf="unreadCount > 0">
-        {{ unreadCount }} no leída{{ unreadCount > 1 ? 's' : '' }}
+        {{ (unreadCount === 1 ? 'shell.notificationCenter.unread.one' : 'shell.notificationCenter.unread.other') | translate: { count: unreadCount } }}
       </p>
     </div>
     
@@ -34,10 +34,10 @@
               (click)="toggleSound()"
               [class.active]="soundEnabled"
               [attr.aria-pressed]="soundEnabled"
-              [title]="soundEnabled ? 'Silenciar notificaciones' : 'Activar sonido de notificaciones'">
+              [title]="(soundEnabled ? 'shell.notificationCenter.mute' : 'shell.notificationCenter.unmute') | translate">
         <i class="fa" [ngClass]="soundEnabled ? 'fa-volume-up' : 'fa-volume-off'"></i>
       </button>
-      <button class="btn-icon" (click)="togglePreferences()" title="Preferencias">
+      <button class="btn-icon" (click)="togglePreferences()" [title]="'shell.notificationCenter.preferences' | translate">
         <i class="fa fa-cog"></i>
       </button>
       <!-- Ticket 1179: siempre visible; se inhabilita cuando no hay nada por leer -->
@@ -45,13 +45,13 @@
               type="button"
               (click)="markAllAsRead()"
               [disabled]="unreadCount === 0"
-              [title]="unreadCount > 0 ? 'Marcar todas como leídas' : 'No hay notificaciones sin leer'">
+              [title]="(unreadCount > 0 ? 'shell.notificationCenter.markAllRead' : 'shell.notificationCenter.noUnread') | translate">
         <i class="fa fa-check-square-o"></i>
       </button>
-      <button class="btn-icon" (click)="showClearAllConfirm()" title="Limpiar todas">
+      <button class="btn-icon" (click)="showClearAllConfirm()" [title]="'shell.notificationCenter.clearAll' | translate">
         <i class="fa fa-trash"></i>
       </button>
-      <button class="btn-icon btn-close" (click)="closePanel()" title="Cerrar">
+      <button class="btn-icon btn-close" (click)="closePanel()" [title]="'comun.cerrar' | translate">
         <i class="fa fa-times"></i>
       </button>
     </div>
@@ -60,18 +60,18 @@
   <!-- Preferences Panel -->
   <div class="preferences-panel" *ngIf="showPreferences" [@slideIn]>
     <div class="preferences-header">
-      <h4><i class="fa fa-cog"></i> Preferencias</h4>
-      <button class="btn-text" (click)="togglePreferences()">Cerrar</button>
+      <h4><i class="fa fa-cog"></i> {{ 'shell.notificationCenter.preferences' | translate }}</h4>
+      <button class="btn-text" (click)="togglePreferences()">{{ 'comun.cerrar' | translate }}</button>
     </div>
     <div class="preferences-content">
-      <p class="text-muted mb-3">Elige qué notificaciones quieres recibir:</p>
+      <p class="text-muted mb-3">{{ 'shell.notificationCenter.preferencesHelp' | translate }}</p>
       <div class="preference-item" *ngFor="let pref of typePreferences">
         <label class="preference-toggle">
           <input type="checkbox"
                  [checked]="pref.enabled"
                  (change)="toggleTypePreference(pref.type)">
           <span class="toggle-slider"></span>
-          <span class="toggle-label">{{ pref.label }}</span>
+          <span class="toggle-label">{{ pref.label | translate }}</span>
         </label>
       </div>
     </div>
@@ -80,14 +80,14 @@
   <!-- Clear All Confirmation -->
   <div class="confirmation-panel" *ngIf="showClearConfirm" [@slideIn]>
     <div class="confirmation-content">
-      <h4><i class="fa fa-trash text-danger"></i> Limpiar todas</h4>
-      <p>¿Estás seguro de que quieres eliminar todas las notificaciones? Esta acción no se puede deshacer.</p>
+      <h4><i class="fa fa-trash text-danger"></i> {{ 'shell.notificationCenter.clearAll' | translate }}</h4>
+      <p>{{ 'shell.notificationCenter.clearConfirm' | translate }}</p>
       <div class="confirmation-actions">
         <button class="btn btn-sm btn-outline-secondary" (click)="cancelClearAll()">
-          Cancelar
+          {{ 'comun.cancelar' | translate }}
         </button>
         <button class="btn btn-sm btn-danger" (click)="confirmClearAll()">
-          <i class="fa fa-trash"></i> Eliminar todas
+          <i class="fa fa-trash"></i> {{ 'shell.notificationCenter.deleteAll' | translate }}
         </button>
       </div>
     </div>
@@ -104,14 +104,14 @@
           #searchInput
           type="text"
           class="form-control search-input"
-          placeholder="Buscar notificaciones..."
+          [placeholder]="'shell.notificationCenter.searchPlaceholder' | translate"
           (input)="onSearchChange($event)"
           [value]="searchTerm">
         <button 
           class="btn-clear-search" 
           *ngIf="searchTerm" 
           (click)="resetFilters()"
-          title="Limpiar búsqueda">
+          [title]="'shell.notificationCenter.clearSearch' | translate">
           <i class="fa fa-times"></i>
         </button>
       </div>
@@ -123,25 +123,25 @@
         class="filter-btn"
         [class.active]="selectedFilter === 'all'"
         (click)="setFilter('all')">
-        Todas
+        {{ 'shell.notificationCenter.filterAll' | translate }}
       </button>
       <button 
         class="filter-btn"
         [class.active]="selectedFilter === 'unread'"
         (click)="setFilter('unread')">
-        No leídas ({{ unreadCount }})
+        {{ 'shell.notificationCenter.filterUnread' | translate: { count: unreadCount } }}
       </button>
       <button 
         class="filter-btn"
         [class.active]="selectedFilter === 'high-priority'"
         (click)="setFilter('high-priority')">
-        Importante
+        {{ 'shell.notificationCenter.filterImportant' | translate }}
       </button>
       <button 
         class="filter-btn"
         [class.active]="selectedFilter === 'today'"
         (click)="setFilter('today')">
-        Hoy
+        {{ 'shell.notificationCenter.filterToday' | translate }}
       </button>
     </div>
 
@@ -151,9 +151,9 @@
         class="form-control form-control-sm"
         [value]="selectedType"
         (change)="setTypeFilter($event.target.value)">
-        <option value="all">Todos los tipos</option>
+        <option value="all">{{ 'shell.notificationCenter.allTypes' | translate }}</option>
         <option *ngFor="let type of getAvailableTypes()" [value]="type">
-          {{ getTypeName(type) }}
+          {{ getTypeName(type) | translate }}
         </option>
       </select>
     </div>
@@ -164,7 +164,7 @@
     <div class="loading-spinner">
       <i class="fa fa-spinner fa-spin"></i>
     </div>
-    <p>Cargando notificaciones...</p>
+    <p>{{ 'shell.notificationCenter.loading' | translate }}</p>
   </div>
 
   <!-- Notifications List -->
@@ -175,15 +175,15 @@
       <div class="empty-icon">
         <i class="fa fa-bell-slash"></i>
       </div>
-      <h4>{{ emptyMessage }}</h4>
+      <h4>{{ emptyMessage | translate }}</h4>
       <p class="text-muted" *ngIf="selectedFilter === 'all' && !searchTerm">
-        Las notificaciones aparecerán aquí cuando ocurran eventos importantes.
+        {{ 'shell.notificationCenter.emptyHelp' | translate }}
       </p>
       <button 
         class="btn btn-sm btn-outline-primary" 
         *ngIf="searchTerm || selectedFilter !== 'all' || selectedType !== 'all'"
         (click)="resetFilters()">
-        <i class="fa fa-undo"></i> Limpiar filtros
+        <i class="fa fa-undo"></i> {{ 'shell.notificationCenter.clearFilters' | translate }}
       </button>
     </div>
 
@@ -208,7 +208,7 @@
             <h5 class="notification-title">{{ notification.title }}</h5>
             <div class="notification-meta">
               <span class="notification-time">{{ getRelativeTime(notification.createdAt) }}</span>
-              <span class="notification-type">{{ getTypeName(notification.type) }}</span>
+              <span class="notification-type">{{ getTypeName(notification.type) | translate }}</span>
             </div>
           </div>
           
@@ -237,20 +237,20 @@
             type="button"
             *ngIf="notification.status !== NotificationStatus.READ"
             (click)="$event.stopPropagation(); markAsRead(notification)"
-            title="Marcar como leída"
-            aria-label="Marcar como leída">
+            [title]="'shell.notificationCenter.markRead' | translate"
+            [attr.aria-label]="'shell.notificationCenter.markRead' | translate">
             <i class="fa fa-square-o"></i>
           </button>
           <span class="btn-icon btn-read-done"
                 *ngIf="notification.status === NotificationStatus.READ"
-                title="Leída" aria-label="Leída">
+                [title]="'shell.notificationCenter.read' | translate" [attr.aria-label]="'shell.notificationCenter.read' | translate">
             <i class="fa fa-check-square"></i>
           </span>
           
           <button 
             class="btn-icon btn-delete"
             (click)="$event.stopPropagation(); deleteNotification(notification)"
-            title="Eliminar">
+            [title]="'comun.eliminar' | translate">
             <i class="fa fa-trash"></i>
           </button>
         </div>
@@ -264,14 +264,14 @@
     <div class="load-more-container" *ngIf="hasMore && hasNotifications">
       <button class="btn btn-outline-primary btn-load-more" (click)="loadMore()">
         <i class="fa fa-chevron-down"></i>
-        Cargar más
+        {{ 'shell.notificationCenter.loadMore' | translate }}
       </button>
     </div>
 
     <!-- Results Summary -->
     <div class="results-summary" *ngIf="hasNotifications">
       <small class="text-muted">
-        Mostrando {{ getPagedNotifications().length }} de {{ filteredNotifications.length }} notificaciones
+        {{ 'shell.notificationCenter.showing' | translate: { shown: getPagedNotifications().length, total: filteredNotifications.length } }}
       </small>
     </div>
   </div>

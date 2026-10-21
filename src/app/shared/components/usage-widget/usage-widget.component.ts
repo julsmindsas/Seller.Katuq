@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { SubscriptionService } from '../../services/subscription.service';
 import { SubscriptionUsage } from '../../models/subscription.model';
 import { Subject } from 'rxjs';
@@ -21,7 +22,10 @@ export class UsageWidgetComponent implements OnInit, OnDestroy {
   loading = true;
   private destroy$ = new Subject<void>();
 
-  constructor(private subscriptionService: SubscriptionService) {}
+  constructor(
+    private subscriptionService: SubscriptionService,
+    private translate: TranslateService
+  ) {}
 
   ngOnInit(): void {
     // Suscribirse a cambios de uso
@@ -70,9 +74,9 @@ export class UsageWidgetComponent implements OnInit, OnDestroy {
     if (!this.usage) return '';
     const remaining = Math.max(0, this.usage.orders.limit - this.usage.orders.current);
     if (remaining === 0) {
-      return 'Llegaste al límite mensual. Puedes esperar al reinicio o desbloquear Premium.';
+      return this.translate.instant('shell.usage.limitReached');
     }
-    return `Te quedan ${remaining} pedidos Gratis este mes.`;
+    return this.translate.instant(remaining === 1 ? 'shell.usage.ordersLeft.one' : 'shell.usage.ordersLeft.other', { count: remaining });
   }
 
   getChatPercentage(): number {

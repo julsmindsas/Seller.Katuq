@@ -1,6 +1,7 @@
 import { Component, Input, OnChanges, SimpleChanges } from "@angular/core";
 import { forkJoin } from "rxjs";
 import { ToastrService } from "ngx-toastr";
+import { TranslateService } from "@ngx-translate/core";
 
 import { WhatsappInboxService } from "../../whatsapp-inbox.service";
 import {
@@ -47,6 +48,7 @@ export class WhatsappContactPanelComponent implements OnChanges {
   constructor(
     private readonly inbox: WhatsappInboxService,
     private readonly toastr: ToastrService,
+    private readonly translate: TranslateService,
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -64,7 +66,7 @@ export class WhatsappContactPanelComponent implements OnChanges {
       this.profile.clienteNombre ||
       this.profile.profileName ||
       this.profile.phoneMasked ||
-      "Contacto"
+      this.translate.instant('notificaciones.whatsapp.detail.contact')
     );
   }
 
@@ -108,9 +110,9 @@ export class WhatsappContactPanelComponent implements OnChanges {
       .sort((a, b) => b - a)[0];
     if (!mas) return "—";
     const dias = Math.floor((Date.now() - mas) / (1000 * 60 * 60 * 24));
-    if (dias <= 0) return "Hoy";
-    if (dias === 1) return "Ayer";
-    if (dias < 30) return `hace ${dias}d`;
+    if (dias <= 0) return this.translate.instant('notificaciones.whatsapp.detail.today');
+    if (dias === 1) return this.translate.instant('notificaciones.whatsapp.detail.yesterday');
+    if (dias < 30) return this.translate.instant('notificaciones.whatsapp.list.daysAgo', { n: dias });
     return new Date(mas).toLocaleDateString("es-CO", {
       day: "numeric",
       month: "short",
@@ -147,9 +149,9 @@ export class WhatsappContactPanelComponent implements OnChanges {
         this.togglingOptOut = false;
         this.toastr.error(
           nuevo
-            ? "No se pudo marcar el contacto como 'No contactar'. Intenta de nuevo."
-            : "No se pudo quitar la marca de 'No contactar'. Intenta de nuevo.",
-          "No contactar",
+            ? this.translate.instant('notificaciones.whatsapp.contact.optOutError')
+            : this.translate.instant('notificaciones.whatsapp.contact.optInError'),
+          this.translate.instant('notificaciones.whatsapp.contact.doNotContact'),
         );
       },
     });
@@ -274,8 +276,8 @@ export class WhatsappContactPanelComponent implements OnChanges {
         const leadId =
           resp?.data?.id || resp?.data?.leadId || resp?.id || "new-lead";
         this.toastr.success(
-          "El contacto fue guardado como Lead en el CRM.",
-          "Guardado en CRM",
+          this.translate.instant('notificaciones.whatsapp.contact.savedToCrm'),
+          this.translate.instant('notificaciones.whatsapp.contact.savedToCrmTitle'),
         );
         // Reflejar el cambio localmente: ahora el panel debe mostrar "Lead".
         if (this.profile) {
@@ -285,7 +287,7 @@ export class WhatsappContactPanelComponent implements OnChanges {
               leadId,
               name,
               stage: resp?.data?.stage || "Nuevo",
-              ownerName: resp?.data?.ownerName || email || "Sin asignar",
+              ownerName: resp?.data?.ownerName || email || this.translate.instant('notificaciones.whatsapp.contact.unassigned'),
               ownerEmail: resp?.data?.ownerEmail || email || "",
               score: this.ratingScore || undefined,
             } as any,
@@ -295,8 +297,8 @@ export class WhatsappContactPanelComponent implements OnChanges {
       error: (err: any) => {
         this.savingToCrm = false;
         const message =
-          err?.error?.error || "No se pudo guardar el lead. Intenta de nuevo.";
-        this.toastr.error(message, "Guardar en CRM");
+          err?.error?.error || this.translate.instant('notificaciones.whatsapp.contact.saveLeadError');
+        this.toastr.error(message, this.translate.instant('notificaciones.whatsapp.contact.saveToCrm'));
       },
     });
   }

@@ -4,7 +4,7 @@
       type="button"
       class="thread-detail__back"
       (click)="onBack()"
-      aria-label="Volver al listado"
+      [attr.aria-label]="'notificaciones.whatsapp.detail.back' | translate"
     >
       ←
     </button>
@@ -26,7 +26,7 @@
     <!-- Quién atiende: pill del bot + acción (mockup) -->
     <div class="thread-detail__bot-pill" *ngIf="botState?.atendiendoBot">
       <span class="thread-detail__bot-dot" aria-hidden="true"></span>
-      Atendido por el bot
+      {{ 'notificaciones.whatsapp.detail.botPill' | translate }}
     </div>
     <button
       *ngIf="botState?.atendiendoBot"
@@ -35,7 +35,7 @@
       (click)="tomarConversacion()"
       [disabled]="botActionBusy"
     >
-      Tomar la conversación
+      {{ 'notificaciones.whatsapp.detail.takeConversation' | translate }}
     </button>
 
     <div class="thread-detail__header-actions">
@@ -44,7 +44,7 @@
         class="thread-detail__action-btn"
         (click)="markAsRead()"
         [disabled]="!phoneHash"
-        title="Marcar los mensajes como leídos"
+        [title]="'notificaciones.whatsapp.detail.markRead' | translate"
       >
         <i class="fa fa-check" aria-hidden="true"></i>
       </button>
@@ -55,7 +55,7 @@
         (click)="toggleContactPanel()"
       >
         <i class="fa fa-user-o" aria-hidden="true"></i>
-        {{ contactPanelOpen ? "Ocultar ficha" : "Ver ficha" }}
+        {{ (contactPanelOpen ? 'notificaciones.whatsapp.detail.hideProfile' : 'notificaciones.whatsapp.detail.showProfile') | translate }}
       </button>
     </div>
   </header>
@@ -79,7 +79,7 @@
     *ngIf="botState && botState.botHabilitado && !botState.atendiendoBot && (botState.tomadaPor || botState.motivoTraspaso)"
   >
     <span class="thread-detail__bot-strip-text">
-      {{ botState.tomadaPor ? "Conversación a cargo de " + botState.tomadaPor : "El bot no está atendiendo este hilo." }}
+      {{ botState.tomadaPor ? ('notificaciones.whatsapp.detail.handledBy' | translate: { nombre: botState.tomadaPor }) : ('notificaciones.whatsapp.detail.botNotHandling' | translate) }}
       <em *ngIf="botState.motivoTraspaso">{{ botState.motivoTraspaso }}</em>
     </span>
     <button
@@ -89,19 +89,19 @@
       (click)="devolverAlBot()"
       [disabled]="botActionBusy"
     >
-      Devolver al bot
+      {{ 'notificaciones.whatsapp.detail.returnToBot' | translate }}
     </button>
   </div>
 
   <div class="thread-detail__body">
     <div class="thread-detail__chat">
-      <div *ngIf="loading" class="thread-detail__state">Cargando mensajes…</div>
+      <div *ngIf="loading" class="thread-detail__state">{{ 'notificaciones.whatsapp.detail.loadingMessages' | translate }}</div>
 
       <div
         *ngIf="!loading && messages.length === 0"
         class="thread-detail__state"
       >
-        Aún no hay mensajes en este hilo.
+        {{ 'notificaciones.whatsapp.detail.noMessages' | translate }}
       </div>
 
       <div
@@ -143,9 +143,9 @@
                 <span
                   *ngIf="item.msg.esBot"
                   class="thread-detail__bot-badge"
-                  title="Mensaje escrito por el bot de pedidos"
+                  [title]="'notificaciones.whatsapp.detail.botBadgeTitle' | translate"
                 >
-                  Asistente
+                  {{ 'notificaciones.whatsapp.detail.botBadge' | translate }}
                 </span>
                 <span class="thread-detail__time">
                   {{ formatTime(item.msg.sentAt) }}
@@ -170,7 +170,7 @@
         *ngIf="botState && botState.atendiendoBot && botState.carrito.length > 0"
       >
         <span class="thread-detail__cart-label">
-          <i class="fa fa-shopping-basket" aria-hidden="true"></i> En su carrito
+          <i class="fa fa-shopping-basket" aria-hidden="true"></i> {{ 'notificaciones.whatsapp.detail.inCart' | translate }}
         </span>
         <div class="thread-detail__cart-item" *ngFor="let linea of botState.carrito">
           <span class="thread-detail__cart-qty">{{ linea.cantidad }}×</span>
@@ -180,11 +180,11 @@
           </span>
         </div>
         <div class="thread-detail__cart-total">
-          <span>Total</span>
+          <span>{{ 'notificaciones.whatsapp.detail.total' | translate }}</span>
           <strong>{{ botState.totalCarrito | currency: "COP" : "symbol-narrow" : "1.0-0" }}</strong>
         </div>
         <small class="thread-detail__cart-note" *ngIf="botState.modoSombra">
-          Modo sombra: el bot redacta pero no envía.
+          {{ 'notificaciones.whatsapp.detail.shadowMode' | translate }}
         </small>
       </div>
 
@@ -195,14 +195,14 @@
       >
         <span class="thread-detail__order-icon"><i class="fa fa-check" aria-hidden="true"></i></span>
         <div class="thread-detail__order-info">
-          <strong>Pedido {{ botState?.cotizacionCreada?.numero }} registrado</strong>
-          <span>El asistente lo dejó como cotización para que lo confirmes</span>
+          <strong>{{ 'notificaciones.whatsapp.detail.orderRegistered' | translate: { numero: botState?.cotizacionCreada?.numero } }}</strong>
+          <span>{{ 'notificaciones.whatsapp.detail.orderAsQuote' | translate }}</span>
         </div>
         <a
           class="thread-detail__order-link"
           [routerLink]="botState?.cotizacionCreada?.id ? ['/cotizaciones/editor', botState?.cotizacionCreada?.id] : ['/cotizaciones']"
         >
-          Ver pedido →
+          {{ 'notificaciones.whatsapp.detail.viewOrder' | translate }}
         </a>
       </div>
 
@@ -222,7 +222,7 @@
             (click)="applyTemplate(tpl)"
             [title]="tpl.sandboxBody"
           >
-            {{ tpl.label }}
+            {{ tpl.label | translate }}
           </button>
         </div>
 
@@ -231,7 +231,7 @@
             class="thread-detail__composer-input"
             [(ngModel)]="composerText"
             name="composerText"
-            placeholder="Escribe un mensaje..."
+            [placeholder]="'notificaciones.whatsapp.detail.composerPlaceholder' | translate"
             (keydown.enter)="onEnterPress($event)"
             [disabled]="sending || soloLectura"
             rows="1"
@@ -242,7 +242,7 @@
             [disabled]="!composerText.trim() || sending || soloLectura"
           >
             <i class="fa fa-paper-plane" aria-hidden="true"></i>
-            {{ sending ? "Enviando..." : "Enviar" }}
+            {{ (sending ? 'notificaciones.whatsapp.detail.sending' : 'notificaciones.whatsapp.detail.send') | translate }}
           </button>
         </form>
       </div>
@@ -263,6 +263,6 @@
 <ng-template #emptyState>
   <div class="thread-detail__placeholder">
     <span class="thread-detail__placeholder-icon"><i class="fa fa-comments-o" aria-hidden="true"></i></span>
-    <p>Selecciona una conversación de la lista</p>
+    <p>{{ 'notificaciones.whatsapp.detail.selectThread' | translate }}</p>
   </div>
 </ng-template>

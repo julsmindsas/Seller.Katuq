@@ -3,6 +3,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, of } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
+import { traducirCatalogo } from '../model/catalog-i18n';
 
 import { ReportsService } from '../../../shared/services/dashboard/reports.service';
 import { findDimension, findMeasure, findSource } from '../model/source-catalog';
@@ -47,7 +49,12 @@ export class ReportViewComponent implements OnInit, OnDestroy {
     private reportsService: ReportsService,
     private route: ActivatedRoute,
     private router: Router,
+    private translate: TranslateService,
   ) {}
+
+  cat(texto: string | undefined | null): string {
+    return traducirCatalogo(this.translate, texto);
+  }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -106,7 +113,7 @@ export class ReportViewComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((err) => {
-          this.errorMsg = err?.error?.error || err?.message || 'Error al ejecutar la consulta.';
+          this.errorMsg = err?.error?.error || err?.message || 'dashboard.common.queryError';
           return of(null);
         }),
         finalize(() => (this.running = false)),
@@ -140,7 +147,7 @@ export class ReportViewComponent implements OnInit, OnDestroy {
   async exportPng(): Promise<void> {
     if (!this.result || this.exporting) return;
     this.exporting = true;
-    Swal.fire({ title: 'Generando imagen…', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: this.translate.instant('dashboard.common.generatingImage'), allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
     try {
       const canvas = await this.captureVizCanvas();
       if (!canvas) return;
@@ -151,14 +158,14 @@ export class ReportViewComponent implements OnInit, OnDestroy {
         URL.revokeObjectURL(url);
       }, 'image/png');
     } catch (err) {
-      Swal.fire('Error', 'No se pudo exportar la imagen.', 'error');
+      Swal.fire(this.translate.instant('dashboard.common.errorTitle'), this.translate.instant('dashboard.common.exportImageError'), 'error');
     } finally { Swal.close(); this.exporting = false; }
   }
 
   async exportPdf(): Promise<void> {
     if (!this.result || this.exporting) return;
     this.exporting = true;
-    Swal.fire({ title: 'Generando PDF…', html: 'Capturando visualizaciones…', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: this.translate.instant('dashboard.common.generatingPdf'), html: this.translate.instant('dashboard.common.capturing'), allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
     try {
       const { default: jsPDF } = await import('jspdf');
       const { default: autoTable } = await import('jspdf-autotable');
@@ -289,14 +296,14 @@ export class ReportViewComponent implements OnInit, OnDestroy {
       }
       pdf.save(`${this.reportName}.pdf`);
     } catch (err) {
-      Swal.fire('Error', 'No se pudo exportar el PDF.', 'error');
+      Swal.fire(this.translate.instant('dashboard.common.errorTitle'), this.translate.instant('dashboard.common.exportPdfError'), 'error');
     } finally { Swal.close(); this.exporting = false; }
   }
 
   async exportExcel(): Promise<void> {
     if (!this.result || this.exporting) return;
     this.exporting = true;
-    Swal.fire({ title: 'Generando Excel…', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: this.translate.instant('dashboard.common.generatingExcel'), allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
     try {
       const ExcelJS = await import('exceljs');
       const wb = new ExcelJS.Workbook();
@@ -388,7 +395,7 @@ export class ReportViewComponent implements OnInit, OnDestroy {
       const a = document.createElement('a'); a.href = url; a.download = `${this.reportName}.xlsx`; a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      Swal.fire('Error', 'No se pudo exportar el Excel.', 'error');
+      Swal.fire(this.translate.instant('dashboard.common.errorTitle'), this.translate.instant('dashboard.common.exportExcelError'), 'error');
     } finally { Swal.close(); this.exporting = false; }
   }
 

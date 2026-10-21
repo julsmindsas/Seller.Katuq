@@ -5,6 +5,8 @@ import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Subject, of } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
+import { traducirCatalogo } from '../model/catalog-i18n';
 
 import { ReportsService } from '../../../shared/services/dashboard/reports.service';
 import { SOURCE_CATALOG, findDimension, findMeasure, findSource } from '../model/source-catalog';
@@ -144,7 +146,8 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   constructor(
     private reportsService: ReportsService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -340,12 +343,16 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
     return findDimension(this.source.id, field.id)?.granularities || ['day'];
   }
 
+  cat(texto: string | undefined | null): string {
+    return traducirCatalogo(this.translate, texto);
+  }
+
   buildSpec(): ReportSpec | null {
     if (!this.source) {
       return null;
     }
     if (this.values.length === 0 && !this.activeVizTypes.has('table')) {
-      this.errorMsg = 'Agrega al menos una medida en Valores.';
+      this.errorMsg = 'dashboard.builder.needValue';
       return null;
     }
 
@@ -406,7 +413,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((err) => {
           console.error('[ReportBuilder] Query error:', err);
-          this.errorMsg = err?.error?.error || err?.error?.message || err?.message || 'Error al ejecutar la consulta.';
+          this.errorMsg = err?.error?.error || err?.error?.message || err?.message || 'dashboard.common.queryError';
           return of(null);
         }),
         finalize(() => (this.running = false))
@@ -445,13 +452,13 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
    */
   openCalcModal(existing?: CalculatedMeasureDef): void {
     if (this.values.length === 0 && !existing) {
-      Swal.fire('Atención', 'Agrega al menos una medida en Valores antes de crear un cálculo.', 'warning');
+      Swal.fire(this.translate.instant('dashboard.common.attention'), this.translate.instant('dashboard.builder.calc.needMeasure'), 'warning');
       return;
     }
     const isEdit = !!existing;
     const refs = availableCalcRefs(this.values, this.calculated, existing?.id);
     const refButtons = refs.length === 0
-      ? '<p style="font-size:12px;color:#9ca3af;font-style:italic;">No hay medidas disponibles.</p>'
+      ? `<p style="font-size:12px;color:#9ca3af;font-style:italic;">${this.translate.instant('dashboard.builder.calc.noMeasures')}</p>`
       : refs.map((r) => `
           <button type="button" class="calc-ref-btn" data-label="${this.escapeHtml(r.label)}"
             style="margin:3px;padding:4px 10px;background:${r.kind === 'calc' ? '#fef3c7' : '#dbeafe'};
@@ -463,54 +470,54 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
 
     const html = `
       <div style="text-align:left;font-size:13px;">
-        <label style="display:block;font-weight:600;margin-bottom:4px;">Nombre del cálculo</label>
+        <label style="display:block;font-weight:600;margin-bottom:4px;">${this.translate.instant('dashboard.builder.calc.name')}</label>
         <input id="calc-label" type="text" value="${this.escapeHtml(existing?.label || '')}"
-          placeholder="Ej: Margen"
+          placeholder="${this.translate.instant('dashboard.builder.calc.namePlaceholder')}"
           style="width:100%;padding:7px 9px;border:1px solid #d1d5db;border-radius:4px;margin-bottom:12px;font-size:13px;" />
 
-        <label style="display:block;font-weight:600;margin-bottom:4px;">Expresión</label>
+        <label style="display:block;font-weight:600;margin-bottom:4px;">${this.translate.instant('dashboard.builder.calc.expression')}</label>
         <textarea id="calc-expr" rows="3"
-          placeholder="Ej: [Total Pedido (sum)] - [Costo (sum)]"
+          placeholder="${this.translate.instant('dashboard.builder.calc.expressionPlaceholder')}"
           style="width:100%;padding:7px 9px;border:1px solid #d1d5db;border-radius:4px;font-family:monospace;font-size:12px;margin-bottom:6px;">${this.escapeHtml(existing?.expression || '')}</textarea>
 
         <p style="font-size:11px;color:#6b7280;margin:0 0 6px;">
-          Operadores: <code>+ - * /</code> y paréntesis. Clic en una medida para insertarla:
+          ${this.translate.instant('dashboard.builder.calc.operatorsHelp')}
         </p>
         <div id="calc-refs" style="margin-bottom:10px;max-height:120px;overflow-y:auto;">${refButtons}</div>
 
         <p style="font-size:11px;color:#6b7280;margin:0 0 6px;">
-          Funciones agregadas (clic para insertar plantilla; reemplaza el <code>[]</code> por una medida):
+          ${this.translate.instant('dashboard.builder.calc.functionsHelp')}
         </p>
         <div id="calc-fns" style="margin-bottom:12px;">
           <button type="button" class="calc-fn-btn" data-template="total([])"
             style="margin:3px;padding:4px 10px;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:4px;font-size:11px;cursor:pointer;font-family:monospace;"
-            title="Suma total de la columna (escalar)">total([])</button>
+            title="${this.translate.instant('dashboard.builder.calc.fnTotal')}">total([])</button>
           <button type="button" class="calc-fn-btn" data-template="pct_of_total([])"
             style="margin:3px;padding:4px 10px;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:4px;font-size:11px;cursor:pointer;font-family:monospace;"
-            title="Porcentaje sobre el total de la columna (0-100)">pct_of_total([])</button>
+            title="${this.translate.instant('dashboard.builder.calc.fnPct')}">pct_of_total([])</button>
           <button type="button" class="calc-fn-btn" data-template="running_total([])"
             style="margin:3px;padding:4px 10px;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:4px;font-size:11px;cursor:pointer;font-family:monospace;"
-            title="Suma acumulada de arriba hacia abajo">running_total([])</button>
+            title="${this.translate.instant('dashboard.builder.calc.fnRunning')}">running_total([])</button>
           <button type="button" class="calc-fn-btn" data-template="rank([])"
             style="margin:3px;padding:4px 10px;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:4px;font-size:11px;cursor:pointer;font-family:monospace;"
-            title="Ranking 1-based (1 = mayor valor). Para ascendente usa rank([], 'asc')">rank([])</button>
+            title="${this.translate.instant('dashboard.builder.calc.fnRank')}">rank([])</button>
         </div>
 
-        <label style="display:block;font-weight:600;margin-bottom:4px;">Formato</label>
+        <label style="display:block;font-weight:600;margin-bottom:4px;">${this.translate.instant('dashboard.builder.calc.format')}</label>
         <select id="calc-format" style="width:100%;padding:7px 9px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;">
-          <option value="number" ${existing?.format === 'number' || !existing?.format ? 'selected' : ''}>Número</option>
-          <option value="currency" ${existing?.format === 'currency' ? 'selected' : ''}>Moneda (COP)</option>
-          <option value="percent" ${existing?.format === 'percent' ? 'selected' : ''}>Porcentaje</option>
+          <option value="number" ${existing?.format === 'number' || !existing?.format ? 'selected' : ''}>${this.translate.instant('dashboard.builder.calc.formatNumber')}</option>
+          <option value="currency" ${existing?.format === 'currency' ? 'selected' : ''}>${this.translate.instant('dashboard.builder.calc.formatCurrency')}</option>
+          <option value="percent" ${existing?.format === 'percent' ? 'selected' : ''}>${this.translate.instant('dashboard.builder.calc.formatPercent')}</option>
         </select>
       </div>
     `;
     Swal.fire({
-      title: isEdit ? 'Editar cálculo' : 'Nuevo cálculo',
+      title: isEdit ? this.translate.instant('dashboard.builder.calc.editTitle') : this.translate.instant('dashboard.builder.calc.newTitle'),
       html,
       width: 560,
       showCancelButton: true,
-      confirmButtonText: isEdit ? 'Guardar' : 'Crear',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: isEdit ? this.translate.instant('comun.guardar') : this.translate.instant('dashboard.builder.calc.create'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       focusConfirm: false,
       didOpen: () => {
         // Click en una ref → insertarla en el textarea en la posición del cursor
@@ -550,11 +557,11 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
         const label = (labelEl?.value || '').trim();
         const expression = (exprEl?.value || '').trim();
         const format = (fmtEl?.value || 'number') as 'number' | 'currency' | 'percent';
-        if (!label) { Swal.showValidationMessage('Falta el nombre'); return false; }
-        if (!expression) { Swal.showValidationMessage('Falta la expresión'); return false; }
+        if (!label) { Swal.showValidationMessage(this.translate.instant('dashboard.builder.calc.missingName')); return false; }
+        if (!expression) { Swal.showValidationMessage(this.translate.instant('dashboard.builder.calc.missingExpression')); return false; }
         const err = validateCalcExpression(expression);
         if (err) {
-          Swal.showValidationMessage('Expresión inválida: ' + err);
+          Swal.showValidationMessage(this.translate.instant('dashboard.builder.calc.invalidExpression', { error: err }));
           return false;
         }
         return { label, expression, format };
@@ -709,7 +716,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((err) => {
-          Swal.fire('Error', err?.error?.message || 'No se pudo guardar.', 'error');
+          Swal.fire(this.translate.instant('dashboard.common.errorTitle'), err?.error?.message || this.translate.instant('dashboard.builder.saveError'), 'error');
           return of(null);
         }),
         finalize(() => (this.saving = false))
@@ -719,14 +726,14 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
           return;
         }
         this.reportId = saved.id || this.reportId;
-        Swal.fire({ icon: 'success', title: 'Reporte guardado', timer: 1500, showConfirmButton: false });
+        Swal.fire({ icon: 'success', title: this.translate.instant('dashboard.builder.saved'), timer: 1500, showConfirmButton: false });
       });
   }
 
   async exportExcel(): Promise<void> {
     if (!this.result || this.exporting) return;
     this.exporting = true;
-    Swal.fire({ title: 'Generando Excel…', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: this.translate.instant('dashboard.common.generatingExcel'), allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
     try {
       const ExcelJS = await import('exceljs');
       const wb = new ExcelJS.Workbook();
@@ -887,7 +894,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('[ReportBuilder] Error exportExcel:', err);
-      Swal.fire('Error', 'No se pudo exportar el Excel.', 'error');
+      Swal.fire(this.translate.instant('dashboard.common.errorTitle'), this.translate.instant('dashboard.common.exportExcelError'), 'error');
     } finally {
       Swal.close();
       this.exporting = false;
@@ -935,7 +942,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   async exportPng(): Promise<void> {
     if (!this.result || this.exporting) return;
     this.exporting = true;
-    Swal.fire({ title: 'Generando imagen…', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: this.translate.instant('dashboard.common.generatingImage'), allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
     try {
       const canvas = await this.captureVizCanvas();
       if (!canvas) return;
@@ -950,7 +957,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       }, 'image/png');
     } catch (err) {
       console.error('[ReportBuilder] Error exportPng:', err);
-      Swal.fire('Error', 'No se pudo exportar la imagen.', 'error');
+      Swal.fire(this.translate.instant('dashboard.common.errorTitle'), this.translate.instant('dashboard.common.exportImageError'), 'error');
     } finally {
       Swal.close();
       this.exporting = false;
@@ -960,7 +967,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   async exportPdf(): Promise<void> {
     if (!this.result || this.exporting) return;
     this.exporting = true;
-    Swal.fire({ title: 'Generando PDF…', html: 'Capturando visualizaciones…', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: this.translate.instant('dashboard.common.generatingPdf'), html: this.translate.instant('dashboard.common.capturing'), allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
     try {
       const { default: jsPDF } = await import('jspdf');
       const { default: autoTable } = await import('jspdf-autotable');
@@ -1174,7 +1181,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       pdf.save(`${this.reportName}.pdf`);
     } catch (err) {
       console.error('[ReportBuilder] Error exportPdf:', err);
-      Swal.fire('Error', 'No se pudo exportar el PDF.', 'error');
+      Swal.fire(this.translate.instant('dashboard.common.errorTitle'), this.translate.instant('dashboard.common.exportPdfError'), 'error');
     } finally {
       Swal.close();
       this.exporting = false;
@@ -1227,7 +1234,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       return;
     }
     if (!this.source) {
-      Swal.fire('Atención', 'Guarda el reporte antes de publicarlo.', 'warning');
+      Swal.fire(this.translate.instant('dashboard.common.attention'), this.translate.instant('dashboard.builder.saveBeforePublish'), 'warning');
       return;
     }
     this.publishing = true;
@@ -1264,7 +1271,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((err) => {
           this.isPublic = false;
-          Swal.fire('Error', err?.error?.message || 'No se pudo publicar.', 'error');
+          Swal.fire(this.translate.instant('dashboard.common.errorTitle'), err?.error?.message || this.translate.instant('dashboard.builder.publishError'), 'error');
           return of(null);
         }),
         finalize(() => (this.publishing = false)),
@@ -1279,28 +1286,28 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   private showPublishUrl(): void {
     const url = `${window.location.origin}/r/${this.reportId}`;
     Swal.fire({
-      title: 'Reporte publicado',
+      title: this.translate.instant('dashboard.builder.publishedTitle'),
       html: `
         <p style="font-size:13px;color:#6b7280;margin-bottom:12px;">
-          Cualquier persona con el enlace puede ver este reporte.
+          ${this.translate.instant('dashboard.builder.publishedText')}
         </p>
         <div style="display:flex;gap:8px;align-items:center;">
           <input id="pub-url" readonly value="${url}"
             style="flex:1;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;background:#f9fafb;color:#111827;" />
           <button id="copy-btn" type="button"
             style="padding:8px 14px;background:#5F3FE0;color:#fff;border:none;border-radius:11px;font-size:13px;cursor:pointer;white-space:nowrap;">
-            Copiar
+            ${this.translate.instant('dashboard.builder.copy')}
           </button>
         </div>
         <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;">
           <a href="${url}" target="_blank"
             style="font-size:12px;color:#5F3FE0;text-decoration:none;">
-            <i class="fa fa-external-link-alt"></i> Abrir enlace
+            <i class="fa fa-external-link-alt"></i> ${this.translate.instant('dashboard.builder.openLink')}
           </a>
           <span style="color:#d1d5db;">·</span>
           <button id="unpublish-btn" type="button"
             style="font-size:12px;color:#6b7280;background:none;border:none;cursor:pointer;padding:0;">
-            Despublicar
+            ${this.translate.instant('dashboard.builder.unpublish')}
           </button>
         </div>
       `,
@@ -1310,7 +1317,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
         document.getElementById('copy-btn')?.addEventListener('click', () => {
           navigator.clipboard.writeText(url).then(() => {
             const btn = document.getElementById('copy-btn') as HTMLButtonElement;
-            if (btn) { btn.textContent = '¡Copiado!'; btn.style.background = '#16a34a'; }
+            if (btn) { btn.textContent = this.translate.instant('dashboard.builder.copied'); btn.style.background = '#16a34a'; }
           });
         });
         document.getElementById('unpublish-btn')?.addEventListener('click', () => {
@@ -1329,7 +1336,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       .save({ ...report, isPublic: false })
       .pipe(takeUntil(this.destroy$), catchError(() => of(null)))
       .subscribe((saved) => {
-        if (saved) Swal.fire({ icon: 'success', title: 'Reporte despublicado', timer: 1500, showConfirmButton: false });
+        if (saved) Swal.fire({ icon: 'success', title: this.translate.instant('dashboard.builder.unpublished'), timer: 1500, showConfirmButton: false });
         else this.isPublic = true;
       });
   }
@@ -1351,25 +1358,25 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       <div style="text-align:left; font-size:13px;">
         <label style="display:flex; align-items:center; gap:8px; margin-bottom:14px; cursor:pointer;">
           <input id="share-public" type="checkbox" ${checkedAttr} style="transform:scale(1.2);" />
-          <span><strong>Reporte público</strong> — visible para todos los usuarios de la empresa</span>
+          <span><strong>${this.translate.instant('dashboard.builder.shareModal.public')}</strong> — ${this.translate.instant('dashboard.builder.shareModal.publicHelp')}</span>
         </label>
         <div style="margin-bottom:12px;">
-          <label style="display:block; font-weight:600; margin-bottom:4px;">Usuarios específicos (emails, separados por coma):</label>
-          <textarea id="share-users" rows="2" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" placeholder="vendedor1@empresa.com, vendedor2@empresa.com">${usersStr}</textarea>
+          <label style="display:block; font-weight:600; margin-bottom:4px;">${this.translate.instant('dashboard.builder.shareModal.users')}</label>
+          <textarea id="share-users" rows="2" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" placeholder="${this.translate.instant('dashboard.builder.shareModal.usersPlaceholder')}">${usersStr}</textarea>
         </div>
         <div>
-          <label style="display:block; font-weight:600; margin-bottom:4px;">Roles (separados por coma):</label>
+          <label style="display:block; font-weight:600; margin-bottom:4px;">${this.translate.instant('dashboard.builder.shareModal.roles')}</label>
           <textarea id="share-roles" rows="2" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" placeholder="Vendedor, Administrador">${rolesStr}</textarea>
         </div>
-        <p style="margin-top:12px; color:#666; font-size:12px;">El propietario del reporte siempre tiene acceso.</p>
+        <p style="margin-top:12px; color:#666; font-size:12px;">${this.translate.instant('dashboard.builder.shareModal.ownerNote')}</p>
       </div>
     `;
     Swal.fire({
-      title: 'Compartir reporte',
+      title: this.translate.instant('dashboard.builder.shareModal.title'),
       html,
       showCancelButton: true,
-      confirmButtonText: 'Aplicar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('dashboard.builder.shareModal.apply'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       focusConfirm: false,
       preConfirm: () => {
         const isPub = (document.getElementById('share-public') as HTMLInputElement)?.checked || false;

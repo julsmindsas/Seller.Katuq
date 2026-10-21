@@ -1,12 +1,12 @@
 <div class="wa-pedidos">
   <!-- Filtros por estado -->
-  <div class="wa-pedidos__filtros" role="tablist" aria-label="Filtrar pedidos">
+  <div class="wa-pedidos__filtros" role="tablist" [attr.aria-label]="'notificaciones.whatsapp.orders.filterAria' | translate">
     <button
       *ngFor="let f of [
-        { id: 'todo', label: 'Todos' },
-        { id: 'bot', label: 'Bot' },
-        { id: 'humano', label: 'Asesor' },
-        { id: 'cerrada', label: 'Cerrados' }
+        { id: 'todo', label: 'notificaciones.whatsapp.orders.filterAll' },
+        { id: 'bot', label: 'notificaciones.whatsapp.orders.filterBot' },
+        { id: 'humano', label: 'notificaciones.whatsapp.orders.filterAgent' },
+        { id: 'cerrada', label: 'notificaciones.whatsapp.orders.filterClosed' }
       ]"
       type="button"
       class="wa-pedidos__filtro"
@@ -14,22 +14,21 @@
       [class.is-active]="filtro === f.id"
       (click)="setFiltro($any(f.id))"
     >
-      {{ f.label }}
+      {{ f.label | translate }}
       <span class="wa-pedidos__filtro-count">{{ contar($any(f.id)) }}</span>
     </button>
   </div>
 
   <div class="wa-pedidos__loading" *ngIf="loading">
-    <i class="fa fa-spinner fa-spin"></i> Cargando pedidos...
+    <i class="fa fa-spinner fa-spin"></i> {{ 'notificaciones.whatsapp.orders.loading' | translate }}
   </div>
 
   <!-- Estado vacío -->
   <div class="wa-pedidos__empty" *ngIf="!loading && filtradas.length === 0">
     <i class="fa fa-shopping-basket" aria-hidden="true"></i>
-    <p><strong>Sin pedidos del bot todavía.</strong></p>
+    <p><strong>{{ 'notificaciones.whatsapp.orders.emptyTitle' | translate }}</strong></p>
     <p>
-      Cuando el bot atienda una conversación de compra, acá vas a ver el
-      carrito en vivo, quién la lleva y la cotización cuando cierre.
+      {{ 'notificaciones.whatsapp.orders.emptyText' | translate }}
     </p>
   </div>
 
@@ -52,7 +51,7 @@
           class="wa-pedidos__estado"
           [attr.data-estado]="s.estado"
         >
-          {{ estadoEtiqueta(s) }}
+          {{ estadoEtiqueta(s) | translate }}
         </span>
         <span class="wa-pedidos__telefono" *ngIf="s.phoneMasked">{{ s.phoneMasked }}</span>
       </div>
@@ -61,8 +60,7 @@
       <div class="wa-pedidos__carrito" *ngIf="s.carrito.length > 0">
         <span class="wa-pedidos__carrito-resumen">
           <i class="fa fa-shopping-cart" aria-hidden="true"></i>
-          {{ s.carrito.length }} producto(s) ·
-          {{ s.totalCarrito | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+          {{ 'notificaciones.whatsapp.orders.cartSummary' | translate: { count: s.carrito.length, total: (s.totalCarrito | currency: "COP" : "symbol-narrow" : "1.0-0") } }}
         </span>
         <span class="wa-pedidos__carrito-detalle">
           <ng-container *ngFor="let l of s.carrito.slice(0, 3); let last = last">
@@ -75,7 +73,7 @@
       <!-- Cotización creada -->
       <div class="wa-pedidos__cotizacion" *ngIf="s.cotizacionCreada?.numero">
         <i class="fa fa-file-text-o" aria-hidden="true"></i>
-        {{ s.cotizacionCreada?.numero }} — lista para confirmar
+        {{ 'notificaciones.whatsapp.orders.quoteReady' | translate: { numero: s.cotizacionCreada?.numero } }}
       </div>
 
       <div class="wa-pedidos__motivo" *ngIf="s.estado === 'humano' && s.motivoTraspaso">

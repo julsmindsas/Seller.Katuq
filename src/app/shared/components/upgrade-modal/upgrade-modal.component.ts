@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, Output, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { SubscriptionService } from '../../services/subscription.service';
 import { Subject, timer } from 'rxjs';
 import { switchMap, take, takeUntil } from 'rxjs/operators';
@@ -32,7 +33,7 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
   securityReady = false;
   termsReady = false;
   step: 'info' | 'card' | 'pending' | 'success' = 'info';
-  pendingMessage = 'Estamos esperando la confirmación segura de Wompi.';
+  pendingMessage = 'shell.upgrade.msg.waiting';
   paymentEnvironment: 'sandbox' | 'production' | null = null;
   productionTestCharge = false;
   initialAmountCOP: number | null = null;
@@ -69,13 +70,16 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
   cardCvcError = '';
   cardHolderError = '';
 
-  constructor(private subscriptionService: SubscriptionService) {}
+  constructor(
+    private subscriptionService: SubscriptionService,
+    private translate: TranslateService
+  ) {}
 
   get paymentButtonLabel(): string {
-    if (this.mode === 'replace') return 'Guardar nueva tarjeta';
+    if (this.mode === 'replace') return this.translate.instant('shell.upgrade.button.saveCard');
     return this.initialAmountCOP
-      ? `Pagar $${this.initialAmountCOP.toLocaleString('es-CO')} COP`
-      : 'Pagar y activar';
+      ? this.translate.instant('shell.upgrade.button.payAmount', { amount: this.initialAmountCOP.toLocaleString('es-CO') })
+      : this.translate.instant('shell.upgrade.button.payActivate');
   }
 
   get isSandboxPayment(): boolean {
@@ -107,7 +111,7 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
       visa: 'Visa',
       mastercard: 'Mastercard',
       amex: 'American Express',
-      unknown: 'Tarjeta',
+      unknown: 'shell.upgrade.card.brandUnknown',
     };
     return labels[this.cardBrand];
   }
@@ -148,7 +152,7 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
   goToCardStep(): void {
     if (!this.wompiApiUrl || !this.wompiPublicKey ||
         (this.mode === 'upgrade' && !this.initialAmountCOP)) {
-      this.cardError = 'Espera mientras confirmamos el valor y la conexión segura con Wompi.';
+      this.cardError = 'shell.upgrade.msg.waitConfig';
       return;
     }
     this.step = 'card';
@@ -173,7 +177,7 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
         if (!config?.publicKey || !allowedApiUrls.includes(config.apiUrl) || !config.initialAmountCOP ||
             !config.quoteId || !config.quoteExpiresAt ||
             !String(config.tokenizationPublicKey || '').includes('BEGIN PUBLIC KEY')) {
-          this.cardError = 'Wompi no está configurado en este entorno';
+          this.cardError = 'shell.upgrade.msg.notConfigured';
           return;
         }
 
@@ -192,7 +196,7 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
       },
       error: () => {
         this.configLoading = false;
-        this.cardError = 'Wompi no está configurado en este entorno';
+        this.cardError = 'shell.upgrade.msg.notConfigured';
       }
     });
   }
@@ -212,11 +216,11 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
             this.personalDataLink = personalAuth.permalink;
             this.termsReady = true;
           } else {
-            this.cardError = 'Wompi no entregó las autorizaciones obligatorias. No ingreses la tarjeta.';
+            this.cardError = 'shell.upgrade.msg.noAuthorizations';
           }
         },
         error: () => {
-          this.cardError = 'No se pudieron cargar los términos de Wompi';
+          this.cardError = 'shell.upgrade.msg.termsError';
         }
       });
   }
@@ -225,12 +229,12 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
   async submitCard(): Promise<void> {
     if (!this.validateCard()) return;
     if (!this.acceptedPolicy || !this.acceptedPersonalData || !this.termsReady) {
-      this.cardError = 'Debes aceptar los términos y la política de datos personales';
+      this.cardError = 'shell.upgrade.msg.acceptTerms';
       return;
     }
     if (!this.securityReady || !this.wompiTokenizationPublicKeyPem ||
         (this.mode === 'upgrade' && !this.paymentQuoteId)) {
-      this.cardError = 'El cifrado seguro de Wompi todavía no está listo';
+      this.cardError = 'shell.upgrade.msg.securityNotReady';
       return;
     }
 
@@ -241,7 +245,7 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
       // 2a. Cifrar como JWE y tokenizar directamente en Wompi. La petición
       // nunca contiene PAN/CVC legibles y el backend de Katuq solo ve el token.
       if (!this.wompiApiUrl || !this.wompiPublicKey) {
-        throw new Error('Wompi no está configurado en este entorno');
+        throw new Error('shell.upgrade.msg.notConfigured');
       }
       const encryptedPayload = await encryptCardDataForWompi({
         number: onlyDigits(this.cardNumber, 19),
@@ -257,7 +261,7 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
       ).toPromise();
 
       if (!tokenResp?.data?.id) {
-        throw new Error('No se pudo tokenizar la tarjeta');
+        throw new Error('shell.upgrade.msg.tokenizeError');
       }
 
       const cardToken = tokenResp.data.id;
@@ -283,7 +287,7 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
         })).toPromise();
 
       if (!sourceResp?.success) {
-        throw new Error(sourceResp?.error || 'Error al registrar medio de pago');
+        throw new Error(sourceResp?.error || 'shell.upgrade.msg.sourceError');
       }
 
       if (this.mode === 'replace') {
@@ -297,7 +301,7 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
       // El backend realiza el primer cobro. El plan permanece Gratis hasta que
       // el webhook de Wompi confirme que la transacción fue aprobada.
       if (!sourceResp.subscriptionId) {
-        throw new Error('No recibimos el identificador para verificar el pago');
+        throw new Error('shell.upgrade.msg.noSubscriptionId');
       }
 
       this.step = 'pending';
@@ -327,7 +331,7 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
     this.validateExpiry();
     this.validateCvc();
     this.validateHolder();
-    this.cardError = this.isCardFormValid ? '' : 'Revisa los campos marcados antes de continuar';
+    this.cardError = this.isCardFormValid ? '' : 'shell.upgrade.msg.reviewFields';
     return this.isCardFormValid;
   }
 
@@ -371,32 +375,32 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
   validateReceiptEmail(): void {
     this.receiptEmailError = isValidReceiptEmail(this.receiptEmail)
       ? ''
-      : 'Escribe un correo válido para recibir el comprobante.';
+      : 'shell.upgrade.msg.invalidEmail';
   }
 
   validateCardNumber(): void {
     const digits = onlyDigits(this.cardNumber, 19);
     this.cardNumberError = digits.length < 13 || digits.length > 19
-      ? 'El número debe tener entre 13 y 19 dígitos.'
-      : passesLuhn(digits) ? '' : 'Revisa el número: la validación de la tarjeta no coincide.';
+      ? 'shell.upgrade.msg.numberLength'
+      : passesLuhn(digits) ? '' : 'shell.upgrade.msg.numberInvalid';
   }
 
   validateExpiry(): void {
     this.expiryError = isValidExpiry(this.cardExpMonth, this.cardExpYear)
       ? ''
-      : 'La fecha debe ser válida y estar vigente.';
+      : 'shell.upgrade.msg.expiryInvalid';
   }
 
   validateCvc(): void {
     this.cardCvcError = isValidCvc(this.cardCvc, this.cardBrand)
       ? ''
-      : this.cardBrand === 'amex' ? 'American Express usa 4 dígitos.' : 'El CVC debe tener 3 dígitos.';
+      : this.cardBrand === 'amex' ? 'shell.upgrade.msg.cvcAmex' : 'shell.upgrade.msg.cvcLength';
   }
 
   validateHolder(): void {
     this.cardHolderError = isValidCardHolder(this.cardHolder)
       ? ''
-      : 'Escribe el nombre completo tal como aparece en la tarjeta.';
+      : 'shell.upgrade.msg.holderInvalid';
   }
 
   private clearSensitiveCardFields(): void {
@@ -411,17 +415,17 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
   private friendlyPaymentError(error: any): string {
     const errorCode = String(error?.error?.error?.type || error?.error?.error || '').toUpperCase();
     if (errorCode.includes('CARD') || errorCode.includes('UNPROCESSABLE')) {
-      return 'Wompi no pudo validar la tarjeta. Revisa los datos o usa otra tarjeta.';
+      return 'shell.upgrade.msg.cardRejected';
     }
     if (error?.status === 0) {
-      return 'No pudimos conectar de forma segura con Wompi. Verifica tu conexión e intenta de nuevo.';
+      return 'shell.upgrade.msg.connectionError';
     }
-    return error?.error?.message || error?.message || 'No pudimos procesar el pago de forma segura.';
+    return error?.error?.message || error?.message || 'shell.upgrade.msg.paymentError';
   }
 
   private waitForPaymentConfirmation(subscriptionId: string): void {
     this.stopPaymentPolling$.next();
-    this.pendingMessage = 'Estamos esperando la confirmación segura de Wompi.';
+    this.pendingMessage = 'shell.upgrade.msg.waiting';
 
     timer(0, 1500).pipe(
       take(20),
@@ -440,15 +444,15 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
         if (['failed', 'declined', 'error', 'voided'].includes(String(status.paymentStatus).toLowerCase())) {
           this.stopPaymentPolling$.next();
           this.step = 'card';
-          this.loadPaymentConfig('Wompi no aprobó el pago. Revisa la tarjeta o intenta con otra.');
+          this.loadPaymentConfig('shell.upgrade.msg.paymentDeclined');
         }
       },
       error: () => {
-        this.pendingMessage = 'El pago sigue en verificación. Puedes cerrar esta ventana; activaremos Premium cuando Wompi lo confirme.';
+        this.pendingMessage = 'shell.upgrade.msg.stillVerifyingClose';
       },
       complete: () => {
         if (this.step === 'pending') {
-          this.pendingMessage = 'El pago sigue en verificación. Puedes continuar usando Gratis; Premium se activará al recibir la confirmación.';
+          this.pendingMessage = 'shell.upgrade.msg.stillVerifyingFree';
         }
       }
     });
@@ -468,7 +472,7 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
     this.expiryError = '';
     this.cardCvcError = '';
     this.cardHolderError = '';
-    this.pendingMessage = 'Estamos esperando la confirmación segura de Wompi.';
+    this.pendingMessage = 'shell.upgrade.msg.waiting';
     this.wompiApiUrl = '';
     this.wompiPublicKey = '';
     this.wompiTokenizationPublicKeyPem = '';

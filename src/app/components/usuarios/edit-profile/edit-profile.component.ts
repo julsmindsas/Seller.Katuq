@@ -8,6 +8,7 @@ import { UtilsService } from '../../../shared/services/utils.service';
 import { Subscription } from 'rxjs';
 import { Location } from '@angular/common';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-edit-profile',
@@ -61,7 +62,8 @@ export class EditProfileComponent implements OnInit, OnDestroy {
     private router: Router,
     config: NgbModalConfig,
     private modalService: NgbModal,
-    private location: Location
+    private location: Location,
+    private translate: TranslateService
   ) {
 
   }
@@ -86,7 +88,7 @@ export class EditProfileComponent implements OnInit, OnDestroy {
     this.kaiPrompt = this.UserLogged.kaiPrompt || ''; // Cargar prompt existente o inicializar vacío
 
     // Construir el placeholder dinámico más explícito
-    this.kaiPromptPlaceholder = `Aquí puedes definir la personalidad o el rol de K.A.I, similar a como personalizarías en ChatGPT. Por ejemplo: "Actúa como un asistente experto en análisis de datos de ventas para ${this.UserLogged.rol}. Proporciona insights claros y accionables basados en los datos que te proporciono. Mi nombre es ${this.UserLogged.name}."`;
+    this.kaiPromptPlaceholder = 'usuarios.editProfile.kaiPlaceholder';
 
   }
 
@@ -110,8 +112,8 @@ export class EditProfileComponent implements OnInit, OnDestroy {
           if (res.error) {
             Swal.fire({
               icon: "error",
-              title: 'Atención!',
-              text: 'Inténtelo nuevamente',
+              title: this.translate.instant('usuarios.editProfile.photoErrorTitle'),
+              text: this.translate.instant('usuarios.editProfile.photoErrorText'),
               showConfirmButton: false,
               timer: 1500
             });
@@ -125,7 +127,7 @@ export class EditProfileComponent implements OnInit, OnDestroy {
             localStorage.setItem('user', JSON.stringify(this.UserLogged));
             Swal.fire({
               icon: 'success',
-              title: 'Imagen de perfil cambiada!',
+              title: this.translate.instant('usuarios.editProfile.photoChanged'),
               showConfirmButton: false,
               timer: 1700
             });
@@ -152,8 +154,8 @@ export class EditProfileComponent implements OnInit, OnDestroy {
         if (res.error) {
           Swal.fire({
             icon: "error",
-            title: 'Error al guardar',
-            text: 'No se pudo actualizar el prompt. Inténtelo nuevamente.',
+            title: this.translate.instant('usuarios.editProfile.kaiSaveErrorTitle'),
+            text: this.translate.instant('usuarios.editProfile.kaiSaveErrorText'),
             showConfirmButton: true
           });
         } else {
@@ -172,8 +174,8 @@ export class EditProfileComponent implements OnInit, OnDestroy {
 
           Swal.fire({
             icon: 'success',
-            title: '¡Prompt guardado!',
-            text: 'Tu prompt personalizado para K.A.I ha sido actualizado.',
+            title: this.translate.instant('usuarios.editProfile.kaiSavedTitle'),
+            text: this.translate.instant('usuarios.editProfile.kaiSavedText'),
             showConfirmButton: false,
             timer: 1700
           });
@@ -183,8 +185,8 @@ export class EditProfileComponent implements OnInit, OnDestroy {
         console.error('Error updating KAI prompt:', err);
         Swal.fire({
           icon: "error",
-          title: 'Error de conexión',
-          text: 'No se pudo conectar con el servidor para guardar el prompt.',
+          title: this.translate.instant('usuarios.editProfile.connectionErrorTitle'),
+          text: this.translate.instant('usuarios.editProfile.connectionErrorText'),
           showConfirmButton: true
         });
       }
@@ -212,7 +214,7 @@ export class EditProfileComponent implements OnInit, OnDestroy {
 
     Swal.fire({
       icon: 'success',
-      title: '¡ Cambios guardados con éxito !',
+      title: this.translate.instant('usuarios.editProfile.preferencesSaved'),
       showConfirmButton: false,
       timer: 1500
     });

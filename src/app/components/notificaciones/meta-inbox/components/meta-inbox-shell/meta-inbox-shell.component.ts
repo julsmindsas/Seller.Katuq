@@ -4,6 +4,7 @@ import { Subject, interval } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
 
 import { LoaderService } from 'src/app/shared/services/loader.service';
+import { TranslateService } from '@ngx-translate/core';
 
 import { MetaInboxService } from '../../meta-inbox.service';
 import {
@@ -61,6 +62,7 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
     private router: Router,
     private servicio: MetaInboxService,
     private loader: LoaderService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -322,16 +324,16 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
   get textoVentana(): string {
     if (!this.ventana) return '';
     if (!this.ventana.abierta) {
-      return `Ya pasaron 24 horas desde el último mensaje. Para poder responderle, ${this.nombreContacto} tiene que escribirte de nuevo.`;
+      return this.translate.instant('notificaciones.meta.windowClosed', { nombre: this.nombreContacto });
     }
     const min = this.ventana.minutosRestantes;
-    if (min >= 120) return `Tienes ${Math.floor(min / 60)} horas para responder.`;
-    if (min >= 60) return 'Tienes alrededor de una hora para responder.';
-    return `Te quedan ${min} minutos para responder.`;
+    if (min >= 120) return this.translate.instant('notificaciones.meta.windowHours', { horas: Math.floor(min / 60) });
+    if (min >= 60) return this.translate.instant('notificaciones.meta.windowOneHour');
+    return this.translate.instant('notificaciones.meta.windowMinutes', { min });
   }
 
   get nombreContacto(): string {
-    return this.hiloActivo?.contactoNombre || 'el contacto';
+    return this.hiloActivo?.contactoNombre || this.translate.instant('notificaciones.meta.theContact');
   }
 
   get puedeEnviar(): boolean {
@@ -391,15 +393,15 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
   private explicarFallo(motivo?: string): string {
     switch (motivo) {
       case 'ventana_cerrada':
-        return `Pasaron más de 24 horas desde el último mensaje. ${this.nombreContacto} tiene que escribirte de nuevo para que puedas responderle.`;
+        return this.translate.instant('notificaciones.meta.failWindowClosed', { nombre: this.nombreContacto });
       case 'sin_conexion':
-        return `La cuenta de ${this.canalLabel} no está conectada. Conéctala en Integraciones.`;
+        return this.translate.instant('notificaciones.meta.failNotConnected', { canal: this.canalLabel });
       case 'contacto_desconocido':
-        return 'No pudimos identificar a este contacto para responderle. Pídele que te escriba de nuevo.';
+        return this.translate.instant('notificaciones.meta.failUnknownContact');
       case 'rechazado_por_meta':
-        return `${this.canalLabel} no aceptó el mensaje. Revisa que la cuenta siga conectada.`;
+        return this.translate.instant('notificaciones.meta.failRejected', { canal: this.canalLabel });
       default:
-        return 'No se pudo enviar el mensaje. Intenta de nuevo.';
+        return this.translate.instant('notificaciones.meta.failDefault');
     }
   }
 

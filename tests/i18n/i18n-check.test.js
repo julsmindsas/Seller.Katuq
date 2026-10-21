@@ -366,7 +366,7 @@ test('--json devuelve el informe completo', () => {
 
 // ---------------------------------------------------------------- configuración y repo real
 
-test('configuración del repo: lista permitida, prefijos dinámicos, módulos cerrados vacíos y bloques de D10', () => {
+test('configuración del repo: lista permitida, prefijos dinámicos, módulos cerrados del shell y bloques de D10', () => {
   const config = JSON.parse(fs.readFileSync(path.join(RAIZ, 'scripts/i18n-check.config.json'), 'utf8'));
   for (const v of ['POS', 'SKU', 'NIT', 'Katuq', 'Opttia', 'KAI', 'DIAN', 'Siigo', 'World Office',
     'Shopify', 'WooCommerce', 'WhatsApp', 'Wompi', 'Addi', 'Sistecrédito']) {
@@ -374,7 +374,16 @@ test('configuración del repo: lista permitida, prefijos dinámicos, módulos ce
   }
   assert.ok(config.igualesPermitidos.todos.includes('Email'));
   assert.ok(Array.isArray(config.prefijosDinamicos));
-  assert.deepEqual(config.modulosCerrados, []);
+  // IDI-B01b (2.7): el shell es el primer módulo cerrado. Cada carpeta cerrada existe y pertenece a
+  // IDI-B01; del encabezado quedan abiertos solo los componentes de la plantilla Cuba que nadie pinta.
+  assert.ok(config.modulosCerrados.length > 0);
+  for (const carpeta of config.modulosCerrados) {
+    assert.ok(fs.existsSync(path.join(RAIZ, 'src/app', carpeta)), `la carpeta cerrada ${carpeta} existe`);
+    assert.ok(config.bloques['IDI-B01 Shell'].some(b => carpeta === b || carpeta.startsWith(`${b}/`)), `${carpeta} es del shell`);
+  }
+  for (const cuba of ['bookmark', 'cart', 'mega-menu', 'message-box', 'notification']) {
+    assert.ok(!config.modulosCerrados.some(c => c.includes(`/elements/${cuba}`)), `${cuba} (Cuba, sin uso) sigue abierto`);
+  }
   // IDI-B00f (1.14): cuando exista de.json, 'de' sale de idiomasOpcionales y su falta pasa a error.
   const existeDe = fs.existsSync(path.join(RAIZ, 'src/assets/i18n/de.json'));
   assert.equal(config.idiomasOpcionales.includes('de'), !existeDe, 'idiomasOpcionales debe seguir a de.json');
@@ -388,14 +397,14 @@ test('configuración del repo: lista permitida, prefijos dinámicos, módulos ce
   }
 });
 
-test('package.json: i18n:check y test:i18n con las siete pruebas, sin engancharse a prebuild ni predeploy', () => {
+test('package.json: i18n:check y test:i18n con las nueve pruebas, sin engancharse a prebuild ni predeploy', () => {
   const { scripts } = JSON.parse(fs.readFileSync(path.join(RAIZ, 'package.json'), 'utf8'));
   assert.equal(scripts['i18n:check'], 'node scripts/i18n-check.js');
   assert.equal(
     scripts['test:i18n'],
     'node --test tests/i18n/app-language.test.js tests/i18n/primeng-i18n.test.js tests/i18n/i18n-check.test.js' +
       ' tests/i18n/diccionarios.test.js tests/i18n/ortografia-claves.test.js tests/i18n/aleman.test.js' +
-      ' tests/i18n/menu-titulos.test.js',
+      ' tests/i18n/menu-titulos.test.js tests/i18n/shell-cierre.test.js tests/i18n/upgrade-modal-caracterizacion.test.js',
   );
   for (const gancho of ['prebuild', 'prebuild:prod', 'predeploy', 'prerelease']) {
     assert.doesNotMatch(scripts[gancho] || '', /i18n/, gancho);

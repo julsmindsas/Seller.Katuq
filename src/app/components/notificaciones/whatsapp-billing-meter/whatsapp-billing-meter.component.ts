@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
+import { TranslateService } from '@ngx-translate/core';
 
 import {
   NotifSmsBalance,
@@ -42,7 +43,8 @@ export class WhatsappBillingMeterComponent implements OnInit, OnDestroy {
 
   constructor(
     private billingService: WhatsappBillingService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private translate: TranslateService
   ) { }
 
   ngOnInit(): void {
@@ -63,8 +65,8 @@ export class WhatsappBillingMeterComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (data) => { this.balance = data; },
         error: (err) => {
-          this.errorMessage = 'No se pudo cargar el saldo de WhatsApp.';
-          this.toastr.error(err?.error?.message || 'Error al consultar el saldo', 'Notificaciones');
+          this.errorMessage = this.translate.instant('notificaciones.billing.loadError');
+          this.toastr.error(err?.error?.message || this.translate.instant('notificaciones.billing.balanceError'), this.translate.instant('notificaciones.page.title'));
         }
       });
   }
@@ -104,9 +106,9 @@ export class WhatsappBillingMeterComponent implements OnInit, OnDestroy {
   public get lowBalanceMessage(): string {
     if (!this.balance) return '';
     if (this.balance.accountStatus === 'closing') {
-      return 'Tu cuenta está en proceso de cierre. Recarga saldo para reactivar los envíos.';
+      return 'notificaciones.billing.accountClosing';
     }
-    return 'Tu saldo está por debajo del 20% del histórico. Considera recargar para evitar interrupciones.';
+    return 'notificaciones.billing.lowBalance';
   }
 
   // --- Recarga con Wompi ---------------------------------------------------
@@ -132,16 +134,16 @@ export class WhatsappBillingMeterComponent implements OnInit, OnDestroy {
     if (this.isToppingUp) return;
     const amount = Number(this.topupAmount);
     if (!amount || isNaN(amount) || amount < this.minTopupAmount) {
-      this.toastr.warning(`La recarga mínima es $${this.minTopupAmount.toLocaleString('es-CO')}`, 'Recarga');
+      this.toastr.warning(this.translate.instant('notificaciones.billing.minTopup', { amount: this.minTopupAmount.toLocaleString('es-CO') }), this.translate.instant('notificaciones.billing.toastTitle'));
       return;
     }
     if (typeof WidgetCheckout === 'undefined') {
-      this.toastr.error('No se pudo cargar la pasarela de pago. Recarga la página e intenta de nuevo.', 'Recarga');
+      this.toastr.error(this.translate.instant('notificaciones.billing.gatewayLoadError'), this.translate.instant('notificaciones.billing.toastTitle'));
       return;
     }
 
     this.isToppingUp = true;
-    this.topupStatusMsg = 'Abriendo la pasarela de pago…';
+    this.topupStatusMsg = this.translate.instant('notificaciones.billing.openingGateway');
     const channel = this.topupChannel;
     const saldoAntes = channel === 'sms'
       ? (this.smsBalance?.balanceCOP || 0)
@@ -152,7 +154,7 @@ export class WhatsappBillingMeterComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (co) => {
           if (!co?.success || !co.reference) {
-            this.toastr.error('No se pudo iniciar la recarga.', 'Recarga');
+            this.toastr.error(this.translate.instant('notificaciones.billing.startError'), this.translate.instant('notificaciones.billing.toastTitle'));
             return;
           }
           try {
@@ -163,27 +165,27 @@ export class WhatsappBillingMeterComponent implements OnInit, OnDestroy {
               publicKey: co.publicKey,
               signature: { integrity: co.integrity },
             });
-            this.topupStatusMsg = 'Completa el pago en la ventana de Wompi…';
+            this.topupStatusMsg = this.translate.instant('notificaciones.billing.completeInWompi');
             checkout.open((result: any) => {
               const tx = result?.transaction;
               if (tx && tx.status === 'APPROVED') {
-                this.topupStatusMsg = 'Pago aprobado ✓ Acreditando tu saldo…';
+                this.topupStatusMsg = this.translate.instant('notificaciones.billing.paymentApproved');
                 this.pollBalance(channel, saldoAntes, 0);
               } else if (tx && tx.status === 'DECLINED') {
                 this.topupStatusMsg = '';
-                this.toastr.warning('El pago fue rechazado.', 'Recarga');
+                this.toastr.warning(this.translate.instant('notificaciones.billing.paymentDeclined'), this.translate.instant('notificaciones.billing.toastTitle'));
               } else {
                 // Cerró sin completar o pendiente.
-                this.topupStatusMsg = 'Si completaste el pago, tu saldo se acreditará en unos segundos.';
+                this.topupStatusMsg = this.translate.instant('notificaciones.billing.paymentPending');
                 this.pollBalance(channel, saldoAntes, 0);
               }
             });
           } catch (e) {
-            this.toastr.error('No se pudo abrir la pasarela de pago.', 'Recarga');
+            this.toastr.error(this.translate.instant('notificaciones.billing.gatewayOpenError'), this.translate.instant('notificaciones.billing.toastTitle'));
           }
         },
         error: (err) => {
-          this.toastr.error(err?.error?.message || 'Error iniciando la recarga', 'Recarga');
+          this.toastr.error(err?.error?.message || this.translate.instant('notificaciones.billing.topupError'), this.translate.instant('notificaciones.billing.toastTitle'));
         }
       });
   }
@@ -192,7 +194,7 @@ export class WhatsappBillingMeterComponent implements OnInit, OnDestroy {
   private pollBalance(channel: 'whatsapp' | 'sms', saldoAntes: number, intento: number): void {
     if (intento > 10) {
       this.topupStatusMsg = '';
-      this.toastr.info('Tu recarga puede tardar unos segundos en reflejarse. Actualiza si no la ves.', 'Recarga');
+      this.toastr.info(this.translate.instant('notificaciones.billing.topupDelay'), this.translate.instant('notificaciones.billing.toastTitle'));
       return;
     }
     const check$: Observable<any> = channel === 'sms'
@@ -205,7 +207,7 @@ export class WhatsappBillingMeterComponent implements OnInit, OnDestroy {
           if (channel === 'sms') this.smsBalance = data; else this.balance = data;
           this.topupStatusMsg = '';
           this.showTopupModal = false;
-          this.toastr.success('¡Saldo recargado! 🎉', channel === 'sms' ? 'SMS' : 'WhatsApp');
+          this.toastr.success(this.translate.instant('notificaciones.billing.toppedUp'), channel === 'sms' ? 'SMS' : 'WhatsApp'); // i18n-ignorar: nombre del canal
         } else {
           setTimeout(() => this.pollBalance(channel, saldoAntes, intento + 1), 3000);
         }
@@ -222,14 +224,14 @@ export class WhatsappBillingMeterComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => {
           if (res?.success) {
-            this.toastr.success('Bonus de bienvenida activado', 'WhatsApp Business');
+            this.toastr.success(this.translate.instant('notificaciones.billing.bonusActivated'), this.translate.instant('notificaciones.billing.whatsappBusiness'));
             this.loadBalance();
           } else {
-            this.toastr.error(res?.message || 'No se pudo activar el bonus', 'WhatsApp Business');
+            this.toastr.error(res?.message || this.translate.instant('notificaciones.billing.bonusError'), this.translate.instant('notificaciones.billing.whatsappBusiness'));
           }
         },
         error: (err) => {
-          this.toastr.error(err?.error?.message || 'Error activando el bonus', 'WhatsApp Business');
+          this.toastr.error(err?.error?.message || this.translate.instant('notificaciones.billing.bonusRequestError'), this.translate.instant('notificaciones.billing.whatsappBusiness'));
         }
       });
   }

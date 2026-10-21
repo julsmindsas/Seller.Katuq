@@ -2,6 +2,7 @@ import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { RouterModule } from "@angular/router";
+import { TranslateModule } from "@ngx-translate/core";
 
 import { MetaInboxRoutingModule } from "./meta-inbox-routing.module";
 import { MetaInboxShellComponent } from "./components/meta-inbox-shell/meta-inbox-shell.component";
@@ -15,6 +16,6 @@ import { MetaContactPanelComponent } from "./components/meta-contact-panel/meta-
  */
 @NgModule({
   declarations: [MetaInboxShellComponent, MetaContactPanelComponent],
-  imports: [CommonModule, FormsModule, RouterModule, MetaInboxRoutingModule],
+  imports: [CommonModule, FormsModule, RouterModule, MetaInboxRoutingModule, TranslateModule],
 })
 export class MetaInboxModule {}

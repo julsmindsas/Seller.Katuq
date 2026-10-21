@@ -4,6 +4,7 @@ import { Subject, combineLatest } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
+import { TranslateService } from '@ngx-translate/core';
 import { NotificationManagerService } from '../../services/notifications/notification-manager.service';
 import { NotificationPreferencesService } from '../../services/notifications/notification-preferences.service';
 import { 
@@ -88,7 +89,8 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     private notificationManager: NotificationManagerService,
     private preferencesService: NotificationPreferencesService,
     private renderer: Renderer2,
-    private router: Router
+    private router: Router,
+    private translate: TranslateService
   ) {
     this.setupSearchDebouncing();
   }
@@ -480,7 +482,7 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
     if (diffInSeconds < 60) {
-      return 'Ahora';
+      return this.translate.instant('shell.notificationCenter.now');
     }
 
     const diffInMinutes = Math.floor(diffInSeconds / 60);
@@ -510,66 +512,66 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
    */
   public getTypeName(type: NotificationType): string {
     const nameMap: Record<NotificationType, string> = {
-      [NotificationType.ORDER_CREATED]: 'Nuevo Pedido',
-      [NotificationType.ORDER_UPDATED]: 'Pedido Actualizado',
-      [NotificationType.ORDER_CANCELLED]: 'Pedido Cancelado',
-      [NotificationType.ORDER_CONFIRMED]: 'Pedido Confirmado',
+      [NotificationType.ORDER_CREATED]: 'shell.notificationCenter.types.orderCreated',
+      [NotificationType.ORDER_UPDATED]: 'shell.notificationCenter.types.orderUpdated',
+      [NotificationType.ORDER_CANCELLED]: 'shell.notificationCenter.types.orderCancelled',
+      [NotificationType.ORDER_CONFIRMED]: 'shell.notificationCenter.types.orderConfirmed',
       
-      [NotificationType.PAYMENT_PENDING]: 'Pago Pendiente',
-      [NotificationType.PAYMENT_APPROVED]: 'Pago Aprobado',
-      [NotificationType.PAYMENT_REJECTED]: 'Pago Rechazado',
-      [NotificationType.PAYMENT_PREAPPROVED]: 'Pago Pre-aprobado',
+      [NotificationType.PAYMENT_PENDING]: 'shell.notificationCenter.types.paymentPending',
+      [NotificationType.PAYMENT_APPROVED]: 'shell.notificationCenter.types.paymentApproved',
+      [NotificationType.PAYMENT_REJECTED]: 'shell.notificationCenter.types.paymentRejected',
+      [NotificationType.PAYMENT_PREAPPROVED]: 'shell.notificationCenter.types.paymentPreapproved',
       
-      [NotificationType.PRODUCTION_STARTED]: 'Producción Iniciada',
-      [NotificationType.PRODUCTION_COMPLETED]: 'Producción Completada',
-      [NotificationType.ORDER_PACKED]: 'Pedido Empacado',
-      [NotificationType.ORDER_DISPATCHED]: 'Pedido Despachado',
-      [NotificationType.ORDER_DELIVERED]: 'Pedido Entregado',
-      [NotificationType.ORDER_PROCESS_REJECTED]: 'Pedido Rechazado',
+      [NotificationType.PRODUCTION_STARTED]: 'shell.notificationCenter.types.productionStarted',
+      [NotificationType.PRODUCTION_COMPLETED]: 'shell.notificationCenter.types.productionCompleted',
+      [NotificationType.ORDER_PACKED]: 'shell.notificationCenter.types.orderPacked',
+      [NotificationType.ORDER_DISPATCHED]: 'shell.notificationCenter.types.orderDispatched',
+      [NotificationType.ORDER_DELIVERED]: 'shell.notificationCenter.types.orderDelivered',
+      [NotificationType.ORDER_PROCESS_REJECTED]: 'shell.notificationCenter.types.orderRejected',
       
-      [NotificationType.LOW_STOCK]: 'Stock Bajo',
-      [NotificationType.OUT_OF_STOCK]: 'Sin Stock',
-      [NotificationType.STOCK_REPLENISHED]: 'Stock Reabastecido',
+      [NotificationType.LOW_STOCK]: 'shell.notificationCenter.types.lowStock',
+      [NotificationType.OUT_OF_STOCK]: 'shell.notificationCenter.types.outOfStock',
+      [NotificationType.STOCK_REPLENISHED]: 'shell.notificationCenter.types.stockReplenished',
       
-      [NotificationType.NEW_CUSTOMER]: 'Nuevo Cliente',
-      [NotificationType.CUSTOMER_UPDATED]: 'Cliente Actualizado',
+      [NotificationType.NEW_CUSTOMER]: 'shell.notificationCenter.types.newCustomer',
+      [NotificationType.CUSTOMER_UPDATED]: 'shell.notificationCenter.types.customerUpdated',
       
-      [NotificationType.SHIPPING_CREATED]: 'Envío Creado',
-      [NotificationType.SHIPPING_UPDATED]: 'Envío Actualizado',
-      [NotificationType.DELIVERY_PROBLEM]: 'Problema de Entrega',
+      [NotificationType.SHIPPING_CREATED]: 'shell.notificationCenter.types.shippingCreated',
+      [NotificationType.SHIPPING_UPDATED]: 'shell.notificationCenter.types.shippingUpdated',
+      [NotificationType.DELIVERY_PROBLEM]: 'shell.notificationCenter.types.deliveryProblem',
       
-      [NotificationType.CART_ABANDONED]: 'Carrito Abandonado',
-      [NotificationType.CART_REMINDER]: 'Recordatorio de Carrito',
+      [NotificationType.CART_ABANDONED]: 'shell.notificationCenter.types.cartAbandoned',
+      [NotificationType.CART_REMINDER]: 'shell.notificationCenter.types.cartReminder',
       
-      [NotificationType.SYSTEM_ALERT]: 'Alerta del Sistema',
-      [NotificationType.SYSTEM_MAINTENANCE]: 'Mantenimiento',
+      [NotificationType.SYSTEM_ALERT]: 'shell.notificationCenter.types.systemAlert',
+      [NotificationType.SYSTEM_MAINTENANCE]: 'shell.notificationCenter.types.systemMaintenance',
       
-      [NotificationType.CASH_CLOSING_REQUIRED]: 'Cierre de Caja',
-      [NotificationType.POS_TRANSACTION_FAILED]: 'Transacción Fallida',
+      [NotificationType.CASH_CLOSING_REQUIRED]: 'shell.notificationCenter.types.cashClosing',
+      [NotificationType.POS_TRANSACTION_FAILED]: 'shell.notificationCenter.types.posTransactionFailed',
       
-      [NotificationType.SUPPLIER_ORDER_ACCEPTED]: 'Pedido Aceptado',
-      [NotificationType.SUPPLIER_ORDER_REJECTED]: 'Pedido Rechazado',
-      [NotificationType.SUPPLIER_ORDER_DISPATCHED]: 'Pedido Despachado',
+      [NotificationType.SUPPLIER_ORDER_ACCEPTED]: 'shell.notificationCenter.types.supplierOrderAccepted',
+      [NotificationType.SUPPLIER_ORDER_REJECTED]: 'shell.notificationCenter.types.supplierOrderRejected',
+      [NotificationType.SUPPLIER_ORDER_DISPATCHED]: 'shell.notificationCenter.types.supplierOrderDispatched',
 
       // Siigo / Contabilidad
-      [NotificationType.SIIGO_INVOICE_CREATED]: 'Factura Siigo Creada',
-      [NotificationType.SIIGO_INVOICE_FAILED]: 'Error Facturación Siigo',
-      [NotificationType.SIIGO_INVOICE_PROCESSING]: 'Procesando Factura',
-      [NotificationType.SIIGO_CUSTOMER_CREATED]: 'Cliente Siigo Creado',
-      [NotificationType.SIIGO_PRODUCT_SYNCED]: 'Producto Sincronizado',
+      [NotificationType.SIIGO_INVOICE_CREATED]: 'shell.notificationCenter.types.siigoInvoiceCreated',
+      [NotificationType.SIIGO_INVOICE_FAILED]: 'shell.notificationCenter.types.siigoInvoiceFailed',
+      [NotificationType.SIIGO_INVOICE_PROCESSING]: 'shell.notificationCenter.types.siigoInvoiceProcessing',
+      [NotificationType.SIIGO_CUSTOMER_CREATED]: 'shell.notificationCenter.types.siigoCustomerCreated',
+      [NotificationType.SIIGO_PRODUCT_SYNCED]: 'shell.notificationCenter.types.siigoProductSynced',
 
       // Facturación genérica
-      [NotificationType.INVOICE_CREATED]: 'Factura Creada',
-      [NotificationType.INVOICE_FAILED]: 'Error de Facturación',
+      [NotificationType.INVOICE_CREATED]: 'shell.notificationCenter.types.invoiceCreated',
+      [NotificationType.INVOICE_FAILED]: 'shell.notificationCenter.types.invoiceFailed',
 
       // Tickets de soporte
-      [NotificationType.TICKET_CREATED]: 'Ticket Creado',
-      [NotificationType.TICKET_STATUS_CHANGED]: 'Ticket Actualizado',
-      [NotificationType.TICKET_ASSIGNED]: 'Ticket Asignado',
-      [NotificationType.TICKET_REPLY]: 'Respuesta de Soporte',
-      [NotificationType.TICKET_CLOSED]: 'Ticket Resuelto',
-      [NotificationType.TICKET_REOPENED]: 'Ticket Reabierto',
-      [NotificationType.NPS_DETRACTOR]: 'Cliente inconforme'
+      [NotificationType.TICKET_CREATED]: 'shell.notificationCenter.types.ticketCreated',
+      [NotificationType.TICKET_STATUS_CHANGED]: 'shell.notificationCenter.types.ticketUpdated',
+      [NotificationType.TICKET_ASSIGNED]: 'shell.notificationCenter.types.ticketAssigned',
+      [NotificationType.TICKET_REPLY]: 'shell.notificationCenter.types.ticketReply',
+      [NotificationType.TICKET_CLOSED]: 'shell.notificationCenter.types.ticketClosed',
+      [NotificationType.TICKET_REOPENED]: 'shell.notificationCenter.types.ticketReopened',
+      [NotificationType.NPS_DETRACTOR]: 'shell.notificationCenter.types.npsDetractor'
     };
 
     return nameMap[type] || type;
@@ -644,9 +646,9 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
    */
   public get emptyMessage(): string {
     if (this.searchTerm || this.selectedType !== 'all' || this.selectedFilter !== 'all') {
-      return 'No se encontraron notificaciones con los filtros aplicados';
+      return 'shell.notificationCenter.emptyFiltered';
     }
-    return 'No tienes notificaciones';
+    return 'shell.notificationCenter.empty';
   }
 
   /**
@@ -703,20 +705,20 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
    */
   private loadTypePreferences(): void {
     const labels: Partial<Record<NotificationType, string>> = {
-      [NotificationType.ORDER_CREATED]: 'Nuevo pedido',
-      [NotificationType.PAYMENT_APPROVED]: 'Pago aprobado',
-      [NotificationType.PAYMENT_REJECTED]: 'Pago rechazado',
-      [NotificationType.PRODUCTION_STARTED]: 'Producción iniciada',
-      [NotificationType.PRODUCTION_COMPLETED]: 'Producción completada',
-      [NotificationType.ORDER_PACKED]: 'Pedido empacado',
-      [NotificationType.ORDER_DISPATCHED]: 'Pedido despachado',
-      [NotificationType.ORDER_DELIVERED]: 'Pedido entregado',
-      [NotificationType.ORDER_PROCESS_REJECTED]: 'Pedido rechazado',
-      [NotificationType.LOW_STOCK]: 'Stock bajo',
-      [NotificationType.OUT_OF_STOCK]: 'Producto agotado',
-      [NotificationType.INVOICE_CREATED]: 'Factura creada',
-      [NotificationType.INVOICE_FAILED]: 'Error de facturación',
-      [NotificationType.NPS_DETRACTOR]: 'Cliente inconforme (NPS)',
+      [NotificationType.ORDER_CREATED]: 'shell.notificationCenter.types.orderCreated',
+      [NotificationType.PAYMENT_APPROVED]: 'shell.notificationCenter.types.paymentApproved',
+      [NotificationType.PAYMENT_REJECTED]: 'shell.notificationCenter.types.paymentRejected',
+      [NotificationType.PRODUCTION_STARTED]: 'shell.notificationCenter.types.productionStarted',
+      [NotificationType.PRODUCTION_COMPLETED]: 'shell.notificationCenter.types.productionCompleted',
+      [NotificationType.ORDER_PACKED]: 'shell.notificationCenter.types.orderPacked',
+      [NotificationType.ORDER_DISPATCHED]: 'shell.notificationCenter.types.orderDispatched',
+      [NotificationType.ORDER_DELIVERED]: 'shell.notificationCenter.types.orderDelivered',
+      [NotificationType.ORDER_PROCESS_REJECTED]: 'shell.notificationCenter.types.orderRejected',
+      [NotificationType.LOW_STOCK]: 'shell.notificationCenter.types.lowStock',
+      [NotificationType.OUT_OF_STOCK]: 'shell.notificationCenter.prefs.outOfStock',
+      [NotificationType.INVOICE_CREATED]: 'shell.notificationCenter.types.invoiceCreated',
+      [NotificationType.INVOICE_FAILED]: 'shell.notificationCenter.types.invoiceFailed',
+      [NotificationType.NPS_DETRACTOR]: 'shell.notificationCenter.prefs.npsDetractor',
     };
 
     this.preferencesService.preferences$

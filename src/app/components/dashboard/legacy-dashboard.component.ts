@@ -6,6 +6,7 @@ import { VentasService } from '../../shared/services/ventas/ventas.service';
 import { KatuqintelligenceService } from '../../shared/services/katuqintelligence/katuqintelligence.service';
 import { AnalyticsService } from '../../shared/services/dashboard/analytics.service';
 import { TourService } from '../../shared/services/tour.service';
+import { TranslateService } from '@ngx-translate/core';
 import { EChartsOption } from 'echarts';
 import {
   DashboardCoreResponse,
@@ -113,11 +114,11 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
 
   // === Drag & Drop Widget Management ===
   chartWidgets = [
-    { id: 'ventas', title: 'Tendencia de Ventas', icon: 'chart-area', color: '#0078d4' },
-    { id: 'topProductos', title: 'Top 10 Productos', icon: 'trophy-star', color: '#107c10' },
-    { id: 'menosVendidos', title: 'Productos con Oportunidad', icon: 'exclamation-triangle', color: '#ffb900' },
-    { id: 'categorias', title: 'Distribución por Categorías', icon: 'chart-pie', color: '#00b7c3' },
-    { id: 'metodosPago', title: 'Métodos de Pago', icon: 'credit-card', color: '#8764b8' }
+    { id: 'ventas', title: 'dashboard.legacy.widgetSalesTrend', icon: 'chart-area', color: '#0078d4' },
+    { id: 'topProductos', title: 'dashboard.legacy.widgetTopProducts', icon: 'trophy-star', color: '#107c10' },
+    { id: 'menosVendidos', title: 'dashboard.legacy.widgetOpportunity', icon: 'exclamation-triangle', color: '#ffb900' },
+    { id: 'categorias', title: 'dashboard.legacy.widgetCategories', icon: 'chart-pie', color: '#00b7c3' },
+    { id: 'metodosPago', title: 'dashboard.legacy.widgetPaymentMethods', icon: 'credit-card', color: '#8764b8' }
   ];
 
   // === K.A.I. Analysis (mantener funcionalidad existente) ===
@@ -177,7 +178,8 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
     private ventasService: VentasService,
     private katuqintelligenceService: KatuqintelligenceService,
     private analyticsService: AnalyticsService,
-    private tourService: TourService
+    private tourService: TourService,
+    private translate: TranslateService
   ) {
     this.initializeDates();
   }
@@ -319,17 +321,17 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
           
           // Manejo específico de errores de autenticación
           if (error.status === 401) {
-            this.estadoCarga.error = 'Sesión expirada. Por favor, inicia sesión nuevamente.';
+            this.estadoCarga.error = 'dashboard.legacy.errSessionExpired';
             console.error('🔐 Error 401: Token de autenticación inválido o expirado');
             
             // Opcional: Redirigir al login automáticamente
             // this.router.navigate(['/login']);
           } else if (error.status === 403) {
-            this.estadoCarga.error = 'No tienes permisos para acceder a esta información.';
+            this.estadoCarga.error = 'dashboard.legacy.errForbidden';
           } else if (error.status === 0) {
-            this.estadoCarga.error = 'No se puede conectar al servidor. Verificar conexión.';
+            this.estadoCarga.error = 'dashboard.legacy.errOffline';
           } else {
-            this.estadoCarga.error = 'Error cargando datos principales. Usando datos de respaldo...';
+            this.estadoCarga.error = 'dashboard.legacy.errFallback';
           }
           
           this.estadoCarga.core = false;
@@ -518,7 +520,7 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
         },
         error: (error) => {
           console.error('❌ Error loading fallback data:', error);
-          this.estadoCarga.error = 'Error crítico cargando datos. Por favor, recarga la página.';
+          this.estadoCarga.error = 'dashboard.legacy.errCritical';
         }
       });
   }
@@ -550,7 +552,7 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
         },
         formatter: (params: any) => {
           const data = params[0];
-          return `<strong>${data.name}</strong><br/>Ventas: $${data.value.toLocaleString('es-CO')}`;
+          return `<strong>${data.name}</strong><br/>${this.translate.instant('dashboard.legacy.chartSalesTooltip', { value: data.value.toLocaleString('es-CO') })}`;
         }
       },
       grid: {
@@ -590,7 +592,7 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
         }
       },
       series: [{
-        name: 'Ventas',
+        name: this.translate.instant('dashboard.legacy.chartSales'),
         type: 'line',
         smooth: true,
         symbol: 'circle',
@@ -631,7 +633,7 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
   private renderTopProductsCharts(): void {
     // Productos Más Vendidos
     if (this.topProductsMasVendidos.length > 0) {
-      const productNames = this.topProductsMasVendidos.map(p => p.nombre || p.referencia || 'Sin nombre');
+      const productNames = this.topProductsMasVendidos.map(p => p.nombre || p.referencia || this.translate.instant('dashboard.legacy.unnamed'));
       const productData = this.topProductsMasVendidos.map(p => p.cantidadVendida || 0);
 
       this.topProductosChartOption = {
@@ -653,7 +655,7 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
           },
           formatter: (params: any) => {
             const data = params[0];
-            return `<strong>${data.name}</strong><br/>Unidades: ${data.value}`;
+            return `<strong>${data.name}</strong><br/>${this.translate.instant('dashboard.legacy.chartUnitsTooltip', { value: data.value })}`;
           }
         },
         grid: {
@@ -695,7 +697,7 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
           }
         },
         series: [{
-          name: 'Unidades Vendidas',
+          name: this.translate.instant('dashboard.legacy.chartUnitsSold'),
           type: 'bar',
           barWidth: '60%',
           itemStyle: {
@@ -716,7 +718,7 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
 
     // Productos Menos Vendidos
     if (this.topProductosMenosVendidos.length > 0) {
-      const productNames = this.topProductosMenosVendidos.map(p => p.nombre || p.referencia || 'Sin nombre');
+      const productNames = this.topProductosMenosVendidos.map(p => p.nombre || p.referencia || this.translate.instant('dashboard.legacy.unnamed'));
       const productData = this.topProductosMenosVendidos.map(p => p.cantidadVendida || 0);
 
       this.menosVendidosChartOption = {
@@ -766,7 +768,7 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
           }
         },
         series: [{
-          name: 'Unidades',
+          name: this.translate.instant('dashboard.legacy.chartUnits'),
           type: 'bar',
           barWidth: '50%',
           itemStyle: {
@@ -809,9 +811,9 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
         formatter: (params: any) => {
           const categoria = this.detailsData!.categorias[params.dataIndex];
           return `<strong>${params.name}</strong><br/>` +
-                 `Ventas: $${categoria.ventas.toLocaleString('es-CO')}<br/>` +
-                 `Productos: ${categoria.cantidad}<br/>` +
-                 `Porcentaje: ${params.percent.toFixed(1)}%`;
+                 `${this.translate.instant('dashboard.legacy.chartSalesTooltip', { value: categoria.ventas.toLocaleString('es-CO') })}<br/>` +
+                 `${this.translate.instant('dashboard.legacy.chartProductsTooltip', { value: categoria.cantidad })}<br/>` +
+                 `${this.translate.instant('dashboard.legacy.chartPercentTooltip', { value: params.percent.toFixed(1) })}`;
         }
       },
       legend: {
@@ -823,7 +825,7 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
         }
       },
       series: [{
-        name: 'Categorías',
+        name: this.translate.instant('dashboard.legacy.chartCategories'),
         type: 'pie',
         radius: ['40%', '70%'],
         avoidLabelOverlap: false,
@@ -882,8 +884,8 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
         formatter: (params: any) => {
           const metodo = this.detailsData!.metodosPago[params.dataIndex];
           return `<strong>${params.name}</strong><br/>` +
-                 `Transacciones: ${metodo.cantidad}<br/>` +
-                 `Porcentaje: ${params.percent.toFixed(1)}%`;
+                 `${this.translate.instant('dashboard.legacy.chartTransactionsTooltip', { value: metodo.cantidad })}<br/>` +
+                 `${this.translate.instant('dashboard.legacy.chartPercentTooltip', { value: params.percent.toFixed(1) })}`;
         }
       },
       legend: {
@@ -896,7 +898,7 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
         }
       },
       series: [{
-        name: 'Métodos de Pago',
+        name: this.translate.instant('dashboard.legacy.widgetPaymentMethods'),
         type: 'pie',
         radius: '65%',
         center: ['40%', '50%'],
@@ -1171,12 +1173,12 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
 
     this.inventarioMovimientosChartOption = {
       tooltip: { trigger: 'axis' },
-      legend: { data: ['Ingresos', 'Salidas'] },
+      legend: { data: [this.translate.instant('dashboard.legacy.chartInbound'), this.translate.instant('dashboard.legacy.chartOutbound')] },
       xAxis: { type: 'category', data: tendencia.map(d => d.fecha), axisLabel: { rotate: 30, fontSize: 10 } },
-      yAxis: { type: 'value', name: 'Unidades' },
+      yAxis: { type: 'value', name: this.translate.instant('dashboard.legacy.chartUnits') },
       series: [
-        { name: 'Ingresos', type: 'bar', data: tendencia.map(d => d.ingresos), color: '#00E396', stack: 'total' },
-        { name: 'Salidas', type: 'bar', data: tendencia.map(d => d.salidas), color: '#FF4560', stack: 'total' }
+        { name: this.translate.instant('dashboard.legacy.chartInbound'), type: 'bar', data: tendencia.map(d => d.ingresos), color: '#00E396', stack: 'total' },
+        { name: this.translate.instant('dashboard.legacy.chartOutbound'), type: 'bar', data: tendencia.map(d => d.salidas), color: '#FF4560', stack: 'total' }
       ]
     };
   }
@@ -1264,7 +1266,7 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   private formatAnalysisHTML(content: string): string {
-    if (!content) return '<p>No se pudo generar el análisis.</p>';
+    if (!content) return `<p>${this.translate.instant('dashboard.legacy.analysisFailed')}</p>`;
     
     if (content.includes('<') && content.includes('>')) {
       return content
@@ -1296,7 +1298,7 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
       })
       .join('');
     
-    return formattedContent || '<p>Análisis completado sin contenido específico.</p>';
+    return formattedContent || `<p>${this.translate.instant('dashboard.legacy.analysisEmpty')}</p>`;
   }
 
   // === ACTUALIZACIONES EN TIEMPO REAL ===
@@ -1437,7 +1439,7 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
     const userString = localStorage.getItem('user');
     if (!userString) {
       console.error('❌ No hay usuario en localStorage');
-      this.estadoCarga.error = 'No hay sesión activa. Por favor, inicia sesión.';
+      this.estadoCarga.error = 'dashboard.legacy.errNoSession';
       return;
     }
 
@@ -1455,7 +1457,7 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
       // Verificar si el token parece válido
       if (!user.token || user.token.length < 10) {
         console.error('❌ Token inválido o muy corto');
-        this.estadoCarga.error = 'Token de autenticación inválido. Por favor, inicia sesión nuevamente.';
+        this.estadoCarga.error = 'dashboard.legacy.errInvalidToken';
         return;
       }
 
@@ -1474,7 +1476,7 @@ export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestro
 
     } catch (error) {
       console.error('❌ Error al parsear usuario:', error);
-      this.estadoCarga.error = 'Error en datos de sesión. Por favor, inicia sesión nuevamente.';
+      this.estadoCarga.error = 'dashboard.legacy.errSessionData';
     }
     
     console.log('================================\n');

@@ -112,7 +112,10 @@ test('1.10: las claves que faltaban quedan traducidas (en-US neutro, pt-BR con v
   assert.equal(en['Cargando...'], 'Loading...');
   assert.equal(pt['Cargando...'], 'Carregando...');
   assert.equal(en['Perfil'], 'Profile');
-  assert.equal(pt['Política de privacidad'], 'Política de privacidade');
+  // IDI-B01b: la pantalla de notificaciones pasó a la clave semántica y la literal se borró (receta,
+  // paso 5); la traducción que se fijó en 1.10 sigue igual bajo la clave nueva.
+  assert.equal(pt['notificaciones.privacyLink'], 'Política de privacidade');
+  assert.equal(pt['Política de privacidad'], undefined);
   assert.equal(pt['Ingresa tu correo y tu contraseña'], 'Digite seu e-mail e sua senha');
   assert.equal(pt['Orden de Venta'], 'Ordem de venda');
   // notificaciones.privacy_note_1 termina en espacio y privacy_note_2 empieza con espacio: la
@@ -236,7 +239,7 @@ test('1.12: cada comun.* toma el valor de su clave literal antigua en cada idiom
 
 test('1.12: valores esperados de comun.*', () => {
   const esperado = {
-    es: ['Guardar', 'Cancelar', 'Aceptar', 'Cerrar', 'Buscar', 'Eliminar', 'Editar', 'Sí', 'No', 'Cargando...', 'Sin resultados'],
+    es: ['Guardar', 'Cancelar', 'Aceptar', 'Cerrar', 'Buscar', 'Eliminar', 'Editar', 'Sí', 'No', 'Cargando…', 'Sin resultados'],
     en: ['Save', 'Cancel', 'Accept', 'Close', 'Search', 'Delete', 'Edit', 'Yes', 'No', 'Loading...', 'No results'],
     pt: ['Salvar', 'Cancelar', 'Aceitar', 'Fechar', 'Buscar', 'Excluir', 'Editar', 'Sim', 'Não', 'Carregando...', 'Nenhum resultado'],
   };
