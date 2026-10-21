@@ -317,7 +317,9 @@ Ninguna tarea de esta parte empieza antes de 0.6. Las marcadas **[sensible]** es
       - revisión privada (destinatario y origen).
 
       Éxito: falla contra 9.4. Dep: 2.2, 4.4.
+      (F440-B07, parcial, sin marcar: escrita `tests/notifications/whatsappBotNotificaciones.test.js` con la caracterización de tienda, venta asistida y WooCommerce, el pedido del bot sin SMS ni WhatsApp de creación, el `origen` anidado sin efecto (S17), `encolarPagoAprobado` (S10, Wompi, preferencia) y el `lineId` hacia `sendTemplate`. Falta la prueba de `aplicarPagoDeTienda` y la del POST público a `crearPedido`: esperan la fila de la tienda.)
 - [ ] 9.6 **[sensible]** D12 en `notificationHooks.onOrderCreated`, en `aplicarPagoDeTienda` y en `notificationQueue.sendWhatsAppNotification` (`lineId`). Éxito: 9.5, 2.2, 4.3 y `tests/notifications` sin fallos nuevos. Dep: 9.5, 0.7.
+      (F440-B07, parcial, sin marcar: hecho `onOrderCreated` (omite SMS y plantilla si `origen === "whatsapp-bot"`, log `BOT_ORDER`), `sendWhatsAppNotification` (pasa `lineId`) y el helper `services/whatsappBotPagoAprobado.js` exportado y probado. Falta llamar `encolarPagoAprobado` desde `aplicarPagoDeTienda` en `controllers/sites.js`: espera la fila de la tienda.)
 - [ ] 9.7 Prueba primero (D13, `whatsappBotSeguimiento.recorrer` y `recordarPagosPendientes`):
       - un pedido del bot **sin correo** a los 25 min recibe un solo texto por la conversación (marca en transacción antes de enviar) y ningún correo;
       - con correo, igual: sale el texto y no el correo;
