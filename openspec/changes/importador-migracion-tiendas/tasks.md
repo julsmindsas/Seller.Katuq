@@ -189,13 +189,14 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
   - la regla de `sanitize_title` («Men's Shirt» → `mens-shirt`) y la base de direcciones (`productBase`, `categoryBase`, `BASE_ASSUMED`).
   - **Éxito:** `wooProducts.test.js` ampliado en verde; perfil del front sin `if` por proveedor.
   - *Estado (F530-B09):* parcial. Hecho en el backend: `readers/woocommerce.js` (tabla de alias en inglés y español, tipos, ejes por nombre, unión por SKU del padre, oferta con fechas, IVA por estado y clase con `taxClassMap`, existencias E2, estado, fotos, categorías), `slugProbable` (`sanitize_title`), bases y `urls[]` en `redirects` (`BASE_ASSUMED`, `SLUG_PROBABLE`), `wooProducts.test.js` ampliado (18 pruebas) e `importStoreWoo.integracion.test.js`. Los encabezados en español son una suposición hasta el export real (0.4). Falta el perfil del front sin `if` por proveedor (F530-F01, tareas 8.x): al cerrarlo se marca [x].
-- [ ] 14.15 **Diff aprobado (productos).** Rutas `photos` y `photos/pending` (`design-fotos.md`):
+- [x] 14.15 **Diff aprobado (productos).** Rutas `photos` y `photos/pending` (`design-fotos.md`):
   - contrato e `importStorePhotos.writeSet.contract.test.js` en rojo primero;
   - `runId` en la llave del lote: retomar con otro `runId` copia lo pendiente; repetir el mismo lote devuelve `replayed`;
   - `photos/pending` solo lee y responde números; índice compuesto de `migration_audit` en `firestore.indexes.json`;
   - usa `photoCopy.js` de TX-37 (su tarea 8.1, que se adelanta si hace falta, con su revisión privada);
   - el archivo nuevo entra en `manual` de `syncDetector.js`.
   - Depende de 6.1 y de TX-37 8.1.
+  - Hecho (F530-B10): `photoCopyStep.js`, `POST photos` y `GET photos/pending`; pruebas `importStorePhotos.writeSet` y `importStorePhotos.security`. El índice compuesto está solo en `firestore.indexes.json` (el despliegue de índices sigue bloqueado; se confirma en 12.2).
   - **Éxito:** contrato en verde; ningún log ni rastro con la URL.
 - [ ] 14.16 Front (con 8.x):
   - paso «Copiar fotos» con progreso, aviso de no cerrar la tienda anterior y «Copiar fotos pendientes» (lee `photos/pending`);

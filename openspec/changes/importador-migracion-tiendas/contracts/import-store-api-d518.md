@@ -91,6 +91,7 @@
 
 - `failed[].code` sale de la pieza `photoCopy`: `download_failed`, `not_image`, `too_large` o `unreadable`.
 - Nunca se devuelve ni se registra la URL de origen.
+- `429 RATE_LIMITED`: 120 lotes cada 15 minutos por empresa del token; `photos/pending` cuenta en el mismo tope. Un enlace que falló no se reintenta más de 3 veces por migración: el cuarto recorrido lo informa como `download_failed` sin descargar. Cualquier llave distinta de `migrationId`, `runId`, `lot` y `products[].cd` en el cuerpo da 400 `INVALID_PAYLOAD`. Guardas como `products`: `WOO_INTEGRATION_ACTIVE` y `FLOW_PUBLISHES_PRODUCTS` (409) e `IMPORT_IN_PROGRESS` (409).
 
 ## `GET photos/pending` (nueva; requiere aprobación, pregunta 8)
 
