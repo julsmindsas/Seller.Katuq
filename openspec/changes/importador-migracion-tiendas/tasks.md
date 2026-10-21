@@ -137,7 +137,7 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
   - **Éxito:** las nuevas en rojo; las de hoy, igual.
 - [ ] 14.2 Lector de Shopify con la tabla de alias (`readers/comun.js`, `readers/shopify.js`): códigos de barras con prefijo, `Status`, `Published on online store` y `format` en la simulación. Depende de 14.1. **Éxito:** 14.1 en verde; los fixtures sintéticos siguen en verde.
 - [ ] 14.21a `[P]` **Caracterización del mapeo de cantidades** (solo pruebas; antes de 14.3a, 14.13, 14.21b y del diff de 6.2): una tabla fija qué cantidad recibe `importInventory` en cada caso (Shopify actual y anterior, inventario aparte y Woo). **Éxito:** en verde con el código de hoy; los contract tests de inventario sin cambios.
-- [ ] 14.3a CSV de inventario de Shopify: alias `Option 1 Value`. Depende de 14.21a. **Éxito:** la unión por opciones funciona con los dos nombres y las cantidades de los fixtures no cambian.
+- [x] 14.3a CSV de inventario de Shopify: alias `Option 1 Value`. Depende de 14.21a. **Éxito:** la unión por opciones funciona con los dos nombres y las cantidades de los fixtures no cambian.
 - [x] 14.14 **Diff aprobado (categorías).** `leerArbol` con `documentoQueEditaElMaestro` (A5). El dorado de `importProducts` suma varios documentos con y sin `categoryAttributes`. **Éxito:** sin la bandera, el dorado no cambia.
   - Hecho (2026-10-21, `feature/tickets-web`, sin desplegar; Daniel aprobó A5 y la pregunta 13 de D-495 con «aprobado todo»): `leerArbol` lee los documentos de la empresa y elige con `documentoQueEditaElMaestro` (la bandera solo se consulta si hay más de uno). `guardarArbol` guarda en una transacción que vuelve a leer el documento y repite las rutas del archivo sobre el árbol fresco, así no pisa lo que Maestros guardó en el intervalo; si el documento quedó ilegible o de otra empresa no escribe, e `importProducts` responde el mismo 409. Sin documento, `add` como siempre. Pruebas: `tests/storeMigration/categoriasArbolMaestro.test.js` (9, rojo antes del arreglo) y el dorado sin cambios (4).
   - Corrección tras la revisión (2026-10-21):
@@ -151,7 +151,7 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
 ### Lo demás (después de 14.0)
 
 - [ ] 14.1b `[P]` `importStore.routes.contract` suma los códigos y las rutas de `contracts/import-store-api-d518.md` (incluidas `photos/pending`, `runId`, `pricesIncludeTax` y `taxClassMap`). **Éxito:** en rojo hasta sus tareas. _Parcial (F530-B01): RATE_LIMITED y WOO_INTEGRATION_ACTIVE en verde en `routes`/`Guard`; el resto en rojo declarado en `importStore.d518Pendiente.contract.test.js` con el bloque que lo cierra._
-- [ ] 14.3b Rechazo del export «Available» (`INVENTORY_FORMAT_UNSUPPORTED`), según la pregunta 9. **Éxito:** prueba con los dos formatos.
+- [x] 14.3b Rechazo del export «Available» (`INVENTORY_FORMAT_UNSUPPORTED`), según la pregunta 9. **Éxito:** prueba con los dos formatos.
 - [ ] 14.4 IVA por producto (A2): lectores, `precioSinIvaDesdeConIva` con la tarifa del producto, `products.taxExempt`, clases de Woo (`zero-rate` al 0 %, `taxClassMap`, `TAX_CLASS_UNMAPPED`) y `pricesIncludeTax` (pregunta 17). **Éxito:** exento al 0 % con `precioUnitarioIva: "0"`; gravado con la tarifa elegida; con `pricesIncludeTax: false`, 50.000 al 19 % queda en 59.500; sin la respuesta y con gravados, `products` da 400.
 - [ ] 14.5 **Diff aprobado (productos).** Oferta en la lista Público (A3):
   - la simulación lee `tiposPrecios` con `active == true` (`offers.publicList`);
@@ -159,7 +159,7 @@ Diseños: `design-ampliacion.md` (A1 a A5), `design-ampliacion-ficha.md` (N1 a N
   - `importStoreProducts.writeSet`: como máximo una fila, del tipo Público y de la misma empresa; nunca `tiposPrecios`; en `upsert`, `OFFER_KEPT` y `PRICE_SHADOWED_BY_PUBLIC_LIST`;
   - `wooProducts.test.js` se actualiza.
   - **Éxito:** escrituras de prueba en verde, y `git diff` vacío en `katuq-product-upsert.action.js`.
-- [ ] 14.6 Partición por (regular, oferta, IVA) (A4) en `separarPorPrecio` (`readers/comun.js`). **Éxito:** tallas con distinta oferta dan dos productos.
+- [x] 14.6 Partición por (regular, oferta, IVA) (A4) en `separarPorPrecio` (`readers/comun.js`). **Éxito:** tallas con distinta oferta dan dos productos.
 - [ ] 14.7 **Diff aprobado (tienda).** «Nuevo» (N1):
   - `nuevoProducto` con `exposicion.nuevo: false` y `metadata.migration.originCreatedAt`;
   - `fechaDeNovedad` en `utils/vitrinaProducto.js` y `esNuevo` con ella.
