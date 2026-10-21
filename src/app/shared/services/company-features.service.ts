@@ -64,6 +64,15 @@ export const COMPANY_FEATURE_FLAGS = [
   'invoiceIdempotency',
   // Bandeja única de facturación (D-499 fase 1, FE-02). Dueño: Daniel. Se retira el 2027-03-31.
   'invoicingTray',
+  // La tienda en el celular (TX-34, D10): una bandera por pieza; el modo lo pone el interruptor
+  // general `config/feature_flags.storeMobile`. No nacen encendidas para empresas nuevas.
+  // Dueño: Daniel. Cada una se retira 30 días después de quedar su pieza para todas las tiendas.
+  'storeLightIndex',
+  'storeSmartSearch',
+  'storeSalesRanking',
+  'storePaymentRetry',
+  'storeDrawer',
+  'storeShippingEstimate',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

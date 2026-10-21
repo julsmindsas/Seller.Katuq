@@ -87,7 +87,9 @@
   tope de longitud, nunca categorías ocultas.
 - [ ] 2.2 [P] `GET /catalogo`: los 5 órdenes, valor desconocido → orden de hoy, `sugerencias` con
   total 0, sin cantidades vendidas en la respuesta.
-- [ ] 2.3 [P] `POST /vista` con agente de robot o automatizado → 204 sin escribir.
+- [x] 2.3 [P] `POST /vista` con agente de robot o automatizado → 204 sin escribir.
+  — **`tests/sitios/vistaSinRobots.contract.test.js` (8 pruebas, roja contra el código anterior);
+  bloque TX34-B03.**
 - [ ] 2.4 [P] Write-set: la tarea nocturna solo escribe `storeProductStats` [si P1]; la proyección
   y el buscador no escriben. Canario: una escritura en `products` u `orders` hace fallar la prueba.
 - [ ] 2.5 [S] `/gracias`: «Reintentar pago» solo con regreso válido, pago rechazado o anulado,
@@ -97,9 +99,15 @@
 
 ## 3. Backend sin módulos sensibles
 
-- [ ] 3.1 Baliza sin robots (D3, VE «Las visitas cuentan personas»). Primero de todo: habilita
+- [x] 3.1 Baliza sin robots (D3, VE «Las visitas cuentan personas»). Primero de todo: habilita
   medir en producción sin inflar visitas. Con P19 aprobada, no espera 0.1-0.3 ni el grupo 1: sale
   con los arreglos del paso 3 de D-518 y solo necesita su prueba. **Éxito:** 2.3 en verde.
+  — **Hecha (bloque TX34-B03): lista cerrada `esAgenteAutomatizado` en `utils/siteAnalitica.js`,
+  más los agentes que se declaran robot con «(compatible; …Bot)»; `registrarVista` responde 204
+  sin leer ni escribir, y el navegador no manda la baliza con `navigator.webdriver`. Cambia a
+  propósito la instantánea de `fichaEspecificaciones`, solo en la compuerta de la baliza: es el
+  cambio de D3, aprobado con el diseño, y queda anotado para que Daniel lo vea. Sin interruptor,
+  como dice D3.**
 - [ ] 3.2 [P] Áreas táctiles, textos legibles y elementos fijos (D9) en `siteHtml.js` y
   `siteTienda.js`; panel de filtros con Escape y toque fuera. **Éxito:** 1.5 sin fallas de 44 px,
   de textos ni cruces.
@@ -115,6 +123,13 @@
   `companies.featureFlags` (catálogo cerrado del backend y del front). **Éxito:** 1.4 en verde
   con `on`; en sombra, cero diferencias en el laboratorio, también en precios y ofertas;
   con `on`, `preciosVitrinaCache` y `ofertasVitrinaCache` ya no se cargan; medición 1.3 repetida.
+  — **Avance (bloque TX34-B03): las banderas de D10 ya existen, todas apagadas: `storeMobile` en
+  `services/platformFlags.js` (y `scripts/platform-flags.js`), las seis banderas de empresa en el
+  catálogo del backend y del front, y `services/sites/modoTienda.js` con el modo efectivo
+  (`tests/plataforma/storeMobileFlags.test.js`, 16 pruebas). Falta la proyección.
+  Pendiente al desplegar (D10, columna «Al crear», D-385): FLORECER recibe `storeLightIndex`
+  para que la sombra corra allí: `set-company-feature.js` primero en simulación y luego con
+  `--execute`, solo con OK de Daniel. Sin esa bandera la sombra no corre en ninguna tienda.**
 - [ ] 3.5b Clave de la caché del HTML sin parámetros de campaña (D15, revisión privada S4).
   **Éxito:** VE «Quien llega por un anuncio no espera de más»; prueba de atribución del pedido
   igual que hoy.
