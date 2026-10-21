@@ -30,7 +30,7 @@
   border: 2px solid var(--kc-line);
   border-radius: 13px;
   padding: 4px 14px;
-  background: #fff;
+  background: var(--ds-surface);
 
   &:focus-within {
     border-color: var(--kc-accent);
@@ -72,8 +72,8 @@
 
 .cp-quick-btn {
   flex: 1 1 88px;
-  background: #fff;
-  border: 1px solid #e4e5ee;
+  background: var(--ds-surface);
+  border: 1px solid var(--km-line-strong);
   border-radius: 11px;
   padding: 10px 8px;
   font-family: var(--kc-font-head);
@@ -84,21 +84,21 @@
   transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 
   &:hover {
-    border-color: #c9b9f7;
-    color: var(--kc-accent);
-    background: #f6f4ff;
+    border-color: var(--km-accent-line);
+    color: var(--kc-accent-texto);
+    background: var(--km-hover-bg);
   }
 
   &:active { transform: translateY(1px); }
 
   &--exact {
     background: var(--kc-accent-wash);
-    border-color: #e2d9fb;
-    color: var(--kc-accent);
+    border-color: var(--km-wash-line);
+    color: var(--kc-accent-texto);
     font-family: var(--kc-font-body);
     font-weight: 800;
 
-    &:hover { background: #e2d9fb; }
+    &:hover { background: var(--km-wash-line); }
   }
 }
 
@@ -111,7 +111,7 @@
   padding: 12px 15px;
   border-radius: 13px;
   background: var(--kc-green-wash);
-  border: 1px solid #cbebd8;
+  border: 1px solid var(--km-ok-line);
 
   .cp-change-label {
     font-size: 13px;
@@ -129,10 +129,10 @@
 
   // Falta plata: el cajero tiene que verlo antes de darle a confirmar.
   &.is-short {
-    background: #fdeceb;
-    border-color: #f6d4d2;
+    background: var(--km-err-wash);
+    border-color: var(--km-err-line);
 
     .cp-change-label,
-    .cp-change-value { color: #d6455b; }
+    .cp-change-value { color: var(--kc-red); }
   }
 }

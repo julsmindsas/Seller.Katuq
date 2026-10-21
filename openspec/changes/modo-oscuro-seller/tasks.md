@@ -246,8 +246,13 @@ Cada una tiene su diseño corto, su delta, sus tareas y su aprobación antes de 
   - [x] 4.2.2 `sitios-lista`: `kb-tokens(true)` y 7 `#fff` de superficie a `var(--kb-surface)`. Quedan 8 `#fff` de la tienda del comercio.
   - [x] 4.2.3 Prueba `tests/theme/builder-tokens.test.js` (en `test:theme`): 10 pruebas; incluye los textos propios de `sitios-lista` (`--sl-*`) y `--kb-accent-fg`.
   - [ ] 4.2.4 Cierre: build sin errores, capturas de la lista y sus modales en claro (idénticas) y oscuro a 1440 y 390 px, y barrido `--todas`. Los corre el orquestador. Pendientes en `design-f2b.md` §4.
-- [ ] **4.3 F2c `_katuq-modal.scss`.** **Sensible:** widgets de pago de POS2, un widget por diff aprobado.
+- [ ] **4.3 F2c `_katuq-modal.scss`.** **Sensible:** widgets de pago de POS2, un widget por diff aprobado. Diseño: `design-f2c.md`.
   - Dependencias: 3.9.
+  - [x] 4.3.1 `_katuq-modal.scss`: juego claro/oscuro de `--kc-*`/`--km-*`, `#fff` a `var(--ds-surface)` y `var(--ds-on-accent)`.
+  - [x] 4.3.2 a 4.3.6 `cash-payment`, `card-payment`, `ewallet-payment` (solo mixin), `cash-closing`, `cash-closing-history`: literales a tokens fuera de impresión.
+  - [x] 4.3.7 `opinar-modal`: variables Sass a `var(--ds-*)`. Pendiente de Daniel: bordes `#ddd3fb`/`#d9cffb` y botón deshabilitado `#d8d4ea`.
+  - [x] 4.3.8 Prueba `tests/theme/modal-tokens.test.js` (14, en `test:theme`) y fixture del claro de c18c863b.
+  - [ ] 4.3.9 Cierre: build sin errores, capturas en claro (idénticas) y oscuro a 1440 y 390 px de los cinco modales y la impresión del cierre. Un widget por diff aprobado: el commit separa por archivo si Daniel lo pide.
 - [ ] **4.4 F3, una pantalla por cambio:** Todos los pedidos, crear venta / venta asistida, despachos, POS, inventario e Inicio. **Sensible** en ventas, POS, despachos e inventario: solo SCSS, capturas antes y después en los dos temas y diff aprobado. Cada pantalla pasa a `var(--ds-accent)` sus rellenos con `var(--primary-color)`.
   - Antes de empezar, el conteo en solo lectura de usuarios con `tema: true` (valor por defecto 5).
   - Dependencias: 3.9; despachos, también 4.1.

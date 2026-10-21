@@ -16,10 +16,121 @@
 
 @import 'katuq-comercial';
 
+// D-502 F2c (ticket 1180, tarea 4.3): colores del modal sobre los tokens --ds-*.
+// En claro cada --km-* vale el literal de siempre (el claro no cambia); en oscuro cada --km-* y cada
+// --kc-* toma su --ds-* por rol. Se emite desde km-modal, en el mismo ámbito que kc-tokens.
+// --kc-accent-texto es el acento como texto o ícono (en oscuro sube a --ds-accent-ink); --kc-accent sigue
+// siendo relleno. Los nombres --km-* no contienen "p-".
+@mixin km-tokens {
+  --kc-accent-texto: var(--kc-accent);
+  --km-gray-50: #f8f9fa;
+  --km-gray-200: #e9ecef;
+  --km-gray-300: #ddd;
+  --km-gray-350: #ced4da;
+  --km-gray-500: #adb5bd;
+  --km-gray-600: #6c757d;
+  --km-gray-700: #495057;
+  --km-gray-333: #333;
+  --km-gray-666: #666;
+  --km-slate: #2c3e50;
+  --km-blue: #3498db;
+  --km-royal: #4e73df;
+  --km-green-t: #2ecc71;
+  --km-red-t: #e74c3c;
+  --km-purple: #8e44ad;
+  --km-sunken: #fbfcfe;
+  --km-row-hover: #fbfaff;
+  --km-row-line: #f5f6fa;
+  --km-hover-bg: #f6f4ff;
+  --km-chip: #f1f2f5;
+  --km-faint: #b7bccb;
+  --km-faint-2: #9aa0b2;
+  --km-subtle: #6b7280;
+  --km-placeholder: #a8aebe;
+  --km-line-strong: #e4e5ee;
+  --km-wash-line: #e2d9fb;
+  --km-accent-line: #c9b9f7;
+  --km-ok-line: #cbebd8;
+  --km-err-wash: #fdeceb;
+  --km-err-line: #f6d4d2;
+  --km-info-line: #cfe0fb;
+  --km-info-ink: #1f56b0;
+  --km-warn-line: #f7e2be;
+  --km-warn-ink: #a9660d;
+  --km-disabled-bg: #ece7fb;
+  --km-disabled-ink: #9a92bd;
+}
+
+@mixin km-tokens-oscuro {
+  --kc-accent: var(--ds-accent);
+  --kc-accent-texto: var(--ds-accent-ink);
+  --kc-accent-ink: var(--ds-accent-ink);
+  --kc-accent-wash: var(--ds-accent-soft);
+  --kc-ink: var(--ds-ink);
+  --kc-ink2: var(--ds-ink-2);
+  --kc-muted: var(--ds-muted);
+  --kc-muted2: var(--ds-muted);
+  --kc-line: var(--ds-line);
+  --kc-line2: var(--ds-line-soft);
+  --kc-canvas: var(--ds-surface-2);
+  --kc-surface: var(--ds-surface);
+  --kc-green: var(--ds-ok);
+  --kc-green-wash: var(--ds-ok-soft);
+  --kc-blue: var(--ds-info);
+  --kc-blue-wash: var(--ds-info-soft);
+  --kc-orange: var(--ds-warn);
+  --kc-orange-wash: var(--ds-warn-soft);
+  --kc-red: var(--ds-err);
+  --kc-red-wash: var(--ds-err-soft);
+
+  --km-gray-50: var(--ds-surface-2);
+  --km-gray-200: var(--ds-line);
+  --km-gray-300: var(--ds-line-strong);
+  --km-gray-350: var(--ds-muted);
+  --km-gray-500: var(--ds-muted);
+  --km-gray-600: var(--ds-body);
+  --km-gray-700: var(--ds-ink-2);
+  --km-gray-333: var(--ds-ink);
+  --km-gray-666: var(--ds-body);
+  --km-slate: var(--ds-ink);
+  --km-blue: var(--ds-info);
+  --km-royal: var(--ds-info);
+  --km-green-t: var(--ds-ok);
+  --km-red-t: var(--ds-err);
+  --km-purple: var(--ds-accent-ink);
+  --km-sunken: var(--ds-surface-2);
+  --km-row-hover: var(--ds-row-hover);
+  --km-row-line: var(--ds-line-soft);
+  --km-hover-bg: var(--ds-row-hover);
+  --km-chip: var(--ds-chip-bg);
+  --km-faint: var(--ds-muted);
+  --km-faint-2: var(--ds-muted);
+  --km-subtle: var(--ds-body);
+  --km-placeholder: var(--ds-muted);
+  --km-line-strong: var(--ds-line-strong);
+  --km-wash-line: var(--ds-connector);
+  --km-accent-line: var(--ds-accent-ink);
+  --km-ok-line: var(--ds-line);
+  --km-err-wash: var(--ds-err-soft);
+  --km-err-line: var(--ds-err);
+  --km-info-line: var(--ds-line);
+  --km-info-ink: var(--ds-info);
+  --km-warn-line: var(--ds-line);
+  --km-warn-ink: var(--ds-warn);
+  --km-disabled-bg: var(--ds-accent-soft);
+  --km-disabled-ink: var(--ds-muted);
+}
+
 @mixin km-modal {
   display: block;
   font-family: var(--kc-font-body);
   color: var(--kc-ink);
+  @include km-tokens;
+
+  // Oscuro: el modal cuelga del <body> (NgbModal), así que :host-context lo alcanza.
+  @at-root :host-context(body.dark-only) {
+    @include km-tokens-oscuro;
+  }
 
   // ------------------------------------------------------------- encabezado
   .modal-header {
@@ -27,7 +138,7 @@
     gap: 12px;
     padding: 16px 20px;
     border-bottom: 1px solid var(--kc-line);
-    background: #fff;
+    background: var(--ds-surface);
 
     .modal-title {
       display: flex;
@@ -54,8 +165,8 @@
       opacity: 1;
 
       &:hover {
-        background-color: #fdeceb;
-        border-color: #f6d4d2;
+        background-color: var(--km-err-wash);
+        border-color: var(--km-err-line);
       }
 
       &:focus { box-shadow: none; }
@@ -65,7 +176,7 @@
   // ------------------------------------------------------------------ cuerpo
   .modal-body {
     padding: 20px;
-    background: #fff;
+    background: var(--ds-surface);
 
     label,
     .form-label {
@@ -87,10 +198,10 @@
       font-size: 14px;
       font-weight: 700;
       color: var(--kc-ink);
-      background: #fff;
+      background: var(--ds-surface);
 
       &::placeholder {
-        color: #a8aebe;
+        color: var(--km-placeholder);
         font-weight: 500;
       }
 
@@ -112,7 +223,7 @@
     gap: 8px;
     padding: 14px 20px;
     border-top: 1px solid var(--kc-line);
-    background: #fbfcfe;
+    background: var(--km-sunken);
 
     > * { margin: 0; }
 
@@ -129,34 +240,34 @@
     .btn-secondary,
     .btn-secondary:hover,
     .btn-secondary:focus {
-      background: #fff !important;
+      background: var(--ds-surface) !important;
       color: var(--kc-ink2) !important;
-      border-color: #e4e5ee !important;
+      border-color: var(--km-line-strong) !important;
     }
 
-    .btn-secondary:hover { border-color: #c9b9f7 !important; }
+    .btn-secondary:hover { border-color: var(--km-accent-line) !important; }
 
     .btn-primary,
     .btn-primary:hover,
     .btn-primary:focus {
       background: var(--kc-accent) !important;
-      color: #fff !important;
+      color: var(--ds-on-accent) !important;
       border-color: var(--kc-accent) !important;
     }
 
     .btn-primary:hover { filter: brightness(1.07); }
 
     .btn-primary:disabled {
-      background: #ece7fb !important;
-      border-color: #ece7fb !important;
-      color: #9a92bd !important;
+      background: var(--km-disabled-bg) !important;
+      border-color: var(--km-disabled-bg) !important;
+      color: var(--km-disabled-ink) !important;
       opacity: 1;
     }
   }
 }
 
 // Chip de ícono para el título del modal.
-@mixin km-title-chip($fg: var(--kc-accent), $bg: var(--kc-accent-wash)) {
+@mixin km-title-chip($fg: var(--kc-accent-texto), $bg: var(--kc-accent-wash)) {
   width: 34px;
   height: 34px;
   border-radius: 11px;
@@ -175,7 +286,7 @@
   justify-content: space-between;
   gap: 12px;
   background: var(--kc-accent-wash);
-  border: 1px solid #e2d9fb;
+  border: 1px solid var(--km-wash-line);
   border-radius: 13px;
   padding: 12px 15px;
 
@@ -189,7 +300,7 @@
     font-family: var(--kc-font-head);
     font-weight: 800;
     font-size: 26px;
-    color: var(--kc-accent);
+    color: var(--kc-accent-texto);
     line-height: 1;
   }
 }
