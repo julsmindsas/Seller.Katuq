@@ -240,8 +240,6 @@ $border-radius: 6px;
       color: #495057;
       margin-bottom: 0.5rem;
       margin-top: 0.5rem;
-      padding-left: 0.5rem;
-      border-left: 3px solid #7C5CFF;
     }
   }
 }
@@ -1992,3 +1990,14 @@ $border-radius: 6px;
   }
 }
 
+// Chip de transportadora (Enviame / Prindel): lila plano del canon, sin fondo fuerte.
+.transportadora-chip {
+  background: #efe9ff;
+  color: #5F3FE0;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .3px;
+
+  i { color: inherit; }
+}

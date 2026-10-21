@@ -170,10 +170,10 @@ button:focus-visible { outline: 2px solid var(--kc-accent); outline-offset: 3px;
 
 // ----- Mensajes -----
 .composer-message {
-  margin: 0; padding: 12px 14px; border-radius: 12px; border: 1px solid #e2d9fb; border-left: 4px solid var(--kc-accent); background: #f7f5fe; font-size: 12.5px; font-weight: 600; line-height: 1.55; color: #514768;
+  margin: 0; padding: 12px 14px; border-radius: 12px; border: 1px solid #e2d9fb; background: #f7f5fe; font-size: 12.5px; font-weight: 600; line-height: 1.55; color: #514768;
   strong { display: block; font-weight: 800; color: var(--kc-ink); } p { margin: 5px 0 0; } i { margin-right: 4px; }
-  &--error { border-color: #f6d4d2; border-left-color: #e0483f; background: #fef6f5; color: #8a4a45; strong { color: #c0392f; } }
-  &--ok { border-color: #d8f0e3; border-left-color: var(--kc-green); background: #f2fbf6; color: #3d6b4f; strong { color: var(--kc-green); } }
+  &--error { border-color: #f6d4d2; background: #fef6f5; color: #8a4a45; strong { color: #c0392f; } }
+  &--ok { border-color: #d8f0e3; background: #f2fbf6; color: #3d6b4f; strong { color: var(--kc-green); } }
   &--status .btn { margin-top: 8px; }
 }
 .composer-message + .composer-message { margin-top: 0; }
@@ -197,11 +197,11 @@ button:focus-visible { outline: 2px solid var(--kc-accent); outline-offset: 3px;
   &__obs { display: flex !important; align-items: center; gap: 7px; margin-top: 9px !important; padding-top: 9px; border-top: 1px solid #e2d9fb; font-size: 11.5px !important; i { font-size: 12px; } }
 }
 .summary-checks {
-  padding: 14px 16px; border-radius: 16px; border: 1px solid #f8ebd4; border-left: 4px solid var(--kc-orange); background: #fefaf2;
+  padding: 14px 16px; border-radius: 16px; border: 1px solid #f8ebd4; background: #fefaf2;
   &__head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; strong { font-size: 13.5px; font-weight: 800; color: var(--kc-ink); } }
   &__icon { @include kc-icon-chip(var(--kc-orange), #fff); width: 28px; height: 28px; border-radius: 9px; font-size: 13px; }
   &__row { display: flex; align-items: flex-start; gap: 9px; margin-top: 8px; font-size: 12.5px; font-weight: 700; color: #9aa0b2; text-wrap: pretty; i { flex-shrink: 0; margin-top: 2px; font-size: 13px; color: #b7bccb; } &.is-ok { color: var(--kc-ink2); i { color: var(--kc-green); } } }
-  &.is-ready { border-color: #d8f0e3; border-left-color: var(--kc-green); background: #f2fbf6; .summary-checks__icon { color: var(--kc-green); } }
+  &.is-ready { border-color: #d8f0e3; background: #f2fbf6; .summary-checks__icon { color: var(--kc-green); } }
 }
 .summary-emit { @include kc-card; border-radius: 16px; padding: 14px 16px; font-size: 12.5px; font-weight: 600; line-height: 1.55; color: var(--kc-ink2); strong { display: block; font-size: 14px; font-weight: 800; color: var(--kc-ink); } p { margin: 6px 0 0; } .btn { margin-top: 8px; } }
 .invoice-confirmation { display: flex; gap: 9px; align-items: flex-start; margin: 12px 0; font-size: 12.5px; font-weight: 700; color: var(--kc-ink); input { margin-top: 3px; accent-color: var(--kc-accent); flex-shrink: 0; } }

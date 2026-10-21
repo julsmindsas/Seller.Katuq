@@ -2,8 +2,8 @@
     <!-- Header row -->
     <div class="entrega-header">
         <div class="entrega-header__title">
-            <i class="fa fa-truck" style="color: #8b5cf6; font-size: 1.25rem;"></i>
-            <h5 style="margin: 0; font-weight: 600; color: #1e293b;">Direcciones de Entrega</h5>
+            <i class="fa fa-truck ent-icono"></i>
+            <h5 style="margin: 0; font-weight: 800; color: #211F3A;">Direcciones de Entrega</h5>
         </div>
         <div class="entrega-header__actions">
             <input
@@ -39,7 +39,7 @@
             </button>
             <button
                 class="btn btn-sm"
-                style="background-color: #8b5cf6; color: #fff; border: none;"
+                style="background-color: #5F3FE0; color: #fff; border: none;"
                 (click)="abrirModalCrearEntrega(crearEntrega)"
             >
                 <i class="fa fa-plus me-1"></i> Nueva Direcci&oacute;n
@@ -51,7 +51,7 @@
     <div
         *ngIf="datosEntregaNoEncontradosParaCiudadSeleccionada"
         class="alert alert-warning mb-3 mt-3"
-        style="border-left: 4px solid #D35400; border-radius: 8px;"
+        style="border-radius: 11px;"
     >
         <i class="fa fa-exclamation-triangle me-2"></i> Este cliente no tiene
         direcciones registradas en <strong>{{ pedidoGral?.envio?.ciudad || ciudad }}</strong>.
@@ -66,7 +66,7 @@
         class="selected-address-card mt-3"
         style="
             background: #E6F7EE;
-            border: 1px solid #86efac;
+            border: 1px solid #c8ecd7;
             border-radius: 12px;
             padding: 16px 20px;
             position: relative;
@@ -77,8 +77,8 @@
                 style="
                     width: 40px;
                     height: 40px;
-                    border-radius: 50%;
-                    background-color: #27AE60;
+                    border-radius: 11px;
+                    background-color: #1E874B;
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -89,13 +89,13 @@
             </div>
             <div style="flex: 1;">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                    <span style="font-weight: 600; color: #166534; font-size: 0.85rem;">
+                    <span style="font-weight: 600; color: #1E874B; font-size: 0.85rem;">
                         Direcci&oacute;n seleccionada
                     </span>
                     <span
                         style="
-                            background-color: #bbf7d0;
-                            color: #166534;
+                            background-color: #ffffff;
+                            color: #1E874B;
                             font-size: 0.7rem;
                             padding: 2px 8px;
                             border-radius: 9999px;
@@ -105,19 +105,19 @@
                         Activa
                     </span>
                 </div>
-                <p style="margin: 0; color: #15803d; font-size: 0.95rem; font-weight: 500;">
+                <p style="margin: 0; color: #1E874B; font-size: 0.95rem; font-weight: 500;">
                     {{ pedidoGral.envio?.direccionEntrega }}
                 </p>
                 <p
                     *ngIf="pedidoGral.envio?.nombres || pedidoGral.envio?.apellidos"
-                    style="margin: 4px 0 0; color: #4ade80; font-size: 0.85rem;"
+                    style="margin: 4px 0 0; color: #4c8a66; font-size: 0.85rem;"
                 >
                     {{ pedidoGral.envio?.nombres }} {{ pedidoGral.envio?.apellidos }}
                     <span *ngIf="pedidoGral.envio?.celular"> &mdash; {{ pedidoGral.envio?.celular }}</span>
                 </p>
                 <p
                     *ngIf="pedidoGral.envio?.ciudad"
-                    style="margin: 2px 0 0; color: #4ade80; font-size: 0.8rem;"
+                    style="margin: 2px 0 0; color: #4c8a66; font-size: 0.8rem;"
                 >
                     {{ pedidoGral.envio?.ciudad }}
                     <span *ngIf="pedidoGral.envio?.departamento">, {{ pedidoGral.envio?.departamento }}</span>
@@ -128,8 +128,8 @@
                 class="btn btn-sm"
                 style="
                     background-color: transparent;
-                    border: 1px solid #86efac;
-                    color: #166534;
+                    border: 1px solid #c8ecd7;
+                    color: #1E874B;
                     font-size: 0.75rem;
                     border-radius: 8px;
                     padding: 4px 10px;
@@ -146,8 +146,8 @@
                 class="btn btn-sm"
                 style="
                     background-color: transparent;
-                    border: 1px solid #86efac;
-                    color: #166534;
+                    border: 1px solid #c8ecd7;
+                    color: #1E874B;
                     font-size: 0.75rem;
                     border-radius: 8px;
                     padding: 4px 10px;
@@ -169,7 +169,7 @@
             *ngFor="let item of datosEntregas; let i = index; trackBy: trackByIndex"
             style="
                 background: #fff;
-                border: 1px solid #e2e8f0;
+                border: 1px solid #ececf4;
                 border-radius: 10px;
                 padding: 14px 18px;
                 margin-bottom: 10px;
@@ -183,23 +183,23 @@
                     style="
                         width: 36px;
                         height: 36px;
-                        border-radius: 50%;
-                        background-color: #f1f5f9;
+                        border-radius: 11px;
+                        background-color: #f3f1fb;
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         flex-shrink: 0;
                     "
                 >
-                    <i class="fa fa-map-marker" style="color: #8b5cf6; font-size: 1rem;"></i>
+                    <i class="fa fa-map-marker" style="color: #5F3FE0; font-size: 1rem;"></i>
                 </div>
                 <div style="flex: 1; min-width: 0;">
                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                         <span
                             *ngIf="item.alias"
                             style="
-                                background-color: #ede9fe;
-                                color: #7c3aed;
+                                background-color: #efe9ff;
+                                color: #5F3FE0;
                                 font-size: 0.7rem;
                                 padding: 2px 8px;
                                 border-radius: 9999px;
@@ -208,21 +208,21 @@
                         >
                             {{ item.alias }}
                         </span>
-                        <span style="font-weight: 500; color: #334155; font-size: 0.9rem;">
+                        <span style="font-weight: 500; color: #211F3A; font-size: 0.9rem;">
                             {{ item.nombres }} {{ item.apellidos }}
                         </span>
                     </div>
-                    <p style="margin: 3px 0 0; color: #64748b; font-size: 0.85rem;">
+                    <p style="margin: 3px 0 0; color: #5b5878; font-size: 0.85rem;">
                         {{ item.direccionEntrega }}
                     </p>
                     <div style="display: flex; gap: 12px; margin-top: 3px; flex-wrap: wrap;">
-                        <span *ngIf="item.celular" style="color: #94a3b8; font-size: 0.8rem;">
+                        <span *ngIf="item.celular" style="color: #8f8bab; font-size: 0.8rem;">
                             <i class="fa fa-phone" style="margin-right: 4px;"></i>{{ item.celular }}
                         </span>
-                        <span *ngIf="item.ciudad" style="color: #94a3b8; font-size: 0.8rem;">
+                        <span *ngIf="item.ciudad" style="color: #8f8bab; font-size: 0.8rem;">
                             <i class="fa fa-map" style="margin-right: 4px;"></i>{{ item.ciudad }}
                         </span>
-                        <span *ngIf="item.barrio" style="color: #94a3b8; font-size: 0.8rem;">
+                        <span *ngIf="item.barrio" style="color: #8f8bab; font-size: 0.8rem;">
                             <i class="fa fa-building" style="margin-right: 4px;"></i>{{ item.barrio }}
                         </span>
                     </div>
@@ -231,7 +231,7 @@
                     <button
                         class="btn btn-sm"
                         style="
-                            background-color: #8b5cf6;
+                            background-color: #5F3FE0;
                             color: #fff;
                             border: none;
                             font-size: 0.78rem;
@@ -249,7 +249,7 @@
                         placement="top"
                         ngbTooltip="{{ 'Editar' | translate }}"
                     >
-                        <i class="icofont icofont-pencil-alt-5" style="color: #8b5cf6; font-size: 14px;"></i>
+                        <i class="icofont icofont-pencil-alt-5" style="color: #5F3FE0; font-size: 14px;"></i>
                     </button>
                     <button
                         class="btn btn-sm btn-light"
@@ -258,7 +258,7 @@
                         placement="top"
                         ngbTooltip="{{ 'Eliminar' | translate }}"
                     >
-                        <i class="icofont icofont-trash" style="color: #d12b38; font-size: 14px;"></i>
+                        <i class="icofont icofont-trash" style="color: #D64545; font-size: 14px;"></i>
                     </button>
                 </div>
             </div>
@@ -272,34 +272,34 @@
         style="
             text-align: center;
             padding: 40px 20px;
-            background: #f8fafc;
-            border-radius: 12px;
-            border: 2px dashed #e2e8f0;
+            background: #faf9fe;
+            border-radius: 16px;
+            border: 2px dashed #e4e2ef;
         "
     >
         <div
             style="
                 width: 56px;
                 height: 56px;
-                border-radius: 50%;
-                background-color: #ede9fe;
+                border-radius: 16px;
+                background-color: #efe9ff;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 margin: 0 auto 12px;
             "
         >
-            <i class="fa fa-map-marker" style="color: #8b5cf6; font-size: 1.5rem;"></i>
+            <i class="fa fa-map-marker" style="color: #5F3FE0; font-size: 1.5rem;"></i>
         </div>
-        <h6 style="color: #475569; font-weight: 600; margin-bottom: 6px;">
+        <h6 style="color: #211F3A; font-weight: 600; margin-bottom: 6px;">
             No hay direcciones registradas
         </h6>
-        <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 16px;">
+        <p style="color: #8f8bab; font-size: 0.85rem; margin-bottom: 16px;">
             Crea tu primera direcci&oacute;n de entrega para continuar.
         </p>
         <button
             class="btn btn-sm"
-            style="background-color: #8b5cf6; color: #fff; border: none; border-radius: 8px; padding: 6px 16px;"
+            style="background-color: #5F3FE0; color: #fff; border: none; border-radius: 8px; padding: 6px 16px;"
             (click)="abrirModalCrearEntrega(crearEntrega)"
         >
             <i class="fa fa-plus me-1"></i> Crear Direcci&oacute;n
@@ -320,14 +320,13 @@
 
 <!-- Modal for CREATING new address -->
 <ng-template #crearEntrega let-modal>
-    <div class="modal-header" style="background: #5F3FE0; color: #fff; border-bottom: none;">
-        <h5 class="modal-title" style="font-weight: 600;">
-            <i class="fa fa-plus-circle me-2"></i>
+    <div class="modal-header ent-modal-cabeza">
+        <h5 class="modal-title">
+            <i class="fa fa-plus-circle ent-modal-icono"></i>
             Nueva Dirección de Entrega
         </h5>
         <button type="button" class="btn-close" aria-label="Cerrar"
-            (click)="modal.dismiss('Cross click')"
-            style="filter: brightness(0) invert(1); opacity: 0.8;">
+            (click)="modal.dismiss('Cross click')">
         </button>
     </div>
     <div class="modal-body" style="padding: 20px 24px;">
@@ -561,7 +560,7 @@
                         placeholder="Buscar por nombre o c&oacute;digo DANE..."
                         (input)="buscarMunicipioDane(searchQueryCiudadDane)"
                     />
-                    <button class="btn btn-outline-primary" type="button" style="border-color: #8b5cf6; color: #8b5cf6;">
+                    <button class="btn btn-outline-primary" type="button">
                         <i class="fa fa-search"></i>
                     </button>
                 </div>
@@ -610,7 +609,7 @@
         <!-- Ubicación seleccionada via DANE -->
         <div class="row mb-2" *ngIf="departamento_entrega || ciudad_municipio_entrega">
             <div class="col-12">
-                <span class="badge" style="background:#ede9fe;color:#5b21b6;font-size:0.82rem;padding:0.4rem 0.75rem;">
+                <span class="badge" style="background:#efe9ff;color:#5F3FE0;font-size:0.82rem;padding:0.4rem 0.75rem;">
                     <i class="fa fa-map-marker me-1"></i>
                     {{ ciudad_municipio_entrega }}{{ departamento_entrega ? ' — ' + departamento_entrega : '' }}{{ pais_entrega ? ' (' + pais_entrega + ')' : '' }}
                 </span>
@@ -651,13 +650,13 @@
             </div>
             <div class="col-md-4 mb-3" *ngIf="valor_zona_cobro">
                 <label class="form-label">Valor Domicilio</label>
-                <div class="form-control-plaintext fw-semibold" style="color: #8b5cf6;">
+                <div class="form-control-plaintext fw-semibold" style="color: #5F3FE0;">
                     {{ valor_zona_cobro | currency }}
                 </div>
             </div>
         </div>
     </div>
-    <div class="modal-footer" style="border-top: 2px solid #f1f5f9;">
+    <div class="modal-footer">
         <button
             type="button"
             class="btn btn-outline-secondary"
@@ -668,7 +667,7 @@
         <button
             type="button"
             class="btn"
-            style="background-color: #8b5cf6; color: #fff; border: none;"
+            style="background-color: #5F3FE0; color: #fff; border: none;"
             (click)="guardarDatosEntrega(); modal.dismiss('Save')"
         >
             <i class="fa fa-save me-1"></i> Guardar
@@ -678,13 +677,12 @@
 
 <!-- Modal for EDITING delivery data -->
 <ng-template #entrega let-modal>
-    <div class="modal-header" style="background: #5F3FE0; color: #fff; border-bottom: none;">
-        <h5 class="modal-title" style="font-weight: 600;">
-            <i class="fa fa-edit me-2"></i>Editar Datos de Entrega
+    <div class="modal-header ent-modal-cabeza">
+        <h5 class="modal-title">
+            <i class="fa fa-edit ent-modal-icono"></i>Editar Datos de Entrega
         </h5>
         <button type="button" class="btn-close" aria-label="Cerrar"
-            (click)="modal.dismiss('Cross click')"
-            style="filter: brightness(0) invert(1); opacity: 0.8;">
+            (click)="modal.dismiss('Cross click')">
         </button>
     </div>
     <div class="modal-body">
@@ -937,7 +935,7 @@
         <!-- Ubicación seleccionada via DANE -->
         <div class="row mb-2" *ngIf="departamento_entrega || ciudad_municipio_entrega">
             <div class="col-12">
-                <span class="badge" style="background:#ede9fe;color:#5b21b6;font-size:0.82rem;padding:0.4rem 0.75rem;">
+                <span class="badge" style="background:#efe9ff;color:#5F3FE0;font-size:0.82rem;padding:0.4rem 0.75rem;">
                     <i class="fa fa-map-marker me-1"></i>
                     {{ ciudad_municipio_entrega }}{{ departamento_entrega ? ' — ' + departamento_entrega : '' }}{{ pais_entrega ? ' (' + pais_entrega + ')' : '' }}
                 </span>
@@ -988,7 +986,7 @@
         <button
             *ngIf="editandodato"
             type="button"
-            class="btn btn-outline-dark"
+            class="btn btn-primary"
             (click)="editarDatosEntrega()"
         >
             Guardar
@@ -998,13 +996,12 @@
 
 <!-- Modal for EDITING billing data -->
 <ng-template #facturacion let-modal>
-    <div class="modal-header" style="background: #5F3FE0; color: #fff; border-bottom: none;">
-        <h5 class="modal-title" style="font-weight: 600;">
-            <i class="fa fa-edit me-2"></i>Editar Datos Facturación Electrónica
+    <div class="modal-header ent-modal-cabeza">
+        <h5 class="modal-title">
+            <i class="fa fa-edit ent-modal-icono"></i>Editar Datos Facturación Electrónica
         </h5>
         <button type="button" class="btn-close" aria-label="Cerrar"
-            (click)="modal.dismiss('Cross click')"
-            style="filter: brightness(0) invert(1); opacity: 0.8;">
+            (click)="modal.dismiss('Cross click')">
         </button>
     </div>
     <div class="modal-body">
@@ -1218,7 +1215,7 @@
         <button
             type="button"
             *ngIf="editandodato"
-            class="btn btn-outline-dark"
+            class="btn btn-primary"
             (click)="editarDatosFacturacion()"
         >
             Guardar

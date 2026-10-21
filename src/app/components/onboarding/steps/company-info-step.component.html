@@ -13,7 +13,7 @@
     <!-- Información Legal -->
     <p-card>
       <ng-template pTemplate="header">
-        <div class="card-header">
+        <div class="onb-cabeza">
           <i class="pi pi-building"></i>
           <span>Información Legal</span>
         </div>
@@ -92,7 +92,7 @@
     <!-- Información de Contacto -->
     <p-card class="mt-3">
       <ng-template pTemplate="header">
-        <div class="card-header">
+        <div class="onb-cabeza">
           <i class="pi pi-phone"></i>
           <span>Información de Contacto</span>
         </div>
@@ -149,7 +149,7 @@
     <!-- Ubicación -->
     <p-card class="mt-3">
       <ng-template pTemplate="header">
-        <div class="card-header">
+        <div class="onb-cabeza">
           <i class="pi pi-map-marker"></i>
           <span>Ubicación</span>
         </div>
@@ -225,7 +225,7 @@
         type="button"
         label="Guardar y Continuar"
         icon="pi pi-check"
-        class="p-button-success p-button-lg"
+        class="cfg-btn"
         [disabled]="!isFormValid()"
         (click)="onComplete()">
       </button>

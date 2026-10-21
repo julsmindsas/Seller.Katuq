@@ -1,76 +1,283 @@
+// Historial de sincronización con el fulfillment (D-131/D-400): métricas en chips
+// planos tintados, tarjetas blancas, encabezados blancos y semánticos en par
+// fuerte/fondo suave. Sin bloques de color fuerte ni primarios paralelos.
+@import '../../../shared/styles/config-pagina';
+
 .sync-history-container {
   padding: 1rem 0;
+  color: $cfg-ink;
+
+  p, small, label, span, button { letter-spacing: normal; }
+  :focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
 }
 
-.stat-card {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+// ── Métricas ──
+.fsh-stat {
+  height: 100%;
+  padding: 14px 16px;
+  background: $cfg-tint;
+  border: 1px solid #eeecf7;
+  border-radius: 11px;
+  color: $cfg-ink;
+  transition: transform .15s ease;
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  &:hover { transform: translateY(-1px); }
+
+  > .d-flex > i {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 11px;
+    font-size: 20px !important;
+    background: $cfg-accent-soft;
+    color: $cfg-accent;
   }
 
   .stat-value {
-    font-size: 1.5rem;
-    font-weight: bold;
+    font-size: 20px;
+    font-weight: 800;
     line-height: 1.2;
+    color: $cfg-ink;
   }
 
   .stat-label {
-    opacity: 0.9;
+    font-size: 10.5px !important;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $cfg-muted;
+  }
+}
+.fsh-stat--ok > .d-flex > i { background: $cfg-ok-soft; color: $cfg-ok; }
+.fsh-stat--error > .d-flex > i { background: $cfg-err-soft; color: $cfg-err; }
+.fsh-stat--info > .d-flex > i { background: $cfg-info-soft; color: $cfg-info; }
+
+.fsh-tenue { color: $cfg-muted !important; font-size: 13px; }
+
+// ── Tarjetas ──
+.fsh-card {
+  background: #fff;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  box-shadow: $cfg-shadow-panel;
+  overflow: hidden;
+}
+
+.fsh-cabeza {
+  padding: 14px 18px;
+  background: #fff;
+  border-bottom: 1px solid $cfg-line-soft;
+}
+
+.fsh-cabeza__titulo {
+  font-size: 15px;
+  font-weight: 800;
+  color: $cfg-ink;
+
+  i { color: $cfg-accent; }
+}
+
+.fsh-cuenta {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: $cfg-accent-soft;
+  color: $cfg-accent !important;
+  font-size: 10.5px !important;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.fsh-filtros {
+  .form-label {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $cfg-muted;
+    margin-bottom: 6px;
   }
 }
 
-.card-header {
-  font-weight: 600;
+:host ::ng-deep .fsh-filtros {
+  .p-dropdown, .p-calendar .p-inputtext {
+    min-height: 40px;
+    background: $cfg-chip-bg;
+    border: 1px solid $cfg-chip-border;
+    border-radius: 10px;
+  }
+  .p-dropdown:not(.p-disabled).p-focus, .p-inputtext:enabled:focus {
+    border-color: $cfg-accent-2;
+    box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
+  }
+  .p-calendar .p-datepicker-trigger {
+    background: $cfg-accent;
+    border-color: $cfg-accent;
+    border-radius: 0 10px 10px 0;
+  }
 }
 
-.table {
+// ── Botones ──
+.fsh-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid $cfg-accent;
+  border-radius: 11px;
+  background: $cfg-accent;
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: $cfg-shadow-btn;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+
+  i { color: inherit; }
+
+  &:hover:not(:disabled) { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
+}
+.fsh-btn--sec {
+  background: #fff;
+  color: $cfg-body;
+  border-color: #e4e2ef;
+  box-shadow: none;
+
+  &:hover:not(:disabled) { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent; }
+}
+.fsh-btn--sm { min-height: 32px; padding: 0 12px; font-size: 12.5px; }
+.fsh-btn--icono { min-height: 34px; width: 34px; padding: 0; }
+
+// ── Tabla ──
+.fsh-tabla {
   th {
-    font-weight: 600;
-    font-size: 0.85rem;
+    background: $cfg-tint;
+    color: $cfg-muted;
+    font-weight: 800;
+    font-size: 10.5px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom-width: 2px;
+    border-bottom: 1px solid $cfg-line-soft;
+    padding: 12px 14px;
   }
 
   td {
     vertical-align: middle;
+    color: $cfg-ink;
+    border-color: $cfg-line-soft;
+    padding: 12px 14px;
   }
+
+  > tbody > tr:hover > td { background: $cfg-row-hover; }
 }
 
-// Estilos para las filas según resultado
+// Filas según resultado
 tr:has(.bg-danger) {
-  background-color: rgba(220, 53, 69, 0.05);
+  background-color: rgba(214, 69, 69, 0.05);
 }
 
 tr:has(.bg-warning) {
-  background-color: rgba(255, 193, 7, 0.05);
+  background-color: rgba(217, 130, 10, 0.05);
 }
 
-// Badge de tipo de sync
-.badge.bg-light {
-  border: 1px solid #dee2e6;
+// Pills de tipo y resultado (los da getResultadoClass): par fuerte/fondo suave.
+.badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
 }
+.badge.fsh-tipo { background: $cfg-accent-soft; color: $cfg-accent; }
+.badge.bg-success { background: $cfg-ok-soft !important; color: $cfg-ok !important; }
+.badge.bg-danger { background: $cfg-err-soft !important; color: $cfg-err !important; }
+.badge.bg-warning { background: $cfg-warn-soft !important; color: $cfg-warn !important; }
+.badge.bg-secondary { background: #eef0f3 !important; color: #5A6B78 !important; }
 
 // Diferencia positiva/negativa
 .text-success.fw-bold {
-  color: #198754 !important;
+  color: $cfg-ok !important;
 }
 
 .text-danger.fw-bold {
-  color: #dc3545 !important;
+  color: $cfg-err !important;
+}
+
+// ── Estado vacío ──
+.fsh-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+  text-align: center;
+}
+.fsh-vacio__icono {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: $cfg-tile;
+  color: $cfg-accent;
+  font-size: 26px;
+}
+.fsh-vacio__titulo { margin: 0; font-size: 15px; font-weight: 800; color: $cfg-ink; }
+.fsh-vacio__texto { font-size: 12.5px; color: $cfg-muted; }
+
+// ── Modal de detalle ──
+:host ::ng-deep .fsh-dialogo.p-dialog {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px -20px rgba(95, 63, 224, .35);
+
+  .p-dialog-header {
+    padding: 16px 20px;
+    background: #fff;
+    border-bottom: 1px solid $cfg-line;
+    color: $cfg-ink;
+  }
+  .p-dialog-title { font-size: 17px; font-weight: 800; color: $cfg-ink; }
+  .p-dialog-content { padding: 18px 20px; }
+}
+
+.fsh-detalle {
+  .fsh-label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $cfg-muted;
+  }
+
+  .alert { border: 0; border-radius: 11px; }
+  .alert-success { background: $cfg-ok-soft; color: $cfg-ok; }
+  .alert-danger { background: $cfg-err-soft; color: $cfg-err; }
+  .alert-warning { background: $cfg-warn-soft; color: $cfg-warn; }
+}
+
+.fsh-json {
+  background: $cfg-chip-bg;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 11px;
+  color: $cfg-ink;
 }
 
 // Responsivo
 @media (max-width: 768px) {
-  .stat-card {
+  .fsh-stat {
     .stat-value {
-      font-size: 1.2rem;
-    }
-
-    i {
-      font-size: 1.5rem !important;
+      font-size: 17px;
     }
   }
 
@@ -97,15 +304,15 @@ pre {
   }
 
   &::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: $cfg-chip-bg;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
+    background: #d8d4ea;
     border-radius: 4px;
 
     &:hover {
-      background: #a1a1a1;
+      background: #c4bfdc;
     }
   }
 }

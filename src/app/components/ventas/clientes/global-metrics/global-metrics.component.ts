@@ -103,23 +103,23 @@ export class GlobalMetricsComponent implements OnInit, OnDestroy {
 
   rfmColor(segmento: string): string {
     const map: Record<string, string> = {
-      'Campeón': '#16a34a',
+      'Campeón': '#1E874B',
       'Fiel': '#1E6FD9',
-      'En riesgo': '#d97706',
-      'Hibernando': '#6b7280',
-      'Perdido': '#dc2626',
+      'En riesgo': '#D9820A',
+      'Hibernando': '#5A6B78',
+      'Perdido': '#D64545',
     };
-    return map[segmento] ?? '#6b7280';
+    return map[segmento] ?? '#5A6B78';
   }
 
   rfmBg(segmento: string): string {
     const map: Record<string, string> = {
-      'Campeón': '#f0fdf4',
-      'Fiel': '#eff6ff',
-      'En riesgo': '#fffbeb',
-      'Hibernando': '#f9fafb',
-      'Perdido': '#fef2f2',
+      'Campeón': '#E6F7EE',
+      'Fiel': '#E7F1FF',
+      'En riesgo': '#FFF1DF',
+      'Hibernando': '#eef0f3',
+      'Perdido': '#FDECEC',
     };
-    return map[segmento] ?? '#f9fafb';
+    return map[segmento] ?? '#eef0f3';
   }
 }

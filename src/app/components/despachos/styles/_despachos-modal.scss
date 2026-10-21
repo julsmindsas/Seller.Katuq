@@ -1,0 +1,131 @@
+// Piezas de modal con el tema canónico (D-131/D-399/D-400) para los modales de
+// logística. Encabezado blanco con título en tinta e ícono en azulejo lila,
+// secciones blancas con cabecera tintada, labels UPPERCASE muted y pie con
+// `cfg-btn` (primario morado, secundario blanco con borde).
+//
+// Uso en el SCSS del componente:
+//   @import '<ruta relativa>/despachos/styles/despachos-modal';
+//   @include despachos-modal;
+//
+// Incluye `config-pagina` (cfg-btn, cfg-aviso, cfg-pill, cfg-form, cfg-vacio).
+// Ningún nombre de clase lleva "p-" (trampa `[class*="p-"]` del reset global).
+@import '../../../shared/styles/config-pagina';
+
+@mixin despachos-modal {
+  @include config-pagina;
+
+  // ── Encabezado ──
+  .dm-cabeza {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: #fff;
+    border-bottom: 1px solid $cfg-line-soft;
+    color: $cfg-ink;
+  }
+  .dm-cabeza__textos {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .dm-icono {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: $cfg-accent-soft;
+    color: $cfg-accent !important;
+    font-size: 17px;
+    margin: 0 !important;
+  }
+  .dm-titulo {
+    margin: 0;
+    font-size: 17px !important;
+    line-height: 1.25;
+    font-weight: 800;
+    color: $cfg-ink !important;
+    letter-spacing: normal;
+  }
+  .dm-sub {
+    margin: 0;
+    font-size: 12.5px;
+    color: $cfg-muted;
+    letter-spacing: normal;
+  }
+  .dm-cerrar {
+    flex: 0 0 auto;
+    margin-left: auto;
+    opacity: .6;
+    &:hover { opacity: 1; }
+    &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; box-shadow: none; }
+  }
+
+  // ── Secciones del cuerpo ──
+  .dm-seccion {
+    background: #fff;
+    border: 1px solid $cfg-line;
+    border-radius: 16px;
+    box-shadow: $cfg-shadow-panel;
+    overflow: hidden;
+  }
+  .dm-seccion__cabeza {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: $cfg-tint;
+    border-bottom: 1px solid $cfg-line-soft;
+    color: $cfg-ink;
+
+    h5, h6 {
+      margin: 0;
+      font-size: 14px !important;
+      font-weight: 800;
+      color: $cfg-ink !important;
+      letter-spacing: normal;
+    }
+    i { color: $cfg-accent; }
+  }
+  .dm-seccion__cuerpo { padding: 16px; }
+
+  // Variantes semánticas de cabecera (par fuerte / fondo suave).
+  .dm-seccion__cabeza--error { background: $cfg-err-soft; h5, h6, i { color: $cfg-err !important; } }
+  .dm-seccion__cabeza--warn { background: $cfg-warn-soft; h5, h6, i { color: $cfg-warn !important; } }
+  .dm-seccion__cabeza--info { background: $cfg-info-soft; h5, h6, i { color: $cfg-info !important; } }
+
+  .dm-label {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $cfg-muted;
+  }
+
+  // ── Pie ──
+  .dm-pie {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 20px;
+    background: #fff;
+    border-top: 1px solid $cfg-line-soft;
+  }
+
+  // Botón primario en par de error para confirmaciones destructivas.
+  .dm-btn-peligro {
+    background: $cfg-err !important;
+    border-color: $cfg-err !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px -8px rgba(214, 69, 69, .6);
+    &:hover:not(:disabled) { background: #b93838 !important; border-color: #b93838 !important; }
+  }
+
+  :focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+}

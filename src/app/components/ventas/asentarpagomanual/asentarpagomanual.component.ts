@@ -63,7 +63,7 @@ export class AsentarpagomanualComponent implements OnInit {
         title: "¡Alerta!",
         text: "Este pedido ya se encuentra pagado.",
         icon: "warning",
-        confirmButtonColor: "#3085d6",
+        confirmButtonColor: "#5F3FE0",
         confirmButtonText: "Aceptar",
       });
       return;
@@ -451,7 +451,7 @@ export class AsentarpagomanualComponent implements OnInit {
             icon: "success",
             title: "Pago registrado",
             text: "El pago quedó en revisión de tesorería.",
-            confirmButtonColor: "#3085d6",
+            confirmButtonColor: "#5F3FE0",
             confirmButtonText: "Aceptar",
           }).then(() => {
             this.modalService.dismissAll(order);
@@ -657,8 +657,8 @@ export class AsentarpagomanualComponent implements OnInit {
       text: `Está seguro de eliminar el pago con fecha ${pago.fecha} y valor ${pago.valor} y número de comprobante ${pago.numeroComprobante} del pedido ${this.pedido.nroPedido}?`,
       icon: "question",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
+      confirmButtonColor: "#D64545",
+      cancelButtonColor: "#8f8bab",
       confirmButtonText: "Eliminar",
       cancelButtonText: "Cancelar",
     }).then((result) => {

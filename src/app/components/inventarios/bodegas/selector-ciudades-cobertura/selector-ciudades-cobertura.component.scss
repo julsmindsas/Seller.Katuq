@@ -1,3 +1,111 @@
+// Modal de ciudades de cobertura con el aspecto Katuq (D-131/D-400): encabezado
+// blanco con ícono en azulejo lila, labels UPPERCASE muted, inputs lilas, paneles
+// blancos y pie con botón morado. Sin border-left de acento.
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
+
+.scc-cabeza {
+  align-items: center;
+  padding: 16px 20px;
+  background: #fff;
+  border-bottom: 1px solid $cfg-line;
+}
+.scc-titulo {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 0;
+  font-size: 17px !important;
+  font-weight: 800;
+  color: $cfg-ink;
+  letter-spacing: normal;
+}
+.scc-icono {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: $cfg-accent-soft;
+  color: $cfg-accent;
+  font-size: 16px;
+}
+.scc-cerrar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: 0 0 0 auto;
+  padding: 0;
+  border: 1px solid $cfg-line;
+  border-radius: 10px;
+  background: $cfg-chip-bg;
+  color: $cfg-body;
+  font-size: 18px;
+  line-height: 1;
+
+  span { color: inherit; font-size: inherit; }
+  &:hover { background: $cfg-err-soft; border-color: #f3c9c9; color: $cfg-err; }
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+}
+
+.scc-cuerpo {
+  padding: 18px 20px;
+  color: $cfg-ink;
+
+  p, label, span, button { letter-spacing: normal; }
+  :focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+
+  // Cobertura nacional: par éxito cuando está activa, tinte lila cuando no.
+  .alert { border: 1px solid transparent; border-radius: 11px; }
+  .alert-success { background: $cfg-ok-soft; color: $cfg-ok; border-color: #cdeedb; }
+  .alert-light { background: $cfg-tint; border-color: $cfg-line !important; color: $cfg-ink; }
+
+  // El switch no es un label de campo: sin UPPERCASE.
+  .form-check-label {
+    text-transform: none;
+    font-size: 13.5px;
+    font-weight: 500;
+    letter-spacing: normal;
+    color: inherit;
+  }
+  .form-check-input:checked { background-color: $cfg-accent; border-color: $cfg-accent; }
+
+  .input-group .form-control { border-radius: 10px 0 0 10px; }
+}
+
+.scc-tenue { color: $cfg-muted; font-size: 13px; }
+
+.scc-buscar {
+  min-height: 40px;
+  border-radius: 0 10px 10px 0;
+  box-shadow: none;
+}
+
+.scc-cuenta { justify-content: center; min-height: 40px; }
+
+.scc-btn-sm { min-height: 30px; padding: 0 10px; font-size: 12px; }
+
+// ── Paneles ──
+.scc-panel {
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: $cfg-shadow-panel;
+}
+.scc-panel__cabeza {
+  background: #fff;
+  border-bottom: 1px solid $cfg-line-soft;
+}
+.scc-panel__titulo {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: $cfg-ink;
+
+  i { color: $cfg-accent; }
+}
+
 .city-list-container {
   max-height: 400px;
   overflow-y: auto;
@@ -10,17 +118,17 @@
 }
 
 .city-item {
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid $cfg-line-soft;
   cursor: pointer;
   transition: background-color 0.2s;
+  color: $cfg-ink;
 
   &:hover {
-    background-color: #f8f9fa;
+    background-color: $cfg-row-hover;
   }
 
   &.selected {
-    background-color: #e3f2fd;
-    border-left: 3px solid #5F3FE0;
+    background-color: $cfg-accent-soft;
   }
 
   &:last-child {
@@ -30,7 +138,7 @@
 
 .selected-city-item {
   padding: 6px 8px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid $cfg-line-soft;
   font-size: 0.9em;
 
   &:last-child {
@@ -38,17 +146,21 @@
   }
 
   &:hover {
-    background-color: #fff5f5;
+    background-color: $cfg-err-soft;
   }
 }
 
+.scc-ciudad { color: $cfg-ink; font-size: 13px; }
+
 .department-header {
-  background-color: #f8f9fa;
+  background-color: $cfg-tint;
   padding: 6px 10px;
-  font-weight: 600;
-  font-size: 0.85em;
-  color: #495057;
-  border-radius: 4px;
+  font-weight: 800;
+  font-size: 10.5px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: $cfg-muted;
+  border-radius: 9px;
   margin-bottom: 4px;
 }
 
@@ -56,9 +168,11 @@
   cursor: pointer;
 }
 
-.card-header {
-  background-color: #f8f9fa;
-  font-weight: 500;
+.scc-pie {
+  gap: 8px;
+  padding: 14px 20px;
+  background: #fff;
+  border-top: 1px solid $cfg-line-soft;
 }
 
 .modal-body {

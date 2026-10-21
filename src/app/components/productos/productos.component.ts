@@ -1931,7 +1931,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
       confirmButtonText: '<i class="pi pi-cloud-download"></i> Importar todos',
       denyButtonText: '<i class="pi pi-search"></i> Por referencia',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#8b5cf6',
+      confirmButtonColor: '#5F3FE0',
       denyButtonColor: '#00e5cc'
     }).then((result) => {
       if (result.isConfirmed) {
@@ -1954,7 +1954,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
       showCancelButton: true,
       confirmButtonText: 'Importar',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#8b5cf6',
+      confirmButtonColor: '#5F3FE0',
       inputValidator: (value) => {
         if (!value || !value.trim()) {
           return 'Debe ingresar un código o referencia';
@@ -2053,7 +2053,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
       showCancelButton: true,
       confirmButtonText: '<i class="pi pi-cloud-download"></i> Importar',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#8b5cf6'
+      confirmButtonColor: '#5F3FE0'
     }).then((result) => {
       if (!result.isConfirmed) return;
 

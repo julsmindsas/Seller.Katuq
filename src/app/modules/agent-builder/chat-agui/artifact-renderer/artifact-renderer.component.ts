@@ -623,7 +623,7 @@ export class ArtifactRendererComponent implements OnInit, OnChanges, AfterViewIn
         const dataset = data.datasets[0];
         const values = dataset.data;
         const total = values.reduce((a: number, b: number) => a + b, 0);
-        const colors = dataset.backgroundColor || ['#10b981', '#5F3FE0', '#f59e0b', '#ef4444', '#8b5cf6'];
+        const colors = dataset.backgroundColor || ['#10b981', '#5F3FE0', '#f59e0b', '#ef4444', '#1E6FD9'];
 
         const centerX = width / 2;
         const centerY = height / 2;

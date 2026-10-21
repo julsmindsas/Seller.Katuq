@@ -12,26 +12,26 @@ $color-primary-hover: #4a2fc0;  // hover del acento
 $color-primary-light: #efe9ff;  // fondo suave del acento
 $color-primary-50: #faf9fe;     // superficie lila
 
-$color-success: #10b981;        // emerald-500
-$color-success-hover: #059669;  // emerald-600
-$color-warning: #f59e0b;        // amber-500
-$color-danger: #ef4444;         // red-500
-$color-danger-hover: #dc2626;   // red-600
+$color-success: #1E874B;        // éxito del canon
+$color-success-hover: #17703d;  // hover del éxito
+$color-warning: #D9820A;        // alerta del canon
+$color-danger: #D64545;         // error del canon
+$color-danger-hover: #b83a3a;   // hover del error
 
 // Neutrals (Zinc palette for consistency)
-$text-primary: #18181b;         // zinc-900
-$text-secondary: #52525b;       // zinc-600
-$text-muted: #a1a1aa;           // zinc-400
-$text-placeholder: #a1a1aa;     // zinc-400
+$text-primary: #211F3A;         // tinta del canon
+$text-secondary: #5b5878;       // cuerpo del canon
+$text-muted: #8f8bab;           // muted del canon
+$text-placeholder: #8f8bab;     // muted del canon
 
-$border-default: #e4e4e7;       // zinc-200
-$border-hover: #d4d4d8;         // zinc-300
+$border-default: #e9e7f3;       // borde lila del canon
+$border-hover: #d9d4ee;         // borde lila hover
 $border-focus: $color-primary;
 
 $bg-white: #ffffff;
-$bg-subtle: #fafafa;            // zinc-50
-$bg-hover: #f4f4f5;             // zinc-100
-$bg-active: #e4e4e7;            // zinc-200
+$bg-subtle: #faf9fe;            // superficie lila
+$bg-hover: #f5f4fa;             // lila suave
+$bg-active: #efe9ff;            // acento suave
 
 // ===========================================
 // SPACING SCALE - More generous spacing
@@ -61,8 +61,8 @@ $font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica 
 // BORDERS & SHADOWS
 // ===========================================
 $radius-sm: 6px;
-$radius-md: 8px;
-$radius-lg: 10px;
+$radius-md: 11px;
+$radius-lg: 16px;
 $radius-full: 9999px;
 
 $border: 1px solid $border-default;
@@ -304,38 +304,42 @@ $transition-slow: 300ms ease;
     }
   }
 
-  // Success button (Export)
+  // Botón secundario (Exportar): blanco con borde (D-399). Conserva la clase
+  // btn-success porque ventas/list y despachos la ajustan desde su SCSS.
   &.btn-success {
-    background: $color-success;
-    border-color: $color-success;
-    color: white;
-    box-shadow: 0 1px 3px rgba($color-success, 0.3);
+    background: $bg-white;
+    border-color: $border-default;
+    color: $text-primary;
 
     &:hover:not(:disabled) {
-      background: $color-success-hover;
-      border-color: $color-success-hover;
-      box-shadow: 0 4px 12px rgba($color-success, 0.35);
+      background: $color-primary-50;
+      border-color: $color-primary;
     }
 
     i {
-      color: white;
+      color: $color-success;
     }
   }
 
-  // Secondary button (Settings)
+  // Botón secundario (Configuración): blanco con borde, sin bloque negro (D-399)
   &.btn-secondary {
-    background: $text-primary;
-    border-color: $text-primary;
-    color: white;
+    background: $bg-white;
+    border-color: $border-default;
+    color: $text-primary;
 
     &:hover:not(:disabled) {
-      background: lighten($text-primary, 15%);
-      border-color: lighten($text-primary, 15%);
+      background: $color-primary-50;
+      border-color: $color-primary;
     }
 
     i {
-      color: white;
+      color: $color-primary;
     }
+  }
+
+  &:focus-visible {
+    outline: 3px solid #7C5CFF !important;
+    outline-offset: 2px;
   }
 
   // Clear/Reset button
@@ -764,7 +768,7 @@ $transition-slow: 300ms ease;
             &.status-pending { background: $color-warning; }
             &.status-approved { background: $color-success; }
             &.status-rejected { background: $color-danger; }
-            &.status-in-progress { background: #8b5cf6; }
+            &.status-in-progress { background: #5F3FE0; }
             &.status-produced { background: #14b8a6; }
             &.status-packed { background: #a855f7; }
             &.status-shipped { background: #1E6FD9; }
@@ -845,7 +849,7 @@ $transition-slow: 300ms ease;
     &.status-pending { background: $color-warning; }
     &.status-approved { background: $color-success; }
     &.status-rejected { background: $color-danger; }
-    &.status-in-progress { background: #8b5cf6; }
+    &.status-in-progress { background: #5F3FE0; }
     &.status-produced { background: #14b8a6; }
     &.status-packed { background: #a855f7; }
     &.status-shipped { background: #1E6FD9; }

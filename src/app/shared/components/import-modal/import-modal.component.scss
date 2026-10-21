@@ -1,27 +1,95 @@
+// Importador con KAI (modal). Aspecto canónico "Regístrese / Todos los pedidos"
+// (D-131, D-399): plano, tarjetas blancas, acento #5F3FE0, avisos en par
+// fuerte/fondo suave. Solo presentación.
+//
+// El p-dialog va con appendTo="body": su marco (cabecera, sombra, radio) lo
+// pinta el tema global y no se alcanza desde aquí sin ::ng-deep global. Lo que
+// sí es de esta plantilla (pasos, paneles, botones del pie) se estiliza abajo;
+// esos elementos llevan el atributo de encapsulación aunque se muevan a body.
+@import '../../styles/config-pagina';
+@include config-pagina;
+
+$ix-accent: $cfg-accent;
+$ix-ink: $cfg-ink;
+$ix-body: $cfg-body;
+$ix-muted: $cfg-muted;
+$ix-line: $cfg-line;
+$ix-tint: $cfg-tint;
+
+// ── Botones del modal (pButton + cfg-btn) ──
+// pButton trae `.p-button` del tema lara (azul) y el `[class*="p-"]` global que
+// fuerza 0.7rem: se reafirman tamaño y foco aquí.
+.p-button.cfg-btn {
+  font-size: 13.5px !important;
+  line-height: 1 !important;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 11px;
+
+  &:focus { box-shadow: none; }
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+}
+
+// Confirmación destructiva fuerte ("Eliminar TODOS los clientes"): par de error.
+.p-button.cfg-btn.ix-btn--peligro-fuerte {
+  background: $cfg-err-soft;
+  border-color: #f3c9c9;
+  color: $cfg-err !important;
+  box-shadow: none;
+
+  &:hover:not(:disabled) { background: $cfg-err; border-color: $cfg-err; color: #fff !important; }
+}
+
+.ix-acento { color: $ix-accent; }
+.ix-alerta { color: $cfg-warn; }
+
+// ── Pasos ──
 .import-step,
 .mapping-step,
 .result-step {
-  padding: 1rem 0;
+  padding: 4px 0;
+  color: $ix-ink;
 
-  .step-header {
-    margin-bottom: 1.5rem;
+  p, a, li, label { letter-spacing: normal; }
+}
 
-    h4 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--text-color);
-      margin-bottom: 0.5rem;
-      display: flex;
-      align-items: center;
+.ix-cabeza {
+  margin-bottom: 18px;
+  font-size: 13.5px !important;
 
-      i {
-        color: var(--primary-color);
-      }
+  h4 {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin: 0 0 8px;
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.25;
+    color: $ix-ink;
+
+    // Ícono en azulejo lila.
+    i {
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 36px;
+      height: 36px;
+      margin: 0 !important;
+      border-radius: 11px;
+      background: $cfg-accent-soft;
+      color: $ix-accent;
+      font-size: 16px;
     }
+  }
 
-    p {
-      margin: 0;
-    }
+  p {
+    margin: 0 0 6px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: $ix-body !important;
+
+    i { color: $ix-accent; }
+    strong { color: $ix-ink; }
   }
 }
 
@@ -29,12 +97,11 @@
   .template-info {
     display: flex;
     align-items: center;
-    color: var(--text-color-secondary);
-    font-size: 0.9rem;
+    color: $ix-body;
+    font-size: 13px;
 
-    i {
-      color: var(--primary-color);
-    }
+    i { color: $ix-accent; }
+    span { color: $ix-body; font-size: 13px; }
   }
 }
 
@@ -44,39 +111,50 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3rem 1rem;
+    padding: 40px 16px;
     text-align: center;
 
     .analyzing-icon {
-      font-size: 3rem;
-      color: var(--primary-color);
-      margin-bottom: 1rem;
+      display: grid;
+      place-items: center;
+      width: 64px;
+      height: 64px;
+      margin-bottom: 14px;
+      border-radius: 16px;
+      background: $cfg-tile;
+      color: $ix-accent;
+      font-size: 26px;
     }
 
     h4 {
-      color: var(--text-color);
-      margin-bottom: 0.5rem;
+      margin-bottom: 8px;
+      font-size: 16px;
+      font-weight: 800;
+      color: $ix-ink;
     }
 
     p {
-      max-width: 400px;
+      max-width: 420px;
+      font-size: 13px;
+      color: $ix-body !important;
+      letter-spacing: normal;
     }
   }
 }
 
 .mapping-summary {
-  padding-top: 1rem;
-  border-top: 1px solid var(--surface-border);
+  padding-top: 14px;
+  border-top: 1px solid $cfg-line-soft;
 
   .summary-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 8px;
 
     ::ng-deep .chip-adjusted {
       .p-chip {
-        background-color: var(--blue-100);
-        color: var(--blue-700);
+        background-color: $cfg-accent-soft;
+        color: $ix-accent;
       }
     }
   }
@@ -88,75 +166,89 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 2rem 1rem;
+    padding: 24px 8px;
     text-align: center;
 
     .result-icon {
-      font-size: 4rem;
-      margin-bottom: 1rem;
+      display: grid;
+      place-items: center;
+      width: 64px;
+      height: 64px;
+      margin-bottom: 14px;
+      border-radius: 16px;
+      background: $cfg-tile;
+      color: $ix-accent;
+      font-size: 28px;
     }
 
-    &.success {
-      .result-icon {
-        color: var(--green-500);
-      }
-    }
+    .result-icon--alerta { background: $cfg-warn-soft; color: $cfg-warn; }
 
-    &.partial {
-      .result-icon {
-        color: var(--orange-500);
-      }
-    }
+    &.success .result-icon { background: $cfg-ok-soft; color: $cfg-ok; }
+    &.partial .result-icon { background: $cfg-warn-soft; color: $cfg-warn; }
 
     h4 {
-      color: var(--text-color);
-      margin-bottom: 1.5rem;
+      margin-bottom: 18px;
+      font-size: 18px;
+      font-weight: 800;
+      color: $ix-ink;
     }
 
     .result-stats {
       display: flex;
-      gap: 2rem;
-      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 18px;
 
       .stat {
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 1rem 2rem;
-        border-radius: 8px;
+        gap: 4px;
+        min-width: 130px;
+        padding: 12px 20px;
+        background: $ix-tint;
+        border: 1px solid #eeecf7;
+        border-radius: 11px;
 
         .stat-number {
-          font-size: 2rem;
-          font-weight: 700;
+          font-size: 22px;
+          font-weight: 800;
+          line-height: 1.2;
+          color: $ix-accent;
         }
 
         .stat-label {
-          font-size: 0.875rem;
-          color: var(--text-color-secondary);
-          margin-top: 0.25rem;
+          font-size: 10.5px;
+          font-weight: 800;
+          letter-spacing: .5px;
+          text-transform: uppercase;
+          color: $ix-muted;
         }
 
         &.success {
-          background-color: var(--green-50);
+          background: $cfg-ok-soft;
+          border-color: transparent;
+          .stat-number { color: $cfg-ok; }
+        }
 
-          .stat-number {
-            color: var(--green-600);
-          }
+        &.info {
+          background: $cfg-info-soft;
+          border-color: transparent;
+          .stat-number { color: $cfg-info; }
         }
 
         &.error {
-          background-color: var(--red-50);
-
-          .stat-number {
-            color: var(--red-600);
-          }
+          background: $cfg-err-soft;
+          border-color: transparent;
+          .stat-number { color: $cfg-err; }
         }
       }
     }
 
     .errors-list {
       width: 100%;
-      max-width: 500px;
+      max-width: 520px;
       text-align: left;
 
       ul {
@@ -165,14 +257,12 @@
         margin: 0;
 
         li {
-          padding: 0.5rem;
-          border-bottom: 1px solid var(--surface-border);
-          font-size: 0.875rem;
-          color: var(--text-color-secondary);
+          padding: 8px;
+          border-bottom: 1px solid $cfg-line-soft;
+          font-size: 13px;
+          color: $ix-body;
 
-          &:last-child {
-            border-bottom: none;
-          }
+          &:last-child { border-bottom: none; }
         }
       }
     }
@@ -184,7 +274,7 @@
 .modal-footer-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 12px;
 }
 
 .modal-footer-actions {
@@ -193,195 +283,183 @@
   // `center` y no el `stretch` por defecto: si un hermano es más alto, los
   // botones crecían hasta su altura y salían como bloques enormes.
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
   flex-wrap: wrap;
 
   button {
     // Que no se aplasten hasta cortar el texto ("Cancel…").
     flex: 0 0 auto;
     white-space: nowrap;
+    margin: 0 !important;
   }
 
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: stretch;
 
-    button {
-      width: 100%;
-    }
+    button { width: 100%; }
   }
 }
 
-// Panel de opciones de producción (antes con estilos en línea sobre un `w-100`
-// que rompía la fila de botones).
-.produccion-panel {
-  background: #faf5ff;
-  border: 1px solid #e9d5ff;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
+// Paneles del pie y del resultado: tarjeta interna lila (opción) o par de
+// alerta (advertencia). Sin border-left.
+@mixin ix-panel {
+  background: $ix-tint;
+  border: 1px solid $ix-line;
+  border-radius: 11px;
+  padding: 12px 14px;
   text-align: left;
+  color: $ix-ink;
 
   h6 {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #0f172a;
-    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $ix-muted;
+    margin-bottom: 8px;
 
-    i {
-      color: #8b5cf6;
-    }
+    i { color: $ix-accent; font-size: 13px; }
   }
+
+  p { letter-spacing: normal; }
+}
+
+@mixin ix-panel-alerta {
+  background: $cfg-warn-soft;
+  border-color: transparent;
+
+  h6 { color: $cfg-warn; i { color: $cfg-warn; } }
+}
+
+.ix-panel { @include ix-panel; }
+
+// Panel de opciones de producción.
+.produccion-panel {
+  @include ix-panel;
 
   label {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
     cursor: pointer;
-    font-size: 0.82rem;
-    color: #0f172a;
+    font-size: 13px;
+    color: $ix-ink;
     margin-bottom: 0;
+
+    span { color: $ix-ink; font-size: 13px; }
   }
 
   input[type='checkbox'] {
     width: 18px;
     height: 18px;
-    accent-color: #8b5cf6;
+    accent-color: $ix-accent;
     flex: 0 0 auto;
   }
 }
 
-// Aviso de categorías antes de importar (D-148). Mismo patrón plano tintado
-// que `.produccion-panel`, en ámbar porque es una advertencia y no una opción.
+// Aviso de categorías antes de importar (D-148): par de alerta.
 .aviso-categorias {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  text-align: left;
-
-  h6 {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #0f172a;
-    margin-bottom: 0.5rem;
-
-    i {
-      color: #d97706;
-    }
-  }
+  @include ix-panel;
+  @include ix-panel-alerta;
 
   p {
-    font-size: 0.82rem;
-    color: #0f172a;
+    font-size: 13px;
+    color: $ix-ink;
   }
 
   .aviso-detalle {
-    font-size: 0.78rem;
-    color: #475569;
+    font-size: 12.5px;
+    color: $ix-body;
   }
 
   label {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
     cursor: pointer;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: #0f172a;
+    font-size: 13px;
+    font-weight: 700;
+    color: $ix-ink;
     margin-bottom: 0;
+
+    span { color: $ix-ink; font-size: 13px; }
   }
 
   input[type='checkbox'] {
     width: 18px;
     height: 18px;
-    accent-color: #d97706;
+    accent-color: $cfg-warn;
     flex: 0 0 auto;
   }
 }
 
 // Resumen de la hoja de precios por volumen (D-148).
 .volumen-panel {
-  background: #faf5ff;
-  border: 1px solid #e9d5ff;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  text-align: left;
-  font-size: 0.82rem;
-  color: #0f172a;
+  @include ix-panel;
+  font-size: 13px;
 
-  h6 {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #0f172a;
-    margin-bottom: 0.5rem;
-
-    i { color: #8b5cf6; }
-  }
-
-  &.con-error {
-    background: #fffbeb;
-    border-color: #fde68a;
-
-    h6 i { color: #d97706; }
-  }
+  &.con-error { @include ix-panel-alerta; }
 
   .volumen-errores {
-    margin: 0.25rem 0 0.5rem 0;
-    padding-left: 1.1rem;
+    margin: 4px 0 8px 0;
+    padding-left: 18px;
     max-height: 8rem;
     overflow-y: auto;
 
     li {
-      font-size: 0.78rem;
+      font-size: 12.5px;
       line-height: 1.4;
-      color: #475569;
+      color: $ix-body;
     }
   }
 
   .volumen-detalle {
-    font-size: 0.78rem;
-    color: #475569;
+    font-size: 12.5px;
+    color: $ix-body;
   }
 }
 
 // Trabajo pendiente de categorías, en la pantalla de resultado (D-148).
 .pendientes-categorias {
-  margin-top: 1rem;
+  margin-top: 14px;
   text-align: left;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 8px;
 
   .pendiente-item {
     display: flex;
     align-items: flex-start;
-    gap: 0.5rem;
-    font-size: 0.8rem;
+    gap: 8px;
+    font-size: 13px;
     line-height: 1.45;
-    color: #0f172a;
-    background: #faf5ff;
-    border: 1px solid #e9d5ff;
-    border-radius: 8px;
-    padding: 0.65rem 0.85rem;
+    color: $ix-ink;
+    background: $ix-tint;
+    border: 1px solid $ix-line;
+    border-radius: 11px;
+    padding: 10px 14px;
+
+    > span { color: $ix-ink; font-size: 13px; }
 
     i {
-      color: #8b5cf6;
-      margin-top: 0.15rem;
+      color: $ix-accent;
+      margin-top: 3px;
       flex: 0 0 auto;
     }
 
     em {
       font-style: normal;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     &.aviso {
-      background: #fffbeb;
-      border-color: #fde68a;
+      background: $cfg-warn-soft;
+      border-color: transparent;
 
-      i {
-        color: #d97706;
-      }
+      i { color: $cfg-warn; }
     }
   }
 }
@@ -392,15 +470,28 @@
 .import-mode-selector {
   text-align: left;
 
-  .fw-semibold,
+  > .fw-semibold {
+    font-size: 10.5px;
+    font-weight: 800 !important;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $ix-muted;
+  }
+
   .form-check-label > span {
-    color: #0f172a;
-    font-weight: 600;
+    color: $ix-ink;
+    font-weight: 700;
+    font-size: 13px;
   }
 
   .form-check-label {
     cursor: pointer;
-    color: #0f172a;
+    color: $ix-ink;
+  }
+
+  .form-check-input:checked {
+    background-color: $ix-accent;
+    border-color: $ix-accent;
   }
 
   .form-check {
@@ -409,8 +500,10 @@
     flex: 1 1 240px;
   }
 
-  small {
-    color: #64748b !important;
+  small,
+  .small span {
+    color: $ix-muted !important;
+    font-size: 12px;
   }
 }
 
@@ -434,49 +527,54 @@
 // Filas repetidas dentro del archivo importado. Es un aviso, no un error: las
 // filas no se subieron a propósito, y el usuario tiene que ir al Excel.
 .duplicados-archivo {
-  margin-top: 1rem;
+  margin-top: 14px;
   text-align: left;
 
   .duplicados-titulo {
     display: flex;
-    gap: .5rem;
+    gap: 8px;
     align-items: flex-start;
-    padding: .75rem 1rem;
-    border-radius: 6px;
-    background: rgba(255, 193, 7, .12);
-    border-left: 3px solid #ffc107;
-    font-size: .875rem;
+    padding: 12px 14px;
+    border-radius: 11px;
+    background: $cfg-warn-soft;
+    color: $ix-ink;
+    font-size: 13px;
     line-height: 1.45;
 
-    i { margin-top: .15rem; color: #b58100; }
+    > span { color: $ix-ink; font-size: 13px; }
+    i { margin-top: 3px; color: $cfg-warn; }
   }
 
   .duplicados-lista {
     margin: 0;
-    padding-left: 1.25rem;
+    padding-left: 20px;
     max-height: 260px;
     overflow-y: auto;
-    font-size: .8125rem;
+    font-size: 13px;
+    color: $ix-ink;
 
-    li { margin-bottom: .25rem; }
-    small { color: #6c757d; }
+    li { margin-bottom: 4px; }
+    small { color: $ix-muted; }
   }
 }
 
 .descargar-errores {
-  margin-top: .75rem;
+  margin-top: 12px;
   display: flex;
-  gap: .75rem;
+  gap: 12px;
   align-items: center;
   flex-wrap: wrap;
 
-  small { color: #6c757d; font-size: .75rem; }
+  small { color: $ix-muted; font-size: 12px; }
 }
 
 // Conteo debajo de la barra de progreso del import.
 .progreso-detalle {
-  margin: .75rem 0 .25rem;
-  font-size: .9375rem;
+  margin: 12px 0 4px;
+  font-size: 14px;
+  color: $ix-ink;
 
-  strong { font-variant-numeric: tabular-nums; }
+  strong { font-variant-numeric: tabular-nums; color: $ix-accent; }
 }
+
+.batch-info small { color: $ix-muted !important; }

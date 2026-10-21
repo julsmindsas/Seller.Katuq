@@ -169,10 +169,10 @@ import { environment } from '../../../../environments/environment';
     }
     
     .voice-action-btn {
-      background: #7367f0;
+      background: #5F3FE0;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 11px;
       padding: 12px 15px;
       font-weight: 600;
       display: flex;
@@ -183,23 +183,23 @@ import { environment } from '../../../../environments/environment';
     }
     
     .voice-action-btn:hover {
-      background: #5e50ee;
+      background: #4a2fc0;
       transform: translateY(-2px);
     }
     
     .voice-transcription {
-      background: #f8f9fa;
-      border-radius: 8px;
+      background: #faf9fe;
+      border-radius: 11px;
       padding: 12px;
-      border-left: 3px solid #7367f0;
+      border: 1px solid #ececf4;
       font-size: 14px;
     }
     
     .voice-error {
-      color: #dc3545;
+      color: #D64545;
       font-size: 14px;
       padding: 8px;
-      background-color: rgba(220, 53, 69, 0.1);
+      background-color: #FDECEC;
       border-radius: 8px;
       text-align: center;
     }
@@ -271,7 +271,7 @@ import { environment } from '../../../../environments/environment';
     .bar {
       display: inline-block;
       width: 4px;
-      background: #7367f0;
+      background: #5F3FE0;
       height: 20px;
       border-radius: 10px;
       animation: sound-wave 0.8s infinite ease alternate;

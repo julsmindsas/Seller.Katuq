@@ -39,7 +39,7 @@ export class BottomNavigationComponent implements OnInit, OnDestroy {
       label: 'Inicio',
       icon: 'fa fa-home',
       route: '/welcome',
-      color: '#a78bfa',
+      color: '#5F3FE0',
       alwaysVisible: true
     },
     {

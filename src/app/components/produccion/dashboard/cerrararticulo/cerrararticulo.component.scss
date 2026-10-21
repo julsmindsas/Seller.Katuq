@@ -1,6 +1,6 @@
 /* Variables */
 $primary-color: #5F3FE0;
-$primary-light: rgba(33, 150, 243, 0.12);
+$primary-light: rgba(95, 63, 224, 0.12);
 $success-color: #66BB6A;
 $success-light: rgba(102, 187, 106, 0.12);
 $warning-color: #FFA726;
@@ -46,18 +46,32 @@ $transition: all 0.3s ease;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
   }
   
+  // Encabezado blanco con ícono en azulejo lila (D-131/D-400), sin franja de color.
   .card-header {
     display: flex;
     align-items: center;
-    padding: 1.25rem 1.5rem;
-    background-color: $primary-color;
-    color: white;
-    font-weight: 600;
-    font-size: 1.1rem;
-    
-    i {
-      font-size: 1.25rem;
+    gap: 11px;
+    padding: 16px 20px;
+    background-color: #fff;
+    border-bottom: 1px solid #ececf4;
+    color: #211F3A;
+    font-weight: 800;
+    font-size: 16px;
+
+    > i {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      margin-right: 0 !important;
+      border-radius: 11px;
+      background: #efe9ff;
+      color: $primary-color;
+      font-size: 16px;
     }
+
+    > span:not(.disabled-label) { color: #211F3A; font-size: 16px; }
   }
   
   .card-content {

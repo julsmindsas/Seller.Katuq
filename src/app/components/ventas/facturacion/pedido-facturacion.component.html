@@ -2,7 +2,7 @@
   <!-- Header row -->
   <div class="facturacion-header d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-3 border-bottom">
     <div class="d-flex align-items-center gap-2">
-      <i class="fa fa-file-invoice" style="font-size: 1.3rem; color: var(--katuq-primary, #8b5cf6);"></i>
+      <i class="fa fa-file-invoice fx-icono"></i>
       <h5 class="mb-0 fw-semibold">{{ 'Datos de Facturacion' | translate }}</h5>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -30,10 +30,10 @@
 
   <!-- Currently selected billing data (highlighted card) -->
   <div *ngIf="pedidoGral?.facturacion; else sinFacturacion" class="selected-billing-card mb-3"
-    style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px;">
+    style="background: #E6F7EE; border: 1px solid #c8ecd7; border-radius: 11px; padding: 12px 16px;">
     <div class="d-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center gap-2">
-        <i class="fa fa-check-circle" style="font-size: 1.2rem; color: #16a34a;"></i>
+        <i class="fa fa-check-circle" style="font-size: 1.2rem; color: #1E874B;"></i>
         <div>
           <span class="badge bg-success bg-opacity-25 text-success me-2" style="font-size: 0.8rem;">
             {{ pedidoGral?.facturacion?.alias || 'Sin referencia' }}
@@ -52,9 +52,9 @@
     </div>
   </div>
   <ng-template #sinFacturacion>
-    <div class="mb-3" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px;">
+    <div class="mb-3" style="background: #FFF1DF; border: 1px solid #f6dcb4; border-radius: 11px; padding: 12px 16px;">
       <div class="d-flex align-items-center gap-2">
-        <i class="fa fa-exclamation-triangle" style="color: #d97706;"></i>
+        <i class="fa fa-exclamation-triangle" style="color: #D9820A;"></i>
         <span>{{ 'No ha seleccionado datos de facturacion. Por favor seleccione uno de la lista.' | translate }}</span>
       </div>
     </div>
@@ -64,9 +64,9 @@
   <div *ngIf="datosFacturacionElectronica?.length > 0" class="billing-list d-flex flex-column gap-2">
     <div class="billing-card d-flex align-items-center justify-content-between flex-wrap gap-2"
       *ngFor="let item of datosFacturacionElectronica; let i = index; trackBy: trackByIndex"
-      style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 16px; transition: box-shadow 0.2s;">
+      style="background: #fff; border: 1px solid #ececf4; border-radius: 11px; padding: 10px 16px; transition: box-shadow 0.2s;">
       <div class="d-flex align-items-center gap-3 flex-wrap">
-        <span class="badge" style="background: #f3f0ff; color: #7c3aed; border: 1px solid #ddd6fe; font-size: 0.78rem;">
+        <span class="badge" style="background: #efe9ff; color: #5F3FE0; border: 1px solid #ddd3fb; font-size: 0.78rem;">
           {{ item.alias || 'Sin referencia' }}
         </span>
         <span class="fw-semibold">{{ item.nombres }}</span>
@@ -80,10 +80,10 @@
           {{ 'Usar' | translate }}
         </button>
         <i placement="top" ngbTooltip="{{ 'Editar' | translate }}"
-          style="font-size: 18px; color: cornflowerblue; cursor: pointer;"
+          style="font-size: 18px; color: #5F3FE0; cursor: pointer;"
           class="icofont icofont-pencil-alt-5" (click)="editarDatos1(facturacion, i)"></i>
         <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
-          style="font-size: 18px; color: #d12b38; cursor: pointer;"
+          style="font-size: 18px; color: #D64545; cursor: pointer;"
           (click)="eliminarDato(i)" class="icofont icofont icofont-trash"></i>
       </div>
     </div>
@@ -92,14 +92,13 @@
 
 <!-- Modal for CREATING new billing data -->
 <ng-template #crearFacturacion let-modal>
-  <div class="modal-header" style="background: #5F3FE0; color: #fff; border-bottom: none;">
-    <h5 class="modal-title" style="font-weight: 600;">
-      <i class="fa fa-plus-circle me-2"></i>
+  <div class="modal-header fx-modal-cabeza">
+    <h5 class="modal-title">
+      <i class="fa fa-plus-circle fx-modal-icono"></i>
       {{ 'Nuevos Datos de Facturación' | translate }}
     </h5>
     <button type="button" class="btn-close" aria-label="Cerrar"
-      (click)="modal.dismiss('Cross click')"
-      style="filter: brightness(0) invert(1); opacity: 0.8;">
+      (click)="modal.dismiss('Cross click')">
     </button>
   </div>
   <div class="modal-body">
@@ -223,14 +222,13 @@
 
 <!-- Modal for EDITING existing billing data -->
 <ng-template #facturacion let-modal>
-  <div class="modal-header" style="background: #5F3FE0; color: #fff; border-bottom: none;">
-    <h5 class="modal-title" style="font-weight: 600;">
-      <i class="fa fa-edit me-2"></i>
+  <div class="modal-header fx-modal-cabeza">
+    <h5 class="modal-title">
+      <i class="fa fa-edit fx-modal-icono"></i>
       {{ 'Editar Datos de Facturación' | translate }}
     </h5>
     <button type="button" class="btn-close" aria-label="Cerrar"
-      (click)="modal.dismiss('Cross click')"
-      style="filter: brightness(0) invert(1); opacity: 0.8;">
+      (click)="modal.dismiss('Cross click')">
     </button>
   </div>
   <div class="modal-body">
@@ -330,7 +328,7 @@
     </div>
   </div>
   <div class="modal-footer">
-    <button type="button" *ngIf="editandodato" class="btn btn-outline-dark" (click)="editarDatosFacturacion()">
+    <button type="button" *ngIf="editandodato" class="btn btn-primary" (click)="editarDatosFacturacion()">
       {{ 'Guardar' | translate }}
     </button>
   </div>

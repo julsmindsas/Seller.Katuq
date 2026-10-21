@@ -1,9 +1,9 @@
-<div class="modal-header border-bottom-0 pb-2">
-  <h4 class="modal-title d-flex align-items-center">
-    <i class="pi pi-map me-2 text-primary"></i>
+<div class="modal-header dm-cabeza">
+  <i class="pi pi-map dm-icono" aria-hidden="true"></i>
+  <h4 class="modal-title dm-titulo d-flex align-items-center">
     {{ 'Gestión de Zonas de Entrega' | translate }}
   </h4>
-  <button type="button" class="btn-close" aria-label="Close" (click)="cancelarModal()"></button>
+  <button type="button" class="btn-close dm-cerrar" aria-label="Close" (click)="cancelarModal()"></button>
 </div>
 
 <div class="modal-body p-0" style="height: 80vh; overflow: hidden;">
@@ -376,7 +376,7 @@
             <!-- Botones de acción -->
             <div class="d-grid gap-2">
               <button type="button"
-                class="btn btn-primary"
+                class="cfg-btn"
                 [disabled]="!zonaForm.valid || puntosPoligonoActual.length < 3"
                 (click)="guardarZona()">
                 <i class="pi pi-save me-1"></i>
@@ -384,7 +384,7 @@
               </button>
 
               <button type="button"
-                class="btn btn-outline-secondary"
+                class="cfg-btn cfg-btn--sec"
                 (click)="limpiarFormulario()">
                 <i class="pi pi-times me-1"></i>
                 {{ 'Limpiar' | translate }}
@@ -400,16 +400,16 @@
   </div>
 </div>
 
-<div class="modal-footer border-top-0 pt-2">
+<div class="modal-footer dm-pie">
   <div class="d-flex justify-content-between w-100 align-items-center">
     <small class="text-muted">
       {{ zonas.length }} {{ 'zonas configuradas' | translate }}
     </small>
     <div>
-      <button type="button" class="btn btn-outline-secondary me-2" (click)="cancelarModal()">
+      <button type="button" class="cfg-btn cfg-btn--sec me-2" (click)="cancelarModal()">
         {{ 'Cancelar' | translate }}
       </button>
-      <button type="button" class="btn btn-primary" (click)="cerrarModal()">
+      <button type="button" class="cfg-btn" (click)="cerrarModal()">
         <i class="pi pi-check me-1"></i>
         {{ 'Aplicar Cambios' | translate }}
       </button>

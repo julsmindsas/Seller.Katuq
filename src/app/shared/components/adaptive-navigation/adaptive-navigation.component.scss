@@ -382,7 +382,7 @@
 // Individual Menu Card - Apple CarPlay Style
 .menu-card {
   position: relative;
-  background: var(--card-color, #007AFF);
+  background: var(--card-color, #5F3FE0);
   border-radius: 16px;
   padding: 20px;
   min-height: 120px;
@@ -397,19 +397,7 @@
   -webkit-touch-callout: none; /* Prevent Safari callout */
   -webkit-user-select: none; /* Prevent text selection */
   user-select: none;
-  
-  // Glossy overlay effect
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 40%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
-    pointer-events: none;
-  }
-  
+
   &:hover {
     transform: scale(1.05);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
@@ -482,7 +470,7 @@
     top: 12px;
     right: 12px;
     background: rgba(255, 255, 255, 0.9);
-    color: var(--card-color, #007AFF);
+    color: var(--card-color, #5F3FE0);
     font-size: 11px;
     font-weight: 700;
     padding: 4px 8px;

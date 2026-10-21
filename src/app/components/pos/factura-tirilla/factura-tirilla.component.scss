@@ -87,7 +87,7 @@
   
   .info-pago {
     background-color: #f0f8ff;
-    border: 1px solid #a78bfa;
+    border: 1px solid #999;
     border-radius: 3px;
     padding: 8px;
     
@@ -222,15 +222,16 @@
       
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 6px 14px -8px rgba(50, 40, 110, .35);
       }
       
       &.btn-primary:hover {
-        background-color: #0056b3 !important;
+        background-color: #4a2fc0 !important;
+        border-color: #4a2fc0 !important;
       }
-      
-      &.btn-success:hover {
-        background-color: #1e7e34 !important;
+
+      &.ft-btn--sec:hover {
+        background-color: #faf9fe !important;
       }
       
       i {
@@ -269,4 +270,32 @@
 
 .border-dotted {
   border-style: dotted !important;
+}
+
+/* Botones de acción en pantalla (no se imprimen): tema Katuq D-131 */
+@media screen {
+  .no-print .ft-btn {
+    min-height: 44px;
+    padding: 10px 20px;
+    border-radius: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .no-print .ft-btn.btn-primary {
+    background-color: #5F3FE0 !important;
+    border: 1px solid #5F3FE0 !important;
+    color: #fff !important;
+  }
+
+  .no-print .ft-btn--sec {
+    background-color: #fff !important;
+    border: 1px solid #e4e2ef !important;
+    color: #5b5878 !important;
+  }
+
+  .no-print .ft-btn:focus-visible {
+    outline: 3px solid #7C5CFF !important;
+    outline-offset: 2px;
+  }
 }

@@ -479,7 +479,7 @@
   }
 
   .btn-primary {
-    background: #4a2fc0;
+    background: #5F3FE0;
     color: #fff;
 
     &:hover:not(:disabled) {
@@ -487,12 +487,13 @@
     }
   }
 
+  // Verde solo como semántico de éxito (par canon).
   .btn-success {
-    background: #059669;
+    background: #1E874B;
     color: #fff;
 
     &:hover:not(:disabled) {
-      background: #047857;
+      background: #176b3b;
     }
   }
 
@@ -735,8 +736,8 @@
    ============================================================ */
 .form-card-wrapper {
   background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid #ececf4;
+  border-radius: 16px;
   overflow: hidden;
   margin-bottom: 1rem;
 
@@ -745,21 +746,21 @@
     align-items: center;
     gap: 0.625rem;
     padding: 0.875rem 1rem;
-    background: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
+    background: #fff;
+    border-bottom: 1px solid #f1f0f7;
 
     .header-icon {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #e5e7eb;
-      border-radius: 6px;
+      background: #efe9ff;
+      border-radius: 11px;
 
       i {
-        font-size: 0.75rem;
-        color: #4b5563;
+        font-size: 0.8125rem;
+        color: #5F3FE0;
       }
     }
 
@@ -768,8 +769,8 @@
 
       .header-title {
         font-size: 0.875rem;
-        font-weight: 600;
-        color: #1f2937;
+        font-weight: 800;
+        color: #211F3A;
         margin: 0;
       }
 

@@ -1,12 +1,12 @@
-<div class="modal-header">
-  <h5 class="modal-title">
-    <i class="pi pi-user-plus me-2" style="color:#8b5cf6;"></i>{{ title }}
+<div class="modal-header lfm-cabeza">
+  <h5 class="modal-title lfm-titulo">
+    <span class="lfm-icono"><i class="pi pi-user-plus"></i></span>{{ title }}
   </h5>
   <button type="button" class="btn-close" aria-label="Cerrar" (click)="cancelar()"></button>
 </div>
 
-<div class="modal-body">
-  <form [formGroup]="form" autocomplete="off">
+<div class="modal-body lfm-cuerpo">
+  <form [formGroup]="form" autocomplete="off" class="cfg-form">
     <div class="row g-3">
 
       <div class="col-12">
@@ -46,7 +46,7 @@
 
       <div class="col-12">
         <label class="form-label fw-semibold">
-          <i class="fa fa-tag me-1" style="color:#8b5cf6;"></i>¿Qué le vas a vender?
+          <i class="fa fa-tag me-1" style="color:#5F3FE0;"></i>¿Qué le vas a vender?
         </label>
         <textarea pInputTextarea formControlName="productoInteres" rows="2"
           placeholder="Ej: Plan básico de ventas por WhatsApp, arreglos florales por catálogo digital, suscripción mensual..."
@@ -86,7 +86,7 @@
       <!-- Etiquetas -->
       <div class="col-12">
         <label class="form-label fw-semibold mb-1">
-          <i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>Etiquetas
+          <i class="pi pi-tags me-1" style="color:#5F3FE0;"></i>Etiquetas
         </label>
         <div class="tags-picker" *ngIf="tagsCatalog.length > 0">
           <span *ngFor="let tag of tagsCatalog" class="tag-chip"
@@ -106,9 +106,9 @@
   </form>
 </div>
 
-<div class="modal-footer">
-  <button pButton label="Cancelar" icon="pi pi-times" class="p-button-text p-button-secondary"
+<div class="modal-footer lfm-pie">
+  <button pButton label="Cancelar" icon="pi pi-times" class="p-button-text p-button-secondary lfm-btn lfm-btn--sec"
     (click)="cancelar()"></button>
   <button pButton [label]="isEdit ? 'Guardar' : 'Crear corporativo'" icon="pi pi-check"
-    class="p-button-primary" (click)="guardar()" [disabled]="form.invalid"></button>
+    class="p-button-primary lfm-btn" (click)="guardar()" [disabled]="form.invalid"></button>
 </div>

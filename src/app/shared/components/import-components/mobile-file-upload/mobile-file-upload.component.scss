@@ -1,31 +1,41 @@
 @import '../../../styles/import-mixins';
+@import '../../../styles/config-pagina';
+@include config-pagina;
+
+// Selector de archivo del importador con KAI.
+// Aspecto canónico (D-131): zona de carga lila punteada, ícono en azulejo,
+// botón principal morado, secundarios blancos con borde, estados en par
+// fuerte/fondo suave.
 
 .mobile-file-upload {
   width: 100%;
+  color: $cfg-ink;
+
+  p, a, span, button { letter-spacing: normal; }
 
   // =============================================================================
-  // UPLOAD ZONE (Empty State)
+  // ZONA DE CARGA (vacía)
   // =============================================================================
 
   .upload-zone {
-    @include mobile-card;
     min-height: 200px;
-    border: 2px dashed var(--surface-border);
-    background: var(--surface-50);
-    transition: all 0.3s ease;
+    border: 2px dashed #d9cffb;
+    border-radius: 16px;
+    background: $cfg-tint;
+    transition: border-color .15s ease, background .15s ease;
     cursor: pointer;
+    overflow: hidden;
 
     @include mobile {
       min-height: 180px;
     }
 
     &:hover {
-      border-color: var(--primary-color);
-      background: var(--primary-50);
+      border-color: $cfg-accent-2;
+      background: $cfg-row-hover;
 
       .upload-icon {
-        color: var(--primary-color);
-        transform: scale(1.1);
+        transform: translateY(-1px);
       }
     }
 
@@ -34,96 +44,79 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: $spacing-xl;
+      padding: 32px 20px;
       height: 100%;
       text-align: center;
 
       @include mobile {
-        padding: $spacing-lg;
+        padding: 24px 16px;
       }
 
       .upload-icon {
-        font-size: 4rem;
-        color: var(--primary-color);
-        margin-bottom: $spacing-md;
-        transition: all 0.3s ease;
-
-        @include mobile {
-          font-size: 3rem;
-        }
+        display: grid;
+        place-items: center;
+        width: 64px;
+        height: 64px;
+        margin-bottom: 14px;
+        border-radius: 16px;
+        background: $cfg-accent-soft;
+        color: $cfg-accent;
+        font-size: 28px;
+        transition: transform .15s ease;
       }
 
       .upload-text {
-        @include mobile-subtitle;
-        margin: 0 0 $spacing-xs 0;
-        color: var(--text-color);
-        font-weight: 600;
+        margin: 0 0 4px 0;
+        font-size: 15px;
+        font-weight: 800;
+        color: $cfg-ink;
       }
 
       .upload-hint {
-        @include mobile-small-text;
-        margin: 0 0 $spacing-lg 0;
-        color: var(--text-color-secondary);
-      }
-
-      ::ng-deep .upload-button {
-        .p-button {
-          @include mobile-button-primary;
-          font-size: 1rem;
-          padding: $spacing-sm $spacing-xl;
-
-          @include mobile {
-            width: 100%;
-            max-width: 280px;
-          }
-        }
+        margin: 0 0 18px 0;
+        font-size: 12.5px;
+        color: $cfg-muted;
       }
     }
   }
 
   // =============================================================================
-  // FILE DETAILS CARD (Selected/Uploading State)
+  // TARJETA DEL ARCHIVO (seleccionado / procesando)
   // =============================================================================
 
   .file-details-card {
-    @include mobile-card;
-    padding: $spacing-lg;
+    background: #fff;
+    border: 1px solid $cfg-line;
+    border-radius: 16px;
+    box-shadow: $cfg-shadow-panel;
+    overflow: hidden;
+    padding: 18px;
     display: flex;
     flex-direction: column;
-    gap: $spacing-md;
+    gap: 14px;
 
     @include mobile {
-      padding: $spacing-md;
+      padding: 14px;
     }
 
-    // File Info Section
     .file-info-section {
       display: flex;
       align-items: center;
-      gap: $spacing-md;
+      gap: 14px;
 
       .file-icon-container {
         flex-shrink: 0;
-        width: 60px;
-        height: 60px;
+        width: 52px;
+        height: 52px;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: var(--primary-100);
-        border-radius: 12px;
-
-        @include mobile {
-          width: 50px;
-          height: 50px;
-        }
+        background: $cfg-accent-soft;
+        border-radius: 11px;
 
         .file-icon {
-          font-size: 2rem;
-          color: var(--primary-color);
-
-          @include mobile {
-            font-size: 1.75rem;
-          }
+          font-size: 22px;
+          color: $cfg-accent;
         }
       }
 
@@ -132,124 +125,76 @@
         min-width: 0;
 
         .file-name {
-          @include mobile-subtitle;
-          margin: 0 0 $spacing-xs 0;
-          color: var(--text-color);
+          margin: 0 0 4px 0;
+          font-size: 15px;
+          font-weight: 800;
+          color: $cfg-ink;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
 
         .file-meta {
-          @include mobile-small-text;
           margin: 0;
-          color: var(--text-color-secondary);
           display: flex;
           align-items: center;
-          gap: $spacing-xs;
+          gap: 6px;
+
+          span {
+            font-size: 10.5px;
+            font-weight: 800;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            color: $cfg-muted;
+          }
 
           .file-separator {
-            color: var(--surface-300);
+            color: #d8d4ea;
           }
         }
       }
     }
 
-    // Progress Section
     .progress-section {
       display: flex;
       flex-direction: column;
-      gap: $spacing-sm;
-
-      ::ng-deep .mobile-progress-bar {
-        .p-progressbar {
-          height: 8px;
-          border-radius: 4px;
-          background: var(--surface-200);
-
-          .p-progressbar-value {
-            background: var(--primary-color);
-          }
-
-          .p-progressbar-label {
-            @include mobile-small-text;
-            font-weight: 600;
-          }
-        }
-      }
+      gap: 8px;
 
       .progress-text {
-        @include mobile-small-text;
         margin: 0;
-        color: var(--text-color-secondary);
+        font-size: 12.5px;
+        color: $cfg-body;
         text-align: center;
-        font-weight: 500;
+        font-weight: 600;
       }
     }
 
-    // State Messages
     .state-message {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: $spacing-sm;
-      padding: $spacing-sm $spacing-md;
-      border-radius: 8px;
-      @include mobile-body;
-      font-weight: 600;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 11px;
+      font-size: 13px;
+      font-weight: 700;
 
-      i {
-        font-size: 1.25rem;
-      }
+      i { font-size: 16px; }
+      span { color: inherit; font-size: 13px; }
 
-      &.success-message {
-        background: var(--green-50);
-        color: var(--green-700);
-        border: 1px solid var(--green-200);
-
-        i {
-          color: var(--green-600);
-        }
-      }
-
-      &.error-message {
-        background: var(--red-50);
-        color: var(--red-700);
-        border: 1px solid var(--red-200);
-
-        i {
-          color: var(--red-600);
-        }
-      }
+      &.success-message { background: $cfg-ok-soft; color: $cfg-ok; }
+      &.error-message { background: $cfg-err-soft; color: $cfg-err; }
     }
 
-    // Action Buttons
     .action-buttons {
       display: flex;
-      gap: $spacing-sm;
+      gap: 8px;
 
       @include mobile {
         flex-direction: column;
       }
 
-      .change-button {
-        flex: 1;
-
-        ::ng-deep .p-button {
-          @include mobile-button;
-          width: 100%;
-        }
-      }
-
-      .clear-button {
-        ::ng-deep .p-button {
-          @include touch-target-comfortable;
-
-          @include mobile {
-            width: 100%;
-          }
-        }
-      }
+      .change-button { flex: 1; }
     }
 
     .hidden-upload {
@@ -258,13 +203,13 @@
   }
 
   // =============================================================================
-  // STATE VARIATIONS
+  // VARIACIONES DE ESTADO
   // =============================================================================
 
   &.state-uploading {
     .file-details-card {
-      border: 2px solid var(--primary-color);
-      background: var(--primary-50);
+      border-color: #d9cffb;
+      background: $cfg-row-hover;
 
       .file-icon-container {
         animation: pulse 2s ease-in-out infinite;
@@ -272,21 +217,56 @@
     }
   }
 
-  &.state-uploaded {
-    .file-details-card {
-      border: 2px solid var(--green-300);
+  &.state-uploaded .file-details-card { border-color: #bfe5cf; }
+  &.state-error .file-details-card { border-color: #f3c9c9; }
+}
+
+// pButton trae `.p-button` del tema (azul) y el `[class*="p-"]` global (0.7rem).
+.p-button.cfg-btn {
+  font-size: 13.5px !important;
+  line-height: 1 !important;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 11px;
+
+  &:focus { box-shadow: none; }
+  &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+}
+
+// Piezas internas de PrimeNG: botón "Seleccionar Archivo" y barra de avance.
+:host ::ng-deep .mobile-file-upload {
+  .upload-zone .p-fileupload-choose {
+    min-height: 44px;
+    padding: 0 20px;
+    border: 1px solid $cfg-accent;
+    border-radius: 11px;
+    background: $cfg-accent;
+    color: #fff;
+    font-weight: 700;
+    box-shadow: $cfg-shadow-btn;
+
+    &:hover { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
+    &.p-focus, &:focus-within { box-shadow: 0 0 0 3px rgba(124, 92, 255, .25); }
+
+    @include mobile {
+      width: 100%;
+      max-width: 280px;
     }
   }
 
-  &.state-error {
-    .file-details-card {
-      border: 2px solid var(--red-300);
-    }
+  .mobile-progress-bar.p-progressbar,
+  .mobile-progress-bar .p-progressbar {
+    height: 8px;
+    border-radius: 20px;
+    background: $cfg-chip-bg;
+
+    .p-progressbar-value { background: $cfg-accent; }
+    .p-progressbar-label { font-weight: 700; }
   }
 }
 
 // =============================================================================
-// ANIMATIONS
+// ANIMACIONES
 // =============================================================================
 
 @keyframes pulse {
@@ -294,21 +274,16 @@
     opacity: 1;
   }
   50% {
-    opacity: 0.6;
+    opacity: .6;
   }
 }
 
 // =============================================================================
-// RESPONSIVE OPTIMIZATIONS
+// RESPONSIVE
 // =============================================================================
 
 @include mobile {
   .mobile-file-upload {
-    .upload-zone,
-    .file-details-card {
-      border-radius: 8px;
-    }
-
     .action-buttons {
       button {
         width: 100%;

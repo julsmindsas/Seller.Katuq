@@ -1,19 +1,26 @@
 .siigo-mapping {
 
   h4 {
-    font-weight: 600;
-    color: #2c3e50;
+    font-weight: 800;
+    color: #211F3A;
   }
 
-  // Cards planas con acento lateral (sin gradientes)
+  // Encabezado del modal: título en tinta (D-131/D-400).
+  .modal-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: #211F3A;
+  }
+
+  // Cards planas sin acento lateral (D-131: sin border-left de acento).
   .card-flat {
-    border: 1px solid #e9ecef;
-    border-left: 4px solid #5e72e4;
-    border-radius: 6px;
-    box-shadow: none;
+    border: 1px solid #ececf4;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
+    overflow: hidden;
 
     &.card-info {
-      border-left-color: #11cdef;
+      background: #faf9fe;
     }
   }
 
@@ -21,17 +28,18 @@
     font-size: 0.875rem;
 
     thead th {
-      font-weight: 600;
-      color: #6c757d;
+      font-weight: 800;
+      color: #8f8bab;
+      background: #faf9fe;
       text-transform: uppercase;
-      font-size: 0.72rem;
-      letter-spacing: 0.03em;
-      border-bottom: 1px solid #e9ecef;
+      font-size: 10.5px;
+      letter-spacing: .5px;
+      border-bottom: 1px solid #f1f0f7;
     }
 
     code {
-      color: #5e72e4;
-      background: #f4f5ff;
+      color: #5F3FE0;
+      background: #efe9ff;
       padding: 0.1rem 0.4rem;
       border-radius: 4px;
     }
@@ -42,28 +50,61 @@
   }
 
   .status-badge {
-    font-weight: 600;
-    font-size: 0.72rem;
-    padding: 0.35rem 0.6rem;
-    border-radius: 4px;
+    font-weight: 800;
+    font-size: 10.5px;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    padding: 0.3rem 0.65rem;
+    border-radius: 20px;
 
     &.badge-ok {
-      color: #1aae6f;
-      background: #e9f9f1;
+      color: #1E874B;
+      background: #E6F7EE;
     }
 
     &.badge-warn {
-      color: #b58100;
-      background: #fff6e0;
+      color: #D9820A;
+      background: #FFF1DF;
     }
 
     &.badge-bad {
-      color: #c0392b;
-      background: #fdecea;
+      color: #D64545;
+      background: #FDECEC;
     }
   }
 
   .gap-2 {
     gap: 0.5rem;
+  }
+
+  // Pie: principal morado y secundario blanco con borde.
+  .modal-footer {
+    gap: 8px;
+    border-top: 1px solid #f1f0f7;
+
+    .btn {
+      min-height: 40px;
+      padding: 0 16px;
+      border-radius: 11px;
+      font-size: 13.5px;
+      font-weight: 700;
+    }
+    .btn-primary {
+      background: #5F3FE0;
+      border-color: #5F3FE0;
+      color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+
+      &:hover:not(:disabled) { background: #4a2fc0; border-color: #4a2fc0; }
+      &:disabled { background: #d8d4ea; border-color: #d8d4ea; box-shadow: none; }
+    }
+    .btn-secondary {
+      background: #fff;
+      border-color: #e4e2ef;
+      color: #5b5878;
+
+      &:hover { background: #faf9fe; border-color: #d9cffb; color: #5F3FE0; }
+    }
+    .btn:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
   }
 }

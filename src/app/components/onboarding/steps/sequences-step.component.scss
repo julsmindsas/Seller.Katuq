@@ -1,233 +1,139 @@
-// Sequences Step Styles - Clean, Modern Design (No Gradients)
-
-// Variables (consistent with onboarding wizard) — acento Katuq #5F3FE0 (D-131)
-$color-primary: #5F3FE0;
-$color-success: #10b981;
-$color-warning: #f59e0b;
-$color-danger: #ef4444;
-$bg-gray-50: #f8fafc;
-$bg-gray-100: #f1f5f9;
-$bg-gray-200: #e2e8f0;
-$text-dark: #211F3A;
-$text-medium: #475569;
-$text-light: #64748b;
-$spacing-sm: 0.5rem;
-$spacing-md: 1rem;
-$spacing-lg: 1.5rem;
+// Sequences Step Styles — aspecto canónico (D-131/D-399). Piezas comunes de
+// los pasos en styles/_pasos.scss.
+@import '../styles/pasos';
+@include onb-pasos;
 
 .step-container {
-  .step-intro {
-    margin-bottom: $spacing-lg;
-
-    .intro-text {
-      font-size: 1.05rem;
-      color: $text-medium;
-      line-height: 1.6;
-      margin: 0;
-    }
-  }
-
-  .configuration-card {
-    ::ng-deep .p-card-header {
-      background: $bg-gray-50;
-      border-bottom: 2px solid $bg-gray-100;
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: $spacing-md;
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: $text-dark;
-      padding: $spacing-md;
-
-      i {
-        color: $color-primary;
-        font-size: 1.4rem;
-      }
-    }
-
-    ::ng-deep .p-card-body {
-      padding: $spacing-lg * 1.5;
-    }
-  }
-
   .consecutivos-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: $spacing-lg;
-    margin-bottom: $spacing-lg;
+    gap: 14px;
+    margin-bottom: 16px;
   }
 
   .consecutivo-option {
-    background: white;
-    border: 2px solid $bg-gray-200;
-    border-radius: 12px;
-    padding: $spacing-lg;
-    transition: all 0.3s ease;
+    background: #fff;
+    border: 1px solid $cfg-line;
+    border-radius: 16px;
+    padding: 16px;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
     cursor: pointer;
 
     &:hover {
-      border-color: $color-primary;
-      box-shadow: 0 4px 12px rgba(95, 63, 224, 0.1);
-      transform: translateY(-2px);
+      border-color: #d9cffb;
+      box-shadow: 0 6px 14px -8px rgba(50, 40, 110, .35);
+      transform: translateY(-1px);
     }
 
     &.selected {
-      background: #efe9ff;
-      border-color: $color-primary;
-      box-shadow: 0 4px 12px rgba(95, 63, 224, 0.15);
+      background: rgba(124, 92, 255, .09);
+      border-color: #d9cffb;
 
       .option-label {
-        color: $color-primary;
-        font-weight: 600;
+        color: $cfg-accent;
+
+        span { color: $cfg-accent; }
       }
 
       .option-preview code {
-        background: $color-primary;
-        color: white;
+        background: $cfg-accent;
+        color: #fff;
       }
     }
 
     .option-header {
       display: flex;
       align-items: center;
-      gap: $spacing-md;
-      margin-bottom: $spacing-md;
-
-      ::ng-deep .p-checkbox {
-        .p-checkbox-box {
-          width: 22px;
-          height: 22px;
-          border-radius: 6px;
-
-          &.p-highlight {
-            background: $color-primary;
-            border-color: $color-primary;
-          }
-        }
-      }
+      gap: 12px;
+      margin-bottom: 10px;
 
       .option-label {
         display: flex;
         align-items: center;
-        gap: $spacing-sm;
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: $text-dark;
+        gap: 8px;
+        font-size: 15px;
+        font-weight: 800;
+        color: $cfg-ink;
         cursor: pointer;
         flex: 1;
 
-        i {
-          font-size: 1.3rem;
-        }
+        span { color: $cfg-ink; font-size: 15px; }
+        i { font-size: 16px; color: $cfg-accent; }
       }
     }
 
     .option-description {
-      font-size: 0.95rem;
-      color: $text-medium;
+      font-size: 13px;
+      color: $cfg-body;
       line-height: 1.5;
-      margin-bottom: $spacing-md;
-      padding-left: calc(22px + #{$spacing-md});
+      margin-bottom: 12px;
+      padding-left: 34px;
     }
 
     .option-preview {
       display: flex;
       align-items: center;
-      gap: $spacing-sm;
-      padding: $spacing-sm $spacing-md;
-      background: $bg-gray-50;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      margin-left: calc(22px + #{$spacing-md});
+      gap: 8px;
+      padding: 8px 12px;
+      background: $cfg-tint;
+      border: 1px solid #eeecf7;
+      border-radius: 11px;
+      font-size: 12.5px;
+      margin-left: 34px;
 
       strong {
-        color: $text-dark;
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+        color: $cfg-muted;
       }
 
       code {
-        background: $bg-gray-200;
-        color: $text-dark;
-        padding: 4px 12px;
-        border-radius: 6px;
-        font-family: 'Courier New', monospace;
-        font-weight: 600;
-        transition: all 0.3s ease;
+        background: $cfg-chip-bg;
+        color: $cfg-info;
+        padding: 3px 10px;
+        border-radius: 9px;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-weight: 700;
+        transition: background .15s ease, color .15s ease;
       }
     }
   }
 
+  // Aviso en par (info / error).
   .help-message {
     display: flex;
     align-items: center;
-    gap: $spacing-sm;
-    padding: $spacing-md $spacing-lg;
-    background: #efe9ff;
-    border: 2px solid #eeecf7;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    color: $color-primary;
-    font-weight: 500;
+    gap: 8px;
+    padding: 12px 14px;
+    background: $cfg-accent-soft;
+    border-radius: 11px;
+    font-size: 13px !important;
+    color: $cfg-accent;
+    font-weight: 600;
 
-    i {
-      font-size: 1.2rem;
-    }
+    span { color: inherit; font-size: 13px; }
+    i { font-size: 15px; }
 
     &.error {
-      background: #fef2f2;
-      border-color: #fecaca;
-      color: $color-danger;
-    }
-  }
-
-  .step-actions {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: $spacing-md;
-
-    button {
-      min-width: 250px;
-      padding: 14px 28px;
-      font-size: 1.05rem;
-      font-weight: 600;
-      border-radius: 10px;
-      transition: all 0.3s ease;
-
-      &:not(:disabled):hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
-      }
-    }
-
-    .form-status {
-      display: flex;
-      align-items: center;
-      gap: $spacing-sm;
-      font-size: 0.95rem;
-      font-weight: 500;
-      color: $text-medium;
-      margin: 0;
-
-      i {
-        font-size: 1.1rem;
-        color: $color-warning;
-      }
-
-      &.success {
-        color: $color-success;
-
-        i {
-          color: $color-success;
-        }
-      }
+      background: $cfg-err-soft;
+      color: $cfg-err;
     }
   }
 }
 
-// Responsive Design
+:host ::ng-deep .consecutivo-option .option-header .p-checkbox .p-checkbox-box {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+
+  &.p-highlight {
+    background: $cfg-accent;
+    border-color: $cfg-accent;
+  }
+}
+
 @media (max-width: 768px) {
   .step-container {
     .consecutivos-grid {
@@ -239,12 +145,6 @@ $spacing-lg: 1.5rem;
       .option-preview {
         padding-left: 0;
         margin-left: 0;
-      }
-    }
-
-    .step-actions {
-      button {
-        min-width: 100%;
       }
     }
   }

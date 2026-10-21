@@ -177,10 +177,10 @@
   gap: 1rem;
   align-items: flex-start;
   padding: 1rem;
-  background: #f7fafc;
-  border-radius: 8px;
+  background: #faf9fe;
+  border-radius: 11px;
   margin-bottom: 1rem;
-  border-left: 4px solid #e2e8f0;
+  border: 1px solid #ececf4;
 
   i {
     font-size: 1.25rem;
@@ -273,9 +273,9 @@
 .tips-container {
   margin-top: 1.5rem;
   padding: 1rem;
-  background: #fef5e7;
-  border-radius: 8px;
-  border-left: 4px solid #f39c12;
+  background: #FFF1DF;
+  border-radius: 11px;
+  border: 1px solid rgba(217, 130, 10, .3);
 
   h5 {
     display: flex;
@@ -287,7 +287,7 @@
     color: #2d3748;
 
     i {
-      color: #f39c12;
+      color: #D9820A;
     }
   }
 

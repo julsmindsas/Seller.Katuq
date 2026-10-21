@@ -1,21 +1,23 @@
 /* =============================================
-   IMPORTAR BODEGAS MODAL - CLEAN DESIGN
+   IMPORTAR BODEGAS MODAL — aspecto Katuq (D-131/D-400)
+   Encabezado blanco con ícono en azulejo lila, cuerpo lila, tarjetas
+   blancas, acento #5F3FE0. Sin bloque negro ni índigo paralelo.
    ============================================= */
 
-// Variables - Colores sobrios
-$primary: #5c6bc0;
-$primary-hover: #3f51b5;
-$success: #4caf50;
-$gray-50: #fafafa;
-$gray-100: #f5f5f5;
-$gray-200: #eeeeee;
-$gray-300: #e0e0e0;
-$gray-400: #bdbdbd;
-$gray-500: #9e9e9e;
-$gray-600: #757575;
-$gray-700: #616161;
-$gray-800: #424242;
-$gray-900: #212121;
+// Variables con los tokens del canon
+$primary: #5F3FE0;
+$primary-hover: #4a2fc0;
+$success: #1E874B;
+$gray-50: #faf9fe;
+$gray-100: #f5f4fa;
+$gray-200: #ececf4;
+$gray-300: #e4e2ef;
+$gray-400: #b9b5d0;
+$gray-500: #8f8bab;
+$gray-600: #5b5878;
+$gray-700: #4a4766;
+$gray-800: #211F3A;
+$gray-900: #211F3A;
 
 // =============================================
 // MODAL HEADER
@@ -24,9 +26,9 @@ $gray-900: #212121;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 24px;
-  background: $gray-800;
-  border-bottom: 1px solid $gray-700;
+  padding: 16px 20px;
+  background: #fff;
+  border-bottom: 1px solid $gray-200;
 
   .header-content {
     display: flex;
@@ -35,42 +37,43 @@ $gray-900: #212121;
   }
 
   .header-icon {
-    width: 42px;
-    height: 42px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    background: #efe9ff;
+    border-radius: 11px;
     display: flex;
     align-items: center;
     justify-content: center;
 
     i {
-      font-size: 20px;
-      color: white;
+      font-size: 18px;
+      color: $primary;
     }
   }
 
   .header-text {
     .modal-title {
       margin: 0;
-      font-size: 18px;
-      font-weight: 600;
-      color: white;
+      font-size: 17px !important;
+      font-weight: 800;
+      color: $gray-800;
     }
 
     .modal-subtitle {
       margin: 2px 0 0;
       font-size: 13px;
-      color: rgba(255, 255, 255, 0.6);
+      letter-spacing: normal;
+      color: $gray-500;
     }
   }
 
   .btn-close-custom {
     width: 32px;
     height: 32px;
-    border: none;
-    background: transparent;
-    border-radius: 6px;
-    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid $gray-200;
+    background: $gray-100;
+    border-radius: 10px;
+    color: $gray-600;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
@@ -78,8 +81,14 @@ $gray-900: #212121;
     justify-content: center;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
+      background: #FDECEC;
+      border-color: #f3c9c9;
+      color: #D64545;
+    }
+
+    &:focus-visible {
+      outline: 3px solid #7C5CFF !important;
+      outline-offset: 2px;
     }
 
     i {
@@ -119,17 +128,20 @@ $gray-900: #212121;
 
     .search-input {
       width: 100%;
-      padding: 12px 40px 12px 44px;
-      border: 2px solid $gray-200;
-      border-radius: 12px;
-      font-size: 14px;
-      background: white;
+      min-height: 40px;
+      padding: 10px 40px 10px 44px;
+      border: 1px solid #e9e7f3;
+      border-radius: 11px;
+      font-size: 13.5px;
+      color: $gray-800;
+      background: $gray-100;
       transition: all 0.2s ease;
 
       &:focus {
         outline: none;
-        border-color: $primary;
-        box-shadow: 0 0 0 3px rgba($primary, 0.1);
+        background: #fff;
+        border-color: #7C5CFF;
+        box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
       }
 
       &::placeholder {
@@ -172,7 +184,7 @@ $gray-900: #212121;
 
     .chip {
       padding: 8px 16px;
-      border: 2px solid $gray-200;
+      border: 1px solid $gray-300;
       border-radius: 20px;
       background: white;
       font-size: 13px;
@@ -211,9 +223,10 @@ $gray-900: #212121;
   gap: 16px;
   padding: 12px 16px;
   background: white;
-  border-radius: 12px;
+  border: 1px solid $gray-200;
+  border-radius: 11px;
   margin-bottom: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
 
   .stat-item {
     display: flex;
@@ -222,12 +235,15 @@ $gray-900: #212121;
 
     .stat-number {
       font-size: 20px;
-      font-weight: 700;
+      font-weight: 800;
       color: $gray-800;
     }
 
     .stat-label {
-      font-size: 13px;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      text-transform: uppercase;
       color: $gray-500;
     }
 
@@ -334,31 +350,32 @@ $gray-900: #212121;
   padding: 48px 24px;
 
   .empty-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 16px;
-    background: $gray-100;
-    border-radius: 50%;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 12px;
+    background: #f3f1fb;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
 
     i {
-      font-size: 32px;
-      color: $gray-400;
+      font-size: 26px;
+      color: $primary;
     }
   }
 
   h5 {
     margin: 0 0 8px;
-    font-size: 16px;
-    font-weight: 600;
-    color: $gray-700;
+    font-size: 15px;
+    font-weight: 800;
+    color: $gray-800;
   }
 
   p {
     margin: 0;
-    font-size: 14px;
+    font-size: 12.5px;
+    letter-spacing: normal;
     color: $gray-500;
   }
 }
@@ -372,14 +389,14 @@ $gray-900: #212121;
   gap: 16px;
   padding: 16px;
   background: white;
-  border: 2px solid $gray-200;
-  border-radius: 12px;
+  border: 1px solid $gray-200;
+  border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: $gray-400;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-color: #d9cffb;
+    box-shadow: 0 8px 22px -14px rgba(95, 63, 224, .35);
   }
 
   &.selected {
@@ -444,7 +461,7 @@ $gray-900: #212121;
     flex: 1;
     min-width: 0;
 
-    .card-header {
+    .wh-cabeza {
       display: flex;
       align-items: center;
       gap: 10px;
@@ -454,17 +471,19 @@ $gray-900: #212121;
       .warehouse-name {
         margin: 0;
         font-size: 15px;
-        font-weight: 600;
+        font-weight: 800;
         color: $gray-800;
       }
 
       .provider-badge {
-        padding: 4px 10px;
-        background: $gray-600;
-        border-radius: 4px;
-        font-size: 11px;
-        font-weight: 500;
-        color: white;
+        padding: 3px 10px;
+        background: #efe9ff;
+        border-radius: 20px;
+        font-size: 10.5px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        color: $primary;
         display: flex;
         align-items: center;
         gap: 4px;
@@ -532,8 +551,8 @@ $gray-900: #212121;
   justify-content: space-between;
   padding: 16px 24px;
   background: white;
-  border-top: 1px solid $gray-200;
-  border-radius: 0 0 12px 12px;
+  border-top: 1px solid #f1f0f7;
+  border-radius: 0 0 16px 16px;
 
   .footer-actions-left {
     display: flex;
@@ -543,12 +562,13 @@ $gray-900: #212121;
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 8px 14px;
-      border: 2px solid $gray-200;
-      border-radius: 8px;
+      min-height: 36px;
+      padding: 0 14px;
+      border: 1px solid $gray-300;
+      border-radius: 11px;
       background: white;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 700;
       color: $gray-600;
       cursor: pointer;
       transition: all 0.2s ease;
@@ -558,7 +578,8 @@ $gray-900: #212121;
       }
 
       &:hover {
-        border-color: $primary;
+        background: $gray-50;
+        border-color: #d9cffb;
         color: $primary;
       }
     }
@@ -569,19 +590,21 @@ $gray-900: #212121;
     gap: 12px;
 
     .btn-cancel {
-      padding: 10px 20px;
-      border: none;
-      background: $gray-100;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
+      min-height: 40px;
+      padding: 0 16px;
+      border: 1px solid $gray-300;
+      background: #fff;
+      border-radius: 11px;
+      font-size: 13.5px;
+      font-weight: 700;
       color: $gray-600;
       cursor: pointer;
       transition: all 0.2s ease;
 
       &:hover {
-        background: $gray-200;
-        color: $gray-700;
+        background: $gray-50;
+        border-color: #d9cffb;
+        color: $primary;
       }
     }
 
@@ -589,13 +612,15 @@ $gray-900: #212121;
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 10px 20px;
-      border: none;
+      min-height: 40px;
+      padding: 0 16px;
+      border: 1px solid $primary;
       background: $primary;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 500;
+      border-radius: 11px;
+      font-size: 13.5px;
+      font-weight: 700;
       color: white;
+      box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
       cursor: pointer;
       transition: all 0.2s ease;
 
@@ -609,14 +634,18 @@ $gray-900: #212121;
         border-radius: 10px;
         font-size: 12px;
         font-weight: 600;
+        color: #fff;
       }
 
       &:hover:not(:disabled) {
         background: $primary-hover;
+        border-color: $primary-hover;
       }
 
       &:disabled {
-        background: $gray-400;
+        background: #d8d4ea;
+        border-color: #d8d4ea;
+        box-shadow: none;
         cursor: not-allowed;
       }
     }

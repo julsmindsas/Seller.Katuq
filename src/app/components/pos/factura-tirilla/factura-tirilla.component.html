@@ -192,16 +192,14 @@
 <!-- BOTONES DE ACCIÓN (solo en pantalla) -->
 <div class="no-print" style="text-align: center; margin-top: 20px; padding: 20px;">
   <button 
-    class="btn btn-primary me-3" 
-    (click)="print()" 
-    style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+    class="btn btn-primary me-3 ft-btn" 
+    (click)="print()">
     <i class="fa fa-print"></i> Imprimir Factura
   </button>
   
   <button 
-    class="btn btn-success" 
-    (click)="goBack()" 
-    style="padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
+    class="btn ft-btn ft-btn--sec" 
+    (click)="goBack()">
     <i class="fa fa-plus"></i> Nueva Venta
   </button>
 </div>

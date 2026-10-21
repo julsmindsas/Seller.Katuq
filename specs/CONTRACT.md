@@ -11776,3 +11776,72 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - **TX-34·9** Promesa de las plantillas sobre el tiempo de entrega. → El carrito y el checkout muestran el tiempo de entrega.
 - **Orden de trabajo:** 1) arreglos de F2-41 con sus diffs; 2) bugs de F5-29 y su seguridad; 3) arreglos que no necesitan diseño nuevo (D-505, cotizable, Shopify CSV, feed JPEG de Meta, choque de categorías de D-498, 500 del árbol de categorías); 4) diseños OpenSpec para aprobar: 1230 (suscripción fase A), TX-34, facetas/plantilla/comparador de F2-42, TX-37 fases 1b y 2, comparar de F5-29, resto de F4-40; 5) implementación por ticket.
 - **Seguridad:** los hallazgos de esta lectura van al openspec privado del backend, no a este contrato.
+
+## D-520 (2026-10-21) — Modales y componentes internos con la regla de diseño Katuq — COMMITEADO, sin desplegar
+
+**Disparador.** Tras D-519 el usuario preguntó si todo estaba rediseñado y luego por los modales. Las pantallas con ruta estaban listas, pero sus modales, pasos y widgets conservaban unas 495 marcas viejas.
+
+**Decisión: solo presentación, unos 185 archivos en 6 grupos.**
+- **Onboarding e importador con KAI.**
+  - Se modernizaron el modal `<app-import-modal>` y los componentes de `shared/components/import-components`, que es lo que se ve en clientes, inventario, productos y categorías.
+  - También los pasos de `onboarding/steps/*`, con el mixin local nuevo `onboarding/styles/_pasos.scss`. Esos pasos y las copias de `onboarding/components/*` no se pintan en ninguna parte (código muerto: candidatos a borrar).
+- **Despachos.**
+  - Se modernizaron los modales y componentes internos: tarifas, seguimiento y cancelación de Envíame, seguimiento, análisis, órdenes de despacho (v1 y v2), generar orden, transportadores, zonas, detalle de entrega, extras de Osmosis y tabla de pedidos.
+  - Mixin local nuevo `despachos/styles/_despachos-modal.scss`, con clases `dm-*` sobre `config-pagina`.
+  - Los estados de envío quedan en el par semántico del canon.
+- **Venta.**
+  - Componentes: entrega (y dirección estructurada), asentar pago manual, notas, facturación, checkout, historial del pedido, catálogo, clientes (métricas y crear cliente) y Tesorería. Gestión de pagos queda con `cfg-cabeza`.
+  - El modal de Tesorería usa el mixin local `tk-modal-canon`. Aprobar pago queda en verde semántico.
+  - En `checkout`, el bloque `:root` nunca aplicaba por la encapsulación: pasa a `:host` con los valores del canon.
+- **POS.**
+  - Cierre de caja e historial, resumen, pagos, cliente y tarjeta, checkout del POS (modal de efectivo), carrito, catálogo, facturación y wizard.
+  - La tirilla térmica solo cambia en sus botones de pantalla; nada que salga en papel.
+- **Integraciones, CRM, inventario y otros.**
+  - Componentes: lead-form-modal y los `p-dialog` del CRM, historial de sync de fulfillment, selector de ciudades, importar bodegas, mapeo Siigo-bodega, catálogo de inventario, los 7 modales de Producción, prospectos, notificaciones de integraciones, flow-ai-assist, Mis ideas (sin breadcrumb) y el composer de facturación.
+  - Los parciales de `integrations/styles` solo cambian valores, no selectores.
+- **Compartidos e IA.**
+  - Filtros compartidos: Exportar y Configuración quedan como botones blancos con borde.
+  - También: barra inferior, botón flotante, chat de Opttia, centro de notificaciones, aviso de actualización, chat-form, voice-interaction, agente de voz, el agent builder y el resultado del video agente.
+  - Del menú lateral solo se quitó el brillo de la barra del plan.
+  - En el menú de cuenta, el modo oscuro usa `#a48bff` (diseño de modo oscuro F1).
+- **Tokens compartidos.** Solo cambian los comentarios de `_katuq-modal.scss` y `_katuq-comercial.scss`: el valor ya se alineó en D-519.
+- **Fugas cerradas** (`::ng-deep` sin `:host`):
+  - `.modal-content` de Inventario, que cambiaba la cabecera y el radio de todos los modales de la app;
+  - `.p-card` y `.p-inputtext` de los pasos del onboarding;
+  - wizard del POS, `cliente-autocomplete` del POS y asentar pago manual.
+
+**Validación.**
+- Verificador de bindings contra HEAD en los 60 HTML cambiados: 59 dan ok. Mis ideas solo difiere por el `<app-breadcrumb>` quitado.
+- Los `.ts` solo cambian literales de color (SweetAlert, estilos en línea, paletas). Se revisaron a mano.
+- `npx sass` sin errores en cada hoja, y una sola compilación de producción al final (ver el commit).
+
+**Medición en `src/app` sin katuq-flow (antes → después).**
+
+| Qué | Antes | Después |
+|---|---|---|
+| `#8b5cf6`/`#a78bfa` | 77 | 12 |
+| `card-header` | 244 | 100 |
+| `border-left` de 3–9 px | 91 | 13 |
+| Gradientes | 43 | 34 |
+| `btn-success` | 33 | 17 |
+| `bg-primary text-white` | 12 | 3 |
+| Azules sueltos | 8 | 4 |
+| Primarios prohibidos | 9 | 8 |
+
+Lo que queda está, sobre todo, en:
+- nombres de clase internos ya pintados en blanco;
+- piezas de PrimeNG o ngb;
+- clases dentro de un `[ngClass]` semántico («Completado»);
+- los colores de zona que elige el usuario;
+- skeletons y fades;
+- las pantallas excluidas.
+
+**Pendientes, que piden cambios fuera de la presentación o globales.**
+- **Tokens globales:** `--primary-color` (`styles.scss`) y `$primary-color` (`_variables.scss`) valen `#a78bfa`. Por eso el `.btn-primary` global de Bootstrap y lo que dependa de ellos salen lila claro en toda la app. Corregirlo es la reconciliación de tokens y pide su propuesta (AGENTS.md).
+- **Overlays en `body`:** el marco de los `p-dialog` con `appendTo="body"` (importador, etiquetas de clientes) y el radio y la sombra de `.modal-content` en NgbModal no se alcanzan desde el componente. Hace falta `modalDialogClass: 'katuq-modal'` (la clase global ya existe) o `styleClass`, lo que toca `.ts`.
+- **Fugas que siguen:**
+  - `crear-cliente-modal.scss` `::ng-deep .modal .modal-dialog { max-width: 860px }`;
+  - los parciales de `integrations/styles` con `ViewEncapsulation.None`;
+  - las barras de `usage-widget`.
+- **Código muerto para borrar en un cambio aparte:** `onboarding/steps/*`, `onboarding/components/*`, `integrations-list.component.css`, `integration-modal.component.html`, `voice-sales-demo`/`voice-sales-wizard`, `usage-widget` y el overlay Live Audio de `floating-button`.
+- **Revisión en el navegador a 1440 y 390 px:** en especial los modales de despachos, la tarifa de Envíame (cabecera sticky de 52 px), Cierre de caja, el modal de efectivo del POS, el importador y los filtros compartidos.

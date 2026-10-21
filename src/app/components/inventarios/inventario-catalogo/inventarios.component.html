@@ -1019,9 +1019,9 @@
                                             <div *ngIf="!row.detalleLoading" class="row">
                                                 <!-- Bodegas de Katuq -->
                                                 <div [ngClass]="fulfillmentEnabled ? 'col-md-6' : 'col-12'">
-                                                    <div class="card h-100 border-start border-primary border-3">
-                                                        <div class="card-header bg-light py-2">
-                                                            <h6 class="mb-0 text-primary">
+                                                    <div class="card h-100 inv-stock-card">
+                                                        <div class="card-header inv-stock-card__cabeza">
+                                                            <h6 class="mb-0 inv-stock-card__titulo">
                                                                 <i class="pi pi-warehouse me-2"></i>
                                                                 Stock en Katuq
                                                             </h6>
@@ -1080,9 +1080,9 @@
 
                                                 <!-- Bodegas del Fulfillment -->
                                                 <div *ngIf="fulfillmentEnabled" class="col-md-6">
-                                                    <div class="card h-100 border-start border-info border-3">
-                                                        <div class="card-header bg-light py-2">
-                                                            <h6 class="mb-0 text-info">
+                                                    <div class="card h-100 inv-stock-card">
+                                                        <div class="card-header inv-stock-card__cabeza">
+                                                            <h6 class="mb-0 inv-stock-card__titulo inv-stock-card__titulo--info">
                                                                 <i class="pi pi-cloud me-2"></i>
                                                                 Stock en {{ fulfillmentProviderName }}
                                                             </h6>

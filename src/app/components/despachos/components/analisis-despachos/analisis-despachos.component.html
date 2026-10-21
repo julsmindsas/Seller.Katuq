@@ -1,6 +1,6 @@
-<div class="analisis-header p-3">
-    <div class="d-flex justify-content-between align-items-center">
-        <h5 class="m-0"><i class="pi pi-chart-line me-2"></i>Análisis y Métricas de Despacho</h5>
+<div class="analisis-header dm-cabeza">
+    <div class="d-flex justify-content-between align-items-center gap-3 w-100">
+        <h5 class="m-0 dm-titulo d-flex align-items-center gap-3"><i class="pi pi-chart-line dm-icono"></i>Análisis y Métricas de Despacho</h5>
         <button pButton pRipple type="button" icon="pi pi-times" class="p-button-text p-button-rounded" (click)="cerrar()"></button>
     </div>
 </div>
@@ -16,8 +16,8 @@
 
             <div class="row">
                 <div class="col-md-4 mb-3 mb-md-0">
-                    <div class="card metric-card h-100">
-                        <div class="card-header bg-danger text-white"><i class="pi pi-exclamation-triangle me-2"></i>Pedidos Urgentes ({{ pedidosUrgentes.length }})</div>
+                    <div class="dm-seccion metric-card h-100">
+                        <div class="dm-seccion__cabeza dm-seccion__cabeza--error"><i class="pi pi-exclamation-triangle me-2"></i>Pedidos Urgentes ({{ pedidosUrgentes.length }})</div>
                         <ul class="list-group list-group-flush">
                             <li *ngFor="let pedido of pedidosUrgentes" class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
@@ -31,8 +31,8 @@
                     </div>
                 </div>
                 <div class="col-md-4 mb-3 mb-md-0">
-                    <div class="card metric-card h-100">
-                        <div class="card-header bg-warning text-dark"><i class="pi pi-clock me-2"></i>Pedidos en Riesgo ({{ pedidosEnRiesgo.length }})</div>
+                    <div class="dm-seccion metric-card h-100">
+                        <div class="dm-seccion__cabeza dm-seccion__cabeza--warn"><i class="pi pi-clock me-2"></i>Pedidos en Riesgo ({{ pedidosEnRiesgo.length }})</div>
                         <ul class="list-group list-group-flush">
                             <li *ngFor="let pedido of pedidosEnRiesgo" class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
@@ -46,8 +46,8 @@
                     </div>
                 </div>
                 <div class="col-md-4 mb-3 mb-md-0">
-                    <div class="card metric-card h-100">
-                        <div class="card-header bg-info text-white"><i class="pi pi-exclamation-circle me-2"></i>Urgentes Sin Producir ({{ pedidosSinProducir.length }})</div>
+                    <div class="dm-seccion metric-card h-100">
+                        <div class="dm-seccion__cabeza dm-seccion__cabeza--info"><i class="pi pi-exclamation-circle me-2"></i>Urgentes Sin Producir ({{ pedidosSinProducir.length }})</div>
                         <ul class="list-group list-group-flush">
                             <li *ngFor="let pedido of pedidosSinProducir" class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
@@ -71,10 +71,10 @@
             </ng-template>
             <div class="row">
                 <div class="col-md-7">
-                    <h6 class="mb-3">Predicción de Carga (Próximos 7 días)</h6>
+                    <h6 class="mb-3 dm-label">Predicción de Carga (Próximos 7 días)</h6>
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered table-hover">
-                            <thead class="table-light">
+                            <thead class="analisis-thead">
                                 <tr>
                                     <th>Fecha</th>
                                     <th class="text-center">Confirmados</th>
@@ -88,19 +88,19 @@
                                     <td class="text-center">{{ dia.confirmados }}</td>
                                     <td class="text-center">
                                         <span *ngIf="dia.pendientesProduccion > 0" class="badge bg-info-light text-info-dark">{{ dia.pendientesProduccion }}</span>
-                                        <span *ngIf="dia.pendientesProduccion === 0" class="text-muted">0</span>
+                                        <span *ngIf="dia.pendientesProduccion === 0" class="text-muted analisis-cero">0</span>
                                     </td>
-                                    <td class="text-center fw-bold text-primary">{{ dia.total }}</td>
+                                    <td class="text-center fw-bold analisis-total">{{ dia.total }}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
                 <div class="col-md-5">
-                    <h6 class="mb-3">Zonas Críticas (con mayor % de retrasos)</h6>
+                    <h6 class="mb-3 dm-label">Zonas Críticas (con mayor % de retrasos)</h6>
                     <ul class="list-group">
                         <li *ngFor="let zona of zonasCriticas" class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="pi pi-map-marker me-2"></i>{{ zona.zona }}</span>
+                            <span class="analisis-zona"><i class="pi pi-map-marker me-2"></i>{{ zona.zona }}</span>
                             <span class="badge rounded-pill" [ngClass]="{'bg-danger': zona.porcentaje > 50, 'bg-warning': zona.porcentaje <= 50}">{{ zona.porcentaje | number:'1.0-0' }}%</span>
                         </li>
                         <li *ngIf="zonasCriticas.length === 0" class="list-group-item text-muted">No se han detectado zonas críticas.</li>

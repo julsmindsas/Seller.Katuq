@@ -244,7 +244,7 @@
     <div class="row g-3">
       <div class="col-lg-6 col-xl-4" *ngFor="let order of allOrders">
         <div class="order-card">
-          <div class="card-header">
+          <div class="order-card__cabeza">
             <div class="order-info">
               <h6 class="order-number">{{ order.nroShippingOrder || 'N/A' }}</h6>
               <span class="order-date">{{ formatDate(order.fecha) }}</span>
@@ -491,7 +491,7 @@
   <div class="modal-container enviame-options-modal" (click)="$event.stopPropagation()">
     <div class="modal-header-custom">
       <h5>
-        <i class="pi pi-truck me-2 text-primary"></i>
+        <i class="pi pi-truck od2-icono"></i>
         {{ 'Opciones de Envío con Enviame.io' | translate }}
       </h5>
       <button type="button" class="btn-close-custom" (click)="closeEnviameOptionsModal()">

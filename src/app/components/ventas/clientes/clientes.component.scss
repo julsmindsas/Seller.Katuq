@@ -69,40 +69,6 @@
   }
 }
 
-.card-header {
-  background: $clientes-white;
-  padding: $clientes-spacing-lg $clientes-spacing-xl;
-  border-bottom: 2px solid $clientes-border-light;
-
-  @include clientes-responsive('tablet') {
-    padding: $clientes-spacing-md;
-  }
-
-  h2 {
-    color: $clientes-dark;
-    font-size: $clientes-font-size-heading;
-    font-weight: $clientes-font-weight-semibold;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: $clientes-spacing-sm;
-
-    i {
-      transition: $clientes-transition-base;
-
-      &:hover {
-        transform: translateX(-3px);
-      }
-    }
-  }
-
-  .text-muted {
-    color: $clientes-grey;
-    font-size: $clientes-font-size-base;
-    margin-top: $clientes-spacing-xs;
-  }
-}
-
 .card-body {
   padding: $clientes-spacing-xl;
   background: $clientes-white;
@@ -453,17 +419,6 @@
     }
   }
 
-  &.btn-success {
-    background: $clientes-success;
-    color: $clientes-white;
-    border-color: $clientes-success;
-
-    &:hover:not(:disabled) {
-      background: $clientes-success-dark;
-      border-color: $clientes-success-dark;
-    }
-  }
-
   &.btn-danger {
     background: $clientes-error;
     color: $clientes-white;
@@ -655,14 +610,6 @@ input[type="checkbox"] {
 @include clientes-responsive('mobile') {
   .container-fluid {
     padding: $clientes-spacing-sm;
-  }
-
-  .card-header {
-    padding: $clientes-spacing-md;
-
-    h2 {
-      font-size: 1.25rem;
-    }
   }
 
   .card-body {
@@ -1217,5 +1164,45 @@ input[type="checkbox"] {
     background: #faf9fe !important;
     border-color: #4a2fc0 !important;
     color: #4a2fc0 !important;
+  }
+}
+
+// Modal "Resultados de búsqueda" (NgbModal con plantilla de este componente): canon D-131.
+.modal-header {
+  padding: 16px 20px;
+  background: #fff;
+  border-bottom: 1px solid #ececf4;
+
+  .modal-title {
+    margin: 0;
+    font-size: 17px !important;
+    font-weight: 800;
+    color: #211F3A;
+  }
+}
+
+.modal-body .table thead th {
+  background: #faf9fe;
+  color: #8f8bab;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  border-color: #f1f0f7;
+}
+
+.modal-footer {
+  border-top: 1px solid #f1f0f7;
+
+  .btn-outline-secondary {
+    min-height: 40px;
+    padding: 0 16px;
+    background: #fff;
+    border-color: #e4e2ef;
+    border-radius: 11px;
+    color: #5b5878;
+    font-weight: 700;
+
+    &:hover { background: #faf9fe; border-color: #d9cffb; color: #5F3FE0; }
   }
 }

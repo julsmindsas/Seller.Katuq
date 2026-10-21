@@ -125,7 +125,7 @@ export class LeadToSalesService {
         title: 'Lead bloqueado',
         text: `Desbloquéalo antes de ${accion}.`,
         icon: 'warning',
-        confirmButtonColor: '#8b5cf6',
+        confirmButtonColor: '#5F3FE0',
       });
       return null;
     }

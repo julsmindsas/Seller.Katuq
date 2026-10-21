@@ -2201,7 +2201,7 @@ export class EnviameRatesModalComponent implements OnInit {
       <div style="text-align: left;">
         <p><strong>❌ NO SE PUEDE PROCESAR ESTA ORDEN</strong></p>
         <p>La orden <strong>${this.order?.nroShippingOrder || 'sin número'}</strong> contiene <strong>${totalPedidos} pedidos</strong> distribuidos en <strong>${bodegasCount} bodegas diferentes</strong>:</p>
-        <div style="margin: 10px 0; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #dc3545;">
+        <div style="margin: 10px 0; padding: 10px; background-color: rgba(255, 255, 255, 0.16); border-radius: 11px;">
           ${bodegasDetails}
         </div>
         <p><strong>💡 SOLUCIONES DISPONIBLES:</strong></p>

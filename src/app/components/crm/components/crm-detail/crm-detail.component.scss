@@ -221,3 +221,30 @@
 
   i { font-size: 11px; color: inherit; }
 }
+
+// Modales p-dialog de esta pantalla: encabezado blanco, título en tinta,
+// radio 20 y sombra violeta difusa (D-131/D-400). Acotado a :host.
+:host ::ng-deep .p-dialog {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px -20px rgba(95, 63, 224, .35);
+
+  .p-dialog-header {
+    padding: 16px 20px;
+    background: #fff;
+    border-bottom: 1px solid $cfg-line;
+    color: $cfg-ink;
+  }
+
+  .p-dialog-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: $cfg-ink;
+  }
+
+  .p-dialog-footer {
+    padding: 14px 20px;
+    background: #fff;
+    border-top: 1px solid $cfg-line-soft;
+  }
+}

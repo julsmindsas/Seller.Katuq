@@ -5,7 +5,10 @@
  * Creado: 2025-10-21
  * 
  * Estilos NUEVOS - No modifica ningún estilo existente
+ * Canon Katuq (D-131, D-399): plano, semánticos en par fuerte/fondo suave.
  */
+@import '../../../shared/styles/config-pagina';
+@include config-pagina;
 
 .order-history-timeline {
   padding: 1rem 0;
@@ -18,16 +21,16 @@
   }
 
   &::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: $cfg-chip-bg;
     border-radius: 4px;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: #d8d4ea;
     border-radius: 4px;
-    
+
     &:hover {
-      background: #94a3b8;
+      background: $cfg-muted;
     }
   }
 }
@@ -35,13 +38,18 @@
 // Timeline Header
 .timeline-header {
   padding-bottom: 0.75rem;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 1px solid $cfg-line;
 
   h6 {
-    font-weight: 600;
-    color: #334155;
+    font-size: 15px;
+    font-weight: 800;
+    color: $cfg-ink;
     margin: 0;
+
+    i { color: $cfg-accent; }
   }
+
+  small { color: $cfg-muted; font-size: 12px; }
 }
 
 // Timeline Wrapper
@@ -58,7 +66,7 @@
     top: 0;
     bottom: 0;
     width: 2px;
-    background: #e2e8f0;
+    background: #eceaf4;
   }
 }
 
@@ -74,8 +82,8 @@
   // Resaltar retrocesos
   &.timeline-item-backward {
     .timeline-content {
-      border-left: 3px solid #f59e0b;
-      background: linear-gradient(to right, #fef3c7 0%, transparent 100%);
+      border-color: #f6dcb4;
+      background: $cfg-warn-soft;
     }
   }
 }
@@ -91,7 +99,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px -4px rgba(95, 63, 224, .35);
   border: 3px solid white;
   z-index: 2;
 
@@ -105,15 +113,15 @@
 // Timeline Content
 .timeline-content {
   background: white;
-  border-radius: 8px;
+  border-radius: 11px;
   padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border-left: 3px solid transparent;
-  transition: all 0.3s ease;
+  border: 1px solid $cfg-line;
+  box-shadow: $cfg-shadow-panel;
+  transition: transform .15s ease, box-shadow .15s ease;
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transform: translateY(-2px);
+    box-shadow: 0 10px 24px -14px rgba(95, 63, 224, .35);
+    transform: translateY(-1px);
   }
 }
 
@@ -124,34 +132,49 @@
   flex-wrap: wrap;
   gap: 0.5rem;
 
-  .badge {
-    font-size: 0.75rem;
-    padding: 0.35rem 0.65rem;
-    font-weight: 500;
-  }
+  i { color: $cfg-muted; }
+}
+
+// Badges en píldora (par fuerte/fondo suave, UPPERCASE)
+.badge {
+  border-radius: 20px;
+  font-size: 10.5px;
+  padding: 4px 10px;
+  font-weight: 800;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+
+  &.bg-primary { background: $cfg-accent-soft !important; color: $cfg-accent !important; }
+  &.bg-secondary { background: #eef0f3 !important; color: #5A6B78 !important; }
 }
 
 // Timeline Meta
 .timeline-meta {
   font-size: 0.85rem;
-  color: #64748b;
+  color: $cfg-muted;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.25rem;
 
   strong {
-    color: #475569;
+    color: $cfg-body;
   }
 
   i {
     opacity: 0.7;
   }
+
+  // Los span de *ngIf los pinta de azul el global `span.ng-star-inserted`.
+  span { color: $cfg-muted; font-size: inherit; }
 }
 
 // Timeline Metadata (expandible)
 .timeline-metadata {
   font-size: 0.85rem;
+  background: $cfg-tint !important;
+  border: 1px solid #eeecf7;
+  border-radius: 11px !important;
   animation: slideDown 0.3s ease;
 
   .metadata-row {
@@ -160,12 +183,12 @@
     
     strong {
       min-width: 140px;
-      color: #475569;
+      color: $cfg-body;
       font-size: 0.8rem;
     }
 
     span {
-      color: #64748b;
+      color: $cfg-muted;
       word-break: break-word;
     }
   }
@@ -173,23 +196,23 @@
 
 // Badge Classes
 .badge-success {
-  background-color: #22c55e !important;
-  color: white;
+  background-color: $cfg-ok-soft !important;
+  color: $cfg-ok !important;
 }
 
 .badge-warning {
-  background-color: #f59e0b !important;
-  color: white;
+  background-color: $cfg-warn-soft !important;
+  color: $cfg-warn !important;
 }
 
 .badge-danger {
-  background-color: #ef4444 !important;
-  color: white;
+  background-color: $cfg-err-soft !important;
+  color: $cfg-err !important;
 }
 
 .badge-secondary {
-  background-color: #6b7280 !important;
-  color: white;
+  background-color: #eef0f3 !important;
+  color: #5A6B78 !important;
 }
 
 // Loading State

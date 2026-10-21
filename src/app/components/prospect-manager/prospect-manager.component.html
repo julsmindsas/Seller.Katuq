@@ -220,7 +220,7 @@
                         (click)="selectProspect(prospect)">
                   Gestionar
                 </button>
-                <button class="btn btn-success btn-sm" ngbTooltip="Convertir a cliente" 
+                <button class="btn btn-sm pm-convertir" ngbTooltip="Convertir a cliente" 
                         (click)="convertToClient(prospect); $event.stopPropagation()">
                   <i class="fa fa-user-check"></i>
                 </button>
@@ -667,7 +667,7 @@
     <h4 class="modal-title">Programar Tarea</h4>
     <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
   </div>
-  <div class="modal-body">
+  <div class="modal-body cfg-form">
     <form [formGroup]="taskForm">
       <div class="mb-3">
         <label class="form-label">Tipo de tarea</label>
@@ -729,8 +729,8 @@
     </form>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
-    <button type="button" class="btn btn-primary" 
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="modal.dismiss()">Cancelar</button>
+    <button type="button" class="cfg-btn" 
             [disabled]="!taskForm.valid" 
             (click)="saveTask(); modal.close()">
       <i class="fa fa-calendar-check me-1"></i>

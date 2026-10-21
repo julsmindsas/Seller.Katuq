@@ -442,25 +442,6 @@ $border-radius: 8px;
   display: block;
 }
 
-// Estilo del encabezado del módulo
-.module-header {
-  background: #fff;
-  border-radius: $border-radius $border-radius 0 0;
-
-  h5 {
-    font-size: 1.3rem;
-
-    i {
-      font-size: 1.1rem;
-    }
-  }
-
-  p {
-    opacity: 0.8;
-    margin-left: 2rem;
-  }
-}
-
 /* Estilos para el panel de métricas avanzadas */
 .metrics-container {
   .card {

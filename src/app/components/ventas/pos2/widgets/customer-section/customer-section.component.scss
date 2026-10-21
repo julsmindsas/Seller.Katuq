@@ -84,7 +84,7 @@
   }
 }
 
-::ng-deep .cliente-autocomplete {
+:host ::ng-deep .cliente-autocomplete {
   width: 100%;
 
   .p-autocomplete-input,
@@ -202,8 +202,8 @@
       .badge-doc {
         display: inline-block;
         padding: 2px 8px;
-        background: #e0e7ff;
-        color: #4f46e5;
+        background: #E7F1FF;
+        color: #1E6FD9;
         border-radius: 6px;
         font-size: 0.75rem;
         font-weight: 600;
@@ -250,7 +250,7 @@
   overflow: hidden;
   animation: slideInUp 0.3s ease-out;
 
-  .cliente-card-header {
+  .cliente-cabeza {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -422,7 +422,7 @@
   margin: 0;
   background: #fff;
 
-  > .card-header {
+  > .tarjeta-cabeza {
     padding: 11px 16px 0 !important;
     border: none;
     background: transparent;
@@ -472,7 +472,7 @@
   background: var(--kc-green-wash);
   padding: 9px 11px;
 
-  .cliente-card-header {
+  .cliente-cabeza {
     padding: 0 0 6px;
     border: none;
     background: transparent;
@@ -547,7 +547,7 @@
 
 // El tema global aplica text-transform a los encabezados de tarjeta; en el
 // ticket queremos el texto tal cual se escribió.
-:host .card > .card-header h5 {
+:host .card > .tarjeta-cabeza h5 {
   text-transform: none !important;
   letter-spacing: normal !important;
 }

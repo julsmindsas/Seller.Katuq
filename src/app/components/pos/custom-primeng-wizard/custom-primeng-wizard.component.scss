@@ -43,19 +43,19 @@
 }
 
 .step-list li.active {
-  background-color: #a78bfa;
+  background-color: #5F3FE0;
   color: #fff;
   font-weight: bold;
 }
 
-::ng-deep .p-steps {
+:host ::ng-deep .p-steps {
   margin-top: 30px;
 }
 
-::ng-deep p-steps >div >ul >li >a {
+:host ::ng-deep p-steps >div >ul >li >a {
   margin-top: -20px;
 }
 
-::ng-deep .wizard-content {
+:host ::ng-deep .wizard-content {
   padding: 0px  !important;
 }
