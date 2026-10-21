@@ -66,31 +66,22 @@ const PENDIENTE_3_A_1 = new Set(['.cfg-btn--sec', ':host ::ng-deep .cfg-card .p-
 
 // Escenario «Ocasiones en oscuro» del delta: hojas que se revisan como el sintético. Lo pendiente es de su
 // bloque de consumidores y entra en la compuerta de 4.1.4: en Tipos de cliente, la descripción con texto
-// literal #211F3A sin fondo propio (1,1:1 sobre la fila oscura) y el badge de precio base en #f2eefe.
+// literal #211F3A sin fondo propio (resuelta en TEMA-B09: ahora var(--ds-ink)) y el badge de precio base en #f2eefe (sin token).
 const PANTALLAS_OCASIONES = {
   'src/app/components/proceso/ocasiones/ocasiones.component.scss': [],
   'src/app/components/proceso/generos/generos.component.scss': [],
-  'src/app/components/proceso/tipos-cliente/tipos-cliente.component.scss': ['.descripcion-recortada', '.badge-precio-base'],
+  'src/app/components/proceso/tipos-cliente/tipos-cliente.component.scss': ['.badge-precio-base'],
 };
 
 // Compuerta (6): reglas de consumidores con fondo claro literal y texto con token, por archivo, medidas el
 // 2026-10-21 sobre el árbol de F2a (42 en 25 archivos). Solo pueden bajar: al migrar cada pantalla
 // (TEMA-B08 a B10 y B17) se baja su número aquí. TEMA-B08 (agenda, billing, cotizaciones, ecomerce,
-// empresas, integrations) los dejó en 0: ya no figuran (42 -> 19 en 13 archivos).
+// empresas, integrations) los dejó en 0 (42 -> 19 en 13 archivos); TEMA-B09 dejó en 0 nps, especificaciones, agent-builder, pauta-embudo y appointments-list (19 -> 5 en 4 archivos: inventarios y borradores, de B10 y B17).
 const TECHO_FONDO_CLARO_TEXTO_TOKEN = {
   'src/app/components/inventarios/historial-movimientos/historial-movimientos.component.scss': 1,
   'src/app/components/inventarios/recepcion-mercancia/recepcion-mercancia.component.scss': 1,
   'src/app/components/inventarios/traslados/traslados.component.scss': 2,
-  'src/app/components/nps/encuestas/encuesta-editor.component.scss': 2,
-  'src/app/components/nps/encuestas/encuestas-lista.component.scss': 1,
-  'src/app/components/nps/seguimiento/caso.component.scss': 1,
-  'src/app/components/productos/crear-productos/especificaciones-producto/especificaciones-producto.component.scss': 1,
   'src/app/components/ventas/borradores-venta/borradores-venta.component.scss': 1,
-  'src/app/modules/agent-builder/library/library.component.scss': 1,
-  'src/app/modules/agent-builder/monitoring/a2a-monitor.component.scss': 4,
-  'src/app/modules/agent-builder/wizard/wizard.component.scss': 2,
-  'src/app/modules/marketing/components/pauta-embudo/pauta-embudo.component.scss': 1,
-  'src/app/modules/video-agent/components/appointments-list/appointments-list.component.scss': 1,
 };
 
 const SINTETICO = "@import 'app/shared/styles/config-pagina';\n@include config-pagina;\n";
@@ -483,7 +474,7 @@ test('6) compuerta: las reglas con fondo claro literal y texto con token no sube
     if (n > techo) fallos.push(`${rel}: ${n} > techo ${techo}`);
   }
   assert.deepEqual(fallos, []);
-  assert.ok(total <= 19, `total ${total}`);
+  assert.ok(total <= 5, `total ${total}`);
 });
 
 module.exports = { usosIncompatibles, revisarOscuro, fondoClaroConTextoToken };

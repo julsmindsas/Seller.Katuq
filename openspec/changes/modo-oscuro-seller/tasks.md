@@ -238,7 +238,7 @@ Cada una tiene su diseño corto, su delta, sus tareas y su aprobación antes de 
       - las capturas en claro.
 
       Los corre el orquestador.
-  - [ ] **4.1.5 Consumidores por módulo:** TEMA-B08 a B10 y B17. Cada uno con su propio diff; ventas, POS, despachos e inventario, con diff aprobado. Estado: TEMA-B08 hecho (21 .scss, 5 literales y --kc-canvas pendientes, ver design-f2a.md); faltan B09, B10 y B17.
+  - [ ] **4.1.5 Consumidores por módulo:** TEMA-B08 a B10 y B17. Cada uno con su propio diff; ventas, POS, despachos e inventario, con diff aprobado. Estado: TEMA-B08 hecho (21 .scss, 5 literales y --kc-canvas pendientes, ver design-f2a.md); TEMA-B09 hecho (28 .scss, prueba `consumidores-b09.test.js`, pendientes en design-f2a.md); faltan B10 y B17.
   - [ ] **4.1.6 Cierre de F2a:** las pruebas del cierre de fase (`design-pruebas.md`), la entrada en `CONTRACT.md` y el comentario de avance en el ticket 1180.
 - [ ] **4.2 F2b `_katuq-builder.scss` y `sitios-lista`.** Coordinar con el trabajo de sitios.
   - Dependencias: 3.9.
