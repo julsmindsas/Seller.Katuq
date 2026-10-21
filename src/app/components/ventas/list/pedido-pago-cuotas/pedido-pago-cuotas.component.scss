@@ -161,3 +161,32 @@ $pizarra-soft: #eef0f3;
   font-size: 12.5px;
   color: $ink;
 }
+
+// D-518: alertas de pago (doble cobro, monto distinto…): par color fuerte / fondo suave.
+.cuotas-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 9px 11px;
+  border-radius: 11px;
+  border: 1px solid rgba(214, 69, 69, .25);
+  background: $error-soft;
+  font-size: 12.5px;
+  line-height: 1.45;
+  letter-spacing: normal;
+  color: $ink;
+
+  i { flex: 0 0 auto; margin-top: 2px; font-size: 13px; color: $error; }
+}
+
+.cuotas-aviso__txt {
+  font-size: 12.5px;
+  color: $ink;
+  overflow-wrap: anywhere;
+}
+
+.cuotas-aviso__titulo {
+  font-weight: 800;
+  color: $error;
+}

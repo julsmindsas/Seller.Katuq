@@ -369,6 +369,44 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     return this.integrationForm?.get('environment')?.value === 'production' ? 'production' : 'staging';
   }
 
+  // ── D-518 (error 6): Addi y Sistecrédito no se activan sin una prueba exitosa ──
+  // El servidor vuelve a probar al guardar con lo que se guarda (y no activa si
+  // falla); aquí solo se evita el viaje: «Guardar» espera a que la prueba salga
+  // bien con ESTOS mismos datos.
+
+  /** Firma de los datos de conexión que pasaron la prueba, o null. */
+  private credencialesCuotasProbadas: string | null = null;
+
+  /** ¿La conexión que se está editando estaba activa? Reactivarla también pide prueba. */
+  private cuotasActivaAlEditar = false;
+
+  /** Campos de conexión del proveedor a cuotas (sin nombre ni reglas). */
+  private camposConexionCuotas(): string[] {
+    return this.selectedIntegrationType === 'sistecredito'
+      ? ['environment', 'subscriptionKey', 'applicationKey', 'applicationToken']
+      : ['environment', 'clientId', 'clientSecret', 'allySlug', 'callbackUser', 'callbackPassword'];
+  }
+
+  private firmaConexionCuotas(): string {
+    const v = (this.integrationForm && this.integrationForm.value) || {};
+    return JSON.stringify(this.camposConexionCuotas().map((c) => [c, typeof v[c] === 'string' ? v[c].trim() : v[c] ?? '']));
+  }
+
+  /** ¿Hay que probar antes de guardar? Conexión nueva, o se tocó algún dato de conexión. */
+  get cuotasPideProbar(): boolean {
+    if (!this.esPagoACuotas) return false;
+    if (!this.editingIntegrationId) return true;
+    // Reactivar un Addi o Sistecrédito desactivado: el servidor vuelve a probar
+    // (integrationConfigService.necesitaPrueba), así que aquí también se espera la prueba.
+    if (!this.cuotasActivaAlEditar) return true;
+    return this.camposConexionCuotas().some((c) => !!this.integrationForm.get(c)?.dirty);
+  }
+
+  /** Addi o Sistecrédito todavía sin una prueba exitosa con los datos que se van a guardar. */
+  get cuotasSinProbar(): boolean {
+    return this.cuotasPideProbar && (this.pruebaConexion !== 'ok' || this.credencialesCuotasProbadas !== this.firmaConexionCuotas());
+  }
+
   private setupRealTimeValidation(): void {
     // DESHABILITADO: Validación en tiempo real automática
     // this.validationSubject.pipe(
@@ -808,7 +846,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     this.mensajePrueba = '';
     this.errorGuardado = '';
     this.pruebaConexion = 'idle';
-    
+    this.credencialesCuotasProbadas = null;
+
     // Limpiar estado de validación
     this.validationResult = null;
     this.credentialStrength = null;
@@ -832,6 +871,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   editIntegration(integration: Integration): void {
     this.selectedIntegrationType = integration.type;
     this.editingIntegrationId = integration.id!;
+    // `enabled` sale de `status === 'active'` (IntegrationsService).
+    this.cuotasActivaAlEditar = integration.enabled === true;
     this.isLoadingEdit = true;
 
     // Crear el formulario base según el tipo seleccionado
@@ -941,6 +982,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
             enabled: fullIntegration.enabled ?? integration.enabled,
             ...config
           });
+          this.cuotasActivaAlEditar = (fullIntegration.enabled ?? integration.enabled) === true;
           if (integration.type === 'dian') {
             this.dianConfigCompanyId = fullIntegration.companyId || this.integrationsService.getActiveCompanyId();
             this.editingIntegrationId = fullIntegration.id || this.editingIntegrationId;
@@ -1792,7 +1834,12 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       if (this.selectedIntegrationType === 'dian') this.dianStepError = 'Revisa los campos marcados antes de guardar la configuración.';
       return;
     }
-    
+    // D-518 (error 6): Addi y Sistecrédito solo se guardan después de una prueba exitosa.
+    if (this.cuotasSinProbar) {
+      this.errorGuardado = `Prueba la conexión antes de guardar: ${this.nombreProveedorCuotas} solo queda activo si responde bien con estos datos.`;
+      return;
+    }
+
     // Validación previa con API V2 antes de guardar
     this.errorGuardado = '';
     const formData = this.integrationForm.value;
@@ -1943,6 +1990,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       next: (result) => {
         this.isTesting = false;
         this.pruebaConexion = result.success ? 'ok' : 'error';
+        // D-518 (error 6): queda anotado CON QUÉ datos funcionó; si cambian, hay que probar otra vez.
+        this.credencialesCuotasProbadas = result.success && this.esPagoACuotas ? this.firmaConexionCuotas() : null;
         this.mensajePrueba = this.limpiarMensaje(result.message) ||
           (result.success ? 'Los datos responden bien.' : 'El servicio no aceptó estos datos.');
         if (result.success) {

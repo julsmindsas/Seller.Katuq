@@ -5,7 +5,7 @@ import { ToastrService } from "ngx-toastr";
 import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
-import { CategoriaSitio, ContenidoSitio, CorreosTienda, CuponSitio, EstadoProveedorCuotas, PaginaSitio, PromocionSitio, PropuestaDiseno, ProveedorCuotas, ResenaSitio, Sitio, SitiosService, TemporadaComercial, TextoCorreo, TiendaSitio, VentaConfig } from "../sitios.service";
+import { CategoriaSitio, ContenidoSitio, CorreosTienda, CuponSitio, EstadoProveedorCuotas, PaginaSitio, PromocionSitio, PropuestaDiseno, ProveedorCuotas, ProveedorReglasCuotas, ReglasCuotasRespuesta, ResenaSitio, Sitio, SitiosService, TemporadaComercial, TextoCorreo, TiendaSitio, VentaConfig } from "../sitios.service";
 import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
@@ -1282,6 +1282,176 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.cargarVentaConfig(true);
   }
 
+  // ── D-518 (F2-41·4): reglas propias del comercio para el pago a cuotas ────
+  // Mínimo y máximo propios (solo más estrictos que el proveedor) y categorías
+  // permitidas con sus subcategorías. Viven en la configuración del proveedor en
+  // Integraciones (no en el sitio): se guardan aparte, al instante, para todas las
+  // tiendas. El servidor vuelve a validar todo.
+
+  /** Rango de cada proveedor, reglas guardadas y rutas del árbol de categorías. */
+  reglasCuotasDatos: ReglasCuotasRespuesta | null = null;
+  cargandoReglasCuotas = false;
+  /** Proveedor cuyas reglas se están editando (uno a la vez). */
+  reglasAbiertas: ProveedorCuotas | null = null;
+  borradorReglas: { montoMinimo: number | null; montoMaximo: number | null; categorias: string[] } = {
+    montoMinimo: null,
+    montoMaximo: null,
+    categorias: [],
+  };
+  errorReglas = "";
+  guardandoReglas = false;
+
+  /** Lo que el servidor sabe de este proveedor (rango, reglas), o null si aún no se leyó. */
+  reglasDe(id: ProveedorCuotas): ProveedorReglasCuotas | null {
+    const p = this.reglasCuotasDatos && this.reglasCuotasDatos.proveedores;
+    return (p && p[id]) || null;
+  }
+
+  /** Abre (o cierra) las reglas de un proveedor; la primera vez las pide al servidor. */
+  abrirReglasCuotas(id: ProveedorCuotas): void {
+    if (this.reglasAbiertas === id) {
+      this.reglasAbiertas = null;
+      return;
+    }
+    this.reglasAbiertas = id;
+    this.errorReglas = "";
+    if (this.reglasCuotasDatos) {
+      this.copiarReglasAlBorrador(id);
+      return;
+    }
+    this.cargandoReglasCuotas = true;
+    this.service.reglasCuotas().subscribe({
+      next: (res) => {
+        this.cargandoReglasCuotas = false;
+        this.reglasCuotasDatos = (res && res.data) || null;
+        if (this.reglasAbiertas) this.copiarReglasAlBorrador(this.reglasAbiertas);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.cargandoReglasCuotas = false;
+        this.errorReglas = "No pudimos leer las reglas. Intenta de nuevo en un momento.";
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  private copiarReglasAlBorrador(id: ProveedorCuotas): void {
+    const r = (this.reglasDe(id) || { configurada: false }).reglas;
+    this.borradorReglas = {
+      montoMinimo: r && r.montoMinimo ? r.montoMinimo : null,
+      montoMaximo: r && r.montoMaximo ? r.montoMaximo : null,
+      categorias: r ? [...(r.categoriasPermitidas || [])] : [],
+    };
+  }
+
+  private pesos(n: number): string {
+    return "$" + Math.round(n).toLocaleString("es-CO");
+  }
+
+  /** "Addi recibe compras desde $50.000 hasta $5.000.000." */
+  rangoCuotasTexto(id: ProveedorCuotas, nombre: string): string {
+    const p = this.reglasDe(id);
+    if (!p || !p.configurada) return "";
+    const r = p.rango;
+    if (!r || (!r.minimo && !r.maximo)) {
+      return id === "addi"
+        ? `No pudimos leer el rango de ${nombre}: tus montos se revisan al guardar.`
+        : `${nombre} no publica un rango: tu mínimo y tu máximo son los que mandan.`;
+    }
+    const desde = r.minimo ? ` desde ${this.pesos(r.minimo)}` : "";
+    const hasta = r.maximo ? ` hasta ${this.pesos(r.maximo)}` : "";
+    return `${nombre} recibe compras${desde}${hasta}.`;
+  }
+
+  /** Resumen de las reglas guardadas, para la línea del interruptor. */
+  resumenReglasCuotas(id: ProveedorCuotas): string {
+    const r = (this.reglasDe(id) || { configurada: false }).reglas;
+    if (!r) return "Mínimo, máximo y categorías propios";
+    const partes: string[] = [];
+    if (r.montoMinimo) partes.push(`desde ${this.pesos(r.montoMinimo)}`);
+    if (r.montoMaximo) partes.push(`hasta ${this.pesos(r.montoMaximo)}`);
+    const n = (r.categoriasPermitidas || []).length;
+    if (n) partes.push(n === 1 ? "1 categoría" : `${n} categorías`);
+    return partes.length ? `Tus reglas: ${partes.join(" · ")}` : "Sin reglas propias: todo el rango y todo el catálogo";
+  }
+
+  /** Lo mismo que revisa el servidor, para decirlo antes de guardar. */
+  problemaReglasCuotas(id: ProveedorCuotas, nombre: string): string {
+    const min = Number(this.borradorReglas.montoMinimo) > 0 ? Number(this.borradorReglas.montoMinimo) : null;
+    const max = Number(this.borradorReglas.montoMaximo) > 0 ? Number(this.borradorReglas.montoMaximo) : null;
+    const r = (this.reglasDe(id) || { configurada: false }).rango || null;
+    const pMin = r && r.minimo ? r.minimo : null;
+    const pMax = r && r.maximo ? r.maximo : null;
+    if (min && max && min > max) return "El mínimo no puede ser mayor que el máximo.";
+    if (min && pMin && min < pMin) return `${nombre} recibe compras desde ${this.pesos(pMin)}: tu mínimo no puede ser menor.`;
+    if (min && pMax && min > pMax) return `${nombre} recibe compras hasta ${this.pesos(pMax)}: tu mínimo no puede pasar de ahí.`;
+    if (max && pMax && max > pMax) return `${nombre} recibe compras hasta ${this.pesos(pMax)}: tu máximo no puede ser mayor.`;
+    if (max && pMin && max < pMin) return `${nombre} recibe compras desde ${this.pesos(pMin)}: tu máximo no puede ser menor.`;
+    return "";
+  }
+
+  /** Rutas del árbol de categorías del comercio. */
+  get categoriasCuotas(): { ruta: string; nivel: number }[] {
+    return (this.reglasCuotasDatos && this.reglasCuotasDatos.categorias) || [];
+  }
+
+  /** "Tecnología > Audio" → "Audio". */
+  ultimoTramo(ruta: string): string {
+    const partes = String(ruta || "").split(">");
+    return partes[partes.length - 1].trim();
+  }
+
+  categoriaCuotasElegida(ruta: string): boolean {
+    return this.borradorReglas.categorias.includes(ruta);
+  }
+
+  /** ¿La incluye una categoría de arriba ya elegida? (una permitida incluye sus subcategorías) */
+  categoriaCuotasHeredada(ruta: string): boolean {
+    return this.borradorReglas.categorias.some((c) => c !== ruta && ruta.startsWith(c + " > "));
+  }
+
+  alternarCategoriaCuotas(ruta: string): void {
+    const lista = this.borradorReglas.categorias;
+    if (lista.includes(ruta)) {
+      this.borradorReglas.categorias = lista.filter((c) => c !== ruta);
+      return;
+    }
+    // Elegir una categoría ya cubre sus subcategorías: no se guardan dos veces.
+    this.borradorReglas.categorias = [...lista.filter((c) => !c.startsWith(ruta + " > ")), ruta].slice(0, 50);
+  }
+
+  guardarReglasCuotas(id: ProveedorCuotas, nombre: string): void {
+    const problema = this.problemaReglasCuotas(id, nombre);
+    if (problema) {
+      this.errorReglas = problema;
+      return;
+    }
+    this.errorReglas = "";
+    this.guardandoReglas = true;
+    const b = this.borradorReglas;
+    const reglas = {
+      montoMinimo: Number(b.montoMinimo) > 0 ? Math.round(Number(b.montoMinimo)) : null,
+      montoMaximo: Number(b.montoMaximo) > 0 ? Math.round(Number(b.montoMaximo)) : null,
+      categoriasPermitidas: [...b.categorias],
+    };
+    this.service.guardarReglasCuotas(id, reglas).subscribe({
+      next: (res) => {
+        this.guardandoReglas = false;
+        const guardadas = (res && res.data && res.data.reglas) || reglas;
+        const p = this.reglasDe(id);
+        if (p) p.reglas = guardadas;
+        this.reglasAbiertas = null;
+        this.toastr.success(`Reglas de ${nombre} guardadas. Ya aplican en tus tiendas.`);
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.guardandoReglas = false;
+        this.errorReglas = (err && err.error && err.error.message) || "No pudimos guardar las reglas. Intenta de nuevo.";
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
   /**
    * ¿La tienda quedaría a medias? Se avisa antes de publicar, porque una tienda
    * encendida sin bodega rechaza los pedidos y el comerciante no se entera
@@ -1782,7 +1952,10 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         lista.push({ texto: "Crea al menos una zona de envío o un punto de recogida", critico: true, ir: () => this.irACampo("tienda", "campo-envio") });
       }
       const otras = (tienda.otrasFormasPago || []).length;
-      if (!tienda.pagoEnLinea && !tienda.contraEntrega && !otras) {
+      // D-518 (error 11): un medio a cuotas encendido y conectado también es un medio de pago
+      // (el servidor lo confirma al publicar: bandera, conexión y entorno).
+      const cuotas = this.cuotasHabilitadas && this.mediosCuotas.some((m) => this.cuotaActiva(m.id) && this.estadoCuotas(m.id).configurada);
+      if (!tienda.pagoEnLinea && !tienda.contraEntrega && !otras && !cuotas) {
         lista.push({ texto: "Activa al menos un medio de pago", critico: true, ir: () => this.irACampo("tienda", "campo-pagos") });
       }
     }

@@ -201,6 +201,33 @@ export interface CuotasVentaConfig {
 }
 
 /**
+ * D-518 (F2-41·4): reglas propias del comercio para un proveedor a cuotas. Solo pueden
+ * ser más estrictas que el proveedor; una categoría permitida incluye sus subcategorías
+ * (rutas del árbol, "Tecnología > Audio"). Sin categorías, aplica a todo el catálogo.
+ */
+export interface ReglasCuotas {
+  montoMinimo: number | null;
+  montoMaximo: number | null;
+  categoriasPermitidas: string[];
+}
+
+/** Un proveedor a cuotas visto desde «Cómo te pagan»: conexión, rango del proveedor y reglas. */
+export interface ProveedorReglasCuotas {
+  configurada: boolean;
+  entorno?: "staging" | "production";
+  /** Rango del proveedor (Addi: su configuración; Sistecrédito: el mínimo del convenio). null si no respondió. */
+  rango?: { minimo: number | null; maximo: number | null } | null;
+  reglas?: ReglasCuotas;
+}
+
+export interface ReglasCuotasRespuesta {
+  bandera: boolean;
+  proveedores: { addi?: ProveedorReglasCuotas; sistecredito?: ProveedorReglasCuotas };
+  /** Rutas del árbol de categorías del comercio, en orden, con su nivel (1 = raíz). */
+  categorias: { ruta: string; nivel: number }[];
+}
+
+/**
  * Identificadores de medición. Solo ids, nunca un fragmento de código: el
  * servidor arma las etiquetas y abre la política de seguridad para los
  * dominios que hagan falta.
@@ -718,6 +745,16 @@ export class SitiosService extends BaseService {
    */
   ventaConfig(): Observable<Respuesta<VentaConfig>> {
     return this.get<Respuesta<VentaConfig>>("/v1/sites/venta-config");
+  }
+
+  /** D-518 (F2-41·4): rango de cada proveedor a cuotas, reglas del comercio y árbol de categorías. */
+  reglasCuotas(): Observable<Respuesta<ReglasCuotasRespuesta>> {
+    return this.get<Respuesta<ReglasCuotasRespuesta>>("/v1/sites/pago-cuotas/reglas");
+  }
+
+  /** D-518 (F2-41·4): guarda las reglas del comercio para un proveedor (solo administradores). */
+  guardarReglasCuotas(proveedor: ProveedorCuotas, reglas: ReglasCuotas): Observable<Respuesta<{ reglas: ReglasCuotas }>> {
+    return this.put<Respuesta<{ reglas: ReglasCuotas }>>(`/v1/sites/pago-cuotas/reglas/${proveedor}`, reglas);
   }
 
   /** Ticket 1232: próximas temporadas comerciales de Colombia con su ventana sugerida. */

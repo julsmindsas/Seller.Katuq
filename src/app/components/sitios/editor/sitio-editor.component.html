@@ -2977,6 +2977,58 @@
                 <p class="aviso aviso--info aviso--cuotas" *ngIf="estadoCuotas(m.id).configurada && estadoCuotas(m.id).entorno === 'staging'">
                   Credenciales de pruebas: solo funciona en empresas de prueba.
                 </p>
+
+                <!-- D-518 (F2-41·4): reglas propias del comercio. Se guardan aparte, al instante. -->
+                <div class="cuotas-reglas" *ngIf="estadoCuotas(m.id).configurada">
+                  <button type="button" class="cuotas-reglas__abrir" (click)="abrirReglasCuotas(m.id)"
+                          [attr.aria-expanded]="reglasAbiertas === m.id" [attr.aria-controls]="'reglas-' + m.id">
+                    <span class="cuotas-reglas__titulo">Reglas de {{ m.nombre }}</span>
+                    <span class="cuotas-reglas__resumen">{{ resumenReglasCuotas(m.id) }}</span>
+                  </button>
+                  <div class="cuotas-reglas__panel" [id]="'reglas-' + m.id" *ngIf="reglasAbiertas === m.id">
+                    <p class="cuotas-reglas__nota" *ngIf="cargandoReglasCuotas">Leyendo tus reglas…</p>
+                    <ng-container *ngIf="!cargandoReglasCuotas && reglasCuotasDatos">
+                      <p class="cuotas-reglas__nota">{{ rangoCuotasTexto(m.id, m.nombre) }}
+                        Tus montos solo pueden ser más estrictos.</p>
+                      <div class="cuotas-reglas__montos">
+                        <div class="campo">
+                          <label [for]="'cuotas-min-' + m.id">Tu mínimo</label>
+                          <input type="number" min="0" step="1000" inputmode="numeric" [id]="'cuotas-min-' + m.id"
+                                 [(ngModel)]="borradorReglas.montoMinimo" placeholder="Sin mínimo propio" />
+                        </div>
+                        <div class="campo">
+                          <label [for]="'cuotas-max-' + m.id">Tu máximo</label>
+                          <input type="number" min="0" step="1000" inputmode="numeric" [id]="'cuotas-max-' + m.id"
+                                 [(ngModel)]="borradorReglas.montoMaximo" placeholder="Sin máximo propio" />
+                        </div>
+                      </div>
+                      <div class="campo">
+                        <label>Categorías con pago a cuotas</label>
+                        <small>Sin ninguna marcada, aplica a todo el catálogo. Una categoría incluye sus
+                          subcategorías. Si un producto del carrito queda fuera, ese carrito no se puede pagar a cuotas.</small>
+                        <div class="casillas" *ngIf="categoriasCuotas.length; else sinArbolCuotas">
+                          <label class="casilla" *ngFor="let c of categoriasCuotas"
+                                 [class.casilla--nivel2]="c.nivel === 2" [class.casilla--nivel3]="c.nivel >= 3"
+                                 [class.is-heredada]="categoriaCuotasHeredada(c.ruta)">
+                            <input type="checkbox" [checked]="categoriaCuotasElegida(c.ruta) || categoriaCuotasHeredada(c.ruta)"
+                                   [disabled]="categoriaCuotasHeredada(c.ruta)" (change)="alternarCategoriaCuotas(c.ruta)" />
+                            <span class="casilla__nombre">{{ ultimoTramo(c.ruta) }}</span>
+                          </label>
+                        </div>
+                        <ng-template #sinArbolCuotas>
+                          <small class="cuotas-reglas__nota">Tu catálogo no tiene árbol de categorías: las cuotas aplican a todo.</small>
+                        </ng-template>
+                      </div>
+                    </ng-container>
+                    <p class="aviso aviso--cuotas" role="alert" *ngIf="errorReglas">{{ errorReglas }}</p>
+                    <div class="cuotas-reglas__acciones" *ngIf="reglasCuotasDatos">
+                      <button type="button" class="btn-primario btn-primario--sm" (click)="guardarReglasCuotas(m.id, m.nombre)"
+                              [disabled]="guardandoReglas">{{ guardandoReglas ? 'Guardando…' : 'Guardar reglas' }}</button>
+                      <button type="button" class="btn-fantasma btn-fantasma--sm" (click)="abrirReglasCuotas(m.id)">Cancelar</button>
+                    </div>
+                    <small class="cuotas-reglas__nota">Se aplican al instante en todas tus tiendas, sin publicar.</small>
+                  </div>
+                </div>
               </ng-container>
             </ng-container>
 

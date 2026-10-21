@@ -8,6 +8,13 @@
 > - aceptar la excepción al Art. X con los controles compensatorios.
 >
 > Aún no hay convenio con ninguno de los dos proveedores.
+>
+> **D-518 (Daniel, 2026-10-21):** corregir los 11 errores de la entrega antes de pedir
+> los diffs sensibles (F2-41·1); cuota estimada con el widget oficial de Addi (F2-41·2);
+> íconos: texto hasta tener el kit de marca y la constancia (F2-41·3); reglas propias
+> del comercio (F2-41·4); rechazo con correo y `/pagar` para reintentar o pagar con
+> Wompi el mismo pedido (F2-41·5); Addi y Sistecrédito cuentan en el límite de
+> integraciones del plan (F2-41·6). Orden de unión: F2-41 primero (T·2).
 
 ## Why
 
@@ -57,15 +64,21 @@ tienda no puede ofrecerlo. Código leído el 2026-10-20:
   «Paga a cuotas con Sistecrédito».
   - Cada comercio los activa con **sus propias credenciales**. Nunca se usa una cuenta
     de Katuq y nunca se cae a Wompi.
-  - Solo aparecen si se cumplen las cuatro condiciones:
+  - Se muestran solo con las cuatro condiciones de visibilidad:
     - el comercio conectó el proveedor;
     - lo encendió en «Cómo te pagan»;
     - tiene la bandera `storeInstallmentPayments`;
-    - el total está dentro del rango del proveedor.
-  - Si el total está fuera del rango, el medio se ve deshabilitado y explica el rango,
-    como recomienda Addi.
-- **Datos del comprador.** Al elegir cuotas, «Cédula o NIT» pasa a ser obligatorio. Addi
-  solo admite cédula de ciudadanía. El documento no se registra en logs (Art. XI).
+    - sus credenciales son de producción (las de pruebas, solo en empresas de prueba).
+  - Y se pueden elegir solo si el carrito cumple (D-518, F2-41·4):
+    - el total FINAL (con envío, cupón y promociones) está dentro del rango del
+      proveedor y del mínimo y máximo propios del comercio, que solo pueden ser más
+      estrictos;
+    - todos los productos están en las categorías permitidas por el comercio (con sus
+      subcategorías). Si uno queda fuera, no hay cuotas para ese carrito.
+  - Si no se cumple, el medio se ve deshabilitado con el motivo, como recomienda Addi.
+- **Datos del comprador.** Al elegir cuotas son obligatorios nombre y apellido, correo,
+  celular, ciudad, dirección (aunque recoja en tienda) y la cédula. Addi solo admite
+  cédula de ciudadanía. Nada de esto se registra en logs (Art. XI).
 - **El pedido se crea igual que hoy:** consecutivo, D-204 y estado de pago «Pendiente».
   - Lleva `pagoTienda.proveedor = 'addi' | 'sistecredito'` y su propio texto en
     `formaDePago` («Addi» o «Sistecrédito»).
@@ -88,19 +101,35 @@ tienda no puede ofrecerlo. Código leído el 2026-10-20:
 - **Ciclo del pedido sin pago:**
   - La reserva de inventario de D-206 cubre también estos pedidos, con vencimiento por
     proveedor: Sistecrédito 60 minutos y Addi 150 minutos, porque la solicitud de Addi
-    vive 2 horas.
-  - `/pagar` reintenta con el mismo proveedor y una referencia nueva; nunca genera un
-    enlace de Wompi.
-  - El recordatorio por correo no se manda para estos pedidos en esta fase.
+    vive 2 horas. Cuenta desde el último intento, con tope: nunca más de dos reservas
+    desde que se creó el pedido.
+  - El barrido de reservas también recorre los pedidos a cuotas, desde el recordatorio
+    de pago y desde el cron de sitios, aunque la tienda no tenga ventas nuevas.
+  - **Rechazo (D-518, F2-41·5):** el pedido sigue Pendiente hasta vencer la reserva y
+    el comprador recibe un correo con el enlace de `/pagar`.
+  - `/pagar` lleva a la solicitud viva si la hay; si no, abre un intento nuevo con el
+    mismo proveedor (máximo 5 por pedido), siempre que quepa en lo que le queda a la
+    reserva y que no haya un enlace de Wompi vigente del pedido. Con `medio=linea`
+    cobra con Wompi el MISMO pedido y la MISMA reserva, si la tienda cobra en línea y
+    no hay una solicitud viva (con Sistecrédito, después de consultar sus intentos).
+  - El recordatorio de pago de Wompi no se manda para estos pedidos: su aviso es el
+    correo de rechazo.
 - **Seller:**
   - Tarjetas «Addi» y «Sistecrédito» en Integraciones, grupo «Cobrar», detrás de la
     bandera.
   - Interruptores en el editor de sitios → «Cómo te pagan».
   - El detalle del pedido muestra el proveedor, la referencia del intento y el estado.
+- **Reglas del comercio (D-518, F2-41·4):** mínimo, máximo y categorías permitidas en la
+  configuración de cada proveedor en Integraciones.
 - **Vitrina:**
   - Etiqueta de texto «Paga a cuotas con Addi / Sistecrédito» en la ficha, el carrito y
     el pie, generada según lo que el comercio tenga encendido.
-  - No se muestra ninguna cuota calculada a mano.
+  - Cuota estimada solo con el widget oficial de Addi, con la bandera encendida
+    (D-518, F2-41·2). Sistecrédito, solo la etiqueta. Nunca una cuota calculada a mano.
+  - Logos: texto hasta tener el kit de marca y la constancia de autorización (F2-41·3).
+    El carrito lista en texto los medios que la tienda acepta.
+  - Una tienda sin medios a cuotas se ve exactamente igual que antes (mismo script,
+    misma hoja de estilos, misma política de la página).
 
 ## Capabilities
 
@@ -125,13 +154,25 @@ tienda no puede ofrecerlo. Código leído el 2026-10-20:
   - `utils/siteBlocks.js` (normalización de `tienda.pagoCuotas`).
   - `utils/siteTienda.js` y `utils/siteHtml.js` (checkout y vitrina).
   - `services/companyFeatureFlags.js` y `services/cronService.js` (conciliación).
+  - D-518: `GET/PUT /v1/sites/pago-cuotas/reglas` (reglas del comercio desde el editor),
+    prueba de conexión del servidor antes de activar Addi o Sistecrédito
+    (`integrationConfigService.saveConfig`), política de la página abierta al widget
+    de Addi solo en los sitios que lo muestran, y páginas legales y checklist de
+    publicación que cuentan las cuotas (`utils/sitePaginasLegales.js`,
+    `utils/siteListoParaVender.js`).
 - **Frontend:**
   - `components/integrations/*` (tarjetas y formularios).
   - `components/sitios/editor/*` («Cómo te pagan»).
   - Detalle del pedido.
 - **Datos:** sin colecciones nuevas.
-  - `orders`: `pagoTienda.proveedor`, `pagoTienda.intentos[]` y `linkIds`.
-  - `integration_configs` / `integration_secrets`: proveedores `addi` y `sistecredito`.
+  - `orders`: `pagoTienda.proveedor`, `pagoTienda.intentos[]` y `linkIds`; marcas
+    `pagoTienda.reservaCuotas` y `pagoTienda.conciliarSistecredito` (las quita el propio
+    barrido); `pagoTienda.cuotasVenceEn` (vencimiento de la reserva a cuotas; `venceEn`
+    sigue siendo del enlace de Wompi); `pagoTienda.devolucionReserva` (vencimiento en
+    curso, hecho o fallido); `pagoTienda.alertas[]`; `pagoTienda.cambioDeMedio` y, al pagarse con
+    Wompi, `formaDePago` «Pago en línea» con `formaDePagoInicial`.
+  - `integration_configs` / `integration_secrets`: proveedores `addi` y `sistecredito`,
+    con las reglas del comercio (`montoMinimo`, `montoMaximo`, `categoriasPermitidas`).
   - `sites.*.tienda.pagoCuotas`.
   - `integrationRawEvents`: eventos crudos.
 - **Write-set:**
@@ -146,14 +187,14 @@ tienda no puede ofrecerlo. Código leído el 2026-10-20:
 
 - Venta asistida, POS, Kuvo, el bot de WhatsApp y el link de pago de pedidos manuales.
   Solo la tienda en línea.
-- Cuota estimada en la ficha («Hasta X cuotas de $Y»). Addi la muestra con su widget
-  oficial, cuya versión vigente hay que pedirle a Addi (fase 2). Sistecrédito no tiene
-  simulador público.
-- Logos de Addi y Sistecrédito. Hoy la tienda no usa logos ajenos por licencia; se
-  usarán solo si el kit de marca de cada proveedor lo permite.
+- Cuota calculada por Katuq. Solo la del widget oficial de Addi (D-518, F2-41·2);
+  Sistecrédito no tiene simulador público.
+- Logos de Addi y Sistecrédito mientras no estén el kit de marca y la constancia de
+  autorización (D-518, F2-41·3; precedente de F2-44).
 - Cancelación o devolución automática al anular el pedido en Katuq. En esta fase se hace
   a mano en el portal de cada proveedor, con aviso en el pedido.
-- Recordatorio por correo de pago pendiente para estos medios.
+- Recordatorio de «pago pendiente» a los 20 minutos para estos medios (el aviso es el
+  correo de rechazo).
 - Marketplace o varios proveedores en un pedido (`/v2/online-applications` de Addi).
 
 ## Riesgos (módulos sensibles)
@@ -175,7 +216,13 @@ tienda no puede ofrecerlo. Código leído el 2026-10-20:
   - Queda registrada en D-517.
 - **Sistecrédito sin sandbox.** Se prueba con el campo `sandbox` de la API y con llaves
   productivas del comercio piloto. La documentación salió de integraciones públicas, no
-  de las guías oficiales: no se escribe código contra Sistecrédito hasta tener las guías
-  del convenio (tarea 0.3).
+  de las guías oficiales. Daniel decidió programarlo ya (respuesta a la pregunta 7);
+  **no se activa con ningún comercio** hasta contrastarlo con las guías del convenio
+  (tarea 0.3).
 - **Monto aprobado distinto al pedido.** Addi no aprueba montos parciales, pero se
-  valida igual. Si el monto no coincide, el pago no se aplica y se abre una alerta.
+  valida igual. Si el monto no coincide, el pago no se aplica y queda una alerta en el
+  pedido.
+- **Dos créditos para un pedido.** Dos solicitudes vivas del mismo pedido podrían
+  aprobarse las dos. `/pagar` no abre una nueva mientras haya una viva, y si igual
+  llegan dos aprobaciones (o una de cuotas y otra de Wompi), la segunda no se aplica y
+  queda la alerta `doble_aprobacion` para que el comercio anule el sobrante.

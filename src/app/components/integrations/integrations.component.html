@@ -3183,7 +3183,9 @@
         <div class="kx-pie kx-pie--form">
           <span class="kx-pie__hint">
             <ng-container *ngIf="selectedIntegrationType === 'dian'">Tus datos se guardan cifrados y separados para este comercio</ng-container>
-            <ng-container *ngIf="selectedIntegrationType !== 'dian'">{{ pruebaConexion === 'ok' ? 'Probada · lista para guardar' : 'Tus datos se guardan cifrados' }}</ng-container>
+            <ng-container *ngIf="selectedIntegrationType !== 'dian' && !cuotasSinProbar">{{ pruebaConexion === 'ok' ? 'Probada · lista para guardar' : 'Tus datos se guardan cifrados' }}</ng-container>
+            <!-- D-518 (error 6): Addi y Sistecrédito no se guardan sin una prueba exitosa con estos datos. -->
+            <ng-container *ngIf="cuotasSinProbar">Prueba la conexión para poder guardar: {{ nombreProveedorCuotas }} solo queda activo si responde bien</ng-container>
           </span>
           <div class="kx-pie__acc">
             <button type="button" class="kx-b kx-b--suave" *ngIf="!editingIntegrationId && !dianDirectMode && !abiertoConProveedor" (click)="backToSelection()">
@@ -3192,7 +3194,7 @@
             <button type="button" class="kx-b kx-b--suave" *ngIf="!dianDirectMode" (click)="cancel()">Cancelar</button>
             <button type="button" class="kx-b kx-b--suave" *ngIf="dianDirectMode" (click)="exitDianSetup()"><i class="fa fa-arrow-left"></i> Volver a facturación</button>
             <button type="submit" class="kx-b kx-b--guardar" *ngIf="selectedIntegrationType !== 'dian' || dianStep === 4"
-                    [disabled]="isSaving || isLoadingEdit || (selectedIntegrationType === 'dian' ? !!dianLoadError : integrationForm.invalid)">
+                    [disabled]="isSaving || isLoadingEdit || cuotasSinProbar || (selectedIntegrationType === 'dian' ? !!dianLoadError : integrationForm.invalid)">
               <i class="fa" [ngClass]="(isSaving || isLoadingEdit) ? 'fa-spinner fa-spin' : 'fa-check'"></i>
               {{ isLoadingEdit ? 'Cargando datos…' : isSaving ? 'Guardando…' : (selectedIntegrationType === 'dian' ? 'Guardar y continuar' : (editingIntegrationId ? 'Guardar cambios' : 'Guardar y conectar')) }}
             </button>
