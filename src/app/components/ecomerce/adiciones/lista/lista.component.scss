@@ -21,7 +21,7 @@
   color: $cfg-ink;
   font-size: 13.5px;
 
-  &:focus { background: #fff; border-color: $cfg-accent-2; box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
+  &:focus { background: var(--ds-surface); border-color: $cfg-accent-2; box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
 }
 
 .adi-tabla { overflow-x: auto; }
@@ -38,7 +38,7 @@
   margin-left: 6px;
   border-radius: 9px;
   background: $cfg-accent-soft;
-  color: $cfg-accent;
+  color: $cfg-accent-ink;
   font-size: 16px;
   cursor: pointer;
   transition: background .15s ease;
