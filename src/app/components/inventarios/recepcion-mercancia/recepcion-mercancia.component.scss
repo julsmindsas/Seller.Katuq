@@ -19,7 +19,7 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
 
 // Mixins
 @mixin card {
-  background: white;
+  background: var(--ds-surface);
   border-radius: $border-radius;
   box-shadow: $box-shadow;
   padding: 24px;
@@ -616,7 +616,7 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
   right: 14px;
   transform: translateY(-50%);
   font-size: 1.3rem;
-  color: $cfg-accent;
+  color: var(--ds-accent-ink);
   opacity: .35;
 }
 .stat-texto { font-size: 14px !important; max-width: 100%; }
@@ -632,8 +632,8 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
   border-radius: 16px;
 }
 .addon-buscar {
-  background-color: $cfg-accent !important;
-  border-color: $cfg-accent !important;
+  background-color: var(--ds-accent) !important;
+  border-color: var(--ds-accent-ink) !important;
   color: #fff !important;
 }
 
@@ -647,8 +647,8 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
   .boton-recargar.p-button { color: $cfg-accent; }
 
   .boton-principal.p-button {
-    background: $cfg-accent;
-    border-color: $cfg-accent;
+    background: var(--ds-accent);
+    border-color: var(--ds-accent-ink);
     border-radius: 11px;
     font-weight: 700;
     box-shadow: $cfg-shadow-btn;
@@ -656,9 +656,9 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
     &:enabled:hover { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
   }
   .boton-secundario.p-button {
-    background: #fff;
+    background: var(--ds-surface);
     color: $cfg-body;
-    border-color: #e4e2ef;
+    border-color: var(--ds-line-strong);
     border-radius: 11px;
     font-weight: 700;
 
