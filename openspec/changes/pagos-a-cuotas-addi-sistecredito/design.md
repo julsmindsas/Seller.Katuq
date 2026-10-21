@@ -1,6 +1,6 @@
 # Diseño: pago a cuotas con Addi y Sistecrédito en la tienda en línea
 
-> D-516 (propuesta). Backend: `katuq_admin_back_firebase/functions/`. Front: `Seller.Katuq/`.
+> D-517 (propuesta). Backend: `katuq_admin_back_firebase/functions/`. Front: `Seller.Katuq/`.
 
 ## Context
 
@@ -166,7 +166,7 @@ cancelación automática, recordatorio, marketplace).
    - **Sistecrédito:** extraer `_id` o factura (camelCase o PascalCase) → ubicar →
      `consultarIntento` con las llaves del comercio → comparar `_id`, factura y valor →
      aplicar → responder siempre 200.
-   - **Excepción al Art. X** (no hay HMAC). Se registra en D-516 con estos controles
+   - **Excepción al Art. X** (no hay HMAC). Se registra en D-517 con estos controles
      compensatorios. Los detalles de seguridad que no deben quedar en este repo público
      van al openspec privado del backend (tarea 0.6).
 6. **Aplicación del pago:** `aplicarPagoDeTienda(doc, {id: referencia}, estadoInterno, origen)`

@@ -57,7 +57,7 @@ const NOMBRES_CAMPO: { [campo: string]: string } = {
 };
 
 // Proveedores que solo se ofrecen con una bandera del comercio encendida, igual que su
-// tarjeta en el directorio (D-516). Apagada, no aparecen en el catálogo del formulario.
+// tarjeta en el directorio (D-517). Apagada, no aparecen en el catálogo del formulario.
 const BANDERA_DE_PROVEEDOR: { [proveedor: string]: CompanyFeatureFlag } = {
   addi: 'storeInstallmentPayments',
   sistecredito: 'storeInstallmentPayments',
@@ -340,7 +340,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Quita del catálogo los proveedores cuya bandera del comercio está apagada (D-516).
+   * Quita del catálogo los proveedores cuya bandera del comercio está apagada (D-517).
    * Sin banderas de por medio devuelve el mismo catálogo de siempre.
    */
   private catalogoSegunBanderas<T extends { id: string }>(catalogo: { [categoria: string]: T[] }): { [categoria: string]: T[] } {
@@ -354,7 +354,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     return resultado;
   }
 
-  /** Addi o Sistecrédito: pago a cuotas en la tienda en línea (D-516). */
+  /** Addi o Sistecrédito: pago a cuotas en la tienda en línea (D-517). */
   get esPagoACuotas(): boolean {
     return this.selectedIntegrationType === 'addi' || this.selectedIntegrationType === 'sistecredito';
   }
@@ -1069,7 +1069,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Addi (D-516): todo sale del portal de aliados. Las "Credenciales de notificación" son las
+   * Addi (D-517): todo sale del portal de aliados. Las "Credenciales de notificación" son las
    * que Addi usa para avisar el resultado del crédito; la URL de notificación la pone Katuq.
    * Nace en Pruebas, como las demás pasarelas nuevas (más seguro).
    */
@@ -1088,7 +1088,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Sistecrédito (D-516): las tres llaves de Credinet Pay que entrega Sistecrédito al firmar
+   * Sistecrédito (D-517): las tres llaves de Credinet Pay que entrega Sistecrédito al firmar
    * el convenio de aliado, y el monto mínimo de compra pactado (opcional, en pesos).
    */
   createSistecreditoForm(): FormGroup {

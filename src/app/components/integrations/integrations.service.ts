@@ -1608,7 +1608,7 @@ export class IntegrationsService {
           logo: "assets/images/logos/wompi.svg",
           active: true,
         },
-        // D-516: pago a cuotas en la tienda en línea. Sin logo (licencia de marca pendiente).
+        // D-517: pago a cuotas en la tienda en línea. Sin logo (licencia de marca pendiente).
         // El formulario los esconde con la bandera storeInstallmentPayments apagada.
         {
           id: "addi",

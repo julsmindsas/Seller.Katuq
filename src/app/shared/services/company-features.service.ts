@@ -57,7 +57,7 @@ export const COMPANY_FEATURE_FLAGS = [
   // Stock de Katuq a WooCommerce: ventas, POS y despachos actualizan la tienda (D-515).
   // Se enciende a mano, primero en una empresa de prueba. Dueño: Daniel. Se revisa el 2027-04-30.
   'wooStockPublish',
-  // Pago a cuotas en la tienda en línea con Addi y Sistecrédito (D-516, ticket 1233): cada comercio
+  // Pago a cuotas en la tienda en línea con Addi y Sistecrédito (D-517, ticket 1233): cada comercio
   // con su convenio y sus credenciales. Dueño: Daniel. Se retira el 2027-04-30.
   'storeInstallmentPayments',
 ] as const;

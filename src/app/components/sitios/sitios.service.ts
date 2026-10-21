@@ -23,7 +23,7 @@ export interface TiendaSitio {
   /** Formas de pago manuales del maestro (transferencia, Nequi...). */
   otrasFormasPago: { cd: string; nombre: string; instrucciones?: string }[];
   /**
-   * D-516: pago a cuotas en el checkout. Apagados por omisión; además del interruptor, el
+   * D-517: pago a cuotas en el checkout. Apagados por omisión; además del interruptor, el
    * servidor exige la bandera del comercio y el proveedor conectado en Integraciones.
    */
   pagoCuotas?: { addi: boolean; sistecredito: boolean };
@@ -180,11 +180,11 @@ export interface VentaConfig {
   formasPago: { cd: string; nombre: string; categoria: string; nombrePublico?: string; instrucciones?: string; disponibleWeb?: boolean; interna?: boolean }[];
   /** Ticket 1213: si la empresa tiene razón social y NIT (solo si están, no los valores). */
   datosLegales?: { razonSocial: boolean; nit: boolean } | null;
-  /** D-516: bandera del comercio y estado de cada proveedor de pago a cuotas. */
+  /** D-517: bandera del comercio y estado de cada proveedor de pago a cuotas. */
   cuotas?: CuotasVentaConfig;
 }
 
-/** Proveedores de pago a cuotas de la tienda (D-516). */
+/** Proveedores de pago a cuotas de la tienda (D-517). */
 export type ProveedorCuotas = "addi" | "sistecredito";
 
 /** Estado de un proveedor a cuotas: si está conectado y con qué credenciales. */

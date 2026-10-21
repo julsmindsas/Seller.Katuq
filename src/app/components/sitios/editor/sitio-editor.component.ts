@@ -1167,7 +1167,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    * Config de venta de la empresa: pasarela propia o no, zonas de cobro y
    * formas de pago del maestro. Sin esto el panel dejaba encender opciones que
    * no funcionan — pago en línea sin pasarela, envío por zonas sin zonas.
-   * `forzar` la vuelve a leer aunque ya esté cargada (D-516: después de conectar
+   * `forzar` la vuelve a leer aunque ya esté cargada (D-517: después de conectar
    * Addi o Sistecrédito en Integraciones, en otra pestaña).
    */
   private cargarVentaConfig(forzar = false): void {
@@ -1236,7 +1236,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     return f.disponibleWeb === false;
   }
 
-  // ── D-516: pago a cuotas con Addi y Sistecrédito ────────────────────────
+  // ── D-517: pago a cuotas con Addi y Sistecrédito ────────────────────────
   // El editor solo guarda el interruptor (`tienda.pagoCuotas`). Que el medio salga en la
   // tienda lo decide el servidor: bandera del comercio, proveedor conectado y rango del total.
 

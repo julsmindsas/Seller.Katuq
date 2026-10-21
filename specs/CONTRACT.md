@@ -11377,7 +11377,9 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
 - Comprobado en la tienda local: editar la talla M cambió solo esa variación (padre intacto); retirar stock llegó a la variación (5 → 0); borrar la talla S borró solo la variación #12. Pruebas: `tests/integrations/woocommerceImportadorBodegaIva.test.js` y `woocommerceVariantes.test.js`. Sin commit ni deploy.
 
 
-## D-516 (2026-10-20) — Pago a cuotas en la tienda en línea con Addi y Sistecrédito (ticket 1233, F2-41) — APROBADA (Daniel, 20-oct), COMMITEADA en ramas `feature/pago-cuotas-addi-sistecredito` (backend d954a833 y front), sin desplegar y con la bandera apagada
+## D-517 (2026-10-20) — Pago a cuotas en la tienda en línea con Addi y Sistecrédito (ticket 1233, F2-41) — APROBADA (Daniel, 20-oct), COMMITEADA en la rama `feature/tickets-web` (backend d954a833, front f8b985d4), sin desplegar y con la bandera apagada
+
+> Renumerada el 2026-10-21: nació como D-516, número que en la rama principal ya era «Pantallas internas restantes» (df58cd6d). Los comentarios del código y la propuesta dicen D-517.
 
 - **Por qué:**
   - En compras de ticket alto, pagar a cuotas decide la compra. El piloto Baudio lo pide en su diseño.
@@ -11431,3 +11433,85 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - Bloque «Pago a cuotas» en el detalle de «Todos los pedidos».
   - Build de producción sin errores. Gradientes y primarios prohibidos: 0 → 0.
   - El front replica los campos `bandera` y `reemplaza` del directorio de D-500 (commit local de otra sesión, aún sin subir). Al unir puede quedar un conflicto trivial en `integrations-list.component.ts`.
+
+## D-518 (2026-10-21) — Tickets «Web ·» reabiertos: requerimiento leído de la fuente y decisiones aprobadas — APROBADA (Daniel, 21-oct: «aprobado»)
+
+- **Por qué:** los 7 tickets «Web ·» del constructor (F2-42, TX-37, F4-40, F2-43, F5-29, TX-34, F5-30) se cerraron el 20-oct como parciales remitiendo a tickets «…b» que nunca se crearon, y F2-41 (D-517) se entregó con recortes que el ticket no autorizaba. Daniel pidió reabrirlos y completarlos.
+- **Cómo se leyó:** un lector y un crítico por ticket (16 agentes) leyeron descripción, todos los comentarios, adjuntos, tickets relacionados de cualquier canal, propuesta OpenSpec, contrato y código. Los hallazgos graves se verificaron otra vez en el código. Informe privado: https://claude.ai/artifact/LdLfeJQQ49Qegy3omsHMpC.
+- **Reglas que aplican a todos:**
+  - Los interruptores que los diseños del 18-oct dejaron en el `.env` pasan a `config/feature_flags` (D-505): `STORE_SUBSCRIPTIONS_BILLING` y `_AVISOS` (F2-43), `WHATSAPP_BOT_PEDIDO_DIRECTO_HABILITADO` (F4-40), `AGENCY_ACCESS_ENABLED` (F5-29), `PRODUCT_PHOTO_UNIFORM_MODE` y `BACKGROUND_REMOVAL_PROVIDER` (TX-37).
+  - Los números de ticket repetidos (1230, 1243, 1235, 1238, 1239, 1240, 1241, 1244, 1206) se citan por su cd.
+  - Todo se implementa en la rama `feature/tickets-web` (backend y front), sin push ni despliegue. Los módulos sensibles (pedidos, pagos, reserva, inventario) van con diff aprobado por Daniel antes del commit.
+- **Decisiones aprobadas** (código del informe → lo decidido):
+  - **T·1** ¿Lo pendiente sigue en el mismo ticket reabierto o se crean los tickets «b»? → Sigue en el mismo ticket. Se corrige el texto de las 7 resoluciones para que no remitan a tickets que no existen.
+  - **T·2** Orden de unión de los cambios que tocan `crearPedido`. → 1) F2-41 con sus arreglos; 2) D-496 extrae el núcleo; 3) suscripciones; 4) pago rechazado de TX-34.
+  - **T·3** ¿La aprobación en bloque del 18-oct cubre las tareas 0.1 (valores por defecto, colecciones nuevas y excepciones a los Art. VII y IX) y 0.8 (specs) de cada propuesta? → Sí. Se marcan y se anota en el contrato con la fecha de la aprobación (18-oct).
+  - **F2-43·1** ¿Qué es «suscripción»? → Las dos, con un solo modelo: primero el 1230 (fase A) y después la tienda con cobro tokenizado (fase B).
+  - **F2-43·2** Precio de cada entrega del 1230. CAFE ESCOBAR usa precios por volumen. → El del pedido original, congelado. Si cambia la lista, el comercio actualiza la suscripción.
+  - **F2-43·3** ¿El cliente recibe confirmación por cada pedido generado? → Sí, la confirmación normal de un pedido, el día que se crea.
+  - **F2-43·4** Pedidos que nacieron en WooCommerce: ¿los generados suben a Woo? → No por ahora. Quedan en Katuq hasta que WP-INT 9 decida qué sube a la web.
+  - **F2-43·5** El 1230 dice «programarlo, publicarlo o replicarlo». ¿Qué es «publicarlo»? → Preguntárselo a Jairo. Si significa que el comprador se suscriba solo por un enlace, es la fase B.
+  - **F2-43·6** Arreglos del cotizable. → Bloquear la compra en el servidor, mostrar el origen Web en el listado, correo automático al cliente si dejó correo, administrador de la empresa como asesor por defecto, validez de 15 días coherente, que la plantilla Tecnología cree cotización, y una prueba que ejecute el flujo.
+  - **F2-43·7** Planes sin inventario (Evora Cloud): el diseño de D-497 no cobra si faltan existencias. → No revisar existencias cuando el producto es no inventariable (`inventariable === false`, que la tienda ya reconoce).
+  - **F2-41·1** Los 11 errores de arriba. → Corregirlos todos antes de pedirte los diffs sensibles.
+  - **F2-41·2** Cuota estimada, criterio (b). → Widget oficial de Addi en ficha y carrito, solo con la bandera encendida, permitiendo su dominio con el mecanismo de terceros que ya usa el sitio. Sistecrédito solo con la etiqueta, porque no tiene simulador público.
+  - **F2-41·3** Íconos de los medios. → Pedir el kit de marca a los dos proveedores y guardar la constancia de autorización. Texto mientras llega.
+  - **F2-41·4** Reglas del comercio. → Mínimo y máximo propios, más estrictos que los del proveedor, y categorías permitidas con sus subcategorías. Si un producto del carrito queda fuera, no se ofrecen cuotas.
+  - **F2-41·5** Rechazo del crédito. → El pedido sigue Pendiente hasta vencer la reserva. El comprador recibe un correo con el enlace de `/pagar`, y ahí puede reintentar con el mismo proveedor o pagar con Wompi sobre el mismo pedido.
+  - **F2-41·6** Plan gratis (1 integración). → Dejar la regla: Addi y Sistecrédito cuentan como cualquier integración.
+  - **F2-42·1** Filtro de disponibilidad. La tienda solo lista lo vendible, así que no separaría nada. → Fuera, y se anota en el ticket.
+  - **F2-42·2** Filtro de valoración. Exige guardar un promedio por producto. → Fuera de F2-42. Si se quiere, va en un ticket propio.
+  - **F2-42·3** ¿Facetas solo con una categoría elegida, como dice la spec? → También en los resultados de búsqueda y en las páginas de marca.
+  - **F2-42·4** Precio con sesión mayorista. → Faceta, rango, orden y comparador con el precio que ve el cliente.
+  - **F2-42·5** Meta de velocidad (el ticket no da cifra). → El catálogo con facetas responde en 1 s o menos en caliente con los 8.568 productos de OH MY STORE, más la meta de página de TX-34.
+  - **F2-42·6** Meta y JSON-LD. → A Meta, `product_type` con la ruta completa. El JSON-LD se valida con el Schema Markup Validator.
+  - **F2-42·7** Interruptores extra de la spec («filtros técnicos» y «comparador»). → Quitarlos: basta `categoryAttributes`. La faceta de marca sigue el interruptor de marcas que ya existe.
+  - **F2-42·8** Buscar dentro de los atributos. → Va en TX-34, que es dueño del buscador.
+  - **TX-37·1** ¿«Editor» incluye el editor del sitio? → Sí. El mismo diálogo se abre desde la sección de productos del sitio y desde Catálogos por link.
+  - **TX-37·2** Marca de agua y logos. → En la fase 1 se detectan y se avisa. Quitarlos con IA va en la fase 2.
+  - **TX-37·3** Fase 1b: fotos externas y sin dueño. → Construirla: copiar a Storage las externas con la empresa en los metadatos, adoptar las sin dueño cuando un producto de la empresa las usa, y corregir Tienda en un paso y las herramientas MCP para que guarden la empresa.
+  - **TX-37·4** Categorías de más de 100 productos. → El sistema parte solo en lotes seguidos de 100. La categoría se compara por ruta exacta con sus subcategorías.
+  - **TX-37·5** Comercios con sincronización. → Excluir solo las integraciones que escriben fotos (Osmosis, Shopify, WooCommerce, fulfillment). OH MY STORE y CAFE ESCOBAR siguen fuera por ahora.
+  - **TX-37·6** Fase 2 con IA. → Diseñarla ya con el recorte de fondo de Bedrock, con costo por foto confirmado y cupo por plan. Se enciende con el OK de Daniel del costo.
+  - **TX-37·7** Feed de Meta con fotos WebP (ya falla). → Arreglo aparte en F2-20: el feed manda a Meta una versión JPEG de cada foto.
+  - **TX-37·8** ¿Quién conecta las variantes con srcset en la tienda? → TX-34, que es dueño del rendimiento.
+  - **F4-40·1** Chatwoot. → Se descarta (D-170). El pase a humano va a la bandeja de Katuq.
+  - **F4-40·2** Reparto con [CONV] F y H. → F4-40: WhatsApp y web (pedido, cotización, pago, memoria, postventa informativa, recuperación y métricas de KAI). [CONV] F: Instagram, Messenger, preguntas frecuentes, desborde y encuesta. [CONV] H: métricas de atención. El correo sale del alcance.
+  - **F4-40·3** Carrito del bot con un cotizable. → Todo el carrito pasa a cotización.
+  - **F4-40·4** «Y confirma» el pago. → Conectar la plantilla de pago aprobado que ya existe y no mandar la de pedido creado en los pedidos del bot.
+  - **F4-40·5** Recuperar ventas. → Dentro de 24 h el bot retoma la conversación y reenvía el link (`/pagar` habilitado para pedidos del bot). Fuera de 24 h, con plantilla, consentimiento y horario de la Ley 2300, en una segunda etapa con el OK de Daniel del costo.
+  - **F4-40·6** Descuento máximo. → KAI nunca descuenta; así se cumple la regla.
+  - **F4-40·7** Postventa: «cambios dentro de reglas». → KAI informa las políticas y pasa a una persona; no tramita el cambio.
+  - **F4-40·8** Agendar visitas. → Sobre la Agenda de D-491.
+  - **F4-40·9** Atribución de ventas a KAI. → «Vendido con Opttia» lee el pedido generado desde la cotización, y cuenta también los pedidos directos (tarea 6.8).
+  - **F4-40·10** Piloto del criterio (a). → FLORECER con un número propio de prueba, Wompi propio y tienda publicada.
+  - **F5-30·1** Alcance de esta entrega. → Shopify por CSV, clientes y WooCommerce por CSV. Wix y páginas cuando haya un export real de un comercio que lo necesite; la API queda fuera porque el CSV cubre el caso.
+  - **F5-30·2** Fotos. → Copiarlas a Storage en esta entrega, con la misma pieza de la fase 1b de TX-37.
+  - **F5-30·3** SEO del producto. → Campo opcional de título y descripción SEO por producto; la ficha lo usa si existe.
+  - **F5-30·4** Ofertas (Woo «Sale price», Shopify «Compare-at»). → Precio regular como base y la oferta como precio antes/ahora en la lista Público, con una excepción acotada al importar.
+  - **F5-30·5** IVA. → Respetar «Charge tax» y «Tax status»: exentos al 0 % y la tarifa elegida para los gravados.
+  - **F5-30·6** Insignia «Nuevo» y texto alternativo. → Nada sale «Nuevo» (se guarda la fecha de origen) y cada foto lleva su texto alternativo de Shopify.
+  - **F5-30·7** Precio por variante. → Se mantiene partir en varios productos, y se corrige la resolución de F2-16, que promete precio por variante y el código no lo hace.
+  - **F5-30·8** WooCommerce. → El CSV usa variantes. Un comercio con la integración Woo activa (CAFE ESCOBAR) no usa el importador hasta que WP-INT 5 decida.
+  - **F5-30·9** Revisión de seguridad M2 y M3. → Limpiar el HTML de la descripción al importar; simulación con tope de 20 cada 15 minutos.
+  - **F5-29·1** Bugs de lo publicado. → Corregir ya: administrador, autor del token, motivo de la programada fallida, versión al unir y programación pendiente cuando publica Opttia.
+  - **F5-29·2** ¿El permiso de publicar es por sitio o por comercio? → Por comercio: un sitio nuevo, duplicado o generado hereda la lista de la empresa.
+  - **F5-29·3** Publicación programada. → Publica la foto del borrador tomada al programar y vuelve a revisar el permiso y el estado de la empresa al ejecutarse.
+  - **F5-29·4** Comparar versiones. → Lista en palabras de lo que cambió entre una versión y lo publicado, por página y sección, reutilizando el «Esto cambié» de KAI.
+  - **F5-29·5** Nivel administrador. → Dominio, pagos y pauta solo los cambia la familia administrador.
+  - **F5-29·6** Restaurar. → Conserva la tienda y la pauta actuales, guarda antes el borrador, y las versiones dejan de copiar tokens.
+  - **F5-29·7** Comentarios y «Pedir aprobación». → Para cualquier equipo, no solo con agencia.
+  - **F5-29·8** Acceso de agencia. → Por invitación, como D-450. Medición y pauta solo si el comercio lo permite en la concesión.
+  - **F5-29·9** Historial «de cada página». → Historial del sitio completo con la comparación por página; no restaurar páginas sueltas.
+  - **F5-29·10** Encendido del modo agencia. → No se enciende hasta cerrar las reglas de Firebase (1320).
+  - **TX-34·1** Antes de código. → Escribir la propuesta OpenSpec de todo lo pendiente para aprobación de Daniel.
+  - **TX-34·2** «Calcula tu envío». → Con las zonas que ya existen, en ficha y carrito, más recoger en tienda. Transportadora después (F2-15). Sin zona: «Te confirmamos el envío por WhatsApp».
+  - **TX-34·3** Pago rechazado. → Botón «Reintentar pago» en `/gracias` que usa `/pagar` sobre el mismo pedido y la misma reserva.
+  - **TX-34·4** Orden por más vendidos y novedad. → Ventas de 30 días y fecha de creación como campos del índice, calculados por una tarea nocturna.
+  - **TX-34·5** Menú en cajón lateral. → Para todas las tiendas en celular, en lugar de la fila horizontal, y también en la vista previa del editor.
+  - **TX-34·6** Cómo medir Lighthouse. → Laboratorio local reproducible, mediana de 3 corridas, portada, catálogo y ficha de cada plantilla, con el aviso de cookies encendido.
+  - **TX-34·7** Render en frío de catálogos grandes. → Primero leer menos (campos mínimos del índice) y medir. Si no alcanza, un resumen por empresa con aprobación de Daniel, porque roza la regla «sin caché extra».
+  - **TX-34·8** Buscador. → Tolera tildes, mayúsculas y un error de tipeo; busca en nombre, referencia, marca, categoría y atributos (con F2-42); ordena por coincidencia y respeta las categorías ocultas.
+  - **TX-34·9** Promesa de las plantillas sobre el tiempo de entrega. → El carrito y el checkout muestran el tiempo de entrega.
+- **Orden de trabajo:** 1) arreglos de F2-41 con sus diffs; 2) bugs de F5-29 y su seguridad; 3) arreglos que no necesitan diseño nuevo (D-505, cotizable, Shopify CSV, feed JPEG de Meta, choque de categorías de D-498, 500 del árbol de categorías); 4) diseños OpenSpec para aprobar: 1230 (suscripción fase A), TX-34, facetas/plantilla/comparador de F2-42, TX-37 fases 1b y 2, comparar de F5-29, resto de F4-40; 5) implementación por ticket.
+- **Seguridad:** los hallazgos de esta lectura van al openspec privado del backend, no a este contrato.

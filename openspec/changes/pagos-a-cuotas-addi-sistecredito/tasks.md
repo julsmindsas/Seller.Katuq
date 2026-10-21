@@ -1,4 +1,4 @@
-> D-516. Backend: `katuq_admin_back_firebase/functions/`. Front: `Seller.Katuq/`. Requisitos: `specs/tienda-pago-a-cuotas` (TC) y `specs/conciliacion-pago-a-cuotas` (CC).
+> D-517. Backend: `katuq_admin_back_firebase/functions/`. Front: `Seller.Katuq/`. Requisitos: `specs/tienda-pago-a-cuotas` (TC) y `specs/conciliacion-pago-a-cuotas` (CC).
 >
 > **[S]** = módulo sensible (pagos, pedidos, consecutivos o inventario): un cambio a la vez, con su diff aprobado por Daniel antes de aplicarlo. **[P]** = paralelizable.
 >
@@ -7,7 +7,7 @@
 ## 0. Antes de programar (sin código productivo)
 
 - [x] 0.1 Daniel responde las preguntas 1-7 de `design.md`, aprueba la excepción acotada a los Artículos IX y X y acuerda el orden con D-496 (`crearPedidoDeTienda`). — **respondidas 2, 4 y 7 el 2026-10-20 (design.md); 1, 3, 5 y 6 con valores por omisión**
-  - **Éxito:** respuestas anotadas en `specs/CONTRACT.md` (D-516); `design.md` y specs ajustados.
+  - **Éxito:** respuestas anotadas en `specs/CONTRACT.md` (D-517); `design.md` y specs ajustados.
 - [ ] 0.2 El comercio piloto pide a Addi (soporte_aliados@addi.com) las credenciales de staging, el `allySlug` y las credenciales de notificación; confirma montos mínimo y máximo y el kit de marca.
   - **Dep.:** pregunta 1. **Éxito:** credenciales de staging cargadas en la configuración del comercio de pruebas, nunca en el repo.
 - [ ] 0.3 El comercio piloto firma el convenio con Sistecrédito y obtiene las guías G-ALI-08/09/10/12 y las llaves de Staging y Production. Contrastar con la guía cada dato de la sección «Sistecrédito» de `design.md` y corregir lo que difiera.
@@ -66,5 +66,5 @@ Cada prueba cita el requisito que cubre. **Dep.:** 0.1 y 0.5.
 - [ ] 6.1 A: compra completa en staging de Addi con el comercio piloto (aprobada, rechazada y abandonada).
 - [ ] 6.2 S: con OK de Daniel, prueba en producción con `sandbox` y luego un pedido real de bajo valor, anulado en Credinet y documentado.
 - [ ] 6.3 Encender la bandera en el comercio piloto (`scripts/set-company-feature.js`) con OK de Daniel.
-- [ ] 6.4 Registrar la bitácora y el estado en `specs/CONTRACT.md` (D-516); comentario técnico y cierre del ticket 1233.
+- [ ] 6.4 Registrar la bitácora y el estado en `specs/CONTRACT.md` (D-517); comentario técnico y cierre del ticket 1233.
 - [ ] 6.5 Retirar la bandera `storeInstallmentPayments` en su fecha (Art. XII).

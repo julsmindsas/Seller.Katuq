@@ -3446,7 +3446,7 @@ input.is-error { border-color: #b42318 !important; }
 // Ticket 1215: forma de pago encendida que el maestro no marca para la web.
 .forma-aviso { color: #b42318 !important; font-weight: 600; }
 
-// D-516: pago a cuotas. Sin el proveedor conectado el interruptor no enciende.
+// D-517: pago a cuotas. Sin el proveedor conectado el interruptor no enciende.
 .opcion.is-bloqueada {
   cursor: not-allowed;
   background: var(--kb-surface-3);

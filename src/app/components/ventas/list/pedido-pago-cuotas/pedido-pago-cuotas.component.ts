@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
-/** Proveedores de pago a cuotas de la tienda en línea (D-516). */
+/** Proveedores de pago a cuotas de la tienda en línea (D-517). */
 type ProveedorCuotas = 'addi' | 'sistecredito';
 
 /** Estado normalizado de un intento, tal como lo guarda el servidor. */
@@ -41,7 +41,7 @@ const TONO_ESTADO: Record<string, 'ok' | 'espera' | 'mal' | 'neutro'> = {
 };
 
 /**
- * Pago a cuotas de un pedido de tienda (D-516, ticket 1233). Solo presentación: lee
+ * Pago a cuotas de un pedido de tienda (D-517, ticket 1233). Solo presentación: lee
  * `pedido.pagoTienda` y no se pinta si el pedido no se pagó con Addi o Sistecrédito.
  * Muestra el proveedor y cada intento (referencia, estado, fecha y monto aprobado) y, si
  * alguno quedó aprobado, dónde se anula o se devuelve: en esta fase se hace a mano en el

@@ -2,7 +2,7 @@
 
 > Ticket 1233 (F2-41, piloto Baudio). Toca **pagos, pedidos y la reserva de inventario
 > del pedido de tienda**.
-> Decisión: **D-516, APROBADA por Daniel el 2026-10-20.** Decidió:
+> Decisión: **D-517, APROBADA por Daniel el 2026-10-20.** Decidió:
 > - implementar los dos proveedores ya;
 > - reserva de 150 minutos para Addi y 60 para Sistecrédito;
 > - aceptar la excepción al Art. X con los controles compensatorios.
@@ -172,7 +172,7 @@ tienda no puede ofrecerlo. Código leído el 2026-10-20:
   - **Excepción acotada:** Addi se autentica con Basic Auth por comercio y validación
     de intento, monto y moneda. Sistecrédito se valida con una consulta autenticada a
     su API, y el contenido de la notificación nunca decide el estado.
-  - Queda registrada en D-516.
+  - Queda registrada en D-517.
 - **Sistecrédito sin sandbox.** Se prueba con el campo `sandbox` de la API y con llaves
   productivas del comercio piloto. La documentación salió de integraciones públicas, no
   de las guías oficiales: no se escribe código contra Sistecrédito hasta tener las guías

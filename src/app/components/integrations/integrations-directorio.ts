@@ -101,7 +101,7 @@ export const DIRECTORIO_INTEGRACIONES: GrupoDirectorio[] = [
     icono: 'M2 5h20v14H2z M2 10h20 M6 15h4',
     entradas: [
       { id: 'wompi', nombre: 'Wompi', queHace: 'Cobra con tarjeta, PSE, Nequi y Bancolombia.', estado: 'conectable', categoria: C.PAYMENT, fuente: 'config', logo: L + 'wompi.svg' },
-      // D-516 (ticket 1233): pago a cuotas en la tienda en línea, con las credenciales del comercio.
+      // D-517 (ticket 1233): pago a cuotas en la tienda en línea, con las credenciales del comercio.
       // Sin logo a propósito: solo se usará si el kit de marca de cada proveedor lo permite.
       { id: 'addi', nombre: 'Addi', queHace: 'Tus clientes pagan a cuotas con Addi en tu tienda en línea.', estado: 'conectable', categoria: C.PAYMENT, fuente: 'config', bandera: 'storeInstallmentPayments' },
       { id: 'sistecredito', nombre: 'Sistecrédito', queHace: 'Tus clientes pagan a cuotas con Sistecrédito en tu tienda en línea.', estado: 'conectable', categoria: C.PAYMENT, fuente: 'config', bandera: 'storeInstallmentPayments' },

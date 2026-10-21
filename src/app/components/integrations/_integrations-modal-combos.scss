@@ -197,7 +197,7 @@
   }
 
   // ---------- Lo nuevo de este rediseño ----------
-  // Ambiente de Addi y Sistecrédito (D-516): el radio nativo queda oculto pero enfocable y
+  // Ambiente de Addi y Sistecrédito (D-517): el radio nativo queda oculto pero enfocable y
   // el foco del teclado se ve en el punto (el reset global quita el outline de los controles).
   .kx-radio input:focus-visible + .kx-radio__p { outline: 3px solid #7C5CFF; outline-offset: 2px; }
   .kx-radio__txt { min-width: 0; }

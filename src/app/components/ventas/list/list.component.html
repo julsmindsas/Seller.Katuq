@@ -501,7 +501,7 @@
                                                             <div class="pedido-desglose__row" *ngIf="pedidoDetalle.faltaPorPagar"><span>{{ 'Falta por pagar' | translate }}</span><b class="is-warn">{{ pedidoDetalle.faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
                                                         </div>
 
-                                                        <!-- D-516: pedido de tienda pagado a cuotas (Addi o Sistecrédito); no se pinta en los demás -->
+                                                        <!-- D-517: pedido de tienda pagado a cuotas (Addi o Sistecrédito); no se pinta en los demás -->
                                                         <app-pedido-pago-cuotas [pedido]="pedidoDetalle"></app-pedido-pago-cuotas>
 
                                                         <!-- datos del pedido (resto de columnas de la tabla) -->
@@ -1417,7 +1417,7 @@
                                                     <!-- D-361: pedido de tienda repartido en un pedido por bodega -->
                                                     <app-pedido-reparto [pedido]="pedido" modo="tarjeta"
                                                                         (abrir)="abrirPedidoRepartido($event)"></app-pedido-reparto>
-                                                    <!-- D-516: pedido de tienda pagado a cuotas (Addi o Sistecrédito) -->
+                                                    <!-- D-517: pedido de tienda pagado a cuotas (Addi o Sistecrédito) -->
                                                     <app-pedido-pago-cuotas [pedido]="pedido"></app-pedido-pago-cuotas>
                                                     <!-- Card contenedora para la tabla de productos -->
                                                     <div class="card products-expansion-card">
