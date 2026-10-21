@@ -745,6 +745,10 @@
               <button class="btn-fantasma btn-fantasma--sm" (click)="abrirSelector()">
                 {{ (b.datos.productoIds?.length || 0) ? 'Cambiar productos' : 'Elegir productos' }}
               </button>
+              <!-- TX-37 · 7.12: «Uniformar fotos» con los elegidos (bandera productPhotoUniform) -->
+              <button *ngIf="fotosUniformesActiva && (b.datos.productoIds?.length || 0)" type="button"
+                      class="btn-fantasma btn-fantasma--sm fu-entrada-sitio"
+                      (click)="abrirFotosUniformesDelBloque()">Uniformar fotos de estos productos</button>
 
               <!-- Los elegidos, arrastrables: el orden de esta lista es el orden
                    en que salen en la página. -->
@@ -1023,6 +1027,10 @@
               Muestra <strong>todo tu catálogo</strong>, no una selección: los productos salen solos de
               Katuq, con su precio y disponibilidad. Los agotados no aparecen.
             </p>
+            <!-- TX-37 · 7.12: «Uniformar fotos» por categoría (bandera productPhotoUniform) -->
+            <button *ngIf="fotosUniformesActiva" type="button"
+                    class="btn-fantasma btn-fantasma--sm fu-entrada-sitio fu-entrada-sitio--catalogo"
+                    (click)="abrirFotosUniformesPorCategoria()">Uniformar fotos por categoría</button>
             <div class="campo">
               <label>Título</label>
               <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
@@ -3872,6 +3880,14 @@
   (confirmar)="aplicarProductosPromo($event)"
   (cerrar)="promoEditandoProductos = null">
 </app-selector-productos>
+
+<!-- TX-37 · 7.12: «Uniformar fotos» (D-501). appAlBody: por encima del menú y la barra. -->
+<app-fotos-uniformes *ngIf="fotosUniformes" appAlBody
+  [productIds]="fotosUniformes.productIds"
+  [elegirCategoria]="fotosUniformes.elegirCategoria"
+  [proporcionSugerida]="proporcionDelEstilo"
+  (cerrado)="cerrarFotosUniformes($event)">
+</app-fotos-uniformes>
 
 <app-selector-productos
   *ngIf="mostrandoSelector && bloqueActual"

@@ -16,6 +16,11 @@
       <button class="cfg-btn cfg-btn--sec" type="button" (click)="volver()">
         <i class="fa fa-arrow-left"></i><span>Volver</span>
       </button>
+      <!-- TX-37 · 7.12: «Uniformar fotos» con los productos del catálogo guardado (bandera productPhotoUniform) -->
+      <button *ngIf="fotosUniformesActiva && hayProductosParaUniformar" class="cfg-btn cfg-btn--sec" type="button"
+              (click)="abrirFotosUniformes()">
+        <i class="fa fa-image"></i><span>Uniformar fotos de este catálogo</span>
+      </button>
     </div>
   </header>
 
@@ -163,6 +168,12 @@
     </div>
   </ng-container>
 </div>
+
+<!-- TX-37 · 7.12: «Uniformar fotos» (D-501). appAlBody: por encima del menú y la barra. -->
+<app-fotos-uniformes *ngIf="fotosUniformes" appAlBody
+  [productIds]="fotosUniformes"
+  (cerrado)="cerrarFotosUniformes($event)">
+</app-fotos-uniformes>
 
 <app-selector-productos
   *ngIf="eligiendo"

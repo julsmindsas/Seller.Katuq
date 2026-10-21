@@ -11,6 +11,7 @@ import { SitioRenderComponent } from "../../sitio-render/sitio-render.component"
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 import { LimitesPlanService } from "../../../shared/services/limites-plan.service";
 import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
+import { idsParaUniformar } from "../../productos/fotos-uniformes/fotos-uniformes-entradas";
 import {
   INSTRUCCION_MAX,
   MAX_REFERENCIAS,
@@ -785,6 +786,11 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   cargandoVentaConfig = false;
   mostrandoAgregar = false;
   mostrandoSelector = false;
+  /**
+   * TX-37 · 7.12 (D-518 TX-37·1): diálogo «Uniformar fotos» abierto desde la sección «Productos»
+   * (sus productos elegidos) o desde «Catálogo completo» (primero se elige la categoría), o null.
+   */
+  fotosUniformes: { productIds: string[]; elegirCategoria: boolean } | null = null;
 
   /** El panel de estilo de sección arranca plegado: es para afinar, no para empezar. */
   mostrandoEstilo = false;
@@ -4819,6 +4825,40 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.marcarSucio();
   }
 
+  // ── Uniformar fotos (TX-37 · 7.12; solo con la bandera productPhotoUniform) ──
+
+  get fotosUniformesActiva(): boolean {
+    return !!(this.features && this.features.isEnabled("productPhotoUniform"));
+  }
+
+  /** La proporción de foto del estilo (1:1, 4:5 o 3:4) para sugerirla; «Del estilo» no sugiere nada. */
+  get proporcionDelEstilo(): string | null {
+    const tema = this.contenido && (this.contenido as any).tema;
+    return (tema && typeof tema.fotoProporcion === "string" && tema.fotoProporcion) || null;
+  }
+
+  /** Sección «Productos»: el mismo diálogo con los productos elegidos de esa sección. */
+  abrirFotosUniformesDelBloque(): void {
+    const b = this.bloqueActual;
+    if (!this.fotosUniformesActiva || !b || b.tipo !== "productos") return;
+    const productIds = idsParaUniformar(b.datos.productoIds);
+    if (!productIds.length) return;
+    this.fotosUniformes = { productIds, elegirCategoria: false };
+  }
+
+  /** Sección «Catálogo completo»: el diálogo abre en el paso de elegir la categoría. */
+  abrirFotosUniformesPorCategoria(): void {
+    const b = this.bloqueActual;
+    if (!this.fotosUniformesActiva || !b || b.tipo !== "catalogo") return;
+    this.fotosUniformes = { productIds: [], elegirCategoria: true };
+  }
+
+  /** Al cerrar con cambios, se vuelven a pedir las fotos de los productos de la vista previa. */
+  cerrarFotosUniformes(evento: { cambio: boolean }): void {
+    this.fotosUniformes = null;
+    if (evento && evento.cambio) this.resolverProductosDePrevia();
+  }
+
   // ── Selector de productos ──────────────────────────────────────────────────
 
   abrirSelector(): void {
@@ -5397,6 +5437,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    */
   @HostListener("document:keydown", ["$event"])
   atajos(evento: KeyboardEvent): void {
+    // TX-37 · 7.12: con «Uniformar fotos» abierto, las teclas son del diálogo (Escape lo cierra
+    // él); el editor no cierra la sección ni deshace, rehace o guarda por detrás.
+    if (this.fotosUniformes) return;
     // Escape cierra lo que esté abierto encima del editor.
     if (evento.key === "Escape") {
       if (this.mostrandoAgregar) { this.cerrarAgregar(); evento.preventDefault(); return; }

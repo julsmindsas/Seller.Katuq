@@ -22,6 +22,7 @@ import { EMPTY, of } from 'rxjs';
 import { parse as flatedParse } from 'flatted';
 import { LoaderService } from '../../shared/services/loader.service';
 import { CompanyFeatureFlag, CompanyFeaturesService } from '../../shared/services/company-features.service';
+import { rutaDeFiltros } from './fotos-uniformes/fotos-uniformes-entradas';
 
 const FILTROS_SESSION_KEY = 'productos_filtros';
 /** D-501: bandera por comercio de «Uniformar fotos» (nace apagada, D-385). */
@@ -429,7 +430,14 @@ export class ProductosComponent implements OnInit, OnDestroy {
   importandoProductosOsmosis: boolean = false;
 
   // D-501: diálogo «Uniformar fotos» abierto (selección o categoría), o null.
-  fotosUniformes: { productIds: string[]; categoryLabel: string } | null = null;
+  // TX-37 · 7.12: la categoría viaja como ruta (`categoryPath`) e incluye sus subcategorías.
+  fotosUniformes: { productIds: string[]; categoryPath: string[] | null } | null = null;
+  // TX-37 · 7.12: los documentos de categorías tal como llegan, solo para traducir la ruta del
+  // filtro a los nombres del servidor (rutaDeFiltros). No cambia el filtro.
+  private categoriasDocs: unknown[] = [];
+  // TX-37 · 7.12: el botón de categoría espera a que lleguen esos documentos (los filtros se
+  // restauran de sesión antes); sin ellos la ruta viajaría sin traducir.
+  categoriasCargadas = false;
 
 
   constructor(
@@ -462,12 +470,15 @@ export class ProductosComponent implements OnInit, OnDestroy {
   abrirFotosUniformesSeleccion(): void {
     const productIds = this.selectedProductos.map(p => this.rowId(p)).filter(Boolean);
     if (!this.fotosUniformesActiva || productIds.length === 0) return;
-    this.fotosUniformes = { productIds, categoryLabel: '' };
+    this.fotosUniformes = { productIds, categoryPath: null };
   }
 
+  /** TX-37 · 7.12: `[categoria]` o `[categoria, subcategoria]` según los filtros; sin tope de 100 (series). */
   abrirFotosUniformesCategoria(): void {
-    if (!this.fotosUniformesActiva || !this.categoriaParaFotos) return;
-    this.fotosUniformes = { productIds: [], categoryLabel: this.categoriaParaFotos };
+    if (!this.fotosUniformesActiva || !this.categoriaParaFotos || !this.categoriasCargadas) return;
+    const categoryPath = rutaDeFiltros(this.categoriaParaFotos, this.filtros.subcategoria, this.categoriasDocs);
+    if (!categoryPath) return;
+    this.fotosUniformes = { productIds: [], categoryPath };
   }
 
   cerrarFotosUniformes(evento: { cambio: boolean }): void {
@@ -523,7 +534,9 @@ export class ProductosComponent implements OnInit, OnDestroy {
     this.service.getTipoEntrega().subscribe((r: any) => { this.tiposEntrega = r || []; });
     this.service.getTiempoEntrega().subscribe((r: any) => { this.tiemposEntrega = r || []; });
     this.service.getCategorias().subscribe((r: any) => {
+      this.categoriasCargadas = true;
       try {
+        this.categoriasDocs = Array.isArray(r) ? r : [];
         const tree = flatedParse((r as any[])[0].categoria);
         this.categoriasList = (tree as any[]).map((p: any) => ({
           label: p.data?.nombre || p.label || '',
@@ -532,7 +545,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
         // Restaurar subcategorías si hay categoría activa
         if (this.filtros.categoria) this.actualizarSubcategorias(this.filtros.categoria);
       } catch { this.categoriasList = []; }
-    });
+    }, () => { this.categoriasCargadas = true; });
 
     // Restaurar filtros de sesión si existen
     this.restaurarFiltros();

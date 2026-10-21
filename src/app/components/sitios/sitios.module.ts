@@ -11,6 +11,7 @@ import { MetricasComponent } from "./metricas/metricas.component";
 import { TiendaEnUnPasoComponent } from "./tienda-en-un-paso/tienda-en-un-paso.component";
 import { SitioRenderModule } from "../sitio-render/sitio-render.module";
 import { AlBodyModule } from "../../shared/directives/al-body.module";
+import { FotosUniformesComponent } from "../productos/fotos-uniformes/fotos-uniformes.component";
 
 /**
  * Editor de landings y tiendas. La vista previa reusa `SitioRenderModule`, el
@@ -21,7 +22,8 @@ import { AlBodyModule } from "../../shared/directives/al-body.module";
  * correo de Marketing también los usan (D-318).
  */
 @NgModule({
-  imports: [CommonModule, FormsModule, DragDropModule, SitiosRoutingModule, SitioRenderModule, SelectorProductosModule, AlBodyModule],
+  // FotosUniformesComponent (standalone): «Uniformar fotos» desde el editor (TX-37 · 7.12).
+  imports: [CommonModule, FormsModule, DragDropModule, SitiosRoutingModule, SitioRenderModule, SelectorProductosModule, AlBodyModule, FotosUniformesComponent],
   declarations: [
     SitiosListaComponent,
     SitioEditorComponent,

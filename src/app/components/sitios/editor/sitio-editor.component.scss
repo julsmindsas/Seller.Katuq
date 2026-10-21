@@ -975,6 +975,19 @@
   }
 }
 
+// TX-37 · 7.12: «Uniformar fotos» en las secciones «Productos» y «Catálogo completo». Va en su
+// propia línea (el panel es angosto). Sin "p-" en el nombre (trampa de CSS global).
+.fu-entrada-sitio {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 8px;
+  letter-spacing: normal;
+
+  &--catalogo { margin: 0 0 14px; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+
 .elegidos {
   border: 1.5px solid var(--kb-line-4);
   border-radius: 13px;
