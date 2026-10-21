@@ -20,6 +20,10 @@
 //     <section class="cfg-card"> …p-table / formulario… </section>
 //   </div>
 //
+// Piezas extra (modernizar-pantallas-restantes): `cfg-pill` (+ `--ok|--warn|--error|--info|--neutro`),
+// `cfg-stats` > `cfg-stat` (`__label`, `__valor`), `cfg-form` (+ `__grupo`, `__pie`) y pestañas
+// PrimeNG dentro de `cfg-pagina`. Son clases nuevas: no cambian las pantallas de D-400.
+//
 // Ojo con las trampas globales (memoria css-globales): nada de clases con "p-" dentro,
 // todo span con texto lleva clase con color propio y los h1 globales traen !important.
 
@@ -232,6 +236,133 @@ $cfg-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
   }
   .cfg-vacio__titulo { margin: 0; font-size: 15px; font-weight: 800; color: $cfg-ink; }
   .cfg-vacio__texto { margin: 0; font-size: 12.5px; color: $cfg-muted; }
+
+  // ── Piezas de pantallas internas (modernizar-pantallas-restantes) ──
+  // Estado en pill: par fuerte/fondo suave, UPPERCASE, radio 20px.
+  .cfg-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 10.5px !important;
+    font-weight: 800;
+    letter-spacing: .4px !important;
+    text-transform: uppercase;
+    white-space: nowrap;
+    background: $cfg-accent-soft;
+    color: $cfg-accent !important;
+  }
+  .cfg-pill--ok { background: $cfg-ok-soft; color: $cfg-ok !important; }
+  .cfg-pill--warn { background: $cfg-warn-soft; color: $cfg-warn !important; }
+  .cfg-pill--error { background: $cfg-err-soft; color: $cfg-err !important; }
+  .cfg-pill--info { background: $cfg-info-soft; color: $cfg-info !important; }
+  .cfg-pill--neutro { background: #eef0f3; color: #5A6B78 !important; }
+
+  // Métricas: chips planos tintados, sin gradientes ni border-left.
+  .cfg-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+  }
+  .cfg-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    background: $cfg-tint;
+    border: 1px solid #eeecf7;
+    border-radius: 11px;
+    min-width: 0;
+    transition: transform .15s ease;
+
+    &:hover { transform: translateY(-1px); }
+  }
+  .cfg-stat__label {
+    font-size: 10.5px !important;
+    font-weight: 800;
+    letter-spacing: .5px !important;
+    text-transform: uppercase;
+    color: $cfg-muted !important;
+  }
+  .cfg-stat__valor {
+    font-size: 18px !important;
+    font-weight: 800;
+    color: $cfg-accent !important;
+    line-height: 1.2;
+  }
+
+  // Formularios: labels UPPERCASE muted e inputs lilas de 40px.
+  .cfg-form {
+    label, .form-label, .col-form-label {
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      color: $cfg-muted;
+      margin-bottom: 6px;
+    }
+
+    .form-control, .form-select {
+      min-height: 40px;
+      background-color: $cfg-chip-bg;
+      border: 1px solid $cfg-chip-border;
+      border-radius: 10px;
+      color: $cfg-ink;
+      font-size: 13.5px;
+      box-shadow: none;
+      transition: border-color .15s ease, background-color .15s ease;
+
+      &:focus { background-color: #fff; border-color: $cfg-accent-2; box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
+    }
+    textarea.form-control { min-height: 88px; }
+
+    .form-check-input:checked { background-color: $cfg-accent; border-color: $cfg-accent; }
+    .invalid-feedback, .text-danger { color: $cfg-err !important; font-size: 12px; }
+  }
+  .cfg-form__grupo {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px 16px;
+  }
+  .cfg-form__pie {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid $cfg-line-soft;
+  }
+
+  :host ::ng-deep .cfg-form {
+    .p-dropdown, .p-multiselect, .p-calendar .p-inputtext, .p-inputnumber .p-inputtext, .p-inputtext {
+      min-height: 40px;
+      background: $cfg-chip-bg;
+      border: 1px solid $cfg-chip-border;
+      border-radius: 10px;
+    }
+    .p-dropdown:not(.p-disabled).p-focus, .p-multiselect:not(.p-disabled).p-focus, .p-inputtext:enabled:focus {
+      border-color: $cfg-accent-2;
+      box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
+    }
+  }
+
+  // Pestañas PrimeNG dentro de la página: activa en acento; el título hereda el color
+  // (el global `span.ng-star-inserted` lo pinta de azul).
+  :host ::ng-deep .cfg-pagina .p-tabview {
+    .p-tabview-nav { background: transparent; border-color: $cfg-line; }
+    .p-tabview-nav li .p-tabview-nav-link {
+      background: transparent;
+      border-color: transparent;
+      color: $cfg-body;
+      font-weight: 700;
+      .p-tabview-title { color: inherit !important; }
+    }
+    .p-tabview-nav li.p-highlight .p-tabview-nav-link { color: $cfg-accent; border-color: $cfg-accent; }
+    .p-tabview-ink-bar { background: $cfg-accent; }
+    .p-tabview-panels { background: transparent; padding: 16px 0 0; }
+  }
 
   // ── Tabla PrimeNG dentro de la tarjeta ──
   :host ::ng-deep .cfg-card .p-datatable {
