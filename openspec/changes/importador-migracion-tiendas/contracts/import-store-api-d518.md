@@ -53,6 +53,7 @@
 | `INVENTORY_FORMAT_UNSUPPORTED` | dry-run | CSV de inventario con las ubicaciones como columnas: pide el export por estados |
 | `OFFER_NO_PUBLIC_LIST`, `OFFER_AMBIGUOUS_LIST` | dry-run, products | No hay un único tipo de cliente Público: la oferta no se carga |
 | `OFFER_SCHEDULED`, `OFFER_EXPIRED` | dry-run, products | Oferta de Woo con inicio futuro o ya vencida: no se carga |
+| `OFFER_INVALID` | dry-run, products | La oferta del producto no se puede calcular (IVA fuera de {0, tarifa elegida} o precios no válidos): no se carga |
 | `OFFER_KEPT` | products (`upsert`) | El producto ya tenía su fila Público: no se toca |
 | `TAX_CLASS_UNMAPPED` | dry-run, products | Woo trae una clase de impuesto sin tarifa asignada: esos productos no se importan |
 | `PRICES_TAX_UNKNOWN` | dry-run | Falta decir si los precios del archivo incluyen IVA |
