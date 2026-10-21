@@ -304,7 +304,7 @@ $border-radius: 8px;
 }
 
 .marketplace-item {
-    background: #ffffff;
+    background: var(--ds-surface);
     padding: 1rem;
     border: 1px solid #dee2e6;
     border-radius: 8px;
@@ -650,8 +650,8 @@ $border-radius: 8px;
 
   /* Estilo para el botón de filtro activo */
   .p-column-filter-menu-button.p-column-filter-menu-button-active {
-    background-color: #efe9ff;
-    color: #5F3FE0;
+    background-color: var(--ds-accent-soft);
+    color: var(--ds-accent-ink);
   }
 }
 
@@ -729,7 +729,7 @@ th.text-center .d-flex.align-items-center.justify-content-center {
     padding: 0.375rem 0.5rem;
     font-size: 0.875rem;
     transition: all 0.2s;
-    background-color: #ffffff;
+    background-color: var(--ds-surface);
 
     &:focus {
       border-color: $primary-color;
@@ -929,7 +929,7 @@ th.text-center .d-flex.align-items-center.justify-content-center {
 
 :host ::ng-deep .badge.bg-primary,
 .badge.bg-primary {
-  background-color: #5F3FE0 !important;
+  background-color: var(--ds-accent) !important;
   color: #ffffff !important;
 }
 
@@ -1134,7 +1134,7 @@ th.text-center .d-flex.align-items-center.justify-content-center {
     
     /* Estilos para columnas congeladas */
     .p-datatable-frozen-view {
-      background-color: #fff;
+      background-color: var(--ds-surface);
       border-right: 1px solid #e9ecef;
       box-shadow: 5px 0 8px rgba(0, 0, 0, 0.05);
       z-index: 1;
@@ -1149,7 +1149,7 @@ th.text-center .d-flex.align-items-center.justify-content-center {
     /* Ajustes para encabezados congelados */
     th, td {
       &[frozen] {
-        background-color: #fff;
+        background-color: var(--ds-surface);
         z-index: 1;
       }
     }
@@ -1229,10 +1229,16 @@ th.text-center .d-flex.align-items-center.justify-content-center {
 // Solo estilo: la lógica y los datos de la vista no cambian.
 // =============================================================================
 @import '../../../shared/styles/katuq-comercial';
+@import 'inv-oscuro';
 
 :host {
   @include kc-tokens;
   font-family: var(--kc-font-body);
+}
+
+// Par oscuro de --kc-* (D-502 F3, 4.4.5): el claro sigue siendo el de kc-tokens
+:host-context(body.dark-only) {
+  @include inv-kc-oscuro;
 }
 
 // Contenedor de la vista (antes era una .card blanca envolviendo todo)
@@ -1708,7 +1714,7 @@ th.text-center .d-flex.align-items-center.justify-content-center {
   width: 100%;
   max-width: 1080px;
   border-collapse: collapse;
-  background: #fff;
+  background: var(--ds-surface);
   border: 1px solid var(--kc-line);
   border-radius: 14px;
   overflow: hidden;
@@ -1818,7 +1824,7 @@ th.text-center .d-flex.align-items-center.justify-content-center {
   }
 
   .p-datatable-tbody > tr {
-    background: #fff;
+    background: var(--ds-surface);
 
     > td {
       border: none;
@@ -1835,7 +1841,7 @@ th.text-center .d-flex.align-items-center.justify-content-center {
   .p-paginator {
     border: none;
     border-top: 1px solid var(--kc-line2);
-    background: #fff;
+    background: var(--ds-surface);
     padding: 14px 22px;
     font-size: 13px;
     font-weight: 600;
@@ -1950,7 +1956,7 @@ th.text-center .d-flex.align-items-center.justify-content-center {
   border: none;
 
   .p-dialog-header {
-    background: #fff;
+    background: var(--ds-surface);
     border-bottom: 1px solid var(--kc-line2);
     padding: 18px 22px;
 
@@ -1972,7 +1978,7 @@ th.text-center .d-flex.align-items-center.justify-content-center {
   }
 
   .p-dialog-content {
-    background: #fff;
+    background: var(--ds-surface);
     padding: 20px 22px;
     font-family: var(--kc-font-body);
     color: var(--kc-ink2);
@@ -2450,8 +2456,8 @@ th.text-center .d-flex.align-items-center.justify-content-center {
 // Botones cuadrados de solo ícono con el par canon fuerte / fondo suave.
 .inv-iconbtn {
   border-radius: 11px;
-  background: #fff;
-  border-color: #e4e2ef;
+  background: var(--ds-surface);
+  border-color: var(--ds-line-strong);
 
   &.is-warning { background: $cfg-warn-soft; border-color: #f8dcb5; color: $cfg-warn; }
   &.is-danger { background: $cfg-err-soft; border-color: #f3c9c9; color: $cfg-err; }
@@ -2478,8 +2484,8 @@ th.text-center .d-flex.align-items-center.justify-content-center {
 .inv-txt-warn { color: $cfg-warn; }
 .inv-metrics-bodega { background: $cfg-tint; }
 .inv-addon-buscar {
-  background-color: $cfg-accent;
-  border-color: $cfg-accent;
+  background-color: var(--ds-accent);
+  border-color: var(--ds-accent-ink);
   color: #fff;
 }
 .inv-miniatura {
