@@ -1,6 +1,6 @@
 'use strict';
 
-// D-532 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B00d, tareas 1.10 y 1.12):
+// D-540 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B00d, tareas 1.10 y 1.12):
 // contenido de los diccionarios reales de src/assets/i18n.
 // - 1.10: en.json y pt.json tienen todas las claves de es.json y ningún valor igual al español
 //   fuera de la lista permitida (scripts/i18n-check.config.json); glosario y tratamiento de D7.

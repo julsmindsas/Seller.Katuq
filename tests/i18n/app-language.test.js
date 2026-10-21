@@ -1,6 +1,6 @@
 'use strict';
 
-// D-532 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B00b, tareas 1.1 y 1.6):
+// D-540 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B00b, tareas 1.1 y 1.6):
 // catálogo de idiomas con Deutsch (CH) oculto, idiomas visibles del login y selector filtrado.
 // Corre el .ts real con el cargador de tests/theme; nunca llama al backend.
 
@@ -187,7 +187,7 @@ test('selector: cambiar a inglés usa en-US en <html lang> y guarda como hoy (D-
   assert.equal(enviados[0].identificacion, '900123');
   assert.equal(enviados[0].lang.code, 'en');
   assert.deepEqual(Object.keys(enviados[0]).sort(), ['identificacion', 'lang']);
-  // users.lang conserva la forma de antes de D-532: htmlLang se deriva del code y no se guarda
+  // users.lang conserva la forma de antes de D-540: htmlLang se deriva del code y no se guarda
   assert.deepEqual(enviados[0].lang, { language: 'English', code: 'en', type: 'US', icon: 'us' });
   assert.deepEqual(nav.usuario().lang, { language: 'English', code: 'en', type: 'US', icon: 'us' });
   assert.equal(componente.selectedLanguage.htmlLang, 'en-US');

@@ -200,7 +200,7 @@
                       <i class="pi pi-check-circle"></i>
                       Editando
                     </div>
-                    <div class="card-header">
+                    <div class="tarjeta-cabeza">
                       <h5>{{getPedidoTabHeader(pedidoData)}}</h5>
                     </div>
                     <div class="card-body">
@@ -487,7 +487,7 @@
                       <i class="pi pi-check-circle"></i>
                       Editando
                     </div>
-                    <div class="card-header">
+                    <div class="tarjeta-cabeza">
                       <h5>{{getPedidoTabHeader(pedidoData)}}</h5>
                     </div>
                     <div class="card-body">
@@ -513,7 +513,7 @@
 
                 <!-- Main Package Info Card -->
                 <div class="package-info-card">
-                  <div class="card-header">
+                  <div class="tarjeta-cabeza">
                     <div class="header-icon">
                       <i class="pi pi-box"></i>
                     </div>
@@ -622,7 +622,7 @@
 
                 <!-- Dimensions Card -->
                 <div class="dimensions-card">
-                  <div class="card-header collapsible" (click)="toggleDimensionsSection()">
+                  <div class="tarjeta-cabeza collapsible" (click)="toggleDimensionsSection()">
                     <div class="header-icon">
                       <i class="pi pi-th-large"></i>
                     </div>
@@ -723,7 +723,7 @@
 
                 <!-- Description Card -->
                 <div class="description-card">
-                  <div class="card-header">
+                  <div class="tarjeta-cabeza">
                     <div class="header-icon">
                       <i class="pi pi-align-left"></i>
                     </div>
@@ -1274,7 +1274,7 @@
                 label="Crear Envío"
                 icon="pi pi-check"
                 iconPos="right"
-                class="p-button-success p-button-lg"
+                class="p-button-lg rm-crear"
                 [disabled]="!selectedRate"
                 [loading]="creatingShipment"
                 (click)="onConfirmShipment()">

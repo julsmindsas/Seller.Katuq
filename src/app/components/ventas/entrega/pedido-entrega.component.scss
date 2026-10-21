@@ -1,8 +1,12 @@
 @import '../../../../../assets/scss/utils/katuq-tokens';
 
-// Reskin: alinear el acento al morado de Cotizaciones (#6C4CE0), sin migrar los tokens globales.
-$katuq-primary: #6c4ce0;
-$katuq-primary-light: #8c6bff;
+// Reskin con el canon Katuq (D-131): acento #5F3FE0, tinta #211F3A, labels UPPERCASE
+// muted, inputs lilas y modales con encabezado blanco. Sin migrar los tokens globales.
+$katuq-primary: #5F3FE0;
+$katuq-primary-light: #7C5CFF;
+$ent-ink: #211F3A;
+$ent-muted: #8f8bab;
+$ent-line: #ececf4;
 
 /* === Section layout === */
 .entrega-section {
@@ -17,7 +21,7 @@ $katuq-primary-light: #8c6bff;
   gap: 0.75rem;
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid $ent-line;
 
   &__title {
     display: flex;
@@ -26,8 +30,8 @@ $katuq-primary-light: #8c6bff;
 
     h5 {
       margin: 0;
-      font-weight: 600;
-      color: #1e293b;
+      font-weight: 800;
+      color: $ent-ink;
     }
   }
 
@@ -39,10 +43,26 @@ $katuq-primary-light: #8c6bff;
   }
 }
 
+.entrega-section {
+  p, a, label, span, button { letter-spacing: normal; }
+  :focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+
+.ent-icono {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: #efe9ff;
+  color: $katuq-primary;
+  font-size: 15px;
+}
+
 /* === Selected address card === */
 .selected-address-card {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: #E6F7EE;
+  border: 1px solid #c8ecd7;
   border-radius: 0.5rem;
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
@@ -57,7 +77,7 @@ $katuq-primary-light: #8c6bff;
 }
 
 .address-card {
-  border: 1px solid #e2e8f0;
+  border: 1px solid $ent-line;
   border-radius: 0.5rem;
   padding: 0.75rem 1rem;
   background: #fff;
@@ -65,23 +85,32 @@ $katuq-primary-light: #8c6bff;
   cursor: default;
 
   &:hover {
-    border-color: $katuq-primary;
-    box-shadow: 0 2px 8px rgba($katuq-primary, 0.1);
+    border-color: #d9cffb !important;
+    box-shadow: 0 10px 24px -14px rgba($katuq-primary, .35) !important;
   }
 
   &--selected {
-    border-color: #16a34a;
-    background: #f0fdf4;
+    border-color: #1E874B;
+    background: #E6F7EE;
   }
+}
+
+// La tarjeta de la dirección en uso recibe su borde por [style.border-color] con el
+// morado viejo (el navegador lo serializa como rgb(139, 92, 246)); se pinta
+// con el acento del canon sin tocar el binding.
+.address-card[style*="139, 92, 246"],
+.address-card[style*="8b5cf6"] {
+  border-color: $katuq-primary !important;
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, .12) !important;
 }
 
 /* === Empty state === */
 .empty-state {
   text-align: center;
   padding: 2rem;
-  border: 2px dashed #e2e8f0;
-  border-radius: 0.75rem;
-  color: #94a3b8;
+  border: 2px dashed #e4e2ef;
+  border-radius: 16px;
+  color: $ent-muted;
 
   i {
     font-size: 2rem;
@@ -94,51 +123,63 @@ $katuq-primary-light: #8c6bff;
   }
 }
 
-/* === Modal form styles === */
-.modal-header {
-  background: $katuq-primary;
-  color: #fff;
-  border-bottom: none;
+/* === Modales: encabezado blanco, título en tinta e ícono en azulejo lila === */
+.ent-modal-cabeza {
+  align-items: center;
+  padding: 16px 20px;
+  background: #fff;
+  color: $ent-ink;
+  border-bottom: 1px solid $ent-line;
   border-radius: 0;
 
   .modal-title {
-    font-weight: 600;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 10px;
+    margin: 0;
+    font-size: 17px;
+    font-weight: 800;
+    color: $ent-ink;
   }
 
-  .close, .btn-close {
-    color: #fff;
-    opacity: 0.8;
-    filter: brightness(0) invert(1);
-
-    &:hover {
-      opacity: 1;
-    }
+  .ent-modal-icono {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    background: #efe9ff;
+    color: $katuq-primary;
+    font-size: 15px;
   }
 }
 
 .modal-body {
-  padding: 1.5rem;
+  padding: 1.25rem;
 
   .form-label {
-    font-weight: 500;
-    color: #475569;
-    font-size: 0.875rem;
-    margin-bottom: 0.25rem;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $ent-muted;
+    margin-bottom: 6px;
   }
 
   .form-control, .form-select, select.form-control {
-    border-radius: 0.375rem;
-    border: 1px solid #e2e8f0;
+    min-height: 40px;
+    border-radius: 10px;
+    border: 1px solid #e9e7f3;
+    background-color: #f5f4fa;
+    color: $ent-ink;
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, background-color 0.2s;
 
     &:focus {
-      border-color: $katuq-primary;
-      box-shadow: 0 0 0 3px rgba($katuq-primary, 0.1);
+      background-color: #fff;
+      border-color: #7C5CFF;
+      box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
     }
   }
 
@@ -148,32 +189,63 @@ $katuq-primary-light: #8c6bff;
 }
 
 .modal-footer {
-  border-top: 1px solid #f1f5f9;
-  padding: 1rem 1.5rem;
+  gap: 8px;
+  border-top: 1px solid #f1f0f7;
+  padding: 14px 20px;
+
+  > * { margin: 0; }
+}
+
+/* Botones Bootstrap con el canon: principal morado, secundarios blancos con borde */
+.btn-primary {
+  background: $katuq-primary !important;
+  border-color: $katuq-primary !important;
+  color: #fff !important;
+  font-weight: 700;
+  border-radius: 11px;
+
+  &:hover:not(:disabled) { background: #4a2fc0 !important; border-color: #4a2fc0 !important; }
+}
+
+.btn-outline-primary {
+  background: #fff;
+  border-color: #e4e2ef;
+  color: $katuq-primary;
+
+  &:hover:not(:disabled) { background: #faf9fe; border-color: #d9cffb; color: $katuq-primary; }
+}
+
+.btn-outline-secondary {
+  background: #fff;
+  border-color: #e4e2ef;
+  color: #5b5878;
+  border-radius: 11px;
+
+  &:hover:not(:disabled) { background: #faf9fe; border-color: #d9cffb; color: $katuq-primary; }
 }
 
 /* === Interactive address field === */
 .input-group {
   .form-control[readonly] {
-    background-color: #f8f9fa;
+    background-color: #f5f4fa;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
 
     &:hover {
-      background-color: #e9ecef;
+      background-color: #faf9fe;
       border-color: $katuq-primary;
     }
 
     &::placeholder {
-      color: #94a3b8;
+      color: $ent-muted;
       font-style: italic;
     }
   }
 
   .input-group-text {
-    background-color: #f1f5f9;
+    background-color: #f3f1fb;
     color: $katuq-primary;
-    border-color: #e2e8f0;
+    border-color: #e9e7f3;
     transition: all 0.2s ease;
   }
 
@@ -196,8 +268,8 @@ $katuq-primary-light: #8c6bff;
 .badge {
   font-size: 0.75rem;
   padding: 0.3rem 0.5rem;
-  border-radius: 0.25rem;
-  font-weight: 500;
+  border-radius: 20px;
+  font-weight: 700;
 }
 
 /* === Buttons === */
@@ -215,20 +287,18 @@ $katuq-primary-light: #8c6bff;
 
 /* === Alerts === */
 .alert {
-  border-radius: 0.5rem;
+  border-radius: 11px;
   border: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  box-shadow: none;
 
   &.alert-info {
-    background-color: #eff6ff;
-    color: #1e40af;
-    border-left: 3px solid $katuq-primary;
+    background-color: #E7F1FF;
+    color: #1E6FD9;
   }
 
   &.alert-warning {
-    background-color: #fffbeb;
-    color: #92400e;
-    border-left: 3px solid #f59e0b;
+    background-color: #FFF1DF;
+    color: #D9820A;
   }
 }
 

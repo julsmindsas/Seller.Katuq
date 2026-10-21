@@ -1,6 +1,6 @@
 'use strict';
 
-// D-532 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B00b, tarea 1.9): textos de PrimeNG
+// D-540 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B00b, tarea 1.9): textos de PrimeNG
 // en el idioma del panel. TranslateService y PrimeNGConfig simulados; sin Angular ni red.
 
 const assert = require('node:assert/strict');

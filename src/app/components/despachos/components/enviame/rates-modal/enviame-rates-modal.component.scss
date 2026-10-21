@@ -16,12 +16,12 @@
   .p-dialog-header {
     padding: 12px 16px !important;
     background: var(--ds-surface) !important;
-    border-bottom: 2px solid #e2e8f0 !important;
+    border-bottom: 1px solid var(--ds-line-soft) !important;
 
     .p-dialog-title {
-      font-size: 14px !important;
-      font-weight: 600 !important;
-      color: #1e293b !important;
+      font-size: 16px !important;
+      font-weight: 800 !important;
+      color: var(--ds-ink) !important;
     }
   }
 
@@ -41,18 +41,19 @@
 $primary: #5F3FE0;
 $primary-dark: #4a2fc0;
 $primary-light: #efe9ff;
-$secondary: #64748b;
-$success: #10b981;
-$warning: #f59e0b;
-$danger: #ef4444;
+// Tema canónico (design-system D-131): tinta, muted, líneas y semánticos del par.
+$secondary: #5b5878;
+$success: #1E874B;
+$warning: #D9820A;
+$danger: #D64545;
 $background: #ffffff;
-$light-bg: #f8fafc;
-$lighter-bg: #f1f5f9;
-$border: #e2e8f0;
-$border-light: #f1f5f9;
-$text-primary: #1e293b;
-$text-secondary: #64748b;
-$text-muted: #94a3b8;
+$light-bg: #faf9fe;
+$lighter-bg: #f5f4fa;
+$border: #ececf4;
+$border-light: #f1f0f7;
+$text-primary: #211F3A;
+$text-secondary: #5b5878;
+$text-muted: #8f8bab;
 
 $spacing-xs: 4px;
 $spacing-sm: 8px;
@@ -65,15 +66,15 @@ $spacing-2xl: 32px;
 $transition-fast: 0.15s ease;
 $transition-base: 0.2s ease;
 
-$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-$shadow-base: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+$shadow-sm: 0 1px 3px rgba(30, 20, 80, 0.04);
+$shadow-base: 0 1px 3px rgba(30, 20, 80, 0.06);
+$shadow-md: 0 6px 16px -6px rgba(48, 30, 120, 0.16);
+$shadow-lg: 0 14px 32px -12px rgba(48, 30, 120, 0.22);
 
-$radius-sm: 4px;
-$radius-base: 6px;
-$radius-md: 8px;
-$radius-lg: 12px;
+$radius-sm: 6px;
+$radius-base: 10px;
+$radius-md: 11px;
+$radius-lg: 16px;
 
 // ========================================
 // CONTAINER BASE
@@ -94,7 +95,7 @@ $radius-lg: 12px;
   // ========================================
   .progress-bar-sticky {
     position: sticky;
-    top: 36px;
+    top: 52px;
     z-index: 999;
     background: var(--ds-surface);
     border-bottom: 1px solid $border;
@@ -240,7 +241,7 @@ $radius-lg: 12px;
 
     // Estados del header
     &.completed {
-      border-left: 4px solid $success;
+      border-color: rgba($success, 0.45);
       background: rgba($success, 0.02);
 
       .step-number-badge {
@@ -259,7 +260,6 @@ $radius-lg: 12px;
     }
 
     &.active {
-      border-left: 4px solid $primary;
       border-color: $primary;
       background: rgba($primary, 0.03);
       box-shadow: 0 0 0 3px rgba($primary, 0.1);
@@ -276,7 +276,7 @@ $radius-lg: 12px;
     }
 
     &.incomplete {
-      border-left: 4px solid $warning;
+      border-color: rgba($warning, 0.45);
 
       .step-number-badge {
         background: rgba($warning, 0.1);
@@ -297,7 +297,6 @@ $radius-lg: 12px;
     &.locked {
       opacity: 0.5;
       cursor: not-allowed;
-      border-left: 4px solid $text-muted;
 
       .step-number-badge {
         background: $lighter-bg;
@@ -399,38 +398,45 @@ $radius-lg: 12px;
     display: flex;
     align-items: center;
     gap: $spacing-sm;
-    height: 36px;
-    padding: 0 $spacing-md;
+    height: 52px;
+    padding: 0 $spacing-base;
     background: var(--ds-surface);
     color: $text-primary;
-    border-bottom: 2px solid $border;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid $border-light;
+    box-shadow: none;
 
     i.pi-truck {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 11px;
+      background: $primary-light;
       font-size: 14px;
       color: $primary;
     }
 
     h4 {
       margin: 0;
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 16px !important;
+      font-weight: 800;
       flex: 1;
       color: $text-primary;
+      letter-spacing: normal;
     }
 
     .order-badge {
       background: $primary-light;
-      color: $primary;
-      padding: 2px $spacing-xs;
-      border-radius: $radius-sm;
-      font-size: 10px;
-      font-weight: 600;
+      color: $primary !important;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 10.5px !important;
+      font-weight: 800;
     }
 
     .date-badge {
-      font-size: 10px;
-      color: $text-secondary;
+      font-size: 11px !important;
+      color: $text-muted !important;
     }
   }
 
@@ -602,7 +608,7 @@ $radius-lg: 12px;
       .shipping-option-compact {
         position: relative;
         background: var(--ds-surface);
-        border: 2px solid #e0e0e0;
+        border: 2px solid var(--ds-line);
         border-radius: 8px;
         cursor: pointer;
         transition: all 0.2s ease;
@@ -613,13 +619,13 @@ $radius-lg: 12px;
 
         &:hover {
           border-color: var(--ds-accent-ink);
-          box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+          box-shadow: 0 2px 8px rgba(95, 63, 224, 0.1);
         }
 
         &.selected {
           border-color: var(--ds-accent-ink);
-          background: #f0f7ff;
-          box-shadow: 0 2px 12px rgba(33, 150, 243, 0.15);
+          background: var(--ds-surface-2);
+          box-shadow: 0 2px 12px rgba(95, 63, 224, 0.15);
 
           .option-name {
             color: var(--ds-accent-ink);
@@ -628,7 +634,7 @@ $radius-lg: 12px;
 
           .option-icon {
             color: var(--ds-accent-ink);
-            background-color: #e3f2fd;
+            background-color: var(--ds-accent-soft);
           }
 
           .option-price {
@@ -642,7 +648,7 @@ $radius-lg: 12px;
           appearance: none;
           width: 20px;
           height: 20px;
-          border: 2px solid #e0e0e0;
+          border: 2px solid var(--ds-line);
           border-radius: 50%;
           cursor: pointer;
           position: relative;
@@ -660,7 +666,7 @@ $radius-lg: 12px;
           position: absolute;
           top: 0.5rem;
           right: 0.5rem;
-          background: #fbbf24;
+          background: var(--ds-warn);
           color: white;
           width: 20px;
           height: 20px;
@@ -696,10 +702,10 @@ $radius-lg: 12px;
               display: flex;
               align-items: center;
               justify-content: center;
-              background: #f5f5f5;
+              background: var(--ds-chip-bg);
               border-radius: 8px;
               font-size: 18px;
-              color: #666;
+              color: var(--ds-body);
               transition: all 0.2s ease;
               flex-shrink: 0;
             }
@@ -712,13 +718,13 @@ $radius-lg: 12px;
               .option-name {
                 font-size: 0.9375rem;
                 font-weight: 600;
-                color: #333;
+                color: var(--ds-ink);
                 transition: color 0.2s ease;
               }
 
               .option-time {
                 font-size: 0.8125rem;
-                color: #666;
+                color: var(--ds-body);
                 display: flex;
                 align-items: center;
                 gap: 0.25rem;
@@ -739,7 +745,7 @@ $radius-lg: 12px;
             .option-price {
               font-size: 0.9375rem;
               font-weight: 600;
-              color: #333;
+              color: var(--ds-ink);
               white-space: nowrap;
               transition: color 0.2s ease;
             }
@@ -779,9 +785,8 @@ $radius-lg: 12px;
       border-top: 2px dashed $border-light;
 
       .distance-card {
-        background: #FFF4E0;
-        border: 2px solid rgba($warning, 0.3);
-        border-left: 4px solid $warning;
+        background: var(--ds-warn-soft);
+        border: 1px solid rgba($warning, 0.3);
         border-radius: $radius-lg;
         box-shadow: $shadow-sm;
         overflow: hidden;
@@ -791,7 +796,7 @@ $radius-lg: 12px;
           align-items: center;
           gap: $spacing-md;
           padding: $spacing-lg;
-          background: #FFF4E0;
+          background: var(--ds-warn-soft);
           border-bottom: 1px solid $border-light;
 
           i {
@@ -1184,7 +1189,7 @@ $radius-lg: 12px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       }
 
-      .card-header {
+      .tarjeta-cabeza {
         padding: $spacing-base $spacing-lg;
         background: $lighter-bg;
         border-bottom: 1px solid $border-light;
@@ -1813,7 +1818,6 @@ $radius-lg: 12px;
             padding: $spacing-xs $spacing-sm;
             background: rgba($primary, 0.05);
             border-radius: $radius-sm;
-            border-left: 3px solid $primary;
 
             &::before {
               content: "ℹ";
@@ -2471,6 +2475,26 @@ $radius-lg: 12px;
     margin-top: $spacing-xl;
     padding-top: $spacing-xl;
     border-top: 1px solid $border;
+
+    // Acción principal (Crear Envío) en el acento del canon.
+    .rm-crear {
+      background: $primary;
+      border-color: $primary;
+      color: #fff;
+      border-radius: 11px;
+      font-weight: 700;
+      box-shadow: 0 8px 18px -8px rgba(95, 63, 224, 0.7);
+
+      &:enabled:hover {
+        background: $primary-dark;
+        border-color: $primary-dark;
+      }
+
+      &:focus-visible {
+        outline: 3px solid var(--ds-focus) !important;
+        outline-offset: 2px;
+      }
+    }
   }
 
   // ========================================
@@ -2734,7 +2758,7 @@ $radius-lg: 12px;
         background: var(--ds-surface-2);
         box-shadow: 0 0 0 3px rgba($primary, 0.1);
 
-        .card-header h5 {
+        .tarjeta-cabeza h5 {
           color: $primary;
         }
       }
@@ -2759,7 +2783,7 @@ $radius-lg: 12px;
         }
       }
 
-      .card-header {
+      .tarjeta-cabeza {
         margin-bottom: $spacing-md;
         padding-right: 80px; // Espacio para el badge
 

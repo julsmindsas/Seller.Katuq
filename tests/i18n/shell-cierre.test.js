@@ -1,6 +1,6 @@
 'use strict';
 
-// D-532 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B01b, tareas 2.3 a 2.7): cierre del
+// D-540 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B01b, tareas 2.3 a 2.7): cierre del
 // shell. Perfil, notificaciones, inicio (dashboard) y piezas comunes pasan sus textos al traductor
 // con claves semánticas; el shell entra en `modulosCerrados` y queda en cero textos sueltos.
 // Node puro: lee plantillas, .ts y diccionarios; transpila algunos .ts sin Angular ni red.

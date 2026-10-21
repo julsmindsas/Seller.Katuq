@@ -457,8 +457,8 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
         : 'Volverá a estar activo en la lista.',
       icon: bloquear ? 'warning' : 'question',
       showCancelButton: true,
-      confirmButtonColor: bloquear ? '#d97706' : '#16a34a',
-      cancelButtonColor: '#6b7280',
+      confirmButtonColor: bloquear ? '#D9820A' : '#1E874B',
+      cancelButtonColor: '#8f8bab',
       confirmButtonText: bloquear ? 'Sí, bloquear' : 'Sí, desbloquear',
       cancelButtonText: 'Cancelar',
     }).then((result) => {

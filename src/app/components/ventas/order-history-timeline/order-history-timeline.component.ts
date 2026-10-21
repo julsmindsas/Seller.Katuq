@@ -66,12 +66,12 @@ export class OrderHistoryTimelineComponent implements OnInit, OnChanges {
    */
   getTransitionColor(type: TransitionType): string {
     const colors = {
-      'forward': '#22c55e',      // Verde
-      'backward': '#f59e0b',     // Naranja/Amarillo
-      'rejection': '#ef4444',    // Rojo
-      'cancellation': '#ef4444', // Rojo
-      'same': '#6b7280',         // Gris
-      'unknown': '#9ca3af'       // Gris claro
+      'forward': '#1E874B',      // Verde
+      'backward': '#D9820A',     // Naranja/Amarillo
+      'rejection': '#D64545',    // Rojo
+      'cancellation': '#D64545', // Rojo
+      'same': '#8f8bab',         // Gris
+      'unknown': '#b9b5cf'       // Gris claro
     };
     return colors[type] || colors['unknown'];
   }

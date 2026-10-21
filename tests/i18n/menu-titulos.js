@@ -1,6 +1,6 @@
 'use strict';
 
-// D-532 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B01a, tarea 2.2). Lee los títulos del
+// D-540 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B01a, tarea 2.2). Lee los títulos del
 // menú de src/app/shared/services/nav.service.ts con el AST de TypeScript, sin ejecutar Angular.
 // Excepción D3: los títulos son identidad (favoritos, secciones plegadas, `item.title === "Mensajes"`)
 // y siguen siendo claves literales en español; la prueba fija que no cambien.

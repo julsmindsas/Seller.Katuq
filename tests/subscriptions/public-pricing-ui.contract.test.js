@@ -11,7 +11,7 @@ const pricingHtml = read("src/app/components/pricing/pricing.component.html");
 const pricingScss = read("src/app/components/pricing/pricing.component.scss");
 const modalHtml = read("src/app/shared/components/upgrade-modal/upgrade-modal.component.html");
 const esDic = JSON.parse(read('src/assets/i18n/es.json'));
-// D-532 (IDI-B02): Pricing pasa sus textos por el traductor; el español vive en es.json bajo la clave de la plantilla.
+// D-540 (IDI-B02): Pricing pasa sus textos por el traductor; el español vive en es.json bajo la clave de la plantilla.
 const muestraTexto = (html, texto) => html.includes(texto)
   || Object.entries(esDic).some(([clave, valor]) => typeof valor === 'string' && valor.includes(texto) && html.includes(`'${clave}'`));
 

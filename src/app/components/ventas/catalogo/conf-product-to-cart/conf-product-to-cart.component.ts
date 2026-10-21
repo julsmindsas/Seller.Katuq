@@ -2577,8 +2577,8 @@ export class ConfProductToCartComponent
       text: `¿Estás seguro de que quieres eliminar la imagen de "${tituloPreferencia}"?`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
+      confirmButtonColor: '#D64545',
+      cancelButtonColor: '#8f8bab',
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
@@ -2684,8 +2684,8 @@ export class ConfProductToCartComponent
       text: `¿Estás seguro de que quieres eliminar la imagen de "${tituloPreferencia}"?`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
+      confirmButtonColor: '#D64545',
+      cancelButtonColor: '#8f8bab',
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
@@ -3877,8 +3877,8 @@ export class ConfProductToCartComponent
       confirmButtonText: "Recargar Página",
       showCancelButton: true,
       cancelButtonText: "Cerrar",
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#6c757d",
+      confirmButtonColor: "#5F3FE0",
+      cancelButtonColor: "#8f8bab",
     }).then((result) => {
       if (result.isConfirmed) {
         window.location.reload();

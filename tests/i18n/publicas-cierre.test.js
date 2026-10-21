@@ -1,6 +1,6 @@
 'use strict';
 
-// D-532 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B02, tareas 3.1 a 3.7): páginas
+// D-540 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B02, tareas 3.1 a 3.7): páginas
 // públicas y de sesión. Pasan sus textos al traductor con claves authentication.*, publica.*,
 // changePassword.*, pricing.* y comun.*; el español no cambia (salvo ortografía) y los valores que
 // se guardan, se comparan o se envían tampoco. Node puro: lee plantillas, .ts y diccionarios.

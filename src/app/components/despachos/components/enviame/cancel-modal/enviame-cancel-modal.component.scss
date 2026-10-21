@@ -1,60 +1,98 @@
+// Tema canónico (design-system D-131): avisos en par fuerte / fondo suave, labels UPPERCASE
+// muted, inputs lilas y pie con secundario blanco + confirmación destructiva en par de error.
+$cm-accent: #5F3FE0;
+$cm-accent-2: #7C5CFF;
+$cm-ink: #211F3A;
+$cm-body: #5b5878;
+$cm-muted: #8f8bab;
+$cm-line: #ececf4;
+$cm-line-soft: #f1f0f7;
+$cm-chip-bg: #f5f4fa;
+$cm-chip-border: #e9e7f3;
+$cm-tint: #faf9fe;
+$cm-ok: #1E874B;
+$cm-warn: #D9820A;
+$cm-warn-soft: #FFF1DF;
+$cm-err: #D64545;
+$cm-err-soft: #FDECEC;
+$cm-info: #1E6FD9;
+$cm-info-soft: #E7F1FF;
+
 .enviame-cancel-modal {
+  color: $cm-ink;
+
+  p, li, label { letter-spacing: normal; }
+  :focus-visible { outline: 3px solid $cm-accent-2 !important; outline-offset: 2px; }
+
   .shipment-info-header {
     .alert {
-      border-radius: 8px;
+      border-radius: 11px;
       border: none;
-      background: #fff3cd;
+      background: $cm-warn-soft;
+
+      .text-warning { color: $cm-warn !important; }
 
       h5 {
-        color: #856404;
-        font-weight: 600;
+        color: $cm-ink;
+        font-size: 16px !important;
+        font-weight: 800;
       }
 
       p {
-        color: #856404;
+        color: $cm-body;
         line-height: 1.5;
+
+        strong { color: $cm-ink; }
       }
     }
   }
 
   .cancel-form {
     .order-details {
-      background-color: #f8f9fa;
+      background-color: $cm-tint;
       padding: 1.25rem;
-      border-radius: 8px;
-      border-left: 4px solid #c4b5fd;
+      border-radius: 16px;
+      border: 1px solid $cm-line;
 
       h6 {
-        color: #c4b5fd;
-        font-weight: 600;
-        border-bottom: 2px solid rgba(23, 162, 184, 0.2);
+        color: $cm-ink !important;
+        font-size: 14px;
+        font-weight: 800;
+        border-bottom: 1px solid $cm-line-soft;
         padding-bottom: 0.5rem;
         margin-bottom: 1rem;
+
+        i { color: $cm-accent; }
       }
 
       p {
         margin-bottom: 0.5rem;
-        font-size: 0.9rem;
+        font-size: 13.5px;
+        color: $cm-body;
 
         strong {
-          color: #495057;
-          font-weight: 600;
+          color: $cm-ink;
+          font-weight: 700;
         }
       }
     }
 
     .form-group {
       .form-label {
-        color: #495057;
-        margin-bottom: 0.75rem;
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+        color: $cm-muted;
+        margin-bottom: 0.5rem;
         display: block;
 
         &.fw-semibold {
-          font-weight: 600;
+          font-weight: 800;
         }
 
         i {
-          color: #6c757d;
+          color: $cm-accent;
         }
       }
     }
@@ -62,28 +100,31 @@
     .p-dropdown,
     .form-control,
     textarea {
-      border: 1px solid #ced4da;
-      border-radius: 6px;
+      background-color: $cm-chip-bg;
+      border: 1px solid $cm-chip-border;
+      border-radius: 10px;
+      color: $cm-ink;
       transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 
       &:focus {
-        border-color: #7C5CFF;
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        background-color: #fff;
+        border-color: $cm-accent-2;
+        box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
       }
 
       &.is-invalid {
-        border-color: #dc3545;
+        border-color: $cm-err;
 
         &:focus {
-          box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+          box-shadow: 0 0 0 3px rgba(214, 69, 69, .15);
         }
       }
 
       &.ng-valid.ng-touched {
-        border-color: #28a745;
+        border-color: $cm-ok;
 
         &:focus {
-          box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+          box-shadow: 0 0 0 3px rgba(30, 135, 75, .15);
         }
       }
     }
@@ -92,45 +133,36 @@
       display: block;
       width: 100%;
       margin-top: 0.5rem;
-      font-size: 0.875rem;
-      color: #dc3545;
-      font-weight: 500;
+      font-size: 12px;
+      color: $cm-err;
+      font-weight: 600;
     }
 
     .form-text {
-      font-size: 0.875rem;
-      color: #6c757d;
+      font-size: 12.5px;
+      color: $cm-muted !important;
       margin-top: 0.5rem;
     }
 
     // Alerts
     .alert {
-      border-radius: 8px;
+      border-radius: 11px;
+      border: none;
       padding: 1rem 1.25rem;
 
-      &.alert-danger {
-        background-color: rgba(220, 53, 69, 0.1);
-        border-color: rgba(220, 53, 69, 0.2);
-        color: #721c24;
-
-        .pi-ban {
-          color: #dc3545;
-        }
-      }
-
       &.alert-info {
-        background-color: rgba(23, 162, 184, 0.1);
-        border-color: rgba(23, 162, 184, 0.2);
-        color: #0c5460;
+        background-color: $cm-info-soft;
+        color: $cm-info;
 
         .alert-heading {
-          color: #0c5460;
-          font-weight: 600;
+          color: $cm-info;
+          font-size: 14px;
+          font-weight: 800;
           margin-bottom: 0.75rem;
         }
 
         ul {
-          color: #0c5460;
+          color: $cm-body;
 
           li {
             margin-bottom: 0.25rem;
@@ -139,7 +171,7 @@
         }
 
         .pi-info-circle {
-          color: #c4b5fd;
+          color: $cm-info;
         }
       }
     }
@@ -155,64 +187,79 @@
       }
 
       .form-check-label {
-        color: #495057;
+        color: $cm-ink;
+        font-size: 13.5px;
         line-height: 1.4;
         cursor: pointer;
 
         &.fw-semibold {
-          font-weight: 600;
+          font-weight: 700;
         }
       }
 
       &.is-invalid {
         .p-checkbox .p-checkbox-box {
-          border-color: #dc3545;
+          border-color: $cm-err;
         }
       }
     }
   }
 
+  // Aviso "Cancelación no disponible" (fuera del formulario): par de error.
+  > .alert.alert-danger {
+    border-radius: 11px;
+    border: none;
+    background-color: $cm-err-soft;
+    color: $cm-err;
+
+    .text-danger { color: $cm-err !important; }
+    p { color: $cm-body; }
+  }
+
   .modal-footer-actions {
-    border-top: 1px solid #dee2e6;
+    border-top: 1px solid $cm-line-soft;
     padding-top: 1.25rem;
     margin-top: 1.5rem;
 
     .p-button {
-      padding: 0.75rem 2rem;
-      font-weight: 500;
-      border-radius: 6px;
+      min-height: 40px;
+      padding: 0.6rem 1.5rem;
+      font-weight: 700;
+      border-radius: 11px;
       transition: all 0.2s ease;
     }
 
+    // Secundario: blanco con borde.
     .p-button-secondary {
-      background-color: #6c757d;
-      border-color: #6c757d;
-      color: #fff;
+      background-color: #fff;
+      border: 1px solid #e4e2ef;
+      color: $cm-body;
 
       &:hover:not(:disabled) {
-        background-color: #5a6268;
-        border-color: #545b62;
+        background-color: $cm-tint;
+        border-color: #d9cffb;
+        color: $cm-accent;
         transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
       }
     }
 
+    // Confirmación destructiva: par de error.
     .p-button-danger {
-      background-color: #dc3545;
-      border-color: #dc3545;
+      background-color: $cm-err;
+      border-color: $cm-err;
       color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(214, 69, 69, .6);
 
       &:hover:not(:disabled) {
-        background-color: #c82333;
-        border-color: #bd2130;
+        background-color: #b93838;
+        border-color: #b93838;
         transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
       }
 
       &:disabled {
-        background-color: #6c757d;
-        border-color: #6c757d;
-        opacity: 0.6;
+        background-color: #d8d4ea;
+        border-color: #d8d4ea;
+        opacity: 1;
         cursor: not-allowed;
         transform: none;
         box-shadow: none;

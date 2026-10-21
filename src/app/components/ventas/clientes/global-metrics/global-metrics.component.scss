@@ -1,4 +1,4 @@
-// Panel de métricas globales de clientes — estilo plano, border-left de acento (sin gradientes en cards).
+// Panel de métricas globales de clientes — chips planos tintados del canon (D-131), sin border-left ni gradientes.
 .gm-wrap {
   padding: 0.75rem 1.25rem 1rem;
 }
@@ -23,16 +23,16 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: #6d28d9;
+  color: #5F3FE0;
 }
 .gm-stale {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   font-size: 0.72rem;
-  color: #9ca3af;
-  background: #f9fafb;
-  border: 1px solid #eef0f4;
+  color: #8f8bab;
+  background: #faf9fe;
+  border: 1px solid #ececf4;
   border-radius: 12px;
   padding: 0.1rem 0.55rem;
 }
@@ -42,14 +42,14 @@
   gap: 0.35rem;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #6d28d9;
-  background: #f5f3ff;
-  border: 1px solid #ddd6fe;
+  color: #5F3FE0;
+  background: #faf9fe;
+  border: 1px solid #e4e2ef;
   border-radius: 20px;
   padding: 0.3rem 0.85rem;
   cursor: pointer;
   transition: background 0.15s, box-shadow 0.15s;
-  &:hover:not(:disabled) { background: #ede9fe; box-shadow: 0 1px 4px rgba(109, 40, 217, 0.12); }
+  &:hover:not(:disabled) { background: #efe9ff; box-shadow: 0 1px 4px rgba(95, 63, 224, 0.12); }
   &:disabled { opacity: 0.6; cursor: default; }
 }
 
@@ -64,10 +64,11 @@
 }
 
 .gm-card {
-  background: #fff;
-  border: 1px solid #eef0f4;
-  border-left: 4px solid #c7ccd6;
-  border-radius: 8px;
+  background: #faf9fe;
+  border: 1px solid #eeecf7;
+  border-radius: 11px;
+  transition: transform .15s ease;
+  &:hover { transform: translateY(-1px); }
   padding: 0.75rem 0.9rem;
   min-height: 80px;
   display: flex;
@@ -75,37 +76,31 @@
   justify-content: center;
 }
 
-.gm-accent-blue   { border-left-color: #2f6fe0; }
-.gm-accent-indigo { border-left-color: #4f46e5; }
-.gm-accent-green  { border-left-color: #059669; }
-.gm-accent-purple { border-left-color: #6d28d9; }
-.gm-accent-orange { border-left-color: #d97706; }
-.gm-accent-cyan   { border-left-color: #0891b2; }
-.gm-accent-red    { border-left-color: #dc2626; }
-.gm-accent-gray   { border-left-color: #c7ccd6; }
+// gm-accent-*: el valor va en acento; "en alerta" (rojo) lo pinta el [style.color] del template.
+.gm-accent-red { background: #FDECEC; border-color: #f3c9c9; }
 
 .gm-label {
-  font-size: 0.72rem;
+  font-size: 10.5px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: #6b7280;
+  letter-spacing: 0.04em;
+  color: #8f8bab;
   margin-bottom: 0.2rem;
 }
 .gm-value {
   font-size: 1.25rem;
-  font-weight: 700;
-  color: #1f2937;
+  font-weight: 800;
+  color: #5F3FE0;
   line-height: 1.2;
 }
 .gm-sub {
   font-size: 0.72rem;
-  color: #6b7280;
+  color: #8f8bab;
   margin-top: 0.15rem;
 }
 
 // ── Skeleton shimmer ────────────────────────────────────────────────────────
 .gm-skel {
-  border-left-color: #e5e7eb;
   background: linear-gradient(90deg, #f3f4f6 25%, #e9ebee 37%, #f3f4f6 63%);
   background-size: 400% 100%;
   animation: gm-shimmer 1.3s ease-in-out infinite;
@@ -119,11 +114,10 @@
 .gm-error {
   margin-top: 0.25rem;
   padding: 0.6rem 0.8rem;
-  border: 1px solid #fcd34d;
-  border-left: 4px solid #d97706;
-  border-radius: 8px;
-  background: #fffbeb;
-  color: #92400e;
+  border: 0;
+  border-radius: 11px;
+  background: #FFF1DF;
+  color: #D9820A;
   font-size: 0.85rem;
 }
 
@@ -139,23 +133,23 @@
   gap: 0.4rem;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #6d28d9;
-  background: #f5f3ff;
-  border: 1px solid #ddd6fe;
+  color: #5F3FE0;
+  background: #faf9fe;
+  border: 1px solid #e4e2ef;
   border-radius: 20px;
   padding: 0.3rem 0.9rem;
   cursor: pointer;
   transition: background 0.15s, box-shadow 0.15s;
-  &:hover { background: #ede9fe; box-shadow: 0 1px 4px rgba(109, 40, 217, 0.12); }
+  &:hover { background: #efe9ff; box-shadow: 0 1px 4px rgba(95, 63, 224, 0.12); }
 }
 
 // ── Panel expandible ────────────────────────────────────────────────────────
 .gm-panel {
   margin-top: 0.5rem;
-  border: 1px solid #ede9fe;
+  border: 1px solid #efe9ff;
   border-radius: 10px;
   padding: 1rem 1.1rem;
-  background: #fafafe;
+  background: #faf9fe;
   animation: gm-fade-in 0.2s ease;
 }
 @keyframes gm-fade-in {
@@ -169,9 +163,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #6c4ce0;
+  color: #5F3FE0;
   margin-bottom: 0.5rem;
-  border-bottom: 1px solid #ede9fe;
+  border-bottom: 1px solid #efe9ff;
   padding-bottom: 0.25rem;
 }
 
@@ -212,17 +206,17 @@
   gap: 0.35rem;
   font-size: 0.78rem;
   font-weight: 500;
-  color: #374151;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
+  color: #211F3A;
+  background: #f5f4fa;
+  border: 1px solid #e9e7f3;
   border-radius: 16px;
   padding: 0.2rem 0.65rem;
 }
 .gm-chip-qty {
   font-size: 0.7rem;
   font-weight: 700;
-  color: #6d28d9;
-  background: #ede9fe;
+  color: #5F3FE0;
+  background: #efe9ff;
   border-radius: 10px;
   padding: 0.02rem 0.4rem;
 }
@@ -243,8 +237,8 @@
   min-width: 1.4rem;
   height: 1.4rem;
   border-radius: 50%;
-  background: #ede9fe;
-  color: #6d28d9;
+  background: #efe9ff;
+  color: #5F3FE0;
   font-weight: 700;
   font-size: 0.7rem;
   display: flex;
@@ -253,14 +247,14 @@
 }
 .gm-top-name {
   flex: 1;
-  color: #374151;
+  color: #211F3A;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .gm-top-qty {
-  color: #6b7280;
+  color: #8f8bab;
   font-size: 0.75rem;
   white-space: nowrap;
 }
@@ -275,5 +269,5 @@
 
 .gm-muted {
   font-size: 0.8rem;
-  color: #9ca3af;
+  color: #8f8bab;
 }

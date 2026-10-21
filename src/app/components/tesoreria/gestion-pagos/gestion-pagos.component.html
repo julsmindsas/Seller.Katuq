@@ -1,20 +1,20 @@
-<div class="tk-page">
+<div class="tk-page cfg-pagina">
 
   <!-- Encabezado -->
-  <div class="tk-header">
-    <div class="tk-header-id">
-      <span class="tk-header-chip" aria-hidden="true"><i class="pi pi-wallet"></i></span>
-      <div>
-        <h4 class="tk-page-title">Tesorería</h4>
-        <p class="tk-page-sub">Verifica comprobantes, aprueba o rechaza pagos y controla la cartera pendiente.</p>
-      </div>
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">Finanzas</span>
+      <h1 class="cfg-titulo">Tesorería</h1>
+      <p class="cfg-sub">Verifica comprobantes, aprueba o rechaza pagos y controla la cartera pendiente.</p>
     </div>
-    <button type="button" class="tk-refresh" (click)="loadMetrics()" [disabled]="loadingMetrics"
-            aria-label="Actualizar indicadores">
-      <i class="pi" [ngClass]="loadingMetrics ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
-      Actualizar
-    </button>
-  </div>
+    <div class="cfg-acciones">
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="loadMetrics()" [disabled]="loadingMetrics"
+              aria-label="Actualizar indicadores">
+        <i class="pi" [ngClass]="loadingMetrics ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
+        Actualizar
+      </button>
+    </div>
+  </header>
 
   <!-- KPI cards (server-side) -->
   <div *ngIf="loadingMetrics" class="tk-grid" aria-busy="true">

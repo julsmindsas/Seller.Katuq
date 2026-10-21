@@ -193,7 +193,7 @@
   box-shadow: none;
   background: #fff;
 
-  > .card-header {
+  > .tarjeta-cabeza {
     flex-shrink: 0;
     padding: 12px 16px 8px !important;
     border: none;
@@ -479,7 +479,7 @@
 
 // El tema global aplica text-transform a los encabezados de tarjeta; en el
 // ticket queremos el texto tal cual se escribió.
-:host .card > .card-header h5 {
+:host .card > .tarjeta-cabeza h5 {
   text-transform: none !important;
   letter-spacing: normal !important;
 }

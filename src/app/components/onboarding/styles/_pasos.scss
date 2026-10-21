@@ -1,0 +1,393 @@
+// Pasos del onboarding (steps/*): piezas comunes con el aspecto canónico
+// "Regístrese / Todos los pedidos" (D-131, D-399, D-400). Plano, tarjetas
+// blancas, acento #5F3FE0, labels UPPERCASE muted, inputs lilas de 40px,
+// estados en par fuerte/fondo suave. Sin gradientes ni border-left de acento.
+//
+// Uso en el SCSS de un paso:
+//   @import '../styles/pasos';
+//   @include onb-pasos;
+//
+// Encabezado de tarjeta: <div class="onb-cabeza"><i class="pi …"></i><span>Título</span></div>
+// (reemplaza al viejo encabezado de tarjeta de la plantilla Cuba). Botón principal `cfg-btn`, secundario
+// `cfg-btn cfg-btn--sec` (vienen de config-pagina).
+
+@import '../../../shared/styles/config-pagina';
+
+@mixin onb-pasos($ancho: 1000px) {
+  @include config-pagina;
+
+  .step-container {
+    max-width: $ancho;
+    margin: 0 auto;
+    color: $cfg-ink;
+
+    p, a, li, label, span, button { letter-spacing: normal; }
+    :focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+
+    // El global `span.ng-star-inserted` pinta de azul los span de *ngIf.
+    span.ng-star-inserted { color: inherit; }
+  }
+
+  .step-intro {
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    background: $cfg-tint;
+    border: 1px solid #eeecf7;
+    border-radius: 11px;
+
+    .intro-text {
+      margin: 0;
+      font-size: 13.5px;
+      line-height: 1.55;
+      color: $cfg-body;
+    }
+  }
+
+  // Encabezado de tarjeta: título 16/800 en tinta, ícono en azulejo lila.
+  .onb-cabeza {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    font-size: 16px;
+    font-weight: 800;
+    color: $cfg-ink;
+
+    > span { color: $cfg-ink; font-size: 16px; font-weight: 800; }
+
+    i {
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      background: $cfg-accent-soft;
+      color: $cfg-accent;
+      font-size: 16px;
+    }
+  }
+
+  // Botones pButton con las clases cfg-*: el tema lara pinta `.p-button` de azul
+  // y el `[class*="p-"]` global fuerza 0.7rem.
+  .p-button.cfg-btn {
+    font-size: 13.5px !important;
+    line-height: 1 !important;
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 11px;
+
+    &:focus { box-shadow: none; }
+    &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+  }
+
+  // Botones de ícono en tablas (editar / eliminar).
+  .p-button.p-button-text {
+    color: $cfg-accent;
+    border-radius: 9px;
+
+    &:enabled:hover { background: $cfg-accent-soft; color: $cfg-accent; }
+    &.p-button-danger { color: $cfg-err; &:enabled:hover { background: $cfg-err-soft; color: $cfg-err; } }
+  }
+
+  // Plantillas rápidas.
+  .templates-card {
+    .templates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 8px;
+
+      .template-button {
+        width: 100%;
+        justify-content: flex-start;
+        text-align: left;
+      }
+    }
+
+    .field-help {
+      display: block;
+      margin-top: 12px;
+      font-size: 12.5px;
+      color: $cfg-muted;
+    }
+  }
+
+  // Formularios.
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 14px 16px;
+
+    .form-field {
+      &.col-12 { grid-column: span 12; }
+
+      &.col-md-3, &.col-md-4, &.col-md-6, &.col-md-8 { grid-column: span 12; }
+
+      @media (min-width: 768px) {
+        &.col-md-3 { grid-column: span 3; }
+        &.col-md-4 { grid-column: span 4; }
+        &.col-md-6 { grid-column: span 6; }
+        &.col-md-8 { grid-column: span 8; }
+      }
+
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+        color: $cfg-muted;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+      }
+
+      .field-help {
+        display: block;
+        margin-top: 6px;
+        font-size: 12px;
+        color: $cfg-muted;
+      }
+
+      small.p-error {
+        display: block;
+        margin-top: 6px;
+        color: $cfg-err;
+        font-size: 12px;
+      }
+
+      .checkbox-field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+    }
+  }
+
+  .icon-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    i {
+      font-size: 15px;
+      color: $cfg-accent;
+    }
+  }
+
+  // Opción destacada (POS): aviso informativo en par, sin border-left.
+  .pos-option {
+    margin-top: 18px;
+    padding: 12px 14px;
+    background: $cfg-info-soft;
+    border-radius: 11px;
+
+    .field-help {
+      display: block;
+      margin-top: 6px;
+      margin-left: 28px;
+      font-size: 12px;
+      color: $cfg-body;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid $cfg-line-soft;
+  }
+
+  // Estados en pill (par fuerte / fondo suave).
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    background: $cfg-accent-soft;
+    color: $cfg-accent;
+
+    &.badge-active { background: $cfg-ok-soft; color: $cfg-ok; }
+    &.badge-inactive { background: $cfg-err-soft; color: $cfg-err; }
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+  }
+
+  // Estado vacío: ícono en azulejo, título y texto corto.
+  .empty-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 32px 16px;
+    text-align: center;
+
+    i {
+      display: grid;
+      place-items: center;
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: $cfg-tile;
+      color: $cfg-accent;
+      font-size: 26px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 12.5px;
+      color: $cfg-muted;
+    }
+  }
+
+  .step-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid $cfg-line;
+    border-radius: 16px;
+    box-shadow: $cfg-shadow-panel;
+
+    button { min-width: 250px; }
+
+    .form-status {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 700;
+      background: $cfg-warn-soft;
+      color: $cfg-warn;
+
+      i { font-size: 14px; }
+
+      &.success { background: $cfg-ok-soft; color: $cfg-ok; }
+    }
+  }
+
+  // Piezas internas de PrimeNG, limitadas al paso.
+  :host ::ng-deep {
+    .p-card {
+      background: #fff;
+      border: 1px solid $cfg-line;
+      border-radius: 16px;
+      box-shadow: $cfg-shadow-panel;
+      color: $cfg-ink;
+
+      .p-card-header {
+        background: #fff;
+        border-bottom: 1px solid $cfg-line-soft;
+        border-radius: 16px 16px 0 0;
+        padding: 14px 20px;
+      }
+
+      .p-card-body { padding: 20px; }
+    }
+
+    .p-inputtext,
+    .p-dropdown,
+    .p-inputtextarea,
+    .p-inputnumber-input,
+    .p-multiselect {
+      min-height: 40px;
+      background: $cfg-chip-bg;
+      border: 1px solid $cfg-chip-border;
+      border-radius: 10px;
+      color: $cfg-ink;
+      transition: border-color .15s ease, background-color .15s ease;
+
+      &:enabled:hover { border-color: #d9cffb; }
+
+      &:enabled:focus,
+      &.p-focus {
+        background: #fff;
+        border-color: $cfg-accent-2;
+        box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
+      }
+
+      &.p-invalid { border-color: $cfg-err; }
+    }
+
+    .p-dropdown,
+    .p-inputnumber,
+    .p-inputnumber .p-inputtext { width: 100%; }
+
+    .p-checkbox .p-checkbox-box.p-highlight {
+      background: $cfg-accent;
+      border-color: $cfg-accent;
+    }
+
+    .p-datatable {
+      .p-datatable-wrapper { border-radius: 11px; }
+
+      .p-datatable-thead > tr > th {
+        background: $cfg-tint;
+        color: $cfg-muted;
+        font-size: 10.5px !important;
+        font-weight: 800;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+        border-color: $cfg-line-soft;
+        padding: 12px 14px;
+      }
+
+      .p-datatable-tbody > tr {
+        background: #fff;
+        color: $cfg-ink;
+
+        > td { padding: 12px 14px; border-color: $cfg-line-soft; }
+        &:hover { background: $cfg-row-hover; }
+      }
+    }
+
+    .templates-grid .template-button .p-button-label { flex: 1; }
+  }
+
+  @media (max-width: 768px) {
+    .step-intro { padding: 12px 14px; margin-bottom: 16px; }
+
+    :host ::ng-deep .p-card {
+      .p-card-header { padding: 12px 16px; }
+      .p-card-body { padding: 16px; }
+    }
+
+    .onb-cabeza { font-size: 15px; }
+
+    .templates-grid { grid-template-columns: 1fr !important; }
+
+    .form-grid { gap: 12px; }
+
+    .form-actions {
+      flex-direction: column;
+
+      button { width: 100%; }
+    }
+
+    .step-actions {
+      padding: 14px;
+
+      button { min-width: 100%; }
+    }
+
+    .action-buttons { flex-direction: column; }
+  }
+}

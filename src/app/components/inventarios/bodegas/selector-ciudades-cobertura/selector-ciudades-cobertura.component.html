@@ -1,13 +1,13 @@
-<div class="modal-header">
-  <h4 class="modal-title">
-    <i class="fa fa-map-marker-alt"></i>&nbsp;Ciudades de Cobertura
+<div class="modal-header scc-cabeza">
+  <h4 class="modal-title scc-titulo">
+    <span class="scc-icono"><i class="fa fa-map-marker-alt"></i></span>Ciudades de Cobertura
   </h4>
-  <button type="button" class="close" aria-label="Close" (click)="cancelar()">
+  <button type="button" class="close scc-cerrar" aria-label="Close" (click)="cancelar()">
     <span aria-hidden="true">&times;</span>
   </button>
 </div>
 
-<div class="modal-body">
+<div class="modal-body cfg-form scc-cuerpo">
   <!-- National Coverage Option -->
   <div class="alert mb-3" [ngClass]="esCoberturaNacional ? 'alert-success' : 'alert-light border'">
     <div class="form-check form-switch d-flex align-items-center">
@@ -17,7 +17,7 @@
       <label class="form-check-label" for="coberturaNacional">
         <i class="fa fa-globe-americas me-1"></i>
         <strong>Cobertura Nacional</strong>
-        <span class="text-muted ms-2">- Esta bodega atiende todas las ciudades de Colombia</span>
+        <span class="scc-tenue ms-2">- Esta bodega atiende todas las ciudades de Colombia</span>
       </label>
     </div>
   </div>
@@ -39,28 +39,28 @@
                placeholder="Nombre o codigo DANE"
                (keyup.enter)="onSearch()"
                (input)="onSearch()">
-        <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">
+        <button class="cfg-btn cfg-btn--sec scc-buscar" type="button" (click)="onSearch()">
           <i class="fa fa-search"></i>
         </button>
       </div>
     </div>
     <div class="col-md-2 d-flex align-items-end">
-      <span class="badge bg-primary p-2 w-100 text-center">{{ selectedCount }} seleccionadas</span>
+      <span class="cfg-pill scc-cuenta w-100">{{ selectedCount }} seleccionadas</span>
     </div>
   </div>
 
   <div class="row" [class.disabled-section]="esCoberturaNacional">
     <!-- Available Cities Panel -->
     <div class="col-md-7">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center py-2">
-          <span><i class="fa fa-list"></i> Ciudades disponibles</span>
+      <div class="card scc-panel">
+        <div class="card-header scc-panel__cabeza d-flex justify-content-between align-items-center py-2">
+          <span class="scc-panel__titulo"><i class="fa fa-list"></i> Ciudades disponibles</span>
           <div>
-            <button class="btn btn-sm btn-outline-primary me-1" (click)="selectAllVisible()"
+            <button class="cfg-btn cfg-btn--sec scc-btn-sm me-1" (click)="selectAllVisible()"
                     [disabled]="municipiosFiltrados.length === 0">
               <i class="fa fa-check-double"></i> Todos
             </button>
-            <button class="btn btn-sm btn-outline-secondary" (click)="deselectAllVisible()"
+            <button class="cfg-btn cfg-btn--sec scc-btn-sm" (click)="deselectAllVisible()"
                     [disabled]="municipiosFiltrados.length === 0">
               <i class="fa fa-times"></i> Ninguno
             </button>
@@ -91,8 +91,8 @@
 
     <!-- Selected Cities Panel -->
     <div class="col-md-5">
-      <div class="card">
-        <div class="card-header py-2">
+      <div class="card scc-panel">
+        <div class="card-header scc-panel__cabeza scc-panel__titulo py-2">
           <i class="fa fa-check-circle"></i> Seleccionadas ({{ selectedCount }})
         </div>
         <div class="card-body selected-list-container">
@@ -105,11 +105,11 @@
           <div *ngFor="let group of selectedByDepartment" class="mb-3">
             <div class="department-header">
               <i class="fa fa-map"></i> {{ group.departamento }}
-              <span class="badge bg-secondary ms-1">{{ group.ciudades.length }}</span>
+              <span class="cfg-pill cfg-pill--neutro ms-1">{{ group.ciudades.length }}</span>
             </div>
             <div *ngFor="let ciudad of group.ciudades"
                  class="selected-city-item d-flex justify-content-between align-items-center">
-              <span>{{ ciudad.nombre }}</span>
+              <span class="scc-ciudad">{{ ciudad.nombre }}</span>
               <button class="btn btn-sm btn-link text-danger p-0" (click)="removeCity(ciudad.codigo)">
                 <i class="fa fa-times"></i>
               </button>
@@ -121,11 +121,11 @@
   </div>
 </div>
 
-<div class="modal-footer">
-  <button type="button" class="btn btn-secondary" (click)="cancelar()">
+<div class="modal-footer scc-pie">
+  <button type="button" class="cfg-btn cfg-btn--sec" (click)="cancelar()">
     <i class="fa fa-times"></i> Cancelar
   </button>
-  <button type="button" class="btn btn-primary" (click)="guardar()">
+  <button type="button" class="cfg-btn" (click)="guardar()">
     <i class="fa fa-check"></i>
     <span *ngIf="esCoberturaNacional">Guardar (Cobertura Nacional)</span>
     <span *ngIf="!esCoberturaNacional">Guardar ({{ selectedCount }} ciudades)</span>

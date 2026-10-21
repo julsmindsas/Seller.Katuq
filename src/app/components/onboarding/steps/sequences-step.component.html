@@ -7,7 +7,7 @@
 
   <p-card class="configuration-card mt-3">
     <ng-template pTemplate="header">
-      <div class="card-header"><i class="pi pi-list-check"></i><span>Configuración de Consecutivos</span></div>
+      <div class="onb-cabeza"><i class="pi pi-list-check"></i><span>Configuración de Consecutivos</span></div>
     </ng-template>
 
     <div class="consecutivos-grid">
@@ -70,7 +70,7 @@
 
   <div class="step-actions mt-4">
     <button pButton type="button" label="Guardar y Continuar" icon="pi pi-check" iconPos="right"
-            class="p-button-success p-button-lg"
+            class="cfg-btn"
             [disabled]="!isValid() || isSaving"
             [loading]="isSaving"
             (click)="onComplete()"></button>

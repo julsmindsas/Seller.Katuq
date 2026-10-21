@@ -6,6 +6,7 @@
 // ==========================================================================
 @import '../../../assets/scss/utils/katuq-tokens';
 @import '../../shared/styles/katuq-comercial';
+@import '../../shared/styles/config-pagina';
 
 :host {
   @include kc-tokens;
@@ -31,17 +32,11 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  border-radius: 16px;
+  border-color: #ececf4;
+  transition: transform .15s ease;
 
-  // Banda de acento a la izquierda (reemplaza el border-left)
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 5px;
-    background: var(--tk-bar, #{$katuq-gray-300});
-  }
+  &:hover { transform: translateY(-1px); }
 }
 
 .tk-accent-green  { --tk-bar: var(--kc-green);  --tk-fg: var(--kc-green); }
@@ -49,7 +44,7 @@
 .tk-accent-purple { --tk-bar: var(--kc-accent); --tk-fg: var(--kc-accent); }
 .tk-accent-blue   { --tk-bar: var(--kc-blue);   --tk-fg: var(--kc-blue); }
 .tk-accent-red    { --tk-bar: var(--kc-red);    --tk-fg: var(--kc-red); }
-.tk-accent-gray   { --tk-bar: #17b0b0;          --tk-fg: var(--kc-ink2); }
+.tk-accent-gray   { --tk-bar: #8f8bab;          --tk-fg: #211F3A; }
 
 .tk-label {
   font-size: 10.5px;
@@ -76,7 +71,6 @@
 
 // ── Skeleton shimmer ──────────────────────────────────────────────────────
 .tk-skel {
-  --tk-bar: #e9eaf1;
   background: linear-gradient(90deg, #f4f5f9 25%, #eceef4 37%, #f4f5f9 63%);
   background-size: 400% 100%;
   animation: tk-shimmer 1.3s ease-in-out infinite;
@@ -311,5 +305,103 @@
     border-color: #cbebd8;
     color: var(--kc-green);
     &:hover:not(:disabled) { background: var(--kc-green-wash); }
+  }
+}
+
+// ── Modales de Tesorería (NgbModal) con el aspecto del canon ──────────────
+// Encabezado blanco con título en tinta e ícono en azulejo lila, labels
+// UPPERCASE muted, inputs lilas de 40px y pie con cfg-btn (config-pagina).
+// El .modal-content lo crea ng-bootstrap fuera del componente: su radio y
+// sombra no se fijan desde aquí.
+@mixin tk-modal-canon {
+  .modal-header {
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: #fff;
+    border-bottom: 1px solid $cfg-line;
+  }
+  .modal-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.3;
+    color: $cfg-ink;
+
+    > i {
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 34px;
+      height: 34px;
+      margin: 0 !important;
+      border-radius: 11px;
+      background: $cfg-accent-soft;
+      color: $cfg-accent;
+      font-size: 15px;
+    }
+  }
+  .modal-body {
+    padding: 18px 20px;
+    color: $cfg-ink;
+
+    .form-label {
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      color: $cfg-muted;
+      margin-bottom: 6px;
+    }
+    .form-control,
+    .form-select {
+      min-height: 40px;
+      background-color: $cfg-chip-bg;
+      border: 1px solid $cfg-chip-border;
+      border-radius: 10px;
+      color: $cfg-ink;
+      font-size: 13.5px;
+      box-shadow: none;
+
+      &:focus {
+        background-color: #fff;
+        border-color: $cfg-accent-2;
+        box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
+      }
+    }
+    .input-group-text {
+      background: $cfg-tile;
+      border-color: $cfg-chip-border;
+      color: $cfg-muted;
+      border-radius: 10px 0 0 10px;
+    }
+    .input-group > .form-control { border-radius: 0 10px 10px 0; }
+    .text-danger { color: $cfg-err !important; }
+  }
+  .modal-footer {
+    gap: 8px;
+    padding: 14px 20px;
+    background: #fff;
+    border-top: 1px solid $cfg-line-soft;
+
+    > * { margin: 0; }
+  }
+  :focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+
+  // Confirmar pago (éxito) y confirmar rechazo (destructivo) en el par semántico.
+  .tk-btn-ok {
+    background: $cfg-ok;
+    border-color: $cfg-ok;
+    box-shadow: none;
+    &:hover:not(:disabled) { background: #176b3b; border-color: #176b3b; }
+  }
+  .tk-btn-err {
+    background: $cfg-err;
+    border-color: $cfg-err;
+    box-shadow: none;
+    &:hover:not(:disabled) { background: #b83636; border-color: #b83636; }
   }
 }

@@ -2,18 +2,19 @@
 // Reskin puro por estilos: el HTML y todos los bindings quedan intactos.
 @import '../../../shared/styles/katuq-comercial';
 
-/* Paleta unificada (acento morado de Cotizaciones). Se define --primary-rgb
-   —que antes faltaba— para que todos los rgba(var(--primary-rgb)) usen el morado. */
-:root {
-  --primary-color: #6c4ce0;
-  --primary-ink: #6c4ce0;
-  --primary-light: #8c6bff;
-  --primary-dark: #533bc4;
-  --primary-rgb: 108, 76, 224;
-  --secondary-color: #14b8a6;
-  --success-color: #17994f;
-  --warning-color: #e0891b;
-  --danger-color: #d6455b;
+/* Paleta del canon (D-131). Va en :host: con encapsulación emulada un `:root`
+   del componente se compila a `[_ngcontent]:root` y nunca aplica, así que el
+   checkout tomaba el --primary-color global, un lila que no es el acento. */
+:host {
+  --primary-color: #5F3FE0;
+  --primary-ink: #5F3FE0;
+  --primary-light: #7C5CFF;
+  --primary-dark: #4a2fc0;
+  --primary-rgb: 95, 63, 224;
+  --secondary-color: #8f8bab;
+  --success-color: #1E874B;
+  --warning-color: #D9820A;
+  --danger-color: #D64545;
   --light-color: #f7f8fc;
   --dark-color: #2a2e3c;
   --gray-100: #f7f8fc;
@@ -159,13 +160,13 @@
       border-color: var(--primary-color);
       color: #fff;
       font-weight: 800;
-      box-shadow: 0 6px 16px rgba(108, 76, 224, 0.28);
+      box-shadow: 0 6px 16px rgba(95, 63, 224, 0.28);
 
       i { color: #fff; }
     }
 
     &:focus {
-      box-shadow: 0 0 0 0.2rem rgba(108, 76, 224, 0.15);
+      box-shadow: 0 0 0 0.2rem rgba(95, 63, 224, 0.15);
     }
   }
 }
@@ -244,7 +245,7 @@
 }
 
 .accordion-button:focus {
-  box-shadow: 0 0 0 0.15rem rgba(108, 76, 224, 0.15);
+  box-shadow: 0 0 0 0.15rem rgba(95, 63, 224, 0.15);
   border-color: #e2d9fb;
 }
 
@@ -633,7 +634,7 @@
 }
 
 .payment-radio:focus + .payment-method-card {
-  box-shadow: 0 0 0 0.2rem rgba(108, 76, 224, 0.15);
+  box-shadow: 0 0 0 0.2rem rgba(95, 63, 224, 0.15);
 }
 
 /* Información de seguridad */
@@ -685,12 +686,12 @@
   background: var(--primary-color);
   color: #fff;
   transition: var(--transition);
-  box-shadow: 0 8px 20px rgba(108, 76, 224, 0.3);
+  box-shadow: 0 8px 20px rgba(95, 63, 224, 0.3);
 }
 
 .order-place .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(108, 76, 224, 0.38);
+  box-shadow: 0 10px 24px rgba(95, 63, 224, 0.38);
 }
 
 .order-place .btn:active { transform: translateY(1px); }
@@ -785,9 +786,9 @@
 }
 
 .alert-danger {
-  background-color: var(--danger-wash, #fce9e8);
+  background-color: var(--danger-wash, var(--ds-err-soft));
   color: var(--danger-color);
-  border-left: 3px solid var(--danger-color);
+  border: 0;
 }
 
 .alert i { margin-right: 0.5rem; }
@@ -816,7 +817,7 @@
       border-radius: 12px;
       padding: 1rem;
       margin-bottom: 1rem;
-      border-left: 4px solid var(--primary-color);
+      border: 1px solid #eeecf7;
 
       .note-header {
         display: flex;

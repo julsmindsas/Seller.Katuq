@@ -597,9 +597,9 @@ export const AGUI_TOOL_DISPLAY: Record<string, { icon: string; label: string; co
     get_delivery_status: { icon: 'pi-map-marker', label: 'Estado entrega', color: '#1E6FD9' },
 
     // MCP Write tools (HITL)
-    update_order_status: { icon: 'pi-pencil', label: 'Actualizar estado', color: '#8b5cf6' },
-    assign_transporter: { icon: 'pi-user-plus', label: 'Asignar transporte', color: '#8b5cf6' },
-    adjust_stock: { icon: 'pi-plus-circle', label: 'Ajustar stock', color: '#8b5cf6' },
+    update_order_status: { icon: 'pi-pencil', label: 'Actualizar estado', color: '#5F3FE0' },
+    assign_transporter: { icon: 'pi-user-plus', label: 'Asignar transporte', color: '#5F3FE0' },
+    adjust_stock: { icon: 'pi-plus-circle', label: 'Ajustar stock', color: '#5F3FE0' },
 
     // Dispatch/Routes tools (múltiples variaciones)
     plan_routes: { icon: 'pi-map', label: 'Planificar rutas', color: '#1E6FD9' },
@@ -858,7 +858,7 @@ export const AGUI_TOOL_ARTIFACT_MAP: AgUiToolArtifactConfig[] = [
                     datasets: [{
                         label: 'Ventas',
                         data: products.map((p: any) => p.sales || p.quantity || p.total || 0),
-                        backgroundColor: ['#10b981', '#1E6FD9', '#f59e0b', '#ef4444', '#8b5cf6']
+                        backgroundColor: ['#10b981', '#1E6FD9', '#f59e0b', '#ef4444', '#5F3FE0']
                     }]
                 }
             } as AgUiChartArtifact;
@@ -1026,7 +1026,7 @@ export const AGUI_TOOL_ARTIFACT_MAP: AgUiToolArtifactConfig[] = [
                         datasets: [{
                             label: 'Cantidad',
                             data: topProducts.slice(0, 5).map((p: any) => p.quantity || p.count || p.sales || 0),
-                            backgroundColor: ['#10b981', '#1E6FD9', '#f59e0b', '#ef4444', '#8b5cf6']
+                            backgroundColor: ['#10b981', '#1E6FD9', '#f59e0b', '#ef4444', '#5F3FE0']
                         }]
                     }
                 } as AgUiChartArtifact;
@@ -1164,7 +1164,7 @@ export const AGUI_TOOL_ARTIFACT_MAP: AgUiToolArtifactConfig[] = [
                     datasets: [{
                         label: 'Stock',
                         data: data.slice(0, 6).map((d: any) => d.stock || d.quantity || d.total || 0),
-                        backgroundColor: ['#10b981', '#1E6FD9', '#f59e0b', '#ef4444', '#8b5cf6', '#6b7280']
+                        backgroundColor: ['#10b981', '#1E6FD9', '#f59e0b', '#ef4444', '#5F3FE0', '#6b7280']
                     }]
                 }
             } as AgUiChartArtifact;

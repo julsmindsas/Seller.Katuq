@@ -1,6 +1,6 @@
 'use strict';
 
-// D-532 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B01a, tareas 2.2 y 2.3). design.md D3, D4 y D9.
+// D-540 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B01a, tareas 2.2 y 2.3). design.md D3, D4 y D9.
 // - Excepción D3: los títulos del menú (nav.service.ts) siguen siendo claves literales en español. El
 //   arreglo de títulos, encabezados, rutas e insignias es idéntico al tomado antes del bloque.
 // - Cada título visible existe en es, en, pt y de; en en, pt y de está traducido (o en la lista permitida).

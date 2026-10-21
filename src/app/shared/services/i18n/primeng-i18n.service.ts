@@ -6,7 +6,7 @@ import { take, takeUntil } from 'rxjs/operators';
 import { DEFAULT_APP_LANGUAGE } from '../../utils/app-language.utils';
 
 /**
- * D-532 (D5): textos de PrimeNG (calendarios, filtros de tabla, carga de archivos, contraseña)
+ * D-540 (D5): textos de PrimeNG (calendarios, filtros de tabla, carga de archivos, contraseña)
  * en el idioma del panel. Los toma del objeto `primeng` de cada diccionario.
  *
  * Solo textos: no pasa `dateFormat` ni `firstDayOfWeek` (formato, Ola 0) y no toca las opciones

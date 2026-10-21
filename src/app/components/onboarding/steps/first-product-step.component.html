@@ -14,7 +14,7 @@
   <!-- Product Form -->
   <p-card class="product-card">
     <ng-template pTemplate="header">
-      <div class="card-header">
+      <div class="onb-cabeza">
         <i class="pi pi-shopping-bag"></i>
         <span>Información del Producto</span>
       </div>
@@ -177,7 +177,7 @@
       label="Omitir Este Paso"
       icon="pi pi-arrow-right"
       iconPos="right"
-      class="p-button-secondary p-button-outlined p-button-lg"
+      class="cfg-btn cfg-btn--sec"
       (click)="onSkip()">
     </button>
 
@@ -187,7 +187,7 @@
       label="Guardar y Continuar"
       icon="pi pi-check"
       iconPos="right"
-      class="p-button-success p-button-lg"
+      class="cfg-btn"
       [disabled]="productForm.invalid || isSaving"
       [loading]="isSaving"
       (click)="onSave()">

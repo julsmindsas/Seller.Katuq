@@ -2677,8 +2677,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
       text: "¡No podrás revertir esto!",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
+      confirmButtonColor: "#D64545",
+      cancelButtonColor: "#8f8bab",
       confirmButtonText: "Sí, eliminarlo",
     }).then((result) => {
       if (result.isConfirmed) {
@@ -2699,8 +2699,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
         text: "Estás a punto de cambiar el asesor asignado a este pedido.",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
+        confirmButtonColor: "#5F3FE0",
+        cancelButtonColor: "#8f8bab",
         confirmButtonText: "Sí, cambiar asesor",
         cancelButtonText: "No, cancelar",
       }).then((result) => {
@@ -2725,7 +2725,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
         title: "¡Alerta!",
         text: "Este pedido ya tiene un asesor asignado.",
         icon: "warning",
-        confirmButtonColor: "#3085d6",
+        confirmButtonColor: "#5F3FE0",
         confirmButtonText: "Aceptar",
       });
     }
@@ -2867,7 +2867,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
         title: "¡Alerta!",
         text: "Este pedido ya ha sido pagado en su totalidad.",
         icon: "warning",
-        confirmButtonColor: "#3085d6",
+        confirmButtonColor: "#5F3FE0",
         confirmButtonText: "Aceptar",
       });
       return;
@@ -3190,22 +3190,22 @@ export class DespachosComponent implements OnInit, OnDestroy {
       const tarjetas = this.todasLasTarjetas
         .map(
           (tarjeta, index) =>
-            `<li style="margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+            `<li style="margin-bottom: 15px; padding: 10px; border: 1px solid #ececf4; border-radius: 16px;">
               <div style="margin-bottom: 10px;">
                 <strong style="color: #333;">Tarjeta ${index + 1}:</strong> 
                 <span style="color: #666; font-size: 0.9em;">Producto: ${escapeHtml(tarjeta.pedido)}</span>
               </div>
               <div style="margin-bottom: 8px;">
-                <strong style="color: #2c3e50;">De:</strong> 
-                <span style="color: #34495e;">${escapeHtml(toTitleCaseSwal(tarjeta.tarjeta.de)) || 'No especificado'}</span>
+                <strong style="color: #211F3A;">De:</strong> 
+                <span style="color: #5b5878;">${escapeHtml(toTitleCaseSwal(tarjeta.tarjeta.de)) || 'No especificado'}</span>
               </div>
               <div style="margin-bottom: 8px;">
-                <strong style="color: #2c3e50;">Para:</strong>
-                <span style="color: #34495e;">${escapeHtml(toTitleCaseSwal(tarjeta.tarjeta.para)) || 'No especificado'}</span>
+                <strong style="color: #211F3A;">Para:</strong>
+                <span style="color: #5b5878;">${escapeHtml(toTitleCaseSwal(tarjeta.tarjeta.para)) || 'No especificado'}</span>
               </div>
               <div style="margin-bottom: 15px;">
-                <strong style="color: #2c3e50;">Mensaje:</strong>
-                <div style="color: #34495e; font-style: italic; margin-top: 5px; padding: 8px; background-color: #f8f9fa; border-radius: 3px;">
+                <strong style="color: #211F3A;">Mensaje:</strong>
+                <div style="color: #5b5878; font-style: italic; margin-top: 5px; padding: 8px; background-color: #faf9fe; border-radius: 11px;">
                   ${escapeHtml(tarjeta.tarjeta.mensaje) || 'Sin mensaje'}
                 </div>
               </div>
@@ -4117,7 +4117,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
         const subtotalZona = pedidosZona.reduce((s, p) => s + (p.faltaPorPagar || 0), 0);
         pedidosHtml += `
           <tr>
-            <td colspan="6" style="padding:3px 6px;background:#eef2ff;border:1px solid #c7d2fe;font-weight:700;font-size:10px;color:#4338ca;">
+            <td colspan="6" style="padding:3px 6px;background:#efe9ff;border:1px solid #ddd3fb;font-weight:700;font-size:10px;color:#5F3FE0;">
               ${escapeHtml(zona)} <span style="font-weight:400;color:#5F3FE0;margin-left:8px;">${pedidosZona.length} pedido${pedidosZona.length > 1 ? 's' : ''} &bull; ${formatCurrency(subtotalZona)}</span>
             </td>
           </tr>`;

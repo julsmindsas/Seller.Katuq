@@ -10,7 +10,7 @@
   <!-- Add/Edit Warehouse Form -->
   <p-card>
     <ng-template pTemplate="header">
-      <div class="card-header">
+      <div class="onb-cabeza">
         <i class="pi pi-warehouse"></i>
         <span>{{ editingIndex !== null ? 'Editar Bodega' : 'Agregar Bodega' }}</span>
       </div>
@@ -181,7 +181,7 @@
           type="button"
           label="Cancelar"
           icon="pi pi-times"
-          class="p-button-secondary p-button-outlined"
+          class="cfg-btn cfg-btn--sec"
           (click)="cancelEdit()">
         </button>
         <button
@@ -189,7 +189,7 @@
           type="button"
           [label]="editingIndex !== null ? 'Actualizar Bodega' : 'Agregar a Lista'"
           [icon]="editingIndex !== null ? 'pi pi-check' : 'pi pi-plus'"
-          class="p-button-success"
+          class="cfg-btn"
           [disabled]="warehouseForm.invalid"
           (click)="addWarehouse()">
         </button>
@@ -200,7 +200,7 @@
   <!-- Warehouses List -->
   <p-card *ngIf="warehousesList.length > 0" class="mt-3">
     <ng-template pTemplate="header">
-      <div class="card-header">
+      <div class="onb-cabeza">
         <i class="pi pi-list"></i>
         <span>Bodegas Configuradas ({{ warehousesList.length }})</span>
       </div>
@@ -278,7 +278,7 @@
       label="Guardar y Continuar"
       icon="pi pi-check"
       iconPos="right"
-      class="p-button-success p-button-lg"
+      class="cfg-btn"
       [disabled]="warehousesList.length === 0 || isSaving"
       [loading]="isSaving"
       (click)="onComplete()">

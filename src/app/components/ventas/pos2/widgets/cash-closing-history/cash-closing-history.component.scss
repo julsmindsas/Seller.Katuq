@@ -53,7 +53,7 @@
 
         &:focus {
           box-shadow: none;
-          border-color: #3498db;
+          border-color: var(--ds-accent-ink);
         }
       }
 
@@ -63,18 +63,18 @@
         color: var(--km-gray-600);
 
         &:hover {
-          color: var(--km-blue);
+          color: var(--ds-accent-ink);
         }
       }
     }
 
     .btn-primary {
-      box-shadow: 0 2px 5px rgba(52, 152, 219, 0.2);
+      box-shadow: 0 2px 5px rgba(95, 63, 224, 0.2);
       transition: all 0.3s ease;
 
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        box-shadow: 0 4px 8px rgba(95, 63, 224, 0.3);
       }
     }
   }
@@ -117,7 +117,7 @@
     }
 
     // Ticket 1173: encabezado plano (era azul #1E6FD9, de la plantilla vieja).
-    .card-header {
+    .cch-cabeza {
       background: var(--ds-surface);
       padding: 14px 18px;
 
@@ -221,7 +221,7 @@
       }
       
       .closing-header {
-        background-color: var(--km-gray-50);
+        background-color: var(--ds-surface-2);
         padding: 15px;
         border-bottom: 1px solid var(--km-gray-200);
         
@@ -240,7 +240,7 @@
         }
         
         .closing-user {
-          color: var(--km-blue);
+          color: var(--ds-accent-ink);
         }
         
         .closing-total {
@@ -261,10 +261,10 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
           }
           
-          .card-header {
+          .cch-cabeza {
             padding: 12px 15px;
-            background-color: var(--km-gray-50);
-            border-bottom: 1px solid var(--km-gray-200);
+            background-color: var(--ds-surface-2);
+            border-bottom: 1px solid var(--ds-line);
             
             .section-subtitle {
               font-size: 1.1rem;
@@ -291,7 +291,7 @@
           
           td {
             font-weight: 500;
-            color: var(--km-blue);
+            color: var(--ds-accent-ink);
           }
         }
         
@@ -452,7 +452,7 @@
       border: 1px solid #ddd;
       margin-bottom: 20px;
 
-      .card-header {
+      .cch-cabeza {
         background: white !important;
         border-bottom: 1px solid #ddd;
         
@@ -478,7 +478,7 @@
           border-bottom: 1px solid #ddd;
         }
         
-        .card-header {
+        .cch-cabeza {
           background-color: white !important;
         }
         
@@ -556,7 +556,7 @@
   box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04);
 }
 
-.card > .card-header {
+.card > .cch-cabeza {
   background: var(--ds-surface);
   border-bottom: 1px solid var(--kc-line);
   border-radius: 16px 16px 0 0;
@@ -803,4 +803,22 @@
   }
 
   .closing-total { color: var(--kc-accent) !important; }
+}
+
+// Encabezados de tarjeta propios (antes el encabezado de tarjeta de Bootstrap): blancos,
+// los internos con el tinte lila del canon. Solo presentación.
+.cash-closing-history .cch-cabeza {
+  margin-bottom: 0;
+  padding: 14px 18px;
+  background: var(--ds-surface);
+  border-bottom: 1px solid var(--ds-line);
+
+  h3, h5 { color: var(--ds-ink); }
+}
+
+.cash-closing-history .cch-cabeza--sub { background: var(--ds-surface-2); }
+
+.cash-closing-history .btn:focus-visible {
+  outline: 3px solid var(--ds-focus) !important;
+  outline-offset: 2px;
 }

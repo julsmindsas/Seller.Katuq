@@ -50,15 +50,17 @@ p-inputnumber-input {
 @media (max-width: 767px) {
   .mobile-checkout .card {
     margin-bottom: 1rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    border: 1px solid #ececf4;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
   }
-  .mobile-checkout .card-header {
-    background-color: #a78bfa;
-    color: #fff;
+  .mobile-checkout .pc-cabeza {
+    background-color: #fff;
+    color: #211F3A;
     padding: 0.75rem 1rem;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
+    border-bottom: 1px solid #ececf4;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
   }
   .mobile-checkout .card-body {
     padding: 1rem;
@@ -66,7 +68,9 @@ p-inputnumber-input {
   }
   .mobile-checkout h5 {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #211F3A;
   }
   .mobile-checkout p {
     margin-bottom: 0.5rem;
@@ -75,5 +79,82 @@ p-inputnumber-input {
     width: 100%;
     padding: 0.75rem;
     font-size: 1.1rem;
+  }
+}
+
+// ── Tema Katuq (D-131): botones y modal de cobro en efectivo. Solo presentación.
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #5F3FE0 !important;
+  border-color: #5F3FE0 !important;
+  color: #fff !important;
+  box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+}
+
+.btn-primary:hover { background-color: #4a2fc0 !important; border-color: #4a2fc0 !important; }
+
+.btn-secondary,
+.btn-secondary:hover,
+.btn-secondary:focus {
+  background-color: #fff !important;
+  border: 1px solid #e4e2ef !important;
+  color: #5b5878 !important;
+}
+
+.btn-secondary:hover { background-color: #faf9fe !important; }
+
+.btn:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+
+.pc-modal {
+  border: 1px solid #ececf4;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px -18px rgba(50, 40, 110, .35);
+
+  .pc-modal__cabeza {
+    background: #fff;
+    border-bottom: 1px solid #ececf4;
+  }
+
+  .pc-modal__titulo {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    color: #211F3A;
+  }
+
+  .pc-modal__icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    background: #efe9ff;
+    color: #5F3FE0;
+  }
+
+  .pc-modal__cerrar {
+    min-width: 44px;
+    min-height: 44px;
+    background: transparent;
+    border: 0;
+    color: #8f8bab;
+  }
+
+  .modal-body label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: #8f8bab !important;
+  }
+
+  .modal-footer {
+    border-top: 1px solid #ececf4;
+    background: #faf9fe;
   }
 }

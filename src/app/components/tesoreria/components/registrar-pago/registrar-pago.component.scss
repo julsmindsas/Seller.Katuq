@@ -1,38 +1,43 @@
 @import '../../tesoreria-shared';
 
+// Modal con el aspecto del canon: cfg-btn (config-pagina) + encabezado/cuerpo/pie de tesorería.
+@include config-pagina;
+@include tk-modal-canon;
+
 .tk-reg-summary {
   display: flex;
   flex-wrap: wrap;
   gap: 1.5rem;
-  padding: 0.7rem 0.9rem;
-  background: $katuq-gray-50;
-  border: 1px solid $katuq-gray-200;
-  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
+  background: $cfg-tint;
+  border: 1px solid #eeecf7;
+  border-radius: 11px;
   > div { display: flex; flex-direction: column; gap: 0.1rem; }
 }
 .tk-reg-label {
   font-size: 0.68rem;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: $katuq-gray-500;
-  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: $cfg-muted;
+  font-weight: 800;
 }
 .tk-reg-num {
   font-size: 1rem;
-  font-weight: 700;
-  color: $katuq-gray-800;
-  font-family: 'Courier New', monospace;
+  font-weight: 800;
+  color: $cfg-ink;
+  font-variant-numeric: tabular-nums;
 }
 
 .tk-file-drop {
   position: relative;
-  border: 2px dashed $katuq-gray-300;
-  border-radius: 10px;
+  border: 2px dashed #d9cffb;
+  border-radius: 11px;
+  background: $cfg-tint;
   padding: 1.1rem;
   text-align: center;
   transition: border-color 0.15s, background 0.15s;
-  &.is-dragover { border-color: $katuq-primary; background: $katuq-purple-50; }
-  &.has-file { border-style: solid; border-color: $katuq-success; background: $katuq-success-light; }
+  &.is-dragover { border-color: $cfg-accent; background: $cfg-accent-soft; }
+  &.has-file { border-style: solid; border-color: $cfg-ok; background: $cfg-ok-soft; }
 }
 .tk-file-input {
   position: absolute;
@@ -47,8 +52,9 @@
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
-  color: $katuq-gray-500;
-  i { font-size: 1.6rem; color: $katuq-gray-400; }
+  color: $cfg-muted;
+  span { color: $cfg-body; font-size: 13px; }
+  i { font-size: 1.6rem; color: $cfg-accent; }
   small { font-size: 0.72rem; }
 }
 .tk-file-selected {
@@ -56,7 +62,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  color: $katuq-success-text;
+  color: $cfg-ok;
+  .tk-file-name { color: $cfg-ok; font-size: 13px; }
   font-weight: 600;
   i { font-size: 1.1rem; }
 }

@@ -10,7 +10,7 @@
   <!-- Predefined Templates -->
   <p-card class="templates-card">
     <ng-template pTemplate="header">
-      <div class="card-header">
+      <div class="onb-cabeza">
         <i class="pi pi-th-large"></i>
         <span>Plantillas Rápidas</span>
       </div>
@@ -22,7 +22,7 @@
         pButton
         type="button"
         [label]="template.nombre"
-        class="p-button-outlined template-button"
+        class="cfg-btn cfg-btn--sec template-button"
         [pTooltip]="template.descripcionCorreoElectronico"
         tooltipPosition="top"
         (click)="useTemplate(template)">
@@ -34,7 +34,7 @@
   <!-- Add/Edit Payment Method Form -->
   <p-card class="mt-3">
     <ng-template pTemplate="header">
-      <div class="card-header">
+      <div class="onb-cabeza">
         <i class="pi pi-credit-card"></i>
         <span>{{ editingIndex !== null ? 'Editar Método de Pago' : 'Agregar Método de Pago' }}</span>
       </div>
@@ -175,7 +175,7 @@
           type="button"
           label="Cancelar"
           icon="pi pi-times"
-          class="p-button-secondary p-button-outlined"
+          class="cfg-btn cfg-btn--sec"
           (click)="cancelEdit()">
         </button>
         <button
@@ -183,7 +183,7 @@
           type="button"
           [label]="editingIndex !== null ? 'Actualizar Método' : 'Agregar a Lista'"
           [icon]="editingIndex !== null ? 'pi pi-check' : 'pi pi-plus'"
-          class="p-button-success"
+          class="cfg-btn"
           [disabled]="paymentForm.invalid"
           (click)="addPaymentMethod()">
         </button>
@@ -194,7 +194,7 @@
   <!-- Payment Methods List -->
   <p-card *ngIf="paymentMethodsList.length > 0" class="mt-3">
     <ng-template pTemplate="header">
-      <div class="card-header">
+      <div class="onb-cabeza">
         <i class="pi pi-list"></i>
         <span>Métodos de Pago Configurados ({{ paymentMethodsList.length }})</span>
       </div>
@@ -281,7 +281,7 @@
       label="Guardar y Continuar"
       icon="pi pi-check"
       iconPos="right"
-      class="p-button-success p-button-lg"
+      class="cfg-btn"
       [disabled]="paymentMethodsList.length === 0 || isSaving"
       [loading]="isSaving"
       (click)="onComplete()">

@@ -1,6 +1,6 @@
 'use strict';
 
-// D-532 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B05, tareas 6.1 a 6.7): Clientes y CRM.
+// D-540 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B05, tareas 6.1 a 6.7): Clientes y CRM.
 // components/crm y components/prospect-manager pasan sus textos al traductor con claves crm.*,
 // prospectManager.* y comun.*. Los valores que se guardan o se comparan (etapas, prioridades,
 // fuentes, tipos) no cambian: solo su etiqueta. Node puro: lee plantillas, .ts y diccionarios.

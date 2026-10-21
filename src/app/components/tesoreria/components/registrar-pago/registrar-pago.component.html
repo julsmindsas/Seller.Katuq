@@ -76,8 +76,8 @@
 </div>
 
 <div class="modal-footer">
-  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()" [disabled]="submitting">Cancelar</button>
-  <button type="button" class="btn btn-primary" (click)="registrar()" [disabled]="submitting || form.invalid">
+  <button type="button" class="cfg-btn cfg-btn--sec" (click)="activeModal.dismiss()" [disabled]="submitting">Cancelar</button>
+  <button type="button" class="cfg-btn" (click)="registrar()" [disabled]="submitting || form.invalid">
     <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check'"></i> Registrar y aprobar
   </button>
 </div>

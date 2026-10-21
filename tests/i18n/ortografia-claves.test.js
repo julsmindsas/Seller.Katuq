@@ -1,6 +1,6 @@
 'use strict';
 
-// D-532 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B00e, tarea 1.11): ortografía de
+// D-540 (ticket Traducción cd CMNdBkVZXgYoOCvqfGZc, bloque IDI-B00e, tarea 1.11): ortografía de
 // las 11 claves literales de es.json que tenían faltas. Cada clave se renombra a su forma
 // corregida a la vez en es, en y pt, y en cada plantilla o .ts que la usa por el traductor.
 // Ninguna es título del menú, valor guardado o comparado, ni ruta (D3, excepción): se comprueba.

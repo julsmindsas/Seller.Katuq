@@ -255,24 +255,6 @@ body {
   }
 }
 
-.intg-gradient-border {
-  position: relative;
-  background: var(--intg-card-bg);
-  border-radius: var(--intg-radius-xl);
-  
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    padding: 2px;
-    background: var(--intg-gradient-primary);
-    border-radius: inherit;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: xor;
-    -webkit-mask-composite: xor;
-  }
-}
-
 // ========================================
 // Skeleton Loader System
 // ========================================

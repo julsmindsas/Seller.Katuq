@@ -13,7 +13,7 @@
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="list-header mb-0"><i class="fa fa-sticky-note me-1"></i> Notas de Producción Generales</h6>
             <button type="button" 
-                    class="btn btn-outline-info btn-sm"
+                    class="cfg-btn cfg-btn--sec notas-btn"
                     (click)="mostrarNotasGuardadas()"
                     title="Ver notas guardadas con archivos">
               <i class="fa fa-eye me-1"></i>Ver archivos
@@ -236,7 +236,7 @@
 
                 <!-- Botón para agregar primera nota cuando no hay campos -->
                 <div *ngIf="notasFormArray.at(i).get('notas')?.controls.length === 0" class="add-note-section">
-                  <button class="btn btn-sm btn-success" type="button" (click)="agregarNota(i)" [disabled]="isProductionNotesDisabled">
+                  <button class="cfg-btn notas-btn" type="button" (click)="agregarNota(i)" [disabled]="isProductionNotesDisabled">
                     <i class="fa fa-plus me-1"></i>
                     {{ obtenerNotasDelProducto(pedido.carrito[i]).length > 0 ? 'Agregar Nueva Nota' : 'Agregar Primera Nota' }}
                   </button>
@@ -253,7 +253,7 @@
                 {{ isEdit ? 'Solo se guardarán las nuevas notas agregadas' : 'Las notas se guardarán junto con el pedido' }}
               </small>
             </div>
-            <button class="btn btn-success"
+            <button class="cfg-btn"
                     type="button"
                     (click)="guardarNotas()"
                     [disabled]="isProductionNotesDisabled || !hayNotasParaGuardar()">

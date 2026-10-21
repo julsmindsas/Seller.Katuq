@@ -202,7 +202,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public userName: string = '';
   public userInitials: string = '';
   public userAvatarUrl: string = '';
-  public greeting: string = 'shell.sidebar.greetingHello'; // clave del saludo según la hora (D-532: la plantilla la traduce)
+  public greeting: string = 'shell.sidebar.greetingHello'; // clave del saludo según la hora (D-540: la plantilla la traduce)
 
   // Solo el primer nombre, para un saludo más limpio
   get firstName(): string {
@@ -772,7 +772,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
         this.currentPlan.renewalDate = renewalDate
           ? this.formatDate(renewalDate)
-          : null; // D-532: sin fecha, la plantilla muestra «No definida» traducido
+          : null; // D-540: sin fecha, la plantilla muestra «No definida» traducido
         this.currentPlan.daysLeft = renewalDate
           ? this.calculateDaysUntilReset(renewalDate)
           : 0;
@@ -2462,7 +2462,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
       this.renderer.addClass(itemElement, 'collapsed-submenu-item');
       this.renderer.setAttribute(itemElement, 'role', 'menuitem');
-      // D-532: el submenú flotante muestra el título traducido; el dato sigue siendo la clave en español.
+      // D-540: el submenú flotante muestra el título traducido; el dato sigue siendo la clave en español.
       const tituloVisible = childItem.title ? this.translate.instant(childItem.title) : '';
       this.renderer.setAttribute(itemElement, 'title', tituloVisible);
       this.renderer.setStyle(itemElement, 'animation-delay', `${index * 0.05} s`);
