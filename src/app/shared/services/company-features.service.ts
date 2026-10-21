@@ -43,6 +43,10 @@ export const COMPANY_FEATURE_FLAGS = [
   'categoryAttributes',
   // Fotos uniformes del producto (D-501, ticket 1252). Dueño: Daniel. Se retira el 2027-04-30.
   'productPhotoUniform',
+  // Quitar el fondo con IA al uniformar fotos (D-518 TX-37·6, ticket 1252, fase 2). Exige
+  // productPhotoUniform (COMPANY_FEATURE_REQUIRES): sola no prende. Dueño: Daniel. Se retira el
+  // 2027-06-30: encendida para todos o eliminada.
+  'productPhotoBackground',
   // SIIGO: facturar con el producto equivalente en vez de crear otro (D-504, ticket 1229).
   // Solo donde se comprobó la regla (ALMACEN BOMBAS). Dueño: Daniel. Se revisa el 2027-04-30.
   'siigoProductEquivalence',
@@ -76,6 +80,15 @@ export const COMPANY_FEATURE_FLAGS = [
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];
+
+/**
+ * Banderas que exigen otras (mismo `FEATURE_FLAG_REQUIRES` del backend): solo cuentan como
+ * prendidas si cada una de sus requeridas también vale exactamente `true`. Las demás no tienen
+ * requisitos.
+ */
+export const COMPANY_FEATURE_REQUIRES: Readonly<Partial<Record<CompanyFeatureFlag, readonly CompanyFeatureFlag[]>>> = Object.freeze({
+  productPhotoBackground: Object.freeze(['productPhotoUniform'] as const),
+});
 
 /**
  * ¿Tiene la empresa activa prendida una función nueva?
@@ -115,9 +128,15 @@ export class CompanyFeaturesService {
 
   constructor(private readonly securityService: SecurityService) {}
 
-  /** `true` solo si la bandera está en el documento de la empresa y vale exactamente `true`. */
+  /**
+   * `true` solo si la bandera está en el documento de la empresa y vale exactamente `true` y, si
+   * está en `COMPANY_FEATURE_REQUIRES`, también cada una de las que exige.
+   */
   isEnabled(flag: CompanyFeatureFlag): boolean {
-    return this.leerBanderas()[flag] === true;
+    const banderas = this.leerBanderas();
+    if (banderas[flag] !== true) return false;
+    const requeridas = COMPANY_FEATURE_REQUIRES[flag] || [];
+    return requeridas.every((r) => banderas[r] === true);
   }
 
   /** Igual que `isEnabled`, pero se vuelve a evaluar cuando cambia la empresa de la sesión. */
