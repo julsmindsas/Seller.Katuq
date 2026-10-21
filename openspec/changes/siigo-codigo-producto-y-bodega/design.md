@@ -165,6 +165,40 @@ inventario, costo de venta, ingreso y devolución. Hoy `createProduct` usa
 - No cambia lo que se factura: no toca el proveedor, el mapper ni
   `createInvoiceFromOrder`.
 
+## Desvíos al implementar (registro del 2026-10-21, bloque 1229-B05)
+
+Los tres primeros van con D-504 (aprobada por Daniel el 21-oct, en bloque) y
+están anotados en el contrato. El candado (S.1) no estaba en lo aprobado: es
+la propuesta D-533, apagada y pendiente de ratificar.
+
+- **D3 detrás de una bandera por comercio.** La búsqueda del equivalente solo
+  corre con `siigoProductEquivalence` (`companies.featureFlags`, D-505), apagada
+  por defecto. La regla depende de cómo codifica cada comercio (ALMARA y OH MY
+  STORE codifican distinto). El código guardado de D1/D2 sí se lee siempre.
+  Dueño Daniel; se revisa el 2027-04-30 (tarea 3.5). El requisito «Equivalencia
+  única antes de crear» de la spec todavía no dice «WHILE la bandera…»: se
+  ajusta con la aprobación de Daniel (tarea 3.6).
+- **D6, `stock_control` solo para servicios.** `createProduct` crea los
+  servicios sin control de inventario; los productos siguen con control, aunque
+  el mapper mande otro valor.
+- **D7 detrás de la misma bandera** (ya escrito en D7): apagada, la vista
+  previa es la de siempre. Se aparta de la recomendación 5 del informe, que
+  pedía la búsqueda exacta para todos y decía que el front no cambiaba: lo
+  nuevo nace apagado y el circuit breaker de SIIGO es compartido. El front sí
+  cambió (1b.2, chip por línea), porque los avisos solos no dicen a qué línea
+  se refieren.
+- **Candado de emisión (S.1), fuera del diseño original.** Hallazgo de
+  planificación del 21-oct: `from-order` y `from-order-async` le creían al
+  header `company`. Va en su propia decisión, D-533, con el interruptor global
+  `config/feature_flags.invoiceTenantLock` (off | shadow | on), que nace en
+  `off`. Que el `orderId` sea de la empresa queda en S.2. Daniel la ratifica
+  antes de desplegar (3.1).
+- **Requisitos EARS sin pasar a la spec.** El de la vista previa sí entró
+  (1229-B02) porque era la recomendación 5, aprobada. Los del candado (D-533,
+  propuesta) y los de la carga con `--aprobado` y `--verificar` (D5 y D6) no
+  estaban en el plan aprobado; quedan para que Daniel los apruebe, junto con
+  la condición de la bandera en «Equivalencia única antes de crear».
+
 ## Pruebas
 
 - `grupoContableSiigo`: las tres formas de `categorias`, la ruta completa

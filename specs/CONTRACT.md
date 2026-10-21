@@ -1346,6 +1346,16 @@ Orden = prioridad. La spec piloto siempre encabeza.
 
 > Resumen breve de cada sesión: qué hicimos, qué queda. Evita perder hilo.
 
+### 2026-10-21 — D-504 y D-533: ticket 1229 SIIGO de ALMACEN BOMBAS (cd nF3GLH3F2sZGnKsqNODM), bloques 1229-B01 a 1229-B05
+- D-504 pasa a APROBADA (Daniel, 21-oct, en bloque) y EN PRODUCCIÓN con `siigoProductEquivalence` apagada (nace apagada; no se releyó Firestore): backend ee5ee2e7 y front 2026.10.21.2. Los desvíos (bandera por comercio, `stock_control` solo en servicios y la vista previa entera detrás de la bandera, con cambio de front) quedan en `design.md`.
+- D-533 (candado de emisión) queda como PROPUESTA commiteada y apagada: no estaba en lo aprobado en bloque y Daniel la ratifica antes de 3.1.
+- En la rama `feature/tickets-web`, commiteado y sin desplegar: S.1 candado de emisión (D-533, backend cb6aad91 y front 693069ce), 1.9 aviso en la vista previa (70f97a54 y 7b7dcca1), 1b.2 chips (9a57fab7), y 2.3/2.4/2.6 scripts de carga endurecidos (f9f89660 y 4290122d). Pruebas en verde: 185 de `test:codigo-siigo`, 32 del candado, 4 de `siigoClienteNitConDv` y 14 del front.
+- **Referencia de D-453:** no estaba errada. En Support hay dos tickets con el número 1229: «Web · F2-20» (cd b0t5fO5a8aA4ZHiKnsIC, 12-oct, catálogo para Google y Meta, Resuelto) y el de SIIGO de Bombas (cd nF3GLH3F2sZGnKsqNODM, 18-oct). Se aclaró la línea de D-453 citando el cd (regla de D-531 para números repetidos). **Para el dueño de `openspec/changes/atributos-por-categoria/`:** su `proposal.md` (l.68) y `specs/catalogo-feed-atributos/spec.md` (l.4) dicen «ticket 1229» por el F2-20; es correcto, pero conviene citar el cd. No se tocaron sus archivos. El commit 081fabb4 del 16-oct también dice «ticket 1229» por el F2-20.
+- `tasks.md` del cambio: 3.3 (parte documental) hecha; 0.2, 2.3, 2.4, 2.5, 2.7, 3.1, 3.2, 3.4, 3.5, 3.6, S.2 y S.3 abiertas con quién las desbloquea. Dos borradores para el comercio, que Daniel manda: el aviso previo (2.7, antes de prender la bandera: bodega 31, bloqueo por falta de stock y los 2 ambiguos) y la nota de cierre (3.4). No se escribió en el ticket.
+- Correcciones de la revisión: la nota ya no dice que la API de SIIGO no permite compras (solo está comprobado que no expone ajustes ni movimientos de inventario; `POST /v1/purchases` no se revisó y Katuq hoy no envía compras); el recordatorio del 1099 reconoce que el comercio ya llamó a SIIGO (comentario del 30-sep en el 1096, cd PkAckfh8DWlSQe5pDVC8) y pide la respuesta. El informe del ticket (pregunta 2) repite la afirmación de las compras.
+- Bloqueado (no lo hace un agente en modo automático): la revisión de Laura de los dos Excel, `--apply` de 2.3 y 2.4, prender la bandera, la primera factura real (3.2), la revisión en navegador a 1440 y 390 px, push y despliegue (3.1), y el comentario y cierre del ticket.
+- Commit con sello sugerido: `docs(contrato,openspec): D-504 aprobada y en producción con la bandera apagada, D-533 candado de emisión, D-453 citada por cd y nota de cierre para Bombas (ticket 1229, bloque 1229-B05, D-518)`. «D-518» es el sello que usan todos los commits de la rama; en el contrato equivale a D-531.
+
 ### 2026-10-21 — D-532: idiomas del panel (ticket cd CMNdBkVZXgYoOCvqfGZc), apertura y bloque IDI-B00a
 - Se aprobó y se asentó la propuesta `idiomas-plataforma` (D-532).
 - En el backend, el login devuelve `visibleLanguages` (`config/feature_flags`, D-505), apagado por defecto: `['es','en','pt']`. El script `set-idiomas-visibles.js` simula por defecto.
@@ -10294,7 +10304,7 @@ Daniel: «arreglalo y te autorizo a corregir los pedidos». Sigue a D-438.
 - **Ya existían:** SSR, URLs amigables, meta editable, sitemap y robots, Product/Offer/Breadcrumb/Organization y WebP con carga diferida.
 - **Fuera:** Core Web Vitals por página y blog.
 
-## D-453 (2026-10-16) — Sitio: catálogo para Google Shopping y Meta (ticket 1229) — PUBLICADO: backend f67f222b, front 2026.10.16.7
+## D-453 (2026-10-16) — Sitio: catálogo para Google Shopping y Meta (ticket 1229 «Web · F2-20», cd b0t5fO5a8aA4ZHiKnsIC; no el 1229 de SIIGO de D-504) — PUBLICADO: backend f67f222b, front 2026.10.16.7
 
 - **El feed ya existía** (`feed.xml`, RSS de Merchant, que también sirve para Meta). Se le agregan:
   - `sale_price` con vigencia cuando hay oferta;
@@ -11135,13 +11145,35 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - **D-496 pedido por WhatsApp: base.** Backend af1bd54c. La cotización enviada por el bot deja historial (1.2), y quedan las pruebas de caracterización 2.1 a 2.3 sin código de producción. La revisión de seguridad (0.5) espera a Daniel.
   - **Corregido (aprobado por Daniel):** en el plan gratis, cada pedido de la tienda en línea contaba dos veces para el tope del mes (`createOrderWithinLimit` + `consumeStoreOrderSlot`). Un tope de 15 bloqueaba hacia el pedido 8. Ahora cuenta una vez.
 
-## D-504 (2026-10-18) — Facturar en SIIGO con el código del producto que ya existe allá, y bodegas de Bombas conectadas (ticket 1229) — PROPUESTA
+## D-504 (2026-10-18) — Facturar en SIIGO con el código del producto que ya existe allá, y bodegas de Bombas conectadas (ticket 1229, cd nF3GLH3F2sZGnKsqNODM) — APROBADA (Daniel, 21-oct, en bloque) y EN PRODUCCIÓN con la bandera `siigoProductEquivalence` apagada
 
 - **Contexto:** ALMACEN BOMBAS factura en SIIGO, pero su código de producto lleva el bloque de categoría (`GLD-00-01-4SSFR`) y en SIIGO no (`GLD-01-4SSFR`). Solo 41 de 1.286 casan tal cual, y al facturar `findOrCreateProduct` crea otro producto en SIIGO: 11 repetidos ya. Ninguna bodega estaba conectada, así que SIIGO descontaba de su bodega por defecto.
 - **Hecho (datos, 2026-10-18):** se conectaron BOD-005 Bogotá → 6, BOD-006 Cali → 7 y BOD-001 Zona Franca LD → 31, en `warehouses.integrations.siigo` (mismo formato que la pantalla D-046, `mappedBy: ticket-1229`). Medellín (4 bodegas Katuq contra Medellin 4 y BMedellin 64) y Zona Franca Exterior quedan para el comercio.
 - **Propuesta:** `products.integrations.siigo.productCode`, que se usa antes de la referencia al facturar. Carga inicial de 666 equivalencias únicas con prueba sin escribir. Sin código y sin referencia en SIIGO, la regla busca un único equivalente antes de crear. Write-set en `products` limitado a `integrations.siigo.productCode*`.
 - **No toca:** referencia de Katuq, precios, catálogo, inventario de Katuq, World Office. D-500 (facturación a Integraciones) es aparte.
-- [Propuesta](../openspec/changes/siigo-codigo-producto-y-bodega/proposal.md). Pendiente: aprobación de Daniel para pasar a diseño y tareas.
+- [Propuesta](../openspec/changes/siigo-codigo-producto-y-bodega/proposal.md). ~~Pendiente: aprobación de Daniel para pasar a diseño y tareas.~~ (estado del 18-oct; ver abajo)
+- **Aprobación (2026-10-21):** Daniel aprobó en bloque propuesta, diseño, spec y tareas; cada pregunta abierta se resuelve con la recomendación escrita en el informe del ticket.
+- **En producción:** backend ee5ee2e7 (contiene 4030ec8c, 91c5f916 y 83202c51; 4030ec8c y 91c5f916 ya iban en 80bb73ce del 19-oct) y front release 2026.10.21.2 (bdb74e32, contiene 6d7d00a1 y 55059eab). La bandera por comercio `siigoProductEquivalence` nace apagada (catálogo de banderas) y ningún script de este ticket la ha prendido; no se releyó Firestore para confirmar que ninguna empresa la tenga encendida a mano. Sin ella, nadie busca equivalentes y la vista previa es la de antes. El código guardado (`integrations.siigo.productCode`) sí se lee en toda factura y vista previa SIIGO, pero como la carga (2.3) no se ha aplicado y la bandera nunca se prendió, ningún producto debería tenerlo (no se releyó Firestore).
+- **Desvíos frente al diseño** (anotados en `design.md`, sección «Desvíos»):
+  - la búsqueda del equivalente (D3) va detrás de la bandera por comercio, porque hay comercios con SIIGO sin inventario y otra forma de codificar (ALMARA, OH MY STORE). Dueño Daniel; se revisa el 2027-04-30 (Art. XII, tarea 3.5);
+  - `stock_control` (D6): solo los servicios pasan a crearse sin control de inventario; los productos siguen con control, aunque el mapper diga otra cosa;
+  - aviso de la vista previa (1.9, recomendación 5 del informe): la recomendación pedía la búsqueda exacta para todos los comercios (candidatos solo con la bandera) y decía que el front no cambiaba. Se implementó con la vista previa entera detrás de `siigoProductEquivalence`, porque lo nuevo nace apagado y el circuit breaker de SIIGO es compartido por todas las empresas (D7 del diseño); con la bandera apagada ningún comercio ve si el producto existe en SIIGO. Y el front sí cambió (1b.2, chips por línea), porque los avisos solos no dicen a qué línea se refieren.
+- **Nuevo en la rama `feature/tickets-web`, commiteado y SIN desplegar** (bloques 1229-B01 a 1229-B04):
+  - S.1, candado de empresa en la emisión: backend cb6aad91, front 693069ce. Decisión propia: D-533.
+  - 1.9, aviso en la vista previa («existe», «con su equivalente», «se creará»), solo con la bandera, tope de 20 códigos y 15 s, sin reintentos: backend 70f97a54, front 7b7dcca1.
+  - 1b.2, código y chip por línea en la vista previa: front 9a57fab7. **Excepción de color:** el texto del chip de alerta va en `#8a5300` (el de `.fvp-aviso`) y no en `#D9820A`, porque sobre `#FFF1DF` da 5,7:1 contra 2,6:1. **Falta la revisión en navegador a 1440 y 390 px** (no hay navegador en el servidor).
+  - 2.3, 2.4 y 2.6, scripts de carga endurecidos (`--aprobado`, `--verificar`, el Excel aprobado nunca se pisa, write-set probado): backend f9f89660, front 4290122d.
+  - Pruebas del 21-oct en la punta de la rama: `npm run test:codigo-siigo` 185 (22 + 125 + 38), `npm run test:candado-empresa-factura` 32, `siigoClienteNitConDv` 4 y `node --test tests/ventas/vista-previa-siigo.test.js` 14, todo en verde.
+- **Pendiente de datos y verificación (nada de esto lo hace un agente en modo automático):**
+  - 2.3: cargar los 666 códigos. Desbloquea Laura (OK al Excel `Codigos SIIGO ALMACEN BOMBAS.xlsx`, que está en Descargas de la máquina donde corrió la prueba, no en el servidor) y luego Daniel con una sesión con permiso de escritura. Antes se repite la prueba sin escribir, porque el catálogo pudo cambiar desde el 19-oct.
+  - 2.4: guardar las 54 conexiones de categoría. Desbloquea Laura (confirmar que las categorías nuevas 1647–1679 tienen las cuentas de inventario, costo, ingreso y devolución).
+  - 2.5: prender la bandera en ALMACEN BOMBAS. Desbloquea Daniel, después de 2.3, de `--verificar` de 2.4, de D-533 en `shadow` sin desajustes y de S.2 resuelta o en sombra.
+  - 2.7: aviso previo al comercio, antes de 2.5 (inventario inicial de la bodega 31, bloqueo por falta de stock apagado y elegir entre los 2 ambiguos). Desbloquea Daniel al mandarlo; el comercio responde.
+  - 0.2: bodegas de Medellín (MED-VIT, MED-MOT, MED-VIR, MED-REP) y Zona Franca Exterior. Desbloquea el comercio al crearlas en Siigo Nube.
+  - 3.2: primera factura real de Bombas con un producto de código largo, revisada contra SIIGO, más la revisión visual de la vista previa.
+  - Spec `specs/siigo-codigo-producto/spec.md` (lo aprueba Daniel, porque cambia una spec aprobada fuera de lo que cubrió la recomendación 5):
+    - el requisito «Equivalencia única antes de crear» debe pasar a «WHILE la empresa tiene `siigoProductEquivalence` encendida», como ya está en producción (tarea 3.6);
+    - requisitos EARS de la carga (`--aprobado`, `--verificar`) y del candado (D-533).
 
 ## D-505 (2026-10-19) — Toda configuración de empresa vive en Firestore; no más interruptores en el `.env` — APROBADA (Daniel, 19-oct)
 
@@ -11824,3 +11856,25 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
     - Golden de `tests/sitios`: 20/20 idéntico.
     - Se corre con `npm run test:idiomas-login`.
   - Sin push ni despliegue. La configuración no se escribió en ninguna base.
+
+## D-533 (2026-10-21) — Candado de empresa en la emisión de facturas, interruptor `invoiceTenantLock` (ticket 1229, cd nF3GLH3F2sZGnKsqNODM, tarea S.1) — PROPUESTA, COMMITEADA en la rama `feature/tickets-web` (backend cb6aad91, front 693069ce), sin desplegar y APAGADA; pendiente de ratificar por Daniel
+
+- **Estado:** el candado no estaba en lo que Daniel aprobó en bloque el 21-oct (propuesta, diseño, spec y tareas del cambio, y las recomendaciones del informe del ticket). Entró como hallazgo de planificación en el bloque 1229-B01 (S.1 de `tasks.md`, commit 693069ce). Por eso queda como propuesta: el código está commiteado y apagado, y ni el despliegue con el modo en `off` (3.1), ni pasar a `shadow` u `on`, ni llevar sus EARS a la spec se hacen sin la aprobación explícita de Daniel.
+- **Por qué (hallazgo de planificación del 21-oct):** `POST /v1/accounting/:provider/invoices/from-order` y `from-order-async` solo tenían `auth` + `validateCompany`, que le cree al header `company`. Una sesión de un comercio podía emitir en el proveedor contable de otra empresa (la ruta vale para todo `:provider`) y, con `siigoProductEquivalence` encendida, guardar códigos SIIGO en sus productos. La vista previa ya usaba `requireJwtTenant`.
+- **Decisión:** `functions/middleware/candadoEmpresaFactura.js`, después de `auth` y solo en esas dos rutas (`routers/accounting.js`).
+  - Compara la empresa del JWT con el header `company`, `body.company`, `body.companyId`, `body.empresa` y `query.companyId` (`pistasDe` en el middleware; lo leen `validateCompany` y el controlador). Julsmind entra a cualquier empresa (D-359).
+  - Es síncrono: lee el modo con `platformFlags.interruptorSync`, así que la emisión nunca espera a Firestore. Si la caché venció, `interruptorSync` lanza un refresco en segundo plano (puede haber una lectura de `config/feature_flags` durante la petición, sin esperarla). Si el servidor no inició los flags, vale `off`.
+- **Interruptor global (D-505):** `config/feature_flags.invoiceTenantLock`, catálogo en `services/platformFlags.js`.
+  - `off` (por defecto, y sin el campo): igual que antes del cambio; la petición no espera a Firestore ni escribe nada.
+  - `shadow`: deja pasar y anota `tenant_mismatch_shadow` en `accounting_invoice_errors` con la empresa del JWT, la pedida, la ruta, `requestedOrderId` (no `orderId`, para no ensuciar la bandeja de D-499) y una huella del usuario, sin correo.
+  - `on`: 403 `TENANT_MISMATCH` o `TENANT_NOT_IN_JWT`, con `error`, `code` y `source` como `requireJwtTenant` y un `message` en español para el comercio.
+  - Se cambia con `node scripts/platform-flags.js invoiceTenantLock shadow --execute` (simula sin `--execute`), siempre por orden de Daniel.
+- **Requisitos EARS** (propuestos; pasan a `specs/siigo-codigo-producto/spec.md` cuando Daniel apruebe esta decisión, porque el candado no estaba en el plan aprobado. El requisito de la vista previa sí entró a la spec en 1229-B02 porque era la recomendación 5, aprobada):
+  - CUANDO `invoiceTenantLock` falte o valga `off`, el sistema DEBERÁ emitir como antes del cambio, sin esperar a Firestore ni escribir eventos.
+  - CUANDO valga `shadow` y la empresa pedida no sea la del JWT, el sistema DEBERÁ dejar pasar la emisión y registrar el evento sin correo ni datos personales.
+  - CUANDO valga `on` y la empresa pedida no sea la del JWT, el sistema DEBERÁ responder 403 sin emitir; SI la sesión no trae empresa en el JWT (API key), DEBERÁ responder 403 `TENANT_NOT_IN_JWT`.
+  - MIENTRAS la sesión sea de Julsmind, el sistema DEBERÁ dejar emitir para la empresa pedida.
+- **Lo que no cierra:** que el `orderId` sea de esa empresa. Queda como S.2 (propuesta propia, interruptor propio que nace en `off`, aprobación de Daniel) y debe estar resuelta, o al menos en sombra sin desajustes, antes de prender `siigoProductEquivalence` en ALMACEN BOMBAS (2.5).
+- **Pruebas:** `npm run test:candado-empresa-factura`, 32 en verde el 21-oct (caracterización del router antes y después, la decisión en los tres modos y el middleware con el interruptor real en memoria).
+- **Encendido:** primero `shadow`, revisar los eventos y después `on`. Antes de 2.5 debe estar al menos en `shadow` sin desajustes. Antes de `on`, decidir si el interceptor del front deja de mostrar el 403 con el título fijo «Suscripción» (cambio de front aparte).
+- **Art. XII:** dueño Daniel. Se ratifica antes de 3.1 y se revisa el **2027-01-31**: o queda en `on` y el interruptor se retira dejando el candado fijo, o se elimina. Tarea S.3 en `tasks.md`.
