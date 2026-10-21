@@ -11500,3 +11500,13 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - A esa hora el código estaba subido sin desplegar: `invoicing/summary` respondía 404.
   - Los otros 13 FE siguen abiertos por la regla «no cerrar tickets sin trabajo publicado»: FE-02, 06, 08, 09, 10, 11, 12, 17, 19, 21, 22, 23 y 24. FE-03 (#1261) ya estaba archivado.
   - FE-02 y FE-03 tienen piezas puras sin conectar (candado, reporte, estados y capacidades).
+- **D-499 2.2 aprobada por el usuario y aplicada (backend, ver el último commit de `backend-aws-security`):**
+  - `createInvoiceFromOrder` usa `utils/emisionConCandado.js`.
+  - **Apagada:** todo idéntico a hoy, más `uncertain_shadow` cuando un envío sale sin respuesta.
+  - **Encendida:** clave por envío, réplica de una clave aceptada, `uncertain` que no vence, dueño en cada escritura y `duplicate_detected`.
+  - **Siguen, sensibles y con diff:**
+    - 2.3: `pedidoYaFacturado` con `candadoFactura`;
+    - 2.4: `beforeSend` y `submittedToDian` en DIAN;
+    - 2.5: `requestId` y códigos en `from-order`;
+    - 2.6 y 2.7: `verify-invoice`;
+    - 2.11: `requestId` desde el front.

@@ -46,7 +46,7 @@
 ## 2. Fase 0: implementación (orden fijo para las SENSIBLE)
 
 - [x] 2.1 `candadoFactura.js` hasta poner 1.1 en verde. Depende de 1.1.
-- [ ] 2.2 **SENSIBLE (pedidos).** `accountingManager.createInvoiceFromOrder`: `options.requestId`, gancho `beforeSend`
+- [x] 2.2 **SENSIBLE (pedidos).** `accountingManager.createInvoiceFromOrder`: `options.requestId`, gancho `beforeSend`
   o `sentAt` antes de `strategy.createInvoice`, las tres escrituras con dueño, `expectedTotal`, réplica, `uncertain`
   y `duplicate: true` como incierto. Bandera apagada: solo `*_shadow`. Leer completo `accountingManager.js:1487-2190`.
   Depende de 2.1, 2.8 y 1.5. Éxito: 1.1 y 1.5 en verde, 1.6 sin regresión.
