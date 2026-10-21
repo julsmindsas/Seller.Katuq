@@ -24,7 +24,7 @@ Lo fija la prueba `importStore.routes.contract.test.js` (tarea 1.1) antes de imp
 | `IMPORT_IN_PROGRESS` | 409 | El candado de la empresa está tomado (`products`, `customers`) |
 | `TOO_MANY` | 413 | Se pasa el límite de la ruta (tabla de abajo) |
 
-Mientras no entren las escrituras (tareas 6.1 y 7.1), `products` y `redirects` validan, revisan la guarda y el sitio, y responden 501 `NOT_AVAILABLE_YET`.
+`products` y `redirects` escriben (tareas 6.1 y 7.1).
 
 Ante `IMPORT_IN_PROGRESS`, el front espera y reenvía el mismo lote. Si ese lote ya había terminado, recibe su resultado con `replayed: true`.
 
@@ -100,6 +100,9 @@ Ante `IMPORT_IN_PROGRESS`, el front espera y reenvía el mismo lote. Si ese lote
 - `TARGET_MISSING`: apunta a un producto que ya no existe.
 - `OVER_CAPACITY`: no cupo en el tope.
 - `NOT_MIGRATED`: el `cd` no corresponde a un producto migrado de la empresa con ese `handle`.
+- `CATEGORY_MISSING`: la categoría de la colección no existe en el árbol de la empresa; no se crea redirección.
+
+`issues` trae hasta 500 avisos y `issuesTotal` el total. Un producto separado por precio (`splitFrom`) o fuera de la tienda web no genera redirección. Errores propios de la ruta: `404 SITE_NOT_FOUND` (sitio ajeno o inexistente), `409 WOO_INTEGRATION_ACTIVE` y `413 SITE_TOO_LARGE` (el borrador no cabe en 1 MiB; no se escribe nada). Solo cambia `draft.redirecciones`; repetir el paso no duplica.
 
 ### `POST customers` (fase 1b)
 

@@ -28,7 +28,7 @@
   - → D-518 (pendiente de aprobación): la prohibición de `preciosPorTipoCliente` pasa a «como máximo una fila, la del tipo Público de la empresa, en el mismo producto» (14.5). Además vigila `seo`, `alt`, `exposicion.nuevo: false` y `marketplace.paginaWeb`.
   - *Estado:* escrita y **en rojo hasta 6.1** (hoy `products` responde 501). La forma del producto y la actualización acotada ya pasan por el upsert real en la prueba de 4.2. El simulador ahora reemplaza un mapa vacío como Firestore (`simulador.test.js`), así que la condición de `exposicion` sí puede fallar; `migrationProduct.test.js` lo comprueba con un control sin la copia.
 - [x] 1.4 `[P]` `importStoreRedirects.contract.test.js`: solo `draft.redirecciones` (`published` intacto); manuales primero y sin cambios; lo generado se reconoce por `metadata.migration.handle` y se actualiza; destino inexistente → `TARGET_MISSING`; tope 500 con sobrantes reportadas; sitio ajeno → 404; repetir no duplica.
-  - *Estado:* escrita; el 404 ya pasa y el resto queda **en rojo hasta 7.1**.
+  - *Estado:* escrita; en verde desde 7.1.
 - [ ] 1.5 `[P]` `importStoreCustomers.writeSet.contract.test.js` (fase 1b): los casos de `design-clientes.md`, incluidos el correo suprimido en otra tienda, el celular con otro formato y la reversa con más de 500 documentos.
 - [x] 1.6 `[P]` Dorado de categorías: con lotes de prueba, `importProducts` escribe el mismo árbol, `categorias` y `categoriasIndex` que en `HEAD`, y responde el mismo 409. Los valores salen del código actual. El dorado de fotos sigue en verde.
   - *Estado:* `categoriasImportProducts.golden.test.js`, con los valores sacados de `HEAD` en `fixtures/dorado-categorias-importProducts.json`; en verde antes y después de 3.1.
@@ -73,7 +73,8 @@
 
 ## 7. Redirecciones
 
-- [ ] 7.1 Ruta `redirects` con fusión transaccional en `draft.redirecciones`. Depende de 4.3 y 6.1. **Éxito:** 1.4 en verde.
+- [x] 7.1 Ruta `redirects` con fusión transaccional en `draft.redirecciones`. Depende de 4.3 y 6.1. **Éxito:** 1.4 en verde.
+  - *Estado (F530-B08):* hecho. `services/storeMigration/redirectsPaso.js` + ruta en `controllers/importStore.js`; 1.4 en verde y `importStoreRedirects.paso.test.js` (fuera de la tienda web, handle distinto, 1 MiB, rastro). Sin tocar `sites.js`, `siteHtml.js` ni `siteTienda.js`. Falta, en B09 y B13: `probable`/`urls[]`/`productBase` de WooCommerce y `TARGET_HIDDEN_BY_PLAN`.
 
 ## 8. Front (fase 1a)
 
