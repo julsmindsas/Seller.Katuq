@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { firstValueFrom } from 'rxjs';
@@ -44,6 +45,7 @@ export class LeadToSalesService {
     private maestro: MaestroService,
     private modalService: NgbModal,
     private router: Router,
+    private translate: TranslateService,
   ) {}
 
   /** Campos que `clients` exige (los mismos validadores del formulario). */
@@ -62,7 +64,7 @@ export class LeadToSalesService {
    * siquiera deja pasar del paso 1.
    */
   async iniciarPedido(lead: CrmLead): Promise<void> {
-    const candidato = await this.prepararCandidato(lead, 'tomarle un pedido');
+    const candidato = await this.prepararCandidato(lead, 'crm.conversion.accionPedido');
     if (!candidato) return;
     const documento = await this.asegurarCliente(candidato);
     if (documento) this.irAVentaAsistida(documento);
@@ -98,7 +100,7 @@ export class LeadToSalesService {
    * `categoria`, que la copia del lead no tiene); si no, viaja la copia.
    */
   async iniciarCotizacion(lead: CrmLead): Promise<void> {
-    const candidato = await this.prepararCandidato(lead, 'cotizarle');
+    const candidato = await this.prepararCandidato(lead, 'crm.conversion.accionCotizar');
     if (!candidato) return;
 
     const yaCliente = await this.buscarCliente(candidato.documento);
@@ -122,8 +124,8 @@ export class LeadToSalesService {
   private async prepararCandidato(lead: CrmLead, accion: string): Promise<any | null> {
     if (lead.activo === false) {
       await Swal.fire({
-        title: 'Lead bloqueado',
-        text: `Desbloquéalo antes de ${accion}.`,
+        title: this.translate.instant('crm.conversion.leadBloqueado'),
+        text: this.translate.instant('crm.conversion.desbloquealoAntesDe', { accion: this.translate.instant(accion) }),
         icon: 'warning',
         confirmButtonColor: '#8b5cf6',
       });
@@ -133,7 +135,7 @@ export class LeadToSalesService {
     const res: any = await firstValueFrom(this.crmService.getLead(lead.id));
     const entity = res?.data?.entity;
     if (!res?.success || !entity) {
-      await Swal.fire('Error', 'No se pudieron cargar los datos del lead.', 'error');
+      await Swal.fire(this.translate.instant('comun.error'), this.translate.instant('crm.conversion.noSePudieronCargarLos'), 'error');
       return null;
     }
     return this.leadACliente(entity);
@@ -196,12 +198,12 @@ export class LeadToSalesService {
     try {
       await firstValueFrom(this.maestro.createClient(cliente));
     } catch {
-      await Swal.fire('Error', 'No se pudo crear el cliente. Intenta de nuevo.', 'error');
+      await Swal.fire(this.translate.instant('comun.error'), this.translate.instant('crm.conversion.noSePudoCrearEl'), 'error');
       return false;
     }
     Swal.fire({
-      title: '¡Ahora es cliente!',
-      text: `${cliente.nombres_completos} quedó en el listado de clientes.`,
+      title: this.translate.instant('crm.conversion.ahoraEsCliente'),
+      text: this.translate.instant('crm.conversion.quedoEnElListadoDe', { nombres_completos: cliente.nombres_completos }),
       icon: 'success',
       timer: 2500,
       timerProgressBar: true,
@@ -217,7 +219,7 @@ export class LeadToSalesService {
     const modalRef = this.modalService.open(CrearClienteModalComponent, { size: 'lg', centered: true });
     modalRef.componentInstance.isEdit = false;
     modalRef.componentInstance.target = 'client';
-    modalRef.componentInstance.title = 'Completa los datos del cliente';
+    modalRef.componentInstance.title = this.translate.instant('crm.conversion.completaLosDatosDelCliente');
     modalRef.componentInstance.prefill = cliente;
 
     return modalRef.result.then(

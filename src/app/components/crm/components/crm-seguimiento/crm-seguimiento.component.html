@@ -2,12 +2,12 @@
 <div class="cfg-pagina seguimiento-wrap">
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">CRM</span>
-      <h1 class="cfg-titulo">Seguimiento</h1>
+      <span class="cfg-eyebrow">{{ 'crm.seguimiento.crm' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'crm.seguimiento.seguimiento' | translate }}</h1>
     </div>
     <div class="cfg-acciones">
       <button class="cfg-btn cfg-btn--sec" (click)="load()" [disabled]="loading">
-        <i class="fa fa-refresh me-1"></i>Actualizar
+        <i class="fa fa-refresh me-1"></i>{{ 'crm.seguimiento.actualizar' | translate }}
       </button>
     </div>
   </header>
@@ -16,19 +16,19 @@
   <div class="metrics-row" *ngIf="!loading">
     <div class="metric-chip metric-chip-warning">
       <span class="metric-value">{{ cotizacionesSinAbrir.length }}</span>
-      <span class="metric-label">Sin abrir</span>
+      <span class="metric-label">{{ 'crm.seguimiento.sinAbrir' | translate }}</span>
     </div>
     <div class="metric-chip metric-chip-info">
       <span class="metric-value">{{ cotizacionesVistasSinCerrar.length }}</span>
-      <span class="metric-label">Vistas sin cerrar</span>
+      <span class="metric-label">{{ 'crm.seguimiento.vistasSinCerrar' | translate }}</span>
     </div>
     <div class="metric-chip metric-chip-danger">
       <span class="metric-value">{{ cotizacionesVencidas.length }}</span>
-      <span class="metric-label">Vencidas</span>
+      <span class="metric-label">{{ 'crm.seguimiento.vencidas' | translate }}</span>
     </div>
     <div class="metric-chip metric-chip-neutral">
       <span class="metric-value">{{ formatCurrency(valorEnRiesgo) }}</span>
-      <span class="metric-label">Valor en riesgo</span>
+      <span class="metric-label">{{ 'crm.seguimiento.valorEnRiesgo' | translate }}</span>
     </div>
   </div>
 
@@ -38,18 +38,18 @@
   <div class="cfg-card stat-card-overdue">
     <div>
       <div class="d-flex align-items-center justify-content-between mb-2">
-        <h6 class="mb-0"><i class="fa fa-clock-o me-2 seg-icono--error"></i>Tareas vencidas</h6>
+        <h6 class="mb-0"><i class="fa fa-clock-o me-2 seg-icono--error"></i>{{ 'crm.seguimiento.tareasVencidas' | translate }}</h6>
         <span class="stat-badge stat-badge-danger">{{ overdueTasks.length }}</span>
       </div>
-      <small class="text-muted d-block mb-2">Tareas pendientes cuya fecha de vencimiento ya pasó.</small>
+      <small class="text-muted d-block mb-2">{{ 'crm.seguimiento.tareasPendientesCuyaFechaDe' | translate }}</small>
 
       <div *ngIf="loading" class="text-center text-muted py-4">
-        <i class="fa fa-spinner fa-spin me-1"></i>Cargando…
+        <i class="fa fa-spinner fa-spin me-1"></i>{{ 'comun.cargando' | translate }}
       </div>
 
       <div *ngIf="!loading && overdueTasks.length === 0" class="text-center text-muted py-4">
         <i class="fa fa-check-circle seg-ok-icono"></i>
-        <p class="mb-0 mt-2">No hay tareas vencidas 🎉</p>
+        <p class="mb-0 mt-2">{{ 'crm.seguimiento.noHayTareasVencidas' | translate }}</p>
       </div>
 
       <div *ngIf="!loading && overdueTasks.length > 0">
@@ -59,14 +59,14 @@
             <div class="fw-semibold text-truncate">{{ task.title }}</div>
             <small class="text-muted d-block">
               <i class="fa fa-user-o me-1"></i>{{ leadName(task) }}
-              <span class="ms-2"><i class="fa fa-calendar-o me-1"></i>Venció {{ formatDate(task.dueDate) }}</span>
-              <span class="badge-overdue ms-2">{{ task._daysOverdue }}d vencida</span>
+              <span class="ms-2"><i class="fa fa-calendar-o me-1"></i>{{ 'crm.seguimiento.vencio' | translate: { p0: formatDate(task.dueDate) } }}</span>
+              <span class="badge-overdue ms-2">{{ 'crm.seguimiento.diasVencida' | translate: { days: task._daysOverdue } }}</span>
             </small>
           </div>
           <p-tag [value]="task.priority" [severity]="getPrioritySeverity(task.priority)"
             [style]="{'font-size':'0.7rem'}"></p-tag>
           <button class="cfg-btn cfg-btn--sec seg-btn-mini" (click)="goToTask(task)">
-            <i class="fa fa-external-link me-1"></i>Ver
+            <i class="fa fa-external-link me-1"></i>{{ 'crm.seguimiento.ver' | translate }}
           </button>
         </div>
       </div>
@@ -77,18 +77,18 @@
   <div class="cfg-card stat-card-pending">
     <div>
       <div class="d-flex align-items-center justify-content-between mb-2">
-        <h6 class="mb-0"><i class="fa fa-envelope-o me-2 seg-icono--warn"></i>Propuestas sin abrir</h6>
+        <h6 class="mb-0"><i class="fa fa-envelope-o me-2 seg-icono--warn"></i>{{ 'crm.seguimiento.propuestasSinAbrir' | translate }}</h6>
         <span class="stat-badge stat-badge-warning">{{ cotizacionesSinAbrir.length }}</span>
       </div>
-      <small class="text-muted d-block mb-2">Cotizaciones enviadas que el cliente todavía no ha abierto.</small>
+      <small class="text-muted d-block mb-2">{{ 'crm.seguimiento.cotizacionesEnviadasQueElCliente' | translate }}</small>
 
       <div *ngIf="loading" class="text-center text-muted py-4">
-        <i class="fa fa-spinner fa-spin me-1"></i>Cargando…
+        <i class="fa fa-spinner fa-spin me-1"></i>{{ 'comun.cargando' | translate }}
       </div>
 
       <div *ngIf="!loading && cotizacionesSinAbrir.length === 0" class="text-center text-muted py-4">
         <i class="fa fa-check-circle seg-ok-icono"></i>
-        <p class="mb-0 mt-2">No hay propuestas pendientes de abrir</p>
+        <p class="mb-0 mt-2">{{ 'crm.seguimiento.noHayPropuestasPendientesDe' | translate }}</p>
       </div>
 
       <div *ngIf="!loading && cotizacionesSinAbrir.length > 0">
@@ -98,17 +98,17 @@
             <div class="fw-semibold text-truncate">{{ clienteNombre(c) }}</div>
             <small class="text-muted d-block">
               <i class="fa fa-file-text-o me-1"></i>{{ c.nroCotizacion }}
-              <span class="ms-2"><i class="fa fa-calendar-o me-1"></i>Enviada {{ formatDate(c.fechaEmision || c.fechaCreacion) }}</span>
-              <span class="badge-pending ms-2">{{ c._diasEsperando }}d esperando</span>
+              <span class="ms-2"><i class="fa fa-calendar-o me-1"></i>{{ 'crm.seguimiento.enviada' | translate: { p0: formatDate(c.fechaEmision || c.fechaCreacion) } }}</span>
+              <span class="badge-pending ms-2">{{ 'crm.seguimiento.diasEsperando' | translate: { days: c._diasEsperando } }}</span>
             </small>
           </div>
           <span class="fw-semibold seg-total">{{ formatCurrency(c.total) }}</span>
           <button class="cfg-btn cfg-btn--sec seg-btn-mini" (click)="goToLead(c)"
-            pTooltip="Ver el lead en el CRM" tooltipPosition="top">
+            pTooltip="{{ 'crm.seguimiento.verElLeadEnEl' | translate }}" tooltipPosition="top">
             <i class="fa fa-address-book-o"></i>
           </button>
           <button class="cfg-btn cfg-btn--sec seg-btn-mini" (click)="goToCotizacion(c)">
-            <i class="fa fa-external-link me-1"></i>Ver
+            <i class="fa fa-external-link me-1"></i>{{ 'crm.seguimiento.ver' | translate }}
           </button>
         </div>
       </div>
@@ -119,18 +119,18 @@
   <div class="cfg-card stat-card-seen">
     <div>
       <div class="d-flex align-items-center justify-content-between mb-2">
-        <h6 class="mb-0"><i class="fa fa-eye me-2 seg-icono--acento"></i>Vistas pero no cerradas</h6>
+        <h6 class="mb-0"><i class="fa fa-eye me-2 seg-icono--acento"></i>{{ 'crm.seguimiento.vistasPeroNoCerradas' | translate }}</h6>
         <span class="stat-badge stat-badge-info">{{ cotizacionesVistasSinCerrar.length }}</span>
       </div>
-      <small class="text-muted d-block mb-2">El cliente abrió la cotización pero aún no la acepta ni la rechaza.</small>
+      <small class="text-muted d-block mb-2">{{ 'crm.seguimiento.elClienteAbrioLaCotizacion' | translate }}</small>
 
       <div *ngIf="loading" class="text-center text-muted py-4">
-        <i class="fa fa-spinner fa-spin me-1"></i>Cargando…
+        <i class="fa fa-spinner fa-spin me-1"></i>{{ 'comun.cargando' | translate }}
       </div>
 
       <div *ngIf="!loading && cotizacionesVistasSinCerrar.length === 0" class="text-center text-muted py-4">
         <i class="fa fa-check-circle seg-ok-icono"></i>
-        <p class="mb-0 mt-2">No hay propuestas vistas sin cerrar</p>
+        <p class="mb-0 mt-2">{{ 'crm.seguimiento.noHayPropuestasVistasSin' | translate }}</p>
       </div>
 
       <div *ngIf="!loading && cotizacionesVistasSinCerrar.length > 0">
@@ -140,18 +140,18 @@
             <div class="fw-semibold text-truncate">{{ clienteNombre(c) }}</div>
             <small class="text-muted d-block">
               <i class="fa fa-file-text-o me-1"></i>{{ c.nroCotizacion }}
-              <span class="ms-2"><i class="fa fa-eye me-1"></i>Vista {{ formatDate(c.fechaPrimeraVista) }}</span>
-              <span class="ms-2 seg-meta" *ngIf="c.vistasCount">({{ c.vistasCount }} {{ c.vistasCount === 1 ? 'vez' : 'veces' }})</span>
-              <span class="badge-pending ms-2">{{ c._diasEsperando }}d esperando</span>
+              <span class="ms-2"><i class="fa fa-eye me-1"></i>{{ 'crm.seguimiento.vista' | translate: { p0: formatDate(c.fechaPrimeraVista) } }}</span>
+              <span class="ms-2 seg-meta" *ngIf="c.vistasCount">({{ (c.vistasCount === 1 ? 'crm.seguimiento.unaVez' : 'crm.seguimiento.variasVeces') | translate: { count: c.vistasCount } }})</span>
+              <span class="badge-pending ms-2">{{ 'crm.seguimiento.diasEsperando' | translate: { days: c._diasEsperando } }}</span>
             </small>
           </div>
           <span class="fw-semibold seg-total">{{ formatCurrency(c.total) }}</span>
           <button class="cfg-btn cfg-btn--sec seg-btn-mini" (click)="goToLead(c)"
-            pTooltip="Ver el lead en el CRM" tooltipPosition="top">
+            pTooltip="{{ 'crm.seguimiento.verElLeadEnEl' | translate }}" tooltipPosition="top">
             <i class="fa fa-address-book-o"></i>
           </button>
           <button class="cfg-btn cfg-btn--sec seg-btn-mini" (click)="goToCotizacion(c)">
-            <i class="fa fa-external-link me-1"></i>Ver
+            <i class="fa fa-external-link me-1"></i>{{ 'crm.seguimiento.ver' | translate }}
           </button>
         </div>
       </div>
@@ -162,18 +162,18 @@
   <div class="cfg-card stat-card-vencida">
     <div>
       <div class="d-flex align-items-center justify-content-between mb-2">
-        <h6 class="mb-0"><i class="fa fa-hourglass-end me-2 seg-icono--error"></i>Propuestas vencidas</h6>
+        <h6 class="mb-0"><i class="fa fa-hourglass-end me-2 seg-icono--error"></i>{{ 'crm.seguimiento.propuestasVencidas' | translate }}</h6>
         <span class="stat-badge stat-badge-danger">{{ cotizacionesVencidas.length }}</span>
       </div>
-      <small class="text-muted d-block mb-2">Cotizaciones que pasaron su fecha de vencimiento sin respuesta.</small>
+      <small class="text-muted d-block mb-2">{{ 'crm.seguimiento.cotizacionesQuePasaronSuFecha' | translate }}</small>
 
       <div *ngIf="loading" class="text-center text-muted py-4">
-        <i class="fa fa-spinner fa-spin me-1"></i>Cargando…
+        <i class="fa fa-spinner fa-spin me-1"></i>{{ 'comun.cargando' | translate }}
       </div>
 
       <div *ngIf="!loading && cotizacionesVencidas.length === 0" class="text-center text-muted py-4">
         <i class="fa fa-check-circle seg-ok-icono"></i>
-        <p class="mb-0 mt-2">No hay propuestas vencidas</p>
+        <p class="mb-0 mt-2">{{ 'crm.seguimiento.noHayPropuestasVencidas' | translate }}</p>
       </div>
 
       <div *ngIf="!loading && cotizacionesVencidas.length > 0">
@@ -183,17 +183,17 @@
             <div class="fw-semibold text-truncate">{{ clienteNombre(c) }}</div>
             <small class="text-muted d-block">
               <i class="fa fa-file-text-o me-1"></i>{{ c.nroCotizacion }}
-              <span class="ms-2"><i class="fa fa-calendar-times-o me-1"></i>Venció {{ formatDate(c.fechaVencimiento) }}</span>
-              <span class="badge-overdue ms-2">{{ c._diasEsperando }}d vencida</span>
+              <span class="ms-2"><i class="fa fa-calendar-times-o me-1"></i>{{ 'crm.seguimiento.vencio' | translate: { p0: formatDate(c.fechaVencimiento) } }}</span>
+              <span class="badge-overdue ms-2">{{ 'crm.seguimiento.diasVencida' | translate: { days: c._diasEsperando } }}</span>
             </small>
           </div>
           <span class="fw-semibold seg-total">{{ formatCurrency(c.total) }}</span>
           <button class="cfg-btn cfg-btn--sec seg-btn-mini" (click)="goToLead(c)"
-            pTooltip="Ver el lead en el CRM" tooltipPosition="top">
+            pTooltip="{{ 'crm.seguimiento.verElLeadEnEl' | translate }}" tooltipPosition="top">
             <i class="fa fa-address-book-o"></i>
           </button>
           <button class="cfg-btn cfg-btn--sec seg-btn-mini" (click)="goToCotizacion(c)">
-            <i class="fa fa-external-link me-1"></i>Ver
+            <i class="fa fa-external-link me-1"></i>{{ 'crm.seguimiento.ver' | translate }}
           </button>
         </div>
       </div>
@@ -204,18 +204,18 @@
   <div class="cfg-card stat-card-unreviewed">
     <div>
       <div class="d-flex align-items-center justify-content-between mb-2">
-        <h6 class="mb-0"><i class="fa fa-eye-slash me-2 seg-icono--acento"></i>Tareas sin revisar</h6>
+        <h6 class="mb-0"><i class="fa fa-eye-slash me-2 seg-icono--acento"></i>{{ 'crm.seguimiento.tareasSinRevisar' | translate }}</h6>
         <span class="stat-badge stat-badge-purple">{{ unreviewedTasks.length }}</span>
       </div>
-      <small class="text-muted d-block mb-2">Tareas pendientes que no has revisado en los últimos 8 días.</small>
+      <small class="text-muted d-block mb-2">{{ 'crm.seguimiento.tareasPendientesQueNoHas' | translate }}</small>
 
       <div *ngIf="loading" class="text-center text-muted py-4">
-        <i class="fa fa-spinner fa-spin me-1"></i>Cargando…
+        <i class="fa fa-spinner fa-spin me-1"></i>{{ 'comun.cargando' | translate }}
       </div>
 
       <div *ngIf="!loading && unreviewedTasks.length === 0" class="text-center text-muted py-4">
         <i class="fa fa-check-circle seg-ok-icono"></i>
-        <p class="mb-0 mt-2">Todo al día, sin tareas olvidadas</p>
+        <p class="mb-0 mt-2">{{ 'crm.seguimiento.todoAlDiaSinTareas' | translate }}</p>
       </div>
 
       <div *ngIf="!loading && unreviewedTasks.length > 0">
@@ -225,13 +225,13 @@
             <div class="fw-semibold text-truncate">{{ task.title }}</div>
             <small class="text-muted d-block">
               <i class="fa fa-user-o me-1"></i>{{ leadName(task) }}
-              <span class="badge-unreviewed ms-2">{{ task._daysSinceReview }}d sin revisar</span>
+              <span class="badge-unreviewed ms-2">{{ 'crm.seguimiento.diasSinRevisar' | translate: { days: task._daysSinceReview } }}</span>
             </small>
           </div>
           <p-tag [value]="task.priority" [severity]="getPrioritySeverity(task.priority)"
             [style]="{'font-size':'0.7rem'}"></p-tag>
           <button class="cfg-btn cfg-btn--sec seg-btn-mini" (click)="goToUnreviewedTask(task)">
-            <i class="fa fa-external-link me-1"></i>Ver
+            <i class="fa fa-external-link me-1"></i>{{ 'crm.seguimiento.ver' | translate }}
           </button>
         </div>
       </div>

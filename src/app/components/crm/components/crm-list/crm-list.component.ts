@@ -16,6 +16,7 @@ import * as XLSX from 'xlsx';
 import { CrmLead, CrmStats, CrmStage, CrmTask, CrmEquipo, PRIORITY_OPTIONS, getStageSeverity, getPrioritySeverity } from '../../models/crm.models';
 import { resolverNombreApellido } from '../../../../shared/utils/nombre-apellido.util';
 
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-crm-list',
   templateUrl: './crm-list.component.html',
@@ -44,7 +45,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   // Tareas pendientes (diálogo desde el badge agregado, reutilizado para citas/vencidas)
   showTasksDialog = false;
-  tasksDialogTitle = 'Tareas pendientes';
+  tasksDialogTitle = '';
   pendingTasks: CrmTask[] = [];
   loadingTasks = false;
   myTasksCount = 0;
@@ -130,6 +131,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
     private corpConfig: CorporateConfigService,
     private ngbModal: NgbModal,
     private leadToSales: LeadToSalesService,
+    private translate: TranslateService,
   ) {
     this.canManageStages = this.computeCanManageStages();
     this.veEquipo = this.computeVeEquipo();
@@ -227,7 +229,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   /** Ticket 1064: nombre del comercial, o su correo si ya no está en el equipo. */
   nombreComercial(email?: string | null): string {
-    if (!email) return 'Sin asignar';
+    if (!email) return this.translate.instant('crm.lista.sinAsignar');
     const e = String(email).trim().toLowerCase();
     const c = this.equipo?.comerciales.find(x => x.email === e);
     return c ? c.nombre : e.split('@')[0];
@@ -258,11 +260,11 @@ export class CrmListComponent implements OnInit, OnDestroy {
       this.guardandoEquipo = false;
       if (ok) {
         this.equipo = { ...this.equipo!, config: { ...this.equipo!.config, [campo]: valor } };
-        this.messageService.add({ severity: 'success', summary: 'Guardado', life: 2500 });
+        this.messageService.add({ severity: 'success', summary: this.translate.instant('crm.lista.guardado'), life: 2500 });
       } else {
         // Revisión 1064: el interruptor vuelve a lo que de verdad quedó guardado.
         this.configEquipo = { ...this.configEquipo, [campo]: !valor };
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar.' });
+        this.messageService.add({ severity: 'error', summary: this.translate.instant('comun.error'), detail: this.translate.instant('crm.lista.noSePudoGuardar') });
       }
     });
   }
@@ -319,7 +321,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
     // Fuente única: mismo modal que usa el listado de Clientes Corporativos.
     const ref = this.ngbModal.open(LeadFormModalComponent, { size: 'lg', centered: true });
     ref.componentInstance.isEdit = false;
-    ref.componentInstance.title = 'Nuevo lead';
+    ref.componentInstance.title = 'crm.lista.nuevoLead';
     ref.componentInstance.tagsCatalog = this.clientTagsCatalog;
     if (this.puedeAsignarComercial) {
       ref.componentInstance.comerciales = this.equipo!.comerciales;
@@ -365,8 +367,8 @@ export class CrmListComponent implements OnInit, OnDestroy {
             if (lead) lead.id = realId;
           }
           this.messageService.add({
-            severity: 'success', summary: '¡Lead creado!',
-            detail: `${formData.name} fue agregado a "${firstStage}"`,
+            severity: 'success', summary: this.translate.instant('crm.lista.leadCreado'),
+            detail: this.translate.instant('crm.lista.fueAgregadoA', { name: formData.name, firstStage }),
           });
           this.loadStats();
           this.saveToCache();
@@ -377,12 +379,12 @@ export class CrmListComponent implements OnInit, OnDestroy {
           if (res?.code === 'EXISTE_OTRO_COMERCIAL') {
             Swal.fire({
               icon: 'warning',
-              title: 'Este cliente ya existe',
-              text: `${formData.name || 'Este cliente'} ya está registrado y lo atiende otro comercial, así que no se creó un lead nuevo. Si crees que debería ser tuyo, pídele al administrador que te lo asigne.`,
-              confirmButtonText: 'Entendido',
+              title: this.translate.instant('crm.lista.esteClienteYaExiste'),
+              text: this.translate.instant('crm.lista.clienteYaAtendidoPorOtro', { name: formData.name || this.translate.instant('crm.lista.esteCliente') }),
+              confirmButtonText: this.translate.instant('comun.entendido'),
             });
           } else {
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: res?.error || 'No se pudo crear el lead. Revisa que el backend esté corriendo.' });
+            this.messageService.add({ severity: 'error', summary: this.translate.instant('comun.error'), detail: res?.error || this.translate.instant('crm.lista.noSePudoCrearEl') });
           }
         }
       });
@@ -587,17 +589,17 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
             if (stageConfig?.isWon) {
               if (res.verifiedBuyer) {
-                this.messageService.add({ severity: 'success', summary: 'Lead cerrado', detail: 'Compra verificada contra los pedidos del cliente.' });
+                this.messageService.add({ severity: 'success', summary: this.translate.instant('crm.lista.leadCerrado'), detail: this.translate.instant('crm.lista.compraVerificadaContraLosPedidos') });
               } else if (res.forcedClose) {
-                this.messageService.add({ severity: 'warn', summary: 'Lead cerrado (forzado)', detail: 'Cierre confirmado manualmente sin pedido asociado.' });
+                this.messageService.add({ severity: 'warn', summary: this.translate.instant('crm.lista.leadCerradoForzado'), detail: this.translate.instant('crm.lista.cierreConfirmadoManualmenteSinPedido') });
               } else {
-                this.messageService.add({ severity: 'warn', summary: 'Lead cerrado', detail: 'No se encontró un pedido asociado. Verifica manualmente.' });
+                this.messageService.add({ severity: 'warn', summary: this.translate.instant('crm.lista.leadCerrado'), detail: this.translate.instant('crm.lista.noSeEncontroUnPedido') });
               }
             } else {
-              this.messageService.add({ severity: 'info', summary: 'Lead archivado como perdido' });
+              this.messageService.add({ severity: 'info', summary: this.translate.instant('crm.lista.leadArchivadoComoPerdido') });
             }
           } else {
-            this.messageService.add({ severity: 'success', summary: 'Etapa actualizada' });
+            this.messageService.add({ severity: 'success', summary: this.translate.instant('crm.lista.etapaActualizada') });
           }
           this.loadStats();
         } else {
@@ -611,23 +613,23 @@ export class CrmListComponent implements OnInit, OnDestroy {
   private promptForceClose(leadId: string, newStage: string): void {
     Swal.fire({
       icon: 'warning',
-      title: 'No se encontró una compra verificada',
-      text: 'No hay un pedido asociado a este cliente. Este lead no puede pasar a "Ganado" a menos que confirmes que la venta sí ocurrió (ej. pago en efectivo, documento distinto).',
+      title: this.translate.instant('crm.lista.noSeEncontroUnaCompra'),
+      text: this.translate.instant('crm.lista.noHayUnPedidoAsociado'),
       showCancelButton: true,
-      confirmButtonText: 'Forzar cierre de todas formas',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('crm.lista.forzarCierreDeTodasFormas'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#d97706',
     }).then(result => {
       if (!result.isConfirmed) return;
 
       Swal.fire({
-        title: 'Motivo del cierre forzado',
+        title: this.translate.instant('crm.lista.motivoDelCierreForzado'),
         input: 'text',
-        inputPlaceholder: 'Ej: pago en efectivo, factura a nombre de un tercero...',
-        inputValidator: (value) => (!value ? 'Debes indicar un motivo para forzar el cierre' : undefined),
+        inputPlaceholder: this.translate.instant('crm.lista.ejPagoEnEfectivoFactura'),
+        inputValidator: (value) => (!value ? this.translate.instant('crm.lista.debesIndicarUnMotivoParaForzar') : undefined),
         showCancelButton: true,
-        confirmButtonText: 'Confirmar cierre',
-        cancelButtonText: 'Cancelar',
+        confirmButtonText: this.translate.instant('crm.lista.confirmarCierre'),
+        cancelButtonText: this.translate.instant('comun.cancelar'),
       }).then(reasonResult => {
         if (!reasonResult.isConfirmed || !reasonResult.value) return;
         this.onStageDrop(leadId, newStage, true, reasonResult.value);
@@ -639,13 +641,13 @@ export class CrmListComponent implements OnInit, OnDestroy {
   private promptLostReason(leadId: string, newStage: string): void {
     Swal.fire({
       icon: 'question',
-      title: 'Motivo de la pérdida',
+      title: this.translate.instant('crm.lista.motivoDeLaPerdida'),
       input: 'text',
-      inputPlaceholder: 'Ej: precio, se fue con la competencia, no respondió, fuera de presupuesto...',
-      inputValidator: (value) => (!value ? 'Indica por qué se perdió el lead' : undefined),
+      inputPlaceholder: this.translate.instant('crm.lista.ejPrecioSeFueCon'),
+      inputValidator: (value) => (!value ? this.translate.instant('crm.lista.indicaPorQueSePerdio') : undefined),
       showCancelButton: true,
-      confirmButtonText: 'Marcar como perdido',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('crm.lista.marcarComoPerdido2'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#dc2626',
     }).then(result => {
       if (!result.isConfirmed || !result.value) {
@@ -723,14 +725,14 @@ export class CrmListComponent implements OnInit, OnDestroy {
   removeTag(index: number): void {
     const tag = this.editableTags[index];
     Swal.fire({
-      title: `¿Eliminar etiqueta "${tag.name}"?`,
-      text: 'Se quitará de todos los leads/clientes que la tengan asignada. Esta acción no se puede deshacer.',
+      title: this.translate.instant('crm.lista.eliminarEtiqueta', { name: tag.name }),
+      text: this.translate.instant('crm.lista.seQuitaraDeTodosLos'),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc2626',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('crm.lista.siEliminar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       didOpen: () => {
         const container = document.querySelector('.swal2-container') as HTMLElement;
         if (container) container.style.zIndex = '99999';
@@ -758,8 +760,8 @@ export class CrmListComponent implements OnInit, OnDestroy {
       this.clientTagsCatalog = [...this.corpConfig.getTags()];
       this.showConfigModal = false;
       this.messageService.add({
-        severity: 'success', summary: 'Configuración guardada',
-        detail: 'Etiquetas actualizadas correctamente.', life: 3000,
+        severity: 'success', summary: this.translate.instant('crm.lista.configuracionGuardada'),
+        detail: this.translate.instant('crm.lista.etiquetasActualizadasCorrectamente'), life: 3000,
       });
     });
   }
@@ -785,14 +787,14 @@ export class CrmListComponent implements OnInit, OnDestroy {
       if (count > 0) {
         stage.active = true; // revertir mientras se confirma
         Swal.fire({
-          title: `¿Desactivar "${stage.label}"?`,
-          text: `Hay ${count} lead(s) en esta etapa. Al desactivarla dejará de mostrarse en el pipeline, pero los leads conservan su información.`,
+          title: this.translate.instant('crm.lista.desactivar', { label: stage.label }),
+          text: this.translate.instant('crm.lista.hayLeadSEnEsta', { count }),
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#dc2626',
           cancelButtonColor: '#6b7280',
-          confirmButtonText: 'Sí, desactivar',
-          cancelButtonText: 'Cancelar',
+          confirmButtonText: this.translate.instant('crm.lista.siDesactivar'),
+          cancelButtonText: this.translate.instant('comun.cancelar'),
           didOpen: () => {
             const container = document.querySelector('.swal2-container') as HTMLElement;
             if (container) container.style.zIndex = '99999';
@@ -806,7 +808,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   guardarEtapas(): void {
     if (!this.editableStages.some(s => s.active !== false)) {
-      this.messageService.add({ severity: 'warn', summary: 'Atención', detail: 'Debe quedar al menos una etapa activa.' });
+      this.messageService.add({ severity: 'warn', summary: this.translate.instant('crm.lista.atencion'), detail: this.translate.instant('crm.lista.debeQuedarAlMenosUna') });
       return;
     }
     this.crmService.saveStages(this.editableStages).subscribe(success => {
@@ -815,11 +817,11 @@ export class CrmListComponent implements OnInit, OnDestroy {
         this.groupByStage();
         this.showStagesModal = false;
         this.messageService.add({
-          severity: 'success', summary: 'Configuración guardada',
-          detail: 'Etapas actualizadas correctamente.', life: 3000,
+          severity: 'success', summary: this.translate.instant('crm.lista.configuracionGuardada'),
+          detail: this.translate.instant('crm.lista.etapasActualizadasCorrectamente'), life: 3000,
         });
       } else {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron guardar las etapas.' });
+        this.messageService.add({ severity: 'error', summary: this.translate.instant('comun.error'), detail: this.translate.instant('crm.lista.noSePudieronGuardarLas') });
       }
     });
   }
@@ -837,13 +839,13 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   /** Abre el diálogo con las tareas pendientes del pipeline (badge agregado). */
   openPendingTasks(): void {
-    this.tasksDialogTitle = 'Tareas pendientes en total';
+    this.tasksDialogTitle = this.translate.instant('crm.lista.tareasPendientesEnTotal');
     this.loadPendingTasksDialog();
   }
 
   /** Abre el diálogo con solo las tareas tipo 'Reunión' de los próximos 7 días (sin vencer). */
   openWeekMeetings(): void {
-    this.tasksDialogTitle = 'Reuniones próximos 7 días';
+    this.tasksDialogTitle = this.translate.instant('crm.lista.reunionesProximos7Dias');
     const now = Date.now();
     const in7d = now + 7 * 86400000;
     this.loadPendingTasksDialog(t => {
@@ -855,7 +857,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   /** Abre el diálogo con solo las tareas vencidas (cualquier tipo, dueDate < ahora). */
   openOverdueTasks(): void {
-    this.tasksDialogTitle = 'Tareas vencidas';
+    this.tasksDialogTitle = this.translate.instant('crm.lista.tareasVencidas');
     const now = Date.now();
     this.loadPendingTasksDialog(t => {
       if (!t.dueDate) return false;
@@ -870,7 +872,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
    * de todo el equipo, y no se entendía de quién era cada número.
    */
   get tasksCardLabel(): string {
-    return this.veEquipo ? 'Tareas del equipo' : 'Mis tareas';
+    return this.translate.instant(this.veEquipo ? 'crm.lista.tareasDelEquipo' : 'crm.lista.misTareas');
   }
 
   /**
@@ -879,7 +881,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
    * lista TODAS las asignaciones. Evita mostrar el mismo pendiente vencido en dos diálogos distintos.
    */
   openMyTasksToday(): void {
-    this.tasksDialogTitle = `${this.tasksCardLabel} (hoy y próx. 7 días)`;
+    this.tasksDialogTitle = this.translate.instant('crm.lista.tareasHoyYProximos7Dias', { card: this.tasksCardLabel });
     this.loadPendingTasksDialog(t => this.isMyTaskInWindow(t));
   }
 
@@ -922,16 +924,16 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   /** Etiqueta de urgencia (Vencida/Hoy/Próximos 7 días/Sin fecha) para agrupar tareas en el diálogo. */
   taskGroupLabel(task: CrmTask): { label: string; bg: string; color: string } {
-    if (!task.dueDate) return { label: 'Sin fecha', bg: '#f1f3f5', color: '#6b7280' };
+    if (!task.dueDate) return { label: this.translate.instant('crm.lista.sinFecha'), bg: '#f1f3f5', color: '#6b7280' };
     const ms = new Date(task.dueDate).getTime();
-    if (isNaN(ms)) return { label: 'Sin fecha', bg: '#f1f3f5', color: '#6b7280' };
+    if (isNaN(ms)) return { label: this.translate.instant('crm.lista.sinFecha'), bg: '#f1f3f5', color: '#6b7280' };
     const now = Date.now();
     const startOfToday = new Date().setHours(0, 0, 0, 0);
     const endOfToday = new Date().setHours(23, 59, 59, 999);
-    if (ms < startOfToday) return { label: 'Vencida', bg: '#fef2f2', color: '#d12b38' };
-    if (ms <= endOfToday) return { label: 'Hoy', bg: '#fff7ed', color: '#D35400' };
-    if (ms <= now + 7 * 86400000) return { label: 'Próximos 7 días', bg: '#ede9fe', color: '#7c3aed' };
-    return { label: 'Próximamente', bg: '#f1f3f5', color: '#6b7280' };
+    if (ms < startOfToday) return { label: this.translate.instant('crm.lista.vencida'), bg: '#fef2f2', color: '#d12b38' };
+    if (ms <= endOfToday) return { label: this.translate.instant('crm.lista.hoy'), bg: '#fff7ed', color: '#D35400' };
+    if (ms <= now + 7 * 86400000) return { label: this.translate.instant('crm.lista.proximos7Dias'), bg: '#ede9fe', color: '#7c3aed' };
+    return { label: this.translate.instant('crm.lista.proximamente'), bg: '#f1f3f5', color: '#6b7280' };
   }
 
   private static readonly PRIORITY_RANK: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
@@ -965,7 +967,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   /** Nombre del lead dueño de la tarea (para mostrar en el diálogo). */
   taskLeadName(task: CrmTask): string {
-    return this.leads.find(l => l.id === task.entityId)?.name || 'Lead';
+    return this.leads.find(l => l.id === task.entityId)?.name || this.translate.instant('crm.lista.lead');
   }
 
   /** Va al detalle del lead de la tarea, abriendo la pestaña Tareas. */
@@ -1038,7 +1040,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   /** Título de la card/diálogo de conversión: ranking completo para admin, solo la propia tasa para vendedor. */
   get conversionCardLabel(): string {
-    return this.canManageStages ? 'Conversión por vendedor' : 'Mi conversión';
+    return this.translate.instant(this.canManageStages ? 'crm.lista.conversionPorVendedor' : 'crm.lista.miConversion');
   }
 
   // ─── Helpers ───────────────────────────────────────────────
@@ -1059,9 +1061,9 @@ export class CrmListComponent implements OnInit, OnDestroy {
   }
 
   getTitle(): string {
-    if (this.entityType === 'company') return 'Pipeline Empresas';
-    if (this.entityType === 'corporate') return 'Pipeline Corporativos';
-    return 'Pipeline Clientes';
+    if (this.entityType === 'company') return this.translate.instant('crm.lista.pipelineEmpresas');
+    if (this.entityType === 'corporate') return this.translate.instant('crm.lista.pipelineCorporativos');
+    return this.translate.instant('crm.lista.pipelineClientes');
   }
 
   trackById(index: number, item: CrmLead): string {
@@ -1092,9 +1094,10 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   getPriorityLabel(priority: string): string {
     const labels: Record<string, string> = {
-      low: 'Baja', medium: 'Media', high: 'Alta', urgent: 'Urgente',
+      low: 'crm.opciones.prioridad.low', medium: 'crm.opciones.prioridad.medium',
+      high: 'crm.opciones.prioridad.high', urgent: 'crm.opciones.prioridad.urgent',
     };
-    return labels[priority] || priority;
+    return labels[priority] ? this.translate.instant(labels[priority]) : priority;
   }
 
   /** Puntaje del CRM de empresas (D-485): 60 o más es alto, 30 a 59 medio y menos de 30 bajo. */
@@ -1129,7 +1132,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
   getContactBadge(lead: CrmLead): { label: string; bg: string; color: string } | null {
     const days = this.getDaysSinceContact(lead);
     if (days === null) return null;
-    const label = days <= 0 ? 'Contactado hoy' : days === 1 ? 'Hace 1 día' : `Hace ${days} días`;
+    const label = days <= 0 ? this.translate.instant('crm.lista.contactadoHoy') : days === 1 ? this.translate.instant('crm.lista.hace1Dia') : this.translate.instant('crm.lista.haceDias', { days });
     if (days >= 30) return { label, bg: '#fef2f2', color: '#d12b38' };
     if (days >= 14) return { label, bg: '#fff7ed', color: '#D35400' };
     return { label, bg: '#f1f3f5', color: '#6b7280' };
@@ -1200,7 +1203,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
     const ts = new Date().toISOString().slice(0, 10);
     XLSX.writeFile(wb, `crm-pipeline-${ts}.xlsx`);
-    this.messageService.add({ severity: 'success', summary: 'Exportado', detail: `${data.length} leads exportados` });
+    this.messageService.add({ severity: 'success', summary: this.translate.instant('crm.lista.exportado'), detail: this.translate.instant('crm.lista.leadsExportados', { length: data.length }) });
   }
 
   // ─── Plantilla de importación ─────────────────────────────
@@ -1237,8 +1240,8 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
     this.messageService.add({
       severity: 'success',
-      summary: 'Plantilla descargada',
-      detail: 'Solo "Nombre" es obligatorio. Trae 2 filas de ejemplo (persona natural y empresa): bórralas antes de importar.',
+      summary: this.translate.instant('crm.lista.plantillaDescargada'),
+      detail: this.translate.instant('crm.lista.soloNombreEsObligatorioTrae'),
       life: 6000,
     });
   }
@@ -1257,7 +1260,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
         const rows: any[] = XLSX.utils.sheet_to_json(ws);
 
         if (rows.length === 0) {
-          this.messageService.add({ severity: 'warn', summary: 'Archivo vacío' });
+          this.messageService.add({ severity: 'warn', summary: this.translate.instant('crm.lista.archivoVacio') });
           return;
         }
 
@@ -1269,7 +1272,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
         const total = rows.length;
 
         this.messageService.add({
-          severity: 'info', summary: 'Importando', detail: `Procesando ${total} registros...`,
+          severity: 'info', summary: this.translate.instant('crm.lista.importando'), detail: this.translate.instant('crm.lista.procesandoRegistros', { total }),
         });
 
         // Cada fila válida genera una operación HTTP. Con forkJoin esperamos a
@@ -1327,8 +1330,8 @@ export class CrmListComponent implements OnInit, OnDestroy {
         if (ops.length === 0) {
           this.messageService.add({
             severity: 'warn',
-            summary: 'Nada para importar',
-            detail: `0 procesados, ${skipped} sin nombre (omitidos). Revisa que la columna de nombre coincida con la plantilla.`,
+            summary: this.translate.instant('crm.lista.nadaParaImportar'),
+            detail: this.translate.instant('crm.lista.importacionSinProcesados', { skipped }),
             life: 6000,
           });
           event.target.value = '';
@@ -1342,10 +1345,10 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
           this.messageService.add({
             severity: failed === 0 ? 'success' : (ok === 0 ? 'error' : 'warn'),
-            summary: failed === 0 ? 'Importación completada' : 'Importación con errores',
-            detail: `${ok} importados`
-              + (failed ? `, ${failed} fallidos` : '')
-              + (skipped ? `, ${skipped} sin nombre (omitidos)` : ''),
+            summary: failed === 0 ? this.translate.instant('crm.lista.importacionCompletada') : this.translate.instant('crm.lista.importacionConErrores'),
+            detail: this.translate.instant('crm.lista.importados', { ok })
+              + (failed ? this.translate.instant('crm.lista.fallidos', { failed }) : '')
+              + (skipped ? this.translate.instant('crm.lista.sinNombreOmitidos', { skipped }) : ''),
             life: 6000,
           });
 
@@ -1354,7 +1357,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
           setTimeout(() => this.loadStats(), 2000);
         });
       } catch (err) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo leer el archivo' });
+        this.messageService.add({ severity: 'error', summary: this.translate.instant('comun.error'), detail: this.translate.instant('crm.lista.noSePudoLeerEl') });
       }
 
       event.target.value = '';
@@ -1459,7 +1462,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
         },
         error: () => {
           this.loadingDuplicates = false;
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los duplicados' });
+          this.messageService.add({ severity: 'error', summary: this.translate.instant('comun.error'), detail: this.translate.instant('crm.lista.noSePudieronCargarLos') });
         },
       });
   }
@@ -1492,16 +1495,16 @@ export class CrmListComponent implements OnInit, OnDestroy {
   deleteSelectedDuplicates(): void {
     const ids = Array.from(this.selectedForDeletion);
     if (ids.length === 0) {
-      this.messageService.add({ severity: 'warn', summary: 'Selecciona leads', detail: 'Marca los leads que deseas eliminar' });
+      this.messageService.add({ severity: 'warn', summary: this.translate.instant('crm.lista.seleccionaLeads'), detail: this.translate.instant('crm.lista.marcaLosLeadsQueDeseas') });
       return;
     }
 
     this.confirmationService.confirm({
-      message: `¿Eliminar ${ids.length} lead(s) seleccionado(s)? Esta acción no se puede deshacer.`,
-      header: 'Confirmar eliminación',
+      message: this.translate.instant('crm.lista.eliminarLeadsSeleccionados', { count: ids.length }),
+      header: this.translate.instant('crm.lista.confirmarEliminacion'),
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Eliminar',
-      rejectLabel: 'Cancelar',
+      acceptLabel: this.translate.instant('comun.eliminar'),
+      rejectLabel: this.translate.instant('comun.cancelar'),
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
         this.deletingLeads = true;
@@ -1513,8 +1516,8 @@ export class CrmListComponent implements OnInit, OnDestroy {
               if (res.success) {
                 this.messageService.add({
                   severity: 'success',
-                  summary: 'Eliminados',
-                  detail: `${res.deleted} lead(s) eliminado(s)${res.failed ? `, ${res.failed} fallido(s)` : ''}`,
+                  summary: this.translate.instant('crm.lista.eliminados'),
+                  detail: this.translate.instant(res.failed ? 'crm.lista.leadsEliminadosConFallidos' : 'crm.lista.leadsEliminados', { deleted: res.deleted, failed: res.failed }),
                 });
                 this.selectedForDeletion.clear();
                 this.showDuplicatesDialog = false;
@@ -1524,7 +1527,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
             },
             error: () => {
               this.deletingLeads = false;
-              this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron eliminar los leads' });
+              this.messageService.add({ severity: 'error', summary: this.translate.instant('comun.error'), detail: this.translate.instant('crm.lista.noSePudieronEliminarLos') });
             },
           });
       },
@@ -1534,11 +1537,11 @@ export class CrmListComponent implements OnInit, OnDestroy {
   deleteSingleLead(lead: CrmLead, event: Event): void {
     event.stopPropagation();
     this.confirmationService.confirm({
-      message: `¿Eliminar "${lead.name}"? Se borrarán también sus actividades y tareas.`,
-      header: 'Confirmar eliminación',
+      message: this.translate.instant('crm.lista.eliminarLeadYSusActividades', { name: lead.name }),
+      header: this.translate.instant('crm.lista.confirmarEliminacion'),
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Eliminar',
-      rejectLabel: 'Cancelar',
+      acceptLabel: this.translate.instant('comun.eliminar'),
+      rejectLabel: this.translate.instant('comun.cancelar'),
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
         this.crmService.deleteLead(lead.id)
@@ -1549,11 +1552,11 @@ export class CrmListComponent implements OnInit, OnDestroy {
                 this.leads = this.leads.filter(l => l.id !== lead.id);
                 this.groupByStage();
                 this.loadStats();
-                this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: `"${lead.name}" eliminado` });
+                this.messageService.add({ severity: 'success', summary: this.translate.instant('crm.lista.eliminado'), detail: this.translate.instant('crm.lista.eliminado2', { name: lead.name }) });
               }
             },
             error: () => {
-              this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el lead' });
+              this.messageService.add({ severity: 'error', summary: this.translate.instant('comun.error'), detail: this.translate.instant('crm.lista.noSePudoEliminarEl') });
             },
           });
       },
@@ -1570,15 +1573,15 @@ export class CrmListComponent implements OnInit, OnDestroy {
     const bloquear = lead.activo !== false;
     Swal.fire({
       icon: bloquear ? 'warning' : 'question',
-      title: `¿${bloquear ? 'Bloquear' : 'Desbloquear'} a "${lead.name}"?`,
+      title: this.translate.instant(bloquear ? 'crm.lista.bloquearLeadPregunta' : 'crm.lista.desbloquearLeadPregunta', { name: lead.name }),
       text: bloquear
-        ? 'Se marcará como bloqueado pero se conserva su historial en el CRM. Podrás reactivarlo cuando quieras.'
-        : 'Volverá a estar activo.',
+        ? this.translate.instant('crm.lista.seMarcaraComoBloqueadoPero')
+        : this.translate.instant('crm.lista.volveraAEstarActivo'),
       showCancelButton: true,
       confirmButtonColor: bloquear ? '#d97706' : '#16a34a',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: bloquear ? 'Sí, bloquear' : 'Sí, desbloquear',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: bloquear ? this.translate.instant('crm.lista.siBloquear') : this.translate.instant('crm.lista.siDesbloquear'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
     }).then(result => {
       if (!result.isConfirmed) return;
       this.crmService.setLeadActive(lead.id, !bloquear)
@@ -1588,11 +1591,11 @@ export class CrmListComponent implements OnInit, OnDestroy {
             lead.activo = !bloquear;
             this.messageService.add({
               severity: 'success',
-              summary: bloquear ? 'Bloqueado' : 'Desbloqueado',
-              detail: `"${lead.name}" ${bloquear ? 'bloqueado' : 'reactivado'}`,
+              summary: bloquear ? this.translate.instant('crm.lista.bloqueado2') : this.translate.instant('crm.lista.desbloqueado'),
+              detail: this.translate.instant(bloquear ? 'crm.lista.leadBloqueado' : 'crm.lista.leadReactivado', { name: lead.name }),
             });
           } else {
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cambiar el estado' });
+            this.messageService.add({ severity: 'error', summary: this.translate.instant('comun.error'), detail: this.translate.instant('crm.lista.noSePudoCambiarEl') });
           }
         });
     });

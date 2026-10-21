@@ -4,53 +4,53 @@
         <!-- Header -->
         <header class="cfg-cabeza crm-cabeza">
             <div class="cfg-cabeza__textos">
-              <span class="cfg-eyebrow">CRM</span>
+              <span class="cfg-eyebrow">{{ 'crm.lista.crm' | translate }}</span>
               <h1 class="cfg-titulo">
                 {{ getTitle() }}
               </h1>
-              <p class="cfg-sub">Arrastra las tarjetas para cambiar de etapa</p>
+              <p class="cfg-sub">{{ 'crm.lista.arrastraLasTarjetasParaCambiar' | translate }}</p>
             </div>
             <div class="crm-buscador">
               <div class="input-group">
                 <span class="input-group-text crm-buscador__icono"><i class="fa fa-search"></i></span>
                 <input type="text" class="form-control" [value]="searchTerm"
                   (input)="onSearch($any($event.target).value)"
-                  placeholder="Buscar por nombre, correo, NIT..." />
+                  placeholder="{{ 'crm.lista.buscarPorNombreCorreoNit' | translate }}" />
               </div>
             </div>
             <div class="cfg-acciones">
               <!-- Crear lead -->
               <button class="cfg-btn" (click)="openCreateDialog()"
-                pTooltip="Agregar nuevo lead al pipeline" tooltipPosition="bottom">
-                <i class="fa fa-plus"></i> Nuevo lead
+                pTooltip="{{ 'crm.lista.agregarNuevoLeadAlPipeline' | translate }}" tooltipPosition="bottom">
+                <i class="fa fa-plus"></i> {{ 'crm.lista.nuevoLead' | translate }}
               </button>
               <!-- Export / Import -->
               <button class="cfg-btn cfg-btn--sec crm-btn-icono" (click)="exportToExcel()"
-                pTooltip="Exportar a Excel" tooltipPosition="bottom" [disabled]="leads.length === 0">
+                pTooltip="{{ 'crm.lista.exportarAExcel' | translate }}" tooltipPosition="bottom" [disabled]="leads.length === 0">
                 <i class="fa fa-download"></i>
               </button>
               <button class="cfg-btn cfg-btn--sec crm-btn-icono" (click)="downloadCrmTemplate()"
-                pTooltip="Descargar plantilla de importación" tooltipPosition="bottom">
+                pTooltip="{{ 'crm.lista.descargarPlantillaDeImportacion' | translate }}" tooltipPosition="bottom">
                 <i class="fa fa-file-excel-o"></i>
               </button>
               <button class="cfg-btn cfg-btn--sec crm-btn-icono" (click)="fileInput.click()"
-                pTooltip="Importar desde Excel" tooltipPosition="bottom">
+                pTooltip="{{ 'crm.lista.importarDesdeExcel' | translate }}" tooltipPosition="bottom">
                 <i class="fa fa-upload"></i>
               </button>
               <input #fileInput type="file" accept=".xlsx,.xls,.csv" hidden (change)="onFileImport($event)" />
               <!-- Duplicados -->
               <button class="cfg-btn cfg-btn--sec crm-btn-icono" (click)="openDuplicatesDialog()"
-                pTooltip="Limpiar duplicados" tooltipPosition="bottom" [disabled]="leads.length === 0">
+                pTooltip="{{ 'crm.lista.limpiarDuplicados' | translate }}" tooltipPosition="bottom" [disabled]="leads.length === 0">
                 <i class="fa fa-clone"></i>
               </button>
               <!-- Vista -->
               <div class="btn-group btn-group-sm crm-vista">
                 <button class="btn" [ngClass]="viewMode === 'kanban' ? 'btn-primary' : 'btn-outline-secondary'"
-                  (click)="viewMode = 'kanban'" pTooltip="Vista Kanban" tooltipPosition="bottom">
+                  (click)="viewMode = 'kanban'" pTooltip="{{ 'crm.lista.vistaKanban' | translate }}" tooltipPosition="bottom">
                   <i class="fa fa-columns"></i>
                 </button>
                 <button class="btn" [ngClass]="viewMode === 'table' ? 'btn-primary' : 'btn-outline-secondary'"
-                  (click)="viewMode = 'table'" pTooltip="Vista Tabla" tooltipPosition="bottom">
+                  (click)="viewMode = 'table'" pTooltip="{{ 'crm.lista.vistaTabla' | translate }}" tooltipPosition="bottom">
                   <i class="fa fa-list"></i>
                 </button>
               </div>
@@ -60,10 +60,10 @@
           <div class="crm-cabeza__tabs">
               <div class="crm-tabs-btn-group" role="group">
                 <button type="button" class="crm-tab-btn" [class.active]="activeTab === 'active'" (click)="setActiveTab('active')">
-                  <i class="fa fa-columns me-1"></i>Pipeline activo
+                  <i class="fa fa-columns me-1"></i>{{ 'crm.lista.pipelineActivo' | translate }}
                 </button>
                 <button type="button" class="crm-tab-btn" [class.active]="activeTab === 'closed'" (click)="setActiveTab('closed')">
-                  <i class="fa fa-archive me-1"></i>Cerrados
+                  <i class="fa fa-archive me-1"></i>{{ 'crm.lista.cerrados' | translate }}
                   <span class="badge crm-badge-cerrados ms-1" *ngIf="closedLoaded">{{ closedLeads.length }}</span>
                 </button>
               </div>
@@ -75,74 +75,74 @@
         <!-- ═══════ Indicadores de gestión ═══════ -->
         <div class="card-body py-2 border-bottom crm-dashboard" *ngIf="stats">
           <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="dash-title"><i class="fa fa-tachometer me-2"></i>Indicadores de gestión</span>
+            <span class="dash-title"><i class="fa fa-tachometer me-2"></i>{{ 'crm.lista.indicadoresDeGestion' | translate }}</span>
             <button class="btn btn-link btn-sm p-0 text-decoration-none" (click)="showDashboard = !showDashboard">
               <i class="fa" [ngClass]="showDashboard ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-              {{ showDashboard ? 'Ocultar' : 'Ver' }}
+              {{ showDashboard ? ('comun.ocultar' | translate) : ('crm.lista.ver' | translate) }}
             </button>
           </div>
 
           <div class="dash-grid" *ngIf="showDashboard">
             <div class="dash-card dash-blue">
-              <div class="dash-label">Valor del pipeline</div>
+              <div class="dash-label">{{ 'crm.lista.valorDelPipeline' | translate }}</div>
               <div class="dash-value">{{ formatCurrency(stats.totalValue) }}</div>
-              <div class="dash-sub">valor potencial total</div>
+              <div class="dash-sub">{{ 'crm.lista.valorPotencialTotal' | translate }}</div>
             </div>
             <div class="dash-card dash-indigo">
-              <div class="dash-label">Contactos totales</div>
+              <div class="dash-label">{{ 'crm.lista.contactosTotales' | translate }}</div>
               <div class="dash-value">{{ stats.total | number }}</div>
-              <div class="dash-sub">+{{ stats.nuevos30d || 0 | number }} en los últimos 30 días</div>
+              <div class="dash-sub">{{ 'crm.lista.enLosUltimos30Dias' | translate: { p0: (stats.nuevos30d || 0 | number) } }}</div>
             </div>
             <div class="dash-card dash-green">
-              <div class="dash-label">Conversión</div>
+              <div class="dash-label">{{ 'crm.lista.conversion' | translate }}</div>
               <div class="dash-value">{{ stats.conversionRate || 0 }}%</div>
-              <div class="dash-sub">{{ stats.convertidos || 0 | number }} convertidos</div>
+              <div class="dash-sub">{{ stats.convertidos || 0 | number }} {{ 'crm.lista.convertidos' | translate }}</div>
             </div>
             <div class="dash-card dash-red">
-              <div class="dash-label">Pérdida</div>
+              <div class="dash-label">{{ 'crm.lista.perdida' | translate }}</div>
               <div class="dash-value">{{ stats.perdidaRate || 0 }}%</div>
-              <div class="dash-sub">{{ stats.perdidos || 0 | number }} perdidos</div>
+              <div class="dash-sub">{{ stats.perdidos || 0 | number }} {{ 'crm.lista.perdidos' | translate }}</div>
             </div>
             <div class="dash-card cursor-pointer" [ngClass]="(stats.tasksOverdue || 0) > 0 ? 'dash-red' : 'dash-gray'"
               (click)="openOverdueTasks()"
-              pTooltip="Tareas sin completar cuya fecha límite ya pasó. Se crean en la pestaña 'Tareas' del lead."
+              pTooltip="{{ 'crm.lista.tareasSinCompletarCuyaFecha' | translate }}"
               tooltipPosition="top">
-              <div class="dash-label">Tareas vencidas</div>
+              <div class="dash-label">{{ 'crm.lista.tareasVencidas' | translate }}</div>
               <div class="dash-value" [style.color]="(stats.tasksOverdue || 0) > 0 ? '#dc2626' : '#6b7280'">
                 {{ stats.tasksOverdue | number }}
               </div>
-              <div class="dash-sub">sin completar, fecha ya pasó</div>
+              <div class="dash-sub">{{ 'crm.lista.sinCompletarFechaYaPaso' | translate }}</div>
             </div>
             <div class="dash-card dash-cyan cursor-pointer"
               (click)="openWeekMeetings()"
-              pTooltip="Tareas tipo 'Reunión' con fecha entre hoy y los próximos 7 días. Se crean en la pestaña 'Tareas' del lead."
+              pTooltip="{{ 'crm.lista.tareasTipoReunionConFecha' | translate }}"
               tooltipPosition="top">
-              <div class="dash-label">Reuniones próximos 7 días</div>
+              <div class="dash-label">{{ 'crm.lista.reunionesProximos7Dias' | translate }}</div>
               <div class="dash-value">{{ stats.citasEstaSemana || 0 | number }}</div>
-              <div class="dash-sub">tipo 'Reunión', agendadas y sin vencer</div>
+              <div class="dash-sub">{{ 'crm.lista.tipoReunionAgendadasYSin' | translate }}</div>
             </div>
             <div class="dash-card" [ngClass]="(stats.leadsEstancados || 0) > 0 ? 'dash-orange' : 'dash-gray'">
-              <div class="dash-label">Leads estancados</div>
+              <div class="dash-label">{{ 'crm.lista.leadsEstancados' | translate }}</div>
               <div class="dash-value" [style.color]="(stats.leadsEstancados || 0) > 0 ? '#d97706' : '#6b7280'">
                 {{ stats.leadsEstancados || 0 | number }}
               </div>
-              <div class="dash-sub">sin avanzar hace +30 días</div>
+              <div class="dash-sub">{{ 'crm.lista.sinAvanzarHace30Dias' | translate }}</div>
             </div>
             <div class="dash-card dash-indigo cursor-pointer"
               (click)="openMyTasksToday()"
-              [pTooltip]="veEquipo ? 'Tareas de todos los comerciales para hoy o los próximos 7 días. Las vencidas están en la card \'Tareas vencidas\'.' : 'Tareas asignadas a ti para hoy o los próximos 7 días. Las vencidas están en la card \'Tareas vencidas\'.'"
+              [pTooltip]="veEquipo ? ('crm.lista.tareasDeTodosLosComerciales' | translate) : ('crm.lista.tareasAsignadasATiPara' | translate)"
               tooltipPosition="top">
               <div class="dash-label">{{ tasksCardLabel }}</div>
               <div class="dash-value">{{ myTasksCount || 0 | number }}</div>
-              <div class="dash-sub">hoy o próx. 7 días</div>
+              <div class="dash-sub">{{ 'crm.lista.hoyOProx7Dias' | translate }}</div>
             </div>
             <div class="dash-card dash-cyan cursor-pointer"
               (click)="openConversionByAgent()"
-              [pTooltip]="canManageStages ? 'Tasa de conversión (ganados / total) por vendedor asignado. Incluye leads del pipeline activo y cerrados.' : 'Tu tasa de conversión (ganados / total). Incluye tus leads del pipeline activo y cerrados.'"
+              [pTooltip]="canManageStages ? ('crm.lista.tasaDeConversionGanadosTotal' | translate) : ('crm.lista.tuTasaDeConversionGanados' | translate)"
               tooltipPosition="top">
               <div class="dash-label">{{ conversionCardLabel }}</div>
               <div class="dash-value"><i class="fa fa-bar-chart"></i></div>
-              <div class="dash-sub">{{ canManageStages ? 'ranking de cierre por asesor' : 'tu cierre' }}</div>
+              <div class="dash-sub">{{ canManageStages ? ('crm.lista.rankingDeCierrePorAsesor' | translate) : ('crm.lista.tuCierre' | translate) }}</div>
             </div>
           </div>
         </div>
@@ -150,7 +150,7 @@
         <!-- Stats chips -->
         <div class="card-body py-2 border-bottom" *ngIf="stats">
           <div class="d-flex flex-wrap align-items-center gap-2">
-            <span class="stat-badge stat-badge-primary">{{ stats.total }} en total</span>
+            <span class="stat-badge stat-badge-primary">{{ stats.total }} {{ 'crm.lista.enTotal' | translate }}</span>
             <ng-container *ngFor="let stage of visibleStages">
               <span class="stat-badge cursor-pointer"
                 [style.background-color]="getStageBgColor(stage.key)" [style.color]="getStageColor(stage.key)"
@@ -161,40 +161,40 @@
             </ng-container>
             <span class="stat-badge stat-badge-warning cursor-pointer" *ngIf="stats.tasksPending > 0"
               (click)="openPendingTasks()"
-              pTooltip="Total de tareas sin completar de todos los leads (de cualquier tipo y fecha). Las tarjetas de arriba son subconjuntos: solo las vencidas, o solo las reuniones próximas."
+              pTooltip="{{ 'crm.lista.totalDeTareasSinCompletar' | translate }}"
               tooltipPosition="bottom">
-              <i class="fa fa-clock-o me-1"></i>{{ stats.tasksPending }} tareas pendientes en total
+              <i class="fa fa-clock-o me-1"></i>{{ stats.tasksPending }} {{ 'crm.lista.tareasPendientesEnTotal' | translate }}
             </span>
             <span class="stat-badge stat-badge-primary ms-auto" *ngIf="stats.totalValue > 0"
-              pTooltip="Valor estimado total del pipeline" tooltipPosition="bottom">
-              <i class="fa fa-dollar me-1"></i>Pipeline: {{ formatCurrency(stats.totalValue) }}
+              pTooltip="{{ 'crm.lista.valorEstimadoTotalDelPipeline' | translate }}" tooltipPosition="bottom">
+              <i class="fa fa-dollar me-1"></i>{{ 'crm.lista.pipeline' | translate: { p0: formatCurrency(stats.totalValue) } }}
             </span>
           </div>
 
           <!-- Etiquetas: botón configurar + filtro de segmentación -->
           <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
             <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" (click)="abrirConfigModal()"
-              pTooltip="Crear o gestionar etiquetas de segmentación" tooltipPosition="bottom">
-              <i class="fa fa-tags"></i> Etiquetas
+              pTooltip="{{ 'crm.lista.crearOGestionarEtiquetasDe' | translate }}" tooltipPosition="bottom">
+              <i class="fa fa-tags"></i> {{ 'crm.lista.etiquetas' | translate }}
             </button>
             <button *ngIf="canManageStages" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" (click)="abrirEtapasModal()"
-              pTooltip="Renombrar, agregar o reordenar las etapas del pipeline" tooltipPosition="bottom">
-              <i class="fa fa-list-ol"></i> Etapas
+              pTooltip="{{ 'crm.lista.renombrarAgregarOReordenarLas' | translate }}" tooltipPosition="bottom">
+              <i class="fa fa-list-ol"></i> {{ 'crm.lista.etapas' | translate }}
             </button>
             <!-- Ticket 1064: equipo comercial -->
             <button *ngIf="canManageStages && equipo" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" (click)="showEquipoModal = true"
-              pTooltip="Quién ve qué leads y recordatorios de tareas por correo" tooltipPosition="bottom">
-              <i class="fa fa-users"></i> Comerciales
+              pTooltip="{{ 'crm.lista.quienVeQueLeadsY' | translate }}" tooltipPosition="bottom">
+              <i class="fa fa-users"></i> {{ 'crm.lista.comerciales' | translate }}
             </button>
             <select *ngIf="puedeAsignarComercial" class="form-select form-select-sm crm-filtro-comercial"
-              [(ngModel)]="selectedComercial" (ngModelChange)="groupByStage()" aria-label="Filtrar por comercial">
-              <option value="">Todos los comerciales</option>
-              <option value="__sin__">Sin asignar</option>
+              [(ngModel)]="selectedComercial" (ngModelChange)="groupByStage()" [attr.aria-label]="'crm.lista.filtrarPorComercial' | translate">
+              <option value="">{{ 'crm.lista.todosLosComerciales' | translate }}</option>
+              <option value="__sin__">{{ 'crm.lista.sinAsignar' | translate }}</option>
               <option *ngFor="let c of equipo?.comerciales" [value]="c.email">{{ c.nombre }}</option>
             </select>
-            <small *ngIf="equipo?.soloPropios" class="text-muted"><i class="fa fa-user-o me-1"></i>Ves solo tus leads</small>
+            <small *ngIf="equipo?.soloPropios" class="text-muted"><i class="fa fa-user-o me-1"></i>{{ 'crm.lista.vesSoloTusLeads' | translate }}</small>
             <ng-container *ngIf="clientTagsCatalog.length > 0">
-              <small class="text-muted ms-2 me-1"><i class="pi pi-tags me-1"></i>Segmentar:</small>
+              <small class="text-muted ms-2 me-1"><i class="pi pi-tags me-1"></i>{{ 'crm.lista.segmentar' | translate }}</small>
               <span *ngFor="let tag of clientTagsCatalog" class="tag-filter-chip"
                 [class.tag-filter-chip-active]="selectedTagNames.includes(tag.name)"
                 [style.background-color]="selectedTagNames.includes(tag.name) ? getTagBgColor(tag.color) : ''"
@@ -204,7 +204,7 @@
                 {{ tag.name }}
               </span>
               <button *ngIf="selectedTagNames.length > 0" class="btn btn-link btn-sm p-0 ms-1"
-                (click)="selectedTagNames = []; groupByStage()">Limpiar</button>
+                (click)="selectedTagNames = []; groupByStage()">{{ 'crm.lista.limpiar' | translate }}</button>
             </ng-container>
           </div>
         </div>
@@ -256,10 +256,10 @@
                       <i class="fa fa-id-card-o me-1"></i>{{ lead.nit }}
                     </small>
                     <small class="d-block crm-puntaje-linea" *ngIf="entityType === 'company' && lead.score !== null && lead.score !== undefined"
-                      [pTooltip]="lead.scoreMotivos?.length ? lead.scoreMotivos.join(' · ') : 'Sin señales todavía'" tooltipPosition="top">
+                      [pTooltip]="lead.scoreMotivos?.length ? lead.scoreMotivos.join(' · ') : ('crm.lista.sinSenalesTodavia' | translate)" tooltipPosition="top">
                       <span class="crm-puntaje" [ngClass]="'crm-puntaje--' + nivelPuntaje(lead.score)">{{ lead.score }}</span>
-                      <span class="crm-puntaje-etiqueta">puntaje</span>
-                      <span class="crm-sugerido" *ngIf="lead.stageAutoPropuesta">Sugerido: {{ getStageLabel(lead.stageAutoPropuesta.stage) }}</span>
+                      <span class="crm-puntaje-etiqueta">{{ 'crm.lista.puntaje' | translate }}</span>
+                      <span class="crm-sugerido" *ngIf="lead.stageAutoPropuesta">{{ 'crm.lista.sugerido' | translate: { p0: getStageLabel(lead.stageAutoPropuesta.stage) } }}</span>
                     </small>
                     <small class="d-block fw-semibold crm-valor" *ngIf="lead.estimatedValue">
                       <i class="fa fa-dollar me-1"></i>{{ formatCurrency(lead.estimatedValue) }}
@@ -276,40 +276,40 @@
                   <div class="kanban-card-actions">
                     <a *ngIf="lead.phone" [href]="'tel:' + lead.phone" class="action-btn-pill"
                       (click)="$event.stopPropagation()">
-                      <i class="fa fa-phone me-1"></i>Llamar
+                      <i class="fa fa-phone me-1"></i>{{ 'crm.lista.llamar' | translate }}
                     </a>
                     <a *ngIf="lead.email" [href]="'mailto:' + lead.email" class="action-btn-pill"
                       (click)="$event.stopPropagation()">
-                      <i class="fa fa-envelope-o me-1"></i>Correo
+                      <i class="fa fa-envelope-o me-1"></i>{{ 'crm.lista.correo' | translate }}
                     </a>
                     <a *ngIf="lead.phone" [href]="'https://wa.me/' + lead.phone" target="_blank"
                       class="action-btn-pill action-btn-wa"
                       (click)="$event.stopPropagation()">
-                      <i class="fa fa-whatsapp me-1"></i>WA
+                      <i class="fa fa-whatsapp me-1"></i>{{ 'crm.lista.wa' | translate }}
                     </a>
                     <a class="action-btn-pill action-btn-detail" (click)="viewDetail(lead)">
-                      <i class="fa fa-external-link me-1"></i>Ver
+                      <i class="fa fa-external-link me-1"></i>{{ 'crm.lista.ver' | translate }}
                     </a>
                     <a class="action-btn-pill action-btn-cotizar"
-                      pTooltip="Cotizar con los datos del lead (no lo vuelve cliente)"
+                      pTooltip="{{ 'crm.lista.cotizarConLosDatosDel' | translate }}"
                       (click)="cotizarDesdeLead(lead, $event)">
-                      <i class="fa fa-file-text-o me-1"></i>Cotizar
+                      <i class="fa fa-file-text-o me-1"></i>{{ 'crm.lista.cotizar' | translate }}
                     </a>
                     <a class="action-btn-pill action-btn-pedido"
-                      pTooltip="Convertir en cliente y tomar el pedido"
+                      pTooltip="{{ 'crm.lista.convertirEnClienteYTomar' | translate }}"
                       (click)="crearPedidoDesdeLead(lead, $event)">
-                      <i class="fa fa-shopping-cart me-1"></i>Pedido
+                      <i class="fa fa-shopping-cart me-1"></i>{{ 'crm.lista.pedido' | translate }}
                     </a>
-                    <a *ngIf="wonStage" class="action-btn-pill action-btn-won" pTooltip="Marcar como Ganado"
+                    <a *ngIf="wonStage" class="action-btn-pill action-btn-won" pTooltip="{{ 'crm.lista.marcarComoGanado' | translate }}"
                       (click)="quickCloseLead(lead, 'won', $event)">
                       <i class="fa fa-check"></i>
                     </a>
-                    <a *ngIf="lostStage" class="action-btn-pill action-btn-lost" pTooltip="Marcar como Perdido"
+                    <a *ngIf="lostStage" class="action-btn-pill action-btn-lost" pTooltip="{{ 'crm.lista.marcarComoPerdido' | translate }}"
                       (click)="quickCloseLead(lead, 'lost', $event)">
                       <i class="fa fa-times"></i>
                     </a>
                     <a class="action-btn-pill" [ngClass]="lead.activo ? 'action-btn-block' : 'action-btn-unblock'"
-                      [pTooltip]="lead.activo ? 'Bloquear' : 'Desbloquear'" (click)="toggleBloqueoLead(lead, $event)">
+                      [pTooltip]="lead.activo ? ('crm.lista.bloquear' | translate) : ('crm.lista.desbloquear' | translate)" (click)="toggleBloqueoLead(lead, $event)">
                       <i class="fa" [ngClass]="lead.activo ? 'fa-lock' : 'fa-unlock'"></i>
                     </a>
                   </div>
@@ -325,15 +325,15 @@
                     </small>
                     <span class="stat-badge badge-sm" *ngIf="getContactBadge(lead) as cb"
                       [style.background-color]="cb.bg" [style.color]="cb.color"
-                      pTooltip="Último contacto registrado (lastContactedAt)" tooltipPosition="top">
+                      pTooltip="{{ 'crm.lista.ultimoContactoRegistradoLastcontactedat' | translate }}" tooltipPosition="top">
                       <i class="fa fa-clock-o me-1"></i>{{ cb.label }}
                     </span>
                     <span class="stat-badge badge-sm" style="cursor:pointer;"
                       [style.background-color]="lead.activo ? '#f0fdf4' : '#fef2f2'"
                       [style.color]="lead.activo ? '#27AE60' : '#d12b38'"
-                      [pTooltip]="lead.activo ? 'Click para bloquear' : 'Click para desbloquear'" tooltipPosition="top"
+                      [pTooltip]="lead.activo ? ('crm.lista.clickParaBloquear' | translate) : ('crm.lista.clickParaDesbloquear' | translate)" tooltipPosition="top"
                       (click)="toggleBloqueoLead(lead, $event)">
-                      {{ lead.activo ? 'activo' : 'bloqueado' }}
+                      {{ lead.activo ? ('crm.lista.activo' | translate) : ('crm.lista.bloqueado' | translate) }}
                     </span>
                   </div>
                 </div>
@@ -341,7 +341,7 @@
                 <!-- Columna vacía -->
                 <div class="kanban-empty" *ngIf="getStageCount(stage.key) === 0">
                   <i class="fa fa-inbox crm-vacio-icono"></i>
-                  <small class="d-block text-muted mt-1">Sin leads en esta etapa</small>
+                  <small class="d-block text-muted mt-1">{{ 'crm.lista.sinLeadsEnEstaEtapa' | translate }}</small>
                 </div>
               </div>
 
@@ -353,13 +353,13 @@
         <div class="card-body py-2 border-bottom crm-seleccion" *ngIf="activeTab === 'active' && selectedCount > 0">
           <div class="d-flex align-items-center gap-3">
             <span class="fw-semibold crm-tinta">
-              <i class="fa fa-check-square-o me-1"></i>{{ selectedCount }} seleccionado(s)
+              <i class="fa fa-check-square-o me-1"></i>{{ selectedCount }} {{ 'crm.lista.seleccionadoS' | translate }}
             </span>
             <button class="cfg-btn cfg-btn--peligro" (click)="deleteSelectedFromTable()" [disabled]="deletingLeads">
-              <i class="fa fa-trash me-1"></i>Eliminar seleccionados
+              <i class="fa fa-trash me-1"></i>{{ 'crm.lista.eliminarSeleccionados' | translate }}
             </button>
             <button class="cfg-btn cfg-btn--sec" (click)="clearSelection()">
-              <i class="fa fa-times me-1"></i>Limpiar selección
+              <i class="fa fa-times me-1"></i>{{ 'crm.lista.limpiarSeleccion' | translate }}
             </button>
           </div>
         </div>
@@ -369,23 +369,23 @@
           <p-table [value]="filteredLeads" dataKey="id"
             [paginator]="true" [rows]="20" [rowsPerPageOptions]="[10,20,50]"
             [showCurrentPageReport]="true"
-            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+            currentPageReportTemplate="{{ 'crm.lista.mostrandoFirstALastDe' | translate }}"
             styleClass="p-datatable p-datatable-gridlines p-datatable-striped"
             style="font-size: 0.75em;">
 
             <ng-template pTemplate="header">
               <tr>
                 <th style="width:4%"></th>
-                <th style="width:20%">Nombre</th>
-                <th style="width:12%" *ngIf="entityType === 'company'">Plan</th>
-                <th style="width:8%" *ngIf="entityType === 'company'" pSortableColumn="score">Puntaje <p-sortIcon field="score"></p-sortIcon></th>
-                <th style="width:10%">Etapa</th>
-                <th style="width:8%">Estado</th>
-                <th style="width:10%">Prioridad</th>
-                <th style="width:11%">Asignado a</th>
-                <th style="width:9%">Valor est.</th>
-                <th style="width:13%">Etiquetas</th>
-                <th style="width:12%">Acciones</th>
+                <th style="width:20%">{{ 'crm.lista.nombre' | translate }}</th>
+                <th style="width:12%" *ngIf="entityType === 'company'">{{ 'crm.lista.plan' | translate }}</th>
+                <th style="width:8%" *ngIf="entityType === 'company'" pSortableColumn="score">{{ 'crm.lista.puntaje2' | translate }} <p-sortIcon field="score"></p-sortIcon></th>
+                <th style="width:10%">{{ 'crm.lista.etapa' | translate }}</th>
+                <th style="width:8%">{{ 'crm.lista.estado' | translate }}</th>
+                <th style="width:10%">{{ 'crm.lista.prioridad' | translate }}</th>
+                <th style="width:11%">{{ 'crm.lista.asignadoA' | translate }}</th>
+                <th style="width:9%">{{ 'crm.lista.valorEst' | translate }}</th>
+                <th style="width:13%">{{ 'crm.lista.etiquetas' | translate }}</th>
+                <th style="width:12%">{{ 'crm.lista.acciones' | translate }}</th>
               </tr>
             </ng-template>
 
@@ -409,7 +409,7 @@
                 <td *ngIf="entityType === 'company'">
                   <span class="crm-puntaje" *ngIf="lead.score !== null && lead.score !== undefined; else sinPuntaje"
                     [ngClass]="'crm-puntaje--' + nivelPuntaje(lead.score)"
-                    [pTooltip]="lead.scoreMotivos?.length ? lead.scoreMotivos.join(' · ') : 'Sin señales todavía'" tooltipPosition="top">
+                    [pTooltip]="lead.scoreMotivos?.length ? lead.scoreMotivos.join(' · ') : ('crm.lista.sinSenalesTodavia' | translate)" tooltipPosition="top">
                     {{ lead.score }}
                   </span>
                   <ng-template #sinPuntaje><small class="text-muted">-</small></ng-template>
@@ -419,16 +419,16 @@
                     [style]="{'font-size':'0.75rem'}"></p-tag>
                   <span class="crm-sugerido" *ngIf="entityType === 'company' && lead.stageAutoPropuesta"
                     [pTooltip]="lead.stageAutoPropuesta.motivo" tooltipPosition="top">
-                    Sugerido: {{ getStageLabel(lead.stageAutoPropuesta.stage) }}
+                    {{ 'crm.lista.sugerido' | translate: { p0: getStageLabel(lead.stageAutoPropuesta.stage) } }}
                   </span>
                 </td>
                 <td (click)="$event.stopPropagation()" style="cursor:default">
                   <span class="stat-badge badge-sm" style="cursor:pointer;"
                     [style.background-color]="lead.activo ? '#f0fdf4' : '#fef2f2'"
                     [style.color]="lead.activo ? '#27AE60' : '#d12b38'"
-                    [pTooltip]="lead.activo ? 'Click para bloquear' : 'Click para desbloquear'" tooltipPosition="top"
+                    [pTooltip]="lead.activo ? ('crm.lista.clickParaBloquear' | translate) : ('crm.lista.clickParaDesbloquear' | translate)" tooltipPosition="top"
                     (click)="toggleBloqueoLead(lead, $event)">
-                    {{ lead.activo ? 'activo' : 'bloqueado' }}
+                    {{ lead.activo ? ('crm.lista.activo' | translate) : ('crm.lista.bloqueado' | translate) }}
                   </span>
                 </td>
                 <td (click)="$event.stopPropagation()" style="cursor:default">
@@ -456,17 +456,17 @@
                 </td>
                 <td (click)="$event.stopPropagation()">
                   <div class="d-flex gap-2 align-items-center">
-                    <a *ngIf="lead.phone" [href]="'tel:' + lead.phone" class="action-btn" pTooltip="Llamar"><i class="fa fa-phone"></i></a>
-                    <a *ngIf="lead.email" [href]="'mailto:' + lead.email" class="action-btn" pTooltip="Correo"><i class="fa fa-envelope-o"></i></a>
+                    <a *ngIf="lead.phone" [href]="'tel:' + lead.phone" class="action-btn" pTooltip="{{ 'crm.lista.llamar' | translate }}"><i class="fa fa-phone"></i></a>
+                    <a *ngIf="lead.email" [href]="'mailto:' + lead.email" class="action-btn" pTooltip="{{ 'crm.lista.correo' | translate }}"><i class="fa fa-envelope-o"></i></a>
                     <a *ngIf="lead.phone" [href]="'https://wa.me/' + lead.phone" target="_blank"
-                      class="action-btn action-btn-wa" pTooltip="WhatsApp"><i class="fa fa-whatsapp"></i></a>
-                    <a class="action-btn action-btn-cotizar-table" pTooltip="Cotizar (no lo vuelve cliente)"
+                      class="action-btn action-btn-wa" pTooltip="{{ 'crm.lista.whatsapp' | translate }}"><i class="fa fa-whatsapp"></i></a>
+                    <a class="action-btn action-btn-cotizar-table" pTooltip="{{ 'crm.lista.cotizarNoLoVuelveCliente' | translate }}"
                       (click)="cotizarDesdeLead(lead, $event)"><i class="fa fa-file-text-o"></i></a>
-                    <a class="action-btn action-btn-pedido-table" pTooltip="Convertir en cliente y tomar el pedido"
+                    <a class="action-btn action-btn-pedido-table" pTooltip="{{ 'crm.lista.convertirEnClienteYTomar' | translate }}"
                       (click)="crearPedidoDesdeLead(lead, $event)"><i class="fa fa-shopping-cart"></i></a>
                     <a class="action-btn" [ngClass]="lead.activo ? 'action-btn-block-table' : 'action-btn-unblock-table'"
                       (click)="toggleBloqueoLead(lead, $event)"
-                      [pTooltip]="lead.activo ? 'Bloquear' : 'Desbloquear'"><i class="fa" [ngClass]="lead.activo ? 'fa-lock' : 'fa-unlock'"></i></a>
+                      [pTooltip]="lead.activo ? ('crm.lista.bloquear' | translate) : ('crm.lista.desbloquear' | translate)"><i class="fa" [ngClass]="lead.activo ? 'fa-lock' : 'fa-unlock'"></i></a>
                   </div>
                 </td>
               </tr>
@@ -476,7 +476,7 @@
               <tr>
                 <td [attr.colspan]="entityType === 'company' ? 11 : 9" class="text-center p-4">
                   <i class="fa fa-inbox crm-vacio-icono crm-vacio-icono--grande"></i>
-                  <p class="text-muted mt-2 mb-0">No hay leads que mostrar</p>
+                  <p class="text-muted mt-2 mb-0">{{ 'crm.lista.noHayLeadsQueMostrar' | translate }}</p>
                 </td>
               </tr>
             </ng-template>
@@ -492,19 +492,19 @@
           <p-table [value]="closedLeads" dataKey="id" *ngIf="!loadingClosed"
             [paginator]="true" [rows]="20" [rowsPerPageOptions]="[10,20,50]"
             [showCurrentPageReport]="true"
-            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+            currentPageReportTemplate="{{ 'crm.lista.mostrandoFirstALastDe' | translate }}"
             styleClass="p-datatable p-datatable-gridlines p-datatable-striped"
             style="font-size: 0.75em;">
 
             <ng-template pTemplate="header">
               <tr>
-                <th style="width:22%">Nombre</th>
-                <th style="width:14%">Documento</th>
-                <th style="width:12%">Etapa</th>
-                <th style="width:16%">Compra</th>
-                <th style="width:14%">Cierre</th>
-                <th style="width:10%">Valor est.</th>
-                <th style="width:12%">Acciones</th>
+                <th style="width:22%">{{ 'crm.lista.nombre' | translate }}</th>
+                <th style="width:14%">{{ 'crm.lista.documento' | translate }}</th>
+                <th style="width:12%">{{ 'crm.lista.etapa' | translate }}</th>
+                <th style="width:16%">{{ 'crm.lista.compra' | translate }}</th>
+                <th style="width:14%">{{ 'crm.lista.cierre' | translate }}</th>
+                <th style="width:10%">{{ 'crm.lista.valorEst' | translate }}</th>
+                <th style="width:12%">{{ 'crm.lista.acciones' | translate }}</th>
               </tr>
             </ng-template>
 
@@ -521,20 +521,20 @@
                 </td>
                 <td>
                   <span class="stat-badge badge-sm crm-par--ok" *ngIf="lead.verifiedBuyer">
-                    <i class="fa fa-check-circle me-1"></i>Comprador verificado
+                    <i class="fa fa-check-circle me-1"></i>{{ 'crm.lista.compradorVerificado' | translate }}
                   </span>
                   <span class="stat-badge badge-sm crm-par--warn" *ngIf="lead.verifiedBuyer === false">
-                    <i class="fa fa-exclamation-triangle me-1"></i>Sin verificar
+                    <i class="fa fa-exclamation-triangle me-1"></i>{{ 'crm.lista.sinVerificar' | translate }}
                   </span>
                   <div *ngIf="lead.forcedReason" class="text-muted" style="font-size:0.72rem; margin-top:3px;"
-                    [pTooltip]="'Cierre forzado por ' + (lead.forcedBy || 'usuario') + (lead.forcedAt ? (' · ' + (lead.forcedAt | date:'short')) : '')"
+                    [pTooltip]="(lead.forcedAt ? 'crm.lista.cierreForzadoPorFecha' : 'crm.lista.cierreForzadoPor') | translate: { user: lead.forcedBy || ('crm.lista.usuario' | translate), date: (lead.forcedAt | date:'short') }"
                     tooltipPosition="top">
-                    <i class="fa fa-comment-o me-1 crm-acento"></i>Motivo: {{ lead.forcedReason }}
+                    <i class="fa fa-comment-o me-1 crm-acento"></i>{{ 'crm.lista.motivo' | translate: { forcedReason: lead.forcedReason } }}
                   </div>
                   <div *ngIf="lead.lostReason" class="text-muted" style="font-size:0.72rem; margin-top:3px;"
-                    [pTooltip]="'Perdido por ' + (lead.lostBy || 'usuario') + (lead.lostAt ? (' · ' + (lead.lostAt | date:'short')) : '')"
+                    [pTooltip]="(lead.lostAt ? 'crm.lista.perdidoPorFecha' : 'crm.lista.perdidoPor') | translate: { user: lead.lostBy || ('crm.lista.usuario' | translate), date: (lead.lostAt | date:'short') }"
                     tooltipPosition="top">
-                    <i class="fa fa-times-circle me-1 crm-rojo"></i>Motivo pérdida: {{ lead.lostReason }}
+                    <i class="fa fa-times-circle me-1 crm-rojo"></i>{{ 'crm.lista.motivoPerdida' | translate: { lostReason: lead.lostReason } }}
                   </div>
                   <small class="text-muted" *ngIf="lead.verifiedBuyer === undefined && !lead.forcedReason && !lead.lostReason">—</small>
                 </td>
@@ -546,14 +546,14 @@
                 </td>
                 <td>
                   <div class="d-flex gap-2 align-items-center">
-                    <a class="action-btn" (click)="viewDetail(lead)" pTooltip="Ver detalle">
+                    <a class="action-btn" (click)="viewDetail(lead)" pTooltip="{{ 'crm.lista.verDetalle' | translate }}">
                       <i class="fa fa-eye"></i>
                     </a>
                     <!-- Un lead cerrado sigue siendo vendible: al ganado se le
                          puede recomprar, al perdido se le puede reactivar. -->
-                    <a class="action-btn action-btn-cotizar-table" pTooltip="Cotizar (no lo vuelve cliente)"
+                    <a class="action-btn action-btn-cotizar-table" pTooltip="{{ 'crm.lista.cotizarNoLoVuelveCliente' | translate }}"
                       (click)="cotizarDesdeLead(lead, $event)"><i class="fa fa-file-text-o"></i></a>
-                    <a class="action-btn action-btn-pedido-table" pTooltip="Convertir en cliente y tomar el pedido"
+                    <a class="action-btn action-btn-pedido-table" pTooltip="{{ 'crm.lista.convertirEnClienteYTomar' | translate }}"
                       (click)="crearPedidoDesdeLead(lead, $event)"><i class="fa fa-shopping-cart"></i></a>
                   </div>
                 </td>
@@ -564,7 +564,7 @@
               <tr>
                 <td colspan="7" class="text-center p-4">
                   <i class="fa fa-archive crm-vacio-icono crm-vacio-icono--grande"></i>
-                  <p class="text-muted mt-2 mb-0">Todavía no hay leads cerrados</p>
+                  <p class="text-muted mt-2 mb-0">{{ 'crm.lista.todaviaNoHayLeadsCerrados' | translate }}</p>
                 </td>
               </tr>
             </ng-template>
@@ -579,26 +579,26 @@
      el listado de Clientes Corporativos). Ver openCreateDialog(). -->
 
 <!-- ═══════ DIALOG DUPLICADOS ═══════ -->
-<p-dialog header="Limpiar leads duplicados" [(visible)]="showDuplicatesDialog"
+<p-dialog header="{{ 'crm.lista.limpiarLeadsDuplicados' | translate }}" [(visible)]="showDuplicatesDialog"
   [modal]="true" [style]="{width: '800px', maxHeight: '85vh'}" [closable]="true">
 
   <div *ngIf="loadingDuplicates" class="text-center py-4">
     <div class="loader-8"></div>
-    <p class="text-muted mt-2">Analizando duplicados...</p>
+    <p class="text-muted mt-2">{{ 'crm.lista.analizandoDuplicados' | translate }}</p>
   </div>
 
   <div *ngIf="!loadingDuplicates" class="mb-3">
     <div class="d-flex gap-3 align-items-center flex-wrap">
-      <span class="stat-badge stat-badge-primary">{{ duplicateStats.totalLeads }} leads totales</span>
+      <span class="stat-badge stat-badge-primary">{{ duplicateStats.totalLeads }} {{ 'crm.lista.leadsTotales' | translate }}</span>
       <span class="stat-badge crm-par--warn">
-        {{ duplicateStats.duplicateGroups }} grupo(s) duplicados
+        {{ duplicateStats.duplicateGroups }} {{ 'crm.lista.grupoSDuplicados' | translate }}
       </span>
       <span class="stat-badge crm-par--error">
-        {{ duplicateStats.duplicateLeads }} leads duplicados
+        {{ duplicateStats.duplicateLeads }} {{ 'crm.lista.leadsDuplicados' | translate }}
       </span>
       <button *ngIf="selectedForDeletion.size > 0"
         class="btn btn-danger btn-sm ms-auto" (click)="deleteSelectedDuplicates()" [disabled]="deletingLeads">
-        <i class="fa fa-trash me-1"></i>Eliminar {{ selectedForDeletion.size }} seleccionado(s)
+        <i class="fa fa-trash me-1"></i>{{ 'crm.lista.eliminarSeleccionadoS' | translate: { size: selectedForDeletion.size } }}
         <span *ngIf="deletingLeads" class="spinner-border spinner-border-sm ms-1"></span>
       </button>
     </div>
@@ -606,8 +606,8 @@
 
   <div *ngIf="!loadingDuplicates && duplicateGroups.length === 0" class="text-center py-4">
     <i class="fa fa-check-circle crm-ok-icono"></i>
-    <p class="mt-2 fw-semibold crm-tinta">No se encontraron duplicados</p>
-    <p class="text-muted">Todos los leads son únicos.</p>
+    <p class="mt-2 fw-semibold crm-tinta">{{ 'crm.lista.noSeEncontraronDuplicados' | translate }}</p>
+    <p class="text-muted">{{ 'crm.lista.todosLosLeadsSonUnicos' | translate }}</p>
   </div>
 
   <div *ngIf="!loadingDuplicates && duplicateGroups.length > 0"
@@ -615,17 +615,17 @@
     <div *ngFor="let group of duplicateGroups; let gi = index" class="mb-3">
       <div class="d-flex align-items-center justify-content-between mb-1">
         <small class="fw-semibold crm-muted">
-          Grupo {{ gi + 1 }} — coincide por: {{ group.matchedBy.join(', ') }}
+          {{ 'crm.lista.grupoCoincidePor' | translate: { p0: gi + 1, p1: group.matchedBy.join(', ') } }}
         </small>
         <div class="d-flex gap-1">
           <button class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size:0.7rem;"
             (click)="selectAllDuplicatesInGroup(group)"
-            pTooltip="Selecciona los duplicados y conserva el original">
-            Seleccionar duplicados
+            pTooltip="{{ 'crm.lista.seleccionaLosDuplicadosYConserva' | translate }}">
+            {{ 'crm.lista.seleccionarDuplicados' | translate }}
           </button>
           <button class="btn btn-outline-secondary btn-sm py-0 px-2" style="font-size:0.7rem;"
             (click)="deselectAllInGroup(group)">
-            Limpiar
+            {{ 'crm.lista.limpiar' | translate }}
           </button>
         </div>
       </div>
@@ -634,11 +634,11 @@
           <thead class="table-light">
             <tr>
               <th style="width:30px;"></th>
-              <th>Nombre</th>
-              <th>Correo</th>
-              <th>Teléfono</th>
-              <th>Etapa</th>
-              <th>Estado</th>
+              <th>{{ 'crm.lista.nombre' | translate }}</th>
+              <th>{{ 'crm.lista.correo' | translate }}</th>
+              <th>{{ 'crm.lista.telefono' | translate }}</th>
+              <th>{{ 'crm.lista.etapa' | translate }}</th>
+              <th>{{ 'crm.lista.estado' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -651,7 +651,7 @@
               </td>
               <td>
                 {{ lead.name }}
-                <span *ngIf="li === 0" class="badge bg-success ms-1" style="font-size:0.6rem;">original</span>
+                <span *ngIf="li === 0" class="badge bg-success ms-1" style="font-size:0.6rem;">{{ 'crm.lista.original' | translate }}</span>
               </td>
               <td><small>{{ lead.email || '-' }}</small></td>
               <td><small>{{ lead.phone || '-' }}</small></td>
@@ -664,7 +664,7 @@
               </td>
               <td>
                 <span [style.color]="lead.activo ? '#27AE60' : '#d12b38'">
-                  {{ lead.activo ? 'activo' : 'bloqueado' }}
+                  {{ lead.activo ? ('crm.lista.activo' | translate) : ('crm.lista.bloqueado' | translate) }}
                 </span>
               </td>
             </tr>
@@ -681,12 +681,12 @@
 
   <div *ngIf="loadingTasks" class="text-center py-4">
     <div class="loader-8"></div>
-    <p class="text-muted mt-2">Cargando tareas...</p>
+    <p class="text-muted mt-2">{{ 'crm.lista.cargandoTareas' | translate }}</p>
   </div>
 
   <div *ngIf="!loadingTasks && pendingTasks.length === 0" class="text-center py-4">
     <i class="fa fa-check-circle crm-ok-icono"></i>
-    <p class="mt-2 fw-semibold crm-tinta">Sin resultados para "{{ tasksDialogTitle }}"</p>
+    <p class="mt-2 fw-semibold crm-tinta">{{ 'crm.lista.sinResultadosPara' | translate: { tasksDialogTitle: tasksDialogTitle } }}</p>
   </div>
 
   <div *ngIf="!loadingTasks && pendingTasks.length > 0" style="max-height: 60vh; overflow-y: auto;">
@@ -697,7 +697,7 @@
         <small class="text-muted d-block">
           <i class="fa fa-user-o me-1"></i>{{ taskLeadName(task) }}
           <span *ngIf="task.dueDate"><i class="fa fa-calendar-o ms-2 me-1"></i>{{ task.dueDate | date:'dd/MM/yyyy' }}</span>
-          <span *ngIf="veEquipo"><i class="fa fa-id-badge ms-2 me-1"></i>{{ task.assignedTo ? nombreComercial(task.assignedTo) : 'Sin asignar' }}</span>
+          <span *ngIf="veEquipo"><i class="fa fa-id-badge ms-2 me-1"></i>{{ task.assignedTo ? nombreComercial(task.assignedTo) : ('crm.lista.sinAsignar' | translate) }}</span>
         </small>
       </div>
       <span class="stat-badge badge-sm" *ngIf="taskGroupLabel(task) as tg"
@@ -711,7 +711,7 @@
       </span>
       <button class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size:0.75rem; white-space:nowrap;"
         (click)="goToTaskLead(task)">
-        <i class="fa fa-external-link me-1"></i>Ver
+        <i class="fa fa-external-link me-1"></i>{{ 'crm.lista.ver' | translate }}
       </button>
     </div>
   </div>
@@ -725,22 +725,22 @@
   </div>
   <div *ngIf="!loadingConversion && conversionRows.length === 0" class="text-center py-4">
     <i class="fa fa-bar-chart fa-2x text-muted mb-2 d-block"></i>
-    <p class="text-muted mb-0">No hay leads con vendedor asignado todavía.</p>
+    <p class="text-muted mb-0">{{ 'crm.lista.noHayLeadsConVendedor' | translate }}</p>
   </div>
   <div class="table-responsive" *ngIf="!loadingConversion && conversionRows.length > 0">
     <table class="table table-sm align-middle">
       <thead>
         <tr>
-          <th>Vendedor</th>
-          <th class="text-end">Total</th>
-          <th class="text-end">Ganados</th>
-          <th class="text-end">Perdidos</th>
-          <th class="text-end">Conversión</th>
+          <th>{{ 'crm.lista.vendedor' | translate }}</th>
+          <th class="text-end">{{ 'crm.lista.total' | translate }}</th>
+          <th class="text-end">{{ 'crm.lista.ganados' | translate }}</th>
+          <th class="text-end">{{ 'crm.lista.perdidos2' | translate }}</th>
+          <th class="text-end">{{ 'crm.lista.conversion' | translate }}</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let row of conversionRows">
-          <td>{{ row.assignedTo === 'Sin asignar' ? 'Sin asignar' : nombreComercial(row.assignedTo) }}</td>
+          <td>{{ row.assignedTo === 'Sin asignar' ? ('crm.lista.sinAsignar' | translate) : nombreComercial(row.assignedTo) }}</td>
           <td class="text-end">{{ row.total }}</td>
           <td class="text-end crm-verde">{{ row.won }}</td>
           <td class="text-end crm-rojo">{{ row.lost }}</td>
@@ -758,10 +758,10 @@
 </p-dialog>
 
 <!-- Configuración del catálogo de etiquetas -->
-<p-dialog header="Configuración de Etiquetas" [(visible)]="showConfigModal"
+<p-dialog header="{{ 'crm.lista.configuracionDeEtiquetas' | translate }}" [(visible)]="showConfigModal"
   [modal]="true" [closable]="true" [dismissableMask]="false" [style]="{width: '480px'}">
 
-  <p class="text-muted small mb-3">Crea etiquetas con color para segmentar tus leads.</p>
+  <p class="text-muted small mb-3">{{ 'crm.lista.creaEtiquetasConColorPara' | translate }}</p>
 
   <div class="config-list mb-3">
     <div *ngFor="let tag of editableTags; let i = index" class="config-list-item">
@@ -772,11 +772,11 @@
         <i class="pi pi-times-circle"></i>
       </button>
     </div>
-    <div *ngIf="editableTags.length === 0" class="text-muted small text-center py-2">Sin etiquetas configuradas</div>
+    <div *ngIf="editableTags.length === 0" class="text-muted small text-center py-2">{{ 'crm.lista.sinEtiquetasConfiguradas' | translate }}</div>
   </div>
 
   <div class="d-flex gap-2 align-items-center flex-wrap">
-    <input pInputText type="text" [(ngModel)]="newTagName" placeholder="Nombre etiqueta..."
+    <input pInputText type="text" [(ngModel)]="newTagName" placeholder="{{ 'crm.lista.nombreEtiqueta' | translate }}"
       class="flex-grow-1" style="min-width: 140px;" (keyup.enter)="addTag()" />
     <div class="d-flex gap-1 flex-wrap">
       <span *ngFor="let c of availableColors" class="color-swatch"
@@ -789,63 +789,63 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <button pButton type="button" label="Cancelar" icon="pi pi-times"
+    <button pButton type="button" label="{{ 'comun.cancelar' | translate }}" icon="pi pi-times"
       class="p-button-text" (click)="cerrarConfigModal()"></button>
-    <button pButton type="button" label="Guardar" icon="pi pi-check"
+    <button pButton type="button" label="{{ 'comun.guardar' | translate }}" icon="pi pi-check"
       class="p-button-primary" (click)="guardarConfig()"></button>
   </ng-template>
 </p-dialog>
 
-<p-dialog header="Configuración de Etapas" [(visible)]="showStagesModal"
+<p-dialog header="{{ 'crm.lista.configuracionDeEtapas' | translate }}" [(visible)]="showStagesModal"
   [modal]="true" [closable]="true" [dismissableMask]="false" [style]="{width: '480px'}">
 
-  <p class="text-muted small mb-3">Activa o desactiva las etapas de tu pipeline según tu proceso de ventas. Los nombres y el orden son fijos.</p>
+  <p class="text-muted small mb-3">{{ 'crm.lista.activaODesactivaLasEtapas' | translate }}</p>
 
   <div class="config-list mb-3">
     <div *ngFor="let stage of editableStages; let i = index" class="config-list-item d-flex align-items-center justify-content-between gap-2 mb-2">
       <span class="d-flex align-items-center gap-2">
         <span class="stage-color-dot" [style.background-color]="getStageColor(stage.key)"></span>
         {{ stage.label }}
-        <span class="stat-badge badge-sm crm-par--ok" *ngIf="stage.isWon">Ganada</span>
-        <span class="stat-badge badge-sm crm-par--error" *ngIf="stage.isLost">Perdida</span>
+        <span class="stat-badge badge-sm crm-par--ok" *ngIf="stage.isWon">{{ 'crm.lista.ganada' | translate }}</span>
+        <span class="stat-badge badge-sm crm-par--error" *ngIf="stage.isLost">{{ 'crm.lista.perdida2' | translate }}</span>
       </span>
       <p-inputSwitch [(ngModel)]="stage.active" [ngModelOptions]="{standalone: true}"
         [trueValue]="true" [falseValue]="false" (onChange)="toggleStageActive(i)"></p-inputSwitch>
     </div>
-    <div *ngIf="editableStages.length === 0" class="text-muted small text-center py-2">Sin etapas configuradas</div>
+    <div *ngIf="editableStages.length === 0" class="text-muted small text-center py-2">{{ 'crm.lista.sinEtapasConfiguradas' | translate }}</div>
   </div>
 
   <ng-template pTemplate="footer">
-    <button pButton type="button" label="Cancelar" icon="pi pi-times"
+    <button pButton type="button" label="{{ 'comun.cancelar' | translate }}" icon="pi pi-times"
       class="p-button-text" (click)="cerrarEtapasModal()"></button>
-    <button pButton type="button" label="Guardar" icon="pi pi-check"
+    <button pButton type="button" label="{{ 'comun.guardar' | translate }}" icon="pi pi-check"
       class="p-button-primary" (click)="guardarEtapas()"></button>
   </ng-template>
 </p-dialog>
 
 <!-- Ticket 1064: equipo comercial (solo administradores) -->
-<p-dialog header="Comerciales" [(visible)]="showEquipoModal"
+<p-dialog header="{{ 'crm.lista.comerciales' | translate }}" [(visible)]="showEquipoModal"
   [modal]="true" [closable]="true" [style]="{width: '480px'}" [breakpoints]="{'640px': '94vw'}">
   <div *ngIf="equipo" class="config-list">
     <div class="config-list-item d-flex align-items-start justify-content-between gap-3 mb-3">
       <span>
-        <strong class="d-block">Cada comercial ve solo sus leads</strong>
-        <small class="text-muted">Los vendedores ven y trabajan únicamente los leads y tareas asignados a ellos. Los administradores siguen viendo todo.</small>
+        <strong class="d-block">{{ 'crm.lista.cadaComercialVeSoloSus' | translate }}</strong>
+        <small class="text-muted">{{ 'crm.lista.losVendedoresVenYTrabajan' | translate }}</small>
       </span>
       <p-inputSwitch [(ngModel)]="configEquipo.crmSoloPropios" [disabled]="guardandoEquipo"
         (onChange)="guardarConfigEquipo('crmSoloPropios', $event.checked)"></p-inputSwitch>
     </div>
     <div class="config-list-item d-flex align-items-start justify-content-between gap-3 mb-2">
       <span>
-        <strong class="d-block">Recordar las tareas por correo</strong>
-        <small class="text-muted">Al asignar una tarea le llega un correo al responsable, y cada mañana recibe las que vencen ese día o ya vencieron.</small>
+        <strong class="d-block">{{ 'crm.lista.recordarLasTareasPorCorreo' | translate }}</strong>
+        <small class="text-muted">{{ 'crm.lista.alAsignarUnaTareaLe' | translate }}</small>
       </span>
       <p-inputSwitch [(ngModel)]="configEquipo.crmRecordatoriosCorreo" [disabled]="guardandoEquipo"
         (onChange)="guardarConfigEquipo('crmRecordatoriosCorreo', $event.checked)"></p-inputSwitch>
     </div>
-    <small class="text-muted d-block mt-2">{{ equipo.comerciales.length }} {{ equipo.comerciales.length === 1 ? 'persona' : 'personas' }} del equipo. El comercial de cada lead se elige al crearlo o en su detalle.</small>
+    <small class="text-muted d-block mt-2">{{ (equipo.comerciales.length === 1 ? 'crm.lista.personaDelEquipo' : 'crm.lista.personasDelEquipo') | translate: { count: equipo.comerciales.length } }}</small>
   </div>
 </p-dialog>
 
-<p-confirmDialog acceptLabel="Eliminar" rejectLabel="Cancelar"></p-confirmDialog>
+<p-confirmDialog acceptLabel="{{ 'comun.eliminar' | translate }}" rejectLabel="{{ 'comun.cancelar' | translate }}"></p-confirmDialog>
 <p-toast appendTo="body"></p-toast>

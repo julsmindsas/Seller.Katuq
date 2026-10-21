@@ -320,13 +320,13 @@ Carpetas de D10. `shared` tiene 58 plantillas (5 con pipe) y 136 mensajes; `noti
 
 `crm` 4/1/59, `prospect-manager` 1/0/33 y los formularios de cliente de `shared` (incluido el formulario único de cliente, que ya trae EN/PT: se conservan sus claves). En el código viven en `components/ventas/clientes` (`clientes-shared.module`); la configuración de `i18n:check` los asigna a este bloque y no a IDI-B03 (IDI-B00c).
 
-- [ ] **6.1 Línea base.** `npm run i18n:check -- --modulo <carpetas>`; anotar aquí los conteos (receta, paso 1).
-- [ ] **6.2 HTML.** Textos y atributos al pipe `translate` con claves `crm.*`, `prospectManager.*` o `comun.*` (receta, paso 2).
-- [ ] **6.3 Mensajes en TS.** `Swal.fire`, `toastr.*` y `messageService.add` a `translate.instant` (receta, paso 3).
-- [ ] **6.4 Ortografía.** Tildes, mayúsculas y puntuación del español en `es.json` (receta, paso 4).
-- [ ] **6.5 en/pt/de.** `en` y `pt` revisadas; `de` en borrador con Opttia; borrar claves literales que el módulo ya no usa (receta, paso 5).
-- [ ] **6.6 Cierre.** Módulo en la lista de cerrados; `npm run i18n:check` con cero textos sueltos, `npx tsc --noEmit -p tsconfig.app.json`, `npm run test:i18n` y `npm run build:prod` sin errores (receta, paso 6).
-- [ ] **6.7 Revisión «solo textos»** (receta, paso 7) y commit.
+- [x] **6.1 Línea base.** `npm run i18n:check -- --modulo <carpetas>`; anotar aquí los conteos (receta, paso 1). Línea base: 603 textos sueltos en `components/crm` y `components/prospect-manager` (59 + 33 mensajes según la tabla de la propuesta); después: 0.
+- [x] **6.2 HTML.** Textos y atributos al pipe `translate` con claves `crm.*`, `prospectManager.*` o `comun.*` (receta, paso 2). Hecho: ~575 claves `crm.*`, `prospectManager.*` y `comun.*` en los cuatro idiomas. Las listas de opciones (actividad, tarea, prioridad, fuente) guardan la clave en `label` y el `value` no cambia; se muestran con `OpcionesI18n` y `etiquetaDeValor` (`shared/utils/i18n-opciones.ts`).
+- [x] **6.3 Mensajes en TS.** `Swal.fire`, `toastr.*` y `messageService.add` a `translate.instant` (receta, paso 3). Hecho: `Swal`, `toastr` y mensajes con `translate.instant`; `lead-to-sales.service` y `crm-seguimiento` reciben `TranslateService`.
+- [x] **6.4 Ortografía.** Tildes, mayúsculas y puntuación del español en `es.json` (receta, paso 4). Hecho: tildes, mayúsculas y puntuación; prueba de ortografía en `tests/i18n/crm-cierre.test.js`.
+- [x] **6.5 en/pt/de.** `en` y `pt` revisadas; `de` en borrador con Opttia; borrar claves literales que el módulo ya no usa (receta, paso 5). Hecho: `en` y `pt` completas; `de` en borrador pendiente de revisión nativa (1.15). `NIT` y `E-Commerce` no se traducen (D4).
+- [ ] **6.6 Cierre.** Módulo en la lista de cerrados; `npm run i18n:check` con cero textos sueltos, `npx tsc --noEmit -p tsconfig.app.json`, `npm run test:i18n` y `npm run build:prod` sin errores (receta, paso 6). Hecho: `components/crm` y `components/prospect-manager` en `modulosCerrados`; cero textos sueltos, `test:i18n` 171/171 y tsc sin errores. Falta `npm run build:prod` (no se corre en este entorno) y la revisión en el navegador a 1440 y 390 px: sin marcar el criterio de build.
+- [x] **6.7 Revisión «solo textos»** (receta, paso 7) y commit. `git diff -w` de plantillas y .ts: solo textos, claves y `TranslateService`. Los formularios de cliente de `components/ventas/clientes` quedan en IDI-B03c por encargo del bloque.
   - Dependencias: 2.7.
 
 ## 7. IDI-B06 Productos, catálogo y listas de precios

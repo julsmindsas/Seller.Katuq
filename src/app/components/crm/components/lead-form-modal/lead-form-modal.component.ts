@@ -8,6 +8,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { ButtonModule } from 'primeng/button';
 import { PRIORITY_OPTIONS } from '../../models/crm.models';
 
+import { TranslateService } from '@ngx-translate/core';
 export interface LeadTag {
   name: string;
   color: string;
@@ -41,7 +42,7 @@ export class LeadFormModalComponent implements OnInit {
   /** Catálogo de etiquetas a elegir (corporate o client según el caller). */
   @Input() tagsCatalog: LeadTag[] = [];
   /** Título del modal. */
-  @Input() title = 'Nuevo corporativo';
+  @Input() title = 'crm.formulario.nuevoCorporativo';
   /** Ticket 1064: comerciales a los que se puede asignar el lead (vacío = no se muestra). */
   @Input() comerciales: { email: string; nombre: string }[] = [];
   /** Ticket 1064: comercial por defecto (quien crea el lead). */
@@ -51,13 +52,13 @@ export class LeadFormModalComponent implements OnInit {
   etiquetasSeleccionadas: string[] = [];
 
   readonly sourceOptions = [
-    { label: 'Redes sociales', value: 'social_media' },
-    { label: 'Referido', value: 'referral' },
-    { label: 'Búsqueda web', value: 'web' },
-    { label: 'Evento / Feria', value: 'event' },
-    { label: 'WhatsApp / Email', value: 'whatsapp' },
-    { label: 'Visita directa', value: 'direct' },
-    { label: 'Otro', value: 'other' },
+    { label: 'crm.opciones.fuente.social_media', value: 'social_media' },
+    { label: 'crm.opciones.fuente.referral', value: 'referral' },
+    { label: 'crm.opciones.fuente.web', value: 'web' },
+    { label: 'crm.opciones.fuente.event', value: 'event' },
+    { label: 'crm.opciones.fuente.whatsapp', value: 'whatsapp' },
+    { label: 'crm.opciones.fuente.direct', value: 'direct' },
+    { label: 'crm.opciones.fuente.other', value: 'other' },
   ];
   readonly priorityOpts = PRIORITY_OPTIONS;
   readonly tipoDocOptions = [
@@ -75,7 +76,7 @@ export class LeadFormModalComponent implements OnInit {
     { label: 'NUIP', value: 'NUIP' },
   ];
 
-  constructor(private fb: FormBuilder, public activeModal: NgbActiveModal) {
+  constructor(private fb: FormBuilder, public activeModal: NgbActiveModal, private translate: TranslateService) {
     this.form = this.fb.group({
       name:           ['', Validators.required],
       tipoDocumento:  ['CC'],
