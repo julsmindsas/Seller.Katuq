@@ -11510,3 +11510,20 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
     - 2.5: `requestId` y códigos en `from-order`;
     - 2.6 y 2.7: `verify-invoice`;
     - 2.11: `requestId` desde el front.
+
+## D-517 (2026-10-21) — Punto Verde Vidagas: eliminar en el carrito (ticket 1321) y pantallas de una sección en Favoritos (ticket 1322) — COMMITEADO, sin desplegar
+
+**1321: «no me deja eliminar el producto del combo».**
+- El botón de eliminar existía en cada producto del combo. La tabla del carrito mide unos 850–900 px y la tarjeta la recortaba (`overflow: hidden`). Con el menú lateral abierto se perdían Subtotal y Acciones, y con ellas el botón de eliminar y «Cerrar combo». Le pasaba a cualquier producto, no solo a los combos.
+- `carrito.component.scss`:
+  - la tarjeta se desplaza a lo ancho (`overflow-x: auto`);
+  - las 4 acciones van en una grilla de 2×2, que cabe en la columna de 96 px.
+- Nuevo «Quitar combo» en el encabezado del combo abierto (`quitarComboAbierto`). Quita todos sus productos, igual que la papelera del combo cerrado.
+- El mismo carrito se usa en venta asistida, crear venta y POS.
+
+**1322: favorito de una sección.**
+- Debajo de la sección salen sus pantallas, por ejemplo Pedidos → Todos los pedidos y Pedidos POS. Salen del menú ya cargado (`enlacesDeFavorito`), así respetan el rol.
+- `localStorage['sidebarFavoriteItems']` no cambia, y el límite sigue en 5 favoritos.
+- Tocar el título de la sección la sigue abriendo en el menú (1232).
+
+**Validación.** `ng build --configuration production` sin errores, compilado aparte sin subir la versión. Ningún gradiente ni primario prohibido. Falta revisarlo en pantalla a 1440 y 390 px.

@@ -150,6 +150,14 @@ export class CarritoComponent implements OnInit {
     fila.lineas.forEach((l) => this.carsingleton.removeProduct(l));
   }
 
+  /** Ticket 1321: desde el encabezado del combo abierto se quitan todos sus productos. */
+  quitarComboAbierto(grupo: string): void {
+    if (!grupo) return;
+    (this.productos || [])
+      .filter((l) => comboDeLinea(l)?.grupo === grupo)
+      .forEach((l) => this.carsingleton.removeProduct(l));
+  }
+
   /** Cantidad de combos: cada producto queda en sus unidades por combo × la cantidad. */
   setCantidadCombo(fila: FilaCombo<any>, value: any): void {
     const k = Math.max(1, Math.floor(Number(value) || 1));

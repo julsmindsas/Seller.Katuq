@@ -2175,19 +2175,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       event.stopPropagation();
       event.preventDefault();
     }
-    const buscar = (items: Menu[], cadena: Menu[]): Menu[] | null => {
-      for (const item of items || []) {
-        if (!item.path && item.children?.length && item.title === favorito.title) return [...cadena, item];
-        const hallado = item.children ? buscar(item.children, [...cadena, item]) : null;
-        if (hallado) return hallado;
-      }
-      return null;
-    };
-    let cadena: Menu[] | null = null;
-    for (const section of this.sections) {
-      cadena = buscar(section.items, []);
-      if (cadena) break;
-    }
+    const cadena = this.cadenaDeSeccion(favorito.title);
     if (!cadena) return;
 
     this.closeAllFirstLevelMenus();
@@ -2197,6 +2185,47 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     setTimeout(() => {
       document.getElementById(this.getMenuKey(destino) + '-toggle')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
+  }
+
+  /** La sección del menú (sin ruta, con hijos) con ese título, con sus padres. */
+  private cadenaDeSeccion(titulo: string | undefined): Menu[] | null {
+    const buscar = (items: Menu[], cadena: Menu[]): Menu[] | null => {
+      for (const item of items || []) {
+        if (!item.path && item.children?.length && item.title === titulo) return [...cadena, item];
+        const hallado = item.children ? buscar(item.children, [...cadena, item]) : null;
+        if (hallado) return hallado;
+      }
+      return null;
+    };
+    for (const section of this.sections) {
+      const cadena = buscar(section.items, []);
+      if (cadena) return cadena;
+    }
+    return null;
+  }
+
+  /**
+   * Ticket 1322: un favorito que es una sección muestra de una vez sus pantallas
+   * (por ejemplo Pedidos → Todos los pedidos y Pedidos POS). Salen del menú ya
+   * cargado, así respetan el rol y los cambios del menú sin guardar nada más.
+   * Se memoriza por `sections`, que se reemplaza en cada navegación.
+   */
+  private enlacesMemo: { sections: any[]; porTitulo: Map<string, Menu[]> } | null = null;
+  enlacesDeFavorito(favorito: Menu): Menu[] {
+    if (favorito.path) return [];
+    if (!this.enlacesMemo || this.enlacesMemo.sections !== this.sections) {
+      this.enlacesMemo = { sections: this.sections, porTitulo: new Map() };
+    }
+    const titulo = favorito.title || '';
+    let enlaces = this.enlacesMemo.porTitulo.get(titulo);
+    if (!enlaces) {
+      const seccion = this.cadenaDeSeccion(favorito.title)?.slice(-1)[0];
+      const pantallas = (items: Menu[] = []): Menu[] =>
+        items.flatMap(hijo => (hijo.children?.length ? pantallas(hijo.children) : hijo.type === 'link' && hijo.path ? [hijo] : []));
+      enlaces = pantallas(seccion?.children);
+      this.enlacesMemo.porTitulo.set(titulo, enlaces);
+    }
+    return enlaces;
   }
 
   // Comprobar si un item está en favoritos
