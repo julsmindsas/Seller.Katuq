@@ -428,3 +428,209 @@ test('revisión B06: un mensaje del servidor que nombra un proveedor o un modelo
   const renovar = { status: 422, error: { code: 'AI_QUOTA_INSUFFICIENT', message: 'Te quedan 4 usos; se renovarán el 1 del mes.' } };
   assert.match(m.mensajeDeError(renovar), /se renovarán/, '«renovar» no es «Nova»');
 });
+
+// ───────────── TX-37 · 8.6 y 9.10 (D-518): origen de las copias y «Quitar fondo» ─────────────
+
+const CONFIG_FONDO = { ...CONFIG, mode: 'on', canApply: true, backgroundRemoval: { available: true, previewAvailable: true }, aiUsesLeft: 480 };
+const AJUSTES = { aspect: '1:1', background: 'white', marginPct: 8 };
+
+test('9.10: «Quitar fondo» solo se ofrece si el servidor lo dice, con rol y modo; la vista previa con IA solo en on', () => {
+  assert.equal(m.quitarFondoDisponible(CONFIG_FONDO), true);
+  assert.equal(m.vistaPreviaConFondoDisponible(CONFIG_FONDO), true);
+  // Un servidor anterior, o sin la bandera: no se ofrece.
+  assert.equal(m.quitarFondoDisponible(CONFIG), false);
+  assert.equal(m.quitarFondoDisponible(null), false);
+  assert.equal(m.quitarFondoDisponible({ ...CONFIG_FONDO, backgroundRemoval: { available: false, previewAvailable: false } }), false);
+  assert.equal(m.quitarFondoDisponible({ ...CONFIG_FONDO, backgroundRemoval: null }), false);
+  // Sin rol de administrador o con el modo en pausa: no.
+  assert.equal(m.quitarFondoDisponible({ ...CONFIG_FONDO, canApply: false }), false);
+  assert.equal(m.quitarFondoDisponible({ ...CONFIG_FONDO, mode: 'off' }), false);
+  // En sombra se puede simular, pero la vista previa no usa IA (gasta).
+  const sombra = { ...CONFIG_FONDO, mode: 'shadow', backgroundRemoval: { available: true, previewAvailable: false } };
+  assert.equal(m.quitarFondoDisponible(sombra), true);
+  assert.equal(m.vistaPreviaConFondoDisponible(sombra), false);
+  // Aunque el servidor dijera previewAvailable en sombra, el front no la usa.
+  assert.equal(m.vistaPreviaConFondoDisponible({ ...sombra, backgroundRemoval: { available: true, previewAvailable: true } }), false);
+  assert.equal(m.vistaPreviaConFondoDisponible({ ...CONFIG_FONDO, backgroundRemoval: { available: true, previewAvailable: false } }), false);
+});
+
+test('9.10: lo que se manda — sin «Quitar fondo» el cuerpo es idéntico al de la fase 1; con él, replace y el alcance', () => {
+  const sel = { tipo: 'productos', productIds: ['p1', 'p2', 'p3', 'p4'] };
+  const antes = m.cuerpoVistaPrevia(sel, AJUSTES);
+  assert.deepEqual(antes, { productIds: ['p1', 'p2', 'p3'], settings: AJUSTES });
+  assert.deepEqual(m.cuerpoVistaPrevia(sel, AJUSTES, m.ajustesDeFondo(m.QUITAR_FONDO_POR_DEFECTO, true)), antes, 'apagado: ni backgroundMode ni backgroundScope');
+  assert.deepEqual(m.ajustesDeFondo({ quitar: true, alcance: 'cover' }, false), {}, 'sin permiso no viaja nada');
+  assert.deepEqual(m.ajustesDeFondo(null, true), {});
+
+  const portada = m.ajustesDeFondo({ quitar: true, alcance: 'cover' }, true);
+  assert.deepEqual(portada, { backgroundMode: 'replace', backgroundScope: 'cover' });
+  assert.deepEqual(m.cuerpoVistaPrevia(sel, AJUSTES, portada).settings, { ...AJUSTES, ...portada });
+  const todas = m.ajustesDeFondo({ quitar: true, alcance: 'all' }, true);
+  assert.equal(todas.backgroundScope, 'all');
+  assert.equal(m.ajustesDeFondo({ quitar: true, alcance: 'raro' }, true).backgroundScope, 'cover', 'un alcance inválido cae en la portada');
+
+  const lote = m.cuerpoLote(sel, AJUSTES, [], 'llave-12345');
+  assert.deepEqual(lote.settings, AJUSTES, 'el lote sin fondo no cambia');
+  assert.deepEqual(m.cuerpoLote(sel, AJUSTES, [], 'llave-12345', todas).settings, { ...AJUSTES, ...todas });
+  assert.deepEqual(m.QUITAR_FONDO_POR_DEFECTO, { quitar: false, alcance: 'cover' }, 'nace apagado y en la portada');
+  assert.deepEqual(m.ALCANCES_FONDO, ['cover', 'all']);
+  assert.deepEqual([m.ETIQUETAS_ALCANCE.cover, m.ETIQUETAS_ALCANCE.all], ['Solo la portada', 'Todas las fotos']);
+});
+
+test('9.10: el aviso del costo de la vista previa y los usos que necesita y que quedan', () => {
+  assert.equal(m.avisoCostoVistaPrevia(3, 480), 'La vista previa usa hasta 3 de tus 480 usos del mes');
+  assert.equal(m.avisoCostoVistaPrevia(3, 1500), 'La vista previa usa hasta 3 de tus 1.500 usos del mes');
+  assert.equal(m.avisoCostoVistaPrevia(undefined, null), 'La vista previa usa hasta 3 de tus usos del mes', 'sin saber cuántos quedan, sin cifra inventada');
+  assert.equal(m.avisoCostoVistaPrevia(3, undefined), 'La vista previa usa hasta 3 de tus usos del mes');
+  assert.equal(m.avisoCostoVistaPrevia(3, -1), 'La vista previa usa hasta 3 de tus usos del mes', 'un valor inválido no se muestra');
+  assert.equal(m.avisoCostoVistaPrevia(3, 2), 'La vista previa usa hasta 2 de tus 2 usos del mes', 'nunca más que lo que queda');
+  assert.equal(m.avisoCostoVistaPrevia(3, 1), 'La vista previa usa hasta 1 de tus 1 uso del mes');
+  assert.match(m.avisoCostoVistaPrevia(3, 0), /No te quedan usos/, 'sin cupo no promete gasto');
+  assert.equal(m.textoUsosQueQuedan(480), 'Te quedan 480 usos de «Quitar fondo» este mes');
+  assert.equal(m.textoUsosQueQuedan(1), 'Te quedan 1 uso de «Quitar fondo» este mes');
+  assert.equal(m.textoUsosQueQuedan(0), 'Te quedan 0 usos de «Quitar fondo» este mes');
+  assert.equal(m.textoUsosQueQuedan(null), '');
+
+  assert.equal(m.textoUsosNecesarios(12, 480, 10), 'Necesita hasta 12 usos de «Quitar fondo» · te quedan 480');
+  assert.equal(m.textoUsosNecesarios(1, null, 1), 'Necesita hasta 1 uso de «Quitar fondo»');
+  const parcial = m.textoUsosNecesarios(60, 480, 340);
+  assert.match(parcial, /^Los primeros 30 productos necesitan hasta 60 usos · te quedan 480\./, 'con más de 30 productos la cifra es de los primeros 30');
+  assert.match(parcial, /Si el lote completo no alcanza, te lo decimos antes de empezar/);
+  assert.equal(m.textoUsosNecesarios(undefined, 480, 10), '');
+  assert.equal(m.textoUsosSimulados(40), 'Al aplicar de verdad usaría hasta 40 usos de «Quitar fondo». Por ahora no se gasta ninguno');
+  assert.equal(m.textoUsosSimulados(null), '');
+});
+
+test('9.10: AI_QUOTA_INSUFFICIENT — el mensaje del servidor lleva siempre la salida; sin proveedor ni «token»', () => {
+  const salida = /Elige menos productos o quita el fondo solo de la portada\.$/;
+  // Con la salida del servidor, tal cual.
+  const completo = { status: 422, error: { code: 'AI_QUOTA_INSUFFICIENT', message: 'Te quedan 4 usos este mes y este lote necesita 9. Elige menos productos o quita el fondo solo de la portada.' } };
+  assert.equal(m.mensajeDeError(completo), completo.error.message);
+  // Sin salida: se agrega.
+  const corto = { status: 422, error: { code: 'AI_QUOTA_INSUFFICIENT', message: 'Te quedan 4 usos este mes y este lote necesita 9.' } };
+  assert.match(m.mensajeDeError(corto), /^Te quedan 4 usos este mes y este lote necesita 9\. Elige menos productos/);
+  assert.match(m.mensajeDeError(corto), salida);
+  // Sin mensaje del servidor: el nuestro, que ya la tiene.
+  assert.match(m.mensajeDeError({ status: 422, error: { code: 'AI_QUOTA_INSUFFICIENT' } }), /Elige menos productos o quita el fondo solo de la portada/);
+  // Con «token» o un proveedor: se usa el nuestro.
+  for (const palabra of ['token', 'Nova', 'Bedrock']) {
+    const err = { status: 422, error: { code: 'AI_QUOTA_INSUFFICIENT', message: `Sin ${palabra} suficiente.` } };
+    assert.equal(m.mensajeDeError(err), m.MENSAJES_ERROR.AI_QUOTA_INSUFFICIENT, palabra);
+  }
+  assert.match(m.MENSAJES_ERROR.ADMIN_ONLY, /administrador/);
+  assert.equal(m.mensajeDeError({ status: 403, error: { code: 'ADMIN_ONLY' } }), m.MENSAJES_ERROR.ADMIN_ONLY);
+  assert.equal(m.mensajeDeError({ status: 422, error: { code: 'BACKGROUND_UNAVAILABLE' } }), m.MENSAJES_ERROR.BACKGROUND_UNAVAILABLE);
+  const enPruebas = { status: 422, error: { code: 'BACKGROUND_UNAVAILABLE', message: 'La vista previa con Quitar fondo todavía no está disponible: tu empresa está en pruebas.' } };
+  assert.equal(m.mensajeDeError(enPruebas), enPruebas.error.message);
+});
+
+test('8.6 y 9.10: ningún texto de pantalla nombra al proveedor ni al modelo, ni dice «token» (Artículo VI)', () => {
+  const todos = [
+    ...Object.values(m.MENSAJES_OMISION), ...Object.values(m.MENSAJES_RESULTADO), ...Object.values(m.MENSAJES_AVISO),
+    ...Object.values(m.MENSAJES_PARADA), ...Object.values(m.MENSAJES_ERROR), ...Object.values(m.MENSAJES_ORIGEN), ...Object.values(m.MENSAJES_ORIGEN_SIMULADO),
+    m.avisoCostoVistaPrevia(3, 480), m.textoUsosQueQuedan(480), m.textoUsosNecesarios(60, 480, 340), m.textoUsosSimulados(40), ...Object.values(m.ETIQUETAS_ALCANCE),
+  ];
+  for (const t of todos) {
+    assert.doesNotMatch(t, /token|\bnova\b|bedrock|canvas|amazon|\baws\b|opttia|titan|anthropic|claude|gemini|openai|\bgpt|bucket|metadata|firestore|sharp|shopify|osmosis/i, t);
+  }
+  for (const c of ['background_input_invalid', 'background_unclear', 'background_unavailable', 'ai_quota', 'download_failed', 'not_image', 'not_adoptable']) {
+    assert.ok(m.motivoDeOmision(c) !== 'No se pudo uniformar', `${c} tiene su texto`);
+  }
+  assert.equal(m.textoDeResultado('would_copy'), 'Se copiaría a tus fotos antes de uniformarla');
+  assert.equal(m.textoDeResultado('would_remove_background'), 'Se le quitaría el fondo');
+});
+
+test('8.6: el origen de las fotos copiadas o adoptadas, real y en condicional', () => {
+  assert.equal(m.textoDeOrigen('link'), 'Copiada desde un enlace');
+  assert.equal(m.textoDeOrigen('unowned'), 'Adoptada de un archivo sin dueño registrado');
+  assert.equal(m.textoDeOrigen('link', true), 'Se copiaría desde un enlace');
+  assert.equal(m.textoDeOrigen('unowned', true), 'Se adoptaría un archivo sin dueño registrado');
+  assert.equal(m.textoDeOrigen('otro'), '');
+  assert.equal(m.textoDeOrigen(undefined, true), '');
+  // Nunca una URL ni una ruta.
+  for (const t of [...Object.values(m.MENSAJES_ORIGEN), ...Object.values(m.MENSAJES_ORIGEN_SIMULADO)]) assert.doesNotMatch(t, /https?:|\/|gs:/i, t);
+});
+
+const loteConOrigen = (extra = {}, fotos) => ({
+  batchId: 'b1', type: 'uniform', status: 'done', mode: 'on', stopCode: null, totals: { products: 3 },
+  counters: { products: 3, photosUniformed: 5, photosSkipped: 4 },
+  metrics: { photosCopied: 3, aiUsesConsumed: 6, aiUsesRefunded: 1 },
+  results: [
+    { productId: 'p1', status: 'uniformed', code: null, photos: fotos || [
+      { index: 0, status: 'uniformed', copiedFrom: 'link' },
+      { index: 1, status: 'uniformed', copiedFrom: 'link' },
+      { index: 2, status: 'uniformed', copiedFrom: 'unowned' },
+      { index: 3, status: 'skipped', code: 'download_failed' },
+    ] },
+    { productId: 'p2', status: 'skipped', code: null, photos: [
+      { index: 0, status: 'skipped', code: 'not_image' }, { index: 1, status: 'skipped', code: 'not_adoptable' }, { index: 2, status: 'skipped', code: 'download_failed' },
+    ] },
+  ],
+  ...extra,
+});
+
+test('8.6: el resumen de un lote dice el origen de lo copiado y cuenta download_failed, not_image y not_adoptable', () => {
+  const r = m.resumenDeLote(loteConOrigen());
+  assert.deepEqual(JSON.parse(JSON.stringify(r.origenes)), [
+    { code: 'link', texto: 'Copiada desde un enlace', cantidad: 2 },
+    { code: 'unowned', texto: 'Adoptada de un archivo sin dueño registrado', cantidad: 1 },
+  ]);
+  assert.equal(r.copiadas, 3, 'el total sale de los contadores del servidor');
+  assert.equal(r.habriaCopiado, 0);
+  const porCodigo = Object.fromEntries(r.motivos.map((x) => [x.code, x.cantidad]));
+  assert.deepEqual(porCodigo, { download_failed: 2, not_image: 1, not_adoptable: 1 });
+  for (const x of r.motivos) assert.ok(x.texto && x.texto !== 'No se pudo uniformar', x.code);
+  assert.deepEqual(r.simulados, []);
+  assert.equal(r.omitidas, 4);
+  assert.equal(r.usosGastados, 6);
+  assert.equal(r.usosDevueltos, 1);
+  assert.equal(r.usosSimulados, 0);
+});
+
+test('8.6 y 9.10: en una simulación, would_copy y would_remove_background se cuentan en condicional y no se gasta ningún uso', () => {
+  const sombra = loteConOrigen({
+    mode: 'shadow', counters: { products: 2, photosWouldUniform: 4, photosSkipped: 0 },
+    metrics: { photosWouldCopy: 2, aiUsesWouldConsume: 7 },
+    results: [{ productId: 'p1', status: 'would_uniform', code: null, photos: [
+      { index: 0, status: 'would_copy', copiedFrom: 'link' },
+      { index: 1, status: 'would_copy', copiedFrom: 'unowned' },
+      { index: 2, status: 'would_remove_background' },
+      { index: 3, status: 'would_remove_background' },
+    ] }],
+  });
+  const r = m.resumenDeLote(sombra);
+  assert.equal(r.enSombra, true);
+  assert.deepEqual(JSON.parse(JSON.stringify(r.simulados)).sort((a, b) => a.code.localeCompare(b.code)), [
+    { code: 'would_copy', texto: 'Se copiaría a tus fotos antes de uniformarla', cantidad: 2 },
+    { code: 'would_remove_background', texto: 'Se le quitaría el fondo', cantidad: 2 },
+  ]);
+  assert.deepEqual(r.origenes.map((x) => x.texto).sort(), ['Se adoptaría un archivo sin dueño registrado', 'Se copiaría desde un enlace']);
+  assert.equal(r.habriaCopiado, 2);
+  assert.equal(r.copiadas, 0);
+  assert.equal(r.usosSimulados, 7);
+  assert.equal(r.usosGastados, 0, 'en sombra no se gasta ningún uso');
+  assert.equal(r.omitidas, 0, 'lo que se haría no es una omisión');
+});
+
+test('8.6 y 9.10: el resumen de una serie suma las métricas del total y lista los orígenes de los lotes leídos', () => {
+  const serie = {
+    seriesId: 's1', type: 'uniform', mode: 'on', status: 'done', stopCode: null, currentPart: null, totals: { products: 6 },
+    counters: { products: 6, photosUniformed: 10 }, metrics: { photosCopied: 9, aiUsesConsumed: 14, aiUsesRefunded: 2 },
+    parts: [{ batchId: 's1-p1', part: 1, status: 'done', stopCode: null, counters: {} }, { batchId: 's1-p2', part: 2, status: 'done', stopCode: null, counters: {} }],
+  };
+  const sinLotes = m.resumenDeSerie(serie);
+  assert.deepEqual([sinLotes.copiadas, sinLotes.usosGastados, sinLotes.usosDevueltos, sinLotes.origenes], [9, 14, 2, []]);
+  const conLotes = m.resumenDeSerie(serie, [loteConOrigen(), loteConOrigen()]);
+  assert.equal(conLotes.origenes.find((x) => x.code === 'link').cantidad, 4);
+  assert.equal(conLotes.copiadas, 9, 'el total sigue siendo el del servidor');
+  assert.equal(m.resumenDeLote(null), null);
+  const sinMetricas = m.resumenDeLote({ ...loteConOrigen(), metrics: undefined });
+  assert.deepEqual([sinMetricas.copiadas, sinMetricas.usosGastados], [0, 0], 'un servidor anterior no manda métricas: ceros, no NaN');
+});
+
+test('8.6 y 9.10: la parada ai_quota y ai_unavailable, y la omisión por cupo, tienen texto sin jerga', () => {
+  assert.match(m.textoDeParada('ai_quota'), /se acabaron los usos de «Quitar fondo»/);
+  assert.match(m.textoDeParada('ai_unavailable'), /Los usos de esas fotos se devolvieron/);
+  assert.match(m.motivoDeOmision('ai_quota'), /Se acabaron los usos/);
+  assert.match(m.motivoDeOmision('background_unavailable'), /el uso se devolvió/);
+});

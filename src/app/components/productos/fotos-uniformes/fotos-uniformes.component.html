@@ -1,4 +1,4 @@
-<!-- «Uniformar fotos» (D-501, ticket 1252; series y categoría por ruta: TX-37 · 7.11). Clases fu-*: ninguna lleva "p-" (trampa de CSS global). -->
+<!-- «Uniformar fotos» (D-501, ticket 1252; series y categoría por ruta: TX-37 · 7.11; origen de copias y «Quitar fondo»: TX-37 · 8.6 y 9.10). Clases fu-*: ninguna lleva "p-" (trampa de CSS global). -->
 <div class="fu-fondo" (click)="cerrarDesdeFondo($event)">
   <section #dialogo class="fu-dialogo" role="dialog" aria-modal="true" aria-labelledby="fu-titulo" tabindex="-1">
 
@@ -125,6 +125,37 @@
           </div>
         </fieldset>
 
+        <!-- TX-37 · 9.10: solo si el servidor la ofrece (bandera, proveedor, administrador y modo) -->
+        <fieldset class="fu-grupo fu-fondo-ia" *ngIf="fondoDisponible">
+          <legend class="fu-label">Quitar fondo</legend>
+          <div class="fu-ayuda">Separa el producto de lo que tiene detrás y lo pone sobre el fondo que elegiste arriba. Cada foto usa hasta 1 uso de tu plan; las que ya pagaste no se vuelven a cobrar.</div>
+          <div class="fu-opciones">
+            <button type="button" class="fu-opcion" [class.is-active]="!quitarFondo" [attr.aria-pressed]="!quitarFondo" (click)="elegirQuitarFondo(false)">
+              <i class="pi pi-image" aria-hidden="true"></i><span class="fu-opcion-texto">Conservar el fondo</span>
+            </button>
+            <button type="button" class="fu-opcion" [class.is-active]="quitarFondo" [attr.aria-pressed]="quitarFondo" (click)="elegirQuitarFondo(true)">
+              <i class="pi pi-sparkles" aria-hidden="true"></i><span class="fu-opcion-texto">Quitar fondo</span>
+            </button>
+          </div>
+          <div class="fu-subgrupo" *ngIf="quitarFondo">
+            <div class="fu-label">Qué fotos</div>
+            <div class="fu-opciones">
+              <button type="button" *ngFor="let a of alcances" class="fu-opcion" [class.is-active]="alcanceFondo === a" [attr.aria-pressed]="alcanceFondo === a" (click)="elegirAlcance(a)">
+                <span class="fu-opcion-texto">{{ etiquetasAlcance[a] }}</span>
+              </button>
+            </div>
+          </div>
+          <div class="fu-usos" *ngIf="textoUsosQuedan">
+            <i class="pi pi-ticket" aria-hidden="true"></i><span class="fu-usos-texto">{{ textoUsosQuedan }}</span>
+          </div>
+          <div class="fu-aviso fu-aviso--alerta" *ngIf="avisoVistaVisible">
+            <i class="pi pi-exclamation-triangle" aria-hidden="true"></i><span class="fu-aviso-texto">{{ avisoCostoVista }}.<ng-container *ngIf="vistaPreviaConIA"> Las fotos que procese se guardan: al aplicar no se vuelven a pagar.</ng-container></span>
+          </div>
+          <div class="fu-aviso fu-aviso--info" *ngIf="fondoEnSombra">
+            <i class="pi pi-info-circle" aria-hidden="true"></i><span class="fu-aviso-texto">Por ahora es una simulación: la vista previa se ve sin quitar el fondo y, al simular, solo contamos cuántos usos necesitaría. No se gasta ninguno.</span>
+          </div>
+        </fieldset>
+
         <div class="fu-aviso fu-aviso--info">
           <i class="pi pi-info-circle" aria-hidden="true"></i>
           <span class="fu-aviso-texto">Centramos el producto, quitamos los bordes de un solo color y dejamos el fondo liso. Una foto con una mesa o una pared detrás no queda con fondo blanco. Las fotos originales se guardan y puedes revertir.</span>
@@ -144,6 +175,16 @@
         <div class="fu-aviso fu-aviso--alerta" *ngIf="conteo.excede || excedeEnServidor">
           <i class="pi pi-exclamation-triangle" aria-hidden="true"></i><span class="fu-aviso-texto">{{ mensajeExcede }}</span>
         </div>
+        <!-- TX-37 · 9.10: «Quitar fondo» — usos que necesita y que quedan; en sombra, solo la estimación -->
+        <div class="fu-conteo" *ngIf="textoUsosVista">
+          <i class="pi pi-ticket" aria-hidden="true"></i><span class="fu-conteo-texto">{{ textoUsosVista }}</span>
+        </div>
+        <div class="fu-aviso fu-aviso--alerta" *ngIf="paradaDeVista">
+          <i class="pi pi-exclamation-triangle" aria-hidden="true"></i><span class="fu-aviso-texto">{{ paradaDeVista }}</span>
+        </div>
+        <div class="fu-aviso fu-aviso--info" *ngIf="fondoEnSombra">
+          <i class="pi pi-info-circle" aria-hidden="true"></i><span class="fu-aviso-texto">Elegiste «Quitar fondo»: al simular contamos las fotos y los usos que necesitaría, sin gastar ninguno. La vista previa de abajo no lo muestra.</span>
+        </div>
         <div *ngIf="!muestras.length" class="fu-vacio">
           <div class="fu-vacio-icono"><i class="pi pi-images" aria-hidden="true"></i></div>
           <div class="fu-vacio-titulo">No hay fotos para mostrar</div>
@@ -161,7 +202,8 @@
                 <figcaption class="fu-pie-foto">Después</figcaption>
               </figure>
             </div>
-            <div class="fu-etiquetas" *ngIf="m.after.warnings?.length">
+            <div class="fu-etiquetas" *ngIf="m.after.warnings?.length || m.copiedFrom">
+              <span *ngIf="m.copiedFrom" class="fu-etiqueta fu-etiqueta--info">{{ textoOrigen(m) }}</span>
               <span *ngFor="let w of m.after.warnings" class="fu-etiqueta fu-etiqueta--alerta">{{ textoAviso(w) }}</span>
             </div>
             <button type="button" class="fu-btn fu-btn--sec fu-btn--bloque" (click)="alternar(m)" [attr.aria-pressed]="excluida(m)">
@@ -192,6 +234,7 @@
         <div class="fu-barra" role="progressbar" [attr.aria-valuenow]="progreso.porcentaje" aria-valuemin="0" aria-valuemax="100">
           <div class="fu-barra-relleno" [style.width.%]="progreso.porcentaje"></div>
         </div>
+        <div class="fu-vacio-texto" *ngIf="textoUsosSombra">{{ textoUsosSombra }}.</div>
         <div class="fu-vacio-texto">{{ progreso.hechos }} de {{ progreso.total }} productos. Puedes cerrar esta ventana: el lote sigue y, si vuelves a abrir Uniformar fotos en este navegador, verás cómo va. Si estás editando el producto, espera a que termine antes de guardar.</div>
       </div>
 
@@ -202,6 +245,7 @@
         <div class="fu-barra" role="progressbar" [attr.aria-valuenow]="progresoSerie.porcentaje" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuetext]="serie ? textoProgresoSerie : null">
           <div class="fu-barra-relleno" [style.width.%]="progresoSerie.porcentaje"></div>
         </div>
+        <div class="fu-vacio-texto" *ngIf="textoUsosSombra">{{ textoUsosSombra }}.</div>
         <ol class="fu-partes" *ngIf="serie?.parts?.length" aria-label="Lotes de la serie">
           <li *ngFor="let p of serie!.parts; trackBy: trackParte" class="fu-parte" [ngClass]="'fu-parte--' + p.status">
             <span class="fu-parte-num">Lote {{ p.part }}</span><span class="fu-parte-estado">{{ textoParte(p) }}</span>
@@ -242,6 +286,36 @@
             </li>
           </ul>
           <div class="fu-ayuda">Revisa esas fotos en cada producto. Se uniformaron igual.</div>
+        </div>
+        <!-- TX-37 · 8.6: de dónde salieron las fotos copiadas o adoptadas (fase 1b) -->
+        <div class="fu-origen-resumen" *ngIf="resumen.origenes.length || resumen.copiadas || resumen.habriaCopiado">
+          <div class="fu-label">{{ resumen.enSombra ? 'Fotos que se copiarían' : 'Fotos copiadas a tus archivos' }}</div>
+          <ul class="fu-lista">
+            <li class="fu-lista-item" *ngIf="resumen.copiadas || resumen.habriaCopiado">
+              <span class="fu-lista-texto">{{ resumen.enSombra ? 'Se copiarían en total' : 'Copiadas en total' }}</span><span class="fu-lista-cantidad">{{ resumen.enSombra ? resumen.habriaCopiado : resumen.copiadas }}</span>
+            </li>
+            <li *ngFor="let o of resumen.origenes" class="fu-lista-item">
+              <span class="fu-lista-texto">{{ o.texto }}</span><span class="fu-lista-cantidad">{{ o.cantidad }}</span>
+            </li>
+          </ul>
+        </div>
+        <!-- TX-37 · 8.6 y 9.10: lo que se haría en una simulación y los usos de «Quitar fondo» -->
+        <div class="fu-origen-resumen" *ngIf="resumen.simulados.length || resumen.usosGastados || resumen.usosDevueltos || resumen.usosSimulados">
+          <div class="fu-label">{{ resumen.enSombra ? 'Lo que se haría' : 'Quitar fondo' }}</div>
+          <ul class="fu-lista">
+            <li *ngFor="let si of resumen.simulados" class="fu-lista-item">
+              <span class="fu-lista-texto">{{ si.texto }}</span><span class="fu-lista-cantidad">{{ si.cantidad }}</span>
+            </li>
+            <li class="fu-lista-item" *ngIf="resumen.usosSimulados">
+              <span class="fu-lista-texto">Usos que necesitaría (no se gastó ninguno)</span><span class="fu-lista-cantidad">{{ resumen.usosSimulados }}</span>
+            </li>
+            <li class="fu-lista-item" *ngIf="resumen.usosGastados">
+              <span class="fu-lista-texto">Usos gastados</span><span class="fu-lista-cantidad">{{ resumen.usosGastados }}</span>
+            </li>
+            <li class="fu-lista-item" *ngIf="resumen.usosDevueltos">
+              <span class="fu-lista-texto">Usos devueltos porque no pudimos quitar el fondo</span><span class="fu-lista-cantidad">{{ resumen.usosDevueltos }}</span>
+            </li>
+          </ul>
         </div>
         <ul class="fu-lista" *ngIf="resumen.motivos.length">
           <li *ngFor="let mo of resumen.motivos" class="fu-lista-item">

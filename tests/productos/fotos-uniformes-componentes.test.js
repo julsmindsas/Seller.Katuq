@@ -742,3 +742,206 @@ test('7.11: plantilla — conteo, sin ubicar, partes de la serie, subcategoría 
     assert.match(scss, new RegExp(`\\.${clase} \\{ color: [^;]+; font-size: \\d+px;`), `${clase}: color y tamaño propios`);
   }
 });
+
+// ───────────── TX-37 · 8.6 y 9.10 (D-518): «Quitar fondo» y origen de las copias ─────────────
+
+const CONFIG_FONDO = { ...CONFIG, mode: 'on', backgroundRemoval: { available: true, previewAvailable: true }, aiUsesLeft: 480 };
+const CONFIG_SOMBRA = { ...CONFIG, mode: 'shadow', backgroundRemoval: { available: true, previewAvailable: false }, aiUsesLeft: 480 };
+const VISTA_FONDO = {
+  success: true, samples: [{ productId: 'p1', index: 0, before: 'https://x/a.jpg', after: { dataUrl: 'data:image/webp;base64,QQ==', warnings: [] }, copiedFrom: 'link' }],
+  skipped: [], aiUsesNeeded: 4, aiUsesPreviewMax: 3, aiUsesLeft: 477, aiUsesConsumed: 3,
+};
+
+test('9.10: sin la opción del servidor no hay «Quitar fondo»: ni se elige ni viaja (cuerpo idéntico a la fase 1)', () => {
+  for (const config of [CONFIG, { ...CONFIG_FONDO, canApply: false }, { ...CONFIG_FONDO, backgroundRemoval: { available: false, previewAvailable: false } }]) {
+    const servicio = servicioFalso({ config });
+    const c = crear({ servicio });
+    c.ngOnInit();
+    assert.equal(c.fondoDisponible, false);
+    c.elegirQuitarFondo(true);
+    assert.equal(c.quitarFondo, false, 'no se puede encender lo que el servidor no ofrece');
+    c.pedirVistaPrevia();
+    assert.deepEqual(afuera(servicio.llamadas.vistaPrevia[0]), { productIds: ['p1', 'p2'], settings: { aspect: '1:1', background: 'white', marginPct: 8 } });
+  }
+});
+
+test('9.10: nace apagado y en la portada; con on, la vista previa y el lote llevan replace y el alcance elegido', () => {
+  const servicio = servicioFalso({ config: CONFIG_FONDO, vista: VISTA_FONDO });
+  const almacen = almacenFalso();
+  const c = crear({ servicio, almacen });
+  c.ngOnInit();
+  assert.equal(c.fondoDisponible, true);
+  assert.equal(c.quitarFondo, false, 'nace apagado');
+  assert.equal(c.alcanceFondo, 'cover', 'la portada por defecto');
+  assert.equal(c.textoUsosQuedan, 'Te quedan 480 usos de «Quitar fondo» este mes');
+  assert.equal(c.vistaPreviaConIA, false);
+  assert.equal(c.avisoCostoVista, 'La vista previa usa hasta 3 de tus 480 usos del mes');
+
+  c.elegirQuitarFondo(true);
+  assert.equal(c.vistaPreviaConIA, true, 'en on, la vista previa usa IA y avisa del costo');
+  c.pedirVistaPrevia();
+  assert.deepEqual(afuera(servicio.llamadas.vistaPrevia[0]).settings, { aspect: '1:1', background: 'white', marginPct: 8, backgroundMode: 'replace', backgroundScope: 'cover' });
+  assert.equal(c.paso, 'vista');
+  assert.equal(c.textoUsosVista, 'Necesita hasta 4 usos de «Quitar fondo» · te quedan 477');
+  assert.equal(c.textoOrigen(c.muestras[0]), 'Se copiaría desde un enlace');
+  assert.equal(almacen.datos[mapper.LLAVE_AJUSTES].includes('backgroundMode'), false, 'el navegador no recuerda «Quitar fondo»: cada foto gasta un uso');
+
+  c.volverAAjustes();
+  c.elegirAlcance('all');
+  c.pedirVistaPrevia();
+  c.aplicar();
+  assert.deepEqual(afuera(servicio.llamadas.crearLote[0]).settings, { aspect: '1:1', background: 'white', marginPct: 8, backgroundMode: 'replace', backgroundScope: 'all' });
+  c.ngOnDestroy();
+});
+
+test('9.10: en sombra la vista previa va sin IA (no gasta) y el lote solo cuenta lo que costaría', async () => {
+  const servicio = servicioFalso({
+    config: CONFIG_SOMBRA, estados: [lote('done', { mode: 'shadow', counters: { products: 2, photosWouldUniform: 4 }, metrics: { aiUsesWouldConsume: 6, photosWouldCopy: 1 },
+      results: [{ productId: 'p1', status: 'would_uniform', code: null, photos: [{ index: 0, status: 'would_copy', copiedFrom: 'unowned' }, { index: 1, status: 'would_remove_background' }] }] })],
+    creado: { success: true, batchId: 'b1', mode: 'shadow', totals: { products: 2 }, aiUsesNeeded: 6 },
+  });
+  const c = crear({ servicio });
+  c.ngOnInit();
+  c.elegirQuitarFondo(true);
+  assert.equal(c.fondoElegido, true);
+  assert.equal(c.fondoEnSombra, true);
+  assert.equal(c.vistaPreviaConIA, false, 'en sombra no se ofrece la vista previa con IA');
+  c.pedirVistaPrevia();
+  assert.deepEqual(afuera(servicio.llamadas.vistaPrevia[0]).settings, { aspect: '1:1', background: 'white', marginPct: 8 }, 'la vista previa no lleva replace: no gasta ni guarda recortes');
+  assert.equal(c.textoUsosVista, '', 'sin IA no hay cifra de la vista previa');
+  c.aplicar();
+  assert.deepEqual(afuera(servicio.llamadas.crearLote[0]).settings.backgroundMode, 'replace', 'el lote en sombra sí lo pide, para contar');
+  assert.equal(c.textoUsosSombra, 'Al aplicar de verdad usaría hasta 6 usos de «Quitar fondo». Por ahora no se gasta ninguno');
+  await esperar(40);
+  assert.equal(c.paso, 'resumen');
+  assert.equal(c.resumen.enSombra, true);
+  assert.equal(c.resumen.usosSimulados, 6);
+  assert.equal(c.resumen.usosGastados, 0);
+  assert.deepEqual(c.resumen.simulados.map((x) => x.code).sort(), ['would_copy', 'would_remove_background']);
+  assert.equal(c.resumen.origenes[0].texto, 'Se adoptaría un archivo sin dueño registrado');
+  c.ngOnDestroy();
+});
+
+test('9.10: AI_QUOTA_INSUFFICIENT muestra el mensaje con la sugerencia y no crea el lote ni cambia de paso', () => {
+  const servicio = servicioFalso({
+    config: CONFIG_FONDO, vista: VISTA_FONDO,
+    fallaCrear: { status: 422, error: { code: 'AI_QUOTA_INSUFFICIENT', aiUsesNeeded: 9, aiUsesLeft: 4, message: 'Te quedan 4 usos este mes y este lote necesita 9. Elige menos productos o quita el fondo solo de la portada.' } },
+  });
+  const c = crear({ servicio });
+  c.ngOnInit();
+  c.elegirQuitarFondo(true);
+  c.elegirAlcance('all');
+  c.pedirVistaPrevia();
+  c.aplicar();
+  assert.equal(c.paso, 'vista', 'sigue en la vista previa para que elija menos productos o la portada');
+  assert.equal(c.ocupado, false);
+  assert.match(c.error, /Te quedan 4 usos este mes y este lote necesita 9\./);
+  assert.match(c.error, /Elige menos productos o quita el fondo solo de la portada/);
+  assert.doesNotMatch(c.error, /token|nova|bedrock|canvas/i);
+  assert.equal(c.quitarFondo, true, 'conserva su elección: puede pasar a «Solo la portada» y reintentar');
+  c.volverAAjustes();
+  c.elegirAlcance('cover');
+  assert.equal(c.alcanceFondo, 'cover');
+});
+
+test('9.10: BACKGROUND_UNAVAILABLE y ADMIN_ONLY apagan «Quitar fondo» y lo dicen; la vista previa detenida avisa por qué', () => {
+  for (const code of ['BACKGROUND_UNAVAILABLE', 'ADMIN_ONLY']) {
+    const servicio = servicioFalso({ config: CONFIG_FONDO });
+    servicio.vistaPrevia = () => rxjs.throwError(() => ({ status: code === 'ADMIN_ONLY' ? 403 : 422, error: { code } }));
+    const c = crear({ servicio });
+    c.ngOnInit();
+    c.elegirQuitarFondo(true);
+    c.pedirVistaPrevia();
+    assert.equal(c.quitarFondo, false, code);
+    assert.equal(c.error, mapper.MENSAJES_ERROR[code], code);
+    assert.equal(c.paso, 'ajustes');
+  }
+  const servicio = servicioFalso({ config: CONFIG_FONDO, vista: { ...VISTA_FONDO, stopCode: 'ai_quota' } });
+  const c = crear({ servicio });
+  c.ngOnInit();
+  c.elegirQuitarFondo(true);
+  c.pedirVistaPrevia();
+  assert.match(c.paradaDeVista, /se acabaron los usos de «Quitar fondo»/);
+});
+
+test('9.10: con más de 30 productos la cifra de la vista previa dice que es de los primeros 30', () => {
+  const servicio = servicioFalso({ config: CONFIG_FONDO, vista: { ...VISTA_FONDO, aiUsesNeeded: 60, selectionTotal: 340, parts: 4 } });
+  const c = crear({ servicio, productIds: [], categoryPath: ['Flores'] });
+  c.ngOnInit();
+  c.elegirQuitarFondo(true);
+  c.pedirVistaPrevia();
+  assert.match(c.textoUsosVista, /^Los primeros 30 productos necesitan hasta 60 usos · te quedan 477\./);
+});
+
+test('8.6: el resumen del diálogo muestra el origen de lo copiado y cuenta lo omitido de la fase 1b', async () => {
+  const servicio = servicioFalso({
+    estados: [lote('done', { metrics: { photosCopied: 3 }, counters: { products: 2, photosUniformed: 3, photosSkipped: 3 }, results: [
+      { productId: 'p1', status: 'uniformed', code: null, photos: [{ index: 0, status: 'uniformed', copiedFrom: 'link' }, { index: 1, status: 'uniformed', copiedFrom: 'link' }, { index: 2, status: 'uniformed', copiedFrom: 'unowned' }, { index: 3, status: 'skipped', code: 'download_failed' }] },
+      { productId: 'p2', status: 'skipped', code: null, photos: [{ index: 0, status: 'skipped', code: 'not_image' }, { index: 1, status: 'skipped', code: 'not_adoptable' }] },
+    ] })],
+  });
+  const c = crear({ servicio });
+  c.ngOnInit();
+  c.pedirVistaPrevia();
+  c.aplicar();
+  await esperar(40);
+  assert.equal(c.paso, 'resumen');
+  assert.deepEqual(c.resumen.origenes.map((o) => [o.code, o.cantidad]), [['link', 2], ['unowned', 1]]);
+  assert.equal(c.resumen.copiadas, 3);
+  assert.deepEqual(Object.fromEntries(c.resumen.motivos.map((x) => [x.code, x.cantidad])), { download_failed: 1, not_image: 1, not_adoptable: 1 });
+  c.ngOnDestroy();
+});
+
+test('8.6 y 9.10: plantilla — «Quitar fondo» solo con fondoDisponible, aviso del costo, origen y conteos; estilos de la regla Katuq', () => {
+  const html = fs.readFileSync(path.join(RAIZ, CARPETA, 'fotos-uniformes.component.html'), 'utf8');
+  const scss = fs.readFileSync(path.join(RAIZ, CARPETA, 'fotos-uniformes.component.scss'), 'utf8');
+  assert.match(html, /\*ngIf="fondoDisponible"/, 'el bloque entero depende de lo que dice el servidor');
+  for (const pieza of ['elegirQuitarFondo(true)', 'elegirQuitarFondo(false)', 'elegirAlcance(a)', 'etiquetasAlcance[a]', 'textoUsosQuedan', 'avisoCostoVista', 'vistaPreviaConIA', 'fondoEnSombra',
+    'textoUsosVista', 'textoUsosSombra', 'paradaDeVista', 'textoOrigen(m)', 'resumen.origenes', 'resumen.simulados', 'resumen.usosGastados', 'resumen.usosDevueltos', 'resumen.usosSimulados']) {
+    assert.ok(html.includes(pieza), pieza);
+  }
+  // El aviso del costo va dentro del bloque de «Quitar fondo» y antes del botón de la vista previa.
+  assert.ok(html.indexOf('avisoCostoVista') < html.indexOf('Ver vista previa'), 'el costo se avisa antes de pedir la vista previa');
+  assert.doesNotMatch(html, /Nova|Bedrock|Canvas|Opttia|Titan|Amazon|modelo|token/i, 'sin proveedor, modelo ni «token» en pantalla (Artículo VI)');
+  const clases = [...html.matchAll(/class="([^"]*)"/g)].flatMap((x) => x[1].split(/\s+/)).concat([...html.matchAll(/\[class\.([\w-]+)\]/g)].map((x) => x[1]));
+  assert.deepEqual(clases.filter((c) => /p-/.test(c) && !/^pi(-|$)/.test(c)), [], 'ninguna clase fu-* lleva "p-"');
+  for (const clase of ['fu-usos-texto', 'fu-etiqueta--info']) {
+    assert.ok(scss.includes(clase), clase);
+  }
+  assert.match(scss, /\.fu-usos-texto \{ color: [^;]+; font-size: [\d.]+px;/, 'span con color y tamaño propios');
+  assert.match(scss, /&\.fu-etiqueta--info \{ background: \$fu-info-soft; color: \$fu-info; \}/);
+  assert.match(scss, /\.fu-opcion,[\s\S]*?:focus-visible\s*\{\s*outline: 3px solid \$fu-accent-2 !important/, 'las opciones nuevas reusan fu-opcion, que devuelve el foco');
+  assert.doesNotMatch(scss, /(linear|radial)-gradient\(/);
+  assert.doesNotMatch(scss, /#2196f3|#4361ee|#2563eb|#5c6ac4|#667eea|#3b82f6|#1d4ed8|#6366f1|#1976d2|#7366ff|rgba\(102,\s*126,\s*234/i);
+  for (const nombre of [...scss.matchAll(/\.([a-zA-Z][\w-]*)/g)].map((x) => x[1])) assert.doesNotMatch(nombre, /p-/, nombre);
+});
+
+test('9.10 (corrector): en on no se dice que no se gasta nada; sin cupo no se pide IA; un error de proveedor oculta la opción', async () => {
+  const servicio = servicioFalso({
+    config: CONFIG_FONDO, vista: VISTA_FONDO,
+    creado: { success: true, batchId: 'b1', mode: 'on', totals: { products: 2 }, aiUsesNeeded: 6 },
+  });
+  const c = crear({ servicio });
+  c.ngOnInit();
+  c.elegirQuitarFondo(true);
+  c.pedirVistaPrevia();
+  c.aplicar();
+  assert.equal(c.textoUsosSombra, '', 'en on el lote sí gasta: no se muestra el texto de simulación');
+  c.ngOnDestroy();
+
+  const sinCupo = crear({ servicio: servicioFalso({ config: { ...CONFIG_FONDO, aiUsesLeft: 0 }, vista: VISTA_FONDO }) });
+  sinCupo.ngOnInit();
+  sinCupo.elegirQuitarFondo(true);
+  assert.equal(sinCupo.vistaPreviaConIA, false, 'sin usos no se pide la vista previa con IA');
+  assert.equal(sinCupo.avisoVistaVisible, true);
+  assert.match(sinCupo.avisoCostoVista, /No te quedan usos/);
+  sinCupo.ngOnDestroy();
+
+  const roto = crear({ servicio: servicioFalso({ config: CONFIG_FONDO, vista: VISTA_FONDO, fallaCrear: { status: 422, error: { code: 'BACKGROUND_UNAVAILABLE', message: 'No disponible' } } }) });
+  roto.ngOnInit();
+  roto.elegirQuitarFondo(true);
+  roto.pedirVistaPrevia();
+  roto.aplicar();
+  assert.equal(roto.fondoDisponible, false, 'la opción se oculta tras BACKGROUND_UNAVAILABLE');
+  roto.ngOnDestroy();
+});

@@ -9,6 +9,11 @@
  * seguidos (`GET /series/:id`) y aquí están los mensajes de TODOS los códigos nuevos de §G (fase 1,
  * fase 1b y fase 2), para tocar este archivo una sola vez.
  *
+ * TX-37 · 8.6 y 9.10 (D-518): origen de las fotos copiadas o adoptadas (fase 1b) y «Quitar fondo»
+ * (fase 2): qué se manda (`settings.backgroundMode` y `backgroundScope`, solo si el servidor lo
+ * ofrece), cuántos usos necesita y cuántos quedan, y los conteos del resumen. Nunca el nombre del
+ * proveedor ni del modelo (Artículo VI).
+ *
  * Reglas:
  *  - Los mensajes son para el comercio: sin jerga, sin nombres de proveedores (Artículo VI) y sin
  *    la palabra «token».
@@ -39,13 +44,26 @@ export interface ConfigFotos {
   /** `maxSeriesProducts` (TX-37 · 7.8): tope de una serie; si falta, el de un lote (sin serie, nunca sin tope). */
   limits: { maxProducts: number; maxSeriesProducts?: number; maxPhotosPerProduct: number; previewMaxPhotos: number };
   canApply: boolean;
+  /**
+   * TX-37 · 9.10 (anexo §G.1): `available` = bandera, proveedor y uso en regla, y la persona es
+   * administrador con el modo encendido; `previewAvailable` = además el modo en `on` (la vista previa
+   * con «Quitar fondo» gasta usos). Un servidor anterior no lo manda: no se ofrece.
+   */
+  backgroundRemoval?: { available: boolean; previewAvailable: boolean } | null;
+  /** Usos de «Quitar fondo» que le quedan a la empresa este mes; null = no se sabe o no aplica. */
+  aiUsesLeft?: number | null;
 }
+
+/** De dónde salió una foto que se copió o adoptó (fase 1b): un enlace o un archivo sin dueño. */
+export type OrigenCopia = 'link' | 'unowned';
 
 export interface Muestra {
   productId: string;
   index: number;
   before: string;
   after: { dataUrl: string; warnings: string[] };
+  /** Fase 1b: la foto se copiaría a las fotos de la empresa antes de uniformarla. */
+  copiedFrom?: OrigenCopia;
 }
 
 export interface Omitida {
@@ -64,6 +82,16 @@ export interface RespuestaVistaPrevia {
   parts?: number;
   /** Productos de la empresa que no se pudieron ubicar en el árbol (conteo de toda la empresa, §G.3). */
   categoryUnresolved?: number;
+  /**
+   * Con «Quitar fondo» (anexo §G.1): usos que necesitan los productos de la vista previa (hasta 30),
+   * el tope que gasta la vista previa, los que le quedan a la empresa y los que ya gastó esta vista.
+   */
+  aiUsesNeeded?: number;
+  aiUsesPreviewMax?: number;
+  aiUsesLeft?: number | null;
+  aiUsesConsumed?: number;
+  /** Por qué se detuvo la vista previa con «Quitar fondo» (`ai_quota`, `ai_unavailable`). */
+  stopCode?: string | null;
 }
 
 export interface FotoDelResultado {
@@ -71,6 +99,8 @@ export interface FotoDelResultado {
   status: string;
   code?: string;
   warnings?: string[];
+  /** Fase 1b: de dónde se copió o adoptó (nunca la URL ni la ruta). */
+  copiedFrom?: OrigenCopia;
 }
 
 export interface ResultadoProducto {
@@ -106,6 +136,8 @@ export interface LoteCreado {
   mode: ModoFotos;
   totals: { products: number; categoryUnresolved?: number };
   existing?: boolean;
+  /** Con «Quitar fondo»: usos que necesita el lote (en sombra, lo que costaría). */
+  aiUsesNeeded?: number;
   /** TX-37 · 7.8: solo cuando la selección pasa de 100 productos. */
   seriesId?: string;
   parts?: number;
@@ -161,6 +193,26 @@ export interface UltimoTrabajo {
   tipo: 'lote' | 'serie' | 'reversion';
   id: string;
 }
+
+/** «Quitar fondo» (fase 2): conservar el fondo (fase 1) o separarlo del producto. */
+export type ModoFondo = 'keep' | 'replace';
+/** `cover` = solo la portada (por defecto, la más barata); `all` = todas las fotos del producto. */
+export type AlcanceFondo = 'cover' | 'all';
+
+export interface AjusteQuitarFondo {
+  quitar: boolean;
+  alcance: AlcanceFondo;
+}
+
+export const ALCANCES_FONDO: AlcanceFondo[] = ['cover', 'all'];
+export const ETIQUETAS_ALCANCE: Record<AlcanceFondo, string> = {
+  cover: 'Solo la portada',
+  all: 'Todas las fotos',
+};
+/** Nunca se recuerda entre aperturas: cada foto cuesta un uso del plan. */
+export const QUITAR_FONDO_POR_DEFECTO: AjusteQuitarFondo = Object.freeze({ quitar: false, alcance: 'cover' }) as AjusteQuitarFondo;
+/** Productos que la vista previa estima (el servidor mira los primeros 30). */
+export const PRODUCTOS_DE_ESTIMACION = 30;
 
 export const AJUSTES_POR_DEFECTO: AjustesFotos = Object.freeze({ aspect: '1:1', background: 'white', marginPct: 8 }) as AjustesFotos;
 export const PROPORCIONES: Proporcion[] = ['1:1', '4:5', '3:4'];
@@ -225,12 +277,25 @@ export const MENSAJES_OMISION: Record<string, string> = {
   background_input_invalid: 'La foto no tiene el tamaño o la forma que necesita «Quitar fondo». No se gastó ningún uso',
   background_unclear: 'No pudimos separar bien el producto del fondo. La foto quedó como estaba',
   background_unavailable: 'No pudimos quitar el fondo en este momento. La foto quedó como estaba y el uso se devolvió',
+  // Se acabó el cupo a mitad de un producto: sus fotos que faltan quedan como estaban.
+  ai_quota: 'Se acabaron los usos de «Quitar fondo» de este mes. La foto quedó como estaba',
 };
 
 /** Lo que pasaría con una foto en una simulación (sombra). */
 export const MENSAJES_RESULTADO: Record<string, string> = {
   would_copy: 'Se copiaría a tus fotos antes de uniformarla',
   would_remove_background: 'Se le quitaría el fondo',
+};
+
+/** De dónde salió una foto copiada o adoptada (fase 1b), en el resumen y en la vista previa. */
+export const MENSAJES_ORIGEN: Record<OrigenCopia, string> = {
+  link: 'Copiada desde un enlace',
+  unowned: 'Adoptada de un archivo sin dueño registrado',
+};
+/** Lo mismo, en una simulación o en la vista previa: todavía no se copió. */
+export const MENSAJES_ORIGEN_SIMULADO: Record<OrigenCopia, string> = {
+  link: 'Se copiaría desde un enlace',
+  unowned: 'Se adoptaría un archivo sin dueño registrado',
 };
 
 /** Avisos informativos (no impiden nada). */
@@ -267,6 +332,9 @@ export const MENSAJES_ERROR: Record<string, string> = {
   SERIES_TOO_LARGE: textoExcede(TOPE_SERIE),
   SERIES_NOT_FOUND: 'No encontramos esa serie de lotes.',
   AI_QUOTA_INSUFFICIENT: 'No te alcanzan los usos de «Quitar fondo» de este mes para este lote. Elige menos productos o quita el fondo solo de la portada.',
+  // TX-37 · 9.10 (anexo §G.1). El mensaje del servidor (que dice cuántos usos quedan) se usa si no nombra a un proveedor.
+  BACKGROUND_UNAVAILABLE: 'Quitar fondo no está disponible para tu empresa por ahora. Escríbenos por soporte.',
+  ADMIN_ONLY: 'Solo un administrador puede probar Quitar fondo, porque gasta usos de tu plan.',
   PHOTO_BUSY: 'Estamos procesando otras fotos. Intenta de nuevo en unos segundos.',
   PREVIEW_RUNNING: 'Ya estamos preparando una vista previa. Espera a que termine.',
   PREVIEW_RATE_LIMIT: 'Pediste muchas vistas previas seguidas. Espera unos minutos y vuelve a intentar.',
@@ -281,13 +349,15 @@ export const MENSAJES_ERROR: Record<string, string> = {
  * Códigos cuyo mensaje del servidor es más preciso que el nuestro: nombra la sincronización, dice
  * por qué la ruta no sirve (TX-37 · 7.6) o cuántos usos quedan y cuántos necesita el lote (fase 2).
  */
-const USAR_MENSAJE_DEL_SERVIDOR = new Set(['COMPANY_HAS_PRODUCT_SYNC', 'INVALID_SELECTION', 'AI_QUOTA_INSUFFICIENT']);
+const USAR_MENSAJE_DEL_SERVIDOR = new Set(['COMPANY_HAS_PRODUCT_SYNC', 'INVALID_SELECTION', 'AI_QUOTA_INSUFFICIENT', 'BACKGROUND_UNAVAILABLE']);
 
 /**
  * Un mensaje del servidor con alguna de estas palabras no se muestra (se usa el nuestro): «token» y
  * los nombres de proveedores o modelos (Artículo VI). Palabras completas, para no tocar «renovar».
  */
 const PROHIBIDO_EN_MENSAJE = /token|\bnova\b|bedrock|canvas|amazon|\baws\b|opttia|\btitan\b|anthropic|claude|gemini|openai|\bgpt/i;
+
+const SUGERENCIA_SIN_CUPO = 'Elige menos productos o quita el fondo solo de la portada.';
 
 /** «2.000»: miles con punto, sin depender del idioma del navegador. */
 function conMiles(n: number): string {
@@ -396,20 +466,44 @@ function partesDeSeleccion(sel: Seleccion): Record<string, unknown> {
     : { categoryPath: rutaValida(sel.categoryPath) || [] };
 }
 
-/** Cuerpo de POST /preview: hasta 3 productos (la vista previa toma 3 fotos como máximo). */
-export function cuerpoVistaPrevia(sel: Seleccion, ajustes: AjustesFotos): Record<string, unknown> {
+/** ¿Se ofrece «Quitar fondo» (aplicar el lote o simularlo)? Lo dice el servidor; sin eso, no. */
+export function quitarFondoDisponible(config: ConfigFotos | null | undefined): boolean {
+  return !!config && config.mode !== 'off' && config.canApply === true && !!config.backgroundRemoval && config.backgroundRemoval.available === true;
+}
+
+/** ¿La vista previa puede usar «Quitar fondo»? Solo en `on` y para administradores: gasta usos. */
+export function vistaPreviaConFondoDisponible(config: ConfigFotos | null | undefined): boolean {
+  return quitarFondoDisponible(config) && config!.mode === 'on' && config!.backgroundRemoval!.previewAvailable === true;
+}
+
+/**
+ * Lo que se suma a `settings` con «Quitar fondo». Si no se pidió o no hay permiso, `{}`: los
+ * `settings` y su huella quedan idénticos a los de la fase 1 (el servidor no guarda las llaves).
+ */
+export function ajustesDeFondo(fondo: AjusteQuitarFondo | null | undefined, permitido: boolean): Record<string, string> {
+  if (!permitido || !fondo || fondo.quitar !== true) {
+    return {};
+  }
+  return { backgroundMode: 'replace', backgroundScope: fondo.alcance === 'all' ? 'all' : 'cover' };
+}
+
+/**
+ * Cuerpo de POST /preview: hasta 3 productos (la vista previa toma 3 fotos como máximo). `fondo`
+ * (ya filtrado con `ajustesDeFondo`) agrega «Quitar fondo»; la vista previa con IA gasta hasta 3 usos.
+ */
+export function cuerpoVistaPrevia(sel: Seleccion, ajustes: AjustesFotos, fondo: Record<string, string> = {}): Record<string, unknown> {
   const partes = partesDeSeleccion(sel);
   if (Array.isArray(partes['productIds'])) {
     partes['productIds'] = (partes['productIds'] as string[]).slice(0, 3);
   }
-  return { ...partes, settings: { ...ajustes } };
+  return { ...partes, settings: { ...ajustes, ...fondo } };
 }
 
-/** Cuerpo de POST /batches. */
-export function cuerpoLote(sel: Seleccion, ajustes: AjustesFotos, excluidas: Exclusion[], llave: string): Record<string, unknown> {
+/** Cuerpo de POST /batches. `fondo` igual que en la vista previa (en sombra el servidor solo cuenta). */
+export function cuerpoLote(sel: Seleccion, ajustes: AjustesFotos, excluidas: Exclusion[], llave: string, fondo: Record<string, string> = {}): Record<string, unknown> {
   return {
     ...partesDeSeleccion(sel),
-    settings: { ...ajustes },
+    settings: { ...ajustes, ...fondo },
     excluded: (excluidas || []).map((e) => ({ productId: e.productId, index: e.index })),
     idempotencyKey: llave,
   };
@@ -440,7 +534,8 @@ export function mensajeDeError(err: any): string {
   const codigo = codigoDeError(err);
   const delServidor = esObjeto(err.error) && typeof err.error['message'] === 'string' ? err.error['message'] : '';
   if (codigo && USAR_MENSAJE_DEL_SERVIDOR.has(codigo) && delServidor && !PROHIBIDO_EN_MENSAJE.test(delServidor)) {
-    return delServidor;
+    // Sin cupo: siempre con la salida (menos productos o solo la portada), aunque el servidor no la diga.
+    return codigo === 'AI_QUOTA_INSUFFICIENT' && !/elige menos/i.test(delServidor) ? `${delServidor} ${SUGERENCIA_SIN_CUPO}` : delServidor;
   }
   if (codigo && MENSAJES_ERROR[codigo]) {
     return MENSAJES_ERROR[codigo];
@@ -499,6 +594,20 @@ export interface ResumenLote {
   omitidas: number;
   conAviso: number;
   motivos: MotivoResumen[];
+  /**
+   * TX-37 · 8.6: de dónde salieron las fotos copiadas o adoptadas (fase 1b). Solo lo que aparece
+   * en los resultados leídos; el total sale de `copiadas` y `habriaCopiado`.
+   */
+  origenes: MotivoResumen[];
+  /** TX-37 · 8.6 y 9.10: lo que se haría en una simulación (`would_copy`, `would_remove_background`). */
+  simulados: MotivoResumen[];
+  /** Fotos copiadas / que se copiarían, según los contadores del servidor (completos). */
+  copiadas: number;
+  habriaCopiado: number;
+  /** Usos de «Quitar fondo» gastados, devueltos y, en sombra, los que costaría. */
+  usosGastados: number;
+  usosDevueltos: number;
+  usosSimulados: number;
   /** Fotos por cada aviso de calidad (p. ej., «Posible marca de agua o logo», D-518 TX-37·2). */
   avisos: MotivoResumen[];
   parada: string | null;
@@ -512,13 +621,16 @@ export interface ResumenLote {
 
 /** Lo común al resumen de un lote y al de una serie. */
 function armarResumen(
-  base: { type: 'uniform' | 'revert'; status: string; mode: ModoFotos; stopCode: string | null; counters: Record<string, number> | null | undefined },
+  base: { type: 'uniform' | 'revert'; status: string; mode: ModoFotos; stopCode: string | null; counters: Record<string, number> | null | undefined; metrics?: Record<string, number> | null },
   omitidas: number,
   conAviso: number,
   motivos: MotivoResumen[],
   avisos: MotivoResumen[],
   sufijoCancelado: string,
+  detalle: { origenes: MotivoResumen[]; simulados: MotivoResumen[] } = { origenes: [], simulados: [] },
 ): ResumenLote {
+  const k = base.metrics || {};
+  const entero = (v: unknown): number => Math.max(0, Math.trunc(Number(v) || 0));
   const c = base.counters || {};
   const enSombra = base.type === 'uniform' && base.mode === 'shadow';
   const uniformadas = Number(c['photosUniformed']) || 0;
@@ -555,6 +667,13 @@ function armarResumen(
     omitidas,
     conAviso,
     motivos,
+    origenes: detalle.origenes,
+    simulados: detalle.simulados,
+    copiadas: entero(k['photosCopied']),
+    habriaCopiado: entero(k['photosWouldCopy']),
+    usosGastados: entero(k['aiUsesConsumed']),
+    usosDevueltos: entero(k['aiUsesRefunded']),
+    usosSimulados: entero(k['aiUsesWouldConsume']),
     avisos,
     parada,
     puedeRevertir: base.type === 'uniform' && uniformadas > 0,
@@ -568,9 +687,11 @@ function omitidasPorContadores(c: Record<string, number> | null | undefined): nu
 }
 
 /** Motivos y avisos por código, contados en los resultados de uno o varios lotes. */
-function contarResultados(lotes: (EstadoLote | null | undefined)[]): { motivos: Map<string, number>; avisos: Map<string, number>; conAviso: number } {
+function contarResultados(lotes: (EstadoLote | null | undefined)[]): { motivos: Map<string, number>; avisos: Map<string, number>; origenes: Map<string, number>; simulados: Map<string, number>; conAviso: number } {
   const motivos = new Map<string, number>();
   const avisos = new Map<string, number>();
+  const origenes = new Map<string, number>();
+  const simulados = new Map<string, number>();
   let conAviso = 0;
   for (const lote of lotes) {
     for (const r of (lote && lote.results) || []) {
@@ -584,6 +705,13 @@ function contarResultados(lotes: (EstadoLote | null | undefined)[]): { motivos: 
         if (f.status === 'excluded') {
           motivos.set('excluded', (motivos.get('excluded') || 0) + 1);
         }
+        // Lo que se haría en una simulación (el estado de la foto, no una omisión).
+        if (f.status === 'would_copy' || f.status === 'would_remove_background') {
+          simulados.set(f.status, (simulados.get(f.status) || 0) + 1);
+        }
+        if (f.copiedFrom === 'link' || f.copiedFrom === 'unowned') {
+          origenes.set(f.copiedFrom, (origenes.get(f.copiedFrom) || 0) + 1);
+        }
         if (Array.isArray(f.warnings) && f.warnings.length) {
           conAviso++;
           for (const w of new Set(f.warnings)) {
@@ -593,7 +721,7 @@ function contarResultados(lotes: (EstadoLote | null | undefined)[]): { motivos: 
       }
     }
   }
-  return { motivos, avisos, conAviso };
+  return { motivos, avisos, origenes, simulados, conAviso };
 }
 
 function ordenarMotivos(mapa: Map<string, number>, texto: (code: string) => string): MotivoResumen[] {
@@ -607,12 +735,28 @@ function textoDeAvisoEnResumen(code: string): string {
   return textoDeAviso(code) || 'Aviso de calidad';
 }
 
+/** Texto del origen de una foto copiada o adoptada; en una simulación, en condicional. */
+export function textoDeOrigen(origen: string | null | undefined, simulado = false): string {
+  if (origen !== 'link' && origen !== 'unowned') {
+    return '';
+  }
+  return (simulado ? MENSAJES_ORIGEN_SIMULADO : MENSAJES_ORIGEN)[origen];
+}
+
+/** Los orígenes y las fotos simuladas del resumen, ya con su texto. */
+function detalleDeResumen(origenes: Map<string, number>, simulados: Map<string, number>, enSombra: boolean): { origenes: MotivoResumen[]; simulados: MotivoResumen[] } {
+  return {
+    origenes: ordenarMotivos(origenes, (c) => textoDeOrigen(c, enSombra)),
+    simulados: ordenarMotivos(simulados, textoDeResultado),
+  };
+}
+
 /** Lo que se cuenta en el resumen de un lote terminado (o en curso). */
 export function resumenDeLote(lote: EstadoLote | null | undefined): ResumenLote | null {
   if (!lote) {
     return null;
   }
-  const { motivos, avisos, conAviso } = contarResultados([lote]);
+  const { motivos, avisos, origenes, simulados, conAviso } = contarResultados([lote]);
   // La reversión de una serie lista hasta 101 productos: el total sale de los contadores (B05).
   const incompletos = lote.resultsTruncated === true;
   const omitidas = incompletos ? omitidasPorContadores(lote.counters) : [...motivos.values()].reduce((t, n) => t + n, 0);
@@ -623,6 +767,7 @@ export function resumenDeLote(lote: EstadoLote | null | undefined): ResumenLote 
     ordenarMotivos(motivos, motivoDeOmision),
     ordenarMotivos(avisos, textoDeAvisoEnResumen),
     'Lote cancelado',
+    detalleDeResumen(origenes, simulados, lote.type === 'uniform' && lote.mode === 'shadow'),
   );
   if (incompletos) {
     resumen.motivosIncompletos = true;
@@ -650,7 +795,7 @@ export function resumenDeSerie(serie: EstadoSerie | null | undefined, lotes?: (E
   }
   const c = serie.counters || {};
   const leidos = (lotes || []).filter((l): l is EstadoLote => !!l);
-  const { motivos, avisos } = contarResultados(leidos);
+  const { motivos, avisos, origenes, simulados } = contarResultados(leidos);
   const resumen = armarResumen(
     serie,
     omitidasPorContadores(c),
@@ -658,6 +803,7 @@ export function resumenDeSerie(serie: EstadoSerie | null | undefined, lotes?: (E
     ordenarMotivos(motivos, motivoDeOmision),
     ordenarMotivos(avisos, textoDeAvisoEnResumen),
     'Serie cancelada',
+    detalleDeResumen(origenes, simulados, serie.type === 'uniform' && serie.mode === 'shadow'),
   );
   if (Array.isArray(lotes) && leidos.length < partesConResultados(serie).length) {
     resumen.motivosIncompletos = true;
@@ -891,6 +1037,66 @@ export function leerUltimoTrabajo(valor: string | null | undefined): UltimoTraba
     }
   }
   return { tipo: 'lote', id: v };
+}
+
+/** «Solo la portada» / «Todas las fotos» (cualquier otro valor cae en la portada). */
+export function alcanceValido(valor: unknown): AlcanceFondo {
+  return valor === 'all' ? 'all' : 'cover';
+}
+
+/** Usos que quedan, si se saben (entero ≥ 0). */
+export function usosQueQuedan(valor: unknown): number | null {
+  const n = typeof valor === 'number' ? valor : NaN;
+  return Number.isFinite(n) && n >= 0 ? Math.trunc(n) : null;
+}
+
+function usos(n: number): string {
+  return n === 1 ? '1 uso' : `${conMiles(n)} usos`;
+}
+
+/** «Te quedan 480 usos este mes», o '' si no se sabe. */
+export function textoUsosQueQuedan(quedan: unknown): string {
+  const n = usosQueQuedan(quedan);
+  return n === null ? '' : `Te quedan ${usos(n)} de «Quitar fondo» este mes`;
+}
+
+/**
+ * Antes de pedir la vista previa con «Quitar fondo» (P17, D-518): gasta hasta 3 usos. Con los que
+ * quedan, «hasta 3 de tus 480 usos del mes»; si no se saben, sin la cifra. Nunca más que lo que queda.
+ */
+export function avisoCostoVistaPrevia(max: number | null | undefined, quedan: unknown): string {
+  const base = Number.isInteger(max) && Number(max) > 0 ? Number(max) : 3;
+  const n = usosQueQuedan(quedan);
+  if (n === null) {
+    return `La vista previa usa hasta ${base} de tus usos del mes`;
+  }
+  if (n === 0) {
+    return 'No te quedan usos este mes: la vista previa se verá sin quitar el fondo';
+  }
+  return `La vista previa usa hasta ${Math.min(base, n)} de tus ${usos(n)} del mes`;
+}
+
+/**
+ * Los usos que necesita lo que se ve en la vista previa y los que quedan. Con más de 30 productos
+ * la cifra es de los primeros 30: se dice, y se avisa que el lote completo se revisa al aplicar.
+ */
+export function textoUsosNecesarios(necesarios: unknown, quedan: unknown, totalProductos: number | null | undefined): string {
+  const n = usosQueQuedan(necesarios);
+  if (n === null) {
+    return '';
+  }
+  const parcial = Number(totalProductos) > PRODUCTOS_DE_ESTIMACION;
+  const base = parcial
+    ? `Los primeros ${PRODUCTOS_DE_ESTIMACION} productos necesitan hasta ${usos(n)}`
+    : `Necesita hasta ${usos(n)} de «Quitar fondo»`;
+  const q = usosQueQuedan(quedan);
+  return `${base}${q === null ? '' : ` · te quedan ${conMiles(q)}`}${parcial ? '. Si el lote completo no alcanza, te lo decimos antes de empezar.' : ''}`;
+}
+
+/** En sombra no se gasta nada: solo lo que costaría. */
+export function textoUsosSimulados(necesarios: unknown): string {
+  const n = usosQueQuedan(necesarios);
+  return n === null ? '' : `Al aplicar de verdad usaría hasta ${usos(n)} de «Quitar fondo». Por ahora no se gasta ninguno`;
 }
 
 /** Ajustes en palabras, para el resumen y los avisos. */

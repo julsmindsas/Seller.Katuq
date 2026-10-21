@@ -19,9 +19,13 @@ import { catchError, switchMap, takeUntil } from 'rxjs/operators';
 
 import { ProductPhotosService } from '../../../shared/services/productos/product-photos.service';
 import {
+  ALCANCES_FONDO,
+  AjusteQuitarFondo,
   AjustesFotos,
+  AlcanceFondo,
   ConfigFotos,
   ConteoSeleccion,
+  ETIQUETAS_ALCANCE,
   ETIQUETAS_FONDO,
   ETIQUETAS_PROPORCION,
   EstadoLote,
@@ -35,6 +39,7 @@ import {
   Muestra,
   Omitida,
   PROPORCIONES,
+  QUITAR_FONDO_POR_DEFECTO,
   ParteDeSerie,
   ProgresoSerie,
   Proporcion,
@@ -42,8 +47,12 @@ import {
   ResumenLote,
   RutaParaElegir,
   Seleccion,
+  ajustesDeFondo,
   ajustesIniciales,
+  alcanceValido,
   alternarExclusion,
+  avisoCostoVistaPrevia,
+  usosQueQuedan,
   codigoDeError,
   conteoDeSeleccion,
   cuerpoLote,
@@ -63,6 +72,7 @@ import {
   progresoDeSerie,
   proporcionSugeridaValida,
   puedeAplicar,
+  quitarFondoDisponible,
   resumenDeLote,
   resumenDeSerie,
   rutasParaElegir,
@@ -73,14 +83,20 @@ import {
   textoDeAjustes,
   textoDeAviso,
   textoDeConteo,
+  textoDeOrigen,
+  textoDeParada,
   textoDeParte,
   textoDeProgresoSerie,
   textoDeRuta,
   textoDeSeleccion,
   textoExcede,
   textoSinUbicar,
+  textoUsosNecesarios,
+  textoUsosQueQuedan,
+  textoUsosSimulados,
   topeDeSerie,
   valorUltimoTrabajo,
+  vistaPreviaConFondoDisponible,
 } from '../../../shared/services/productos/product-photos.mapper';
 
 type Paso = 'cargando' | 'pausa' | 'categoria' | 'ajustes' | 'vista' | 'aplicando' | 'resumen' | 'error';
@@ -103,6 +119,19 @@ type Paso = 'cargando' | 'pausa' | 'categoria' | 'ajustes' | 'vista' | 'aplicand
  *    detiene y lo dice, en vez de seguir consultando sin fin;
  *  - `proporcionSugerida` (la del estilo del sitio, pregunta 13) es la proporción inicial, salvo
  *    «Del estilo»; sin ella, la de siempre (P1).
+ *
+ * TX-37 · 8.6 y 9.10 (D-518):
+ *  - «Quitar fondo» (fase 2) solo se ofrece si `GET /settings` dice que está disponible (bandera,
+ *    proveedor y uso en regla, administrador, modo encendido). Empieza apagado y en «Solo la portada»;
+ *    no se recuerda entre aperturas porque cada foto gasta un uso del plan;
+ *  - la vista previa con IA solo si además el modo es `on`: antes de pedirla avisa «La vista previa
+ *    usa hasta 3 de tus N usos del mes». En sombra la vista previa va sin IA y el lote solo cuenta
+ *    lo que costaría (nunca se gasta);
+ *  - muestra los usos que necesita lo que se ve y los que quedan; sin cupo (AI_QUOTA_INSUFFICIENT)
+ *    el mensaje sugiere elegir menos productos o solo la portada;
+ *  - el resumen dice de dónde salieron las fotos copiadas o adoptadas (fase 1b) y cuenta
+ *    `download_failed`, `not_image`, `not_adoptable`, `would_copy` y `would_remove_background`;
+ *  - nunca el nombre del proveedor ni del modelo (Artículo VI).
  *
  * Lo abren la barra masiva de Productos (selección), el botón junto al filtro de categoría y la
  * pestaña Imágenes de un producto guardado (y, con TX-37 · 7.12, el editor del sitio y Catálogos por
@@ -165,6 +194,11 @@ export class FotosUniformesComponent implements OnInit, AfterViewInit, OnDestroy
   buscarCategoria = '';
   /** Al elegir una subcategoría (SERIES_TOO_LARGE), solo se listan las de esta ruta. */
   soloSubrutasDe: string[] | null = null;
+  /** TX-37 · 9.10: «Quitar fondo» (fase 2). Nace apagado y en la portada, siempre. */
+  quitarFondo = false;
+  alcanceFondo: AlcanceFondo = QUITAR_FONDO_POR_DEFECTO.alcance;
+  /** Usos que el servidor estimó al crear el lote (en sombra, lo que costaría). */
+  usosDelLote: number | null = null;
   /** Cada cuánto se consulta el lote. Las pruebas lo acortan. */
   intervaloConsultaMs = INTERVALO_CONSULTA_MS;
 
@@ -172,6 +206,8 @@ export class FotosUniformesComponent implements OnInit, AfterViewInit, OnDestroy
   readonly fondos: Fondo[] = FONDOS;
   readonly etiquetasProporcion = ETIQUETAS_PROPORCION;
   readonly etiquetasFondo = ETIQUETAS_FONDO;
+  readonly alcances: AlcanceFondo[] = ALCANCES_FONDO;
+  readonly etiquetasAlcance = ETIQUETAS_ALCANCE;
 
   private cambio = false;
   private cerradoYa = false;
@@ -267,6 +303,74 @@ export class FotosUniformesComponent implements OnInit, AfterViewInit, OnDestroy
   /** La proporción que sugirió quien abrió el diálogo (la del sitio), si es válida. */
   get proporcionDelSitio(): Proporcion | null {
     return proporcionSugeridaValida(this.proporcionSugerida);
+  }
+
+  /** «Quitar fondo» se ofrece (el servidor lo dice: bandera, proveedor, rol y modo). */
+  get fondoDisponible(): boolean {
+    return !this.fondoRetirado && quitarFondoDisponible(this.config);
+  }
+
+  /** Se eligió «Quitar fondo» y se puede: lo que se manda al aplicar. */
+  get fondoElegido(): boolean {
+    return this.quitarFondo && this.fondoDisponible;
+  }
+
+  /** La vista previa puede usar IA (modo `on`): gasta hasta 3 usos. */
+  get vistaPreviaConIA(): boolean {
+    return this.fondoElegido && vistaPreviaConFondoDisponible(this.config) && this.usosRestantes !== 0;
+  }
+
+  /** Modo `on` con vista previa de IA posible: se avisa su costo (o que no hay usos) antes de pedirla. */
+  get avisoVistaVisible(): boolean {
+    return this.fondoElegido && vistaPreviaConFondoDisponible(this.config);
+  }
+
+  private get usosRestantes(): number | null {
+    return usosQueQuedan(this.config && this.config.aiUsesLeft);
+  }
+
+  /** En sombra «Quitar fondo» solo se cuenta; la vista previa va sin IA. */
+  get fondoEnSombra(): boolean {
+    return this.fondoElegido && !!this.config && this.config.mode === 'shadow';
+  }
+
+  /** El servidor dijo que ya no se puede: la opción se oculta hasta reabrir el diálogo. */
+  private fondoRetirado = false;
+
+  get ajusteFondo(): AjusteQuitarFondo {
+    return { quitar: this.quitarFondo, alcance: this.alcanceFondo };
+  }
+
+  get textoUsosQuedan(): string {
+    return textoUsosQueQuedan(this.config && this.config.aiUsesLeft);
+  }
+
+  /** Antes de pedir la vista previa con IA: cuánto gasta. */
+  get avisoCostoVista(): string {
+    return avisoCostoVistaPrevia(this.vistaPrevia && this.vistaPrevia.aiUsesPreviewMax, this.config && this.config.aiUsesLeft);
+  }
+
+  /** Después de la vista previa con IA: los usos que necesita lo que se ve y los que quedan. */
+  get textoUsosVista(): string {
+    const v = this.vistaPrevia;
+    if (!v || !this.fondoElegido) return '';
+    return textoUsosNecesarios(v.aiUsesNeeded, v.aiUsesLeft !== undefined ? v.aiUsesLeft : this.config && this.config.aiUsesLeft, this.conteo.total);
+  }
+
+  /** En sombra: lo que costaría aplicar (dato del servidor al simular, o de la vista previa). */
+  get textoUsosSombra(): string {
+    if (!this.config || this.config.mode !== 'shadow') return '';
+    return textoUsosSimulados(this.usosDelLote);
+  }
+
+  /** La vista previa con IA se detuvo (`ai_quota`, `ai_unavailable`): lo dice sin gastar más. */
+  get paradaDeVista(): string {
+    const v = this.vistaPrevia;
+    return v && v.stopCode ? textoDeParada(v.stopCode) : '';
+  }
+
+  textoOrigen(m: Muestra): string {
+    return textoDeOrigen(m.copiedFrom, true);
   }
 
   /** Número de cada marca de pasos: con el paso de categoría, todo corre un lugar. */
@@ -467,7 +571,9 @@ export class FotosUniformesComponent implements OnInit, AfterViewInit, OnDestroy
     this.error = '';
     this.excedeEnServidor = false;
     this.guardarLocal(LLAVE_AJUSTES, JSON.stringify(this.ajustes));
-    this.servicio.vistaPrevia(cuerpoVistaPrevia(this.seleccion, this.ajustes)).pipe(takeUntil(this.destruir$)).subscribe({
+    // La vista previa lleva «Quitar fondo» solo si el servidor la deja usar IA (modo `on`, administrador).
+    const fondoVista = ajustesDeFondo(this.ajusteFondo, this.vistaPreviaConIA);
+    this.servicio.vistaPrevia(cuerpoVistaPrevia(this.seleccion, this.ajustes, fondoVista)).pipe(takeUntil(this.destruir$)).subscribe({
       next: (r) => {
         this.ocupado = false;
         this.vistaPrevia = r || null;
@@ -505,6 +611,17 @@ export class FotosUniformesComponent implements OnInit, AfterViewInit, OnDestroy
     return p.batchId;
   }
 
+  /** «Quitar fondo»: elegirlo o volver a conservar el fondo. Solo si el servidor lo ofrece. */
+  elegirQuitarFondo(quitar: boolean): void {
+    if (quitar && !this.fondoDisponible) return;
+    this.quitarFondo = quitar;
+  }
+
+  /** «Solo la portada» o «Todas las fotos». */
+  elegirAlcance(a: AlcanceFondo): void {
+    this.alcanceFondo = alcanceValido(a);
+  }
+
   volverAAjustes(): void {
     this.paso = 'ajustes';
     this.error = '';
@@ -520,12 +637,14 @@ export class FotosUniformesComponent implements OnInit, AfterViewInit, OnDestroy
     if (this.bloqueaAplicar) return;
     this.ocupado = true;
     this.error = '';
-    this.servicio.crearLote(cuerpoLote(this.seleccion, this.ajustes, this.excluidas, nuevaLlave()))
+    this.usosDelLote = null;
+    this.servicio.crearLote(cuerpoLote(this.seleccion, this.ajustes, this.excluidas, nuevaLlave(), ajustesDeFondo(this.ajusteFondo, this.fondoElegido)))
       .pipe(takeUntil(this.destruir$))
       .subscribe({
         next: (r) => {
           this.ocupado = false;
           this.paso = 'aplicando';
+          this.usosDelLote = typeof r.aiUsesNeeded === 'number' ? r.aiUsesNeeded : null;
           if (r.seriesId) {
             this.ultimaSerieId = r.seriesId;
             this.ultimoLoteId = null;
@@ -753,6 +872,12 @@ export class FotosUniformesComponent implements OnInit, AfterViewInit, OnDestroy
 
   private fallo(err: unknown): void {
     this.ocupado = false;
+    // «Quitar fondo» ya no se puede (ni la vista previa con IA ni el lote): se vuelve a conservar el fondo.
+    const codigo = codigoDeError(err);
+    if (codigo === 'BACKGROUND_UNAVAILABLE' || codigo === 'ADMIN_ONLY') {
+      this.quitarFondo = false;
+      this.fondoRetirado = true;
+    }
     this.error = mensajeDeError(err);
     this.cdr.markForCheck();
   }

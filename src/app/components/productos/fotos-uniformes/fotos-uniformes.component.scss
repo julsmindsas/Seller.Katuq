@@ -327,6 +327,7 @@ $fu-info-soft: #E7F1FF;
   font-weight: 800;
 
   &.fu-etiqueta--alerta { background: $fu-alerta-soft; color: $fu-alerta; }
+  &.fu-etiqueta--info { background: $fu-info-soft; color: $fu-info; }
 }
 
 .fu-omitidas {
@@ -582,7 +583,8 @@ $fu-info-soft: #E7F1FF;
   &:disabled .fu-ruta-texto { color: $fu-muted; }
 }
 
-.fu-avisos-resumen {
+.fu-avisos-resumen,
+.fu-origen-resumen {
   margin-top: 12px;
 
   .fu-lista-item { align-items: center; }
@@ -691,3 +693,23 @@ $fu-info-soft: #E7F1FF;
 
   .fu-pie .fu-btn { flex: 1 1 auto; }
 }
+
+// ── TX-37 · 8.6 y 9.10: «Quitar fondo», usos del plan y origen de las fotos copiadas ──
+
+.fu-subgrupo {
+  margin-top: 10px;
+
+  .fu-label { margin-bottom: 6px; }
+}
+
+.fu-usos {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+  color: $fu-accent;
+
+  .fu-usos-texto { color: $fu-accent; font-size: 12.5px; font-weight: 700; }
+}
+
+.fu-fondo-ia .fu-aviso { margin-top: 10px; }
