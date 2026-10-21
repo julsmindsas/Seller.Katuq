@@ -191,7 +191,7 @@ D-496 (ticket F4-40, cd `PrDNIoDwRacCPQVcHmx1`; el número 1243 está repetido, 
       Dep: 4.2, 5.1, 5.3.
 - [ ] 6.2 **[sensible]** `services/whatsappBotPedidoDirecto.js` (D5-D8).
       Éxito: 6.1 en verde. Dep: 6.1, 0.5.
-- [ ] 6.3 Prueba primero, en `whatsappBotSession.test.js`:
+- [x] 6.3 Prueba primero, en `whatsappBotSession.test.js`:
       - `guardarPropuesta`;
       - `reclamarCreacion`: lease, y dos llamadas a la vez dan un solo `creando`;
       - `marcarPedidoCreado` con `creadoEn`;
@@ -199,7 +199,8 @@ D-496 (ticket F4-40, cd `PrDNIoDwRacCPQVcHmx1`; el número 1243 está repetido, 
       - `devolverAlBot` limpia;
       - `marcarCerrada` con `pedidoCreado`.
       Dep: 0.3.
-- [ ] 6.4 Mutaciones de sesión, todas en transacción. Éxito: 6.3 en verde. Dep: 6.3.
+- [x] 6.4 Mutaciones de sesión, todas en transacción. Éxito: 6.3 en verde. Dep: 6.3.
+      (F440-B04: además `seguimiento` con `marcarSeguimiento`, `borrarSeguimiento`, `registrarEnvio` y `posponer`; el cableado del despachador es de F440-B09. 10.2 sigue abierta.)
 - [ ] 6.5 Prueba primero, en `whatsappBotDispatcher.test.js`:
       - llaves apagadas: la cotización de hoy, byte a byte, y el «sí» post-cierre reabre como hoy;
       - sombra: cotización, evento `sombra` y cero escrituras en `orders`;
