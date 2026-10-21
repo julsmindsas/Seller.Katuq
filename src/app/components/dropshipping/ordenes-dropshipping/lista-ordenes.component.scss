@@ -14,8 +14,8 @@
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: #fff;
-  border: 1px solid #ececf4;
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-line);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
   min-width: 0;
@@ -35,7 +35,7 @@
   font-size: 24px !important;
   font-weight: 800;
   line-height: 1.15;
-  color: #211F3A;
+  color: var(--ds-ink);
   word-break: break-word;
 }
 
@@ -45,7 +45,7 @@
   font-weight: 800;
   letter-spacing: .5px;
   text-transform: uppercase;
-  color: #8f8bab;
+  color: var(--ds-muted);
 }
 
 .lo-metrica__icono {
@@ -68,24 +68,24 @@
 // Estilos para la tabla
 .p-table {
   .p-datatable-header {
-    background: #faf9fe;
-    border: 1px solid #ececf4;
+    background: var(--ds-surface-2);
+    border: 1px solid var(--ds-line);
     border-bottom: none;
     padding: 1rem 1.5rem;
   }
   
   .p-datatable-tbody > tr > td {
     padding: 1rem;
-    border-bottom: 1px solid #f1f0f7;
+    border-bottom: 1px solid var(--ds-line-soft);
     vertical-align: middle;
   }
   
   .p-datatable-thead > tr > th {
-    background: #faf9fe;
-    border: 1px solid #f1f0f7;
+    background: var(--ds-surface-2);
+    border: 1px solid var(--ds-line-soft);
     padding: 1rem;
     font-weight: 800;
-    color: #8f8bab;
+    color: var(--ds-muted);
   }
 }
 
@@ -94,12 +94,12 @@
   // Acciones de fila: secundarios blancos con borde lila (sin azul info de Bootstrap).
   .btn-outline-info,
   .btn-outline-secondary {
-    background: #fff;
-    border: 1px solid #e4e2ef;
-    color: #5F3FE0;
+    background: var(--ds-surface);
+    border: 1px solid var(--ds-line-strong);
+    color: var(--ds-accent-ink);
     border-radius: 11px;
 
-    &:hover, &:focus, &.show { background: #efe9ff; border-color: #d9cffb; color: #5F3FE0; }
+    &:hover, &:focus, &.show { background: var(--ds-accent-soft); border-color: #d9cffb; color: var(--ds-accent-ink); }
   }
 
   .btn {
@@ -128,19 +128,19 @@
   border-radius: 20px;
   border: 0;
 
-  &.p-tag-warning { background: #FFF1DF; color: #D9820A; }
-  &.p-tag-info { background: #E7F1FF; color: #1E6FD9; }
-  &.p-tag-primary { background: #efe9ff; color: #5F3FE0; }
-  &.p-tag-success { background: #E6F7EE; color: #1E874B; }
-  &.p-tag-danger { background: #FDECEC; color: #D64545; }
+  &.p-tag-warning { background: var(--ds-warn-soft); color: var(--ds-warn); }
+  &.p-tag-info { background: var(--ds-info-soft); color: var(--ds-info); }
+  &.p-tag-primary { background: var(--ds-accent-soft); color: var(--ds-accent-ink); }
+  &.p-tag-success { background: var(--ds-ok-soft); color: var(--ds-ok); }
+  &.p-tag-danger { background: var(--ds-err-soft); color: var(--ds-err); }
 }
 
 // Estilos para filtros
 .p-inputgroup {
   .p-inputgroup-addon {
-    background: #f5f4fa;
-    border: 1px solid #e9e7f3;
-    color: #8f8bab;
+    background: var(--ds-chip-bg);
+    border: 1px solid var(--ds-control-border);
+    color: var(--ds-muted);
     display: flex;
     align-items: center;
     padding: 0.375rem 0.75rem;
@@ -150,7 +150,7 @@
     border-left: none;
     
     &:focus {
-      border-color: #7C5CFF;
+      border-color: var(--ds-focus);
       box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
     }
   }
@@ -164,7 +164,7 @@
   }
   
   &.p-focus {
-    border-color: #7C5CFF;
+    border-color: var(--ds-focus);
     box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
   }
 }
@@ -192,11 +192,11 @@
 .empty-state {
   text-align: center;
   padding: 3rem 1rem;
-  color: #8f8bab;
+  color: var(--ds-muted);
   
   .pi {
     font-size: 3rem;
-    color: #5F3FE0;
+    color: var(--ds-accent-ink);
     margin-bottom: 1rem;
   }
   
@@ -254,12 +254,12 @@
 
 // Estilos para códigos y números
 code {
-  background: #faf9fe;
-  border: 1px solid #ececf4;
+  background: var(--ds-surface-2);
+  border: 1px solid var(--ds-line);
   border-radius: 4px;
   padding: 0.25rem 0.5rem;
   font-size: 0.875rem;
-  color: #5F3FE0;
+  color: var(--ds-accent-ink);
 }
 
 // Estilos para información financiera
@@ -268,11 +268,11 @@ code {
 }
 
 .text-success {
-  color: #1E874B !important;
+  color: var(--ds-ok) !important;
 }
 
 .text-muted {
-  color: #8f8bab !important;
+  color: var(--ds-muted) !important;
 }
 
 // Mejoras en iconos
