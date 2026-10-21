@@ -15,6 +15,10 @@
           <svg *ngIf="!logoMarca" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 3l7 4v10l-7 4-7-4V7z"/></svg>
           Mi marca
         </button>
+        <button class="btn-fantasma" *ngIf="features.isEnabled('storeMigrationImport')" (click)="traerMiTienda()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/></svg>
+          Traer mi tienda
+        </button>
         <button class="btn-primario" (click)="abrirAsistente()">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
           {{ soloTipo === 'catalogo' ? 'Crear catálogo' : 'Crear sitio' }}

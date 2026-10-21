@@ -10,5 +10,7 @@ module.exports = {
   errores: require(base + 'logica/errores.ts'),
   sumas: require(base + 'logica/sumas.ts'),
   reporte: require(base + 'logica/reporte.ts'),
+  flujo: require(base + 'logica/flujo.ts'),
+  textos: require(base + 'logica/textos.ts'),
   acceso: require(base + 'logica/acceso.ts'),
 };

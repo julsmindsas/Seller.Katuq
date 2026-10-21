@@ -456,6 +456,15 @@ export class ProductosComponent implements OnInit, OnDestroy {
     private features: CompanyFeaturesService
   ) { }
 
+  // ---- F5-30: «Traer mi tienda» (solo con la bandera storeMigrationImport) ----
+  get traerTiendaActiva(): boolean {
+    return this.features.isEnabled('storeMigrationImport');
+  }
+
+  traerMiTienda(): void {
+    this.router.navigate(['/migrar-tienda']);
+  }
+
   // ---- D-501: Uniformar fotos (solo con la bandera productPhotoUniform) ----
   get fotosUniformesActiva(): boolean {
     return this.features.isEnabled(BANDERA_FOTOS_UNIFORMES);

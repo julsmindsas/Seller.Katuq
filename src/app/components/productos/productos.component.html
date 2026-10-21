@@ -57,6 +57,11 @@
                                     <i class="pi pi-plus"></i>{{ "Crear Producto" | translate }}
                                 </button>
                             </ng-template>
+                            <!-- «Traer mi tienda» (F5-30): solo con la bandera storeMigrationImport -->
+                            <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="traerTiendaActiva"
+                                    (click)="traerMiTienda()">
+                                <i class="pi pi-cloud-download pk-ico-accent"></i>Traer mi tienda
+                            </button>
                             <!-- Split: Importar Excel + dropdown integraciones -->
                             <div class="btn-group pk-split" ngbDropdown>
                                 <button type="button" class="cfg-btn cfg-btn--sec pk-split-main"

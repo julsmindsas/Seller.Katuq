@@ -213,6 +213,11 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   /** El comerciante quiere otra descripción solo para esta página. */
   objetivoPropio = false;
 
+  /** F5-30: «Traer mi tienda» (el botón solo se ve con la bandera storeMigrationImport). */
+  traerMiTienda(): void {
+    this.router.navigate(["/migrar-tienda"]);
+  }
+
   ngOnInit(): void {
     this.leerEnlaceDelChat();
     this.cargar();
