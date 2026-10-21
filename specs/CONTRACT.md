@@ -1346,6 +1346,12 @@ Orden = prioridad. La spec piloto siempre encabeza.
 
 > Resumen breve de cada sesión: qué hicimos, qué queda. Evita perder hilo.
 
+### 2026-10-21 — D-532: idiomas del panel (ticket cd CMNdBkVZXgYoOCvqfGZc), apertura y bloque IDI-B00a
+- Se aprobó y se asentó la propuesta `idiomas-plataforma` (D-532).
+- En el backend, el login devuelve `visibleLanguages` (`config/feature_flags`, D-505), apagado por defecto: `['es','en','pt']`. El script `set-idiomas-visibles.js` simula por defecto.
+- Pruebas: caracterización 7/7 antes y después, contrato 0/10 → 13/13 y golden de sitios 20/20. `passwordResetRoutes.contract.test.js` ya estaba en rojo (aserción vieja sobre `diagnostics.js` desde D-319); queda pendiente fuera de este bloque.
+- Siguen IDI-B00b a IDI-B00f (front base) y los bloques de módulo. Sin push ni despliegue.
+
 ### 2026-10-02 (sesión tiket-apoyo — OH MY STORE en cero)
 - **1087 cerrado solo con configuración:** el envío de las facturas de OH MY STORE sale con el producto SIIGO `TSV` "TRANSPORTE DOMICILIO EN VENTAS" (código encontrado recorriendo su catálogo SIIGO en solo lectura; guardado con `IntegrationConfigService.saveConfig`, verificado con la vista previa del ORE-001355).
 - **1110 cerrado:** ver D-340. OH MY STORE queda sin tickets abiertos.
@@ -11776,3 +11782,45 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - **TX-34·9** Promesa de las plantillas sobre el tiempo de entrega. → El carrito y el checkout muestran el tiempo de entrega.
 - **Orden de trabajo:** 1) arreglos de F2-41 con sus diffs; 2) bugs de F5-29 y su seguridad; 3) arreglos que no necesitan diseño nuevo (D-505, cotizable, Shopify CSV, feed JPEG de Meta, choque de categorías de D-498, 500 del árbol de categorías); 4) diseños OpenSpec para aprobar: 1230 (suscripción fase A), TX-34, facetas/plantilla/comparador de F2-42, TX-37 fases 1b y 2, comparar de F5-29, resto de F4-40; 5) implementación por ticket.
 - **Seguridad:** los hallazgos de esta lectura van al openspec privado del backend, no a este contrato.
+
+## D-532 (2026-10-21) — Idiomas del panel Seller: español, inglés, portugués y alemán de Suiza (ticket «Traducción», cd CMNdBkVZXgYoOCvqfGZc) — APROBADA (Daniel, 21-oct: «Base + módulo por módulo»; artefactos aprobados en bloque)
+
+> Ticket citado por su `cd` y no por el número 1231, que D-446 ya usa para otro ticket (las estrellas del sitio). Retoma los tickets 1181 (`urpQiIDjXO9W9FuQQ4fk`) y 1182 (`ZQy5r70gskWzdbp3NfBg`), que Daniel archivó el 16-oct.
+
+- **Propuesta:** `openspec/changes/idiomas-plataforma/` (proposal, design, `tasks.md` y las specs `seller-language` y `seller-translation-coverage`).
+  - Daniel la aprobó en bloque el 2026-10-21 (tarea 0.2), incluida la asignación de carpetas de D10 tal como está escrita.
+  - Cada pregunta abierta se resuelve con la recomendación escrita.
+- **Recomendaciones aprobadas (1 a 9):**
+  1. Este ticket es el paraguas. El trabajo sale en un bloque base (`IDI-B00`) y doce bloques de módulo (`IDI-B01` a `IDI-B12`), sin abrir un ticket por módulo.
+  2. Alemán estándar de Suiza (`de-CH`, sin «ß»), mostrado como «Deutsch (CH)» con la bandera `ch`.
+  3. Preguntar a Jairo para qué comercio o mercado es el alemán (tarea 0.4). Si hay uno concreto, sus módulos se revisan primero en alemán.
+  4. Esta entrega cubre solo el panel Seller. La tienda pública, los correos, WhatsApp, los PDF y los formatos de número, moneda y fecha quedan para el idioma por empresa de la Ola 0 (`company-locale-profile`).
+  5. El borrador se genera con Opttia en desarrollo (D-257), nunca en tiempo de ejecución. La revisión nativa es obligatoria antes de mostrar de-CH en el selector; Daniel decide la persona o agencia y aprueba el costo (tarea 0.5). Para pt-BR, revisión nativa antes de vender en Brasil.
+  6. Claves semánticas por módulo para lo nuevo y lo que se migre. Excepción: los títulos del menú y todo valor que se guarde o se compare siguen como clave literal.
+  7. La ortografía se corrige por módulo, dentro de cada bloque. Además, el bloque base hace una pasada sobre las 11 claves de `es.json`.
+  8. Se retiran `fr.json` y los idiomas `cn`, `ae` y `fr` declarados.
+  9. El idioma del panel es por usuario (`users.lang`). El de lo que ven los clientes del comercio queda para la Ola 0. No se mezclan.
+- **Idiomas visibles (D-505):** el login devuelve `visibleLanguages`, leído de `config/feature_flags`.
+  - `visibleAppLanguages` es configuración permanente. Si falta, no es un arreglo o trae algún elemento que no es texto, vale `['es','en','pt']`, que es lo de hoy. Los códigos fuera del catálogo se ignoran y `es` siempre se agrega, así que `[]` deja solo el español.
+  - de-CH nace oculto. Interruptor de emergencia: quitar `de` y vaciar la lista de prueba. El cambio llega al siguiente inicio de sesión.
+  - Si la lectura falla o tarda más de 2,5 s, el login sigue y deja un log estructurado sin correo, nombre ni empresa. La confirmación del registro reusa `construirSesion` y también devuelve el campo.
+- **Bandera temporal (Art. XII):** `appLanguagePreviewCompanies` contiene las empresas de prueba que ven todo el catálogo.
+  - Dueño: Daniel.
+  - Se retira al publicar de-CH o el 2027-06-30, lo que pase primero (tarea 14.3).
+- **Excepción acotada al Art. IX:** Angular 14.3 no tiene signals ni `@if`.
+  - El código de este cambio sigue el estilo de cada módulo que toca (NgModule y sus directivas).
+  - El servicio nuevo de PrimeNG es un servicio raíz pequeño.
+  - La excepción vale solo para este cambio.
+- **Write-set:**
+  - En `config/feature_flags`, solo los campos `visibleAppLanguages` y `appLanguagePreviewCompanies`. Se escriben a mano o con `functions/scripts/set-idiomas-visibles.js`, que simula por defecto, y siempre por orden de Daniel.
+  - `users.lang`, como hoy, desde el selector.
+  - Ninguna escritura en `orders`, `products`, precios, `inventory` ni `inventoryMovement`.
+- **Bloque base:**
+  - `IDI-B00a` (tareas 0.2, 0.3, 1.2, 1.4 y 1.5), en el backend de la rama `feature/tickets-web`:
+    - `services/appLanguages.js`, más el campo `visibleLanguages` y su `require` en `construirSesion`, sin ningún otro cambio en el login.
+    - Caracterización del login: 7/7 antes y después.
+    - Contrato: 0/10 antes del cambio y 10/10 después; con los tres casos de la corrección, 13/13.
+    - Pruebas del script: 6/6.
+    - Golden de `tests/sitios`: 20/20 idéntico.
+    - Se corre con `npm run test:idiomas-login`.
+  - Sin push ni despliegue. La configuración no se escribió en ninguna base.
