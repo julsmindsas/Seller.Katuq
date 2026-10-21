@@ -12,7 +12,7 @@
   border: 1px solid $cfg-line;
   border-radius: 16px;
   box-shadow: $cfg-shadow-panel;
-  background: #fff;
+  background: var(--ds-surface);
 }
 
 :host ::ng-deep .ce-principal .card-body {
@@ -69,8 +69,8 @@
         .p-tabview-title { color: inherit !important; }
 
         &:hover {
-          background: #fff !important;
-          color: $cfg-accent !important;
+          background: var(--ds-surface) !important;
+          color: $cfg-accent-ink !important;
         }
 
         &:focus { box-shadow: none !important; }
@@ -78,8 +78,8 @@
       }
 
       &.p-highlight .p-tabview-nav-link {
-        background: #fff !important;
-        color: $cfg-accent !important;
+        background: var(--ds-surface) !important;
+        color: $cfg-accent-ink !important;
         box-shadow: $cfg-shadow-panel !important;
       }
     }
@@ -93,7 +93,7 @@
     width: 28px !important;
     border-radius: 11px;
 
-    &:hover { color: $cfg-accent !important; }
+    &:hover { color: $cfg-accent-ink !important; }
   }
 
   .p-tabview-panels {
@@ -151,7 +151,7 @@ select.form-control {
   &::placeholder { color: $cfg-muted; }
 
   &:focus {
-    background-color: #fff;
+    background-color: var(--ds-surface);
     border-color: $cfg-accent-2;
     box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
     outline: none;
@@ -167,7 +167,7 @@ select.form-control {
   background: $cfg-accent;
   border: 1px solid $cfg-accent;
   border-radius: 11px;
-  color: #fff;
+  color: var(--ds-on-accent);
   font-weight: 700;
   font-size: 13px;
   padding: 8px 16px;
@@ -182,8 +182,8 @@ select.form-control {
 }
 
 .btn-outline-primary {
-  background: #fff;
-  border: 1px solid #e4e2ef;
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-line-strong);
   border-radius: 11px;
   color: $cfg-body;
   font-weight: 700;
@@ -192,7 +192,7 @@ select.form-control {
   &:hover:not(:disabled) {
     background: $cfg-tint;
     border-color: #d9cffb;
-    color: $cfg-accent;
+    color: $cfg-accent-ink;
   }
 }
 
@@ -201,7 +201,7 @@ select.form-control {
 // Botón de subir archivo
 input[type="file"]::-webkit-file-upload-button {
   background-color: $cfg-accent;
-  color: #fff;
+  color: var(--ds-on-accent);
   border: none;
   border-radius: 10px;
   padding: 6px 12px;
@@ -251,7 +251,7 @@ th {
 .delete-button {
   padding: 6px 12px;
   border: 1px solid #f3c9c9;
-  background: #fff;
+  background: var(--ds-surface);
   color: $cfg-err;
   border-radius: 10px;
   font-size: 0.78rem;
@@ -264,7 +264,7 @@ th {
 
 // Enlaces
 a {
-  color: $cfg-accent;
+  color: $cfg-accent-ink;
   text-decoration: none;
   font-weight: 600;
 
