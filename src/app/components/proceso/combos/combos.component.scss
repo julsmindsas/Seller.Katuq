@@ -414,5 +414,6 @@
   .cb-title { font-size: 24px !important; }
   .cb-search { min-width: 0; flex: 1 1 100%; }
   .cb-head-actions { width: 100%; }
-  .cb-head-actions .cb-btn-primary { flex: 1 1 100%; }
+  .cb-head-actions .cb-btn-primary,
+  .cb-head-actions .cb-btn-ghost { flex: 1 1 100%; }
 }

@@ -748,6 +748,12 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
    */
   agregarCombo(combo: any): void {
     const ids: string[] = (combo?.productos || []).map((p: any) => p?.productoId).filter((id: any) => !!id);
+    // Ticket 1323 (D-538): unidades por producto definidas en el combo.
+    const cantidades = new Map<string, number>(
+      (combo?.productos || [])
+        .filter((p: any) => p?.productoId && Number.isInteger(p.cantidad) && p.cantidad > 0)
+        .map((p: any) => [p.productoId, p.cantidad])
+    );
     this.productoTerm = "";
     this.productoSuggestions = [];
     this.comboSuggestions = [];
@@ -783,7 +789,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
         let configurables = 0;
         agregables.forEach((producto) => {
           if (this.requiereConfiguracion(producto)) configurables++;
-          this.agregarDirecto(producto, false, completo ? marca : undefined);
+          this.agregarDirecto(producto, false, completo ? marca : undefined, cantidades.get((producto as any).cd));
         });
         const config = configurables > 0 ? ` ${configurables} se configuran al convertirla en pedido.` : "";
         if (completo) {
@@ -901,10 +907,14 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   private agregarDirecto(
     producto: Producto,
     mostrarToast = true,
-    combo?: { id: string; nombre: string; grupo: string; descripcion?: string }
+    combo?: { id: string; nombre: string; grupo: string; descripcion?: string },
+    cantidadCombo?: number
   ): void {
     const productoConPrecio = this.aplicarPrecioCategoria(producto);
-    const cantidadMinima = (producto as any)?.disponibilidad?.cantidadMinVenta || 1;
+    // Ticket 1323: la cantidad del combo, si la trae, manda sobre la mínima de venta.
+    const cantidadMinima = cantidadCombo && cantidadCombo > 0
+      ? cantidadCombo
+      : (producto as any)?.disponibilidad?.cantidadMinVenta || 1;
     const hoy = new Date();
     const datosEntrega = {
       fechaEntrega: {

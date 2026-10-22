@@ -501,6 +501,10 @@ export class MaestroService {
   public deletePermanentCombo(id: string) {
     return this.http.post(this.urlBase + '/v1/combos/delete-permanent', { id }, this.httpOptions);
   }
+  /** Ticket 1323 (D-538): carga desde Excel. Con `simular` no guarda nada; devuelve el plan y los errores. */
+  public importarCombos(filas: any[], simular: boolean) {
+    return this.http.post(this.urlBase + '/v1/combos/import', { filas, simular }, this.httpOptions);
+  }
   // Batch fetch de productos por id — el catálogo de venta asistida es
   // paginado/buscado, así que los productos de un combo no necesariamente
   // están ya cargados en memoria (D-147).

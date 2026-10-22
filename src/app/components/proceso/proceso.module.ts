@@ -21,6 +21,7 @@ import { CrearDescuentoPromocionComponent } from './descuentos-promociones/crear
 import { HistorialRedencionesComponent } from './descuentos-promociones/historial-redenciones/historial-redenciones.component';
 import { CombosComponent } from './combos/combos.component';
 import { CrearComboComponent } from './combos/crear-combo/crear-combo.component';
+import { ImportarCombosComponent } from './combos/importar-combos/importar-combos.component';
 import { TableModule } from 'primeng/table';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -51,7 +52,8 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     CrearDescuentoPromocionComponent,
     HistorialRedencionesComponent,
     CombosComponent,
-    CrearComboComponent
+    CrearComboComponent,
+    ImportarCombosComponent
   ]
 })
 export class ProcesoModule { }

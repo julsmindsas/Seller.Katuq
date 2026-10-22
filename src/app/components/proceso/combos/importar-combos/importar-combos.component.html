@@ -1,0 +1,80 @@
+<!-- Ticket 1323 (D-538): cargar combos desde Excel -->
+<div class="icb">
+  <div class="icb-head">
+    <div>
+      <span class="icb-eyebrow">Combos</span>
+      <h2 class="icb-title">Cargar combos desde Excel</h2>
+      <p class="icb-sub">Una fila por producto del combo. Con un código que ya existe, el combo se actualiza; si no, se crea. Primero revisamos el archivo y no se guarda nada hasta que confirmes.</p>
+    </div>
+    <button type="button" class="icb-close" aria-label="Cerrar" (click)="activeModal.dismiss()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg>
+    </button>
+  </div>
+
+  <div class="icb-pasos">
+    <div class="icb-paso">
+      <span class="icb-paso-num">1</span>
+      <div class="icb-paso-txt">
+        <strong>Descarga la plantilla</strong>
+        <span>{{ combos?.length ? 'Sale con tus combos que ya tienen código, para editarlos.' : 'Trae un ejemplo para que veas cómo llenarla.' }}</span>
+      </div>
+      <button type="button" class="icb-btn-ghost" (click)="descargarPlantilla()">Descargar plantilla</button>
+    </div>
+    <div class="icb-paso">
+      <span class="icb-paso-num">2</span>
+      <div class="icb-paso-txt">
+        <strong>Sube el archivo</strong>
+        <span>{{ nombreArchivo || 'Excel .xlsx con las columnas de la plantilla.' }}</span>
+      </div>
+      <label class="icb-btn-ghost icb-file">
+        Elegir archivo
+        <input type="file" accept=".xlsx,.xls" (change)="alElegirArchivo($event)" [disabled]="procesando">
+      </label>
+    </div>
+  </div>
+
+  <div class="icb-loading" *ngIf="procesando">
+    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+    <span class="icb-loading-txt">Revisando el archivo…</span>
+  </div>
+
+  <ng-container *ngIf="resultado && !procesando">
+    <div class="icb-summary">
+      <div class="icb-stat"><span class="icb-stat-label">Filas</span><span class="icb-stat-value">{{ resultado.resumen.filas }}</span></div>
+      <div class="icb-stat"><span class="icb-stat-label">Combos nuevos</span><span class="icb-stat-value">{{ resultado.resumen.crear }}</span></div>
+      <div class="icb-stat"><span class="icb-stat-label">Se actualizan</span><span class="icb-stat-value">{{ resultado.resumen.actualizar }}</span></div>
+      <div class="icb-stat" [class.icb-stat--err]="resultado.errores.length"><span class="icb-stat-label">Errores</span><span class="icb-stat-value">{{ resultado.errores.length }}</span></div>
+    </div>
+
+    <div class="icb-aviso icb-aviso--err" *ngIf="resultado.errores.length">
+      <span class="icb-aviso-txt">Hay {{ resultado.errores.length }} error(es). Corrígelos en el Excel y vuelve a subirlo: mientras haya errores no se guarda nada.</span>
+    </div>
+    <div class="icb-table-wrap" *ngIf="resultado.errores.length">
+      <table class="icb-table">
+        <thead><tr><th>Fila</th><th>Combo</th><th>Qué pasa</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let e of resultado.errores"><td>{{ e.fila || '—' }}</td><td>{{ e.codigo || '—' }}</td><td>{{ e.mensaje }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="icb-table-wrap" *ngIf="!resultado.errores.length && resultado.combos.length">
+      <table class="icb-table">
+        <thead><tr><th>Código</th><th>Combo</th><th>Productos</th><th>Qué se hace</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let c of resultado.combos">
+            <td>{{ c.codigo }}</td><td>{{ c.nombre }}</td><td>{{ c.productos }}</td>
+            <td><span class="icb-tag" [class.icb-tag--new]="c.accion === 'crear'">{{ c.accion === 'crear' ? 'Se crea' : 'Se actualiza' }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+
+  <div class="icb-foot">
+    <button type="button" class="icb-btn-ghost" (click)="activeModal.dismiss()">Cancelar</button>
+    <button type="button" class="icb-btn-primary" [disabled]="!puedeConfirmar || procesando" (click)="confirmar()">
+      Cargar {{ resultado?.combos?.length || '' }} combo(s)
+    </button>
+  </div>
+</div>

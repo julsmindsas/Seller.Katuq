@@ -1750,6 +1750,8 @@ export class EcomerceProductsComponent
       mostrarToast?: boolean;
       /** Ticket 1097: la línea entra como parte de este combo, cerrado (una sola fila). */
       combo?: { id: string; nombre: string; grupo: string; descripcion?: string };
+      /** Ticket 1323 (D-538): unidades que lleva el combo; sin ella, la mínima de venta. */
+      cantidad?: number;
     } = {}
   ): boolean {
     const mostrarToast = opts.mostrarToast !== false;
@@ -1770,7 +1772,10 @@ export class EcomerceProductsComponent
     }
 
     // 2. Obtener la cantidad mínima de venta
-    const cantidadMinima = producto.disponibilidad?.cantidadMinVenta || 1;
+    // Ticket 1323: la cantidad del combo, si la trae, manda sobre la mínima de venta.
+    const cantidadMinima = opts.cantidad && opts.cantidad > 0
+      ? opts.cantidad
+      : (producto.disponibilidad?.cantidadMinVenta || 1);
 
     // 3. Obtener el producto con precio ajustado por categoría (si aplica)
     const productoConPrecio = this.obtenerProductoConPrecioCategoria(producto);
@@ -1914,6 +1919,12 @@ export class EcomerceProductsComponent
     const ids: string[] = (combo?.productos || [])
       .map((p: any) => p.productoId)
       .filter((id: any) => !!id);
+    // Ticket 1323 (D-538): unidades por producto definidas en el combo.
+    const cantidades = new Map<string, number>(
+      (combo?.productos || [])
+        .filter((p: any) => p?.productoId && Number.isInteger(p.cantidad) && p.cantidad > 0)
+        .map((p: any) => [p.productoId, p.cantidad])
+    );
 
     if (ids.length === 0) {
       return;
@@ -1981,7 +1992,8 @@ export class EcomerceProductsComponent
           const agregado = this.agregarProductoAlCarritoInterno(producto, {
             requiereConfiguracionPendiente: requiereConfig,
             mostrarToast: false,
-            combo: completo ? marcaCombo : undefined
+            combo: completo ? marcaCombo : undefined,
+            cantidad: cantidades.get((producto as any).cd)
           });
           if (agregado && requiereConfig) pendientesConfig++;
         });
