@@ -44,7 +44,8 @@
 ## 6. Prueba funcional (requiere aprobación: escribe pedidos reales)
 
 - [ ] 6.1 Pedir permiso para crear pedidos de prueba en la empresa demo FLORECER con el back local (`urlApi` → `http://localhost:3300`).
-- [ ] 6.2 Venta POS con cuatro líneas (sin cambios, precio manual, IVA 0 %, Desc. 10 %). Comparar ticket = monto cobrado = pedido guardado (subtotal, IVA, total) = tirilla, con diferencia ≤ $1.
+- [x] 6.2 Venta POS con cuatro líneas (sin cambios, precio manual, IVA 0 %, Desc. 10 %). Comparar ticket = monto cobrado = pedido guardado (subtotal, IVA, total) = tirilla, con diferencia ≤ $1.
+  - Resultado (22-oct, back local legacy, FLORECER BOD-003): POS-000002 (4 líneas): ticket = cobro = $130.065, pero el servidor descartó el precio manual de la Caja de Bombones porque ese producto es de ALMARA FELICIDAD (288 de 300 productos del inventario de FLORECER son de ALMARA) → pedido $137.065, falta $7.000, tirilla "PAGADO". IVA 19 % y desc. 10 % bien. POS-000003 (Caja de Bombones propia de FLORECER, manual $40.000): ticket = cobro = pedido = $40.000, sin descarte. Pendiente decidir: rechazar con 400 en vez de descartar en silencio.
 - [ ] 6.3 Intentar con la petición manipulada (IVA 3, precio −1) → 400 sin consumir consecutivo.
 - [ ] 6.4 Revisión visual del ticket a 1440 y 390 px, sin scroll horizontal ni texto invisible.
 - [ ] 6.5 Anular o marcar los pedidos de prueba según indique el usuario.

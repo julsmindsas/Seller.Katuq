@@ -11914,6 +11914,12 @@ Lo que queda está, sobre todo, en:
   - Build de producción del front sin errores. Gradientes y primarios prohibidos en `pos2` y la tirilla: 0 en origin, 0 con el cambio.
   - Ajuste al diseño: las clases del editor usan el prefijo `lin-`, porque `lp-` contiene "p-" (trampa de `_reset.scss`).
   - Falta: prueba funcional en FLORECER (escribe pedidos, requiere permiso), revisión visual a 1440 y 390 px, y despliegue (primero el backend).
+- **Prueba funcional (22-oct, con permiso, back local en modo legacy contra producción, FLORECER BOD-003):**
+  - POS-000003 (Caja de Bombones propia de FLORECER, precio manual $40.000): ticket = cobro = pedido = $40.000, `_precioManualOverride` guardado y permiso leído del producto real. Cuadra de punta a punta.
+  - POS-000002 (4 líneas: sin cambios, precio manual, IVA 19 %, desc. 10 %): ticket y cobro $130.065; IVA y descuento guardados bien, pero el servidor descartó el precio manual porque esa Caja de Bombones es de ALMARA FELICIDAD → pedido $137.065, falta $7.000, tirilla "PAGADO". No es fallo del cambio: 288 de 300 productos del inventario de FLORECER son de ALMARA (empresa armada copiando otra; su `cd` interno apunta al id de ALMARA).
+  - Hueco del diseño visto en la prueba: el descarte en silencio deja en el POS un pedido distinto de lo cobrado. Propuesto rechazar con 400 en ese caso; pendiente de decisión.
+  - Incidente aparte: el back local procesó la `notification_queue` real (≈34 notificaciones de ALMARA FELICIDAD, 07:17-08:05). Se reinició con `NOTIFICATION_QUEUE_ENABLED=false`; la revisión de las afectadas queda como tarea aparte.
+  - Quedan en FLORECER: POS-000002, POS-000003 y el cliente "Cliente Prueba D536 Pos" (doc 9990536001). Pendiente: anular o marcar (6.5), 6.3 y 6.4.
 - [Propuesta](../openspec/changes/pos-editar-precio-iva/proposal.md) · [Diseño](../openspec/changes/pos-editar-precio-iva/design.md) · [Tareas](../openspec/changes/pos-editar-precio-iva/tasks.md)
 
 ## D-537 (2026-10-22) — Contactos del cliente y cotización dirigida a una persona (ticket 1327) — PROPUESTA, pendiente de aprobación
