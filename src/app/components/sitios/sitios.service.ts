@@ -501,6 +501,8 @@ export interface MetricasKai {
   cotizaciones: number;
   ventasTiendaAsistidas: number;
   truncado: boolean;
+  /** Cifras cuya marca aún nadie escribe: se muestran «pendiente», no como 0. */
+  pendientes?: string[];
 }
 
 interface Respuesta<T> {

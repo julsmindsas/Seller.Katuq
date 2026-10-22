@@ -438,7 +438,7 @@
 
   &__cifras {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 10px;
 
     @media (max-width: 600px) {
@@ -473,4 +473,12 @@
   }
 
   &--principal &__valor { color: #5f3fe0; }
+
+  // «Pendiente · disponible pronto»: más chico y apagado, para que no parezca una cifra.
+  &__valor--pendiente {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b6890;
+    letter-spacing: normal;
+  }
 }

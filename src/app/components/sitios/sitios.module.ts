@@ -1,6 +1,7 @@
 import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
+import { TranslateModule } from "@ngx-translate/core";
 import { DragDropModule } from "@angular/cdk/drag-drop";
 import { SitiosRoutingModule } from "./sitios-routing.module";
 import { SitiosListaComponent } from "./lista/sitios-lista.component";
@@ -23,7 +24,7 @@ import { FotosUniformesComponent } from "../productos/fotos-uniformes/fotos-unif
  */
 @NgModule({
   // FotosUniformesComponent (standalone): «Uniformar fotos» desde el editor (TX-37 · 7.12).
-  imports: [CommonModule, FormsModule, DragDropModule, SitiosRoutingModule, SitioRenderModule, SelectorProductosModule, AlBodyModule, FotosUniformesComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, DragDropModule, SitiosRoutingModule, SitioRenderModule, SelectorProductosModule, AlBodyModule, FotosUniformesComponent],
   declarations: [
     SitiosListaComponent,
     SitioEditorComponent,

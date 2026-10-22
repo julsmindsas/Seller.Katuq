@@ -109,6 +109,18 @@ export class WhatsappThreadDetailComponent
   // ─── Bot de pedidos ────────────────────────────────────────────────────
   /** Estado del bot para este hilo (null = sin bot o sin cargar). */
   botState: BotThreadState | null = null;
+
+  /**
+   * Texto del pedido que creó el bot: número, total y si está pagado (spec
+   * kai-metricas, D22). Sin total legible (0 o ausente) usa el texto sin él.
+   */
+  get claveDelPedidoDelBot(): string {
+    const p = this.botState?.pedidoCreado;
+    const pagado = p?.estadoPago === 'Aprobado';
+    const conTotal = Number(p?.total) > 0;
+    const base = pagado ? 'notificaciones.whatsapp.detail.botOrderApproved' : 'notificaciones.whatsapp.detail.botOrderPending';
+    return conTotal ? `${base}Total` : base;
+  }
   /** Lock del botón tomar/devolver mientras responde el backend. */
   botActionBusy = false;
 

@@ -54,6 +54,11 @@ export class MetricasComponent implements OnInit {
     return !!k && !(k.pedidos || k.pagosRecuperados || k.citas || k.cotizaciones || k.ventasTiendaAsistidas);
   }
 
+  /** ¿Esa cifra aún no se mide (nadie escribe su marca)? Entonces no es un 0 real. */
+  kaiPendiente(cifra: string): boolean {
+    return !!this.kai && Array.isArray(this.kai.pendientes) && this.kai.pendientes.includes(cifra);
+  }
+
   cargarKai(): void {
     this.kaiCargando = true;
     this.kaiError = false;

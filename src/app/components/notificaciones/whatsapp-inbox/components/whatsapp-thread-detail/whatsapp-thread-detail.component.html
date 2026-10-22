@@ -215,9 +215,10 @@
       >
         <i class="fa fa-shopping-bag thread-detail__pedido-icono" aria-hidden="true"></i>
         <span class="thread-detail__pedido-texto">
-          {{ (botState?.pedidoCreado?.estadoPago === 'Aprobado'
-            ? 'notificaciones.whatsapp.detail.botOrderApproved'
-            : 'notificaciones.whatsapp.detail.botOrderPending') | translate: { numero: botState?.pedidoCreado?.nroPedido } }}
+          {{ claveDelPedidoDelBot | translate: {
+            numero: botState?.pedidoCreado?.nroPedido,
+            total: (botState?.pedidoCreado?.total | currency: "COP" : "symbol-narrow" : "1.0-0")
+          } }}
         </span>
         <a
           class="thread-detail__pedido-enlace"
