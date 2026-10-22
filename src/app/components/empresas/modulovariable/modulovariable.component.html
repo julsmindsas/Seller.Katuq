@@ -1,9 +1,9 @@
 <div class="cfg-pagina">
     <header class="cfg-cabeza">
         <div class="cfg-cabeza__textos">
-            <span class="cfg-eyebrow">Configuración</span>
-            <h1 class="cfg-titulo">Módulos</h1>
-            <p class="cfg-sub">Activa y ajusta los módulos opcionales de tu empresa: producción y dropshipping.</p>
+            <span class="cfg-eyebrow">{{ 'empresas.camposPersonalizados.configuracion' | translate }}</span>
+            <h1 class="cfg-titulo">{{ 'empresas.modulovariable.modulos' | translate }}</h1>
+            <p class="cfg-sub">{{ 'empresas.modulovariable.activaYAjustaLosModulos' | translate }}</p>
         </div>
     </header>
 
@@ -11,25 +11,25 @@
         <a class="cfg-card mod-tarjeta" [routerLink]="['/empresas/modulovariable/produccion/centrotrabajos']"
             routerLinkActive="router-link-active">
             <div class="cfg-vacio__icono mod-tarjeta__icono"><i class="fa fa-industry" aria-hidden="true"></i></div>
-            <div class="mod-tarjeta__titulo">Centros de trabajo</div>
-            <p class="mod-tarjeta__texto">Define las áreas y estaciones donde se fabrican tus productos.</p>
+            <div class="mod-tarjeta__titulo">{{ 'empresas.modulovariable.centrosDeTrabajo' | translate }}</div>
+            <p class="mod-tarjeta__texto">{{ 'empresas.modulovariable.defineLasAreasYEstaciones' | translate }}</p>
             <div class="mod-tarjeta__ir">{{'Ir a centro de trabajo' | translate}} <i class="fa fa-arrow-right" aria-hidden="true"></i></div>
         </a>
 
         <a class="cfg-card mod-tarjeta" [routerLink]="['/empresas/modulovariable/produccion/procesos']"
             routerLinkActive="router-link-active">
             <div class="cfg-vacio__icono mod-tarjeta__icono"><i class="fa fa-sitemap" aria-hidden="true"></i></div>
-            <div class="mod-tarjeta__titulo">Procesos</div>
-            <p class="mod-tarjeta__texto">Arma los pasos de producción y el orden en que se ejecutan.</p>
+            <div class="mod-tarjeta__titulo">{{ 'empresas.modulovariable.procesos' | translate }}</div>
+            <p class="mod-tarjeta__texto">{{ 'empresas.modulovariable.armaLosPasosDeProduccion' | translate }}</p>
             <div class="mod-tarjeta__ir">{{'Ir a procesos' | translate}} <i class="fa fa-arrow-right" aria-hidden="true"></i></div>
         </a>
 
         <a class="cfg-card mod-tarjeta" [routerLink]="['/empresas/modulovariable/dropshipping/configuracion']"
             routerLinkActive="router-link-active">
             <div class="cfg-vacio__icono mod-tarjeta__icono"><i class="fa fa-truck" aria-hidden="true"></i></div>
-            <div class="mod-tarjeta__titulo">Dropshipping</div>
-            <p class="mod-tarjeta__texto">Vende sin inventario propio y gestiona las órdenes con tus proveedores.</p>
-            <div class="mod-tarjeta__ir">{{'Configurar Dropshipping' | translate}} <i class="fa fa-arrow-right" aria-hidden="true"></i></div>
+            <div class="mod-tarjeta__titulo">{{ 'empresas.modulovariable.dropshipping' | translate }}</div>
+            <p class="mod-tarjeta__texto">{{ 'empresas.modulovariable.vendeSinInventarioPropioY' | translate }}</p>
+            <div class="mod-tarjeta__ir">{{'empresas.moduloVariable.configurarDropshipping' | translate}} <i class="fa fa-arrow-right" aria-hidden="true"></i></div>
         </a>
     </div>
 </div>

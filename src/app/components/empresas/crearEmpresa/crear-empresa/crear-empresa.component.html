@@ -2,14 +2,14 @@
 <div class="cfg-pagina">
     <header class="cfg-cabeza">
         <div class="cfg-cabeza__textos">
-            <span class="cfg-eyebrow">Empresas</span>
+            <span class="cfg-eyebrow">{{ 'empresas.consolaPlataforma.empresas2' | translate }}</span>
             <h1 class="cfg-titulo">
-                {{ mostrarCrear ? 'Crear Empresa' : 'Editar Empresa' }}
+                {{ mostrarCrear ? ('empresas.crearEmpresa.crearEmpresa' | translate) : ('empresas.crearEmpresa.editarEmpresa' | translate) }}
             </h1>
         </div>
         <div class="cfg-acciones">
             <button class="cfg-btn cfg-btn--sec" (click)="volverAlListado()">
-                <i class="fa fa-arrow-left"></i>Volver
+                <i class="fa fa-arrow-left"></i>{{ 'comun.volver' | translate }}
             </button>
         </div>
     </header>
@@ -17,12 +17,12 @@
     <!-- Editando: mientras llega la empresa no se muestra el formulario, para que
          nadie escriba sobre campos vacíos y termine borrando sedes y contactos. -->
     <div class="cfg-aviso" *ngIf="cargandoEmpresa">
-        <i class="fa fa-spinner fa-spin"></i> Cargando los datos de la empresa…
+        <i class="fa fa-spinner fa-spin"></i> {{ 'empresas.crearEmpresa.cargandoLosDatosDeLa' | translate }}
     </div>
     <div class="cfg-aviso cfg-aviso--error ce-aviso-error" *ngIf="errorCarga">
-        <strong>No se pudo abrir la empresa.</strong>
+        <strong>{{ 'empresas.crearEmpresa.noSePudoAbrirLa' | translate }}</strong>
         <div>{{ errorCarga }}</div>
-        <button type="button" class="cfg-btn cfg-btn--sec" (click)="volverAlListado()">Volver al listado</button>
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="volverAlListado()">{{ 'empresas.crearEmpresa.volverAlListado' | translate }}</button>
     </div>
 
     <div class="row" *ngIf="!cargandoEmpresa && !errorCarga">
@@ -33,50 +33,48 @@
 
                     <div class="card-body">
                         <p-tabView [scrollable]="true">
-                            <p-tabPanel header="Datos Básicos">
+                            <p-tabPanel [header]="'empresas.crearEmpresa.datosBasicos' | translate">
                                 <div class="row">
-                                    <h5>Datos Básicos</h5>
+                                    <h5>{{ 'empresas.crearEmpresa.datosBasicos' | translate }}</h5>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="validationCustom01">Nombre Completo o Razón
-                                            Social</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.nombreCompletoORazonSocial' | translate }}</label>
                                         <input formControlName="nombre" class="form-control" id="validationCustom01"
-                                            type="text" placeholder="Nombre Empresa" required="">
+                                            type="text" [placeholder]="'empresas.crearEmpresa.nombreEmpresa' | translate" required="">
 
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="validationCustom01">Nombre Comercial</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.nombreComercial' | translate }}</label>
                                         <input formControlName="nomComercial" class="form-control"
-                                            id="validationCustom01" type="text" placeholder="Nombre Comercial Empresa"
+                                            id="validationCustom01" type="text" [placeholder]="'empresas.crearEmpresa.nombreComercialEmpresa' | translate"
                                             required="">
 
                                     </div>
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label" for="validationCustom01">CC o Nit </label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.ccONit' | translate }} </label>
                                         <input formControlName="nit" class="form-control" id="validationCustom01"
-                                            type="text" placeholder="Nit/CC sin DV" required=""
+                                            type="text" [placeholder]="'empresas.crearEmpresa.nitCcSinDv' | translate" required=""
                                             [readonly]="!mostrarCrear"
-                                            [title]="mostrarCrear ? '' : 'El NIT identifica a la empresa y no se cambia desde aquí'">
+                                            [title]="mostrarCrear ? '' : ('empresas.crearEmpresa.elNitIdentificaALa' | translate)">
 
                                     </div>
                                     <div class="col-md-1 mb-3">
-                                        <label class="form-label" for="validationCustom01">DV</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.dv' | translate }}</label>
                                         <input formControlName="digitoVerificacion" class="form-control"
-                                            id="validationCustom01" type="text" maxlength="1" placeholder="DV"
+                                            id="validationCustom01" type="text" maxlength="1" [placeholder]="'empresas.crearEmpresa.dv' | translate"
                                             required=""
                                             [readonly]="!mostrarCrear"
-                                            [title]="mostrarCrear ? '' : 'El dígito de verificación va con el NIT'">
+                                            [title]="mostrarCrear ? '' : ('empresas.crearEmpresa.elDigitoDeVerificacionVa' | translate)">
 
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <label class="form-label" for="validationCustom01">Número de teléfono
-                                            fijo</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.numeroDeTelefonoFijo' | translate }}</label>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label" for="validationCustom01">Número de Celular</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.numeroDeCelular' | translate }}</label>
                                     </div>
 
                                 </div>
@@ -85,8 +83,8 @@
 
                                         <select autocomplete="on" formControlName="indicativoFijoLocal"
                                             class="form-control select-default" id="validationCustom01" type="number"
-                                            placeholder="Indicativo Local">
-                                            <option disabled selected>Código Area</option>
+                                            [placeholder]="'empresas.crearEmpresa.indicativoLocal' | translate">
+                                            <option disabled selected>{{ 'empresas.crearEmpresa.codigoArea' | translate }}</option>
                                             <option value="{{item.CodigoArea}}" *ngFor="let item of indicativosLocales">
                                                 {{item.Ciudad}} (+{{item.CodigoArea}})</option>
                                         </select>
@@ -95,22 +93,21 @@
                                     <div class="col-md-2 mb-3">
 
                                         <input formControlName="fijo" class="form-control" id="validationCustom01"
-                                            type="number" placeholder="Número de telefono
-                                            fijo">
+                                            type="number" [placeholder]="'empresas.crearEmpresa.numeroDeTelefonoFijo2' | translate">
 
                                     </div>
                                     <div class="col-md-1 mb-3">
 
                                         <input formControlName="extensionFijo" class="form-control"
-                                            id="validationCustom01" type="number" placeholder="Ext">
+                                            id="validationCustom01" type="number" [placeholder]="'empresas.crearEmpresa.ext' | translate">
                                     </div>
                                     <div class="col-md-1"></div>
                                     <div class="col-md-2 mb-3">
 
                                         <select autocomplete="on" formControlName="indicativoCel"
                                             class="form-control select-default" id="validationCustom01" type="number"
-                                            placeholder="Número de Celular" required="">
-                                            <option disabled selected>Código País</option>
+                                            [placeholder]="'empresas.crearEmpresa.numeroDeCelular' | translate" required="">
+                                            <option disabled selected>{{ 'empresas.crearEmpresa.codigoPais' | translate }}</option>
                                             <option value="{{item.phone_code}}" *ngFor="let item of indicativos">
                                                 {{item.nombre}} (+{{item.phone_code}})</option>
                                         </select>
@@ -119,72 +116,69 @@
                                     <div class="col-md-4 mb-3">
 
                                         <input formControlName="cel" class="form-control" id="validationCustom01"
-                                            type="number" placeholder="Número de Celular" required="">
+                                            type="number" [placeholder]="'empresas.crearEmpresa.numeroDeCelular' | translate" required="">
 
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="validationCustom01">Email Para Facturación
-                                            Electrónica</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.emailParaFacturacionElectronica' | translate }}</label>
                                         <input formControlName="emailFactuElec" class="form-control"
-                                            id="validationCustom01" type="text" placeholder="Correo Electrónico"
+                                            id="validationCustom01" type="text" [placeholder]="'empresas.crearEmpresa.correoElectronico' | translate"
                                             required="">
 
                                     </div>
                                     <!-- Ticket 1235: tamaño del rótulo que se imprime en Despachos -->
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="formatoRotulo">Formato del rótulo de despacho</label>
+                                        <label class="form-label" for="formatoRotulo">{{ 'empresas.crearEmpresa.formatoDelRotuloDeDespacho' | translate }}</label>
                                         <select id="formatoRotulo" formControlName="formatoRotulo" class="form-control select-default">
-                                            <option value="completo">Completo · etiqueta de 10×10 cm</option>
-                                            <option value="compacto">Compacto · etiqueta de 5×5 cm</option>
+                                            <option value="completo">{{ 'empresas.crearEmpresa.completoEtiquetaDe1010' | translate }}</option>
+                                            <option value="compacto">{{ 'empresas.crearEmpresa.compactoEtiquetaDe55' | translate }}</option>
                                         </select>
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="validationCustom01">Email Contacto
-                                            General</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.emailContactoGeneral' | translate }}</label>
                                         <input formControlName="emailContactoGeneral" class="form-control"
-                                            id="validationCustom01" type="text" placeholder="Correo Electrónico"
+                                            id="validationCustom01" type="text" [placeholder]="'empresas.crearEmpresa.correoElectronico' | translate"
                                             required="">
 
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="validationCustom01">Email Para Notificaciones del
-                                            Sistema</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.emailParaNotificacionesDelSistema' | translate }}</label>
                                         <input formControlName="emailNotificacionesSistema" class="form-control"
-                                            id="validationCustom01" type="text" placeholder="Correo Electrónico"
+                                            id="validationCustom01" type="text" [placeholder]="'empresas.crearEmpresa.correoElectronico' | translate"
                                             required="">
 
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="validationCustom01">Dirección</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.direccion' | translate }}</label>
                                         <input formControlName="direccion" class="form-control" id="validationCustom01"
-                                            type="text" placeholder="Dirección" required="">
+                                            type="text" [placeholder]="'empresas.crearEmpresa.direccion' | translate" required="">
 
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="validationCustom01">Barrio</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.barrio' | translate }}</label>
                                         <input formControlName="barrio" class="form-control" id="validationCustom01"
-                                            type="text" placeholder="Barrio" required="">
+                                            type="text" [placeholder]="'empresas.crearEmpresa.barrio' | translate" required="">
 
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="validationCustom01">País</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.pais' | translate }}</label>
 
                                         <select formControlName="pais" class="form-control select-default" name="" id=""
                                             (change)="identificarDepto()">
-                                            <option disabled selected>País</option>
+                                            <option disabled selected>{{ 'empresas.crearEmpresa.pais' | translate }}</option>
                                             <option *ngFor="let item of paises" value="{{item}}">{{item}}</option>
                                         </select>
 
                                     </div>
 
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="validationCustom01">Departamento</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.departamento' | translate }}</label>
                                         <select formControlName="departamento" class="form-control select-default"
-                                            id="validationCustom01" type="text" placeholder="Departamento" required=""
+                                            id="validationCustom01" type="text" [placeholder]="'empresas.crearEmpresa.departamento' | translate" required=""
                                             (change)="identificarCiu()">
-                                            <option disabled selected>Departamento</option>
+                                            <option disabled selected>{{ 'empresas.crearEmpresa.departamento' | translate }}</option>
                                             <option *ngFor="let item of departamentos" value="{{item}}">{{item}}
                                             </option>
                                         </select>
@@ -192,123 +186,112 @@
                                     </div>
 
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="validationCustom01">Ciudad</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.ciudad' | translate }}</label>
                                         <select formControlName="ciudad" class="form-control select-default"
-                                            id="validationCustom01" type="text" placeholder="Ciudad" required="">
-                                            <option disabled selected>Ciudad</option>
+                                            id="validationCustom01" type="text" [placeholder]="'empresas.crearEmpresa.ciudad' | translate" required="">
+                                            <option disabled selected>{{ 'empresas.crearEmpresa.ciudad' | translate }}</option>
                                             <option *ngFor="let item of ciudades" value="{{item}}">{{item}}</option>
                                         </select>
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="validationCustom01">Código Postal</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.codigoPostal' | translate }}</label>
                                         <input formControlName="codPostal" class="form-control" type="text">
                                     </div>
                                     <div class="col-md-12 mb-3">
-                                        <button class="btn btn-primary" (click)="redirectToPostalCode()">Conoce tu
-                                            código postal</button>
+                                        <button class="btn btn-primary" (click)="redirectToPostalCode()">{{ 'empresas.crearEmpresa.conoceTuCodigoPostal' | translate }}</button>
                                     </div>
 
                                 </div>
                             </p-tabPanel>
-                            <p-tabPanel header="Personifica tu marca">
+                            <p-tabPanel [header]="'empresas.crearEmpresa.personificaTuMarca' | translate">
 
                                 <div class="row text-center">
-                                    <h5>Personifica tu marca: ¡Dale vida a tus datos!</h5>
+                                    <h5>{{ 'empresas.crearEmpresa.personificaTuMarcaDaleVida' | translate }}</h5>
                                 </div>
                                 <div class="row">
 
                                     <form [formGroup]="frmPersonificaTuMarca" style="align-items: center;">
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label" for="marcaProyeccion">¿Cómo quieres que tu marca
-                                                se proyecte?</label>
+                                            <label class="form-label" for="marcaProyeccion">{{ 'empresas.crearEmpresa.comoQuieresQueTuMarca' | translate }}</label>
                                             <textarea formControlName="marcaProyeccion" class="form-control"
                                                 id="marcaProyeccion" rows="4"
-                                                placeholder="Ej., inspiradora, confiable, innovadora."
+                                                [placeholder]="'empresas.crearEmpresa.ejInspiradoraConfiableInnovadora' | translate"
                                                 required></textarea>
                                         </div>
 
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label" for="marcaHabla">¿Cómo habla tu marca?</label>
+                                            <label class="form-label" for="marcaHabla">{{ 'empresas.crearEmpresa.comoHablaTuMarca' | translate }}</label>
                                             <textarea formControlName="marcaHabla" class="form-control" id="marcaHabla"
                                                 rows="4"
-                                                placeholder="Ej., cercano pero profesional, formal, creativo, etc."
+                                                [placeholder]="'empresas.crearEmpresa.ejCercanoPeroProfesionalFormal' | translate"
                                                 required></textarea>
                                         </div>
 
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label" for="colaboradoresHablan">¿Cómo hablan tus
-                                                colaboradores?</label>
+                                            <label class="form-label" for="colaboradoresHablan">{{ 'empresas.crearEmpresa.comoHablanTusColaboradores' | translate }}</label>
                                             <textarea formControlName="colaboradoresHablan" class="form-control"
                                                 id="colaboradoresHablan" rows="4"
-                                                placeholder="Ej., siempre dirigirse al cliente por su nombre, mantener un tono respetuoso pero amigable."
+                                                [placeholder]="'empresas.crearEmpresa.ejSiempreDirigirseAlCliente' | translate"
                                                 required></textarea>
                                         </div>
 
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label" for="tonoMarca">Describe el tono de tu marca en
-                                                tres palabras.</label>
+                                            <label class="form-label" for="tonoMarca">{{ 'empresas.crearEmpresa.describeElTonoDeTu' | translate }}</label>
                                             <textarea formControlName="tonoMarca" class="form-control" id="tonoMarca"
-                                                rows="2" placeholder="Ej., profesional, amistoso, cercano."
+                                                rows="2" [placeholder]="'empresas.crearEmpresa.ejProfesionalAmistosoCercano' | translate"
                                                 required></textarea>
                                         </div>
 
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label" for="frasesKai">¿Cuáles son las frases de saludo y
-                                                despedida que te gustaría que KAI use con los clientes?</label>
+                                            <label class="form-label" for="frasesKai">{{ 'empresas.crearEmpresa.cualesSonLasFrasesDe' | translate }}</label>
                                             <textarea formControlName="frasesKai" class="form-control" id="frasesKai"
                                                 rows="4"
-                                                placeholder="Ej., ¡Bienvenido a [Nombre del Comercio]!, Gracias por tu preferencia. ¡Hasta pronto!"
+                                                [placeholder]="'empresas.crearEmpresa.ejBienvenidoANombreDel' | translate"
                                                 required></textarea>
                                         </div>
 
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label" for="manejoQuejas">¿Cómo manejas las preguntas o
-                                                quejas de clientes?</label>
+                                            <label class="form-label" for="manejoQuejas">{{ 'empresas.crearEmpresa.comoManejasLasPreguntasO' | translate }}</label>
                                             <textarea formControlName="manejoQuejas" class="form-control"
                                                 id="manejoQuejas" rows="4"
-                                                placeholder="Describe aquí el proceso o tono que KAI debe usar."
+                                                [placeholder]="'empresas.crearEmpresa.describeAquiElProcesoO' | translate"
                                                 required></textarea>
                                         </div>
 
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label" for="terminosEvitar">¿Qué términos específicos
-                                                debe evitar KAI en sus respuestas?</label>
+                                            <label class="form-label" for="terminosEvitar">{{ 'empresas.crearEmpresa.queTerminosEspecificosDebeEvitar' | translate }}</label>
                                             <textarea formControlName="terminosEvitar" class="form-control"
                                                 id="terminosEvitar" rows="4"
-                                                placeholder="Especifica palabras o frases que KAI no debe usar."
+                                                [placeholder]="'empresas.crearEmpresa.especificaPalabrasOFrasesQue' | translate"
                                                 required></textarea>
                                         </div>
 
                                         <!-- Sección única para subir archivos -->
                                         <div class="col-md-12 mb-3">
-                                            <h4>Documentos de tu marca para Opttia</h4>
-                                            <p>Guarda los cambios de la empresa y prepara los archivos para que Opttia pueda consultarlos.
-                                                Esta primera versión admite PDF con texto y TXT, hasta 5 MB por archivo.
-                                                Los documentos estarán disponibles para usuarios con permiso de lectura de marca.</p>
+                                            <h4>{{ 'empresas.crearEmpresa.documentosDeTuMarcaPara' | translate }}</h4>
+                                            <p>{{ 'empresas.crearEmpresa.guardaLosCambiosDeLa' | translate }}</p>
                                             <button type="button" class="btn btn-outline-primary mb-3"
                                                 [disabled]="!empresaId || brandDocumentsBusy" (click)="loadBrandDocuments()">
-                                                {{ brandDocumentsBusy ? 'Procesando…' : 'Consultar estado de documentos' }}
+                                                {{ brandDocumentsBusy ? ('empresas.crearEmpresa.procesando' | translate) : ('empresas.crearEmpresa.consultarEstadoDeDocumentos' | translate) }}
                                             </button>
                                             <p *ngIf="brandDocumentsError" class="text-danger" role="alert">{{ brandDocumentsError }}</p>
                                             <div *ngFor="let document of brandDocuments" class="d-flex align-items-center gap-2 mb-2">
-                                                <span>{{ document.name }} — {{ document.status === 'ready' ? 'Listo' : document.status === 'processing' ? 'Procesando' : document.status === 'failed' ? 'Falló' : 'Pendiente' }}</span>
+                                                <span>{{ document.name }} — {{ document.status === 'ready' ? ('empresas.crearEmpresa.listo' | translate) : document.status === 'processing' ? ('empresas.crearEmpresa.procesando2' | translate) : document.status === 'failed' ? ('empresas.crearEmpresa.fallo' | translate) : ('empresas.crearEmpresa.pendiente' | translate) }}</span>
                                                 <button type="button" class="btn btn-sm btn-outline-primary"
                                                     [disabled]="brandDocumentsBusy" (click)="indexBrandDocument(document.id)">
-                                                    {{ document.status === 'ready' ? 'Actualizar' : 'Preparar archivo' }}
+                                                    {{ document.status === 'ready' ? ('empresas.consolaPlataforma.actualizar' | translate) : ('empresas.crearEmpresa.prepararArchivo' | translate) }}
                                                 </button>
                                             </div>
-                                            <p>Sube documentos clave para que KAI entienda a fondo tu marca y pueda
-                                                brindar una experiencia personalizada.</p>
+                                            <p>{{ 'empresas.crearEmpresa.subeDocumentosClaveParaQue' | translate }}</p>
                                             <ul>
-                                                <li>Manual de Marca</li>
-                                                <li>Modelo de Negocio</li>
-                                                <li>Preguntas Frecuentes (FAQ)</li>
-                                                <li>Manuales de Atención al Cliente</li>
-                                                <li>Presentaciones de Venta</li>
-                                                <li>Otros documentos importantes para tu identidad de marca</li>
+                                                <li>{{ 'empresas.crearEmpresa.manualDeMarca' | translate }}</li>
+                                                <li>{{ 'empresas.crearEmpresa.modeloDeNegocio' | translate }}</li>
+                                                <li>{{ 'empresas.crearEmpresa.preguntasFrecuentesFaq' | translate }}</li>
+                                                <li>{{ 'empresas.crearEmpresa.manualesDeAtencionAlCliente' | translate }}</li>
+                                                <li>{{ 'empresas.crearEmpresa.presentacionesDeVenta' | translate }}</li>
+                                                <li>{{ 'empresas.crearEmpresa.otrosDocumentosImportantesParaTu' | translate }}</li>
                                             </ul>
-                                            <label class="form-label" for="archivoUnico">Carga tus archivos
-                                                aquí:</label>
+                                            <label class="form-label" for="archivoUnico">{{ 'empresas.crearEmpresa.cargaTusArchivosAqui' | translate }}</label>
                                             <app-images-manager [initialFiles]="uploadedFiles"
                                                 (filesUploaded)="handleFilesUploaded($event)"
                                                 (fileDeleted)="handleFileDeleted($event)">
@@ -318,19 +301,19 @@
                                                 <table class="file-table">
                                                     <thead>
                                                         <tr>
-                                                            <th>Nombre del Archivo</th>
-                                                            <th>URL</th>
-                                                            <th>Acciones</th>
+                                                            <th>{{ 'empresas.crearEmpresa.nombreDelArchivo' | translate }}</th>
+                                                            <th>{{ 'empresas.crearEmpresa.url' | translate }}</th>
+                                                            <th>{{ 'empresas.consolaPlataforma.acciones' | translate }}</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
                                                         <tr *ngFor="let file of uploadedFiles">
                                                             <td>{{ file.name }}</td>
-                                                            <td><a [href]="file.url" target="_blank">Ver archivo</a>
+                                                            <td><a [href]="file.url" target="_blank">{{ 'empresas.crearEmpresa.verArchivo' | translate }}</a>
                                                             </td>
                                                             <td>
                                                                 <button class="delete-button"
-                                                                    (click)="removeFile(file)">Eliminar</button>
+                                                                    (click)="removeFile(file)">{{ 'comun.eliminar' | translate }}</button>
                                                             </td>
                                                         </tr>
                                                     </tbody>
@@ -344,73 +327,69 @@
 
                                 </div>
                             </p-tabPanel>
-                            <p-tabPanel header="Archivos Tributarios">
+                            <p-tabPanel [header]="'empresas.crearEmpresa.archivosTributarios' | translate">
 
                                 <div class="row">
-                                    <h5>Datos Tributarios</h5>
+                                    <h5>{{ 'empresas.crearEmpresa.datosTributarios' | translate }}</h5>
                                 </div>
                                 <div class="row">
 
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="validationCustom01">RUT</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.rut' | translate }}</label>
                                         <input class="form-control" id="validationCustom01" type="file"
-                                            placeholder="First name" required="">
+                                            [placeholder]="'empresas.crearEmpresa.firstName' | translate" required="">
 
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="validationCustom01">Cámara de Comercio</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.camaraDeComercio' | translate }}</label>
                                         <input class="form-control" id="validationCustom01" type="file"
-                                            placeholder="First name" required="">
+                                            [placeholder]="'empresas.crearEmpresa.firstName' | translate" required="">
 
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="validationCustom01">Certificado Bancario</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.certificadoBancario' | translate }}</label>
                                         <input class="form-control" id="validationCustom01" type="file"
-                                            placeholder="First name" required="">
+                                            [placeholder]="'empresas.crearEmpresa.firstName' | translate" required="">
 
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="validationCustom01">Cédula Representante
-                                            legal</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.cedulaRepresentanteLegal' | translate }}</label>
                                         <input class="form-control" id="validationCustom01" type="file"
-                                            placeholder="First name" required="">
+                                            [placeholder]="'empresas.crearEmpresa.firstName' | translate" required="">
 
                                     </div>
 
 
                                 </div>
                             </p-tabPanel>
-                            <p-tabPanel header="Contrato">
+                            <p-tabPanel [header]="'empresas.crearEmpresa.contrato' | translate">
                                 <div class="row">
-                                    <h5>Contrato</h5>
+                                    <h5>{{ 'empresas.crearEmpresa.contrato' | translate }}</h5>
                                 </div>
                                 <table>
                                     <tbody>
                                         <tr>
                                             <td>
-                                                <label class="form-label" for="validationCustom01">Aceptación Términos y
-                                                    Condiciones</label>
+                                                <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.aceptacionTerminosYCondiciones' | translate }}</label>
                                             </td>
                                             <td>
                                                 <input formControlName="terminosYCondiciones" id="validationCustom01"
-                                                    type="checkbox" placeholder="First name" required="">
+                                                    type="checkbox" [placeholder]="'empresas.crearEmpresa.firstName' | translate" required="">
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td><label class="form-label" for="validationCustom01">Aceptación política
-                                                    de tratamiento de datos
-                                                    personales</label>
+                                            <td><label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.aceptacionPoliticaDeTratamientoDe' | translate }}</label>
                                             </td>
                                             <td><input formControlName="tratamientoDeDatosPersonales"
-                                                    id="validationCustom01" type="checkbox" placeholder="First name"
+                                                    id="validationCustom01" type="checkbox" [placeholder]="'empresas.crearEmpresa.firstName' | translate"
                                                     required="">
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td> <label class="form-label" for="validationCustom01">Contrato</label>
+                                            <td> <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.contrato' | translate }}</label>
                                             </td>
                                             <td> <input class="form-control" id="validationCustom01" type="file"
-                                                    placeholder="First name" required="">
+                                                    [placeholder]="'empresas.crearEmpresa.firstName' | translate" required="">
                                             </td>
                                         </tr>
                                     </tbody>
@@ -420,39 +399,39 @@
 
 
                             </p-tabPanel>
-                            <p-tabPanel header="Contactos">
+                            <p-tabPanel [header]="'empresas.crearEmpresa.contactos' | translate">
                                 <div class="row">
-                                    <h5>Datos de Contacto</h5>
+                                    <h5>{{ 'empresas.crearEmpresa.datosDeContacto' | translate }}</h5>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="validationCustom01">Nombre Completo</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.nombreCompleto' | translate }}</label>
                                         <input #nomCompletoContacto class="form-control" id="validationCustom01"
-                                            type="text" placeholder="Nombre" required="">
+                                            type="text" [placeholder]="'empresas.crearEmpresa.nombre' | translate" required="">
 
                                     </div>
                                     <div class="col-md-2 mb-3">
-                                        <label class="form-label" for="validationCustom01">Indicativo País</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.indicativoPais' | translate }}</label>
                                         <select #indicativoTelContacto class="form-control select-default"
-                                            id="validationCustom01" type="text" placeholder="Indicativo" required="">
-                                            <option disabled selected>Indicativo Area</option>
+                                            id="validationCustom01" type="text" [placeholder]="'empresas.crearEmpresa.indicativo' | translate" required="">
+                                            <option disabled selected>{{ 'empresas.crearEmpresa.indicativoArea' | translate }}</option>
                                             <option value="{{item.phone_code}}" *ngFor="let item of indicativos">
                                                 {{item.nombre}} (+{{item.phone_code}})</option>
                                         </select>
 
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="validationCustom01">Número de Celular</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.numeroDeCelular' | translate }}</label>
                                         <input #telContacto class="form-control" id="validationCustom01" type="text"
-                                            placeholder="Celular" required="">
+                                            [placeholder]="'empresas.crearEmpresa.celular' | translate" required="">
 
                                     </div>
 
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label" for="validationCustom01">Indicativo Local</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.indicativoLocal' | translate }}</label>
                                         <select #indicativoFijoContacto class="form-control select-default"
-                                            id="validationCustom01" type="text" placeholder="Indicativo" required="">
-                                            <option disabled selected>Indicativo Local</option>
+                                            id="validationCustom01" type="text" [placeholder]="'empresas.crearEmpresa.indicativo' | translate" required="">
+                                            <option disabled selected>{{ 'empresas.crearEmpresa.indicativoLocal' | translate }}</option>
                                             <option value="{{item.CodigoArea}}" *ngFor="let item of indicativosLocales">
                                                 {{item.Ciudad}} (+{{item.CodigoArea}})</option>
                                         </select>
@@ -460,61 +439,59 @@
 
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="validationCustom01">Número de teléfono
-                                            fijo</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.numeroDeTelefonoFijo' | translate }}</label>
                                         <input #fijoContacto class="form-control" id="validationCustom01" type="text"
-                                            placeholder="Fijo" required="">
+                                            [placeholder]="'empresas.crearEmpresa.fijo' | translate" required="">
 
                                     </div>
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label" for="validationCustom01">Extensión</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.extension' | translate }}</label>
                                         <input #extensionFijoContacto class="form-control" id="validationCustom01"
-                                            type="text" placeholder="Extensión" required="">
+                                            type="text" [placeholder]="'empresas.crearEmpresa.extension' | translate" required="">
 
                                     </div>
 
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="validationCustom01">Email de contacto</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.emailDeContacto' | translate }}</label>
                                         <input #emailContacto class="form-control" id="validationCustom01" type="text"
-                                            placeholder="Correo" required="">
+                                            [placeholder]="'empresas.crearEmpresa.correo' | translate" required="">
 
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="validationCustom01">Teléfono logística</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.telefonoLogistica' | translate }}</label>
                                         <input #telefonoLogisticaContacto class="form-control" id="validationCustom01"
-                                            type="text" placeholder="Teléfono logística" required="">
+                                            type="text" [placeholder]="'empresas.crearEmpresa.telefonoLogistica' | translate" required="">
 
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="validationCustom01">Cargo</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.cargo' | translate }}</label>
                                         <select #cargoContacto class="form-control select-default"
                                             id="validationCustom01" type="text">
-                                            <option value="Ventas">Ventas</option>
-                                            <option value="Representante legal">Representante legal</option>
-                                            <option value="Contabilidad y Facturación.">Contabilidad y Facturación
+                                            <option value="Ventas">{{ 'empresas.consolaPlataforma.ventas' | translate }}</option>
+                                            <option value="Representante legal">{{ 'empresas.crearEmpresa.representanteLegal' | translate }}</option>
+                                            <option value="Contabilidad y Facturación.">{{ 'empresas.crearEmpresa.contabilidadYFacturacion' | translate }}
                                             </option>
                                         </select>
 
 
                                     </div>
                                     <div class="col-md-12 mb-3">
-                                        <button class="btn btn-primary" (click)="addRowContact()">Añadir
-                                            Contacto</button>
+                                        <button class="btn btn-primary" (click)="addRowContact()">{{ 'empresas.crearEmpresa.anadirContacto' | translate }}</button>
                                     </div>
                                     <div class="col-md-12 table-responsive">
                                         <table class="table table-border-vertical table-xs">
                                             <thead>
                                                 <tr>
-                                                    <th>Id</th>
-                                                    <th>Nombre Contacto</th>
-                                                    <th>indicativo Cel</th>
-                                                    <th>Cel</th>
-                                                    <th>Indicativo Fijo Sede</th>
-                                                    <th>Fijo</th>
-                                                    <th>Extension</th>
-                                                    <th>Email</th>
-                                                    <th>Teléfono logística</th>
-                                                    <th>Cargo</th>
+                                                    <th>{{ 'empresas.crearEmpresa.id' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.nombreContacto' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.indicativoCel' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.cel' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.indicativoFijoSede' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.fijo' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.extension2' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.email' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.telefonoLogistica' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.cargo' | translate }}</th>
                                                 </tr>
 
                                             </thead>
@@ -539,109 +516,109 @@
                                     </div>
                                 </div>
                             </p-tabPanel>
-                            <p-tabPanel header="Recursos Gráficos Principales">
+                            <p-tabPanel [header]="'empresas.crearEmpresa.recursosGraficosPrincipales' | translate">
                                 <div class="row">
-                                    <h5>Recursos Gráficos</h5>
+                                    <h5>{{ 'empresas.crearEmpresa.recursosGraficos' | translate }}</h5>
                                 </div>
                                 <div class="row">
                                     <!-- Logo -->
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="logoInput">Logo</label>
+                                        <label class="form-label" for="logoInput">{{ 'empresas.crearEmpresa.logo' | translate }}</label>
                                         <input class="form-control" id="logoInput" type="file"
-                                            (change)="onFileSelected($event, 'logo')" placeholder="Correo" required>
+                                            (change)="onFileSelected($event, 'logo')" [placeholder]="'empresas.crearEmpresa.correo' | translate" required>
                                     </div>
 
                                     <!-- Banners -->
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="bannerInput">Banners</label>
+                                        <label class="form-label" for="bannerInput">{{ 'empresas.crearEmpresa.banners' | translate }}</label>
                                         <input class="form-control" id="bannerInput" type="file"
-                                            (change)="onFileSelected($event, 'banner')" placeholder="Correo" required>
+                                            (change)="onFileSelected($event, 'banner')" [placeholder]="'empresas.crearEmpresa.correo' | translate" required>
                                     </div>
 
                                     <!-- Email Encabezado -->
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="emailHeaderInput">Email Encabezado</label>
+                                        <label class="form-label" for="emailHeaderInput">{{ 'empresas.crearEmpresa.emailEncabezado' | translate }}</label>
                                         <input class="form-control" id="emailHeaderInput" type="file"
                                             (change)="onFileSelected($event, 'imageEmail.encabezado')"
-                                            placeholder="Correo" required>
+                                            [placeholder]="'empresas.crearEmpresa.correo' | translate" required>
                                     </div>
 
                                     <!-- Email Pie de Página -->
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="emailFooterInput">Email Pie de Página</label>
+                                        <label class="form-label" for="emailFooterInput">{{ 'empresas.crearEmpresa.emailPieDePagina' | translate }}</label>
                                         <input class="form-control" id="emailFooterInput" type="file"
                                             (change)="onFileSelected($event, 'imageEmail.piepagina')"
-                                            placeholder="Correo" required>
+                                            [placeholder]="'empresas.crearEmpresa.correo' | translate" required>
                                     </div>
                                 </div>
 
                                 <!-- Visor de imágenes basado en el formulario -->
                                 <div class="row mt-4">
                                     <div class="col-md-3" *ngIf="f.get('logo')?.value">
-                                        <h5>Logo</h5>
-                                        <img [src]="f.get('logo').value" class="img-thumbnail" alt="Logo"
+                                        <h5>{{ 'empresas.crearEmpresa.logo' | translate }}</h5>
+                                        <img [src]="f.get('logo').value" class="img-thumbnail" [alt]="'empresas.crearEmpresa.logo' | translate"
                                             style="max-height: 150px;">
                                     </div>
                                     <div class="col-md-3" *ngIf="f.get('banner')?.value">
-                                        <h5>Banners</h5>
-                                        <img [src]="f.get('banner').value" class="img-thumbnail" alt="Banner"
+                                        <h5>{{ 'empresas.crearEmpresa.banners' | translate }}</h5>
+                                        <img [src]="f.get('banner').value" class="img-thumbnail" [alt]="'empresas.crearEmpresa.banner' | translate"
                                             style="max-height: 150px;">
                                     </div>
                                     <div class="col-md-3" *ngIf="f.get('imageEmail.encabezado')?.value">
-                                        <h5>Email Encabezado</h5>
+                                        <h5>{{ 'empresas.crearEmpresa.emailEncabezado' | translate }}</h5>
                                         <img [src]="f.get('imageEmail.encabezado').value"
-                                            class="img-thumbnail" alt="Email Encabezado" style="max-height: 150px;">
+                                            class="img-thumbnail" [alt]="'empresas.crearEmpresa.emailEncabezado' | translate" style="max-height: 150px;">
                                     </div>
                                     <div class="col-md-3" *ngIf="f.get('imageEmail.piepagina')?.value">
-                                        <h5>Email Pie de Página</h5>
+                                        <h5>{{ 'empresas.crearEmpresa.emailPieDePagina' | translate }}</h5>
                                         <img [src]="f.get('imageEmail.piepagina').value"
-                                            class="img-thumbnail" alt="Email Pie de Página" style="max-height: 150px;">
+                                            class="img-thumbnail" [alt]="'empresas.crearEmpresa.emailPieDePagina' | translate" style="max-height: 150px;">
                                     </div>
                                 </div>
 
                             </p-tabPanel>
 
-                            <p-tabPanel header="Sedes">
+                            <p-tabPanel [header]="'empresas.crearEmpresa.sedes' | translate">
                                 <div class="row">
-                                    <h5>Sedes</h5>
+                                    <h5>{{ 'empresas.crearEmpresa.sedes' | translate }}</h5>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="validationCustom01">Nombre Sede</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.nombreSede' | translate }}</label>
                                         <input #nombreSede class="form-control" id="validationCustom01" type="text"
-                                            placeholder="Nombre Sede" required="">
+                                            [placeholder]="'empresas.crearEmpresa.nombreSede' | translate" required="">
 
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="validationCustom01">Dirección</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.direccion' | translate }}</label>
                                         <input #direccionSede class="form-control" id="validationCustom01" type="text"
-                                            placeholder="Dirección" required="">
+                                            [placeholder]="'empresas.crearEmpresa.direccion' | translate" required="">
 
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="validationCustom01">Barrio</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.barrio' | translate }}</label>
 
                                         <input #barrio class="form-control" id="validationCustom01" type="text"
-                                            placeholder="Dirección" required="">
+                                            [placeholder]="'empresas.crearEmpresa.direccion' | translate" required="">
 
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="validationCustom01">País</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.pais' | translate }}</label>
 
                                         <select #paisSede class="form-control select-default" name="" id=""
                                             (change)="identificarDepto1()">
-                                            <option disabled selected>País</option>
+                                            <option disabled selected>{{ 'empresas.crearEmpresa.pais' | translate }}</option>
                                             <option *ngFor="let item of paises1" value="{{item}}">{{item}}</option>
                                         </select>
 
                                     </div>
 
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="validationCustom01">Departamento</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.departamento' | translate }}</label>
                                         <select #dptoSede class="form-control select-default" id="validationCustom01"
-                                            type="text" placeholder="Departamento" required=""
+                                            type="text" [placeholder]="'empresas.crearEmpresa.departamento' | translate" required=""
                                             (change)="identificarCiu1()">
-                                            <option disabled selected>Departamento</option>
+                                            <option disabled selected>{{ 'empresas.crearEmpresa.departamento' | translate }}</option>
                                             <option *ngFor="let item of departamentos" value="{{item}}">{{item}}
                                             </option>
                                         </select>
@@ -650,63 +627,62 @@
 
 
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label" for="validationCustom01">Ciudad</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.ciudad' | translate }}</label>
                                         <select #ciudadSede class="form-control select-default" id="validationCustom01"
-                                            type="text" placeholder="Ciudad" required="">
-                                            <option disabled selected>Ciudad</option>
+                                            type="text" [placeholder]="'empresas.crearEmpresa.ciudad' | translate" required="">
+                                            <option disabled selected>{{ 'empresas.crearEmpresa.ciudad' | translate }}</option>
                                             <option *ngFor="let item of ciudades" value="{{item}}">{{item}}</option>
                                         </select>
                                     </div>
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">Código Postal</label>
+                                        <label class="form-label">{{ 'empresas.crearEmpresa.codigoPostal' | translate }}</label>
                                         <input class="form-control" #codigoPostalSede type="text"
-                                            placeholder="Codigo Postal">
+                                            [placeholder]="'empresas.crearEmpresa.codigoPostal2' | translate">
 
                                     </div>
                                     <div class="col-md-3 mb-3">
 
 
                                         <br>
-                                        <button class="btn btn-primary" (click)="redirectToPostalCode()">Conoce tu
-                                            código postal</button>
+                                        <button class="btn btn-primary" (click)="redirectToPostalCode()">{{ 'empresas.crearEmpresa.conoceTuCodigoPostal' | translate }}</button>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="validationCustom01">Rotulo Dirección</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.rotuloDireccion' | translate }}</label>
                                         <select #rotuloDireccionSede class="form-control select-default"
-                                            id="validationCustom01" type="text" placeholder="Ciudad" required="">
-                                            <option value="Punto de Venta"> Punto de Venta</option>
-                                            <option value="Planta de Fábrica"> Planta de Fábrica</option>
-                                            <option value="Planta de Producción"> Planta de Producción</option>
+                                            id="validationCustom01" type="text" [placeholder]="'empresas.crearEmpresa.ciudad' | translate" required="">
+                                            <option value="Punto de Venta"> {{ 'empresas.crearEmpresa.puntoDeVenta' | translate }}</option>
+                                            <option value="Planta de Fábrica"> {{ 'empresas.crearEmpresa.plantaDeFabrica' | translate }}</option>
+                                            <option value="Planta de Producción"> {{ 'empresas.crearEmpresa.plantaDeProduccion' | translate }}</option>
                                         </select>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="validationCustom01">Como llegar</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.comoLlegar' | translate }}</label>
                                         <input class="form-control" #comoLlegarSede type="text"
-                                            placeholder="Como llegar">
+                                            [placeholder]="'empresas.crearEmpresa.comoLlegar' | translate">
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label" for="validationCustom01">Link Google Maps</label>
+                                        <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.linkGoogleMaps' | translate }}</label>
                                         <input class="form-control" #linkGoogleMapsSede type="text"
-                                            placeholder="Como llegar">
+                                            [placeholder]="'empresas.crearEmpresa.comoLlegar' | translate">
                                     </div>
                                     <div class="col-md-12 mb-3">
-                                        <button class="btn btn-primary" (click)="addRow()">Añadir Sede</button>
+                                        <button class="btn btn-primary" (click)="addRow()">{{ 'empresas.crearEmpresa.anadirSede' | translate }}</button>
                                     </div>
                                     <div class="col-md-12 table-responsive">
                                         <table class="table table-border-vertical table-xs">
                                             <thead>
                                                 <tr>
-                                                    <th>Id</th>
-                                                    <th>Nombre Sede</th>
-                                                    <th>Dirección Sede</th>
-                                                    <th>Barrio Sede</th>
-                                                    <th>País Sede</th>
-                                                    <th>Departamento Sede</th>
-                                                    <th>Ciudad Sede</th>
-                                                    <th>Código Postal Sede</th>
-                                                    <th>Rotulo Dirección Sede</th>
-                                                    <th>Como llegar Sede</th>
-                                                    <th>Link Google Maps</th>
+                                                    <th>{{ 'empresas.crearEmpresa.id' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.nombreSede' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.direccionSede' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.barrioSede' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.paisSede' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.departamentoSede' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.ciudadSede' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.codigoPostalSede' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.rotuloDireccionSede' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.comoLlegarSede' | translate }}</th>
+                                                    <th>{{ 'empresas.crearEmpresa.linkGoogleMaps' | translate }}</th>
                                                 </tr>
 
                                             </thead>
@@ -735,32 +711,31 @@
 
 
                             </p-tabPanel>
-                            <p-tabPanel header="Horarios de atención">
+                            <p-tabPanel [header]="'empresas.crearEmpresa.horariosDeAtencion' | translate">
                                 <div class="row">
-                                    <h5>Horarios de atención</h5>
+                                    <h5>{{ 'empresas.crearEmpresa.horariosDeAtencion' | translate }}</h5>
                                 </div>
                                 <div class="row">
                                     <div class="card">
                                         <div class="car-header">
 
-                                            <h6>Servicio Al Cliente, Información Y Ventas en Canales Telefónicos y
-                                                Digitales</h6>
+                                            <h6>{{ 'empresas.crearEmpresa.servicioAlClienteInformacionY' | translate }}</h6>
 
                                         </div>
                                         <div class="car-body">
 
                                             <div class="row">
                                                 <div class="col-md-3 mb-3">
-                                                    <label class="form-label" for="validationCustom01">Apertura</label>
+                                                    <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.apertura' | translate }}</label>
                                                     <input formControlName="apeturaSac" class="form-control"
-                                                        id="validationCustom01" type="time" placeholder="First name"
+                                                        id="validationCustom01" type="time" [placeholder]="'empresas.crearEmpresa.firstName' | translate"
                                                         required="">
 
                                                 </div>
                                                 <div class="col-md-3 mb-3">
-                                                    <label class="form-label" for="validationCustom01">Cierre</label>
+                                                    <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.cierre' | translate }}</label>
                                                     <input formControlName="cierreSac" class="form-control"
-                                                        id="validationCustom01" type="time" placeholder="First name"
+                                                        id="validationCustom01" type="time" [placeholder]="'empresas.crearEmpresa.firstName' | translate"
                                                         required="">
 
                                                 </div>
@@ -772,7 +747,7 @@
                                     <div class="card">
                                         <div class="car-header">
 
-                                            <h6>Horarios Sedes</h6>
+                                            <h6>{{ 'empresas.crearEmpresa.horariosSedes' | translate }}</h6>
 
                                         </div>
                                         <div class="car-body">
@@ -784,7 +759,7 @@
                                                             <div class="row">
                                                                 <div class="col-md-4 ">
                                                                     <label class="form-label"
-                                                                        for="validationCustom01">Punto de Venta </label>
+                                                                        for="validationCustom01">{{ 'empresas.crearEmpresa.puntoDeVenta' | translate }} </label>
                                                                     <input disabled formControlName="nombrePV"
                                                                         class="form-control" id="validationCustom01"
                                                                         type="text" required="">
@@ -792,7 +767,7 @@
                                                                 </div>
                                                                 <div class="col-md-4 ">
                                                                     <label class="form-label"
-                                                                        for="validationCustom01">Apertura </label>
+                                                                        for="validationCustom01">{{ 'empresas.crearEmpresa.apertura' | translate }} </label>
                                                                     <input formControlName="aperturaPv"
                                                                         class="form-control" id="validationCustom01"
                                                                         type="time" required="">
@@ -800,7 +775,7 @@
                                                                 </div>
                                                                 <div class="col-md-4 ">
                                                                     <label class="form-label"
-                                                                        for="validationCustom01">Cierre </label>
+                                                                        for="validationCustom01">{{ 'empresas.crearEmpresa.cierre' | translate }} </label>
                                                                     <input formControlName="cierrePv"
                                                                         class="form-control" id="validationCustom01"
                                                                         type="time" required="">
@@ -821,23 +796,23 @@
                                     <div class="card">
                                         <div class="car-header">
 
-                                            <h6>Horarios de disponibilidad página web</h6>
+                                            <h6>{{ 'empresas.crearEmpresa.horariosDeDisponibilidadPaginaWeb' | translate }}</h6>
 
                                         </div>
                                         <div class="car-body">
 
                                             <div class="row">
                                                 <div class="col-md-3 mb-3">
-                                                    <label class="form-label" for="validationCustom01">Apertura</label>
+                                                    <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.apertura' | translate }}</label>
                                                     <input formControlName="aperturaPagweb" class="form-control"
-                                                        id="validationCustom01" type="time" placeholder="First name"
+                                                        id="validationCustom01" type="time" [placeholder]="'empresas.crearEmpresa.firstName' | translate"
                                                         required="">
 
                                                 </div>
                                                 <div class="col-md-3 mb-3">
-                                                    <label class="form-label" for="validationCustom01">Cierre</label>
+                                                    <label class="form-label" for="validationCustom01">{{ 'empresas.crearEmpresa.cierre' | translate }}</label>
                                                     <input formControlName="cierrePagweb" class="form-control"
-                                                        id="validationCustom01" type="time" placeholder="First name"
+                                                        id="validationCustom01" type="time" [placeholder]="'empresas.crearEmpresa.firstName' | translate"
                                                         required="">
 
                                                 </div>
@@ -848,19 +823,19 @@
 
                                 </div>
                             </p-tabPanel>
-                            <p-tabPanel header="Ubicación">
+                            <p-tabPanel [header]="'empresas.crearEmpresa.ubicacion' | translate">
                                 <div class="row">
-                                    <h5>Ubicación y Cobertura</h5>
+                                    <h5>{{ 'empresas.crearEmpresa.ubicacionYCobertura' | translate }}</h5>
                                 </div>
 
                                 <!-- Buscador de municipios DANE -->
                                 <div class="row mb-4">
                                     <div class="col-md-4">
-                                        <label class="form-label">Buscar municipio (nombre o código DANE)</label>
+                                        <label class="form-label">{{ 'empresas.crearEmpresa.buscarMunicipioNombreOCodigo' | translate }}</label>
                                         <div class="input-group">
                                             <input type="text" class="form-control"
                                                    [(ngModel)]="searchQueryCiudad"
-                                                   placeholder="Ej: Bogotá, Medellín, 05001..."
+                                                   [placeholder]="'empresas.crearEmpresa.ejBogotaMedellin05001' | translate"
                                                    (input)="buscarMunicipioDane(searchQueryCiudad)">
                                             <button class="btn btn-outline-primary" type="button">
                                                 <i class="fa fa-search"></i>
@@ -868,16 +843,16 @@
                                         </div>
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">Filtrar por departamento</label>
+                                        <label class="form-label">{{ 'empresas.crearEmpresa.filtrarPorDepartamento' | translate }}</label>
                                         <select class="form-control"
                                                 (change)="onDepartamentoDaneChange($event.target.value)">
-                                            <option value="">-- Todos los departamentos --</option>
+                                            <option value="">{{ 'empresas.crearEmpresa.todosLosDepartamentos' | translate }}</option>
                                             <option *ngFor="let depto of departamentosDane" [value]="depto">{{ depto }}</option>
                                         </select>
                                     </div>
                                     <div class="col-md-4 d-flex align-items-end">
                                         <small class="text-muted">
-                                            <i class="fa fa-info-circle"></i> Base de datos DANE con 1122 municipios
+                                            <i class="fa fa-info-circle"></i> {{ 'empresas.crearEmpresa.baseDeDatosDaneCon' | translate }}
                                         </small>
                                     </div>
                                 </div>
@@ -885,7 +860,7 @@
                                 <!-- Lista de municipios encontrados -->
                                 <div class="row mb-4" *ngIf="municipiosFiltradosDane.length > 0">
                                     <div class="col-12">
-                                        <label class="form-label">Municipios disponibles (click para seleccionar)</label>
+                                        <label class="form-label">{{ 'empresas.crearEmpresa.municipiosDisponiblesClickParaSeleccionar' | translate }}</label>
                                         <div class="d-flex flex-wrap gap-2" style="max-height: 200px; overflow-y: auto;">
                                             <span *ngFor="let municipio of municipiosFiltradosDane"
                                                   class="badge bg-light text-dark border p-2"
@@ -900,7 +875,7 @@
 
                                 <div class="row mb-3" *ngIf="cargandoCiudades">
                                     <div class="col-12 text-center">
-                                        <i class="fa fa-spinner fa-spin"></i> Cargando municipios...
+                                        <i class="fa fa-spinner fa-spin"></i> {{ 'empresas.crearEmpresa.cargandoMunicipios' | translate }}
                                     </div>
                                 </div>
 
@@ -908,39 +883,38 @@
 
                                 <form [formGroup]="ciudadess">
                                     <div class="row">
-                                        <h5>Ciudades de Operación</h5>
+                                        <h5>{{ 'empresas.crearEmpresa.ciudadesDeOperacion' | translate }}</h5>
                                         <div class="col-sm-6">
-                                            <label class="form-label">Ciudades de Origen</label>
+                                            <label class="form-label">{{ 'empresas.crearEmpresa.ciudadesDeOrigen' | translate }}</label>
                                             <ng-select [items]="ciudadesOrigen"
                                                 style="font-family: roboto;" [multiple]="true"
                                                 formControlName="ciudadesOrigen" [closeOnSelect]="false"
-                                                placeholder="Seleccione ciudades de origen"
+                                                [placeholder]="'empresas.crearEmpresa.seleccioneCiudadesDeOrigen' | translate"
                                                 bindLabel="label" bindValue="value">
                                             </ng-select>
-                                            <small class="text-muted">Ciudades desde donde despacha productos</small>
+                                            <small class="text-muted">{{ 'empresas.crearEmpresa.ciudadesDesdeDondeDespachaProductos' | translate }}</small>
                                         </div>
                                         <div class="col-sm-6">
-                                            <label class="form-label">Ciudades de Entrega</label>
+                                            <label class="form-label">{{ 'empresas.crearEmpresa.ciudadesDeEntrega' | translate }}</label>
                                             <ng-select [items]="ciudadesEntrega"
                                                 style="font-family: roboto;" [multiple]="true"
                                                 formControlName="ciudadesEntrega" [closeOnSelect]="false"
-                                                placeholder="Seleccione ciudades de entrega"
+                                                [placeholder]="'empresas.crearEmpresa.seleccioneCiudadesDeEntrega' | translate"
                                                 bindLabel="label" bindValue="value">
                                             </ng-select>
-                                            <small class="text-muted">Ciudades donde puede entregar productos</small>
+                                            <small class="text-muted">{{ 'empresas.crearEmpresa.ciudadesDondePuedeEntregarProductos' | translate }}</small>
                                         </div>
                                     </div>
                                 </form>
                             </p-tabPanel>
-                            <p-tabPanel header="Marketplace">
+                            <p-tabPanel [header]="'empresas.crearEmpresa.marketplace' | translate">
                                 <div class="row">
-                                    <h5>Marketplace</h5>
+                                    <h5>{{ 'empresas.crearEmpresa.marketplace' | translate }}</h5>
                                 </div>
 
                                 <div class="row">
                                     <div>
-                                        <button class="btn btn-primary" (click)="addRowMP()">+Añadir Market
-                                            Place</button>
+                                        <button class="btn btn-primary" (click)="addRowMP()">{{ 'empresas.crearEmpresa.anadirMarketPlace' | translate }}</button>
                                     </div>
 
                                 </div>
@@ -948,10 +922,10 @@
                                     <table class="table">
                                         <thead class="thead-light">
                                             <tr>
-                                                <th scope="col">Logo</th>
-                                                <th scope="col"> Nombre</th>
-                                                <th scope="col">Link</th>
-                                                <th scope="col">Activo</th>
+                                                <th scope="col">{{ 'empresas.crearEmpresa.logo' | translate }}</th>
+                                                <th scope="col"> {{ 'empresas.crearEmpresa.nombre' | translate }}</th>
+                                                <th scope="col">{{ 'empresas.crearEmpresa.link' | translate }}</th>
+                                                <th scope="col">{{ 'empresas.crearEmpresa.activo' | translate }}</th>
 
 
                                             </tr>
@@ -960,23 +934,23 @@
                                             <tr [formGroupName]="i"
                                                 *ngFor="let item of this.f.get('marketPlace')['controls'];let i = index">
 
-                                                <th scope="row"><input aria-label="Selecciona un archivo "
-                                                        class="form-control" type="file" placeholder="First name"
+                                                <th scope="row"><input [attr.aria-label]="'empresas.crearEmpresa.seleccionaUnArchivo' | translate"
+                                                        class="form-control" type="file" [placeholder]="'empresas.crearEmpresa.firstName' | translate"
                                                         required="">
 
 
                                                 </th>
                                                 <td scope="row"><input formControlName="nombreMP" class="form-control"
-                                                        placeholder="Nombre" type="text" required="">
+                                                        [placeholder]="'empresas.crearEmpresa.nombre' | translate" type="text" required="">
                                                 </td>
                                                 <td scope="row"><input formControlName="linkMP" class="form-control"
-                                                        type="text" placeholder="link marketplace" required="">
+                                                        type="text" [placeholder]="'empresas.crearEmpresa.linkMarketplace' | translate" required="">
                                                 </td>
                                                 <td scope="row"><input formControlName="activoMp" type="checkbox"
-                                                        placeholder="link marketplace" required="">
+                                                        [placeholder]="'empresas.crearEmpresa.linkMarketplace' | translate" required="">
                                                 </td>
 
-                                                <td><button class="btn btn-primary" (click)="lessRowMP(i)">X</button>
+                                                <td><button class="btn btn-primary" (click)="lessRowMP(i)">{{ 'empresas.crearEmpresa.x' | translate }}</button>
                                                 </td>
                                             </tr>
 
@@ -984,14 +958,13 @@
                                     </table>
                                 </div>
                             </p-tabPanel>
-                            <p-tabPanel header="Redes Sociales">
+                            <p-tabPanel [header]="'empresas.crearEmpresa.redesSociales' | translate">
                                 <div class="row">
-                                    <h5>Redes Sociales</h5>
+                                    <h5>{{ 'empresas.crearEmpresa.redesSociales' | translate }}</h5>
                                 </div>
                                 <div class="row">
                                     <div>
-                                        <button class="btn btn-primary" (click)="addRowRS()">+Añadir Redes
-                                            Sociales</button>
+                                        <button class="btn btn-primary" (click)="addRowRS()">{{ 'empresas.crearEmpresa.anadirRedesSociales' | translate }}</button>
                                     </div>
 
                                 </div>
@@ -999,10 +972,10 @@
                                     <table class="table">
                                         <thead class="thead-light">
                                             <tr>
-                                                <th scope="col">Logo</th>
-                                                <th scope="col">Nombre</th>
-                                                <th scope="col">Link</th>
-                                                <th scope="col">Activo</th>
+                                                <th scope="col">{{ 'empresas.crearEmpresa.logo' | translate }}</th>
+                                                <th scope="col">{{ 'empresas.crearEmpresa.nombre' | translate }}</th>
+                                                <th scope="col">{{ 'empresas.crearEmpresa.link' | translate }}</th>
+                                                <th scope="col">{{ 'empresas.crearEmpresa.activo' | translate }}</th>
 
                                             </tr>
                                         </thead>
@@ -1011,23 +984,23 @@
                                                 *ngFor="let item of this.f.get('redesSociales')['controls'];let i = index">
 
                                                 <th scope="row"><input formControlName="logoRS" class="form-control"
-                                                        id="validationCustom01" type="file" placeholder="First name"
-                                                        required="" aria-label="Selecciona un archivo ">
+                                                        id="validationCustom01" type="file" [placeholder]="'empresas.crearEmpresa.firstName' | translate"
+                                                        required="" [attr.aria-label]="'empresas.crearEmpresa.seleccionaUnArchivo' | translate">
 
 
                                                 </th>
                                                 <td><input formControlName="nombreRS" class="form-control"
-                                                        id="validationCustom01" type="text" placeholder="Nombre"
+                                                        id="validationCustom01" type="text" [placeholder]="'empresas.crearEmpresa.nombre' | translate"
                                                         required="">
                                                 </td>
                                                 <td><input formControlName="linkRS" class="form-control"
                                                         id="validationCustom01" type="text"
-                                                        placeholder="Link Red Social" required="">
+                                                        [placeholder]="'empresas.crearEmpresa.linkRedSocial' | translate" required="">
                                                 </td>
                                                 <td scope="row"><input formControlName="activoRs" type="checkbox"
-                                                        placeholder="link marketplace" required="">
+                                                        [placeholder]="'empresas.crearEmpresa.linkMarketplace' | translate" required="">
                                                 </td>
-                                                <td><button class="btn btn-primary" (click)="lessRowRS(i)">X</button>
+                                                <td><button class="btn btn-primary" (click)="lessRowRS(i)">{{ 'empresas.crearEmpresa.x' | translate }}</button>
                                                 </td>
 
 
@@ -1038,14 +1011,13 @@
                                 </div>
 
                             </p-tabPanel>
-                            <p-tabPanel header="Canales de comunicación">
+                            <p-tabPanel [header]="'empresas.crearEmpresa.canalesDeComunicacion' | translate">
                                 <div class="row">
-                                    <h5>Canales de comunicación</h5>
+                                    <h5>{{ 'empresas.crearEmpresa.canalesDeComunicacion' | translate }}</h5>
                                 </div>
                                 <div class="row">
                                     <div>
-                                        <button class="btn btn-primary" (click)="addRowCC()">+Añadir canales de
-                                            comunicación</button>
+                                        <button class="btn btn-primary" (click)="addRowCC()">{{ 'empresas.crearEmpresa.anadirCanalesDeComunicacion' | translate }}</button>
                                     </div>
 
                                 </div>
@@ -1053,10 +1025,10 @@
                                     <table class="table">
                                         <thead class="thead-light">
                                             <tr>
-                                                <th scope="col">Logo</th>
-                                                <th scope="col">Nombre</th>
-                                                <th scope="col">Link</th>
-                                                <th scope="col">Activo</th>
+                                                <th scope="col">{{ 'empresas.crearEmpresa.logo' | translate }}</th>
+                                                <th scope="col">{{ 'empresas.crearEmpresa.nombre' | translate }}</th>
+                                                <th scope="col">{{ 'empresas.crearEmpresa.link' | translate }}</th>
+                                                <th scope="col">{{ 'empresas.crearEmpresa.activo' | translate }}</th>
 
 
                                             </tr>
@@ -1067,24 +1039,24 @@
 
                                                 <th scope="row"><input formControlName="logoCC" class="form-control"
                                                         id="validationCustom01" type="file"
-                                                        aria-label="Selecciona un archivo " placeholder="First name"
+                                                        [attr.aria-label]="'empresas.crearEmpresa.seleccionaUnArchivo' | translate" [placeholder]="'empresas.crearEmpresa.firstName' | translate"
                                                         required="">
 
 
                                                 </th>
                                                 <td><input formControlName="nombreCC" class="form-control"
-                                                        id="validationCustom01" type="text" placeholder="Nombre"
+                                                        id="validationCustom01" type="text" [placeholder]="'empresas.crearEmpresa.nombre' | translate"
                                                         required="">
                                                 </td>
                                                 <td><input formControlName="linkCC" class="form-control"
                                                         id="validationCustom01" type="text"
-                                                        placeholder="Link Canal de Comunicación" required="">
+                                                        [placeholder]="'empresas.crearEmpresa.linkCanalDeComunicacion' | translate" required="">
                                                 </td>
                                                 <td scope="row"><input formControlName="activoCc" type="checkbox"
-                                                        placeholder="link marketplace" required="">
+                                                        [placeholder]="'empresas.crearEmpresa.linkMarketplace' | translate" required="">
                                                 </td>
                                                 <td>
-                                                    <button class="btn btn-primary" (click)="lessRowCC(i)">X</button>
+                                                    <button class="btn btn-primary" (click)="lessRowCC(i)">{{ 'empresas.crearEmpresa.x' | translate }}</button>
                                                 </td>
 
 
@@ -1100,10 +1072,10 @@
                             <div class="ce-pie">
                                 <div class="ce-pie__botones">
                                     <button *ngIf="mostrarCrear" (click)="guardar()"
-                                        class="cfg-btn">Guardar</button>
+                                        class="cfg-btn">{{ 'comun.guardar' | translate }}</button>
                                     <button *ngIf="!mostrarCrear" (click)="editar()"
-                                        class="cfg-btn">Editar</button>
-                                    <button type="button" class="cfg-btn cfg-btn--sec" (click)="volverAlListado()">Volver</button>
+                                        class="cfg-btn">{{ 'comun.editar' | translate }}</button>
+                                    <button type="button" class="cfg-btn cfg-btn--sec" (click)="volverAlListado()">{{ 'comun.volver' | translate }}</button>
                                 </div>
                             </div>
                         </p-tabView>

@@ -11,6 +11,7 @@ import { MessageService } from 'primeng/api';
 import { ConfigPrecios, ModoPrecio, PricingModeService } from '../../shared/services/empresas/pricing-mode.service';
 import Swal from 'sweetalert2';
 
+import { TranslateService } from '@ngx-translate/core';
 // Interfaz mejorada basada en el modelo completo de Empresa
 export interface Empresa {
   _docId?: string;
@@ -102,11 +103,15 @@ export class EmpresasComponent implements OnInit, OnDestroy {
   // Opciones para filtros
   paisesDisponibles: string[] = [];
   paisesOptions: { label: string, value: string }[] = [];
-  estadosActivo = [
-    { label: 'Todos', value: null },
-    { label: 'Activo', value: true },
-    { label: 'Inactivo', value: false }
-  ];
+  estadosActivo: { label: string, value: boolean | null }[] = [];
+
+  private armarEstadosActivo(): void {
+    this.estadosActivo = [
+      { label: this.translate.instant('empresas.empresas.todos'), value: null },
+      { label: this.translate.instant('empresas.empresas.activo'), value: true },
+      { label: this.translate.instant('empresas.empresas.inactivo'), value: false }
+    ];
+  }
 
   private destroy$ = new Subject<void>();
 
@@ -128,7 +133,8 @@ export class EmpresasComponent implements OnInit, OnDestroy {
     private breakpointObserver: BreakpointObserver,
     private dataStoreService: DataStoreService,
     private messageService: MessageService,
-    private pricingMode: PricingModeService
+    private pricingMode: PricingModeService,
+    private translate: TranslateService
   ) {
     const currentCompany = JSON.parse(localStorage.getItem("currentCompany") || '{}');
     this.isJulsmind = currentCompany.nomComercial === 'Julsmind';
@@ -156,6 +162,8 @@ export class EmpresasComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.armarEstadosActivo();
+    this.translate.onLangChange.pipe(takeUntil(this.destroy$)).subscribe(() => this.armarEstadosActivo());
     this.cargarDatos();
     this.puedeEditarModo = this.pricingMode.puedeEditar();
     this.cargarModoPrecio();
@@ -164,11 +172,13 @@ export class EmpresasComponent implements OnInit, OnDestroy {
   // ── Modo de precios ──
 
   /** Nombre legible de cada modo, para los mensajes. */
-  private readonly NOMBRE_MODO: { [k: string]: string } = {
-    unitario: 'Precio unitario',
-    tipoCliente: 'Precio por tipo de cliente',
-    volumen: 'Precio por volumen'
-  };
+  private get NOMBRE_MODO(): { [k: string]: string } {
+    return {
+      unitario: this.translate.instant('empresas.empresas.modoUnitario'),
+      tipoCliente: this.translate.instant('empresas.empresas.modoTipoCliente'),
+      volumen: this.translate.instant('empresas.empresas.modoVolumen')
+    };
+  }
 
   get modoPrecio(): ModoPrecio {
     return this.configPrecios.modo;
@@ -206,15 +216,14 @@ export class EmpresasComponent implements OnInit, OnDestroy {
       .map(k => this.NOMBRE_MODO[k]);
 
     const confirmacion = await Swal.fire({
-      title: `¿Manejar ${nombre}?`,
-      html: `En <strong>Lista de precios</strong> se mostrará la pestaña de
-             <strong>${nombre}</strong>${modo === 'unitario' ? '' : ' y se ocultará la de <strong>' + ocultas.join('</strong> y <strong>') + '</strong>'}.<br><br>
-             Los precios que ya tengas cargados en los otros modos
-             <u>no se borran</u>: quedan guardados y vuelven a verse si cambias de modo.`,
+      title: this.translate.instant('empresas.empresas.manejarModo', {nombre}),
+      html: modo === 'unitario'
+        ? this.translate.instant('empresas.empresas.enListaDePreciosSeMostrara', {nombre})
+        : this.translate.instant('empresas.empresas.enListaDePreciosSeMostraraOculta', {nombre, ocultas: ocultas.join('</strong> / <strong>')}),
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Sí, usar este modo',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('empresas.empresas.siUsarEsteModo'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#5F3FE0'
     });
 
@@ -236,7 +245,7 @@ export class EmpresasComponent implements OnInit, OnDestroy {
           this.guardandoModo = false;
           Swal.fire({
             icon: 'success',
-            title: 'Configuración de precios actualizada',
+            title: this.translate.instant('empresas.empresas.configuracionDePreciosActualizada'),
             text: mensajeExito,
             confirmButtonColor: '#5F3FE0'
           });
@@ -246,10 +255,10 @@ export class EmpresasComponent implements OnInit, OnDestroy {
           const esPermiso = err?.status === 403;
           Swal.fire({
             icon: 'error',
-            title: esPermiso ? 'No tienes permiso' : 'No se pudo guardar',
+            title: esPermiso ? this.translate.instant('empresas.empresas.noTienesPermiso') : this.translate.instant('empresas.crearEmpresa.noSePudoGuardar'),
             text: esPermiso
-              ? 'Solo el administrador de la empresa puede cambiar el modo de precios.'
-              : (err?.error?.error || 'Intenta de nuevo en unos segundos.'),
+              ? this.translate.instant('empresas.empresas.soloElAdministradorDeLa')
+              : (err?.error?.error || this.translate.instant('empresas.empresas.intentaDeNuevoEnUnos')),
             confirmButtonColor: '#5F3FE0'
           });
         }
@@ -274,8 +283,8 @@ export class EmpresasComponent implements OnInit, OnDestroy {
           console.error('Error fetching empresas:', err);
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Error al cargar las empresas'
+            summary: this.translate.instant('comun.error'),
+            detail: this.translate.instant('empresas.empresas.errorAlCargarLasEmpresas')
           });
           this.cargando = false;
         }
@@ -455,8 +464,8 @@ export class EmpresasComponent implements OnInit, OnDestroy {
     if (!docId || docId.includes('__')) {
       this.messageService.add({
         severity: 'error',
-        summary: 'No se pudo abrir',
-        detail: 'Esta empresa no tiene identificador. Recarga el listado e intenta de nuevo.'
+        summary: this.translate.instant('empresas.empresas.noSePudoAbrir'),
+        detail: this.translate.instant('empresas.empresas.estaEmpresaNoTieneIdentificador')
       });
       return;
     }
@@ -483,16 +492,16 @@ export class EmpresasComponent implements OnInit, OnDestroy {
           
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
-            detail: 'Archivo exportado correctamente'
+            summary: this.translate.instant('comun.exito'),
+            detail: this.translate.instant('empresas.empresas.archivoExportadoCorrectamente')
           });
         },
         error: (error) => {
           console.error('Error al exportar:', error);
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Error al exportar los datos'
+            summary: this.translate.instant('comun.error'),
+            detail: this.translate.instant('empresas.empresas.errorAlExportarLosDatos')
           });
         },
         complete: () => {
@@ -504,8 +513,8 @@ export class EmpresasComponent implements OnInit, OnDestroy {
       this.exportando = false;
       this.messageService.add({
         severity: 'error',
-        summary: 'Error',
-        detail: 'Error al iniciar la exportación'
+        summary: this.translate.instant('comun.error'),
+        detail: this.translate.instant('empresas.empresas.errorAlIniciarLaExportacion')
       });
     }
   }
@@ -532,7 +541,7 @@ export class EmpresasComponent implements OnInit, OnDestroy {
   }
 
   getEstadoLabel(activo: boolean | undefined): string {
-    return activo ? 'Activo' : 'Inactivo';
+    return this.translate.instant(activo ? 'empresas.empresas.activo' : 'empresas.empresas.inactivo');
   }
 
   // NUEVO: alternar estado activo/inactivo de una empresa
@@ -542,7 +551,7 @@ export class EmpresasComponent implements OnInit, OnDestroy {
     const accion = nuevoEstado ? 'activar' : 'desactivar';
 
     // Confirmación rápida (puede reemplazarse por un diálogo más elaborado)
-    if (!confirm(`¿Está seguro de ${accion} la empresa \"${empresa.nomComercial || empresa.nombre}\"?`)) {
+    if (!confirm(this.translate.instant(nuevoEstado ? 'empresas.empresas.confirmarAccionActivar' : 'empresas.empresas.confirmarAccionDesactivar', { nombre: empresa.nomComercial || empresa.nombre }))) {
       return;
     }
 
@@ -554,16 +563,16 @@ export class EmpresasComponent implements OnInit, OnDestroy {
         empresa.activo = nuevoEstado;
         this.messageService.add({
           severity: 'success',
-          summary: 'Éxito',
-          detail: `Empresa ${accion}da correctamente`
+          summary: this.translate.instant('comun.exito'),
+          detail: this.translate.instant(nuevoEstado ? 'empresas.empresas.empresaActivadaCorrectamente' : 'empresas.empresas.empresaDesactivadaCorrectamente')
         });
       },
       error: (err) => {
         console.error(`Error al ${accion} la empresa`, err);
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
-          detail: `No se pudo ${accion} la empresa`
+          summary: this.translate.instant('comun.error'),
+          detail: this.translate.instant(nuevoEstado ? 'empresas.empresas.noSePudoActivarLaEmpresa' : 'empresas.empresas.noSePudoDesactivarLaEmpresa')
         });
       }
     });

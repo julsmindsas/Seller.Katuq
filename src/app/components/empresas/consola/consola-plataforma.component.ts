@@ -27,6 +27,7 @@ import { SubscriptionService } from '../../../shared/services/subscription.servi
 import { escaparHtml } from '../../../shared/utils/escapar-html';
 import { mensajeErrorInforme, periodoMesAnterior, validarPeriodo } from '../../../shared/utils/informe-ejecutivo';
 
+import { TranslateService } from '@ngx-translate/core';
 /** Filtros de la pestaña de cobros. Cada tarjeta enciende el suyo. */
 type FiltroCobros = 'todas' | 'aCobrar' | 'sinTarjeta' | 'vencidas' | 'cortesia';
 
@@ -288,7 +289,8 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private subscriptionService: SubscriptionService,
     private dataStoreService: DataStoreService,
-    private router: Router
+    private router: Router,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -319,7 +321,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
           // tickets", que es una afirmación —y es falsa.
           this.soporte = null;
           this.errorSoporte =
-            err?.error?.error || 'No se pudieron leer los tickets de soporte.';
+            err?.error?.error || this.translate.instant('empresas.consolaPlataforma.noSePudieronLeerTickets');
         },
       });
   }
@@ -387,7 +389,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
           this.error =
             err?.status === 403
               ? 'Esta consola es solo para el administrador de la plataforma (Julsmind). Verifica con qué empresa iniciaste sesión.'
-              : err?.error?.error || 'No se pudo cargar el panorama de la plataforma.';
+              : err?.error?.error || this.translate.instant('empresas.consolaPlataforma.noSePudoCargarPanorama');
         },
       });
   }
@@ -422,7 +424,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
         next: (res) => (this.cobros = res),
         error: (err) => {
           this.cobros = null;
-          this.errorCobros = err?.error?.error || 'No se pudieron cargar los cobros del mes.';
+          this.errorCobros = err?.error?.error || this.translate.instant('empresas.consolaPlataforma.noSePudieronCargarCobros');
         },
       });
   }
@@ -498,9 +500,9 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
    * cambia es si hay una tarjeta a la cual cobrarle.
    */
   etiquetaModo(modo: FilaCobro['modoCobro']): string {
-    if (modo === 'automatico') return 'Tarjeta inscrita';
-    if (modo === 'manual') return 'Link de pago';
-    return 'Cortesía';
+    if (modo === 'automatico') return this.translate.instant('empresas.consolaPlataforma.tarjetaInscrita');
+    if (modo === 'manual') return this.translate.instant('empresas.consolaPlataforma.linkDePago');
+    return this.translate.instant('empresas.consolaPlataforma.cortesiaTipo');
   }
 
   /**
@@ -512,11 +514,11 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
    * indistinguibles de un cliente que debe plata.
    */
   etiquetaPeriodo(fila: FilaCobro): string {
-    if (fila.modoCobro === 'cortesia') return 'Cortesía';
+    if (fila.modoCobro === 'cortesia') return this.translate.instant('empresas.consolaPlataforma.cortesiaTipo');
     const p = (fila.renovacion?.periodo || fila.periodo || '').toLowerCase();
-    if (p === 'anual' || p === 'yearly') return 'Anual';
-    if (p === 'quarterly') return 'Trimestral';
-    if (p === 'mensual' || p === 'monthly') return 'Mensual';
+    if (p === 'anual' || p === 'yearly') return this.translate.instant('empresas.consolaPlataforma.anualPeriodo');
+    if (p === 'quarterly') return this.translate.instant('empresas.consolaPlataforma.trimestral');
+    if (p === 'mensual' || p === 'monthly') return this.translate.instant('empresas.consolaPlataforma.mensual');
     return '—';
   }
 
@@ -617,7 +619,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
         next: (res) => (this.pedidos = res),
         error: (err) => {
           this.pedidos = null;
-          this.errorPedidos = err?.error?.error || 'No se pudieron cargar los pedidos.';
+          this.errorPedidos = err?.error?.error || this.translate.instant('empresas.consolaPlataforma.noSePudieronCargarPedidos');
         },
       });
   }
@@ -688,11 +690,11 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
    */
   tipoCorto(tipo: string): string {
     const corto: Record<string, string> = {
-      integracion: 'Integración',
-      modulo: 'Módulo nuevo',
-      mejora: 'Mejora',
-      reporte: 'Reporte',
-      correccion: 'Corrección',
+      integracion: this.translate.instant('empresas.consolaPlataforma.tipoIntegracion'),
+      modulo: this.translate.instant('empresas.consolaPlataforma.tipoModuloNuevo'),
+      mejora: this.translate.instant('empresas.consolaPlataforma.tipoMejora'),
+      reporte: this.translate.instant('empresas.consolaPlataforma.tipoReporte'),
+      correccion: this.translate.instant('empresas.consolaPlataforma.tipoCorreccion'),
     };
     return corto[tipo] || tipo;
   }
@@ -752,7 +754,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
           this.cargarPedidos();
         },
         error: (err) => {
-          this.errorPedidos = err?.error?.error || 'No se pudo guardar el pedido.';
+          this.errorPedidos = err?.error?.error || this.translate.instant('empresas.consolaPlataforma.noSePudoGuardarPedido');
         },
       });
   }
@@ -798,17 +800,15 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
    */
   async eliminarPedido(pedido: PedidoFuncionalidad): Promise<void> {
     const confirmacion = await Swal.fire({
-      title: 'Borrar esta sugerencia',
+      title: this.translate.instant('empresas.consolaPlataforma.borrarEstaSugerencia'),
       html:
         `<div style="text-align:left">` +
         `<p>${pedido.titulo}</p>` +
-        `<p class="text-muted" style="font-size:.9em">Si el cliente sí la pidió y decidiste no hacerla, ` +
-        `mejor márcala como <b>Descartada</b>: queda el registro de que se evaluó y de que se dijo que no. ` +
-        `Borrar es para una anotación equivocada — una prueba, un duplicado.</p></div>`,
+        `<p class="text-muted" style="font-size:.9em">${this.translate.instant('empresas.consolaPlataforma.borrarSugerenciaAviso')}</p></div>`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Sí, borrar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('empresas.consolaPlataforma.siBorrar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#D7263D',
       reverseButtons: true,
     });
@@ -820,7 +820,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => this.cargarPedidos(),
         error: (err) => {
-          this.errorPedidos = err?.error?.error || 'No se pudo borrar la sugerencia.';
+          this.errorPedidos = err?.error?.error || this.translate.instant('empresas.consolaPlataforma.noSePudoBorrarSugerencia');
         },
       });
   }
@@ -853,7 +853,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
         next: () => this.cargarPedidos(),
         error: (err) => {
           pedido.estado = anterior; // se deshace: la pantalla no puede mentir
-          this.errorPedidos = err?.error?.error || 'No se pudo cambiar el estado.';
+          this.errorPedidos = err?.error?.error || this.translate.instant('empresas.consolaPlataforma.noSePudoCambiarEstado');
         },
       });
   }
@@ -923,7 +923,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
   motivoDeCortesia(fila: FilaCobro): string {
     return (
       fila.motivoCortesia ||
-      'Empresa de Katuq o demo: tiene premium y acceso a todo, y no se le factura.'
+      this.translate.instant('empresas.consolaPlataforma.empresaKatuqODemo')
     );
   }
 
@@ -944,15 +944,15 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
 
   etiquetaFactura(fila: FilaCobro): string {
     const e = fila.ultimaFactura?.estado;
-    if (!e) return 'Sin facturas';
+    if (!e) return this.translate.instant('empresas.consolaPlataforma.sinFacturas');
     const mapa: Record<string, string> = {
-      paid: 'Pagada',
-      open: 'Abierta',
-      pending_manual: 'Pendiente de pago',
-      processing: 'Procesando',
-      failed: 'Fallida',
-      cancelled: 'Cancelada',
-      custom: 'A convenir',
+      paid: this.translate.instant('empresas.consolaPlataforma.facturaPagada'),
+      open: this.translate.instant('empresas.consolaPlataforma.facturaAbierta'),
+      pending_manual: this.translate.instant('empresas.consolaPlataforma.facturaPendientePago'),
+      processing: this.translate.instant('empresas.consolaPlataforma.facturaProcesando'),
+      failed: this.translate.instant('empresas.consolaPlataforma.facturaFallida'),
+      cancelled: this.translate.instant('empresas.consolaPlataforma.facturaCancelada'),
+      custom: this.translate.instant('empresas.consolaPlataforma.facturaAConvenir'),
     };
     return mapa[e] || e;
   }
@@ -1205,7 +1205,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
   /** Nombre legible del escalón filtrado, para el aviso. */
   etiquetaEscalon(): string {
     if (this.filtroEscalon === 'todos') return '';
-    if (this.filtroEscalon === 'freemium') return 'Freemium (no se cobra)';
+    if (this.filtroEscalon === 'freemium') return this.translate.instant('empresas.consolaPlataforma.freemiumNoSeCobra');
     return this.escalones.find((e) => e.id === this.filtroEscalon)?.nombre || this.filtroEscalon;
   }
 
@@ -1299,16 +1299,16 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
 
     const porOmision = periodoMesAnterior();
     const peticion = await Swal.fire({
-      title: 'Informe de ventas',
+      title: this.translate.instant('empresas.consolaPlataforma.informeDeVentas'),
       html:
-        `<p class="text-muted" style="font-size:.9em">${escaparHtml(empresa.nomComercial || 'La empresa')}: los pedidos se cuentan por fecha de entrega.</p>` +
+        `<p class="text-muted" style="font-size:.9em">${this.translate.instant('empresas.consolaPlataforma.informeNota', {nombre: escaparHtml(empresa.nomComercial || this.translate.instant('empresas.consolaPlataforma.laEmpresa'))})}</p>` +
         `<div style="display:flex;gap:12px;justify-content:center;text-align:left">` +
-        `<label style="font-size:.8em">Desde<br><input id="informe-desde" type="date" class="swal2-input" style="margin:4px 0 0" value="${porOmision.desde}"></label>` +
-        `<label style="font-size:.8em">Hasta<br><input id="informe-hasta" type="date" class="swal2-input" style="margin:4px 0 0" value="${porOmision.hasta}"></label>` +
+        `<label style="font-size:.8em">${this.translate.instant('empresas.consolaPlataforma.desde')}<br><input id="informe-desde" type="date" class="swal2-input" style="margin:4px 0 0" value="${porOmision.desde}"></label>` +
+        `<label style="font-size:.8em">${this.translate.instant('empresas.consolaPlataforma.hasta')}<br><input id="informe-hasta" type="date" class="swal2-input" style="margin:4px 0 0" value="${porOmision.hasta}"></label>` +
         `</div>`,
       showCancelButton: true,
-      confirmButtonText: 'Descargar PDF',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('empresas.consolaPlataforma.descargarPdf'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       reverseButtons: true,
       focusConfirm: false,
       preConfirm: () => {
@@ -1353,9 +1353,9 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
           }
           Swal.fire({
             icon: 'error',
-            title: 'No se pudo armar el informe',
+            title: this.translate.instant('empresas.consolaPlataforma.noSePudoArmarEl'),
             text: mensajeErrorInforme(err?.status, mensajeServidor),
-            confirmButtonText: 'Entendido',
+            confirmButtonText: this.translate.instant('comun.entendido'),
           });
         },
       });
@@ -1402,7 +1402,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => this.unidadesPorEmpresa.set(empresa._docId, res),
         error: () =>
-          this.errorUnidades.set(empresa._docId, 'No se pudieron calcular las unidades'),
+          this.errorUnidades.set(empresa._docId, this.translate.instant('empresas.consolaPlataforma.noSePudieronCalcularUnidades')),
       });
   }
 
@@ -1523,19 +1523,19 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
 
   /** Mismo lenguaje que la pantalla de tickets del comercio: Error / Consulta. */
   tipoTicket(tipo: string | null): string {
-    if (tipo === 'bug') return 'Error';
-    if (tipo === 'ayuda') return 'Consulta';
-    if (tipo === 'idea') return 'Sugerencia';
-    return 'Sin clasificar';
+    if (tipo === 'bug') return this.translate.instant('comun.error');
+    if (tipo === 'ayuda') return this.translate.instant('empresas.consolaPlataforma.tipoTicketConsulta');
+    if (tipo === 'idea') return this.translate.instant('empresas.consolaPlataforma.tipoTicketSugerencia');
+    return this.translate.instant('empresas.consolaPlataforma.sinClasificar');
   }
 
   estadoTicket(status: string): string {
     const k = String(status || '').toLowerCase();
-    if (k === 'haciendo') return 'En progreso';
-    if (k === 'pendiente') return 'Pendiente';
-    if (k === 'resuelto') return 'Resuelto';
-    if (k === 'archivado') return 'Archivado';
-    return status || 'Pendiente';
+    if (k === 'haciendo') return this.translate.instant('empresas.consolaPlataforma.estadoEnProgreso');
+    if (k === 'pendiente') return this.translate.instant('empresas.consolaPlataforma.estadoPendiente');
+    if (k === 'resuelto') return this.translate.instant('empresas.consolaPlataforma.estadoResuelto');
+    if (k === 'archivado') return this.translate.instant('empresas.consolaPlataforma.estadoArchivado');
+    return status || this.translate.instant('empresas.consolaPlataforma.estadoPendiente');
   }
 
   /**
@@ -1583,15 +1583,15 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
 
     if (!destinos.length) {
       this.notificationService.error(
-        'Sin movimientos',
+        this.translate.instant('empresas.consolaPlataforma.sinMovimientos'),
         info
-          ? `Desde "${info.etiqueta}" no hay a dónde moverla`
-          : 'Todavía no cargó el catálogo de estados'
+          ? this.translate.instant('empresas.consolaPlataforma.desdeNoHayAdondeMoverla', {etiqueta: info.etiqueta})
+          : this.translate.instant('empresas.consolaPlataforma.todaviaNoCargoElCatalogo')
       );
       return;
     }
 
-    const nombre = empresa.nomComercial || empresa.nombre || 'esta empresa';
+    const nombre = empresa.nomComercial || empresa.nombre || this.translate.instant('empresas.consolaPlataforma.estaEmpresa');
     const usuarios = empresa.metricas?.usuarios;
     const opciones = destinos
       .map((e) => {
@@ -1610,29 +1610,32 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
       .join('');
 
     const resultado = await Swal.fire({
-      title: `Estado de ${nombre}`,
+      title: this.translate.instant('empresas.consolaPlataforma.estadoDe', {nombre}),
       html:
         `<div style="text-align:left">` +
-        `<p style="margin:0 0 .75rem">Hoy está en <b>${info?.etiqueta || actual}</b>` +
+        `<p style="margin:0 0 .75rem">${this.translate.instant('empresas.consolaPlataforma.hoyEstaEn', {estado: info?.etiqueta || actual})}` +
         (empresa.estadoMotivo ? ` — <i>${empresa.estadoMotivo}</i>` : '') +
-        `. Tiene <b>${typeof usuarios === 'number' ? usuarios : '—'}</b> usuarios.</p>` +
-        `<label style="display:block;font-size:.85em;margin-bottom:.25rem">Nuevo estado</label>` +
+        `. ${this.translate.instant('empresas.consolaPlataforma.tieneUsuarios', {n: typeof usuarios === 'number' ? usuarios : '—'})}</p>` +
+        `<label style="display:block;font-size:.85em;margin-bottom:.25rem">${this.translate.instant('empresas.consolaPlataforma.nuevoEstado')}</label>` +
         `<select id="sw-estado" class="swal2-select" style="width:100%;margin:0 0 .75rem">${opciones}</select>` +
-        `<label style="display:block;font-size:.85em;margin-bottom:.25rem">Motivo</label>` +
+        `<label style="display:block;font-size:.85em;margin-bottom:.25rem">${this.translate.instant('empresas.consolaPlataforma.motivoCampo')}</label>` +
+        // i18n-ignorar (solo marcado HTML, sin texto)
         `<textarea id="sw-motivo" class="swal2-textarea" style="width:100%;margin:0 0 .75rem" ` +
-        `placeholder="Ej: factura de agosto sin pagar, pausa acordada hasta diciembre…"></textarea>` +
-        `<label style="display:block;font-size:.85em;margin-bottom:.25rem">Días de gracia antes de suspender` +
-        ` <small class="text-muted">(vacío = el estándar)</small></label>` +
+        // i18n-ignorar (solo marcado HTML, sin texto)
+        `placeholder="${this.translate.instant('empresas.consolaPlataforma.ejFacturaSinPagar')}"></textarea>` +
+        `<label style="display:block;font-size:.85em;margin-bottom:.25rem">${this.translate.instant('empresas.consolaPlataforma.diasDeGraciaAntesDeSuspender')}` +
+        ` <small class="text-muted">${this.translate.instant('empresas.consolaPlataforma.vacioEsElEstandar')}</small></label>` +
+        // i18n-ignorar (solo marcado HTML, sin texto)
         `<input id="sw-gracia" type="number" min="0" max="180" class="swal2-input" style="width:100%;margin:0 0 .75rem" ` +
+        // i18n-ignorar (solo marcado HTML, sin texto)
         `value="${empresa.diasGracia ?? ''}" placeholder="7">` +
-        `<p class="text-muted" style="font-size:.8em;margin:.5rem 0 0"><b>Nada de esto borra datos.</b> ` +
-        `Todo se deshace volviendo a este mismo botón.</p>` +
+        `<p class="text-muted" style="font-size:.8em;margin:.5rem 0 0">${this.translate.instant('empresas.consolaPlataforma.nadaDeEstoBorraDatos')}</p>` +
         `<ul class="text-muted" style="font-size:.78em;margin:.4rem 0 0;padding-left:1.1rem">${consecuencias}</ul>` +
         `</div>`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Cambiar estado',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('empresas.consolaPlataforma.cambiarEstado'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       reverseButtons: true,
       focusCancel: true,
       preConfirm: () => {
@@ -1643,13 +1646,13 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
         const destino = this.catalogoEstados[estado] || {};
         // El backend exige lo mismo; validarlo acá evita el viaje de ida y vuelta.
         if ((!destino.entra || !destino.escribe) && motivo.length < 4) {
-          Swal.showValidationMessage('Escribe el motivo: queda en el historial de la empresa');
+          Swal.showValidationMessage(this.translate.instant('empresas.consolaPlataforma.escribeElMotivoQuedaEn'));
           return false;
         }
 
         const dias = graciaCruda === '' ? null : Number(graciaCruda);
         if (dias !== null && (!Number.isFinite(dias) || dias < 0 || dias > 180)) {
-          Swal.showValidationMessage('Los días de gracia deben ir entre 0 y 180');
+          Swal.showValidationMessage(this.translate.instant('empresas.consolaPlataforma.losDiasDeGraciaDeben'));
           return false;
         }
 
@@ -1678,9 +1681,9 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
           if (diasGracia !== null) empresa.diasGracia = diasGracia;
           this.recalcularTotalesLocales();
           this.aplicarFiltros();
-          this.notificationService.success('Listo', res.message);
+          this.notificationService.success(this.translate.instant('empresas.crearEmpresa.listo'), res.message);
         },
-        error: (err) => this.notificationService.error('No se pudo', err.message),
+        error: (err) => this.notificationService.error(this.translate.instant('empresas.consolaPlataforma.noSePudo'), err.message),
       });
   }
 
@@ -1697,47 +1700,47 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     evento.stopPropagation();
 
     const desbloqueando = !empresa.activo;
-    const nombre = empresa.nomComercial || empresa.nombre || 'esta empresa';
+    const nombre = empresa.nomComercial || empresa.nombre || this.translate.instant('empresas.consolaPlataforma.estaEmpresa');
     const usuarios = empresa.metricas?.usuarios;
 
     let motivo = '';
 
     if (desbloqueando) {
       const confirmacion = await Swal.fire({
-        title: `¿Desbloquear ${nombre}?`,
+        title: this.translate.instant('empresas.consolaPlataforma.desbloquearEmpresa', {nombre}),
         html:
-          'Sus usuarios podrán volver a iniciar sesión de inmediato.' +
+          this.translate.instant('empresas.consolaPlataforma.susUsuariosPodranVolverA') +
           (empresa.bloqueo
-            ? `<br><br><small class="text-muted">Fue bloqueada por ${empresa.bloqueo.por}<br>Motivo: ${empresa.bloqueo.motivo}</small>`
+            ? `<br><br><small class="text-muted">${this.translate.instant('empresas.consolaPlataforma.fueBloqueadaPor', {por: empresa.bloqueo.por, motivo: empresa.bloqueo.motivo})}</small>`
             : ''),
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'Sí, desbloquear',
-        cancelButtonText: 'Cancelar',
+        confirmButtonText: this.translate.instant('empresas.consolaPlataforma.siDesbloquear'),
+        cancelButtonText: this.translate.instant('comun.cancelar'),
         confirmButtonColor: '#0F9D58',
         reverseButtons: true,
       });
       if (!confirmacion.isConfirmed) return;
     } else {
       const confirmacion = await Swal.fire({
-        title: `¿Bloquear ${nombre}?`,
+        title: this.translate.instant('empresas.consolaPlataforma.bloquearEmpresa', {nombre}),
         html:
           `<div style="text-align:left">` +
-          `<p><b>${typeof usuarios === 'number' ? usuarios : 'Sus'} usuarios</b> dejarán de poder iniciar sesión de inmediato.</p>` +
-          `<p class="text-muted" style="font-size:.9em">No se borra nada: sus productos, clientes y pedidos quedan intactos, y puedes desbloquearla cuando quieras.</p>` +
+          `<p>${typeof usuarios === 'number' ? this.translate.instant('empresas.consolaPlataforma.nUsuariosDejaranDeIniciar', {n: usuarios}) : this.translate.instant('empresas.consolaPlataforma.susUsuariosDejaranDeIniciar')}</p>` +
+          `<p class="text-muted" style="font-size:.9em">${this.translate.instant('empresas.consolaPlataforma.noSeBorraNadaProductos')}</p>` +
           `</div>`,
         icon: 'warning',
         input: 'text',
-        inputLabel: '¿Por qué la bloqueas?',
-        inputPlaceholder: 'Ej: falta de pago, solicitud del cliente…',
+        inputLabel: this.translate.instant('empresas.consolaPlataforma.porQueLaBloqueas'),
+        inputPlaceholder: this.translate.instant('empresas.consolaPlataforma.ejFaltaDePagoSolicitud'),
         showCancelButton: true,
-        confirmButtonText: 'Bloquear',
-        cancelButtonText: 'Cancelar',
+        confirmButtonText: this.translate.instant('empresas.consolaPlataforma.bloquear'),
+        cancelButtonText: this.translate.instant('comun.cancelar'),
         confirmButtonColor: '#D7263D',
         reverseButtons: true,
         focusCancel: true,
         inputValidator: (v) =>
-          (v || '').trim().length < 4 ? 'Escribe el motivo: queda en el registro' : null,
+          (v || '').trim().length < 4 ? this.translate.instant('empresas.consolaPlataforma.escribeElMotivo') : null,
       });
       if (!confirmacion.isConfirmed) return;
       motivo = (confirmacion.value || '').trim();
@@ -1758,11 +1761,11 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
           this.recalcularTotalesLocales();
           this.aplicarFiltros();
           this.notificationService.success(
-            'Listo',
-            `${nombre} quedó ${desbloqueando ? 'desbloqueada' : 'bloqueada'}`
+            this.translate.instant('empresas.crearEmpresa.listo'),
+            desbloqueando ? this.translate.instant('empresas.consolaPlataforma.nombreQuedoDesbloqueada', {nombre}) : this.translate.instant('empresas.consolaPlataforma.nombreQuedoBloqueada', {nombre})
           );
         },
-        error: () => this.notificationService.error('Error', 'No se pudo cambiar el estado'),
+        error: () => this.notificationService.error(this.translate.instant('comun.error'), this.translate.instant('empresas.consolaPlataforma.noSePudoCambiarEl')),
       });
   }
 
@@ -1787,8 +1790,8 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
       // que no llegó: se pierde el tiempo buscando el problema donde no está.
       console.error('[consola] no se pudo abrir el editor de plan:', e);
       this.notificationService.error(
-        'No se pudo abrir el editor de plan',
-        e?.message || 'Error inesperado. Mira la consola del navegador (F12).'
+        this.translate.instant('empresas.consolaPlataforma.noSePudoAbrirEl'),
+        e?.message || this.translate.instant('empresas.consolaPlataforma.errorInesperadoMiraLaConsola')
       );
     }
   }
@@ -1807,63 +1810,52 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     const opciones = ESCALONES.map(
       (e) =>
         `<option value="${e.id}" ${pactoActual === e.id ? 'selected' : ''}>` +
-        `${e.nombre} — ${e.usd ? 'US$' + e.usd + '/mes' : 'a medida'} (hasta ${e.hasta})</option>`
+        `${e.nombre} — ${e.usd ? this.translate.instant('empresas.consolaPlataforma.precioPorMes', {usd: e.usd}) : this.translate.instant('empresas.consolaPlataforma.aMedida')} (${this.translate.instant('empresas.consolaPlataforma.hastaN', {n: e.hasta})})</option>`
     ).join('');
 
     const resultado = await Swal.fire({
-      title: 'Plan del cliente',
+      title: this.translate.instant('empresas.consolaPlataforma.planDelCliente'),
       width: 520,
+        // i18n-ignorar (solo marcado HTML, sin texto)
       html: `
         <div style="text-align:left;font-size:.9rem">
           <p style="margin:0 0 14px"><b>${nombre}</b></p>
 
-          <label style="display:block;font-weight:600;margin-bottom:4px">Plan</label>
+          <label style="display:block;font-weight:600;margin-bottom:4px">${this.translate.instant('empresas.consolaPlataforma.plan')}</label>
           <select id="sw-plan" class="swal2-select" style="width:100%;margin:0 0 14px">
-            <option value="premium" ${eraPremium ? 'selected' : ''}>★ Premium — sin límites, se le cobra</option>
-            <option value="freemium" ${!eraPremium ? 'selected' : ''}>Freemium — gratis, 15 pedidos al mes</option>
+            <option value="premium" ${eraPremium ? 'selected' : ''}>${this.translate.instant('empresas.consolaPlataforma.premiumSinLimites')}</option>
+            <option value="freemium" ${!eraPremium ? 'selected' : ''}>${this.translate.instant('empresas.consolaPlataforma.freemiumGratis15')}</option>
           </select>
 
           <div id="sw-pago">
-            <label style="display:block;font-weight:600;margin-bottom:4px">Escalón de precio</label>
+            <label style="display:block;font-weight:600;margin-bottom:4px">${this.translate.instant('empresas.consolaPlataforma.escalonDePrecio')}</label>
             <select id="sw-tier" class="swal2-select" style="width:100%;margin:0 0 4px">
-              <option value="auto" ${!pactoActual ? 'selected' : ''}>Automático — lo deciden sus ventas</option>
+              <option value="auto" ${!pactoActual ? 'selected' : ''}>${this.translate.instant('empresas.consolaPlataforma.automaticoLoDeciden')}</option>
               ${opciones}
             </select>
-            <p style="margin:0 0 14px;font-size:.75rem;color:#6b7280">
-              Elige uno fijo solo si se pactó con el cliente. En automático, el escalón
-              cambia solo cada mes según lo que venda.
-            </p>
+            <p style="margin:0 0 14px;font-size:.75rem;color:#6b7280">${this.translate.instant('empresas.consolaPlataforma.eligeUnoFijo')}</p>
 
-            <label style="display:block;font-weight:600;margin-bottom:4px">Cada cuánto paga</label>
+            <label style="display:block;font-weight:600;margin-bottom:4px">${this.translate.instant('empresas.consolaPlataforma.cadaCuantoPaga')}</label>
             <select id="sw-periodo" class="swal2-select" style="width:100%;margin:0 0 4px">
-              <option value="monthly" ${periodoActual === 'monthly' ? 'selected' : ''}>Mensual</option>
-              <option value="yearly" ${periodoActual === 'yearly' ? 'selected' : ''}>Anual — 12 meses con 20% de descuento</option>
+              <option value="monthly" ${periodoActual === 'monthly' ? 'selected' : ''}>${this.translate.instant('empresas.consolaPlataforma.mensual')}</option>
+              <option value="yearly" ${periodoActual === 'yearly' ? 'selected' : ''}>${this.translate.instant('empresas.consolaPlataforma.anual12Meses')}</option>
             </select>
-            <p style="margin:0 0 14px;font-size:.75rem;color:#6b7280">
-              El anual cobra el año completo de una sola vez.
-            </p>
+            <p style="margin:0 0 14px;font-size:.75rem;color:#6b7280">${this.translate.instant('empresas.consolaPlataforma.elAnualCobra')}</p>
 
             <!-- Las dos fechas del ciclo, editables a mano. La de arriba dice
                  DESDE CUÁNDO se miden las ventas (que es lo que decide el
                  escalón) y la de abajo CUÁNDO se cobra. En un anual las dos son
                  un acuerdo comercial, no una cuenta: el año arranca el día que
                  se pactó con el cliente, no doce meses antes del corte. -->
-            <label style="display:block;font-weight:600;margin-bottom:4px">Inicio del período</label>
+            <label style="display:block;font-weight:600;margin-bottom:4px">${this.translate.instant('empresas.consolaPlataforma.inicioDelPeriodo')}</label>
             <input id="sw-inicio" type="date" class="swal2-input"
                    style="width:100%;margin:0 0 4px" value="${inicioActual}">
-            <p style="margin:0 0 14px;font-size:.75rem;color:#6b7280">
-              Desde cuándo se cuentan sus ventas para decidir el escalón.
-              <b>Vacío = lo calcula el sistema</b> restándole un período a la fecha de cobro.
-            </p>
+            <p style="margin:0 0 14px;font-size:.75rem;color:#6b7280">${this.translate.instant('empresas.consolaPlataforma.desdeCuandoSeCuentan')}</p>
 
-            <label style="display:block;font-weight:600;margin-bottom:4px">Próximo cobro</label>
+            <label style="display:block;font-weight:600;margin-bottom:4px">${this.translate.instant('empresas.consolaPlataforma.proximoCobro')}</label>
             <input id="sw-fecha" type="date" class="swal2-input"
                    style="width:100%;margin:0 0 4px" value="${fechaActual}">
-            <p style="margin:0 0 14px;font-size:.75rem;color:#6b7280">
-              El día en que se le cobra. <b>Déjalo como está si no lo vas a cambiar.</b>
-              En un plan anual esta fecha debe ir a un año: si queda al mes siguiente,
-              se le cobraría el año entero doce veces.
-            </p>
+            <p style="margin:0 0 14px;font-size:.75rem;color:#6b7280">${this.translate.instant('empresas.consolaPlataforma.elDiaEnQueSeCobra')}</p>
 
             <!-- Cortesía. Va ACÁ, junto al resto del acuerdo comercial, y no en
                  el selector de plan: son dos preguntas distintas —qué puede
@@ -1873,14 +1865,11 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
             <label style="display:flex;gap:8px;align-items:flex-start;font-weight:600;margin-bottom:4px">
               <input id="sw-cortesia" type="checkbox" style="margin-top:3px"
                      ${empresa.cobroCortesia ? 'checked' : ''}>
-              <span>No se le cobra (cortesía)</span>
+              <span>${this.translate.instant('empresas.consolaPlataforma.noSeLeCobraCortesia')}</span>
             </label>
-            <p style="margin:0 0 8px;font-size:.75rem;color:#6b7280">
-              Para las empresas de Katuq y las demo: <b>conservan premium y el acceso a todo</b>,
-              pero desaparecen de Cobros del mes y no entran en el ingreso estimado.
-            </p>
+            <p style="margin:0 0 8px;font-size:.75rem;color:#6b7280">${this.translate.instant('empresas.consolaPlataforma.paraLasEmpresasDeKatuq')}</p>
             <input id="sw-motivo-cortesia" type="text" class="swal2-input"
-                   style="width:100%;margin:0" placeholder="¿Por qué no se le cobra? Ej: empresa de Katuq, demo comercial"
+                   style="width:100%;margin:0" placeholder="${this.translate.instant('empresas.consolaPlataforma.porQueNoSeLeCobra')}"
                    value="${(empresa.motivoCortesia || '').replace(/"/g, '&quot;')}">
           </div>
         </div>`,
@@ -1905,8 +1894,8 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
         motivoCortesia: (document.getElementById('sw-motivo-cortesia') as HTMLInputElement).value.trim(),
       }),
       showCancelButton: true,
-      confirmButtonText: 'Guardar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('comun.guardar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#0F9D58',
       reverseButtons: true,
       focusConfirm: false,
@@ -1919,15 +1908,12 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
       const dias = (new Date(v.nextBillingDate).getTime() - Date.now()) / MS_DIA;
       if (dias < 180) {
         const sigue = await Swal.fire({
-          title: 'Revisa la fecha',
-          html:
-            `Marcaste <b>plan anual</b> pero el próximo cobro queda en <b>${Math.round(dias)} días</b>.<br><br>` +
-            'En anual se cobra el año completo de una vez: con esa fecha se le cobraría ' +
-            'el año entero antes de que termine el que ya pagó.',
+          title: this.translate.instant('empresas.consolaPlataforma.revisaLaFecha'),
+          html: this.translate.instant('empresas.consolaPlataforma.marcasteAnual', {dias: Math.round(dias)}),
           icon: 'warning',
           showCancelButton: true,
-          confirmButtonText: 'Guardar así',
-          cancelButtonText: 'Volver a corregir',
+          confirmButtonText: this.translate.instant('empresas.consolaPlataforma.guardarAsi'),
+          cancelButtonText: this.translate.instant('empresas.consolaPlataforma.volverACorregir'),
           confirmButtonColor: '#d9534f',
           reverseButtons: true,
         });
@@ -1987,14 +1973,14 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
           if (this.vista === 'cobros') this.cargarCobros();
           this.cargar();
           this.notificationService.success(
-            'Listo',
-            `${nombre} quedó en ${nuevo.toUpperCase()}. Dale a Actualizar para ver el precio recalculado.`
+            this.translate.instant('empresas.crearEmpresa.listo'),
+            this.translate.instant('empresas.consolaPlataforma.quedoEnPlan', {nombre, plan: nuevo.toUpperCase()})
           );
         },
         error: (err) =>
           this.notificationService.error(
-            'Error',
-            err?.error?.message || 'No se pudo actualizar el plan'
+            this.translate.instant('comun.error'),
+            err?.error?.message || this.translate.instant('empresas.consolaPlataforma.noSePudoActualizarPlan')
           ),
       });
   }
@@ -2074,7 +2060,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
       const b = empresa.bloqueo;
       return {
         clave: 'bloqueada',
-        etiqueta: 'Bloqueada',
+        etiqueta: this.translate.instant('empresas.consolaPlataforma.saludBloqueada'),
         titulo: b?.motivo
           ? `Bloqueada el ${this.fechaCorta(b.fecha)} por ${b.por || 'alguien'}: ${b.motivo}`
           : 'Desactivada: sus usuarios no pueden entrar a Katuq. Sin motivo registrado.',
@@ -2084,7 +2070,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     if (this.planVencido(empresa)) {
       return {
         clave: 'vencida',
-        etiqueta: 'Plan vencido',
+        etiqueta: this.translate.instant('empresas.consolaPlataforma.saludPlanVencido'),
         titulo: `Se le venció el ${this.fechaCorta(empresa.renovacion?.fecha)} y sigue usando Katuq: hay un cobro pendiente.`,
       };
     }
@@ -2097,7 +2083,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
       if (noEntra) razones.push('nadie inicia sesión hace más de 30 días');
       return {
         clave: 'riesgo',
-        etiqueta: 'En riesgo',
+        etiqueta: this.translate.instant('empresas.consolaPlataforma.saludEnRiesgo'),
         titulo: `Se está enfriando: ${razones.join(' y ')}.`,
       };
     }
@@ -2105,7 +2091,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     if (this.planPorVencer(empresa)) {
       return {
         clave: 'porvencer',
-        etiqueta: 'Vence pronto',
+        etiqueta: this.translate.instant('empresas.consolaPlataforma.saludVencePronto'),
         titulo: `Renueva el ${this.fechaCorta(empresa.renovacion?.fecha)}, esta semana.`,
       };
     }
@@ -2114,14 +2100,14 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     if (!empresa.escalon?.aplica) {
       return {
         clave: 'activa',
-        etiqueta: 'Activa',
+        etiqueta: this.translate.instant('empresas.consolaPlataforma.saludActiva'),
         titulo: 'Operando con el plan gratis. No tiene ningún cobro pendiente porque no se le cobra.',
       };
     }
 
     return {
       clave: 'aldia',
-      etiqueta: 'Al día',
+      etiqueta: this.translate.instant('empresas.consolaPlataforma.saludAlDia'),
       titulo: 'Operando, vendiendo y con el plan vigente.',
     };
   }
@@ -2152,10 +2138,10 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
   etiquetaCategoria(categoria: string): string {
     switch (categoria) {
       case 'ecommerce': return 'E-commerce';
-      case 'pagos': return 'Pagos';
-      case 'logistica': return 'Logística';
-      case 'contabilidad': return 'Contabilidad';
-      default: return 'Otras';
+      case 'pagos': return this.translate.instant('empresas.consolaPlataforma.categoriaPagos');
+      case 'logistica': return this.translate.instant('empresas.consolaPlataforma.categoriaLogistica');
+      case 'contabilidad': return this.translate.instant('empresas.consolaPlataforma.categoriaContabilidad');
+      default: return this.translate.instant('empresas.consolaPlataforma.categoriaOtras');
     }
   }
 
@@ -2197,8 +2183,8 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
    */
   tituloIntegraciones(empresa: EmpresaPanorama): string {
     const integraciones = empresa.integraciones;
-    if (!integraciones) return 'No se pudo leer el censo de integraciones';
-    if (!integraciones.proveedores.length) return 'No tiene ninguna integración configurada';
+    if (!integraciones) return this.translate.instant('empresas.consolaPlataforma.noSePudoLeerCensoIntegraciones');
+    if (!integraciones.proveedores.length) return this.translate.instant('empresas.consolaPlataforma.sinIntegracionesConfiguradas');
 
     const activas = integraciones.proveedores.filter((p) => p.activa).map((p) => p.nombre);
     const apagadas = integraciones.proveedores.filter((p) => !p.activa).map((p) => p.nombre);

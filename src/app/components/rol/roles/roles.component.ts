@@ -9,6 +9,7 @@ import Swal from 'sweetalert2';
 import { UtilsService } from '../../../shared/services/utils.service';
 import { ROLE_TEMPLATES, RoleTemplate } from '../../../shared/models/roles/role-templates';
 
+import { TranslateService } from '@ngx-translate/core';
 /**
  * Ticket 1108: permisos asignables a un rol que NO aparecen en el menú lateral,
  * agrupados por la sección del menú bajo la que se muestran. Mismo path, título
@@ -50,7 +51,9 @@ export class RolesComponent implements OnInit {
     private router: Router,
     private modalService: NgbModal,
     private utilsService: UtilsService,
-    private maestroService: MaestroService, private navService: NavService) {
+    private maestroService: MaestroService, private navService: NavService,
+    private translate: TranslateService
+  ) {
     this.roleForm = this.fb.group({
       rol: ['', Validators.required],
       menus: [[], Validators.required],
@@ -103,10 +106,10 @@ export class RolesComponent implements OnInit {
       error: (error) => {
         console.error('❌ Error cargando empresas:', error);
         Swal.fire({
-          title: 'Error!',
-          text: 'Hubo un problema al cargar las empresas',
+          title: this.translate.instant('rol.roles.error'),
+          text: this.translate.instant('rol.roles.huboUnProblemaAlCargar'),
           icon: 'error',
-          confirmButtonText: 'Ok'
+          confirmButtonText: this.translate.instant('rol.crearRol.ok')
         });
       }
     });
@@ -159,10 +162,10 @@ export class RolesComponent implements OnInit {
       },
       error: (error) => {
         Swal.fire({
-          title: 'Error!',
-          text: 'Hubo un problema al cargar los roles',
+          title: this.translate.instant('rol.roles.error'),
+          text: this.translate.instant('rol.roles.huboUnProblemaAlCargar2'),
           icon: 'error',
-          confirmButtonText: 'Ok'
+          confirmButtonText: this.translate.instant('rol.crearRol.ok')
         });
       }
     });
@@ -246,8 +249,8 @@ export class RolesComponent implements OnInit {
     // 5. Cerrar modal y feedback visual
     this.showTemplateModal = false;
     Swal.fire({
-      title: 'Plantilla aplicada',
-      text: `Se cargaron los menús y permisos de "${tpl.nombreSugerido}". Ajustá lo que necesites y guardá.`,
+      title: this.translate.instant('rol.roles.plantillaAplicada'),
+      text: this.translate.instant('rol.roles.seCargaronMenusYPermisos', {nombre: tpl.nombreSugerido}),
       icon: 'success',
       timer: 2500,
       showConfirmButton: false
@@ -269,20 +272,20 @@ export class RolesComponent implements OnInit {
         this.maestroService.updateRol(this.editingRoleId, newRole).subscribe({
           next: (response) => {
             Swal.fire({
-              title: 'Actualizado!',
-              text: 'Rol actualizado con éxito',
+              title: this.translate.instant('rol.roles.actualizado'),
+              text: this.translate.instant('rol.roles.rolActualizadoConExito'),
               icon: 'success',
-              confirmButtonText: 'Ok'
+              confirmButtonText: this.translate.instant('rol.crearRol.ok')
             });
             this.loadRoles();
             localStorage.removeItem('currentRole');
           },
           error: (error) => {
             Swal.fire({
-              title: 'Error!',
-              text: 'Hubo un problema al actualizar el rol',
+              title: this.translate.instant('rol.roles.error'),
+              text: this.translate.instant('rol.roles.huboUnProblemaAlActualizar'),
               icon: 'error',
-              confirmButtonText: 'Ok'
+              confirmButtonText: this.translate.instant('rol.crearRol.ok')
             });
           }
         });
@@ -291,19 +294,19 @@ export class RolesComponent implements OnInit {
         this.maestroService.createRol(newRole).subscribe({
           next: (response) => {
             Swal.fire({
-              title: 'Guardado!',
-              text: 'Rol guardado con éxito',
+              title: this.translate.instant('rol.crearRol.guardado'),
+              text: this.translate.instant('rol.roles.rolGuardadoConExito'),
               icon: 'success',
-              confirmButtonText: 'Ok'
+              confirmButtonText: this.translate.instant('rol.crearRol.ok')
             });
             this.loadRoles();
           },
           error: (error) => {
             Swal.fire({
-              title: 'Error!',
-              text: 'Hubo un problema al guardar el rol',
+              title: this.translate.instant('rol.roles.error'),
+              text: this.translate.instant('rol.roles.huboUnProblemaAlGuardar'),
               icon: 'error',
-              confirmButtonText: 'Ok'
+              confirmButtonText: this.translate.instant('rol.crearRol.ok')
             });
           }
         });

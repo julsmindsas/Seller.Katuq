@@ -3,6 +3,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
 
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-centro-trabajos',
   templateUrl: './centrotrabajos.component.html',
@@ -13,7 +14,9 @@ export class CentrotrabajosComponent implements OnInit {
   centrosTrabajo: any[] = [];
   nuevoCentroTrabajo = '';
 
-  constructor(private modalService: NgbModal, private centroTrabajosService: MaestroService) { }
+  constructor(private modalService: NgbModal, private centroTrabajosService: MaestroService,
+    private translate: TranslateService
+  ) { }
   cargando = false;
   ngOnInit(): void {
     this.obtenerCentrosTrabajo();
@@ -37,7 +40,7 @@ export class CentrotrabajosComponent implements OnInit {
             this.centrosTrabajo = data;
           },
           error: (error) => {
-            Swal.fire('Error', 'Error al obtener los centros de trabajo', 'error');
+            Swal.fire(this.translate.instant('comun.error'), this.translate.instant('empresas.centrotrabajos.errorAlObtenerLosCentros'), 'error');
             console.log(error);
           }
         }
@@ -49,18 +52,18 @@ export class CentrotrabajosComponent implements OnInit {
       .subscribe({
         next: (data: any) => {
           if (data.msg && data.msg !== 'added') {
-            Swal.fire('Error', data.msg, 'error');
+            Swal.fire(this.translate.instant('comun.error'), data.msg, 'error');
             return;
           }
           else {
-            Swal.fire('Exito', 'Centro de trabajo agregado', 'success');
+            Swal.fire(this.translate.instant('empresas.centrotrabajos.exito'), this.translate.instant('empresas.centrotrabajos.centroDeTrabajoAgregado'), 'success');
           }
           this.obtenerCentrosTrabajo();
           this.nuevoCentroTrabajo = '';
           this.modalService.dismissAll();
         },
         error: (error) => {
-          Swal.fire('Error', 'Error al agregar el centro de trabajo', 'error');
+          Swal.fire(this.translate.instant('comun.error'), this.translate.instant('empresas.centrotrabajos.errorAlAgregarElCentro'), 'error');
           this.nuevoCentroTrabajo = '';
           this.modalService.dismissAll();
           console.log(error);
@@ -70,13 +73,13 @@ export class CentrotrabajosComponent implements OnInit {
 
   eliminarCentroTrabajo(centroTrabajo: any) {
     Swal.fire({
-      title: '¿Estás seguro?',
-      text: "No podrás revertir esto!",
+      title: this.translate.instant('empresas.centrotrabajos.estasSeguro'),
+      text: this.translate.instant('empresas.centrotrabajos.noPodrasRevertirEsto'),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Si, eliminar!'
+      confirmButtonText: this.translate.instant('empresas.centrotrabajos.siEliminar')
     }).then((result) => {
       if (result.isConfirmed) {
         this.centroTrabajosService.deleteCentroTrabajo(centroTrabajo)

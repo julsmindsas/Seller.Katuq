@@ -7,6 +7,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { InfoIndicativos } from '../../../../Mock/indicativosPais';
 import { ReportsService } from '../../../shared/services/dashboard/reports.service';
 
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-crear-usuarios',
   templateUrl: './crear-usuarios.component.html',
@@ -35,7 +36,8 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
     private route: Router,
     private activatedRoute: ActivatedRoute,
     private infoIndicativo: InfoIndicativos,
-    private reportsService: ReportsService
+    private reportsService: ReportsService,
+    private translate: TranslateService
   ) {
     this.f = fb.group({
       cd: [''],
@@ -139,17 +141,17 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
   // Catálogo curado de rutas seguras para no-admin. Excluye rutas administrativas
   // (/rol, /empresas, /usuarios). Los labels se muestran al admin en el modal.
   rutasDisponibles = [
-    { path: '/welcome', label: 'Pantalla de bienvenida (Default)' },
-    { path: '/pedidos', label: 'Pedidos' },
-    { path: '/pos', label: 'POS — Punto de Venta' },
-    { path: '/productos', label: 'Productos' },
-    { path: '/inventario', label: 'Inventario' },
-    { path: '/clientes', label: 'Clientes' },
-    { path: '/despachos', label: 'Despachos' },
-    { path: '/picking-packing/picking', label: 'Picking' },
-    { path: '/picking-packing/packing', label: 'Packing' },
-    { path: '/dashboards', label: 'Dashboard gerencial' },
-    { path: '/dashboards/builder', label: 'Constructor de reportes' },
+    { path: '/welcome', label: 'usuarios.crearUsuarios.pantallaDeBienvenidaDefault' },
+    { path: '/pedidos', label: 'usuarios.crearUsuarios.ruta.pedidos' },
+    { path: '/pos', label: 'usuarios.crearUsuarios.ruta.pos' },
+    { path: '/productos', label: 'usuarios.crearUsuarios.ruta.productos' },
+    { path: '/inventario', label: 'usuarios.crearUsuarios.ruta.inventario' },
+    { path: '/clientes', label: 'usuarios.crearUsuarios.ruta.clientes' },
+    { path: '/despachos', label: 'usuarios.crearUsuarios.ruta.despachos' },
+    { path: '/picking-packing/picking', label: 'usuarios.crearUsuarios.ruta.picking' },
+    { path: '/picking-packing/packing', label: 'usuarios.crearUsuarios.ruta.packing' },
+    { path: '/dashboards', label: 'usuarios.crearUsuarios.ruta.dashboardGerencial' },
+    { path: '/dashboards/builder', label: 'usuarios.crearUsuarios.ruta.constructorReportes' },
   ];
 
   get esRolAdmin(): boolean {
@@ -164,7 +166,7 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
   get bienvenidaLabelActual(): string {
     const tipo = this.f?.controls['bienvenidaTipo']?.value;
     const path = this.f?.controls['bienvenidaPath']?.value;
-    if (!tipo || tipo === 'default' || !path) return 'Pantalla de bienvenida (Default)';
+    if (!tipo || tipo === 'default' || !path) return this.translate.instant('usuarios.crearUsuarios.pantallaDeBienvenidaDefault');
     if (tipo === 'reporte') {
       // Match contra /view/ (preferido) y /builder/ (legacy, paths viejos antes
       // del cambio a vista previa ejecutada).
@@ -182,10 +184,10 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
           error: () => { },
         });
       }
-      return 'Reporte guardado';
+      return this.translate.instant('usuarios.crearUsuarios.reporteGuardado');
     }
     const ruta = this.rutasDisponibles.find((r) => r.path === path);
-    return ruta ? ruta.label : path;
+    return ruta ? this.translate.instant(ruta.label) : path;
   }
 
   abrirBienvenidaModal(): void {
@@ -272,10 +274,10 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
         const usuario = this.buildUsuarioPayload();
         this.service.createUser(usuario).subscribe((response: any) => {
           Swal.fire({
-            title: 'Guardado!',
-            text: 'Usuario creado con éxito',
+            title: this.translate.instant('usuarios.crearUsuarios.guardado'),
+            text: this.translate.instant('usuarios.crearUsuarios.usuarioCreadoConExito'),
             icon: 'success',
-            confirmButtonText: 'Ok'
+            confirmButtonText: this.translate.instant('usuarios.crearUsuarios.ok')
           });
           this.route.navigateByUrl('/usuarios');
         }, error => {
@@ -288,10 +290,10 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
         const usuario = this.buildUsuarioPayload();
         this.service.updateUser(usuario).subscribe((response: any) => {
           Swal.fire({
-            title: 'Guardado!',
-            text: 'Usuario actualizado con éxito',
+            title: this.translate.instant('usuarios.crearUsuarios.guardado'),
+            text: this.translate.instant('usuarios.crearUsuarios.usuarioActualizadoConExito'),
             icon: 'success',
-            confirmButtonText: 'Ok'
+            confirmButtonText: this.translate.instant('usuarios.crearUsuarios.ok')
           });
           this.route.navigateByUrl('/usuarios');
         }, error => {
@@ -305,11 +307,11 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
       const camposFaltantes = this.getCamposInvalidos();
       Swal.fire({
         icon: 'error',
-        title: 'Faltan datos para guardar',
+        title: this.translate.instant('usuarios.crearUsuarios.faltanDatosParaGuardar'),
         html: camposFaltantes.length > 0
-          ? `Por favor completá:<br><strong>${camposFaltantes.join(', ')}</strong>`
-          : 'Por favor verificá los datos del formulario.',
-        confirmButtonText: 'Entendido'
+          ? this.translate.instant('usuarios.crearUsuarios.porFavorCompleta', {campos: camposFaltantes.join(', ')})
+          : this.translate.instant('usuarios.crearUsuarios.porFavorVerificaLosDatos'),
+        confirmButtonText: this.translate.instant('comun.entendido')
       });
     }
   }
@@ -320,13 +322,13 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
    */
   private getCamposInvalidos(): string[] {
     const labels: Record<string, string> = {
-      email: 'Email',
-      password: 'Contraseña',
-      nombre: 'Nombres',
-      apellido: 'Apellidos',
-      tipoIdentificacion: 'Tipo de identificación',
-      identificacion: 'Identificación',
-      roles: 'Rol',
+      email: this.translate.instant('usuarios.crearUsuarios.campoEmail'),
+      password: this.translate.instant('usuarios.crearUsuarios.campoContrasena'),
+      nombre: this.translate.instant('usuarios.crearUsuarios.campoNombres'),
+      apellido: this.translate.instant('usuarios.crearUsuarios.campoApellidos'),
+      tipoIdentificacion: this.translate.instant('usuarios.crearUsuarios.campoTipoIdentificacion'),
+      identificacion: this.translate.instant('usuarios.crearUsuarios.campoIdentificacion'),
+      roles: this.translate.instant('usuarios.crearUsuarios.campoRol'),
     };
     const faltantes: string[] = [];
     for (const key of Object.keys(this.f.controls)) {
@@ -353,12 +355,12 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
   }
 
   private mostrarErrorGuardado(error: any): void {
-    const mensaje = error?.error?.message || error?.error?.msg || 'No fue posible guardar el usuario.';
+    const mensaje = error?.error?.message || error?.error?.msg || this.translate.instant('usuarios.crearUsuarios.noFuePosibleGuardarUsuario');
     Swal.fire({
       icon: 'error',
-      title: 'Error al guardar',
+      title: this.translate.instant('usuarios.crearUsuarios.errorAlGuardar'),
       text: mensaje,
-      confirmButtonText: 'Entendido'
+      confirmButtonText: this.translate.instant('comun.entendido')
     });
   }
 

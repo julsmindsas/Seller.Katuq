@@ -7,6 +7,7 @@ import {
   DropshippingSettingsService,
 } from '../../../../shared/services/dropshipping-settings.service';
 
+import { TranslateService } from '@ngx-translate/core';
 /** Roles que el servidor deja guardar (ONLY_ADMIN de routers/companies.js). */
 const ROLES_QUE_GUARDAN = ['Administrador', 'Super Administrador'];
 
@@ -32,6 +33,7 @@ export class DropshippingConfigComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private settings: DropshippingSettingsService,
+    private translate: TranslateService,
   ) {
     this.initializeForm();
   }
@@ -73,7 +75,7 @@ export class DropshippingConfigComponent implements OnInit {
       },
       error: () => {
         this.loading = false;
-        this.errorCarga = 'No pudimos cargar la configuración. Revisa tu conexión y vuelve a intentarlo.';
+        this.errorCarga = this.translate.instant('empresas.dropshippingConfig.noPudimosCargarConfiguracion');
       }
     });
   }
@@ -130,12 +132,12 @@ export class DropshippingConfigComponent implements OnInit {
     if (!this.puedeGuardar) return;
 
     Swal.fire({
-      title: 'Encontramos una configuración en este navegador',
-      text: '¿Quieres guardarla para toda la empresa? Así se verá igual en cualquier computador.',
+      title: this.translate.instant('empresas.dropshippingConfig.encontramosUnaConfiguracionEnEste'),
+      text: this.translate.instant('empresas.dropshippingConfig.quieresGuardarlaParaTodaLa'),
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Sí, guardarla',
-      cancelButtonText: 'No, descartarla',
+      confirmButtonText: this.translate.instant('empresas.dropshippingConfig.siGuardarla'),
+      cancelButtonText: this.translate.instant('empresas.dropshippingConfig.noDescartarla'),
       confirmButtonColor: '#5F3FE0',
     }).then((r) => {
       if (!r.isConfirmed) {
@@ -185,12 +187,12 @@ export class DropshippingConfigComponent implements OnInit {
         this.aplicarAlFormulario(ajustes);
         alGuardar?.();
         Swal.fire({
-          title: 'Configuración guardada',
+          title: this.translate.instant('empresas.dropshippingConfig.configuracionGuardada'),
           text: ajustes.habilitado
-            ? 'Dropshipping quedó habilitado para toda la empresa.'
-            : 'Dropshipping quedó deshabilitado para toda la empresa.',
+            ? this.translate.instant('empresas.dropshippingConfig.dropshippingQuedoHabilitadoParaToda')
+            : this.translate.instant('empresas.dropshippingConfig.dropshippingQuedoDeshabilitadoParaToda'),
           icon: 'success',
-          confirmButtonText: 'Entendido',
+          confirmButtonText: this.translate.instant('comun.entendido'),
           confirmButtonColor: '#5F3FE0'
         });
       },
@@ -199,10 +201,10 @@ export class DropshippingConfigComponent implements OnInit {
         // Un 403 (rol o plan) ya lo explica el interceptor con su aviso.
         if (err?.status === 403) return;
         Swal.fire({
-          title: 'No se pudo guardar',
-          text: err?.error?.error || err?.error?.message || 'Ocurrió un error al guardar la configuración.',
+          title: this.translate.instant('empresas.crearEmpresa.noSePudoGuardar'),
+          text: err?.error?.error || err?.error?.message || this.translate.instant('empresas.dropshippingConfig.ocurrioUnErrorAlGuardar'),
           icon: 'error',
-          confirmButtonText: 'Entendido',
+          confirmButtonText: this.translate.instant('comun.entendido'),
           confirmButtonColor: '#5F3FE0'
         });
       }
@@ -214,12 +216,12 @@ export class DropshippingConfigComponent implements OnInit {
 
     if (!habilitado) {
       Swal.fire({
-        title: '¿Deshabilitar Dropshipping?',
-        text: 'Al deshabilitar dropshipping, los usuarios no podrán configurar nuevos productos de dropshipping. Los productos ya configurados mantendrán su configuración.',
+        title: this.translate.instant('empresas.dropshippingConfig.deshabilitarDropshipping'),
+        text: this.translate.instant('empresas.dropshippingConfig.alDeshabilitarDropshippingLosUsuarios'),
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Sí, deshabilitar',
-        cancelButtonText: 'Cancelar',
+        confirmButtonText: this.translate.instant('empresas.dropshippingConfig.siDeshabilitar'),
+        cancelButtonText: this.translate.instant('comun.cancelar'),
         confirmButtonColor: '#D64545'
       }).then((result) => {
         if (!result.isConfirmed) {
@@ -243,21 +245,21 @@ export class DropshippingConfigComponent implements OnInit {
   getFieldError(fieldName: string): string {
     const field = this.dropshippingConfigForm.get(fieldName);
     if (field && field.errors && field.touched) {
-      if (field.errors['required']) return 'Este campo es requerido';
-      if (field.errors['min']) return `El valor mínimo es ${field.errors['min'].min}`;
-      if (field.errors['max']) return `El valor máximo es ${field.errors['max'].max}`;
+      if (field.errors['required']) return this.translate.instant('empresas.dropshippingConfig.esteCampoEsRequerido');
+      if (field.errors['min']) return this.translate.instant('empresas.dropshippingConfig.valorMinimo', {min: field.errors['min'].min});
+      if (field.errors['max']) return this.translate.instant('empresas.dropshippingConfig.valorMaximo', {max: field.errors['max'].max});
     }
     return '';
   }
 
   resetToDefaults(): void {
     Swal.fire({
-      title: '¿Restablecer Configuración?',
-      text: 'Se restablecerán todos los valores a su configuración por defecto. No se guarda hasta que pulses Guardar.',
+      title: this.translate.instant('empresas.dropshippingConfig.restablecerConfiguracion'),
+      text: this.translate.instant('empresas.dropshippingConfig.seRestableceranTodosLosValores'),
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Sí, restablecer',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('empresas.dropshippingConfig.siRestablecer'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#5F3FE0'
     }).then((result) => {
       if (result.isConfirmed) {

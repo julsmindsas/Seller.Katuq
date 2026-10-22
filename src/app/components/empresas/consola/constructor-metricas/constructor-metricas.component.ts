@@ -8,6 +8,7 @@ import {
   SitioConstructor,
 } from '../../../../shared/services/constructor-metricas.service';
 
+import { TranslateService } from '@ngx-translate/core';
 /**
  * Ticket 1246 (Web F5-31): cómo va el constructor web en toda la plataforma.
  * Sitios, tiempo hasta publicar, embudo, ventas de las webs, uso de funciones
@@ -25,7 +26,9 @@ export class ConstructorMetricasComponent implements OnInit, OnDestroy {
   tabla: 'empresas' | 'sitios' = 'empresas';
   private destroy$ = new Subject<void>();
 
-  constructor(private servicio: ConstructorMetricasService) {}
+  constructor(private servicio: ConstructorMetricasService,
+    private translate: TranslateService
+  ) {}
 
   ngOnInit(): void {
     this.cargar();
@@ -46,7 +49,7 @@ export class ConstructorMetricasComponent implements OnInit, OnDestroy {
         next: (r) => (this.datos = r),
         error: (err) => {
           this.datos = null;
-          this.error = err?.error?.error || 'No se pudieron cargar las métricas del constructor.';
+          this.error = err?.error?.error || this.translate.instant('empresas.constructorMetricas.noSePudieronCargarMetricas');
         },
       });
   }

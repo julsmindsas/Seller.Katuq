@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Table } from 'primeng/table';
 import Swal from 'sweetalert2';
 
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-usuarios',
   templateUrl: './usuarios.component.html',
@@ -23,7 +24,9 @@ export class UsuariosComponent implements OnInit {
   usuarios: any;
   filterValue: string = '';
   
-  constructor(private service: MaestroService, private router: Router) {
+  constructor(private service: MaestroService, private router: Router,
+    private translate: TranslateService
+  ) {
     this.cargarDatos()
   }
   
@@ -75,13 +78,13 @@ export class UsuariosComponent implements OnInit {
   }
 
   get metricasBotonTexto(): string {
-    return this.metricasSoloPropias ? 'Vendedores: solo sus métricas' : 'Vendedores: métricas de todos';
+    return this.metricasSoloPropias ? this.translate.instant('usuarios.usuarios.vendedoresSoloSusMetricas') : this.translate.instant('usuarios.usuarios.vendedoresMetricasDeTodos');
   }
 
   get metricasTooltip(): string {
     return this.metricasSoloPropias
-      ? 'Cada vendedor ve en la bienvenida y en Dashboards solo sus ventas, despachos y tareas. Clic para cambiarlo.'
-      : 'Los vendedores ven en la bienvenida y en Dashboards las cifras de toda la empresa. Clic para cambiarlo.';
+      ? this.translate.instant('usuarios.usuarios.tooltipSoloPropias')
+      : this.translate.instant('usuarios.usuarios.tooltipTodos');
   }
 
   cambiarMetricasEquipo(): void {
@@ -91,19 +94,19 @@ export class UsuariosComponent implements OnInit {
     const lista = ventas.length
       ? '<ul style="text-align:left;max-height:160px;overflow:auto;margin:8px 0 0;">' + ventas.map(u =>
           `<li>${this.escapar([u.nombre, u.apellido].filter(Boolean).join(' ') || u.email)} <small style="color:#6b7280;">(${this.escapar(u.roles)})</small></li>`).join('') + '</ul>'
-      : '<p style="color:#6b7280;margin:8px 0 0;">Hoy no hay usuarios con rol de ventas. Les aplicará a los que se creen.</p>';
+      : `<p style="color:#6b7280;margin:8px 0 0;">${this.translate.instant('usuarios.usuarios.hoyNoHayUsuariosDeVentas')}</p>`;
 
     Swal.fire({
-      title: nuevo ? '¿Cada vendedor verá solo sus métricas?' : '¿Los vendedores verán las métricas de todos?',
+      title: nuevo ? this.translate.instant('usuarios.usuarios.cadaVendedorVeraSoloSus') : this.translate.instant('usuarios.usuarios.losVendedoresVeranLasMetricas'),
       html: (nuevo
-        ? 'En la pantalla de bienvenida y en Dashboards, cada usuario con rol de ventas verá <b>solo sus ventas, sus despachos y sus tareas del CRM</b>. No verá las de sus compañeros.'
-        : 'En la pantalla de bienvenida y en Dashboards, los usuarios con rol de ventas volverán a ver <b>las cifras de toda la empresa</b>.')
-        + `<p style="margin:12px 0 0;"><b>Les aplica a ${ventas.length} ${ventas.length === 1 ? 'usuario' : 'usuarios'}:</b></p>` + lista
-        + '<p style="color:#6b7280;margin:12px 0 0;font-size:13px;">Administradores, gerentes, supervisores y demás roles siguen viendo todo.</p>',
+        ? this.translate.instant('usuarios.usuarios.metricasSoloPropiasAviso')
+        : this.translate.instant('usuarios.usuarios.metricasEquipoAviso'))
+        + `<p style="margin:12px 0 0;">${ventas.length === 1 ? this.translate.instant('usuarios.usuarios.lesAplicaAUnUsuario') : this.translate.instant('usuarios.usuarios.lesAplicaAUsuarios', {n: ventas.length})}</p>` + lista
+        + `<p style="color:#6b7280;margin:12px 0 0;font-size:13px;">${this.translate.instant('usuarios.usuarios.otrosRolesSiguenViendoTodo')}</p>`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Sí, cambiar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('usuarios.usuarios.siCambiar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
     }).then(r => {
       if (!r.isConfirmed) return;
       this.service.saveMetricasEquipo(nuevo).subscribe({
@@ -111,12 +114,12 @@ export class UsuariosComponent implements OnInit {
           this.metricasSoloPropias = nuevo;
           Swal.fire({
             icon: 'success',
-            title: nuevo ? 'Cada vendedor verá solo sus métricas' : 'Los vendedores verán las métricas de todos',
-            text: 'Las cifras cambian de inmediato. Los títulos de la bienvenida ("Mis ventas de hoy"…) se actualizan cuando vuelvan a iniciar sesión.',
-            confirmButtonText: 'Entendido',
+            title: nuevo ? this.translate.instant('usuarios.usuarios.cadaVendedorVeraSoloSus2') : this.translate.instant('usuarios.usuarios.losVendedoresVeranLasMetricas2'),
+            text: this.translate.instant('usuarios.usuarios.lasCifrasCambianDeInmediato'),
+            confirmButtonText: this.translate.instant('comun.entendido'),
           });
         },
-        error: (e) => Swal.fire('Error', e?.error?.message || 'No fue posible guardar el cambio.', 'error'),
+        error: (e) => Swal.fire(this.translate.instant('comun.error'), e?.error?.message || this.translate.instant('usuarios.usuarios.noFuePosibleGuardarEl'), 'error'),
       });
     });
   }
@@ -164,29 +167,29 @@ export class UsuariosComponent implements OnInit {
     const usuarioId = usuario?.cd || usuario?.id;
     if (!usuarioId) {
       Swal.fire(
-        'Error',
-        'No fue posible identificar el usuario a eliminar.',
+        this.translate.instant('comun.error'),
+        this.translate.instant('usuarios.usuarios.noFuePosibleIdentificarEl'),
         'error'
       );
       return;
     }
 
     Swal.fire({
-      title: `¿Está seguro de eliminar el usuario ${usuario.nombre}?`,
-      text: "Esta acción no se puede deshacer.",
+      title: this.translate.instant('usuarios.usuarios.estaSeguroDeEliminarUsuario', {nombre: usuario.nombre}),
+      text: this.translate.instant('usuarios.usuarios.estaAccionNoSePuede'),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonText: this.translate.instant('usuarios.usuarios.siEliminar'),
+      cancelButtonText: this.translate.instant('comun.cancelar')
     }).then((result) => {
       if (result.isConfirmed) {
         // Llamar al servicio para eliminar el usuario.
         this.service.eliminarUsuario(usuarioId).subscribe(response => {
           Swal.fire(
-            'Eliminado',
-            'El usuario ha sido eliminado exitosamente.',
+            this.translate.instant('usuarios.usuarios.eliminado'),
+            this.translate.instant('usuarios.usuarios.elUsuarioHaSidoEliminado'),
             'success'
           );
           // Actualizar los arreglos de usuarios
@@ -194,8 +197,8 @@ export class UsuariosComponent implements OnInit {
           this.usuarios = this.usuarios.filter(u => (u.cd || u.id) !== usuarioId);
         }, error => {
           Swal.fire(
-            'Error',
-            'Hubo un problema al eliminar el usuario.',
+            this.translate.instant('comun.error'),
+            this.translate.instant('usuarios.usuarios.huboUnProblemaAlEliminar'),
             'error'
           );
           console.error('Error eliminando el usuario', error);

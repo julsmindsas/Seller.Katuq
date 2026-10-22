@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FilaCampana, PautaMetricasService } from '../../../../shared/services/pauta-metricas.service';
 
+import { TranslateService } from '@ngx-translate/core';
 /**
  * Registros por campaña de pauta (D-327): cuántos trae cada campaña, cuántos
  * ya venden 10 o más pedidos a la semana y cuánto cuesta cada uno. El costo lo
@@ -19,7 +20,9 @@ export class PautaCampanasComponent implements OnInit {
   costos: { [campana: string]: number | null } = {};
   guardando: string | null = null;
 
-  constructor(private servicio: PautaMetricasService) {}
+  constructor(private servicio: PautaMetricasService,
+    private translate: TranslateService
+  ) {}
 
   ngOnInit(): void {
     this.cargar();
@@ -35,7 +38,7 @@ export class PautaCampanasComponent implements OnInit {
         this.cargando = false;
       },
       error: (err) => {
-        this.error = err?.error?.error || 'No se pudieron cargar los registros por campaña.';
+        this.error = err?.error?.error || this.translate.instant('empresas.pautaCampanas.noSePudieronCargarRegistros');
         this.cargando = false;
       },
     });
@@ -52,7 +55,7 @@ export class PautaCampanasComponent implements OnInit {
       },
       error: (err) => {
         this.guardando = null;
-        this.error = err?.error?.error || 'No se pudo guardar el costo.';
+        this.error = err?.error?.error || this.translate.instant('empresas.pautaCampanas.noSePudoGuardarCosto');
       },
     });
   }

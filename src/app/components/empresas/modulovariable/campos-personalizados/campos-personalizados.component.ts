@@ -4,6 +4,7 @@ import { CustomFieldsService, CustomFieldGroup, CustomFieldConfig } from '../../
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-campos-personalizados',
   templateUrl: './campos-personalizados.component.html',
@@ -17,18 +18,19 @@ export class CamposPersonalizadosComponent implements OnInit {
   showForm = false;
 
   tiposCampo = [
-    { valor: 'text', etiqueta: 'Texto' },
-    { valor: 'number', etiqueta: 'Número' },
-    { valor: 'select', etiqueta: 'Lista desplegable' },
-    { valor: 'checkbox', etiqueta: 'Casilla de verificación' },
-    { valor: 'date', etiqueta: 'Fecha' },
-    { valor: 'textarea', etiqueta: 'Texto largo' }
+    { valor: 'text', etiqueta: 'empresas.camposPersonalizados.tipoTexto' },
+    { valor: 'number', etiqueta: 'empresas.camposPersonalizados.tipoNumero' },
+    { valor: 'select', etiqueta: 'empresas.camposPersonalizados.tipoListaDesplegable' },
+    { valor: 'checkbox', etiqueta: 'empresas.camposPersonalizados.tipoCasilla' },
+    { valor: 'date', etiqueta: 'empresas.camposPersonalizados.tipoFecha' },
+    { valor: 'textarea', etiqueta: 'empresas.camposPersonalizados.tipoTextoLargo' }
   ];
 
   constructor(
     private customFieldsService: CustomFieldsService,
     private fb: FormBuilder,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -185,35 +187,35 @@ export class CamposPersonalizadosComponent implements OnInit {
     save$.subscribe({
       next: () => {
         this.toastr.success(
-          this.editingGroup ? 'Grupo actualizado' : 'Grupo creado',
-          'Campos Personalizados'
+          this.editingGroup ? this.translate.instant('empresas.camposPersonalizados.grupoActualizado') : this.translate.instant('empresas.camposPersonalizados.grupoCreado'),
+          this.translate.instant('empresas.camposPersonalizados.camposPersonalizados')
         );
         this.showForm = false;
         this.editingGroup = null;
         this.loadGroups();
       },
       error: (err: any) => {
-        this.toastr.error(err.message || 'Error guardando', 'Error');
+        this.toastr.error(err.message || this.translate.instant('empresas.camposPersonalizados.errorGuardando'), this.translate.instant('comun.error'));
       }
     });
   }
 
   eliminarGrupo(grupo: CustomFieldGroup): void {
     Swal.fire({
-      title: 'Eliminar grupo',
-      text: `Se eliminara "${grupo.nombre}" y todos sus campos. Esta accion no se puede deshacer.`,
+      title: this.translate.instant('empresas.camposPersonalizados.eliminarGrupo'),
+      text: this.translate.instant('empresas.camposPersonalizados.seEliminaraGrupo', {nombre: grupo.nombre}),
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Eliminar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonText: this.translate.instant('comun.eliminar'),
+      cancelButtonText: this.translate.instant('comun.cancelar')
     }).then(result => {
       if (result.isConfirmed) {
         this.customFieldsService.deleteGroup(grupo.id).subscribe({
           next: () => {
-            this.toastr.success('Grupo eliminado', 'Campos Personalizados');
+            this.toastr.success(this.translate.instant('empresas.camposPersonalizados.grupoEliminado'), this.translate.instant('empresas.camposPersonalizados.camposPersonalizados'));
             this.loadGroups();
           },
-          error: (err: any) => this.toastr.error(err.message, 'Error')
+          error: (err: any) => this.toastr.error(err.message, this.translate.instant('comun.error'))
         });
       }
     });
@@ -224,7 +226,7 @@ export class CamposPersonalizadosComponent implements OnInit {
       next: () => {
         grupo.activo = !grupo.activo;
         this.toastr.info(
-          grupo.activo ? 'Grupo activado' : 'Grupo desactivado',
+          grupo.activo ? this.translate.instant('empresas.camposPersonalizados.grupoActivado') : this.translate.instant('empresas.camposPersonalizados.grupoDesactivado'),
           grupo.nombre
         );
       }

@@ -10,7 +10,9 @@ import Swal from 'sweetalert2'
 })
 export class CrearRolComponent implements OnInit {
   public f: FormGroup
-  constructor(private fb: FormBuilder,private service: MaestroService) {
+  constructor(private fb: FormBuilder,private service: MaestroService,
+    private translate: TranslateService
+  ) {
     this.f = fb.group({
       nombre: ['', [Validators.required, Validators.email]],
       descripcion: ['', Validators.required],
@@ -18,6 +20,7 @@ export class CrearRolComponent implements OnInit {
 
 
     });
+import { TranslateService } from '@ngx-translate/core';
    }
 
   ngOnInit(): void {
@@ -26,10 +29,10 @@ export class CrearRolComponent implements OnInit {
 
     this.service.createRol(this.f.value).subscribe(r=> {console.log(r)
     Swal.fire({
-      title: 'Guardado!',
-      text: 'Guardado con exito',
+      title: this.translate.instant('rol.crearRol.guardado'),
+      text: this.translate.instant('rol.crearRol.guardadoConExito'),
       icon: 'success',
-      confirmButtonText: 'Ok'
+      confirmButtonText: this.translate.instant('rol.crearRol.ok')
     })});
   }
 

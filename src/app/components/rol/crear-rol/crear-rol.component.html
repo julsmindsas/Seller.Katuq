@@ -1,8 +1,8 @@
 <div class="cfg-pagina">
     <header class="cfg-cabeza">
         <div class="cfg-cabeza__textos">
-            <span class="cfg-eyebrow">Maestros · Roles</span>
-            <h1 class="cfg-titulo">Crear Rol</h1>
+            <span class="cfg-eyebrow">{{ 'rol.crearRol.maestrosRoles' | translate }}</span>
+            <h1 class="cfg-titulo">{{ 'rol.crearRol.crearRol' | translate }}</h1>
         </div>
     </header>
 
@@ -10,32 +10,32 @@
         <form cForm [formGroup]="f" class="cfg-form">
             <div class="cfg-form__grupo">
                 <div>
-                    <label class="form-label" for="validationCustom01">Nombre</label>
+                    <label class="form-label" for="validationCustom01">{{ 'rol.crearRol.nombre' | translate }}</label>
                     <input formControlName="nombre" class="form-control" id="Nombre" type="text"
-                        placeholder="Nombre" required="">
+                        [placeholder]="'rol.crearRol.nombre' | translate" required="">
 
                 </div>
                 <div>
-                    <label class="form-label" for="validationCustom01">Descripcion</label>
+                    <label class="form-label" for="validationCustom01">{{ 'rol.crearRol.descripcion' | translate }}</label>
                     <input formControlName="descripcion" class="form-control" id="validationCustom01"
-                        type="text" placeholder="Descripcion" required="">
+                        type="text" [placeholder]="'rol.crearRol.descripcion' | translate" required="">
 
                 </div>
                 <div>
-                    <label class="form-label" for="validationCustom01">Permisos</label>
+                    <label class="form-label" for="validationCustom01">{{ 'rol.crearRol.permisos' | translate }}</label>
                     <select formControlName="permisos" class="form-control digits" name="" id="">
-                        <option value="1" selected>Seleccione</option>
-                        <option value="crearEmpresas">Crear Empresas</option>
-                        <option value="crearUsuarios">Crear Usuarios</option>
-                        <option value="crearRoles">Crear Roles</option>
-                        <option value="crearTodo">Crear Todo</option>
+                        <option value="1" selected>{{ 'rol.crearRol.seleccione' | translate }}</option>
+                        <option value="crearEmpresas">{{ 'rol.crearRol.crearEmpresas' | translate }}</option>
+                        <option value="crearUsuarios">{{ 'rol.crearRol.crearUsuarios' | translate }}</option>
+                        <option value="crearRoles">{{ 'rol.crearRol.crearRoles' | translate }}</option>
+                        <option value="crearTodo">{{ 'rol.crearRol.crearTodo' | translate }}</option>
                     </select>
 
                 </div>
             </div>
 
             <div class="cfg-form__pie">
-                <button (click)="guardar()" class="cfg-btn">Guardar</button>
+                <button (click)="guardar()" class="cfg-btn">{{ 'comun.guardar' | translate }}</button>
             </div>
         </form>
     </section>

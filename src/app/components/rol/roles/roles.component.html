@@ -3,17 +3,17 @@
   <!-- Header -->
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Seguridad</span>
+      <span class="cfg-eyebrow">{{ 'rol.rol.seguridad' | translate }}</span>
       <h1 class="cfg-titulo">
-              {{ editingRoleId ? 'Editar Rol' : 'Crear Rol' }}
+              {{ editingRoleId ? ('rol.roles.editarRol' | translate) : ('rol.crearRol.crearRol' | translate) }}
       </h1>
       <p class="cfg-sub">
-              {{ editingRoleId ? 'Modifica la configuración del rol.' : 'Define un nuevo rol con sus permisos y accesos.' }}
+              {{ editingRoleId ? ('rol.roles.modificaLaConfiguracionDelRol' | translate) : ('rol.roles.defineUnNuevoRolCon' | translate) }}
       </p>
     </div>
     <div class="cfg-acciones">
             <button class="cfg-btn cfg-btn--sec" type="button" (click)="volver()">
-              <i class="icofont icofont-arrow-left"></i>&nbsp; Volver al listado
+              <i class="icofont icofont-arrow-left"></i>{{ 'rol.roles.volverAlListado' | translate }}
             </button>
     </div>
   </header>
@@ -27,33 +27,33 @@
                 <i class="icofont icofont-magic-alt"></i>
               </div>
               <div class="template-banner-text">
-                <strong>¿Querés empezar más rápido?</strong>
-                <small class="d-block rl-tenue">Elegí una plantilla (Administrador, Vendedor, Cajero, Bodeguero, etc) y armá un rol con permisos pre-configurados. Después podés personalizarlo.</small>
+                <strong>{{ 'rol.roles.queresEmpezarMasRapido' | translate }}</strong>
+                <small class="d-block rl-tenue">{{ 'rol.roles.elegiUnaPlantillaAdministradorVendedor' | translate }}</small>
               </div>
               <div class="template-banner-action">
                 <button type="button" class="cfg-btn rl-btn-chico">
-                  Ver plantillas <i class="icofont icofont-simple-right"></i>
+                  {{ 'rol.roles.verPlantillas' | translate }} <i class="icofont icofont-simple-right"></i>
                 </button>
               </div>
             </div>
 
             <!-- Sección: Información básica -->
-            <div class="section-title">Información del Rol</div>
+            <div class="section-title">{{ 'rol.roles.informacionDelRol' | translate }}</div>
             <div class="row mb-3">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="rol">Nombre del Rol <span class="rl-obligatorio">*</span></label>
+                  <label for="rol">{{ 'rol.roles.nombreDelRol' | translate }} <span class="rl-obligatorio">*</span></label>
                   <input type="text" autocomplete="off" id="rol" formControlName="rol"
                     class="form-control" [class.is-invalid]="roleForm.get('rol')?.invalid && roleForm.get('rol')?.touched"
-                    placeholder="Ej: Vendedor, Administrador, Despachador" />
-                  <div class="invalid-feedback">El nombre del rol es obligatorio.</div>
+                    [placeholder]="'rol.roles.ejVendedorAdministradorDespachador' | translate" />
+                  <div class="invalid-feedback">{{ 'rol.roles.elNombreDelRolEs' | translate }}</div>
                 </div>
               </div>
               <div class="col-md-6" *ngIf="isJulsmind">
                 <div class="form-group">
-                  <label for="empresa">Empresa</label>
+                  <label for="empresa">{{ 'rol.roles.empresa' | translate }}</label>
                   <select id="empresa" formControlName="empresa" class="form-control">
-                    <option [ngValue]="null" disabled>Seleccione una empresa</option>
+                    <option [ngValue]="null" disabled>{{ 'rol.roles.seleccioneUnaEmpresa' | translate }}</option>
                     <option *ngFor="let empresa of empresas" [value]="empresa.nomComercial">{{ empresa.nomComercial }}</option>
                   </select>
                 </div>
@@ -65,8 +65,8 @@
               <div class="config-banner-left">
                 <i class="icofont icofont-gear"></i>
                 <div>
-                  <span class="config-banner-title">Configuraciones</span>
-                  <span class="config-banner-desc">Facturación, prefijos y más opciones del rol</span>
+                  <span class="config-banner-title">{{ 'rol.roles.configuraciones' | translate }}</span>
+                  <span class="config-banner-desc">{{ 'rol.roles.facturacionPrefijosYMasOpciones' | translate }}</span>
                 </div>
               </div>
               <div class="config-banner-right">
@@ -78,7 +78,7 @@
             </div>
 
             <!-- Sección: Menús y permisos -->
-            <div class="section-title">Menús y Permisos</div>
+            <div class="section-title">{{ 'rol.roles.menusYPermisos' | translate }}</div>
             <div class="row mb-4">
               <div class="col-12">
                 <p-pickList [source]="availableMenus" [target]="selectedMenus"
@@ -102,7 +102,7 @@
                   </ng-template>
                 </p-pickList>
                 <small class="form-text rl-tenue mt-1" *ngIf="selectedMenus.length === 0">
-                  Seleccione al menos un menú para este rol.
+                  {{ 'rol.roles.seleccioneAlMenosUnMenu' | translate }}
                 </small>
               </div>
             </div>
@@ -110,11 +110,11 @@
             <!-- Acciones -->
             <div class="cfg-form__pie">
                 <button class="cfg-btn cfg-btn--sec" type="button" (click)="volver()">
-                  Cancelar
+                  {{ 'comun.cancelar' | translate }}
                 </button>
                 <button class="cfg-btn" type="submit" [disabled]="roleForm.invalid || selectedMenus.length === 0">
                   <i class="icofont icofont-check-circled"></i>&nbsp;
-                  {{ editingRoleId ? 'Actualizar Rol' : 'Guardar Rol' }}
+                  {{ editingRoleId ? ('rol.roles.actualizarRol' | translate) : ('rol.roles.guardarRol' | translate) }}
                 </button>
             </div>
 
@@ -126,7 +126,7 @@
 <ng-template #configModal let-modal>
   <div class="modal-header config-modal-header">
     <h5 class="modal-title">
-      <i class="icofont icofont-gear"></i>&nbsp; Configuraciones del Rol
+      <i class="icofont icofont-gear"></i>{{ 'rol.roles.configuracionesDelRol' | translate }}
     </h5>
     <button type="button" class="close rl-cerrar" (click)="modal.dismiss()">
       <span class="rl-cerrar__x">&times;</span>
@@ -138,17 +138,16 @@
     <div class="config-section">
       <div class="config-section-header">
         <i class="icofont icofont-file-document"></i>
-        <span>Facturación Electrónica</span>
+        <span>{{ 'rol.roles.facturacionElectronica' | translate }}</span>
       </div>
       <div class="config-section-body">
         <div class="form-group">
-          <label for="prefijoFacturacion">Prefijos de facturación</label>
+          <label for="prefijoFacturacion">{{ 'rol.roles.prefijosDeFacturacion' | translate }}</label>
           <input type="text" autocomplete="off" id="prefijoFacturacion"
             [formControl]="roleForm.get('prefijoFacturacion')"
-            class="form-control" placeholder="Ej: FE, POS, SETT" />
+            class="form-control" [placeholder]="'rol.roles.ejFePosSett' | translate" />
           <small class="form-text rl-tenue">
-            Prefijos separados por coma. Al facturar, el usuario podrá elegir entre estos.
-            Si se deja vacío, se usará el prefijo por defecto de la empresa.
+            {{ 'rol.roles.prefijosSeparadosPorComaAl' | translate }}
           </small>
         </div>
       </div>
@@ -158,23 +157,23 @@
     <div class="config-section config-section-disabled">
       <div class="config-section-header">
         <i class="icofont icofont-chart-bar-graph"></i>
-        <span>Reportes y Dashboard</span>
-        <span class="coming-soon-badge">Próximamente</span>
+        <span>{{ 'rol.roles.reportesYDashboard' | translate }}</span>
+        <span class="coming-soon-badge">{{ 'rol.roles.proximamente' | translate }}</span>
       </div>
     </div>
 
     <div class="config-section config-section-disabled">
       <div class="config-section-header">
         <i class="icofont icofont-notification"></i>
-        <span>Notificaciones</span>
-        <span class="coming-soon-badge">Próximamente</span>
+        <span>{{ 'rol.roles.notificaciones' | translate }}</span>
+        <span class="coming-soon-badge">{{ 'rol.roles.proximamente' | translate }}</span>
       </div>
     </div>
 
   </div>
   <div class="modal-footer rl-modal-pie">
     <button type="button" class="cfg-btn" (click)="modal.close()">
-      <i class="icofont icofont-check"></i>&nbsp; Listo
+      <i class="icofont icofont-check"></i>{{ 'rol.roles.listo' | translate }}
     </button>
   </div>
 </ng-template>
@@ -183,9 +182,9 @@
 <div class="template-modal-overlay" *ngIf="showTemplateModal" (click)="cerrarSelectorPlantillas()">
   <div class="template-modal-box" (click)="$event.stopPropagation()">
     <div class="template-modal-header">
-      <h5 class="mb-1"><i class="icofont icofont-magic-alt"></i> Elegí una plantilla</h5>
-      <small class="rl-tenue">El rol se creará con los menús y permisos pre-configurados. Después podés ajustarlo.</small>
-      <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrarSelectorPlantillas()"></button>
+      <h5 class="mb-1"><i class="icofont icofont-magic-alt"></i> {{ 'rol.roles.elegiUnaPlantilla' | translate }}</h5>
+      <small class="rl-tenue">{{ 'rol.roles.elRolSeCrearaCon' | translate }}</small>
+      <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="cerrarSelectorPlantillas()"></button>
     </div>
     <div class="template-modal-body">
       <div class="template-grid">
@@ -204,7 +203,7 @@
       </div>
     </div>
     <div class="template-modal-footer">
-      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrarSelectorPlantillas()">Cancelar</button>
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrarSelectorPlantillas()">{{ 'comun.cancelar' | translate }}</button>
     </div>
   </div>
 </div>

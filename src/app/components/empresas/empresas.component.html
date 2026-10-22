@@ -16,10 +16,10 @@
 <div class="em" *ngIf="!isJulsmind">
 
   <header class="em-head">
-    <span class="em-eyebrow">Mi empresa</span>
-    <h1 class="em-titulo">Los datos de tu <span>empresa</span></h1>
+    <span class="em-eyebrow">{{ 'empresas.empresas.miEmpresa' | translate }}</span>
+    <h1 class="em-titulo">{{ 'empresas.empresas.losDatosDeTu' | translate }} <span>{{ 'empresas.consolaPlataforma.empresa' | translate }}</span></h1>
     <p class="em-lead">
-      Cómo le cobras a tus clientes y cómo te identifican. Para editar los datos, usa el lápiz de la fila.
+      {{ 'empresas.empresas.comoLeCobrasATus' | translate }}
     </p>
   </header>
 
@@ -31,26 +31,25 @@
     <div class="modo-head">
       <div class="modo-head-icon"><i class="pi pi-tags"></i></div>
       <div>
-        <h2 class="em-subtitulo">Modo de precios</h2>
+        <h2 class="em-subtitulo">{{ 'empresas.empresas.modoDePrecios' | translate }}</h2>
         <p class="em-texto">
-          Tu empresa factura de una sola forma. Elige cuál manejas y
-          <strong>Lista de precios</strong> mostrará solo esa pestaña.
+          {{ 'empresas.empresas.tuEmpresaFacturaDeUna' | translate }}
+          <strong>{{ 'empresas.empresas.listaDePrecios' | translate }}</strong> {{ 'empresas.empresas.mostraraSoloEsaPestana' | translate }}
         </p>
       </div>
     </div>
 
     <div class="modo-loading" *ngIf="cargandoModo">
-      <i class="pi pi-spin pi-spinner"></i> Consultando la configuración de tu empresa...
+      <i class="pi pi-spin pi-spinner"></i> {{ 'empresas.empresas.consultandoLaConfiguracionDeTu' | translate }}
     </div>
 
     <ng-container *ngIf="!cargandoModo">
       <div class="modo-aviso" *ngIf="!modoPrecio">
         <i class="pi pi-info-circle"></i>
-        <span class="modo-aviso-txt">Todavía no has elegido. Mientras tanto, en Lista de precios se siguen viendo
-        las dos pestañas, igual que hasta hoy.</span>
+        <span class="modo-aviso-txt">{{ 'empresas.empresas.todaviaNoHasElegidoMientras' | translate }}</span>
       </div>
 
-      <div class="modo-opciones" role="radiogroup" aria-label="Modo de precios">
+      <div class="modo-opciones" role="radiogroup" [attr.aria-label]="'empresas.empresas.modoDePrecios' | translate">
         <button type="button" class="modo-opcion"
           [class.activa]="modoPrecio === 'unitario'"
           [class.bloqueada]="!puedeEditarModo"
@@ -60,9 +59,8 @@
           <span class="modo-check"><i class="pi"
             [ngClass]="modoPrecio === 'unitario' ? 'pi-check' : ''"></i></span>
           <span class="modo-opcion-txt">
-            <strong>Precio unitario</strong>
-            <small>Un solo precio por producto, igual para todos los clientes
-              y para cualquier cantidad.</small>
+            <strong>{{ 'empresas.empresas.precioUnitario' | translate }}</strong>
+            <small>{{ 'empresas.empresas.unSoloPrecioPorProducto' | translate }}</small>
           </span>
         </button>
 
@@ -75,9 +73,8 @@
           <span class="modo-check"><i class="pi"
             [ngClass]="modoPrecio === 'tipoCliente' ? 'pi-check' : ''"></i></span>
           <span class="modo-opcion-txt">
-            <strong>Precio por tipo de cliente</strong>
-            <small>El precio depende de la tipología del cliente (mayorista, distribuidor,
-              público…), sin importar cuántas unidades lleve.</small>
+            <strong>{{ 'empresas.empresas.precioPorTipoDeCliente' | translate }}</strong>
+            <small>{{ 'empresas.empresas.elPrecioDependeDeLa' | translate }}</small>
           </span>
         </button>
 
@@ -90,9 +87,8 @@
           <span class="modo-check"><i class="pi"
             [ngClass]="modoPrecio === 'volumen' ? 'pi-check' : ''"></i></span>
           <span class="modo-opcion-txt">
-            <strong>Precio por volumen</strong>
-            <small>El precio depende de la cantidad comprada, por rangos de unidades,
-              igual para todos los clientes.</small>
+            <strong>{{ 'empresas.empresas.precioPorVolumen' | translate }}</strong>
+            <small>{{ 'empresas.empresas.elPrecioDependeDeLa2' | translate }}</small>
           </span>
         </button>
       </div>
@@ -100,21 +96,20 @@
       <div class="modo-notas">
         <p class="modo-nota" *ngIf="!puedeEditarModo">
           <i class="pi pi-lock"></i>
-          <span class="modo-nota-txt">Solo el administrador de la empresa puede cambiar el modo de precios.</span>
+          <span class="modo-nota-txt">{{ 'empresas.empresas.soloElAdministradorDeLa' | translate }}</span>
         </p>
         <p class="modo-nota" *ngIf="puedeEditarModo">
           <i class="pi pi-shield"></i>
-          <span class="modo-nota-txt">Cambiar de modo no borra precios: los del modo que se apaga quedan guardados.</span>
+          <span class="modo-nota-txt">{{ 'empresas.empresas.cambiarDeModoNoBorra' | translate }}</span>
         </p>
         <p class="modo-nota" *ngIf="modoPrecio === 'tipoCliente'">
           <i class="pi pi-info-circle"></i>
-          <span class="modo-nota-txt">¿Quieres que uno de tus tipos de cliente defina el <strong>precio base</strong> del
-          producto? Se marca en <strong>Tipos de Cliente → Editar</strong>.</span>
+          <span class="modo-nota-txt">{{ 'empresas.empresas.quieresQueUnoDeTus' | translate }} <strong>{{ 'empresas.empresas.precioBase' | translate }}</strong> {{ 'empresas.empresas.delProductoSeMarcaEn' | translate }} <strong>{{ 'empresas.empresas.tiposDeClienteEditar' | translate }}</strong>.</span>
         </p>
       </div>
 
       <div class="modo-loading" *ngIf="guardandoModo">
-        <i class="pi pi-spin pi-spinner"></i> Guardando...
+        <i class="pi pi-spin pi-spinner"></i> {{ 'empresas.empresas.guardando' | translate }}
       </div>
     </ng-container>
   </section>
@@ -127,11 +122,11 @@
   <section class="em-panel em-lista" *ngIf="!cargando">
     <div class="em-lista__head">
       <div>
-        <h2 class="em-subtitulo">{{ 'Mi empresa' | translate }}</h2>
-        <p class="em-texto">Datos de tu empresa. Para editarlos, usa el lápiz de la fila.</p>
+        <h2 class="em-subtitulo">{{ 'empresas.empresas.miEmpresa' | translate }}</h2>
+        <p class="em-texto">{{ 'empresas.empresas.datosDeTuEmpresaPara' | translate }}</p>
       </div>
       <span class="em-conteo">
-        {{ 'Mostrando' | translate }} {{ rows.length }} {{ 'de' | translate }} {{ totalRecords }} {{ 'empresas' | translate }}
+        {{ 'empresas.empresas.mostrando' | translate }} {{ rows.length }} {{ 'de' | translate }} {{ totalRecords }} {{ 'empresas.empresas.unidadEmpresas' | translate }}
       </span>
     </div>
 
@@ -142,13 +137,13 @@
         <input
           type="text"
           [formControl]="filtroGlobalControl"
-          [placeholder]="'Buscar en todas las columnas...' | translate">
+          [placeholder]="'empresas.empresas.buscarEnTodasLasColumnas' | translate">
       </div>
       <button class="em-btn-ghost" type="button"
               [class.activo]="mostrarFiltrosAvanzados"
               (click)="toggleFiltrosAvanzados()">
         <i class="pi pi-filter"></i>
-        {{ 'Filtros Avanzados' | translate }}
+        {{ 'empresas.empresas.filtrosAvanzados' | translate }}
         <i class="pi" [ngClass]="mostrarFiltrosAvanzados ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
       </button>
       <button class="em-btn-ghost" type="button" (click)="limpiarFiltros()">
@@ -161,11 +156,11 @@
     <div class="em-filtros" *ngIf="mostrarFiltrosAvanzados">
       <div class="em-filtros__grid">
         <div class="em-campo">
-          <label class="em-label">{{ 'NIT' | translate }}</label>
+          <label class="em-label">{{ 'empresas.empresas.nit' | translate }}</label>
           <input type="text" class="em-input"
                  [(ngModel)]="filtros.nit"
                  (ngModelChange)="onFiltroChange()"
-                 [placeholder]="'Filtrar por NIT...' | translate">
+                 [placeholder]="'empresas.empresas.filtrarPorNit' | translate">
         </div>
 
         <div class="em-campo">
@@ -173,7 +168,7 @@
           <input type="text" class="em-input"
                  [(ngModel)]="filtros.nombre"
                  (ngModelChange)="onFiltroChange()"
-                 [placeholder]="'Filtrar por razón social...' | translate">
+                 [placeholder]="'empresas.empresas.filtrarPorRazonSocial' | translate">
         </div>
 
         <div class="em-campo">
@@ -181,7 +176,7 @@
           <input type="text" class="em-input"
                  [(ngModel)]="filtros.nomComercial"
                  (ngModelChange)="onFiltroChange()"
-                 [placeholder]="'Filtrar por nombre comercial...' | translate">
+                 [placeholder]="'empresas.empresas.filtrarPorNombreComercial' | translate">
         </div>
 
         <div class="em-campo">
@@ -189,7 +184,7 @@
           <input type="text" class="em-input"
                  [(ngModel)]="filtros.email"
                  (ngModelChange)="onFiltroChange()"
-                 [placeholder]="'Filtrar por email...' | translate">
+                 [placeholder]="'empresas.empresas.filtrarPorEmail' | translate">
         </div>
 
         <div class="em-campo">
@@ -197,7 +192,7 @@
           <input type="text" class="em-input"
                  [(ngModel)]="filtros.telefono"
                  (ngModelChange)="onFiltroChange()"
-                 [placeholder]="'Filtrar por teléfono...' | translate">
+                 [placeholder]="'empresas.empresas.filtrarPorTelefono' | translate">
         </div>
 
         <div class="em-campo">
@@ -205,30 +200,30 @@
           <p-multiSelect
             [(ngModel)]="filtros.pais"
             [options]="paisesOptions"
-            [placeholder]="'Seleccionar países...' | translate"
+            [placeholder]="'empresas.empresas.seleccionarPaises' | translate"
             (onChange)="onFiltroChange()"
             styleClass="w-100">
           </p-multiSelect>
         </div>
 
         <div class="em-campo">
-          <label class="em-label">{{ 'Estado' | translate }}</label>
+          <label class="em-label">{{ 'empresas.empresas.estado' | translate }}</label>
           <p-dropdown
             [(ngModel)]="filtros.activo"
             [options]="estadosActivo"
             optionLabel="label"
             optionValue="value"
-            [placeholder]="'Todos los estados' | translate"
+            [placeholder]="'empresas.empresas.todosLosEstados' | translate"
             (onChange)="onFiltroChange()"
             styleClass="w-100">
           </p-dropdown>
         </div>
 
         <div class="em-campo">
-          <label class="em-label">{{ 'Fecha Desde' | translate }}</label>
+          <label class="em-label">{{ 'empresas.empresas.fechaDesde' | translate }}</label>
           <p-calendar
             [(ngModel)]="filtros.fechaDesde"
-            [placeholder]="'Fecha desde...' | translate"
+            [placeholder]="'empresas.empresas.fechaDesdePlaceholder' | translate"
             (onSelect)="onFiltroChange()"
             dateFormat="dd/mm/yy"
             [showIcon]="true"
@@ -257,7 +252,7 @@
       <ng-template pTemplate="header">
         <tr>
           <th *ngIf="!isMobile" pSortableColumn="nit" style="width: 11%">
-            {{ 'NIT' | translate }}
+            {{ 'empresas.empresas.nit' | translate }}
             <p-sortIcon field="nit"></p-sortIcon>
           </th>
           <th pSortableColumn="nombre" [style.width]="isMobile ? '35%' : '18%'">
@@ -271,7 +266,7 @@
           <th *ngIf="!isMobile" style="width: 10%">{{ 'Teléfono' | translate }}</th>
           <th *ngIf="!isMobile" style="width: 16%">{{ 'Email' | translate }}</th>
           <th *ngIf="!isMobile" style="width: 8%">{{ 'País' | translate }}</th>
-          <th *ngIf="!isMobile" style="width: 8%">{{ 'Estado' | translate }}</th>
+          <th *ngIf="!isMobile" style="width: 8%">{{ 'empresas.empresas.estado' | translate }}</th>
           <th [style.width]="isMobile ? '40%' : '8%'" class="em-col-acciones">{{ 'Acciones' | translate }}</th>
         </tr>
       </ng-template>
@@ -335,7 +330,7 @@
             <div class="em-acciones" [class.flex-column]="isMobile">
               <button class="em-icono"
                 (click)="editarEmpresa(empresa)"
-                title="{{ 'Editar empresa' | translate }}">
+                title="{{ 'empresas.empresas.editarEmpresa' | translate }}">
                 <i class="pi pi-pencil"></i>
               </button>
 
@@ -354,8 +349,8 @@
           <td [attr.colspan]="isMobile ? 3 : 8">
             <div class="em-vacio">
               <span class="em-vacio__ico"><i class="pi pi-search"></i></span>
-              <strong>{{ 'No se encontraron empresas' | translate }}</strong>
-              <small>{{ 'Intenta ajustar los filtros de búsqueda' | translate }}</small>
+              <strong>{{ 'empresas.empresas.noSeEncontraronEmpresas' | translate }}</strong>
+              <small>{{ 'empresas.empresas.intentaAjustarFiltros' | translate }}</small>
             </div>
           </td>
         </tr>
