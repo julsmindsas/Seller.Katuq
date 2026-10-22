@@ -11922,3 +11922,11 @@ Lo que queda está, sobre todo, en:
 - **Propuesta:** `clients.contactos[]` opcional (nombre, cargo, correo, celular, principal) en el formulario único de cliente (D-406) como pestaña Contactos; en la cotización, selector «Dirigida a» que guarda una copia en `cotizacion.contactoDestino` y la muestra como «Atención» en el documento y al compartir por WhatsApp.
 - **No toca:** pedidos, facturación electrónica, cartera ni notificaciones (siguen con el correo principal); clientes corporativos del CRM; índice de búsqueda. El envío de la cotización por correo no existe hoy (501) y queda fuera.
 - [Propuesta](../openspec/changes/contactos-del-cliente/proposal.md). Checkpoint: aprobación de Daniel antes de diseño y tareas.
+
+## D-538 (2026-10-22) — Combos: cantidad por producto, código y carga desde Excel (ticket 1323) — PROPUESTA, pendiente de aprobación; la parte de solo lectura EN PRODUCCIÓN
+
+- **Petición:** ALMACEN BOMBAS (ticket 1323): ver los combos y sus componentes desde Claude y cargarlos desde Excel. Daniel (22-oct): «hazlo» para la parte rápida y propuesta para lo demás.
+- **En producción (22-oct, backend 60e6552d):** tool MCP `get_combos` (solo lectura: productos, cantidad, IVA, subtotales y total con/sin IVA, avisos) y `get_product_catalog` con precio numérico, `priceSinIva`, `active` = `exposicion.activar` y `enCombos`. Probado en solo lectura con los 8 combos de ALMACEN BOMBAS.
+- **Propuesta:** `combos.productos[].cantidad` (sin ella, la cantidad mínima de venta como hoy) y `combos.codigo` único por empresa; tipo Combos en el importador con simulación previa y creación/actualización por código; `get_combos` con disponibilidad por stock. Enmienda D-147 y D-339 solo en cantidad y código.
+- **No toca:** precio propio del combo (sigue siendo la suma, pregunta abierta a Daniel), inventario, facturación, POS, creador de informes.
+- [Propuesta](../openspec/changes/combos-cantidad-codigo-y-carga-excel/proposal.md). Checkpoint: aprobación de Daniel antes de diseño y tareas.
