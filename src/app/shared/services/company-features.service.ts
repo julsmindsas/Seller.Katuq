@@ -64,6 +64,8 @@ export const COMPANY_FEATURE_FLAGS = [
   'invoiceIdempotency',
   // Bandeja única de facturación (D-499 fase 1, FE-02). Dueño: Daniel. Se retira el 2027-03-31.
   'invoicingTray',
+  // D-539 (ticket 1331): pedido con productos de varias bodegas de una misma zona.
+  'multiBodegaMismaZona',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

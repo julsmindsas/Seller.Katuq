@@ -10,7 +10,10 @@ import {
   OnChanges,
   SimpleChanges,
   OnDestroy,
+  inject,
 } from "@angular/core";
+import { CompanyFeaturesService } from "../../../../shared/services/company-features.service";
+import { bodegasDeLaZona } from "../../../../shared/utils/bodega-zona";
 import { Subject, of, forkJoin, EMPTY, Observable, timer } from "rxjs";
 import { takeUntil, debounceTime, distinctUntilChanged, switchMap, tap, catchError, filter, expand, map, last } from "rxjs/operators";
 import { QuickViewComponent } from "../../quick-view/quick-view.component";
@@ -51,6 +54,9 @@ export class EcomerceProductsComponent
   private searchSubject$ = new Subject<string>();
   @Input() public ciudad: string;
   @Input() public bodega: any;
+  /** D-539: bodegas del canal; con la bandera, el stock se suma en las de la zona de `bodega`. */
+  @Input() public bodegas: any[] = [];
+  private readonly companyFeatures = inject(CompanyFeaturesService);
   @Output() onRender = new EventEmitter<void>();
 
   // Nuevos inputs y outputs para el selector de ciudad
@@ -312,10 +318,13 @@ export class EcomerceProductsComponent
     if (!Array.isArray(products) || this.soloNoInventariables || !idBodega) {
       return products || [];
     }
+    // D-539: con la bandera, se venden las existencias de todas las bodegas de la zona.
+    const zona = this.companyFeatures.isEnabled('multiBodegaMismaZona') ? bodegasDeLaZona(this.bodega, this.bodegas) : [];
+    const codigos = zona.length > 1 ? zona.map((b: any) => b.idBodega) : [idBodega];
     return products.map((p) => {
       if (!p || p.disponibilidad?.inventariable === false) return p;
       if (!p.stockPorBodega) return p;
-      const enBodega = p.stockPorBodega[idBodega] || 0;
+      const enBodega = codigos.reduce((suma: number, c: string) => suma + (Number(p.stockPorBodega[c]) || 0), 0);
       if (p.disponibilidad?.cantidadDisponible === enBodega) return p;
       return {
         ...p,

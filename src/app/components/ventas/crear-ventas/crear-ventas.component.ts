@@ -12,6 +12,8 @@ import {
   OnDestroy,
   inject,
 } from "@angular/core";
+import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
+import { bodegaParaLinea, bodegasDeLaZona } from "../../../shared/utils/bodega-zona";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import {
   trigger,
@@ -910,6 +912,8 @@ export class CrearVentasComponent
             _requiereConfiguracionPendiente: item._requiereConfiguracionPendiente,
             // Ticket 1097: a qué combo pertenece la línea y si se ve en una sola fila.
             combo: item.combo,
+            // D-539: bodega de la que sale la línea (solo con la bandera y varias bodegas en la zona).
+            ...this.bodegaDeLaLinea(item),
           }));
 
           // Forzar detección de cambios para actualizar la UI y notificar al componente de notas
@@ -4576,6 +4580,26 @@ export class CrearVentasComponent
   onVoiceTranscription(text: string): void {
     console.log("Texto transcrito:", text);
     // Aquí se podría utilizar la transcripción para realizar alguna acción
+  }
+
+  // ---- D-539 (ticket 1331): pedido con productos de varias bodegas de una misma zona ----
+  private readonly companyFeaturesBodegas = inject(CompanyFeaturesService);
+
+  /**
+   * `{ idBodega, bodegaNombre }` de la bodega de la que sale la línea, o `{}`
+   * para que salga de la del pedido como siempre (bandera apagada, una sola
+   * bodega en la zona o línea sin desglose de existencias).
+   */
+  bodegaDeLaLinea(item: any): { idBodega?: string; bodegaNombre?: string } {
+    if (!this.bodega?.idBodega || !this.companyFeaturesBodegas.isEnabled('multiBodegaMismaZona')) return {};
+    const zona = bodegasDeLaZona(this.bodega, this.bodegas);
+    if (zona.length < 2) return {};
+    const elegida = bodegaParaLinea(item, this.bodega, zona);
+    if (!elegida) return {};
+    // Se deja también en la línea del carrito para que el carrito muestre de dónde sale.
+    item.idBodega = elegida.idBodega;
+    item.bodegaNombre = elegida.nombre;
+    return { idBodega: elegida.idBodega, bodegaNombre: elegida.nombre };
   }
 
   cargarBodegas() {

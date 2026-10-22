@@ -98,6 +98,19 @@
     gap: 2px;
     min-width: 0;
 
+    // D-539: bodega de la línea. Color y tamaño propios: span.ng-star-inserted lo pinta de azul.
+    .item-bodega {
+      display: inline-block;
+      margin-top: 2px;
+      padding: 1px 8px;
+      border-radius: 20px;
+      background: #efe9ff;
+      color: #5F3FE0 !important;
+      font-size: 11px !important;
+      font-weight: 700;
+      letter-spacing: normal;
+    }
+
     .item-name {
       font-weight: 800;
       font-size: 13.5px;
