@@ -295,7 +295,8 @@ Ninguna tarea de esta parte empieza antes de 0.6. Las marcadas **[sensible]** es
 - [ ] 8.7 Commit en la rama que defina Daniel (pregunta 15). Despliegue por Daniel con `sudo systemctl restart kai-adk`, **antes** del backend: sin `capacidades` no cambia nada. Éxito: un turno real de ALMARA o FLORECER con las banderas apagadas responde igual. Dep: 8.1 a 8.6.
 
 > Nota de avance, bloque F440-B10 (repo `wt-kai-tickets-web`, rama `feature/tickets-web`): 8.1 a 8.6 hechas y probadas con `adk_agent/tests/test_whatsapp_capacidades.py` (17 casos, sin red; no hay pytest instalado en la máquina, corre también como script). 8.1: el golden `tests/golden/whatsapp_instrucciones_base.json` se tomó del commit base de la rama (0317715), NO del que corre en producción; antes del despliegue hay que regenerarlo contra producción (instrucción en `tests/golden/_generar_whatsapp_golden.py`). 8.7 queda abierta: el commit está hecho, falta el despliegue de Daniel (`sudo systemctl restart kai-adk`, antes del backend) y la prueba real con ALMARA o FLORECER. El tono de Mi marca (pregunta 9) entra como `comercio.tono`, tope de 300 caracteres.
-- [ ] 8.8 Backend `services/whatsappBotClient.js` (≈33-60): manda `capacidades`, `politicas` y `cotizacionesRecientes` solo con su bandera, y lee `pedirAgenda`. Prueba: con las banderas apagadas el cuerpo enviado es idéntico al de hoy. Dep: 8.2, 5.4 y 8.7 (kai desplegado antes de que el backend mande algo nuevo).
+- [x] 8.8 Backend `services/whatsappBotClient.js` (≈33-60): manda `capacidades`, `politicas` y `cotizacionesRecientes` solo con su bandera, y lee `pedirAgenda`. Prueba: con las banderas apagadas el cuerpo enviado es idéntico al de hoy. Dep: 8.2, 5.4 y 8.7 (kai desplegado antes de que el backend mande algo nuevo).
+      *Hecho (F440-B11):* `armarCuerpo(entrada, permisos)` en `whatsappBotClient.js` quita `capacidades`, `politicas`, `tono` y `cotizacionesRecientes` salvo que el despachador pase permisos (bandera de la empresa más interruptor general); igualdad profunda con permisos apagados. Lee `pedirAgenda` (objeto). `agenda` viaja siempre `false` hasta B12. `pedidoDirecto` viaja `true` solo con bandera, interruptor y modo `activo`. El despliegue de kai (8.7) sigue siendo de Daniel antes de encender nada.
 
 ## 9. Pago: enlace, confirmación y recordatorio (D10 a D14)
 
@@ -370,19 +371,22 @@ Ninguna tarea de esta parte empieza antes de 0.6. Las marcadas **[sensible]** es
 
 ## 11. Memoria y postventa informativa (D15, D17)
 
-- [ ] 11.1 Prueba primero:
+- [x] 11.1 Prueba primero:
       - `contextoDelContacto` con `whatsappBotAttention` trae hasta 3 cotizaciones de esa empresa: las del `phoneHash` y las que tienen ese WhatsApp en `cliente.numero_celular_whatsapp`, sin repetir;
       - sin la bandera, no consulta `cotizaciones`;
       - un fallo de lectura no tumba el turno.
 
       Dep: 0.6.
-- [ ] 11.2 Implementar la memoria (revisión privada). Éxito: 11.1 y `whatsappBotDispatcher.test.js` en verde. Dep: 11.1.
+- [x] 11.2 Implementar la memoria (revisión privada). Éxito: 11.1 y `whatsappBotDispatcher.test.js` en verde. Dep: 11.1.
+      *Hecho (F440-B11):* `services/whatsappBotMemoria.js` (`cotizacionesRecientes`) dentro de `contextoDelContacto`, mismo caché de 5 min (llave aparte con `atencion`); pruebas en `whatsappBotDispatcher.test.js`.
 - [ ] 11.3 Prueba primero: el origen del contacto (`prospects` con `company ==` y `phoneNormalized ==`, solo lectura) llega a `whatsappBot.origenContacto`: de la web, solo los campos utm; de un anuncio (`anuncio` o `ultimoToque.anuncio`), el anuncio sin `ctwaClid`; sin origen, nada. `orders.campana` queda vacío y no se informa conversión. El prospecto de otra empresa con el mismo teléfono no se lee. `prospects` no se escribe (6.6). Dep: 4.1.
+      *Avance (F440-B11), sin marcar:* hecha y probada la parte de lectura y formato (`leerOrigenDelContacto`, `formatearOrigen` en `whatsappBotMemoria.js`; `tests/notifications/whatsappBotMemoriaPoliticas.test.js`). Falta guardarlo en `whatsappBot.origenContacto` del pedido, que vive en el núcleo (`sites.js`): espera la fila de la tienda.
 - [ ] 11.4 **[sensible]** Implementar 11.3 en las marcas del núcleo (D15) y las políticas de D17:
       - extractor de las páginas legales publicadas, que descarta las que tienen marcador de «falta»;
       - `garantia` y `tiempoEntrega` en `perfilesProducto`.
 
       Éxito: 11.3 y una prueba del extractor en verde. Dep: 11.3, 4.2, 0.7.
+      *Avance (F440-B11), sin marcar:* hecho el extractor (`services/whatsappBotPoliticas.js`, descarta la página con `[COMPLETA:`), `perfilesProducto` con `garantia` y `tiempoEntrega` solo con `whatsappBotAttention`, y el tono de Mi marca (solo lectura); el despachador manda `comercio.politicas` y `comercio.tono`. Falta la marca de origen en el núcleo (espera la fila de la tienda) y 0.7.
 
 ## 12. Agenda desde el bot (D18)
 
