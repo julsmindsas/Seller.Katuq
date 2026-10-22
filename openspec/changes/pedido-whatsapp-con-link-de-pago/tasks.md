@@ -407,7 +407,7 @@ Ninguna tarea de esta parte empieza antes de 0.6. Las marcadas **[sensible]** es
 
 ## 13. Atribución y métricas de KAI (D19, D20)
 
-- [ ] 13.1 Prueba primero en `tests/enVivo/ia.test.js`:
+- [x] 13.1 Prueba primero en `tests/enVivo/ia.test.js`:
       - un pedido con `origen: "whatsapp-bot"` es `ia`;
       - un pedido cuyo `nroPedido` está en `pedidoGenerado` de una cotización del bot convertida es `ia`;
       - el de otra empresa, no;
@@ -415,7 +415,8 @@ Ninguna tarea de esta parte empieza antes de 0.6. Las marcadas **[sensible]** es
       - `writeset.contract.test.js` permite la consulta por empresa y sigue sin escrituras (revisión privada).
 
       Dep: 0.6.
-- [ ] 13.2 Implementar D19 (absorbe 6.8). Éxito: 13.1 y toda `tests/enVivo` en verde. Dep: 13.1.
+- [x] 13.2 Implementar D19 (absorbe 6.8). Éxito: 13.1 y toda `tests/enVivo` en verde. Dep: 13.1.
+      *Hecho (F440-B13):* `services/enVivo/ia.js` (origen propio sin lectura; consulta por empresa + `pedidoGenerado` + `origen`, `limit(1)`, `select("origen")`, solo para pedidos convertidos; memoria por pedido con el tope de 5.000; sí y no de más de 24 h definitivos, no reciente se reconsulta tras 60 s); `writeset.contract.test.js` admite solo esa forma de consulta. Toda `tests/enVivo` en verde.
 - [ ] 13.3 Superficie de las métricas de KAI según la pregunta 13. Si Daniel elige una pantalla nueva o un bloque nuevo, va con su propia spec de UI y la regla de diseño Katuq. Dep: respuesta a la pregunta 13.
 
 ## 14. KAI en la web (D21)
