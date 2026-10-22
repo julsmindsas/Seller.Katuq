@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { RouterModule, Routes } from '@angular/router';
 import { LiveAudioComponent } from './live-audio.component';
 import { Visual3dComponent } from '../visual3d/visual3d.component';
@@ -21,6 +22,7 @@ const routes: Routes = [
   ],
   imports: [
     CommonModule,
+    TranslateModule,
     RouterModule.forChild(routes),
     GeminiAudioModule  // Importar para usar AudioPulseComponent
   ]

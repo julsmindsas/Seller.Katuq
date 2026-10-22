@@ -12123,3 +12123,13 @@ Lo que queda está, sobre todo, en:
 - **de-CH:** borrador escrito por el agente (Opttia no responde aquí), con «Sie»; sigue oculto hasta la revisión nativa.
 - **Pruebas:** `test:i18n` 215/215 (prueba nueva `en-vivo-cierre.test.js`), tsc con candado sin errores, las 39 plantillas pasan el analizador de Angular.
 - **Sin marcar:** 13.2 a 13.7 (cierran con IDI-B12f), `build:prod` y la revisión en navegador a 1440 y 390 px.
+
+
+### 2026-10-21 — D-540: bloque IDI-B12f, asistentes de shared (tareas 13.2 a 13.7)
+- **Qué cambió:** 12 plantillas y 4 componentes con mensajes (`images-manager`, `katuq-intelligence`, `voice-sales-demo`, `voice-sales-wizard`, 49 avisos) de `chat-form`, `floating-button`, `gemini-asistant`, `images-manager`, `katuq-intelligence`, `modulo-ia`, `opttia-chat` y `voice-agent` pasan al traductor con 294 claves `asistentes.*` (más `comun.*`) en es, en, pt y de. `modulo-ia` (standalone) importa `TranslateModule` y guarda claves en sus mapas de títulos, segmentos y tipos de pedido. `images-manager` se tomó aquí porque IDI-B06a no lo había hecho.
+- **No se traduce:** respuestas de Opttia y KAI, las preguntas que `modulo-ia` y el chat envían al asistente, los comandos de voz de la demo, las herramientas de `ToolRegistryService`, los servicios y los códigos de segmento o tipo de pedido. Una prueba fija que ningún servicio del asistente usa el traductor.
+- **Pendiente (el verificador no lo cuenta):** el `confirm()` y los paneles `innerHTML` del `floating-button` (código `@deprecated` sin llamadores), los estados y registros técnicos de `gemini-asistant` y los textos de pasos del asistente de ventas por voz que vienen de `voice-agent-sales.service.ts`.
+- **Desvío por aprobar:** `SEGMENTOS`, `TIPOS_PEDIDO`, `TITULOS` y `SIN_ACCESO` de `modulo-ia` guardan claves y los getters traducen; «Generate» (inglés en la plantilla) pasa a «Generar» en español.
+- **de-CH:** borrador escrito por el agente (Opttia no responde aquí), con «Sie»; sigue oculto hasta la revisión nativa.
+- **Pruebas:** `test:i18n` 222/222 (prueba nueva `asistentes-cierre.test.js`, 7 casos), `opttia-chat-ui` y `opttia-markdown` en verde, `i18n:check` 0 errores, tsc con candado sin errores.
+- **Sin marcar:** 13.6 y 13.7 (falta `build:prod` y la revisión en navegador a 1440 y 390 px). 13.2 a 13.5 quedan marcadas con los seis sub-bloques B12a a B12f hechos.

@@ -5,9 +5,9 @@
       <div class="title-section">
         <h1 class="demo-title">
           <i class="fa fa-robot"></i>
-          Demostración: Agente de Voz para Ventas Katuq
+          {{ 'asistentes.voiceSalesDemo.demostracionAgenteDeVozPara' | translate }}
         </h1>
-        <p class="demo-subtitle">Experiencia completa de ventas usando comandos de voz</p>
+        <p class="demo-subtitle">{{ 'asistentes.voiceSalesDemo.experienciaCompletaDeVentasUsando' | translate }}</p>
       </div>
       
       <div class="header-actions">
@@ -16,14 +16,14 @@
           (click)="startFullDemo()"
           [disabled]="isDemoActive">
           <i class="fa fa-play"></i>
-          Iniciar Demo Completo
+          {{ 'asistentes.voiceSalesDemo.iniciarDemoCompleto' | translate }}
         </button>
         
         <button 
           class="btn btn-outline-primary btn-lg"
           (click)="openFullWizard()">
           <i class="fa fa-external-link-alt"></i>
-          Abrir Wizard Completo
+          {{ 'asistentes.voiceSalesDemo.abrirWizardCompleto' | translate }}
         </button>
       </div>
     </div>
@@ -32,7 +32,7 @@
   <!-- Barra de Progreso del Demo -->
   <div class="demo-progress-section">
     <div class="progress-info">
-      <span class="progress-text">Progreso del Demo: {{ getDemoProgressPercentage() }}%</span>
+      <span class="progress-text">{{ 'asistentes.voiceSalesDemo.progresoDelDemo' | translate:{porcentaje: (getDemoProgressPercentage())} }}</span>
       <span class="status-text">{{ getCurrentDemoStatus() }}</span>
     </div>
     <div class="progress-bar">
@@ -48,7 +48,7 @@
       <div class="demo-steps-panel">
         <h3 class="panel-title">
           <i class="fa fa-list-check"></i>
-          Pasos de la Demostración
+          {{ 'asistentes.voiceSalesDemo.pasosDeLaDemostracion' | translate }}
         </h3>
         
         <div class="demo-steps-list">
@@ -63,8 +63,8 @@
               </div>
               
               <div class="step-info">
-                <div class="step-name">{{ step.name }}</div>
-                <div class="step-description">{{ step.description }}</div>
+                <div class="step-name">{{ ('asistentes.voiceSalesDemo.paso.' + step.id + '.name') | translate }}</div>
+                <div class="step-description">{{ ('asistentes.voiceSalesDemo.paso.' + step.id + '.description') | translate }}</div>
               </div>
               
               <div class="step-actions">
@@ -91,7 +91,7 @@
             (click)="resetDemo()"
             [disabled]="!isDemoActive">
             <i class="fa fa-redo"></i>
-            Reiniciar Demo
+            {{ 'asistentes.voiceSalesDemo.reiniciarDemo' | translate }}
           </button>
         </div>
       </div>
@@ -101,11 +101,11 @@
         <div class="status-header">
           <h3 class="status-title">
             <i class="fa fa-chart-line"></i>
-            Estado de la Demostración
+            {{ 'asistentes.voiceSalesDemo.estadoDeLaDemostracion' | translate }}
           </h3>
           <div class="status-indicator" [class]="isDemoActive ? 'active' : 'inactive'">
             <i [class]="isDemoActive ? 'fa fa-circle' : 'fa fa-circle'"></i>
-            {{ isDemoActive ? 'Activo' : 'Inactivo' }}
+            {{ isDemoActive ? ('asistentes.voiceSalesDemo.activo' | translate) : ('asistentes.voiceSalesDemo.inactivo' | translate) }}
           </div>
         </div>
 
@@ -114,28 +114,28 @@
           <div class="status-card current-status">
             <div class="status-cabeza">
               <i class="fa fa-info-circle"></i>
-              <span>Estado Actual</span>
+              <span>{{ 'asistentes.voiceSalesDemo.estadoActual' | translate }}</span>
             </div>
             <div class="card-body">
               <div class="status-item">
-                <span class="label">Demo Activo:</span>
+                <span class="label">{{ 'asistentes.voiceSalesDemo.demoActivo2' | translate }}</span>
                 <span class="value" [class]="isDemoActive ? 'text-success' : 'text-danger'">
                   <i [class]="isDemoActive ? 'fa fa-check' : 'fa fa-times'"></i>
-                  {{ isDemoActive ? 'Sí' : 'No' }}
+                  {{ isDemoActive ? ('comun.si' | translate) : ('comun.no' | translate) }}
                 </span>
               </div>
               
               <div class="status-item">
-                <span class="label">Paso Actual:</span>
+                <span class="label">{{ 'asistentes.voiceSalesDemo.pasoActual' | translate }}</span>
                 <span class="value">
-                  {{ currentDemoStep || 'No iniciado' }}
+                  {{ currentDemoStep || ('asistentes.voiceSalesDemo.noIniciado' | translate) }}
                 </span>
               </div>
               
               <div class="status-item">
-                <span class="label">Progreso:</span>
+                <span class="label">{{ 'asistentes.voiceSalesDemo.progreso' | translate }}</span>
                 <span class="value">
-                  {{ getDemoProgressPercentage() }}% completado
+                  {{ getDemoProgressPercentage() }}{{ 'asistentes.voiceSalesDemo.completado2' | translate }}
                 </span>
               </div>
             </div>
@@ -145,30 +145,30 @@
           <div class="status-card system-info">
             <div class="status-cabeza">
               <i class="fa fa-cogs"></i>
-              <span>Información del Sistema</span>
+              <span>{{ 'asistentes.voiceSalesDemo.informacionDelSistema' | translate }}</span>
             </div>
             <div class="card-body">
               <div class="status-item">
-                <span class="label">Servicio de Voz:</span>
+                <span class="label">{{ 'asistentes.voiceSalesDemo.servicioDeVoz' | translate }}</span>
                 <span class="value text-success">
                   <i class="fa fa-check"></i>
-                  Disponible
+                  {{ 'asistentes.voiceSalesDemo.disponible' | translate }}
                 </span>
               </div>
               
               <div class="status-item">
-                <span class="label">Integración:</span>
+                <span class="label">{{ 'asistentes.voiceSalesDemo.integracion' | translate }}</span>
                 <span class="value text-success">
                   <i class="fa fa-check"></i>
-                  Conectada
+                  {{ 'asistentes.voiceSalesDemo.conectada' | translate }}
                 </span>
               </div>
               
               <div class="status-item">
-                <span class="label">Herramientas:</span>
+                <span class="label">{{ 'asistentes.voiceSalesDemo.herramientas' | translate }}</span>
                 <span class="value text-success">
                   <i class="fa fa-check"></i>
-                  Cargadas
+                  {{ 'asistentes.voiceSalesDemo.cargadas' | translate }}
                 </span>
               </div>
             </div>
@@ -178,15 +178,15 @@
           <div class="status-card instructions">
             <div class="status-cabeza">
               <i class="fa fa-lightbulb"></i>
-              <span>Instrucciones</span>
+              <span>{{ 'asistentes.voiceSalesDemo.instrucciones' | translate }}</span>
             </div>
             <div class="card-body">
               <ol class="instructions-list">
-                <li>Haz clic en "Iniciar Demo Completo" para comenzar</li>
-                <li>El sistema ejecutará automáticamente cada paso</li>
-                <li>Puedes ejecutar pasos individuales haciendo clic en ellos</li>
-                <li>Observa cómo se integra con el sistema real de ventas</li>
-                <li>Al finalizar, abre el Wizard Completo para uso manual</li>
+                <li>{{ 'asistentes.voiceSalesDemo.hazClicEnIniciarDemo' | translate }}</li>
+                <li>{{ 'asistentes.voiceSalesDemo.elSistemaEjecutaraAutomaticamenteCada' | translate }}</li>
+                <li>{{ 'asistentes.voiceSalesDemo.puedesEjecutarPasosIndividualesHaciendo' | translate }}</li>
+                <li>{{ 'asistentes.voiceSalesDemo.observaComoSeIntegraCon' | translate }}</li>
+                <li>{{ 'asistentes.voiceSalesDemo.alFinalizarAbreElWizard' | translate }}</li>
               </ol>
             </div>
           </div>
@@ -197,7 +197,7 @@
       <div class="demo-logs-panel">
         <h3 class="panel-title">
           <i class="fa fa-terminal"></i>
-          Logs de la Demostración
+          {{ 'asistentes.voiceSalesDemo.logsDeLaDemostracion' | translate }}
         </h3>
         
         <div class="logs-content">
@@ -205,17 +205,17 @@
           <div class="log-section">
             <h4 class="log-title">
               <i class="fa fa-stream"></i>
-              Log en Tiempo Real
+              {{ 'asistentes.voiceSalesDemo.logEnTiempoReal' | translate }}
             </h4>
             
             <div class="log-container">
               <div class="log-entry" *ngFor="let step of demoSteps.slice(0, 5)">
                 <div class="log-timestamp">
                   <i class="fa fa-clock"></i>
-                  {{ getDemoStepStatus(step.id) === 'completed' ? 'Completado' : 'Pendiente' }}
+                  {{ getDemoStepStatus(step.id) === 'completed' ? ('asistentes.voiceSalesDemo.completado' | translate) : ('asistentes.voiceSalesDemo.pendiente' | translate) }}
                 </div>
                 <div class="log-message">
-                  {{ step.name }}
+                  {{ ('asistentes.voiceSalesDemo.paso.' + step.id + '.name') | translate }}
                 </div>
                 <div class="log-status">
                   <i [class]="getDemoStepIcon(step.id)"></i>
@@ -224,7 +224,7 @@
               
               <div *ngIf="demoSteps.length === 0" class="no-logs">
                 <i class="fa fa-inbox"></i>
-                <span>No hay logs disponibles</span>
+                <span>{{ 'asistentes.voiceSalesDemo.noHayLogsDisponibles' | translate }}</span>
               </div>
             </div>
           </div>
@@ -233,28 +233,28 @@
           <div class="stats-section">
             <h4 class="stats-title">
               <i class="fa fa-chart-bar"></i>
-              Estadísticas
+              {{ 'asistentes.voiceSalesDemo.estadisticas' | translate }}
             </h4>
             
             <div class="stats-grid">
               <div class="stat-item">
                 <div class="stat-value">{{ demoSteps.length }}</div>
-                <div class="stat-label">Total de Pasos</div>
+                <div class="stat-label">{{ 'asistentes.voiceSalesDemo.totalDePasos' | translate }}</div>
               </div>
               
               <div class="stat-item">
                 <div class="stat-value">{{ demoSteps.filter(s => getDemoStepStatus(s.id) === 'completed').length }}</div>
-                <div class="stat-label">Completados</div>
+                <div class="stat-label">{{ 'asistentes.voiceSalesDemo.completados' | translate }}</div>
               </div>
               
               <div class="stat-item">
                 <div class="stat-value">{{ demoSteps.filter(s => getDemoStepStatus(s.id) === 'active').length }}</div>
-                <div class="stat-label">En Progreso</div>
+                <div class="stat-label">{{ 'asistentes.voiceSalesDemo.enProgreso' | translate }}</div>
               </div>
               
               <div class="stat-item">
                 <div class="stat-value">{{ demoSteps.filter(s => getDemoStepStatus(s.id) === 'pending').length }}</div>
-                <div class="stat-label">Pendientes</div>
+                <div class="stat-label">{{ 'asistentes.voiceSalesDemo.pendientes' | translate }}</div>
               </div>
             </div>
           </div>
@@ -263,7 +263,7 @@
           <div class="quick-actions">
             <h4 class="actions-title">
               <i class="fa fa-bolt"></i>
-              Acciones Rápidas
+              {{ 'asistentes.voiceSalesDemo.accionesRapidas' | translate }}
             </h4>
             
             <div class="actions-grid">
@@ -272,7 +272,7 @@
                 (click)="executeStepManually('warehouse')"
                 [disabled]="!isDemoActive">
                 <i class="fa fa-warehouse"></i>
-                Bodega
+                {{ 'asistentes.sphereVisualContainer.bodega' | translate }}
               </button>
               
               <button 
@@ -280,7 +280,7 @@
                 (click)="executeStepManually('products')"
                 [disabled]="!isDemoActive">
                 <i class="fa fa-search"></i>
-                Productos
+                {{ 'asistentes.sphereVisualContainer.productos' | translate }}
               </button>
               
               <button 
@@ -288,7 +288,7 @@
                 (click)="executeStepManually('client')"
                 [disabled]="!isDemoActive">
                 <i class="fa fa-user"></i>
-                Cliente
+                {{ 'asistentes.sphereVisualContainer.cliente' | translate }}
               </button>
               
               <button 
@@ -296,7 +296,7 @@
                 (click)="executeStepManually('process')"
                 [disabled]="!isDemoActive">
                 <i class="fa fa-check"></i>
-                Finalizar
+                {{ 'asistentes.voiceSalesDemo.finalizar' | translate }}
               </button>
             </div>
           </div>
@@ -311,11 +311,11 @@
       <div class="footer-info">
         <span class="demo-version">
           <i class="fa fa-code-branch"></i>
-          v1.0.0 - Agente de Voz para Ventas
+          {{ 'asistentes.voiceSalesDemo.v100AgenteDe' | translate }}
         </span>
         <span class="demo-status">
           <i class="fa fa-circle" [class]="isDemoActive ? 'text-success' : 'text-muted'"></i>
-          {{ isDemoActive ? 'Demo Activo' : 'Demo Inactivo' }}
+          {{ isDemoActive ? ('asistentes.voiceSalesDemo.demoActivo' | translate) : ('asistentes.voiceSalesDemo.demoInactivo' | translate) }}
         </span>
       </div>
       
@@ -325,14 +325,14 @@
           (click)="resetDemo()"
           [disabled]="!isDemoActive">
           <i class="fa fa-redo"></i>
-          Reiniciar
+          {{ 'asistentes.voiceSalesDemo.reiniciar' | translate }}
         </button>
         
         <button 
           class="btn btn-outline-primary btn-sm"
           (click)="openFullWizard()">
           <i class="fa fa-external-link-alt"></i>
-          Wizard Completo
+          {{ 'asistentes.voiceSalesDemo.wizardCompleto' | translate }}
         </button>
       </div>
     </div>

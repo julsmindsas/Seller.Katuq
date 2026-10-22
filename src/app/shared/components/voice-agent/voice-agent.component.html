@@ -16,13 +16,13 @@
     <div class="call-header" 
          (mousedown)="startDrag($event)" 
          [ngClass]="{'draggable': uiConfig.allowDragging && !isMobile}">
-      <span class="call-status">{{ config.agentName || 'K.A.I.' }} - Asistente Activo</span>
+      <span class="call-status">{{ config.agentName || ('asistentes.voiceAgent.kAI' | translate) }} - {{ 'asistentes.voiceAgent.asistenteActivo' | translate }}</span>
       <div class="header-controls">
         <span class="call-timer">{{ state.callDuration }}</span>
         <button *ngIf="!isMobile && uiConfig.showControls" 
                 class="header-end-call-btn" 
                 (click)="stopSession()"
-                title="Finalizar sesión">
+                [title]="'asistentes.voiceAgent.finalizarSesion' | translate">
           <i class="fa fa-phone"></i>
         </button>
       </div>
@@ -38,9 +38,9 @@
                 height="120">
         </canvas>
       </div>
-      <div class="call-name">{{ config.agentName || 'K.A.I.' }}</div>
+      <div class="call-name">{{ config.agentName || ('asistentes.voiceAgent.kAI' | translate) }}</div>
       <div class="call-status-text">
-        {{ state.currentText || 'Escuchando...' }}
+        {{ state.currentText || ('asistentes.voiceAgent.escuchando' | translate) }}
         <span *ngIf="state.errorMessage" class="badge bg-danger ms-2">
           <i class="fa fa-exclamation-circle"></i>
         </span>
@@ -59,7 +59,7 @@
                *ngFor="let step of visualSteps; let i = index"
                [ngClass]="{'active': currentStepIndex === i}" 
                (click)="goToStep(i, $event)" 
-               [title]="'Paso ' + (i+1)">
+               [title]="'asistentes.voiceAgent.pasoN' | translate:{i: (i+1)}">
           </div>
         </div>
 
@@ -68,7 +68,7 @@
           <div class="step-item" 
                *ngFor="let step of visualSteps; let i = index"
                [ngClass]="{'active': currentStepIndex === i}">
-            <h5 class="step-title">Paso {{i+1}} de {{visualSteps.length}}</h5>
+            <h5 class="step-title">{{ 'asistentes.voiceAgent.pasoDe' | translate:{i: (i+1), length: visualSteps.length} }}</h5>
             <div class="step-image" 
                  [style.background-image]="'url(' + step.imageUrl + ')'"></div>
             <div class="step-caption" *ngIf="step.caption">
@@ -96,7 +96,7 @@
       <!-- Mensaje cuando no hay contenido visual -->
       <div class="no-content-message" *ngIf="!hasVisualContent">
         <i class="fa fa-image"></i>
-        <span>El contenido visual aparecerá aquí</span>
+        <span>{{ 'asistentes.voiceAgent.elContenidoVisualApareceraAqui' | translate }}</span>
       </div>
     </div>
 
@@ -121,7 +121,7 @@
       
       <button class="call-control-btn interrupt-btn" 
               (click)="interrupt()"
-              title="Interrumpir">
+              [title]="'asistentes.voiceAgent.interrumpir' | translate">
         <i class="fa fa-stop"></i>
       </button>
       
@@ -131,7 +131,7 @@
       </button>
       
       <button class="call-control-btn info-btn" 
-              title="Estado de conexión"
+              [title]="'asistentes.voiceAgent.estadoDeConexion' | translate"
               [ngClass]="{'connected': state.isConnected, 'disconnected': !state.isConnected}">
         <i class="fa fa-signal"></i>
       </button>

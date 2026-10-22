@@ -1,27 +1,27 @@
 <div class="floating-button-container opttia-launcher" *ngIf="authService.isLoggedIn"
   [class.open]="chatFormVisible" [class.minimized]="chatMinimized" [class.options-visible]="optionsPanelVisible">
   <button type="button" class="floating-button" (click)="toggleOptionsPanel($event)"
-    [attr.aria-label]="optionsPanelVisible ? 'Cerrar menú de Opttia' : 'Abrir menú de Opttia'"
+    [attr.aria-label]="optionsPanelVisible ? ('asistentes.floatingButton.cerrarMenuDeOpttia' | translate) : ('asistentes.floatingButton.abrirMenuDeOpttia' | translate)"
     [attr.aria-expanded]="optionsPanelVisible" aria-controls="opttia-menu"
     [class.active]="optionsPanelVisible" [class.has-unread]="hasUnreadMessages">
     <span class="launcher-symbol" aria-hidden="true">
       <img src="assets/images/opttia/tuki-avatar-v1.webp" alt="" width="32" height="32" decoding="async">
     </span>
-    <span class="launcher-label">Opttia <span class="launcher-ai">IA</span></span>
+    <span class="launcher-label">Opttia <span class="launcher-ai">{{ 'asistentes.floatingButton.ia' | translate }}</span></span>
     <i class="fa launcher-toggle" [ngClass]="optionsPanelVisible ? 'fa-times' : 'fa-angle-up'" aria-hidden="true"></i>
-    <span class="launcher-unread" *ngIf="hasUnreadMessages" aria-label="Mensajes sin leer"></span>
+    <span class="launcher-unread" *ngIf="hasUnreadMessages" [attr.aria-label]="'asistentes.floatingButton.mensajesSinLeer' | translate"></span>
   </button>
 
   <button type="button" class="mobile-menu-backdrop" *ngIf="optionsPanelVisible"
-    (click)="closeEverything($event)" aria-label="Cerrar opciones de Opttia" tabindex="-1"></button>
+    (click)="closeEverything($event)" [attr.aria-label]="'asistentes.floatingButton.cerrarOpcionesDeOpttia' | translate" tabindex="-1"></button>
   <section id="opttia-menu" class="opttia-menu" *ngIf="optionsPanelVisible"
     aria-labelledby="opttia-menu-title" (keydown.escape)="$event.stopPropagation(); closeEverything(null)">
     <header class="opttia-menu-header">
       <div>
-        <span class="menu-eyebrow">TU ESPACIO DE AYUDA</span>
-        <h2 id="opttia-menu-title">¿Qué necesitas hoy?</h2>
+        <span class="menu-eyebrow">{{ 'asistentes.floatingButton.tuEspacioDeAyuda' | translate }}</span>
+        <h2 id="opttia-menu-title">{{ 'asistentes.floatingButton.queNecesitasHoy' | translate }}</h2>
       </div>
-      <button type="button" class="menu-close" (click)="closeEverything($event)" aria-label="Cerrar menú">
+      <button type="button" class="menu-close" (click)="closeEverything($event)" [attr.aria-label]="'asistentes.floatingButton.cerrarMenu' | translate">
         <i class="fa fa-times" aria-hidden="true"></i>
       </button>
     </header>
@@ -32,40 +32,40 @@
           <img src="assets/images/opttia/tuki-avatar-v1.webp" alt="" width="32" height="32" decoding="async">
         </span>
         <span class="feature-copy">
-          <span class="feature-title">Consulta rápida <span class="feature-badge">Opttia</span></span>
-          <span class="feature-description">Respuestas breves sobre ventas, pedidos e inventario.</span>
-          <span class="feature-action">Abrir chat básico <i class="fa fa-arrow-right" aria-hidden="true"></i></span>
+          <span class="feature-title">{{ 'asistentes.floatingButton.consultaRapida' | translate }} <span class="feature-badge">Opttia</span></span>
+          <span class="feature-description">{{ 'asistentes.floatingButton.respuestasBrevesSobreVentasPedidos' | translate }}</span>
+          <span class="feature-action">{{ 'asistentes.floatingButton.abrirChatBasico' | translate }} <i class="fa fa-arrow-right" aria-hidden="true"></i></span>
         </span>
       </button>
 
       <a class="opttia-full-link" href="https://www.opttia.com/" target="_blank" rel="noopener noreferrer">
-        <span><strong>Opttia completa</strong><small>Agentes, análisis y automatizaciones en opttia.com</small></span>
+        <span><strong>{{ 'asistentes.floatingButton.opttiaCompleta' | translate }}</strong><small>{{ 'asistentes.floatingButton.agentesAnalisisYAutomatizacionesEn' | translate }}</small></span>
         <i class="fa fa-external-link" aria-hidden="true"></i>
       </a>
 
       <!-- K.A.I. Chat, Voz y Live Audio están deprecados y no se ofrecen en este menú. -->
-      <h3 class="menu-section-title">SOPORTE Y SEGUIMIENTO</h3>
-      <nav class="support-links" aria-label="Soporte de Katuq">
+      <h3 class="menu-section-title">{{ 'asistentes.floatingButton.soporteYSeguimiento' | translate }}</h3>
+      <nav class="support-links" [attr.aria-label]="'asistentes.floatingButton.soporteDeKatuq' | translate">
         <button type="button" class="support-link" (click)="navigateTo('/soporte', $event)">
           <span class="support-icon" aria-hidden="true"><i class="fa fa-headphones"></i></span>
-          <span class="support-copy"><strong>Contactar soporte</strong><small>Reporta un problema o propone una idea</small></span>
+          <span class="support-copy"><strong>{{ 'asistentes.floatingButton.contactarSoporte' | translate }}</strong><small>{{ 'asistentes.floatingButton.reportaUnProblemaOPropone' | translate }}</small></span>
           <i class="fa fa-angle-right" aria-hidden="true"></i>
         </button>
         <button type="button" class="support-link" (click)="navigateTo('/misTickets', $event)">
           <span class="support-icon" aria-hidden="true"><i class="fa fa-ticket"></i></span>
-          <span class="support-copy"><strong>Mis tickets</strong><small>Consulta respuestas y avances</small></span>
+          <span class="support-copy"><strong>{{ 'asistentes.floatingButton.misTickets' | translate }}</strong><small>{{ 'asistentes.floatingButton.consultaRespuestasYAvances' | translate }}</small></span>
           <i class="fa fa-angle-right" aria-hidden="true"></i>
         </button>
         <button type="button" class="support-link" (click)="navigateTo('/misIdeas', $event)">
           <span class="support-icon" aria-hidden="true"><i class="fa fa-lightbulb-o"></i></span>
-          <span class="support-copy"><strong>Mis ideas</strong><small>Sigue las mejoras que has propuesto</small></span>
+          <span class="support-copy"><strong>{{ 'asistentes.floatingButton.misIdeas' | translate }}</strong><small>{{ 'asistentes.floatingButton.sigueLasMejorasQueHas' | translate }}</small></span>
           <i class="fa fa-angle-right" aria-hidden="true"></i>
         </button>
       </nav>
     </div>
 
     <footer class="opttia-menu-footer">
-      <span>Estamos para ayudarte</span>
+      <span>{{ 'asistentes.floatingButton.estamosParaAyudarte' | translate }}</span>
       <span class="menu-brand">Katuq</span>
     </footer>
   </section>
@@ -92,18 +92,18 @@
   <!-- @deprecated K.A.I. Live Audio conservado solo para compatibilidad. -->
   <div *ngIf="legacyKaiEnabled && selectedMode === 'live-audio'" class="live-audio-container">
     <app-live-audio></app-live-audio>
-    <button class="close-live-audio-btn" (click)="stopLiveAudioMode($event)" title="Cerrar Live Audio">
+    <button class="close-live-audio-btn" (click)="stopLiveAudioMode($event)" [title]="'asistentes.floatingButton.cerrarLiveAudio' | translate">
       <i class="fa fa-times"></i>
     </button>
   </div>
 
   <!-- Burbuja de chat minimizada -->
   <button *ngIf="chatMinimized" type="button" class="minimized-chat-bubble"
-    (click)="maximizeChat($event)" aria-label="Restaurar chat de Opttia">
+    (click)="maximizeChat($event)" [attr.aria-label]="'asistentes.floatingButton.restaurarChatDeOpttia' | translate">
     <span class="minimized-chat-avatar" aria-hidden="true">
       <img src="assets/images/opttia/tuki-avatar-v1.webp" alt="" width="32" height="32" decoding="async">
     </span>
-    <span class="minimize-text">Continuar con Opttia</span>
+    <span class="minimize-text">{{ 'asistentes.floatingButton.continuarConOpttia' | translate }}</span>
     <span class="notification-indicator" *ngIf="hasUnreadMessages"></span>
     <span class="maximize-chat-btn" aria-hidden="true">
       <i class="fa fa-expand"></i>
@@ -114,19 +114,19 @@
   <div *ngIf="chatFormVisible && !chatMinimized" class="floating-chat-overlay" [ngClass]="{'maximized': chatMaximized}">
     <!-- Barra de título del chat -->
     <div class="chat-header" (dblclick)="toggleChatSize($event)">
-      <span class="chat-title">Opttia · Consulta rápida</span>
+      <span class="chat-title">{{ 'asistentes.floatingButton.opttiaConsultaRapida' | translate }}</span>
       <div class="chat-controls">
         <button type="button" class="chat-control-btn" (click)="minimizeChat($event)"
-          title="Minimizar" aria-label="Minimizar chat de Opttia">
+          [title]="'asistentes.floatingButton.minimizar' | translate" [attr.aria-label]="'asistentes.floatingButton.minimizarChatDeOpttia' | translate">
           <i class="fa fa-minus" aria-hidden="true"></i>
         </button>
         <button type="button" class="chat-control-btn" (click)="toggleChatSize($event)"
-          [title]="chatMaximized ? 'Restaurar tamaño' : 'Maximizar'"
-          [attr.aria-label]="chatMaximized ? 'Restaurar tamaño del chat de Opttia' : 'Maximizar chat de Opttia'">
+          [title]="chatMaximized ? ('asistentes.floatingButton.restaurarTamano' | translate) : ('asistentes.floatingButton.maximizar' | translate)"
+          [attr.aria-label]="chatMaximized ? ('asistentes.floatingButton.restaurarTamanoDelChatDe' | translate) : ('asistentes.floatingButton.maximizarChatDeOpttia' | translate)">
           <i class="fa" [ngClass]="chatMaximized ? 'fa-compress' : 'fa-expand'"></i>
         </button>
         <button type="button" class="close-chat-btn" (click)="closeChat($event)"
-          title="Cerrar" aria-label="Cerrar chat de Opttia">
+          [title]="'comun.cerrar' | translate" [attr.aria-label]="'asistentes.floatingButton.cerrarChatDeOpttia' | translate">
           <i class="fa fa-times"></i>
         </button>
       </div>

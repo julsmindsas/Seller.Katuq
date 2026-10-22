@@ -1,9 +1,9 @@
 <div class="live-audio-fullscreen">
   <!-- Header -->
   <div class="header">
-    <h1>🎤 Live Audio - Asistente Katuq</h1>
+    <h1>{{ 'asistentes.liveAudio.liveAudioAsistenteKatuq' | translate }}</h1>
     <button class="close-btn" (click)="closeFullscreen()">
-      <i class="fa fa-times"></i> Cerrar
+      <i class="fa fa-times"></i> {{ 'comun.cerrar' | translate }}
     </button>
   </div>
 
@@ -29,7 +29,7 @@
     <!-- VU Meters (AudioPulse indicators) -->
     <div class="vu-meters" style="position: absolute; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 100;">
       <div class="vu-meter-container" style="background: rgba(0,0,0,0.7); padding: 10px; border-radius: 8px; text-align: center;">
-        <label style="color: white; font-size: 12px; margin-bottom: 5px; display: block;">Entrada (Micrófono)</label>
+        <label style="color: white; font-size: 12px; margin-bottom: 5px; display: block;">{{ 'asistentes.liveAudio.entradaMicrofono' | translate }}</label>
         <app-audio-pulse
           [volume]="inputVolume"
           [active]="isRecording"
@@ -37,7 +37,7 @@
         </app-audio-pulse>
       </div>
       <div class="vu-meter-container" style="background: rgba(0,0,0,0.7); padding: 10px; border-radius: 8px; text-align: center;">
-        <label style="color: white; font-size: 12px; margin-bottom: 5px; display: block;">Salida (Respuesta)</label>
+        <label style="color: white; font-size: 12px; margin-bottom: 5px; display: block;">{{ 'asistentes.liveAudio.salidaRespuesta' | translate }}</label>
         <app-audio-pulse
           [volume]="outputVolume"
           [active]="true"
@@ -79,7 +79,7 @@
           font-size: 0.8rem;
           margin-left: 10px;
         ">
-          🎨 Test Visuales
+          {{ 'asistentes.liveAudio.testVisuales' | translate }}
         </button>
       </div>
     </div>
@@ -95,6 +95,6 @@
 
   <!-- Footer -->
   <div class="footer">
-    <p>🎯 Habla con el asistente para probar las herramientas de Katuq</p>
+    <p>{{ 'asistentes.liveAudio.hablaConElAsistentePara' | translate }}</p>
   </div>
 </div>

@@ -5,9 +5,9 @@
       <div class="title-section">
         <h2 class="wizard-title">
           <i class="fa fa-microphone-alt"></i>
-          Agente de Voz para Ventas Katuq
+          {{ 'asistentes.voiceSalesWizard.agenteDeVozParaVentas' | translate }}
         </h2>
-        <p class="wizard-subtitle">Realiza ventas completas usando comandos de voz</p>
+        <p class="wizard-subtitle">{{ 'asistentes.voiceSalesWizard.realizaVentasCompletasUsandoComandos' | translate }}</p>
       </div>
       
       <div class="header-actions">
@@ -15,13 +15,13 @@
           class="btn btn-outline-primary btn-sm" 
           (click)="resetVoiceSales()"
           [disabled]="isProcessing">
-          <i class="fa fa-redo"></i> Reiniciar
+          <i class="fa fa-redo"></i> {{ 'asistentes.voiceSalesDemo.reiniciar' | translate }}
         </button>
         <button 
           class="btn btn-outline-secondary btn-sm" 
           (click)="endVoiceSales()"
           [disabled]="isProcessing">
-          <i class="fa fa-stop"></i> Finalizar
+          <i class="fa fa-stop"></i> {{ 'asistentes.voiceSalesDemo.finalizar' | translate }}
         </button>
       </div>
     </div>
@@ -30,8 +30,8 @@
   <!-- Barra de Progreso -->
   <div class="progress-section">
     <div class="progress-info">
-      <span class="progress-text">Progreso: {{ completionPercentage }}%</span>
-      <span class="step-text">Paso {{ currentStep }} de {{ totalSteps }}</span>
+      <span class="progress-text">{{ 'asistentes.voiceSalesWizard.progreso' | translate:{completionPercentage: completionPercentage} }}</span>
+      <span class="step-text">{{ 'asistentes.voiceSalesWizard.pasoDe' | translate:{currentStep: currentStep, totalSteps: totalSteps} }}</span>
     </div>
     <div class="progress-bar">
       <div class="progress-fill" [style.width.%]="completionPercentage"></div>
@@ -46,7 +46,7 @@
       <div class="steps-panel">
         <h3 class="panel-title">
           <i class="fa fa-list-ol"></i>
-          Pasos del Proceso
+          {{ 'asistentes.voiceSalesWizard.pasosDelProceso' | translate }}
         </h3>
         
         <div class="steps-list">
@@ -81,7 +81,7 @@
         <div class="step-header">
           <h3 class="step-title">
             <i [class]="currentStepInfo?.icon"></i>
-            {{ currentStepInfo?.name || 'Paso Actual' }}
+            {{ currentStepInfo?.name || ('asistentes.voiceSalesWizard.pasoActual' | translate) }}
           </h3>
           <div class="step-progress">
             <span class="step-number">{{ currentStep }}</span>
@@ -92,7 +92,7 @@
 
         <div class="step-content">
           <div class="step-description">
-            <p>{{ currentStepInfo?.description || 'Descripción del paso actual' }}</p>
+            <p>{{ currentStepInfo?.description || ('asistentes.voiceSalesWizard.descripcionDelPasoActual' | translate) }}</p>
           </div>
 
           <!-- Información del Paso Actual -->
@@ -100,19 +100,19 @@
             <div class="info-card">
               <div class="info-header">
                 <i class="fa fa-info-circle"></i>
-                <span>Estado del Paso</span>
+                <span>{{ 'asistentes.voiceSalesWizard.estadoDelPaso' | translate }}</span>
               </div>
               <div class="info-content">
                 <div class="info-item">
-                  <span class="label">Puede avanzar:</span>
+                  <span class="label">{{ 'asistentes.voiceSalesWizard.puedeAvanzar' | translate }}</span>
                   <span class="value" [class]="salesProgress.canProceed ? 'text-success' : 'text-danger'">
                     <i [class]="salesProgress.canProceed ? 'fa fa-check' : 'fa fa-times'"></i>
-                    {{ salesProgress.canProceed ? 'Sí' : 'No' }}
+                    {{ salesProgress.canProceed ? ('comun.si' | translate) : ('comun.no' | translate) }}
                   </span>
                 </div>
                 
                 <div class="info-item" *ngIf="salesProgress.missingRequirements.length > 0">
-                  <span class="label">Requisitos faltantes:</span>
+                  <span class="label">{{ 'asistentes.voiceSalesWizard.requisitosFaltantes' | translate }}</span>
                   <div class="missing-requirements">
                     <span 
                       *ngFor="let req of salesProgress.missingRequirements" 
@@ -123,7 +123,7 @@
                 </div>
 
                 <div class="info-item">
-                  <span class="label">Siguiente acción:</span>
+                  <span class="label">{{ 'asistentes.voiceSalesWizard.siguienteAccion' | translate }}</span>
                   <span class="value">{{ salesProgress.nextAction }}</span>
                 </div>
               </div>
@@ -135,7 +135,7 @@
             <div class="commands-header">
               <h4>
                 <i class="fa fa-microphone"></i>
-                Comandos de Voz
+                {{ 'asistentes.voiceSalesWizard.comandosDeVoz' | translate }}
               </h4>
               <p class="help-text">{{ getCurrentStepHelp() }}</p>
             </div>
@@ -147,7 +147,7 @@
                   #voiceInput
                   type="text" 
                   class="form-control command-input"
-                  placeholder="Escribe tu comando de voz aquí..."
+                  [placeholder]="'asistentes.voiceSalesWizard.escribeTuComandoDeVoz' | translate"
                   [(ngModel)]="voiceCommand"
                   (keyup.enter)="executeVoiceCommand()"
                   [disabled]="isProcessing">
@@ -158,14 +158,14 @@
                   [disabled]="!voiceCommand.trim() || isProcessing">
                   <i class="fa fa-play" *ngIf="!isProcessing"></i>
                   <i class="fa fa-spinner fa-spin" *ngIf="isProcessing"></i>
-                  Ejecutar
+                  {{ 'asistentes.voiceSalesWizard.ejecutar' | translate }}
                 </button>
               </div>
             </div>
 
             <!-- Comandos de Ejemplo -->
             <div class="example-commands">
-              <h5>Comandos de ejemplo:</h5>
+              <h5>{{ 'asistentes.voiceSalesWizard.comandosDeEjemplo' | translate }}</h5>
               <div class="command-chips">
                 <button 
                   *ngFor="let command of getExampleCommands()"
@@ -180,7 +180,7 @@
 
           <!-- Navegación Manual -->
           <div class="manual-navigation">
-            <h5>Navegación Manual:</h5>
+            <h5>{{ 'asistentes.voiceSalesWizard.navegacionManual' | translate }}</h5>
             <div class="navigation-buttons">
               <button 
                 class="btn btn-outline-primary"
@@ -209,7 +209,7 @@
         <div class="session-status">
           <h4 class="panel-title">
             <i class="fa fa-chart-line"></i>
-            Estado de la Sesión
+            {{ 'asistentes.voiceSalesWizard.estadoDeLaSesion' | translate }}
           </h4>
           
           <div class="status-cards">
@@ -218,9 +218,9 @@
                 <i class="fa fa-microphone"></i>
               </div>
               <div class="status-info">
-                <span class="status-label">Agente Activo</span>
+                <span class="status-label">{{ 'asistentes.voiceSalesWizard.agenteActivo' | translate }}</span>
                 <span class="status-value" [class]="isActive ? 'text-success' : 'text-danger'">
-                  {{ isActive ? 'Sí' : 'No' }}
+                  {{ isActive ? ('comun.si' | translate) : ('comun.no' | translate) }}
                 </span>
               </div>
             </div>
@@ -230,9 +230,9 @@
                 <i class="fa fa-cog"></i>
               </div>
               <div class="status-info">
-                <span class="status-label">Procesando</span>
+                <span class="status-label">{{ 'asistentes.voiceSalesWizard.procesando' | translate }}</span>
                 <span class="status-value" [class]="isProcessing ? 'text-warning' : 'text-success'">
-                  {{ isProcessing ? 'Sí' : 'No' }}
+                  {{ isProcessing ? ('comun.si' | translate) : ('comun.no' | translate) }}
                 </span>
               </div>
             </div>
@@ -242,7 +242,7 @@
                 <i class="fa fa-shopping-cart"></i>
               </div>
               <div class="status-info">
-                <span class="status-label">Productos</span>
+                <span class="status-label">{{ 'asistentes.sphereVisualContainer.productos' | translate }}</span>
                 <span class="status-value">
                   {{ salesProgress?.data?.cart?.count || 0 }}
                 </span>
@@ -255,14 +255,14 @@
         <div class="last-result" *ngIf="lastResult">
           <h4 class="panel-title">
             <i class="fa fa-terminal"></i>
-            Último Comando
+            {{ 'asistentes.voiceSalesWizard.ultimoComando' | translate }}
           </h4>
           
           <div class="result-card" [class]="lastResult.success ? 'success' : 'error'">
             <div class="result-header">
               <i [class]="lastResult.success ? 'fa fa-check-circle' : 'fa fa-exclamation-circle'"></i>
               <span class="result-status">
-                {{ lastResult.success ? 'Exitoso' : 'Error' }}
+                {{ lastResult.success ? ('asistentes.voiceSalesWizard.exitoso' | translate) : ('comun.error' | translate) }}
               </span>
             </div>
             
@@ -271,7 +271,7 @@
             </div>
             
             <div class="result-next-action" *ngIf="lastResult.nextAction">
-              <strong>Siguiente:</strong> {{ lastResult.nextAction }}
+              <strong>{{ 'asistentes.voiceSalesWizard.siguiente' | translate }}</strong> {{ lastResult.nextAction }}
             </div>
           </div>
         </div>
@@ -281,7 +281,7 @@
           <div class="history-header">
             <h4 class="panel-title">
               <i class="fa fa-history"></i>
-              Historial de Comandos
+              {{ 'asistentes.voiceSalesWizard.historialDeComandos' | translate }}
             </h4>
             <button 
               class="btn btn-outline-danger btn-sm"
@@ -311,7 +311,7 @@
             
             <div *ngIf="commandHistory.length === 0" class="no-history">
               <i class="fa fa-inbox"></i>
-              <span>No hay comandos ejecutados</span>
+              <span>{{ 'asistentes.voiceSalesWizard.noHayComandosEjecutados' | translate }}</span>
             </div>
           </div>
         </div>
@@ -325,11 +325,11 @@
       <div class="footer-info">
         <span class="session-time">
           <i class="fa fa-clock"></i>
-          Sesión activa
+          {{ 'asistentes.voiceSalesWizard.sesionActiva' | translate }}
         </span>
         <span class="completion-status">
           <i class="fa fa-flag-checkered"></i>
-          {{ completionPercentage }}% completado
+          {{ completionPercentage }}{{ 'asistentes.voiceSalesDemo.completado2' | translate }}
         </span>
       </div>
       
@@ -338,7 +338,7 @@
           class="btn btn-outline-info btn-sm"
           (click)="onUpdateProgressClick()">
           <i class="fa fa-sync"></i>
-          Actualizar Estado
+          {{ 'asistentes.voiceSalesWizard.actualizarEstado' | translate }}
         </button>
       </div>
     </div>

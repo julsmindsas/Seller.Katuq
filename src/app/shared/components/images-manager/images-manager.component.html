@@ -1,16 +1,16 @@
 <input type="file" class="form-control"  multiple (change)="uploadFiles($event)" />
 
 <div *ngIf="files.length > 0">
-    <h3>Progreso de carga:</h3>
+    <h3>{{ 'asistentes.imagesManager.progresoDeCarga' | translate }}</h3>
     <div *ngFor="let file of files">
         <p>{{ file.name }} - {{ file.progress | number: '1.0-0' }}%</p>
         <div class="progress-bar">
             <div class="progress" [style.width.%]="file.progress"></div>
         </div>
-        <a *ngIf="file.url" [href]="file.url" target="_blank">Ver archivo</a>
+        <a *ngIf="file.url" [href]="file.url" target="_blank">{{ 'asistentes.imagesManager.verArchivo' | translate }}</a>
     </div>
 
-    <h4>Progreso total: {{ overallProgress | number: '1.0-0' }}%</h4>
+    <h4>{{ 'asistentes.imagesManager.progresoTotal' | translate:{overallProgress: (overallProgress | number: '1.0-0')} }}</h4>
     <div class="progress-bar">
         <div class="progress" [style.width.%]="overallProgress"></div>
     </div>
