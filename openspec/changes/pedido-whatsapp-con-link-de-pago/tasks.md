@@ -421,13 +421,13 @@ Ninguna tarea de esta parte empieza antes de 0.6. Las marcadas **[sensible]** es
 
 ## 14. KAI en la web (D21)
 
-- [ ] 14.1 Prueba primero en `tests/sitios`:
+- [x] 14.1 (F440-B14: `tests/sitios/asesorKai.test.js`, 7 casos nuevos) Prueba primero en `tests/sitios`:
       - `validarRespuesta` convierte en `cotizar` el `agregar` de un cotizable y nunca lo agrega;
       - el prompt lleva las políticas y no muestra estados de pedido;
       - «no inventes descuentos» sigue en el prompt.
 
       Dep: 0.6.
-- [ ] 14.2 Implementar en `services/sites/asesorKai.js`, en `asesorKai` (`sites.js` ≈9277) y en el widget de `utils/siteHtml.js` (botón «Cotiza con un asesor», que abre el formulario de D-475). Revisión privada. Éxito: 14.1 y `scripts/test-sitios-publicacion.js` en verde. Dep: 14.1.
+- [ ] 14.2 Implementar en `services/sites/asesorKai.js`, en `asesorKai` (`sites.js` ≈9277) y en el widget de `utils/siteHtml.js` (botón «Cotiza con un asesor», que abre el formulario de D-475). Revisión privada. Éxito: 14.1 y `scripts/test-sitios-publicacion.js` en verde. Dep: 14.1. (F440-B14, parcial, sin marcar: hecho el servicio `services/sites/asesorKai.js` —`candidatos(..., cotizables)` con `idsCotizables`, `validarRespuesta({idsCotizables})` que vuelve `cotizar` el `agregar` de un cotizable, `armarPrompt({politicas, whatsapp, idsCotizables})`, y exportadas `ACCION_COTIZAR`/`accionCotizar(id)` = `{tipo:"cotizar", id, cantidad:1}`. Falta pasar `tienda.cotizables`, políticas y WhatsApp desde `asesorKai` en `sites.js` y el botón del widget en `siteHtml.js`: espera la fila de la tienda.)
 - [ ] 14.3 **[sensible]** Atribución web: la línea marcada `kai` en el carrito del navegador, `asistidoPorKai` en el checkout, y `crearPedido` lo agrega solo al evento `pedido`. Prueba primero: el golden de 2.1 no cambia salvo ese campo del evento, y el pedido queda igual. Dep: 3.1 (después de la extracción, T·2), 0.7.
 
 ## 15. Piloto, costo y encendido
