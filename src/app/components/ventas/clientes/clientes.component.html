@@ -31,28 +31,15 @@
 
         <!-- Buscador de cliente (ticket 1163: plegado por defecto al crear) -->
         <div class="cfg-card search-section" *ngIf="buscadorAbierto">
+            <!-- Ticket 1326: un solo campo; el servidor busca por documento, nombre y
+                 apellido, celular o correo (el mismo buscador de venta asistida y POS). -->
             <div class="row align-items-end g-2">
-                <div class="col-12 col-md-3">
-                    <label class="form-label fw-semibold small">{{ "Buscar por" | translate }}</label>
-                    <p-dropdown [(ngModel)]="tipoBusqueda"
-                                [options]="[
-                                    {label: 'Documento', value: 'CC-NIT'},
-                                    {label: 'Email', value: 'email'},
-                                    {label: 'Nombre', value: 'nombre'}
-                                ]"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="{{ 'Seleccionar...' | translate }}"
-                                [showClear]="false"
-                                styleClass="w-100 search-input-tall"
-                                panelStyleClass="buscar-por-panel"></p-dropdown>
-                </div>
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-md-9">
                     <label class="form-label fw-semibold small">{{ "Buscar cliente" | translate }}</label>
                     <input #documentoBusqueda
                            pInputText
                            type="text"
-                           placeholder="{{ 'Documento, email o nombre...' | translate }}"
+                           placeholder="{{ 'Documento, nombre y apellido, celular o correo' | translate }}"
                            class="w-100 search-input-tall"
                            (keyup.enter)="buscar()" />
                 </div>
@@ -67,7 +54,7 @@
             </div>
         </div>
 
-        <!-- Resultados de búsqueda por email/nombre -->
+        <!-- Resultados de búsqueda (varios clientes coinciden) -->
         <div *ngIf="resultadosBusqueda && resultadosBusqueda.length > 0" class="cfg-card cli-resultados">
             <p class="fw-semibold small mb-2 text-muted">
                 <i class="pi pi-list me-1"></i>{{ resultadosBusqueda.length }} resultados encontrados — selecciona el cliente:
