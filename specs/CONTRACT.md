@@ -11915,3 +11915,10 @@ Lo que queda está, sobre todo, en:
   - Ajuste al diseño: las clases del editor usan el prefijo `lin-`, porque `lp-` contiene "p-" (trampa de `_reset.scss`).
   - Falta: prueba funcional en FLORECER (escribe pedidos, requiere permiso), revisión visual a 1440 y 390 px, y despliegue (primero el backend).
 - [Propuesta](../openspec/changes/pos-editar-precio-iva/proposal.md) · [Diseño](../openspec/changes/pos-editar-precio-iva/design.md) · [Tareas](../openspec/changes/pos-editar-precio-iva/tasks.md)
+
+## D-537 (2026-10-22) — Contactos del cliente y cotización dirigida a una persona (ticket 1327) — PROPUESTA, pendiente de aprobación
+
+- **Petición:** ALMACEN BOMBAS (ticket 1327): poder inscribir más de un contacto (nombre y correo) por cliente, porque la cotización no siempre va a la misma persona. Daniel aprobó trabajarlo (22-oct) y pidió ver primero cómo funcionaría.
+- **Propuesta:** `clients.contactos[]` opcional (nombre, cargo, correo, celular, principal) en el formulario único de cliente (D-406) como pestaña Contactos; en la cotización, selector «Dirigida a» que guarda una copia en `cotizacion.contactoDestino` y la muestra como «Atención» en el documento y al compartir por WhatsApp.
+- **No toca:** pedidos, facturación electrónica, cartera ni notificaciones (siguen con el correo principal); clientes corporativos del CRM; índice de búsqueda. El envío de la cotización por correo no existe hoy (501) y queda fuera.
+- [Propuesta](../openspec/changes/contactos-del-cliente/proposal.md). Checkpoint: aprobación de Daniel antes de diseño y tareas.
