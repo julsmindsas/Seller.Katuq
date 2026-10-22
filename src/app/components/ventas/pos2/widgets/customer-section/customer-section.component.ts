@@ -22,6 +22,8 @@ import { of } from "rxjs";
 })
 export class CustomerSectionComponent implements OnInit, OnDestroy {
   datosCliente: any = "";
+  /** Ticket 1328: ventana con las métricas del cliente asociado. */
+  mostrarMetricas = false;
   // D-419 (ticket 1171): a quién se factura la venta en curso.
   facturacion: FacturacionPos = SIN_FACTURA;
   documentoCliente: string = "";

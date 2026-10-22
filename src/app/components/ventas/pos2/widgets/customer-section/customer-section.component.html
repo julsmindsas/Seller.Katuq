@@ -65,6 +65,11 @@
                         <span>Cliente Asociado</span>
                     </div>
                     <div class="cliente-actions">
+                        <!-- Ticket 1328: métricas de compra del cliente (spec 009) -->
+                        <button class="btn-action" type="button" (click)="mostrarMetricas = true"
+                                title="Ver métricas" aria-label="Ver métricas del cliente">
+                            <i class="fa fa-chart-line"></i>
+                        </button>
                         <button class="btn-action" (click)="editarCliente()" title="Editar">
                             <i class="fa fa-pen"></i>
                         </button>
@@ -109,3 +114,11 @@
         </div>
     </div>
 </div>
+
+<!-- Ticket 1328: métricas del cliente asociado a la venta -->
+<p-dialog [(visible)]="mostrarMetricas" [modal]="true" [dismissableMask]="true" [draggable]="false"
+          [resizable]="false" appendTo="body" [style]="{ width: '640px', maxWidth: '95vw' }"
+          header="Métricas del cliente">
+    <app-customer-metrics *ngIf="mostrarMetricas" [documento]="datosCliente?.documento" [compacto]="true">
+    </app-customer-metrics>
+</p-dialog>

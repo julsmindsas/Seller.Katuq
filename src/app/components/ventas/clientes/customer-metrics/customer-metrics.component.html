@@ -1,4 +1,4 @@
-<div class="cm-wrap" *ngIf="enabled">
+<div class="cm-wrap" [class.cm-compacto]="compacto" *ngIf="enabled">
 
   <!-- Cargando -->
   <div *ngIf="loading" class="cm-grid" aria-busy="true">

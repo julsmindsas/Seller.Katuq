@@ -15,6 +15,8 @@ import { CustomerSummary } from '../../modelo/customer-summary';
 })
 export class CustomerMetricsComponent implements OnChanges {
   @Input() documento: string | null = null;
+  /** Ticket 1328: en un panel angosto (Ver detalles, POS) las cifras van en 2 columnas y sin margen lateral. */
+  @Input() compacto = false;
 
   enabled = false;
   loading = false;
