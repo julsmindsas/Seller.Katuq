@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { EnVivoCompartidoModule } from '../compartido/en-vivo-compartido.module';
 import { EnVivoCanalesKatuqComponent } from './canales-katuq/en-vivo-canales-katuq.component';
@@ -35,7 +36,7 @@ const PIEZAS = [
  * `EnVivoCompartidoModule` (el icono, el odómetro y la celebración que usa la página).
  */
 @NgModule({
-  imports: [CommonModule, EnVivoCompartidoModule],
+  imports: [TranslateModule, CommonModule, EnVivoCompartidoModule],
   declarations: PIEZAS,
   exports: PIEZAS,
 })

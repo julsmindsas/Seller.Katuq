@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EnVivoCompartidoModule } from '../compartido/en-vivo-compartido.module';
@@ -12,7 +13,7 @@ import { EnVivoGrupoDespachoComponent } from './grupo-despacho/grupo-despacho.co
  * borró con la tarea 7.5 de D-422.
  */
 @NgModule({
-  imports: [CommonModule, FormsModule, EnVivoCompartidoModule],
+  imports: [TranslateModule, CommonModule, FormsModule, EnVivoCompartidoModule],
   declarations: [EnVivoGrupoDespachoComponent, EnVivoFueraDelPlanComponent],
   exports: [EnVivoGrupoDespachoComponent, EnVivoFueraDelPlanComponent],
 })

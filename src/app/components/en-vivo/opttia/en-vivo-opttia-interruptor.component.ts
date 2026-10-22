@@ -8,6 +8,7 @@ import {
   OnInit,
   SimpleChanges,
 } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 import { sesionEsAdministrador } from '../paginas/sesion-katuq';
@@ -52,7 +53,8 @@ export class EnVivoOpttiaInterruptorComponent implements OnInit, OnChanges, OnDe
   constructor(
     private readonly api: EnVivoService,
     private readonly estado: EnVivoEstadoService,
-    private readonly cambios: ChangeDetectorRef
+    private readonly cambios: ChangeDetectorRef,
+    private readonly translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -91,36 +93,32 @@ export class EnVivoOpttiaInterruptorComponent implements OnInit, OnChanges, OnDe
   }
 
   get texto(): string {
-    if (!this.general) return 'Opttia apagado por Katuq';
-    return this.activado ? 'Opttia prendido' : 'Opttia apagado';
+    if (!this.general) return this.translate.instant('enVivo.enVivoOpttiaInterruptor.apagadoPorKatuq');
+    return this.translate.instant(this.activado ? 'enVivo.enVivoOpttiaInterruptor.prendido' : 'enVivo.enVivoOpttiaInterruptor.apagado');
   }
 
   get titulo(): string {
-    if (!this.general) return 'Katuq apagó a Opttia en En vivo para todos los comercios.';
-    return this.activado
-      ? 'Opttia analiza la operación y responde preguntas. Clic para apagarlo.'
-      : 'Opttia no analiza ni responde aquí. Clic para prenderlo.';
+    if (!this.general) return this.translate.instant('enVivo.enVivoOpttiaInterruptor.descKatuqApago');
+    return this.translate.instant(this.activado ? 'enVivo.enVivoOpttiaInterruptor.descPrendido' : 'enVivo.enVivoOpttiaInterruptor.descApagado');
   }
 
   cambiar(): void {
     if (this.activado === null || !this.general || this.guardando) return;
     const nuevo = !this.activado;
     const donde = this.katuq
-      ? 'Aplica a "Katuq en vivo" (todos los comercios juntos).'
+      ? this.translate.instant('enVivo.enVivoOpttiaInterruptor.alcanceKatuq')
       : this.comercio
-        ? `Aplica a todas las pantallas En vivo de ${escapar(this.comercio)}.`
-        : 'Aplica a todas las pantallas En vivo de tu empresa.';
+        ? this.translate.instant('enVivo.enVivoOpttiaInterruptor.alcanceComercio', { comercio: escapar(this.comercio) })
+        : this.translate.instant('enVivo.enVivoOpttiaInterruptor.alcanceEmpresa');
     const alcance = `<p style="color:#6b7280;margin:12px 0 0;font-size:13px;">${donde}</p>`;
     Swal.fire({
-      title: nuevo ? '¿Prender a Opttia?' : '¿Apagar a Opttia?',
+      title: this.translate.instant(nuevo ? 'enVivo.enVivoOpttiaInterruptor.tituloPrender' : 'enVivo.enVivoOpttiaInterruptor.tituloApagar'),
       html:
-        (nuevo
-          ? 'Opttia vuelve a analizar la operación (un resumen cada 15 a 30 minutos) y a responder preguntas.'
-          : 'Opttia deja de analizar y de responder. Las cifras, la escena y los eventos siguen igual.') + alcance,
+        this.translate.instant(nuevo ? 'enVivo.enVivoOpttiaInterruptor.textoPrender' : 'enVivo.enVivoOpttiaInterruptor.textoApagar') + alcance,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: nuevo ? 'Sí, prender' : 'Sí, apagar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant(nuevo ? 'enVivo.enVivoOpttiaInterruptor.siPrender' : 'enVivo.enVivoOpttiaInterruptor.siApagar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
     }).then((r) => {
       if (!r.isConfirmed) return;
       this.guardando = true;
@@ -136,7 +134,7 @@ export class EnVivoOpttiaInterruptorComponent implements OnInit, OnChanges, OnDe
           error: (e) => {
             this.guardando = false;
             this.cambios.markForCheck();
-            Swal.fire('Error', e?.error?.message || 'No fue posible guardar el cambio.', 'error');
+            Swal.fire(this.translate.instant('comun.error'), e?.error?.message || this.translate.instant('enVivo.enVivoOpttiaInterruptor.noSeGuardo'), 'error');
           },
         })
       );

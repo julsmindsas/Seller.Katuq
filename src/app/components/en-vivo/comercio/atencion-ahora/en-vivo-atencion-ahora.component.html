@@ -1,14 +1,14 @@
 <section class="card" aria-labelledby="ev-atencion-titulo">
   <header class="card__head">
     <div>
-      <div class="card__eyebrow">Atención ahora</div>
-      <h2 class="card__title" id="ev-atencion-titulo">{{ vista?.titulo || 'Lo que necesita tu operación' }}</h2>
+      <div class="card__eyebrow">{{ 'enVivo.enVivoAtencionAhora.atencionAhora' | translate }}</div>
+      <h2 class="card__title" id="ev-atencion-titulo">{{ vista?.titulo || ('enVivo.enVivoAtencionAhora.loQueNecesitaTuOperacion' | translate) }}</h2>
     </div>
     <span class="chip" *ngIf="vista?.calculada">{{ vista?.chip }}</span>
   </header>
 
   <div class="card__body" *ngIf="vista as v">
-    <p class="vacio" role="status" *ngIf="!v.calculada">Calculando lo que necesita tu operación…</p>
+    <p class="vacio" role="status" *ngIf="!v.calculada">{{ 'enVivo.enVivoAtencionAhora.calculandoLoQueNecesitaTu' | translate }}</p>
 
     <ul class="radar" *ngIf="v.calculada && v.items.length > 0" aria-live="polite" aria-relevant="additions">
       <li *ngFor="let a of v.items; trackBy: porClave" class="alerta" [ngClass]="a.clase" [class.is-new]="a.nuevo">
@@ -18,7 +18,7 @@
           <p *ngIf="a.texto">{{ a.texto }}</p>
           <div class="opt" *ngIf="a.sugerencia">
             <app-en-vivo-icono nombre="ia"></app-en-vivo-icono>
-            <span>Opttia sugiere: {{ a.sugerencia }}</span>
+            <span>{{ 'enVivo.enVivoAtencionAhora.opttiaSugiere' | translate:{sugerencia: a.sugerencia} }}</span>
           </div>
           <div class="alerta__acts" *ngIf="a.accion">
             <button type="button" [attr.aria-label]="a.ariaAccion" (click)="abrir(a)">{{ a.etiquetaAccion }}</button>
@@ -29,7 +29,7 @@
 
     <p class="radar__ok" role="status" *ngIf="v.calculada && v.items.length === 0">
       <app-en-vivo-icono nombre="check"></app-en-vivo-icono>
-      <span>Todo al día: nada atascado, demorado ni sin cobrar.</span>
+      <span>{{ 'enVivo.enVivoAtencionAhora.todoAlDiaNadaAtascado' | translate }}</span>
     </p>
   </div>
 </section>

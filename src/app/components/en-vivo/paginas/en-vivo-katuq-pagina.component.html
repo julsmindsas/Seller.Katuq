@@ -5,11 +5,11 @@
     <button
       type="button"
       class="ev-btn ev-btn--ampliar"
-      title="Ampliar la escena: quita los paneles flotantes"
+      [title]="'enVivo.enVivoComercioPagina.ampliarLaEscenaQuitaLos' | translate"
       [attr.aria-pressed]="ampliado"
       (click)="alternarAmpliado()"
     >
-      <span>{{ ampliado ? 'Con paneles' : 'Ampliar' }}</span>
+      <span>{{ ampliado ? ('enVivo.enVivoComercioPagina.conPaneles' | translate) : ('enVivo.enVivoComercioPagina.ampliar' | translate) }}</span>
     </button>
   </ng-container>
 

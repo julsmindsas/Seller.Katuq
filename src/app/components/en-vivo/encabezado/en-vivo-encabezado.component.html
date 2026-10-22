@@ -16,13 +16,13 @@
 
   <span class="top__spacer"></span>
 
-  <div class="seg" role="group" aria-label="Vista" *ngIf="opciones.length > 1 && !sinAcceso">
+  <div class="seg" role="group" [attr.aria-label]="'enVivo.enVivoEncabezado.vista' | translate" *ngIf="opciones.length > 1 && !sinAcceso">
     <button
       *ngFor="let o of opciones; trackBy: porOpcion"
       type="button"
       [attr.aria-pressed]="o.id === opcionActiva"
       (click)="elegirOpcion.emit(o.id)"
-    >{{ o.etiqueta }}<span class="seg__insignia" *ngIf="o.insignia" [attr.aria-label]="o.insignia + ' listos'">{{ o.insignia }}</span></button>
+    >{{ o.etiqueta }}<span class="seg__insignia" *ngIf="o.insignia" [attr.aria-label]="o.insignia + ' ' + ('enVivo.enVivoEncabezado.listos' | translate)">{{ o.insignia }}</span></button>
   </div>
 
   <div class="actions" *ngIf="!sinAcceso">
@@ -30,8 +30,8 @@
     <button
       type="button"
       class="ibtn"
-      aria-label="Sonido"
-      title="Sonido (apagado hasta que lo enciendas)"
+      [attr.aria-label]="'enVivo.enVivoEncabezado.sonido' | translate"
+      [title]="'enVivo.enVivoEncabezado.sonidoApagadoHastaQueLo' | translate"
       [attr.aria-pressed]="sonido"
       (click)="alternarSonido.emit()"
     >
@@ -47,19 +47,19 @@
     >
       <app-en-vivo-icono [nombre]="ocultar ? 'ojoTachado' : 'ojo'"></app-en-vivo-icono>
     </button>
-    <button type="button" class="btn btn--ghost" [disabled]="repitiendo" title="Repetir el día" (click)="repetirDia.emit()">
+    <button type="button" class="btn btn--ghost" [disabled]="repitiendo" [title]="'enVivo.enVivoEncabezado.repetirElDia' | translate" (click)="repetirDia.emit()">
       <app-en-vivo-icono nombre="repetir"></app-en-vivo-icono>
-      <span>{{ repitiendo ? 'Repitiendo…' : 'Repetir el día' }}</span>
+      <span>{{ repitiendo ? ('enVivo.enVivoEncabezado.repitiendo' | translate) : ('enVivo.enVivoEncabezado.repetirElDia' | translate) }}</span>
     </button>
     <button
       type="button"
       class="btn btn--primary"
-      title="Modo pantalla"
+      [title]="'enVivo.enVivoEncabezado.modoPantalla' | translate"
       [attr.aria-pressed]="modoPantalla"
       (click)="alternarModoPantalla.emit()"
     >
       <app-en-vivo-icono nombre="pantalla"></app-en-vivo-icono>
-      <span>{{ modoPantalla ? 'Salir del modo pantalla' : 'Modo pantalla' }}</span>
+      <span>{{ modoPantalla ? ('enVivo.enVivoEncabezado.salirDelModoPantalla' | translate) : ('enVivo.enVivoEncabezado.modoPantalla' | translate) }}</span>
     </button>
   </div>
 </header>

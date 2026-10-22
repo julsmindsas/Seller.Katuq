@@ -1,4 +1,4 @@
-<section class="pulso" aria-label="Pulso de pedidos">
+<section class="pulso" [attr.aria-label]="'enVivo.enVivoPulso.pulsoDePedidos' | translate">
   <header class="pulso__head" *ngIf="datos as d">
     <div>
       <div class="pulso__eyebrow">{{ d.etiqueta }}</div>

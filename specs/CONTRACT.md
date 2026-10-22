@@ -12114,3 +12114,11 @@ Lo que queda está, sobre todo, en:
 - **de-CH:** borrador escrito por el agente (Opttia no responde en este entorno), con tratamiento «Sie»; sigue oculto hasta la revisión nativa.
 - **Pruebas:** `test:i18n` 207/207 (prueba nueva `empresas-cierre.test.js`), tsc con candado sin errores, las 15 plantillas pasan el analizador de Angular. `tests/theme` 230/231: falla `claro idéntico al de 5a1982da`, que compara el SCSS del modo oscuro (otro agente); este bloque no toca estilos.
 - **Sin marcar:** 13.2 a 13.7 (cierran con IDI-B12f), `build:prod` y la revisión en navegador a 1440 y 390 px. Pendiente: los tooltips largos de la consola armados en TypeScript (`tituloMes`, `tituloPlan`, `tituloRenovacion`, `tituloIntegraciones`, frases de salud) y el CSV de cobros siguen en español. Sin push, despliegue ni escrituras en Firestore.
+
+### 2026-10-21 — D-540: bloque IDI-B12e, En vivo (tareas 13.2 a 13.7, parcial)
+- **Qué cambió:** las 39 plantillas de `components/en-vivo` pasan al traductor (165 claves `enVivo.*` más 17 del interruptor de Opttia, en es, en, pt y de). El interruptor de Opttia traduce su aviso `Swal`, los botones y el error. Los 9 módulos con declaraciones importan `TranslateModule`. Textos sueltos: de 203 a 0; `components/en-vivo` queda en `modulosCerrados`.
+- **No se traduce:** cifras, nombres de comercios, textos que genera Opttia; servicios, escenas y utilidades no usan el traductor. Sin cambios de estilos ni animaciones.
+- **Pendiente:** textos armados en funciones puras de TypeScript (`utilidades/*`, `ficha/utilidades/*`, `propuestas.reglas.ts`, `en-vivo-propuestas.service.ts`, `opttia-puntos.ts`, etiquetas de `en-vivo.component.ts`, canvas de las escenas): el verificador no los cuenta y quedan en español hasta un bloque aparte.
+- **de-CH:** borrador escrito por el agente (Opttia no responde aquí), con «Sie»; sigue oculto hasta la revisión nativa.
+- **Pruebas:** `test:i18n` 215/215 (prueba nueva `en-vivo-cierre.test.js`), tsc con candado sin errores, las 39 plantillas pasan el analizador de Angular.
+- **Sin marcar:** 13.2 a 13.7 (cierran con IDI-B12f), `build:prod` y la revisión en navegador a 1440 y 390 px.

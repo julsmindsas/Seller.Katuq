@@ -37,11 +37,11 @@
       <!-- Repetir el día: qué se está viendo y cuánto falta (la hora real avanza en el reloj del encabezado) -->
       <div class="ev-repeticion" *ngIf="vm.repeticion.activa" role="status" aria-live="polite">
         <app-en-vivo-icono nombre="repetir"></app-en-vivo-icono>
-        <span class="ev-repeticion__texto">Repitiendo el día · cada llegada en su hora real</span>
+        <span class="ev-repeticion__texto">{{ 'enVivo.enVivo.repitiendoElDiaCadaLlegada' | translate }}</span>
         <span
           class="ev-repeticion__barra"
           role="progressbar"
-          aria-label="Avance de la repetición del día"
+          [attr.aria-label]="'enVivo.enVivo.avanceDeLaRepeticionDel' | translate"
           aria-valuemin="0"
           aria-valuemax="100"
           [attr.aria-valuenow]="porcentaje(vm.repeticion.progreso)"

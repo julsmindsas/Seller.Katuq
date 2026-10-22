@@ -10,7 +10,7 @@
 
   <div class="proy" *ngIf="proyeccion as p">
     <div class="proy__txt">
-      <span>Proyección al cierre</span>
+      <span>{{ 'enVivo.enVivoHeroe.proyeccionAlCierre' | translate }}</span>
       <b>{{ p.texto }}</b>
     </div>
     <div class="proy__bar" aria-hidden="true">
@@ -19,8 +19,8 @@
       <s *ngIf="p.record !== null" [style.left.%]="p.record"></s>
     </div>
     <div class="proy__leg" aria-hidden="true">
-      <span><i class="sw sw--hoy"></i>Hoy</span>
-      <span><i class="sw sw--falta"></i>Lo que falta según el ritmo</span>
+      <span><i class="sw sw--hoy"></i>{{ 'enVivo.enVivoHeroe.hoy' | translate }}</span>
+      <span><i class="sw sw--falta"></i>{{ 'enVivo.enVivoHeroe.loQueFaltaSegunEl' | translate }}</span>
       <span><i class="sw sw--record"></i>{{ p.textoRecord }}</span>
     </div>
     <p class="ev-sr">{{ p.accesible }}</p>

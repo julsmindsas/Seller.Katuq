@@ -3,14 +3,14 @@
     <div class="opt__marca">
       <span class="opt__logo" aria-hidden="true"><app-en-vivo-icono nombre="ia"></app-en-vivo-icono></span>
       <div class="opt__marca-texto">
-        <div class="opt__etiqueta">Opttia · la inteligencia de Katuq</div>
+        <div class="opt__etiqueta">{{ 'enVivo.enVivoOpttia.opttiaLaInteligenciaDeKatuq' | translate }}</div>
         <h2 class="opt__titulo" id="ev-opt-titulo">{{ titulo }}</h2>
       </div>
     </div>
     <div class="opt__lado">
       <button type="button" class="opt__recorrido" *ngIf="conEscena" (click)="alRecorrido()">
         <app-en-vivo-icono nombre="ia"></app-en-vivo-icono>
-        Recorrido en la escena
+        {{ 'enVivo.enVivoOpttia.recorridoEnLaEscena' | translate }}
       </button>
       <span class="opt__cuando" *ngIf="hayResumen">{{ cuando }}</span>
     </div>
@@ -23,12 +23,12 @@
 
       <p class="opt__pensando" *ngIf="!hayResumen" role="status">
         <span class="opt__puntos" aria-hidden="true"><i></i><i></i><i></i></span>
-        Opttia está mirando los datos…
+        {{ 'enVivo.enVivoOpttia.opttiaEstaMirandoLosDatos' | translate }}
       </p>
 
       <ng-container *ngIf="hayResumen">
         <h3 class="opt__tit" aria-hidden="true">{{ titularVisible }}</h3>
-        <ul class="opt__lista" aria-label="Lo más importante ahora">
+        <ul class="opt__lista" [attr.aria-label]="'enVivo.enVivoOpttia.loMasImportanteAhora' | translate">
           <li *ngFor="let p of puntos; trackBy: porIndice" class="opt__punto" [ngClass]="p.clase" [class.is-visible]="p.visible">
             <span class="opt__punto-ico"><app-en-vivo-icono [nombre]="p.icono"></app-en-vivo-icono></span>
             <span class="opt__punto-txt">{{ p.texto }}</span>
@@ -40,7 +40,7 @@
 
     <button type="button" class="opt__vendido" *ngIf="vendido" (click)="alVerVendidos()">
       <span class="opt__vendido-ico"><app-en-vivo-icono nombre="ia"></app-en-vivo-icono></span>
-      <span class="opt__vendido-txt">Vendido con Opttia hoy</span>
+      <span class="opt__vendido-txt">{{ 'enVivo.enVivoOpttia.vendidoConOpttiaHoy' | translate }}</span>
       <b class="opt__vendido-n">{{ textoVendido }}</b>
     </button>
 
@@ -51,20 +51,20 @@
         type="text"
         class="opt__entrada"
         name="pregunta"
-        aria-label="Pregúntale a Opttia"
-        placeholder="Pregúntale a Opttia sobre lo que ves…"
+        [attr.aria-label]="'enVivo.enVivoOpttia.preguntaleAOpttia' | translate"
+        [placeholder]="'enVivo.enVivoOpttia.preguntaleAOpttiaSobreLo' | translate"
         [attr.maxlength]="maxCaracteres"
         [disabled]="bloqueada"
         (input)="alEscribir(entrada)"
       />
-      <button type="submit" class="opt__enviar" [disabled]="bloqueada || enviando">Preguntar</button>
+      <button type="submit" class="opt__enviar" [disabled]="bloqueada || enviando">{{ 'enVivo.enVivoOpttia.preguntar' | translate }}</button>
     </form>
     <div class="opt__ayuda">
       <span class="opt__bloqueo" *ngIf="bloqueada" role="status">{{ textoBloqueo }}</span>
       <span class="opt__contador" *ngIf="largo >= avisoCaracteres" [class.is-tope]="largo >= maxCaracteres">{{ largo }} / {{ maxCaracteres }}</span>
     </div>
 
-    <div class="opt__chips" role="group" aria-label="Preguntas sugeridas">
+    <div class="opt__chips" role="group" [attr.aria-label]="'enVivo.enVivoOpttia.preguntasSugeridas' | translate">
       <button
         type="button"
         class="opt__chip"
@@ -84,20 +84,20 @@
 
         <p class="opt__pensando" *ngIf="r.fase === 'pensando'" aria-hidden="true">
           <span class="opt__puntos"><i></i><i></i><i></i></span>
-          pensando…
+          {{ 'enVivo.enVivoOpttia.pensando' | translate }}
         </p>
 
         <p class="opt__a" *ngIf="r.fase === 'escribiendo' || r.fase === 'lista' || r.fase === 'aviso'" aria-hidden="true">{{ r.textoVisible }}</p>
 
         <div class="opt__a opt__a--tope" *ngIf="r.fase === 'tope'" aria-hidden="true">
-          <b>Llegaste al tope de {{ maxPreguntasPorHora }} preguntas por hora.</b>
+          <b>{{ 'enVivo.enVivoOpttia.llegasteAlTopeDePreguntas' | translate:{maxPreguntasPorHora: maxPreguntasPorHora} }}</b>
           {{ textoBloqueo }}
         </div>
 
         <p class="opt__nota" *ngIf="r.fase === 'lista' && r.nota">{{ r.nota }}</p>
 
         <div class="opt__acts" *ngIf="r.fase === 'lista' && (r.botones.length > 0 || (conEscena && r.verEnEscena))">
-          <button type="button" class="opt__act opt__act--escena" *ngIf="conEscena && r.verEnEscena" (click)="alVerEnEscena()">Verlo en la escena</button>
+          <button type="button" class="opt__act opt__act--escena" *ngIf="conEscena && r.verEnEscena" (click)="alVerEnEscena()">{{ 'enVivo.enVivoOpttia.verloEnLaEscena' | translate }}</button>
           <button type="button" class="opt__act" *ngFor="let b of r.botones; trackBy: porIndice" (click)="alAbrir(b)">{{ b.etiqueta }}</button>
         </div>
       </div>

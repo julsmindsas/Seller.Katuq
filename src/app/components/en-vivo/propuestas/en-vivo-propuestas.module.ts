@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { EnVivoCompartidoModule } from '../compartido/en-vivo-compartido.module';
 import { EnVivoDespachosModule } from '../despachos/en-vivo-despachos.module';
@@ -12,7 +13,7 @@ import { EnVivoSugerenciaComponent } from './en-vivo-sugerencia.component';
  * plan de despachos (grupo y "no entra al plan") que exporta `EnVivoDespachosModule`.
  */
 @NgModule({
-  imports: [CommonModule, EnVivoCompartidoModule, EnVivoDespachosModule],
+  imports: [TranslateModule, CommonModule, EnVivoCompartidoModule, EnVivoDespachosModule],
   declarations: [EnVivoSugerenciaComponent, EnVivoSugerenciaAjusteComponent],
   exports: [EnVivoSugerenciaComponent, EnVivoSugerenciaAjusteComponent],
 })

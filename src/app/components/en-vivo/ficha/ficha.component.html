@@ -5,7 +5,7 @@
     <header class="ev-ficha__cabecera">
       <button type="button" class="ev-ficha__btn ev-ficha__atras" *ngIf="vm.puedeVolver" (click)="atras()">
         <app-en-vivo-icono [nombre]="'flecha'"></app-en-vivo-icono>
-        <span>Atrás</span>
+        <span>{{ 'enVivo.ficha.atras' | translate }}</span>
       </button>
 
       <div class="ev-ficha__tit">
@@ -13,7 +13,7 @@
         <h2 class="ev-ficha__titulo" [id]="idTitulo" tabindex="-1" #titulo>{{ vm.contenido.titulo }}</h2>
       </div>
 
-      <button type="button" class="ev-ficha__btn ev-ficha__cerrar" (click)="cerrar()" aria-label="Cerrar la ficha">
+      <button type="button" class="ev-ficha__btn ev-ficha__cerrar" (click)="cerrar()" [attr.aria-label]="'enVivo.ficha.cerrarLaFicha' | translate">
         <app-en-vivo-icono [nombre]="'equis'"></app-en-vivo-icono>
       </button>
     </header>

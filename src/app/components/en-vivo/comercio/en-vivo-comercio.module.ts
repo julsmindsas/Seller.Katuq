@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { EnVivoCompartidoModule } from '../compartido/en-vivo-compartido.module';
 import { EnVivoAtencionAhoraComponent } from './atencion-ahora/en-vivo-atencion-ahora.component';
@@ -27,7 +28,7 @@ const PIEZAS = [
  * `@Input` ni llama al servidor. La página que las junta la arma quien importe este módulo.
  */
 @NgModule({
-  imports: [CommonModule, EnVivoCompartidoModule],
+  imports: [TranslateModule, CommonModule, EnVivoCompartidoModule],
   declarations: PIEZAS,
   exports: PIEZAS,
 })

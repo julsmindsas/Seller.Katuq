@@ -23,7 +23,7 @@
     [class.ev-sug--urgente]="vm.item?.prioridad === 'urgente'"
     [class.ev-sug--razon]="razonAbierta"
     role="region"
-    aria-label="Opttia propone"
+    [attr.aria-label]="'enVivo.enVivoSugerencia.opttiaPropone' | translate"
     (keydown)="alTeclado($event, vm)"
     (pointerdown)="actividad()"
     (focusin)="actividad()"
@@ -33,12 +33,12 @@
       <div class="ev-sug-cabeza">
         <p class="ev-sug-eyebrow">
           <app-en-vivo-icono nombre="ia"></app-en-vivo-icono>
-          <span class="ev-sug-eyebrow__texto">Opttia propone</span>
+          <span class="ev-sug-eyebrow__texto">{{ 'enVivo.enVivoSugerencia.opttiaPropone' | translate }}</span>
         </p>
-        <span class="ev-sug-pastilla t-ok"><span class="ev-sug-pastilla__texto">Al día</span></span>
+        <span class="ev-sug-pastilla t-ok"><span class="ev-sug-pastilla__texto">{{ 'enVivo.enVivoSugerencia.alDia' | translate }}</span></span>
       </div>
-      <h2 class="ev-sug-titulo">Todo al día</h2>
-      <p class="ev-sug-razon ev-sug-razon--siempre">Te aviso aquí mismo si sale algo.</p>
+      <h2 class="ev-sug-titulo">{{ 'enVivo.enVivoSugerencia.todoAlDia' | translate }}</h2>
+      <p class="ev-sug-razon ev-sug-razon--siempre">{{ 'enVivo.enVivoSugerencia.teAvisoAquiMismoSi' | translate }}</p>
     </ng-container>
 
     <ng-template #conPropuesta>
@@ -49,10 +49,10 @@
             <span class="ev-sug-eyebrow__texto">{{ vm.eyebrow }}</span>
           </p>
           <div class="ev-sug-cola" *ngIf="vm.total > 1 && !vm.tv">
-            <button type="button" class="ev-sug-flecha ev-sug-flecha--atras" [disabled]="vm.ocupado" (click)="anterior()" aria-label="Propuesta anterior">
+            <button type="button" class="ev-sug-flecha ev-sug-flecha--atras" [disabled]="vm.ocupado" (click)="anterior()" [attr.aria-label]="'enVivo.enVivoSugerencia.propuestaAnterior' | translate">
               <app-en-vivo-icono nombre="flecha"></app-en-vivo-icono>
             </button>
-            <button type="button" class="ev-sug-flecha" [disabled]="vm.ocupado" (click)="siguiente()" aria-label="Propuesta siguiente">
+            <button type="button" class="ev-sug-flecha" [disabled]="vm.ocupado" (click)="siguiente()" [attr.aria-label]="'enVivo.enVivoSugerencia.propuestaSiguiente' | translate">
               <app-en-vivo-icono nombre="flecha"></app-en-vivo-icono>
             </button>
           </div>
@@ -61,7 +61,7 @@
         <h2 class="ev-sug-titulo">{{ vm.titulo }}</h2>
 
         <button type="button" class="ev-sug-porque" *ngIf="vm.razon && !vm.tv" [attr.aria-expanded]="razonAbierta" (click)="alternarRazon($event)">
-          <span class="ev-sug-porque__texto">{{ razonAbierta ? 'Ocultar la razón' : '¿Por qué?' }}</span>
+          <span class="ev-sug-porque__texto">{{ razonAbierta ? ('enVivo.enVivoSugerencia.ocultarLaRazon' | translate) : ('enVivo.enVivoSugerencia.porQue' | translate) }}</span>
         </button>
         <p class="ev-sug-razon" *ngIf="vm.razon">{{ vm.razon }}</p>
 
@@ -102,10 +102,10 @@
             <!-- Producción en sombra: así lo haría Opttia, sin botón de aprobar. -->
             <ng-container *ngSwitchCase="'sombra'">
               <p class="ev-sug-sombra">
-                <span class="ev-sug-sombra__texto">Así lo haría Opttia · pronto podrás aprobarlo</span>
+                <span class="ev-sug-sombra__texto">{{ 'enVivo.enVivoSugerencia.asiLoHariaOpttiaPronto' | translate }}</span>
               </p>
               <div class="ev-sug-acciones">
-                <button type="button" class="ev-sug-btn ev-sug-btn--texto" (click)="despues()"><span>Después</span></button>
+                <button type="button" class="ev-sug-btn ev-sug-btn--texto" (click)="despues()"><span>{{ 'enVivo.enVivoSugerencia.despues' | translate }}</span></button>
                 <ng-container *ngTemplateOutlet="menuMas"></ng-container>
               </div>
             </ng-container>
@@ -125,17 +125,17 @@
                   (click)="abrirWhatsapp(vm)"
                 >
                   <span class="ev-sug-btn__giro" *ngIf="vm.whatsappAbriendo" aria-hidden="true"></span>
-                  <span class="ev-sug-btn__texto">{{ vm.whatsappAbriendo ? 'Abriendo WhatsApp…' : 'Abrir WhatsApp' }}</span>
+                  <span class="ev-sug-btn__texto">{{ vm.whatsappAbriendo ? ('enVivo.enVivoSugerencia.abriendoWhatsapp' | translate) : ('enVivo.enVivoSugerencia.abrirWhatsapp' | translate) }}</span>
                 </button>
                 <ng-template #pedidoPrincipal>
-                  <button type="button" class="ev-sug-btn ev-sug-btn--principal ev-sug-btn--pedido" (click)="abrirPedido(it)"><span>Abrir pedido</span></button>
+                  <button type="button" class="ev-sug-btn ev-sug-btn--principal ev-sug-btn--pedido" (click)="abrirPedido(it)"><span>{{ 'enVivo.enVivoSugerencia.abrirPedido' | translate }}</span></button>
                 </ng-template>
                 <div class="ev-sug-acciones__fila">
                   <button type="button" class="ev-sug-btn ev-sug-btn--sec ev-sug-btn--pedido" *ngIf="vm.whatsapp" (click)="abrirPedido(it)">
-                    <span>Abrir pedido</span>
+                    <span>{{ 'enVivo.enVivoSugerencia.abrirPedido' | translate }}</span>
                   </button>
-                  <button type="button" class="ev-sug-btn ev-sug-btn--texto" (click)="despues()"><span>Después</span></button>
-                  <button type="button" class="ev-sug-btn ev-sug-btn--texto ev-sug-btn--pagado" (click)="yaPago()"><span>Ya pagó / no aplica</span></button>
+                  <button type="button" class="ev-sug-btn ev-sug-btn--texto" (click)="despues()"><span>{{ 'enVivo.enVivoSugerencia.despues' | translate }}</span></button>
+                  <button type="button" class="ev-sug-btn ev-sug-btn--texto ev-sug-btn--pagado" (click)="yaPago()"><span>{{ 'enVivo.enVivoSugerencia.yaPagoNoAplica' | translate }}</span></button>
                 </div>
               </div>
             </ng-container>
@@ -169,9 +169,9 @@
                 </button>
                 <div class="ev-sug-acciones__fila">
                   <button type="button" class="ev-sug-btn ev-sug-btn--sec" *ngIf="vm.ajustable" [disabled]="vm.ocupado" (click)="ajustar()">
-                    <span>Ajustar</span>
+                    <span>{{ 'enVivo.enVivoSugerencia.ajustar' | translate }}</span>
                   </button>
-                  <button type="button" class="ev-sug-btn ev-sug-btn--texto" [disabled]="vm.aplicando" (click)="despues()"><span>Después</span></button>
+                  <button type="button" class="ev-sug-btn ev-sug-btn--texto" [disabled]="vm.aplicando" (click)="despues()"><span>{{ 'enVivo.enVivoSugerencia.despues' | translate }}</span></button>
                   <ng-container *ngTemplateOutlet="menuMas"></ng-container>
                 </div>
               </div>
@@ -191,7 +191,7 @@
           <ng-template #soloSeguir>
             <div class="ev-sug-acciones">
               <div class="ev-sug-acciones__fila">
-                <button type="button" class="ev-sug-btn ev-sug-btn--sec" *ngIf="vm.total > 0" (click)="siguiente()"><span>Siguiente</span></button>
+                <button type="button" class="ev-sug-btn ev-sug-btn--sec" *ngIf="vm.total > 0" (click)="siguiente()"><span>{{ 'enVivo.enVivoSugerencia.siguiente' | translate }}</span></button>
               </div>
             </div>
           </ng-template>
@@ -206,14 +206,14 @@
           type="button"
           class="ev-sug-btn ev-sug-btn--icono"
           [attr.aria-expanded]="masAbierto"
-          aria-label="Más opciones"
+          [attr.aria-label]="'enVivo.enVivoSugerencia.masOpciones' | translate"
           [disabled]="vm.aplicando"
           (click)="alternarMas()"
         >
           <span class="ev-sug-mas__puntos" aria-hidden="true">···</span>
         </button>
         <button type="button" class="ev-sug-btn ev-sug-btn--texto ev-sug-mas__opcion" *ngIf="masAbierto" (click)="noHoy()">
-          <span>No hoy</span>
+          <span>{{ 'enVivo.enVivoSugerencia.noHoy' | translate }}</span>
         </button>
       </div>
     </ng-template>

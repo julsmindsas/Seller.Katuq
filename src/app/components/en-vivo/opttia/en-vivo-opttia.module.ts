@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { EnVivoCompartidoModule } from '../compartido/en-vivo-compartido.module';
 import { EnVivoNarracionComponent } from './en-vivo-narracion.component';
@@ -13,7 +14,7 @@ import { EnVivoOpttiaComponent } from './en-vivo-opttia.component';
  * (`EnVivoCompartidoModule`: el icono, entre otras) y las exporta para quien lo importe.
  */
 @NgModule({
-  imports: [CommonModule, EnVivoCompartidoModule],
+  imports: [TranslateModule, CommonModule, EnVivoCompartidoModule],
   declarations: [EnVivoOpttiaComponent, EnVivoNarracionComponent, EnVivoOpttiaInterruptorComponent],
   exports: [EnVivoOpttiaComponent, EnVivoNarracionComponent, EnVivoOpttiaInterruptorComponent],
 })

@@ -1,13 +1,13 @@
 <section class="card" *ngIf="vm$ | async as vm" aria-labelledby="ev-kq-canales-titulo">
   <header class="card__head">
     <div>
-      <div class="card__eyebrow">Canales en toda Katuq</div>
-      <h2 class="card__title" id="ev-kq-canales-titulo">De dónde llegan los pedidos</h2>
+      <div class="card__eyebrow">{{ 'enVivo.enVivoCanalesKatuq.canalesEnTodaKatuq' | translate }}</div>
+      <h2 class="card__title" id="ev-kq-canales-titulo">{{ 'enVivo.enVivoCanalesKatuq.deDondeLleganLosPedidos' | translate }}</h2>
     </div>
   </header>
 
   <div class="card__body">
-    <p class="vacio" *ngIf="vm.filas.length === 0">Todavía no hay pedidos hoy.</p>
+    <p class="vacio" *ngIf="vm.filas.length === 0">{{ 'enVivo.enVivoCanalesKatuq.todaviaNoHayPedidosHoy' | translate }}</p>
 
     <ng-container *ngIf="vm.filas.length > 0">
       <!-- La mezcla: cada canal pesa lo que pesan sus pedidos. Los números van en las filas. -->

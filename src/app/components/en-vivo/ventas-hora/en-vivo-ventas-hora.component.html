@@ -5,8 +5,8 @@
       <h2 class="card__title" id="ev-vh-titulo">{{ titulo }}</h2>
     </div>
     <div class="legend" aria-hidden="true">
-      <span><i class="sw sw--hoy"></i>Hoy</span>
-      <span><i class="sw sw--ayer"></i>Ayer</span>
+      <span><i class="sw sw--hoy"></i>{{ 'enVivo.enVivoHeroe.hoy' | translate }}</span>
+      <span><i class="sw sw--ayer"></i>{{ 'enVivo.enVivoVentasHora.ayer' | translate }}</span>
     </div>
   </header>
 
@@ -14,7 +14,7 @@
     <p class="resumen" *ngIf="resumenResto"><b *ngIf="resumenPctTexto" class="resumen__pct" [class.is-up]="resumenPct !== null && resumenPct >= 0" [class.is-down]="resumenPct !== null && resumenPct < 0">{{ resumenPctTexto }}</b> {{ resumenResto }}</p>
     <p class="readout">{{ lectura }}</p>
 
-    <div class="plot" role="group" [attr.aria-label]="etiquetaEje + ', hoy contra ayer'">
+    <div class="plot" role="group" [attr.aria-label]="etiquetaEje + ('enVivo.enVivoVentasHora.hoyContraAyer' | translate)">
       <div class="plot__grid plot__grid--tope"><span>{{ topeTexto }}</span></div>
       <div class="plot__grid plot__grid--mitad"><span>{{ mitadTexto }}</span></div>
       <div class="plot__grid plot__grid--base"><span>0</span></div>

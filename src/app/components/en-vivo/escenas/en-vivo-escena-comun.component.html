@@ -12,14 +12,14 @@
     class="eve-leyenda"
     *ngIf="coloresLeyenda.length && !sin3d"
     role="img"
-    aria-label="Leyenda: mientras más oscuro el departamento, más pedidos de hoy"
+    [attr.aria-label]="'enVivo.enVivoEscenaComun.leyendaMientrasMasOscuroEl' | translate"
   >
-    <span aria-hidden="true">Pedidos por departamento</span>
+    <span aria-hidden="true">{{ 'enVivo.enVivoEscenaComun.pedidosPorDepartamento' | translate }}</span>
     <i class="eve-ley-tierra" aria-hidden="true"></i>
     <i *ngFor="let c of coloresLeyenda" [style.background]="c" aria-hidden="true"></i>
-    <span aria-hidden="true">más</span>
+    <span aria-hidden="true">{{ 'enVivo.enVivoEscenaComun.mas' | translate }}</span>
   </div>
   <div class="eve-nogl" *ngIf="sin3d" role="status">
-    <div><b>Este equipo no muestra la vista 3D.</b> Las cifras, las etapas y la lista siguen en vivo.</div>
+    <div><b>{{ 'enVivo.enVivoEscenaComun.esteEquipoNoMuestraLa' | translate }}</b> {{ 'enVivo.enVivoEscenaComun.lasCifrasLasEtapasY' | translate }}</div>
   </div>
 </div>

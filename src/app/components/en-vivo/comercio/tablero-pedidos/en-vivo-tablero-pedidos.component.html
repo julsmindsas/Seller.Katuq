@@ -1,7 +1,7 @@
-<section #tablero class="tablero" [attr.aria-label]="vista.soloPropias ? 'Mis pedidos por etapa, en vivo' : 'Pedidos por etapa, en vivo'">
-  <p class="vacio" role="status" *ngIf="!vista.cargado">Cargando los pedidos…</p>
+<section #tablero class="tablero" [attr.aria-label]="vista.soloPropias ? ('enVivo.enVivoTableroPedidos.misPedidosPorEtapaEn' | translate) : ('enVivo.enVivoTableroPedidos.pedidosPorEtapaEnVivo' | translate)">
+  <p class="vacio" role="status" *ngIf="!vista.cargado">{{ 'enVivo.enVivoTableroPedidos.cargandoLosPedidos' | translate }}</p>
   <p class="vacio" role="status" *ngIf="vista.cargado && vista.total === 0">
-    Todavía no hay pedidos en el tablero. Cuando entre uno, lo verás aquí.
+    {{ 'enVivo.enVivoTableroPedidos.todaviaNoHayPedidosEn' | translate }}
   </p>
 
   <div class="kanban" *ngIf="vista.cargado">
@@ -52,8 +52,8 @@
             </span>
           </button>
         </li>
-        <li class="kcol__mas" *ngIf="c.resto > 0">y {{ c.resto }} más</li>
-        <li class="kcol__vacio" *ngIf="c.total === 0">Sin pedidos</li>
+        <li class="kcol__mas" *ngIf="c.resto > 0">{{ 'enVivo.enVivoTableroPedidos.yMas' | translate:{resto: c.resto} }}</li>
+        <li class="kcol__vacio" *ngIf="c.total === 0">{{ 'enVivo.enVivoTableroPedidos.sinPedidos' | translate }}</li>
       </ul>
     </section>
   </div>

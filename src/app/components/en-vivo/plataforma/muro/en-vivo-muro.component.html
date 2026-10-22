@@ -1,5 +1,5 @@
-<section class="muro" *ngIf="vm$ | async as vm" aria-label="Muro de comercios de Katuq">
-  <p class="vacio" *ngIf="vm.tarjetas.length === 0">Todavía no hay comercios con movimiento hoy.</p>
+<section class="muro" *ngIf="vm$ | async as vm" [attr.aria-label]="'enVivo.enVivoMuro.muroDeComerciosDeKatuq' | translate">
+  <p class="vacio" *ngIf="vm.tarjetas.length === 0">{{ 'enVivo.enVivoCinta.todaviaNoHayComerciosCon' | translate }}</p>
 
   <ul class="muro__lista" *ngIf="vm.tarjetas.length > 0">
     <li *ngFor="let t of vm.tarjetas; trackBy: porEmpresa">
