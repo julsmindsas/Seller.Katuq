@@ -417,7 +417,8 @@ Ninguna tarea de esta parte empieza antes de 0.6. Las marcadas **[sensible]** es
       Dep: 0.6.
 - [x] 13.2 Implementar D19 (absorbe 6.8). Éxito: 13.1 y toda `tests/enVivo` en verde. Dep: 13.1.
       *Hecho (F440-B13):* `services/enVivo/ia.js` (origen propio sin lectura; consulta por empresa + `pedidoGenerado` + `origen`, `limit(1)`, `select("origen")`, solo para pedidos convertidos; memoria por pedido con el tope de 5.000; sí y no de más de 24 h definitivos, no reciente se reconsulta tras 60 s); `writeset.contract.test.js` admite solo esa forma de consulta. Toda `tests/enVivo` en verde.
-- [ ] 13.3 Superficie de las métricas de KAI según la pregunta 13. Si Daniel elige una pantalla nueva o un bloque nuevo, va con su propia spec de UI y la regla de diseño Katuq. Dep: respuesta a la pregunta 13.
+- [x] 13.3 Superficie de las métricas de KAI según la pregunta 13. Si Daniel elige una pantalla nueva o un bloque nuevo, va con su propia spec de UI y la regla de diseño Katuq. Dep: respuesta a la pregunta 13.
+      *Hecho (F440-B16):* sección de UI en `specs/kai-metricas/spec.md`; `GET /v1/sites/kai/metricas` (`controllers/kaiMetricas.js`, `services/sites/metricasKai.js`; solo lectura, empresa de la sesión, igualdades con tope; `recuperadoPorKai` y `asistidoPorKai` dan 0 mientras no se escriban); bloque «KAI» en `MetricasComponent` con carga, vacío y error. Pruebas: `tests/sitios/metricasKai.test.js`. Pendiente fuera de este bloque: revisión visual a 1440 y 390 px y build de producción.
 
 ## 14. KAI en la web (D21)
 

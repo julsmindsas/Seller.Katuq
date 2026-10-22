@@ -490,6 +490,19 @@ export interface KitDeMarca {
   redesSociales?: any[];
 }
 
+export interface MetricasKai {
+  dias: number;
+  pedidos: number;
+  pedidosPagados: number;
+  ventas: number;
+  pagosRecuperados: number;
+  valorRecuperado: number;
+  citas: number;
+  cotizaciones: number;
+  ventasTiendaAsistidas: number;
+  truncado: boolean;
+}
+
 interface Respuesta<T> {
   success: boolean;
   message?: string;
@@ -621,6 +634,11 @@ export class SitiosService extends BaseService {
   /** Qué está pasando en una página: visitas, contactos, pedidos e ingresos. */
   metricas(id: string, dias = 30): Observable<Respuesta<MetricasSitio>> {
     return this.get<Respuesta<MetricasSitio>>(`/v1/sites/${id}/metricas?dias=${dias}`);
+  }
+
+  /** Bloque «KAI» de «Cómo va» (F4-40·B16): solo lectura, empresa de la sesión. */
+  metricasKai(dias = 30): Observable<Respuesta<MetricasKai>> {
+    return this.get<Respuesta<MetricasKai>>(`/v1/sites/kai/metricas?dias=${dias}`);
   }
 
   /** Quién le dejó sus datos a la tienda: formulario, Avísame y carritos. */

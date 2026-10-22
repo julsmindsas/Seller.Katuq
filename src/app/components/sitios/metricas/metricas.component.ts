@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
-import { ContactoSitio, FilaOrigen, MetricasSitio, SitiosService } from "../sitios.service";
+import { ContactoSitio, FilaOrigen, MetricasKai, MetricasSitio, SitiosService } from "../sitios.service";
 
 /**
  * Qué está pasando en una página publicada.
@@ -44,7 +44,35 @@ export class MetricasComponent implements OnInit {
     return !!this.datos && this.datos.diasPermitidos === 1;
   }
 
+  /** Bloque «KAI»: carga y falla aparte, para no tumbar el resto de la ventana. */
+  kai: MetricasKai | null = null;
+  kaiCargando = true;
+  kaiError = false;
+
+  get kaiVacio(): boolean {
+    const k = this.kai;
+    return !!k && !(k.pedidos || k.pagosRecuperados || k.citas || k.cotizaciones || k.ventasTiendaAsistidas);
+  }
+
+  cargarKai(): void {
+    this.kaiCargando = true;
+    this.kaiError = false;
+    this.service.metricasKai(this.rango).subscribe({
+      next: (res) => {
+        this.kaiCargando = false;
+        this.kai = res && res.success && res.data ? res.data : null;
+        this.kaiError = !this.kai;
+      },
+      error: () => {
+        this.kaiCargando = false;
+        this.kai = null;
+        this.kaiError = true;
+      },
+    });
+  }
+
   ngOnInit(): void {
+    this.cargarKai();
     this.cargar();
     this.cargarContactos();
   }
@@ -132,6 +160,7 @@ export class MetricasComponent implements OnInit {
   cambiarRango(dias: number): void {
     if (this.rango === dias) return;
     this.rango = dias;
+    this.cargarKai();
     this.cargar();
   }
 
