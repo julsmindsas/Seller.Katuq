@@ -11936,3 +11936,11 @@ Lo que queda está, sobre todo, en:
 - **Propuesta:** `combos.productos[].cantidad` (sin ella, la cantidad mínima de venta como hoy) y `combos.codigo` único por empresa; tipo Combos en el importador con simulación previa y creación/actualización por código; `get_combos` con disponibilidad por stock. Enmienda D-147 y D-339 solo en cantidad y código.
 - **No toca:** precio propio del combo (sigue siendo la suma, pregunta abierta a Daniel), inventario, facturación, POS, creador de informes.
 - [Propuesta](../openspec/changes/combos-cantidad-codigo-y-carga-excel/proposal.md). Checkpoint: aprobación de Daniel antes de diseño y tareas.
+
+## D-539 (2026-10-22) — Pedido con productos de varias bodegas de una misma ciudad (ticket 1331) — PROPUESTA, pendiente de aprobación
+
+- **Petición:** ALMACEN BOMBAS (ticket 1331, urgente): pedidos y combos con productos de distintas bodegas de Medellín (6 bodegas), descontando cada uno de su bodega.
+- **Hallazgo (código, 22-oct):** la venta asistida trabaja con una bodega a la vez y el pedido guarda una sola (`order.bodegaId`); `updateByChannel`/`updateByPOS` ignoran la bodega de la línea. Cambiar de bodega con el carrito lleno descuenta todo de la última: descuadre silencioso.
+- **Propuesta:** `carrito[i].idBodega` (convención D-361) por línea dentro de la misma `ciudad`; descuento, control de existencias y alistamiento por línea; sin bodega en la línea = exactamente como hoy. Bandera `multiBodegaMismaCiudad`, apagada; primero ALMACEN BOMBAS.
+- **No toca:** mezclar ciudades, partir pedidos o facturas, traslados, POS, asignación automática de canales. Write-set de inventario cerrado (D-134).
+- [Propuesta](../openspec/changes/pedido-con-varias-bodegas-misma-ciudad/proposal.md). Módulo sensible: un cambio a la vez con diff aprobado.
