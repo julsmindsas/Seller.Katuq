@@ -460,7 +460,9 @@ export class NavService implements OnDestroy {
           icon: "gift",
           isOnlySuperAdministrador: true,
         },
-        { path: "prospectos/lista", title: "Prospectos", type: "link", icon: "user-plus" },
+        // Ticket 1330: "Prospectos" (prospectos/lista) se quitó. Su ruta salió de
+        // routes.ts en b8e2eed5 (2026-03-25) y el enlace llevaba a "No encontramos
+        // esta página". Los prospectos se trabajan en el CRM (Gestión Comercial → Pipeline).
       ],
     },
 

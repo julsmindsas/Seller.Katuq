@@ -499,9 +499,11 @@
     font-weight: 700;
     letter-spacing: .4px;
     text-transform: uppercase;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    // Ticket 1329: el nombre completo en hasta dos líneas, sin cortarlo con "…".
+    white-space: normal;
+    overflow-wrap: break-word;
+    line-height: 1.25;
+    min-width: 0;
     flex: 1;
   }
 
@@ -594,9 +596,9 @@
   .menu-text {
     flex: 1;
     min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow-wrap: break-word;
+    line-height: 1.25;
   }
 
   .submenu-chevron {
@@ -746,9 +748,9 @@
   .submenu-text {
     flex: 1;
     min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow-wrap: break-word;
+    line-height: 1.25;
   }
 
   .submenu-chevron {
@@ -1577,7 +1579,9 @@ body.dark-only {
   line-height: 1;
   padding: 3px 6px;
   border-radius: 99px;
-  color: #fff;
+  // Ticket 1329: `span.ng-star-inserted` (_reset.scss) le ganaba y pintaba el
+  // texto del mismo morado del fondo: se veía como un botón vacío.
+  color: #fff !important;
   background: #5F3FE0;
   text-transform: uppercase;
   margin-left: 6px;

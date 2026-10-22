@@ -216,7 +216,8 @@
                 (click)="toggleSection(section)"
                 [class.expanded]="!section.collapsed"
                 [attr.aria-expanded]="!section.collapsed"
-                [attr.aria-controls]="'section-content-' + sectionIndex">
+                [attr.aria-controls]="'section-content-' + sectionIndex"
+                [attr.title]="section.title | translate">
           <div class="section-icon">
             <i class="fa" [ngClass]="getSectionIcon(section.title)" aria-hidden="true"></i>
           </div>
@@ -250,7 +251,7 @@
                class="menu-link"
                [class.collapsed-link]="collapseMenu && !isTemporarilyExpanded"
                [attr.aria-label]="item.title | translate"
-               [attr.title]="collapseMenu ? (item.title | translate) : ''"
+               [attr.title]="item.title | translate"
                role="menuitem">
               <div class="menu-icon">
                 <i class="fa" [ngClass]="getMenuIcon(item.icon, item.title)" aria-hidden="true"></i>
@@ -299,7 +300,7 @@
                     [class.active]="item.active && (!collapseMenu || isTemporarilyExpanded)"
                     [attr.aria-expanded]="item.active && (!collapseMenu || isTemporarilyExpanded)"
                     [attr.aria-controls]="(!collapseMenu || isTemporarilyExpanded) ? getMenuKey(item) : null"
-                    [attr.title]="collapseMenu ? (item.title | translate) : ''"
+                    [attr.title]="item.title | translate"
                     role="menuitem"
                     [attr.aria-haspopup]="true">
               <div class="menu-icon">
@@ -346,6 +347,7 @@
                    (click)="onSubMenuItemClick($event); onMobileLinkClick()"
                    routerLinkActive="active"
                    class="submenu-link"
+                   [attr.title]="child.title | translate"
                    role="menuitem">
                   <div class="submenu-icon">
                     <i class="fa" [ngClass]="getSubmenuIcon(child.icon, child.title)" aria-hidden="true"></i>
@@ -370,6 +372,7 @@
                         (click)="toggletNavActive(child)"
                         [class.active]="child.active"
                         [attr.aria-expanded]="child.active"
+                        [attr.title]="child.title | translate"
                         role="menuitem"
                         [attr.aria-haspopup]="true">
                   <div class="submenu-icon">
@@ -394,6 +397,7 @@
                        (click)="onSubMenuItemClick($event); onMobileLinkClick()"
                        routerLinkActive="active"
                        class="sub-submenu-link"
+                       [attr.title]="grandchild.title | translate"
                        role="menuitem">
                       <div class="sub-submenu-icon">
                         <i class="fa" [ngClass]="getSubmenuIcon(grandchild.icon, grandchild.title)" aria-hidden="true"></i>
