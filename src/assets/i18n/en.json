@@ -1560,6 +1560,8 @@
   "notificaciones.whatsapp.detail.orderRegistered": "Order {{numero}} registered",
   "notificaciones.whatsapp.detail.orderAsQuote": "The assistant left it as a quote for you to confirm",
   "notificaciones.whatsapp.detail.viewOrder": "View order →",
+  "notificaciones.whatsapp.detail.botOrderPending": "Order {{numero}} · payment pending",
+  "notificaciones.whatsapp.detail.botOrderApproved": "Order {{numero}} · payment approved",
   "notificaciones.whatsapp.detail.composerPlaceholder": "Write a message…",
   "notificaciones.whatsapp.detail.sending": "Sending…",
   "notificaciones.whatsapp.detail.send": "Send",

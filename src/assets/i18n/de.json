@@ -1380,6 +1380,8 @@
     "notificaciones.whatsapp.detail.orderRegistered": "Bestellung {{numero}} erfasst",
     "notificaciones.whatsapp.detail.orderAsQuote": "Der Assistent hat es als Offerte zur Bestätigung hinterlegt",
     "notificaciones.whatsapp.detail.viewOrder": "Bestellung anzeigen →",
+    "notificaciones.whatsapp.detail.botOrderPending": "Bestellung {{numero}} · Zahlung ausstehend",
+    "notificaciones.whatsapp.detail.botOrderApproved": "Bestellung {{numero}} · Zahlung genehmigt",
     "notificaciones.whatsapp.detail.composerPlaceholder": "Schreiben Sie eine Nachricht…",
     "notificaciones.whatsapp.detail.sending": "Wird gesendet…",
     "notificaciones.whatsapp.detail.send": "Senden",

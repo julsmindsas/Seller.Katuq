@@ -206,6 +206,28 @@
         </a>
       </div>
 
+      <!-- Pedido creado por el bot (D22): sale de orders, no de la sesión -->
+      <div
+        class="thread-detail__pedido"
+        [class.thread-detail__pedido--ok]="botState?.pedidoCreado?.estadoPago === 'Aprobado'"
+        *ngIf="botState?.pedidoCreado?.nroPedido"
+        role="status"
+      >
+        <i class="fa fa-shopping-bag thread-detail__pedido-icono" aria-hidden="true"></i>
+        <span class="thread-detail__pedido-texto">
+          {{ (botState?.pedidoCreado?.estadoPago === 'Aprobado'
+            ? 'notificaciones.whatsapp.detail.botOrderApproved'
+            : 'notificaciones.whatsapp.detail.botOrderPending') | translate: { numero: botState?.pedidoCreado?.nroPedido } }}
+        </span>
+        <a
+          class="thread-detail__pedido-enlace"
+          [routerLink]="['/ventas/pedidos']"
+          [queryParams]="{ nroPedido: botState?.pedidoCreado?.nroPedido }"
+        >
+          {{ 'notificaciones.whatsapp.detail.viewOrder' | translate }}
+        </a>
+      </div>
+
       <!-- Composer: chips de respuesta rápida + textarea + botón enviar -->
       <div class="thread-detail__composer-wrap" *ngIf="canShowComposer">
         <!-- [D-437] Solo lectura: el chat lo atiende otra persona -->

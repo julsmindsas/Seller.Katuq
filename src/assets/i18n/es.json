@@ -1380,6 +1380,8 @@
   "notificaciones.whatsapp.detail.orderRegistered": "Pedido {{numero}} registrado",
   "notificaciones.whatsapp.detail.orderAsQuote": "El asistente lo dejó como cotización para que lo confirmes",
   "notificaciones.whatsapp.detail.viewOrder": "Ver pedido →",
+  "notificaciones.whatsapp.detail.botOrderPending": "Pedido {{numero}} · pago pendiente",
+  "notificaciones.whatsapp.detail.botOrderApproved": "Pedido {{numero}} · pago aprobado",
   "notificaciones.whatsapp.detail.composerPlaceholder": "Escribe un mensaje…",
   "notificaciones.whatsapp.detail.sending": "Enviando…",
   "notificaciones.whatsapp.detail.send": "Enviar",
