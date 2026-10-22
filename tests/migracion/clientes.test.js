@@ -115,7 +115,7 @@ test('avisos: bandera apagada, sin casilla, Woo y correos con mayúsculas; sin d
   const t = c.sumarClientes([resp(1)]);
   const con = c.avisosDeClientes(t, { correosConMayusculas: 3 }, true, true);
   assert.ok(con.includes(c.AVISO_CONSENTIMIENTO_APAGADO));
-  assert.ok(con.some((x) => /3 clientes traen el correo con mayúsculas/.test(x)));
+  assert.ok(con.some((x) => /3 correos con mayúsculas en el archivo/.test(x)));
   assert.ok(c.avisosDeClientes(t, { correosConMayusculas: 0 }, false, true).some((x) => /Sin la casilla/.test(x)));
   assert.ok(c.avisosDeClientes(t, { correosConMayusculas: 0 }, true, false).includes(c.AVISO_WOO_SIN_CONSENTIMIENTO));
   const creadas = c.sumarClientes([resp(1, { subscriptions: { created: 300, noConsent: 100, existing: 0, suppressed: 0, failed: 0 } })]);

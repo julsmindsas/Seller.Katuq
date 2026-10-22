@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, In
 import { CommonModule } from '@angular/common';
 import Swal from 'sweetalert2';
 import { MigracionTiendaService } from '../migracion-tienda.service';
+import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
 import { ErrorImportador } from '../tipos';
 import { nuevoId } from '../logica/flujo';
 import {
@@ -70,7 +71,7 @@ interface LoteVista {
         <ul class="mt-lista mt-sep">
           <li *ngIf="lectura.resumen.sinContacto">{{ lectura.resumen.sinContacto }} no tienen correo ni celular y se omitirán.</li>
           <li *ngIf="lectura.resumen.repetidasEnArchivo">{{ lectura.resumen.repetidasEnArchivo }} están repetidos en el archivo y solo entra el primero.</li>
-          <li *ngIf="lectura.resumen.correosConMayusculas">{{ lectura.resumen.correosConMayusculas }} traen el correo con mayúsculas; si ya los tenías guardados así podrían repetirse.</li>
+          <li *ngIf="lectura.resumen.correosConMayusculas">{{ lectura.resumen.correosConMayusculas }} correos con mayúsculas en el archivo; si ya los tenías guardados así en tus clientes podrían repetirse.</li>
           <li *ngIf="lectura.resumen.conSmsOWhatsapp">{{ lectura.resumen.conSmsOWhatsapp }} aceptaban SMS o WhatsApp: ese permiso no se importa.</li>
         </ul>
 
@@ -80,7 +81,7 @@ interface LoteVista {
             <span class="mt-texto-check">{{ textoDeclaracion }}</span>
           </label>
           <p class="mt-ayuda">Solo se suscribe a quienes aceptaron correos en tu tienda anterior ({{ lectura.resumen.aceptanCorreo }} en este archivo) y solo si marcas esta casilla.</p>
-          <p class="cfg-aviso cfg-aviso--warn mt-sep"><span class="mt-fuerte">{{ avisoApagado }}</span></p>
+          <p class="cfg-aviso cfg-aviso--warn mt-sep" *ngIf="!consentimientoEncendido"><span class="mt-fuerte">{{ avisoApagado }}</span></p>
         </div>
         <p class="cfg-aviso cfg-aviso--warn mt-sep" *ngIf="!traeConsentimiento"><span class="mt-fuerte">El archivo de {{ lectura.perfil.nombre }} no trae el permiso de correos: tus clientes entran sin suscripción.</span></p>
       </ng-container>
@@ -156,7 +157,16 @@ export class PasoClientesComponent {
   private previas: RespuestaClientes[] = [];
   private siguiente = 0;
 
-  constructor(private readonly servicio: MigracionTiendaService, private readonly cd: ChangeDetectorRef) {}
+  constructor(
+    private readonly servicio: MigracionTiendaService,
+    private readonly cd: ChangeDetectorRef,
+    private readonly features: CompanyFeaturesService,
+  ) {}
+
+  /** El aviso de «entran sin suscripción» solo vale mientras la bandera del concepto legal está apagada. */
+  get consentimientoEncendido(): boolean {
+    return this.features.isEnabled('storeMigrationCustomerConsent');
+  }
 
   get traeConsentimiento(): boolean {
     return !!this.lectura && this.lectura.ok && this.lectura.perfil.acepta !== null;

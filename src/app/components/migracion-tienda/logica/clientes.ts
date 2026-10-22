@@ -324,7 +324,7 @@ export function avisosDeClientes(t: TotalesClientes, lectura: Pick<ResumenClient
   else if (quiso && t.subscriptions.created === 0 && t.subscriptions.noConsent > 0) v.push(AVISO_CONSENTIMIENTO_APAGADO);
   else if (!quiso && t.subscriptions.noConsent > 0) v.push('Sin la casilla de declaración, los clientes entraron sin suscripción a tus correos.');
   if (lectura.correosConMayusculas > 0) {
-    v.push(`${lectura.correosConMayusculas} clientes traen el correo con mayúsculas. Si ya los tenías guardados así, pueden haber quedado repetidos; revísalos en tu lista de clientes.`);
+    v.push(`${lectura.correosConMayusculas} correos con mayúsculas en el archivo. Si ya tenías esos clientes guardados así, pueden haber quedado repetidos; revísalos en tu lista de clientes.`);
   }
   return v;
 }
