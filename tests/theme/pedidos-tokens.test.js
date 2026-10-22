@@ -50,9 +50,10 @@ test('2) los $pd-* de color pasaron a tokens', () => {
   assert.deepEqual([...new Set(usos)], ['$pd-muted-2']);
 });
 
-test('3) sin blancos de superficie literales', () => {
-  const sinTexto = zona.split('\n').filter(l => /(^|[\s;{])(background(-color)?)\s*:\s*(#fff|#ffffff|white)\b/i.test(l));
+test('3) sin blancos de superficie literales (toda la hoja, no solo la zona de $pd-*)', () => {
+  const sinTexto = fuente.split('\n').filter(l => /(^|[\s;{])(background(-color)?)\s*:\s*(#fff|#ffffff|white)\b/i.test(l));
   assert.deepEqual(sinTexto, []);
+  assert.ok(!/\$[\w-]+\s*:\s*(#fff|#ffffff|white)\s*;/i.test(fuente), 'variable Sass de superficie en blanco');
   const blancos = zona.split('\n').filter(l => /(^|[\s;{])color\s*:\s*(#fff|#ffffff)\b/i.test(l));
   assert.ok(blancos.length <= 5, `texto blanco literal: ${blancos.length}`);
 });

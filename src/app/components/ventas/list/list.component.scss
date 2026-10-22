@@ -8,7 +8,7 @@ $info-color: #1E6FD9;
 $secondary-color: #5A6B78;
 $border-radius: 8px;
 $filter-bar-height: 60px;
-$filter-bar-bg: #ffffff;
+$filter-bar-bg: var(--ds-surface);
 $filter-border-color: #e0e0e0;
 
 // ==================== ESTILOS MINIMALISTAS PARA FILTROS ====================
@@ -98,7 +98,7 @@ $filter-border-color: #e0e0e0;
           font-size: 0.875rem;
           padding: 0.375rem 0.5rem;
           border: 1px solid #dee2e6;
-          background-color: #fff;
+          background-color: var(--ds-surface);
           transition: all 0.2s ease;
 
           &:focus {
@@ -117,7 +117,7 @@ $filter-border-color: #e0e0e0;
           width: 34px;
           height: 34px;
           color: #6c757d;
-          background-color: #fff;
+          background-color: var(--ds-surface);
           border: 1px solid #dee2e6;
           border-left: none;
           transition: all 0.2s ease;
@@ -168,7 +168,7 @@ $filter-border-color: #e0e0e0;
           width: 110px;
           height: 34px;
           border: 1px solid #dee2e6;
-          background-color: #fff;
+          background-color: var(--ds-surface);
           transition: all 0.2s ease;
 
           &:hover {
@@ -280,7 +280,7 @@ $filter-border-color: #e0e0e0;
         display: inline-flex;
         align-items: center;
         padding: 0.25rem 0.75rem;
-        background: white;
+        background: var(--ds-surface);
         border: 1px solid #dee2e6;
         border-radius: 20px;
         font-size: 0.8rem;
@@ -326,7 +326,7 @@ $filter-border-color: #e0e0e0;
   }
 
   .config-section {
-    background: white;
+    background: var(--ds-surface);
     border-radius: 6px;
     padding: 0.75rem;
 
@@ -468,7 +468,7 @@ $filter-border-color: #e0e0e0;
 
   .p-datatable-header {
     padding: 0.5rem;
-    background-color: white;
+    background-color: var(--ds-surface);
     border-bottom: 1px solid #f1f0f7;
   }
 
@@ -1015,7 +1015,7 @@ $filter-border-color: #e0e0e0;
 }
 
 .modal-header {
-  background-color: #ffffff;
+  background-color: var(--ds-surface);
   border-bottom: 1px solid #ececf4;
   border-radius: 16px 16px 0 0;
 }
@@ -1029,7 +1029,7 @@ $filter-border-color: #e0e0e0;
 // Modal impresión PDF
 // -----------------------
 .pdf-print-modal-header {
-  background-color: #ffffff;
+  background-color: var(--ds-surface);
   border-bottom: 1px solid #ececf4;
 
   .modal-title {
@@ -1063,7 +1063,7 @@ $filter-border-color: #e0e0e0;
     max-height: 70vh;
     overflow: auto;
     padding: 1rem;
-    background-color: #ffffff;
+    background-color: var(--ds-surface);
     border-radius: 11px;
     box-shadow: 0 0 0 1px #ececf4;
   }
@@ -1071,7 +1071,7 @@ $filter-border-color: #e0e0e0;
 
 .pdf-print-modal-footer {
   border-top: 1px solid #ececf4;
-  background-color: #ffffff;
+  background-color: var(--ds-surface);
 
   .btn {
     min-width: 110px;
@@ -1165,7 +1165,7 @@ $filter-border-color: #e0e0e0;
   border: 1px solid #ddd;
   border-top: none;
   padding: 20px;
-  background: #fff;
+  background: var(--ds-surface);
   border-radius: 0 0 6px 6px;
 }
 
@@ -1175,7 +1175,7 @@ $filter-border-color: #e0e0e0;
 }
 
 .tabs input:checked + label {
-  background: #fff;
+  background: var(--ds-surface);
   border-bottom: 1px solid #fff;
 }
 
@@ -1267,7 +1267,7 @@ $filter-border-color: #e0e0e0;
     height: 32px;
     border-radius: 50%;
     border: 1px solid #dee2e6;
-    background-color: #fff;
+    background-color: var(--ds-surface);
     cursor: pointer;
     position: relative;
     z-index: 1002 !important;
@@ -1286,7 +1286,7 @@ $filter-border-color: #e0e0e0;
   .list-actions {
     position: fixed;
     width: 200px;
-    background-color: #fff;
+    background-color: var(--ds-surface);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     border-radius: 6px;
     padding: 0.5rem 0;
@@ -1370,7 +1370,7 @@ $filter-border-color: #e0e0e0;
 
 // Estilos para paginador mejorado
 :host ::ng-deep .p-paginator {
-  background-color: #ffffff;
+  background-color: var(--ds-surface);
   border-top: 1px solid #f1f0f7;
   padding: 0.75rem 1rem;
 
@@ -1485,7 +1485,7 @@ $filter-border-color: #e0e0e0;
 
   // Encabezado plano: blanco con tinta y flechas en acento (sin banda de color).
   .p-datepicker-header {
-    background-color: #ffffff;
+    background-color: var(--ds-surface);
     color: #211F3A;
     border: none;
     border-bottom: 1px solid #f1f0f7;
@@ -1679,7 +1679,7 @@ $filter-border-color: #e0e0e0;
         top: 100%;
         left: 0;
         right: 0;
-        background: white;
+        background: var(--ds-surface);
         border: 1px solid #ced4da;
         border-top: none;
         border-radius: 0 0 6px 6px;
@@ -1926,7 +1926,7 @@ $filter-border-color: #e0e0e0;
       margin-top: 1rem;
 
       .filter-group {
-        background-color: white;
+        background-color: var(--ds-surface);
         border: 1px solid #e9ecef;
         border-radius: 8px;
         padding: 1rem;
@@ -2038,7 +2038,7 @@ $filter-border-color: #e0e0e0;
               padding: 0.2rem 0.4rem;
               border: 1px solid #dee2e6;
               border-radius: 14px;
-              background-color: white;
+              background-color: var(--ds-surface);
               color: #6c757d;
               font-size: 0.65rem;
               font-weight: 500;
@@ -2202,7 +2202,7 @@ $filter-border-color: #e0e0e0;
 
 // Modal de Cambio de Estado
 .estado-modal {
-  background: white;
+  background: var(--ds-surface);
   border-radius: 16px;
   overflow: hidden;
 }
@@ -2212,7 +2212,7 @@ $filter-border-color: #e0e0e0;
   display: flex;
   align-items: center;
   padding: 16px 20px;
-  background: #ffffff;
+  background: var(--ds-surface);
   color: #211F3A;
   border-bottom: 1px solid #ececf4;
   position: relative;
@@ -2375,7 +2375,7 @@ $filter-border-color: #e0e0e0;
   .btn-cancel {
     padding: 8px 20px;
     border: 1px solid #e4e2ef;
-    background: white;
+    background: var(--ds-surface);
     color: #5b5878;
     border-radius: 11px;
     font-weight: 700;
@@ -2434,7 +2434,7 @@ $filter-border-color: #e0e0e0;
   padding: 12px 16px;
   border: 1px solid #ececf4;
   border-radius: 11px;
-  background: white;
+  background: var(--ds-surface);
   transition: all 0.2s ease;
   text-align: left;
   cursor: pointer;
@@ -2539,7 +2539,7 @@ $filter-border-color: #e0e0e0;
   width: 95%;
   max-height: 90vh;
   overflow-y: auto;
-  background: white;
+  background: var(--ds-surface);
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   animation: slideIn 0.3s ease-out;
@@ -2643,7 +2643,7 @@ $filter-border-color: #e0e0e0;
 }
 
 .custom-modal-content {
-  background: white;
+  background: var(--ds-surface);
   border-radius: 16px;
   box-shadow: 0 18px 40px -12px rgba(50, 40, 110, .35);
   border: none;
@@ -2942,7 +2942,7 @@ $filter-border-color: #e0e0e0;
           right: 2px;
           font-size: 0.6em;
           color: #dc3545;
-          background: white;
+          background: var(--ds-surface);
           border-radius: 50%;
           padding: 1px;
         }
@@ -3626,7 +3626,7 @@ $filter-border-color: #e0e0e0;
 .products-expansion-card {
   border: 1px solid #ececf4;
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--ds-surface);
   box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
   max-width: 600px;
   width: fit-content;
@@ -3667,7 +3667,7 @@ $filter-border-color: #e0e0e0;
   }
   
   .card-body {
-    background: #ffffff;
+    background: var(--ds-surface);
     
     // Estilos para la lista vertical de productos
     .products-vertical-list {
@@ -3772,7 +3772,7 @@ $filter-border-color: #e0e0e0;
       .btn-outline-primary {
         color: #5F3FE0;
         border-color: #d9cffb;
-        background: #fff;
+        background: var(--ds-surface);
 
         &:hover:not(:disabled) { background: #efe9ff; color: #5F3FE0; border-color: #5F3FE0; }
       }
@@ -3780,7 +3780,7 @@ $filter-border-color: #e0e0e0;
       .btn-outline-danger {
         color: #D64545;
         border-color: #f5c9c9;
-        background: #fff;
+        background: var(--ds-surface);
 
         &:hover:not(:disabled) { background: #FDECEC; color: #D64545; border-color: #D64545; }
       }
@@ -3855,7 +3855,7 @@ $filter-border-color: #e0e0e0;
       align-items: center;
       gap: 0.4rem;
       padding: 0.3rem;
-      background: white;
+      background: var(--ds-surface);
       border-radius: 9px;
       border: 1px solid #ececf4;
       
@@ -5295,7 +5295,7 @@ $filter-border-color: #e0e0e0;
 
     .table {
       margin-bottom: 0;
-      background-color: white;
+      background-color: var(--ds-surface);
 
       tbody {
         tr {
@@ -5356,7 +5356,7 @@ $filter-border-color: #e0e0e0;
 
     // Secundarios: blancos con borde lila (canon).
     &.btn-outline-secondary {
-      background-color: #fff;
+      background-color: var(--ds-surface);
       border: 1px solid #e4e2ef;
       color: #5b5878;
 
@@ -5368,7 +5368,7 @@ $filter-border-color: #e0e0e0;
     }
 
     &.btn-outline-primary {
-      background-color: #fff;
+      background-color: var(--ds-surface);
       border: 1px solid #d9cffb;
       color: #5F3FE0;
 
