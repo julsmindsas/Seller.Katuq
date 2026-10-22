@@ -62,3 +62,34 @@ test('4) gradientes y primarios prohibidos no suben', () => {
     assert.ok((t.match(/#(2196f3|4361ee|2563eb|5c6ac4|667eea|3b82f6|1d4ed8|6366f1|1976d2|7366ff)\b|rgba\(102,\s*126,\s*234/gi) || []).length <= p, `${f}: primarios`);
   }
 });
+
+test('5) modal de tarifas: superficies y borde son custom properties locales con par oscuro en tokens', () => {
+  const rel = ARCHIVOS.find(f => /rates-modal/.test(f));
+  const t = fuente(rel);
+  for (const v of ['background', 'light-bg', 'lighter-bg', 'border']) {
+    assert.match(t, new RegExp(`^\\$${v}:\\s*var\\(--er-${v}\\);`, 'm'), `$${v} debe ser var(--er-${v})`);
+  }
+  const postcss = require('postcss');
+  const raiz = postcss.parse(compilar(rel));
+  const pares = { background: 'surface', 'light-bg': 'surface-2', 'lighter-bg': 'chip-bg', border: 'line' };
+  let claroDefs = 0;
+  let oscuroDefs = 0;
+  raiz.walkRules(r => {
+    const oscura = r.selectors.every(s => /^body\.dark-only /.test(s));
+    r.walkDecls(/^--er-/, d => {
+      const nombre = d.prop.slice(5);
+      if (oscura) {
+        oscuroDefs++;
+        assert.equal(d.value, `var(--ds-${pares[nombre]})`);
+        assert.ok(claros.has(pares[nombre]) && oscuros.has(pares[nombre]));
+      } else {
+        claroDefs++;
+        assert.match(d.value, /^#[0-9a-f]{6}$/i);
+      }
+    });
+  });
+  assert.equal(claroDefs, 4, 'una definición clara por variable (regla con los tres contenedores)');
+  assert.equal(oscuroDefs, 4, 'un par oscuro por variable');
+  // Las funciones de color de Sass no usan estas variables (con var() no compilarían o cambiarían el claro).
+  assert.doesNotMatch(t, /(rgba?|darken|lighten|mix|fade-?\w*|transparentize|opacify)\([^)]*\$(background|light-bg|lighter-bg|border)\b/);
+});

@@ -28,9 +28,22 @@ function compilar(rel) {
   }).css;
 }
 
+// Custom properties locales --er-* del modal de tarifas (ticket 1180, auditoría): en claro valen un literal;
+// se resuelven aquí y se quitan sus definiciones, así el «claro idéntico» sigue midiendo los valores reales.
+function resolverLocales(lineas) {
+  const valores = new Map();
+  for (const l of lineas) {
+    const m = /\{ --er-([\w-]+): ([^}]*?) \}$/.exec(l);
+    if (m) valores.set(m[1], m[2]);
+  }
+  return lineas
+    .filter(l => !/\{ --er-[\w-]+: [^}]*? \}$/.test(l))
+    .map(l => l.replace(/var\(--er-([\w-]+)\)/g, (t, n) => (valores.has(n) ? valores.get(n) : t)));
+}
+
 function lineasClaro(rel) {
   const claros = leerTokens(compilar('src/app/shared/styles/_theme-tokens.scss'), 'claro');
-  return normalizarCss(compilar(rel), claros, 'claro');
+  return resolverLocales(normalizarCss(compilar(rel), claros, 'claro'));
 }
 
 module.exports = { ARCHIVOS, compilar, lineasClaro };
