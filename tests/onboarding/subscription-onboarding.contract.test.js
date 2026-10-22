@@ -61,9 +61,11 @@ assert.ok(welcome.includes('0 de {{ freeOrdersLimit }} pedidos usados') || welco
 assert.ok(registrationTs.includes("= 'welcome'"), 'el registro no debe comenzar obligatoriamente en el video');
 assert.ok(registrationTs.includes('startFreeRegistration()'), 'debe existir un camino de registro directo');
 assert.ok(registrationTs.includes("['video', 'welcome', 'quickstart-success']"), 'un registro anterior no debe dejar una pantalla de éxito vacía');
-assert.ok(registrationHtml.includes('Crear mi cuenta Gratis'), 'el CTA principal debe ser crear la cuenta Gratis');
-assert.ok(registrationHtml.includes('El diagnóstico es opcional'), 'la UI debe decir que el diagnóstico es opcional');
-assert.ok(registrationHtml.includes('Solo necesitamos estos 4 datos'), 'el registro directo debe explicar su alcance');
+// IDI-B12c: el registro pide la clave y es.json conserva el texto. El texto de «diagnóstico opcional» y
+// «4 datos» ya no existía desde el rediseño del registro (5 datos, diagnóstico como enlace secundario).
+assert.ok(muestraTexto(registrationHtml, 'Crear mi cuenta Gratis'), 'el CTA principal debe ser crear la cuenta Gratis');
+assert.ok(muestraTexto(registrationHtml, 'Haz el diagnóstico de 5 minutos'), 'el diagnóstico debe ser un camino secundario opcional');
+assert.ok(muestraTexto(registrationHtml, 'Son 5 datos. Toma menos de 1 minuto.'), 'el registro directo debe explicar su alcance');
 assert.ok(!quickStart.includes('Se requieren respuestas del diagnóstico'), 'el servicio no debe bloquear el registro sin diagnóstico');
 
 console.log('subscription-onboarding.contract.test.js: OK');

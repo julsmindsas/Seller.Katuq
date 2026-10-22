@@ -1,4 +1,6 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { AutoComplete } from 'primeng/autocomplete';
 
@@ -43,7 +45,7 @@ export interface ColumnDefinition {
     ])
   ]
 })
-export class SharedFiltersComponent implements OnInit {
+export class SharedFiltersComponent implements OnInit, OnDestroy {
   @ViewChild('autoCompleteInput') autoCompleteInput: AutoComplete;
 
   @Input() estadosPagoOptions: FilterOption[] = [];
@@ -56,9 +58,9 @@ export class SharedFiltersComponent implements OnInit {
   @Input() showExportButton: boolean = true;
   @Input() showAdvancedButton: boolean = true;
   @Input() exportDisabled: boolean = false;
-  @Input() searchPlaceholder: string = 'Buscar pedido...';
-  @Input() filterButtonLabel: string = 'Filtrar';
-  @Input() exportButtonTooltip: string = 'Exportar Excel';
+  @Input() searchPlaceholder: string = 'filters.sharedFilters.buscarPedido';
+  @Input() filterButtonLabel: string = 'filters.sharedFilters.filtrar';
+  @Input() exportButtonTooltip: string = 'filters.sharedFilters.exportarExcel';
   @Input() initialDateFrom: Date | null = null;
   @Input() initialDateTo: Date | null = null;
   @Input() searchSuggestions: any[] = []; // Sugerencias para autocompletado
@@ -104,13 +106,13 @@ export class SharedFiltersComponent implements OnInit {
   };
 
   datePresets: DatePreset[] = [
-    { label: 'Hoy', value: 'today' },
-    { label: 'Mañana', value: 'tomorrow' },
-    { label: 'Ayer', value: 'yesterday' },
-    { label: 'Últimos 7 días', value: 'last7days' },
-    { label: 'Últimos 30 días', value: 'last30days' },
-    { label: 'Este mes', value: 'thisMonth' },
-    { label: 'Mes pasado', value: 'lastMonth' }
+    { label: 'filters.sharedFilters.hoy', value: 'today' },
+    { label: 'filters.sharedFilters.manana', value: 'tomorrow' },
+    { label: 'filters.sharedFilters.ayer', value: 'yesterday' },
+    { label: 'filters.sharedFilters.ultimos7Dias', value: 'last7days' },
+    { label: 'filters.sharedFilters.ultimos30Dias', value: 'last30days' },
+    { label: 'filters.sharedFilters.esteMes', value: 'thisMonth' },
+    { label: 'filters.sharedFilters.mesPasado', value: 'lastMonth' }
   ];
 
   es: any = {
@@ -124,8 +126,37 @@ export class SharedFiltersComponent implements OnInit {
     clear: 'Limpiar'
   };
 
+  private cambioIdioma?: Subscription;
+  private pagoPorOmision = false;
+  private procesoPorOmision = false;
+  private presetsClaves: DatePreset[] = [];
+  private opcionesPago: FilterOption[] = [];
+  private opcionesProceso: FilterOption[] = [];
+
+  constructor(private translate: TranslateService) {}
+
+  ngOnDestroy(): void {
+    this.cambioIdioma?.unsubscribe();
+  }
+
+  /** Calendario de PrimeNG con los textos del idioma activo (lunes como primer día). */
+  private calendarioDelIdioma(): any {
+    const textos = this.translate.instant('primeng');
+    return { ...this.es, ...(textos && typeof textos === 'object' ? textos : {}), firstDayOfWeek: 1 };
+  }
+
+  private traducirOpciones(): void {
+    this.es = this.calendarioDelIdioma();
+    this.datePresets = this.presetsClaves.map((p) => ({ ...p, label: this.translate.instant(p.label) }));
+    if (this.pagoPorOmision) this.estadosPagoOptions = this.opcionesPago.map((o) => ({ ...o, label: this.translate.instant(o.label) }));
+    if (this.procesoPorOmision) this.estadosProcesoOptions = this.opcionesProceso.map((o) => ({ ...o, label: this.translate.instant(o.label) }));
+  }
+
   ngOnInit(): void {
+    this.presetsClaves = this.datePresets;
     this.initializeFilters();
+    this.traducirOpciones();
+    this.cambioIdioma = this.translate.onLangChange.subscribe(() => this.traducirOpciones());
     // Initialize dates from Input properties if provided
     if (this.initialDateFrom) {
       this.fechaInicialDate = this.initialDateFrom;
@@ -137,30 +168,34 @@ export class SharedFiltersComponent implements OnInit {
 
   private initializeFilters(): void {
     if (this.estadosPagoOptions.length === 0) {
+      this.pagoPorOmision = true;
       // Fallback con el enum completo: omitir estados aquí los vuelve
       // infiltrables para los consumidores que no pasan [estadosPagoOptions]
       // (spec 013: Pospendiente = pago en revisión de tesorería, debe ser
       // visible en todos los módulos operativos).
-      this.estadosPagoOptions = [
-        { label: 'Todos', value: 'all' },
-        { label: 'Pendiente', value: 'Pendiente' },
-        { label: 'Pospendiente', value: 'Pospendiente' },
-        { label: 'PreAprobado', value: 'PreAprobado' },
-        { label: 'Aprobado', value: 'Aprobado' },
-        { label: 'Rechazado', value: 'Rechazado' }
+      this.opcionesPago = [
+        { label: 'filters.sharedFilters.todos', value: 'all' },
+        { label: 'filters.sharedFilters.pendiente', value: 'Pendiente' },
+        { label: 'filters.sharedFilters.pospendiente', value: 'Pospendiente' },
+        { label: 'filters.sharedFilters.preAprobado', value: 'PreAprobado' },
+        { label: 'filters.sharedFilters.aprobado', value: 'Aprobado' },
+        { label: 'filters.sharedFilters.rechazado', value: 'Rechazado' }
       ];
+      this.estadosPagoOptions = this.opcionesPago;
     }
 
     if (this.estadosProcesoOptions.length === 0) {
-      this.estadosProcesoOptions = [
-        { label: 'Todos', value: 'all' },
-        { label: 'Sin Producir', value: 'SinProducir' },
-        { label: 'En Producción', value: 'EnProduccion' },
-        { label: 'Producido', value: 'ProducidoTotalmente' },
-        { label: 'Empacado', value: 'Empacado' },
-        { label: 'Despachado', value: 'Despachado' },
-        { label: 'Entregado', value: 'Entregado' }
+      this.procesoPorOmision = true;
+      this.opcionesProceso = [
+        { label: 'filters.sharedFilters.todos', value: 'all' },
+        { label: 'filters.sharedFilters.sinProducir', value: 'SinProducir' },
+        { label: 'filters.sharedFilters.enProduccion', value: 'EnProduccion' },
+        { label: 'filters.sharedFilters.producido', value: 'ProducidoTotalmente' },
+        { label: 'filters.sharedFilters.empacado', value: 'Empacado' },
+        { label: 'filters.sharedFilters.despachado', value: 'Despachado' },
+        { label: 'filters.sharedFilters.entregado', value: 'Entregado' }
       ];
+      this.estadosProcesoOptions = this.opcionesProceso;
     }
   }
 

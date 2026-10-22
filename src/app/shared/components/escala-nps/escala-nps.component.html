@@ -3,7 +3,7 @@
     class="enps__opciones"
     role="radiogroup"
     [attr.aria-labelledby]="etiquetadoPor"
-    [attr.aria-label]="etiquetadoPor ? null : etiqueta"
+    [attr.aria-label]="etiquetadoPor ? null : (etiqueta | translate)"
     (keydown)="teclado($event)"
   >
     <button
@@ -20,7 +20,7 @@
     >{{ n }}</button>
   </div>
   <div class="enps__leyendas" aria-hidden="true">
-    <span class="enps__leyenda">Nada probable</span>
-    <span class="enps__leyenda">Muy probable</span>
+    <span class="enps__leyenda">{{ 'escalaNps.escalaNps.nadaProbable' | translate }}</span>
+    <span class="enps__leyenda">{{ 'escalaNps.escalaNps.muyProbable' | translate }}</span>
   </div>
 </div>

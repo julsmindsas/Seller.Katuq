@@ -8,9 +8,9 @@ export const ETAPAS_COLA = ['ProducidoTotalmente', 'Empacado', 'ParaDespachar'] 
 export type EtapaCola = typeof ETAPAS_COLA[number];
 
 export const NOMBRE_ETAPA: Record<EtapaCola, string> = {
-  ProducidoTotalmente: 'Producido',
-  Empacado: 'Empacado',
-  ParaDespachar: 'Listo para despachar',
+  ProducidoTotalmente: 'centroOperaciones.etapa.producido',
+  Empacado: 'centroOperaciones.etapa.empacado',
+  ParaDespachar: 'centroOperaciones.etapa.listoParaDespachar',
 };
 
 export interface LineaCola { productoId: string; nombre: string; cantidad: number; }

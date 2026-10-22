@@ -23,8 +23,9 @@ const guardImports = {'@angular/core': {Injectable: () => target => target}, '@a
 const guard = compile('kuvo.guard.ts', guardImports);
 function component(service) {
   const {KuvoComponent} = compile('kuvo.component.ts', {'@angular/core': {Component: () => target => target, ChangeDetectionStrategy: {OnPush: 1}}, '@angular/common': {}, '@angular/forms': {}, '@angular/router': {},
-    '../../shared/services/bodegas/bodega.service': {}, './kuvo.guard': guard, './kuvo.service': {}, './kuvo.models': models});
-  const instance = new KuvoComponent(service, {}, {markForCheck() {}}); instance.authorized = true; return instance;
+    '../../shared/services/bodegas/bodega.service': {}, './kuvo.guard': guard, './kuvo.service': {}, './kuvo.models': models,
+    '@ngx-translate/core': {TranslateModule: {}, TranslateService: class {}}});
+  const instance = new KuvoComponent(service, {}, {markForCheck() {}}, {instant: key => key}); instance.authorized = true; return instance;
 }
 test('Panel Kuvo: payload parcial conserva cupones/saldos privados y slug bloqueado nunca se reenvía', () => {
   const saved = {slug: 'almara', slugLocked: true, nombrePublico: 'Almara', checkoutEnabled: false, activo: true,

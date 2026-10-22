@@ -7,22 +7,22 @@
   [style]="{ width: 'min(640px, 96vw)' }"
   [appendTo]="'body'"
   styleClass="ag-dialogo"
-  header="Agendar cita"
+  [header]="'agenda.citaForm.agendarCita' | translate"
   (onHide)="cerrarDialogo()">
 
   <div class="ag-form">
     <!-- Cliente -->
     <div class="ag-campo">
-      <span class="ag-etiqueta">Cliente</span>
+      <span class="ag-etiqueta">{{ 'agenda.citaForm.cliente' | translate }}</span>
       <div class="ag-cliente-elegido" *ngIf="cliente.clientId; else buscarOEscribir">
         <span class="ag-cliente-nombre">{{ cliente.name }}</span>
         <span class="ag-muted">{{ cliente.phone }}<ng-container *ngIf="cliente.email"> · {{ cliente.email }}</ng-container></span>
-        <button type="button" class="ag-quitar" (click)="quitarCliente()">Cambiar</button>
+        <button type="button" class="ag-quitar" (click)="quitarCliente()">{{ 'agenda.citaForm.cambiar' | translate }}</button>
       </div>
       <ng-template #buscarOEscribir>
         <div class="ag-buscador">
           <input class="ag-input" type="search" [(ngModel)]="busqueda" (ngModelChange)="alBuscar()"
-            placeholder="Buscar cliente por nombre, cédula o celular" autocomplete="off" aria-label="Buscar cliente">
+            [placeholder]="'agenda.citaForm.buscarClientePorNombreCedula' | translate" autocomplete="off" [attr.aria-label]="'agenda.citaForm.buscarCliente' | translate">
           <div class="ag-resultados" *ngIf="resultados.length">
             <button type="button" class="ag-resultado" *ngFor="let r of resultados" (click)="elegirCliente(r)">
               <span class="ag-cliente-nombre">{{ r.nombres_completos || r.displayLabel }}</span>
@@ -31,52 +31,52 @@
           </div>
         </div>
         <div class="ag-dos">
-          <input class="ag-input" [(ngModel)]="cliente.name" placeholder="Nombre" aria-label="Nombre del cliente" maxlength="120">
-          <input class="ag-input" [(ngModel)]="cliente.phone" placeholder="Celular" aria-label="Celular" inputmode="tel" maxlength="30">
+          <input class="ag-input" [(ngModel)]="cliente.name" [placeholder]="'agenda.citaForm.nombre' | translate" [attr.aria-label]="'agenda.citaForm.nombreDelCliente' | translate" maxlength="120">
+          <input class="ag-input" [(ngModel)]="cliente.phone" [placeholder]="'agenda.citaForm.celular' | translate" [attr.aria-label]="'agenda.citaForm.celular' | translate" inputmode="tel" maxlength="30">
         </div>
       </ng-template>
     </div>
 
     <!-- Servicios -->
     <div class="ag-campo">
-      <span class="ag-etiqueta">Servicio</span>
+      <span class="ag-etiqueta">{{ 'agenda.citaForm.servicio' | translate }}</span>
       <p-multiSelect *ngIf="servicios.length; else sinServicios"
         [options]="serviciosActivos" optionLabel="name" optionValue="productId"
         [(ngModel)]="serviceIds" (onChange)="alCambiarServicios()"
-        [filter]="true" filterPlaceholder="Buscar servicio" defaultLabel="Elige uno o varios"
+        [filter]="true" filterPlaceholder="Buscar servicio" [defaultLabel]="'agenda.citaForm.eligeUnoOVarios' | translate"
         [showToggleAll]="false" display="chip" [appendTo]="'body'" styleClass="ag-multi">
         <ng-template let-s pTemplate="item">
-          <span class="ag-opcion-servicio">{{ s.name }}<ng-container *ngIf="s.durationMinutes"> · {{ s.durationMinutes }} min</ng-container></span>
+          <span class="ag-opcion-servicio">{{ s.name }}<ng-container *ngIf="s.durationMinutes"> {{ 'agenda.citaForm.min' | translate:{durationMinutes: s.durationMinutes} }}</ng-container></span>
         </ng-template>
       </p-multiSelect>
       <ng-template #sinServicios>
-        <input class="ag-input" [(ngModel)]="motivo" placeholder="Motivo de la cita" maxlength="60" aria-label="Motivo">
-        <span class="ag-muted">Todavía no tienes servicios marcados. En Productos, marca un ítem como "Servicio" para elegirlo aquí.</span>
+        <input class="ag-input" [(ngModel)]="motivo" [placeholder]="'agenda.citaForm.motivoDeLaCita' | translate" maxlength="60" [attr.aria-label]="'agenda.citaForm.motivo' | translate">
+        <span class="ag-muted">{{ 'agenda.citaForm.todaviaNoTienesServiciosMarcados' | translate }}</span>
       </ng-template>
     </div>
 
     <div class="ag-dos">
       <div class="ag-campo" *ngIf="config.staff.length">
-        <span class="ag-etiqueta">Quién atiende</span>
-        <select class="ag-input" [(ngModel)]="staffId" (ngModelChange)="alCambiarCriterio()" aria-label="Quién atiende">
-          <option [ngValue]="null">Cualquiera disponible</option>
+        <span class="ag-etiqueta">{{ 'agenda.citaForm.quienAtiende' | translate }}</span>
+        <select class="ag-input" [(ngModel)]="staffId" (ngModelChange)="alCambiarCriterio()" [attr.aria-label]="'agenda.citaForm.quienAtiende' | translate">
+          <option [ngValue]="null">{{ 'agenda.citaForm.cualquieraDisponible' | translate }}</option>
           <option *ngFor="let p of personas" [ngValue]="p.id">{{ p.name }}</option>
         </select>
       </div>
       <div class="ag-campo">
-        <span class="ag-etiqueta">Fecha</span>
-        <input class="ag-input" type="date" [(ngModel)]="fecha" [min]="hoy" (ngModelChange)="alCambiarCriterio()" aria-label="Fecha">
+        <span class="ag-etiqueta">{{ 'agenda.citaForm.fecha' | translate }}</span>
+        <input class="ag-input" type="date" [(ngModel)]="fecha" [min]="hoy" (ngModelChange)="alCambiarCriterio()" [attr.aria-label]="'agenda.citaForm.fecha' | translate">
       </div>
       <div class="ag-campo" *ngIf="!modoFranjas">
-        <span class="ag-etiqueta">Duración (min)</span>
-        <input class="ag-input" type="number" min="5" max="720" step="5" [(ngModel)]="duracion" (ngModelChange)="alCambiarDuracion()" aria-label="Duración en minutos">
+        <span class="ag-etiqueta">{{ 'agenda.citaForm.duracionMin' | translate }}</span>
+        <input class="ag-input" type="number" min="5" max="720" step="5" [(ngModel)]="duracion" (ngModelChange)="alCambiarDuracion()" [attr.aria-label]="'agenda.citaForm.duracionEnMinutos' | translate">
       </div>
     </div>
 
     <!-- Hora o franja -->
     <div class="ag-campo">
-      <span class="ag-etiqueta">{{ modoFranjas ? 'Franja' : 'Hora' }} · {{ fechaLarga(fecha) }}</span>
-      <span class="ag-muted" *ngIf="cargandoHoras">Buscando horas libres…</span>
+      <span class="ag-etiqueta">{{ modoFranjas ? ('agenda.citaForm.franja' | translate) : ('agenda.citaForm.hora' | translate) }} · {{ fechaLarga(fecha) }}</span>
+      <span class="ag-muted" *ngIf="cargandoHoras">{{ 'agenda.citaForm.buscandoHorasLibres' | translate }}</span>
 
       <ng-container *ngIf="!cargandoHoras && !modoFranjas">
         <div class="ag-opciones" *ngIf="disponibilidad?.horas?.length; else sinHoras">
@@ -85,10 +85,10 @@
             {{ horaLegible(h.hora) }}
           </button>
         </div>
-        <ng-template #sinHoras><span class="ag-muted">No hay horas libres ese día con esa persona y esa duración.</span></ng-template>
+        <ng-template #sinHoras><span class="ag-muted">{{ 'agenda.citaForm.noHayHorasLibresEse' | translate }}</span></ng-template>
         <div class="ag-otra-hora">
-          <span class="ag-muted">¿Otra hora?</span>
-          <input class="ag-input ag-input--hora" type="time" [(ngModel)]="horaManual" (ngModelChange)="alEscribirHora()" aria-label="Otra hora">
+          <span class="ag-muted">{{ 'agenda.citaForm.otraHora' | translate }}</span>
+          <input class="ag-input ag-input--hora" type="time" [(ngModel)]="horaManual" (ngModelChange)="alEscribirHora()" [attr.aria-label]="'agenda.citaForm.otraHora2' | translate">
         </div>
       </ng-container>
 
@@ -100,25 +100,25 @@
             {{ f.franja }}
           </button>
         </div>
-        <ng-template #sinFranjas><span class="ag-muted">Ese día no hay agenda.</span></ng-template>
+        <ng-template #sinFranjas><span class="ag-muted">{{ 'agenda.citaForm.eseDiaNoHayAgenda' | translate }}</span></ng-template>
       </ng-container>
     </div>
 
     <!-- A domicilio -->
     <div class="ag-dos" *ngIf="aDomicilio">
       <div class="ag-campo">
-        <span class="ag-etiqueta">Dirección del servicio</span>
-        <input class="ag-input" [(ngModel)]="lugar.address" maxlength="200" aria-label="Dirección del servicio">
+        <span class="ag-etiqueta">{{ 'agenda.citaForm.direccionDelServicio' | translate }}</span>
+        <input class="ag-input" [(ngModel)]="lugar.address" maxlength="200" [attr.aria-label]="'agenda.citaForm.direccionDelServicio' | translate">
       </div>
       <div class="ag-campo">
-        <span class="ag-etiqueta">Ciudad</span>
-        <input class="ag-input" [(ngModel)]="lugar.city" maxlength="80" aria-label="Ciudad">
+        <span class="ag-etiqueta">{{ 'agenda.citaForm.ciudad' | translate }}</span>
+        <input class="ag-input" [(ngModel)]="lugar.city" maxlength="80" [attr.aria-label]="'agenda.citaForm.ciudad' | translate">
       </div>
     </div>
 
     <div class="ag-campo">
-      <span class="ag-etiqueta">Notas (opcional)</span>
-      <textarea class="ag-input" [(ngModel)]="notas" maxlength="600" rows="2" aria-label="Notas"></textarea>
+      <span class="ag-etiqueta">{{ 'agenda.citaForm.notasOpcional' | translate }}</span>
+      <textarea class="ag-input" [(ngModel)]="notas" maxlength="600" rows="2" [attr.aria-label]="'agenda.citaForm.notas' | translate"></textarea>
     </div>
 
     <div class="cfg-aviso cfg-aviso--error" *ngIf="error" role="alert"><span class="ag-txt">{{ error }}</span></div>
@@ -126,9 +126,9 @@
 
   <ng-template pTemplate="footer">
     <div class="ag-pie">
-      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrarDialogo()"><span class="ag-txt">Cancelar</span></button>
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrarDialogo()"><span class="ag-txt">{{ 'comun.cancelar' | translate }}</span></button>
       <button type="button" class="cfg-btn" [disabled]="!puedeGuardar" (click)="guardar()">
-        <span class="ag-txt">{{ guardando ? 'Agendando…' : 'Agendar' }}</span>
+        <span class="ag-txt">{{ guardando ? ('agenda.citaForm.agendando' | translate) : ('agenda.citaForm.agendar' | translate) }}</span>
       </button>
     </div>
   </ng-template>

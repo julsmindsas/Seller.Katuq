@@ -2,7 +2,7 @@
   <ng-container *ngIf="!unknownProvider; else providerNotFound">
     <header class="cfg-cabeza dashboard-header">
       <div class="cfg-cabeza__textos header-text">
-        <span class="cfg-eyebrow">Integraciones</span>
+        <span class="cfg-eyebrow">{{ 'providerDashboard.providerDashboard.integraciones' | translate }}</span>
         <h1 class="cfg-titulo">
           <i class="pi" [ngClass]="'pi-' + (config?.icon || 'box')"></i>
           {{ config?.label }}
@@ -10,11 +10,11 @@
         <p class="cfg-sub muted">{{ config?.description }}</p>
       </div>
       <div class="cfg-acciones header-actions">
-        <a routerLink="/flows" class="cfg-btn cfg-btn--sec btn-link" pTooltip="Ver flujos automatizados" tooltipPosition="bottom">
-          <i class="pi pi-sitemap"></i> Flujos
+        <a routerLink="/flows" class="cfg-btn cfg-btn--sec btn-link" [pTooltip]="'providerDashboard.providerDashboard.verFlujosAutomatizados' | translate" tooltipPosition="bottom">
+          <i class="pi pi-sitemap"></i> {{ 'providerDashboard.providerDashboard.flujos' | translate }}
         </a>
-        <a routerLink="/integrations" class="cfg-btn cfg-btn--sec btn-link" pTooltip="Volver a integraciones" tooltipPosition="bottom">
-          <i class="pi pi-cog"></i> Credenciales
+        <a routerLink="/integrations" class="cfg-btn cfg-btn--sec btn-link" [pTooltip]="'providerDashboard.providerDashboard.volverAIntegraciones' | translate" tooltipPosition="bottom">
+          <i class="pi pi-cog"></i> {{ 'providerDashboard.providerDashboard.credenciales' | translate }}
         </a>
       </div>
     </header>
@@ -23,23 +23,23 @@
     <p-tabView [(activeIndex)]="activeTab" styleClass="provider-tabs">
       <p-tabPanel
         *ngIf="hasFeature('issues')"
-        header="Pedidos con problemas"
+        [header]="'providerDashboard.providerDashboard.pedidosConProblemas' | translate"
         leftIcon="pi pi-exclamation-triangle">
         <app-provider-issues-table [provider]="provider!"></app-provider-issues-table>
       </p-tabPanel>
 
       <p-tabPanel
         *ngIf="hasFeature('kpis')"
-        header="Resumen"
+        [header]="'providerDashboard.providerDashboard.resumen' | translate"
         leftIcon="pi pi-chart-bar">
         <app-provider-summary [provider]="provider!"></app-provider-summary>
       </p-tabPanel>
 
       <p-tabPanel
         *ngIf="hasFeature('products')"
-        header="Productos"
+        [header]="'providerDashboard.providerDashboard.productos' | translate"
         leftIcon="pi pi-box">
-        <p class="placeholder">Estado de sincronización de productos próximamente.</p>
+        <p class="placeholder">{{ 'providerDashboard.providerDashboard.estadoDeSincronizacionDeProductos' | translate }}</p>
       </p-tabPanel>
     </p-tabView>
     </section>
@@ -48,9 +48,9 @@
   <ng-template #providerNotFound>
     <div class="cfg-card cfg-vacio not-found">
       <i class="pi pi-info-circle cfg-vacio__icono"></i>
-      <h2 class="cfg-vacio__titulo">Integración no encontrada</h2>
-      <p class="cfg-vacio__texto">El proveedor <strong>{{ provider }}</strong> no está configurado en este comercio o no existe en el sistema.</p>
-      <button pButton type="button" label="Volver a integraciones" icon="pi pi-arrow-left" (click)="goBackToIntegrations()"></button>
+      <h2 class="cfg-vacio__titulo">{{ 'providerDashboard.providerDashboard.integracionNoEncontrada' | translate }}</h2>
+      <p class="cfg-vacio__texto">{{ 'providerDashboard.providerDashboard.elProveedor' | translate }} <strong>{{ provider }}</strong> {{ 'providerDashboard.providerDashboard.noEstaConfiguradoEnEste' | translate }}</p>
+      <button pButton type="button" [label]="'providerDashboard.providerDashboard.volverAIntegraciones' | translate" icon="pi pi-arrow-left" (click)="goBackToIntegrations()"></button>
     </div>
   </ng-template>
 </div>

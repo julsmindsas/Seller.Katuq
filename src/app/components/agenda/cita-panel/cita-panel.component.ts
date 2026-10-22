@@ -15,6 +15,7 @@ import {
 } from '../agenda.models';
 import { esFecha, fechaCorta, fechaLarga, horaLegible, hoyBogota, minutos } from '../agenda-fechas';
 
+import { TranslateService } from '@ngx-translate/core';
 /**
  * Detalle de una cita (D-491): estado, mover, notas, historial y escribirle al
  * cliente por WhatsApp (abre el chat con el texto escrito; Katuq no envía nada).
@@ -51,7 +52,9 @@ export class CitaPanelComponent implements OnChanges, OnDestroy {
   private readonly pedirHoras$ = new Subject<void>();
   private readonly destruir$ = new Subject<void>();
 
-  constructor(private readonly agenda: AgendaService, private readonly toastr: ToastrService) {
+  constructor(private readonly agenda: AgendaService, private readonly toastr: ToastrService,
+    private translate: TranslateService
+  ) {
     this.pedirHoras$
       .pipe(
         debounceTime(150),
@@ -97,7 +100,7 @@ export class CitaPanelComponent implements OnChanges, OnDestroy {
 
   get servicios(): string {
     const s = (this.cita.services || []).map((x) => x.name);
-    return s.length ? s.join(', ') : this.cita.reason || 'Sin servicio';
+    return s.length ? s.join(', ') : this.cita.reason || this.translate.instant('agenda.citaPanel.sinServicio');
   }
 
   get total(): number {
@@ -130,7 +133,7 @@ export class CitaPanelComponent implements OnChanges, OnDestroy {
   }
 
   textoHistorial(h: HistorialCita): string {
-    const estado = (v: string) => ESTADOS_CITA[v as EstadoCita]?.texto || v;
+    const estado = (v: string) => (ESTADOS_CITA[v as EstadoCita] ? this.translate.instant(ESTADOS_CITA[v as EstadoCita].texto) : v);
     if (h.what === 'created') return `Creada (${estado(h.to)})`;
     if (h.what === 'status') return `${estado(h.from)} → ${estado(h.to)}${h.reason ? ` · ${h.reason}` : ''}`;
     if (h.what === 'moved') {
@@ -139,7 +142,7 @@ export class CitaPanelComponent implements OnChanges, OnDestroy {
       return `Movida de ${fechaCorta(a.date)} ${a.startTime || a.window || ''} a ${fechaCorta(b.date)} ${b.startTime || b.window || ''}`;
     }
     if (h.what === 'order') return 'Cobrada';
-    if (h.what === 'edited') return 'Datos editados';
+    if (h.what === 'edited') return this.translate.instant('agenda.citaPanel.datosEditados');
     return h.what;
   }
 
@@ -154,13 +157,13 @@ export class CitaPanelComponent implements OnChanges, OnDestroy {
     let reason: string | undefined;
     if (status === 'cancelled') {
       const r = await Swal.fire({
-        title: '¿Cancelar la cita?',
-        text: 'El espacio queda libre para otra cita. Puedes reabrirla si sigue libre.',
+        title: this.translate.instant('agenda.citaPanel.cancelarLaCita'),
+        text: this.translate.instant('agenda.citaPanel.elEspacioQuedaLibrePara'),
         input: 'text',
-        inputPlaceholder: 'Motivo (opcional)',
+        inputPlaceholder: this.translate.instant('agenda.citaPanel.motivoOpcional'),
         showCancelButton: true,
-        confirmButtonText: 'Sí, cancelar',
-        cancelButtonText: 'No',
+        confirmButtonText: this.translate.instant('agenda.citaPanel.siCancelar'),
+        cancelButtonText: this.translate.instant('comun.no'),
         confirmButtonColor: '#D64545',
       });
       if (!r.isConfirmed) return;
@@ -171,12 +174,12 @@ export class CitaPanelComponent implements OnChanges, OnDestroy {
     this.agenda.cambiarEstado(this.cita.id, status, reason).subscribe({
       next: (c) => {
         this.ocupado = false;
-        this.toastr.success(`Cita ${ESTADOS_CITA[c.status].texto.toLowerCase()}.`);
+        this.toastr.success(this.translate.instant('agenda.citaPanel.citaEstado', { estado: this.translate.instant(ESTADOS_CITA[c.status].texto).toLowerCase() }));
         this.cambio.emit(c);
       },
       error: (e) => {
         this.ocupado = false;
-        this.error = e?.error?.message || 'No pudimos cambiar la cita.';
+        this.error = e?.error?.message || this.translate.instant('agenda.citaPanel.noPudimosCambiarLaCita');
       },
     });
   }
@@ -216,12 +219,12 @@ export class CitaPanelComponent implements OnChanges, OnDestroy {
       next: (c) => {
         this.ocupado = false;
         this.moviendo = false;
-        this.toastr.success(`Cita movida al ${fechaCorta(c.date)} · ${c.startTime ? horaLegible(c.startTime) : c.window}.`);
+        this.toastr.success(this.translate.instant('agenda.citaPanel.citaMovida', { fecha: fechaCorta(c.date), hora: c.startTime ? horaLegible(c.startTime) : c.window }));
         this.cambio.emit(c);
       },
       error: (e) => {
         this.ocupado = false;
-        this.error = e?.error?.message || 'No pudimos mover la cita.';
+        this.error = e?.error?.message || this.translate.instant('agenda.citaPanel.noPudimosMoverLaCita');
         if (e?.error?.code === 'OCUPADO') this.pedirHoras$.next();
       },
     });
@@ -235,12 +238,12 @@ export class CitaPanelComponent implements OnChanges, OnDestroy {
       next: (c) => {
         this.ocupado = false;
         this.notasCambiadas = false;
-        this.toastr.success('Notas guardadas.');
+        this.toastr.success(this.translate.instant('agenda.citaPanel.notasGuardadas'));
         this.cambio.emit(c);
       },
       error: (e) => {
         this.ocupado = false;
-        this.error = e?.error?.message || 'No pudimos guardar las notas.';
+        this.error = e?.error?.message || this.translate.instant('agenda.citaPanel.noPudimosGuardarLasNotas');
       },
     });
   }

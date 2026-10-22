@@ -9,13 +9,13 @@
     filterBy="label"
     [disabled]="disabled"
     [defaultLabel]="placeholder"
-    [selectedItemsLabel]="'{0} personas'"
+    [selectedItemsLabel]="('selectorEquipo.selectorEquipo.0Personas' | translate)"
     [maxSelectedLabels]="3"
     [showToggleAll]="false"
     appendTo="body"
     [overlayOptions]="overlay"
-    emptyFilterMessage="No hay nadie con ese nombre"
-    emptyMessage="No hay personas para elegir"
+    [emptyFilterMessage]="'selectorEquipo.selectorEquipo.noHayNadieConEse' | translate"
+    [emptyMessage]="'selectorEquipo.selectorEquipo.noHayPersonasParaElegir' | translate"
     [style]="{ width: '100%' }"
   ></p-multiSelect>
 
@@ -32,8 +32,8 @@
       [showClear]="false"
       appendTo="body"
       [overlayOptions]="overlay"
-      emptyFilterMessage="No hay nadie con ese nombre"
-      emptyMessage="No hay personas para elegir"
+      [emptyFilterMessage]="'selectorEquipo.selectorEquipo.noHayNadieConEse' | translate"
+      [emptyMessage]="'selectorEquipo.selectorEquipo.noHayPersonasParaElegir' | translate"
       [style]="{ width: '100%' }"
     ></p-dropdown>
   </ng-template>

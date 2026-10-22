@@ -1,18 +1,18 @@
 <div class="opinar">
   <header class="opinar__cabeza">
     <div class="opinar__textos">
-      <span class="opinar__eyebrow">Opinar</span>
-      <h2 class="opinar__titulo" id="opinar-titulo">¿Qué nos quieres contar?</h2>
-      <p class="opinar__sub">Lo lee el equipo de Katuq y te responde aquí mismo.</p>
+      <span class="opinar__eyebrow">{{ 'opinarModal.opinarModal.opinar' | translate }}</span>
+      <h2 class="opinar__titulo" id="opinar-titulo">{{ 'opinarModal.opinarModal.queNosQuieresContar' | translate }}</h2>
+      <p class="opinar__sub">{{ 'opinarModal.opinarModal.loLeeElEquipoDe' | translate }}</p>
     </div>
-    <button type="button" class="opinar__cerrar" (click)="cerrar()" [disabled]="enviando" aria-label="Cerrar">
+    <button type="button" class="opinar__cerrar" (click)="cerrar()" [disabled]="enviando" [attr.aria-label]="'comun.cerrar' | translate">
       <i class="pi pi-times" aria-hidden="true"></i>
     </button>
   </header>
 
   <form class="opinar__cuerpo" (ngSubmit)="enviar()" novalidate>
     <fieldset class="opinar__grupo">
-      <legend class="opinar__label">¿Qué es?</legend>
+      <legend class="opinar__label">{{ 'opinarModal.opinarModal.queEs' | translate }}</legend>
       <div class="opinar__opciones">
         <label
           *ngFor="let t of tipos; let primero = first"
@@ -29,16 +29,16 @@
           />
           <span class="opinar__icono" aria-hidden="true"><i class="pi" [ngClass]="t.icono"></i></span>
           <span class="opinar__tipo-textos">
-            <span class="opinar__tipo-nombre">{{ t.label }}</span>
-            <span class="opinar__tipo-ayuda">{{ t.ayuda }}</span>
+            <span class="opinar__tipo-nombre">{{ t.label | translate }}</span>
+            <span class="opinar__tipo-ayuda">{{ t.ayuda | translate }}</span>
           </span>
         </label>
       </div>
-      <span class="opinar__error" *ngIf="intento && !tipo">Elige si es una idea o algo que no funciona.</span>
+      <span class="opinar__error" *ngIf="intento && !tipo">{{ 'opinarModal.opinarModal.eligeSiEsUnaIdea' | translate }}</span>
     </fieldset>
 
     <div class="opinar__grupo">
-      <label class="opinar__label" for="opinar-texto">{{ tipo === 'bug' ? 'Cuéntanos qué pasó' : 'Cuéntanos tu idea' }}</label>
+      <label class="opinar__label" for="opinar-texto">{{ tipo === 'bug' ? ('opinarModal.opinarModal.cuentanosQuePaso' | translate) : ('opinarModal.opinarModal.cuentanosTuIdea' | translate) }}</label>
       <textarea
         id="opinar-texto"
         class="opinar__texto"
@@ -47,15 +47,15 @@
         aria-describedby="opinar-nota"
         [attr.aria-invalid]="intento && !textoValido"
         [maxlength]="MAX"
-        [placeholder]="tipo === 'bug' ? 'Qué estabas haciendo y qué pasó' : 'Qué te gustaría que Katuq hiciera'"
+        [placeholder]="tipo === 'bug' ? ('opinarModal.opinarModal.queEstabasHaciendoYQue' | translate) : ('opinarModal.opinarModal.queTeGustariaQueKatuq' | translate)"
         [(ngModel)]="texto"
       ></textarea>
       <div class="opinar__pie-texto">
         <span class="opinar__error" id="opinar-nota" *ngIf="intento && !textoValido; else notaPantalla">
-          Escribe al menos {{ MIN }} caracteres para enviarlo.
+          {{ 'opinarModal.opinarModal.escribeAlMenosCaracteresPara' | translate:{MIN: MIN} }}
         </span>
         <ng-template #notaPantalla>
-          <span class="opinar__nota" id="opinar-nota">Guardamos sola la pantalla donde estás<ng-container *ngIf="nombrePantalla">: {{ nombrePantalla }}</ng-container>.</span>
+          <span class="opinar__nota" id="opinar-nota">{{ 'opinarModal.opinarModal.guardamosSolaLaPantallaDonde' | translate }}<ng-container *ngIf="nombrePantalla">: {{ nombrePantalla }}</ng-container>.</span>
         </ng-template>
         <span class="opinar__contador">{{ texto.length }}/{{ MAX }}</span>
       </div>
@@ -64,10 +64,10 @@
     <p class="opinar__aviso" *ngIf="error" role="alert">{{ error }}</p>
 
     <div class="opinar__acciones">
-      <button type="button" class="opinar__btn opinar__btn--sec" (click)="cerrar()" [disabled]="enviando">Cancelar</button>
+      <button type="button" class="opinar__btn opinar__btn--sec" (click)="cerrar()" [disabled]="enviando">{{ 'comun.cancelar' | translate }}</button>
       <button type="submit" class="opinar__btn" [disabled]="enviando">
         <i class="pi" [ngClass]="enviando ? 'pi-spin pi-spinner' : 'pi-send'" aria-hidden="true"></i>
-        <span class="opinar__btn-texto">{{ enviando ? 'Enviando…' : 'Enviar' }}</span>
+        <span class="opinar__btn-texto">{{ enviando ? ('opinarModal.opinarModal.enviando' | translate) : ('opinarModal.opinarModal.enviar' | translate) }}</span>
       </button>
     </div>
   </form>

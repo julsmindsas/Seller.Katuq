@@ -13,6 +13,7 @@ import {
 } from '../agenda.models';
 import { esFecha, fechaLarga, horaLegible, hoyBogota, minutos, nuevoRequestId } from '../agenda-fechas';
 
+import { TranslateService } from '@ngx-translate/core';
 const DURACION_POR_DEFECTO = 60;
 
 /**
@@ -72,7 +73,9 @@ export class CitaFormComponent implements OnInit, OnDestroy {
   private readonly pedirHoras$ = new Subject<void>();
   private readonly destruir$ = new Subject<void>();
 
-  constructor(private readonly agenda: AgendaService) {}
+  constructor(private readonly agenda: AgendaService,
+    private translate: TranslateService
+  ) {}
 
   ngOnInit(): void {
     if (this.preset) {
@@ -250,7 +253,7 @@ export class CitaFormComponent implements OnInit, OnDestroy {
         },
         error: (e) => {
           this.guardando = false;
-          this.error = e?.error?.message || 'No pudimos agendar la cita. Intenta de nuevo.';
+          this.error = e?.error?.message || this.translate.instant('agenda.citaForm.noPudimosAgendarLaCita');
           // Si la hora se acaba de ocupar, se refrescan las libres.
           if (e?.error?.code === 'OCUPADO') this.alCambiarCriterio();
         },

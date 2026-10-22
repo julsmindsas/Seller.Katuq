@@ -29,7 +29,7 @@
       class="form-control form-control-sm"
       [id]="campo?.id"
       [formControl]="control">
-      <option value="">-- Seleccionar --</option>
+      <option value="">{{ 'dynamicField.dynamicField.seleccionar' | translate }}</option>
       <option *ngFor="let opt of campo?.opciones" [value]="opt.valor">
         {{ opt.etiqueta }}
       </option>

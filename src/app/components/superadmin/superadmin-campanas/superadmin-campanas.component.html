@@ -2,83 +2,82 @@
 
   <div class="campanas__encabezado">
     <div>
-      <span class="campanas__eyebrow">Configuración plataforma</span>
-      <h1 class="campanas__titulo">Campañas de registro</h1>
+      <span class="campanas__eyebrow">{{ 'superadmin.superadminCampanas.configuracionPlataforma' | translate }}</span>
+      <h1 class="campanas__titulo">{{ 'superadmin.superadminCampanas.campanasDeRegistro' | translate }}</h1>
       <p class="campanas__bajada">
-        Códigos para pautar. Quien se registre por el enlace entra con Premium por el tiempo que
-        definas, sin tarjeta. Al terminar pasa al plan gratuito y le avisamos antes.
+        {{ 'superadmin.superadminCampanas.codigosParaPautarQuienSe' | translate }}
       </p>
     </div>
-    <button type="button" class="btn-acento" (click)="nueva()">Nueva campaña</button>
+    <button type="button" class="btn-acento" (click)="nueva()">{{ 'superadmin.superadminCampanas.nuevaCampana' | translate }}</button>
   </div>
 
   <!-- Formulario -->
   <div *ngIf="mostrarFormulario" class="tarjeta tarjeta--formulario">
-    <h2 class="tarjeta__titulo">{{ editandoId ? 'Editar campaña' : 'Nueva campaña' }}</h2>
+    <h2 class="tarjeta__titulo">{{ editandoId ? ('superadmin.superadminCampanas.editarCampana' | translate) : ('superadmin.superadminCampanas.nuevaCampana' | translate) }}</h2>
 
     <div class="campos">
       <label class="campo">
-        <span class="campo__label">Código</span>
-        <input type="text" [(ngModel)]="formulario.codigo" placeholder="COLOMBIA2026"
+        <span class="campo__label">{{ 'superadmin.superadminCampanas.codigo' | translate }}</span>
+        <input type="text" [(ngModel)]="formulario.codigo" [placeholder]="'superadmin.superadminCampanas.colombia2026' | translate"
                [disabled]="guardando" class="campo__input campo__input--codigo">
-        <small class="campo__ayuda">Es lo que va en el enlace. Solo letras y números.</small>
+        <small class="campo__ayuda">{{ 'superadmin.superadminCampanas.esLoQueVaEn' | translate }}</small>
       </label>
 
       <label class="campo">
-        <span class="campo__label">Nombre de la campaña</span>
-        <input type="text" [(ngModel)]="formulario.nombre" placeholder="Colombia 2026"
+        <span class="campo__label">{{ 'superadmin.superadminCampanas.nombreDeLaCampana' | translate }}</span>
+        <input type="text" [(ngModel)]="formulario.nombre" [placeholder]="'superadmin.superadminCampanas.colombia20262' | translate"
                [disabled]="guardando" class="campo__input">
-        <small class="campo__ayuda">Lo ve quien abre el enlace.</small>
+        <small class="campo__ayuda">{{ 'superadmin.superadminCampanas.loVeQuienAbreEl' | translate }}</small>
       </label>
 
       <label class="campo campo--ancho">
-        <span class="campo__label">Descripción</span>
+        <span class="campo__label">{{ 'superadmin.superadminCampanas.descripcion' | translate }}</span>
         <input type="text" [(ngModel)]="formulario.descripcion"
-               placeholder="Monta tu tienda y vende desde el primer día"
+               [placeholder]="'superadmin.superadminCampanas.montaTuTiendaYVende' | translate"
                [disabled]="guardando" class="campo__input">
       </label>
 
       <label class="campo">
-        <span class="campo__label">Días de Premium</span>
+        <span class="campo__label">{{ 'superadmin.superadminCampanas.diasDePremium' | translate }}</span>
         <input type="number" [(ngModel)]="formulario.diasPremium" min="1" max="730"
                [disabled]="guardando" class="campo__input">
-        <small class="campo__ayuda">90 días = 3 meses.</small>
+        <small class="campo__ayuda">{{ 'superadmin.superadminCampanas.90Dias3Meses' | translate }}</small>
       </label>
 
       <label class="campo">
-        <span class="campo__label">Cupo máximo</span>
+        <span class="campo__label">{{ 'superadmin.superadminCampanas.cupoMaximo' | translate }}</span>
         <input type="number" [(ngModel)]="formulario.cupoMaximo" min="0"
                [disabled]="guardando" class="campo__input">
-        <small class="campo__ayuda">0 = sin tope.</small>
+        <small class="campo__ayuda">{{ 'superadmin.superadminCampanas.0SinTope' | translate }}</small>
       </label>
 
       <label class="campo">
-        <span class="campo__label">Vigente hasta</span>
+        <span class="campo__label">{{ 'superadmin.superadminCampanas.vigenteHasta' | translate }}</span>
         <input type="date" [(ngModel)]="formulario.vigenteHasta"
                [disabled]="guardando" class="campo__input">
-        <small class="campo__ayuda">Vacío = sin fecha límite.</small>
+        <small class="campo__ayuda">{{ 'superadmin.superadminCampanas.vacioSinFechaLimite' | translate }}</small>
       </label>
 
       <label class="campo campo--switch">
         <input type="checkbox" [(ngModel)]="formulario.activo" [disabled]="guardando">
-        <span>Campaña activa</span>
+        <span>{{ 'superadmin.superadminCampanas.campanaActiva' | translate }}</span>
       </label>
     </div>
 
     <div class="acciones">
-      <button type="button" class="btn-plano" (click)="cancelar()" [disabled]="guardando">Cancelar</button>
+      <button type="button" class="btn-plano" (click)="cancelar()" [disabled]="guardando">{{ 'comun.cancelar' | translate }}</button>
       <button type="button" class="btn-acento" (click)="guardar()" [disabled]="guardando">
-        {{ guardando ? 'Guardando…' : (editandoId ? 'Guardar cambios' : 'Crear campaña') }}
+        {{ guardando ? ('superadmin.superadminCampanas.guardando' | translate) : (editandoId ? ('superadmin.superadminCampanas.guardarCambios' | translate) : ('superadmin.superadminCampanas.crearCampana' | translate)) }}
       </button>
     </div>
   </div>
 
   <!-- Cargando -->
-  <div *ngIf="cargando" class="estado-vacio">Cargando campañas…</div>
+  <div *ngIf="cargando" class="estado-vacio">{{ 'superadmin.superadminCampanas.cargandoCampanas' | translate }}</div>
 
   <!-- Sin campañas -->
   <div *ngIf="!cargando && campanas.length === 0" class="estado-vacio">
-    Todavía no hay campañas. Crea la primera para empezar a pautar.
+    {{ 'superadmin.superadminCampanas.todaviaNoHayCampanasCrea' | translate }}
   </div>
 
   <!-- Listado -->
@@ -88,15 +87,15 @@
       <div class="tarjeta__fila">
         <div>
           <span class="chip" [class.chip--apagado]="!campana.activo">{{ campana.codigo }}</span>
-          <span class="chip chip--info">{{ campana.beneficioTexto || (campana.duracionTexto + ' de Premium') }}</span>
-          <span class="chip chip--aviso" *ngIf="campana.activo && !campana.disponible">{{ campana.motivoNoDisponible === 'AUN_NO' ? 'Aún no abre' : 'Sin cupo o vencida' }}</span>
-          <span class="chip chip--apagado" *ngIf="!campana.activo">Apagada</span>
+          <span class="chip chip--info">{{ campana.beneficioTexto || ('superadmin.superadminCampanas.duracionDePremium' | translate:{duracion: campana.duracionTexto}) }}</span>
+          <span class="chip chip--aviso" *ngIf="campana.activo && !campana.disponible">{{ campana.motivoNoDisponible === 'AUN_NO' ? ('superadmin.superadminCampanas.aunNoAbre' | translate) : ('superadmin.superadminCampanas.sinCupoOVencida' | translate) }}</span>
+          <span class="chip chip--apagado" *ngIf="!campana.activo">{{ 'superadmin.superadminCampanas.apagada' | translate }}</span>
         </div>
         <div class="tarjeta__acciones">
-          <button type="button" class="btn-plano" (click)="copiarEnlace(campana)">Copiar enlace</button>
-          <button type="button" class="btn-plano" (click)="editar(campana)">Editar</button>
+          <button type="button" class="btn-plano" (click)="copiarEnlace(campana)">{{ 'superadmin.superadminCampanas.copiarEnlace' | translate }}</button>
+          <button type="button" class="btn-plano" (click)="editar(campana)">{{ 'comun.editar' | translate }}</button>
           <button type="button" class="btn-plano" (click)="cambiarEstado(campana)">
-            {{ campana.activo ? 'Apagar' : 'Encender' }}
+            {{ campana.activo ? ('superadmin.superadminCampanas.apagar' | translate) : ('superadmin.superadminCampanas.encender' | translate) }}
           </button>
         </div>
       </div>
@@ -106,32 +105,32 @@
 
       <div class="datos">
         <div class="dato">
-          <span class="dato__label">Usos</span>
+          <span class="dato__label">{{ 'superadmin.superadminCampanas.usos' | translate }}</span>
           <span class="dato__valor">
-            {{ campana.usosConsumidos }}<ng-container *ngIf="campana.cupoMaximo > 0"> de {{ campana.cupoMaximo }}</ng-container>
+            {{ campana.usosConsumidos }}<ng-container *ngIf="campana.cupoMaximo > 0"> {{ 'superadmin.superadminCampanas.de' | translate:{cupoMaximo: campana.cupoMaximo} }}</ng-container>
           </span>
         </div>
         <div class="dato">
-          <span class="dato__label">Cupo restante</span>
-          <span class="dato__valor">{{ campana.cupoRestante === -1 ? 'Sin tope' : campana.cupoRestante }}</span>
+          <span class="dato__label">{{ 'superadmin.superadminCampanas.cupoRestante' | translate }}</span>
+          <span class="dato__valor">{{ campana.cupoRestante === -1 ? ('superadmin.superadminCampanas.sinTope' | translate) : campana.cupoRestante }}</span>
         </div>
         <div class="dato">
-          <span class="dato__label">Vigente hasta</span>
+          <span class="dato__label">{{ 'superadmin.superadminCampanas.vigenteHasta' | translate }}</span>
           <span class="dato__valor">{{ fechaLegible(campana.vigenteHasta) }}</span>
         </div>
         <div class="dato">
-          <span class="dato__label">Visitas</span>
+          <span class="dato__label">{{ 'superadmin.superadminCampanas.visitas' | translate }}</span>
           <span class="dato__valor">
             {{ campana.visitas }}
-            <small class="dato__nota" *ngIf="campana.visitantes">· {{ campana.visitantes }} personas aprox.</small>
+            <small class="dato__nota" *ngIf="campana.visitantes">{{ 'superadmin.superadminCampanas.personasAprox' | translate:{visitantes: campana.visitantes} }}</small>
           </span>
         </div>
         <div class="dato">
-          <span class="dato__label">Empezaron el registro</span>
+          <span class="dato__label">{{ 'superadmin.superadminCampanas.empezaronElRegistro' | translate }}</span>
           <span class="dato__valor">{{ campana.clics }}</span>
         </div>
         <div class="dato dato--ancho">
-          <span class="dato__label">Enlace</span>
+          <span class="dato__label">{{ 'superadmin.superadminCampanas.enlace' | translate }}</span>
           <span class="dato__valor dato__valor--enlace">{{ enlaceDeCampana(campana) }}</span>
         </div>
       </div>
@@ -141,30 +140,30 @@
           <div class="embudo">
             <div class="embudo__paso">
               <span class="embudo__num">{{ r.visitas }}</span>
-              <span class="embudo__label">entraron al enlace</span>
+              <span class="embudo__label">{{ 'superadmin.superadminCampanas.entraronAlEnlace' | translate }}</span>
             </div>
             <span class="embudo__flecha">→</span>
             <div class="embudo__paso">
               <span class="embudo__num">{{ r.clics }}</span>
-              <span class="embudo__label">empezaron el registro</span>
+              <span class="embudo__label">{{ 'superadmin.superadminCampanas.empezaronElRegistro2' | translate }}</span>
             </div>
             <span class="embudo__flecha">→</span>
             <div class="embudo__paso embudo__paso--fin">
               <span class="embudo__num">{{ r.registradas }}</span>
-              <span class="embudo__label">se registraron</span>
+              <span class="embudo__label">{{ 'superadmin.superadminCampanas.seRegistraron' | translate }}</span>
             </div>
           </div>
           <div class="embudo__pie">
-            Conversión desde la visita: <strong>{{ porcentaje(r.conversionVisitaRegistro) }}</strong>
-            <span *ngIf="r.pagaron !== undefined"> · Pagaron un plan: <strong>{{ r.pagaron }}</strong> ({{ porcentaje(r.conversionUsoPago) }} de los que usaron el código)</span>
-            · Siguen en Premium: <strong>{{ r.sigueEnPremium }}</strong>
-            <span *ngIf="r.degradadas"> · Ya bajaron a gratis: <strong>{{ r.degradadas }}</strong></span>
+            {{ 'superadmin.superadminCampanas.conversionDesdeLaVisita' | translate }} <strong>{{ porcentaje(r.conversionVisitaRegistro) }}</strong>
+            <span *ngIf="r.pagaron !== undefined"> {{ 'superadmin.superadminCampanas.pagaronUnPlan' | translate }} <strong>{{ r.pagaron }}</strong> {{ 'superadmin.superadminCampanas.deLosQueUsaronEl' | translate:{conversionUsoPago: (porcentaje(r.conversionUsoPago))} }}</span>
+            {{ 'superadmin.superadminCampanas.siguenEnPremium' | translate }} <strong>{{ r.sigueEnPremium }}</strong>
+            <span *ngIf="r.degradadas"> {{ 'superadmin.superadminCampanas.yaBajaronAGratis' | translate }} <strong>{{ r.degradadas }}</strong></span>
             <br />
-            <small>Las visitas se guardan por tandas: el número puede ir hasta medio minuto atrás.</small>
+            <small>{{ 'superadmin.superadminCampanas.lasVisitasSeGuardanPor' | translate }}</small>
           </div>
         </ng-container>
         <ng-template #pedirResultado>
-          <button type="button" class="btn-plano" (click)="verResultado(campana)">Ver cuántos trajo</button>
+          <button type="button" class="btn-plano" (click)="verResultado(campana)">{{ 'superadmin.superadminCampanas.verCuantosTrajo' | translate }}</button>
         </ng-template>
       </div>
 

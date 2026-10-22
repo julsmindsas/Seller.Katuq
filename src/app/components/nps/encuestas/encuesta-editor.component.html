@@ -3,28 +3,28 @@
   <section class="cfg-card">
     <div class="nps-barra">
       <div class="ed-titulo">
-        <a class="ed-volver" routerLink="/nps/encuestas"><i class="pi pi-arrow-left" aria-hidden="true"></i><span class="nps-heredar">Encuestas</span></a>
+        <a class="ed-volver" routerLink="/nps/encuestas"><i class="pi pi-arrow-left" aria-hidden="true"></i><span class="nps-heredar">{{ 'nps.encuestaEditor.encuestas' | translate }}</span></a>
         <h2 class="nps-barra__titulo">
-          {{ esNueva ? 'Nueva encuesta' : (encuesta?.nombre || 'Encuesta') }}
+          {{ esNueva ? ('nps.encuestaEditor.nuevaEncuesta' | translate) : (encuesta?.nombre || ('nps.encuestaEditor.encuesta' | translate)) }}
         </h2>
         <div class="ed-estado" *ngIf="encuesta">
-          <span class="nps-pastilla is-canal">{{ NOMBRE_CANAL[encuesta.canal] }}</span>
-          <span class="nps-pastilla" *ngIf="!encuesta.soloLectura" [ngClass]="'is-' + encuesta.estado">{{ NOMBRE_ESTADO[encuesta.estado] }}</span>
-          <span class="nps-pastilla is-nuevo" *ngIf="encuesta.soloLectura && encuesta.etapa">Etapa: {{ NOMBRE_ETAPA[encuesta.etapa] || encuesta.etapa }}</span>
-          <span class="nps-muted" *ngIf="encuesta.respuestas90d !== undefined">{{ encuesta.respuestas90d | number }} respuestas en 90 días</span>
+          <span class="nps-pastilla is-canal">{{ NOMBRE_CANAL[encuesta.canal] | translate }}</span>
+          <span class="nps-pastilla" *ngIf="!encuesta.soloLectura" [ngClass]="'is-' + encuesta.estado">{{ NOMBRE_ESTADO[encuesta.estado] | translate }}</span>
+          <span class="nps-pastilla is-nuevo" *ngIf="encuesta.soloLectura && encuesta.etapa">{{ 'nps.encuestaEditor.etapa' | translate:{etapa: ((NOMBRE_ETAPA[encuesta.etapa] || encuesta.etapa) | translate)} }}</span>
+          <span class="nps-muted" *ngIf="encuesta.respuestas90d !== undefined">{{ encuesta.respuestas90d | number }} {{ 'nps.encuestaEditor.respuestasEn90Dias' | translate }}</span>
         </div>
       </div>
       <div class="cfg-acciones" *ngIf="!soloLectura && !cargando && !error">
         <button type="button" class="cfg-btn cfg-btn--peligro" *ngIf="encuesta && encuesta.estado !== 'activa'" (click)="eliminar()" [disabled]="guardando || cambiandoEstado">
-          <i class="pi pi-trash" aria-hidden="true"></i><span>Eliminar</span>
+          <i class="pi pi-trash" aria-hidden="true"></i><span>{{ 'comun.eliminar' | translate }}</span>
         </button>
         <button type="button" class="cfg-btn cfg-btn--sec" (click)="alternarEstado()" [disabled]="guardando || cambiandoEstado">
           <i class="pi" [ngClass]="encuesta?.estado === 'activa' ? 'pi-pause' : 'pi-play'" aria-hidden="true"></i>
-          <span>{{ encuesta?.estado === 'activa' ? 'Pausar' : (esNueva || form.dirty ? 'Guardar y activar' : 'Activar') }}</span>
+          <span>{{ encuesta?.estado === 'activa' ? ('nps.encuestaEditor.pausar' | translate) : (esNueva || form.dirty ? ('nps.encuestaEditor.guardarYActivar' | translate) : ('nps.encuestaEditor.activar' | translate)) }}</span>
         </button>
         <button type="button" class="cfg-btn" (click)="guardar()" [disabled]="guardando || (!esNueva && form.pristine)">
           <i class="pi" [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-check'" aria-hidden="true"></i>
-          <span>{{ guardando ? 'Guardando…' : 'Guardar' }}</span>
+          <span>{{ guardando ? ('nps.encuestaEditor.guardando' | translate) : ('comun.guardar' | translate) }}</span>
         </button>
       </div>
     </div>
@@ -38,177 +38,177 @@
   <section class="cfg-card" *ngIf="cargando">
     <div class="cfg-vacio">
       <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-spin pi-spinner"></i></span>
-      <p class="cfg-vacio__titulo">Abriendo la encuesta…</p>
+      <p class="cfg-vacio__titulo">{{ 'nps.encuestaEditor.abriendoLaEncuesta' | translate }}</p>
     </div>
   </section>
 
   <p class="cfg-aviso" *ngIf="encuesta?.soloLectura">
     <i class="pi pi-info-circle" aria-hidden="true"></i>
-    <span class="nps-heredar">Es la encuesta de Katuq a sus comercios dentro del Seller. Se enciende por etapas desde el servidor (NPS_COMERCIOS); aquí solo se consulta.</span>
+    <span class="nps-heredar">{{ 'nps.encuestaEditor.esLaEncuestaDeKatuq' | translate }}</span>
   </p>
   <p class="cfg-aviso" *ngIf="soloLectura && !encuesta?.soloLectura && !cargando && !error">
     <i class="pi pi-info-circle" aria-hidden="true"></i>
-    <span class="nps-heredar">Las encuestas las cambian los administradores de tu empresa.</span>
+    <span class="nps-heredar">{{ 'nps.encuestaEditor.lasEncuestasLasCambianLos' | translate }}</span>
   </p>
 
   <div class="ed-cuerpo" *ngIf="!cargando && !error" [formGroup]="form">
     <div class="ed-columna">
       <!-- ── Datos ─────────────────────────────────────── -->
       <section class="cfg-card ed-bloque" *ngIf="!encuesta?.soloLectura">
-        <h3 class="ed-bloque__titulo">Datos</h3>
+        <h3 class="ed-bloque__titulo">{{ 'nps.encuestaEditor.datos' | translate }}</h3>
 
         <label class="nps-campo ed-campo">
-          <span class="nps-campo__label">Nombre interno</span>
-          <input class="nps-input" formControlName="nombre" maxlength="80" placeholder="Ej.: Después de la entrega" [class.is-error]="invalido(['nombre'])" />
-          <span class="nps-error" *ngIf="invalido(['nombre'])">Ponle un nombre para reconocerla. Tus clientes no lo ven.</span>
+          <span class="nps-campo__label">{{ 'nps.encuestaEditor.nombreInterno' | translate }}</span>
+          <input class="nps-input" formControlName="nombre" maxlength="80" [placeholder]="'nps.encuestaEditor.ejDespuesDeLaEntrega' | translate" [class.is-error]="invalido(['nombre'])" />
+          <span class="nps-error" *ngIf="invalido(['nombre'])">{{ 'nps.encuestaEditor.ponleUnNombreParaReconocerla' | translate }}</span>
         </label>
 
         <fieldset class="ed-grupo">
-          <legend class="nps-campo__label">Cuándo se pregunta</legend>
+          <legend class="nps-campo__label">{{ 'nps.encuestaEditor.cuandoSePregunta' | translate }}</legend>
           <div class="ed-canales">
             <label class="ed-canal" [class.is-activo]="canal === 'entrega'" [class.is-bloqueado]="!canalEditable">
               <input type="radio" class="ed-radio" formControlName="canal" value="entrega" />
               <span class="ed-canal__icono" aria-hidden="true"><i class="pi pi-truck"></i></span>
               <span class="ed-canal__textos">
-                <span class="ed-canal__nombre">Después de la entrega</span>
-                <span class="ed-canal__ayuda">Le llega por correo al comprador unos días después de que su pedido queda Entregado.</span>
+                <span class="ed-canal__nombre">{{ 'nps.encuestaEditor.despuesDeLaEntrega' | translate }}</span>
+                <span class="ed-canal__ayuda">{{ 'nps.encuestaEditor.leLlegaPorCorreoAl' | translate }}</span>
               </span>
             </label>
             <label class="ed-canal" [class.is-activo]="canal === 'enlace'" [class.is-bloqueado]="!canalEditable">
               <input type="radio" class="ed-radio" formControlName="canal" value="enlace" />
               <span class="ed-canal__icono" aria-hidden="true"><i class="pi pi-qrcode"></i></span>
               <span class="ed-canal__textos">
-                <span class="ed-canal__nombre">Enlace y QR</span>
-                <span class="ed-canal__ayuda">Una dirección fija y su QR para tu tienda, tus redes o el mostrador.</span>
+                <span class="ed-canal__nombre">{{ 'nps.encuestaEditor.enlaceYQr' | translate }}</span>
+                <span class="ed-canal__ayuda">{{ 'nps.encuestaEditor.unaDireccionFijaYSu' | translate }}</span>
               </span>
             </label>
           </div>
-          <span class="nps-ayuda" *ngIf="!canalEditable && !soloLectura">El canal no se cambia después de crearla. Si necesitas otro, crea una encuesta nueva.</span>
+          <span class="nps-ayuda" *ngIf="!canalEditable && !soloLectura">{{ 'nps.encuestaEditor.elCanalNoSeCambia' | translate }}</span>
         </fieldset>
 
         <label class="nps-campo ed-campo ed-campo--corto" *ngIf="canal === 'entrega'">
-          <span class="nps-campo__label">Días después de la entrega</span>
+          <span class="nps-campo__label">{{ 'nps.encuestaEditor.diasDespuesDeLaEntrega' | translate }}</span>
           <input class="nps-input" type="number" inputmode="numeric" min="1" max="30" formControlName="diasEspera" [class.is-error]="invalido(['diasEspera'])" />
-          <span class="nps-error" *ngIf="invalido(['diasEspera'])">Escribe un número de 1 a 30.</span>
-          <span class="nps-ayuda" *ngIf="!invalido(['diasEspera'])">El correo sale a las 9:00 a. m., hora de Colombia.</span>
+          <span class="nps-error" *ngIf="invalido(['diasEspera'])">{{ 'nps.encuestaEditor.escribeUnNumeroDe1' | translate }}</span>
+          <span class="nps-ayuda" *ngIf="!invalido(['diasEspera'])">{{ 'nps.encuestaEditor.elCorreoSaleALas' | translate }}</span>
         </label>
 
         <label class="nps-campo ed-campo">
-          <span class="nps-campo__label">Responsable de los clientes inconformes</span>
+          <span class="nps-campo__label">{{ 'nps.encuestaEditor.responsableDeLosClientesInconformes' | translate }}</span>
           <select class="nps-select ed-select" formControlName="responsableEmail" [class.is-error]="intentoActivar && faltaResponsable">
-            <option value="">Escoge una persona</option>
+            <option value="">{{ 'nps.encuestaEditor.escogeUnaPersona' | translate }}</option>
             <option *ngFor="let u of responsables" [value]="u.email">{{ u.nombre || u.email }}{{ u.rol ? ' · ' + u.rol : '' }}</option>
           </select>
-          <span class="nps-error" *ngIf="intentoActivar && faltaResponsable">Sin responsable la encuesta no se puede activar.</span>
-          <span class="nps-ayuda" *ngIf="!(intentoActivar && faltaResponsable)">Le llega un correo con cada nota de 0 a 6 para que contacte al cliente.</span>
+          <span class="nps-error" *ngIf="intentoActivar && faltaResponsable">{{ 'nps.encuestaEditor.sinResponsableLaEncuestaNo' | translate }}</span>
+          <span class="nps-ayuda" *ngIf="!(intentoActivar && faltaResponsable)">{{ 'nps.encuestaEditor.leLlegaUnCorreoCon' | translate }}</span>
         </label>
 
         <!-- Dirección y QR de la encuesta de enlace (existen al guardarla) -->
         <div class="ed-enlace" *ngIf="canal === 'enlace'">
           <ng-container *ngIf="enlace as url; else sinEnlace">
-            <img class="ed-enlace__qr" *ngIf="qrImagen" [src]="qrImagen" alt="Código QR de la encuesta" width="120" height="120" />
+            <img class="ed-enlace__qr" *ngIf="qrImagen" [src]="qrImagen" [alt]="'nps.encuestaEditor.codigoQrDeLaEncuesta' | translate" width="120" height="120" />
             <div class="ed-enlace__datos">
-              <span class="nps-campo__label">Dirección de la encuesta</span>
+              <span class="nps-campo__label">{{ 'nps.encuestaEditor.direccionDeLaEncuesta' | translate }}</span>
               <span class="ed-enlace__url">{{ url }}</span>
               <div class="ed-enlace__acciones">
-                <button type="button" class="cfg-btn cfg-btn--sec" (click)="copiarEnlace()"><i class="pi pi-copy" aria-hidden="true"></i><span>Copiar</span></button>
-                <button type="button" class="cfg-btn cfg-btn--sec" (click)="descargarQr()"><i class="pi pi-download" aria-hidden="true"></i><span>Descargar QR</span></button>
+                <button type="button" class="cfg-btn cfg-btn--sec" (click)="copiarEnlace()"><i class="pi pi-copy" aria-hidden="true"></i><span>{{ 'nps.encuestaEditor.copiar' | translate }}</span></button>
+                <button type="button" class="cfg-btn cfg-btn--sec" (click)="descargarQr()"><i class="pi pi-download" aria-hidden="true"></i><span>{{ 'nps.encuestaEditor.descargarQr' | translate }}</span></button>
               </div>
-              <span class="nps-ayuda" *ngIf="encuesta?.estado !== 'activa'">Mientras no esté activa, quien abra el enlace verá que la encuesta no está recibiendo respuestas.</span>
+              <span class="nps-ayuda" *ngIf="encuesta?.estado !== 'activa'">{{ 'nps.encuestaEditor.mientrasNoEsteActivaQuien' | translate }}</span>
             </div>
           </ng-container>
           <ng-template #sinEnlace>
-            <span class="nps-ayuda">La dirección y el QR aparecen al guardar la encuesta.</span>
+            <span class="nps-ayuda">{{ 'nps.encuestaEditor.laDireccionYElQr' | translate }}</span>
           </ng-template>
         </div>
       </section>
 
       <!-- ── Preguntas ─────────────────────────────────── -->
       <section class="cfg-card ed-bloque">
-        <h3 class="ed-bloque__titulo">Preguntas</h3>
+        <h3 class="ed-bloque__titulo">{{ 'nps.encuestaEditor.preguntas' | translate }}</h3>
 
         <label class="nps-campo ed-campo">
-          <span class="nps-campo__label">Pregunta del 0 al 10</span>
+          <span class="nps-campo__label">{{ 'nps.encuestaEditor.preguntaDel0Al10' | translate }}</span>
           <textarea class="nps-textarea ed-textarea" rows="2" formControlName="nps" [maxlength]="MAX_PREGUNTA" [class.is-error]="invalido(['nps'])"></textarea>
-          <span class="nps-error" *ngIf="invalido(['nps'])">La pregunta del 0 al 10 es obligatoria.</span>
-          <span class="nps-ayuda" *ngIf="!invalido(['nps'])">Escribe {{ '{' }}comercio{{ '}' }} donde quieras el nombre de tu tienda: "{{ comercio }}".</span>
+          <span class="nps-error" *ngIf="invalido(['nps'])">{{ 'nps.encuestaEditor.laPreguntaDel0Al' | translate }}</span>
+          <span class="nps-ayuda" *ngIf="!invalido(['nps'])">{{ 'nps.encuestaEditor.escribeComercioDondeQuierasEl' | translate:{p: ('{'), p2: ('}'), comercio: comercio} }}</span>
         </label>
 
         <div class="ed-grupo" formGroupName="abiertas">
-          <span class="nps-campo__label">Pregunta abierta según la nota</span>
+          <span class="nps-campo__label">{{ 'nps.encuestaEditor.preguntaAbiertaSegunLaNota' | translate }}</span>
           <label class="nps-campo ed-campo" *ngFor="let s of segmentos">
-            <span class="ed-subetiqueta" [ngClass]="'is-' + s.key">{{ s.etiqueta }}</span>
+            <span class="ed-subetiqueta" [ngClass]="'is-' + s.key">{{ s.etiqueta | translate }}</span>
             <input class="nps-input" [formControlName]="s.key" [maxlength]="MAX_PREGUNTA" [class.is-error]="invalido(['abiertas', s.key])" />
-            <span class="nps-error" *ngIf="invalido(['abiertas', s.key])">Escribe la pregunta para este grupo.</span>
+            <span class="nps-error" *ngIf="invalido(['abiertas', s.key])">{{ 'nps.encuestaEditor.escribeLaPreguntaParaEste' | translate }}</span>
           </label>
         </div>
 
         <div class="ed-grupo" formArrayName="adicionales">
           <div class="ed-grupo__cabeza">
-            <span class="nps-campo__label">Preguntas adicionales (opcionales)</span>
+            <span class="nps-campo__label">{{ 'nps.encuestaEditor.preguntasAdicionalesOpcionales' | translate }}</span>
             <span class="nps-muted">{{ adicionales.length }}/{{ MAX_ADICIONALES }}</span>
           </div>
 
           <div class="ed-adicional" *ngFor="let a of adicionales.controls; let i = index; trackBy: porIndice" [formGroupName]="i">
             <div class="ed-adicional__cabeza">
-              <div class="ed-tipos" role="group" [attr.aria-label]="'Tipo de la pregunta ' + (i + 1)">
-                <button type="button" class="ed-tipo" [class.is-activo]="a.get('tipo')?.value === 'opcion'" [attr.aria-pressed]="a.get('tipo')?.value === 'opcion'" (click)="cambiarTipo(i, 'opcion')" [disabled]="soloLectura">Opción única</button>
-                <button type="button" class="ed-tipo" [class.is-activo]="a.get('tipo')?.value === 'texto'" [attr.aria-pressed]="a.get('tipo')?.value === 'texto'" (click)="cambiarTipo(i, 'texto')" [disabled]="soloLectura">Texto corto</button>
+              <div class="ed-tipos" role="group" [attr.aria-label]="('nps.encuestaEditor.tipoDeLaPreguntaN' | translate:{n: (i + 1)})">
+                <button type="button" class="ed-tipo" [class.is-activo]="a.get('tipo')?.value === 'opcion'" [attr.aria-pressed]="a.get('tipo')?.value === 'opcion'" (click)="cambiarTipo(i, 'opcion')" [disabled]="soloLectura">{{ 'nps.encuestaEditor.opcionUnica' | translate }}</button>
+                <button type="button" class="ed-tipo" [class.is-activo]="a.get('tipo')?.value === 'texto'" [attr.aria-pressed]="a.get('tipo')?.value === 'texto'" (click)="cambiarTipo(i, 'texto')" [disabled]="soloLectura">{{ 'nps.encuestaEditor.textoCorto' | translate }}</button>
               </div>
-              <button type="button" class="ed-quitar" *ngIf="!soloLectura" (click)="quitarAdicional(i)" [attr.aria-label]="'Quitar la pregunta ' + (i + 1)"><i class="pi pi-times" aria-hidden="true"></i></button>
+              <button type="button" class="ed-quitar" *ngIf="!soloLectura" (click)="quitarAdicional(i)" [attr.aria-label]="('nps.encuestaEditor.quitarLaPreguntaN' | translate:{n: (i + 1)})"><i class="pi pi-times" aria-hidden="true"></i></button>
             </div>
 
-            <input class="nps-input" formControlName="texto" [maxlength]="MAX_PREGUNTA" placeholder="Ej.: ¿Cómo nos conociste?" [class.is-error]="invalido(['adicionales', i, 'texto'])" [attr.aria-label]="'Texto de la pregunta ' + (i + 1)" />
-            <span class="nps-error" *ngIf="invalido(['adicionales', i, 'texto'])">Escribe la pregunta.</span>
+            <input class="nps-input" formControlName="texto" [maxlength]="MAX_PREGUNTA" [placeholder]="'nps.encuestaEditor.ejComoNosConociste' | translate" [class.is-error]="invalido(['adicionales', i, 'texto'])" [attr.aria-label]="('nps.encuestaEditor.textoDeLaPreguntaN' | translate:{n: (i + 1)})" />
+            <span class="nps-error" *ngIf="invalido(['adicionales', i, 'texto'])">{{ 'nps.encuestaEditor.escribeLaPregunta' | translate }}</span>
 
             <div class="ed-opciones" *ngIf="a.get('tipo')?.value === 'opcion'" formArrayName="opciones">
               <div class="ed-opcion" *ngFor="let o of opciones(i).controls; let j = index; trackBy: porIndice">
                 <span class="ed-opcion__punto" aria-hidden="true"></span>
-                <input class="nps-input" [formControlName]="j" [maxlength]="MAX_OPCION" [placeholder]="'Opción ' + (j + 1)" [class.is-error]="invalido(['adicionales', i, 'opciones', j])" [attr.aria-label]="'Opción ' + (j + 1) + ' de la pregunta ' + (i + 1)" />
-                <button type="button" class="ed-quitar" *ngIf="!soloLectura && opciones(i).length > 2" (click)="quitarOpcion(i, j)" [attr.aria-label]="'Quitar la opción ' + (j + 1)"><i class="pi pi-times" aria-hidden="true"></i></button>
+                <input class="nps-input" [formControlName]="j" [maxlength]="MAX_OPCION" [placeholder]="('nps.encuestaEditor.opcionN' | translate:{n: (j + 1)})" [class.is-error]="invalido(['adicionales', i, 'opciones', j])" [attr.aria-label]="('nps.encuestaEditor.opcionNDeLaPreguntaM' | translate:{j: (j + 1), i: (i + 1)})" />
+                <button type="button" class="ed-quitar" *ngIf="!soloLectura && opciones(i).length > 2" (click)="quitarOpcion(i, j)" [attr.aria-label]="('nps.encuestaEditor.quitarLaOpcionN' | translate:{n: (j + 1)})"><i class="pi pi-times" aria-hidden="true"></i></button>
               </div>
               <button type="button" class="ed-agregar ed-agregar--chico" *ngIf="!soloLectura && opciones(i).length < MAX_OPCIONES" (click)="agregarOpcion(i)">
-                <i class="pi pi-plus" aria-hidden="true"></i><span class="nps-heredar">Agregar opción</span>
+                <i class="pi pi-plus" aria-hidden="true"></i><span class="nps-heredar">{{ 'nps.encuestaEditor.agregarOpcion' | translate }}</span>
               </button>
             </div>
-            <span class="nps-ayuda" *ngIf="a.get('tipo')?.value === 'texto'">El cliente responde con hasta 300 caracteres.</span>
+            <span class="nps-ayuda" *ngIf="a.get('tipo')?.value === 'texto'">{{ 'nps.encuestaEditor.elClienteRespondeConHasta' | translate }}</span>
           </div>
 
           <button type="button" class="ed-agregar" *ngIf="!soloLectura && adicionales.length < MAX_ADICIONALES" (click)="agregarAdicional()">
-            <i class="pi pi-plus" aria-hidden="true"></i><span class="nps-heredar">Agregar pregunta</span>
+            <i class="pi pi-plus" aria-hidden="true"></i><span class="nps-heredar">{{ 'nps.encuestaEditor.agregarPregunta' | translate }}</span>
           </button>
-          <span class="nps-muted" *ngIf="!adicionales.length && soloLectura">Sin preguntas adicionales.</span>
+          <span class="nps-muted" *ngIf="!adicionales.length && soloLectura">{{ 'nps.encuestaEditor.sinPreguntasAdicionales' | translate }}</span>
         </div>
       </section>
     </div>
 
     <!-- ── Vista previa ──────────────────────────────────── -->
-    <aside class="ed-vista" aria-label="Vista previa de la encuesta">
-      <span class="nps-campo__label">Así la ve tu cliente</span>
+    <aside class="ed-vista" [attr.aria-label]="'nps.encuestaEditor.vistaPreviaDeLaEncuesta' | translate">
+      <span class="nps-campo__label">{{ 'nps.encuestaEditor.asiLaVeTuCliente' | translate }}</span>
       <div class="ed-vista__tarjeta">
-        <p class="ed-vista__pregunta" id="ed-vista-pregunta">{{ vista(valorNps) || 'Escribe la pregunta del 0 al 10' }}</p>
+        <p class="ed-vista__pregunta" id="ed-vista-pregunta">{{ vista(valorNps) || ('nps.encuestaEditor.escribeLaPreguntaDel0' | translate) }}</p>
         <app-escala-nps [valor]="notaVista" etiquetadoPor="ed-vista-pregunta" (cambio)="notaVista = $event"></app-escala-nps>
 
         <ng-container *ngIf="notaVista !== null; else tocaNota">
           <p class="ed-vista__abierta">{{ vista(abiertaVista) }}</p>
-          <div class="ed-vista__caja">Escribe aquí (opcional)</div>
+          <div class="ed-vista__caja">{{ 'nps.encuestaEditor.escribeAquiOpcional' | translate }}</div>
 
           <div class="ed-vista__adicional" *ngFor="let a of adicionales.controls">
-            <p class="ed-vista__texto">{{ a.get('texto')?.value || 'Pregunta adicional' }}</p>
+            <p class="ed-vista__texto">{{ a.get('texto')?.value || ('nps.encuestaEditor.preguntaAdicional' | translate) }}</p>
             <div class="ed-vista__opciones" *ngIf="a.get('tipo')?.value === 'opcion'">
-              <span class="ed-vista__opcion" *ngFor="let o of a.get('opciones')?.value">{{ o || 'Opción' }}</span>
+              <span class="ed-vista__opcion" *ngFor="let o of a.get('opciones')?.value">{{ o || ('nps.encuestaEditor.opcion' | translate) }}</span>
             </div>
-            <div class="ed-vista__caja ed-vista__caja--corta" *ngIf="a.get('tipo')?.value === 'texto'">Respuesta corta</div>
+            <div class="ed-vista__caja ed-vista__caja--corta" *ngIf="a.get('tipo')?.value === 'texto'">{{ 'nps.encuestaEditor.respuestaCorta' | translate }}</div>
           </div>
 
           <div class="ed-vista__adicional" *ngIf="canal === 'enlace'">
-            <p class="ed-vista__texto">¿Quieres que te contactemos? (opcional)</p>
-            <div class="ed-vista__caja ed-vista__caja--corta">Correo o celular</div>
+            <p class="ed-vista__texto">{{ 'nps.encuestaEditor.quieresQueTeContactemosOpcional' | translate }}</p>
+            <div class="ed-vista__caja ed-vista__caja--corta">{{ 'nps.encuestaEditor.correoOCelular' | translate }}</div>
           </div>
-          <span class="ed-vista__boton">Enviar</span>
+          <span class="ed-vista__boton">{{ 'nps.encuestaEditor.enviar' | translate }}</span>
         </ng-container>
         <ng-template #tocaNota>
-          <p class="ed-vista__pista">Toca una nota para ver la pregunta que sigue.</p>
+          <p class="ed-vista__pista">{{ 'nps.encuestaEditor.tocaUnaNotaParaVer' | translate }}</p>
         </ng-template>
       </div>
     </aside>

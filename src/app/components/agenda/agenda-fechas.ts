@@ -10,13 +10,13 @@ const DIAS_LARGOS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'vier
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
 export const NOMBRES_DIAS: { clave: string; corto: string; largo: string }[] = [
-  { clave: '1', corto: 'Lun', largo: 'Lunes' },
-  { clave: '2', corto: 'Mar', largo: 'Martes' },
-  { clave: '3', corto: 'Mié', largo: 'Miércoles' },
-  { clave: '4', corto: 'Jue', largo: 'Jueves' },
-  { clave: '5', corto: 'Vie', largo: 'Viernes' },
-  { clave: '6', corto: 'Sáb', largo: 'Sábado' },
-  { clave: '7', corto: 'Dom', largo: 'Domingo' },
+  { clave: '1', corto: 'agenda.dias.lunesCorto', largo: 'agenda.dias.lunes' },
+  { clave: '2', corto: 'agenda.dias.martesCorto', largo: 'agenda.dias.martes' },
+  { clave: '3', corto: 'agenda.dias.miercolesCorto', largo: 'agenda.dias.miercoles' },
+  { clave: '4', corto: 'agenda.dias.juevesCorto', largo: 'agenda.dias.jueves' },
+  { clave: '5', corto: 'agenda.dias.viernesCorto', largo: 'agenda.dias.viernes' },
+  { clave: '6', corto: 'agenda.dias.sabadoCorto', largo: 'agenda.dias.sabado' },
+  { clave: '7', corto: 'agenda.dias.domingoCorto', largo: 'agenda.dias.domingo' },
 ];
 
 export function esFecha(fecha: string | null | undefined): boolean {

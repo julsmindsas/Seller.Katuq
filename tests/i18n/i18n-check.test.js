@@ -399,7 +399,7 @@ test('configuración del repo: lista permitida, prefijos dinámicos, módulos ce
   }
 });
 
-test('package.json: i18n:check y test:i18n con las catorce pruebas, sin engancharse a prebuild ni predeploy', () => {
+test('package.json: i18n:check y test:i18n con las quince pruebas, sin engancharse a prebuild ni predeploy', () => {
   const { scripts } = JSON.parse(fs.readFileSync(path.join(RAIZ, 'package.json'), 'utf8'));
   assert.equal(scripts['i18n:check'], 'node scripts/i18n-check.js');
   assert.equal(
@@ -407,7 +407,7 @@ test('package.json: i18n:check y test:i18n con las catorce pruebas, sin engancha
     'node --test tests/i18n/app-language.test.js tests/i18n/primeng-i18n.test.js tests/i18n/i18n-check.test.js' +
       ' tests/i18n/diccionarios.test.js tests/i18n/ortografia-claves.test.js tests/i18n/aleman.test.js' +
       ' tests/i18n/menu-titulos.test.js tests/i18n/shell-cierre.test.js tests/i18n/upgrade-modal-caracterizacion.test.js' +
-      ' tests/i18n/publicas-cierre.test.js tests/i18n/crm-cierre.test.js tests/i18n/integraciones-cierre.test.js tests/i18n/onboarding-cierre.test.js tests/i18n/facturacion-caracterizacion.test.js',
+      ' tests/i18n/publicas-cierre.test.js tests/i18n/crm-cierre.test.js tests/i18n/integraciones-cierre.test.js tests/i18n/onboarding-cierre.test.js tests/i18n/resto3-cierre.test.js tests/i18n/facturacion-caracterizacion.test.js',
   );
   for (const gancho of ['prebuild', 'prebuild:prod', 'predeploy', 'prerelease']) {
     assert.doesNotMatch(scripts[gancho] || '', /i18n/, gancho);

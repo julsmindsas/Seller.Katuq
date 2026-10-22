@@ -4,29 +4,29 @@
     <div class="nps-barra">
       <div class="nps-filtros">
         <label class="nps-campo">
-          <span class="nps-campo__label">Encuesta</span>
+          <span class="nps-campo__label">{{ 'nps.encuestaEditor.encuesta' | translate }}</span>
           <select class="nps-select" name="encuesta" [(ngModel)]="encuestaId" (ngModelChange)="cambiarEncuesta()" [disabled]="cargando">
-            <option value="">Todas las encuestas</option>
+            <option value="">{{ 'nps.resultados.todasLasEncuestas' | translate }}</option>
             <option *ngFor="let e of encuestas" [value]="e.id">{{ e.nombre }}</option>
           </select>
         </label>
         <label class="nps-campo">
-          <span class="nps-campo__label">Canal</span>
+          <span class="nps-campo__label">{{ 'nps.resultados.canal' | translate }}</span>
           <select class="nps-select" name="canal" [(ngModel)]="canal" (ngModelChange)="cambiarCanal()" [disabled]="cargando">
-            <option value="">Todos los canales</option>
-            <option *ngFor="let c of canales" [value]="c">{{ NOMBRE_CANAL[c] }}</option>
+            <option value="">{{ 'nps.resultados.todosLosCanales' | translate }}</option>
+            <option *ngFor="let c of canales" [value]="c">{{ NOMBRE_CANAL[c] | translate }}</option>
           </select>
         </label>
         <label class="nps-interruptor" *ngIf="esJulsmind">
           <input type="checkbox" role="switch" class="nps-interruptor__input" name="pruebas"
                  [(ngModel)]="conPruebas" (ngModelChange)="cargar()" [disabled]="cargando" />
           <span class="nps-interruptor__pista" aria-hidden="true"></span>
-          <span class="nps-interruptor__texto">Incluir respuestas de prueba</span>
+          <span class="nps-interruptor__texto">{{ 'nps.resultados.incluirRespuestasDePrueba' | translate }}</span>
         </label>
       </div>
       <button type="button" class="cfg-btn cfg-btn--sec" (click)="cargar()" [disabled]="cargando">
         <i class="pi pi-refresh" [class.pi-spin]="cargando" aria-hidden="true"></i>
-        <span>Actualizar</span>
+        <span>{{ 'nps.encuestasLista.actualizar' | translate }}</span>
       </button>
     </div>
   </section>
@@ -39,51 +39,51 @@
   <section class="cfg-card" *ngIf="cargando && !tablero">
     <div class="cfg-vacio">
       <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-spin pi-spinner"></i></span>
-      <p class="cfg-vacio__titulo">Calculando los resultados…</p>
+      <p class="cfg-vacio__titulo">{{ 'nps.resultados.calculandoLosResultados' | translate }}</p>
     </div>
   </section>
 
   <ng-container *ngIf="tablero as t">
     <p class="cfg-aviso" *ngIf="t.conPruebas">
       <i class="pi pi-info-circle" aria-hidden="true"></i>
-      <span class="nps-heredar">Incluye las respuestas de prueba de Julsmind y FLORECER (marcadas como "Prueba"). Sirven para revisar la pantalla, no para decidir.</span>
+      <span class="nps-heredar">{{ 'nps.resultados.incluyeLasRespuestasDePrueba' | translate }}</span>
     </p>
 
     <!-- ── Resumen ───────────────────────────────────── -->
     <div class="res-resumen">
       <section class="cfg-card res-nps" aria-labelledby="res-nps-titulo">
-        <span class="cfg-label" id="res-nps-titulo">NPS · últimos 90 días</span>
+        <span class="cfg-label" id="res-nps-titulo">{{ 'nps.resultados.npsUltimos90Dias' | translate }}</span>
         <ng-container *ngIf="t.nps !== null; else sinRespuestas">
           <div class="res-nps__fila">
             <span class="res-nps__valor" [ngClass]="tonoNps(t.nps)">{{ t.nps }}</span>
-            <span class="res-nps__respuestas">{{ t.respuestas | number }} {{ t.respuestas === 1 ? 'respuesta' : 'respuestas' }}</span>
+            <span class="res-nps__respuestas">{{ t.respuestas | number }} {{ t.respuestas === 1 ? ('nps.resultados.respuesta' | translate) : ('nps.resultados.respuestas' | translate) }}</span>
           </div>
-          <span class="nps-muted">Va de −100 a 100: el porcentaje de promotores menos el de detractores.</span>
+          <span class="nps-muted">{{ 'nps.resultados.vaDe100A100' | translate }}</span>
           <p class="cfg-aviso cfg-aviso--warn res-nps__aviso" *ngIf="t.respuestas < t.minimoConfiable">
             <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
-            <span class="nps-heredar">Pocas respuestas: con menos de {{ t.minimoConfiable }} la nota todavía se mueve mucho.</span>
+            <span class="nps-heredar">{{ 'nps.resultados.pocasRespuestasConMenosDe' | translate:{minimoConfiable: t.minimoConfiable} }}</span>
           </p>
         </ng-container>
         <ng-template #sinRespuestas>
           <div class="cfg-vacio res-vacio">
             <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-comments"></i></span>
-            <p class="cfg-vacio__titulo">Sin respuestas todavía</p>
-            <p class="cfg-vacio__texto">Cuando alguien responda una encuesta, el NPS aparece aquí.</p>
+            <p class="cfg-vacio__titulo">{{ 'nps.resultados.sinRespuestasTodavia' | translate }}</p>
+            <p class="cfg-vacio__texto">{{ 'nps.resultados.cuandoAlguienRespondaUnaEncuesta' | translate }}</p>
           </div>
         </ng-template>
       </section>
 
       <section class="cfg-card res-stat" aria-labelledby="res-tasa-titulo">
-        <span class="cfg-label" id="res-tasa-titulo">Tasa de respuesta</span>
+        <span class="cfg-label" id="res-tasa-titulo">{{ 'nps.resultados.tasaDeRespuesta' | translate }}</span>
         <span class="res-stat__valor">{{ t.tasaRespuesta !== null ? t.tasaRespuesta + '%' : '—' }}</span>
         <span class="nps-muted" *ngIf="t.mostradas; else nadie">
-          De {{ t.mostradas | number }} {{ t.mostradas === 1 ? 'encuesta enviada o mostrada' : 'encuestas enviadas o mostradas' }} en 90 días.
+          {{ 'nps.resultados.deEn90Dias' | translate:{mostradas: (t.mostradas | number), encuestaEnviadaOMostrada: (t.mostradas === 1 ? ('nps.resultados.encuestaEnviadaOMostrada' | translate) : ('nps.resultados.encuestasEnviadasOMostradas' | translate))} }}
         </span>
-        <ng-template #nadie><span class="nps-muted">Todavía no se ha enviado ninguna encuesta.</span></ng-template>
+        <ng-template #nadie><span class="nps-muted">{{ 'nps.resultados.todaviaNoSeHaEnviado' | translate }}</span></ng-template>
       </section>
 
       <section class="cfg-card res-stat" aria-labelledby="res-reparto-titulo">
-        <span class="cfg-label" id="res-reparto-titulo">Reparto</span>
+        <span class="cfg-label" id="res-reparto-titulo">{{ 'nps.resultados.reparto' | translate }}</span>
         <div class="res-barra" *ngIf="totalReparto; else repartoVacio" role="img" [attr.aria-label]="textoReparto">
           <span *ngFor="let s of SEGMENTOS" class="res-barra__tramo" [ngClass]="'is-' + s" [style.width.%]="ancho(s)"></span>
         </div>
@@ -91,7 +91,7 @@
         <ul class="res-leyenda">
           <li class="res-leyenda__item" *ngFor="let s of SEGMENTOS">
             <span class="res-punto" [ngClass]="'is-' + s" aria-hidden="true"></span>
-            <span class="res-leyenda__nombre">{{ NOMBRE_PLURAL[s] }}</span>
+            <span class="res-leyenda__nombre">{{ NOMBRE_PLURAL[s] | translate }}</span>
             <span class="res-leyenda__valor">{{ pct(s) }}% · {{ t.reparto[s] | number }}</span>
           </li>
         </ul>
@@ -101,21 +101,21 @@
     <!-- ── Gráficas (widgets del constructor de reportes) ── -->
     <div class="res-graficas">
       <section class="cfg-card" aria-labelledby="res-tendencia-titulo">
-        <h2 class="cfg-card__titulo res-card-titulo" id="res-tendencia-titulo">Tendencia mensual</h2>
-        <p class="res-card-sub">NPS de cada mes, últimos 6 meses.</p>
+        <h2 class="cfg-card__titulo res-card-titulo" id="res-tendencia-titulo">{{ 'nps.resultados.tendenciaMensual' | translate }}</h2>
+        <p class="res-card-sub">{{ 'nps.resultados.npsDeCadaMesUltimos' | translate }}</p>
         <app-viz-chart class="res-grafica" [result]="t.tendencia" chartType="line" [colors]="COLOR_LINEA"></app-viz-chart>
       </section>
       <section class="cfg-card" aria-labelledby="res-torta-titulo">
-        <h2 class="cfg-card__titulo res-card-titulo" id="res-torta-titulo">Reparto de respuestas</h2>
-        <p class="res-card-sub">Últimos 90 días.</p>
+        <h2 class="cfg-card__titulo res-card-titulo" id="res-torta-titulo">{{ 'nps.resultados.repartoDeRespuestas' | translate }}</h2>
+        <p class="res-card-sub">{{ 'nps.resultados.ultimos90Dias' | translate }}</p>
         <app-viz-chart class="res-grafica" [result]="t.graficaReparto" chartType="pie" [colors]="coloresReparto" [compacta]="true"></app-viz-chart>
       </section>
     </div>
 
     <!-- ── Preguntas adicionales (solo al filtrar por encuesta) ── -->
     <section class="cfg-card" *ngIf="t.adicionales?.length" aria-labelledby="res-adicionales-titulo">
-      <h2 class="cfg-card__titulo res-card-titulo" id="res-adicionales-titulo">Preguntas adicionales</h2>
-      <p class="res-card-sub">Lo que respondieron en "{{ encuestaElegida?.nombre }}", últimos 90 días.</p>
+      <h2 class="cfg-card__titulo res-card-titulo" id="res-adicionales-titulo">{{ 'nps.resultados.preguntasAdicionales' | translate }}</h2>
+      <p class="res-card-sub">{{ 'nps.resultados.loQueRespondieronEnUltimos' | translate:{nombre: encuestaElegida?.nombre} }}</p>
       <div class="res-adicionales">
         <div class="res-adicional" *ngFor="let a of t.adicionales">
           <p class="res-adicional__pregunta">{{ a.texto }}</p>
@@ -130,7 +130,7 @@
                 <div class="res-opcion__barra" aria-hidden="true"><span class="res-opcion__relleno" [style.width.%]="pctOpcion(a, o.n)"></span></div>
               </li>
             </ul>
-            <ng-template #sinOpciones><p class="nps-muted">Nadie la ha respondido todavía.</p></ng-template>
+            <ng-template #sinOpciones><p class="nps-muted">{{ 'nps.resultados.nadieLaHaRespondidoTodavia' | translate }}</p></ng-template>
           </ng-container>
 
           <ng-container *ngIf="a.tipo === 'texto'">
@@ -141,9 +141,9 @@
               </li>
             </ul>
             <button type="button" class="res-mas-textos" *ngIf="(a.respuestas?.length || 0) > 5" (click)="alternarTextos(a.id)">
-              {{ textosAbiertos.has(a.id) ? 'Ver menos' : 'Ver las ' + a.respuestas?.length + ' respuestas' }}
+              {{ textosAbiertos.has(a.id) ? ('nps.resultados.verMenos' | translate) : ('nps.resultados.verLasNRespuestas' | translate:{n: a.respuestas?.length}) }}
             </button>
-            <ng-template #sinTextos><p class="nps-muted">Nadie la ha respondido todavía.</p></ng-template>
+            <ng-template #sinTextos><p class="nps-muted">{{ 'nps.resultados.nadieLaHaRespondidoTodavia' | translate }}</p></ng-template>
           </ng-container>
         </div>
       </div>
@@ -155,12 +155,12 @@
     <!-- ── Respuestas y comentarios ─────────────────────── -->
     <section class="cfg-card" aria-labelledby="res-lista-titulo">
       <div class="res-lista__cabeza">
-        <h2 class="cfg-card__titulo res-card-titulo" id="res-lista-titulo">Respuestas y comentarios</h2>
-        <span class="res-contador">{{ filtrados.length | number }} de {{ t.comentarios.length | number }}</span>
+        <h2 class="cfg-card__titulo res-card-titulo" id="res-lista-titulo">{{ 'nps.resultados.respuestasYComentarios' | translate }}</h2>
+        <span class="res-contador">{{ filtrados.length | number }} {{ 'nps.resultados.de' | translate:{length: (t.comentarios.length | number)} }}</span>
       </div>
 
       <div class="nps-filtros res-filtros">
-        <div class="res-segmentado" role="group" aria-label="Tipo de respuesta">
+        <div class="res-segmentado" role="group" [attr.aria-label]="'nps.resultados.tipoDeRespuesta' | translate">
           <button
             type="button"
             *ngFor="let f of filtrosSegmento"
@@ -169,43 +169,43 @@
             [attr.aria-pressed]="filtroSegmento === f.key"
             (click)="filtrarSegmento(f.key)"
           >
-            <span class="nps-heredar">{{ f.label }}</span>
+            <span class="nps-heredar">{{ f.label | translate }}</span>
             <span class="res-segmentado__n">{{ conteo[f.key] | number }}</span>
           </button>
         </div>
         <label class="nps-campo nps-campo--linea">
-          <span class="nps-campo__label">Periodo</span>
+          <span class="nps-campo__label">{{ 'nps.resultados.periodo' | translate }}</span>
           <select class="nps-select" name="periodo" [(ngModel)]="periodo" (ngModelChange)="aplicarFiltros()">
-            <option *ngFor="let p of periodos" [ngValue]="p.dias">{{ p.label }}</option>
+            <option *ngFor="let p of periodos" [ngValue]="p.dias">{{ p.label | translate }}</option>
           </select>
         </label>
         <label class="nps-check">
           <input type="checkbox" name="soloConComentario" [(ngModel)]="soloConComentario" (ngModelChange)="aplicarFiltros()" />
-          <span class="nps-check__texto">Solo con comentario</span>
+          <span class="nps-check__texto">{{ 'nps.resultados.soloConComentario' | translate }}</span>
         </label>
       </div>
 
       <ul class="nps-lista" *ngIf="filtrados.length; else listaVacia">
         <li class="nps-fila" *ngFor="let c of filtrados | slice: 0:visibles; trackBy: porId">
           <div class="nps-nota" [ngClass]="'is-' + c.segmento">
-            <span class="nps-oculto">Nota</span>
+            <span class="nps-oculto">{{ 'nps.resultados.nota' | translate }}</span>
             <span class="nps-heredar">{{ c.nota }}</span>
           </div>
           <div class="nps-fila__cuerpo">
             <div class="nps-fila__cabeza">
-              <span class="nps-pastilla" [ngClass]="'is-' + c.segmento">{{ NOMBRE[c.segmento] }}</span>
-              <span class="nps-pastilla is-canal" *ngIf="c.canal">{{ NOMBRE_CANAL[c.canal] }}</span>
-              <span class="nps-pastilla is-prueba" *ngIf="c.prueba">Prueba</span>
-              <span class="nps-doc" *ngIf="c.nroTicket">Ticket #{{ c.nroTicket }}</span>
-              <span class="nps-doc" *ngIf="c.pedido">Pedido {{ c.pedido }}</span>
+              <span class="nps-pastilla" [ngClass]="'is-' + c.segmento">{{ NOMBRE[c.segmento] | translate }}</span>
+              <span class="nps-pastilla is-canal" *ngIf="c.canal">{{ NOMBRE_CANAL[c.canal] | translate }}</span>
+              <span class="nps-pastilla is-prueba" *ngIf="c.prueba">{{ 'nps.resultados.prueba' | translate }}</span>
+              <span class="nps-doc" *ngIf="c.nroTicket">{{ 'nps.resultados.ticket' | translate:{nroTicket: c.nroTicket} }}</span>
+              <span class="nps-doc" *ngIf="c.pedido">{{ 'nps.resultados.pedido' | translate:{pedido: c.pedido} }}</span>
               <time class="nps-fila__fecha" [attr.datetime]="c.fecha">{{ fecha(c.fecha) }}</time>
             </div>
             <p class="nps-fila__texto" *ngIf="c.comentario; else sinComentario">{{ c.comentario }}</p>
-            <ng-template #sinComentario><p class="nps-fila__texto is-vacio">Sin comentario</p></ng-template>
+            <ng-template #sinComentario><p class="nps-fila__texto is-vacio">{{ 'nps.resultados.sinComentario' | translate }}</p></ng-template>
             <p class="nps-fila__meta" *ngIf="metaDe(c) as meta">{{ meta }}</p>
             <a class="res-caso" *ngIf="tieneCaso(c)" [routerLink]="['/nps/seguimiento', c.id]">
-              <span class="nps-pastilla" [ngClass]="'is-' + c.casoEstado">{{ NOMBRE_ESTADO_CASO[c.casoEstado!] }}</span>
-              <span class="res-caso__texto">{{ casoAbierto(c) ? 'Atender el caso' : 'Ver el caso' }}</span>
+              <span class="nps-pastilla" [ngClass]="'is-' + c.casoEstado">{{ NOMBRE_ESTADO_CASO[c.casoEstado!] | translate }}</span>
+              <span class="res-caso__texto">{{ casoAbierto(c) ? ('nps.resultados.atenderElCaso' | translate) : ('nps.resultados.verElCaso' | translate) }}</span>
               <i class="pi pi-arrow-right" aria-hidden="true"></i>
             </a>
           </div>
@@ -214,15 +214,15 @@
 
       <div class="res-mas" *ngIf="filtrados.length > visibles">
         <button type="button" class="cfg-btn cfg-btn--sec" (click)="verMas()">
-          <span>Ver más ({{ filtrados.length - visibles | number }})</span>
+          <span>{{ 'nps.resultados.verMas' | translate:{visibles: (filtrados.length - visibles | number)} }}</span>
         </button>
       </div>
 
       <ng-template #listaVacia>
         <div class="cfg-vacio">
           <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-inbox"></i></span>
-          <p class="cfg-vacio__titulo">{{ t.comentarios.length ? 'Nada con estos filtros' : 'Sin respuestas todavía' }}</p>
-          <p class="cfg-vacio__texto">{{ t.comentarios.length ? 'Prueba con otro tipo de respuesta o con un periodo más largo.' : 'Aquí aparecen las respuestas con su nota y comentario.' }}</p>
+          <p class="cfg-vacio__titulo">{{ t.comentarios.length ? ('nps.resultados.nadaConEstosFiltros' | translate) : ('nps.resultados.sinRespuestasTodavia' | translate) }}</p>
+          <p class="cfg-vacio__texto">{{ t.comentarios.length ? ('nps.resultados.pruebaConOtroTipoDe' | translate) : ('nps.resultados.aquiAparecenLasRespuestasCon' | translate) }}</p>
         </div>
       </ng-template>
     </section>

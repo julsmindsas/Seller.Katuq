@@ -13,6 +13,8 @@ import {
   NOMBRE_CANAL, NOMBRE_ESTADO_CASO, NOMBRE_SEGMENTO, casoAbierto, esAdministradorSesion, fechaCorta, mensajeError,
 } from '../nps-comun';
 
+import { TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 type FiltroSegmento = 'todos' | SegmentoNps;
 type Comentario = TableroNps['comentarios'][number];
 
@@ -31,7 +33,7 @@ const DIA_MS = 24 * 60 * 60 * 1000;
 @Component({
   selector: 'app-nps-resultados',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ReportVizModule, ModuloIaComponent],
+  imports: [TranslateModule, CommonModule, FormsModule, RouterModule, ReportVizModule, ModuloIaComponent],
   templateUrl: './resultados.component.html',
   styleUrls: ['./resultados.component.scss'],
 })
@@ -43,20 +45,20 @@ export class ResultadosComponent implements OnInit, OnDestroy {
   readonly NOMBRE_CANAL = NOMBRE_CANAL;
   readonly NOMBRE_ESTADO_CASO = NOMBRE_ESTADO_CASO;
   readonly NOMBRE_PLURAL: Record<SegmentoNps, string> = {
-    promotor: 'Promotores (9 y 10)',
-    pasivo: 'Pasivos (7 y 8)',
-    detractor: 'Detractores (0 a 6)',
+    promotor: 'nps.resultados.promotoresPlural',
+    pasivo: 'nps.resultados.pasivosPlural',
+    detractor: 'nps.resultados.detractoresPlural',
   };
   readonly filtrosSegmento: { key: FiltroSegmento; label: string }[] = [
-    { key: 'todos', label: 'Todas' },
-    { key: 'promotor', label: 'Promotores' },
-    { key: 'pasivo', label: 'Pasivos' },
-    { key: 'detractor', label: 'Detractores' },
+    { key: 'todos', label: 'nps.resultados.filtroTodas' },
+    { key: 'promotor', label: 'nps.resultados.filtroPromotores' },
+    { key: 'pasivo', label: 'nps.resultados.filtroPasivos' },
+    { key: 'detractor', label: 'nps.resultados.filtroDetractores' },
   ];
   readonly periodos = [
-    { dias: 90, label: 'Últimos 90 días' },
-    { dias: 30, label: 'Último mes' },
-    { dias: 7, label: 'Última semana' },
+    { dias: 90, label: 'nps.resultados.periodo90' },
+    { dias: 30, label: 'nps.resultados.ultimoMes' },
+    { dias: 7, label: 'nps.resultados.ultimaSemana' },
   ];
   /** Las pruebas (respuestas de Julsmind y FLORECER) solo existen en la encuesta a comercios. */
   readonly esJulsmind = this.empresaSesion() === 'julsmind';
@@ -84,7 +86,9 @@ export class ResultadosComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private nps: NpsService, private router: Router) {}
+  constructor(private nps: NpsService, private router: Router,
+    private translate: TranslateService
+  ) {}
 
   get totalReparto(): number {
     const r = this.tablero?.reparto;
@@ -140,8 +144,8 @@ export class ResultadosComponent implements OnInit, OnDestroy {
           this.cargando = false;
           this.tablero = null;
           this.error = e?.status === 403
-            ? 'Los resultados los ven los administradores de tu empresa.'
-            : mensajeError(e, 'No pudimos calcular los resultados en este momento. Intenta de nuevo en unos minutos.');
+            ? this.translate.instant('nps.resultados.losResultadosLosVenLos')
+            : mensajeError(e, this.translate.instant('nps.resultados.noPudimosCalcularLosResultados'), this.translate);
         },
       });
   }
@@ -198,7 +202,7 @@ export class ResultadosComponent implements OnInit, OnDestroy {
   }
 
   get textoReparto(): string {
-    return SEGMENTOS.map((s) => `${this.NOMBRE_PLURAL[s]}: ${this.pct(s)}%`).join(', ');
+    return SEGMENTOS.map((s) => `${this.translate.instant(this.NOMBRE_PLURAL[s])}: ${this.pct(s)}%`).join(', ');
   }
 
   /** Total de respuestas de una pregunta de opción, para el ancho de cada barra. */
@@ -230,7 +234,7 @@ export class ResultadosComponent implements OnInit, OnDestroy {
   }
 
   metaDe(c: Comentario): string {
-    return [c.empresa, c.rol, c.plan ? `Plan ${c.plan}` : null].filter(Boolean).join(' · ');
+    return [c.empresa, c.rol, c.plan ? this.translate.instant('nps.resultados.plan', { plan: c.plan }) : null].filter(Boolean).join(' · ');
   }
 
   porId(_: number, c: Comentario): string {

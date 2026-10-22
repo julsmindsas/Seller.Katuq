@@ -3,12 +3,12 @@
 <ng-container *ngIf="{ nuevo: ['welcome', 'registration', 'summary', 'quickstart-success'].includes(currentStep) } as vista">
 <div class="survey-container" [class.reg-layout]="vista.nuevo">
   <!-- Logo del diagnóstico largo (en el diseño nuevo va en la barra superior) -->
-  <img *ngIf="!vista.nuevo" class="survey-logo" src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq Logo">
+  <img *ngIf="!vista.nuevo" class="survey-logo" src="assets/images/logo/Katuq/katuq_dark.svg" [alt]="'diagnosticSurvey.diagnosticSurvey.katuqLogo' | translate">
 
   <!-- Indicador de guardado automático -->
   <div class="autosave-indicator" *ngIf="showAutoSaveIndicator" role="status" aria-live="polite">
     <span class="autosave-icon">💾</span>
-    <span class="autosave-text">Progreso guardado</span>
+    <span class="autosave-text">{{ 'diagnosticSurvey.diagnosticSurvey.progresoGuardado' | translate }}</span>
   </div>
 
   <div class="reg-shell">
@@ -16,7 +16,7 @@
   <div *ngIf="vista.nuevo" class="reg-topbar">
     <!-- Logo en línea: el SVG del asset trae márgenes internos y descuadra la barra -->
     <svg class="reg-topbar__logo" viewBox="0 0 1000.48 286.72" role="img" aria-label="Katuq"><path fill="#211F3A" d="m0,221.82V6.96h50.68v93.5L121.65,6.96h61.05l-81.05,102.24,87.42,112.61h-61.94L50.68,122.84v98.98H0Z"/><path fill="#211F3A" d="m425.41,221.82V51.86h-68.31V6.96h187.59v44.9h-68.01v169.96h-51.27Z"/><path fill="#211F3A" d="m617.89,6.96v118.1c0,18.97,3.48,33.17,10.45,42.6,6.96,9.43,17.51,14.15,31.64,14.15s24.03-4.39,31.19-13.19c7.16-8.79,10.74-21.58,10.74-38.38V6.96h45.79v123.28c0,31.02-7.95,55.2-23.86,72.53-15.91,17.34-37.98,26-66.23,26s-50.75-8.59-66.6-25.78c-15.86-17.19-23.78-41.34-23.78-72.46V6.96h50.68Z"/><path fill="#211F3A" d="m805.48,238.86c1.28-7.02,3.01-14.03,5.19-21.04,2.17-7.01,4.89-14.17,8.15-21.49-12.35-11.06-21.66-23.63-27.93-37.71-6.27-14.08-9.41-29.31-9.41-45.71,0-12.64,1.93-24.89,5.78-36.75,3.85-11.85,9.48-22.67,16.89-32.45,10.47-13.93,23.26-24.69,38.38-32.3,15.11-7.61,31.27-11.41,48.45-11.41,12.25,0,24.03,1.95,35.34,5.85,11.31,3.9,21.8,9.66,31.49,17.26,13.73,10.77,24.28,24,31.64,39.71,7.36,15.71,11.04,32.89,11.04,51.56,0,14.82-2.87,29.09-8.59,42.82-5.73,13.73-13.78,25.63-24.15,35.71-9.29,9.29-19.83,16.47-31.64,21.56-11.81,5.09-23.59,7.63-35.34,7.63-5.04,0-13.63-1.28-25.78-3.85l-.3-.15-.44,3.11c6.72,1.48,21.63,6.12,44.75,13.93,23.12,7.8,42.92,12.15,59.42,13.04l-12.45,38.53c-18.28-1.38-43.71-9.04-76.31-22.97-4.25-1.78-7.46-3.11-9.63-4l-1.78-.74c-27.96-11.85-52.21-18.57-72.75-20.15Zm28.75-124.47c0,18.67,5.46,34.3,16.37,46.9,10.91,12.59,24.38,18.89,40.38,18.89s29.58-6.27,40.45-18.82c10.87-12.54,16.3-28.2,16.3-46.97s-5.43-34.6-16.3-47.19c-10.87-12.59-24.35-18.89-40.45-18.89s-29.46,6.3-40.38,18.89c-10.92,12.6-16.37,28.33-16.37,47.19Z"/><polygon fill="#5F3FE0" points="293.77 225.68 388.87 225.68 310.15 4.41 219.45 5.14 293.77 225.68"/><polygon fill="#00c9b1" opacity=".9" points="134.75 223.31 233.62 223.31 309.83 3.5 215.36 3.5 134.75 223.31"/></svg>
-    <span class="reg-topbar__login">¿Ya tienes cuenta? <button type="button" class="reg-topbar__link" (click)="goToLogin()">Entrar</button></span>
+    <span class="reg-topbar__login">{{ 'diagnosticSurvey.diagnosticSurvey.yaTienesCuenta' | translate }} <button type="button" class="reg-topbar__link" (click)="goToLogin()">{{ 'diagnosticSurvey.diagnosticSurvey.entrar' | translate }}</button></span>
   </div>
 
   <div class="survey-form animate-fancy">
@@ -25,7 +25,7 @@
       <!-- Proceso de configuración automática -->
       <div *ngIf="quickStartInProgress" class="quickstart-processing">
         <div class="welcome-text" style="margin-top:20px;">
-          Creando tu cuenta…
+          {{ 'diagnosticSurvey.diagnosticSurvey.creandoTuCuenta' | translate }}
         </div>
         <div class="quickstart-message" style="font-size: 1.2rem; margin: 20px 0;">
           {{ quickStartMessage }}
@@ -38,51 +38,48 @@
         <!-- Eligió su contraseña (D-319): confirmación corta y entra de una vez -->
         <ng-container *ngIf="eligioContrasena; else exitoClasico">
           <div class="reg-done">
-            <span class="reg-eyebrow">Cuenta creada</span>
-            <h1 class="reg-h1">¡Listo, {{ welcomeMessage }}!</h1>
+            <span class="reg-eyebrow">{{ 'diagnosticSurvey.diagnosticSurvey.cuentaCreada' | translate }}</span>
+            <h1 class="reg-h1">{{ 'diagnosticSurvey.diagnosticSurvey.listo' | translate:{welcomeMessage: welcomeMessage} }}</h1>
 
             <div *ngIf="promocionAplicada" class="promo-aplicada">
-              <p class="promo-aplicada__titulo">Tienes Premium activo</p>
+              <p class="promo-aplicada__titulo">{{ 'diagnosticSurvey.diagnosticSurvey.tienesPremiumActivo' | translate }}</p>
               <p class="promo-aplicada__texto">
-                Aplicamos el código <strong>{{ promocionAplicada.codigo }}</strong>: tu cuenta queda con el
-                plan Premium completo. Te avisaremos por correo antes de que termine.
+                {{ 'diagnosticSurvey.diagnosticSurvey.aplicamosElCodigo' | translate }} <strong>{{ promocionAplicada.codigo }}</strong>{{ 'diagnosticSurvey.diagnosticSurvey.tuCuentaQuedaConEl' | translate }}
               </p>
             </div>
             <div *ngIf="promocionNoAplicada" class="promo-no-aplicada">
-              <p class="promo-no-aplicada__titulo">Tu cuenta quedó creada en el plan gratuito</p>
+              <p class="promo-no-aplicada__titulo">{{ 'diagnosticSurvey.diagnosticSurvey.tuCuentaQuedoCreadaEn' | translate }}</p>
               <p class="promo-no-aplicada__texto">
-                La promoción con la que llegaste ya no estaba disponible cuando terminaste el registro.
-                Puedes pasarte a Premium cuando quieras.
+                {{ 'diagnosticSurvey.diagnosticSurvey.laPromocionConLaQue' | translate }}
               </p>
             </div>
             <!-- Cupón que no regala Premium (ej: más pedidos al mes) -->
             <div *ngIf="cuponAplicado" class="promo-aplicada">
-              <p class="promo-aplicada__titulo">Tu cupón quedó aplicado</p>
+              <p class="promo-aplicada__titulo">{{ 'diagnosticSurvey.diagnosticSurvey.tuCuponQuedoAplicado' | translate }}</p>
               <p class="promo-aplicada__texto">{{ cuponAplicado.mensaje }}</p>
             </div>
 
             <ul class="reg-done__list">
-              <li><span class="reg-tick" aria-hidden="true">✓</span>Tu cuenta quedó creada</li>
-              <li *ngIf="!promocionAplicada"><span class="reg-tick" aria-hidden="true">✓</span>Plan gratis activo: {{ cuponAplicado?.pedidosPorMes || 15 }} pedidos al mes</li>
-              <li><span class="reg-tick" aria-hidden="true">✓</span>Tu panel está listo para subir tus productos</li>
+              <li><span class="reg-tick" aria-hidden="true">✓</span>{{ 'diagnosticSurvey.diagnosticSurvey.tuCuentaQuedoCreada2' | translate }}</li>
+              <li *ngIf="!promocionAplicada"><span class="reg-tick" aria-hidden="true">✓</span>{{ 'diagnosticSurvey.diagnosticSurvey.planGratisActivoPedidosAl' | translate:{pedidosPorMes: (cuponAplicado?.pedidosPorMes || 15)} }}</li>
+              <li><span class="reg-tick" aria-hidden="true">✓</span>{{ 'diagnosticSurvey.diagnosticSurvey.tuPanelEstaListoPara' | translate }}</li>
             </ul>
 
             <p class="aviso-spam">
-              Te vamos a escribir desde <strong>notificaciones&#64;katuq.com</strong> con tus siguientes pasos.
-              Si no ves nuestros correos, búscalos en <strong>Spam</strong> o <strong>Promociones</strong> y márcalos como “No es spam”.
+              {{ 'diagnosticSurvey.diagnosticSurvey.teVamosAEscribirDesde' | translate }} <strong>{{ 'diagnosticSurvey.diagnosticSurvey.notificacionesKatuqCom' | translate }}</strong> {{ 'diagnosticSurvey.diagnosticSurvey.conTusSiguientesPasosSi' | translate }} <strong>{{ 'diagnosticSurvey.diagnosticSurvey.spam' | translate }}</strong> {{ 'diagnosticSurvey.diagnosticSurvey.o' | translate }} <strong>{{ 'diagnosticSurvey.diagnosticSurvey.promociones' | translate }}</strong> {{ 'diagnosticSurvey.diagnosticSurvey.yMarcalosComoNoEs' | translate }}
             </p>
 
             <div class="entrando-cuenta" role="status" aria-live="polite">
               <span *ngIf="entrandoACuenta" class="entrando-cuenta__spinner" aria-hidden="true"></span>
-              <span>{{ entrandoACuenta ? 'Entrando a tu cuenta…' : 'Tu cuenta quedó creada.' }}</span>
+              <span>{{ entrandoACuenta ? ('diagnosticSurvey.diagnosticSurvey.entrandoATuCuenta' | translate) : ('diagnosticSurvey.diagnosticSurvey.tuCuentaQuedoCreada' | translate) }}</span>
             </div>
-            <p class="reg-fine">Tu primer paso adentro: subir tu primer producto.</p>
+            <p class="reg-fine">{{ 'diagnosticSurvey.diagnosticSurvey.tuPrimerPasoAdentroSubir' | translate }}</p>
           </div>
         </ng-container>
 
         <ng-template #exitoClasico>
         <div class="welcome-text">
-          {{ '¡PERFECTO!' | translate }} <span class="highlight">{{ welcomeMessage | uppercase }}</span>
+          {{ 'diagnosticSurvey.diagnosticSurvey.perfecto' | translate }} <span class="highlight">{{ welcomeMessage | uppercase }}</span>
         </div>
         <div class="welcome-text-sm" style="margin: 20px 0;">
           {{ quickStartMessage }}
@@ -90,58 +87,54 @@
 
         <!-- Promoción aplicada: la empresa quedó en Premium con fecha de corte -->
         <div *ngIf="promocionAplicada" class="promo-aplicada">
-          <p class="promo-aplicada__titulo">🎁 Tienes Premium activo</p>
+          <p class="promo-aplicada__titulo">{{ 'diagnosticSurvey.diagnosticSurvey.tienesPremiumActivo2' | translate }}</p>
           <p class="promo-aplicada__texto">
-            Aplicamos el código <strong>{{ promocionAplicada.codigo }}</strong>: tu cuenta queda con el
-            plan Premium completo. Te avisaremos por correo antes de que termine, y tu información
-            sigue intacta pase lo que pase.
+            {{ 'diagnosticSurvey.diagnosticSurvey.aplicamosElCodigo' | translate }} <strong>{{ promocionAplicada.codigo }}</strong>{{ 'diagnosticSurvey.diagnosticSurvey.tuCuentaQuedaConEl2' | translate }}
           </p>
         </div>
 
         <!-- El código no alcanzó: se dice claro, pero el registro ya está hecho -->
         <div *ngIf="promocionNoAplicada" class="promo-no-aplicada">
-          <p class="promo-no-aplicada__titulo">Tu cuenta quedó creada en el plan gratuito</p>
+          <p class="promo-no-aplicada__titulo">{{ 'diagnosticSurvey.diagnosticSurvey.tuCuentaQuedoCreadaEn' | translate }}</p>
           <p class="promo-no-aplicada__texto">
-            La promoción con la que llegaste ya no estaba disponible cuando terminaste el registro.
-            Puedes empezar a vender de una vez, y pasarte a Premium cuando quieras.
+            {{ 'diagnosticSurvey.diagnosticSurvey.laPromocionConLaQue2' | translate }}
           </p>
         </div>
 
         <!-- Cupón que no regala Premium (ej: más pedidos al mes) -->
         <div *ngIf="cuponAplicado" class="promo-aplicada">
-          <p class="promo-aplicada__titulo">Tu cupón quedó aplicado</p>
+          <p class="promo-aplicada__titulo">{{ 'diagnosticSurvey.diagnosticSurvey.tuCuponQuedoAplicado' | translate }}</p>
           <p class="promo-aplicada__texto">{{ cuponAplicado.mensaje }}</p>
         </div>
 
         <div *ngIf="!promocionAplicada && !promocionNoAplicada && !cuponAplicado" class="free-plan-created">
-          <p class="free-plan-created__title">Tu cuenta Gratis está lista</p>
+          <p class="free-plan-created__title">{{ 'diagnosticSurvey.diagnosticSurvey.tuCuentaGratisEstaLista' | translate }}</p>
           <p class="free-plan-created__text">
-            Puedes operar hasta 15 pedidos sin tarjeta. Cuando necesites más capacidad o funciones avanzadas,
-            podrás activar Premium desde Katuq.
+            {{ 'diagnosticSurvey.diagnosticSurvey.puedesOperarHasta15Pedidos' | translate }}
           </p>
         </div>
 
         <!-- Credenciales: la contraseña solo llega por correo, hay que decírselo al usuario -->
         <div *ngIf="credentialsEmailSent && !eligioContrasena" class="credentials-notice" style="background: #efe9ff; border: 1px solid #ddd3fb; padding: 16px; margin: 20px 0; text-align: left; border-radius: 11px;">
-          <p style="margin: 0 0 6px; font-weight: bold; color: #5F3FE0;">📧 {{ 'Revisa tu correo para ingresar' | translate }}</p>
+          <p style="margin: 0 0 6px; font-weight: bold; color: #5F3FE0;">📧 {{ 'diagnosticSurvey.diagnosticSurvey.revisaTuCorreoParaIngresar' | translate }}</p>
           <p style="margin: 0; font-size: 1.05rem;">
-            {{ 'Te enviamos tu usuario y contraseña a' | translate }}
+            {{ 'diagnosticSurvey.diagnosticSurvey.teEnviamosTuUsuarioYContrasena' | translate }}
             <strong>{{ mainForm.get('registration.correo')?.value }}</strong>.
-            {{ 'Úsalas para iniciar sesión y luego cámbiala por seguridad.' | translate }}
+            {{ 'diagnosticSurvey.diagnosticSurvey.usalasParaIniciarSesion' | translate }}
           </p>
         </div>
 
         <div *ngIf="!credentialsEmailSent && !eligioContrasena" class="credentials-notice" style="background: #FFF1DF; border: 1px solid #f5d3a3; padding: 16px; margin: 20px 0; text-align: left; border-radius: 11px;">
-          <p style="margin: 0 0 6px; font-weight: bold; color: #D9820A;">Tu cuenta está lista, pero el correo no pudo salir</p>
+          <p style="margin: 0 0 6px; font-weight: bold; color: #D9820A;">{{ 'diagnosticSurvey.diagnosticSurvey.tuCuentaEstaListaPero' | translate }}</p>
           <p style="margin: 0; font-size: 1.05rem;">
-            Ve al login y usa <strong>“Olvidé mi contraseña”</strong> con
-            <strong>{{ mainForm.get('registration.correo')?.value }}</strong>. Podrás crear una contraseña sin ayuda de soporte.
+            {{ 'diagnosticSurvey.diagnosticSurvey.veAlLoginYUsa' | translate }} <strong>{{ 'diagnosticSurvey.diagnosticSurvey.olvideMiContrasena' | translate }}</strong> {{ 'diagnosticSurvey.diagnosticSurvey.con' | translate }}
+            <strong>{{ mainForm.get('registration.correo')?.value }}</strong>{{ 'diagnosticSurvey.diagnosticSurvey.podrasCrearUnaContrasenaSin' | translate }}
           </p>
         </div>
 
         <div class="next-steps-container" style="margin: 30px 0; text-align: left;">
           <h3 style="color: #5F3FE0; font-size: 1.5rem; margin-bottom: 15px;">
-            {{ '¿Qué puedes hacer ahora?' | translate }}
+            {{ 'diagnosticSurvey.diagnosticSurvey.quePuedesHacerAhora' | translate }}
           </h3>
           <ul class="next-steps-list">
             <li *ngFor="let step of nextSteps" style="margin: 8px 0; font-size: 1.1rem;">
@@ -152,7 +145,7 @@
 
         <div *ngIf="!eligioContrasena" class="quick-actions" style="margin: 30px 0;">
           <button class="cta-button primary" (click)="redirectToMainSystem()">
-            {{ 'Ir al Panel Principal' | translate }} 🚀
+            {{ 'diagnosticSurvey.diagnosticSurvey.irAlPanelPrincipal' | translate }} 🚀
           </button>
         </div>
         </ng-template>
@@ -163,7 +156,7 @@
         <app-codigo-correo *ngIf="!entrandoACuenta" [email]="correoPorVerificar" (entro)="alConfirmarCorreo($event)"></app-codigo-correo>
         <div *ngIf="entrandoACuenta" class="entrando-cuenta" role="status" aria-live="polite">
           <span class="entrando-cuenta__spinner" aria-hidden="true"></span>
-          <span>Entrando a tu cuenta…</span>
+          <span>{{ 'diagnosticSurvey.diagnosticSurvey.entrandoATuCuenta' | translate }}</span>
         </div>
       </div>
 
@@ -174,10 +167,10 @@
         </div>
         <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
           <button class="cta-button primary" (click)="backToRegistration()">
-            {{ 'Corregir mis datos' | translate }}
+            {{ 'diagnosticSurvey.diagnosticSurvey.corregirMisDatos' | translate }}
           </button>
           <button class="cta-button secondary" (click)="goToLogin()">
-            {{ 'Ir al login' | translate }}
+            {{ 'diagnosticSurvey.diagnosticSurvey.irAlLogin' | translate }}
           </button>
         </div>
       </div>
@@ -188,14 +181,14 @@
           {{ quickStartError }}
         </div>
         <div style="font-size: 1.1rem; margin: 15px 0;">
-          {{ 'Si ya tienes una cuenta, ingresa con tu correo y contraseña. Si crees que es un error, corrige tus datos e intenta de nuevo.' | translate }}
+          {{ 'diagnosticSurvey.diagnosticSurvey.siYaTienesUnaCuenta' | translate }}
         </div>
         <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
           <button class="cta-button primary" (click)="goToLogin()">
-            {{ 'Ir al login' | translate }}
+            {{ 'diagnosticSurvey.diagnosticSurvey.irAlLogin' | translate }}
           </button>
           <button class="cta-button secondary" (click)="backToRegistration()">
-            {{ 'Corregir mis datos' | translate }}
+            {{ 'diagnosticSurvey.diagnosticSurvey.corregirMisDatos' | translate }}
           </button>
         </div>
       </div>
@@ -206,10 +199,10 @@
           {{ quickStartError }}
         </div>
         <div style="font-size: 1.1rem; margin: 15px 0;">
-          {{ 'No te preocupes, puedes configurar tu comercio manualmente desde el panel de administración.' | translate }}
+          {{ 'diagnosticSurvey.diagnosticSurvey.noTePreocupes' | translate }}
         </div>
         <button class="cta-button secondary" (click)="redirectToMainSystem()">
-          {{ 'Continuar al Panel' | translate }}
+          {{ 'diagnosticSurvey.diagnosticSurvey.continuarAlPanel' | translate }}
         </button>
       </div>
     </div>
@@ -241,29 +234,29 @@
       <div *ngIf="registrationOnly" class="progress-steps progress-steps--short">
         <div class="step" [ngClass]="{'active': currentStep === 'registration', 'completed': currentStep === 'summary'}">
           <span class="step-number">1</span>
-          <span class="step-label">Datos básicos</span>
+          <span class="step-label">{{ 'diagnosticSurvey.diagnosticSurvey.datosBasicos' | translate }}</span>
         </div>
         <div class="step" [ngClass]="{'active': currentStep === 'summary'}">
           <span class="step-number">2</span>
-          <span class="step-label">Crear cuenta</span>
+          <span class="step-label">{{ 'diagnosticSurvey.diagnosticSurvey.crearCuenta' | translate }}</span>
         </div>
       </div>
       <div *ngIf="!registrationOnly" class="progress-steps">
         <div class="step" [ngClass]="{'active': currentStep === 'questionnaire', 'completed': getStepNumber() > 1}">
           <span class="step-number">1</span>
-          <span class="step-label">Diagnóstico</span>
+          <span class="step-label">{{ 'diagnosticSurvey.diagnosticSurvey.diagnostico' | translate }}</span>
         </div>
         <div class="step" [ngClass]="{'active': currentStep === 'contextual', 'completed': getStepNumber() > 2}" *ngIf="contextualQuestions.length > 0">
           <span class="step-number">2</span>
-          <span class="step-label">Detalles</span>
+          <span class="step-label">{{ 'diagnosticSurvey.diagnosticSurvey.detalles' | translate }}</span>
         </div>
         <div class="step" [ngClass]="{'active': currentStep === 'registration', 'completed': getStepNumber() > 3}">
           <span class="step-number">{{ contextualQuestions.length > 0 ? '3' : '2' }}</span>
-          <span class="step-label">Registro</span>
+          <span class="step-label">{{ 'diagnosticSurvey.diagnosticSurvey.registro' | translate }}</span>
         </div>
         <div class="step" [ngClass]="{'active': currentStep === 'summary'}">
           <span class="step-number">{{ contextualQuestions.length > 0 ? '4' : '3' }}</span>
-          <span class="step-label">Listo</span>
+          <span class="step-label">{{ 'diagnosticSurvey.diagnosticSurvey.listo2' | translate }}</span>
         </div>
       </div>
     </div>
@@ -271,46 +264,46 @@
     <!-- Secciones según currentStep -->
     <div *ngIf="!submissionSuccess">
       <!-- Paso 0: Página de Bienvenida/Landing -->
-      <div *ngIf="currentStep === 'welcome'" class="welcome-landing" role="main" aria-label="Crea tu cuenta en Katuq">
+      <div *ngIf="currentStep === 'welcome'" class="welcome-landing" role="main" [attr.aria-label]="'diagnosticSurvey.diagnosticSurvey.creaTuCuentaEnKatuq' | translate">
         <!-- D-327: la campaña de vendedores (perfil=vendedor) le habla a quien ya vende, sin "gratis" (aprobado por Daniel, 29-sep). -->
         <div *ngIf="perfilRegistro" class="welcome-content reg-welcome">
-          <span class="reg-eyebrow">Para negocios que ya venden</span>
-          <h1 class="reg-h1">Tus pedidos, inventario y cobros <span class="reg-hl">en un solo lugar</span></h1>
-          <p class="reg-lead">Para quien ya vende por WhatsApp, Instagram o su local y necesita orden. Creas tu cuenta en un minuto.</p>
+          <span class="reg-eyebrow">{{ 'diagnosticSurvey.diagnosticSurvey.paraNegociosQueYaVenden' | translate }}</span>
+          <h1 class="reg-h1">{{ 'diagnosticSurvey.diagnosticSurvey.tusPedidosInventarioYCobros' | translate }} <span class="reg-hl">{{ 'diagnosticSurvey.diagnosticSurvey.enUnSoloLugar' | translate }}</span></h1>
+          <p class="reg-lead">{{ 'diagnosticSurvey.diagnosticSurvey.paraQuienYaVendePor' | translate }}</p>
 
           <ul class="reg-perks">
-            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>Todos tus pedidos en un solo lugar</strong>Registras los de WhatsApp, tu tienda en línea y tu local, sin perder ninguno.</span></li>
-            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>Inventario al día</strong>Sabes qué tienes y qué se está agotando.</span></li>
-            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>Cobros y facturación</strong>Contra entrega o transferencia desde el primer día. Conecta tu pasarela de pagos o tu SIIGO/World Office para facturar.</span></li>
+            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>{{ 'diagnosticSurvey.diagnosticSurvey.todosTusPedidosEnUn' | translate }}</strong>{{ 'diagnosticSurvey.diagnosticSurvey.registrasLosDeWhatsappTu' | translate }}</span></li>
+            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>{{ 'diagnosticSurvey.diagnosticSurvey.inventarioAlDia' | translate }}</strong>{{ 'diagnosticSurvey.diagnosticSurvey.sabesQueTienesYQue' | translate }}</span></li>
+            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>{{ 'diagnosticSurvey.diagnosticSurvey.cobrosYFacturacion' | translate }}</strong>{{ 'diagnosticSurvey.diagnosticSurvey.contraEntregaOTransferenciaDesde' | translate }}</span></li>
           </ul>
 
           <ng-container *ngTemplateOutlet="videoBienvenida"></ng-container>
 
           <div class="reg-cta">
-            <button class="reg-btn" (click)="startFreeRegistration()" type="button">Crear mi cuenta</button>
-            <p class="reg-fine">Son 5 datos. Toma menos de 1 minuto.</p>
+            <button class="reg-btn" (click)="startFreeRegistration()" type="button">{{ 'diagnosticSurvey.diagnosticSurvey.crearMiCuenta' | translate }}</button>
+            <p class="reg-fine">{{ 'diagnosticSurvey.diagnosticSurvey.son5DatosTomaMenos' | translate }}</p>
           </div>
         </div>
 
         <div *ngIf="!perfilRegistro" class="welcome-content reg-welcome">
-          <span class="reg-eyebrow">Plan gratis · Sin tarjeta</span>
-          <h1 class="reg-h1">Vende en línea desde hoy, <span class="reg-hl">gratis</span></h1>
-          <p class="reg-lead">Tu tienda, tus pedidos y tu inventario en un solo lugar. Creas tu cuenta en un minuto y Katuq te guía paso a paso.</p>
+          <span class="reg-eyebrow">{{ 'diagnosticSurvey.diagnosticSurvey.planGratisSinTarjeta' | translate }}</span>
+          <h1 class="reg-h1">{{ 'diagnosticSurvey.diagnosticSurvey.vendeEnLineaDesdeHoy' | translate }} <span class="reg-hl">{{ 'diagnosticSurvey.diagnosticSurvey.gratis' | translate }}</span></h1>
+          <p class="reg-lead">{{ 'diagnosticSurvey.diagnosticSurvey.tuTiendaTusPedidosY' | translate }}</p>
 
           <ul class="reg-perks">
-            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>15 pedidos gratis cada mes</strong>Pasas a Premium solo si lo necesitas.</span></li>
-            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>Tu tienda lista con tus productos</strong>En tu propia dirección katuq.com.</span></li>
-            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>Te acompañamos hasta tu primera venta</strong>Te guiamos por correo, paso a paso.</span></li>
+            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>{{ 'diagnosticSurvey.diagnosticSurvey.15PedidosGratisCadaMes' | translate }}</strong>{{ 'diagnosticSurvey.diagnosticSurvey.pasasAPremiumSoloSi' | translate }}</span></li>
+            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>{{ 'diagnosticSurvey.diagnosticSurvey.tuTiendaListaConTus' | translate }}</strong>{{ 'diagnosticSurvey.diagnosticSurvey.enTuPropiaDireccionKatuq' | translate }}</span></li>
+            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>{{ 'diagnosticSurvey.diagnosticSurvey.teAcompanamosHastaTuPrimera' | translate }}</strong>{{ 'diagnosticSurvey.diagnosticSurvey.teGuiamosPorCorreoPaso' | translate }}</span></li>
           </ul>
 
           <ng-container *ngTemplateOutlet="videoBienvenida"></ng-container>
 
           <div class="reg-cta">
-            <button class="reg-btn" (click)="startFreeRegistration()" type="button">Crear mi cuenta gratis</button>
-            <p class="reg-fine">Son 5 datos. Toma menos de 1 minuto.</p>
+            <button class="reg-btn" (click)="startFreeRegistration()" type="button">{{ 'diagnosticSurvey.diagnosticSurvey.crearMiCuentaGratis2' | translate }}</button>
+            <p class="reg-fine">{{ 'diagnosticSurvey.diagnosticSurvey.son5DatosTomaMenos' | translate }}</p>
           </div>
-          <p class="reg-alt">¿Prefieres que te recomendemos por dónde empezar?
-            <button class="reg-link" (click)="startDiagnostic()" type="button">Haz el diagnóstico de 5 minutos</button>
+          <p class="reg-alt">{{ 'diagnosticSurvey.diagnosticSurvey.prefieresQueTeRecomendemosPor' | translate }}
+            <button class="reg-link" (click)="startDiagnostic()" type="button">{{ 'diagnosticSurvey.diagnosticSurvey.hazElDiagnosticoDe5' | translate }}</button>
           </p>
         </div>
       </div>
@@ -320,7 +313,7 @@
         <div class="reg-video">
           <iframe
             [src]="videoBienvenidaUrl"
-            title="Gestiona todo tu negocio en un solo lugar con Inteligencia Artificial | Katuq"
+            [title]="'diagnosticSurvey.diagnosticSurvey.gestionaTodoTuNegocioEn' | translate"
             loading="lazy"
             allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             referrerpolicy="strict-origin-when-cross-origin"
@@ -329,17 +322,17 @@
       </ng-template>
 
       <!-- Paso 0.5: Video Explicativo ANTES del cuestionario -->
-      <div *ngIf="currentStep === 'video'" role="main" aria-label="Video explicativo" class="video-intro-step">
+      <div *ngIf="currentStep === 'video'" role="main" [attr.aria-label]="'diagnosticSurvey.diagnosticSurvey.videoExplicativo' | translate" class="video-intro-step">
         <div class="video-intro-container">
           <!-- Header con títulos (se oculta en mobile) -->
           <div class="video-intro-header">
-            <h2 class="video-intro-title">Antes de comenzar...</h2>
-            <p class="video-intro-subtitle">Mira este breve video (15 segundos)</p>
+            <h2 class="video-intro-title">{{ 'diagnosticSurvey.diagnosticSurvey.antesDeComenzar' | translate }}</h2>
+            <p class="video-intro-subtitle">{{ 'diagnosticSurvey.diagnosticSurvey.miraEsteBreveVideo15' | translate }}</p>
 
             <!-- Botón visible solo en desktop debajo del texto -->
             <div class="video-intro-actions">
               <button class="skip-video-btn-large" (click)="skipVideoAndStart()" type="button">
-                Saltar video →
+                {{ 'diagnosticSurvey.diagnosticSurvey.saltarVideo' | translate }}
               </button>
             </div>
           </div>
@@ -355,32 +348,32 @@
               playsinline
               controls>
               <source src="https://firebasestorage.googleapis.com/v0/b/katuq-new.firebasestorage.app/o/videos%2Fnuevoregistro%2Fdiagnostic-explainer-15s-es.mp4?alt=media&token=683755b3-75d3-43a9-a2db-bb6e5ddd8cfc" type="video/mp4">
-              <p>Tu navegador no soporta video HTML5</p>
+              <p>{{ 'diagnosticSurvey.diagnosticSurvey.tuNavegadorNoSoportaVideo' | translate }}</p>
             </video>
 
             <!-- Botón overlay para mobile (posicionado absolutamente sobre el video) -->
             <button class="skip-video-btn-large skip-video-mobile" (click)="skipVideoAndStart()" type="button">
-              Saltar video →
+              {{ 'diagnosticSurvey.diagnosticSurvey.saltarVideo' | translate }}
             </button>
           </div>
         </div>
       </div>
 
       <!-- Paso 1: Cuestionario -->
-      <div *ngIf="currentStep === 'questionnaire'" role="main" aria-label="Cuestionario de diagnóstico">
+      <div *ngIf="currentStep === 'questionnaire'" role="main" [attr.aria-label]="'diagnosticSurvey.diagnosticSurvey.cuestionarioDeDiagnostico' | translate">
         <h1>{{ surveyData.formTitle }}</h1>
         <h3 class="subtitle">{{ surveyData.formDescription }}</h3>
-        <p class="motivational-message">💡 <strong>Estamos analizando tu negocio</strong> para darte recomendaciones personalizadas</p>
+        <p class="motivational-message">💡 <strong>{{ 'diagnosticSurvey.diagnosticSurvey.estamosAnalizandoTuNegocio' | translate }}</strong> {{ 'diagnosticSurvey.diagnosticSurvey.paraDarteRecomendacionesPersonalizadas' | translate }}</p>
         <h3>{{ currentSection.sectionTitle }}</h3>
 
             <!-- Indicador de progreso de preguntas -->
-            <div class="question-progress" aria-label="Progreso del cuestionario" role="progressbar"
+            <div class="question-progress" [attr.aria-label]="'diagnosticSurvey.diagnosticSurvey.progresoDelCuestionario' | translate" role="progressbar"
                  [attr.aria-valuenow]="getTotalProgress()"
                  [attr.aria-valuemin]="0"
                  [attr.aria-valuemax]="100">
               <div class="progress-text">
-                Pregunta {{ getCurrentQuestionNumber() }} de {{ getTotalQuestions() }}
-                <span class="time-remaining" *ngIf="getEstimatedTimeRemaining() > 0">• Aprox. {{ getEstimatedTimeRemaining() }} min restantes</span>
+                {{ 'diagnosticSurvey.diagnosticSurvey.preguntaDe' | translate:{getCurrentQuestionNumber: (getCurrentQuestionNumber()), getTotalQuestions: (getTotalQuestions())} }}
+                <span class="time-remaining" *ngIf="getEstimatedTimeRemaining() > 0">{{ 'diagnosticSurvey.diagnosticSurvey.aproxMinRestantes' | translate:{getEstimatedTimeRemaining: (getEstimatedTimeRemaining())} }}</span>
               </div>
               <div class="progress-bar-container">
                 <div class="progress-bar-fill" [style.width.%]="getTotalProgress()"></div>
@@ -410,13 +403,13 @@
                       class="back-button"
                       (click)="backQuestion()"
                       type="button"
-                      aria-label="Pregunta anterior">
+                      [attr.aria-label]="'diagnosticSurvey.diagnosticSurvey.preguntaAnterior' | translate">
                 {{ 'Volver' | translate }}
               </button>
               <button class="next-button"
                       (click)="moveNextStep()"
                       type="button"
-                      [attr.aria-label]="isLastQuestion() ? 'Ir al siguiente paso' : 'Siguiente pregunta'">
+                      [attr.aria-label]="isLastQuestion() ? ('diagnosticSurvey.diagnosticSurvey.irAlSiguientePaso' | translate) : ('diagnosticSurvey.diagnosticSurvey.siguientePregunta' | translate)">
                 {{ isLastQuestion() ? ('Siguiente paso' | translate) : '→' }}
               </button>
             </div>
@@ -424,12 +417,12 @@
 
       <!-- Preguntas Contextuales (opcional) -->
       <div *ngIf="currentStep === 'contextual'">
-        <h1>{{ 'Algunas preguntas adicionales...' | translate }}</h1>
-        <h3 class="subtitle">{{ 'Solo ' + contextualQuestions.length + ' preguntas más para personalizar mejor tu configuración.' | translate }}</h3>
+        <h1>{{ 'diagnosticSurvey.diagnosticSurvey.algunasPreguntasAdicionales' | translate }}</h1>
+        <h3 class="subtitle">{{ 'diagnosticSurvey.diagnosticSurvey.soloNPreguntasMas' | translate:{n: contextualQuestions.length} }}</h3>
         
         <div class="contextual-progress" style="margin: 20px 0;">
           <div class="progress-text" style="font-size: 0.9rem; color: #666; margin-bottom: 5px;">
-            {{ 'Pregunta ' + (currentContextualIndex + 1) + ' de ' + contextualQuestions.length | translate }}
+            {{ 'diagnosticSurvey.diagnosticSurvey.preguntaNDeTotal' | translate:{n: (currentContextualIndex + 1), total: contextualQuestions.length} }}
           </div>
           <div class="progress-bar" style="width: 100%; height: 4px; background: #ececf4; border-radius: 2px;">
             <div class="progress-fill" 
@@ -457,7 +450,7 @@
           </button>
           <button class="next-button" (click)="nextContextualQuestion()"
                   *ngIf="contextualResponses[currentContextualQuestion.id]">
-            {{ isLastContextualQuestion() ? ('Continuar' | translate) : '→' }}
+            {{ isLastContextualQuestion() ? ('diagnosticSurvey.diagnosticSurvey.continuar' | translate) : '→' }}
           </button>
         </div>
       </div>
@@ -465,11 +458,11 @@
       <!-- Paso Introductorio para Registro -->
       <div *ngIf="currentStep === 'introduction'" class="introduction-step">
         <h2>{{ '¡Excelente trabajo!' | translate }} 🎉</h2>
-        <p class="intro-motivational">Has completado el diagnóstico. Estamos casi listos para configurar tu comercio.</p>
+        <p class="intro-motivational">{{ 'diagnosticSurvey.diagnosticSurvey.hasCompletadoElDiagnosticoEstamos' | translate }}</p>
         <p style="font-size:1.8rem;">
           {{ 'Ahora, para continuar, ingresa los datos básicos de tu empresa. Si eres persona natural, utiliza tus datos personales.' | translate }}
         </p>
-        <p class="intro-reassuring">🔒 <strong>Tu información está segura</strong> y solo será usada para configurar tu cuenta.</p>
+        <p class="intro-reassuring">🔒 <strong>{{ 'diagnosticSurvey.diagnosticSurvey.tuInformacionEstaSegura' | translate }}</strong> {{ 'diagnosticSurvey.diagnosticSurvey.ySoloSeraUsadaPara' | translate }}</p>
         <div class="navigation-buttons">
           <button type="button" class="next-button" (click)="moveNextStep()">{{ 'Continuar al registro' | translate }}</button>
         </div>
@@ -481,7 +474,7 @@
         <div *ngIf="promocionCampana" class="promo-franja">
           <span class="promo-franja__codigo">{{ promocionCampana.codigo }}</span>
           <span class="promo-franja__texto" *ngIf="!promocionCampana.titulo">
-            <strong>{{ promocionCampana.duracionTexto }}</strong> de Premium gratis al terminar tu registro
+            <strong>{{ promocionCampana.duracionTexto }}</strong> {{ 'diagnosticSurvey.diagnosticSurvey.dePremiumGratisAlTerminar' | translate }}
           </span>
           <span class="promo-franja__texto" *ngIf="promocionCampana.titulo">
             <strong>{{ promocionCampana.titulo }}</strong> {{ promocionCampana.detalle }}
@@ -493,10 +486,10 @@
              [attr.aria-valuenow]="registrationIndex + 1"
              [attr.aria-valuemin]="1"
              [attr.aria-valuemax]="registrationQuestions.length"
-             [attr.aria-label]="'Paso ' + (registrationIndex + 1) + ' de ' + registrationQuestions.length">
+             [attr.aria-label]="('diagnosticSurvey.diagnosticSurvey.pasoNDeTotal' | translate:{n: (registrationIndex + 1), total: registrationQuestions.length})">
           <div class="reg-progress__top">
-            <span>Paso {{ registrationIndex + 1 }} de {{ registrationQuestions.length }}</span>
-            <span class="reg-progress__hint">{{ pasoActual === 'password' ? 'Último paso' : 'Menos de 1 minuto' }}</span>
+            <span>{{ 'diagnosticSurvey.diagnosticSurvey.pasoDe' | translate:{registrationIndex: (registrationIndex + 1), length: registrationQuestions.length} }}</span>
+            <span class="reg-progress__hint">{{ pasoActual === 'password' ? ('diagnosticSurvey.diagnosticSurvey.ultimoPaso' | translate) : ('diagnosticSurvey.diagnosticSurvey.menosDe1Minuto' | translate) }}</span>
           </div>
           <div class="reg-progress__bar"><i [style.width.%]="(registrationIndex + 1) / registrationQuestions.length * 100"></i></div>
         </div>
@@ -508,13 +501,13 @@
         <!-- Nombre del negocio -->
         <ng-container *ngIf="pasoActual === 'nombre'">
           <div class="survey-question reg-field">
-            <h2 class="reg-q">{{ pregunta('nombre').question }}</h2>
-            <label class="reg-label" for="reg-nombre">Nombre del negocio</label>
+            <h2 class="reg-q">{{ pregunta('nombre').question | translate }}</h2>
+            <label class="reg-label" for="reg-nombre">{{ 'diagnosticSurvey.diagnosticSurvey.nombreDelNegocio' | translate }}</label>
             <div class="input-container reg-input" [class.is-error]="isFieldInvalid('nombre')">
               <input id="reg-nombre"
                      type="text"
                      class="material-input"
-                     placeholder="Ej: Tienda Aurora"
+                     [placeholder]="'diagnosticSurvey.diagnosticSurvey.ejTiendaAurora' | translate"
                      formControlName="nombre"
                      autocomplete="organization"
                      (keyup.enter)="moveNextStep()"
@@ -522,19 +515,19 @@
                      [class.valid]="isFieldValid('nombre')">
               <span *ngIf="isFieldValid('nombre')" class="reg-input__ok" aria-hidden="true">✓</span>
             </div>
-            <p *ngIf="!getFieldError('nombre')" class="reg-help">Así te verán tus clientes en tu tienda.</p>
+            <p *ngIf="!getFieldError('nombre')" class="reg-help">{{ 'diagnosticSurvey.diagnosticSurvey.asiTeVeranTusClientes' | translate }}</p>
             <div *ngIf="getFieldError('nombre')" class="error-message">
               {{ getFieldError('nombre') }}
             </div>
 
             <!-- D-327: solo con perfil de campaña (perfil=vendedor). Opcional. -->
             <fieldset *ngIf="perfilRegistro" class="reg-perfil">
-              <legend class="reg-perfil__pregunta">{{ perfilRegistro.pregunta }} <span class="reg-perfil__opcional">(opcional)</span></legend>
+              <legend class="reg-perfil__pregunta">{{ perfilRegistro.pregunta | translate }} <span class="reg-perfil__opcional">{{ 'diagnosticSurvey.diagnosticSurvey.opcional' | translate }}</span></legend>
               <div class="reg-perfil__opciones" role="radiogroup">
                 <button type="button" *ngFor="let o of perfilRegistro.opciones" role="radio"
                         class="reg-perfil__opcion" [class.is-selected]="pedidosSemana === o.valor"
                         [attr.aria-checked]="pedidosSemana === o.valor"
-                        (click)="elegirPedidosSemana(o.valor)">{{ o.etiqueta }}</button>
+                        (click)="elegirPedidosSemana(o.valor)">{{ o.etiqueta | translate }}</button>
               </div>
             </fieldset>
           </div>
@@ -542,13 +535,13 @@
         <!-- Correo -->
         <ng-container *ngIf="pasoActual === 'correo'">
           <div class="survey-question reg-field">
-            <h2 class="reg-q">{{ pregunta('correo').question }}</h2>
-            <label class="reg-label" for="reg-correo">Correo</label>
+            <h2 class="reg-q">{{ pregunta('correo').question | translate }}</h2>
+            <label class="reg-label" for="reg-correo">{{ 'diagnosticSurvey.diagnosticSurvey.correo' | translate }}</label>
             <div class="input-container reg-input" [class.is-error]="isFieldInvalid('correo')">
               <input id="reg-correo"
                      type="email"
                      class="material-input"
-                     placeholder="tu@correo.com"
+                     [placeholder]="'diagnosticSurvey.diagnosticSurvey.tuCorreoCom' | translate"
                      formControlName="correo"
                      autocomplete="email"
                      inputmode="email"
@@ -559,7 +552,7 @@
                      [class.valid]="isFieldValid('correo')">
               <span *ngIf="isFieldValid('correo')" class="reg-input__ok" aria-hidden="true">✓</span>
             </div>
-            <p *ngIf="!getFieldError('correo')" class="reg-help">Con este correo entras a Katuq y te llegan los avisos de tus pedidos.</p>
+            <p *ngIf="!getFieldError('correo')" class="reg-help">{{ 'diagnosticSurvey.diagnosticSurvey.conEsteCorreoEntrasA' | translate }}</p>
             <div *ngIf="getFieldError('correo')" class="error-message">
               {{ getFieldError('correo') }}
             </div>
@@ -568,8 +561,8 @@
         <!-- Celular -->
         <ng-container *ngIf="pasoActual === 'celular'">
           <div class="survey-question reg-field">
-            <h2 class="reg-q">{{ pregunta('celular').question }}</h2>
-            <label class="reg-label" for="reg-celular">Celular (WhatsApp)</label>
+            <h2 class="reg-q">{{ pregunta('celular').question | translate }}</h2>
+            <label class="reg-label" for="reg-celular">{{ 'diagnosticSurvey.diagnosticSurvey.celularWhatsapp' | translate }}</label>
             <div class="input-container reg-input" [class.is-error]="isFieldInvalid('celular')">
               <span class="reg-input__prefix" aria-hidden="true">+57</span>
               <input id="reg-celular"
@@ -585,7 +578,7 @@
                      [class.valid]="isFieldValid('celular')">
               <span *ngIf="isFieldValid('celular')" class="reg-input__ok" aria-hidden="true">✓</span>
             </div>
-            <p *ngIf="!getFieldError('celular')" class="reg-help">Te escribimos por WhatsApp si necesitas ayuda. Nada de spam.</p>
+            <p *ngIf="!getFieldError('celular')" class="reg-help">{{ 'diagnosticSurvey.diagnosticSurvey.teEscribimosPorWhatsappSi' | translate }}</p>
             <div *ngIf="getFieldError('celular')" class="error-message">
               {{ getFieldError('celular') }}
             </div>
@@ -594,13 +587,13 @@
         <!-- Cédula o NIT -->
         <ng-container *ngIf="pasoActual === 'nit'">
           <div class="survey-question reg-field">
-            <h2 class="reg-q">{{ pregunta('nit').question }}</h2>
-            <label class="reg-label" for="reg-nit">Cédula o NIT</label>
+            <h2 class="reg-q">{{ pregunta('nit').question | translate }}</h2>
+            <label class="reg-label" for="reg-nit">{{ 'diagnosticSurvey.diagnosticSurvey.cedulaONit' | translate }}</label>
             <div class="input-container reg-input" [class.is-error]="isFieldInvalid('nit')">
               <input id="reg-nit"
                      type="text"
                      class="material-input"
-                     placeholder="Solo números"
+                     [placeholder]="'diagnosticSurvey.diagnosticSurvey.soloNumeros' | translate"
                      formControlName="nit"
                      autocomplete="off"
                      inputmode="numeric"
@@ -612,22 +605,22 @@
             <div *ngIf="getFieldError('nit')" class="error-message">
               {{ getFieldError('nit') }}
             </div>
-            <p *ngIf="!getFieldError('nit') && !avisoDocumento" class="document-help">Si no tienes NIT, pon tu cédula.</p>
+            <p *ngIf="!getFieldError('nit') && !avisoDocumento" class="document-help">{{ 'diagnosticSurvey.diagnosticSurvey.siNoTienesNitPon' | translate }}</p>
             <p *ngIf="avisoDocumento" class="document-warning" role="status">
-              ¿Seguro que es tu número? Parece una serie. Si no tienes NIT, pon tu cédula. Si es correcto, sigue sin problema.
+              {{ 'diagnosticSurvey.diagnosticSurvey.seguroQueEsTuNumero' | translate }}
             </p>
           </div>
         </ng-container>
         <!-- Contraseña: la elige la persona y entra de una vez al terminar (D-319) -->
         <ng-container *ngIf="pasoActual === 'password'">
           <div class="survey-question reg-field">
-            <h2 class="reg-q">{{ pregunta('password').question }}</h2>
-            <label class="reg-label" for="reg-password">Contraseña</label>
+            <h2 class="reg-q">{{ pregunta('password').question | translate }}</h2>
+            <label class="reg-label" for="reg-password">{{ 'diagnosticSurvey.diagnosticSurvey.contrasena' | translate }}</label>
             <div class="input-container reg-input" [class.is-error]="isFieldInvalid('password')">
               <input id="reg-password"
                      [type]="mostrarContrasena ? 'text' : 'password'"
                      class="material-input material-input--password"
-                     [placeholder]="pregunta('password').placeholder"
+                     [placeholder]="pregunta('password').placeholder | translate"
                      formControlName="password"
                      autocomplete="new-password"
                      autocapitalize="off"
@@ -640,16 +633,16 @@
                       class="password-toggle"
                       (click)="mostrarContrasena = !mostrarContrasena"
                       [attr.aria-pressed]="mostrarContrasena"
-                      [attr.aria-label]="mostrarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'">
-                {{ mostrarContrasena ? 'Ocultar' : 'Ver' }}
+                      [attr.aria-label]="mostrarContrasena ? ('diagnosticSurvey.diagnosticSurvey.ocultarContrasena' | translate) : ('diagnosticSurvey.diagnosticSurvey.mostrarContrasena' | translate)">
+                {{ mostrarContrasena ? ('comun.ocultar' | translate) : ('diagnosticSurvey.diagnosticSurvey.ver' | translate) }}
               </button>
             </div>
             <ul id="reglas-contrasena" class="password-rules" aria-live="polite">
-              <li [class.ok]="reglasDeContrasena.largo">8 caracteres o más</li>
-              <li [class.ok]="reglasDeContrasena.letra">Una letra</li>
-              <li [class.ok]="reglasDeContrasena.numero">Un número</li>
+              <li [class.ok]="reglasDeContrasena.largo">{{ 'diagnosticSurvey.diagnosticSurvey.8CaracteresOMas' | translate }}</li>
+              <li [class.ok]="reglasDeContrasena.letra">{{ 'diagnosticSurvey.diagnosticSurvey.unaLetra' | translate }}</li>
+              <li [class.ok]="reglasDeContrasena.numero">{{ 'diagnosticSurvey.diagnosticSurvey.unNumero' | translate }}</li>
             </ul>
-            <p *ngIf="!getFieldError('password')" class="password-help">Con ella entras de una vez, sin esperar ningún correo.</p>
+            <p *ngIf="!getFieldError('password')" class="password-help">{{ 'diagnosticSurvey.diagnosticSurvey.conEllaEntrasDeUna' | translate }}</p>
             <div *ngIf="getFieldError('password')" class="error-message">
               {{ getFieldError('password') }}
             </div>
@@ -661,33 +654,33 @@
                   (click)="moveNextStep()"
                   [class.disabled]="!isCurrentRegistrationFieldValid()"
                   [disabled]="!isCurrentRegistrationFieldValid()">
-            {{ registrationIndex === registrationQuestions.length - 1 ? 'Crear mi cuenta' : 'Continuar' }}
+            {{ registrationIndex === registrationQuestions.length - 1 ? ('diagnosticSurvey.diagnosticSurvey.crearMiCuenta' | translate) : ('diagnosticSurvey.diagnosticSurvey.continuar' | translate) }}
           </button>
           <div class="reg-actions__row">
             <button type="button" class="reg-back" (click)="backRegistration()">
-              ← {{ registrationIndex === 0 && registrationOnly ? 'Volver al inicio' : 'Atrás' }}
+              ← {{ registrationIndex === 0 && registrationOnly ? ('diagnosticSurvey.diagnosticSurvey.volverAlInicio' | translate) : ('diagnosticSurvey.diagnosticSurvey.atras' | translate) }}
             </button>
-            <span class="reg-kbd">o presiona <kbd>Enter</kbd></span>
+            <span class="reg-kbd">{{ 'diagnosticSurvey.diagnosticSurvey.oPresiona' | translate }} <kbd>{{ 'diagnosticSurvey.diagnosticSurvey.enter' | translate }}</kbd></span>
           </div>
         </div>
         <p class="reg-secure">
           <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Z"/></svg>
-          Tus datos solo se usan para crear tu cuenta.
+          {{ 'diagnosticSurvey.diagnosticSurvey.tusDatosSoloSeUsan' | translate }}
         </p>
       </div>
 
       <!-- Paso 3: Resumen de Respuestas -->
       <div *ngIf="currentStep === 'summary'">
-        <h1>{{ registrationOnly ? 'Revisa tus datos' : ('Resumen de respuestas' | translate) }} ✨</h1>
+        <h1>{{ registrationOnly ? ('diagnosticSurvey.diagnosticSurvey.revisaTusDatos' | translate) : ('Resumen de respuestas' | translate) }} ✨</h1>
         <p class="summary-motivational">
-          {{ registrationOnly ? 'Estás a un paso de crear tu cuenta Gratis.' : '¡Estás a un paso de obtener tu configuración personalizada!' }}
+          {{ registrationOnly ? ('diagnosticSurvey.diagnosticSurvey.estasAUnPasoDe' | translate) : ('diagnosticSurvey.diagnosticSurvey.estasAUnPasoDe2' | translate) }}
         </p>
         <div class="summary-container"
              [class.summary-container--registration-only]="registrationOnly"
              [innerHTML]="summaryHTML"></div>
         <div class="navigation-buttons">
-          <button class="back-button" (click)="editResponses()">{{ registrationOnly ? 'Editar datos' : ('Revisar respuestas' | translate) }}</button>
-          <button class="next-button" (click)="submitResponses()">{{ registrationOnly ? 'Crear mi cuenta Gratis' : ('Confirmar envío' | translate) }}</button>
+          <button class="back-button" (click)="editResponses()">{{ registrationOnly ? ('diagnosticSurvey.diagnosticSurvey.editarDatos' | translate) : ('Revisar respuestas' | translate) }}</button>
+          <button class="next-button" (click)="submitResponses()">{{ registrationOnly ? ('diagnosticSurvey.diagnosticSurvey.crearMiCuentaGratis' | translate) : ('Confirmar envío' | translate) }}</button>
         </div>
       </div>
     </div>
@@ -695,40 +688,40 @@
   </div><!-- /reg-main -->
 
   <!-- Qué obtiene: tienda y pedido de ejemplo (ilustración, no datos reales) -->
-  <aside *ngIf="vista.nuevo" class="reg-aside" aria-label="Qué obtienes con Katuq">
-    <h2 class="reg-aside__title">Así se ve tu negocio con <span>Katuq</span></h2>
+  <aside *ngIf="vista.nuevo" class="reg-aside" [attr.aria-label]="'diagnosticSurvey.diagnosticSurvey.queObtienesConKatuq' | translate">
+    <h2 class="reg-aside__title">{{ 'diagnosticSurvey.diagnosticSurvey.asiSeVeTuNegocio' | translate }} <span>Katuq</span></h2>
     <div class="reg-demo">
       <div class="reg-store">
         <div class="reg-store__bar">
           <span class="reg-store__dots" aria-hidden="true"><i></i><i></i><i></i></span>
-          <span class="reg-store__url"><b>tienda-aurora</b>.katuq.com</span>
+          <span class="reg-store__url"><b>{{ 'diagnosticSurvey.diagnosticSurvey.tiendaAurora' | translate }}</b>{{ 'diagnosticSurvey.diagnosticSurvey.katuqCom' | translate }}</span>
         </div>
         <div class="reg-store__body">
           <div class="reg-store__head">
-            <span class="reg-store__name">Tienda Aurora</span>
-            <span class="reg-chip reg-chip--ok">Publicada</span>
+            <span class="reg-store__name">{{ 'diagnosticSurvey.diagnosticSurvey.tiendaAurora2' | translate }}</span>
+            <span class="reg-chip reg-chip--ok">{{ 'diagnosticSurvey.diagnosticSurvey.publicada' | translate }}</span>
           </div>
           <div class="reg-store__prods">
-            <div class="reg-prod"><div class="reg-prod__ph reg-prod__ph--a"></div><span class="reg-prod__name">Vestido lino</span><span class="reg-prod__price">$189.000</span></div>
-            <div class="reg-prod"><div class="reg-prod__ph reg-prod__ph--b"></div><span class="reg-prod__name">Camisa oxford</span><span class="reg-prod__price">$95.000</span></div>
-            <div class="reg-prod"><div class="reg-prod__ph reg-prod__ph--c"></div><span class="reg-prod__name">Bolso tejido</span><span class="reg-prod__price">$120.000</span></div>
+            <div class="reg-prod"><div class="reg-prod__ph reg-prod__ph--a"></div><span class="reg-prod__name">{{ 'diagnosticSurvey.diagnosticSurvey.vestidoLino' | translate }}</span><span class="reg-prod__price">$189.000</span></div>
+            <div class="reg-prod"><div class="reg-prod__ph reg-prod__ph--b"></div><span class="reg-prod__name">{{ 'diagnosticSurvey.diagnosticSurvey.camisaOxford' | translate }}</span><span class="reg-prod__price">$95.000</span></div>
+            <div class="reg-prod"><div class="reg-prod__ph reg-prod__ph--c"></div><span class="reg-prod__name">{{ 'diagnosticSurvey.diagnosticSurvey.bolsoTejido' | translate }}</span><span class="reg-prod__price">$120.000</span></div>
           </div>
         </div>
       </div>
-      <div class="reg-toast" role="img" aria-label="Aviso de pedido nuevo de ejemplo">
+      <div class="reg-toast" role="img" [attr.aria-label]="'diagnosticSurvey.diagnosticSurvey.avisoDePedidoNuevoDe' | translate">
         <span class="reg-toast__ico">$</span>
         <div>
-          <div class="reg-toast__t1">Pedido nuevo</div>
-          <div class="reg-toast__t2"><span class="reg-toast__num">#AUR-000124</span> · $189.000 · contra entrega</div>
+          <div class="reg-toast__t1">{{ 'diagnosticSurvey.diagnosticSurvey.pedidoNuevo' | translate }}</div>
+          <div class="reg-toast__t2"><span class="reg-toast__num">{{ 'diagnosticSurvey.diagnosticSurvey.aur000124' | translate }}</span> {{ 'diagnosticSurvey.diagnosticSurvey.189000ContraEntrega' | translate }}</div>
         </div>
       </div>
     </div>
     <div class="reg-steps">
-      <div><div class="reg-steps__n">Hoy</div><div class="reg-steps__t">Creas tu cuenta</div></div>
-      <div><div class="reg-steps__n">En minutos</div><div class="reg-steps__t">Subes tus productos con una foto</div></div>
-      <div><div class="reg-steps__n">Después</div><div class="reg-steps__t">Recibes pedidos ordenados</div></div>
+      <div><div class="reg-steps__n">{{ 'diagnosticSurvey.diagnosticSurvey.hoy' | translate }}</div><div class="reg-steps__t">{{ 'diagnosticSurvey.diagnosticSurvey.creasTuCuenta' | translate }}</div></div>
+      <div><div class="reg-steps__n">{{ 'diagnosticSurvey.diagnosticSurvey.enMinutos' | translate }}</div><div class="reg-steps__t">{{ 'diagnosticSurvey.diagnosticSurvey.subesTusProductosConUna' | translate }}</div></div>
+      <div><div class="reg-steps__n">{{ 'diagnosticSurvey.diagnosticSurvey.despues' | translate }}</div><div class="reg-steps__t">{{ 'diagnosticSurvey.diagnosticSurvey.recibesPedidosOrdenados' | translate }}</div></div>
     </div>
-    <p class="reg-aside__note">Tienda y pedido de ejemplo.</p>
+    <p class="reg-aside__note">{{ 'diagnosticSurvey.diagnosticSurvey.tiendaYPedidoDeEjemplo' | translate }}</p>
   </aside>
   </div><!-- /reg-shell -->
 </div>

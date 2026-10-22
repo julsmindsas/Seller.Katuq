@@ -15,12 +15,12 @@ import { PixelesPautaService, PixelRegistro } from '../../shared/services/pixele
  */
 const PERFILES_REGISTRO: { [perfil: string]: { pregunta: string; opciones: { valor: string; etiqueta: string; calificacion: number }[] } } = {
     vendedor: {
-        pregunta: '¿Cuántos pedidos recibes a la semana?',
+        pregunta: 'diagnosticSurvey.diagnosticSurvey.cuantosPedidosRecibesALa',
         opciones: [
-            { valor: 'no_vendo', etiqueta: 'Todavía no vendo', calificacion: 0 },
-            { valor: 'menos_10', etiqueta: 'Menos de 10', calificacion: 1 },
-            { valor: '10_50', etiqueta: '10 a 50', calificacion: 2 },
-            { valor: 'mas_50', etiqueta: 'Más de 50', calificacion: 3 }
+            { valor: 'no_vendo', etiqueta: 'diagnosticSurvey.diagnosticSurvey.todaviaNoVendo', calificacion: 0 },
+            { valor: 'menos_10', etiqueta: 'diagnosticSurvey.diagnosticSurvey.menosDe10', calificacion: 1 },
+            { valor: '10_50', etiqueta: 'diagnosticSurvey.diagnosticSurvey.10A50', calificacion: 2 },
+            { valor: 'mas_50', etiqueta: 'diagnosticSurvey.diagnosticSurvey.masDe50', calificacion: 3 }
         ]
     }
 };
@@ -31,6 +31,7 @@ import { SesionConfirmada } from '../../shared/services/registro-verificacion.se
 import { UtilsService } from '../../shared/services/utils.service';
 import { VersionCheckService } from '../../shared/services/version-check.service';
 
+import { TranslateService } from '@ngx-translate/core';
 /** Contraseñas por defecto del sistema: el backend las rechaza (D-319). */
 const CONTRASENAS_POR_DEFECTO = ['Katuq2025!', 'Default@123'];
 
@@ -59,7 +60,7 @@ function nitConDigitoValido(digitos: string): boolean {
 }
 
 /**
- * "Cédula o NIT": ¿el número parece inventado? Solo para el aviso amable (no
+ * 'diagnosticSurvey.diagnosticSurvey.cedulaONit': ¿el número parece inventado? Solo para el aviso amable (no
  * bloquea). Misma regla que `documentoPareceInventado` del backend: todos los
  * dígitos iguales o una serie de 7+ seguidos (123456778 sí, 43123456 no), y un
  * NIT con dígito de verificación válido nunca cuenta.
@@ -267,11 +268,11 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     // El HTML pinta cada paso por su `formControl` (ver `pasoActual`), así que
     // reordenar es solo mover esta lista. La contraseña va siempre de última.
     registrationQuestions = [
-        { formControl: 'nombre', question: '¿Cómo se llama tu negocio?', placeholder: 'Nombre de la empresa' },
-        { formControl: 'correo', question: '¿Con qué correo vas a entrar?', placeholder: 'correo@ejemplo.com' },
-        { formControl: 'celular', question: '¿A qué celular te escribimos?', placeholder: 'Número de celular' },
-        { formControl: 'nit', question: '¿Cuál es tu cédula o NIT?', placeholder: 'Cédula o NIT' },
-        { formControl: 'password', question: 'Crea tu contraseña', placeholder: 'Mínimo 8 caracteres' }
+        { formControl: 'nombre', question: 'diagnosticSurvey.diagnosticSurvey.comoSeLlamaTuNegocio', placeholder: 'diagnosticSurvey.diagnosticSurvey.nombreDeLaEmpresa' },
+        { formControl: 'correo', question: 'diagnosticSurvey.diagnosticSurvey.conQueCorreoVasA', placeholder: 'correo@ejemplo.com' },
+        { formControl: 'celular', question: 'diagnosticSurvey.diagnosticSurvey.aQueCelularTeEscribimos', placeholder: 'diagnosticSurvey.diagnosticSurvey.numeroDeCelular' },
+        { formControl: 'nit', question: 'diagnosticSurvey.diagnosticSurvey.cualEsTuCedulaO', placeholder: 'diagnosticSurvey.diagnosticSurvey.cedulaONit' },
+        { formControl: 'password', question: 'diagnosticSurvey.diagnosticSurvey.creaTuContrasena', placeholder: 'diagnosticSurvey.diagnosticSurvey.minimo8Caracteres' }
     ];
     registrationIndex = 0;
 
@@ -331,8 +332,9 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         private authService: AuthService,
         private utils: UtilsService,
         private versionCheck: VersionCheckService,
-        private sanitizer: DomSanitizer
-    ) {
+        private sanitizer: DomSanitizer,
+    private translate: TranslateService
+  ) {
         // No se vuelve a asignar registrationQuestions aquí
         this.mainForm = this.fb.group({
             registration: this.fb.group({
@@ -574,10 +576,10 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 return this.getMinLengthMessage(fieldName);
             }
             if (field.errors?.['reglas']) {
-                return 'Te falta cumplir las reglas de abajo';
+                return this.translate.instant('diagnosticSurvey.diagnosticSurvey.teFaltaCumplirLasReglas');
             }
             if (field.errors?.['porDefecto']) {
-                return 'Esa contraseña no se puede usar. Elige otra.';
+                return this.translate.instant('diagnosticSurvey.diagnosticSurvey.esaContrasenaNoSePuede');
             }
             if (field.errors?.['servidor']) {
                 return field.errors['servidor'];
@@ -588,30 +590,30 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
 
     private getRequiredMessage(fieldName: string): string {
         const messages: { [key: string]: string } = {
-            'nombre': 'El nombre de la empresa es requerido',
-            'nit': 'Escribe tu cédula o NIT',
-            'correo': 'El correo electrónico es requerido',
-            'celular': 'El número de celular es requerido',
-            'password': 'Crea una contraseña para entrar'
+            'nombre': this.translate.instant('diagnosticSurvey.diagnosticSurvey.elNombreDeLaEmpresa'),
+            'nit': this.translate.instant('diagnosticSurvey.diagnosticSurvey.escribeTuCedulaONit'),
+            'correo': this.translate.instant('diagnosticSurvey.diagnosticSurvey.elCorreoElectronicoEsRequerido'),
+            'celular': this.translate.instant('diagnosticSurvey.diagnosticSurvey.elNumeroDeCelularEs'),
+            'password': this.translate.instant('diagnosticSurvey.diagnosticSurvey.creaUnaContrasenaParaEntrar')
         };
-        return messages[fieldName] || 'Este campo es requerido';
+        return messages[fieldName] || this.translate.instant('diagnosticSurvey.diagnosticSurvey.esteCampoEsRequerido');
     }
 
     private getPatternMessage(fieldName: string): string {
         const messages: { [key: string]: string } = {
-            'nombre': 'Solo se permiten letras y espacios',
-            'nit': 'Debe tener entre 6 y 11 números, sin puntos ni guiones',
-            'correo': 'Ingresa un correo válido (ejemplo@dominio.com)',
-            'celular': 'Debe ser un celular colombiano válido (3XXXXXXXXX)'
+            'nombre': this.translate.instant('diagnosticSurvey.diagnosticSurvey.soloSePermitenLetrasY'),
+            'nit': this.translate.instant('diagnosticSurvey.diagnosticSurvey.debeTenerEntre6Y'),
+            'correo': this.translate.instant('diagnosticSurvey.diagnosticSurvey.ingresaUnCorreoValidoEjemplo'),
+            'celular': this.translate.instant('diagnosticSurvey.diagnosticSurvey.debeSerUnCelularColombiano')
         };
-        return messages[fieldName] || 'Formato inválido';
+        return messages[fieldName] || this.translate.instant('diagnosticSurvey.diagnosticSurvey.formatoInvalido');
     }
 
     private getMinLengthMessage(fieldName: string): string {
         const messages: { [key: string]: string } = {
-            'nombre': 'Mínimo 2 caracteres'
+            'nombre': this.translate.instant('diagnosticSurvey.diagnosticSurvey.minimo2Caracteres')
         };
-        return messages[fieldName] || 'Muy corto';
+        return messages[fieldName] || this.translate.instant('diagnosticSurvey.diagnosticSurvey.muyCorto');
     }
 
     isFieldValid(fieldName: string): boolean {
@@ -818,7 +820,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         );
         
         if (!this.registrationOnly && unansweredQuestions.length > 0) {
-            alert(`Por favor, responde todas las preguntas antes de continuar. Faltan ${unansweredQuestions.length} pregunta(s).`);
+            alert(this.translate.instant('diagnosticSurvey.diagnosticSurvey.faltanPreguntas', { n: unansweredQuestions.length }));
             this.currentStep = 'questionnaire';
             // Ir a la primera pregunta sin respuesta
             const firstUnanswered = unansweredQuestions[0];
@@ -837,7 +839,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         
         // Validar datos de registro
         if (!this.mainForm.get('registration')?.valid) {
-            alert('Por favor, completa todos los campos del registro correctamente.');
+            alert(this.translate.instant('diagnosticSurvey.diagnosticSurvey.porFavorCompletaTodosLos'));
             this.currentStep = 'registration';
             this.registrationIndex = 0;
             return;
@@ -916,7 +918,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
             if (quickStartResult.success) {
                 this.quickStartInProgress = false;
                 this.welcomeMessage = registrationData.nombre;
-                this.quickStartMessage = quickStartResult.message || "¡Tu comercio está configurado y listo!";
+                this.quickStartMessage = quickStartResult.message || this.translate.instant('diagnosticSurvey.diagnosticSurvey.tuComercioEstaConfiguradoY');
                 this.credentialsEmailSent = quickStartResult.credentialsEmailSent !== false;
                 this.clearProgress();
                 clearOnboardingStorage(localStorage);
@@ -964,7 +966,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 }
 
             } else {
-                const err: any = new Error(quickStartResult.error || 'Error en configuración automática');
+                const err: any = new Error(quickStartResult.error || this.translate.instant('diagnosticSurvey.diagnosticSurvey.errorEnConfiguracionAutomatica'));
                 err.code = quickStartResult.errorCode;
                 err.fields = quickStartResult.errorFields;
                 throw err;
@@ -980,7 +982,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
             const duplicateCodes = ['COMERCIO_YA_EXISTE', 'EMAIL_YA_EXISTE', 'USUARIO_YA_EXISTE'];
             if (duplicateCodes.includes(error.code)) {
                 this.registrationAlreadyExists = true;
-                this.quickStartError = error.message || 'Ya existe un registro con estos datos. Si ya tienes cuenta, ingresa con tu correo y contraseña.';
+                this.quickStartError = error.message || this.translate.instant('diagnosticSurvey.diagnosticSurvey.yaExisteUnRegistroCon');
                 return;
             }
 
@@ -993,25 +995,25 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 const control = this.mainForm.get('registration.password');
                 control?.setValue('');
                 control?.markAsTouched();
-                control?.setErrors({ servidor: errorContrasena.message || 'Elige otra contraseña.' });
+                control?.setErrors({ servidor: errorContrasena.message || this.translate.instant('diagnosticSurvey.diagnosticSurvey.eligeOtraContrasena') });
                 return;
             }
 
             // Datos inválidos (422): dejar corregir sin falso "éxito"
             if (error.code === 'VALIDATION_ERROR') {
                 this.registrationBlocked = true;
-                this.quickStartError = error.message || 'Algunos datos no son válidos. Revísalos e intenta de nuevo.';
+                this.quickStartError = error.message || this.translate.instant('diagnosticSurvey.diagnosticSurvey.algunosDatosNoSonValidos');
                 return;
             }
 
             // Bloqueado por anti-abuso (403): mensaje claro + contacto a soporte
             if (error.code === 'REGISTRATION_BLOCKED') {
                 this.registrationBlocked = true;
-                this.quickStartError = error.message || 'No pudimos completar tu registro automáticamente. Escríbenos a soporte@katuq.com.';
+                this.quickStartError = error.message || this.translate.instant('diagnosticSurvey.diagnosticSurvey.noPudimosCompletarTuRegistro');
                 return;
             }
 
-            this.quickStartError = error.message || 'Error en la configuración automática';
+            this.quickStartError = error.message || this.translate.instant('diagnosticSurvey.diagnosticSurvey.errorEnLaConfiguracionAutomatica');
 
             // Fallback al proceso tradicional (solo errores desconocidos / 500 / red)
             setTimeout(() => {
@@ -1037,7 +1039,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
 
         this.router.navigate(['/login'], {
             queryParams: {
-                message: 'Tu comercio ha sido configurado exitosamente. Usa las credenciales proporcionadas para ingresar.'
+                message: this.translate.instant('diagnosticSurvey.diagnosticSurvey.tuComercioHaSidoConfigurado')
             }
         });
     }
@@ -1139,7 +1141,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
             // Evitar avanzar si no se ha seleccionado una opción
             if (!this.responses[this.currentQuestion.id]) {
                 // Usar una notificación más amigable (podría reemplazarse por un servicio de notificaciones)
-                const message = "Por favor, selecciona una opción para continuar";
+                const message = this.translate.instant('diagnosticSurvey.diagnosticSurvey.porFavorSeleccionaUnaOpcion');
                 // Mostrar feedback visual en lugar de alert
                 console.warn(message);
                 // Opcional: podrías añadir aquí una notificación toast
