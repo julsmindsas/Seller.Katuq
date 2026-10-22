@@ -1,4 +1,4 @@
-import { Carrito, Cliente } from "../../ventas/modelo/pedido";
+import { Carrito, Cliente, ContactoCliente } from "../../ventas/modelo/pedido";
 
 /**
  * Modelo de Cotización — spec 008 (T-13).
@@ -38,6 +38,8 @@ export interface Cotizacion {
   company?: string;
   estadoCotizacion: EstadoCotizacion;
   cliente?: Cliente | null;
+  /** Ticket 1327 (D-537): copia de la persona del cliente a la que va dirigida. */
+  contactoDestino?: ContactoCliente | null;
   vendedor?: VendedorCotizacion | null;
   // Ítems con la misma forma que el carrito de venta asistida.
   items: Carrito[];

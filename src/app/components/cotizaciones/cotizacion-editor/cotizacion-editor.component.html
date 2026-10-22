@@ -121,6 +121,16 @@
             <button type="button" class="cot-link" (click)="quitarCliente()">⇄ Cambiar</button>
           </div>
         </div>
+
+        <!-- Ticket 1327 (D-537): persona de la empresa a la que va dirigida -->
+        <div class="cot-dirigida" *ngIf="clienteSeleccionado && contactosCliente.length">
+          <label class="cot-dirigida-label" for="cot-dirigida">Dirigida a</label>
+          <select id="cot-dirigida" class="form-select form-select-sm cot-dirigida-select"
+                  [ngModel]="contactoDestinoId" (ngModelChange)="elegirContactoDestino($event)">
+            <option value="">Sin persona (datos del cliente)</option>
+            <option *ngFor="let c of contactosCliente" [value]="c.id">{{ c.nombre }}{{ c.cargo ? ' — ' + c.cargo : '' }}</option>
+          </select>
+        </div>
       </section>
 
       <!-- Fechas y vendedor -->
@@ -704,6 +714,8 @@
         <strong>{{ clienteNombre(cotizacion.cliente) || '— sin cliente —' }}</strong>
         <!-- Documento · ciudad · celular · correo -->
         <span *ngIf="clienteMetaDoc(cotizacion.cliente)">{{ clienteMetaDoc(cotizacion.cliente) }}</span>
+        <!-- Ticket 1327: a quién de la empresa va dirigida -->
+        <span class="doc-client-atencion" *ngIf="atencionDoc">Atención: <strong>{{ atencionDoc }}</strong></span>
         <!-- El tipo de cliente va en renglón propio: no es un dato de contacto,
              es el segmento con el que se tarifó la cotización. -->
         <span class="doc-client-tipo" *ngIf="clienteTipo(cotizacion.cliente)">

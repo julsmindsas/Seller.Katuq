@@ -328,6 +328,16 @@ export interface CategoriaCliente {
   descripcion?: string;
 }
 
+/** Persona de contacto del cliente (`clients.contactos[]`, ticket 1327, D-537). */
+export interface ContactoCliente {
+  id: string;
+  nombre: string;
+  cargo?: string;
+  correo?: string;
+  celular?: string;
+  principal?: boolean;
+}
+
 export interface Cliente {
   estado?: string;
   tipo_documento_comprador?: string;
@@ -343,6 +353,7 @@ export interface Cliente {
   datosEntrega?: Entrega;
   notas?: Notas;
   categoria?: CategoriaCliente;
+  contactos?: ContactoCliente[];
 }
 
 export interface NotasPedido {

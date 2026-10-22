@@ -14,6 +14,7 @@ import { alMenosUnTelefono, PATRON_TELEFONO_FIJO } from "../cliente-telefonos.va
 import { EntregaCliente, esEntregaCompleta, normalizarEntrega, normalizarEntregas, resumenEntrega } from "../../../../shared/utils/client-delivery";
 import { normalizeZonasCobro, zonaCubreCiudad } from "../../../../shared/util/zona-cobro.util";
 import Swal from "sweetalert2";
+import { ContactoCliente } from "../../modelo/pedido";
 
 /** Resultado que el formulario entrega a quien lo abrió (modal: `close()`, inline: `guardado`). */
 export interface ResultadoFormularioCliente {
@@ -111,7 +112,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
   tipoDocSeleccionado: string = 'CC';
 
   // ── Pestañas (D-406) ────────────────────────────────────────────────
-  /** Índice de la pestaña activa: 0 Contacto, 1 Entrega, 2 Facturación, 3 Notas. */
+  /** Índice de la pestaña activa: 0 Contacto, 1 Contactos, 2 Entrega, 3 Facturación, 4 Notas. */
   pestana = 0;
   /** Las pestañas extra solo aplican a clientes habituales que se guardan (corporativos van por CRM; el borrador no persiste). */
   get permiteExtras(): boolean {
@@ -137,6 +138,11 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
   perfilEditando: PerfilFacturacion | null = null;
   perfilIndex = -1;
 
+  // ── Contactos (varias personas, ticket 1327) ────────────────────────
+  contactos: ContactoCliente[] = [];
+  contactoEditando: ContactoCliente | null = null;
+  contactoIndex = -1;
+
   // ── Notas ───────────────────────────────────────────────────────────
   notas: NotaCliente[] = [];
   notaNueva = '';
@@ -146,7 +152,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
    * que al editar solo se envía el arreglo que cambió: si la pantalla que abrió
    * el formulario trajo el cliente sin alguno de ellos, no se borra por omisión.
    */
-  private tocado = { entrega: false, facturacion: false, notas: false };
+  private tocado = { entrega: false, facturacion: false, notas: false, contactos: false };
 
   readonly tipoDocOptions = [
     { label: 'CC - Cédula de ciudadanía', value: 'CC' },
@@ -344,11 +350,15 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     this.notas = Array.isArray(origen?.notas)
       ? origen.notas.filter((n: any) => n && typeof n === 'object').map((n: any) => ({ ...n }))
       : [];
+    this.contactos = Array.isArray(origen?.contactos)
+      ? origen.contactos.filter((c: any) => c && typeof c === 'object').map((c: any) => ({ ...c }))
+      : [];
     this.ordenarNotas();
     this.entregaEditando = null;
     this.perfilEditando = null;
+    this.contactoEditando = null;
     this.notaNueva = '';
-    this.tocado = { entrega: false, facturacion: false, notas: false };
+    this.tocado = { entrega: false, facturacion: false, notas: false, contactos: false };
     this.pestana = 0;
   }
 
@@ -567,6 +577,12 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
   get totalEntregas(): number { return this.entregas.length; }
   get totalPerfiles(): number { return this.perfiles.length; }
   get totalNotas(): number { return this.notas.length; }
+  get totalContactos(): number { return this.contactos.length; }
+
+  /** Hay un contacto a medio escribir. */
+  get contactoPendiente(): boolean {
+    return !!this.contactoEditando && !this.contactoCompleto(this.contactoEditando);
+  }
 
   /** Hay una dirección a medio escribir (bloquea el guardado hasta completarla o descartarla). */
   get entregaPendiente(): boolean {
@@ -804,6 +820,71 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     this.tocado.facturacion = true;
   }
 
+  // ── Contactos: varias personas (ticket 1327) ──────────────────────
+  contactoCompleto(c: any): boolean {
+    return !!(c && String(c.nombre || '').trim() && (String(c.correo || '').trim() || String(c.celular || '').trim()));
+  }
+
+  nuevoContacto(): void {
+    this.contactoIndex = -1;
+    this.contactoEditando = { id: this.idContacto(), nombre: '', cargo: '', correo: '', celular: '', principal: this.contactos.length === 0 };
+  }
+
+  editarContacto(i: number): void {
+    this.contactoIndex = i;
+    this.contactoEditando = { ...this.contactos[i] };
+  }
+
+  eliminarContacto(i: number): void {
+    const eraPrincipal = !!this.contactos[i]?.principal;
+    this.contactos.splice(i, 1);
+    if (eraPrincipal && this.contactos.length) this.contactos[0].principal = true;
+    this.tocado.contactos = true;
+    if (this.contactoIndex === i) this.descartarContacto();
+  }
+
+  descartarContacto(): void {
+    this.contactoEditando = null;
+    this.contactoIndex = -1;
+  }
+
+  confirmarContacto(): void {
+    if (!this.contactoEditando) return;
+    if (!this.contactoCompleto(this.contactoEditando)) {
+      Swal.fire({
+        title: 'Falta completar el contacto',
+        text: 'El nombre y un correo o un celular son obligatorios.',
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#5F3FE0',
+      });
+      return;
+    }
+    const c: ContactoCliente = {
+      ...this.contactoEditando,
+      id: this.contactoEditando.id || this.idContacto(),
+      nombre: this.toTitleCase(String(this.contactoEditando.nombre || '').trim()),
+      cargo: String(this.contactoEditando.cargo || '').trim(),
+      correo: String(this.contactoEditando.correo || '').trim().toLowerCase(),
+      celular: String(this.contactoEditando.celular || '').replace(/\s+/g, ''),
+    };
+    if (this.contactoIndex >= 0) this.contactos[this.contactoIndex] = c;
+    else this.contactos.push(c);
+    if (c.principal) this.marcarPrincipal(this.contactoIndex >= 0 ? this.contactoIndex : this.contactos.length - 1);
+    if (!this.contactos.some((x) => x.principal)) this.contactos[0].principal = true;
+    this.tocado.contactos = true;
+    this.descartarContacto();
+  }
+
+  marcarPrincipal(i: number): void {
+    this.contactos.forEach((c, idx) => { c.principal = idx === i; });
+    this.tocado.contactos = true;
+  }
+
+  private idContacto(): string {
+    return `ct-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+  }
+
   // ── Notas ──────────────────────────────────────────────────────────
   private usuarioActual(): string {
     try {
@@ -853,8 +934,19 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
       return;
     }
 
-    if (this.permiteExtras && this.entregaPendiente) {
+    if (this.permiteExtras && this.contactoPendiente) {
       this.pestana = 1;
+      Swal.fire({
+        title: 'Hay un contacto sin terminar',
+        text: 'Complétalo con "Agregar a la lista" o descártalo antes de guardar.',
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#5F3FE0',
+      });
+      return;
+    }
+    if (this.permiteExtras && this.entregaPendiente) {
+      this.pestana = 2;
       Swal.fire({
         title: 'Hay una dirección sin terminar',
         text: 'Complétala con "Agregar a la lista" o descártala antes de guardar.',
@@ -865,7 +957,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
       return;
     }
     if (this.permiteExtras && this.perfilPendiente) {
-      this.pestana = 2;
+      this.pestana = 3;
       Swal.fire({
         title: 'Hay un perfil de facturación sin terminar',
         text: 'Complétalo con "Agregar a la lista" o descártalo antes de guardar.',
@@ -878,6 +970,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     // Una dirección o un perfil completos pero sin confirmar se toman como confirmados.
     if (this.permiteExtras && this.entregaEditando) this.confirmarEntrega();
     if (this.permiteExtras && this.perfilEditando) this.confirmarPerfil();
+    if (this.permiteExtras && this.contactoEditando) this.confirmarContacto();
     if (this.permiteExtras && String(this.notaNueva || '').trim()) this.agregarNota();
 
     const formValue = this.formulario.getRawValue();
@@ -905,6 +998,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
       if (!this.isEdit || this.tocado.entrega) clienteData.datosEntrega = this.entregas.map(normalizarEntrega);
       if (!this.isEdit || this.tocado.facturacion) clienteData.datosFacturacionElectronica = this.perfiles.map((p) => ({ ...p }));
       if (!this.isEdit || this.tocado.notas) clienteData.notas = this.notas.map((n) => ({ ...n }));
+      if (!this.isEdit || this.tocado.contactos) clienteData.contactos = this.contactos.map((c) => ({ ...c }));
     }
 
     // Modo borrador: sin persistencia, el caller se queda con el valor.
@@ -1000,7 +1094,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
               toast: true,
               position: 'top-end'
             });
-            this.tocado = { entrega: false, facturacion: false, notas: false };
+            this.tocado = { entrega: false, facturacion: false, notas: false, contactos: false };
             this.emitirResultado({ cliente: clienteActualizado, action: 'updated' });
           },
           error: () => {
@@ -1020,12 +1114,12 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
         const esArrayVacio = Array.isArray(res) && res.length === 0;
         if (res && !esArrayVacio) {
           const clienteEncontrado = Array.isArray(res) ? res[0] : res;
-          const traeExtras = (clienteData.datosEntrega?.length || 0) + (clienteData.datosFacturacionElectronica?.length || 0) + (clienteData.notas?.length || 0) > 0;
+          const traeExtras = (clienteData.datosEntrega?.length || 0) + (clienteData.datosFacturacionElectronica?.length || 0) + (clienteData.notas?.length || 0) + (clienteData.contactos?.length || 0) > 0;
           Swal.fire({
             title: `${this.entityLabel} ya registrado`,
             html: `<p>El documento <strong>${clienteData.documento}</strong> ya está registrado.</p>
                    <p><strong>${this.entityLabel}:</strong> ${clienteEncontrado.nombres_completos} ${clienteEncontrado.apellidos_completos || ""}</p>
-                   ${traeExtras ? '<p class="text-muted" style="font-size:0.9em;">Las direcciones, perfiles o notas que escribiste no se guardaron: se cargó el cliente existente para que las agregues ahí.</p>' : ''}`,
+                   ${traeExtras ? '<p class="text-muted" style="font-size:0.9em;">Las direcciones, perfiles, contactos o notas que escribiste no se guardaron: se cargó el cliente existente para que las agregues ahí.</p>' : ''}`,
             icon: "info",
             confirmButtonText: "Entendido",
           }).then(() => {
