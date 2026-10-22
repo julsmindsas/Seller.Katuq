@@ -294,6 +294,15 @@ Lectura de la tarea 0.3, hecha el 2026-10-19 sobre la punta local de `backend-aw
 
 Wompi (`tests/integrations`) y el bot (`tests/notifications`) quedaron en verde. `whatsappBotCierre` ya se midió con 1.1 y 1.2 aplicadas.
 
+**Verificación final F440-B17 (2026-10-21, tarea 16.3).** Se repitió la línea base sobre `tests/sitios`, `notifications`, `cotizaciones`, `integrations`, `orders` y `companies`, más `tests/agenda` y `tests/enVivo`: 196 archivos, 187 en verde. Los 9 que fallan:
+
+- Los 7 de la línea base que siguen igual: `sitios/carritoWhatsapp`, `sitios/tiendaEnUnPaso`, `companies/soloLectura`, `orders/preciosPorTipoFase0` y los tres `.emulator` (`cotizaciones/anexoCondiciones`, `cotizaciones/valoresSinDecimales`, `orders/estadoPagoBloqueado`).
+- `sitios/pedidoReservaDuplicada` ahora pasa (antes fallaba).
+- `notifications/orderNotificationService`: «Cannot find module serviceAccountKey.json», una credencial local que no está en el repositorio; no toca este cambio. No estaba en la línea base porque esa medición se limitó al bot; no se pudo medir contra el código anterior sin `git stash`.
+- Cero fallos nuevos atribuibles a F4-40. El golden `tests/sitios/pedidoTiendaCaracterizacion.golden.json` no cambió desde af1bd54c y su prueba pasa.
+- kai: no hay pytest en la máquina; `test_whatsapp_capacidades.py` y `test_whatsapp_bot_channel.py` corren como script y pasan.
+- Front: `tsc --noEmit -p tsconfig.app.json` con candado, 0 errores. Quedan sin hacer el build de producción y la revisión visual a 1440 y 390 px.
+
 ---
 
 ## Ampliación 21-oct (F4-40, D-518) — PENDIENTE DE APROBACIÓN
