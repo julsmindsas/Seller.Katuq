@@ -6,7 +6,9 @@ Lo que pasa hoy en Katuq (verificado en código el 22-oct):
 
 - La venta asistida trabaja con **una bodega a la vez**. El catálogo, el stock que se muestra, el «agregar al carrito» y el «agregar combo» miran solo esa bodega. Del combo, el producto que no tiene existencias en ella se deja por fuera («Combo sin existencias» o «quedó incompleto»).
 - El pedido guarda **una sola bodega** (`order.bodegaId`) y el inventario descuenta todo de ahí (`inventoryService.updateByChannel`, `updateByPOS`). Si el vendedor cambia de bodega con el carrito lleno, todas las líneas se descuentan de la última bodega escogida. Es un descuadre silencioso.
-- Si el comercio tiene el control de existencias en «bloquear», el servidor rechaza el pedido porque revisa todas las líneas contra esa única bodega.
+- Si el comercio tiene el control de existencias en «bloquear», el servidor rechaza el pedido porque revisa todas las líneas contra esa única bodega. **ALMACEN BOMBAS lo tiene en «bloquear»** (leído el 22-oct): por eso el pedido mezclado no se deja crear.
+
+Bodegas de ALMACEN BOMBAS (leídas el 22-oct): MED-REP, MED-VIT y MED-MOT en **Medellín**; ZF-EXT y ZF-01 (Zona Franca) en **Rionegro**; MED-VIR «Medellín P» (transaccional) **sin ciudad**; BOG-01 Bogotá; CAL-VIT Cali. El comercio cuenta la Zona Franca como Medellín, así que «misma ciudad» por el campo `ciudad` la dejaría por fuera (pregunta 3).
 
 ## What Changes
 
@@ -45,3 +47,4 @@ Lo que pasa hoy en Katuq (verificado en código el 22-oct):
 
 1. ¿Va detrás de una bandera solo para ALMACEN BOMBAS, o para todos los comercios con varias bodegas en una ciudad?
 2. Cuando un producto está en varias bodegas de la misma ciudad, ¿se toma de la bodega escogida primero, como propone esto, o el vendedor escoge la bodega de cada línea?
+3. La Zona Franca está registrada en Rionegro. ¿Se agrupan las bodegas por una **zona** que el comercio define en cada bodega (por ejemplo «Medellín» para las 6), en vez de por ciudad? La propuesta recomienda la zona, con la ciudad como valor inicial.
