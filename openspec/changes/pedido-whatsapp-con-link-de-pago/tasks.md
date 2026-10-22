@@ -390,8 +390,8 @@ Ninguna tarea de esta parte empieza antes de 0.6. Las marcadas **[sensible]** es
 
 ## 12. Agenda desde el bot (D18)
 
-- [ ] 12.1 Prueba primero en `tests/agenda`: `reservar` con origen `opttia` nace «Solicitada», exige teléfono y no permite hoy, igual que la web. Los orígenes existentes no cambian, y la API de la Agenda sigue sin aceptar `opttia` desde el cuerpo. Dep: 0.6.
-- [ ] 12.2 Prueba primero (despachador):
+- [x] 12.1 Prueba primero en `tests/agenda`: `reservar` con origen `opttia` nace «Solicitada», exige teléfono y no permite hoy, igual que la web. Los orígenes existentes no cambian, y la API de la Agenda sigue sin aceptar `opttia` desde el cuerpo. Dep: 0.6.
+- [x] 12.2 Prueba primero (despachador):
       - `pedirAgenda` ofrece días y franjas reales con botones;
       - la franja libre reserva y confirma;
       - con la ocupada, ofrece otras;
@@ -401,7 +401,9 @@ Ninguna tarea de esta parte empieza antes de 0.6. Las marcadas **[sensible]** es
       - write-set: solo `appointments` y avisos.
 
       Dep: 12.1, 8.8.
+      *Hecho (F440-B12):* `tests/notifications/whatsappBotAgenda.test.js` (14 casos) y la fila de agenda del contract test de 6.6.
 - [ ] 12.3 Implementar D18 en `services/agenda/citas.js` (`esPublico`) y el despachador. `utils/agenda.js` y el front no cambian: `opttia` ya existe con su etiqueta. Éxito: 12.1, 12.2 y `npm run test:agenda` en verde; en la Agenda de FLORECER la cita del bot se ve con el origen «Opttia». Dep: 12.2, 0.7.
+      *Avance (F440-B12), sin marcar:* hecho `esPublico = ["web", "opttia"]` en `citas.js`, el servicio `services/whatsappBotAgenda.js` y el cableado del despachador (botones `agenda:`, `pedirAgenda`, `capacidades.agenda`); `npm run test:agenda` y las pruebas del bot en verde. Falta la comprobación visual en FLORECER (piloto, bloqueado) y 0.7. El motivo de la cita se guarda en la sesión (`citaPedida`) porque los botones no pasan por el agente.
 
 ## 13. Atribución y métricas de KAI (D19, D20)
 
