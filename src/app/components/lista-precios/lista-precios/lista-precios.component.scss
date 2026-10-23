@@ -525,3 +525,13 @@
     color: #5f3fe0;
   }
 }
+
+// Ticket 1358 (fase 0): quién hizo la última edición, debajo de la fecha.
+.editor-edicion {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: #8a87a3;
+  letter-spacing: normal;
+  word-break: break-all;
+}

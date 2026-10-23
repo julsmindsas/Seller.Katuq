@@ -479,8 +479,23 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     return this.tiposCliente.filter(tipo => !tiposConPrecio.includes(tipo.id));
   }
 
+  /** Ticket 1358 (fase 0): la última edición en hora de Colombia, no el texto ISO crudo. */
   obtenerFechaEdicion(producto: Producto): string {
-    return producto.date_edit || '-';
+    const crudo = producto.date_edit;
+    if (!crudo) return '-';
+    const fecha = new Date(crudo);
+    if (isNaN(fecha.getTime())) return String(crudo);
+    return fecha.toLocaleString('es-CO', {
+      timeZone: 'America/Bogota',
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: 'numeric', minute: '2-digit',
+    });
+  }
+
+  /** Ticket 1358 (fase 0): quién hizo la última edición, si quedó registrado. */
+  obtenerEditor(producto: Producto): string {
+    const editor = String((producto as any)?.user_edit || '').trim();
+    return editor && editor !== 'precios-tipo-cliente' ? editor : '';
   }
 
   // ── TrackBy ──

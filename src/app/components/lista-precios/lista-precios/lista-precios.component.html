@@ -189,7 +189,7 @@
                         <i class="pi pi-info-circle me-1"></i>Sin configurar
                       </span>
                     </td>
-                    <td>{{ obtenerFechaEdicion(producto) }}</td>
+                    <td>{{ obtenerFechaEdicion(producto) }}<small class="editor-edicion" *ngIf="obtenerEditor(producto)">{{ obtenerEditor(producto) }}</small></td>
                     <td class="text-center">
                       <button
                         class="btn btn-sm btn-outline-primary"
@@ -436,7 +436,7 @@
                         $ {{ producto.precio?.precioUnitarioConIva | number:'1.0-0' }}
                       </span>
                     </td>
-                    <td>{{ obtenerFechaEdicion(producto) }}</td>
+                    <td>{{ obtenerFechaEdicion(producto) }}<small class="editor-edicion" *ngIf="obtenerEditor(producto)">{{ obtenerEditor(producto) }}</small></td>
                     <td class="text-center">
                       <button
                         class="btn btn-sm btn-outline-primary"
@@ -576,7 +576,7 @@
                         <i class="pi pi-info-circle me-1"></i>Sin rangos configurados
                       </span>
                     </td>
-                    <td>{{ obtenerFechaEdicion(producto) }}</td>
+                    <td>{{ obtenerFechaEdicion(producto) }}<small class="editor-edicion" *ngIf="obtenerEditor(producto)">{{ obtenerEditor(producto) }}</small></td>
                     <td class="text-center">
                       <button
                         class="btn btn-sm btn-outline-primary"
@@ -707,7 +707,7 @@
                         $ {{ obtenerPrecioBase(producto) | number:'1.0-0' }}
                       </span>
                     </td>
-                    <td>{{ obtenerFechaEdicion(producto) }}</td>
+                    <td>{{ obtenerFechaEdicion(producto) }}<small class="editor-edicion" *ngIf="obtenerEditor(producto)">{{ obtenerEditor(producto) }}</small></td>
                     <td class="text-center">
                       <button
                         class="btn btn-sm btn-outline-primary"
