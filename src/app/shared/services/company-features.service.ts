@@ -68,6 +68,10 @@ export const COMPANY_FEATURE_FLAGS = [
   'invoicingTray',
   // D-539 (ticket 1331): pedido con productos de varias bodegas de una misma zona.
   'multiBodegaMismaZona',
+  // Cifras oficiales de los reportes (D-551, tickets 1341-1348, F1): una sola definición de venta,
+  // por fecha de entrega, sin pedidos caídos. Apagada, los reportes calculan como hoy.
+  // Dueño: Daniel. Se retira el 2027-04-30 (Artículo XII).
+  'reportsOfficialMetrics',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];
