@@ -2187,19 +2187,6 @@ $filter-border-color: #e0e0e0;
   }
 }
 
-// Estilos para el Modal de Opciones
-.option-modal-icon {
-  width: 45px;
-  height: 45px;
-  border-radius: 12px;
-  background: #5F3FE0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 18px;
-}
-
 // Modal de Cambio de Estado
 .estado-modal {
   background: white;
@@ -2415,124 +2402,6 @@ $filter-border-color: #e0e0e0;
   }
 }
 
-.options-grid {
-  display: grid;
-  // Ticket 1188: tantas columnas como quepan (3 a 5 en escritorio), para ver
-  // todas las opciones sin scroll. En móvil vuelve a una sola columna.
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 8px;
-  max-height: calc(90vh - 200px); // Ajustar según header y footer
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 4px; // Espacio para el scrollbar
-}
-
-.option-btn {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #ececf4;
-  border-radius: 11px;
-  background: white;
-  transition: all 0.2s ease;
-  text-align: left;
-  cursor: pointer;
-
-  &:hover {
-    border-color: #d9cffb;
-    background: #faf9ff;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 14px -8px rgba(50, 40, 110, .35);
-  }
-
-  &.danger-btn {
-    border-color: #f5c9c9;
-
-    &:hover {
-      border-color: #D64545;
-      background: #FDECEC;
-      box-shadow: 0 6px 14px -8px rgba(214, 69, 69, .35);
-    }
-  }
-}
-
-.option-icon.duplicate-icon { background: #0E9F6E; }
-.option-icon.invoice-icon { background: #5F3FE0; }
-
-.option-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px;
-  font-size: 16px;
-  color: white;
-}
-
-.pdf-icon {
-  background: #D64545;
-}
-.production-icon {
-  background: #5F3FE0;
-}
-.client-icon {
-  background: #01a3a4;
-}
-.address-icon {
-  background: #B86E00;
-}
-.billing-icon {
-  background: #1E6FD9;
-}
-.notes-icon {
-  background: #f368e0;
-}
-.payment-icon {
-  background: #1E6FD9;
-}
-.cleanup-icon {
-  background: #ffc107;
-  color: #212529 !important;
-  
-  &:hover {
-    background: #e0a800;
-    transform: scale(1.05);
-    transition: all 0.2s ease;
-  }
-  
-  i {
-    animation: none;
-    
-    &:hover {
-      animation: sweep 0.6s ease-in-out;
-    }
-  }
-}
-.cart-icon {
-  background: #5F3FE0;
-}
-.seller-icon {
-  background: #01a3a4;
-}
-.history-icon {
-  background: #ff6348;
-}
-.discount-icon {
-  background: #1E874B;
-}
-.edit-discount-icon {
-  background: #B86E00;
-}
-.delete-icon {
-  background: #D64545;
-}
-.delivery-icon {
-  background: #054f52;
-}
-
 // Contenedor simple para el modal de entrega sin conflictos CSS
 .delivery-modal-container {
   max-width: 800px;
@@ -2549,23 +2418,6 @@ $filter-border-color: #e0e0e0;
     display: block;
     width: 100%;
   }
-}
-
-.option-content {
-  flex: 1;
-}
-
-.option-title {
-  font-weight: 700;
-  color: #211F3A;
-  display: block;
-  margin-bottom: 2px;
-}
-
-.option-description {
-  color: #8f8bab;
-  font-size: 12px;
-  line-height: 1.3;
 }
 
 #optionsModal {
@@ -2586,25 +2438,6 @@ $filter-border-color: #e0e0e0;
   .modal-footer {
     padding: 12px 24px 20px;
     justify-content: center;
-  }
-}
-
-// Scrollbar styling para options-grid
-.options-grid::-webkit-scrollbar {
-  width: 6px;
-}
-
-.options-grid::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.options-grid::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-
-  &:hover {
-    background: #a8a8a8;
   }
 }
 
@@ -2630,12 +2463,6 @@ $filter-border-color: #e0e0e0;
   overflow-y: auto;
   animation: slideIn 0.3s ease-out;
 
-  // Ticket 1188: el modal de opciones del pedido ocupa el ancho de la pantalla
-  &.options-modal {
-    max-width: min(1240px, 96vw);
-    width: 96%;
-  }
-  
   &.delivery-modal {
     max-width: 700px;
     width: 95%;
@@ -2845,39 +2672,10 @@ $filter-border-color: #e0e0e0;
     }
   }
 
-  .option-modal-icon {
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
-  }
-
   .modal-title {
     font-size: 16px;
   }
 
-  .options-grid {
-    max-height: calc(98vh - 180px);
-    grid-template-columns: 1fr;
-  }
-
-  .option-btn {
-    padding: 10px 12px;
-    min-height: 48px;
-  }
-
-  .option-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
-  }
-
-  .option-title {
-    font-size: 14px;
-  }
-
-  .option-description {
-    font-size: 11px;
-  }
 }
 
 // Estilos para pedidos congelados
@@ -2914,50 +2712,6 @@ $filter-border-color: #e0e0e0;
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
-}
-
-// Estilos para botones deshabilitados en el modal de opciones
-.option-btn {
-  &.disabled-option {
-    opacity: 0.6;
-    cursor: not-allowed;
-    background-color: #f8f9fa !important;
-    border-color: #e9ecef !important;
-    
-    &:hover {
-      transform: none !important;
-      box-shadow: none !important;
-      background-color: #f8f9fa !important;
-    }
-
-    .option-icon {
-      opacity: 0.5;
-      
-      &.frozen-icon {
-        position: relative;
-        
-        .frozen-lock {
-          position: absolute;
-          top: 2px;
-          right: 2px;
-          font-size: 0.6em;
-          color: #dc3545;
-          background: white;
-          border-radius: 50%;
-          padding: 1px;
-        }
-      }
-    }
-
-    .option-title {
-      color: #6c757d !important;
-    }
-
-    .text-warning {
-      color: #fd7e14 !important;
-      font-weight: 500;
-    }
-  }
 }
 
 // Estilos para botones deshabilitados en la tabla
@@ -4575,14 +4329,6 @@ $filter-border-color: #e0e0e0;
     padding: 10px 20px !important;
   }
 
-  /* Fix 6: Option buttons in mobile context */
-  .option-btn {
-    padding: 14px 16px !important;
-    min-height: 48px !important;
-    display: flex !important;
-    align-items: center !important;
-  }
-
   /* Fix 7: Local search clear button */
   .btn-outline-secondary.btn-sm {
     min-height: 44px !important;
@@ -4621,11 +4367,6 @@ $filter-border-color: #e0e0e0;
   .btn-close {
     min-height: 44px !important;
     min-width: 44px !important;
-  }
-
-  .option-btn {
-    padding: 12px 14px !important;
-    min-height: 44px !important;
   }
 
   /* Ensure inputs remain readable on tiny screens */

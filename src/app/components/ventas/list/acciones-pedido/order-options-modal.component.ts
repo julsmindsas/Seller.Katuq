@@ -66,7 +66,11 @@ export class OrderOptionsModalComponent implements OnChanges, AfterViewInit, OnD
 
   ngOnDestroy(): void {
     const a = this.abridor;
-    if (a && typeof a.focus === 'function' && document.body.contains(a)) a.focus();
+    // El foco vuelve al botón que abrió el modal SOLO si nadie más lo tomó: la acción escogida puede haber abierto
+    // otra ventana (Editar cliente, Pagos…) y el foco ya está en ella; quitárselo la dejaría sin teclado.
+    const activo = document.activeElement;
+    const libre = !activo || activo === document.body || this.dialogo?.nativeElement.contains(activo);
+    if (libre && a && typeof a.focus === 'function' && document.body.contains(a)) a.focus();
   }
 
   get numeroPedido(): string {
