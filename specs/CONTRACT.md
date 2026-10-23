@@ -11944,3 +11944,19 @@ Lo que queda está, sobre todo, en:
 - **Propuesta:** `carrito[i].idBodega` (convención D-361) por línea dentro de la misma `ciudad`; descuento, control de existencias y alistamiento por línea; sin bodega en la línea = exactamente como hoy. Bandera `multiBodegaMismaCiudad`, apagada; primero ALMACEN BOMBAS.
 - **No toca:** mezclar ciudades, partir pedidos o facturas, traslados, POS, asignación automática de canales. Write-set de inventario cerrado (D-134).
 - [Propuesta](../openspec/changes/pedido-con-varias-bodegas-misma-ciudad/proposal.md). Módulo sensible: un cambio a la vez con diff aprobado.
+
+## D-540 (2026-10-23) — POS: panel del ticket compacto (ticket 1340, ALMARA FELICIDAD) — APROBADA (Daniel, 23-oct)
+
+- **Por qué:** en 1366×768 el panel derecho del POS gastaba ~740 px antes del primer producto; con cliente asociado la lista quedaba en 0 px y el total debajo de «Cobrar con».
+- **Ya publicado (correcciones, 2026.10.23.1, `8510a712`):** piso propio del carrito, íconos de Font Awesome 4.7, −/+ en todo el botón, sin doble scroll en el POS de escritorio (clase `katuq-pos-escritorio`), Opttia en el encabezado de todo Katuq (sin botón flotante) y mayúscula inicial que respeta tildes (`mayusculaInicial`); 93 clientes corregidos con `scripts/clientes/corregirMayusculasConTilde.js`.
+- **Decisión (rediseño):** panel `clamp(400px, 32%, 440px)`, cliente plegado a una línea, filas de ~48 px con el editor de precio de D-536 plegado («Editar precio», una línea a la vez), cupón detrás de «Agregar cupón», pie fijo con TOTAL y pagos. «Cambiar» no quita el cliente hasta escoger otro. **Para todos los comercios, sin bandera.**
+- **No toca:** CartService (formato de `getPOSSubTotal`), `pos-order-creator`, móvil (< 1001 px).
+- [Propuesta](../openspec/changes/pos-panel-resumen-compacto/proposal.md). Pendiente: diseño y tareas aprobados antes de implementar.
+
+## D-541 (2026-10-23) — Historial completo e inmutable del pedido (ticket 1351, ALMARA FELICIDAD) — APROBADA (Daniel, 23-oct)
+
+- **Por qué:** el «Historial» solo guardaba cambios de estado del proceso; un pedido creado y pagado salía vacío.
+- **Ya publicado (mejora rápida, backend `cad71177`, front `ebe05a5e`):** candado de empresa en `GET /v1/orders/:orderId/history` (`requireJwtTenantOrPlatform`) y creación + pagos reconstruidos con los datos del pedido, marcados «Reconstruido».
+- **Decisiones:** colección NUEVA solo para el historial (append-only; `order_status_history` sigue igual para el Tablero en vivo); lo ve todo el que ve el pedido, exportan solo administradores; alertas F4 a la campana de los administradores; motivo obligatorio solo en la web desde la F2; la F1 sale con bandera por empresa (D-505), primero ALMARA.
+- **Fases:** F1 creación, estados, pagos, eliminación y pantalla básica; F2 las 17 opciones con antes → después; F3 sistema, inventario, integraciones, facturación y cliente; F4 comparar, exportar y alertas.
+- [Propuesta](../openspec/changes/historial-completo-del-pedido/proposal.md). Pendiente: diseño y tareas de la F1 aprobados antes de implementar.
