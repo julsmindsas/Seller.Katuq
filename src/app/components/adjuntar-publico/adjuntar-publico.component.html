@@ -1,0 +1,82 @@
+<app-publica-marco ancho="angosto" pie="Archivos del ticket con tecnología de Katuq">
+  <!-- Cargando -->
+  <div class="pub-stack adj-centro" *ngIf="paso === 'cargando'" role="status">
+    <span class="pub-estado pub-estado--info" aria-hidden="true"><i class="pi pi-spin pi-spinner"></i></span>
+    <p class="pub-lead">Abriendo la página…</p>
+  </div>
+
+  <!-- Error: enlace inválido, vencido, ya usado o función apagada -->
+  <div class="pub-stack adj-centro" *ngIf="paso === 'error'" role="alert">
+    <span class="pub-estado pub-estado--warn" aria-hidden="true"><i class="pi" [ngClass]="error.icono"></i></span>
+    <h1 class="pub-h2">{{ error.titulo }}</h1>
+    <p class="pub-lead">{{ error.texto }}</p>
+  </div>
+
+  <!-- Subir -->
+  <div class="pub-stack" *ngIf="paso === 'subir' && sesion">
+    <div>
+      <span class="pub-eyebrow">Ticket de soporte</span>
+      <h1 class="pub-h1">Sube los archivos</h1>
+      <p class="pub-lead">
+        Son para {{ comercio }}.
+        {{ sesion.esTicketExistente ? 'Se agregarán a un ticket que ya abriste.' : 'Se adjuntarán al ticket que Claude está preparando.' }}
+        No pasan por el chat.
+      </p>
+    </div>
+
+    <label class="adj-zona" [class.is-activa]="arrastrando" [class.is-llena]="!hayCupo" for="adj-archivos"
+           (dragover)="alArrastrar($event, true)" (dragleave)="alArrastrar($event, false)" (drop)="alSoltar($event)">
+      <input id="adj-archivos" class="adj-input" type="file" multiple [accept]="tiposAceptados"
+             [disabled]="!hayCupo" (change)="alElegir($event)" />
+      <span class="pub-estado pub-estado--info adj-zona__icono" aria-hidden="true"><i class="pi pi-upload"></i></span>
+      <span class="adj-zona__titulo">{{ hayCupo ? 'Arrastra los archivos aquí o toca para elegirlos' : 'Ya llegaste al máximo de archivos' }}</span>
+      <span class="adj-zona__ayuda">
+        Hasta {{ sesion.maximo }} archivos: imágenes, PDF, Excel, Word, CSV, audio y video.
+        Máximo {{ topeGeneralMb }} MB cada uno ({{ topeMediaMb }} MB para audio y video).
+      </span>
+    </label>
+
+    <ul class="adj-lista" *ngIf="items.length" aria-live="polite">
+      <li class="adj-fila" *ngFor="let i of items; trackBy: trackPorId" [class.is-error]="i.estado === 'error'">
+        <span class="adj-mini" aria-hidden="true">
+          <img *ngIf="i.vista" [src]="i.vista" alt="" />
+          <i *ngIf="!i.vista" class="pi" [ngClass]="i.estado === 'error' ? 'pi-exclamation-triangle' : 'pi-file'"></i>
+        </span>
+        <span class="adj-datos">
+          <span class="adj-nombre">{{ i.nombre }}</span>
+          <span class="adj-detalle" *ngIf="i.estado !== 'error'">
+            {{ formatearTamano(i.bytes) }} ·
+            {{ i.estado === 'subido' ? (i.quitando ? 'Quitando…' : 'Subido') : (i.estado === 'subiendo' ? 'Subiendo ' + i.progreso + '%' : 'En espera') }}
+          </span>
+          <span class="adj-detalle adj-detalle--error" *ngIf="i.estado === 'error'">{{ i.error }}</span>
+          <span class="adj-detalle adj-detalle--error" *ngIf="i.estado === 'subido' && i.error">{{ i.error }}</span>
+          <span class="adj-barra" *ngIf="i.estado === 'subiendo'" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+                [attr.aria-valuenow]="i.progreso" [attr.aria-label]="'Subiendo ' + i.nombre"><i [style.width.%]="i.progreso"></i></span>
+        </span>
+        <button type="button" class="adj-quitar" (click)="quitar(i)" [disabled]="i.quitando"
+                [attr.aria-label]="'Quitar ' + i.nombre">Quitar</button>
+      </li>
+    </ul>
+
+    <p class="pub-aviso pub-aviso--error" *ngIf="avisoTerminar" role="alert">
+      <span class="adj-heredar">{{ avisoTerminar }}</span>
+    </p>
+
+    <button type="button" class="pub-btn" (click)="terminar()" [disabled]="!puedeTerminar">
+      <span class="pub-spinner" *ngIf="terminando" aria-hidden="true"></span>
+      <span class="adj-heredar">{{ terminando ? 'Guardando…' : (hayEnCurso ? 'Subiendo…' : 'Listo, ya subí todo') }}</span>
+    </button>
+    <p class="pub-fine">
+      Después vuelve a Claude y toca «Ya los subí» en la tarjeta del ticket. Este enlace se usa una sola vez y vale 30 minutos.
+    </p>
+  </div>
+
+  <!-- Terminado -->
+  <div class="pub-stack adj-centro" *ngIf="paso === 'terminado'" role="status">
+    <span class="pub-estado pub-estado--ok" aria-hidden="true"><i class="pi pi-check-circle"></i></span>
+    <h1 class="pub-h2">{{ cuantosSubidos === 1 ? 'Quedó 1 archivo' : 'Quedaron ' + cuantosSubidos + ' archivos' }}</h1>
+    <p class="pub-lead">
+      Vuelve a Claude y toca «Ya los subí» en la tarjeta del ticket para revisarlos y aprobar. Ya puedes cerrar esta página.
+    </p>
+  </div>
+</app-publica-marco>

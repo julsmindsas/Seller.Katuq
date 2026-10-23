@@ -15,6 +15,8 @@ describe('rutas-publicas', () => {
     expect(rutaSinQuery('/inventario;bodega=BOD-001')).toBe('/inventario');
     expect(esRutaPublica('/login?returnUrl=%2Fpedidos')).toBe(true);
     expect(esRutaPublica('/encuesta/tok123')).toBe(true);
+    expect(esRutaPublica('/adjuntar/tok123')).toBe(true);
+    expect(esRutaPublica('/adjuntarx')).toBe(false);
   });
 
   it('la lista de novedades sigue siendo la misma', () => {

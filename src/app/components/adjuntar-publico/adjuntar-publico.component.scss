@@ -1,0 +1,143 @@
+// Página pública de subida de archivos de un ticket abierto desde Claude (D-549, plan B).
+// Marco y piezas de las pantallas públicas (D-398): plano, acento #5F3FE0, sin gradientes.
+// Ningún nombre de clase contiene "p-" (el reset global fuerza su tamaño de letra); los spans y el
+// label llevan color y tamaño propios (`span.ng-star-inserted` pinta de azul y `label` fija .7rem).
+@import '../../shared/components/publica/publica';
+
+:host {
+  display: block;
+  @include publica-piezas;
+}
+
+.adj-heredar { color: inherit; font-size: inherit; }
+
+.adj-centro {
+  align-items: center;
+  text-align: center;
+
+  .pub-lead { margin-left: auto; margin-right: auto; }
+}
+
+// Zona para soltar o elegir: es un label, así el toque abre el selector y también funciona con teclado.
+.adj-zona {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 26px 18px;
+  text-align: center;
+  background: $pub-tint;
+  border: 1.5px dashed #ddd3fb;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+
+  &:hover, &.is-activa { background: $pub-accent-soft; border-color: $pub-accent; }
+  &:focus-within { outline: 3px solid $pub-accent-2; outline-offset: 2px; }
+  &.is-llena { cursor: not-allowed; opacity: .7; }
+}
+
+.adj-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.adj-zona__icono { width: 52px; height: 52px; font-size: 24px; }
+
+.adj-zona__titulo {
+  color: $pub-ink;
+  font-family: $pub-display;
+  // Hay un `label { font-size: .7rem !important }` global (styles.scss) y este span hereda de un label.
+  font-size: 16px !important;
+  line-height: 1.35;
+}
+
+.adj-zona__ayuda { color: $pub-body; font-size: 13.5px !important; line-height: 1.45; max-width: 40ch; }
+
+.adj-lista {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.adj-fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid $pub-line;
+  border-radius: 16px;
+
+  &.is-error { background: $pub-err-soft; border-color: transparent; }
+}
+
+.adj-mini {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  overflow: hidden;
+  border-radius: 11px;
+  background: $pub-tile;
+  color: $pub-accent;
+  font-size: 20px;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.adj-fila.is-error .adj-mini { background: #fff; color: $pub-err; }
+
+.adj-datos {
+  flex: 1;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.adj-nombre {
+  color: $pub-ink;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adj-detalle { color: $pub-body; font-size: 13px; line-height: 1.35; overflow-wrap: anywhere; }
+.adj-detalle--error { color: $pub-err; }
+
+.adj-barra {
+  display: block;
+  height: 6px;
+  margin-top: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: $pub-accent-soft;
+
+  i { display: block; height: 100%; background: $pub-accent; transition: width .15s ease; }
+}
+
+.adj-quitar {
+  flex: none;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: $pub-accent;
+  font-family: $pub-display;
+  font-size: 13px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { background: $pub-accent-soft; }
+  &:disabled { color: $pub-muted; cursor: not-allowed; }
+}
