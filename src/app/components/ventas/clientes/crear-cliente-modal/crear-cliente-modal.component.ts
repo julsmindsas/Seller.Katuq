@@ -15,6 +15,7 @@ import { EntregaCliente, esEntregaCompleta, normalizarEntrega, normalizarEntrega
 import { normalizeZonasCobro, zonaCubreCiudad } from "../../../../shared/util/zona-cobro.util";
 import Swal from "sweetalert2";
 import { ContactoCliente } from "../../modelo/pedido";
+import { mayusculaInicial } from '../../../../shared/utils/mayuscula-inicial';
 
 /** Resultado que el formulario entrega a quien lo abrió (modal: `close()`, inline: `guardado`). */
 export interface ResultadoFormularioCliente {
@@ -550,8 +551,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
   }
 
   private toTitleCase(str: string): string {
-    if (!str) return str;
-    return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    return mayusculaInicial(str); // Ticket 1340: respeta las tildes («Gómez», no «GóMez»)
   }
 
   private getCamposFaltantes(): string[] {

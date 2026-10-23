@@ -9,6 +9,7 @@ import { ThemeModeService } from '../../services/theme-mode.service';
 import { MaestroService } from '../../services/maestros/maestro.service';
 import { TourNavigationService } from '../../services/tour-navigation.service';
 import { SubscriptionService } from '../../services/subscription.service';
+import { OpttiaChatService } from '../../services/opttia-chat.service';
 
 @Component({
   selector: 'app-header',
@@ -34,7 +35,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private notificationService: NotificationrlService,
     private tourNavigationService: TourNavigationService,
     public subscriptionService: SubscriptionService,
-    private themeMode: ThemeModeService) {
+    private themeMode: ThemeModeService,
+    public opttiaChat: OpttiaChatService) {
   }
   loadNotifications() {
     this.notificationService.getNotifications()

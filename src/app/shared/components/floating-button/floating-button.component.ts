@@ -52,6 +52,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
   public chatMaximized: boolean = false;
   public isPremiumUser: boolean = false;
   private openRequestSub?: Subscription;
+  private menuToggleSub?: Subscription;
 
   constructor(
     public authService: AuthService,
@@ -137,6 +138,10 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     this.subscriptionService.subscription$.subscribe(subscription => {
       this.isPremiumUser = subscription?.plan === 'premium';
     });
+
+    // Ticket 1340: el botón de Opttia está en el encabezado; aquí quedan el menú y el chat.
+    this.opttiaChat.setLauncherDisponible(true);
+    this.menuToggleSub = this.opttiaChat.menuToggleRequested$.subscribe(() => this.toggleOptionsPanel());
 
     // Una pantalla pidió abrir Opttia con una pregunta ya escrita (D-401).
     this.openRequestSub = this.opttiaChat.openRequested$.subscribe(() => {
@@ -855,6 +860,8 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.opttiaChat.setLauncherDisponible(false);
+    this.menuToggleSub?.unsubscribe();
     this.openRequestSub?.unsubscribe();
     // Detener sesión de voz si está activa
     if (this.voiceAgentService.isSessionActive()) {

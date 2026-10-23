@@ -1626,3 +1626,14 @@ body.kq-editor-lleno {
 // Avisos flotantes (ngx-toastr y p-toast) con el estilo Katuq. Al final para mandar sobre
 // los temas, primeng-overrides y dark-mode.
 @import "./assets/scss/components/avisos";
+
+// Ticket 1340: el POS en escritorio sin scroll de página (antes había dos barras: la del ticket
+// y la de la página, que siempre medía ~150 px más que la ventana por el min-height de
+// .page-body, el encabezado y el pie). La clase la pone PosComponent mientras está abierto.
+@media (min-width: 1001px) {
+  body.katuq-pos-escritorio {
+    .page-body { min-height: 0 !important; padding-bottom: 0 !important; }
+    .footer { display: none !important; }
+    .pos-shell { height: calc(100vh - 116px); }
+  }
+}

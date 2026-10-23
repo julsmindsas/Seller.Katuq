@@ -47,13 +47,13 @@
                     </ng-template>
                     <ng-template pTemplate="empty">
                         <div class="empty-results">
-                            <i class="fa fa-user-slash"></i>
+                            <i class="fa fa-user-times"></i>
                             <span>{{ 'No se encontraron clientes' | translate }}</span>
                         </div>
                     </ng-template>
                 </p-autoComplete>
                 <span class="loading-spinner" *ngIf="isSearching">
-                    <i class="fa fa-circle-notch fa-spin"></i>
+                    <i class="fa fa-circle-o-notch fa-spin"></i>
                 </span>
             </div>
 
@@ -68,10 +68,10 @@
                         <!-- Ticket 1328: métricas de compra del cliente (spec 009) -->
                         <button class="btn-action" type="button" (click)="mostrarMetricas = true"
                                 title="Ver métricas" aria-label="Ver métricas del cliente">
-                            <i class="fa fa-chart-line"></i>
+                            <i class="fa fa-line-chart"></i>
                         </button>
                         <button class="btn-action" (click)="editarCliente()" title="Editar">
-                            <i class="fa fa-pen"></i>
+                            <i class="fa fa-pencil"></i>
                         </button>
                         <button class="btn-action btn-action-danger" (click)="limpiar()" title="Quitar">
                             <i class="fa fa-times"></i>
@@ -94,7 +94,7 @@
                     </div>
                     <!-- D-419 (ticket 1171): a quién se factura la venta -->
                     <div class="cliente-facturacion" [class.incompleta]="facturacionIncompleta">
-                        <i class="fa fa-file-invoice"></i>
+                        <i class="fa fa-file-text-o"></i>
                         <span class="cf-label">{{ 'Facturación' | translate }}:</span>
                         <span class="cf-valor">{{ resumenFacturacion }}</span>
                         <button type="button" class="cf-cambiar" (click)="abrirFacturacion()">{{ 'Cambiar' | translate }}</button>

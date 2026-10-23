@@ -1175,3 +1175,17 @@ a {
 }
 
 @import 'opttia-launcher';
+
+// Ticket 1340: Opttia se abre desde el encabezado. El botón flotante ya no se muestra (tapaba los
+// botones de pago del POS); el menú sale arriba a la derecha, bajo el botón del encabezado. El chat
+// queda donde siempre. En celular el menú sigue como hoja inferior (_opttia-launcher.scss).
+.opttia-launcher > .floating-button { display: none !important; }
+
+@media (min-width: 769px) {
+  .opttia-launcher .opttia-menu {
+    position: fixed !important;
+    top: 72px !important;
+    right: 16px !important;
+    bottom: auto !important;
+  }
+}

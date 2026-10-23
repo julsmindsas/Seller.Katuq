@@ -5,6 +5,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ClientConfigService, ClientTag } from './services/client-config.service';
 import { clientBillingProfiles } from '../../../shared/utils/client-search';
+import { mayusculaInicial } from '../../../shared/utils/mayuscula-inicial';
 
 /**
  * Pantalla Crear cliente (`ventas/clientes`).
@@ -462,8 +463,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   }
 
   private toTitleCase(str: string): string {
-    if (!str) return str;
-    return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    return mayusculaInicial(str); // Ticket 1340: respeta las tildes («Gómez», no «GóMez»)
   }
 
   // =============================================

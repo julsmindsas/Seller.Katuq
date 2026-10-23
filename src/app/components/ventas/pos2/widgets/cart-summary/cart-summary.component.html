@@ -23,19 +23,21 @@
                     <h6 class="txt-primary">${{ precioUnitario(item) | number:'1.2-2' }}
                       <span *ngIf="lineaEditada(item)" class="marca-editado">Editado</span>
                     </h6>
-                    <a href="javascript:void(0)">
-                      <i class="fa fa-trash trash-remove" (click)="cartService.posRemoveCartItem(item)"></i>
+                    <a href="javascript:void(0)" (click)="cartService.posRemoveCartItem(item)" title="Quitar" aria-label="Quitar producto">
+                      <i class="fa fa-trash trash-remove"></i>
                     </a>
                   </div>
                 </div>
                 <div class="right-details mb-2">
                   <div class="touchspin-wrapper">
-                    <button class="decrement-touchspin btn-touchspin">
-                      <i class="fa fa-minus icono-pos" (click)="cartService.updatePOSQuantity(-1, item)"></i>
+                    <button type="button" class="decrement-touchspin btn-touchspin" aria-label="Quitar una unidad"
+                            (click)="cartService.updatePOSQuantity(-1, item)">
+                      <i class="fa fa-minus icono-pos"></i>
                     </button>
                     <span class="input-touchspin fs-14 fc-gray" type="text">{{item.cantidad}}</span>
-                    <button class="increment-touchspin btn-touchspin">
-                      <i class="fa fa-plus icono-pos" (click)="cartService.updatePOSQuantity(1, item)"></i>
+                    <button type="button" class="increment-touchspin btn-touchspin" aria-label="Agregar una unidad"
+                            (click)="cartService.updatePOSQuantity(1, item)">
+                      <i class="fa fa-plus icono-pos"></i>
                     </button>
                   </div>
                 </div>

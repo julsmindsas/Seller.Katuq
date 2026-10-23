@@ -332,3 +332,39 @@
     padding: 0 12px;
   }
 }
+
+// Ticket 1340: botón de Opttia en el encabezado. Cada span lleva color y tamaño propios.
+.opttia-encabezado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px 0 6px;
+  border: 1px solid #e4e2ef;
+  border-radius: 20px;
+  background: #fff;
+  color: #211F3A;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease;
+
+  img { width: 24px; height: 24px; border-radius: 50%; }
+
+  .opttia-encabezado__texto { color: #211F3A; font-size: 13px; font-weight: 700; letter-spacing: normal; }
+  .opttia-encabezado__ia {
+    color: #5F3FE0;
+    background: #efe9ff;
+    border-radius: 20px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  &:hover { border-color: #5F3FE0; box-shadow: 0 6px 14px -8px rgba(50, 40, 110, .35); }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+
+  // En celular solo el avatar
+  @media (max-width: 575px) {
+    padding: 0 6px;
+    .opttia-encabezado__texto, .opttia-encabezado__ia { display: none; }
+  }
+}

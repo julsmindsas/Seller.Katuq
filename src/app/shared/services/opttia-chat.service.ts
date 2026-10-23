@@ -97,6 +97,21 @@ export class OpttiaChatService implements OnDestroy {
     this.openRequestSubject.next(text);
   }
 
+  // Ticket 1340: Opttia se abre desde el encabezado (ya no hay botón flotante). El componente
+  // flotante (menú y chat) avisa si está montado; el encabezado solo muestra el botón entonces.
+  private readonly menuToggleSubject = new Subject<void>();
+  readonly menuToggleRequested$ = this.menuToggleSubject.asObservable();
+  private readonly launcherSubject = new BehaviorSubject<boolean>(false);
+  readonly launcherDisponible$ = this.launcherSubject.asObservable();
+
+  toggleMenuFromHeader(): void {
+    this.menuToggleSubject.next();
+  }
+
+  setLauncherDisponible(disponible: boolean): void {
+    this.launcherSubject.next(disponible);
+  }
+
   /** El chat la toma al abrirse; después se borra para no repetirla. */
   takePendingDraft(): string | null {
     const draft = this.pendingDraft;

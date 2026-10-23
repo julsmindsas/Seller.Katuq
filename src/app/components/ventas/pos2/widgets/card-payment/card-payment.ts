@@ -67,9 +67,9 @@ export class CardPaymentComponent implements OnInit {
    */
   getCategoryIcon(categoria: string): string {
     const cat = (categoria || '').toLowerCase();
-    if (cat.includes('offline') || cat.includes('efectivo')) return 'fa fa-money-bill-wave';
+    if (cat.includes('offline') || cat.includes('efectivo')) return 'fa fa-money';
     if (cat.includes('online')) return 'fa fa-globe';
-    if (cat.includes('billeteras')) return 'fa fa-wallet';
+    if (cat.includes('billeteras')) return 'fa fa-mobile';
     if (cat.includes('cripto')) return 'fa fa-bitcoin';
     if (cat.includes('crédito')) return 'fa fa-credit-card';
     return 'fa fa-credit-card';
