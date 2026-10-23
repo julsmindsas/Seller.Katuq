@@ -429,10 +429,10 @@ Una prueba de contrato del backend con un espía de Firestore falla si alguna de
 3. **Falla del conteo de uso** (D16). La spec pide avisar cuando falla «el conteo o una preferencia». Recomendado: avisar solo cuando falla una preferencia (pin, restablecer, sugerencia). El conteo falla en silencio, para no interrumpir al cajero en cada clic.
 4. **Impuestos distintos del IVA** (D8). No existe hoy un dato de empresa que lo diga. Recomendado: «Ajusta el IVA del pedido» para todos, y la otra reseña cuando exista ese dato.
 
-### Open Questions → resueltas (2026-10-23, pendientes de la frase de Daniel)
+### Open Questions → resueltas (2026-10-23, confirmadas por Daniel: CONTRACT.md, commit `459ba31f`)
 
-1. **Íconos Tabler en el pedido:** sí, con el registro de D-546 (`IconoTablerComponent` y `shared/icons/tabler-iconos.ts`). Recomendada; confirmación de Daniel pendiente de citar.
-2. **Historial con D-541:** «Historial» en la grilla y «Historial del pedido» en el botón del detalle (y nombre anterior para el buscador). Recomendada; confirmación de Daniel pendiente de citar.
+1. **Íconos Tabler en el pedido:** sí, con el registro de D-546 (`IconoTablerComponent` y `shared/icons/tabler-iconos.ts`). Recomendada y confirmada por Daniel (23-oct).
+2. **Historial con D-541:** «Historial» en la grilla y «Historial del pedido» en el botón del detalle (y nombre anterior para el buscador). Recomendada y confirmada por Daniel (23-oct).
 3. **Falla del conteo de uso:** el conteo falla en silencio y solo se avisa cuando falla una preferencia (la recomendada, por omisión).
 4. **Impuestos distintos del IVA:** «Ajusta el IVA del pedido» para todos (la recomendada, por omisión).
 
