@@ -1,4 +1,4 @@
-> **Estado:** PROPUESTA, pendiente de aprobación de Daniel. Ticket 1340 (ALMARA FELICIDAD). Decisión: D-XXX (por asignar). Redactada el 2026-10-23. Solo documentos: sin diseño, sin tareas y sin código.
+> **Estado:** APROBADA por Daniel el 2026-10-23, con las cuatro preguntas respondidas (al final). Ticket 1340 (ALMARA FELICIDAD). Decisión: D-XXX (por asignar). `design.md` y `tasks.md` redactados el mismo día y pendientes de aprobación. Sin código.
 
 ## Why
 
@@ -113,16 +113,12 @@ No hay desviaciones del design-system.
   - todo `span` con `*ngIf` lleva su propio color y tamaño;
   - el foco se devuelve con `:focus-visible`;
   - se neutraliza el `letter-spacing` heredado.
-- **Sesiones paralelas:** las correcciones del 1340 están sin commitear en estos mismos archivos (`pos.component.*`, `cart-summary`, `customer-section` y `pos-checkout`). Esta propuesta se implementa cuando esas correcciones estén publicadas, para no pisarlas.
+- **Sesiones paralelas:** las correcciones del 1340 ya están publicadas (2026.10.23.1, commit `8510a712`) y esta propuesta parte de ellas. Antes de implementar se hace `git pull` y se confirma que ninguna otra sesión tiene cambios sin commitear en `pos2`.
 - **Uso táctil:** en filas de 48 px, los botones −, + y quitar miden al menos 32×32 px.
 
-## Preguntas para Daniel
+## Preguntas respondidas (Daniel, 2026-10-23)
 
-1. ¿Sale para todos los comercios con POS o primero solo para ALMARA, con una bandera por empresa (D-505)?
-2. ¿Qué hace «Cambiar» en el cliente?
-   - **Propuesto:** muestra el buscador sin quitar el cliente actual hasta que se escoja otro. Si el cajero cancela, el cliente queda.
-   - **Alternativa:** quita el cliente de una vez.
-3. ¿Qué pasa con el campo de cupón mientras no funcione?
-   - **Propuesto:** queda plegado detrás de «Agregar cupón».
-   - **Alternativa:** se oculta del todo.
-4. ¿Solo una línea puede tener «Editar precio» abierto a la vez? Es lo propuesto: al abrir otra, se cierra la anterior.
+1. **¿Para quién sale?** Para todos los comercios con POS, sin bandera por empresa. No se agrega nada en `companies.featureFlags` (D-505). Si algo falla, se revierte el commit del front.
+2. **¿Qué hace «Cambiar» en el cliente?** Muestra el buscador sin quitar el cliente actual hasta que se escoja otro. Si el cajero cancela (Esc o clic fuera), el cliente queda asociado, con la misma facturación.
+3. **¿Qué pasa con el cupón mientras no funcione?** Queda plegado detrás de «Agregar cupón». Al abrirlo se comporta igual que hoy.
+4. **¿Una sola línea con «Editar precio» abierto?** Sí. Al abrir otra línea se cierra la anterior, y cerrar no deshace los cambios.
