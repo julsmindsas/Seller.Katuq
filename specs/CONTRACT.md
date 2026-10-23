@@ -11960,3 +11960,50 @@ Lo que queda está, sobre todo, en:
 - **Decisiones:** colección NUEVA solo para el historial (append-only; `order_status_history` sigue igual para el Tablero en vivo); lo ve todo el que ve el pedido, exportan solo administradores; alertas F4 a la campana de los administradores; motivo obligatorio solo en la web desde la F2; la F1 sale con bandera por empresa (D-505), primero ALMARA.
 - **Fases:** F1 creación, estados, pagos, eliminación y pantalla básica; F2 las 17 opciones con antes → después; F3 sistema, inventario, integraciones, facturación y cliente; F4 comparar, exportar y alertas.
 - [Propuesta](../openspec/changes/historial-completo-del-pedido/proposal.md). Pendiente: diseño y tareas de la F1 aprobados antes de implementar.
+
+### 2026-10-23 — Tickets de ALMARA FELICIDAD: aprobaciones de Daniel (23-oct)
+
+Daniel aprobó en bloque, con las opciones recomendadas de cada propuesta, «cerrar todo lo de ALMARA» menos 1355 y 1356, que lleva otra sesión (D-543 y D-544).
+
+- **Aprobado y commiteado, sin publicar:**
+  - 1332, backend `6d3ea44f`: el tablero de Producción solo guarda el avance de producción de cada línea y ya no borra el sabor ni la tarjeta (DAD-014554).
+  - D-541, backend `9ab9074d`: F1 hasta el enganche 4.1, con la bandera `orderHistoryLog` apagada.
+  - D-484 (`reportes-empresa-del-jwt`): APROBADA el 23-oct. Es requisito de D-551.
+- **Arreglos sin spec (bugs y solo presentación), commiteados:**
+  - 1359: celular de otro país;
+  - 1358, fase 0: «Última edición» en hora de Colombia, con quién la hizo, tomado del token;
+  - 1334: el menú no parte palabras;
+  - 1338: filtros de cotizaciones y «Nº cotización»;
+  - 1347: textos e íconos de reportes.
+
+## D-546 (2026-10-23) — Menú lateral ordenado (tickets 1335, 1337 y 1336, ALMARA) — APROBADA la propuesta (Daniel, 23-oct)
+- `openspec/changes/menu-lateral-ordenado/`. Fases: F1 ancho de 264 px y filas de tres zonas; F2 íconos por grupo y modo compacto de 72 px; F3 el mapa de ALMARA, sin cambiar rutas ni permisos y conservando los favoritos.
+- Decisiones: para todos y sin bandera; íconos Tabler solo en el menú; lo que el 1336 pide fuera del menú va en cambios aparte.
+- Siguen design y tasks, con su aprobación.
+
+## D-547 (2026-10-23) — Acciones del pedido (tickets 1350 y 1349, ALMARA) — APROBADA la propuesta (Daniel, 23-oct)
+- `openspec/changes/acciones-del-pedido/`.
+  - F1: grilla fija de 16 acciones, más la fila «Para este pedido», para todos.
+  - F2: 4 acciones del rol y 4 del usuario, con bandera, ALMARA primero. Katuq solo sugiere.
+- Se coordina con D-543 y D-544, que suman dos acciones, y con D-541.
+
+## D-548 (2026-10-23) — Trazabilidad de productos y precios (tickets 1357 y 1358, ALMARA) — APROBADA la propuesta (Daniel, 23-oct)
+- `openspec/changes/trazabilidad-productos-y-precios/`: un evento por cambio real, con quién, cuándo, antes → después y origen, guardado en `productHistory`.
+- Las sincronizaciones dejan evento a partir de la F2. Revertir se decide después. Sale con bandera, ALMARA primero, y solo la familia Administrador exporta.
+
+## D-549 (2026-10-23) — Adjuntos a tickets desde Claude (ticket 1339, ALMARA) — APROBADA la propuesta (Daniel, 23-oct)
+- `openspec/changes/mcp-adjuntos-tickets/`: los archivos se eligen en la tarjeta y se aprueban.
+- Si Claude no deja elegir archivos, el plan B es un enlace de un solo uso a Katuq. Los archivos no aprobados se borran a las 24 h. Sale para todos, con un interruptor en `config/`.
+
+## D-550 (2026-10-23) — Editar pedidos desde Claude (ticket 1333, ALMARA) — APROBADA la propuesta (Daniel, 23-oct)
+- `openspec/changes/mcp-editar-pedidos/`: cada cambio pasa por tarjeta de aprobación y por el mismo camino de la pantalla.
+- F0: `update_order_status` también pide aprobación; hoy escribe a la primera.
+- Sale con bandera por empresa y por fase. Depende de D-541, D-543 y D-544.
+
+## D-551 (2026-10-23) — Reportes para dueños (tickets 1341-1348, ALMARA) — APROBADA la propuesta (Daniel, 23-oct)
+- `openspec/changes/reportes-para-duenos/`. Tres fases, siempre después de D-484.
+- «Ventas» se cuenta por fecha de entrega, o por la de creación si el pedido no tiene. El valor es el guardado, sin pedidos caídos.
+- Velocidad: se lee solo el período, sin guardar resultados.
+- Costo: el vigente en la fecha de la venta.
+- El resumen del lunes sale apagado por omisión y con dos semanas en sombra.
+- La F3 se integra a D-474 y al informe ejecutivo.
