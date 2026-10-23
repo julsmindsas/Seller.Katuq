@@ -162,7 +162,7 @@
            class="favorite-link"
            [attr.aria-label]="'Ir a ' + (favorite.title | translate)">
           <i class="fa" [ngClass]="getMenuIcon(favorite.icon, favorite.title)" aria-hidden="true"></i>
-          <span>{{favorite.title | translate}}</span>
+          <span class="favorite-text" [attr.title]="favorite.title | translate">{{favorite.title | translate}}</span>
           <button class="remove-favorite-btn" 
                   (click)="toggleFavorite(favorite, $event)"
                   [attr.aria-label]="'Quitar ' + (favorite.title | translate) + ' de favoritos'">
@@ -176,7 +176,7 @@
              class="favorite-link"
              [attr.aria-label]="'Abrir ' + (favorite.title | translate) + ' en el menú'">
             <i class="fa" [ngClass]="getMenuIcon(favorite.icon, favorite.title)" aria-hidden="true"></i>
-            <span>{{favorite.title | translate}}</span>
+            <span class="favorite-text" [attr.title]="favorite.title | translate">{{favorite.title | translate}}</span>
             <button class="remove-favorite-btn"
                     (click)="toggleFavorite(favorite, $event)"
                     [attr.aria-label]="'Quitar ' + (favorite.title | translate) + ' de favoritos'">
@@ -191,7 +191,7 @@
                  routerLinkActive="active"
                  class="favorite-link favorite-link--hijo"
                  [attr.aria-label]="'Ir a ' + (enlace.title | translate)">
-                <span>{{enlace.title | translate}}</span>
+                <span class="favorite-text" [attr.title]="enlace.title | translate">{{enlace.title | translate}}</span>
               </a>
             </li>
           </ul>
@@ -221,7 +221,7 @@
           <div class="section-icon">
             <i class="fa" [ngClass]="getSectionIcon(section.title)" aria-hidden="true"></i>
           </div>
-          <span class="section-title">{{section.title | translate}}</span>
+          <span class="section-title" [attr.title]="section.title | translate">{{section.title | translate}}</span>
           <i class="fa fa-chevron-down section-chevron" 
              [class.rotated]="!section.collapsed" 
              aria-hidden="true"></i>
@@ -257,6 +257,7 @@
                 <i class="fa" [ngClass]="getMenuIcon(item.icon, item.title)" aria-hidden="true"></i>
               </div>
               <span class="menu-text"
+                    [attr.title]="item.title | translate"
                     [class.sr-only]="isCompactMode || (collapseMenu && !isTemporarilyExpanded)">{{item.title | translate}}</span>
               <!-- Ticket 1177: insignia (NUEVO) para que los administradores vean lo recién publicado -->
               <span class="menu-badge" *ngIf="badgeVisible(item) && (!collapseMenu || isTemporarilyExpanded)">{{item.badgeValue | translate}}</span>
@@ -284,6 +285,7 @@
                 <i class="fa" [ngClass]="getMenuIcon(item.icon, item.title) || 'fa-external-link'" aria-hidden="true"></i>
               </div>
               <span class="menu-text"
+                    [attr.title]="item.title | translate"
                     [class.sr-only]="isCompactMode || (collapseMenu && !isTemporarilyExpanded)">{{item.title | translate}}</span>
               <i class="fa fa-external-link external-icon" 
                  *ngIf="!collapseMenu" 
@@ -307,6 +309,7 @@
                 <i class="fa" [ngClass]="getMenuIcon(item.icon, item.title) || 'fa-folder-o'" aria-hidden="true"></i>
               </div>
               <span class="menu-text"
+                    [attr.title]="item.title | translate"
                     [class.sr-only]="isCompactMode || (collapseMenu && !isTemporarilyExpanded)">{{item.title | translate}}</span>
               <span class="menu-badge menu-badge--dot" *ngIf="!item.active && hasNewChild(item) && (!collapseMenu || isTemporarilyExpanded)" title="Hay opciones nuevas"></span>
               <i class="fa fa-chevron-down submenu-chevron"
@@ -352,7 +355,7 @@
                   <div class="submenu-icon">
                     <i class="fa" [ngClass]="getSubmenuIcon(child.icon, child.title)" aria-hidden="true"></i>
                   </div>
-                  <span class="submenu-text">{{child.title | translate}}</span>
+                  <span class="submenu-text" [attr.title]="child.title | translate">{{child.title | translate}}</span>
                   <span class="menu-badge" *ngIf="badgeVisible(child)">{{child.badgeValue | translate}}</span>
                 </a>
 
@@ -362,7 +365,7 @@
                   <div class="submenu-icon" aria-hidden="true">
                     <i class="fa" [ngClass]="getSubmenuIcon(child.icon, child.title)"></i>
                   </div>
-                  <span class="submenu-text">{{ child.title | translate }}</span>
+                  <span class="submenu-text" [attr.title]="child.title | translate">{{ child.title | translate }}</span>
                   <span class="submenu-future-label">Próximamente</span>
                 </div>
 
@@ -378,7 +381,7 @@
                   <div class="submenu-icon">
                     <i class="fa" [ngClass]="getSubmenuIcon(child.icon, child.title)" aria-hidden="true"></i>
                   </div>
-                  <span class="submenu-text">{{child.title | translate}}</span>
+                  <span class="submenu-text" [attr.title]="child.title | translate">{{child.title | translate}}</span>
                   <i class="fa fa-chevron-down submenu-chevron" 
                      [class.rotated]="child.active" 
                      aria-hidden="true"></i>
@@ -402,7 +405,7 @@
                       <div class="sub-submenu-icon">
                         <i class="fa" [ngClass]="getSubmenuIcon(grandchild.icon, grandchild.title)" aria-hidden="true"></i>
                       </div>
-                      <span>{{grandchild.title | translate}}</span>
+                      <span class="sub-submenu-text" [attr.title]="grandchild.title | translate">{{grandchild.title | translate}}</span>
                     </a>
                   </li>
                 </ul>

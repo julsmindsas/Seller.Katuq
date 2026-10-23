@@ -448,6 +448,30 @@
 // =====================================================================
 // NAVEGACIÓN PRINCIPAL
 // =====================================================================
+
+// Ticket 1334: nombre de una opción del menú, en cualquier nivel. Ocupa el
+// espacio que dejan ícono, insignia, estrella y flecha; corta solo entre
+// palabras, en máximo dos líneas y con "…". El nombre completo va en `title`.
+// (El 1329 había puesto `overflow-wrap: break-word` con `min-width: 0`: en una
+// fila angosta el navegador partía las palabras y, junto a una insignia, el
+// nombre quedaba de una letra por línea).
+@mixin ktq-nombre-menu {
+  flex: 1 1 0%;
+  min-width: 0;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+  line-height: 1.25;
+  letter-spacing: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .main-navigation {
   flex: 1;
   overflow-y: auto;
@@ -499,12 +523,17 @@
     font-weight: 700;
     letter-spacing: .4px;
     text-transform: uppercase;
-    // Ticket 1329: el nombre completo en hasta dos líneas, sin cortarlo con "…".
-    white-space: normal;
-    overflow-wrap: break-word;
-    line-height: 1.25;
+    // Ticket 1334: el título de la sección va en una línea con "…"; el nombre
+    // completo sale en el `title` de la cabecera.
+    flex: 1 1 0%;
     min-width: 0;
-    flex: 1;
+    white-space: nowrap;
+    word-break: normal;
+    overflow-wrap: normal;
+    hyphens: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
   }
 
   .section-chevron {
@@ -594,11 +623,7 @@
   }
 
   .menu-text {
-    flex: 1;
-    min-width: 0;
-    white-space: normal;
-    overflow-wrap: break-word;
-    line-height: 1.25;
+    @include ktq-nombre-menu;
   }
 
   .submenu-chevron {
@@ -746,14 +771,11 @@
   }
 
   .submenu-text {
-    flex: 1;
-    min-width: 0;
-    white-space: normal;
-    overflow-wrap: break-word;
-    line-height: 1.25;
+    @include ktq-nombre-menu;
   }
 
   .submenu-chevron {
+    flex: none;
     font-size: 10px;
     color: var(--ktq-faint);
     transition: transform .25s;
@@ -806,11 +828,16 @@
 
     .sub-submenu-icon {
       width: 16px;
+      flex: none;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #a29fbd;
       i { font-size: 12px; }
+    }
+
+    .sub-submenu-text {
+      @include ktq-nombre-menu;
     }
 
     &:hover {
@@ -1616,3 +1643,49 @@ body.dark-only {
   text-transform: uppercase;
   white-space: nowrap;
 }
+
+// =====================================================================
+// Ticket 1334: nombres del menú completos, sin partir palabras
+// =====================================================================
+
+// Favoritos: mismo nombre de dos líneas que el resto del menú.
+.favorites-section .favorite-link .favorite-text {
+  @include ktq-nombre-menu;
+}
+
+// Más aire para el nombre: separaciones de 8 px y la estrella de favoritos sin
+// el relleno de 0.3rem que le pone styles.scss (la estrella sigue en su sitio).
+.sidebar-container .menu-link { gap: 8px; }
+.sidebar-container .submenu-link { gap: 8px; }
+.sidebar-wrapper .sidebar-container .menu-link .favorite-btn {
+  flex: none;
+  padding: 2px 3px !important;
+}
+
+// La insignia (NUEVO / PRÓXIMAMENTE) baja a una segunda línea, alineada con el
+// nombre: al lado le dejaba al nombre 0–34 px y salía letra por letra. El
+// `::after` de ancho completo fuerza el salto de línea; el punto (●) sigue en línea.
+.menu-link:has(> .menu-badge:not(.menu-badge--dot)),
+.submenu-link:has(> .menu-badge:not(.menu-badge--dot)),
+.submenu-link:has(> .submenu-future-label) {
+  flex-wrap: wrap;
+  row-gap: 0;
+
+  &::after {
+    content: "";
+    order: 1;
+    flex: 0 0 100%;
+    height: 0;
+  }
+
+  > .menu-badge,
+  > .submenu-future-label {
+    order: 2;
+    flex: none;
+  }
+}
+
+// Sangría = ícono + separación, para que la insignia quede bajo el nombre.
+.menu-link:has(> .menu-badge:not(.menu-badge--dot)) > .menu-badge { margin: 3px 0 0 28px; }
+.submenu-link:has(> .menu-badge:not(.menu-badge--dot)) > .menu-badge,
+.submenu-link:has(> .submenu-future-label) > .submenu-future-label { margin: 3px 0 0 26px; }

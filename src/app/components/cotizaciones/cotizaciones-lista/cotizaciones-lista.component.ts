@@ -1,8 +1,8 @@
-import { Component, HostListener, OnInit, OnDestroy } from "@angular/core";
+import { Component, ElementRef, HostListener, OnInit, OnDestroy, ViewChild } from "@angular/core";
 import Swal from "sweetalert2";
 import { Router } from "@angular/router";
 import { Subject, Subscription } from "rxjs";
-import { debounceTime, distinctUntilChanged } from "rxjs/operators";
+import { debounceTime, filter } from "rxjs/operators";
 import { ToastrService } from "ngx-toastr";
 import * as XLSX from "xlsx";
 import { CotizacionesService } from "../cotizaciones.service";
@@ -95,6 +95,11 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   sortKey = "fechaCreacion";
   sortDir: 1 | -1 = -1;
 
+  /** Ticket 1338: cajas de texto que "Limpiar filtros" deja vacías (pueden tener texto aún sin aplicar). */
+  @ViewChild("buscarInput") private buscarInput?: ElementRef<HTMLInputElement>;
+  @ViewChild("numeroInput") private numeroInput?: ElementRef<HTMLInputElement>;
+  @ViewChild("buscarCompacto") private buscarCompacto?: ElementRef<HTMLInputElement>;
+
   private metricsSeq = 0;
   private searchSubject = new Subject<string>();
   private pedidoSubject = new Subject<string>();
@@ -119,7 +124,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     this.cargarMetas();
     this.subs.push(
       this.searchSubject
-        .pipe(debounceTime(350), distinctUntilChanged())
+        .pipe(debounceTime(350), filter((value) => value !== this.q))
         .subscribe((value) => {
           this.q = value;
           this.page = 1;
@@ -129,7 +134,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     );
     this.subs.push(
       this.pedidoSubject
-        .pipe(debounceTime(350), distinctUntilChanged())
+        .pipe(debounceTime(350), filter((value) => value !== this.filtroPedido))
         .subscribe((value) => {
           this.filtroPedido = value;
           this.page = 1;
@@ -664,8 +669,40 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     if (this.filtroSinConvertir) lista.push({ clave: "sinConvertir", texto: "Aceptadas sin convertir" });
     else if (this.filtroEstado) lista.push({ clave: "estado", texto: "Estado: " + this.estadoLabel(this.filtroEstado) });
     if (this.filtroMotivo) lista.push({ clave: "motivo", texto: "Motivo: " + this.filtroMotivo });
-    if (this.filtroPedido) lista.push({ clave: "pedido", texto: "Pedido: " + this.filtroPedido });
+    if (this.filtroPedido) lista.push({ clave: "pedido", texto: "Nº cotización: " + this.filtroPedido });
     return lista;
+  }
+
+  /** Ticket 1338: cuántos filtros hay puestos (los de la barra compacta más la búsqueda). */
+  get cantidadFiltros(): number {
+    return this.filtrosActivos.length + (this.q ? 1 : 0);
+  }
+
+  /** Ticket 1338: quita todos los filtros y recarga una sola vez. */
+  limpiarFiltros(): void {
+    this.q = "";
+    this.filtroPedido = "";
+    // Reemplaza lo que estuviera esperando el debounce; al llegar vacío no recarga.
+    this.searchSubject.next("");
+    this.pedidoSubject.next("");
+    [this.buscarInput, this.numeroInput, this.buscarCompacto].forEach((ref) => {
+      if (ref) ref.nativeElement.value = "";
+    });
+    this.vendedoresSel = [];
+    this.menuComerciales = false;
+    this.periodo = "";
+    this.fechaDesde = "";
+    this.fechaHasta = "";
+    this.filtroEstado = "";
+    this.filtroSinConvertir = false;
+    this.filtroMotivo = "";
+    this.filtroAtencion = "";
+    this.filtroProducto = "";
+    this.filtroProductoNombre = "";
+    this.filtroClienteTipo = "";
+    this.page = 1;
+    this.cargar();
+    this.cargarMetrics();
   }
 
   quitarFiltro(clave: string): void {
