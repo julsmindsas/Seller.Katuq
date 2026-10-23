@@ -29,6 +29,7 @@ import {
   VizType,
   DateGranularity,
 } from '../model/report-spec.interfaces';
+import { aggLabel, granularityLabel, vizLabel } from '../model/report-labels';
 
 interface FieldRef {
   id: string;
@@ -63,6 +64,11 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   vizType: VizType = 'table';
   vizOptions: VizType[] = ['table', 'pivot', 'bar', 'line', 'pie', 'kpi'];
   activeVizTypes: Set<VizType> = new Set(['table']);
+
+  // Solo para mostrar en español; los valores guardados siguen en inglés.
+  readonly vizLabel = vizLabel;
+  readonly aggLabel = aggLabel;
+  readonly granularityLabel = granularityLabel;
 
   // Filtro global de fecha
   dateFrom: string = '';
@@ -340,6 +346,12 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
     return findDimension(this.source.id, field.id)?.granularities || ['day'];
   }
 
+  /** Duración del cálculo en segundos, con coma decimal (ej: "1,3"). */
+  secondsText(durationMs: number): string {
+    const seconds = (Number(durationMs) || 0) / 1000;
+    return seconds.toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  }
+
   buildSpec(): ReportSpec | null {
     if (!this.source) {
       return null;
@@ -445,7 +457,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
    */
   openCalcModal(existing?: CalculatedMeasureDef): void {
     if (this.values.length === 0 && !existing) {
-      Swal.fire('Atención', 'Agrega al menos una medida en Valores antes de crear un cálculo.', 'warning');
+      Swal.fire('Atención', 'Agrega al menos un dato en «Qué medir» antes de crear una fórmula.', 'warning');
       return;
     }
     const isEdit = !!existing;
@@ -463,7 +475,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
 
     const html = `
       <div style="text-align:left;font-size:13px;">
-        <label style="display:block;font-weight:600;margin-bottom:4px;">Nombre del cálculo</label>
+        <label style="display:block;font-weight:600;margin-bottom:4px;">Nombre de la fórmula</label>
         <input id="calc-label" type="text" value="${this.escapeHtml(existing?.label || '')}"
           placeholder="Ej: Margen"
           style="width:100%;padding:7px 9px;border:1px solid #d1d5db;border-radius:4px;margin-bottom:12px;font-size:13px;" />
@@ -505,7 +517,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       </div>
     `;
     Swal.fire({
-      title: isEdit ? 'Editar cálculo' : 'Nuevo cálculo',
+      title: isEdit ? 'Editar fórmula' : 'Nueva fórmula',
       html,
       width: 560,
       showCancelButton: true,
@@ -650,7 +662,8 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
     const newCols = measCols.map((c) => ({
       ...c,
       field: c.field + '_' + label,
-      label: c.label + ' (' + label + ')',
+      // Solo el texto visible: la clave `field` conserva el guion bajo.
+      label: c.label + ' (' + label.replace(/_/g, ' ') + ')',
     }));
     this.result.columns = [...this.result.columns, ...newCols];
 
@@ -798,7 +811,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
           .filter(t => this.activeVizTypes.has(t));
         const chartLabels: Record<string, string> = { bar: 'Barras', line: 'Linea', pie: 'Pastel' };
 
-        const grafSheet = wb.addWorksheet('Graficas');
+        const grafSheet = wb.addWorksheet('Gráficas');
 
         // Geometría fija de la hoja
         const COLS      = 14;   // columnas visibles
@@ -859,7 +872,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
 
       // ── Hoja pivot si está activa ──────────────────────────────
       if (this.activeVizTypes.has('pivot')) {
-        const pvSheet = wb.addWorksheet('Pivot');
+        const pvSheet = wb.addWorksheet('Tabla dinámica');
         pvSheet.addRow(cols.map(c => c.label));
         const pvHeader = pvSheet.getRow(1);
         pvHeader.eachCell(cell => {
@@ -992,7 +1005,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
         pdf.setFontSize(8.5);
         pdf.setTextColor(30, 64, 175);
         const metaParts: string[] = [`Fuente: ${this.source?.label || '-'}`];
-        if (this.dateFrom || this.dateTo) metaParts.push(`Periodo: ${this.dateFrom || '-'} al ${this.dateTo || '-'}`);
+        if (this.dateFrom || this.dateTo) metaParts.push(`Período: ${this.dateFrom || '-'} al ${this.dateTo || '-'}`);
         if (this.result?.meta) {
           const { totalRows, totalDocsScanned, totalDocsAfterFilter } = this.result.meta as any;
           const filtered = totalDocsAfterFilter != null && totalDocsAfterFilter !== totalDocsScanned
@@ -1295,7 +1308,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
         <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;">
           <a href="${url}" target="_blank"
             style="font-size:12px;color:#5F3FE0;text-decoration:none;">
-            <i class="fa fa-external-link-alt"></i> Abrir enlace
+            <i class="fa fa-external-link"></i> Abrir enlace
           </a>
           <span style="color:#d1d5db;">·</span>
           <button id="unpublish-btn" type="button"

@@ -26,8 +26,8 @@ export const REPORT_PRESETS: ReportPreset[] = [
   // ── PRODUCTOS ─────────────────────────────────────────────────────────────
   {
     id: 'top20-productos-unidades',
-    name: 'Top 20 productos por unidades vendidas',
-    description: 'Concepto (producto) con sum de cantidad. Requiere persistLines=true en sync WO.',
+    name: 'Los 20 productos que más unidades venden',
+    description: 'Cuántas unidades se vendieron de cada producto, según tus facturas de World Office.',
     category: 'productos',
     icon: 'fa-trophy',
     requiresIntegration: 'worldoffice',
@@ -44,10 +44,10 @@ export const REPORT_PRESETS: ReportPreset[] = [
   },
   {
     id: 'top20-productos-ingreso',
-    name: 'Top 20 productos por ingreso',
-    description: 'Concepto con sum de valor total renglón. Solo facturas de venta (FV).',
+    name: 'Los 20 productos que más dinero dejan',
+    description: 'Cuánto se facturó de cada producto. Solo cuenta facturas de venta.',
     category: 'productos',
-    icon: 'fa-coins',
+    icon: 'fa-money',
     requiresIntegration: 'worldoffice',
     spec: {
       source: 'accounting_document_lines',
@@ -62,10 +62,10 @@ export const REPORT_PRESETS: ReportPreset[] = [
   },
   {
     id: 'tendencia-mensual-productos',
-    name: 'Tendencia mensual de ventas (productos)',
-    description: 'Cantidad y valor por mes, agrupable por producto.',
+    name: 'Ventas de productos mes a mes',
+    description: 'Unidades y valor vendido cada mes. Puedes separarlo por producto.',
     category: 'productos',
-    icon: 'fa-chart-line',
+    icon: 'fa-line-chart',
     requiresIntegration: 'worldoffice',
     spec: {
       source: 'accounting_document_lines',
@@ -83,8 +83,8 @@ export const REPORT_PRESETS: ReportPreset[] = [
   },
   {
     id: 'descuento-por-producto',
-    name: 'Descuento aplicado por producto',
-    description: 'Concepto con sum descuento — útil para revisar política de precios.',
+    name: 'Descuentos dados en cada producto',
+    description: 'Cuánto se descontó en cada producto. Sirve para revisar tus precios.',
     category: 'productos',
     icon: 'fa-tags',
     requiresIntegration: 'worldoffice',
@@ -107,10 +107,10 @@ export const REPORT_PRESETS: ReportPreset[] = [
   },
   {
     id: 'ventas-producto-x-tercero',
-    name: 'Productos × Cliente (pivot)',
-    description: 'Concepto en filas, cliente en columnas, sum cantidad como valor.',
+    name: 'Qué productos compra cada cliente',
+    description: 'Una fila por producto y una columna por cliente, con las unidades compradas.',
     category: 'productos',
-    icon: 'fa-table-cells',
+    icon: 'fa-th',
     requiresIntegration: 'worldoffice',
     spec: {
       source: 'accounting_document_lines',
@@ -125,10 +125,10 @@ export const REPORT_PRESETS: ReportPreset[] = [
   // ── CARTERA ───────────────────────────────────────────────────────────────
   {
     id: 'cartera-cxc-por-vendedor',
-    name: 'Cartera CxC por vendedor',
-    description: 'Saldo CxC agrupado por vendedor responsable (de balances WO).',
+    name: 'Cartera por cobrar de cada vendedor',
+    description: 'Cuánto deben los clientes de cada vendedor, según World Office.',
     category: 'cartera',
-    icon: 'fa-user-tie',
+    icon: 'fa-user',
     requiresIntegration: 'worldoffice',
     spec: {
       source: 'accounting_balances',
@@ -143,8 +143,8 @@ export const REPORT_PRESETS: ReportPreset[] = [
   },
   {
     id: 'cartera-aging-buckets',
-    name: 'Cartera por antigüedad (aging)',
-    description: 'Suma de saldos por bucket de antigüedad: corriente, 0-30, 31-60, 61-90, +90.',
+    name: '¿Quién te debe y desde cuándo?',
+    description: 'Saldos por cobrar según los días de atraso: al día, hasta 30, de 31 a 60, de 61 a 90 y más de 90 días.',
     category: 'cartera',
     icon: 'fa-hourglass-half',
     requiresIntegration: 'worldoffice',

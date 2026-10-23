@@ -6,6 +6,7 @@ import { ReportsService } from '../../../shared/services/dashboard/reports.servi
 import { findSource } from '../model/source-catalog';
 import { ReportResult, SavedReport, SourceDef, VizType } from '../model/report-spec.interfaces';
 import { REPORT_PRESETS, ReportPreset } from './preset-reports';
+import { sourceLabel, vizLabel } from '../model/report-labels';
 
 @Component({
   selector: 'app-dashboard-home',
@@ -30,6 +31,10 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   @ViewChild('previewPanel') previewPanel?: ElementRef<HTMLElement>;
 
   presets: ReportPreset[] = REPORT_PRESETS;
+
+  // Solo para mostrar "Pedidos · Barras" en vez de "orders · bar".
+  readonly sourceLabel = sourceLabel;
+  readonly vizLabel = vizLabel;
 
   constructor(private reportsService: ReportsService, private router: Router) {}
 
