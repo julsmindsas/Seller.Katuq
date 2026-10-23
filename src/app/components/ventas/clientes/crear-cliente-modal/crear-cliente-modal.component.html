@@ -176,13 +176,14 @@
                         styleClass="country-code" panelStyleClass="buscar-por-panel">
                       </p-dropdown>
                       <input pInputText type="text" placeholder="{{ 'Número celular' | translate }}"
-                        formControlName="numero_celular_comprador" autocomplete="tel" maxlength="10"
+                        formControlName="numero_celular_comprador" autocomplete="tel" [attr.maxlength]="esCelularColombia ? 10 : largoCelularOtroPais.max"
                         (keypress)="validarSoloNumeros($event)" class="flex-grow-1">
                     </div>
                     <div *ngIf="formulario.get('numero_celular_comprador')?.invalid && formulario.get('numero_celular_comprador')?.touched" class="error-message mt-1">
                       <i class="pi pi-exclamation-circle"></i>
                       <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
-                      <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('pattern')">{{ "Debe tener exactamente 10 dígitos" | translate }}</span>
+                      <span *ngIf="formulario.get('numero_celular_comprador')?.getError('celular')?.colombia">{{ "Debe tener exactamente 10 dígitos" | translate }}</span>
+                      <span *ngIf="formulario.get('numero_celular_comprador')?.getError('celular')?.colombia === false">{{ "Debe tener entre 6 y 14 dígitos" | translate }}</span>
                     </div>
                   </div>
 

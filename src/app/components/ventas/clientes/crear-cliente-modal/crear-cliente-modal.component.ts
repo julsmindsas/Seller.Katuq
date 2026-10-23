@@ -10,7 +10,7 @@ import { ClientConfigService, ClientTag } from "../services/client-config.servic
 import { InfoIndicativos } from "../../../../../Mock/indicativosPais";
 import { DireccionEstructuradaComponent } from "../../entrega/direccion-estructurada/direccion-estructurada.component";
 import { DaneCodesService } from "../../../../shared/services/dane-codes.service";
-import { alMenosUnTelefono, PATRON_TELEFONO_FIJO } from "../cliente-telefonos.validator";
+import { alMenosUnTelefono, celularSegunIndicativo, LARGO_CELULAR_OTRO_PAIS, PATRON_TELEFONO_FIJO } from "../cliente-telefonos.validator";
 import { EntregaCliente, esEntregaCompleta, normalizarEntrega, normalizarEntregas, resumenEntrega } from "../../../../shared/utils/client-delivery";
 import { normalizeZonasCobro, zonaCubreCiudad } from "../../../../shared/util/zona-cobro.util";
 import Swal from "sweetalert2";
@@ -447,7 +447,8 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
       apellidos_completos: ["", Validators.required],
       indicativo_celular_comprador: ["57", Validators.required],
       // Ticket 1050: celular o fijo, al menos uno (validador del grupo).
-      numero_celular_comprador: ["", [Validators.pattern(/^[0-9]{10}$/)]],
+      // Ticket 1359: 10 dígitos para +57; con otro indicativo, de 6 a 14.
+      numero_celular_comprador: ["", [celularSegunIndicativo]],
       telefono_fijo: ["", [Validators.pattern(PATRON_TELEFONO_FIJO)]],
       correo_electronico_comprador: ["", [Validators.required, Validators.email]],
       indicativo_celular_whatsapp: ["57"],
@@ -469,7 +470,17 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
 
     // Ticket 1083: con NIT, "Apellidos" deja de ser obligatorio.
     this.formulario.controls['tipo_documento_comprador'].valueChanges.subscribe(() => this.ajustarApellidosSegunTipoDoc());
+    // Ticket 1359: el largo válido del celular depende del indicativo.
+    this.formulario.controls['indicativo_celular_comprador'].valueChanges.subscribe(() =>
+      this.formulario.controls['numero_celular_comprador'].updateValueAndValidity());
   }
+
+  /** Ticket 1359: Colombia (+57) usa 10 dígitos; los demás países, hasta 14. */
+  get esCelularColombia(): boolean {
+    return String(this.formulario?.get('indicativo_celular_comprador')?.value ?? '57') === '57';
+  }
+
+  readonly largoCelularOtroPais = LARGO_CELULAR_OTRO_PAIS;
 
   validarSoloNumeros(event: any) {
     const pattern = /[0-9]/;
@@ -561,7 +572,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
       nombres_completos:             'Nombres Completos',
       apellidos_completos:           'Apellidos Completos',
       indicativo_celular_comprador:  'Indicativo Celular',
-      numero_celular_comprador:      'Teléfono Celular (10 dígitos)',
+      numero_celular_comprador:      'Teléfono Celular',
       telefono_fijo:                 'Teléfono fijo (7 a 10 dígitos)',
       correo_electronico_comprador:  'Correo Electrónico',
       whatsappUsername:              'Usuario de WhatsApp (2 a 60 caracteres: letras, números, espacios, punto o guion)',
