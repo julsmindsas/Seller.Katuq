@@ -56,11 +56,12 @@
     // fuera de la pantalla: toma el espacio que quede, como con `col`.
     .nav-right { order: 3; flex: 1 0 0% !important; max-width: none !important; }
 
-    // En teléfono el nombre del comercio cede espacio a las acciones (sin scroll lateral).
-    @media (max-width: 767.98px) {
-      .header-logos-section { flex: 0 1 auto !important; overflow: hidden; }
-      .company-logo { overflow: hidden; }
-    }
+    // El nombre del comercio cede espacio a las acciones en cualquier ancho (sin scroll lateral):
+    // primero se encoge el buscador (shrink 6) y luego el nombre, con «…». Con el menú de 264 px
+    // (D-546) y un nombre largo, a 1147 px el perfil se salía 38 px.
+    app-search { flex-shrink: 6; }
+    .header-logos-section { flex: 0 1 auto !important; overflow: hidden; }
+    .company-logo { overflow: hidden; }
 
     @media (max-width: 575.98px) {
       .nav-right .nav-menus { gap: 4px; }
