@@ -12036,3 +12036,18 @@ Daniel aprobó en bloque, con las opciones recomendadas de cada propuesta, «cer
 - Costo: el vigente en la fecha de la venta.
 - El resumen del lunes sale apagado por omisión y con dos semanas en sombra.
 - La F3 se integra a D-474 y al informe ejecutivo.
+
+### 2026-10-23 — D-546 a D-551: Daniel aprobó diseño y tareas; D-484 y el menú publicados
+
+- **Diseño y tareas aprobados por Daniel el 23-oct** (respuestas en el chat de soporte, con la opción recomendada de cada pregunta abierta):
+  - **D-546:** «Menú lateral D-546».
+  - **D-548:** «Trazabilidad D-548». El costo lo ven Administrador, gerencia y quien tiene «Lista de precios». Las acciones masivas van en F1.
+  - **D-549:** «Adjuntos D-549». Después: «Ir directo al plan B», sin la prueba manual en Claude.
+  - **D-550:** «Editar pedidos D-550». Lote de hasta 50 pedidos en una sola tarjeta y permisos de pago nuevos. Después: «Persona siempre, permiso igual».
+  - **D-547:** «Aprobado (Recommended)». Íconos Tabler también en las acciones del pedido; «Historial» en la grilla.
+  - **D-551:** «Aprobado (Recommended)». Bandera `reportsOfficialMetrics` por empresa, tope de 30 s y registro de consultas de más de 5 s.
+- **Lecturas de producción de solo lectura** (conteos, nombres y tipos de campo, sin datos personales): Daniel las autorizó el 23-oct con «Sí, solo lectura».
+- **Publicado:**
+  - D-484, backend `700357a3`. Cero rechazos en los 10 minutos siguientes.
+  - D-546, el menú, front 2026.10.23.9 y .10. La .10 se publicó forzando el candado, con autorización de Daniel: la .9 llevaba sin commitear un archivo de memoria de agente que no era código.
+- **Tickets de ALMARA cerrados el 23-oct:** 1332, 1334, 1335, 1336, 1337, 1338, 1352, 1353, 1354 y 1359.
