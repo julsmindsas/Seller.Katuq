@@ -1,4 +1,4 @@
-> **Estado:** DISEÑO de la F1, pendiente de aprobación. Ticket 1351 (ALMARA FELICIDAD). Decisión D-XXX (la sesión principal pone el número). La propuesta y las specs están aprobadas por Daniel desde el 23-oct. Este documento diseña en detalle **solo la F1**; las F2 a F4 quedan en esbozo y se diseñan cada una antes de implementarse. Solo documento: sin código.
+> **Estado:** DISEÑO de la F1, APROBADO por Daniel el 2026-10-23 con las respuestas a las Open Questions (al final). Secciones 1 a 3 de `tasks.md` implementadas el 23-oct, sin enganchar. Ticket 1351 (ALMARA FELICIDAD). Decisión D-541. La propuesta y las specs están aprobadas por Daniel desde el 23-oct. Este documento diseña en detalle **solo la F1**; las F2 a F4 quedan en esbozo y se diseñan cada una antes de implementarse. Solo documento: sin código.
 
 ## Context
 
@@ -455,7 +455,7 @@ El **motivo** de anular viaja en `_motivoCambio`, un campo de paso. `updateOrder
 
 - `fuente` es `evento`, `legado` o `reconstruido`. `clase` es `dinero`, `texto`, `estado`, `fecha` o `lista`.
 - `resumen` va solo en la primera página.
-- **No se manda el correo del actor:** basta con el nombre y el rol (D11).
+- **No se manda el correo del actor:** basta con el nombre y el rol (D11). Única excepción: si la persona no tiene nombre en Katuq, se muestra su correo para que el cambio no quede anónimo (D8.3, confirmado por Daniel el 2026-10-23).
 - `?foto=1` agrega la foto inicial completa al evento de creación, con sus partes si las tiene.
 
 **D8.5. Lenguaje.**
@@ -549,7 +549,7 @@ El **motivo** de anular viaja en `_motivoCambio`, un campo de paso. `updateOrder
   - solo esta lista cerrada de campos: `{ company, orderId, eventId, tipo, origen, resultado, intentos, duracionMs, codigoError, fuente }`;
   - un texto con «@» sale como `[omitido]`;
   - nunca nombres, teléfonos, direcciones, montos ni motivos.
-- **Respuesta al front:** lleva nombre y rol del actor, sin correo.
+- **Respuesta al front:** lleva nombre y rol del actor, sin correo, salvo el respaldo de D8.3 cuando falta el nombre (Daniel, 2026-10-23).
 - **Exportar** (F4): solo la familia Administrador.
 
 ### D12. Rendimiento y costo
@@ -646,10 +646,25 @@ El **motivo** de anular viaja en `_motivoCambio`, un campo de paso. `updateOrder
    - Los eventos escritos quedan inertes: solo los lee la vista con la bandera.
 8. **Retiro (Artículo XII, 2027-04-30).** Encendida para todos o eliminada. Se borran `order-history-timeline` y la rama de antes del lector cuando ya no haga falta.
 
-## Open Questions
+## Open Questions → resueltas (Daniel, 23-oct)
 
-1. **Canal en el token (D4.1).** ¿Firmamos `canal` al iniciar sesión (recomendado; toca el login de forma aditiva) o aceptamos que la App se vea como Web hasta que la App lo mande?
-2. **Gate de reglas.** ¿Confirmas que ALMARA se enciende solo después de publicar la exclusión de la colección en las reglas (D7.3)?
-3. **Canales fuera de la lista.** Tienda en línea, Kuvo, domicilios, mensajero, WhatsApp del cliente y pasarelas van como «Sistema» o «App» más el canal (D4). ¿De acuerdo?
-4. **Motivo al anular un pago en la F1.** La spec lo pide desde la F1 y la decisión 4 deja la obligación del servidor para la F2. Propuesta: desde la F1 la pantalla web lo exige, y el servidor lo registra («sin motivo (origen)») sin rechazar hasta la F2. Así las pantallas viejas en caché no fallan. ¿Así?
-5. **Picking y packing** (`controllers/inventory.js:2306-2680`). Son cambios de estado que hace una persona y hoy no dejan registro. ¿Entran en la F1 (si ALMARA tiene `pickingAlistamiento`) o en la F2?
+1. **Canal en el token (D4.1): NO se firma.** La App se ve como Web por ahora. No se hacen las tareas 1.4 ni 4.13. `contexto.js` no lee ningún canal de la sesión ni el `User-Agent`: toda sesión JWT es `web` (y `pos` en una creación POS).
+2. **Gate de reglas: confirmado.** ALMARA FELICIDAD se enciende solo después de publicar la regla que cierra la colección (D7.3, tarea 5.2). Primero FLORECER.
+3. **Canales fuera de la lista: de acuerdo.** Tienda en línea, Kuvo, domicilios, mensajero, WhatsApp del cliente y pasarelas van como «Sistema» (o el origen que corresponda, p. ej. «App» para el mensajero) más su canal.
+4. **Motivo al anular un pago: así.** La web lo exige desde la F1; el servidor registra «sin motivo (origen)» (`reasonStatus: 'missing'`) sin rechazar hasta la F2.
+5. **Picking y packing: en la F2**, no en la F1. (Tarea 1.5: ALMARA no tiene `pickingAlistamiento` encendida.)
+
+## Desvíos de la implementación (secciones 1 a 3, 23-oct)
+
+Anotados también en `tasks.md`. Ninguno cambia el alcance aprobado:
+
+- **Foto inicial (D2), rutas reales de la tarea 1.1:** la dirección y la ciudad salen de `envio` (no de `datosEntrega`); la fecha pactada, de `fechaEntrega` en la raíz; el vendedor, de `asesorAsignado` o, en la tienda, de `vendedor`; el código de descuento, de `cuponAplicado`, `cupon.codigo` o `descuentoAplicado.codigoPersonalizado`; las notas son el mapa de listas de `notasPedido`. El servidor no guarda un total por línea, así que la línea lleva cantidad, precio sin y con IVA, tarifa y descuento, sin `totalLinea` inventado. `desgloseIVA` va solo si existe (ninguno de los pedidos leídos lo traía).
+- **Clave del pago (D3.2):** el pago del POS no trae `paymentId`, `fechaHoraCarga`, comprobante ni `valor`; el hash usa `valor` o `valorRegistrado` y la primera fecha disponible. Dos pagos idénticos en el mismo pedido llevan «#2», «#3».
+- **Canal del POS:** nulo. La lista cerrada de canales no tiene `web` ni `app`, y con la decisión 1 no habría nada que distinguir.
+- **MCP sin persona:** el actor se llama «Opttia», «Llave de la empresa» o «Claude/MCP» (lenguaje de negocio), no el `mcpActor` técnico (`opttia:EMPRESA`).
+- **Valor de estado desconocido:** se separa en palabras («ProducidoParcialmente» → «Producido parcialmente») en lugar de «Otro cambio», que queda para tipos y campos desconocidos. En los dos casos queda el aviso en el log.
+- **Partes de la foto:** no llevan `orderId` (además de no llevar `occurredAt`), así que ninguna consulta del pedido ni el conteo las ve.
+- **La constante de la colección** se llama `COLECCION_HISTORIAL_PEDIDO`: `COLECCION_EVENTOS` ya existe en `controllers/sites.js` para `site_events`.
+- **El candado de lectura (D8.2) vive en `lectura.responder`**, que devuelve `{ status, body }`; el controlador (4.12) solo lo envía. Así la prueba 2.6 queda en verde sin tocar `controllers/orders.js`.
+- **`registrar`** también recibe una función que arma el evento (más `{ company, orderId }`), para revisar la bandera antes de armar y contar la falla si el constructor se rompe. Devuelve `{ resultado, intentos, id }` para pruebas y registros; quien llama no lo espera.
+- **`delivery_reported`** lleva en `tags` también `process_status_changed`. La evidencia del mensajero es la lista de D3; `telefono` y `signatureImage` no entran.
