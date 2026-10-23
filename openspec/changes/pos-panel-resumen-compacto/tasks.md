@@ -174,7 +174,7 @@
 > **Verificación real (2026-10-23).** Daniel revisó la versión local en su pantalla con FLORECER y la aprobó («yo lo vi bien»). No se tomaron en el navegador las medidas de 1.2, 6.3-6.7 ni la prueba de teclado de 6.9. La comparación de pedidos de 1.3/6.8 se reemplazó por la revisión del diff: ningún archivo toca servicios, `CartService`, `PosCheckoutService`, el armado del pedido ni los totales (los nuevos `subtotalLinea` y `textoUnidades` solo leen). Lo que falta se revisa en producción en 7.4.
 
 - [ ] 7.1 Registrar **D-XXX** en `specs/CONTRACT.md` con lo verificado y lo que no se pudo verificar, más la entrada de bitácora. Lo hace la sesión principal.
-- [ ] 7.2 Commit con sello y solo los archivos de este cambio. Nunca `git add -A`, porque hay otras sesiones en el mismo working copy.
-- [ ] 7.3 Publicar el front con el candado: `git pull`, compilar desde la punta y desplegar enseguida. Necesita autorización explícita de Daniel.
-- [ ] 7.4 Ticket 1340: verificar en producción a 1366×768, subir la evidencia del antes y el después, y pasarlo a Resuelto con un comentario en lenguaje de negocio.
+- [x] 7.2 (`d743c37c`) Commit con sello y solo los archivos de este cambio. Nunca `git add -A`, porque hay otras sesiones en el mismo working copy.
+- [x] 7.3 (2026.10.23.2, commit `d6495832`) Publicar el front con el candado: `git pull`, compilar desde la punta y desplegar enseguida. Necesita autorización explícita de Daniel.
+- [x] 7.4 (2026-10-23: Resuelto. Revisado en producción a 1366×650 con FLORECER y sin cobrar. Encontré cuatro fallas de pantalla y las corregí en `9cd8b673`, que está pendiente de publicar: la foto de la línea en 0 px, el ticket en 3 columnas entre 1001 y 1199 px, el encabezado con scroll lateral y el −/+ del catálogo en teléfono) Ticket 1340: verificar en producción a 1366×768, subir la evidencia del antes y el después, y pasarlo a Resuelto con un comentario en lenguaje de negocio.
 - [ ] 7.5 `/opsx:archive`. Al archivar, ajustar si hace falta la redacción del escenario «Ventana muy baja» (design.md, Open Questions).
