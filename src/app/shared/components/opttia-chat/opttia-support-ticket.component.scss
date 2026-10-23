@@ -1,0 +1,42 @@
+$ost-accent: #5F3FE0;
+$ost-ink: #211F3A;
+$ost-muted: #8f8bab;
+$ost-line: #ececf4;
+
+:host { display: block; min-width: 0; margin: 12px 0 16px; }
+.ost-card {
+  min-width: 0; padding: 16px; color: $ost-ink; background: #fff;
+  border: 1px solid $ost-line; border-radius: 16px; box-shadow: 0 1px 3px rgba(30,20,80,.04);
+  overflow-wrap: anywhere; font-size: 12.5px; line-height: 1.5;
+  p, a { letter-spacing: normal; }
+}
+.ost-eyebrow, .ost-label, .ost-identity dt {
+  color: $ost-muted; font-size: 10px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
+}
+.ost-eyebrow { display: flex; align-items: center; gap: 6px; }
+.ost-title { margin: 6px 0 14px; color: $ost-ink; font-size: 16px !important; font-weight: 800; }
+.ost-identity {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px; margin: 0 0 14px;
+  background: #faf9fe; border: 1px solid $ost-line; border-radius: 11px;
+  div { min-width: 0; }
+  dd { margin: 4px 0 0; color: $ost-ink; font-size: 12px; font-weight: 600; }
+}
+.ost-field { margin: 12px 0; p { margin: 4px 0 0; color: $ost-ink; font-size: 12.5px; } }
+.ost-description { white-space: pre-wrap; }
+.ost-evidence { padding-left: 18px; margin: 4px 0; a { color: $ost-accent; font-size: 12px; } }
+.ost-notice { margin: 12px 0; padding: 10px; color: $ost-ink; background: #f3f1fb; border-radius: 11px; }
+.ost-expiry { margin: 8px 0; color: $ost-muted; font-size: 11px; }
+.ost-status { color: #1E874B; background: #E6F7EE; border-radius: 20px; padding: 4px 9px; font-size: 11px; }
+.ost-actions {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px;
+  button, a { min-height: 40px; padding: 8px 12px; border-radius: 11px; font-size: 12px; font-weight: 700; text-align: center; }
+  button:disabled { opacity: .55; cursor: not-allowed; }
+  button:focus-visible, a:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+.ost-primary { color: #fff; background: $ost-accent; border: 1px solid $ost-accent; }
+.ost-secondary { color: $ost-ink; background: #fff; border: 1px solid $ost-line; text-decoration: none; }
+@media (max-width: 420px) {
+  .ost-card { padding: 13px; }
+  .ost-identity { grid-template-columns: 1fr; gap: 8px; }
+  .ost-actions { button, a { flex: 1 1 auto; } }
+}

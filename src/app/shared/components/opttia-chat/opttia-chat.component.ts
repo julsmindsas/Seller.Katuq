@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { OpttiaSupportView } from '../../services/opttia-support.types';
 import {
   OpttiaChatMessage,
   OpttiaChatService,
@@ -32,6 +33,8 @@ export class OpttiaChatComponent implements OnInit, OnDestroy, AfterViewChecked 
   isSending = false;
   errorMessage: string | null = null;
   hasConsent = false;
+  supportView: OpttiaSupportView | null = null;
+  replyingToSupport = false;
 
   get suggestions(): string[] {
     return [
@@ -95,6 +98,12 @@ export class OpttiaChatComponent implements OnInit, OnDestroy, AfterViewChecked 
         this.shouldScroll = true;
         this.cdr.markForCheck();
       });
+    this.opttia.support$.pipe(takeUntil(this.destroy$)).subscribe(view => {
+      this.supportView = view;
+      if (!view || view.status !== 'draft') this.replyingToSupport = false;
+      this.shouldScroll = true;
+      this.cdr.markForCheck();
+    });
   }
 
   ngAfterViewChecked(): void {
@@ -128,7 +137,9 @@ export class OpttiaChatComponent implements OnInit, OnDestroy, AfterViewChecked 
     const text = this.draft.trim();
     if (!text || this.isSending || !this.hasConsent || !this.opttia.canSend) return;
     this.draft = '';
-    await this.opttia.sendMessage(text);
+    const continueReport = this.replyingToSupport;
+    this.replyingToSupport = false;
+    await this.opttia.sendMessage(text, continueReport);
     if (this.errorMessage) this.draft = text;
   }
 
@@ -143,6 +154,16 @@ export class OpttiaChatComponent implements OnInit, OnDestroy, AfterViewChecked 
 
   fillStoreDraft(): void {
     this.draft = 'Quiero crear mi tienda con IA. Mi negocio se llama … y vendo …';
+  }
+
+  fillSupportDraft(): void {
+    this.replyingToSupport = false;
+    this.draft = 'Necesito reportar un problema de Katuq: ';
+  }
+
+  completeSupportReport(): void {
+    this.replyingToSupport = true;
+    this.draft = '';
   }
 
   useSuggestion(suggestion: string): void {

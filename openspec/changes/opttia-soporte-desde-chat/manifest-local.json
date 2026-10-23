@@ -1,0 +1,132 @@
+{
+  "decision": "D-545",
+  "generatedAt": "2026-10-23T18:38:35.051Z",
+  "note": "Snapshot local, no publicación. Los archivos compartidos incluyen hunks de otras sesiones: los hashes no atribuyen su autoría ni autorizan publicarlos.",
+  "repositories": [
+    {
+      "name": "Seller",
+      "root": "/Users/danielga/Downloads/_Organizado/01_Katuq/Codigo/Seller.Katuq",
+      "head": "8f3904c26589e5cb7d4dd3999211dc813767f72f",
+      "files": [
+        {
+          "path": "src/app/app.module.ts",
+          "sha256": "b0fb2c0a24dcabc7baf9328c8582d1b9b6ea943785e39c46580f1ba97e54adda"
+        },
+        {
+          "path": "src/app/shared/services/base.service.ts",
+          "sha256": "99daa220abf92092b8307ff46112df06329efbba6f5695ad06af37ed1831ec2d"
+        },
+        {
+          "path": "src/app/shared/services/company-features.service.ts",
+          "sha256": "4074a27c22308ce0eed43821edc83d677db0a0c039f482fd45a6882294cf6183"
+        },
+        {
+          "path": "src/app/shared/services/interceptor/http.interceptor.ts",
+          "sha256": "3907b575f0a17e56f23c987fe0b8097e2b3f8c2406001c65674f6d96dfa2d2c9"
+        },
+        {
+          "path": "src/app/shared/services/interceptor/opttia-mcp.context.ts",
+          "sha256": "ccbd6692ab0a2e033a373ea89a643fcc5daee5e295bc3d3e57dfd9c944503308"
+        },
+        {
+          "path": "src/app/shared/services/opttia-chat.service.ts",
+          "sha256": "b8f8187b9118249ffa63395e53ba515ad5cd4d30338ae00f69779ea989bf9b8b"
+        },
+        {
+          "path": "src/app/shared/services/opttia-support-confirmation.service.ts",
+          "sha256": "3387af46a42ddd8a8d06338043b65ab25975193f28b954fe93885b8b7e7e35a8"
+        },
+        {
+          "path": "src/app/shared/services/opttia-support-state.ts",
+          "sha256": "18eadeae3ad3545fc070aea6f65d1e6d4f76a16dc1b9621d3e0c35bf424cfff4"
+        },
+        {
+          "path": "src/app/shared/services/opttia-support.types.ts",
+          "sha256": "278e75d5d2dd8818219e9bee0ed9f41db1d78f6f7b50ee7e6c307db16bccc7db"
+        },
+        {
+          "path": "src/app/shared/components/opttia-chat/opttia-chat.component.ts",
+          "sha256": "97f6675a84d7fa9af4c4f224a27ff3c72ea9501fd1878a4fce75e4b9dee673a8"
+        },
+        {
+          "path": "src/app/shared/components/opttia-chat/opttia-chat.component.html",
+          "sha256": "9cfced3467586bbe948d04550b64bbe952e57bb4d4eeffd40562d510308da95f"
+        },
+        {
+          "path": "src/app/shared/components/opttia-chat/opttia-chat.component.scss",
+          "sha256": "5b883a51c86b8c858bd8d5039007fc0a636d73cf78c5546aa3fc0870a705bc45"
+        },
+        {
+          "path": "src/app/shared/components/opttia-chat/opttia-support-ticket.component.ts",
+          "sha256": "4765815591405e430811ae6606cb1b62cf6c0cf4cb46ca0155335220ca676af1"
+        },
+        {
+          "path": "src/app/shared/components/opttia-chat/opttia-support-ticket.component.html",
+          "sha256": "3ef120a281f62511dcc7ae8a67c5d4b01ca235e40190604f942194becaff9653"
+        },
+        {
+          "path": "src/app/shared/components/opttia-chat/opttia-support-ticket.component.scss",
+          "sha256": "cedb9d2729bb889eb790612b914032098d7d620f1d6a9b6044a246d0d46eab9c"
+        },
+        {
+          "path": "src/assets/version.json",
+          "sha256": "d0c2c78ff7a4332bf06d111e85beaa0c054f70d12c400b6a73579a8b2d8adc1d"
+        }
+      ]
+    },
+    {
+      "name": "Katuq backend",
+      "root": "/Users/danielga/Downloads/_Organizado/01_Katuq/Codigo/katuq_admin_back_firebase",
+      "head": "9ab9074da49672488f94cc878128c923b4906fa8",
+      "files": [
+        {
+          "path": "functions/routers/opttia.js",
+          "sha256": "fe26d94de2838f296f664c983de81204eaeb700180012f6072e9cfa596bf12e1"
+        },
+        {
+          "path": "functions/services/companyFeatureFlags.js",
+          "sha256": "cb534ebbcace449bf8ffddaa8d43a02c22b95b08484529516c3e01ae86c0559e"
+        },
+        {
+          "path": "functions/services/opttiaMcpGrant.js",
+          "sha256": "d4b27edd0a5a3aa54253332935b2c94bca7a8b33e7f89ff593c6f3eb1628c29e"
+        },
+        {
+          "path": "functions/services/opttiaSupportProposal.js",
+          "sha256": "eca2bd89a1762edfc48e5da134ded214e94a8277adb92b6c051cca2d1b17ad94"
+        },
+        {
+          "path": "functions/services/opttiaSupportMcp.js",
+          "sha256": "028ae175e4f404616d331f6ace19eb51fb94de70311bafee7ac769e2e7469b6a"
+        },
+        {
+          "path": "functions/services/soporte/crearTicket.js",
+          "sha256": "b7851066bd8deb3da74b4391a79294fc46a5a913d8193f4a88476da6b77a4ecd"
+        },
+        {
+          "path": "functions/tools/createSupportTicket.js",
+          "sha256": "6d83e766212c0e0b32290ab6208ffead5396c66a701e9c37593e0559696efd7f"
+        }
+      ]
+    },
+    {
+      "name": "Opttia ADK",
+      "root": "/Users/danielga/Downloads/_Organizado/KAI/kai",
+      "head": "1a1a434cafd02a9d82292c7d6f6cbcf88394f233",
+      "files": [
+        {
+          "path": "adk_agent/services/katuq_support_chat.py",
+          "sha256": "b82b6d14e5cb94b603c504a6e105c8ba1e7aaf7385ea5dd5a95b2b0b8a2017e8"
+        },
+        {
+          "path": "adk_agent/tools/katuq_authenticated_mcp.py",
+          "sha256": "a0179df62ab601c39fa8558042c92d1848b73715768a8678a0e62930809ce6b2"
+        },
+        {
+          "path": "adk_agent/endpoints/katuq_basic_chat_endpoint.py",
+          "sha256": "4ab78b40f91bd27211cf646cdc9d34e4ef2e289b26cae19aabb20abbedaf0acc"
+        }
+      ]
+    }
+  ]
+}

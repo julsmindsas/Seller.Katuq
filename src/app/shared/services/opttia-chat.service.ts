@@ -1,6 +1,10 @@
 import { Injectable, NgZone, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { OpttiaSupportConfirmationService } from './opttia-support-confirmation.service';
+import { OpttiaSupportState } from './opttia-support-state';
+import { OpttiaSupportView } from './opttia-support.types';
+import { Observable } from 'rxjs';
 import {
   KatuqCommerceContext,
   KatuqCommerceContextService
@@ -16,6 +20,7 @@ export interface OpttiaAccess {
   resetTime: string | null;
   tools: string[];
   message?: string;
+  supportTicketCreation?: boolean;
 }
 
 export interface OpttiaChatMessage {
@@ -42,6 +47,9 @@ export interface OpttiaInterrupt {
 }
 
 interface OpttiaSseEvent {
+  proposal?: unknown;
+  draft?: unknown;
+  result?: unknown;
   access?: OpttiaAccess;
   type?: string;
   customType?: string;
@@ -76,7 +84,7 @@ export class OpttiaChatService implements OnDestroy {
 
   get canSend(): boolean {
     const access = this.accessSubject.value;
-    return !!access && access.allowed && (access.remaining === -1 || access.remaining > 0);
+    return !!access && access.allowed && (access.remaining === -1 || access.remaining > 0) && !this.supportSubmitting;
   }
 
   hasTool(name: string): boolean {
@@ -134,6 +142,7 @@ export class OpttiaChatService implements OnDestroy {
         throw new Error('Katuq no devolvió una autorización válida para Opttia.');
       }
       this.accessSubject.next(access);
+      this.support.setEnabled(access.supportTicketCreation === true);
     } catch (error: any) {
       if (this.readSession()?.token === session.token) this.errorSubject.next(error.message || 'No se pudo verificar el cupo.');
     } finally {
@@ -167,6 +176,13 @@ export class OpttiaChatService implements OnDestroy {
   private abortController: AbortController | null = null;
   private sessionId: string | null = null;
   private activeSessionScope: string | null = null;
+  private readonly support: OpttiaSupportState;
+  readonly support$: Observable<OpttiaSupportView | null>;
+  get supportSubmitting(): boolean { return this.support?.submitting === true; }
+  private readonly sessionChanged = () => {
+    this.support.synchronize(this.commerceContext.resolve());
+    if (localStorage.getItem(this.consentStorageKey) !== 'accepted') this.support.reset();
+  };
 
   get isSending(): boolean {
     return this.sendingSubject.value;
@@ -190,8 +206,18 @@ export class OpttiaChatService implements OnDestroy {
 
   constructor(
     private readonly ngZone: NgZone,
-    private readonly commerceContext: KatuqCommerceContextService
-  ) {}
+    private readonly commerceContext: KatuqCommerceContextService,
+    confirmation: OpttiaSupportConfirmationService
+  ) {
+    this.support = new OpttiaSupportState(confirmation, () => this.commerceContext.resolve(),
+      () => localStorage.getItem(this.consentStorageKey) === 'accepted');
+    this.support$ = this.support.view$;
+    window.addEventListener('storage', this.sessionChanged);
+    window.addEventListener('focus', this.sessionChanged);
+  }
+
+  confirmSupport(): Promise<void> { return this.support.confirm(); }
+  cancelSupport(): void { this.support.cancel(); }
 
   /** Evita mostrar por un instante la conversación de otra sesión del navegador. */
   prepareForCurrentSession(): void {
@@ -200,7 +226,7 @@ export class OpttiaChatService implements OnDestroy {
     void this.refreshAccess();
   }
 
-  async sendMessage(content: string): Promise<void> {
+  async sendMessage(content: string, continueSupportReport = false): Promise<void> {
     const text = content.trim();
     if (!text || this.isSending) return;
     if (!this.canSend) {
@@ -214,6 +240,7 @@ export class OpttiaChatService implements OnDestroy {
       return;
     }
     this.ensureSessionScope(session);
+    const supportDraft = this.support.takeDraft(continueSupportReport);
     this.errorSubject.next(null);
     this.interruptSubject.next(null);
 
@@ -228,7 +255,8 @@ export class OpttiaChatService implements OnDestroy {
       company: session.companyId,
       // El chat embebido es deliberadamente efímero: el endpoint básico recibe
       // solo la pregunta actual y no hereda memoria ni potencia de opttia.com.
-      messages: [{ role: 'user' as const, content: text }]
+      messages: [{ role: 'user' as const, content: text }],
+      ...(supportDraft ? { supportDraft } : {})
     };
 
     const requestController = new AbortController();
@@ -251,7 +279,8 @@ export class OpttiaChatService implements OnDestroy {
         throw new Error('Opttia respondió sin contenido. Intenta nuevamente.');
       }
 
-      await this.consumeEventStream(response.body);
+      await this.consumeEventStream(response.body, () => this.abortController === requestController && !requestController.signal.aborted
+        && this.readSession()?.token === session.token && this.readSession()?.companyId === session.companyId);
     } catch (error: any) {
       if (error?.name !== 'AbortError') {
         this.errorSubject.next(
@@ -329,6 +358,7 @@ export class OpttiaChatService implements OnDestroy {
   }
 
   clear(): void {
+    this.support.reset();
     this.cancel();
     this.sessionId = null;
     this.interruptSubject.next(null);
@@ -342,9 +372,12 @@ export class OpttiaChatService implements OnDestroy {
 
   ngOnDestroy(): void {
     this.cancel();
+    this.support.reset();
+    window.removeEventListener('storage', this.sessionChanged);
+    window.removeEventListener('focus', this.sessionChanged);
   }
 
-  private async consumeEventStream(stream: ReadableStream<Uint8Array>): Promise<void> {
+  private async consumeEventStream(stream: ReadableStream<Uint8Array>, isCurrent = () => true): Promise<void> {
     const reader = stream.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
@@ -357,11 +390,11 @@ export class OpttiaChatService implements OnDestroy {
       buffer = done ? '' : (lines.pop() || '');
 
       for (const line of lines) {
-        this.processSseLine(line);
+        if (isCurrent()) this.processSseLine(line);
       }
 
       if (done) {
-        if (buffer.trim()) this.processSseLine(buffer);
+        if (buffer.trim() && isCurrent()) this.processSseLine(buffer);
         break;
       }
     }
@@ -383,11 +416,18 @@ export class OpttiaChatService implements OnDestroy {
   private handleEvent(event: OpttiaSseEvent): void {
     if (event.type === 'katuq:ACCESS' && event.access) {
       this.accessSubject.next(event.access);
+      this.support.setEnabled(event.access.supportTicketCreation === true);
       return;
     }
     const type = event.customType || event.type;
 
     switch (type) {
+      case 'katuq:SUPPORT_PROPOSAL':
+      case 'katuq:SUPPORT_DRAFT':
+      case 'katuq:SUPPORT_RESULT':
+        this.support.setEnabled(this.accessSubject.value?.supportTicketCreation === true);
+        this.support.receive(type, event.proposal || event.draft || event.result);
+        break;
       case 'RUN_STARTED':
         this.sessionId = event.threadId || event.session_id || this.sessionId;
         break;
@@ -504,7 +544,9 @@ export class OpttiaChatService implements OnDestroy {
   }
 
   private readSession(): KatuqCommerceContext | null {
-    return this.commerceContext.resolve();
+    const session = this.commerceContext.resolve();
+    this.support?.synchronize(session);
+    return session;
   }
 
   private buildHeaders(session: KatuqCommerceContext, accept: string): Record<string, string> {

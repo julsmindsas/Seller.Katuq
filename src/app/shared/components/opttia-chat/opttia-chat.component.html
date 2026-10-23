@@ -9,11 +9,11 @@
     </div>
 
     <div class="toolbar-actions">
-      <button type="button" (click)="clearConversation()" [disabled]="isSending" title="Nueva conversación"
+      <button type="button" (click)="clearConversation()" [disabled]="isSending || opttia.supportSubmitting" title="Nueva conversación"
         aria-label="Iniciar una conversación nueva">
         <i class="fa fa-plus"></i>
       </button>
-      <button type="button" (click)="withdrawConsent()" [disabled]="isSending" title="Privacidad"
+      <button type="button" (click)="withdrawConsent()" [disabled]="isSending || opttia.supportSubmitting" title="Privacidad"
         aria-label="Retirar permiso para usar Opttia">
         <i class="fa fa-shield"></i>
       </button>
@@ -55,6 +55,9 @@
       <button type="button" *ngIf="canSuggestStore" [disabled]="!opttia.canSend" (click)="fillStoreDraft()">
         Crear mi tienda con IA
       </button>
+      <button type="button" *ngIf="opttia.hasTool('create_support_ticket')" [disabled]="!opttia.canSend" (click)="fillSupportDraft()">
+        Reportar un problema de Katuq
+      </button>
     </div>
 
     <article class="interrupt-card" *ngIf="pendingInterrupt as interrupt">
@@ -79,6 +82,10 @@
       </ng-template>
     </article>
 
+    <app-opttia-support-ticket *ngIf="supportView as support" [view]="support" [blocked]="isSending"
+      (confirmRequested)="opttia.confirmSupport()" (cancelRequested)="opttia.cancelSupport()"
+      (replyRequested)="completeSupportReport()"></app-opttia-support-ticket>
+
     <div class="thinking" *ngIf="isSending">
       <span></span><span></span><span></span>
       <small>Opttia está pensando…</small>
@@ -93,10 +100,14 @@
     </button>
   </div>
 
+  <div class="ost-reply" *ngIf="replyingToSupport">
+    Completando este reporte.
+    <button type="button" (click)="replyingToSupport = false">Hacer otra consulta</button>
+  </div>
   <form class="composer" (ngSubmit)="send()">
     <textarea name="opttiaMessage" [(ngModel)]="draft" (keydown)="onKeydown($event)"
-      [disabled]="isSending || !opttia.canSend" rows="1" maxlength="4000"
-      placeholder="Pregúntale a Opttia sobre tu negocio…"
+      [disabled]="isSending || !opttia.canSend" rows="1" maxlength="2000"
+      [placeholder]="replyingToSupport ? 'Escribe el dato que falta para tu reporte…' : 'Pregúntale a Opttia sobre tu negocio…'"
       aria-label="Mensaje para Opttia"></textarea>
     <button *ngIf="!isSending" type="submit" [disabled]="!draft.trim() || !opttia.canSend" aria-label="Enviar mensaje">
       <i class="fa fa-paper-plane"></i>
@@ -107,7 +118,7 @@
     </button>
   </form>
 
-  <p class="disclaimer">Consultas breves y de solo lectura. Para agentes y automatizaciones usa opttia.com.</p>
+  <p class="disclaimer">Consultas breves{{ opttia.hasTool('create_support_ticket') ? ' y tickets de soporte con tu confirmación' : ' y de solo lectura' }}. Para agentes y automatizaciones usa opttia.com.</p>
 </section>
 
 <ng-template #consentView>

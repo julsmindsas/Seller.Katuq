@@ -1,0 +1,45 @@
+<article class="ost-card" aria-label="Reporte de soporte" aria-live="polite" [attr.aria-busy]="view.status === 'submitting'">
+  <div class="ost-eyebrow"><i class="pi pi-ticket" aria-hidden="true"></i> Soporte Katuq</div>
+  <h3 class="ost-title">{{ heading }}</h3>
+
+  <ng-container *ngIf="showDetails">
+  <ng-container *ngIf="view.display as display">
+    <dl class="ost-identity">
+      <div><dt>Comercio</dt><dd>{{ display.company }}</dd></div>
+      <div><dt>Reporta</dt><dd>{{ display.reporter }}</dd></div>
+    </dl>
+    <div class="ost-field"><div class="ost-label">Asunto</div><p>{{ display.asunto }}</p></div>
+    <div class="ost-field"><div class="ost-label">Qué ocurre</div><p class="ost-description">{{ display.descripcion }}</p></div>
+    <div class="ost-field" *ngIf="display.adjuntos.length">
+      <div class="ost-label">Evidencias aportadas</div>
+      <ul class="ost-evidence"><li *ngFor="let url of display.adjuntos">
+        <a [href]="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
+      </li></ul>
+    </div>
+  </ng-container>
+  </ng-container>
+
+  <p class="ost-notice" *ngIf="view.status === 'review'">Todavía no se ha creado un ticket. Revisa los datos y confirma.</p>
+  <p class="ost-notice" *ngIf="view.status === 'created'">El ticket quedó guardado en Katuq. Puedes seguirlo en Mis tickets.</p>
+  <p class="ost-notice" *ngIf="view.status === 'existing'">Encontramos este ticket. No se abrió otro.</p>
+  <p class="ost-notice" *ngIf="view.message">{{ view.message }}</p>
+  <p class="ost-expiry" *ngIf="view.expiresAt && (view.status === 'review' || view.status === 'uncertain')">
+    Puedes confirmar hasta las <time [attr.datetime]="view.expiresAt">{{ view.expiresAt | date:'HH:mm' }}</time>.
+  </p>
+  <p class="ost-status" *ngIf="view.ticket">Estado: {{ view.ticket.status }}</p>
+
+  <div class="ost-actions">
+    <button type="button" class="ost-primary" *ngIf="view.status === 'review' || view.status === 'submitting'"
+      [disabled]="blocked || view.status === 'submitting'" (click)="confirmRequested.emit()">
+      {{ view.status === 'submitting' ? 'Confirmando…' : 'Crear ticket' }}
+    </button>
+    <button type="button" class="ost-primary" *ngIf="view.status === 'uncertain'" [disabled]="blocked"
+      (click)="confirmRequested.emit()">Reintentar misma propuesta</button>
+    <button type="button" class="ost-primary" *ngIf="view.status === 'draft'" [disabled]="blocked"
+      (click)="replyRequested.emit()">Completar reporte</button>
+    <button type="button" class="ost-secondary" *ngIf="view.status === 'review' || view.status === 'draft'"
+      [disabled]="blocked" (click)="cancelRequested.emit()">Cancelar</button>
+    <a class="ost-secondary" *ngIf="view.ticket || view.status === 'uncertain' || view.status === 'expired' || view.status === 'revoked'"
+      routerLink="/misTickets">Ver mis tickets</a>
+  </div>
+</article>

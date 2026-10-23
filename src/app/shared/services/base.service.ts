@@ -1,4 +1,4 @@
-import { HttpClient, HttpContext } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpHeaders } from '@angular/common/http';
 import { SKIP_LOADER } from './interceptor/loader.interceptor';
 import { Injectable } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
@@ -31,9 +31,10 @@ export class BaseService {
      * POST sin la pantalla de carga global: para pantallas que muestran su propio avance (por ejemplo
      * el chat "Con IA" del editor, que dice "Mirando tu imagen…" mientras la IA trabaja).
      */
-    protected postSinLoader<T>(url: string, body: any): Observable<T> {
+    protected postSinLoader<T>(url: string, body: any, options?: { context?: HttpContext; headers?: HttpHeaders }): Observable<T> {
         const urlComplete = this.urlBase + url;
-        return this.http.post<T>(urlComplete, body, { context: new HttpContext().set(SKIP_LOADER, true) });
+        return this.http.post<T>(urlComplete, body, { ...options,
+            context: (options?.context || new HttpContext()).set(SKIP_LOADER, true) });
     }
 
     /**

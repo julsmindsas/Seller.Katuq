@@ -25,6 +25,8 @@ export const COMPANY_FEATURE_FLAGS = [
   'opttiaProduccion',
   // Opttia propone en la escena, fase 2 (D-422): "Abrir WhatsApp" en la señal de cobro (no envía nada).
   'opttiaCobroWhatsapp',
+  // Tickets desde el chat integrado (D-545). Dueño: Daniel. Revisión/retiro: 2027-01-31.
+  'opttiaSupportTickets',
   // Varios números de WhatsApp por comercio, asignados a vendedores, y dueño del chat (D-437).
   // Dueño: Daniel. Se retira 30 días después de tenerla encendida para todos.
   'whatsappMultiNumero',

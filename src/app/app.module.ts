@@ -47,6 +47,7 @@ import { SafeUrlPipe } from './pipes/safe-url.pipe'; // Importar el pipe
 import { FloatingButtonComponent } from './shared/components/floating-button/floating-button.component';
 import { OpttiaChatComponent } from './shared/components/opttia-chat/opttia-chat.component';
 import { OpttiaMarkdownComponent } from './shared/components/opttia-chat/opttia-markdown.component';
+import { OpttiaSupportTicketComponent } from './shared/components/opttia-chat/opttia-support-ticket.component';
 import { ChatFormComponent } from './shared/components/chat-form/chat.form.component';
 import { ChatComponent } from './components/chat/chat/chat.component';
 import { AppTranslateModule } from './shared/modules/translate.module';
@@ -97,6 +98,7 @@ export function HttpLoaderFactory(http: HttpClient) {
   imports: [
     BrowserModule,
     PublicaModule,
+    OpttiaSupportTicketComponent,
     FormsModule,
     ReactiveFormsModule,
     BrowserAnimationsModule,
