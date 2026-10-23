@@ -2542,9 +2542,39 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   confirmDeleteOrder(order: any) {
-    if (confirm(`¿Está seguro de eliminar el pedido #${order.nroPedido}?`)) {
-      this.deleteOrder(order);
-    }
+    // D-547 5.1: Swal con el número del pedido en lugar de confirm(). El botón de eliminar
+    // queda deshabilitado hasta que el texto recortado sea igual a nroPedido, e
+    // inputValidator rechaza cualquier otro texto (Enter sin coincidencia no elimina).
+    const esperado = String(order?.nroPedido ?? '').trim();
+    Swal.fire({
+      title: 'Eliminar pedido',
+      text: `Para confirmar, escribe el número del pedido (${esperado}). Se borra para siempre.`,
+      icon: 'warning',
+      input: 'text',
+      inputPlaceholder: esperado,
+      inputAttributes: { autocomplete: 'off', 'aria-label': 'Número del pedido' },
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#D64545',
+      focusCancel: false,
+      didOpen: () => {
+        const confirmar = Swal.getConfirmButton();
+        const campo = Swal.getInput();
+        if (confirmar) { confirmar.disabled = true; }
+        campo?.addEventListener('input', () => {
+          if (confirmar) { confirmar.disabled = !esperado || campo.value.trim() !== esperado; }
+        });
+      },
+      inputValidator: (valor: string) =>
+        esperado && (valor || '').trim() === esperado
+          ? null
+          : 'El número no coincide con el del pedido',
+    }).then((resultado) => {
+      if (resultado.isConfirmed) {
+        this.deleteOrder(order);
+      }
+    });
   }
   ESTADOPAGO: any[];
   cargando = true;
