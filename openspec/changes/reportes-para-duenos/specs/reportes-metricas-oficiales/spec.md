@@ -79,11 +79,19 @@ El período anterior SHALL calcularse así:
 ### Requirement: Valor guardado del pedido
 El sistema SHALL contar cada pedido con su valor guardado, el mismo que usan el cobro y el informe ejecutivo. Ninguna pantalla SHALL recalcularlo a su manera.
 
-IF un pedido tiene valores incoherentes (por ejemplo, un total menor que lo que ya se pagó), THEN el sistema SHALL contarlo con su valor guardado y listarlo en "Datos por revisar".
+IF un pedido tiene valores incoherentes (por ejemplo, un total de $1 con productos, un total que no es un número o lo pagado igual al doble del total o más), THEN el sistema SHALL contarlo con su valor guardado y listarlo en "Datos por revisar".
 
 #### Scenario: Pedido con total de $1
 - **WHEN** un pedido guarda un total de $1 y un anticipo de $88.000
 - **THEN** aparece en "Datos por revisar" con su número y la diferencia
+
+#### Scenario: Anticipo apenas por encima del total
+- **WHEN** un pedido guarda un total de $111.201 y un anticipo de $121.200 (menos del doble)
+- **THEN** se cuenta con su valor guardado y no aparece en "Datos por revisar"
+
+#### Scenario: Anticipo del doble del total
+- **WHEN** un pedido guarda un total de $93.200 y un anticipo de $186.400
+- **THEN** aparece en "Datos por revisar" con su número y la diferencia de $93.200
 
 ### Requirement: Definición junto a cada cifra
 Cada indicador y cada columna de medida SHALL tener un ícono (i) con su definición en una frase.

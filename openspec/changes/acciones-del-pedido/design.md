@@ -428,3 +428,16 @@ Una prueba de contrato del backend con un espía de Firestore falla si alguna de
 2. **Historial con D-541** (D5). Recomendado: «Historial» en la grilla, como el mockup aprobado, y «Historial del pedido» en el botón del detalle y en la ventana de D-541.
 3. **Falla del conteo de uso** (D16). La spec pide avisar cuando falla «el conteo o una preferencia». Recomendado: avisar solo cuando falla una preferencia (pin, restablecer, sugerencia). El conteo falla en silencio, para no interrumpir al cajero en cada clic.
 4. **Impuestos distintos del IVA** (D8). No existe hoy un dato de empresa que lo diga. Recomendado: «Ajusta el IVA del pedido» para todos, y la otra reseña cuando exista ese dato.
+
+### Open Questions → resueltas (2026-10-23, pendientes de la frase de Daniel)
+
+1. **Íconos Tabler en el pedido:** sí, con el registro de D-546 (`IconoTablerComponent` y `shared/icons/tabler-iconos.ts`). Recomendada; confirmación de Daniel pendiente de citar.
+2. **Historial con D-541:** «Historial» en la grilla y «Historial del pedido» en el botón del detalle (y nombre anterior para el buscador). Recomendada; confirmación de Daniel pendiente de citar.
+3. **Falla del conteo de uso:** el conteo falla en silencio y solo se avisa cuando falla una preferencia (la recomendada, por omisión).
+4. **Impuestos distintos del IVA:** «Ajusta el IVA del pedido» para todos (la recomendada, por omisión).
+
+### Notas de implementación de F1 (2026-10-23)
+
+- El catálogo agrega el tipo `subaccion` (los 7 hijos de Factura electrónica y «Editar o quitar» de Descuento) para que el plan cubra las 28 acciones de hoy y el buscador encuentre los hijos; `electronicInvoice` es solo el contenedor y no se ejecuta.
+- El modal no recibe `accionesPrecio` como entrada propia: llega dentro de `estados` (el padre lo pasa a `estadoAcciones`). `ListOrdersComponent.accionesPrecioPedido` es la lista que D-543 y D-544 llenan, reemplazándola (no mutándola) para que el memo de `estadosAccionesDe` lo vea.
+- `pinned-filled` de D10 solo existe en el set relleno de Tabler, que el generador no lee: F2 usa `pinned`, o `pin` con la entrada `relleno` del componente.

@@ -20,6 +20,7 @@
   - **Depende de:** 0.4.
   - **Hecho cuando:** la tabla de rutas reales queda en `design.md` («Desvíos») y el catálogo de D2 coincide.
   - **Pendiente (23-oct):** **Parcial.** Se leyeron 1.500 productos de ALMARA (solo nombres de campo, tipos y conteos de booleanos): rutas de «se puede vender» (`exposicion.activar`), disponible/agotado (`exposicion.disponible`), IVA (texto), base, volumen, costo y categoría confirmadas; `disponibilidad.activo/estado` no existen. La tabla quedó en `design.md` («Desvíos»). **Falta confirmar la forma viva de `preciosPorTipoCliente` con GCJ1236** (ninguno de los 1.500 tenía datos en ese arreglo): la segunda lectura de producción la denegó el clasificador de permisos y no se insistió.
+  - **Intento del 23-oct (autorizado):** la consulta `company == "ALMARA FELICIDAD"` + `identificacion.referencia == "GCJ1236"` (y la de `GCJ1236C`) devolvió **0 documentos**: la referencia no está guardada con ese texto exacto o la empresa se escribe distinto. La segunda lectura (buscar la referencia sin filtrar por empresa y en minúsculas) la **denegó el clasificador de permisos** y no se insistió. Sigue pendiente la forma viva de `preciosPorTipoCliente`; no bloquea (el código usa `tipoClienteId`, `tipoClienteNombre`, `precio`, `porcentajeIva`, `valorIva`, `precioConIva`, `activo`).
 - [x] 1.2 Leer los índices vivos y reusar la copia del ruleset de D-541 (tarea 1.2 de D-541); confirmar que no hay índices de `productHistory` con `occurredAt`.
   - **Depende de:** 0.4.
   - **Hecho cuando:** la lista de índices a crear queda escrita en la tarea 7.1.
@@ -28,10 +29,10 @@
   - **Depende de:** 0.4.
   - **Hecho cuando:** una tabla P1-P12 con esas tres columnas queda en `design.md` D6.
   - **Hecho (23-oct):** Tabla P1-P12 (lee antes, transacción, de dónde sale la empresa, qué sirve de `previo`) en `design.md` D6. Hallazgos: ningún escritor usa transacción; P7 descarta los datos que lee y P11 no lee el producto (su `costoAnterior` viene del navegador), así que esos dos deben leer con `getAll`.
-- [ ] 1.4 Censo de solo lectura de los roles de ALMARA: cuáles tienen el menú `lista-precios/lista-precios` y cuáles pasan `puedeVerMargen` (solo nombres de rol).
+- [x] 1.4 Censo de solo lectura de los roles de ALMARA: cuáles tienen el menú `lista-precios/lista-precios` y cuáles pasan `puedeVerMargen` (solo nombres de rol).
   - **Depende de:** 0.3.
   - **Hecho cuando:** la lista de roles que verían costos queda en `design.md` D9.
-  - **Pendiente (23-oct):** **Falta.** Es una lectura de producción (`roles` de ALMARA) y el clasificador de permisos las denegó; no se insistió. La regla ya está en código (`lectura.js` → `puedeVerCostos`) y se resuelve por rol en cada petición, así que no bloquea; la lista de nombres de rol queda para cuando se autorice la lectura.
+  - **Hecho (23-oct, autorizado por Daniel):** 6 roles en ALMARA; solo «Administrador» ve costos (familia Administrador, `puedeVerMargen` y menú `lista-precios/lista-precios`). Los otros cinco («Almara Produccion», «Daniel Garcia», «julian», «Solo inventarios.», «VENTAS») no cumplen ninguna de las tres condiciones. Anotado en `design.md` D9.
 ## 2. Backend: pruebas primero (Artículo VIII; fallan por la razón esperada)
 
 - [x] 2.1 [P] `tests/productos/historialProducto.diferencias.test.js`: catálogo, normalización, arreglos por clave, quitar precio, variación (GCJ1236: $42.621 → $78.291 = +$35.670, +83,7 %; GCJ1236C: +$19.867, +43,9 %), campos técnicos y stock ignorados, prioridad, `tags`, ids.
@@ -115,6 +116,9 @@
 - [ ] 5.1 Usuario del token, no de la cabecera, en costo (`controllers/productCosts.js:168, 267, 416`).
   - **Depende de:** 0.4.
   - **Hecho cuando:** una prueba con cabecera `email` falsa guarda el correo del token en `costo.actualizadoPor` y en `productCostHistory.importedBy`.
+  - **Aplicado en la copia de trabajo (23-oct), espera el diff aprobado por Daniel:** `controllers/productCosts.js` (`usuarioDeLaSesion`: con JWT solo el correo del token, o «system» si el token no lo trae; la cabecera `email`/`user` queda solo para la llave de servicio) en `previewCostImport`, `applyCostImport` y `updateProductCost`. Prueba nueva `tests/productos/costoUsuarioDelToken.test.js` (7 casos en verde; contra el `productCosts.js` de HEAD falla). Sin commit.
+  - **Ampliado tras la revisión (23-oct):** `routers/fulfillmentIntegrations.js` suma `requireJwtTenantOrPlatform` a las cinco rutas `/cost-import/*`, porque la empresa salía de la cabecera `company` y otra empresa podía escribir y leer costos ajenos (la comprobación de dueño comparaba contra esa misma cabecera). Prueba: 10 casos en verde (cabecera ajena = 403 y cero escrituras; las cinco rutas llevan el middleware). Efecto: la llave de servicio ya no entra a esas rutas (solo las llama el Seller). Sin commit.
+  - **No se cerró aquí:** que solo ciertos roles puedan escribir costos pasa a 5.16 y a Open Questions 5.
 - [ ] 5.2 Lo mismo en importar precios (`productos.js:3349`) y limpiar precios (`:3727`).
   - **Depende de:** 0.4.
   - **Hecho cuando:** misma prueba sobre `user_edit`.
@@ -157,6 +161,9 @@
 - [ ] 5.15 Suite completa: `test:historial-producto`, `test:historial-producto:puntos` (se suma al principal) y la regresión de `design.md` («Pruebas»).
   - **Depende de:** 5.4-5.14.
   - **Hecho cuando:** 0 fallas.
+- [ ] 5.16 Rol para escribir costos (hallazgo de revisión): decidir con Daniel qué roles editan o importan costos (Open Questions 5) y, aprobado, gatear las cinco rutas `/cost-import/*`.
+  - **Depende de:** 5.1 y la respuesta de Daniel (censo de roles de los comercios con costos, solo nombres de rol).
+  - **Hecho cuando:** un rol sin permiso recibe 403 con cero escrituras, y la regla es la misma de D9.
 
 ## 6. Front
 

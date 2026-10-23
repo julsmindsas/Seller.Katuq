@@ -1,3 +1,5 @@
+> **Enmienda del 2026-10-23 (tarde): plan B.** Daniel decidió saltarse el spike e ir directo al plan B. Las secciones D1, D3 y D6 quedan como **registro del plan A que no se hizo** (se conservan por si más adelante se decide volver a él) y la que manda es **D7**. Cambios frente a lo aprobado: la tarjeta no elige ni sube archivos y su política de contenido sigue vacía (`connectDomains: []`); no hay vista previa ni «Quitar» en la tarjeta (los tiene la página); el enlace ya no lleva `actor`; «Cancelar» descarta con `discard_support_attachments` y cierra el enlace; el destino en el ticket lleva la sesión (D4). Pendiente la constancia de Daniel en `specs/CONTRACT.md` (tasks.md 0.2, 0.3 y 8.5).
+>
 > **Estado:** DISEÑO, **pendiente de constancia escrita de la aprobación del diseño** (el encargo del 23-oct la da por hecha, pero en `specs/CONTRACT.md` solo consta la aprobación de la propuesta y la spec). Ticket 1339 (ALMARA FELICIDAD). Decisión **D-549**. La propuesta y la spec las aprobó Daniel el 2026-10-23 con las respuestas recomendadas. F1 y F2 salen juntas. La primera tarea es un spike que decide entre el plan A (la tarjeta elige y sube) y el plan B (enlace de un solo uso a Katuq). Solo documento: sin código.
 
 ## Context
@@ -50,7 +52,9 @@ Verificado en el código el 23-oct, sin leer ni escribir producción. Backend en
 
 ## Decisions
 
-### D1. Spike primero: ¿la tarjeta puede elegir y subir archivos?
+### D1. Spike primero: ¿la tarjeta puede elegir y subir archivos? — NO SE HIZO (plan B directo)
+
+> Daniel decidió el 2026-10-23 no hacer el spike. Esta sección queda como registro de lo que habría medido; el camino es D7.
 
 Antes de escribir código de producto se prueba en **Claude web y Claude escritorio**, con un servidor MCP desechable fuera del despliegue:
 
@@ -95,7 +99,9 @@ Una propuesta de ticket con el interruptor encendido trae una **sesión de adjun
     - `x-goog-meta-company` y `x-goog-meta-sesion`;
   - `discard_support_attachments { adjuntosToken, ruta? }` → borra un archivo o toda la sesión. Lo usan «Quitar» y «Cancelar».
 
-### D3. Subida directa (plan A)
+### D3. Subida directa (plan A) — NO APLICA (plan B directo)
+
+> Registro del plan A. Con el plan B la tarjeta no sube nada; la subida la hace la página de Katuq (D7) con la misma URL firmada de 15 minutos.
 
 1. La persona elige o arrastra. La tarjeta valida tipo y tamaño antes de pedir permiso, para avisar rápido. **El servidor vuelve a validar todo** (D4).
 2. Por cada archivo: `prepare_support_attachment_upload` → `PUT` con los encabezados exactos → avance por archivo con `XMLHttpRequest.upload.onprogress`.
@@ -116,7 +122,7 @@ Una propuesta de ticket con el interruptor encendido trae una **sesión de adjun
    - devuelve una propuesta nueva cuyos `cambios` tienen una fila por archivo: `{ campo: "adjunto:{ruta}", etiqueta: "Archivo", antes: null, despues: "{nombre} · {tamaño} · {md5}" }`.
    - La huella cubre la lista exacta. Si un archivo se cambia, se quita o se agrega, la aprobación anterior no sirve.
 3. «Aprobar» manda los mismos argumentos más el comprobante. El servidor vuelve a hacer el paso 2 y verifica la huella. Si cuadra:
-   1. **copia** cada archivo a `tickets/subidas/{ticketId}/{n}_{nombre}`, con `firebaseStorageDownloadTokens` derivado de forma determinista (HMAC de sesión y ruta). Así la URL es la misma en un reintento y el formato es el de la app de Support (`addSupportTicketEvidence.js:47-49`);
+   1. **copia** cada archivo a `tickets/subidas/{ticketId}/{sesion8}_{n}_{nombre}` (`sesion8` = los 8 primeros caracteres de la sesión: el número `n` reinicia en cada sesión y, sin ella, dos solicitudes sobre el mismo ticket con un archivo del mismo nombre se pisarían; la copia además revisa que el destino no sea de otra sesión y se niega a escribir encima), con `firebaseStorageDownloadTokens` derivado de forma determinista (HMAC de sesión y ruta). Así la URL es la misma en un reintento y el formato es el de la app de Support (`addSupportTicketEvidence.js:47-49`);
    2. **crea el ticket** con id determinista `mcpcard_{sha256(comprobante)}` y `create()` por `servicioTickets.crearTicketSoporte`. Un segundo intento encuentra el ticket y lo devuelve (`ya_existia`). Se reutiliza el mecanismo de D-545 (`deps.idempotency`), ampliado para este origen (tarea 5.1, coordinada con D-545);
    3. borra la sesión pendiente **al final**, solo después de crear el ticket (mejor esfuerzo; D5 recoge lo que quede). Si la creación falla, la sesión sigue y el reintento copia lo mismo encima.
    4. **Reintento de una aprobación que ya tuvo éxito** (la sesión ya no existe): si las copias deterministas ya están en `tickets/subidas/{ticketId}/` y el ticket ya las registra, se responde lo ya aplicado (`ya_existia` en F1; `agregado` con las mismas URL en F2), sin escribir ni copiar nada. Si falta alguna copia, el error es el de siempre.
@@ -132,13 +138,15 @@ Una propuesta de ticket con el interruptor encendido trae una **sesión de adjun
 
 ### D5. Lo no aprobado se borra
 
-- **Al cancelar** o quitar: `discard_support_attachments` al momento.
+- **Al cancelar** o quitar: `discard_support_attachments` al momento. Plan B: «Cancelar» en la tarjeta llama a esa herramienta con solo el permiso (toda la sesión), que además crea el marcador `_cerrada` para que el enlace responda «ya se usó» y no acepte subidas durante los 30 minutos que le quedaran. Si el host no deja llamar la herramienta o falla, la tarjeta igual se cierra y lo dice («los archivos se borran solos en 24 horas»). «Quitar» un archivo lo hace la página con `DELETE /v1/soporte/adjuntos/:token/:n`.
 - **A las 24 horas:** un trabajo cada hora en el planificador existente (`services/cronService.js`, zona `America/Bogota`) lista `tickets/subidas/pendientes/` por páginas de 500 y borra lo creado hace más de 24 horas.
   - Lleva latido en `services/monitoring/jobHeartbeat.js` y un registro `soporte.adjuntos.limpieza { borrados, duracionMs }`.
   - Se eligió el trabajo y no una regla de ciclo de vida del bucket porque la regla cuenta en días (borraría entre 24 y 48 h) y porque cambiarla reemplaza todas las reglas del bucket.
 - **Enlace vencido (plan B):** la misma limpieza.
 
-### D6. La tarjeta de soporte
+### D6. La tarjeta de soporte (plan B: ver los cambios marcados)
+
+> **Plan B:** la pantalla se registra con `connectDomains: []` y `resourceDomains: []` como todas (no declara el almacenamiento: no sube nada). No tiene selector, arrastrar, vista previa ni «Quitar»; muestra la propuesta, la lista de archivos que quedaron en el servidor (nombre y tamaño), «Subir los archivos en Katuq», «Ya los subí», «Aprobar» y «Cancelar». Lo de vista previa y «Quitar» vive en la página (D7). El resto de esta sección describe el plan A y se conserva como registro.
 
 - **Pantalla nueva** `ui://katuq/soporte/adjuntar.html` en `services/mcp/apps/soporte/`, compilada por `build.js` como las demás. Se registra con `meta: { csp: { connectDomains: ["https://storage.googleapis.com"], resourceDomains: [] } }`.
 - **Por qué no la genérica:** el permiso de red solo lo necesita esta. `update_product` y las demás aprobaciones siguen con `connectDomains: []`.
@@ -151,7 +159,7 @@ Una propuesta de ticket con el interruptor encendido trae una **sesión de adjun
 
 ### D7. Plan B: enlace de un solo uso (solo si el spike lo exige)
 
-- **Enlace:** `https://<Seller>/adjuntar/{enlaceToken}`. Token HS256 con etiqueta `mcp-adjuntos-enlace-v1`: `{ company, actor, sesion, ticketId, exp: 30 min }`.
+- **Enlace:** `https://<Seller>/adjuntar/{enlaceToken}`. Token HS256 con etiqueta `mcp-adjuntos-enlace-v1`: `{ company, sesion, ticketId, exp: 30 min }`. **Sin `actor`:** la página no tiene sesión y el enlace no debe llevar a la persona dentro (la empresa y la sesión salen siempre del enlace, nunca de lo que mande la página).
 - **Un solo uso sin colección:** al tocar «Listo» en la página se crea el objeto marcador `pendientes/{empresa}/{sesion}/_cerrada`. Con el marcador, el enlace responde «Este enlace ya se usó». Aprobar el ticket también consume la sesión.
 - **Backend:** rutas nuevas, normales v1 y sin sesión (el token es la llave), con límite de peticiones por IP:
   - `GET /v1/soporte/adjuntos/:token`: empresa, topes y archivos de la sesión;
@@ -159,7 +167,10 @@ Una propuesta de ticket con el interruptor encendido trae una **sesión de adjun
   - `DELETE /v1/soporte/adjuntos/:token/:n`;
   - `POST /v1/soporte/adjuntos/:token/listo`.
 - **Front:** ruta pública `adjuntar/:token` como `encuesta/:ref` (`app-routing.module.ts`), componente standalone OnPush con `<app-publica-marco>` y `@include publica-piezas` (D-398). Servicio `shared/services/soporte/adjuntos-publicos.service.ts extends BaseService`.
-- **CORS:** el bucket acepta además el origen del Seller.
+- **CORS:** el bucket acepta el origen del Seller (`https://sellercenter.katuq.com`) para `PUT` y `OPTIONS`; nunca `*`.
+- **Privacidad del enlace en los registros:** el enlace viaja en la ruta y el cuerpo de `/permiso` lleva el nombre del archivo. `utils/soporteAdjuntosPrivacy.js` define «petición de adjuntos» y los registros globales la omiten o la redactan: `usageTracker` (no escribe `apiUsage`), el skip de `morganBody` en `index.js` y `beforeSend` de Sentry en `instrument.js`. Lo fija `tests/support/adjuntos/montaje.test.js`.
+- **Montaje:** `app.use("/v1/soporte/adjuntos", require("./routers/soporteAdjuntos"))` en `index.js`, sin `auth` ni guardia de solo lectura (el guardia vive dentro de `auth`, así que la página pública no lo cruza).
+- **Tarjeta:** `connectDomains: []`, sin selector de archivos (ver D6).
 - En la tarjeta, el botón usa `ui/open-link` si S7 pasa; si no, muestra el enlace para copiar. Después de subir, «Ya los subí» vuelve a pedir la propuesta con la lista.
 
 ### D8. Interruptor global

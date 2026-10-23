@@ -1,4 +1,4 @@
-> **Estado:** TAREAS, pendientes de aprobación de Daniel. Decisión **D-547** (propuesta aprobada el 2026-10-23). Tickets 1350 (F1) y 1349, parte 1 (F2), de ALMARA FELICIDAD. Dos fases, cada una se aprueba, se publica y se verifica por separado: **F1** (secciones 1 a 8, para todos) y **F2** (secciones 9 a 13, con la bandera `orderPinnedActions`, ALMARA primero). Sin código hasta aprobar `design.md` y este archivo.
+> **Estado:** TAREAS, pendientes de aprobación de Daniel (0.2 y 0.4 abiertas hasta citar su frase en CONTRACT.md). Decisión **D-547** (propuesta aprobada el 2026-10-23). Tickets 1350 (F1) y 1349, parte 1 (F2), de ALMARA FELICIDAD. Dos fases, cada una se aprueba, se publica y se verifica por separado: **F1** (secciones 1 a 8, para todos) y **F2** (secciones 9 a 13, con la bandera `orderPinnedActions`, ALMARA primero). Sin código hasta aprobar `design.md` y este archivo.
 >
 > **Módulo sensible `orders`.** Un cambio a la vez, con el diff a la vista y aprobación explícita antes de aplicarlo (`openspec/config.yaml`). Una aprobación de este `tasks.md` no sustituye esa del diff.
 >
@@ -32,6 +32,8 @@ Regla de llegada: quien llega **segundo** se adapta al primero; ninguno cambia l
   - Katuq solo sugiere;
   - F1 para todos y sin bandera; F2 con bandera por empresa en `companies.featureFlags`, ALMARA primero.
 - [ ] 0.2 Aprobación de `design.md` y de este `tasks.md`. Sin ella no se toca código.
+  - **Estado (2026-10-23): SIN EVIDENCIA PROPIA.** `specs/CONTRACT.md` (D-547) solo registra «APROBADA la propuesta». La orquestación informó que Daniel aprobó design y tasks, pero ese aviso no es una frase de Daniel. Queda abierta hasta citar sus palabras en CONTRACT.md (como en S-03). Mientras tanto, el código de las secciones 2 y 3 y los diffs de 4.2 son **tentativos**: sin commit ni deploy. El diff de cada pieza sensible se aprueba aparte.
+
 - [x] 0.3 **D-547** registrada en `specs/CONTRACT.md` (propuesta aprobada, 2026-10-23).
 - [ ] 0.4 Respuestas de Daniel a las 4 Open Questions de `design.md`, con las recomendadas por omisión:
   1. íconos Tabler en el pedido, con el registro de D-546;
@@ -40,6 +42,7 @@ Regla de llegada: quien llega **segundo** se adapta al primero; ninguno cambia l
   4. «Ajusta el IVA del pedido» para todos.
 
   **Hecho cuando:** las 4 respuestas están anotadas en `design.md` («Open Questions → resueltas»). La 1 bloquea 2.1; la 2 y la 4 bloquean 2.2; la 3 bloquea 11.1.
+  - **Estado (2026-10-23):** las 4 respuestas están anotadas en `design.md` («Open Questions → resueltas»), pero las 4 son las **recomendadas** (Tabler en el pedido; «Historial» en la grilla y «Historial del pedido» en el botón del detalle; el conteo falla en silencio; «Ajusta el IVA del pedido»). Que Daniel las haya confirmado no está citado: queda abierta hasta registrar su frase.
 
 ---
 
@@ -47,31 +50,44 @@ Regla de llegada: quien llega **segundo** se adapta al primero; ninguno cambia l
 
 ### 1. Verificación previa (solo lectura, antes de editar)
 
-- [ ] 1.1 `git pull`, `git status` de `src/app/components/ventas/list/`, `src/app/shared/` y `src/styles.scss`, y relectura de la tabla de coordinación (estado real de D-541 7.5, D-543 T-38 y D-544 L-11, y de D-546 F2 para el registro de íconos). **Hecho cuando:** la carpeta `list/` está limpia, o lo que tiene está identificado con su sesión avisada, y el estado de las cuatro decisiones queda anotado en el scratchpad con el commit que se lee.
-- [ ] 1.2 Sacar de `list.component.html` (`:568-659` el bloque, `:2171-2540` el modal) y de `onRowMenuClick` (`list.component.ts:506-628`) la tabla de las **28 acciones**: título de hoy en cada lugar, método llamado, plantilla pasada, si cierra el modal y su condición. Para cada una, anotar las rutas del servidor que escribe (leyendo el método, no suponiendo). Guardar en `tests/ventas/acciones-pedido-antes.json` (solo la tabla de llamadas, sin datos de pedidos) y la lista de rutas a bloquear en el scratchpad. **Hecho cuando:**
+- [x] 1.1 `git pull`, `git status` de `src/app/components/ventas/list/`, `src/app/shared/` y `src/styles.scss`, y relectura de la tabla de coordinación (estado real de D-541 7.5, D-543 T-38 y D-544 L-11, y de D-546 F2 para el registro de íconos). **Hecho cuando:** la carpeta `list/` está limpia, o lo que tiene está identificado con su sesión avisada, y el estado de las cuatro decisiones queda anotado en el scratchpad con el commit que se lee.
+  - **Resultado (2026-10-23):** leído en `310bd6a1` (rama igual a `origin`, nada que bajar; no se hizo `git pull` porque el working copy es compartido). `list/`, `shared/`, `styles.scss`, `tests/` y `package.json` sin cambios ajenos. D-541 7.5, D-543 T-37/T-38 y D-544 L-11 sin hacer; `grep` de `correctPrice`/`changePriceList` en `list/` vacío; D-546 F2 publicada (`c30e836b`, 57 íconos Tabler; sin `devDependency` en `package.json`). Notas en el scratchpad (`d547-notas-1x.md`).
+
+- [x] 1.2 Sacar de `list.component.html` (`:568-659` el bloque, `:2171-2540` el modal) y de `onRowMenuClick` (`list.component.ts:506-628`) la tabla de las **28 acciones**: título de hoy en cada lugar, método llamado, plantilla pasada, si cierra el modal y su condición. Para cada una, anotar las rutas del servidor que escribe (leyendo el método, no suponiendo). Guardar en `tests/ventas/acciones-pedido-antes.json` (solo la tabla de llamadas, sin datos de pedidos) y la lista de rutas a bloquear en el scratchpad. **Hecho cuando:**
   - el JSON tiene las 28 entradas (23 del modal, 5 de factura que hoy solo están en el bloque);
   - cada entrada trae `metodo`, `plantilla`, `cerrar` y los tres títulos de hoy;
   - la lista de rutas de escritura cubre cada acción que guarda algo;
   - dos personas leyendo el JSON contra la plantilla no encuentran una diferencia.
+  - **Resultado (2026-10-23):** `tests/ventas/acciones-pedido-antes.json` con las 28 entradas (23 del modal, 5 de factura solo del bloque: `soloEnBloque`), cada una con `metodo`, `plantilla`, `cerrar`, `argumentoExtra`, condiciones y los títulos de hoy en bloque, modal y «⋯». Rutas de escritura por acción y patrones para bloquear en DevTools en el scratchpad (`d547-notas-1x.md`). Salvedad: «dos personas leyendo» queda para la revisión del diff.
+
 - [ ] 1.3 Medir el modal de hoy y el bloque con DevTools y FLORECER: 1366×768 (alto de ventana de 620 y de 650), 1440×900 y 390×844, en un pedido de venta, uno POS y uno despachado. Contar `(linear|radial)-gradient(` y primarios prohibidos en `components/ventas/list` y `components/rol`. **Hecho cuando:** la tabla de medidas y las capturas del «antes» están en el scratchpad, y los conteos confirman la base (3 gradientes y 0 primarios en `list`; 0 y 0 en `rol`).
+  - **Avance (2026-10-23):** hechos los conteos de la línea base (`components/ventas/list`: 3 gradientes y 0 primarios; `components/rol`: 0 y 0; `shared/icons`: 0 y 0). **Pendiente:** las medidas y capturas del modal de hoy en FLORECER (1366×768 a 620 y 650 de alto, 1440×900 y 390×844) necesitan iniciar sesión en un navegador con la empresa demo.
+
 - [ ] 1.4 Capturar el «antes» de las 28 acciones sobre 6 pedidos de FLORECER: venta, POS, despachado, con descuento, facturado (o, si FLORECER no tiene uno, un pedido real de ALMARA **solo abriendo la ventana, sin confirmar nada**) y abierto desde Producción. De cada acción: captura de la ventana que abre y, si escribe, el payload bloqueado en DevTools. *Depende de:* 1.2. **Hecho cuando:** hay una captura por acción y por pedido en que aplica, y un JSON por payload bloqueado, todo en el scratchpad y nada en el repo.
+  - **Pendiente (2026-10-23):** requiere una persona con la sesión de FLORECER abierta y DevTools bloqueando las rutas de escritura (la lista está en el scratchpad, `d547-notas-1x.md`).
 
 ### 2. Piezas puras (sin tocar `list.component.*`)
 
-- [ ] 2.1 `[P]` Íconos Tabler (D10). Si D-546 F2 ya publicó `IconoTablerComponent` y `shared/icons/tabler-iconos.ts`, solo agregar los 25 nombres a `tabler-usados.json` y regenerar. Si no, crear esas piezas **tal como las describe D-546 D6** (`devDependency` `@tabler/icons` con versión exacta de al menos dos semanas, script `scripts/generar-iconos-tabler.js`, componente standalone OnPush sin `innerHTML`), sin variante propia. *Depende de:* 0.4 (respuesta 1) y 1.1. **Hecho cuando:**
+- [x] 2.1 `[P]` Íconos Tabler (D10). Si D-546 F2 ya publicó `IconoTablerComponent` y `shared/icons/tabler-iconos.ts`, solo agregar los 25 nombres a `tabler-usados.json` y regenerar. Si no, crear esas piezas **tal como las describe D-546 D6** (`devDependency` `@tabler/icons` con versión exacta de al menos dos semanas, script `scripts/generar-iconos-tabler.js`, componente standalone OnPush sin `innerHTML`), sin variante propia. *Depende de:* 0.4 (respuesta 1) y 1.1. **Hecho cuando:**
   - correr el script dos veces no deja diff;
   - un nombre inexistente lo hace fallar (probado);
   - los 25 nombres (16 fijas, contexto, pie y pin / `pinned-filled`) existen en `tabler-iconos.ts`;
   - el build pasa y a 1440 y 390 px nada visible cambió.
-- [ ] 2.2 `[P]` Catálogo (D1): `acciones-pedido/acciones-pedido.catalogo.ts` con las 16 fijas, las de contexto y el pie, con `id`, `titulo`, `resena`, `nombresAnteriores` (recogidos en 1.2), `icono`, `columna` y `tipo`. Prueba `tests/ventas/acciones-pedido-catalogo.test.js`. *Depende de:* 0.4 (respuestas 2 y 4) y 1.2. **Hecho cuando:**
+  - **Resultado (2026-10-23):** `tabler-usados.json` pasó de 57 a 81 nombres y `tabler-iconos.ts` se regeneró con `@tabler/icons` 3.49.0 (instalado solo en el scratchpad, `TABLER_ICONS_DIR`): dos corridas sin diff y `--check` en verde; `menu-iconos.test.js` en verde (el script falla con un nombre inexistente: probado ahí). Nombres: los 16 de la grilla, 6 de contexto, 8 de subacciones, `trash`, `lock`, `pin` y `pinned`. `pinned-filled` solo existe en el set relleno que el script no lee: F2 usa `pinned` o `pin` con `relleno`. Falta la `devDependency` `"@tabler/icons": "3.49.0"` en `package.json` (la misma pendiente de D-546 4.1).
+
+- [x] 2.2 `[P]` Catálogo (D1): `acciones-pedido/acciones-pedido.catalogo.ts` con las 16 fijas, las de contexto y el pie, con `id`, `titulo`, `resena`, `nombresAnteriores` (recogidos en 1.2), `icono`, `columna` y `tipo`. Prueba `tests/ventas/acciones-pedido-catalogo.test.js`. *Depende de:* 0.4 (respuestas 2 y 4) y 1.2. **Hecho cuando:**
   - la prueba pasa: hay exactamente 16 fijas, 4 por columna, ids únicos, ningún ícono repetido y títulos y reseñas idénticos a la tabla de la spec;
   - cada título de hoy de las 28 acciones aparece como título o como `nombresAnteriores` de alguna;
   - el build pasa.
-- [ ] 2.3 Plan (D2): `acciones-pedido.plan.ts`, la tabla `id → { metodo, plantilla, cerrar }` copiada de 1.2. Prueba de contrato `tests/ventas/acciones-pedido-plan.contract.test.js`. *Depende de:* 1.2 y 2.2. **Hecho cuando:**
+  - **Resultado (2026-10-23):** `acciones-pedido/acciones-pedido.catalogo.ts` (16 fijas, 6 de contexto, 8 subacciones y el pie) y `tests/ventas/acciones-pedido-catalogo.test.js`: 7 pruebas en verde (16 fijas, 4 por columna, íconos únicos, títulos y reseñas idénticos a la spec, los títulos de hoy de las 28 acciones cubiertos).
+
+- [x] 2.3 Plan (D2): `acciones-pedido.plan.ts`, la tabla `id → { metodo, plantilla, cerrar }` copiada de 1.2. Prueba de contrato `tests/ventas/acciones-pedido-plan.contract.test.js`. *Depende de:* 1.2 y 2.2. **Hecho cuando:**
   - la prueba compara el plan con `acciones-pedido-antes.json` y falla si una entrada difiere en método, plantilla o cierre;
   - la prueba lee `list.component.ts` y falla si algún `metodo` no existe en `ListOrdersComponent`;
   - se probó que falla al cambiar un `metodo` a propósito.
-- [ ] 2.4 `[P]` Estado (D3): `acciones-pedido.estado.ts` con `estadoAcciones(entrada)` y las pruebas `tests/ventas/acciones-pedido-estado.test.js`. *Depende de:* 2.2. **Hecho cuando:** pasan los escenarios de la spec:
+  - **Resultado (2026-10-23):** `acciones-pedido/acciones-pedido.plan.ts` y `tests/ventas/acciones-pedido-plan.contract.test.js`: 4 pruebas en verde. Compara con `acciones-pedido-antes.json` (se probó que falla al cambiar un método, una plantilla y un cierre a propósito) y lee `list.component.ts` con el compilador de TypeScript para comprobar que cada método existe. `marcarOQuitarRevision` es nuevo (4.2): antes de aplicar 4.2 esa prueba fallaba solo por él.
+
+- [x] 2.4 `[P]` Estado (D3): `acciones-pedido.estado.ts` con `estadoAcciones(entrada)` y las pruebas `tests/ventas/acciones-pedido-estado.test.js`. *Depende de:* 2.2. **Hecho cuando:** pasan los escenarios de la spec:
   - pedido de venta normal (las 16 visibles y habilitadas);
   - POS (Notas deshabilitada con «No aplica a pedidos POS»);
   - congelado con y sin administrador (Editar productos, Descuento e Impuestos con «Congelado · {estado}»);
@@ -81,16 +97,19 @@ Regla de llegada: quien llega **segundo** se adapta al primero; ninguno cambia l
   - despachado (aparece `delivery`);
   - Desde Producción, con y sin Brenda (solo las 6 fijas que aplican, ninguna deshabilitada);
   - `correctPrice` y `changePriceList` ausentes si `accionesPrecio` está vacío.
-- [ ] 2.5 `[P]` Buscador (D6): función pura `filtrarAcciones(texto, acciones)` en `acciones-pedido/` y `tests/ventas/acciones-pedido-buscador.test.js`. *Depende de:* 2.2. **Hecho cuando:** pasan:
+  - **Resultado (2026-10-23):** `acciones-pedido/acciones-pedido.estado.ts` y `tests/ventas/acciones-pedido-estado.test.js`: 15 pruebas en verde con todos los escenarios de la spec. Hallazgo: `puedeLiberarFactura` y por tanto `puedeRefacturar` ya devuelven `false` desde Producción, así que Refacturar nunca sale ahí (D9 lo lista; no cambia nada respecto de hoy).
+
+- [x] 2.5 `[P]` Buscador (D6): función pura `filtrarAcciones(texto, acciones)` en `acciones-pedido/` y `tests/ventas/acciones-pedido-buscador.test.js`. *Depende de:* 2.2. **Hecho cuando:** pasan:
   - «imprimir» encuentra PDF del pedido;
   - sin mayúsculas ni tildes («direccion» encuentra Editar dirección);
   - busca por reseña;
   - Enter sobre una sola coincidencia habilitada devuelve esa acción; con dos o con una deshabilitada, ninguna;
   - sin coincidencias devuelve vacío.
+  - **Resultado (2026-10-23):** `acciones-pedido/acciones-pedido.buscador.ts` y `tests/ventas/acciones-pedido-buscador.test.js`: 8 pruebas en verde. Factura electrónica no es candidata por sí sola: se buscan sus hijos, que también coinciden con el nombre del grupo.
 
 ### 3. El modal como componente (todavía sin conectarlo)
 
-- [ ] 3.1 `OrderOptionsModalComponent` en `acciones-pedido/` (D4, D5, D9), OnPush, declarado en `VentasModule`:
+- [x] 3.1 `OrderOptionsModalComponent` en `acciones-pedido/` (D4, D5, D9), OnPush, declarado en `VentasModule`:
   - entradas `pedido`, `estados`, `accionesPrecio`, `pines` y `resaltada` (las dos últimas sin uso en F1); salidas `(accion)` y `(cerrar)`;
   - encabezado con el buscador, grilla de 16 tarjetas en 4 columnas, fila «Para este pedido» con Factura electrónica plegable, pie con Eliminar y «Cerrar»;
   - vista Desde Producción (D9);
@@ -104,16 +123,23 @@ Regla de llegada: quien llega **segundo** se adapta al primero; ninguno cambia l
   - a 1147×607 y a 390×844 hay 2 columnas, sin scroll horizontal;
   - las tarjetas de una fila miden lo mismo y ningún texto lleva «…»;
   - Tab recorre buscador, tarjetas habilitadas y pie en orden de lectura con el foco visible.
-- [ ] 3.2 `[P]` Pruebas del componente (`node --test` con `ts-node`, o las del bloque Angular si el arnés lo exige): una tarjeta deshabilitada no emite `(accion)`; Esc, la X, «Cerrar» y el clic fuera emiten `(cerrar)` sin `(accion)`; Enter con una sola coincidencia emite su `id`; sin pedidos de contexto no existe la fila. *Depende de:* 3.1. **Hecho cuando:** las pruebas pasan.
+  - **Resultado (2026-10-23):** `acciones-pedido/order-options-modal.component.{ts,html,scss}` y `order-options-modal.vista.ts` (lógica pura), declarado en `VentasModule` (que ahora importa `IconoTablerComponent`). Medido en un arnés de Angular compilado (scratchpad), con el CSS global del build de producción: 1366×650 y 1366×620, modal de 1040×513 px (≤ 520) sin scroll, con la fila de contexto de 4 acciones; 1440 → 1040 de ancho; 1147×607 → 918 de ancho en 2 columnas con scroll solo dentro del cuerpo; 390×844 → 374 de ancho, 2 columnas, sin scroll horizontal; tarjetas de una fila de igual alto, 0 «…», foco inicial en el buscador y Tab en orden (buscador, X, columnas, contexto, Cerrar). Sin gradientes ni primarios, ninguna clase con «p-». Salvedad de diseño: el modal no recibe la entrada `accionesPrecio` aparte; llega dentro de `estados` (el padre la pasa a `estadoAcciones`). El menú de dos opciones de Descuento (D8, tarea 5.2) quedó en el componente; falta su conexión en `list`.
+
+- [x] 3.2 `[P]` Pruebas del componente (`node --test` con `ts-node`, o las del bloque Angular si el arnés lo exige): una tarjeta deshabilitada no emite `(accion)`; Esc, la X, «Cerrar» y el clic fuera emiten `(cerrar)` sin `(accion)`; Enter con una sola coincidencia emite su `id`; sin pedidos de contexto no existe la fila. *Depende de:* 3.1. **Hecho cuando:** las pruebas pasan.
+  - **Resultado (2026-10-23):** `order-options-modal.component.spec.ts` (15 pruebas de DOM: tarjeta deshabilitada no emite, Esc/X/Cerrar/clic fuera solo cierran, Enter con una coincidencia, sin fila de contexto, menús de Factura y Descuento, Eliminar, Producción) y `tests/ventas/acciones-pedido-vista.test.js` (10 pruebas con `node --test`). Las de Karma pasan en un arnés del scratchpad: `ng test` del repositorio no corre aquí porque falta `node_modules/quill` (lo pide `angular.json`) y `@types/jasmine`.
 
 ### 4. Conectar el modal en `list.component.*` (sensible: una pieza a la vez, con diff y aprobación)
 
-- [ ] 4.1 Verificación previa, solo lectura: de los 28 métodos del plan, comprobar cuáles leen `this.selectedOrder` (que `closeOptionsModal()` deja en `null`), con atención a `releaseInvoice` y las 4 acciones DIAN que hoy solo se llamaban desde el bloque. *Depende de:* 2.3. **Hecho cuando:** la lista está en el scratchpad con archivo y línea, y el plan marca `cerrar: false` en toda acción que lo lea o la llama antes de cerrar. Si el plan cambia, 2.3 se vuelve a correr en verde.
+- [x] 4.1 Verificación previa, solo lectura: de los 28 métodos del plan, comprobar cuáles leen `this.selectedOrder` (que `closeOptionsModal()` deja en `null`), con atención a `releaseInvoice` y las 4 acciones DIAN que hoy solo se llamaban desde el bloque. *Depende de:* 2.3. **Hecho cuando:** la lista está en el scratchpad con archivo y línea, y el plan marca `cerrar: false` en toda acción que lo lea o la llama antes de cerrar. Si el plan cambia, 2.3 se vuelve a correr en verde.
+  - **Resultado (2026-10-23):** `this.selectedOrder` solo se LEE en `onIvaLineaActualizada` (`list.component.ts:10560`, protegido con `if (this.selectedOrder && …)`, así que `null` no rompe nada); se ESCRIBE en `openOptionsModal`, `closeOptionsModal` y `onOptionsProduccion`; `list.component.html` solo lo usa dentro del modal que se reemplaza. `releaseInvoice` y las 4 DIAN reciben el pedido por argumento y no leen estado del modal: se llaman y luego se cierra (`cerrar: true`).
+
 - [ ] 4.2 `ejecutarAccionPedido(id, pedido)` y los `@ViewChild` nuevos (`datosEnregaModal`, `datosFacturacionModal`, `cambioEstadoPagoModal`, `recompraModal`, `pagosModal`, `descuentoModal`, `editarDescuentoModal`), más el cálculo de las entradas de `estadoAcciones` con los métodos de hoy y sin reescribirlos. Aún sin cambiar la plantilla. **Mostrar el diff y esperar aprobación.** *Depende de:* 4.1. **Hecho cuando:**
   - el diff solo agrega (no modifica métodos existentes);
   - compila;
   - la prueba de 2.3 sigue en verde;
   - `git diff --stat` solo muestra `list.component.ts`.
+  - **Estado (2026-10-23): APLICADO en el working copy, pendiente de la aprobación del diff de Daniel.** `git diff --stat` solo muestra `list.component.ts` (117 líneas agregadas, 0 borradas): 7 `@ViewChild` nuevos, `accionesPrecioPedido`, `entradaEstadoAcciones`, `estadosAccionesDe` (devuelve el mismo objeto mientras nada cambie, para el binding OnPush), `marcarOQuitarRevision`, `ejecutarAccionPedido` y 5 imports. Compila (re-verificado 2026-10-23: el build de producción ya termina sin errores, ya sin el fallo de `adjuntar-publico.component.ts`, de otra sesión; repetirlo antes de cerrar); la prueba de 2.3 en verde; 9 pruebas de Karma (`ejecutar-accion-pedido.spec.ts`) en verde en el arnés del scratchpad. No se marca `[x]` hasta que Daniel apruebe.
+
 - [ ] 4.3 Coordinación D-543/D-544: releer la tabla de coordinación. Si D-543 T-38 o D-544 L-11 ya agregaron sus botones a «Más opciones», pasarlos a la fila de contexto con sus condiciones y su consulta exactas, alimentando `accionesPrecio`; si no, dejar `accionesPrecio` vacío. **Mostrar el diff y esperar aprobación.** *Depende de:* 4.2. **Hecho cuando:**
   - `grep` de `correctPrice` y `changePriceList` en `list.component.*` muestra una sola ruta de entrada (la fila de contexto);
   - sus reglas, permisos y consulta no cambiaron (el diff de sus archivos de servicio y diálogo está vacío);

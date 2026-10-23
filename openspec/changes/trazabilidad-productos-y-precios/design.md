@@ -261,6 +261,7 @@ Una corrección es otro evento. Nada se edita.
 
 - **Ver el historial:** quien abre la ficha del producto.
 - **Ver costos en el historial:** familia Administrador, `puedeVerMargen`, o rol con el menú `lista-precios/lista-precios` (donde vive la pestaña «Costo» hoy). Se resuelve con `menusDelRol` como `services/mcp/permisoDeEscritura.js`. Ver Open Questions 1.
+- **Censo de roles de ALMARA (tarea 1.4, lectura de producción del 23-oct, solo nombres de rol):** hay 6 roles. **Solo «Administrador» vería costos** (familia Administrador, `puedeVerMargen` y menú `lista-precios/lista-precios`: los tres). Ninguno de los otros cinco los vería: «Almara Produccion», «Daniel Garcia», «julian», «Solo inventarios.» y «VENTAS» no son familia Administrador, no pasan `puedeVerMargen` y no tienen ese menú. Hoy ningún rol fuera de Administrador depende del menú para este permiso en ALMARA.
 - **Exportar (F3):** solo la familia Administrador (`isAdminFamilyRole`).
 - **Bandera `productHistoryLog`** en `FEATURE_FLAG_NAMES` y `COMPANY_FEATURE_FLAGS`. Apagada: no se escribe, `vista=eventos` responde la vista de antes y el front muestra la pestaña de hoy. Corte general `config/feature_flags.productHistoryLog === false`. Dueño Daniel, retiro 2027-04-30 (Artículo XII). Primero FLORECER, luego ALMARA.
 
@@ -322,6 +323,8 @@ Una corrección es otro evento. Nada se edita.
 - **`date_edit`:** no se toca; la prueba de puntos lo verifica.
 - **Reglas abiertas** (D-513): gate antes de ALMARA, compartido con D-541.
 - **Hallazgos de seguridad** del censo: quedan anotados para cambios aparte; el historial no confía en la cabecera aunque el escritor sí lo haga.
+- **Empresa de las rutas de costo (P8, P11) = cabecera (hallazgo de revisión, 23-oct):** `previewCostImport`, `applyCostImport`, `updateProductCost`, `listCostImports` y `listCostHistoryByProduct` leían la empresa de `req.headers.company`, que escribe el navegador, y la rutas solo llevaban `auth`: una sesión de la empresa A con `company: B` podía cambiar y leer costos de B. **Corregido en 5.1** (aplicado, espera diff): las cinco rutas suman `requireJwtTenantOrPlatform` (cabecera ajena = 403 y cero escrituras; Julsmind sigue pidiendo la empresa). Efecto: la llave de servicio ya no entra a estas cinco rutas (no hay ningún llamador interno; solo el Seller).
+- **Quién puede ESCRIBIR costos (abierto, previo al cambio):** ninguna de esas rutas exige rol; cualquier sesión de la empresa puede editar o importar costos y leer su historial, aunque D9 solo deje VER costos en el historial a la familia Administrador, `puedeVerMargen` y el menú «Lista de precios». D9 es de lectura del historial, no de escritura. No se cerró en 5.1 porque exige decidir qué roles editan costos en cada empresa (el censo 1.4 es solo de ALMARA) y un `requireRole` a ciegas podría bloquear a roles legítimos de otros comercios. Queda como **pregunta para Daniel** (Open Questions 5) y como tarea 5.16.
 
 ## Migration Plan
 
@@ -388,3 +391,4 @@ Se usó la copia viva de los índices que sacó esta misma sesión hoy a las 9:4
 _Texto original de las preguntas, para el registro:_
 1. **¿Quién ve los cambios de costo en el historial?** Recomendado: familia Administrador, quien pasa `puedeVerMargen` (gerencia) y quien tiene el menú «Lista de precios», que es quien ve la pestaña «Costo» hoy. Alternativa: solo familia Administrador y gerencia.
 2. **Las acciones masivas** (activar, inactivar, agotado, eliminar) **entran en la F1**, porque el escenario de la spec «Producto inactivado por acción masiva» es de la F1, aunque la tabla de fases de la propuesta las ponía en la F2. ¿De acuerdo?
+5. **¿Quién puede editar o importar costos?** (hallazgo de revisión, abierta). Hoy cualquier sesión de la empresa. Propuesta: la misma regla de D9 (familia Administrador, `puedeVerMargen` o menú «Lista de precios») aplicada a las cinco rutas de costo, con censo de roles de los comercios con costos antes de encenderla. Pide aprobación de Daniel.
