@@ -43,9 +43,9 @@ Las adiciones SHALL sumar su propio costo a la línea donde se vendieron.
 - **THEN** el costo de lo vendido de esa línea es $8.000 por combo
 
 ### Requirement: Método de costo explícito
-El sistema SHALL usar un método de costo único, fijado en D-XXX, y SHALL mostrarlo en la definición de cada cifra de rentabilidad.
+El sistema SHALL usar un método de costo único (D-551) y SHALL mostrarlo en la definición de cada cifra de rentabilidad.
 
-Recomendado: el costo vigente del producto en la fecha de la venta, según el historial de costos que alimentan las compras y el cargue de costos.
+El método es el costo vigente del producto en la fecha de la venta, según el historial de costos que alimentan las compras y el cargue de costos.
 
 Un cambio de costo posterior a la venta SHALL NOT cambiar la rentabilidad de ventas ya hechas.
 
@@ -56,7 +56,7 @@ Un cambio de costo posterior a la venta SHALL NOT cambiar la rentabilidad de ven
 ### Requirement: Calidad de los datos de costo
 Junto a toda cifra de rentabilidad, el sistema SHALL mostrar qué porcentaje de la venta neta del período corresponde a productos sin costo cargado. También SHALL ofrecer la lista de esos productos, ordenada por venta, con acceso para completarlos.
 
-IF los productos sin costo superan el umbral de D-XXX (recomendado: 5 % de la venta neta), THEN la rentabilidad SHALL marcarse como "no confiable". En ese caso SHALL NOT presentarse como cifra definitiva en el tablero, en Opttia ni en los envíos.
+IF los productos sin costo superan el umbral de D-551 (5 % de la venta neta), THEN la rentabilidad SHALL marcarse como "no confiable". En ese caso SHALL NOT presentarse como cifra definitiva en el tablero, en Opttia ni en los envíos.
 
 #### Scenario: Faltan costos
 - **WHEN** el 12 % de la venta del mes es de productos sin costo

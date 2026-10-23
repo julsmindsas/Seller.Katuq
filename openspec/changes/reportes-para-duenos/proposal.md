@@ -1,3 +1,5 @@
+> **Estado:** PROPUESTA aprobada por Daniel el 2026-10-23 (**D-551**), con las cinco respuestas de la sección «Preguntas para Daniel» según lo recomendado. `design.md` y `tasks.md` escritos y pendientes de aprobación. Los 13 arreglos rápidos de 1347 ya están publicados en el commit `9a50d29a` del Seller.
+
 ## Why
 
 ALMARA FELICIDAD (gerencia@almara.com.co) abrió el 22-oct ocho tickets para que los Reportes de Katuq le hablen al dueño del negocio: 1348, 1347, 1346, 1345 (F1), 1344, 1343, 1342 (F2) y 1341 (F3). Hoy Reportes habla como un ingeniero de datos, tarda con muchos datos, da cifras que no cuadran con otras pantallas y no avisa nada por sí solo.
@@ -23,7 +25,7 @@ Lo que muestra el código (solo lectura, 23-oct). Rutas del backend relativas a 
 
 ## Requisito previo obligatorio: `reportes-empresa-del-jwt` (D-484)
 
-**Ninguna tarea de este cambio empieza hasta que `openspec/changes/reportes-empresa-del-jwt/` esté implementado, desplegado y verificado.** Hoy tiene 0 de 26 tareas.
+**Ninguna tarea de este cambio empieza hasta que `openspec/changes/reportes-empresa-del-jwt/` esté implementado, desplegado y verificado.** Daniel aprobó D-484 el 23-oct y se está terminando; la tarea 1.1 de `tasks.md` es la compuerta.
 
 Hoy `/v1/reports` toma la empresa de la cabecera `company`, que manda el navegador (`routers/reports.js:20-27`). Con ella cambiada se leen datos de otra empresa y se puede publicar en ella un enlace que lee sin sesión (`reports.js:45-56`). Cada fase de este cambio agranda ese hueco:
 
@@ -140,7 +142,7 @@ El ticket pide un caché ("si nada cambió, mostrar el último resultado") y pre
   - solo lectura de `orders`, `products`, inventario, cartera y facturación;
   - escrituras solo de reportes guardados, metas (F2) y preferencias de envío (F3);
   - sin colecciones nuevas sin aprobación explícita (ver pregunta 3).
-- **Decisiones:** D-XXX en `specs/CONTRACT.md`, una por fase. ⚠️ D-474 aparece dos veces en el contrato: atribución en la línea 10633 y chat de Opttia en la 11029. Hay que renumerar una antes de citar D-474 en tareas.
+- **Decisiones:** **D-551** en `specs/CONTRACT.md` (propuesta aprobada el 2026-10-23), con una entrada de bitácora por fase. ⚠️ D-474 aparece dos veces en el contrato: atribución en la línea 10633 y chat de Opttia en la 11029. En este cambio, D-474 es siempre el **chat de Opttia**.
 
 ## Constitución
 

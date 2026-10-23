@@ -25,7 +25,7 @@ El diccionario SHALL definir al menos:
 - Días de vencimiento;
 - Período anterior.
 
-`[NEEDS CLARIFICATION: definición exacta de Ventas y Venta neta. Ver pregunta 2 de proposal.md. Recomendado: Ventas = valor guardado del pedido con IVA y envío, sin pedidos que no cuentan; Venta neta = Ventas sin IVA ni envío.]`
+Definiciones (D-551): **Ventas** es el valor guardado del pedido, con IVA y envío, sin los pedidos que no cuentan. **Venta neta** es Ventas sin IVA ni envío.
 
 #### Scenario: Misma venta en todas partes
 - **WHEN** se consulta la venta de septiembre con el mismo período, la misma fecha base y los mismos filtros en el tablero, en un reporte, en el informe ejecutivo y en Opttia
@@ -51,7 +51,7 @@ Cada resultado SHALL decir qué estados incluye y cuáles excluye.
 ### Requirement: Fecha base elegible y en hora de Colombia
 Cada resultado SHALL decir qué fecha usa: creación del pedido, entrega o factura. La persona SHALL poder cambiarla.
 
-La fecha por omisión SHALL ser la que fije D-XXX. Recomendado: entrega, o creación si el pedido no tiene fecha de entrega.
+La fecha por omisión SHALL ser la de entrega o, si el pedido no tiene fecha de entrega, la de creación (D-551).
 
 Todo corte por día, semana o mes SHALL hacerse en hora de Colombia.
 

@@ -1,4 +1,4 @@
-> **Estado:** PROPUESTA, pendiente de aprobación de Daniel. Tickets 1350 (fase 1) y 1349 (fase 2) de ALMARA FELICIDAD. Decisión: D-XXX (por asignar). `design.md` y `tasks.md` se escriben después de aprobar esta propuesta. Sin código.
+> **Estado:** PROPUESTA, pendiente de aprobación de Daniel. Tickets 1350 (fase 1) y 1349 (fase 2) de ALMARA FELICIDAD. Decisión: D-547. `design.md` y `tasks.md` se escriben después de aprobar esta propuesta. Sin código.
 
 ## Why
 

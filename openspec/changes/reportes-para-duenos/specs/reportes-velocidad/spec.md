@@ -69,7 +69,7 @@ WHEN la persona cancela, el sistema SHALL dejar de calcular y dejar la pantalla 
 - **THEN** la pantalla sigue respondiendo y se puede cancelar
 
 ### Requirement: Tiempo máximo con salida clara
-IF una consulta supera el tiempo máximo (D-XXX; recomendado: 30 segundos), THEN el sistema SHALL:
+IF una consulta supera el tiempo máximo (D-551; recomendado: 30 segundos), THEN el sistema SHALL:
 - detenerla;
 - decir en lenguaje claro que fue muy grande;
 - sugerir cómo acotarla (período, filtro o menos columnas).
@@ -83,7 +83,7 @@ Nunca SHALL quedarse cargando sin fin.
 ### Requirement: Hora del cálculo visible
 Cada resultado SHALL mostrar la hora en que se calculó y un botón "Actualizar".
 
-`[NEEDS CLARIFICATION: mostrar al instante el último resultado de un reporte guardado contradice la regla de AGENTS.md "Sin cache extra". Ver pregunta 3 de proposal.md. Recomendado: no guardar resultados; mostrar la hora del cálculo y cumplir los tiempos leyendo solo el período.]`
+El sistema SHALL NOT guardar resultados de reportes para mostrarlos después (AGENTS.md, «Sin cache extra»; D-551): cumple los tiempos leyendo solo el período y muestra la hora del cálculo.
 
 #### Scenario: Reporte abierto
 - **WHEN** el dueño abre un reporte
