@@ -280,3 +280,24 @@
     }
   }
 }
+
+// Ticket 1351: eventos de creación y pagos. Cada span lleva color y tamaño propios (trampa span.ng-star-inserted).
+.evento-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+
+  .evento-nombre { color: #211F3A; font-size: 13px; font-weight: 800; }
+  .evento-detalle { color: #5b5878; font-size: 12px; }
+  .evento-reconstruido {
+    color: #5A6B78;
+    background: #eef0f3;
+    border-radius: 20px;
+    padding: 1px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+  }
+}

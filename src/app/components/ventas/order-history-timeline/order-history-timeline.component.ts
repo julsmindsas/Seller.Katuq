@@ -50,15 +50,25 @@ export class OrderHistoryTimelineComponent implements OnInit, OnChanges {
       return;
     }
 
-    this.timelineEvents = this.history.map((item, index) => ({
+    this.timelineEvents = this.history.map((item: any, index) => ({
       ...item,
-      color: this.getTransitionColor(item.transitionType),
-      icon: this.getTransitionIcon(item.transitionType),
+      // Ticket 1351: creación y pagos reconstruidos con los datos del pedido (tipoEvento).
+      color: item.tipoEvento ? this.colorEvento(item.tipoEvento) : this.getTransitionColor(item.transitionType),
+      icon: item.tipoEvento ? this.iconoEvento(item.tipoEvento) : this.getTransitionIcon(item.transitionType),
       date: this.formatTimestamp(item.timestamp),
       relativeDate: this.getRelativeTime(item.timestamp),
       isFirst: index === 0,
       isLast: index === this.history.length - 1
     }));
+  }
+
+  /** Ticket 1351: color e ícono de los eventos que no son cambios de estado. */
+  colorEvento(tipo: string): string {
+    return ({ creacion: '#5F3FE0', pago: '#1E6FD9' } as Record<string, string>)[tipo] || '#8f8bab';
+  }
+
+  iconoEvento(tipo: string): string {
+    return ({ creacion: 'pi pi-plus', pago: 'pi pi-wallet' } as Record<string, string>)[tipo] || 'pi pi-info-circle';
   }
 
   /**
