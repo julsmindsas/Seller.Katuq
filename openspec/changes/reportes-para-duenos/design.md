@@ -219,6 +219,14 @@ Un contract test con un espía de Firestore falla si el motor, el lector, el cua
 3. **Rollback:** apagar `reportsOfficialMetrics` devuelve las cifras de hoy sin tocar datos. Lo demás de F1 se revierte con su commit.
 4. **F2 y F3** se diseñan en detalle y se aprueban por separado cuando F1 esté publicada y verificada.
 
+## Aprobación (Daniel, 2026-10-23)
+
+Daniel aprobó este diseño y `tasks.md` (F1) el 2026-10-23, con estas respuestas:
+
+1. **Bandera `reportsOfficialMetrics`:** bandera por empresa, apagada por omisión. ALMARA la recibe después de comprobar la paridad, y se retira el 2027-04-30.
+2. **Tope por consulta:** 30 s. Las consultas de más de 5 s quedan en el registro de consultas lentas.
+3. **Fecha de factura:** se aplica la recomendación, que es la opción conservadora. No se ofrece hasta que la tarea 1.8 la verifique por proveedor; entrega y creación cubren los tickets de ALMARA. Daniel no la respondió por separado y puede cambiarla.
+
 ## Open Questions
 
 1. **Bandera `reportsOfficialMetrics`** (D11). Recomendado: bandera por empresa, ALMARA después de la paridad y retiro el 2027-04-30. La alternativa es encender para todos de una vez; es más simple, pero cambia las cifras de todos los reportes guardados el mismo día.

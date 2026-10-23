@@ -1,4 +1,4 @@
-> **Estado:** DISEÑO, **pendiente de aprobación**. Ticket 1339 (ALMARA FELICIDAD). Decisión **D-549**. La propuesta y la spec las aprobó Daniel el 2026-10-23 con las respuestas recomendadas. F1 y F2 salen juntas. La primera tarea es un spike que decide entre el plan A (la tarjeta elige y sube) y el plan B (enlace de un solo uso a Katuq). Solo documento: sin código.
+> **Estado:** DISEÑO, **pendiente de constancia escrita de la aprobación del diseño** (el encargo del 23-oct la da por hecha, pero en `specs/CONTRACT.md` solo consta la aprobación de la propuesta y la spec). Ticket 1339 (ALMARA FELICIDAD). Decisión **D-549**. La propuesta y la spec las aprobó Daniel el 2026-10-23 con las respuestas recomendadas. F1 y F2 salen juntas. La primera tarea es un spike que decide entre el plan A (la tarjeta elige y sube) y el plan B (enlace de un solo uso a Katuq). Solo documento: sin código.
 
 ## Context
 
@@ -118,7 +118,8 @@ Una propuesta de ticket con el interruptor encendido trae una **sesión de adjun
 3. «Aprobar» manda los mismos argumentos más el comprobante. El servidor vuelve a hacer el paso 2 y verifica la huella. Si cuadra:
    1. **copia** cada archivo a `tickets/subidas/{ticketId}/{n}_{nombre}`, con `firebaseStorageDownloadTokens` derivado de forma determinista (HMAC de sesión y ruta). Así la URL es la misma en un reintento y el formato es el de la app de Support (`addSupportTicketEvidence.js:47-49`);
    2. **crea el ticket** con id determinista `mcpcard_{sha256(comprobante)}` y `create()` por `servicioTickets.crearTicketSoporte`. Un segundo intento encuentra el ticket y lo devuelve (`ya_existia`). Se reutiliza el mecanismo de D-545 (`deps.idempotency`), ampliado para este origen (tarea 5.1, coordinada con D-545);
-   3. borra la sesión pendiente (mejor esfuerzo; D5 recoge lo que quede).
+   3. borra la sesión pendiente **al final**, solo después de crear el ticket (mejor esfuerzo; D5 recoge lo que quede). Si la creación falla, la sesión sigue y el reintento copia lo mismo encima.
+   4. **Reintento de una aprobación que ya tuvo éxito** (la sesión ya no existe): si las copias deterministas ya están en `tickets/subidas/{ticketId}/` y el ticket ya las registra, se responde lo ya aplicado (`ya_existia` en F1; `agregado` con las mismas URL en F2), sin escribir ni copiar nada. Si falta alguna copia, el error es el de siempre.
 4. El `ticketId` se decide antes de copiar (es determinista), así que copiar va primero: si la creación falla, el reintento copia lo mismo encima y crea el ticket.
 
 **Ticket existente (F2):** igual, con `add_support_ticket_evidence { id }` sin fuente.
@@ -240,3 +241,10 @@ Una propuesta de ticket con el interruptor encendido trae una **sesión de adjun
 
 1. **¿Quién hace el spike en Claude web y escritorio?** Hace falta una persona que conecte el conector de prueba (túnel) en las dos versiones y tome las capturas. Recomendado: Daniel o Santiago, 30 minutos.
 2. **Si el origen de la tarjeta en Claude cambia por conversación** (subdominio aleatorio) y el bucket no puede listarlo, ¿se pasa al plan B en vez de abrir el CORS con comodín? Recomendado: sí, plan B. Nunca `*`.
+
+### Respuestas asumidas (recomendadas), por confirmar por escrito
+
+1. El spike lo hace Daniel o Santiago (30 min) en Claude web y escritorio.
+2. Si el origen de la tarjeta cambia por conversación y el bucket no puede listarlo, se pasa al plan B; nunca `origin: ["*"]`.
+
+> Estas respuestas son las recomendadas que la propuesta ya adoptó; no hay una confirmación escrita de Daniel sobre ellas. La tarea 0.2 sigue abierta hasta que conste.

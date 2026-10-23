@@ -1,92 +1,115 @@
-> **Estado:** TAREAS de la **F1**, **pendientes de aprobación**. D-548, tickets 1357 y 1358. La F0 está hecha. Las F2 a F4 tendrán sus tareas cuando se diseñen (sección 10). Backend en `katuq_admin_back_firebase/functions`, front en `Seller.Katuq`. Cada tarea de código cierra con `node --check` de los archivos tocados (backend) o `npm run build` (front) y sus pruebas en verde; no se avanza con el build roto. Los enganches de la sección 5 van **uno a la vez, con el diff a la vista y aprobación antes de cada commit**. Leer los archivos antes de editarlos. Nunca `git add -A`.
+> **Estado:** TAREAS de la **F1**, **aprobadas por Daniel el 2026-10-23**. Secciones 1 a 4 hechas en el backend (salvo lo marcado «Pendiente»); la sección 5 espera el diff aprobado de cada enganche. D-548, tickets 1357 y 1358. La F0 está hecha. Las F2 a F4 tendrán sus tareas cuando se diseñen (sección 10). Backend en `katuq_admin_back_firebase/functions`, front en `Seller.Katuq`. Cada tarea de código cierra con `node --check` de los archivos tocados (backend) o `npm run build` (front) y sus pruebas en verde; no se avanza con el build roto. Los enganches de la sección 5 van **uno a la vez, con el diff a la vista y aprobación antes de cada commit**. Leer los archivos antes de editarlos. Nunca `git add -A`.
 
 ## 0. Checkpoints
 
 - [x] 0.1 Propuesta y specs aprobadas por Daniel (23-oct), con las 4 respuestas recomendadas.
 - [x] 0.2 **F0 hecha:** «Última edición» en hora de Colombia y con quién en las cuatro pestañas de Listas de precios (Seller `27c3fc4a`) y usuario del token en precios por tipo de cliente (backend `9d2fa325`). Lo que la propuesta anotaba además para cerrar la F0 pasa a las tareas 5.1 a 5.3 y 6.1.
-- [ ] 0.3 Aprobación de `design.md` y respuesta a sus 2 Open Questions.
+- [x] 0.3 Aprobación de `design.md` y respuesta a sus 2 Open Questions.
   - **Hecho cuando:** Daniel aprueba y las respuestas quedan anotadas en `design.md`.
-- [ ] 0.4 Aprobación de este `tasks.md`.
+  - **Hecho (23-oct):** Daniel aprobó el diseño el 2026-10-23 y respondió las 2 Open Questions (costos: familia Administrador, `puedeVerMargen` y menú «Lista de precios»; acciones masivas en la F1). Anotado en `design.md` («Open Questions»).
+- [x] 0.4 Aprobación de este `tasks.md`.
   - **Hecho cuando:** Daniel lo aprueba por escrito.
+  - **Hecho (23-oct):** Daniel aprobó este `tasks.md` el 2026-10-23 (propuesta, diseño y tareas).
 - [ ] 0.5 Bitácora de D-548 en `specs/CONTRACT.md`: diseño aprobado, versión 2 de `productHistory`, bandera `productHistoryLog` (dueño Daniel, retiro 2027-04-30) y excepción acotada del Artículo IX. Antes de escribir, revisar `origin`.
   - **Depende de:** 0.3, 0.4.
   - **Hecho cuando:** la entrada está en el contrato.
-
+  - **Pendiente (23-oct):** Falta: `specs/CONTRACT.md` no se toca desde esta sesión (otra sesión lo comparte). Debe escribirlo quien cierre la sesión, revisando `origin` antes: diseño aprobado, versión 2 de `productHistory`, bandera `productHistoryLog` (dueño Daniel, retiro 2027-04-30), excepción acotada del Artículo IX y, de esta entrega, las secciones 1 a 4 sin enganchar.
 ## 1. Verificación previa (solo lectura, sin escribir producción)
 
 - [ ] 1.1 Leer 3 productos reales de ALMARA (uno con precios por tipo de cliente, uno con volumen, uno inactivo o agotado) y confirmar las rutas de D2: «se puede vender», disponible/agotado, precio que muestra «Precio tipo clientes» (con o sin IVA) y forma de `preciosPorTipoCliente`. Solo nombres de campo y tipos, ningún valor personal.
   - **Depende de:** 0.4.
   - **Hecho cuando:** la tabla de rutas reales queda en `design.md` («Desvíos») y el catálogo de D2 coincide.
-- [ ] 1.2 Leer los índices vivos y reusar la copia del ruleset de D-541 (tarea 1.2 de D-541); confirmar que no hay índices de `productHistory` con `occurredAt`.
+  - **Pendiente (23-oct):** **Parcial.** Se leyeron 1.500 productos de ALMARA (solo nombres de campo, tipos y conteos de booleanos): rutas de «se puede vender» (`exposicion.activar`), disponible/agotado (`exposicion.disponible`), IVA (texto), base, volumen, costo y categoría confirmadas; `disponibilidad.activo/estado` no existen. La tabla quedó en `design.md` («Desvíos»). **Falta confirmar la forma viva de `preciosPorTipoCliente` con GCJ1236** (ninguno de los 1.500 tenía datos en ese arreglo): la segunda lectura de producción la denegó el clasificador de permisos y no se insistió.
+- [x] 1.2 Leer los índices vivos y reusar la copia del ruleset de D-541 (tarea 1.2 de D-541); confirmar que no hay índices de `productHistory` con `occurredAt`.
   - **Depende de:** 0.4.
   - **Hecho cuando:** la lista de índices a crear queda escrita en la tarea 7.1.
-- [ ] 1.3 Por cada punto P1-P12, anotar si el escritor ya lee el producto antes de escribir, si usa transacción y de dónde saca la empresa.
+  - **Hecho (23-oct):** Índices vivos tomados de la copia que sacó esta sesión a las 9:45 (D-541, 1.2): `productHistory` tiene UN índice (`company, productoId, fecha DESC, __name__ DESC`), ninguno con `occurredAt` ni `tags`. La lista a crear (4 índices y los `fieldOverrides`) quedó en `design.md` («Desvíos») para la tarea 7.1. El ruleset: D-541 ya anotó que hay que sumar `collection != 'productHistory'` a las tres condiciones cuando se haga 7.2.
+- [x] 1.3 Por cada punto P1-P12, anotar si el escritor ya lee el producto antes de escribir, si usa transacción y de dónde saca la empresa.
   - **Depende de:** 0.4.
   - **Hecho cuando:** una tabla P1-P12 con esas tres columnas queda en `design.md` D6.
+  - **Hecho (23-oct):** Tabla P1-P12 (lee antes, transacción, de dónde sale la empresa, qué sirve de `previo`) en `design.md` D6. Hallazgos: ningún escritor usa transacción; P7 descarta los datos que lee y P11 no lee el producto (su `costoAnterior` viene del navegador), así que esos dos deben leer con `getAll`.
 - [ ] 1.4 Censo de solo lectura de los roles de ALMARA: cuáles tienen el menú `lista-precios/lista-precios` y cuáles pasan `puedeVerMargen` (solo nombres de rol).
   - **Depende de:** 0.3.
   - **Hecho cuando:** la lista de roles que verían costos queda en `design.md` D9.
-
+  - **Pendiente (23-oct):** **Falta.** Es una lectura de producción (`roles` de ALMARA) y el clasificador de permisos las denegó; no se insistió. La regla ya está en código (`lectura.js` → `puedeVerCostos`) y se resuelve por rol en cada petición, así que no bloquea; la lista de nombres de rol queda para cuando se autorice la lectura.
 ## 2. Backend: pruebas primero (Artículo VIII; fallan por la razón esperada)
 
-- [ ] 2.1 [P] `tests/productos/historialProducto.diferencias.test.js`: catálogo, normalización, arreglos por clave, quitar precio, variación (GCJ1236: $42.621 → $78.291 = +$35.670, +83,7 %; GCJ1236C: +$19.867, +43,9 %), campos técnicos y stock ignorados, prioridad, `tags`, ids.
+- [x] 2.1 [P] `tests/productos/historialProducto.diferencias.test.js`: catálogo, normalización, arreglos por clave, quitar precio, variación (GCJ1236: $42.621 → $78.291 = +$35.670, +83,7 %; GCJ1236C: +$19.867, +43,9 %), campos técnicos y stock ignorados, prioridad, `tags`, ids.
   - **Depende de:** 1.1.
   - **Hecho cuando:** falla con `Cannot find module`.
-- [ ] 2.2 [P] `tests/productos/historialProducto.contexto.test.js`: actor del token; una cabecera `email` falsa no cambia nada; MCP `oauth`, `servicekey`, `apikey`; sin clasificar → Sistema más traza.
+  - **Hecho (23-oct):** `historialProducto.diferencias.test.js`: 38 casos (GCJ1236 +$35.670 / +83,7 %, GCJ1236C +$19.867 / +43,9 %, normalización, claves, quitar precio, campos técnicos y existencias, prioridad, ids, foto de alta/baja, `conParche`, `armarEvento`). Falló con `Cannot find module` antes de escribir el módulo.
+- [x] 2.2 [P] `tests/productos/historialProducto.contexto.test.js`: actor del token; una cabecera `email` falsa no cambia nada; MCP `oauth`, `servicekey`, `apikey`; sin clasificar → Sistema más traza.
   - **Depende de:** 0.4.
   - **Hecho cuando:** falla con `Cannot find module`.
-- [ ] 2.3 [P] `tests/productos/historialProducto.escritor.test.js`: bandera apagada = cero escrituras; corte general; solo `create`; `ALREADY_EXISTS` = éxito; reintentos solo ante transitorios; falla final → `integration_audit` sin datos personales; nunca lanza; lote de 30 con el mismo `batch.id` y una sola lectura de bandera.
+  - **Hecho (23-oct):** `historialProducto.contexto.test.js`: 15 casos (actor del token, cabecera `email` falsa sin efecto, MCP oauth/servicekey/apikey, integraciones, sin clasificar). Falló con `Cannot find module` antes del módulo.
+- [x] 2.3 [P] `tests/productos/historialProducto.escritor.test.js`: bandera apagada = cero escrituras; corte general; solo `create`; `ALREADY_EXISTS` = éxito; reintentos solo ante transitorios; falla final → `integration_audit` sin datos personales; nunca lanza; lote de 30 con el mismo `batch.id` y una sola lectura de bandera.
   - **Depende de:** 0.4.
   - **Hecho cuando:** falla con `Cannot find module`.
-- [ ] 2.4 [P] `tests/productos/historialProducto.inmutable.contract.test.js`: escaneo de D7.1 con su lista permitida.
+  - **Hecho (23-oct):** `historialProducto.escritor.test.js`: 30 casos (bandera apagada, corte general, solo `create`, `ALREADY_EXISTS`, reintentos, falla a `integration_audit`, nunca lanza, lote de 30, 400 filas → 120 eventos, una sola lectura de bandera por lote). Falló con `Cannot find module` antes del módulo.
+- [x] 2.4 [P] `tests/productos/historialProducto.inmutable.contract.test.js`: escaneo de D7.1 con su lista permitida.
   - **Depende de:** 0.4.
   - **Hecho cuando:** falla porque `constantes.js` no existe.
-- [ ] 2.5 [P] `tests/productos/historialProducto.writeset.contract.test.js`: el módulo solo hace `productHistory.create` e `integration_audit.create`; ningún archivo de inventario lo importa; un ajuste de existencias deja producto, variantes, precios y listas sin cambios y sin evento.
+  - **Hecho (23-oct):** `historialProducto.inmutable.contract.test.js`: 8 casos. Lista permitida del literal `productHistory`: `constantes.js` y `batchStore.js` (v1 de fotos, hasta la F2). Falló porque `constantes.js`, `escritor.js` y `lectura.js` no existían (y por el literal que aún tenía `controllers/productos.js`, que 4.1 quitó).
+- [x] 2.5 [P] `tests/productos/historialProducto.writeset.contract.test.js`: el módulo solo hace `productHistory.create` e `integration_audit.create`; ningún archivo de inventario lo importa; un ajuste de existencias deja producto, variantes, precios y listas sin cambios y sin evento.
   - **Depende de:** 0.4.
   - **Hecho cuando:** falla por la razón esperada.
-- [ ] 2.6 [P] `tests/productos/historialProducto.lectura.test.js`: 404 ajeno con rastro; empresa del token; costos ocultos sin permiso; mezcla con registros v1 de fotos; 140 eventos en páginas de 50 sin dobles, asc y desc; bandera apagada o índice faltante → vista de antes; sin `vista`, respuesta idéntica a la de hoy.
+  - **Hecho (23-oct):** `historialProducto.writeset.contract.test.js`: 4 casos (el escritor solo `productHistory.create` e `integration_audit.create`; la lectura solo lee; ningún archivo de inventario, existencias o Kuvo importa el módulo; un ajuste de existencias no cambia el producto ni deja evento). Falló por `Cannot find module`.
+- [x] 2.6 [P] `tests/productos/historialProducto.lectura.test.js`: 404 ajeno con rastro; empresa del token; costos ocultos sin permiso; mezcla con registros v1 de fotos; 140 eventos en páginas de 50 sin dobles, asc y desc; bandera apagada o índice faltante → vista de antes; sin `vista`, respuesta idéntica a la de hoy.
   - **Depende de:** 0.4.
   - **Hecho cuando:** falla con `Cannot find module`.
-- [ ] 2.7 `tests/productos/historialProducto.puntos.contract.test.js`: un caso por punto P1-P12 (inspección del código, patrón `tests/sellerMobileNotifications/orderControllerHook.test.js`), más la prueba de que con el registrador roto cada escritor guarda en `products` lo mismo que antes, incluido `date_edit`.
+  - **Hecho (23-oct):** `historialProducto.lectura.test.js`: 27 casos (404 ajeno = inexistente con rastro, empresa del token, costos ocultos sin permiso, mezcla con v1, 140 eventos en páginas de 50 asc y desc sin dobles, bandera apagada o índice faltante → vista de antes, sin `vista` idéntica a la de hoy, controlador y ruta). Falló por `Cannot find module`.
+- [x] 2.7 `tests/productos/historialProducto.puntos.contract.test.js`: un caso por punto P1-P12 (inspección del código, patrón `tests/sellerMobileNotifications/orderControllerHook.test.js`), más la prueba de que con el registrador roto cada escritor guarda en `products` lo mismo que antes, incluido `date_edit`.
   - **Depende de:** 1.3.
   - **Hecho cuando:** sus 12 casos están en rojo a propósito y el de «producto igual» en verde.
+  - **Hecho (23-oct):** `historialProducto.puntos.contract.test.js`: P1-P12 en rojo a propósito (los 12 fallan con «falta usar el módulo historialProducto», ninguno por ancla perdida) y los 2 de «producto igual» en verde (el registrador nunca lanza aunque todo esté roto; cada escritor sigue escribiendo `date_edit` y `user_edit`).
 - [ ] 2.8 Scripts `test:historial-producto` (2.1 a 2.6) y `test:historial-producto:puntos` (2.7) en `package.json`.
   - **Depende de:** 2.1-2.7.
   - **Hecho cuando:** los dos scripts corren y muestran los rojos esperados.
-
+  - **Pendiente (23-oct):** **Falta el cambio en `package.json`** (no se toca desde esta sesión). Líneas a agregar en `scripts`:
+    - `"test:historial-producto": "node tests/productos/historialProducto.diferencias.test.js && node tests/productos/historialProducto.contexto.test.js && node tests/productos/historialProducto.escritor.test.js && node tests/productos/historialProducto.inmutable.contract.test.js && node tests/productos/historialProducto.writeset.contract.test.js && node tests/productos/historialProducto.lectura.test.js"`
+    - `"test:historial-producto:puntos": "node tests/productos/historialProducto.puntos.contract.test.js"`
 ## 3. Backend: el módulo, todavía sin enganchar
 
 - [ ] 3.1 `productHistoryLog` en `FEATURE_FLAG_NAMES` (`services/companyFeatureFlags.js`) con su comentario (D-548, dueño Daniel, retiro 2027-04-30, corte general) y en `tests/companies/companyFeatureFlags.test.js`.
   - **Depende de:** 0.5.
   - **Hecho cuando:** las pruebas de banderas pasan y la bandera no nace encendida.
-- [ ] 3.2 `services/productos/historialProducto/constantes.js` y `etiquetas.js`.
+  - **Pendiente (23-oct):** **Falta.** `services/companyFeatureFlags.js` y `tests/companies/companyFeatureFlags.test.js` no se tocan desde esta sesión. Líneas exactas en el informe de la entrega. Mientras no estén, `isFeatureEnabled(…, "productHistoryLog")` responde `false` (estado seguro: nada se escribe).
+- [x] 3.2 `services/productos/historialProducto/constantes.js` y `etiquetas.js`.
   - **Depende de:** 1.1.
   - **Hecho cuando:** 2.4 en verde.
-- [ ] 3.3 `diferencias.js` (funciones puras).
+  - **Hecho (23-oct):** `services/productos/historialProducto/constantes.js` y `etiquetas.js`. Prueba 2.4 en verde.
+- [x] 3.3 `diferencias.js` (funciones puras).
   - **Depende de:** 2.1, 3.2.
   - **Hecho cuando:** 2.1 en verde.
-- [ ] 3.4 `contexto.js`.
+  - **Hecho (23-oct):** `diferencias.js` (funciones puras, más `conParche` y `armarEvento`). Prueba 2.1 en verde (38/38).
+- [x] 3.4 `contexto.js`.
   - **Depende de:** 2.2, 3.2.
   - **Hecho cuando:** 2.2 en verde.
-- [ ] 3.5 `log.js` con la lista cerrada de D11.
+  - **Hecho (23-oct):** `contexto.js`. Prueba 2.2 en verde (15/15).
+- [x] 3.5 `log.js` con la lista cerrada de D11.
   - **Depende de:** 3.2.
   - **Hecho cuando:** un texto con «@» sale como `[omitido]` en su prueba.
-- [ ] 3.6 `escritor.js` (`registrar` y `registrarLote`).
+  - **Hecho (23-oct):** `log.js` con la lista cerrada; un texto con «@» sale `[omitido]`.
+- [x] 3.6 `escritor.js` (`registrar` y `registrarLote`).
   - **Depende de:** 2.3, 2.5, 3.3, 3.4, 3.5.
   - **Hecho cuando:** 2.3, 2.4 y 2.5 en verde.
-- [ ] 3.7 `lectura.js` (vista nueva, vista de antes, registros v1, filtro de costos con `menusDelRol` y `puedeVerMargen`).
+  - **Hecho (23-oct):** `escritor.js` (`registrar` y `registrarLote` con BulkWriter solo `create`). Pruebas 2.3, 2.4 y 2.5 en verde.
+  - **Corregido (23-oct, revisión):** `escribirTanda` esperaba las promesas ANTES de `bw.close()`, y el BulkWriter real solo envía al juntar 20 operaciones o al cerrar: un lote que no fuera múltiplo de 20 (3, 25, 30, 41) se colgaba y perdía eventos. Ahora engancha `allSettled`, cierra y luego lee. El doble de pruebas imita ese comportamiento (no resuelve hasta 20 operaciones o `close()`) y se sumó `tests/productos/historialProducto.lote.emulator.test.js` (3, 25, 30, 41 y 400 filas con 120 cambios) contra el emulador de Firestore: con el código anterior fallan 4 de 5, con el nuevo pasan los 5. Falta el script `test:historial-producto:emulador` en `package.json` (ver informe).
+- [x] 3.7 `lectura.js` (vista nueva, vista de antes, registros v1, filtro de costos con `menusDelRol` y `puedeVerMargen`).
   - **Depende de:** 2.6, 1.4.
   - **Hecho cuando:** 2.6 en verde.
-- [ ] 3.8 `index.js` y `node --check` de los 8 archivos.
+  - **Hecho (23-oct):** `lectura.js` (vista nueva, vista de antes, registros v1, filtro de costos con `menusDelRol`, `isAdminFamilyRole` y `puedeVerMargen`). Prueba 2.6 en verde (27/27). La lista de roles de 1.4 no hizo falta para escribirlo.
+  - **Corregido (23-oct, revisión):** `leerFotos` pedía los `limit(N)` más nuevos por `fecha` y quitaba los v2 DESPUÉS; con más de 50 eventos v2 más nuevos que una foto, la vista de antes salía vacía (y con 100, la mezcla nunca mostraba la foto). Los eventos v2 ya NO escriben `fecha` (se ordenan por `occurredAt`), así que no entran a la consulta de fotos ni llenan su tope; el filtro `esV2` queda como defensa. Pruebas nuevas: 120 eventos v2 más nuevos + una foto, con y sin `vista` (29/29). Sin índice nuevo: no hay datos v2 escritos aún (bandera apagada).
+- [x] 3.8 `index.js` y `node --check` de los 8 archivos.
   - **Depende de:** 3.6, 3.7.
   - **Hecho cuando:** `npm run test:historial-producto` en verde.
-
+  - **Hecho (23-oct):** `index.js`; `node --check` de los 8 archivos y las 6 pruebas de `test:historial-producto` corridas en cadena en verde (122 casos). El script de `package.json` espera a 2.8.
 ## 4. Backend: la lectura
 
-- [ ] 4.1 `controllers/productos.js:2930` delega en `lectura.js` (las dos vistas) y `routers/productos.js:733` suma `requireJwtTenantOrPlatform`.
+- [x] 4.1 `controllers/productos.js:2930` delega en `lectura.js` (las dos vistas) y `routers/productos.js:733` suma `requireJwtTenantOrPlatform`.
   - **Depende de:** 3.8.
   - **Hecho cuando:** 2.6 en verde contra el controlador; sin `vista`, la respuesta es idéntica a la de hoy para un producto con historial de fotos.
-
+  - **Hecho (23-oct):** `controllers/productos.js` (`getHistorial`) delega en `leerPagina` con la empresa del JWT y `routers/productos.js` suma `requireJwtTenantOrPlatform`. Sin `vista`, la respuesta es idéntica a la de hoy para un producto con historial de fotos. Prueba 2.6 en verde, incluido el caso del controlador y la ruta (inspección).
 ## 5. Backend: usuario del token y enganches (uno a la vez; diff y aprobación antes de cada commit)
 
 - [ ] 5.1 Usuario del token, no de la cabecera, en costo (`controllers/productCosts.js:168, 267, 416`).

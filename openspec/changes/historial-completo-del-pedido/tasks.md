@@ -129,11 +129,13 @@ Cada prueba se escribe antes que el código y falla por la razón esperada (falt
 
 ## 4. Backend: los enganches (uno a la vez; diff y aprobación antes de cada commit)
 
-- [ ] 4.1 `utils/orderStatusHistory.js`: el espejo después del `.add()` y los parámetros opcionales `historialPedido` y `contexto` (D6.1).
+- [x] 4.1 `utils/orderStatusHistory.js`: el espejo después del `.add()` y los parámetros opcionales `historialPedido` y `contexto` (D6.1).
   - Firma y valor devuelto, iguales.
-  - **Hecho:**
-    - la regresión de los lectores de `order_status_history` (`tests/enVivo/*`, `osmosisWebhookHistorial`, `liberarPedidosQuitados`, `carrierCompliance`) en verde;
+  - **Hecho (23-oct, sin commit; diff pendiente de aprobación):**
+    - la regresión de los lectores de `order_status_history` (`tests/enVivo/*`, `osmosisWebhookHistorial`, `liberarPedidosQuitados`, `carrierCompliance`) en verde; también `whatsappConfirmacionPedido`, `ejecutarPlan*.contract` e `historialReconstruido`;
     - los casos E5 a E12 y E14 de 2.7 en verde con el contexto por fuente.
+    - Prueba nueva `tests/orders/historialPedido.espejo.test.js` (9 casos, sumada a `test:historial-pedido`). Con la bandera apagada: mismo valor devuelto, mismo registro, cero escrituras y cero logs nuevos. Lo único extra es 1 lectura de `companies` por registro, en segundo plano. Además fija que la respuesta no espera al espejo y el id aleatorio cuando falla el `.add()` (D5.3).
+    - **Desvío en 2.7:** los casos E5–E12 y E14 verifican ahora el espejo y que su `source` dé el origen y el canal de D6.3. El caso estricto «contexto de la sesión» de E5, E6, E7 y E13 queda aparte, en rojo hasta la 4.11.
 - [ ] 4.2 `updateOrderInternal`:
   - `options.contexto`;
   - quitar `_motivoCambio`;

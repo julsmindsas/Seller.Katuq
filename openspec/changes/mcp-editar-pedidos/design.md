@@ -1,4 +1,4 @@
-> **Estado:** DISEÑO, **pendiente de aprobación**. Ticket 1333 (ALMARA FELICIDAD). Decisión **D-550**. La propuesta y la spec las aprobó Daniel el 2026-10-23 con las respuestas recomendadas. Depende de D-541 (historial del pedido), D-543 y D-544 (precio y lista con vista previa) y D-549 (adjuntos, para el comprobante de pago). Este documento diseña en detalle la **F0, la F1 y la F2**; la **F3 y la F4** quedan a nivel de contrato y gates, y se re-detallan cuando cierre su dependencia. `orders` es un módulo sensible: un cambio a la vez, con diff y aprobación. Solo documento: sin código.
+> **Estado:** DISEÑO, **aprobado por Daniel el 2026-10-23**; F0 implementada en el árbol de trabajo del backend (24-oct), sin commit ni despliegue (ver «Desvíos de la implementación, F0»). Ticket 1333 (ALMARA FELICIDAD). Decisión **D-550**. La propuesta y la spec las aprobó Daniel el 2026-10-23 con las respuestas recomendadas. Depende de D-541 (historial del pedido), D-543 y D-544 (precio y lista con vista previa) y D-549 (adjuntos, para el comprobante de pago). Este documento diseña en detalle la **F0, la F1 y la F2**; la **F3 y la F4** quedan a nivel de contrato y gates, y se re-detallan cuando cierre su dependencia. `orders` es un módulo sensible: un cambio a la vez, con diff y aprobación. Solo documento: sin código.
 
 ## Context
 
@@ -232,5 +232,42 @@ Se amplía la genérica `apps/confirmar/` sin cambiar su contrato:
 
 ## Open Questions
 
+> **Respondidas por Daniel el 2026-10-23 con las recomendadas:** (1) el lote de hasta 50 pedidos se conserva en UNA tarjeta; (2) se crean los permisos `ventas.register_payment` y `ventas.void_payment` (se implementan en la F3).
+
 1. **`update_order_status` hoy cambia hasta 50 pedidos de una vez.** La spec dice que el MCP no edita varios pedidos a la vez. Recomendado: **conservar el lote de hasta 50 en una sola tarjeta** que lista cada pedido con su antes → después, porque ya existe y lo usan los despachos; la regla de «un pedido por aprobación» aplica a las opciones nuevas (`edit_order`, pagos, plata). Alternativa: un pedido por tarjeta también en la F0.
 2. **Permisos nuevos de pagos sin Tesorería** (`ventas.register_payment` y `ventas.void_payment` en el mapa de D-543). ¿De acuerdo con crearlos, o se reutiliza la regla de Tesorería (Tesorero y familia Administrador) también para las empresas sin Tesorería?
+
+## Desvíos de la implementación, F0 (24-oct)
+
+**Qué se hizo.** Backend `katuq_admin_back_firebase/functions`, sin commit ni despliegue. `update_order_status` con la bandera `mcpOrderStatusApproval` propone y aplica con la aprobación en la tarjeta; `get_order_edit_options` (lectura); tarjeta con efectos y motivo. Detalle por tarea en `tasks.md`.
+
+- **Archivos nuevos:** `services/mcp/pedidos/{banderas,bloqueos,identidad,log,opciones,propuesta,resolver,aplicar}.js`, `tools/getOrderEditOptions.js`, `services/mcp/apps/_comun/propuesta.js` y 5 pruebas (`tests/mcp/pedidos/{updateOrderStatus.aprobacion.contract,opciones,modulo}.test.js`, `tests/mcp/confirmarTarjeta.test.js`).
+- **Archivos tocados:** `tools/updateOrderStatus.js`, `tools/toolRegistry.js` (2 líneas de registro de D-550; el archivo también trae hunks de D-549 de otra sesión: al commitear, `git add -p` solo los de D-550, ver tarea 3.5), `services/mcp/apps/confirmar/{src/confirmar.html,src/confirmar.css,src/confirmar.js,dist/confirmar.html}`. No se tocó `controllers/orders.js`: F0 no lo necesita.
+- **Sin `_baseVersion` en F0.** La huella del comprobante ya lleva el estado de antes de cada pedido; si otra persona lo movió, `el_dato_cambio` y se propone de nuevo. `_baseVersion` entra con la F1.
+- **Lote:** una huella para todo el lote. Si UN pedido cambió entre la propuesta y la aprobación, no se aplica NINGUNO y se muestra la propuesta nueva (más simple y más seguro que aplicar a medias).
+- **Reintento:** la misma aprobación dos veces encuentra todos los pedidos ya en el estado nuevo: responde `ya_aplicado` con éxito y sin escribir. No exige comprobante válido porque no escribe nada. Vale también para los estados finales (Entregado, Rechazado, Cerrado) y para un pedido cancelado que ya está en el estado pedido: el bloqueo de «final» conserva su texto, pero si el pedido ya está en `newStatus` y llegó un `comprobante`, la respuesta es `ya_aplicado` (revisión de 24-oct; cubierto en 2.1).
+- **DESVÍO de la spec, requisito «Aprobación de la persona»: el modelo SÍ puede aprobar.** La spec dice «La aprobación SHALL quedar ligada a la persona, la empresa, el pedido y el contenido exacto» y «El modelo SHALL NOT poder aprobar». F0 no lo cumple por completo: `comprobante` es un parámetro del `inputSchema` que el modelo puede enviar, y la propuesta le devuelve el comprobante en el mismo resultado que lee. `verificarComprobante` (`services/mcp/confirmacion.js`) comprueba empresa, herramienta, contenido exacto (huella con el antes de cada pedido) y vencimiento de 10 minutos, pero **no** la persona (el comprobante no la lleva). Es el contrato de confirmación que ya usan las otras herramientas de escritura del MCP, y es la limitación anotada en Riesgos. Atar el comprobante a la persona no la cierra: el modelo seguiría leyéndolo. Lo que sí la cierra es que el comprobante solo viaje a la tarjeta, sin pasar por el modelo, y eso es un cambio del puente de pantallas del MCP, fuera de F0. **Decisión pendiente de Daniel antes de encender 4.2:** (a) aceptar la limitación para F0, con la descripción de la herramienta que ya le dice al modelo que no la invente, o (b) abrir un cambio aparte para que el comprobante no pase por el modelo. Hasta que decida, el requisito NO se da por cumplido (tareas 2.1 y 3.4 lo anotan).
+- **Solo personas con la bandera:** con la bandera encendida, una llave de empresa (`apikey`) o la de Opttia (`servicekey`) reciben «sin persona» y no cambian estados (decisión D5). **Riesgo a validar con Daniel antes de encender una empresa que use a Opttia para mover estados desde su chat:** esa vía deja de funcionar en esa empresa. Las propuestas de Opttia en la escena (despachos, producción) no pasan por esta herramienta.
+- **`updateOrderInternal` recibe `{ contexto, motivo }` como tercer argumento**, también sin la bandera. Hoy lo ignora; con el enganche 4.3 de D-541 el historial mostrará «Claude/MCP» con la persona. Eso hace pasar el caso U2 del contrato de D-541. El motivo debe leerlo D-541 (`reason`/`reasonStatus`).
+- **Caché de pedidos:** con la bandera se invalida una vez por lote, como la ruta de la pantalla; sin ella no, como hoy.
+- **La tarjeta** muestra como éxito cualquier resultado `success: true` que no sea propuesta (antes lo mostraba como error). Sin esto, `update_order_status` sin bandera se vería en rojo.
+- **Pregunta nueva para Daniel (tarea 1.2):** la pantalla solo deja cambiar el estado de proceso a Administradores (y a 5 correos fijos). El MCP hoy lo deja a quien tenga `ventas/pedidos` o `despachos` en el menú, con las transiciones validadas por el servidor. La F0 no lo cambia (sería ampliar el alcance de lo aprobado). ¿Se deja como está o se restringe el MCP a la regla de la pantalla?
+- **Pregunta nueva para Daniel (tarea 1.3):** zona y domicilio los resuelve el navegador, no el servidor. Para la F2, ¿se acepta la regla simple «una ciudad nueva solo si la zona guardada la cubre»?
+
+**Lo que falta para encender F0** (nada de esto se hizo en esta sesión):
+
+1. Catálogo de banderas, `services/companyFeatureFlags.js` (otra sesión), dentro de `FEATURE_FLAG_NAMES`:
+   ```js
+   // Cambiar el estado de un pedido desde Claude pide la aprobación de la persona en la tarjeta
+   // (D-550, ticket 1333, F0). Apagada, update_order_status cambia el estado en la primera llamada
+   // como hoy. No nace encendida para empresas nuevas: primero FLORECER, luego ALMARA FELICIDAD.
+   // Dueño: Daniel. Se retira el 2027-04-30: encendida para todos o eliminada (Artículo XII).
+   "mcpOrderStatusApproval",
+   ```
+   Y el mismo nombre en el arreglo del front (`company-features.service.ts`), como pide ese archivo, más su prueba de banderas.
+2. `package.json`, script (otra sesión):
+   ```json
+   "test:mcp-pedidos": "node tests/mcp/pedidos/updateOrderStatus.aprobacion.contract.test.js && node tests/mcp/pedidos/opciones.test.js && node tests/mcp/pedidos/modulo.test.js && node tests/mcp/confirmarTarjeta.test.js && node services/mcp/apps/build.js --check"
+   ```
+3. Bitácora de D-550 en `specs/CONTRACT.md` (tarea 0.4), revisando `origin` antes.
+4. Diff aprobado por Daniel, commit, push y despliegue con la bandera apagada (4.1); luego FLORECER (4.2) y ALMARA (4.3).

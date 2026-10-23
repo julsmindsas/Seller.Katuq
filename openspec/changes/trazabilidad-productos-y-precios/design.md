@@ -1,4 +1,4 @@
-> **Estado:** DISEÑO, **pendiente de aprobación**. Tickets 1357 y 1358 (ALMARA FELICIDAD). Decisión **D-548**. La propuesta y las specs las aprobó Daniel el 2026-10-23 con las respuestas recomendadas. **La F0 está hecha** (Seller `27c3fc4a`, backend `9d2fa325`). Este documento diseña en detalle la **F1**; la F2 queda diseñada a nivel de puntos de escritura y reglas, y la F3 y la F4 en esbozo. Solo documento: sin código.
+> **Estado:** DISEÑO **APROBADO por Daniel el 2026-10-23** (con las respuestas de las 2 Open Questions, abajo). Secciones 1 a 4 de `tasks.md` implementadas en el backend sin enganchar a ningún escritor (ver «Desvíos»); la sección 5 espera el diff aprobado de cada enganche. Tickets 1357 y 1358 (ALMARA FELICIDAD). Decisión **D-548**. La propuesta y las specs las aprobó Daniel el 2026-10-23 con las respuestas recomendadas. **La F0 está hecha** (Seller `27c3fc4a`, backend `9d2fa325`). Este documento diseña en detalle la **F1**; la F2 queda diseñada a nivel de puntos de escritura y reglas, y la F3 y la F4 en esbozo. Solo documento: sin código.
 
 ## Context
 
@@ -119,7 +119,7 @@ Los scripts de `functions/scripts/` que escriben productos (precios, costos, act
 | `productRef`, `productName` | referencia y nombre al momento del evento |
 | `type`, `tags` | tipo principal y todos los tipos del guardado (D2) |
 | `occurredAt` | hora del servidor (Timestamp) |
-| `fecha` | la misma hora en texto ISO, para que la consulta de hoy siga ordenando (compatibilidad v1) |
+| ~~`fecha`~~ | **No se escribe** (corregido 23-oct tras revisión). La consulta de fotos de hoy ordena por `fecha`; si el evento v2 la tuviera, llenaría el tope (50 o 100) y desplazaría los registros de fotos. Los v2 se ordenan por `occurredAt` |
 | `recordedAt` | `serverTimestamp()` |
 | `actor` | `{ kind, name, email, role }`; `kind` ∈ `user`, `system`, `integration` |
 | `origin`, `channel` | listas cerradas (D4) |
@@ -219,6 +219,25 @@ Regla común: **el antes es lo guardado al momento del cambio.**
 
 Cada enganche es **una línea** en el escritor existente: no cambia lo que se guarda en `products`, ni `date_edit`, ni `user_edit`.
 
+**Tabla P1–P12 (tarea 1.3, leída el 23-oct en `backend-aws-security`; líneas de la copia de trabajo de ese día):**
+
+| Punto | ¿Lee el producto antes de escribir? | ¿Transacción? | Empresa de dónde sale | Qué toma el enganche como `previo` |
+|---|---|---|---|---|
+| P1 `create` (`productos.js:373`) | No (es nuevo; solo consulta si la referencia ya existe) | No (`add`) | `req.headers.company` (la ruta va con `requireJwtTenant`: es la del token) | `null`; `final` = `req.body` con el id de `newProductRef` |
+| P2 `edit` (`:1895`) | Sí: `productSnapshot` | No (`update` con el documento completo) | `req.headers.company` + `esDeLaEmpresa` | `productSnapshot.data()` antes del `update` |
+| P3 `delete` (`:~1970-2025`) | Sí: `productSnapshot` | No (`delete`) | `req.headers.company` + `esDeLaEmpresa` | `productSnapshot.data()` |
+| P4 `deleteAllByCompany` (`:2784`) | Sí: todo el catálogo (`productsSnapshot`) | No (lotes de 500) | `req.headers.company` (con `requireJwtTenant`) | `doc.data()` de cada documento ya leído |
+| P5 `bulkUpdateField` (`:1764`) | Sí: todo el catálogo | No (lotes de 500) | `req.headers.company` | `doc.data()` ya leído. **Ojo:** sus campos permitidos incluyen `disponibilidad.estado/activo`, que no existen (ver «Desvíos») |
+| P6 `updatePreciosTipoCliente` (`:3775`) | Sí: `snap` | No | `req.headers.company` + comparación manual | `snap.data()`; `final` = previo + `escritura` (rutas punteadas: usar `conParche`) |
+| P7 `bulkPatch` (`:3884`) | Solo `snap.data().company` por id (no conserva los datos) | No (lotes de 490) | `req.headers.company` | **Hay que guardar `snap.data()` en el bucle de validación**: hoy se descarta |
+| P8 `updateProductCost` (`productCosts.js:413`) | Sí: `snap` | No | `req.headers.company` + `data.company !== companyId` | `snap.data()`; `final` = `conParche(previo, patch)` |
+| P9 `importPrecios` (`:3202`) / `importPreciosUnitarios` (`:3454`) / `importPreciosVolumen` (`:3567`) | `importPrecios`: sí, el catálogo completo (`productosPorRef[ref].data`). Los otros dos: `mapaReferenciasProducto` con `select(referencia, precio)` (trae `precio`, o sea base y volúmenes) | No (lotes de 500) | `req.headers.company` | `importPrecios`: `producto.data`. Unitarios y volumen: `{ company, precio }` del mapa (alcanza: solo cambian rutas de `precio`) |
+| P10 `limpiarPrecios` (`:3699`) | Sí: consulta `preciosPorTipoCliente != null` (documentos completos) | No (lotes de 500; el commit intermedio no se espera) | `req.headers.company` | `doc.data()`; `final` = sin `preciosPorTipoCliente` |
+| P11 `applyCostImport` (`productCosts.js:264`) | **No**: `loadCompanyProductIdSet` usa `select()` vacío y `costoAnterior` viene del navegador | No (lotes de 400) | `req.headers.company` | **Hay que leer con `getAll` antes del batch** (el `costoAnterior` del cuerpo no es lo guardado) |
+| P12 `update_product` (`tools/updateProduct.js`) | Sí: `buscarProducto` → `datos` | No (`ref.update(parche)`) | `context.mcpCompany` | `datos`; `final` = `conParche(datos, parche)` |
+
+Ningún escritor usa transacción, así que la ventana «leer-escribir» queda como en Riesgos.
+
 ### D7. Inmutabilidad: tres candados
 
 1. **Código:** solo `escritor.js` escribe eventos v2, solo con `create()` (o `BulkWriter.create`). Un contract test recorre `functions/**/*.js` (con `scripts/`) y falla si aparece `productHistory` fuera de una lista permitida: `constantes.js`, el escritor v1 de fotos (`batchStore.js`, hasta la F2) y la lectura de hoy (`productos.js:2930`, que pasa a delegar en `lectura.js` en la tarea 4.1). También falla si hay `set`, `update`, `delete`, `FieldValue.delete` o `recursiveDelete` sobre la colección.
@@ -314,7 +333,58 @@ Una corrección es otro evento. Nada se edita.
 6. **Revertir:** bandera de la empresa o corte general; revertir commits si hace falta. Los eventos escritos quedan inertes.
 7. **Retiro (2027-04-30):** encendida para todos o eliminada.
 
-## Open Questions
+## Desvíos (verificación previa, secciones 1 a 4)
 
+### Rutas reales en `products` (tarea 1.1, lectura de producción del 23-oct, solo nombres y tipos)
+
+Se leyeron **1.500 productos de ALMARA FELICIDAD**, sin imprimir valores personales. El catálogo de D2 coincide, con estas precisiones:
+
+| Qué | Ruta real | Observado |
+|---|---|---|
+| Se puede vender | `exposicion.activar` (booleano) | 1.459 `true`, 41 `false` |
+| Disponible / agotado | `exposicion.disponible` (booleano) | 1.442 `true`, 58 `false` |
+| `disponibilidad.activo` y `disponibilidad.estado` | **no existen** en ninguno de los 1.500 | `bulkUpdateField` (P5) los lista como permitidos, pero no son lo que muestra la pantalla; el catálogo no los lee |
+| Tarifa de IVA | `precio.precioUnitarioIva`, **texto** | `"0"` (1.472), `"0.00"` (16), `"0.0"` (9), `"5"`, `"19"`, `"0.19"` (uno cada uno): por eso se normaliza como número |
+| Precio base | `precio.precioUnitarioSinIva`, `precio.valorIva`, `precio.precioUnitarioConIva` (números) | tal cual el diseño |
+| Volumen | `precio.preciosVolumen[]` con `numeroUnidadesInicial`, `numeroUnidadesLimite`, `valorUnitarioPorVolumenSinIVA`, `valorUnitarioPorVolumenIva`, `valorIVAPorVolumen` (número **o texto**), `valorUnitarioPorVolumenConIVA` | el rango de 1 unidad es el precio base |
+| Costo | `costoUnitario`, `precio.costoUnitario`, `costo{ costoUnitario, valor, fuente, importId, actualizadoPor, actualizadoAt, fechaVigencia }` | se lee en la cascada de la pantalla |
+| Categoría | `categorias` (**texto**), más `categoriasIndex` (índice, se ignora) | D2 decía «categoría» sin ruta |
+| `date_edit` | texto ISO en todos | coincide con la propuesta |
+| Existencias | `disponibilidad.cantidadDisponible` es **texto en unos y número en otros** | se ignora siempre |
+| `preciosPorTipoCliente[]` | ninguno de los 1.500 tenía el arreglo con datos | **Pendiente de confirmar con GCJ1236.** La forma que usa el código (`tipoClienteId`, `tipoClienteNombre`, `precio`, `porcentajeIva`, `valorIva`, `precioConIva`, `activo`) sale de `productos.js:3315` y de `Producto.ts:14`. La consulta a GCJ1236 y la del censo completo las **denegó el clasificador de permisos** («Production Reads»); queda para quien autorice la lectura |
+
+La pantalla «Precio tipo clientes» muestra `precioConIva || precio` (`lista-precios.component.html:179`). Por eso la variación del evento se calcula sobre el valor **con IVA** cuando existe.
+
+### Índices vivos de `productHistory` (tarea 1.2)
+
+Se usó la copia viva de los índices que sacó esta misma sesión hoy a las 9:45 (la de D-541, tarea 1.2): 414 índices compuestos y 2 `fieldOverrides`. **`productHistory` tiene un solo índice**: `company ASC, productoId ASC, fecha DESC, __name__ DESC`. Ninguno con `occurredAt` ni con `tags`. A crear en 7.1, con el CLI y sin `--force`:
+
+1. `productHistory`: `company ASC, productoId ASC, occurredAt DESC, __name__ DESC`
+2. `productHistory`: `company ASC, productoId ASC, occurredAt ASC, __name__ ASC`
+3. `productHistory`: `company ASC, productoId ASC, tags CONTAINS, occurredAt DESC, __name__ DESC`
+4. `productHistory`: `company ASC, productoId ASC, tags CONTAINS, occurredAt ASC, __name__ ASC`
+5. `fieldOverrides` sin índice simple para `details`, `prices`, `snapshot` y `actor`.
+
+### Decisiones de implementación
+
+- **Variación sobre lo que ve la persona:** `diff` y `diffPct` van sobre el valor con IVA cuando existe (precio base, tipo de cliente y volumen) y, si no, sobre el valor sin IVA; el costo no lleva IVA. `before`/`after` guardan el valor sin IVA y `beforeWithTax`/`afterWithTax` el valor con IVA. Con ALMARA (0 %) coinciden.
+- **El rango de volumen desde 1 unidad no es un precio por volumen:** es el precio base (`importPreciosVolumen` lo reescribe a mano), así que se ignora para no duplicar cada cambio de precio base.
+- **Un precio de tipo de cliente con `precio ≤ 0` cuenta como quitado**, igual que `updatePreciosTipoCliente`. La campaña de la lista (`precioDescuento`, D-219) queda fuera de la F1.
+- **El costo se lee en la cascada de la pantalla** (`costoUnitario` → `precio.costoUnitario` → `costo`), no en la de `updateProductCost` (que empieza por `precio.costoUnitario`).
+- **El resumen** de la lectura cuenta eventos v2 y registros v1 de fotos con un solo `count()`; sin permiso de costos el total no se devuelve (`null`) para no filtrar cuántos hay.
+- **Los eventos que la persona no puede ver** (solo costo) quedan dentro de la mezcla de la página para que el cursor y el orden sean estables; solo se quitan al final. Una página puede salir con menos de 50.
+- **La vista de antes (sin `vista`) deja fuera los eventos v2** (`schemaVersion >= 2`): la pestaña vieja pinta `campo / valorAnterior / valorNuevo` y mostraría filas vacías. Para un producto con solo historial de fotos la respuesta es idéntica a la de hoy.
+- **El controlador `getHistorial` ya no exige la cabecera `company`** (400 si faltaba): ahora la empresa es la del token; la ruta suma `requireJwtTenantOrPlatform`, así que una cabecera de otra empresa responde 403 a un comercio.
+- **La bandera `productHistoryLog` todavía NO está en `FEATURE_FLAG_NAMES`** (esa lista no se editó en este paso). Mientras no esté, `isFeatureEnabled` responde `false`: el módulo no escribe y la lectura responde la vista de antes. Es el estado seguro.
+- **`applyCostImport` (P11) toma `costoAnterior` del navegador**: el enganche debe leer el producto con `getAll`, no usar ese valor.
+
+## Open Questions (respondidas por Daniel el 2026-10-23)
+
+1. **¿Quién ve los cambios de costo en el historial?** Respuesta: **la familia Administrador, quien pasa `puedeVerMargen` y quien tiene el menú «Lista de precios»** (la recomendada). Implementado en `lectura.js` (`puedeVerCostos`). Falla cerrada: si no se puede resolver el menú, no ve costos.
+2. **Las acciones masivas** (activar, inactivar, agotado, eliminar) **entran en la F1.** Respuesta: **de acuerdo**; son parte de P5 y P7.
+
+---
+
+_Texto original de las preguntas, para el registro:_
 1. **¿Quién ve los cambios de costo en el historial?** Recomendado: familia Administrador, quien pasa `puedeVerMargen` (gerencia) y quien tiene el menú «Lista de precios», que es quien ve la pestaña «Costo» hoy. Alternativa: solo familia Administrador y gerencia.
 2. **Las acciones masivas** (activar, inactivar, agotado, eliminar) **entran en la F1**, porque el escenario de la spec «Producto inactivado por acción masiva» es de la F1, aunque la tabla de fases de la propuesta las ponía en la F2. ¿De acuerdo?
