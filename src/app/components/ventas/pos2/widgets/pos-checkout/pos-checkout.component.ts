@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, OnInit, Renderer2, ViewChild } from '@angular/core';
 import { PosCheckoutService } from '../../../../../shared/services/ventas/pos-checkout.service';
 import { CartService } from '../../../../../shared/services/cart.service';
 import { Subscription } from 'rxjs';
@@ -7,13 +7,24 @@ import { EstadoPago, EstadoProceso } from '../../../modelo/pedido';
 import Swal from 'sweetalert2';
 import { PaymentService } from '../../../../../shared/services/ventas/payment.service';
 import { FacturacionIntegracionService } from '../../../../../shared/services/integraciones/facturas/facturacion.service';
+import { CustomerSectionComponent } from '../customer-section/customer-section.component';
+import { PaymentSelectorComponent } from '../payment-selector/payment-selector.component';
+
+/**
+ * D-540 (ticket 1340): alto mínimo de la lista del ticket en escritorio.
+ * Si no caben 2 líneas (52 px c/u), se desplaza el panel completo
+ * («panel completo»); se sale con 128 px para que el modo no parpadee.
+ */
+const LISTA_MINIMA_ENTRA = 104;
+const LISTA_MINIMA_SALE = 128;
+const CLASE_PANEL_COMPLETO = 'ticket-apretado';
 
 @Component({
   selector: 'app-pos-checkout',
   templateUrl: './pos-checkout.component.html',
   styleUrls: ['./pos-checkout.component.scss']
 })
-export class PosCheckoutComponent implements OnInit, OnDestroy {
+export class PosCheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
   // Banderas de control
   showPedidoConfirm: boolean = false;
   showSteper: boolean = true;
@@ -25,12 +36,25 @@ export class PosCheckoutComponent implements OnInit, OnDestroy {
   // Suscripciones
   private subscriptions: Subscription[] = [];
 
+  // D-540: piezas de alto fijo del ticket en escritorio (solo pantalla).
+  @ViewChild(CustomerSectionComponent, { read: ElementRef }) private clienteHost?: ElementRef<HTMLElement>;
+  @ViewChild(PaymentSelectorComponent, { read: ElementRef }) private pagosHost?: ElementRef<HTMLElement>;
+  private observadorAlto?: ResizeObserver;
+  private consultaEscritorio?: MediaQueryList;
+  private panelTicket: HTMLElement | null = null;
+  private piezasFijas: HTMLElement[] = [];
+  private panelCompleto = false;
+  private cuadroPendiente = 0;
+
   constructor(
     public cartService: CartService,
     public checkoutService: PosCheckoutService,
     private ventasService: VentasService,
     private paymentService: PaymentService,
-    private facturacionElectronicaService: FacturacionIntegracionService
+    private facturacionElectronicaService: FacturacionIntegracionService,
+    private host: ElementRef<HTMLElement>,
+    private renderer: Renderer2,
+    private zone: NgZone,
   ) { }
 
   ngOnInit(): void {
@@ -55,9 +79,71 @@ export class PosCheckoutComponent implements OnInit, OnDestroy {
     );
   }
   
+  /**
+   * D-540: vigila el alto del panel y de las piezas fijas (cliente, título,
+   * cupón, TOTAL y pagos). La lista y el host del carrito, que sí cambian al
+   * cambiar de modo, no se vigilan, así que no hay bucle.
+   */
+  ngAfterViewInit(): void {
+    if (typeof ResizeObserver === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const host = this.host.nativeElement;
+    this.panelTicket = host.parentElement; // <aside class="pos-ticket">
+    if (!this.panelTicket) return;
+
+    const carrito = host.querySelector('app-cart-summary');
+    this.piezasFijas = [
+      this.clienteHost?.nativeElement,
+      this.pagosHost?.nativeElement,
+      carrito?.querySelector('.tarjeta-cabeza'),
+      carrito?.querySelector('.coupon-code'),
+      carrito?.querySelector('.total-item'),
+    ].filter((el): el is HTMLElement => el instanceof HTMLElement);
+
+    this.consultaEscritorio = window.matchMedia('(min-width: 1001px)');
+    this.zone.runOutsideAngular(() => {
+      const observador = new ResizeObserver(() => this.programarModoPanel());
+      observador.observe(this.panelTicket as HTMLElement);
+      this.piezasFijas.forEach(el => observador.observe(el));
+      this.observadorAlto = observador;
+    });
+  }
+
   ngOnDestroy(): void {
     // Desuscribirse al destruir el componente
     this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.observadorAlto?.disconnect();
+    if (this.cuadroPendiente) cancelAnimationFrame(this.cuadroPendiente);
+  }
+
+  /**
+   * El cambio de clase se aplica en el cuadro siguiente: al entrar al modo
+   * aparece la barra del panel y cambia el ancho de las piezas vigiladas; si
+   * se aplicara dentro del callback, el navegador avisaría de un bucle de
+   * ResizeObserver.
+   */
+  private programarModoPanel(): void {
+    if (this.cuadroPendiente) return;
+    this.cuadroPendiente = requestAnimationFrame(() => {
+      this.cuadroPendiente = 0;
+      this.actualizarModoPanel();
+    });
+  }
+
+  private actualizarModoPanel(): void {
+    if (!this.panelTicket) return;
+    let completo = false;
+    if (this.consultaEscritorio?.matches) {
+      const fijo = this.piezasFijas.reduce((suma, el) => suma + el.offsetHeight, 0);
+      const disponible = this.panelTicket.clientHeight - fijo;
+      completo = this.panelCompleto ? disponible < LISTA_MINIMA_SALE : disponible < LISTA_MINIMA_ENTRA;
+    }
+    if (completo === this.panelCompleto) return;
+    this.panelCompleto = completo;
+    if (completo) {
+      this.renderer.addClass(this.host.nativeElement, CLASE_PANEL_COMPLETO);
+    } else {
+      this.renderer.removeClass(this.host.nativeElement, CLASE_PANEL_COMPLETO);
+    }
   }
   
   /**

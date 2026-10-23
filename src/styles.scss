@@ -1634,6 +1634,8 @@ body.kq-editor-lleno {
   body.katuq-pos-escritorio {
     .page-body { min-height: 0 !important; padding-bottom: 0 !important; }
     .footer { display: none !important; }
-    .pos-shell { height: calc(100vh - 116px); }
+    // D-540: sin el piso de 560 px. En 1366×768 la ventana útil mide 620-650 px, así que
+    // 100vh − 116 da 504-534 px; con el piso ganaba 560 y volvía el scroll de página.
+    .pos-shell { height: calc(100vh - 116px); min-height: 0; }
   }
 }

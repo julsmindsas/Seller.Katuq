@@ -1,7 +1,9 @@
-<div class="card cart-summary-sticky">
+<div class="card cart-summary-sticky" [class.cupon-abierto]="cuponAbierto">
   <div class="tarjeta-cabeza card-no-border p-3">
     <div class="header-top">
       <h5 class="m-0">{{ 'Resumen de la compra' | translate }}</h5>
+      <!-- D-540: unidades del ticket (solo escritorio) -->
+      <span class="tkt-unidades">{{ textoUnidades }}</span>
     </div>
   </div>
   <div class="card-body pt-0 order-details p-3">
@@ -9,7 +11,7 @@
     <div class="order-quantity p-b-10 border-bottom">
       <div class="custom-scrollbar cart-items-container">
         <div *ngIf="cartService.posCartItems && cartService.posCartItems.length">
-          <div *ngFor="let item of cartService.posCartItems; track item" class="ticket-linea">
+          <div *ngFor="let item of cartService.posCartItems; track item" class="ticket-linea" [class.fila-abierta]="lineaAbierta === item">
             <div class="order-details-wrapper">
               <div class="left-details">
                 <div class="order-img widget-hover">
@@ -18,9 +20,16 @@
               </div>
               <div class="category-details">
                 <div class="order-details-right">
-                  <h6 class="f-14 f-w-500 mb-2">{{ item.crearProducto?.titulo || 'Producto sin nombre' }}</h6>
+                  <h6 class="f-14 f-w-500 mb-2" [title]="item.crearProducto?.titulo || ''">{{ item.crearProducto?.titulo || 'Producto sin nombre' }}</h6>
+                  <!-- D-540: el editor de D-536 queda plegado detrás de «Editar precio» (solo escritorio) -->
+                  <div class="fila-meta">
+                    <button type="button" class="fila-editar" (click)="alternarEditor(item, $event)"
+                            [attr.aria-expanded]="lineaAbierta === item">{{ 'Editar precio' | translate }}</button>
+                    <span class="fila-marca" *ngIf="lineaEditada(item)">Editado</span>
+                  </div>
                   <div class="last-order-detail">
-                    <h6 class="txt-primary">${{ precioUnitario(item) | number:'1.2-2' }}
+                    <span class="fila-subtotal">${{ subtotalLinea(item) | number:'1.2-2' }}</span>
+                    <h6 class="txt-primary">${{ precioUnitario(item) | number:'1.2-2' }} <span class="fila-cu">c/u</span>
                       <span *ngIf="lineaEditada(item)" class="marca-editado">Editado</span>
                     </h6>
                     <a href="javascript:void(0)" (click)="cartService.posRemoveCartItem(item)" title="Quitar" aria-label="Quitar producto">
@@ -66,7 +75,7 @@
           <span class="input-group-text">
             <i class="fa fa-ticket" aria-hidden="true"></i>
           </span>
-          <input class="form-control" type="text" [(ngModel)]="couponCode"
+          <input #cuponInput class="form-control" type="text" [(ngModel)]="couponCode"
             placeholder="{{'Código del cupón...' | translate }}"
             aria-label="Enter Code" aria-describedby="button-addon2">
           <button class="btn bc-primary fc-white" id="button-addon2" type="button"
@@ -76,26 +85,31 @@
     </div>
     
     <!-- Resumen de totales -->
+    <!-- D-540: en escritorio se ocultan la Cantidad (va en el título) y las filas en $0
+         o iguales al TOTAL; en móvil se ven como siempre. -->
     <div class="total-item mt-3">
-      <div class="item-number">
+      <div class="item-number fila-cantidad">
         <span class="text-gray">{{ 'Cantidad' | translate}}</span>
         <span>{{cartService.posCartItems.length}} (Items)</span>
       </div>
-      <div class="item-number">
+      <div class="item-number" [class.fila-cero]="descuentoTicket === 0">
         <span class="text-gray">{{ 'Descuento' | translate }}</span>
-        <span>$0.00</span>
+        <span>${{ descuentoTicket | number:'1.2-2' }}</span>
       </div>
-      <div class="item-number">
+      <div class="item-number" [class.fila-cero]="cuponTicket === 0">
         <span class="text-gray">{{ 'Cupón de descuento' | translate }}</span>
-        <span>$0.00</span>
+        <span>${{ cuponTicket | number:'1.2-2' }}</span>
       </div>
-      <div class="item-number border-bottom">
+      <div class="item-number border-bottom" [class.fila-cero]="subtotalTicket === 0 || subtotalTicket === totalNumerico">
         <span class="text-gray">Subtotal</span>
-        <span>${{ totalNumerico | number:'1.2-2' }}</span>
+        <span>${{ subtotalTicket | number:'1.2-2' }}</span>
       </div>
       <div class="item-number pt-3 pb-0">
         <span class="f-w-600">Total</span>
         <h6 class="f-w-600 txt-primary">${{ totalNumerico | number:'1.2-2' }}</h6>
+        <!-- D-540: el cupón queda plegado (solo escritorio); el campo y applyCoupon() no cambian. -->
+        <button type="button" class="cupon-agregar" (click)="alternarCupon()"
+                [attr.aria-expanded]="cuponAbierto">{{ 'Agregar cupón' | translate }}</button>
       </div>
     </div>
   </div>

@@ -3,8 +3,12 @@ import {
   OnInit,
   OnDestroy,
   ChangeDetectorRef,
+  ElementRef,
+  HostListener,
+  ViewChild,
 } from "@angular/core";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { AutoComplete } from "primeng/autocomplete";
 import { PosCheckoutService } from "../../../../../shared/services/ventas/pos-checkout.service";
 import { MaestroService } from "../../../../../shared/services/maestros/maestro.service";
 import { CrearClienteModalComponent } from "../../../clientes/crear-cliente-modal/crear-cliente-modal.component";
@@ -35,16 +39,34 @@ export class CustomerSectionComponent implements OnInit, OnDestroy {
   private searchSubject = new Subject<string>();
   private searchSubscription: Subscription;
 
+  // D-540 (ticket 1340): estado de pantalla del cliente en escritorio. No pasa
+  // por ningún servicio: el cliente y la facturación siguen en PosCheckoutService.
+  /** La línea del cliente muestra acciones, facturación y contacto. */
+  desplegado = false;
+  /** «Cambiar»: buscador visible, el cliente actual sigue asociado hasta escoger otro. */
+  cambiando = false;
+  @ViewChild(AutoComplete) private buscador?: AutoComplete;
+  private cdClienteVisto: any = null;
+
   constructor(
     private modal: NgbModal,
     private service: MaestroService,
     private checkoutService: PosCheckoutService,
     private cdr: ChangeDetectorRef,
+    private host: ElementRef<HTMLElement>,
   ) {}
 
   ngOnInit(): void {
     // Suscribirse a cambios en el cliente
     this.checkoutService.customer$.subscribe((customer) => {
+      // D-540: escoger otro, crearlo o quitarlo cierra «Cambiar»; otro cliente
+      // (o ninguno) llega plegado. Editar al mismo cliente no lo pliega.
+      this.cambiando = false;
+      const cd = customer?.cd ?? null;
+      if (!customer || cd !== this.cdClienteVisto) {
+        this.desplegado = false;
+      }
+      this.cdClienteVisto = cd;
       console.log("🔄 Customer observable cambió:", customer);
       if (customer) {
         this.datosCliente = customer;
@@ -373,6 +395,61 @@ export class CustomerSectionComponent implements OnInit, OnDestroy {
 
   get facturacionIncompleta(): boolean {
     return faltantesFacturacion(this.facturacion).length > 0;
+  }
+
+  // ── D-540 (ticket 1340): cliente plegable en escritorio ──────────────
+  /** Inicial del avatar: nombre, o apellido si falta; «?» si no hay ninguno. */
+  get inicialCliente(): string {
+    const fuente = String(this.datosCliente?.nombres_completos || "").trim()
+      || String(this.datosCliente?.apellidos_completos || "").trim();
+    return fuente ? fuente.charAt(0).toUpperCase() : "?";
+  }
+
+  /**
+   * Muestra el buscador con el foco puesto SIN quitar al cliente: no llama a
+   * setCustomer ni a clearCustomer, que reiniciarían la facturación (D-419).
+   */
+  cambiarCliente(): void {
+    this.cambiando = true;
+    this.desplegado = false;
+    // Solo vacía la caja de búsqueda; customer$ no se toca.
+    this.selectedCliente = null;
+    this.clienteSuggestions = [];
+    this.cdr.detectChanges();
+    this.buscador?.inputEL?.nativeElement?.focus();
+  }
+
+  /** Esc o clic fuera: vuelve la línea del cliente actual, con la misma facturación. */
+  cancelarCambio(devolverFoco = false): void {
+    if (!this.cambiando) return;
+    this.cambiando = false;
+    if (!devolverFoco) return;
+    this.cdr.detectChanges();
+    this.host.nativeElement.querySelector<HTMLElement>(".cli-cambiar")?.focus();
+  }
+
+  /**
+   * composedPath() y no contains(): para cuando el clic llega al documento,
+   * Angular ya pudo esconder el botón «Cambiar» que se tocó. La lista de
+   * sugerencias vive dentro del componente, así que escoger una no cuenta.
+   */
+  @HostListener("document:click", ["$event"])
+  alHacerClicEnDocumento(event: Event): void {
+    if (!this.cambiando) return;
+    const ruta = typeof event.composedPath === "function" ? event.composedPath() : [];
+    if (!ruta.includes(this.host.nativeElement)) {
+      this.cancelarCambio();
+    }
+  }
+
+  /** Si el foco sale del componente con el teclado, también se cancela. */
+  @HostListener("focusout", ["$event"])
+  alSalirElFoco(event: FocusEvent): void {
+    if (!this.cambiando) return;
+    const destino = event.relatedTarget as Node | null;
+    if (destino && !this.host.nativeElement.contains(destino)) {
+      this.cancelarCambio();
+    }
   }
 
   abrirFacturacion(): void {

@@ -582,3 +582,278 @@
     .cf-valor { color: #b45309; }
   }
 }
+
+// =============================================================================
+// D-540 (ticket 1340): CLIENTE PLEGABLE EN ESCRITORIO
+//
+// Con cliente: una línea (avatar, nombre, documento y «Cambiar») de 47 px; al
+// tocarla se despliega la tarjeta de hoy sin el nombre repetido (acciones,
+// facturación D-419 y contacto). Sin cliente o con «Cambiar»: buscador y
+// «Nuevo» en una fila. Los elementos nuevos nacen ocultos y solo se encienden
+// desde 1001 px; en móvil las clases de estado no hacen nada.
+// =============================================================================
+.cli-linea,
+.cli-nuevo {
+  display: none;
+}
+
+@media (min-width: 1001px) {
+  // El encabezado «Cliente» con su «Nuevo» lo reemplazan la línea y la fila del buscador.
+  .card.customer-sticky > .tarjeta-cabeza {
+    display: none !important;
+  }
+
+  .card.customer-sticky > .card-body {
+    padding: 0 !important;
+  }
+
+  .card.customer-sticky .search-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 8px;
+    row-gap: 0;
+  }
+
+  .cli-oculto {
+    display: none !important;
+  }
+
+  // --- línea plegada: 7 + 32 + 7 + 1 del borde de la tarjeta = 47 px ---------
+  .cli-linea {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 7px 12px;
+    transition: background 0.15s ease;
+
+    &:hover { background: #faf9ff; }
+  }
+
+  .cli-resumen {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    border: 0;
+    border-radius: 11px;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    font-family: var(--kc-font-body);
+    letter-spacing: normal;
+
+    &:focus-visible {
+      outline: 3px solid #7C5CFF !important;
+      outline-offset: 2px;
+    }
+
+    &[aria-expanded="true"] .cli-flecha { transform: rotate(180deg); }
+  }
+
+  .cli-avatar {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #efe9ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--kc-font-head);
+    font-size: 14px !important;
+    font-weight: 800;
+    line-height: 1 !important;
+    color: #5F3FE0 !important;
+  }
+
+  .cli-datos {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, max-content) auto;
+    justify-content: start;
+    align-items: center;
+    column-gap: 6px;
+    row-gap: 1px;
+  }
+
+  .cli-nombre {
+    grid-column: 1 / -1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 13px !important;
+    font-weight: 800;
+    line-height: 16px !important;
+    color: #211F3A !important;
+  }
+
+  .cli-doc {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 11.5px !important;
+    font-weight: 600;
+    line-height: 14px !important;
+    color: #8f8bab !important;
+  }
+
+  // Par de alerta del design-system; span con *ngIf → color y tamaño propios.
+  .cli-aviso {
+    justify-self: start;
+    padding: 0 7px;
+    border-radius: 20px;
+    background: #FFF1DF;
+    white-space: nowrap;
+    font-size: 10.5px !important;
+    font-weight: 800;
+    line-height: 14px !important;
+    color: #D9820A !important;
+    letter-spacing: normal;
+  }
+
+  .cli-flecha {
+    flex-shrink: 0;
+    font-size: 16px;
+    color: #8f8bab;
+    transition: transform 0.15s ease;
+  }
+
+  // --- botones secundarios: «Cambiar» (30 px) y «Nuevo» (38 px, como el buscador)
+  .cli-cambiar,
+  .cli-nuevo {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 12px;
+    background: #fff;
+    border: 1px solid #e4e2ef;
+    border-radius: 11px;
+    color: #5F3FE0;
+    font-family: var(--kc-font-body);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: normal;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      background: #efe9ff;
+      border-color: #d9cffb;
+    }
+
+    &:focus-visible {
+      outline: 3px solid #7C5CFF !important;
+      outline-offset: 2px;
+    }
+  }
+
+  .cli-cambiar { height: 30px; }
+
+  .cli-nuevo {
+    height: 38px;
+    margin: 7px 12px 7px 0;
+
+    i { font-size: 11px; }
+  }
+
+  // --- buscador de 38 px: fila de 7 + 38 + 7 + 1 = 53 px ----------------------
+  .autocomplete-box {
+    min-width: 0;
+    margin: 7px 0 7px 12px;
+
+    .search-icon-left {
+      left: 12px;
+      font-size: 13px;
+      color: #8f8bab;
+    }
+
+    .loading-spinner {
+      right: 34px;
+      font-size: 13px;
+    }
+  }
+
+  :host ::ng-deep .cliente-autocomplete {
+    .p-autocomplete-input,
+    input.p-inputtext,
+    input.p-inputtext:enabled:focus {
+      height: 38px !important;
+      min-height: 38px !important;
+      padding: 0 34px 0 32px !important;
+      font-size: 13px !important;
+      line-height: 36px !important;
+      border-width: 1px !important;
+      border-radius: 11px !important;
+    }
+
+    .p-autocomplete-clear-icon { right: 10px; }
+  }
+
+  // --- tarjeta: solo con la línea desplegada -----------------------------------
+  .card.customer-sticky .cliente-card {
+    display: none;
+  }
+
+  .card.customer-sticky .cliente-card.cli-abierto {
+    display: block;
+    grid-column: 1 / -1;
+    margin: 0 12px 10px;
+    padding: 8px 10px;
+    border: 1px solid #ececf4;
+    border-radius: 11px;
+    background: #faf9fe;
+
+    // El nombre ya está en la línea: quedan acciones, facturación y contacto.
+    .cliente-status,
+    .cliente-main { display: none; }
+
+    .cliente-cabeza {
+      justify-content: flex-end;
+      padding: 0 0 4px;
+    }
+
+    .btn-action {
+      border-color: #e4e2ef;
+
+      &:focus-visible { outline: 3px solid #7C5CFF !important; }
+    }
+
+    .cliente-facturacion {
+      margin: 2px 0 0;
+
+      .cf-cambiar:focus-visible { outline: 3px solid #7C5CFF !important; }
+    }
+
+    .cliente-contact {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px dashed #e4e2ef;
+
+      .contact-item {
+        min-width: 0;
+        color: #6b6890;
+        letter-spacing: normal;
+
+        i { color: #5F3FE0; }
+
+        span {
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          font-size: 11.5px !important;
+          color: #6b6890 !important;
+        }
+      }
+    }
+  }
+}

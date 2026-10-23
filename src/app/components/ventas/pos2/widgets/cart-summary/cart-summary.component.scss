@@ -638,3 +638,394 @@
   text-transform: uppercase;
   vertical-align: middle;
 }
+
+// =============================================================================
+// D-540 (ticket 1340): TICKET COMPACTO EN ESCRITORIO
+//
+// Filas de ~48 px con el editor de D-536 plegado detrás de «Editar precio»,
+// título con las unidades, filas del pie en $0 ocultas, TOTAL plano y cupón
+// detrás de «Agregar cupón». Los elementos nuevos nacen ocultos y solo se
+// encienden desde 1001 px: en la hoja de móvil todo se ve como antes.
+// Ningún binding cambia: los contenedores viejos de la fila pasan a
+// display: contents para que sus hijos sean celdas de la grilla.
+// =============================================================================
+.tkt-unidades,
+.fila-meta,
+.fila-subtotal,
+.fila-cu,
+.cupon-agregar {
+  display: none;
+}
+
+@media (min-width: 1001px) {
+  // --- título con unidades: 6 + 20 + 4 = 30 px --------------------------------
+  .card.cart-summary-sticky > .tarjeta-cabeza {
+    padding: 6px 12px 4px !important;
+
+    .header-top { gap: 8px; }
+
+    h5 { line-height: 20px; }
+  }
+
+  .tkt-unidades {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    height: 20px;
+    padding: 0 9px;
+    border-radius: 20px;
+    background: #efe9ff;
+    white-space: nowrap;
+    font-family: var(--kc-font-body);
+    font-size: 11px !important;
+    font-weight: 800;
+    line-height: 1 !important;
+    letter-spacing: normal;
+    color: #5F3FE0 !important;
+  }
+
+  // --- lista: la única zona que se desplaza -----------------------------------
+  .card.cart-summary-sticky .cart-items-container {
+    padding: 0 12px;
+    scrollbar-gutter: stable;
+  }
+
+  // --- fila compacta ------------------------------------------------------------
+  // Con nombre de 1 línea: 48 px; con 2: 3 + 28 + 2 + 14 + 3 + 1 de borde = 51 px.
+  .cart-summary-sticky .ticket-linea {
+    padding-bottom: 0;
+    border-bottom: 1px solid #f1f0f7;
+  }
+
+  .cart-summary-sticky .ticket-linea .order-details-wrapper {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) auto auto 32px;
+    grid-template-areas:
+      "img nombre stepper subtotal quitar"
+      "img meta   stepper unitario quitar";
+    column-gap: 6px;
+    row-gap: 2px;
+    align-items: center;
+    min-height: 48px;
+    margin: 0;
+    padding: 3px 0;
+    border-bottom: 0;
+  }
+
+  .cart-summary-sticky .ticket-linea .category-details,
+  .cart-summary-sticky .ticket-linea .order-details-right,
+  .cart-summary-sticky .ticket-linea .last-order-detail,
+  .cart-summary-sticky .ticket-linea .right-details {
+    display: contents;
+  }
+
+  .cart-summary-sticky .ticket-linea .left-details {
+    grid-area: img;
+    margin: 0;
+  }
+
+  .cart-summary-sticky .ticket-linea .order-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 11px;
+  }
+
+  // Nombre: máximo 2 líneas con «…»; completo en el title.
+  .cart-summary-sticky .ticket-linea .order-details-right > h6 {
+    grid-area: nombre;
+    align-self: end;
+    min-width: 0;
+    margin: 0 !important;
+    font-family: var(--kc-font-body);
+    font-size: 12.5px !important;
+    font-weight: 800;
+    line-height: 14px !important;
+    letter-spacing: normal;
+    color: var(--kc-ink);
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  // «Editar precio» + marca «Editado»: 14 px de alto.
+  .cart-summary-sticky .fila-meta {
+    grid-area: meta;
+    align-self: start;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    height: 14px;
+  }
+
+  // La zona de toque crece con el margen negativo, sin hacer crecer la fila.
+  .cart-summary-sticky .fila-editar {
+    flex-shrink: 0;
+    margin: -4px 0 -4px -6px;
+    padding: 4px 6px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    font-family: var(--kc-font-body);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 14px;
+    letter-spacing: normal;
+    white-space: nowrap;
+    color: #5F3FE0;
+    cursor: pointer;
+
+    &:hover { background: #f5f2ff; }
+
+    &:focus-visible { outline: 3px solid #7C5CFF !important; }
+  }
+
+  .cart-summary-sticky .ticket-linea.fila-abierta .fila-editar {
+    background: #efe9ff;
+  }
+
+  // span con *ngIf → color y tamaño propios.
+  .cart-summary-sticky .fila-marca {
+    display: inline-flex;
+    align-items: center;
+    height: 14px;
+    padding: 0 6px;
+    border-radius: 20px;
+    background: #efe9ff;
+    white-space: nowrap;
+    text-transform: uppercase;
+    font-size: 9.5px !important;
+    font-weight: 800;
+    line-height: 1 !important;
+    letter-spacing: 0.04em;
+    color: #5F3FE0 !important;
+  }
+
+  // La marca vieja va dentro del precio; en escritorio la reemplaza la de arriba.
+  .cart-summary-sticky .ticket-linea .marca-editado {
+    display: none;
+  }
+
+  // −/cantidad/+: botones de 32×32 px.
+  .cart-summary-sticky .ticket-linea .touchspin-wrapper {
+    grid-area: stepper;
+    gap: 0;
+    padding: 0;
+    background: #f5f4fa;
+    border: 1px solid #e9e7f3;
+    border-radius: 11px;
+
+    .btn-touchspin {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: transparent;
+      color: #5F3FE0;
+
+      i { font-size: 10px; }
+
+      &:hover { background: #efe9ff; }
+
+      &:focus-visible {
+        outline: 3px solid #7C5CFF !important;
+        outline-offset: -2px;
+      }
+    }
+
+    .input-touchspin {
+      width: 22px;
+      min-width: 22px;
+      font-size: 13px !important;
+    }
+  }
+
+  .cart-summary-sticky .fila-subtotal {
+    grid-area: subtotal;
+    align-self: end;
+    justify-self: end;
+    display: block;
+    white-space: nowrap;
+    font-family: var(--kc-font-head);
+    font-size: 13px !important;
+    font-weight: 800;
+    line-height: 16px !important;
+    letter-spacing: normal;
+    color: #211F3A !important;
+  }
+
+  .cart-summary-sticky .ticket-linea .last-order-detail h6 {
+    grid-area: unitario;
+    align-self: start;
+    justify-self: end;
+    margin: 0 !important;
+    white-space: nowrap;
+    font-family: var(--kc-font-body);
+    font-size: 10.5px !important;
+    font-weight: 700;
+    line-height: 14px !important;
+    letter-spacing: normal;
+    color: #8f8bab !important;
+  }
+
+  .cart-summary-sticky .fila-cu {
+    display: inline;
+    font-size: 10.5px !important;
+    font-weight: 700;
+    color: #8f8bab !important;
+  }
+
+  // Quitar: el <a> mide 32×32 px; hover con el par de error.
+  .cart-summary-sticky .ticket-linea .last-order-detail > a {
+    grid-area: quitar;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 11px;
+    letter-spacing: normal;
+    transition: background 0.15s ease;
+
+    .trash-remove {
+      padding: 0;
+      background: transparent;
+      font-size: 13px;
+      color: #8f8bab;
+    }
+
+    &:hover {
+      background: #FDECEC;
+
+      .trash-remove {
+        background: transparent;
+        color: #D64545;
+      }
+    }
+
+    &:focus-visible { outline: 3px solid #7C5CFF !important; }
+  }
+
+  // --- editor de D-536: oculto salvo en la línea abierta ----------------------
+  // Se esconde con CSS, no con *ngIf: el componente no se destruye. La regla del
+  // padre le gana al :host de pos-linea-precio, que no se toca.
+  .cart-summary-sticky .ticket-linea app-pos-linea-precio {
+    display: none;
+  }
+
+  .cart-summary-sticky .ticket-linea.fila-abierta app-pos-linea-precio {
+    display: block;
+    margin: 0 0 8px 38px;
+    padding: 8px 10px;
+    background: #faf9fe;
+    border: 1px solid #ececf4;
+    border-radius: 11px;
+  }
+
+  // --- cupón: plegado detrás de «Agregar cupón» (44 px abierto) --------------
+  .card.cart-summary-sticky .coupon-code {
+    display: none;
+  }
+
+  .card.cart-summary-sticky.cupon-abierto .coupon-code {
+    display: block;
+    padding: 6px 12px;
+  }
+
+  // --- pie: solo el TOTAL (8 + 30 + 4 + 1 de borde = 43 px) -------------------
+  .card.cart-summary-sticky .total-item {
+    padding: 8px 12px 4px;
+    background: #fff;
+    border-top: 1px solid var(--kc-line);
+  }
+
+  // Cantidad: va en el título. Descuento, cupón y subtotal: solo si suman algo.
+  .card.cart-summary-sticky .total-item .item-number.fila-cantidad,
+  .card.cart-summary-sticky .total-item .item-number.fila-cero {
+    display: none;
+  }
+
+  // TOTAL plano, sin banda: a la izquierda «Total» y «Agregar cupón», a la derecha el monto.
+  .card.cart-summary-sticky .total-item .item-number:last-child {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "etiqueta monto"
+      "cupon    monto";
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent;
+    border: 0 !important;
+    border-radius: 0;
+
+    > span {
+      grid-area: etiqueta;
+      font-family: var(--kc-font-body);
+      font-size: 11px !important;
+      font-weight: 800;
+      line-height: 14px !important;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #8f8bab !important;
+    }
+
+    > h6.txt-primary {
+      grid-area: monto;
+      font-family: var(--kc-font-head) !important;
+      font-size: 24px !important;
+      font-weight: 800 !important;
+      line-height: 1 !important;
+      color: #5F3FE0 !important;
+      white-space: nowrap;
+      margin: 0 !important;
+    }
+  }
+
+  .card.cart-summary-sticky .cupon-agregar {
+    grid-area: cupon;
+    justify-self: start;
+    display: inline-block;
+    margin: 0;
+    padding: 1px 0;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    font-family: var(--kc-font-body);
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 14px;
+    letter-spacing: normal;
+    color: #5F3FE0;
+    cursor: pointer;
+
+    &:hover { text-decoration: underline; }
+
+    &:focus-visible { outline: 3px solid #7C5CFF !important; }
+  }
+
+  // --- modo «panel completo» (pos-checkout pone .ticket-apretado) -------------
+  // Todo toma su alto natural, la lista pierde su scroll y se desplaza el panel.
+  :host-context(.ticket-apretado) {
+    height: auto;
+  }
+
+  :host-context(.ticket-apretado) .card.cart-summary-sticky {
+    height: auto;
+
+    > .card-body { flex: none; }
+
+    .order-quantity {
+      flex: none;
+      overflow: visible;
+    }
+
+    .cart-items-container {
+      flex: none;
+      overflow: visible;
+    }
+  }
+}

@@ -350,7 +350,9 @@ $calc-radius:     16px;
 }
 
 .pos-ticket {
-  width: 392px;
+  // D-540 (ticket 1340): 32 % del área del POS, entre 400 y 440 px (antes 392 fijos).
+  // En móvil la regla de abajo la deja en 100 %.
+  width: clamp(400px, 32%, 440px);
   flex-shrink: 0;
   min-height: 0;
   background: #fff;
@@ -361,6 +363,20 @@ $calc-radius:     16px;
   overflow-y: auto;
   overscroll-behavior: contain;
 
+}
+
+// D-540: en escritorio el panel solo se desplaza en el modo «panel completo»
+// (ventana muy baja, ver pos-checkout); lleva la misma barra fina que la lista.
+@media (min-width: 1001px) {
+  .pos-ticket {
+    &::-webkit-scrollbar { width: 8px; }
+    &::-webkit-scrollbar-thumb {
+      background: #d7d9e3;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+  }
 }
 
 // =============================================================================

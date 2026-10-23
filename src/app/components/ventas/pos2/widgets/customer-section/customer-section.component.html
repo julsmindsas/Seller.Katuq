@@ -10,8 +10,23 @@
     </div>
     <div class="card-body pt-0 order-details p-3">
         <div class="search-section">
+            <!-- D-540: cliente plegado a una línea (solo escritorio; en móvil no se ve). -->
+            <div class="cli-linea" *ngIf="datosCliente" [class.cli-oculto]="cambiando">
+                <button type="button" class="cli-resumen" (click)="desplegado = !desplegado"
+                        [attr.aria-expanded]="desplegado">
+                    <span class="cli-avatar" aria-hidden="true">{{ inicialCliente }}</span>
+                    <span class="cli-datos">
+                        <span class="cli-nombre">{{ datosCliente?.nombres_completos }} {{ datosCliente?.apellidos_completos }}</span>
+                        <span class="cli-doc">{{ datosCliente?.documento }}</span>
+                        <span class="cli-aviso" *ngIf="facturacionIncompleta">{{ 'Facturación incompleta' | translate }}</span>
+                    </span>
+                    <i class="fa fa-angle-down cli-flecha" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="cli-cambiar" (click)="cambiarCliente()" aria-label="Cambiar cliente">{{ 'Cambiar' | translate }}</button>
+            </div>
+
             <!-- Autocompletado de clientes -->
-            <div class="autocomplete-box">
+            <div class="autocomplete-box" [class.cli-oculto]="datosCliente && !cambiando">
                 <i class="fa fa-search search-icon-left"></i>
                 <p-autoComplete
                     [(ngModel)]="selectedCliente"
@@ -19,6 +34,7 @@
                     (completeMethod)="searchClientes($event)"
                     (onSelect)="onClienteSelect($event)"
                     (onClear)="onClienteClear()"
+                    (keydown.escape)="cancelarCambio(true)"
                     field="displayLabel"
                     [minLength]="3"
                     [forceSelection]="false"
@@ -56,9 +72,13 @@
                     <i class="fa fa-circle-o-notch fa-spin"></i>
                 </span>
             </div>
+            <!-- D-540: «Nuevo» junto al buscador (solo escritorio). -->
+            <button type="button" class="cli-nuevo" [class.cli-oculto]="datosCliente && !cambiando" (click)="openModal()">
+                <i class="fa fa-plus" aria-hidden="true"></i> {{ 'Nuevo' | translate }}
+            </button>
 
-            <!-- Cliente seleccionado -->
-            <div class="cliente-card" *ngIf="datosCliente">
+            <!-- Cliente seleccionado (en escritorio, solo con la línea desplegada) -->
+            <div class="cliente-card" *ngIf="datosCliente" [class.cli-abierto]="desplegado && !cambiando">
                 <div class="cliente-cabeza">
                     <div class="cliente-status">
                         <i class="fa fa-check-circle"></i>
