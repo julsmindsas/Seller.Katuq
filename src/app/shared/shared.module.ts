@@ -87,6 +87,7 @@ import { DialogModule } from 'primeng/dialog';
 
 import { ImagenProductoPipe } from './pipes/imagen-producto.pipe';
 import { PublicaModule } from './components/publica/publica.module';
+import { IconoTablerComponent } from './icons/icono-tabler.component';
 @NgModule({
   declarations: [
     HeaderComponent,
@@ -140,6 +141,8 @@ import { PublicaModule } from './components/publica/publica.module';
   ],
   imports: [
     ImagenProductoPipe,
+    // D-546: íconos Tabler del menú lateral (standalone).
+    IconoTablerComponent,
     CommonModule,
     PublicaModule,
     RouterModule,

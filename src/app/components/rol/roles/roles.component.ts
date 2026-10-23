@@ -8,15 +8,17 @@ import { Role } from '../../../shared/models/roles/roles';
 import Swal from 'sweetalert2';
 import { UtilsService } from '../../../shared/services/utils.service';
 import { ROLE_TEMPLATES, RoleTemplate } from '../../../shared/models/roles/role-templates';
+import { catalogoDeMenus, disponiblesSinSeleccionadas, entradasConNombresActuales, menusParaGuardar, textoDeEntrada } from './roles-menus';
 
 /**
  * Ticket 1108: permisos asignables a un rol que NO aparecen en el menú lateral,
- * agrupados por la sección del menú bajo la que se muestran. Mismo path, título
- * e ícono con que quedaron guardados en los roles que ya los tienen (así el
- * selector los reconoce como ya asignados y no los duplica).
+ * agrupados por el `id` del grupo del menú bajo el que se muestran (D-546: el `id`
+ * no cambia si el grupo cambia de nombre; hay dos grupos «Productos», el de Inventario
+ * y el de Configuración). Mismo path, título e ícono con que quedaron guardados en los
+ * roles que ya los tienen (así el selector los reconoce como ya asignados y no los duplica).
  */
-const PERMISOS_FUERA_DEL_MENU: { [seccion: string]: Menu[] } = {
-  Productos: [
+const PERMISOS_FUERA_DEL_MENU: { [idGrupo: string]: Menu[] } = {
+  productos: [
     // Lo lee productos.component.ts (puedeEdicionRapida): formulario rápido en
     // "Crear Producto" y "Edición rápida" en cada fila.
     { path: 'productos/crear-rapido', title: 'Creación rápida', type: 'link', icon: 'zap' } as Menu,
@@ -118,38 +120,17 @@ export class RolesComponent implements OnInit {
     this.availableMenusCopy = this.utilsService.deepClone(this.availableMenus);
   }
 
+  /**
+   * D-546: el catálogo del selector sale de `catalogoDeMenus` (roles-menus.ts): cada entrada con su grupo
+   * («Clientes · Listado») y sin modificar el menú de NavService.
+   */
   getChildrenMenus(menus: Menu[]): Menu[] {
-    let childrenMenus: Menu[] = [];
-    let index = 0;
-    menus.forEach(menu => {
-      const menuParaAgregar = this.utilsService.deepClone(menu);
-      menuParaAgregar.children = [];
-      if (menu.children) {
-        menuParaAgregar['movable'] = false;
-        menuParaAgregar['index'] = index++;
-        childrenMenus.push(menuParaAgregar);
-        menu.children.forEach(child => {
-          child['movable'] = true;
-          child['index'] = index++;
-        });
-        childrenMenus = childrenMenus.concat(menu.children);
-        // Ticket 1108: permisos que ya no están en el menú lateral pero que el
-        // código sigue exigiendo por rol. "Creación rápida" se sacó del menú
-        // (se entra desde Crear Producto) y con eso dejó de poder asignarse:
-        // ningún rol nuevo podía tener la creación/edición rápida de productos.
-        (PERMISOS_FUERA_DEL_MENU[menu.title || ''] || []).forEach(permiso => {
-          childrenMenus.push({ ...permiso, movable: true, index: index++ } as any);
-        });
-      } else if (menu.path && menu.type === 'link') {
-        // Links de PRIMER NIVEL del menú (sin submenu), ej: "Tesorería"
-        // (spec 013, path "tesoreria"). Antes quedaban FUERA del catálogo
-        // del pickList y el administrador no podía asignarlos a ningún rol.
-        menuParaAgregar['movable'] = true;
-        menuParaAgregar['index'] = index++;
-        childrenMenus.push(menuParaAgregar);
-      }
-    });
-    return childrenMenus;
+    return catalogoDeMenus(menus, PERMISOS_FUERA_DEL_MENU);
+  }
+
+  /** El texto de una entrada en el selector. */
+  textoDeEntrada(entrada: Menu): string {
+    return textoDeEntrada(entrada);
   }
 
   loadRoles(): void {
@@ -181,11 +162,11 @@ export class RolesComponent implements OnInit {
         prefijoFacturacion: role.prefijoFacturacion || '',
         permissions: (role as any).permissions || {}
       });
-      this.selectedMenus = role.menus;
+      // D-546: un rol guardado con los nombres de antes se abre con los de ahora, reconocido por la ruta.
+      this.selectedMenus = entradasConNombresActuales(role.menus, this.availableMenusCopy);
+      this.roleForm.patchValue({ menus: this.selectedMenus });
       // Actualizar availableMenus eliminando los seleccionados
-      this.availableMenus = this.availableMenusCopy.filter((menu: Menu) =>
-        !this.selectedMenus.some(selected => selected.path === menu.path && selected.title === menu.title)
-      );
+      this.availableMenus = disponiblesSinSeleccionadas(this.availableMenusCopy, this.selectedMenus);
     }
   }
 
@@ -257,7 +238,8 @@ export class RolesComponent implements OnInit {
   saveRole(): void {
     if (this.roleForm.valid) {
       const newRole: Role = this.roleForm.value;
-      newRole.menus = this.selectedMenus;
+      // Mismas rutas que el selector, sin los campos que solo sirven para mostrarlas (etiqueta, nombre anterior).
+      newRole.menus = menusParaGuardar(this.selectedMenus);
       if (this.isJulsmind) {
         const empresaControl = this.roleForm.get('empresa');
         if (empresaControl) {
@@ -325,7 +307,7 @@ export class RolesComponent implements OnInit {
     if (modeDirection === 'target') {
       this.selectedMenus = this.selectedMenus.filter((item: any) => item.movable == true);
       this.selectedMenus = [...this.selectedMenus, ...movedItems.filter(item => !this.selectedMenus.includes(item))];
-      this.availableMenus = this.availableMenusCopy.filter((item: any) => !this.selectedMenus.some(item2 => item2.path == item.path && item2.title == item.title));
+      this.availableMenus = disponiblesSinSeleccionadas(this.availableMenusCopy, this.selectedMenus);
       this.availableMenus = [...this.availableMenus.sort((a, b) => a['index'] - b['index'])];
     }
     else {

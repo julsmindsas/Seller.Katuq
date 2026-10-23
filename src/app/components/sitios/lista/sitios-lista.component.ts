@@ -194,9 +194,21 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
    * Ticket 1175: la ruta `sitios/catalogos` abre esta misma lista mostrando
    * solo los catálogos y creando catálogos por defecto. Null = todas las páginas.
    */
-  get soloTipo(): "catalogo" | null {
+  get soloTipo(): "catalogo" | "landing" | null {
     // Con la misma guarda que el enlace del chat (línea de queryParamMap): sin ruta, todas.
-    return this.route?.snapshot?.data?.["tipo"] === "catalogo" ? "catalogo" : null;
+    const tipo = this.route?.snapshot?.data?.["tipo"];
+    // D-546: la ruta `sitios/landings` hace lo mismo con las landings.
+    return tipo === "catalogo" || tipo === "landing" ? tipo : null;
+  }
+
+  /**
+   * Un sitio sin `tipo` es una landing: así lo trata el servidor (`sitio.tipo || "landing"`) al crear, duplicar y
+   * armar su respuesta. En producción hoy todos traen tipo (revisado el 2026-10-23: 10 tiendas, 3 landings, 1 catálogo).
+   */
+  private coincideConElFiltro(sitio: Sitio): boolean {
+    const tipo = this.soloTipo;
+    if (!tipo) { return true; }
+    return tipo === "landing" ? !sitio.tipo || sitio.tipo === "landing" : sitio.tipo === tipo;
   }
 
   /** Página cuyas métricas se están viendo. Null = ninguna. */
@@ -284,7 +296,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.cargando = false;
         const todos: Sitio[] = (res && res.data) || [];
-        this.sitios = this.soloTipo ? todos.filter((x) => x.tipo === this.soloTipo) : todos;
+        this.sitios = todos.filter((x) => this.coincideConElFiltro(x));
         this.vigilar();
         this.abrirDesdeEnlace();
       },

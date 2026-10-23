@@ -16,7 +16,8 @@ const names = new Set([
   'toggletNavActive', 'closeAllFirstLevelMenus', 'closeChildrenActive', 'closeChildrenInSet',
   'closeChildrenRecursive', 'closeSiblings', 'closeSiblingsInChildren', 'isFirstLevelItem',
   'resetActiveState', 'isAncestor', 'handleMobileSubmenuToggle', 'setActiveRecursive',
-  'showCollapsedSubmenu',
+  'compacto', 'panel', 'sinAbrirPanel', 'filaDeFuente', 'abrirPanel', 'cerrarPanel', 'alEntrarPuntero',
+  'alSalirPuntero', 'alPerderFoco', 'cerrarPanelConTeclado',
 ]);
 const members = component.members.filter(node => names.has(node.name?.getText(source)));
 const compiled = ts.transpileModule(`export class SidebarMenu { ${members.map(node => node.getText(source)).join('\n')} }`, {
@@ -43,9 +44,14 @@ function fixture() {
     { title: 'Inventarios y Productos', items: [products] },
     { title: 'Configuración', items: [settings] },
   ];
+  // Las filas que arma `construirVistaMenu`, reducidas a lo que usan estos métodos.
+  const fila = (item, clave) => ({
+    clave, fuente: item, titulo: item.title, tipo: item.children ? 'grupo' : 'enlace',
+    hijos: (item.children || []).map((hijo, i) => fila(hijo, `${clave}.${i}`)),
+  });
+  sidebar.sections.forEach((section, i) => { section.filas = section.items.map((item, j) => fila(item, `${i}.${j}`)); });
   Object.assign(sidebar, {
     collapseMenu: false,
-    isTemporarilyExpanded: false,
     isMobile: () => false,
     cdr: { detectChanges() {} },
     navServices: { getMenuItems: () => sidebar.sections.flatMap(section => section.items) },
@@ -53,29 +59,70 @@ function fixture() {
   return { sidebar, operations, settings, products };
 }
 
-test('el submenú flotante pinta canales futuros como información sin href ni eventos de navegación', () => {
-  const sidebar = new context.exports.SidebarMenu();
-  Object.assign(sidebar, {
-    isMobile: () => false, closeCollapsedSubmenu() {}, getMenuIcon: () => 'fa-circle',
-    rutaMenu: p => p, navigateAndCleanup: () => assert.fail('no debe navegar'),
-    renderer: {
-      createElement: tag => ({ tag, attrs: {}, children: [], listeners: [] }),
-      createText: text => ({ text }), addClass() {}, removeClass() {}, setStyle() {},
-      setAttribute: (el, key, value) => { el.attrs[key] = value; },
-      appendChild: (el, child) => el.children.push(child),
-      listen: (el, event) => { el.listeners.push(event); return () => {}; },
-    },
-  });
-  const parent = { getBoundingClientRect: () => ({ top: 100, right: 200 }) };
-  sidebar.showCollapsedSubmenu({ children: [{ title: 'TikTok', type: 'info', badgeValue: 'Próximamente' }] }, {
-    target: { closest: () => parent },
-  });
-  const entry = sidebar.currentCollapsedSubmenu.children[0];
-  assert.equal(entry.tag, 'div');
-  assert.equal(entry.attrs['aria-disabled'], 'true');
-  assert.equal(entry.attrs.href, undefined);
-  assert(!entry.listeners.includes('click'));
-  assert.equal(entry.children[1].children[1].children[0].text, 'Próximamente');
+test('el panel del riel compacto pinta canales futuros como información sin href ni eventos de navegación', () => {
+  const html = fs.readFileSync(path.resolve(__dirname, '../../src/app/shared/components/sidebar/sidebar.component.html'), 'utf8');
+  const panel = html.slice(html.indexOf('<ng-template #panelTpl'), html.indexOf('<!-- Menú Principal -->'));
+  const informativo = panel.slice(panel.indexOf("*ngIf=\"hijo.tipo === 'info'\""));
+  const etiqueta = informativo.slice(0, informativo.indexOf('>') + 1);
+  assert.match(etiqueta, /aria-disabled="true"/);
+  assert(!/routerLink|href|\(click\)/.test(etiqueta), 'el canal informativo no navega');
+  assert(!html.includes('showCollapsedSubmenu') && !html.includes('collapsed-submenu-floating'), 'el submenú flotante armado a mano se retiró');
+});
+
+test('compacto solo existe en escritorio: en el celular colapsado es el cajón cerrado', () => {
+  const { sidebar } = fixture();
+  sidebar.collapseMenu = true;
+  assert.equal(sidebar.compacto, true);
+  sidebar.isMobile = () => true;
+  assert.equal(sidebar.compacto, false);
+});
+
+test('en compacto, tocar un grupo abre su panel con tope en la ventana; en abierto no abre nada', () => {
+  const { sidebar, operations } = fixture();
+  const evento = { currentTarget: { closest: () => ({ querySelector: () => ({ getBoundingClientRect: () => ({ top: 880 }) }) }) } };
+  sidebar.toggletNavActive(operations, { ...evento, stopPropagation() {}, preventDefault() {} });
+  assert.equal(sidebar.panel, null, 'menú abierto: el grupo se despliega, no abre panel');
+  assert.equal(operations.active, true);
+  operations.active = false;
+  sidebar.collapseMenu = true;
+  sidebar.toggletNavActive(operations, { ...evento, stopPropagation() {}, preventDefault() {} });
+  assert.equal(sidebar.panel.clave, '0.0');
+  assert(sidebar.panel.top <= 900 - 8 - 56 - 40, 'el panel no se sale por abajo');
+  assert.equal(operations.active, false, 'el grupo no se despliega en el riel');
+  sidebar.cerrarPanel();
+  assert.equal(sidebar.panel, null);
+});
+
+test('el panel no se abre con el dedo por hover, y cerrarlo con Esc no lo reabre al devolver el foco', () => {
+  const { sidebar, operations } = fixture();
+  sidebar.collapseMenu = true;
+  const fila = sidebar.filaDeFuente(operations);
+  sidebar.alEntrarPuntero(fila, { pointerType: 'touch', currentTarget: null });
+  assert.equal(sidebar.panel, null);
+  sidebar.alEntrarPuntero(fila, { pointerType: 'mouse', currentTarget: null });
+  assert.equal(sidebar.panel.clave, fila.clave);
+  sidebar.alSalirPuntero({ pointerType: 'touch' });
+  assert.equal(sidebar.panel.clave, fila.clave, 'soltar el dedo no cierra');
+  sidebar.alSalirPuntero({ pointerType: 'mouse' });
+  assert.equal(sidebar.panel, null);
+
+  sidebar.abrirPanel(fila, { currentTarget: null });
+  const boton = { focus: () => sidebar.abrirPanel(fila, { currentTarget: null }) };
+  sidebar.cerrarPanelConTeclado({ currentTarget: { closest: () => ({ querySelector: () => boton }) } });
+  assert.equal(sidebar.panel, null, 'el foco devuelto al botón no reabre el panel');
+});
+
+test('el foco que sale de la fila y de su panel lo cierra; el que se queda dentro, no', () => {
+  const { sidebar, operations } = fixture();
+  sidebar.collapseMenu = true;
+  const fila = sidebar.filaDeFuente(operations);
+  const dentro = {};
+  const item = { contains: nodo => nodo === dentro };
+  sidebar.abrirPanel(fila, { currentTarget: null });
+  sidebar.alPerderFoco({ currentTarget: item, relatedTarget: dentro });
+  assert.equal(sidebar.panel.clave, fila.clave);
+  sidebar.alPerderFoco({ currentTarget: item, relatedTarget: {} });
+  assert.equal(sidebar.panel, null);
 });
 
 test('Logística de Operaciones abre al primer clic después de Logística de Configuración', () => {
@@ -132,4 +179,15 @@ test('un submenú con el título de otro grupo conserva a su propio padre abiert
   assert.equal(nested.active, true);
   assert.equal(sibling.active, false);
   assert.equal(operations.active, false);
+});
+
+test('el cajón cerrado del celular depende de `.collapsed` en el aside: se liga a collapseMenu, no a compacto', () => {
+  // En el celular `compacto` es siempre falso; si el aside solo usara `compacto`, el cajón nunca se escondería.
+  const html = fs.readFileSync(path.resolve(__dirname, '../../src/app/shared/components/sidebar/sidebar.component.html'), 'utf8');
+  const aside = html.match(/<aside class="sidebar-container"[^>]*>/s)[0];
+  assert.match(aside, /\[class\.collapsed\]="collapseMenu"/);
+  const scss = fs.readFileSync(path.resolve(__dirname, '../../src/app/shared/components/sidebar/sidebar.component.scss'), 'utf8');
+  assert.match(scss, /En móvil "collapsed" = drawer cerrado[\s\S]{0,80}&\.collapsed\s*\{\s*transform: translateX\(calc\(-100% - 24px\)\)/);
+  // El encabezado y el contenido del riel sí son solo de escritorio.
+  assert.match(html, /<header class="sidebar-header unified-header"\s+\[class\.collapsed\]="compacto"/);
 });

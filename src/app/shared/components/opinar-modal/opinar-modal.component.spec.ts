@@ -16,8 +16,20 @@ describe('opinar-modal', () => {
       { title: 'CRM', children: [{ path: 'crm/list', title: 'Pipeline' }, { path: 'crm/satisfaccion', title: 'Satisfacción de clientes' }] },
       { title: 'Pedidos', path: 'pedidos', children: [{ path: 'pedidos/lista', title: 'Todos los pedidos' }] },
     ];
-    expect(nombreDePantalla('/crm/satisfaccion', menu)).toBe('Satisfacción de clientes');
-    expect(nombreDePantalla('/pedidos/lista/123', menu)).toBe('Todos los pedidos');
+    // D-546: dentro de un grupo, la pantalla se nombra con su grupo.
+    expect(nombreDePantalla('/crm/satisfaccion', menu)).toBe('CRM · Satisfacción de clientes');
+    expect(nombreDePantalla('/pedidos/lista/123', menu)).toBe('Pedidos'); // un grupo de un solo hijo se dibuja como enlace directo con el nombre del grupo
     expect(nombreDePantalla('/otra', menu)).toBeNull();
+  });
+
+  it('un grupo de un solo hijo se nombra como se ve (enlace directo) y uno inline no antepone su nombre', () => {
+    const menu: any[] = [
+      { title: 'Producción', children: [{ path: 'produccion/dashboard', title: 'Órdenes de producción' }] },
+      { title: 'Finanzas', display: 'inline', children: [{ path: 'cartera', title: 'Cartera' }, { path: 'tesoreria', title: 'Tesorería' }] },
+      { title: 'Bodegas', children: [{ path: 'inventario/recepcion-mercancia', title: 'Ajustes' }, { path: 'inventario/traslados', title: 'Traslados' }] },
+    ];
+    expect(nombreDePantalla('/produccion/dashboard', menu)).toBe('Producción');
+    expect(nombreDePantalla('/cartera', menu)).toBe('Cartera');
+    expect(nombreDePantalla('/inventario/recepcion-mercancia', menu)).toBe('Bodegas · Ajustes');
   });
 });

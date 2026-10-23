@@ -623,17 +623,36 @@ input.p-inputtext {
 
 /* DARK MODE - Sidebar background Katuq púrpura */
 /* ============================================
-   SIDEBAR TEMPORARILY EXPANDED - Header Sync
-   Cuando el sidebar colapsado se expande por hover
+   ANCHO DEL MENÚ LATERAL - Header y cuerpo sincronizados (D-546)
+   Abierto 264 px, compacto 72 px; el celular usa un cajón
    ============================================ */
 
-// Variables sincronizadas — 260px = mismo margen que usa el theme para
-// .page-body: el header y el cuerpo quedan alineados con la tarjeta del
-// sidebar (rediseño 2026 "Almara"), sin franja muerta entre ambos.
+// Variables sincronizadas — D-546: el menú abierto mide 264 px. Es la única fuente del
+// ancho: el header, el cuerpo y el menú leen estas variables (el theme de assets/scss fija
+// 260 a mano; el bloque «Ancho del menú» de abajo lo sobrescribe sin editar el theme).
 :root {
-  --sidebar-width: 260px;
-  --sidebar-collapsed-width: 80px;
+  --sidebar-width: 264px;
+  --sidebar-collapsed-width: 72px;
   --sidebar-transition-speed: 0.15s;
+}
+
+// D-546 (D2): reglas del theme que fijaban 260 px en el menú abierto (assets/scss/layout/_sidebar.scss
+// :1153, :1181, :1243 y :1809). Solo en escritorio; en el celular el menú es un drawer.
+@media (min-width: 992px) {
+  html body .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper {
+    width: var(--sidebar-width);
+  }
+  html body .page-wrapper.compact-wrapper .page-body-wrapper .page-body {
+    margin-left: var(--sidebar-width);
+  }
+  // Riel compacto (F2): ancho fijo de 72 px. Las reglas `.close_icon` del theme (width auto, margen del
+  // cuerpo de 53 px) son más específicas que las de arriba: se repite la clase para pasarlas.
+  html body .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper.close_icon.close_icon {
+    width: var(--sidebar-collapsed-width);
+  }
+  html body .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper.close_icon.close_icon ~ .page-body {
+    margin-left: var(--sidebar-collapsed-width);
+  }
 }
 
 /* ============================================
@@ -678,26 +697,8 @@ body.dark-only .page-wrapper .page-header,
                 width var(--sidebar-transition-speed) ease-out;
   }
 
-  // ★ CLAVE: Header cuando sidebar está temporalmente expandido por hover
-  .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon,
-  .page-header.close_icon.temporarily-expanded,
-  body:has(.sidebar-container.temporarily-expanded) .page-header.close_icon {
-    margin-left: var(--sidebar-width) !important;
-    width: calc(100% - var(--sidebar-width)) !important;
-    transition: margin-left var(--sidebar-transition-speed) ease-out,
-                width var(--sidebar-transition-speed) ease-out;
-  }
-
-  // Sidebar temporalmente expandido - Z-index superior al header
-  .sidebar-container.temporarily-expanded {
-    z-index: 1030 !important; // Por encima del header (1025)
-    box-shadow: 4px 0 25px rgba(0, 0, 0, 0.2) !important;
-  }
-
-  // Asegurar que el sidebar colapsado tenga menor z-index
-  .sidebar-container.collapsed:not(.temporarily-expanded) {
-    z-index: 1020;
-  }
+  // D-546: el menú compacto ya no se expande al pasar el puntero (su panel flotante muestra el grupo):
+  // se retiraron las reglas `temporarily-expanded` del encabezado y del menú.
 }
 
 // Compatibilidad con compact-wrapper (tema Dubai) - SOBRESCRIBE tema
@@ -714,13 +715,6 @@ body.dark-only .page-wrapper .page-header,
       margin-left: var(--sidebar-collapsed-width) !important;
       width: calc(100% - var(--sidebar-collapsed-width)) !important;
     }
-
-    // Sidebar temporalmente expandido por hover
-    .page-header.close_icon.temporarily-expanded,
-    &.sidebar-temporarily-expanded .page-header.close_icon {
-      margin-left: var(--sidebar-width) !important;
-      width: calc(100% - var(--sidebar-width)) !important;
-    }
   }
 }
 
@@ -735,38 +729,18 @@ body.dark-only .page-wrapper .page-header,
   font-size: 8px !important;
 }
 
-/* Iconos del sidebar proporcionados */
+/* Iconos del sidebar proporcionados.
+   D-546: el tamaño de cada pieza del menú (filas, estrella, insignia, ícono) ya no se fuerza
+   desde aquí: lo define sidebar.component.scss en un solo lugar. Queda solo el tamaño base de
+   los íconos del resto de la barra (buscador, tarjeta del plan), que las filas sobrescriben. */
 .sidebar-wrapper i,
 .sidebar-wrapper .fa {
   font-size: 10px !important;
 }
 
-/* Iconos de menú específicos un poco más grandes */
-.sidebar-wrapper .menu-link i,
-.sidebar-wrapper .menu-icon i {
-  font-size: 11px !important;
-}
-
-/* Botones del sidebar */
-.sidebar-wrapper .control-btn,
-.sidebar-wrapper .favorite-btn {
+.sidebar-wrapper .control-btn {
   font-size: 8px !important;
   padding: 0.3rem !important;
-}
-
-/* Items de menú del sidebar */
-.sidebar-wrapper .menu-link,
-.sidebar-wrapper .submenu-link {
-  font-size: 12px !important;
-  padding: 0.6rem 0.8rem !important;
-}
-
-.sidebar-wrapper .menu-text {
-  font-size: 12px !important;
-}
-
-.sidebar-wrapper .submenu-text {
-  font-size: 11px !important;
 }
 
 /* Headers de sección del sidebar */

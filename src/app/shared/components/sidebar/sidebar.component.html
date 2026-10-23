@@ -26,28 +26,18 @@
   </div>
 </div>
 
-<!-- Zona invisible de hover extendida (MEJORA UX) -->
-<div class="sidebar-hover-zone"
-     *ngIf="collapseMenu && !isMobile()"
-     (mouseenter)="onMouseEnter()"
-     (mouseleave)="onMouseLeave()"
-     [class.active]="isTemporarilyExpanded">
-</div>
-
 <!-- Sidebar Container -->
 <aside class="sidebar-container"
-       [class.collapsed]="collapseMenu && !isTemporarilyExpanded"
-       [class.temporarily-expanded]="collapseMenu && isTemporarilyExpanded"
-       [class.compact]="isCompactMode"
+       [class.collapsed]="collapseMenu"
        [class.auto-hide-enabled]="isAutoHideEnabled"
        [class.sidebar-hidden]="isAutoHideEnabled && !isSidebarVisible"
        [class.sidebar-hovering]="isAutoHideEnabled && isHovering"
        role="navigation"
        aria-label="Menú principal">
 
-  <!-- Header Unificado: Logo + Perfil de Usuario -->
+  <!-- Header Unificado: Logo + Perfil de Usuario. En el riel compacto: el logo y, debajo, el botón alternar. -->
   <header class="sidebar-header unified-header"
-          [class.collapsed]="collapseMenu && !isTemporarilyExpanded">
+          [class.collapsed]="compacto">
 
     <!-- Contenido principal del header -->
     <div class="header-content">
@@ -56,14 +46,14 @@
         <!-- Logo/Avatar clickeable -->
         <a routerLink='/welcome' class="brand-avatar-link" [attr.aria-label]="'Ir a inicio'">
           <!-- Logo compacto cuando está colapsado -->
-          <div class="logo-avatar" *ngIf="collapseMenu && !isTemporarilyExpanded">
+          <div class="logo-avatar" *ngIf="compacto">
             <img src="assets/images/logo/Katuq/katuq_logo_solo.svg"
                  alt="Katuq"
                  class="logo-icon">
           </div>
 
           <!-- Avatar del usuario cuando está expandido -->
-          <div class="user-avatar" *ngIf="!collapseMenu || isTemporarilyExpanded">
+          <div class="user-avatar" *ngIf="!compacto">
             <img *ngIf="userAvatarUrl"
                  [src]="userAvatarUrl"
                  [alt]="userName"
@@ -76,7 +66,7 @@
         </a>
 
         <!-- Info expandida: Saludo + Logo -->
-        <div class="expanded-info" *ngIf="!collapseMenu || isTemporarilyExpanded">
+        <div class="expanded-info" *ngIf="!compacto">
           <div class="greeting-section">
             <span class="greeting-text">{{greeting}} <span class="emoji">👋</span></span>
             <span class="user-name">{{firstName}}</span>
@@ -84,13 +74,13 @@
         </div>
       </div>
 
-      <!-- Botón de colapsar/expandir -->
+      <!-- Botón alternar: abierto ⇄ compacto (en el celular, cierra el cajón) -->
       <button class="collapse-toggle-btn"
-              *ngIf="!collapseMenu || isTemporarilyExpanded"
               (click)="sidebarToggle()"
               [attr.aria-label]="collapseMenu ? 'Expandir menú' : 'Contraer menú'"
+              [attr.aria-pressed]="compacto"
               [title]="collapseMenu ? 'Expandir menú' : 'Contraer menú'">
-        <i class="fa" [ngClass]="collapseMenu ? 'fa-angle-double-right' : 'fa-angle-double-left'"></i>
+        <app-icono-tabler [nombre]="collapseMenu ? 'layout-sidebar-left-expand' : 'layout-sidebar-left-collapse'" [tamano]="18"></app-icono-tabler>
       </button>
     </div>
 
@@ -98,11 +88,11 @@
 
   <!-- Barra de Búsqueda -->
   <div class="search-section"
-       [class.hidden]="isCompactMode || (collapseMenu && !isTemporarilyExpanded)"
+       [class.hidden]="compacto"
        [class.active]="isSearchFocused"
        role="search">
     <div class="search-input-container">
-      <i class="fa fa-search search-icon" aria-hidden="true"></i>
+      <app-icono-tabler class="search-icon" nombre="search" [tamano]="16"></app-icono-tabler>
       <input type="text" 
              [(ngModel)]="searchTerm" 
              (input)="searchMenu()" 
@@ -115,7 +105,7 @@
               *ngIf="searchTerm" 
               (click)="clearSearch()"
               aria-label="Limpiar búsqueda">
-        <i class="fa fa-times" aria-hidden="true"></i>
+        <app-icono-tabler nombre="x" [tamano]="15"></app-icono-tabler>
       </button>
     </div>
     
@@ -126,72 +116,72 @@
       <div class="search-result" 
            *ngFor="let result of searchResults"
            role="option">
-        <a [routerLink]="rutaMenu(result.path)" 
+        <a [routerLink]="rutaMenu(result.ruta)" 
            (click)="clearSearch(); onMobileLinkClick()"
            class="search-result-link">
-          <i class="fa" [ngClass]="getMenuIcon(result.icon, result.title)" aria-hidden="true"></i>
-          <span>{{result.title | translate}}</span>
+          <app-icono-tabler [nombre]="iconoDeResultado(result)" [tamano]="18"></app-icono-tabler>
+          <span class="search-result-texto">
+            <span class="search-result-grupo" *ngIf="result.grupo">{{result.grupo | translate}} · </span>{{result.titulo | translate}}
+          </span>
         </a>
       </div>
     </div>
     
     <div class="search-no-results" 
          *ngIf="isSearchActive && searchResults.length === 0 && searchTerm">
-      <i class="fa fa-search" aria-hidden="true"></i>
+      <app-icono-tabler nombre="search" [tamano]="14"></app-icono-tabler>
       <span>Sin resultados para "{{searchTerm}}"</span>
     </div>
   </div>
 
-  <!-- Sección de Favoritos -->
+  <!-- Sección de Favoritos: fija arriba del menú (D-546 F1). Cada favorito muestra debajo su grupo. -->
   <div class="favorites-section"
-       *ngIf="favoriteItems.length > 0 && !isCompactMode && (!collapseMenu || isTemporarilyExpanded)"
+       *ngIf="favoritos.length > 0 && !compacto"
        role="region" 
        aria-labelledby="favorites-title">
     <h3 id="favorites-title" class="favorites-title">
-      <i class="fa fa-star" aria-hidden="true"></i>
+      <app-icono-tabler nombre="star" [tamano]="12" [relleno]="true"></app-icono-tabler>
       <span>Favoritos</span>
     </h3>
     
     <ul class="favorites-list" role="list">
       <li class="favorite-item" 
-          *ngFor="let favorite of favoriteItems" 
+          *ngFor="let favorite of favoritos" 
           role="listitem">
-        <a *ngIf="favorite.path; else favoritoSeccion"
-           [routerLink]="rutaMenu(favorite.path)"
-           (click)="onMenuItemClick(favorite); onMobileLinkClick()"
+        <a *ngIf="favorite.ruta; else favoritoSeccion"
+           [routerLink]="rutaMenu(favorite.ruta)"
+           (click)="onMobileLinkClick()"
            class="favorite-link"
-           [attr.aria-label]="'Ir a ' + (favorite.title | translate)">
-          <i class="fa" [ngClass]="getMenuIcon(favorite.icon, favorite.title)" aria-hidden="true"></i>
-          <span class="favorite-text" [attr.title]="favorite.title | translate">{{favorite.title | translate}}</span>
-          <button class="remove-favorite-btn" 
-                  (click)="toggleFavorite(favorite, $event)"
-                  [attr.aria-label]="'Quitar ' + (favorite.title | translate) + ' de favoritos'">
-            <i class="fa fa-times" aria-hidden="true"></i>
-          </button>
+           [attr.aria-label]="'Ir a ' + (favorite.titulo | translate)">
+          <app-icono-tabler class="fav-icono" [nombre]="favorite.icono" [tamano]="18"></app-icono-tabler>
+          <span class="fav-textos">
+            <span class="favorite-text" [attr.title]="favorite.titulo | translate">{{favorite.titulo | translate}}</span>
+            <span class="fav-grupo" *ngIf="favorite.grupo">{{favorite.grupo | translate}}</span>
+          </span>
+          <ng-container *ngTemplateOutlet="estrellaTpl; context: { $implicit: favorite.estrella }"></ng-container>
         </a>
-        <!-- Ticket 1232: favorito de una sección: la abre en el menú. -->
+        <!-- Ticket 1232: favorito de un grupo: lo abre en el menú. -->
         <ng-template #favoritoSeccion>
           <a href="#"
              (click)="abrirSeccionFavorita(favorite, $event)"
              class="favorite-link"
-             [attr.aria-label]="'Abrir ' + (favorite.title | translate) + ' en el menú'">
-            <i class="fa" [ngClass]="getMenuIcon(favorite.icon, favorite.title)" aria-hidden="true"></i>
-            <span class="favorite-text" [attr.title]="favorite.title | translate">{{favorite.title | translate}}</span>
-            <button class="remove-favorite-btn"
-                    (click)="toggleFavorite(favorite, $event)"
-                    [attr.aria-label]="'Quitar ' + (favorite.title | translate) + ' de favoritos'">
-              <i class="fa fa-times" aria-hidden="true"></i>
-            </button>
+             [attr.aria-label]="'Abrir ' + (favorite.titulo | translate) + ' en el menú'">
+            <app-icono-tabler class="fav-icono" [nombre]="favorite.icono" [tamano]="18"></app-icono-tabler>
+            <span class="fav-textos">
+              <span class="favorite-text" [attr.title]="favorite.titulo | translate">{{favorite.titulo | translate}}</span>
+              <span class="fav-grupo" *ngIf="favorite.grupo">{{favorite.grupo | translate}}</span>
+            </span>
+            <ng-container *ngTemplateOutlet="estrellaTpl; context: { $implicit: favorite.estrella }"></ng-container>
           </a>
-          <!-- Ticket 1322: las pantallas de la sección quedan a un clic. -->
-          <ul class="favorite-children" *ngIf="enlacesDeFavorito(favorite).length" role="list">
-            <li *ngFor="let enlace of enlacesDeFavorito(favorite)" role="listitem">
-              <a [routerLink]="rutaMenu(enlace.path)"
-                 (click)="onMenuItemClick(enlace); onMobileLinkClick()"
+          <!-- Ticket 1322: las pantallas del grupo quedan a un clic. -->
+          <ul class="favorite-children" *ngIf="favorite.pantallas.length" role="list">
+            <li *ngFor="let enlace of favorite.pantallas" role="listitem">
+              <a [routerLink]="rutaMenu(enlace.ruta)"
+                 (click)="onMobileLinkClick()"
                  routerLinkActive="active"
                  class="favorite-link favorite-link--hijo"
-                 [attr.aria-label]="'Ir a ' + (enlace.title | translate)">
-                <span class="favorite-text" [attr.title]="enlace.title | translate">{{enlace.title | translate}}</span>
+                 [attr.aria-label]="'Ir a ' + (enlace.titulo | translate)">
+                <span class="favorite-text" [attr.title]="enlace.titulo | translate">{{enlace.titulo | translate}}</span>
               </a>
             </li>
           </ul>
@@ -200,9 +190,92 @@
     </ul>
   </div>
 
+  <!-- Estrella de favoritos (D-546 D4): siempre visible; rellena si la entrada es favorita.
+       Es un `span role="button"` porque va dentro de un enlace o de un botón. -->
+  <ng-template #estrellaTpl let-estrella>
+    <span class="fila-estrella"
+          [class.fila-estrella--activa]="esFavorita(estrella)"
+          role="button"
+          tabindex="0"
+          (click)="alternarFavorito(estrella, $event)"
+          (keydown.enter)="alternarFavorito(estrella, $event)"
+          (keydown.space)="alternarFavorito(estrella, $event)"
+          [attr.aria-label]="etiquetaEstrella(estrella)"
+          [attr.aria-pressed]="esFavorita(estrella)"
+          [attr.title]="etiquetaEstrella(estrella)">
+      <app-icono-tabler nombre="star" [tamano]="15" [relleno]="esFavorita(estrella)"></app-icono-tabler>
+    </span>
+  </ng-template>
+
+  <!-- Fila del menú (D-546 D3): ícono · nombre (todo el espacio que queda) · zona derecha de ancho fijo.
+       La usan el enlace directo, el grupo, el hijo y el panel del riel compacto. -->
+  <ng-template #filaTpl let-fila>
+    <span class="fila-ico" *ngIf="fila.nivel === 2" aria-hidden="true">
+      <app-icono-tabler [nombre]="fila.icono" [tamano]="20"></app-icono-tabler>
+      <span class="fila-punto" *ngIf="puntoVisible(fila)" title="Hay opciones nuevas"></span>
+    </span>
+    <span class="fila-nombre menu-text"
+          [class.submenu-text]="fila.nivel === 3"
+          [class.sr-only]="compacto && fila.nivel === 2"
+          [attr.title]="fila.titulo | translate">{{fila.titulo | translate}}</span>
+    <span class="fila-der" *ngIf="!(compacto && fila.nivel === 2)">
+      <span class="fila-slot-insignia">
+        <span class="fila-insignia"
+              *ngIf="fila.insignia"
+              [class.fila-insignia--pronto]="fila.insignia.tono === 'pronto'">{{fila.insignia.texto}}</span>
+      </span>
+      <span class="fila-slot-estrella">
+        <ng-container *ngIf="favoritoDeFila(fila) as estrella">
+          <ng-container *ngTemplateOutlet="estrellaTpl; context: { $implicit: estrella }"></ng-container>
+        </ng-container>
+      </span>
+      <span class="fila-slot-chevron" *ngIf="fila.nivel === 2">
+        <app-icono-tabler *ngIf="fila.tipo === 'grupo'"
+                          class="submenu-chevron"
+                          [class.rotated]="fila.fuente.active"
+                          nombre="chevron-down"
+                          [tamano]="14"></app-icono-tabler>
+      </span>
+    </span>
+  </ng-template>
+
+  <!-- Panel flotante del riel compacto (D-546 D8): el nombre del grupo y sus pantallas, con insignias y
+       estrellas; para un enlace directo, solo su nombre. Es hijo del <li> de la fila: `pointerleave` del
+       <li> lo cierra, y el puente transparente de su borde izquierdo cubre el hueco con el ícono. -->
+  <ng-template #panelTpl let-fila>
+    <div class="panel-flotante"
+         [class.panel-flotante--solo]="fila.tipo !== 'grupo'"
+         [style.top.px]="panel?.top"
+         [attr.role]="fila.tipo === 'grupo' ? 'menu' : 'tooltip'"
+         [attr.aria-label]="fila.titulo | translate"
+         (keydown.arrowdown)="moverFocoPanel($event, 1)"
+         (keydown.arrowup)="moverFocoPanel($event, -1)">
+      <div class="panel-titulo">{{fila.titulo | translate}}</div>
+      <ng-container *ngIf="fila.tipo === 'grupo'">
+        <ng-container *ngFor="let hijo of fila.hijos; trackBy: porClave">
+          <a *ngIf="hijo.tipo === 'enlace'"
+             [routerLink]="rutaMenu(hijo.ruta)"
+             (click)="onSubMenuItemClick($event); onMobileLinkClick()"
+             routerLinkActive="active"
+             class="submenu-link fila fila--n3 panel-fila"
+             [attr.title]="hijo.titulo | translate"
+             role="menuitem">
+            <ng-container *ngTemplateOutlet="filaTpl; context: { $implicit: hijo }"></ng-container>
+          </a>
+          <div *ngIf="hijo.tipo === 'info'"
+               class="submenu-link submenu-future fila fila--n3 panel-fila"
+               role="menuitem"
+               aria-disabled="true">
+            <ng-container *ngTemplateOutlet="filaTpl; context: { $implicit: hijo }"></ng-container>
+          </div>
+        </ng-container>
+      </ng-container>
+    </div>
+  </ng-template>
+
   <!-- Menú Principal -->
   <nav class="main-navigation" role="navigation" aria-label="Navegación principal">
-    <div class="menu-container" [class.compact]="isCompactMode">
+    <div class="menu-container">
       
       <!-- Iterar secciones -->
       <div class="menu-section" 
@@ -212,205 +285,149 @@
         <!-- Título de sección -->
         <button class="section-header"
                 [id]="'section-header-' + sectionIndex"
-                *ngIf="section.isHeaderSection && !isCompactMode && (!collapseMenu || isTemporarilyExpanded)"
+                *ngIf="section.isHeaderSection && !compacto"
                 (click)="toggleSection(section)"
                 [class.expanded]="!section.collapsed"
                 [attr.aria-expanded]="!section.collapsed"
                 [attr.aria-controls]="'section-content-' + sectionIndex"
                 [attr.title]="section.title | translate">
           <div class="section-icon">
-            <i class="fa" [ngClass]="getSectionIcon(section.title)" aria-hidden="true"></i>
+            <app-icono-tabler [nombre]="section.icono" [tamano]="20"></app-icono-tabler>
           </div>
           <span class="section-title" [attr.title]="section.title | translate">{{section.title | translate}}</span>
-          <i class="fa fa-chevron-down section-chevron" 
-             [class.rotated]="!section.collapsed" 
-             aria-hidden="true"></i>
+          <!-- Sección hecha de un grupo `inline` (Finanzas, Comunicaciones): lleva la estrella de ese grupo (D10). -->
+          <ng-container *ngIf="favoritoDeSeccion(section) as estrellaSeccion">
+            <ng-container *ngTemplateOutlet="estrellaTpl; context: { $implicit: estrellaSeccion }"></ng-container>
+          </ng-container>
+          <app-icono-tabler class="section-chevron"
+                            [class.rotated]="!section.collapsed"
+                            nombre="chevron-down"
+                            [tamano]="14"></app-icono-tabler>
         </button>
 
         <!-- Items de la sección -->
         <ul class="menu-items" 
             [id]="'section-content-' + sectionIndex"
-            [class.collapsed]="section.collapsed && !isCompactMode && (!collapseMenu || isTemporarilyExpanded)"
-            [class.compact]="isCompactMode"
-            [class.sidebar-collapsed]="collapseMenu"
+            [class.collapsed]="section.collapsed && !compacto"
+            [class.sidebar-collapsed]="compacto"
             role="group"
-            [attr.aria-labelledby]="section.isHeaderSection ? 'section-header-' + sectionIndex : null">
+            [attr.aria-labelledby]="section.isHeaderSection && !compacto ? 'section-header-' + sectionIndex : null">
           
           <li class="menu-item"
-              *ngFor="let item of section.items"
-              [class.has-children]="item.children?.length > 0"
-              [class.active]="item.active"
-              [attr.data-tooltip]="item.title"
+              *ngFor="let fila of section.filas; trackBy: porClave"
+              [class.has-children]="fila.tipo === 'grupo' && fila.hijos.length > 0"
+              [class.active]="fila.fuente.active"
+              [class.panel-activo]="compacto && panel?.clave === fila.clave"
+              [attr.data-tooltip]="fila.titulo"
+              (pointerenter)="alEntrarPuntero(fila, $event)"
+              (pointerleave)="alSalirPuntero($event)"
+              (focusin)="abrirPanel(fila, $event)"
+              (focusout)="alPerderFoco($event)"
+              (keydown.escape)="cerrarPanelConTeclado($event)"
               role="none">
             
-            <!-- Item sin hijos (Link directo) -->
-            <a *ngIf="!item.children && item.type === 'link'"
-               [routerLink]="rutaMenu(item.path)"
-               (click)="onMenuItemClick(item); onMobileLinkClick()"
+            <!-- Enlace directo -->
+            <a *ngIf="fila.tipo === 'enlace'"
+               [routerLink]="rutaMenu(fila.ruta)"
+               (click)="onMenuItemClick(fila.fuente); onMobileLinkClick()"
                routerLinkActive="active"
-               class="menu-link"
-               [class.collapsed-link]="collapseMenu && !isTemporarilyExpanded"
-               [attr.aria-label]="item.title | translate"
-               [attr.title]="item.title | translate"
+               class="menu-link fila fila--n2"
+               [class.collapsed-link]="compacto"
+               [attr.aria-label]="fila.titulo | translate"
+               [attr.title]="compacto ? null : (fila.titulo | translate)"
                role="menuitem">
-              <div class="menu-icon">
-                <i class="fa" [ngClass]="getMenuIcon(item.icon, item.title)" aria-hidden="true"></i>
-              </div>
-              <span class="menu-text"
-                    [attr.title]="item.title | translate"
-                    [class.sr-only]="isCompactMode || (collapseMenu && !isTemporarilyExpanded)">{{item.title | translate}}</span>
-              <!-- Ticket 1177: insignia (NUEVO) para que los administradores vean lo recién publicado -->
-              <span class="menu-badge" *ngIf="badgeVisible(item) && (!collapseMenu || isTemporarilyExpanded)">{{item.badgeValue | translate}}</span>
-              <button class="favorite-btn"
-                      *ngIf="!collapseMenu || isTemporarilyExpanded"
-                      (click)="toggleFavorite(item, $event)"
-                      [class.active]="isFavorite(item)"
-                      [attr.aria-label]="isFavorite(item) ? 'Quitar de favoritos' : 'Añadir a favoritos'">
-                <i class="fa fa-star" aria-hidden="true"></i>
-              </button>
-              <!-- Tooltip para modo compacto o colapsado -->
-              <div class="tooltip" *ngIf="isCompactMode || (collapseMenu && !isTemporarilyExpanded)">{{item.title | translate}}</div>
+              <ng-container *ngTemplateOutlet="filaTpl; context: { $implicit: fila }"></ng-container>
             </a>
 
             <!-- Item externo -->
-            <a *ngIf="!item.children && item.type === 'extLink'"
-               [href]="item.path"
-               (click)="onMenuItemClick(item)"
-               class="menu-link external"
-               [class.collapsed-link]="collapseMenu && !isTemporarilyExpanded"
-               [attr.aria-label]="(item.title | translate) + ' (enlace externo)'"
-               [attr.title]="collapseMenu ? (item.title | translate) + ' (enlace externo)' : ''"
+            <a *ngIf="fila.tipo === 'externo'"
+               [href]="fila.ruta"
+               (click)="onMenuItemClick(fila.fuente)"
+               class="menu-link external fila fila--n2"
+               [class.collapsed-link]="compacto"
+               [attr.aria-label]="(fila.titulo | translate) + ' (enlace externo)'"
+               [attr.title]="compacto ? null : (fila.titulo | translate) + ' (enlace externo)'"
                role="menuitem">
-              <div class="menu-icon">
-                <i class="fa" [ngClass]="getMenuIcon(item.icon, item.title) || 'fa-external-link'" aria-hidden="true"></i>
-              </div>
-              <span class="menu-text"
-                    [attr.title]="item.title | translate"
-                    [class.sr-only]="isCompactMode || (collapseMenu && !isTemporarilyExpanded)">{{item.title | translate}}</span>
-              <i class="fa fa-external-link external-icon" 
-                 *ngIf="!collapseMenu" 
-                 aria-hidden="true"></i>
-              <div class="tooltip" *ngIf="isCompactMode || collapseMenu">{{item.title | translate}}</div>
+              <ng-container *ngTemplateOutlet="filaTpl; context: { $implicit: fila }"></ng-container>
             </a>
 
-            <!-- Item con hijos (Submenu) -->
-            <button *ngIf="item.children" 
-                    class="menu-link submenu-toggle"
-                    [id]="getMenuKey(item) + '-toggle'"
-                    [class.collapsed-link]="collapseMenu && !isTemporarilyExpanded"
-                    (click)="toggletNavActive(item, $event)"
-                    [class.active]="item.active && (!collapseMenu || isTemporarilyExpanded)"
-                    [attr.aria-expanded]="item.active && (!collapseMenu || isTemporarilyExpanded)"
-                    [attr.aria-controls]="(!collapseMenu || isTemporarilyExpanded) ? getMenuKey(item) : null"
-                    [attr.title]="item.title | translate"
+            <!-- Canal informativo (PRONTO) de un grupo `inline`: sin ruta ni eventos de navegación -->
+            <div *ngIf="fila.tipo === 'info'"
+                 class="menu-link submenu-future fila fila--n2"
+                 [class.collapsed-link]="compacto"
+                 role="menuitem"
+                 tabindex="-1"
+                 aria-disabled="true"
+                 [attr.aria-label]="(fila.titulo | translate) + ' (próximamente)'">
+              <ng-container *ngTemplateOutlet="filaTpl; context: { $implicit: fila }"></ng-container>
+            </div>
+
+            <!-- Grupo (con submenú; en el riel compacto abre su panel flotante) -->
+            <button *ngIf="fila.tipo === 'grupo'" 
+                    class="menu-link submenu-toggle fila fila--n2"
+                    [id]="getMenuKey(fila.fuente) + '-toggle'"
+                    [class.collapsed-link]="compacto"
+                    (click)="toggletNavActive(fila.fuente, $event)"
+                    (keydown.enter)="compacto && abrirPanelConTeclado(fila, $event)"
+                    (keydown.space)="compacto && abrirPanelConTeclado(fila, $event)"
+                    (keydown.arrowright)="compacto && abrirPanelConTeclado(fila, $event)"
+                    [class.active]="fila.fuente.active && !compacto"
+                    [attr.aria-expanded]="compacto ? panel?.clave === fila.clave : fila.fuente.active"
+                    [attr.aria-controls]="!compacto ? getMenuKey(fila.fuente) : null"
+                    [attr.title]="compacto ? null : (fila.titulo | translate)"
+                    [attr.aria-label]="fila.titulo | translate"
                     role="menuitem"
                     [attr.aria-haspopup]="true">
-              <div class="menu-icon">
-                <i class="fa" [ngClass]="getMenuIcon(item.icon, item.title) || 'fa-folder-o'" aria-hidden="true"></i>
-              </div>
-              <span class="menu-text"
-                    [attr.title]="item.title | translate"
-                    [class.sr-only]="isCompactMode || (collapseMenu && !isTemporarilyExpanded)">{{item.title | translate}}</span>
-              <span class="menu-badge menu-badge--dot" *ngIf="!item.active && hasNewChild(item) && (!collapseMenu || isTemporarilyExpanded)" title="Hay opciones nuevas"></span>
-              <i class="fa fa-chevron-down submenu-chevron"
-                 *ngIf="!collapseMenu || isTemporarilyExpanded"
-                 [class.rotated]="item.active"
-                 aria-hidden="true"></i>
-              <!-- Ticket 1232: la sección también puede ser favorita; el favorito la abre en el menú. -->
-              <span class="favorite-btn"
-                    *ngIf="!collapseMenu || isTemporarilyExpanded"
-                    role="button"
-                    tabindex="0"
-                    (click)="toggleFavorite(item, $event)"
-                    (keydown.enter)="toggleFavorite(item, $event)"
-                    [class.active]="isFavorite(item)"
-                    [attr.aria-label]="isFavorite(item) ? 'Quitar de favoritos' : 'Añadir a favoritos'">
-                <i class="fa fa-star" aria-hidden="true"></i>
-              </span>
-              <div class="tooltip" *ngIf="isCompactMode || collapseMenu">{{item.title | translate}}</div>
+              <ng-container *ngTemplateOutlet="filaTpl; context: { $implicit: fila }"></ng-container>
             </button>
 
             <!-- Submenú -->
             <ul class="submenu"
-                *ngIf="item.children && (!collapseMenu || isTemporarilyExpanded)"
-                [id]="getMenuKey(item)"
-                [class.expanded]="item.active"
-                [class.compact-submenu]="isCompactMode"
+                *ngIf="fila.tipo === 'grupo' && !compacto"
+                [id]="getMenuKey(fila.fuente)"
+                [class.expanded]="fila.fuente.active"
                 role="menu"
-                [attr.aria-labelledby]="getMenuKey(item) + '-toggle'">
+                [attr.aria-labelledby]="getMenuKey(fila.fuente) + '-toggle'">
               
               <li class="submenu-item" 
-                  *ngFor="let child of item.children"
-                  [class.active]="child.active"
+                  *ngFor="let hijo of fila.hijos; trackBy: porClave"
+                  [class.active]="hijo.fuente.active"
                   role="none">
                 
-                <!-- Subitem sin hijos -->
-                <a *ngIf="!child.children && child.type === 'link'"
-                   [routerLink]="rutaMenu(child.path)"
+                <!-- Hijo con pantalla -->
+                <a *ngIf="hijo.tipo === 'enlace'"
+                   [routerLink]="rutaMenu(hijo.ruta)"
                    (click)="onSubMenuItemClick($event); onMobileLinkClick()"
                    routerLinkActive="active"
-                   class="submenu-link"
-                   [attr.title]="child.title | translate"
+                   class="submenu-link fila fila--n3"
+                   [attr.title]="hijo.titulo | translate"
                    role="menuitem">
-                  <div class="submenu-icon">
-                    <i class="fa" [ngClass]="getSubmenuIcon(child.icon, child.title)" aria-hidden="true"></i>
-                  </div>
-                  <span class="submenu-text" [attr.title]="child.title | translate">{{child.title | translate}}</span>
-                  <span class="menu-badge" *ngIf="badgeVisible(child)">{{child.badgeValue | translate}}</span>
+                  <ng-container *ngTemplateOutlet="filaTpl; context: { $implicit: hijo }"></ng-container>
                 </a>
 
-                <!-- Canal informativo, sin ruta ni eventos de navegación -->
-                <div *ngIf="child.type === 'info'" class="submenu-link submenu-future"
+                <!-- Hijo externo -->
+                <a *ngIf="hijo.tipo === 'externo'"
+                   [href]="hijo.ruta"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="submenu-link fila fila--n3"
+                   [attr.title]="hijo.titulo | translate"
+                   role="menuitem">
+                  <ng-container *ngTemplateOutlet="filaTpl; context: { $implicit: hijo }"></ng-container>
+                </a>
+
+                <!-- Canal informativo (PRONTO), sin ruta ni eventos de navegación -->
+                <div *ngIf="hijo.tipo === 'info'" class="submenu-link submenu-future fila fila--n3"
                      role="menuitem" aria-disabled="true">
-                  <div class="submenu-icon" aria-hidden="true">
-                    <i class="fa" [ngClass]="getSubmenuIcon(child.icon, child.title)"></i>
-                  </div>
-                  <span class="submenu-text" [attr.title]="child.title | translate">{{ child.title | translate }}</span>
-                  <span class="submenu-future-label">Próximamente</span>
+                  <ng-container *ngTemplateOutlet="filaTpl; context: { $implicit: hijo }"></ng-container>
                 </div>
-
-                <!-- Subitem con nietos -->
-                <button *ngIf="child.children" 
-                        class="submenu-link submenu-toggle"
-                        (click)="toggletNavActive(child)"
-                        [class.active]="child.active"
-                        [attr.aria-expanded]="child.active"
-                        [attr.title]="child.title | translate"
-                        role="menuitem"
-                        [attr.aria-haspopup]="true">
-                  <div class="submenu-icon">
-                    <i class="fa" [ngClass]="getSubmenuIcon(child.icon, child.title)" aria-hidden="true"></i>
-                  </div>
-                  <span class="submenu-text" [attr.title]="child.title | translate">{{child.title | translate}}</span>
-                  <i class="fa fa-chevron-down submenu-chevron" 
-                     [class.rotated]="child.active" 
-                     aria-hidden="true"></i>
-                </button>
-
-                <!-- Sub-submenú (tercer nivel) -->
-                <ul class="sub-submenu" 
-                    *ngIf="child.children"
-                    [class.expanded]="child.active"
-                    role="menu">
-                  <li class="sub-submenu-item" 
-                      *ngFor="let grandchild of child.children"
-                      [class.active]="grandchild.active"
-                      role="none">
-                    <a [routerLink]="rutaMenu(grandchild.path)"
-                       (click)="onSubMenuItemClick($event); onMobileLinkClick()"
-                       routerLinkActive="active"
-                       class="sub-submenu-link"
-                       [attr.title]="grandchild.title | translate"
-                       role="menuitem">
-                      <div class="sub-submenu-icon">
-                        <i class="fa" [ngClass]="getSubmenuIcon(grandchild.icon, grandchild.title)" aria-hidden="true"></i>
-                      </div>
-                      <span class="sub-submenu-text" [attr.title]="grandchild.title | translate">{{grandchild.title | translate}}</span>
-                    </a>
-                  </li>
-                </ul>
               </li>
             </ul>
+
+            <!-- Panel flotante del riel compacto -->
+            <ng-container *ngIf="compacto && panel?.clave === fila.clave">
+              <ng-container *ngTemplateOutlet="panelTpl; context: { $implicit: fila }"></ng-container>
+            </ng-container>
           </li>
         </ul>
       </div>
@@ -421,7 +438,7 @@
        vive en la cabecera y el sonido se controla desde el panel de notificaciones).
        En su lugar baja el logo de Katuq con la versión, que antes iban arriba. -->
   <div class="sidebar-brand-footer"
-       *ngIf="!collapseMenu && !isCompactMode"
+       *ngIf="!collapseMenu"
        role="contentinfo">
     <img class="logo-light" src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq">
     <img class="logo-dark" src="assets/images/logo/Katuq/katuq-dark.png" alt="Katuq">
@@ -431,7 +448,7 @@
   <!-- Plan Card -->
   <div class="plan-card-container"
        *ngIf="isAdminUser"
-       [class.collapsed]="collapseMenu || isCompactMode">
+       [class.collapsed]="collapseMenu">
     
     <div class="plan-card-header">
       <div class="plan-title">

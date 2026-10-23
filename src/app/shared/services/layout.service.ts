@@ -9,7 +9,6 @@ export interface SidebarState {
   isPinned: boolean;
   isHovering: boolean;
   isCollapsed: boolean;
-  isCompactMode: boolean;
   isTemporarilyExpanded: boolean; // NUEVO: Estado temporal de expansión en auto-collapse
 }
 
@@ -39,7 +38,6 @@ export class LayoutService {
     isPinned: false, // Cambiado a false por defecto
     isHovering: false,
     isCollapsed: false,
-    isCompactMode: false,
     isTemporarilyExpanded: false // NUEVO: No expandido temporalmente por defecto
   });
 
@@ -60,8 +58,8 @@ export class LayoutService {
     expandDelay: 0, // Sin delay al expandir en hover
     collapseDelay: 300, // ms antes de colapsar al salir
     animationDuration: 300, // Duración de la animación en ms
-    collapsedWidth: 70, // Ancho cuando está colapsado (px)
-    expandedWidth: 260 // Ancho cuando está expandido (px)
+    collapsedWidth: 72, // Ancho cuando está colapsado (px) — D-546: igual a --sidebar-collapsed-width
+    expandedWidth: 264 // Ancho cuando está expandido (px) — D-546: igual a --sidebar-width
   };
 
   constructor() {
@@ -140,11 +138,6 @@ export class LayoutService {
     }
   }
 
-  public toggleCompactMode(): void {
-    const currentState = this.sidebarState.value;
-    this.updateSidebarState({ isCompactMode: !currentState.isCompactMode });
-  }
-
   // Métodos para auto-collapse
   public toggleAutoCollapse(): void {
     const currentState = this.sidebarState.value;
@@ -177,7 +170,6 @@ export class LayoutService {
       const stateToSave = {
         isAutoHideEnabled: state.isAutoHideEnabled,
         isAutoCollapseEnabled: state.isAutoCollapseEnabled,
-        isCompactMode: state.isCompactMode,
         isCollapsed: state.isCollapsed
       };
       localStorage.setItem('katuq_sidebar_state', JSON.stringify(stateToSave));
@@ -195,7 +187,6 @@ export class LayoutService {
           isAutoHideEnabled: parsed.isAutoHideEnabled || false,
           isAutoCollapseEnabled: parsed.isAutoCollapseEnabled || false,
           isPinned: false, // Sin funcionalidad de pin
-          isCompactMode: parsed.isCompactMode || false,
           isCollapsed: parsed.isCollapsed || false,
           isVisible: parsed.isAutoHideEnabled ? false : true,
           isTemporarilyExpanded: false // Siempre empezar colapsado en auto-collapse
@@ -220,7 +211,6 @@ export class LayoutService {
       isPinned: false,
       isHovering: false,
       isCollapsed: false,
-      isCompactMode: false,
       isTemporarilyExpanded: false
     });
     localStorage.removeItem('katuq_sidebar_state');

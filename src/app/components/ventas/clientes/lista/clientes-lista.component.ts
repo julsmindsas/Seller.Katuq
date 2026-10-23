@@ -778,7 +778,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                 if (!data.links.length) {
                     Swal.fire(
                         'Acceso creado, pero sin tienda',
-                        data.aviso || 'Ningún sitio publicado tiene la tienda encendida todavía. Enciéndela en Mi página web y vuelve a generar el link.',
+                        data.aviso || 'Ningún sitio publicado tiene la tienda encendida todavía. Enciéndela en Sitio web › Mis sitios y vuelve a generar el link.',
                         'info'
                     );
                     return;

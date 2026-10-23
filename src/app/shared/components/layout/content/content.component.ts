@@ -116,7 +116,7 @@ export class ContentComponent implements OnInit, AfterViewInit, OnDestroy {
       'sidebar-collapsed',
       'sidebar-compact',
       'sidebar-auto-collapse',
-      'sidebar-temporarily-expanded'
+      'sidebar-temporarily-expanded' // (solo auto-collapse, función en desuso)
     );
 
     // Aplicar clases según el nuevo estado
@@ -130,13 +130,6 @@ export class ContentComponent implements OnInit, AfterViewInit, OnDestroy {
       wrapperElement.classList.add('sidebar-auto-hidden');
     } else if (state.isCollapsed) {
       wrapperElement.classList.add('sidebar-collapsed');
-    } else {
-      // Expandido por click
-      wrapperElement.classList.add('sidebar-temporarily-expanded');
-    }
-
-    if (state.isCompactMode) {
-      wrapperElement.classList.add('sidebar-compact');
     }
   }
 
