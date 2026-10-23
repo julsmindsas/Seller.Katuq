@@ -1,4 +1,4 @@
-> **Estado:** PROPUESTA, pendiente de aprobación de Daniel. Ticket 1351 (ALMARA FELICIDAD). Decisión: D-XXX (por asignar). Redactada el 2026-10-23. Solo documentos: sin diseño, sin tareas y sin código. Se entrega por fases (F1 a F4) y cada fase se aprueba y se publica por separado.
+> **Estado:** APROBADA por Daniel el 2026-10-23, con las cinco preguntas respondidas (ver al final). Ticket 1351 (ALMARA FELICIDAD). Decisión: D-XXX (la pone la sesión principal). El diseño y las tareas de la F1 están en `design.md` y `tasks.md`, pendientes de aprobación. Se entrega por fases (F1 a F4) y cada fase se aprueba y se publica por separado.
 
 ## Why
 
@@ -19,7 +19,12 @@ ALMARA FELICIDAD pide un registro **completo, cronológico e inmutable** de todo
 - **Nada garantiza que el registro solo crezca.** Ninguna regla impide que un código del backend edite o borre registros.
 - **El Tablero en vivo (D-386) depende de esa colección.** `services/enVivo/historialEstados.js` lee todo lo que la colección acumula en el día para toda la plataforma (~160 registros diarios) y trata cada registro como un cambio de estado. Esto pesa en la decisión de dónde guardar los eventos nuevos.
 
-**Mejora rápida en curso** (ticket 1351, sin publicar, en `order-history-timeline`): el modal actual muestra la creación y los pagos «reconstruidos» con los datos actuales del pedido. Sirve mientras tanto y **la F1 la reemplaza** con eventos reales.
+**Mejora rápida, publicada el 23-oct** (ticket 1351; backend `cad71177`, front `ebe05a5e`, versión `2026.10.23.1`):
+
+- el modal muestra la creación y los pagos «reconstruidos» con los datos actuales del pedido;
+- la consulta toma la empresa del token (`requireJwtTenantOrPlatform`).
+
+Sirve mientras tanto, y **la F1 la reemplaza** con eventos reales.
 
 ## What Changes
 
@@ -46,11 +51,11 @@ Los cambios que se guardan juntos forman **un solo evento** con varios detalles.
 | **F3** | **Eventos que no hace una persona:** sistema (recálculos, vencimientos, automatizaciones), inventario, producción, integraciones (Siigo, Shopify, WooCommerce), facturación electrónica y acciones del cliente. |
 | **F4** | **Comparar** el pedido entre dos fechas, **exportar** a PDF y Excel, **alertas** al administrador y consulta del historial de un pedido eliminado. |
 
-### Dónde se guardan los eventos (decisión para Daniel)
+### Dónde se guardan los eventos (decidido: opción A, Daniel, 23-oct)
 
-- **A (recomendada):** una colección nueva, solo para el historial del pedido. Los cambios de estado se siguen escribiendo también en `order_status_history`, como hoy, para que el Tablero en vivo y las auditorías no cambien.
-  - Requiere aprobación explícita, porque la regla de `openspec/config.yaml` no permite colecciones nuevas sin ella.
-- **B:** ampliar `order_status_history`. No hay colección nueva, pero:
+- **A (escogida):** una colección nueva, solo para el historial del pedido. Solo crece: nadie la edita ni la borra. En el diseño se llama `order_history_events`. Los cambios de estado se siguen escribiendo también en `order_status_history`, como hoy, para que el Tablero en vivo y las auditorías no cambien.
+  - La regla de `openspec/config.yaml` exige aprobación explícita para una colección nueva. Daniel la dio el 23-oct.
+- **B (descartada):** ampliar `order_status_history`. No hay colección nueva, pero:
   - el Tablero en vivo leería varias veces más registros por día;
   - habría que enseñarle a ignorar lo que no es un cambio de estado;
   - los registros viejos y los nuevos quedarían con formas distintas en la misma colección.
@@ -97,7 +102,7 @@ Los cambios que se guardan juntos forman **un solo evento** con varios detalles.
 
 ## Riesgos (módulo sensible: `orders`)
 
-- **Muchos puntos de escritura:** son unos 15 en la F1 y más en la F2 y la F3. Se cambia uno a la vez, con diff aprobado. Un contract test verifica que el pedido se guarda igual aunque falle el registro del evento.
+- **Muchos puntos de escritura:** se estimaron unos 15 en la F1, y el diseño contó más: 10 de creación, 14 de estado, 5 de pago y 8 llamadores de `updateOrderInternal`. Habrá más en la F2 y la F3. Se cambia uno a la vez, con diff aprobado. Un contract test verifica que el pedido se guarda igual aunque falle el registro del evento.
 - **Volumen y costo:** se esperan entre 10 y 40 eventos por pedido. La consulta se pagina y el Tablero en vivo no los lee (opción A).
 - **Datos personales en los eventos:** el antes → después de cliente y dirección vive en la base de datos, igual que el pedido, pero nunca en los logs. Exportar queda solo para quien puede ver el pedido.
 - **Motivo obligatorio y clientes de la API:** la App, el MCP y Opttia también cambian precios y descuentos. Si el servidor exige el motivo de una vez, esos clientes se rompen. Lo propuesto:
@@ -106,12 +111,20 @@ Los cambios que se guardan juntos forman **un solo evento** con varios detalles.
 - **Lo reconstruido no es la realidad:** los datos actuales pueden ser distintos a los del día de la creación. Por eso se marca siempre como reconstruido.
 - **Integraciones (Artículo IV):** si un webhook se reintenta, no se duplica el evento. Antes de tocar webhooks en la F3 se contrasta con `specs/002-flows-osmosis-shopify-marco/findings.md`.
 - **Foto inicial grande:** un pedido con cientos de líneas debe caber en un documento. El diseño define cómo se parte si no cabe.
-- **Sesión paralela:** la mejora rápida está sin commitear en `order-history-timeline`. La F1 se implementa después de que esa mejora se publique.
+- **Sesión paralela (cerrado):** la mejora rápida se publicó el 23-oct (`cad71177`, `ebe05a5e`). La F1 parte de esa versión.
 
-## Preguntas para Daniel
+## Preguntas respondidas (Daniel, 23-oct)
 
-1. ¿Opción A (colección nueva solo para el historial) u opción B (ampliar `order_status_history`)?
-2. ¿Quién ve el historial completo: todo el que ve el pedido o solo los administradores? ¿Y quién puede exportarlo?
-3. Las alertas de la F4: ¿por dónde llegan (campana de Katuq, correo o WhatsApp) y a qué roles?
-4. ¿Aceptas el motivo obligatorio solo en la web desde la F2, mientras la App, el MCP y Opttia registran «sin motivo»?
-5. ¿La F1 sale para todos los comercios o primero solo para ALMARA, con una bandera por empresa (D-505)?
+1. **¿Opción A u opción B?**
+   - **A:** una colección nueva solo para el historial. Solo crece: nadie la edita ni la borra.
+   - `order_status_history` sigue como hoy, porque la lee el Tablero en vivo (D-386).
+2. **¿Quién ve el historial y quién lo exporta?**
+   - Lo ve todo el que ve el pedido.
+   - Exportar (F4) queda solo para los administradores: la familia Administrador, `isAdminFamilyRole`.
+3. **¿Por dónde llegan las alertas de la F4 y a qué roles?** A la campana de Katuq de los administradores.
+4. **¿Motivo obligatorio solo en la web desde la F2?**
+   - Sí: obligatorio solo en la web desde la F2.
+   - La App, el MCP y Opttia registran «sin motivo» por ahora.
+5. **¿Para todos o con bandera?**
+   - La F1 sale con bandera por empresa (D-505: `featureFlags.<nombre>` en `companies`, con `requireFeature` / `CompanyFeaturesService`; nada en el `.env`).
+   - Primero ALMARA FELICIDAD.
