@@ -1,6 +1,6 @@
 # Diseño aprobado — D-545
 
-Estado: alcance/spec, diseño/contratos y tareas aprobados por Daniel el 23-oct-2026. Gate concreto del servicio compartido aprobado después mediante «si aprobado, aplica el diff y sigue con el MCP y el chat». Candidato local implementado y verificado; ver `verificacion.md`. No se autoriza publicación ni efectos productivos.
+Estado: alcance/spec, diseño/contratos y tareas aprobados por Daniel el 23-oct-2026. Gate concreto del servicio compartido aprobado después mediante «si aprobado, aplica el diff y sigue con el MCP y el chat». Implementación verificada en `verificacion.md`; autorización posterior de Git y solo despliegue Opttia ejecutada según `publicacion.md`. Katuq lo despliega otra sesión. No se autoriza activación ni un ticket/aviso real.
 
 ## 1. Decisión y recorrido
 

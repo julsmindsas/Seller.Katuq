@@ -154,6 +154,7 @@ Referencias: `proposal.md`, spec `opttia-support-ticket-creation`, `design.md`, 
   - Salida: backend Katuq → ADK → Seller, siguiendo sus manuales y gates de salud entre componentes; sin activación de comercios.
   - Éxito: backend/ADK/Hosting sanos, hashes/versiones coinciden y `/mcp` sigue cerrado sin sesión. ADK se gestiona por systemd, no por el PM2 legacy. Compatibilidad con clientes sin soporte nuevo comprobada; ante falla, aplicar la reversión acordada sin borrar datos.
   - Dependencias: 6.1. Coordinar previamente si otra sesión cambia runtime o despliega los mismos servicios.
+  - Parcial 23-oct: Opttia `4a61ae4` publicado y verificado (salud200, hashes y rechazo sin sesión); Katuq backend/Seller solo en Git por instrucción expresa de Daniel. Tarea conjunta abierta hasta que su otra sesión publique ambos. Primer intento revertido por timeout y segundo sano, según `publicacion.md`.
 
 - [ ] 6.3 Autorizar y ejecutar la activación piloto por comercio.
   - Entrada: 6.2 sano y autorización del comercio piloto; FLORECER primero según canon, sin extender a todos automáticamente.
