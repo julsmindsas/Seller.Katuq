@@ -1,1 +1,4 @@
 - [Replace con $`](feedback_replace_dolar_backtick.md) — editar por script con split/join; "$`" en replace duplicó tasks.md (14-oct)
+- [Ver pantallas sin login](reference_harness_visual_sin_login.md) — Chrome headless + CSS de dist + sass del componente; iframe para 390 px
+- [Ancho del menú lateral](project_menu_lateral_ancho.md) — nombre ~100 px; insignias en 2.ª línea por :has (ticket 1334, 23-oct)
+- [Solo Font Awesome 4.7](reference_font_awesome_47.md) — FA 5/6 sale en blanco; equivalencias y grep contra node_modules/font-awesome
