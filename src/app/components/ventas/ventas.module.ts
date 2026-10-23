@@ -31,6 +31,8 @@ import { DropdownModule } from "primeng/dropdown";
 import { NgxHotkeysModule, NgxHotkeysService } from "@balticcode/ngx-hotkeys";
 import { NgxStarRatingModule } from "ngx-star-rating";
 import { ListOrdersComponent } from "./list/list.component";
+import { OrderOptionsModalComponent } from "./list/acciones-pedido/order-options-modal.component";
+import { IconoTablerComponent } from "../../shared/icons/icono-tabler.component";
 import { Pedido3dComponent } from "./list/pedido-3d/pedido-3d.component";
 import { PedidoRepartoComponent } from "./list/pedido-reparto/pedido-reparto.component";
 import { PedidoPagoCuotasComponent } from "./list/pedido-pago-cuotas/pedido-pago-cuotas.component";
@@ -102,6 +104,7 @@ import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-im
   imports: [
     ModuloIaComponent,
     ImagenProductoPipe,
+    IconoTablerComponent, // D-547: íconos Tabler del modal «Opciones del pedido» (mismo registro de D-546)
     VisorImagenModule,
     NgSelectModule,
     CommonModule,
@@ -156,6 +159,7 @@ import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-im
     CheckOutComponent,
     PedidoEntregaComponent,
     ListOrdersComponent,
+    OrderOptionsModalComponent, // D-547 (F1): modal «Opciones del pedido» en grilla
     CrearVentasComponent,
     VentaAsistidaUnicaComponent,
     SelectorVistaVentaComponent,

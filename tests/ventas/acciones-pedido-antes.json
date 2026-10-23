@@ -1,0 +1,458 @@
+{
+  "_nota": "D-547 tarea 1.2. Tabla de llamadas de las 28 acciones del pedido TAL COMO ESTABAN antes del cambio (list.component.html: bloque ACCIONES :568-648, modal Más opciones :2171-2540; list.component.ts: onRowMenuClick :506-628). Solo llamadas, sin datos de pedidos. `plantilla` es el nombre de la referencia de plantilla que se pasa al método (null si no se pasa). `cerrar` es si la plantilla del modal llama closeOptionsModal() DESPUÉS del método (false cuando lo cierra el propio método). Lugares: bloque, modal, fila (menú ⋯); null = la acción no está en ese lugar. En las 5 acciones con soloEnBloque=true (que hoy no se llaman desde el modal) el cerrar=true es el valor NUEVO que usará el modal; la tarea 4.1 comprobó que ninguno de esos métodos lee this.selectedOrder.",
+  "commit": "310bd6a1",
+  "acciones": [
+    {
+      "id": "orderPdf",
+      "metodo": "pdfOrder",
+      "plantilla": "modalContent",
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "siempre",
+      "condicionBloque": "siempre",
+      "condicionFila": "siempre",
+      "titulos": {
+        "bloque": "Imprimir PDF",
+        "modal": "Generar PDF del pedido",
+        "fila": "Imprimir PDF"
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "salesOrder",
+      "metodo": "generarOrdenVenta",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "siempre",
+      "condicionBloque": "siempre",
+      "condicionFila": null,
+      "titulos": {
+        "bloque": "Orden de Venta",
+        "modal": "Generar PDF orden de venta simplificada",
+        "fila": null
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "resendConfirmation",
+      "metodo": "reenviarConfirmacionPedido",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "!isFromProduction",
+      "condicionBloque": null,
+      "condicionFila": "!isFromProduction",
+      "titulos": {
+        "bloque": null,
+        "modal": "Envía de nuevo la confirmación del pedido",
+        "fila": "Enviar de nuevo la confirmación"
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "duplicate",
+      "metodo": "duplicarPedido",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "siempre",
+      "condicionBloque": null,
+      "condicionFila": "siempre",
+      "titulos": {
+        "bloque": null,
+        "modal": "Duplicar pedido",
+        "fila": "Duplicar"
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "editCustomer",
+      "metodo": "editDatosClientes",
+      "plantilla": "clientesModal",
+      "cerrar": false,
+      "argumentoExtra": null,
+      "condicionModal": "!isFromProduction",
+      "condicionBloque": "!isFromProduction",
+      "condicionFila": "!isFromProduction",
+      "titulos": {
+        "bloque": "Editar Cliente",
+        "modal": "Permite actualizar la información principal del cliente asociado al pedido.",
+        "fila": "Editar Cliente"
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "editAddress",
+      "metodo": "editDatosEntrega",
+      "plantilla": "datosEnregaModal",
+      "cerrar": false,
+      "argumentoExtra": null,
+      "condicionModal": "!isFromProduction; deshabilitada si !canEditDeliveryAddressByDeliveryType",
+      "condicionBloque": "!isFromProduction; deshabilitada si !canEditDeliveryAddressByDeliveryType",
+      "condicionFila": null,
+      "titulos": {
+        "bloque": "Editar Dirección",
+        "modal": "Edita o corrige la dirección registrada para la entrega del pedido.",
+        "fila": null
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "billingData",
+      "metodo": "editDatosFacturacion",
+      "plantilla": "datosFacturacionModal",
+      "cerrar": false,
+      "argumentoExtra": null,
+      "condicionModal": "!isFromProduction; deshabilitada si !canEditBilling",
+      "condicionBloque": "!isFromProduction; deshabilitada si !canEditBilling",
+      "condicionFila": null,
+      "titulos": {
+        "bloque": "Facturación",
+        "modal": "Ajusta los datos de facturación necesarios para esta venta.",
+        "fila": null
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "changeSeller",
+      "metodo": "editSeller",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "!isFromProduction; deshabilitada si !canAssignSeller",
+      "condicionBloque": null,
+      "condicionFila": null,
+      "titulos": {
+        "bloque": null,
+        "modal": "Actualiza el asesor asignado para el seguimiento del pedido.",
+        "fila": null
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "editProducts",
+      "metodo": "addProductToCart",
+      "plantilla": "recompraModal",
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "!isFromProduction; deshabilitada si !canAddProducts",
+      "condicionBloque": "!isFromProduction; deshabilitada si !canAddProducts",
+      "condicionFila": null,
+      "titulos": {
+        "bloque": "Agregar Productos",
+        "modal": "Añadir o retirar productos",
+        "fila": null
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "discount",
+      "metodo": "aplicarCodigoDescuento",
+      "plantilla": "descuentoModal",
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "!isFromProduction && (canModifyProducts || isAdminUser())",
+      "condicionBloque": null,
+      "condicionFila": null,
+      "titulos": {
+        "bloque": null,
+        "modal": "Aplicar descuento al pedido",
+        "fila": null
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "editDiscount",
+      "metodo": "editarDescuentoPedido",
+      "plantilla": "editarDescuentoModal",
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "!isFromProduction && (porceDescuento > 0 || descuentoAplicado) && (canModifyProducts || isAdminUser())",
+      "condicionBloque": null,
+      "condicionFila": null,
+      "titulos": {
+        "bloque": null,
+        "modal": "Editar/Eliminar Descuento",
+        "fila": null
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "taxes",
+      "metodo": "abrirModalEditarIva",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "!isFromProduction && (canModifyProducts || isAdminUser())",
+      "condicionBloque": null,
+      "condicionFila": null,
+      "titulos": {
+        "bloque": null,
+        "modal": "Ajustar impuestos de este pedido",
+        "fila": null
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "payments",
+      "metodo": "AsentarPago",
+      "plantilla": "pagosModal",
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "!isFromProduction",
+      "condicionBloque": null,
+      "condicionFila": null,
+      "titulos": {
+        "bloque": null,
+        "modal": "Gestión de pagos",
+        "fila": null
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "changeStatus",
+      "metodo": "editarEstadoPago",
+      "plantilla": "cambioEstadoPagoModal",
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "siempre",
+      "condicionBloque": "siempre",
+      "condicionFila": null,
+      "titulos": {
+        "bloque": "Estado de Pago",
+        "modal": "Actualizar estados del pedido",
+        "fila": null
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "history",
+      "metodo": "verHistorialPedido",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "siempre",
+      "condicionBloque": "siempre (botón del pie del detalle)",
+      "condicionFila": null,
+      "titulos": {
+        "bloque": "Historial",
+        "modal": "Historial de estados y movimientos",
+        "fila": null
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "notes",
+      "metodo": "editNotas",
+      "plantilla": "notasModal",
+      "cerrar": false,
+      "argumentoExtra": null,
+      "condicionModal": "!isFromProduction && !isPedidoPOS",
+      "condicionBloque": "!isFromProduction && !isPedidoPOS",
+      "condicionFila": "!isFromProduction && !isPedidoPOS",
+      "titulos": {
+        "bloque": "Editar Notas",
+        "modal": "Notas del pedido",
+        "fila": "Editar Notas"
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "cleanNotes",
+      "metodo": "limpiarNotasHuerfanasPedido",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "siempre",
+      "condicionBloque": null,
+      "condicionFila": null,
+      "titulos": {
+        "bloque": null,
+        "modal": "Eliminar notas huérfanas",
+        "fila": null
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "invoice",
+      "metodo": "facturarPedidoSiigo",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "!isFromProduction && puedeFacturarSiigo",
+      "condicionBloque": "!isFromProduction && puedeFacturarSiigo",
+      "condicionFila": "!isFromProduction && puedeFacturarSiigo",
+      "titulos": {
+        "bloque": "Facturar",
+        "modal": "Facturar",
+        "fila": "Facturar"
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "reinvoice",
+      "metodo": "refacturarPedido",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "puedeRefacturar",
+      "condicionBloque": null,
+      "condicionFila": "puedeRefacturar",
+      "titulos": {
+        "bloque": null,
+        "modal": "REFACTURAR",
+        "fila": "Refacturar"
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "releaseInvoice",
+      "metodo": "liberarFactura",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": null,
+      "condicionBloque": "puedeLiberarFactura",
+      "condicionFila": null,
+      "titulos": {
+        "bloque": "Liberar factura",
+        "modal": null,
+        "fila": null
+      },
+      "soloEnBloque": true
+    },
+    {
+      "id": "dianStatus",
+      "metodo": "consultarEstadoDian",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": null,
+      "condicionBloque": "!isFromProduction && esFacturaDian",
+      "condicionFila": "!isFromProduction && esFacturaDian",
+      "titulos": {
+        "bloque": "Estado DIAN",
+        "modal": null,
+        "fila": "Consultar estado DIAN"
+      },
+      "soloEnBloque": true
+    },
+    {
+      "id": "dianPdf",
+      "metodo": "descargarArtefactoDian",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": "'pdf'",
+      "condicionModal": null,
+      "condicionBloque": "!isFromProduction && esFacturaDian",
+      "condicionFila": "!isFromProduction && esFacturaDian",
+      "titulos": {
+        "bloque": "PDF DIAN",
+        "modal": null,
+        "fila": "Descargar PDF DIAN"
+      },
+      "soloEnBloque": true
+    },
+    {
+      "id": "creditNote",
+      "metodo": "crearNotaCreditoDian",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": null,
+      "condicionBloque": "!isFromProduction && esFacturaDian",
+      "condicionFila": "!isFromProduction && esFacturaDian",
+      "titulos": {
+        "bloque": "Nota crédito",
+        "modal": null,
+        "fila": "Crear nota crédito total"
+      },
+      "soloEnBloque": true
+    },
+    {
+      "id": "dianAdjustment",
+      "metodo": "crearAjusteDian",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": null,
+      "condicionBloque": "!isFromProduction && esFacturaDian",
+      "condicionFila": "!isFromProduction && esFacturaDian",
+      "titulos": {
+        "bloque": "Ajuste NC / ND",
+        "modal": null,
+        "fila": "Crear ajuste NC / ND"
+      },
+      "soloEnBloque": true
+    },
+    {
+      "id": "delivery",
+      "metodo": "mostrarDetalleEntrega",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "estadoProceso === 'Despachado' || estadoProceso === 'Entregado'",
+      "condicionBloque": null,
+      "condicionFila": null,
+      "titulos": {
+        "bloque": null,
+        "modal": "Ver detalles de despacho y entrega",
+        "fila": null
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "production",
+      "metodo": "produceOrder",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "isFromProduction",
+      "condicionBloque": null,
+      "condicionFila": "isFromProduction",
+      "titulos": {
+        "bloque": null,
+        "modal": "Producción",
+        "fila": "Producción"
+      },
+      "soloEnBloque": false
+    },
+    {
+      "id": "reviewMark",
+      "metodo": "marcarComoRevisado",
+      "metodoAlterno": "quitarRevision",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "isFromProduction && checkIfUserIsBrenda()",
+      "condicionBloque": null,
+      "condicionFila": null,
+      "titulos": {
+        "bloque": null,
+        "modal": "Marcar como Revisado",
+        "fila": null
+      },
+      "soloEnBloque": false,
+      "titulosExtra": [
+        "Quitar Revisión"
+      ]
+    },
+    {
+      "id": "deleteOrder",
+      "metodo": "confirmDeleteOrder",
+      "plantilla": null,
+      "cerrar": true,
+      "argumentoExtra": null,
+      "condicionModal": "canDeleteOrder() && !isFromProduction",
+      "condicionBloque": null,
+      "condicionFila": null,
+      "titulos": {
+        "bloque": null,
+        "modal": "Eliminar pedido permanentemente",
+        "fila": null
+      },
+      "soloEnBloque": false
+    }
+  ]
+}

@@ -76,6 +76,14 @@ import {
 } from "../../../shared/services/facturacion/facturacion-automatica.service";
 import { TreasuryService } from "../../../shared/services/treasury/treasury.service";
 import { debePreguntarSiVolvio, preguntarSiVolvio } from "../../../shared/utils/pedido-mercancia-devuelta";
+import { AccionPedidoId } from "./acciones-pedido/acciones-pedido.catalogo";
+import { PlantillaPedido, pasoDe } from "./acciones-pedido/acciones-pedido.plan";
+import {
+  AccionPrecioEntrada,
+  EntradaEstadoAcciones,
+  EstadoAcciones,
+  estadoAcciones,
+} from "./acciones-pedido/acciones-pedido.estado";
 
 /** Estados en los que el pedido ya salió de la bodega (ticket 1318). */
 const ESTADOS_DE_SALIDA = ['Despachado', 'Entregado', 'Cerrado'];
@@ -121,6 +129,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild("modalContent", { static: false }) modalContentRef: any;
   @ViewChild("clientesModal", { static: false }) clientesModalRef: any;
   @ViewChild("notasModal", { static: false }) notasModalRef: any;
+
+  // D-547 (F1): el resto de plantillas que piden los métodos de las acciones del pedido. Las lee
+  // `ejecutarAccionPedido` según `acciones-pedido.plan.ts`. Son referencias, no cambian ninguna acción.
+  @ViewChild("datosEnregaModal", { static: false }) datosEnregaModalRef: any;
+  @ViewChild("datosFacturacionModal", { static: false }) datosFacturacionModalRef: any;
+  @ViewChild("cambioEstadoPagoModal", { static: false }) cambioEstadoPagoModalRef: any;
+  @ViewChild("recompraModal", { static: false }) recompraModalRef: any;
+  @ViewChild("pagosModal", { static: false }) pagosModalRef: any;
+  @ViewChild("descuentoModal", { static: false }) descuentoModalRef: any;
+  @ViewChild("editarDescuentoModal", { static: false }) editarDescuentoModalRef: any;
 
   @ViewChild("fechaInicialCtrl", { static: false })
   fechaInicialCtrl: ElementRef;
@@ -785,6 +803,105 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     return !!(
       this.UserLogged?.email && authorizedEmails.includes(this.UserLogged.email)
     );
+  }
+
+  // ── D-547 (F1): acciones del pedido ──────────────────────────────────────────────────────────
+  // Piezas que usa el modal «Opciones del pedido». Solo SE AGREGAN: ningún método de arriba cambia.
+
+  /**
+   * D-543 y D-544 (Corregir precio, Cambiar tipo de precio): su consulta de permisos llena esta lista. Vacía,
+   * el modal no muestra ninguna de las dos. Quien la llene no cambia las reglas del otro (ver tasks.md 4.3).
+   */
+  accionesPrecioPedido: AccionPrecioEntrada[] = [];
+
+  private entradaEstadosAnterior: EntradaEstadoAcciones | null = null;
+  private estadosAccionesAnterior: EstadoAcciones | null = null;
+
+  /** Los datos que `estadoAcciones` necesita, calculados con los mismos métodos que usaba la plantilla de hoy. */
+  entradaEstadoAcciones(pedido: Pedido): EntradaEstadoAcciones {
+    const p: any = pedido;
+    return {
+      produccion: !!this.isFromProduction,
+      puedeDireccion: this.canEditDeliveryAddressByDeliveryType(pedido),
+      puedeFacturacion: this.canEditBilling(pedido),
+      puedeProductos: this.canAddProducts(pedido),
+      puedeDescuentoEImpuestos: this.canModifyProducts(pedido) || this.isAdminUser(),
+      puedeAsesor: this.canAssignSeller(pedido),
+      esPOS: this.isPedidoPOS(pedido),
+      tieneDescuento: !!((p?.porceDescuento && p.porceDescuento > 0) || p?.descuentoAplicado),
+      puedeEliminar: this.canDeleteOrder(),
+      esBrenda: this.checkIfUserIsBrenda(),
+      estadoProceso: String(p?.estadoProceso ?? ""),
+      puedeFacturarSiigo: this.puedeFacturarSiigo(pedido),
+      puedeRefacturar: this.puedeRefacturar(pedido),
+      puedeLiberar: this.puedeLiberarFactura(pedido),
+      esDian: this.esFacturaDian(pedido),
+      despachadoOEntregado: p?.estadoProceso === "Despachado" || p?.estadoProceso === "Entregado",
+      revisado: !!p?.revisadoParaProduccion,
+      accionesPrecio: this.accionesPrecioPedido,
+    };
+  }
+
+  /**
+   * Estados de las acciones del pedido para el modal. Devuelve el MISMO objeto mientras nada cambie, para que
+   * el binding `[estados]` del modal (OnPush) no vea un objeto nuevo en cada ciclo de detección.
+   */
+  estadosAccionesDe(pedido: Pedido): EstadoAcciones | null {
+    if (!pedido) return null;
+    const entrada = this.entradaEstadoAcciones(pedido);
+    const previa: any = this.entradaEstadosAnterior;
+    // `accionesPrecio` se compara por referencia: D-543 y D-544 deben REEMPLAZAR la lista, no mutarla.
+    const igual = !!previa && !!this.estadosAccionesAnterior &&
+      (Object.keys(entrada) as (keyof EntradaEstadoAcciones)[]).every((k) => previa[k] === entrada[k]);
+    if (igual) return this.estadosAccionesAnterior;
+    this.entradaEstadosAnterior = entrada;
+    this.estadosAccionesAnterior = estadoAcciones(entrada);
+    return this.estadosAccionesAnterior;
+  }
+
+  /** Marcar revisión o Quitar revisión: el ternario que traía la plantilla de «Más opciones», sin cambiarlo. */
+  marcarOQuitarRevision(order: Pedido): void {
+    if ((order as any)?.revisadoParaProduccion) {
+      this.quitarRevision(order);
+    } else {
+      this.marcarComoRevisado(order);
+    }
+  }
+
+  /**
+   * Ejecuta una acción del pedido tal como lo hacía cada botón del modal: llama al método de hoy con su
+   * plantilla (si la pide) y cierra el modal DESPUÉS solo si el plan lo dice (las que cierran por dentro,
+   * como Editar cliente, no lo cierran dos veces). La prueba de contrato
+   * `tests/ventas/acciones-pedido-plan.contract.test.js` compara el plan con la plantilla de antes.
+   */
+  ejecutarAccionPedido(id: AccionPedidoId, pedido: Pedido): void {
+    const paso = pasoDe(id);
+    if (!paso || !pedido) return;
+    const metodo = (this as any)[paso.metodo];
+    if (typeof metodo !== "function") return;
+    const argumentos: any[] = [];
+    if (paso.plantilla) argumentos.push(this.plantillaDeAccion(paso.plantilla));
+    argumentos.push(pedido);
+    if (paso.argumentoExtra) argumentos.push(paso.argumentoExtra);
+    metodo.apply(this, argumentos);
+    if (paso.cerrar) this.closeOptionsModal();
+  }
+
+  /** Referencia de plantilla (`<ng-template #…>`) por el nombre que usa el plan. */
+  private plantillaDeAccion(nombre: PlantillaPedido): any {
+    const plantillas: Record<PlantillaPedido, any> = {
+      modalContent: this.modalContentRef,
+      clientesModal: this.clientesModalRef,
+      notasModal: this.notasModalRef,
+      datosEnregaModal: this.datosEnregaModalRef,
+      datosFacturacionModal: this.datosFacturacionModalRef,
+      cambioEstadoPagoModal: this.cambioEstadoPagoModalRef,
+      recompraModal: this.recompraModalRef,
+      pagosModal: this.pagosModalRef,
+      descuentoModal: this.descuentoModalRef,
+      editarDescuentoModal: this.editarDescuentoModalRef,
+    };
+    return plantillas[nombre];
   }
 
   /**

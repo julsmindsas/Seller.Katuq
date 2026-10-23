@@ -1,0 +1,456 @@
+// D-547 (F1): modal «Opciones del pedido». Tokens de openspec/specs/design-system/spec.md (D-131) y regla de diseño
+// Katuq (D-399): plano, sin gradientes, acento #5F3FE0, tinta #211F3A, radios 16/11/20.
+//
+// Trampas de CSS global (AGENTS.md) que este archivo evita:
+//   - `[class*="p-"]` fuerza el font-size: ninguna clase de aquí contiene «p-» (todas llevan el prefijo opm-).
+//   - `span.ng-star-inserted` pinta de azul todo span creado por *ngIf/*ngFor: TODO span lleva color y tamaño propios.
+//   - `h1..h6` y `button:focus`: el título lleva !important y el foco se devuelve con :focus-visible.
+//   - `a` y `p` traen letter-spacing: aquí se neutraliza en todo el modal.
+
+$ink: #211F3A;
+$muted: #8F8BAB;
+$cuerpo: #6B6890;
+$acento: #5F3FE0;
+$acento-suave: #EFE9FF;
+$linea: #ECEAF4;
+$linea-suave: #F1F0F7;
+$borde-campo: #E9E7F3;
+$borde-boton: #E4E2EF;
+$fondo-campo: #F5F4FA;
+$hover: #FAF9FF;
+$superficie: #FAF9FE;
+$alerta: #D9820A;
+$alerta-suave: #FFF1DF;
+$error: #D64545;
+$info: #1E6FD9;
+$foco: #7C5CFF;
+
+:host { display: contents; }
+
+.opm-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(33, 31, 58, 0.45);
+}
+
+.opm-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(1040px, 80vw);
+  max-height: calc(100vh - 32px);
+  background: #fff;
+  border: 1px solid $linea;
+  border-radius: 20px;
+  box-shadow: 0 24px 60px -20px rgba(50, 40, 110, 0.45);
+  color: $ink;
+  letter-spacing: normal;
+  overflow: hidden;
+
+  button, input { font-family: inherit; letter-spacing: normal; }
+  button:focus-visible, input:focus-visible { outline: 3px solid $foco !important; outline-offset: 2px; }
+}
+
+// ── Encabezado ──────────────────────────────────────────────────────────────
+.opm-cabeza {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: none;
+  padding: 14px 20px 6px;
+}
+
+.opm-titulos { flex: 1 1 auto; min-width: 0; }
+
+.opm-titulo {
+  margin: 0;
+  font-size: 16px !important;
+  line-height: 1.25 !important;
+  font-weight: 800;
+  color: $ink;
+  letter-spacing: normal;
+}
+
+.opm-numero {
+  margin-top: 2px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.3;
+  color: $info;
+}
+
+.opm-buscar {
+  position: relative;
+  flex: 0 1 280px;
+  min-width: 0;
+}
+
+.opm-buscar-icono {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: $muted;
+  pointer-events: none;
+}
+
+.opm-buscar-campo {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px 0 38px;
+  background: $fondo-campo;
+  border: 1px solid $borde-campo;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.2;
+  color: $ink;
+
+  &::placeholder { color: $muted; }
+}
+
+.opm-cerrar-x {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: $muted;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover { background: $fondo-campo; color: $ink; }
+}
+
+// ── Cuerpo: grilla de 4 temas, o lista en flujo ─────────────────────────────
+.opm-cuerpo {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 2px 20px 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.opm-grilla {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  // Una fila de etiquetas y cuatro de tarjetas; cada tema cae en su columna, de arriba abajo (orden de lectura).
+  grid-template-rows: auto repeat(4, auto);
+  grid-auto-flow: column;
+  gap: 6px 12px;
+  align-items: stretch;
+}
+
+.opm-lista {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px 12px;
+  align-items: stretch;
+  padding-top: 8px;
+}
+
+.opm-etiqueta {
+  align-self: end;
+  min-height: 20px;
+  padding: 4px 2px 0;
+  font-size: 10.5px;
+  line-height: 1.2;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: $muted;
+}
+
+.opm-celda {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+
+// ── Tarjeta ─────────────────────────────────────────────────────────────────
+.opm-tarjeta {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid $linea;
+  border-radius: 16px;
+  color: $ink;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover:not(:disabled) { background: $hover; border-color: #DDD6F7; }
+
+  &.opm-tarjeta-bloqueada {
+    background: $superficie;
+    cursor: not-allowed;
+
+    .opm-icono { background: $linea-suave; color: #A9A5C2; }
+    span.opm-tarjeta-titulo { color: $cuerpo; }
+  }
+}
+
+.opm-icono {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: $acento-suave;
+  border-radius: 11px;
+  color: $acento;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.opm-texto {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+  line-height: 1.3;
+  color: $ink;
+}
+
+span.opm-tarjeta-titulo {
+  display: block;
+  font-size: 13px;
+  line-height: 1.25;
+  font-weight: 700;
+  color: $ink;
+  letter-spacing: normal;
+  overflow-wrap: break-word;
+}
+
+span.opm-tarjeta-resena {
+  display: block;
+  font-size: 11.5px;
+  line-height: 1.3;
+  font-weight: 400;
+  color: $cuerpo;
+  letter-spacing: normal;
+  overflow-wrap: break-word;
+}
+
+// Motivo de una acción deshabilitada, en el par semántico de alerta
+span.opm-tarjeta-motivo {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 4px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 2px 8px;
+  background: $alerta-suave;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: $alerta;
+  letter-spacing: normal;
+
+  app-icono-tabler { margin-top: 1px; }
+}
+
+// Lugar del pin (F2). En F1 queda vacío pero reserva su ancho para que el texto no salte al activarlo.
+.opm-lugar-pin {
+  flex: none;
+  width: 24px;
+  height: 24px;
+}
+
+// ── Menú de Descuento (Aplicar otro / Editar o quitar) ──────────────────────
+.opm-menu {
+  position: absolute;
+  top: calc(100% - 6px);
+  right: 8px;
+  z-index: 5;
+  min-width: 190px;
+  padding: 4px;
+  background: #fff;
+  border: 1px solid $linea;
+  border-radius: 11px;
+  box-shadow: 0 6px 14px -8px rgba(50, 40, 110, 0.35);
+}
+
+.opm-menu-opcion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  color: $ink;
+  cursor: pointer;
+
+  app-icono-tabler { color: $acento; }
+  &:hover { background: $hover; }
+}
+
+span.opm-menu-texto {
+  font-size: 12.5px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: $ink;
+}
+
+// ── Estado vacío del buscador ───────────────────────────────────────────────
+.opm-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 36px 16px;
+  text-align: center;
+  color: $muted;
+}
+
+.opm-vacio-titulo { font-size: 14px; line-height: 1.3; font-weight: 800; color: $ink; }
+.opm-vacio-texto { font-size: 12px; line-height: 1.4; color: $cuerpo; }
+
+// ── Para este pedido ────────────────────────────────────────────────────────
+.opm-contexto {
+  flex: none;
+  padding: 8px 20px;
+  background: $superficie;
+  border-top: 1px solid $linea-suave;
+}
+
+.opm-contexto-fila {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+
+  & + & { margin-top: 8px; }
+}
+
+.opm-contexto-etiqueta {
+  flex: none;
+  min-width: 110px;
+  font-size: 10.5px;
+  line-height: 1.2;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: $muted;
+}
+
+.opm-contexto-botones { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+
+.opm-contexto-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px;
+  background: #fff;
+  border: 1px solid $borde-boton;
+  border-radius: 11px;
+  color: $acento;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover:not(:disabled) { background: $hover; border-color: #DDD6F7; }
+  &:disabled { color: #A9A5C2; background: $superficie; cursor: not-allowed; }
+}
+
+span.opm-contexto-texto {
+  font-size: 12.5px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: $ink;
+}
+
+.opm-contexto-flecha { color: $muted; transition: transform 0.15s; &.opm-girada { transform: rotate(180deg); } }
+
+.opm-contexto-hijo { height: 32px; }
+
+// ── Pie ─────────────────────────────────────────────────────────────────────
+.opm-pie {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 20px 12px;
+  border-top: 1px solid $linea-suave;
+}
+
+.opm-eliminar {
+  padding: 4px 2px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  font-size: 12.5px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: $error;
+  cursor: pointer;
+
+  &:hover { text-decoration: underline; }
+}
+
+span.opm-eliminar-nota { font-weight: 500; color: $error; font-size: 12.5px; }
+
+.opm-cerrar {
+  margin-left: auto;
+  height: 36px;
+  padding: 0 20px;
+  background: #fff;
+  border: 1px solid $borde-boton;
+  border-radius: 11px;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #5B5878;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover { background: $hover; }
+}
+
+// ── Pantallas más angostas que el modal ─────────────────────────────────────
+@media (max-width: 1199px) {
+  .opm-grilla {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    // Dos temas por columna: etiqueta + 4 tarjetas, etiqueta + 4 tarjetas.
+    grid-template-rows: auto repeat(4, auto) auto repeat(4, auto);
+  }
+  .opm-lista { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 519px) {
+  .opm-fondo { padding: 8px; align-items: flex-start; }
+  .opm-modal { width: calc(100vw - 16px); max-height: calc(100vh - 16px); border-radius: 16px; }
+  .opm-cabeza { flex-wrap: wrap; gap: 8px 10px; padding: 14px 14px 10px; }
+  .opm-cerrar-x { order: 2; }
+  .opm-buscar { order: 3; flex: 1 1 100%; }
+  .opm-cuerpo { padding: 2px 14px 10px; }
+  .opm-grilla, .opm-lista { gap: 8px; }
+  .opm-tarjeta { padding: 10px; gap: 8px; }
+  .opm-icono { width: 36px; height: 36px; }
+  .opm-lugar-pin:empty { display: none; }
+  .opm-contexto { padding: 10px 14px; }
+  .opm-contexto-etiqueta { min-width: 100%; }
+  .opm-pie { padding: 10px 14px 14px; flex-wrap: wrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .opm-tarjeta, .opm-contexto-boton, .opm-cerrar-x, .opm-contexto-flecha { transition: none; }
+}
