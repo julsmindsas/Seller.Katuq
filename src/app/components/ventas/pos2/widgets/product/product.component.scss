@@ -1050,6 +1050,10 @@
     height: 26px;
   }
 
+  // La regla global de toque (styles.scss) deja cada botón en 44 px: si el
+  // precio y el −/+ no caben en la tarjeta, el −/+ baja de línea en vez de salirse.
+  .cat-card-priceline { flex-wrap: wrap; }
+
   // El desplegable ocupa el ancho de la pantalla y se le da tope de alto para
   // que el teclado del teléfono no lo deje sin espacio.
   .cat-suggest { max-height: 52vh; }

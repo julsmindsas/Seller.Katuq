@@ -252,6 +252,8 @@
 .cart-summary-sticky .order-img {
   width: 40px;
   height: 40px;
+  // _dashboard_8.scss le pone padding: 15px 20px y la foto quedaba en 0 px (D-540).
+  padding: 0 !important;
   border-radius: 10px;
   background: var(--kc-canvas);
   border: 1px solid var(--kc-line);
@@ -685,7 +687,11 @@
   }
 
   // --- lista: la única zona que se desplaza -----------------------------------
+  // _dashboard_8.scss la vuelve una grilla de 3 columnas por debajo de 1200 px
+  // (plantilla vieja de tableta): entre 1001 y 1199 px cada línea quedaba de 157 px.
   .card.cart-summary-sticky .cart-items-container {
+    display: flex !important;
+    flex-direction: column;
     padding: 0 12px;
     scrollbar-gutter: stable;
   }

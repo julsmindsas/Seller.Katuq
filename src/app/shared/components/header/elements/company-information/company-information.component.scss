@@ -1,3 +1,8 @@
+:host {
+    display: block;
+    min-width: 0;
+}
+
 // Marca del comercio en el header — rediseño 2026 "Almara":
 // nombre en la tipografía del rediseño (Plus Jakarta Sans) + logo pequeño redondeado si existe.
 .company-brand {
@@ -24,6 +29,7 @@
         font-weight: 700;
         color: var(--ktq-ink, #1c1a2b);
         line-height: 1;
+        min-width: 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -41,9 +47,16 @@
 }
 
 @media (max-width: 575.98px) {
+    .company-brand { gap: 6px; }
+
     .company-brand .company-brand-name {
         font-size: 16px;
         max-width: 110px;
+    }
+
+    // En teléfono no cabe logo + nombre + acciones: si hay logo, va solo el logo.
+    .company-brand .company-brand-logo + .company-brand-name {
+        display: none;
     }
 }
 

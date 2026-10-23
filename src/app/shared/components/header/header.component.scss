@@ -52,7 +52,19 @@
     }
 
     .header-logos-section { order: 1; }
-    .nav-right { order: 3; }
+    // _responsive.scss la fija en 71.67 % entre 992 y 1199 px y empujaba el perfil
+    // fuera de la pantalla: toma el espacio que quede, como con `col`.
+    .nav-right { order: 3; flex: 1 0 0% !important; max-width: none !important; }
+
+    // En teléfono el nombre del comercio cede espacio a las acciones (sin scroll lateral).
+    @media (max-width: 767.98px) {
+      .header-logos-section { flex: 0 1 auto !important; overflow: hidden; }
+      .company-logo { overflow: hidden; }
+    }
+
+    @media (max-width: 575.98px) {
+      .nav-right .nav-menus { gap: 4px; }
+    }
 
     @media (max-width: 767.98px) {
       app-search { display: none; } // en móvil manda el buscador del menú
@@ -362,8 +374,8 @@
   &:hover { border-color: #5F3FE0; box-shadow: 0 6px 14px -8px rgba(50, 40, 110, .35); }
   &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
 
-  // En celular solo el avatar
-  @media (max-width: 575px) {
+  // Por debajo de 1200 px solo el avatar: con el texto, la barra no cabía.
+  @media (max-width: 1199.98px) {
     padding: 0 6px;
     .opttia-encabezado__texto, .opttia-encabezado__ia { display: none; }
   }
