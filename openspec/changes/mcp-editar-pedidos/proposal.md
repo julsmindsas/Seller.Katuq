@@ -1,4 +1,4 @@
-> **Estado:** PROPUESTA, pendiente de aprobación. Ticket 1333 (ALMARA FELICIDAD). Decisión: D-XXX (la pone la sesión principal). Depende de D-541 (historial del pedido), de D-543 y D-544 (vista previa y confirmación de precio y de lista) y de D-532 (Opttia para empleados, permisos por rol). Solo documento: sin diseño, sin tareas y sin código. `orders` es un módulo sensible: cada fase y cada opción se aprueban y se publican por separado.
+> **Estado:** PROPUESTA APROBADA por Daniel el 2026-10-23, con las respuestas recomendadas de las 4 preguntas. Diseño y tareas pendientes de aprobación (`design.md`, `tasks.md`). Ticket 1333 (ALMARA FELICIDAD). Decisión: D-550. Depende de D-541 (historial del pedido), de D-543 y D-544 (vista previa y confirmación de precio y de lista) y de D-532 (Opttia para empleados, permisos por rol). `orders` es un módulo sensible: cada fase y cada opción se aprueban y se publican por separado.
 
 ## Why
 
@@ -90,6 +90,8 @@ Cada aprobación es **un pedido y una opción**. Exige **el mismo permiso** que 
 - **Dependencias abiertas:** la F3 depende de `mcp-adjuntos-tickets` para el comprobante y la F4 del núcleo de D-543 y D-544. Ninguna fase se adelanta a su dependencia.
 
 ## Preguntas para Daniel
+
+> Respondidas el 2026-10-23: Daniel aprobó las cuatro recomendadas (D-550).
 
 1. **¿`update_order_status` también pide aprobación en la tarjeta (F0)?**
    - **Recomendada:** sí. Así hay una sola regla para escribir pedidos desde Claude, y el ticket ya lo supone.

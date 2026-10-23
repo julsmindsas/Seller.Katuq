@@ -1,4 +1,4 @@
-> **Estado:** PROPUESTA, pendiente de aprobación. Ticket 1339 (ALMARA FELICIDAD). Decisión: D-XXX (la pone la sesión principal). Delta de la capability archivada `support-ticket-creation`. Solo documento: sin diseño, sin tareas y sin código.
+> **Estado:** PROPUESTA APROBADA por Daniel el 2026-10-23, con las respuestas recomendadas de las 4 preguntas. Diseño y tareas pendientes de aprobación (`design.md`, `tasks.md`). Ticket 1339 (ALMARA FELICIDAD). Decisión: D-549. Delta de la capability archivada `support-ticket-creation`.
 
 ## Why
 
@@ -76,6 +76,8 @@ Verificado en el código el 23-oct, sin leer producción. Backend en `backend-aw
 - **Datos personales:** un pantallazo puede traerlos. Nunca van a los logs; solo identificadores.
 
 ## Preguntas para Daniel
+
+> Respondidas el 2026-10-23: Daniel aprobó las cuatro recomendadas (D-549).
 
 1. **Si Claude no deja elegir archivos en la tarjeta, ¿cuál es el plan B?**
    - **Recomendada:** un enlace de un solo uso a una página de Katuq, ligado al ticket o a la propuesta, para subir ahí.

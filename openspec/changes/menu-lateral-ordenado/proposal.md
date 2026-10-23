@@ -1,4 +1,4 @@
-> **Estado:** PROPUESTA, pendiente de aprobación de Daniel. Tickets 1335 (Menú 2/4), 1337 (Menú 4/4) y 1336 (Menú 3/4) de ALMARA FELICIDAD. Decisión: D-XXX (por asignar). `design.md` y `tasks.md` se escriben después de aprobar esta propuesta. Sin código.
+> **Estado:** PROPUESTA APROBADA por Daniel el 2026-10-23, con las respuestas recomendadas a las cuatro preguntas. Tickets 1335 (Menú 2/4), 1337 (Menú 4/4) y 1336 (Menú 3/4) de ALMARA FELICIDAD. Decisión: **D-546**. `design.md` y `tasks.md` están escritos y pendientes de aprobación. Sin código.
 
 ## Why
 

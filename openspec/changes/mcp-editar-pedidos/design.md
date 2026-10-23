@@ -1,0 +1,236 @@
+> **Estado:** DISEÑO, **pendiente de aprobación**. Ticket 1333 (ALMARA FELICIDAD). Decisión **D-550**. La propuesta y la spec las aprobó Daniel el 2026-10-23 con las respuestas recomendadas. Depende de D-541 (historial del pedido), D-543 y D-544 (precio y lista con vista previa) y D-549 (adjuntos, para el comprobante de pago). Este documento diseña en detalle la **F0, la F1 y la F2**; la **F3 y la F4** quedan a nivel de contrato y gates, y se re-detallan cuando cierre su dependencia. `orders` es un módulo sensible: un cambio a la vez, con diff y aprobación. Solo documento: sin código.
+
+## Context
+
+Verificado en el código el 23-oct, sin leer ni escribir producción. Backend en `backend-aws-security` (`9ab9074d`).
+
+- **La única escritura de pedidos por MCP** es `update_order_status` (`tools/updateOrderStatus.js:73-168`):
+  - busca por `nroPedido`, `orderId` o `pedidos[]` (hasta 50) dentro de la empresa;
+  - rechaza cancelados (`isCancelledOrder`) y estados finales (`Entregado`, `Rechazado`, `Cerrado`);
+  - aplica con `updateOrderInternal(cambio, correo)` (`:28, 150`) **en la primera llamada, sin aprobación**.
+- **`updateOrderInternal`** (`controllers/orders.js:3336`):
+  - busca el rol por correo **sin filtrar empresa** (`:3387-3400`) y tiene una lista fija de correos que saltan las transiciones (`:3378-3385`);
+  - valida transiciones (`:3352-3375`), aplica el guard de Tesorería y el de Kuvo, y recalcula totales **solo si llega `carrito`** (`:3678-3684`);
+  - con `_baseVersion` revisa la versión en transacción y lanza `STALE_WRITE` (`:3693-3711`);
+  - después: historial de estado (`:3739-3790`), inventario por recompra si sube una cantidad (`:3801-3880`), devoluciones (`:3929-3990`), factura automática al aprobar un pago (`:4000-4110`) y avisos al cliente y al vendedor (`:4113-4150`), salvo `options.skipNotifications`.
+- **La ruta `POST /v1/orders/edit`** (`orders.js:5058`) además revisa que el pedido sea de la empresa del token (`services/orders/accesoEdicion.js`) e **invalida el caché de pedidos de la empresa** (`:5073-5078`). `update_order_status` no invalida ese caché.
+- **La aprobación del MCP:** `services/mcp/confirmacion.js` firma la huella de los cambios con el valor de antes (vence en 10 min, sin estado, `:59-120`); la pantalla genérica la muestra y aprueba (`apps/confirmar/src/confirmar.js`). `update_product` y `create_support_ticket` la usan.
+- **Quién escribe por MCP:** `services/mcp/permisoDeEscritura.js` (familia Administrador o el módulo en el menú; persona única y activa por correo y empresa). `update_order_status` usa `['ventas/pedidos', 'despachos']` (`tools/toolRegistry.js:186`).
+- **Dónde viven los datos:**
+  - notas: `notasPedido` es un mapa de listas (`notasCliente`, `notasProduccion`, `notasDespachos`, `notasEntregas`, `notasFacturacionPagos`) con `{ nota, fecha, producto, productoId }` (tarea 1.1 de D-541);
+  - tarjeta de regalo: `carrito[i].configuracion.tarjetas[] { de, para, mensaje }`;
+  - entrega: forma, observaciones, franja y fecha `{day, month, year}` en `carrito[0].configuracion.datosEntrega`; fecha pactada en la raíz `fechaEntrega`; dirección y ciudad en `envio.{ direccionEntrega, ciudad }`; zona y valor del domicilio en `envio.{ zonaCobro, valorZonaCobro }` y `totalEnvio`;
+  - asesor: `asesorAsignado.{ name, email }`; facturación: `facturacion.{ … }`.
+  - **Tarjeta, observaciones, franja y fecha de `datosEntrega` están dentro de `carrito`:** cambiarlas obliga a mandar `carrito`, y eso recalcula totales.
+- **La web pide motivo** solo para devolver un pedido que ya salió (`list.component.ts:7087-7111`, `_motivoRetroceso`). D-541 F2 lo exigirá en precio, descuento, impuestos y anulación de pago.
+- **Tesorería:** `POST /v1/treasury/payments/submit` (solo `auth`) registra un pago para revisión; `/payments/direct` y `/payments/:id/review` exigen `TREASURY_ROLES` = Tesorero, Administrador, Super Administrador (`routers/treasury.js:33-45`, `services/treasury/treasuryConstants.js:80`).
+- **D-543 y D-544** (en implementación en otra sesión): núcleo **preparar → revisar → confirmar** en `/v1/orders/price-change/{options,preview,confirm}`, con permisos por acción en `roles.permissions` (`ventas.correct_price`, `ventas.change_price_list`), comprobante propio de 10 min y bandera `orderPriceCorrections` / `orderPriceListChanges` (`openspec/changes/corregir-precio-pedido/contracts.md`). Su diseño concluye que el guardado genérico no sirve para cambiar plata.
+- **D-541:** su F1 (en curso, `9ab9074d`) registra creación, estados, pagos y eliminación; las «17 opciones» con antes → después (notas, tarjeta, entrega, asesor, facturación…) son su **F2**, todavía sin diseñar. Su tarea 4.3 lleva el contexto (actor y origen) a los llamadores de `updateOrderInternal`, incluido el MCP.
+
+## Decisiones de Daniel (23-oct)
+
+| # | Pregunta | Decisión | Dónde se aplica |
+|---|---|---|---|
+| 1 | ¿`update_order_status` pide aprobación? | **Sí (F0).** Una sola regla para escribir pedidos desde Claude | D3 |
+| 2 | ¿Qué permiso por opción? | **El de la pantalla**; pagos y plata, **permiso por acción** como D-543 | D5 |
+| 3 | ¿Motivo obligatorio? | **Donde la web lo exige**; opcional en lo demás | D6 |
+| 4 | ¿Bandera? | **Por empresa y por fase** (D-505), ALMARA primero | D9 |
+
+## Goals / Non-Goals
+
+**Goals:**
+
+- Toda escritura de pedidos desde el MCP pasa por propuesta → aprobación de la persona en la tarjeta → aplicación por la operación de la pantalla.
+- F0: `update_order_status` con aprobación y una consulta de «qué puedo editar».
+- F1: notas, observaciones de entrega y tarjeta de regalo, sin mover plata ni inventario.
+- F2: entrega, contacto de quien recibe, asesor y facturación de un pedido no facturado, sin mover plata.
+- Historial D-541 con la persona, origen «Claude/MCP», antes → después y motivo.
+
+**Non-Goals:**
+
+- Cambiar reglas o validaciones de la pantalla.
+- Ediciones en lote (salvo lo que ya hace `update_order_status`, ver Open Questions 1), eliminar, duplicar, facturar, POS, pedidos cancelados o en estado final, caja o Kuvo cerrados.
+- Escrituras desde el chat integrado de Opttia (`servicekey`).
+- Arreglar la búsqueda de rol sin empresa o los correos fijos de `updateOrderInternal` (anotados en Riesgos).
+
+## Decisions
+
+### D1. Cómo funciona cada edición
+
+1. **Propuesta.** La herramienta lee el pedido fresco, revisa bloqueos, permisos y bandera, arma `cambios` (`{ campo, etiqueta, antes, despues }`) y `efectos`, y devuelve `propuestaPendiente` (`confirmacion.js:126`). **Cero escrituras**, cero avisos.
+2. **Aprobación.** La persona aprueba en la tarjeta. La tarjeta vuelve a llamar la herramienta con los mismos `argumentos`, el `comprobante` y, si aplica, el `motivo` que escribió.
+3. **Aplicación.** La herramienta vuelve a leer, recalcula `cambios` desde el pedido fresco y llama `verificarComprobante` con la misma lista. Si cuadra, aplica **solo los campos aprobados** por la operación de la pantalla.
+4. **Historial.** El contexto de D-541 (`options.contexto`, tarea 4.3 de D-541) lleva la persona, el origen `mcp` y el motivo.
+
+**Concurrencia.** Dos candados:
+
+- la huella cubre el valor de antes de cada campo que cambia (si alguien lo tocó, `el_dato_cambio`);
+- `argumentos.version` lleva el `date_upd` leído en la propuesta y se pasa como `_baseVersion`; `updateOrderInternal` rechaza con `STALE_WRITE` si otra persona guardó el pedido entre la propuesta y la aprobación. La tarjeta dice «El pedido cambió mientras lo revisabas. Pídelo de nuevo para ver cómo quedó».
+- Límite conocido: un escritor que no actualiza `date_upd` no se detecta (lo anota D-543). En F1 y F2 se acepta porque no hay plata; la F4 usa el candado de D-543 (`updateTime`).
+
+**Reintento.** La misma aprobación dos veces: la segunda encuentra el valor ya aplicado, la huella no cuadra y la respuesta es «Ese cambio ya estaba aplicado» con éxito, sin escribir.
+
+### D2. Módulo único: `functions/services/mcp/pedidos/`
+
+```
+opciones.js     catálogo cerrado de opciones: fase, bandera, módulos del menú, permiso por acción,
+                motivo (requerido u opcional), campos y operación que aplica
+resolver.js     pedido por nroPedido u orderId dentro de la empresa; ajeno = «no encontrado»
+bloqueos.js     cancelado, estado final, POS, caja o Kuvo cerrados, facturado (para facturación)
+identidad.js    persona de la credencial: solo `oauth` con correo; servicekey y apikey no editan
+propuesta.js    cambios, efectos y comprobante
+sinDinero.js    guard: el cambio no mueve totales (D4)
+aplicar.js      updateOrderInternal con parche mínimo, `_baseVersion`, contexto D-541 e invalidación
+                del caché de pedidos, como la ruta de la pantalla
+log.js          registro estructurado con lista cerrada de campos
+```
+
+Las herramientas son delgadas: validan entrada y llaman al módulo.
+
+### D3. Herramientas
+
+Cuatro herramientas nuevas y una cambiada, para no confundir al modelo con una por opción:
+
+| Herramienta | Tipo | Fase | Qué hace |
+|---|---|---|---|
+| `update_order_status` | escritura | F0 | La de hoy, con propuesta y aprobación (ver abajo) |
+| `get_order_edit_options` | lectura | F0 | Para un pedido: qué opciones están disponibles para esta persona y esta empresa, cuáles no y por qué («tu rol no puede registrar pagos», «el pedido ya se entregó», «aún no está activo para tu empresa») |
+| `edit_order` | escritura, módulo `['ventas/pedidos']` | F1, F2 | `opcion` ∈ `nota`, `observaciones_entrega`, `tarjeta_regalo` (F1); `entrega`, `contacto_recibe`, `asesor`, `facturacion` (F2), con un objeto tipado por opción |
+| `record_order_payment` | escritura | F3 | `accion` ∈ `registrar`, `anular` |
+| `change_order_price` | escritura | F4 | `kind` ∈ `linePrice`, `priceList`, envoltura del núcleo D-543/D-544 |
+
+Todas declaran `uiResource: CONFIRMAR_CAMBIO`.
+
+**`update_order_status` en la F0** (con la bandera `mcpOrderStatusApproval` de la empresa encendida):
+
+- La primera llamada devuelve la propuesta: una fila por pedido aprobable (`{ campo: "estadoProceso@{orderId}", etiqueta: "Pedido DAD-014573", antes: "EnProduccion", despues: "Empacado" }`) y, si es `Rechazado` con `observaciones`, la fila del motivo del rechazo. Los no aprobables van en `advertencias` con su razón.
+- La aprobación aplica pedido por pedido como hoy, con el contexto D-541 y la invalidación del caché.
+- Lote de hasta 50 en **una** tarjeta, ver Open Questions 1.
+- Con la bandera apagada, se comporta exactamente como hoy. Al encenderla para todas las empresas, la rama vieja se borra (retiro de la bandera).
+
+### D4. Sin plata ni inventario en F1 y F2
+
+- **Opciones que no tocan `carrito`** (nota, asesor, facturación, dirección, ciudad, contacto, `fechaEntrega` de la raíz): el parche lleva solo esos campos. Sin `carrito`, `updateOrderInternal` no recalcula ni descuenta inventario.
+- **Opciones que tocan `carrito`** (tarjeta de regalo, observaciones, franja y fecha dentro de `datosEntrega`): se manda el `carrito` **fresco** con solo ese cambio. Antes de proponer y otra vez antes de aplicar, `sinDinero.js`:
+  1. corre `calculateOrderTotals` sobre una copia con el carrito nuevo (sin escribir);
+  2. compara `subtotal`, `totalImpuesto`, `totalDescuento`, `totalEnvio`, `totalPedididoConDescuento`, `anticipo` y `faltaPorPagar` con lo guardado;
+  3. si alguno cambia, **no ofrece aprobar**: «Al guardar este cambio, Katuq recalcularía el valor del pedido. Hazlo desde Katuq para revisarlo.»
+  - Las cantidades no cambian, así que el inventario por recompra no se dispara (`orders.js:3836` calcula el delta por cantidad).
+- **Pedidos con acuerdo de precio de D-543** (`pricingAgreement`): las opciones que tocan `carrito` se bloquean hasta que D-543 publique la protección del guardado genérico (su tarea T-18); entonces se levanta el bloqueo en una tarea aparte.
+- **Ciudad o dirección que cambia el domicilio** (F2): se resuelve la zona con el mismo servicio que usa la pantalla (se ubica en la tarea 1.3). Si `valorZonaCobro` o `totalEnvio` cambiarían, no se ofrece aprobar.
+- **Avisos al cliente:** la propuesta dice si el cambio dispara un aviso, con el mismo detector que usa `updateOrderInternal` (`claimDirectNotifEvents` / `detectSellerNotification`, verificado en la tarea 1.4). No se agrega `skipNotifications`: el comportamiento es el de la pantalla.
+
+### D5. Permisos
+
+- **Persona identificada:** solo credenciales `oauth` con correo (Claude, Codex). `servicekey` (Opttia) y `apikey` (llave de empresa) reciben «Los pedidos se editan con tu usuario de Katuq conectado a Claude». La persona se resuelve como hoy (`permisoDeEscritura.puedeEscribir`): única, activa y del mismo rol.
+- **Por opción, el de la pantalla:**
+  - F1 y F2: el menú `ventas/pedidos` o la familia Administrador. Si la tarea 1.2 encuentra que la pantalla restringe alguna opción por rol (por ejemplo, cambiar el asesor), se replica esa misma regla.
+  - F3 con Tesorería: registrar = la regla de `/payments/submit`; anular = `TREASURY_ROLES`.
+  - F3 sin Tesorería y F4: permiso por acción en el mapa `roles.permissions` de D-543: `ventas.register_payment` y `ventas.void_payment` (nuevos, excluidos de la concesión automática igual que los de D-543), `ventas.correct_price` y `ventas.change_price_list` (los de D-543 y D-544).
+- **Nunca «tiene el menú, puede todo»:** `get_order_edit_options` y cada propuesta dicen exactamente qué falta.
+
+### D6. Motivo
+
+| Opción | Motivo |
+|---|---|
+| Estado (F0), notas, observaciones, tarjeta (F1), entrega, contacto, asesor, facturación (F2), registrar pago (F3) | Opcional |
+| Anular pago (F3), precio, lista (F4), cambiar cliente (después de la F4) | **Obligatorio** |
+
+- La propuesta trae `motivo: { requerido, etiqueta, max: 500 }`. La tarjeta muestra el campo y, si es obligatorio, no deja aprobar vacío.
+- El motivo no entra en la huella: lo escribe la persona en la tarjeta después de la propuesta.
+- En el evento D-541: `reason` y `reasonStatus` = `given` o `not_required`. Esto actualiza la decisión 4 de D-541 para el MCP: con la tarjeta, el MCP ya no registra «sin motivo».
+
+### D7. La tarjeta
+
+Se amplía la genérica `apps/confirmar/` sin cambiar su contrato:
+
+- bloque opcional de **motivo** (textarea, contador, «Escribe por qué» si es obligatorio);
+- bloque opcional de **efectos** («Total: no cambia», «Saldo: no cambia», «Se avisará al cliente por correo»);
+- sin `motivo` ni `efectos` en la propuesta, se ve exactamente como hoy (`update_product`, tickets).
+- CSP sin cambios (`connectDomains: []`).
+- La forma de pintar la propuesta se extrae a `apps/_comun/propuesta.js` para compartirla con la tarjeta de soporte de D-549 (la tarea la hace quien llegue primero).
+- Compilada y versionada (`build.js`); `build.js --check` en verde.
+
+### D8. Historial (D-541)
+
+- **F0:** el cambio de estado ya lo registra D-541 F1 (`process_status_changed`), ahora con el contexto del MCP.
+- **F1 y F2:** necesitan que el catálogo cerrado de D-541 tenga los campos y tipos de estas opciones (nota agregada o editada, tarjeta, observaciones, entrega, contacto, asesor, facturación). Son de la F2 de D-541.
+  - Si la F2 de D-541 no está lista cuando arranque la F1 de D-550, se agregan **solo esas entradas** al catálogo (`constantes.js` y `etiquetas.js` de `services/orders/historialPedido/`) en una tarea coordinada con el dueño de D-541 y con su aprobación.
+  - **Gate:** ninguna opción se enciende sin que su evento quede en el historial (prueba de flujo en el emulador).
+- Una propuesta rechazada, vencida o cancelada no deja evento.
+
+### D9. Banderas (D-505)
+
+| Bandera (`companies.featureFlags`) | Fase | Además exige |
+|---|---|---|
+| `mcpOrderStatusApproval` | F0 | — |
+| `mcpOrderEditNotes` | F1 | `orderHistoryLog` encendida |
+| `mcpOrderEditDelivery` | F2 | `orderHistoryLog` y `mcpOrderEditNotes` |
+| `mcpOrderEditPayments` | F3 | lo anterior y D-549 encendido |
+| `mcpOrderEditPrices` | F4 | lo anterior y `orderPriceCorrections` / `orderPriceListChanges` |
+
+- **Corte general:** `config/feature_flags.mcpOrderEdit === false` apaga F1 a F4 para todos (no apaga la aprobación de la F0, que nunca vuelve a escribir sin tarjeta).
+- Dueño Daniel. Retiro 2027-04-30 (Artículo XII): cada una encendida para todos o eliminada. Primero FLORECER, luego ALMARA, fase por fase.
+
+### D10. Datos personales y logs
+
+- `log.js`: `mcp.pedido.{propuesta, aplicado, rechazado}` con `{ company, orderId, opcion, resultado, codigo, duracionMs }`. Nunca dirección, teléfono, nombre, mensaje de la tarjeta, motivo ni montos.
+- La propuesta muestra en la tarjeta los datos que la persona ya puede ver en Katuq; no se agrega ningún dato que la pantalla no muestre.
+
+### D11. F3 y F4 a nivel de contrato (se re-detallan antes de implementar)
+
+- **F3, pagos.**
+  - **Gate de diseño:** la tarea 9.1 traza «Gestión de pagos» (`asentarpagomanual.component.ts:319, 674, 746`) y decide si el saldo, el estado de pago y la cartera los calcula el servidor. Si dependen del cálculo del navegador, **la F3 se detiene** hasta tener una operación de servidor para registrar un pago (cambio aparte con spec), en vez de copiar ese cálculo en el MCP.
+  - **Con Tesorería:** registrar por el mismo servicio de `/payments/submit` (queda pendiente de revisión, como en la pantalla); anular solo `TREASURY_ROLES`, por el servicio de revisión.
+  - **Comprobante:** se adjunta con la sesión de adjuntos de D-549, ligada al pedido en vez del ticket.
+  - **Efectos** en la propuesta: saldo antes → después, estado de pago, factura automática si la empresa la tiene al aprobar el pago (`orders.js:4000-4110`) y avisos.
+- **F4, plata y productos.**
+  - `change_order_price` llama los servicios de preparar y confirmar de D-543 y D-544, **no** sus rutas HTTP. La propuesta es su vista previa (líneas, total, pagos, saldo); `cambios` incluye una fila con el digest de la vista previa, así el comprobante del MCP queda atado a ella; al aprobar se confirma con su `operationId` y `previewToken`.
+  - **Identidad:** el módulo de acceso de D-543 resuelve al usuario desde el JWT; el MCP necesita un adaptador por correo y empresa (persona única), coordinado con el dueño de D-543 y sin editar su carpeta de OpenSpec.
+  - Agregar o quitar productos, cantidades, descuentos, impuestos y cambiar el cliente se habilitan solo cuando la pantalla tenga su propia vista previa y confirmación. Hasta entonces, `get_order_edit_options` dice «Se hace desde Katuq».
+
+## Contratos
+
+| Herramienta | Entrada | Propuesta | Aplicación |
+|---|---|---|---|
+| `update_order_status` | `nroPedido` / `orderId` / `pedidos[]`, `newStatus`, `observaciones?`, `comprobante?`, `motivo?` | `cambios` por pedido, `advertencias` con los no aprobables | `{ actualizados, fallidos, pedidos[], errores[] }` como hoy |
+| `get_order_edit_options` | `nroPedido` / `orderId` | — | `{ pedido, opciones: [{ id, disponible, razon, motivo }] }` |
+| `edit_order` | `nroPedido` / `orderId`, `opcion`, un objeto por opción (`nota { lista, texto, indice? }`, `tarjeta { linea, indice, de, para, mensaje }`, `entrega { direccion, ciudad, fecha, franja }`, `contacto { nombre, telefono }`, `asesor { email }`, `facturacion { … }`), `comprobante?`, `motivo?`, `version?` | `cambios`, `efectos`, `motivo`, `argumentos` (con `version`) | `{ success, mensaje, pedido: { nroPedido }, cambios }` |
+
+**Errores** (español de negocio, sin códigos internos): «no encontramos ese pedido» (también si es de otra empresa), «tu rol no puede…», «ese pedido ya se entregó: se revisa desde Katuq», «al guardar cambiaría el valor del pedido», «el pedido cambió mientras lo revisabas», «aún no está activo para tu empresa».
+
+## Pruebas
+
+| Repo | Archivo | Qué fija |
+|---|---|---|
+| Back | `tests/mcp/pedidos/updateOrderStatus.aprobacion.contract.test.js` | Bandera encendida: la primera llamada no escribe; aprobación aplica; pedido movido entre propuesta y aprobación = rechazo; reintento = «ya aplicado»; bandera apagada = comportamiento de hoy, idéntico |
+| Back | `tests/mcp/pedidos/opciones.test.js` | `get_order_edit_options`: matriz de rol × opción × bandera × estado del pedido; solo lectura |
+| Back | `tests/mcp/pedidos/editOrder.f1.contract.test.js` | Nota, observaciones y tarjeta: propuesta sin escrituras; parche mínimo; guard sin plata (un pedido con total guardado de $1 se bloquea); `_baseVersion`; pedido con `pricingAgreement` bloqueado; `servicekey` y `apikey` no editan |
+| Back | `tests/mcp/pedidos/editOrder.f2.contract.test.js` | Entrega con cambio de domicilio bloqueada; facturación de pedido facturado bloqueada; asesor con la regla de la pantalla |
+| Back | `tests/mcp/pedidos/writeset.contract.test.js` | Con una base falsa: solo `orders.update` (por `updateOrderInternal`) y los eventos D-541; nunca `products`, `inventory`, `inventoryMovement`, precios ni listas; F1 y F2 no llaman `inventoryService` |
+| Back | `tests/mcp/pedidos/historial.emulator.test.js` | En el emulador: cada opción aplicada deja su evento D-541 con origen `mcp`, persona, antes → después y motivo; propuesta cancelada no deja evento |
+| Back | `tests/mcp/confirmarTarjeta.test.js` + `build.js --check` | Motivo y efectos opcionales; sin ellos, la tarjeta igual que hoy |
+| Back | Regresión | `tests/mcp/*`, `retrocesoManual.contract`, `editBatchSinCamposDePago`, suites de Tesorería y de D-541 |
+
+## Risks / Trade-offs
+
+- **Módulo sensible.** Un cambio a la vez, banderas por fase, guard sin plata y pruebas de write-set.
+- **`updateOrderInternal` busca el rol por correo sin empresa** y tiene correos fijos que saltan transiciones. El MCP hereda ese comportamiento «igual que la pantalla»; queda anotado para un cambio aparte (también lo anota D-541).
+- **El comprobante lo ve el modelo** (contrato de hoy). La tarjeta es la única que manda el motivo y la aprobación; la huella y la versión impiden aplicar algo distinto a lo propuesto.
+- **Cambio de costumbre (F0):** quien hoy cambia estados por Claude sin tarjeta pasará a aprobarlos. Se avisa en la descripción de la herramienta y se enciende por empresa.
+- **Dependencias abiertas:** F1/F2 dependen del catálogo de D-541 F2; F3 de D-549 y de la tarea 9.1; F4 de D-543/D-544 publicados y estables. Ninguna fase se adelanta.
+- **Caché de pedidos:** se invalida como en la ruta de la pantalla; si Redis no está, no pasa nada.
+
+## Migration Plan
+
+1. **F0:** backend con `mcpOrderStatusApproval` apagada en todas partes. Commit, push y despliegue. FLORECER encendida; luego ALMARA (OK de Daniel). Observación de 5 días hábiles.
+2. **F1:** con D-541 F1 enganchada y `orderHistoryLog` encendida en la empresa. Mismo orden: apagada en todas partes, FLORECER, ALMARA.
+3. **F2:** igual, después de la F1 estable.
+4. **F3 y F4:** se diseñan en detalle al cerrar sus dependencias.
+5. **Revertir:** bandera de la fase en la empresa, o el corte general para F1-F4. Los cambios ya aplicados son ediciones normales del pedido con su evento.
+6. **Retiro (2027-04-30):** cada bandera encendida para todos o eliminada.
+
+## Open Questions
+
+1. **`update_order_status` hoy cambia hasta 50 pedidos de una vez.** La spec dice que el MCP no edita varios pedidos a la vez. Recomendado: **conservar el lote de hasta 50 en una sola tarjeta** que lista cada pedido con su antes → después, porque ya existe y lo usan los despachos; la regla de «un pedido por aprobación» aplica a las opciones nuevas (`edit_order`, pagos, plata). Alternativa: un pedido por tarjeta también en la F0.
+2. **Permisos nuevos de pagos sin Tesorería** (`ventas.register_payment` y `ventas.void_payment` en el mapa de D-543). ¿De acuerdo con crearlos, o se reutiliza la regla de Tesorería (Tesorero y familia Administrador) también para las empresas sin Tesorería?

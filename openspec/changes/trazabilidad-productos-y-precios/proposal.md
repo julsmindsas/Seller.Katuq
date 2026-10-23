@@ -1,4 +1,4 @@
-> **Estado:** PROPUESTA, pendiente de aprobación. Tickets 1357 (datos del producto) y 1358 (precios por tipo de cliente y costos), ALMARA FELICIDAD. Decisión: D-XXX (la pone la sesión principal). Solo documento: sin diseño, sin tareas y sin código. Se entrega por fases y cada fase se aprueba y se publica por separado.
+> **Estado:** PROPUESTA APROBADA por Daniel el 2026-10-23, con las respuestas recomendadas de las 4 preguntas. F0 hecha (Seller `27c3fc4a`, backend `9d2fa325`). Diseño y tareas de la F1 pendientes de aprobación (`design.md`, `tasks.md`). Tickets 1357 (datos del producto) y 1358 (precios por tipo de cliente y costos), ALMARA FELICIDAD. Decisión: D-548. Se entrega por fases y cada fase se aprueba y se publica por separado.
 
 ## Why
 
@@ -32,7 +32,9 @@ Censo de esta propuesta (sin pruebas ni scripts). El diseño lo completa y lo co
 | Sistema | borrar empresa `companies.js:1699`; marca técnica de embeddings `cronService.js:713` |
 | Inventario | **solo lee** `products` (`inventoryService.js:329, 664, 1357`, dentro de transacciones). Cumple D-134 y así sigue |
 
-### Fase 0, ya en curso (sin spec: solo presentación y quién)
+### Fase 0, hecha el 23-oct (sin spec: solo presentación y quién)
+
+> Los pendientes de esta lista pasan a la F1 (tareas 5.1 a 5.3 y 6.1 de `tasks.md`).
 
 Otra sesión la empezó el 23-oct, en commits locales sin publicar:
 
@@ -110,6 +112,8 @@ Lo que se guarda junto forma **un solo evento**. Los eventos solo se agregan: na
 - **Trabajo paralelo:** la fase 0 la lleva otra sesión. Las fotos de D-501 tienen su prueba de contrato del write-set (`tests/productos/productPhotos/writeset.contract.test.js`), que la F2 debe conservar.
 
 ## Preguntas para Daniel
+
+> Respondidas el 2026-10-23: Daniel aprobó las cuatro recomendadas (D-548). El censo completo de escritores y la fase de cada uno están en `design.md`.
 
 1. **¿Dónde se guardan los eventos?**
    - **A (recomendada):** ampliar `productHistory`, que ya existe, ya tiene consulta y pestaña, y hoy solo la usan las fotos. Se distingue por versión del registro. No hace falta colección nueva y nadie más la lee (a diferencia de `order_status_history` en D-541).
