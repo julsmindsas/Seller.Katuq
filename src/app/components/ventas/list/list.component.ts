@@ -7503,12 +7503,44 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       motivoRetroceso = String(r.value).trim();
     }
 
+    // Ticket 1387 (ALMARA): cancelar un pedido exige el motivo; sin motivo no se cancela.
+    // Queda en `motivoCancelacion`, el campo canónico (lo usa también WhatsApp).
+    const pasaACancelado = this.tempEstadoPago === 'Cancelado' && this.originalEstadoPago !== 'Cancelado';
+    let motivoCancelacion = '';
+    if (pasaACancelado) {
+      this.modalService.dismissAll("confirmed");
+      const r = await Swal.fire({
+        icon: 'warning',
+        title: '¿Por qué se cancela el pedido?',
+        text: `${order.nroPedido || 'El pedido'} quedará cancelado. El motivo queda guardado en el pedido.`,
+        input: 'textarea',
+        inputPlaceholder: 'Ej.: el cliente desistió de la compra',
+        showCancelButton: true,
+        confirmButtonText: 'Cancelar el pedido',
+        cancelButtonText: 'Volver',
+        inputValidator: (v) => (!v || !String(v).trim() ? 'Escribe el motivo de la cancelación' : undefined),
+      });
+      if (!r.isConfirmed) {
+        order.estadoPago = this.originalEstadoPago;
+        order.estadoProceso = this.originalEstadoProceso;
+        return;
+      }
+      motivoCancelacion = String(r.value).trim().slice(0, 500);
+    }
+
     const orderToUpdate = {
       ...order,
       estadoPago: this.tempEstadoPago,
       estadoProceso: this.tempEstadoProceso
     };
     if (mercanciaVolvio) (orderToUpdate as any).mercanciaVolvioABodega = true;
+    if (motivoCancelacion) {
+      (orderToUpdate as any).motivoCancelacion = motivoCancelacion;
+      (orderToUpdate as any).fechaCancelacion = new Date().toISOString();
+      try {
+        (orderToUpdate as any).canceladoPor = JSON.parse(localStorage.getItem('user') || '{}')?.email || '';
+      } catch { /* sin usuario en la sesión: se guarda sin autor */ }
+    }
     if (cambiaProceso) {
       // El backend solo acepta un retroceso con esta marca (la usa también Despachos).
       (orderToUpdate as any)._estadoProcesoExplicitlyChanged = true;

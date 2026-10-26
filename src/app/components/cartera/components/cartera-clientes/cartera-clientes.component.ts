@@ -165,6 +165,47 @@ export class CarteraClientesComponent implements OnChanges {
     });
     this.filtered = this.ordenar(filtrados);
     this.totalVisible = this.filtered.reduce((suma, c) => suma + this.saldoVisible(c), 0);
+    this.kpisVista = this.calcularKpisVista();
+  }
+
+  // ── Banner que sigue a los filtros (ticket 1388) ──────────────────────────
+  /**
+   * Con filtros, el banner mostraba los números de TODA la cartera y la lista
+   * los del filtro, y no cuadraban (ALMARA: «Con cartera vencida» 31 clientes
+   * $19,7 M vs. banner vencida $13,9 M). Ahora, con cualquier filtro activo, el
+   * banner se calcula sobre lo que se ve: total = el de la lista, vencida = la
+   * parte con más de 15 días vencida de esos mismos pedidos (misma regla del
+   * servidor), DSO ponderado y clientes sobre su cupo.
+   */
+  kpisVista: CarteraResponse['kpis'] | null = null;
+
+  get hayFiltros(): boolean {
+    return !!this.searchTerm.trim() || this.riskFilter !== 'todos' || !!this.vendorFilter ||
+      this.antiguedadFilter !== 'todas';
+  }
+
+  private vencidoVisible(cliente: CarteraCliente): number {
+    if (this.antiguedadFilter === 'todas') return Number(cliente.vencido) || 0;
+    return this.pedidosVisibles(cliente)
+      .filter((p) => (Number(p.diasVencido) || 0) > 15)
+      .reduce((suma, p) => suma + (Number(p.saldo) || 0), 0);
+  }
+
+  private calcularKpisVista(): CarteraResponse['kpis'] | null {
+    const base = this.data?.kpis;
+    if (!base) return null;
+    if (!this.hayFiltros) return base;
+    const total = this.totalVisible;
+    const vencida = this.filtered.reduce((suma, c) => suma + this.vencidoVisible(c), 0);
+    const dsoPonderado = this.filtered.reduce(
+      (suma, c) => suma + (Number(c.dso) || 0) * this.saldoVisible(c), 0);
+    return {
+      ...base,
+      carteraTotal: { ...base.carteraTotal, monto: total, clientes: this.filtered.length },
+      carteraVencida: { ...base.carteraVencida, monto: vencida, pct: total > 0 ? (vencida / total) * 100 : 0 },
+      dsoPromedio: total > 0 ? Math.round(dsoPonderado / total) : 0,
+      excedenCupo: { ...base.excedenCupo, cantidad: this.filtered.filter((c) => c.excedeCupo).length },
+    };
   }
 
   // ── Antigüedad y orden (ticket 1130) ──────────────────────────────────────
