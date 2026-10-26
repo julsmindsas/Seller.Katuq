@@ -340,7 +340,7 @@ Todas llevan `auth` y `requireFeature('orderPinnedActions')`. La empresa y el us
 
 - `resaltada(pedido)` da:
   - `payments` («Pago pendiente») si `estadoPago === 'Pendiente'`;
-  - `billingData` («Sin factura») si `estadoPago === 'Pagado'` y no hay `nroFactura` ni `pdfUrlInvoice`.
+  - `billingData` («Sin factura») si `estadoPago` es `Aprobado` o `PreAprobado` (el mismo criterio de `puedeFacturarSiigo`; el enum real `EstadoPago` NO tiene «Pagado») y no hay `nroFactura`, ni `pdfUrlInvoice`, ni una facturación en curso (`_facturando`): la misma condición de `canEditBilling`.
 - La acción se pinta con el par de alerta y la etiqueta, en su mismo lugar: en el bloque si está entre las 8, si no en su tarjeta del modal.
 
 ### D18. Las 4 del rol en Roles y permisos

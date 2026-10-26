@@ -128,6 +128,7 @@ Todas declaran `uiResource: CONFIRMAR_CAMBIO`.
   - F3 con Tesorería: registrar = la regla de `/payments/submit`; anular = `TREASURY_ROLES`.
   - F3 sin Tesorería y F4: permiso por acción en el mapa `roles.permissions` de D-543: `ventas.register_payment` y `ventas.void_payment` (nuevos, excluidos de la concesión automática igual que los de D-543), `ventas.correct_price` y `ventas.change_price_list` (los de D-543 y D-544).
 - **Nunca «tiene el menú, puede todo»:** `get_order_edit_options` y cada propuesta dicen exactamente qué falta.
+- **La empresa y la persona salen de la credencial, nunca de `args` (F2, asesor):** el asesor propuesto se busca en `users` filtrando por la empresa de la credencial (`mcpCompany`) con **`empresa || company`, `empresa` primero** (la colección tiene los dos campos y `company` está mal en 24 de 124 usuarios), y el correo cuenta sin mayúsculas. El rol «administrador» se pregunta por **quien actúa** (`mcpUserEmail`) en su empresa, no por el asesor propuesto. La bandera de la fase se lee con `mcpCompany`. La prueba `editOrder.f2.contract.test.js` lo fija con un usuario de otra empresa con el mismo correo y un administrador ajeno; la búsqueda real (7.3) necesita su propia prueba con un usuario cuyo `empresa` difiere de `company`.
 
 ### D6. Motivo
 
@@ -310,3 +311,36 @@ Se amplía la genérica `apps/confirmar/` sin cambiar su contrato:
 3. `package.json`, `test:mcp-pedidos`: sumar `tests/mcp/pedidos/modulo.f1.test.js tests/mcp/pedidos/editOrder.f1.contract.test.js tests/mcp/pedidos/writeset.contract.test.js` (y `historial.emulator.test.js` cuando pase la 6.1).
 4. 1.1 (nombres de campo en pedidos reales de ALMARA) y 0.4 (bitácora en `specs/CONTRACT.md`).
 5. Diff aprobado por Daniel, commit (con `git add -p` en `tools/toolRegistry.js`: solo las 3 líneas de `edit_order`), push y despliegue con la bandera apagada; luego FLORECER y ALMARA (6.6).
+
+## Desvíos de la implementación, F2 (26-oct): pruebas y catálogo del historial, SIN código de la herramienta
+
+**Qué hay.** Solo pruebas en rojo (tarea 7.1) y el catálogo de D-541 (7.2, en el árbol sin commit). La herramienta (7.3) no se escribió: depende de que Daniel apruebe 7.2 y de las decisiones de abajo. Detalle y archivos en `tasks.md`, 7.1 y 7.2.
+
+**Lo que las pruebas dan por decidido (Daniel debe confirmar antes de 7.3):**
+
+1. **Ciudad nueva: regla simple «b» de la tarea 1.3.** Se acepta solo si la zona de cobro guardada en el pedido (`envio.zonaCobro`, por nombre) la cubre; la zona no cambia ni el valor del domicilio. Si no la cubre, no hay zona guardada, la zona ya no existe o las zonas no se pueden leer, «se hace desde Katuq». Para eso `edit_order` lee las zonas de la empresa (dep `zonas`, solo lectura) y una copia pura de `zonaCubreCiudad` del front (mayúsculas y espacios no cuentan; documentos legacy con `ciudad` en la raíz).
+2. **Contrato de las opciones** (ajusta la tabla «Contratos»): `entrega { direccion?, ciudad?, fecha? "AAAA-MM-DD", franja?, linea? }`, `contacto_recibe { nombres?, apellidos?, telefono? }` (el teléfono queda con dígitos y sin repetir el indicativo guardado; de 7 a 15 dígitos), `asesor { email }` (el servidor lo busca entre los usuarios de **la empresa de la credencial**, filtrando por `empresa || company` con `empresa` primero, nunca por una empresa de `args`, y guarda `{ name, email, nit }` como la pantalla), `facturacion { tipoDocumento?, documento?, nombres?, correoElectronico?, indicativoCel?, celular?, direccion?, ciudad?, departamento?, pais?, codigoPostal?, alias? }`.
+3. **Parches.** `envio`, `facturacion` y `asesorAsignado` se reemplazan enteros en `updateOrderInternal`, así que el parche lleva la copia guardada con solo lo que cambia. Dirección, ciudad y contacto no tocan `carrito` (no se recalcula nada). Fecha y franja sí viven en `carrito`: el parche lleva también `fechaEntrega` y `horarioEntrega` de la raíz (el pedido los guarda en los dos lados; la fecha conserva el sufijo de hora que ya tenga la raíz), los datos de cálculo y se aplican las mismas reglas de F1 para lo que toca `carrito`: congelado (EnProduccion a Despachado), acuerdo de precio, versión obligatoria y guard «sin plata».
+4. **Bloqueos de la pantalla (tarea 1.2):** «recoge en tienda» (forma de la línea o de la raíz) bloquea dirección, ciudad, contacto, fecha y franja (`list.component.ts:2146`); facturación solo con el pedido sin facturar (las tres marcas de la pantalla y las tres del servidor, con `pedidoYaFacturado` para el candado vivo); asesor solo familia Administrador (`list.component.ts:2394`), dep `esAdministrador`.
+5. **Sin `date_upd` en lo que no toca `carrito`:** dirección, contacto, asesor y facturación se aplican sin `_baseVersion`, igual que las notas de F1 (el parche se arma sobre el pedido releído al aprobar, así que la ventana es solo la del guardado). Fecha y franja siguen exigiéndolo.
+6. **Efectos en la tarjeta:** domicilio y total no cambian; no se avisa al cliente ni al vendedor; con el pedido en EnDespacho o Despachado, un cambio de dirección **avisa al mensajero** (`notifyMessengerIfDeliveryAddressChanged`, `controllers/orders.js:3242`) y la tarjeta lo dice.
+7. **Historial (7.2):** teléfono, documento y correo enmascarados; dirección, ciudad, nombres y asesor completos. Si el cambio real deja la misma marca (mismos últimos dígitos, misma primera letra y dominio, o dato de 4 caracteres o menos), el historial lo dice: «***4567 (anterior)» y «***4567 (nuevo)». Nunca dos marcas iguales. Un cambio de «quién recibe» hecho en la pantalla junto con la dirección sale en el mismo evento.
+
+**Líneas que otra sesión debe agregar** (no se tocaron `services/companyFeatureFlags.js` ni `package.json`):
+
+```js
+// Editar notas, observaciones de entrega y tarjeta de regalo de un pedido desde Claude, con la
+// aprobación de la persona en la tarjeta (D-550, ticket 1333, F1). Exige también `orderHistoryLog`.
+// Apagada, edit_order responde «aún no está activa para tu empresa». Corte general:
+// `config/feature_flags.mcpOrderEdit` (false = apaga F1 a F4 para todos). Primero FLORECER, luego
+// ALMARA FELICIDAD. Dueño: Daniel. Se retira el 2027-04-30 (Artículo XII).
+"mcpOrderEditNotes",
+// Editar la entrega (dirección, ciudad, fecha y franja), el contacto de quien recibe, el asesor y los datos de
+// facturación de un pedido no facturado desde Claude (D-550, ticket 1333, F2). Exige `mcpOrderEditNotes` y
+// `orderHistoryLog`. Apagada, esas opciones responden «aún no está activa para tu empresa». Dueño: Daniel.
+// Se retira el 2027-04-30 (Artículo XII).
+"mcpOrderEditDelivery",
+```
+Y el mismo nombre en `tests/companies/companyFeatureFlags.test.js` y en el arreglo del front (`company-features.service.ts`).
+
+**Pendientes para Daniel (además de los de F0 y F1):** (a) confirmar los puntos 1 a 7; (b) la medición de `date_upd` (tasks.md 1.1): 78 % de los pedidos activos de ALMARA no lo tienen, así que `observaciones_entrega`, `tarjeta_regalo`, la fecha y la franja se negarían en la mayoría hasta que alguien guarde cada pedido una vez desde la pantalla; (c) leer, solo patrones, el formato de `fechaEntrega` y `horarioEntrega` (el sistema negó esa lectura el 26-oct).

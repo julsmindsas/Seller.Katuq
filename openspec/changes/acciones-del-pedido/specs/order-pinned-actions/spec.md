@@ -70,7 +70,7 @@ THE sistema SHALL contar, por usuario, cuántas veces usa cada acción fijable. 
 THE bloque SHALL resaltar una acción según el estado del pedido, sin cambiarla de lugar:
 
 - pago pendiente: Pagos;
-- pagado y sin factura: Facturación.
+- pagado (pago aprobado o preaprobado) y sin factura: Facturación.
 
 El resaltado usa el par semántico de alerta y una etiqueta corta («Pago pendiente», «Sin factura»). IF la acción no está entre las 8, THEN SHALL resaltarse solo su tarjeta en el modal.
 
