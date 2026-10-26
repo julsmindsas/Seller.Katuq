@@ -109,8 +109,10 @@
 
 ## 2. Contract tests primero (rojos hasta implementar; Artículo VIII)
 
-- [ ] 2.1 [P] `GET /sugerencias`: forma de la respuesta, sin precios, 404 sin catálogo visible,
+- [x] 2.1 [P] `GET /sugerencias`: forma de la respuesta, sin precios, 404 sin catálogo visible,
   tope de longitud, nunca categorías ocultas.
+  — `tests/sitios/sugerencias.contract.test.js` (19 pruebas; incluye `Cache-Control`, solo con `search` en `on`,
+  plan gratis y límites del router).
 - [ ] 2.2 [P] `GET /catalogo`: los 5 órdenes, valor desconocido → orden de hoy, `sugerencias` con
   total 0, sin cantidades vendidas en la respuesta.
   — **Avance (bloque TX34-B10): parte `sugerencias` con total 0 hecha** (`buscadorTienda.test.js`, sin
@@ -212,8 +214,11 @@
   única `palabras` de la proyección; (2) se suma un último escalón «contiene» (3 letras o más) para que `on`
   nunca encuentre menos que la subcadena de hoy; (3) los atributos solo se buscan sobre la proyección que se
   sirve (no en la sombra de `lightIndex`), con los valores que `valoresVisibles` muestra en la ficha.
-- [ ] 3.7 Autocompletar (D5): endpoint y lista accesible. **Éxito:** 2.1 en verde, revisión con axe
+- [x] 3.7 Autocompletar (D5): endpoint y lista accesible. **Éxito:** 2.1 en verde, revisión con axe
   sin errores nuevos, controles de la revisión privada.
+  — Hecho (TX34-B11): `GET /sugerencias` (`services/sites/sugerenciasTienda.js`), lista combobox en la cabecera y el
+  catálogo (`siteHtml.js`), clases `kq-auto*` (no `kq-sug*`, que es el «Completa tu pedido» del carrito). Prueba en
+  navegador real con axe: `tests/sitios/autocompletarNavegador.test.js` (16 pruebas, escenario «Elegir con teclado»).
 - [x] 3.8 Sin resultados (D7) y, [si P8], el evento por la baliza. **Éxito:** 2.2 en verde.
   — Hecho (TX34-B10): `sugerencias` (corrección con resultado a 2 errores o menos, hasta 4 categorías visibles,
   «Ver todo el catálogo» y WhatsApp) solo con `search` en `on`; el HTML y el script las pintan con enlaces y
