@@ -12338,3 +12338,21 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **D-515 probado de punta a punta en FLORECER** contra la tienda local: un ajuste +1 de la Gorra en BOD-006 se detectó en sombra y luego llegó a la tienda (7 → 8), sin tocar otros productos ni el inventario de Katuq, con `inventory_audit` `publicado`. El índice `inventory(company, updatedAt)` ya existe en producción.
 - **Pruebas:** `tests/integrations/woocommerceImagenesSinDuplicar.test.js` 8/8. `woocommerceVariantes` se ajusta al GET previo; el padre sigue sin tocarse. Las 9 pruebas de WooCommerce pasan. Contra la tienda local, tres ediciones de la Gorra con la misma foto dejan el mismo adjunto (#18).
 - **Sin desplegar.**
+
+
+### 2026-10-26 — D-564: WooCommerce, pedido con productos que no existen en Katuq (punto 7)
+- **Problema:** en la entrada por automatizaciones (`woocommerce-order-map`), una línea cuyo SKU no existe en Katuq se quedaba por fuera del carrito y solo dejaba un `logger.warn`. El pago queda por el total de WooCommerce, así que el pedido queda descuadrado y nadie se entera. Caso real: BAR-000109 de CAFÉ ESCOBAR entró con el carrito vacío (1 de 93 pedidos Woo; los faltantes parciales no se pueden contar porque el pedido no guarda las líneas de Woo).
+- **Decisión (aprobada por ella):** el pedido se sigue creando. No se inventan líneas ni se toca el inventario. Se reusa la marca existente `requiereAtencionLogistica` (la de Cereza) con `motivoAtencion: woo_productos_no_encontrados`. Se agrega una nota en `notasPedido.notasFacturacionPagos` con nombre, SKU, cantidad y valor de cada faltante, y la lista en `integrations.woocommerce.productosNoEncontrados`. La lista de pedidos muestra el triángulo con su texto (`list.component.ts`).
+- **No toca:** `katuq-order-upsert`, pagos, inventario ni consecutivos. Los pedidos con todos los productos salen idénticos.
+- **Hallazgo aparte, sin arreglar:** en el UPDATE de `katuq-order-upsert`, `notasPedido` del proveedor reemplaza las notas que escribió el operador (no está en los campos protegidos). Afecta a Shopify, Cereza y Woo; requiere su propia propuesta.
+- **Pruebas:** `tests/integrations/woocommercePedidoProductoFaltante.test.js` (3 casos), las 10 de WooCommerce y `webhooksVivosRegresion` en verde. `scripts/smoke-test-woo-mapper.js` falla en 3 casos (on-hold, formaEntrega y estado en update) también SIN este cambio: es deuda previa del script.
+- **Sin desplegar.**
+
+
+### 2026-10-26 — D-565: WooCommerce, llaves en la cabecera y solo https (punto 23)
+- **Problema:** `getWooCommerceApiClient` y "Probar conexión" mandaban `consumer_key`/`consumer_secret` como parámetros de la URL, que quedan escritos en los registros de la tienda y de los proxies. Además se podía guardar una tienda con http.
+- **Qué cambió:** las llaves van como Basic auth (`auth` de axios). Si la tienda responde 401 (hostings que quitan la cabecera Authorization), se reintenta UNA vez con las llaves en la URL. La empresa queda en ese modo mientras el proceso viva (`llavesEnUrl`) y se avisa una vez. El reintento usa `auth: null` y no `delete`, porque `mergeConfig` de axios 0.21 heredaría la cabecera del cliente. "Probar conexión" hace lo mismo.
+- **Solo https:** `protocoloTiendaPermitido` (`storeUrlGuard.js`) se aplica al guardar (`validateConfig`) y antes de cada llamada (`WC_STORE_NOT_HTTPS`). Única excepción: `http://127.0.0.1` o `localhost` fuera de producción (`NODE_ENV !== production`), para la tienda de prueba local. En producción esa dirección sería el propio servidor.
+- **Verificado:** CAFÉ ESCOBAR, Mi Campo Verde y la demo usan https (siguen permitidas). FLORECER local queda bloqueada en producción, donde igual no era alcanzable. Contra la tienda local con axios real, la respuesta llegó con llaves solo en la cabecera.
+- **Pruebas:** `woocommerceLlavesEnCabecera.test.js` nueva; `woocommercePruebaConexion` ajustada a los dos intentos; las 11 de WooCommerce y `webhooksVivosRegresion` en verde.
+- **Sin desplegar.**
