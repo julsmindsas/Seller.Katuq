@@ -118,6 +118,9 @@
   bloque TX34-B03.**
 - [ ] 2.4 [P] Write-set: la tarea nocturna solo escribe `storeProductStats` [si P1]; la proyección
   y el buscador no escriben. Canario: una escritura en `products` u `orders` hace fallar la prueba.
+  — **Avance (bloque TX34-B08): parte proyección hecha** (revisión estática de `indiceTienda.js` con
+  canarios y una corrida con la Firestore en solo lectura, en `indiceTiendaSombra.test.js`). Faltan la
+  tarea nocturna (TX34-B12) y el buscador (TX34-B10).
 - [ ] 2.5 [S] `/gracias`: «Reintentar pago» solo con regreso válido, pago rechazado o anulado,
   reserva vigente e interruptor encendido; la promesa del correo solo con regreso válido y correo
   salido o elegible.
@@ -158,7 +161,7 @@
   sin `srcset` salvo que TX-37 cambie su pregunta 7. **Éxito:** 2.6 en verde, VE «Fotos del
   tamaño justo» y CLS ≤ 0,1 en el laboratorio.
   — **Hecha (bloque TX34-B07):** `srcset` y `sizes` en tarjeta (2 columnas en celular), ficha y miniaturas con las variantes `-wN.webp` (constructor y TX-37); precarga de la ficha con la misma lista, tomada de la primera foto del bloque; el script de la ficha cambia `srcset` y `src` juntos; primera fila del catálogo (4) sin `loading=lazy` y la primera con `fetchpriority=high`, también en las tarjetas que arma el script; el espacio de la foto ya lo reserva `aspect-ratio`. Portada `-cover.jpg` y fotos sin variantes, como hoy. **Pendiente de medir:** CLS en el laboratorio (no se corrió la medición completa).
-- [ ] 3.5 Proyección de tienda (D1) en modo sombra, con invalidación, para todo lo público
+- [x] 3.5 Proyección de tienda (D1) en modo sombra, con invalidación, para todo lo público
   (catálogo, ficha, categorías con foto, afines, marcas, plan gratis, feed, sitemap, directorio y
   el precio y lo vendible de KAI). Banderas de D10 en `config/feature_flags.storeMobile` y
   `companies.featureFlags` (catálogo cerrado del backend y del front). **Éxito:** 1.4 en verde
@@ -171,6 +174,25 @@
   Pendiente al desplegar (D10, columna «Al crear», D-385): FLORECER recibe `storeLightIndex`
   para que la sombra corra allí: `set-company-feature.js` primero en simulación y luego con
   `--execute`, solo con OK de Daniel. Sin esa bandera la sombra no corre en ninguna tienda.**
+  — **Hecha (bloque TX34-B08, commit local):** `services/sites/indiceTienda.js` (una lectura de `products`
+  por empresa, solo los campos de la tienda con `marketplace` entero; precio y oferta de vitrina con las
+  funciones puras de `vitrinaProducto.js`; un registro por empresa con TTL de 5 min y la carga en vuelo
+  compartida; `attributes` y `palabras` solo si se piden). Se invalida en `invalidateSearchIndex` y al
+  publicar. Con `storeMobile.lightIndex` en `shadow` calcula los dos, sirve lo de hoy y cuenta las
+  diferencias por empresa (sin términos ni datos del comprador); en `on` leen de la proyección
+  `consultarCatalogo`, `categoriasConFoto`, `productosAfines`, `marcasDeTienda`,
+  `productosVisiblesDelPlan` (el plan gratis), el feed, el sitemap, el directorio y lo vendible y el
+  precio de KAI (que sigue leyendo del índice compartido solo descripción, características y etiquetas);
+  la ficha compara en sombra su precio y lo vendible. Con `on`, `preciosVitrinaCache`,
+  `ofertasVitrinaCache` y las fechas aparte ya no se leen (3 lecturas de `products` pasan a 1; probado
+  con la Firestore falsa). Si la proyección falla, se sirve lo de hoy. `getSearchIndex`, el Seller y
+  `tools/searchProducts.js` no cambian. Pruebas: `tests/sitios/indiceTiendaSombra.test.js` (cero
+  diferencias en la muestra con ofertas, ofertas vencidas, lista mayorista y plan gratis, y en los 15
+  sitios del laboratorio; canarios; `on` igual a `off`; invalidación; multi-tenant; write-set) y el golden
+  de 1.4 con `on`, `shadow` y `off`.
+  **Pendiente:** la medición 1.3 repetida sobre FLORECER y OH MY STORE (bloqueada); la bandera
+  `storeLightIndex` en FLORECER al desplegar; P18: las facetas de F2-42 deben leer de la proyección
+  (punto de extensión documentado en `indiceTienda.js`; no se tocó F2-42).
 - [ ] 3.5b Clave de la caché del HTML sin parámetros de campaña (D15, revisión privada S4).
   **Éxito:** VE «Quien llega por un anuncio no espera de más»; prueba de atribución del pedido
   igual que hoy.
