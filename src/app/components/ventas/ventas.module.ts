@@ -33,6 +33,7 @@ import { NgxStarRatingModule } from "ngx-star-rating";
 import { ListOrdersComponent } from "./list/list.component";
 import { OrderOptionsModalComponent } from "./list/acciones-pedido/order-options-modal.component";
 import { OrderPinnedActionsComponent } from "./list/acciones-pedido/order-pinned-actions.component";
+import { OrderActionSuggestionComponent } from "./list/acciones-pedido/order-action-suggestion.component";
 import { IconoTablerComponent } from "../../shared/icons/icono-tabler.component";
 import { Pedido3dComponent } from "./list/pedido-3d/pedido-3d.component";
 import { PedidoRepartoComponent } from "./list/pedido-reparto/pedido-reparto.component";
@@ -162,6 +163,7 @@ import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-im
     ListOrdersComponent,
     OrderOptionsModalComponent, // D-547 (F1): modal «Opciones del pedido» en grilla
     OrderPinnedActionsComponent, // D-547 (F2): bloque ACCIONES de 8 (4 del rol y 4 del usuario), tras la bandera
+    OrderActionSuggestionComponent, // D-547 (F2): aviso «Usas Pagos a diario, ¿lo fijamos?», tras la bandera
     CrearVentasComponent,
     VentaAsistidaUnicaComponent,
     SelectorVistaVentaComponent,

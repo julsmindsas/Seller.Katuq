@@ -172,4 +172,113 @@ describe('OrderOptionsModalComponent (D-547)', () => {
     expect(todos(el, '.opm-etiqueta').length).toBe(0);
     expect(todos(el, '.opm-tarjeta[disabled]').length).toBe(0);
   });
+  // ── F2 (11.3): pines ────────────────────────────────────────────────────────────────────────
+  describe('pines (bandera orderPinnedActions)', () => {
+    const GENERAL = ['orderPdf', 'salesOrder', 'editCustomer', 'billingData'] as any[];
+    let fijadas: { id: string; fijar: boolean }[];
+
+    function abrirConPines(pines: string[] = [], activos = true, cambios: Partial<EntradaEstadoAcciones> = {}): HTMLElement {
+      const comp = fixture.componentInstance;
+      comp.pinesActivos = activos;
+      comp.delRol = GENERAL;
+      comp.pines = pines as any[];
+      fijadas = [];
+      comp.fijar.subscribe((e: any) => fijadas.push(e));
+      return abrir(cambios);
+    }
+    const pin = (el: HTMLElement, titulo: string) => {
+      const t = tarjeta(el, titulo);
+      return t.parentElement!.querySelector('.opm-pin') as HTMLButtonElement;
+    };
+
+    it('sin la bandera no existe ningún pin y el modal es el de F1', () => {
+      const el = abrirConPines([], false);
+      expect(todos(el, '.opm-pin').length).toBe(0);
+    });
+
+    it('con la bandera, las 16 tarjetas llevan su pin como botón propio (no dentro de la tarjeta)', () => {
+      const el = abrirConPines();
+      expect(todos(el, '.opm-pin').length).toBe(16);
+      expect(todos(el, '.opm-tarjeta .opm-pin').length).toBe(0);
+      expect(todos(el, '.opm-contexto-boton .opm-pin').length).toBe(0);
+    });
+
+    it('gris libre, azul fijado por el usuario y azul con candado fijado por el rol, con su nombre accesible', () => {
+      const el = abrirConPines(['payments']);
+      const libre = pin(el, 'Descuento');
+      expect(libre.getAttribute('aria-label')).toBe('Fijar en acciones principales');
+      expect(libre.getAttribute('aria-pressed')).toBe('false');
+      expect(libre.classList.contains('opm-pin-fijado')).toBeFalse();
+
+      const usuario = pin(el, 'Pagos');
+      expect(usuario.getAttribute('aria-label')).toBe('Quitar de acciones principales');
+      expect(usuario.getAttribute('aria-pressed')).toBe('true');
+      expect(usuario.classList.contains('opm-pin-fijado')).toBeTrue();
+
+      const rol = pin(el, 'PDF del pedido');
+      expect(rol.getAttribute('aria-label')).toBe('Fijada por tu rol');
+      expect(rol.getAttribute('aria-disabled')).toBe('true');
+      expect(rol.querySelector('.opm-pin-candado')).not.toBeNull();
+    });
+
+    it('tocar un pin gris pide fijar, uno azul pide soltar, y no activa la tarjeta', () => {
+      const el = abrirConPines(['payments']);
+      pin(el, 'Descuento').click();
+      pin(el, 'Pagos').click();
+      expect(fijadas).toEqual([{ id: 'discount', fijar: true }, { id: 'payments', fijar: false }]);
+      expect(acciones).toEqual([]);
+    });
+
+    it('el pin de una acción del rol no emite nada', () => {
+      const el = abrirConPines();
+      pin(el, 'PDF del pedido').click();
+      expect(fijadas).toEqual([]);
+    });
+
+    it('una tarjeta deshabilitada igual se puede fijar (fijar no da acceso)', () => {
+      const el = abrirConPines([], true, { puedeAsesor: false });
+      expect(tarjeta(el, 'Cambiar asesor').disabled).toBeTrue();
+      pin(el, 'Cambiar asesor').click();
+      expect(fijadas).toEqual([{ id: 'changeSeller', fijar: true }]);
+      expect(acciones).toEqual([]);
+    });
+
+    it('las acciones de contexto y Eliminar no tienen pin', () => {
+      const el = abrirConPines();
+      expect(todos(el, '.opm-contexto .opm-pin').length).toBe(0);
+      expect(todos(el, '.opm-pie .opm-pin').length).toBe(0);
+    });
+  });
+  // ── F2 (11.5): resaltado sin mover ──────────────────────────────────────────────────────────
+  describe('resaltado (D17)', () => {
+    function abrirResaltada(r: any): HTMLElement {
+      fixture.componentInstance.resaltada = r;
+      return abrir();
+    }
+    const orden = (el: HTMLElement) => todos(el, '.opm-tarjeta-titulo').map(t => t.textContent!.trim());
+
+    it('sin resaltado, ninguna tarjeta lo lleva', () => {
+      const el = abrirResaltada(null);
+      expect(todos(el, '.opm-tarjeta-resaltada').length).toBe(0);
+      expect(todos(el, '.opm-tarjeta-alerta').length).toBe(0);
+    });
+
+    it('resalta la tarjeta con su etiqueta en lugar de la reseña y no mueve ninguna', () => {
+      const sin = orden(abrirResaltada(null));
+      fixture = TestBed.createComponent(OrderOptionsModalComponent);
+      const el = abrirResaltada({ id: 'payments', etiqueta: 'Pago pendiente' });
+      const t = tarjeta(el, 'Pagos');
+      expect(t.classList.contains('opm-tarjeta-resaltada')).toBeTrue();
+      expect(t.querySelector('.opm-tarjeta-alerta')!.textContent!.trim()).toBe('Pago pendiente');
+      expect(t.querySelector('.opm-tarjeta-resena')).toBeNull();
+      expect(todos(el, '.opm-tarjeta-resaltada').length).toBe(1);
+      expect(orden(el)).toEqual(sin);
+    });
+
+    it('la tarjeta resaltada sigue siendo una acción normal: emite su id', () => {
+      const el = abrirResaltada({ id: 'billingData', etiqueta: 'Sin factura' });
+      tarjeta(el, 'Facturación').click();
+      expect(acciones).toEqual(['billingData']);
+    });
+  });
 });

@@ -66,7 +66,7 @@ import { PedidoEntrega } from "../../despachos/interfaces/pedido-entrega.interfa
 import { LogisticaService } from "../../../shared/services/despachos/logistica.services";
 import { normalizeTransportadorName } from "../../../shared/services/despachos/transportador.util";
 import { Observable, Subject, firstValueFrom, forkJoin, of } from "rxjs";
-import { catchError, debounceTime, distinctUntilChanged, map, switchMap, takeUntil } from "rxjs/operators";
+import { catchError, debounceTime, distinctUntilChanged, finalize, map, switchMap, takeUntil } from "rxjs/operators";
 import { OrdenVentaComponent } from "../orden-venta/orden-venta.component";
 import { IntegrationsService } from "../../integrations/integrations.service";
 import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
@@ -84,8 +84,12 @@ import {
   EstadoAcciones,
   estadoAcciones,
 } from "./acciones-pedido/acciones-pedido.estado";
-import { ochoAcciones } from "./acciones-pedido/acciones-pedido.ocho";
-import { AccionResaltada, resaltada } from "./acciones-pedido/acciones-pedido.resaltada";
+import { accionesDelRol, ochoAcciones } from "./acciones-pedido/acciones-pedido.ocho";
+import { decidirPin, reemplazarPin } from "./acciones-pedido/acciones-pedido.pines";
+import { cuentaComoUso, idFijaPorTitulo } from "./acciones-pedido/acciones-pedido.uso";
+import { AccionResaltada, resaltada, resaltadaSoloEnModal } from "./acciones-pedido/acciones-pedido.resaltada";
+import { diaColombia } from "./acciones-pedido/acciones-pedido.dia";
+import { sugerencia } from "./acciones-pedido/acciones-pedido.sugerencia";
 import { AccionesUsuario } from "./acciones-pedido/acciones-pedido.me";
 import { OrderActionsService } from "../../../shared/services/ventas/order-actions.service";
 
@@ -647,7 +651,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     );
 
-    this.rowMenuItems = items;
+    this.rowMenuItems = this.conConteoDeUso(items);
     menu.toggle(event);
   }
 
@@ -888,6 +892,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!paso || !pedido) return;
     const metodo = (this as any)[paso.metodo];
     if (typeof metodo !== "function") return;
+    this.contarUso(id);
     const argumentos: any[] = [];
     if (paso.plantilla) argumentos.push(this.plantillaDeAccion(paso.plantilla));
     argumentos.push(pedido);
@@ -911,6 +916,68 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       editarDescuentoModal: this.editarDescuentoModalRef,
     };
     return plantillas[nombre];
+  }
+
+  // ── D-547 (F2, 11.4): conteo de uso ─────────────────────────────────────────────────────────
+  // Desde `ejecutarAccionPedido` (el modal y el bloque de 8) y desde el «⋯» de cada fila se cuenta, una vez por acción
+  // y por día, el uso de las 16 fijas. Sin la bandera no hay estado cargado y `registrarUso` no hace nada. Falla en
+  // silencio, guarda solo el id de la acción (nada del pedido ni del cliente) y no escribe en consola.
+
+  /** Cuenta el uso de una acción fija (las demás no se cuentan). */
+  contarUso(id: string): void {
+    if (cuentaComoUso(id)) this.orderActions.registrarUso(id);
+  }
+
+  /** Las entradas del «⋯» que llevan el título de una acción fija cuentan su uso antes de ejecutarse; el resto queda igual. */
+  private conConteoDeUso(items: MenuItem[]): MenuItem[] {
+    return items.map((item) => {
+      const id = idFijaPorTitulo(item.label);
+      const comando = item.command;
+      if (!id || !comando) return item;
+      return { ...item, command: (e: any) => { this.contarUso(id); comando(e); } };
+    });
+  }
+
+  // ── D-547 (F2, 11.4): sugerencia de fijar ──────────────────────────────────────────────────
+  // Katuq SOLO sugiere: el aviso va dentro del detalle, sin ventana, y nada cambia sin que el usuario acepte.
+
+  /** La acción que se le sugiere fijar al usuario (se calcula al abrir el primer pedido de la sesión con estado cargado). */
+  sugerenciaPedido: AccionPedidoId | null = null;
+  private sugerenciaEvaluada = false;
+
+  /** La sugerencia a mostrar: desaparece si el usuario ya la fijó por su cuenta. */
+  get sugerenciaVisible(): AccionPedidoId | null {
+    const id = this.sugerenciaPedido;
+    return id && this.bloquePersonalizado && !this.accionesDelBloque.includes(id) ? id : null;
+  }
+
+  /**
+   * Una sola evaluación por sesión, al abrir el primer pedido con las acciones ya cargadas (si el estado aún no llegó,
+   * se intenta en el siguiente pedido). Al mostrarla se avisa al servidor (`shown`) para respetar la semana entre
+   * sugerencias; si ese aviso falla, el aviso se ve igual y no se interrumpe al usuario.
+   */
+  private evaluarSugerenciaDeLaSesion(): void {
+    if (this.sugerenciaEvaluada || !this.bloquePersonalizado) return;
+    this.sugerenciaEvaluada = true;
+    const me = this.orderActions.estado;
+    if (!me) return;
+    const id = sugerencia(me.usageDays, this.accionesDelBloque, me.dismissed, me.lastSuggestionAt, diaColombia());
+    if (!id) return;
+    this.sugerenciaPedido = id;
+    this.orderActions.registrarSugerencia(id, "shown").pipe(takeUntil(this.destroy$)).subscribe({ error: () => { /* en silencio */ } });
+  }
+
+  /** «Fijar»: hace lo mismo que el pin del modal (con los 4 espacios llenos pregunta cuál reemplazar). */
+  fijarSugerencia(id: AccionPedidoId): void {
+    this.fijarAccionDelModal({ id, fijar: true });
+  }
+
+  /** «Ahora no»: esa acción no vuelve a sugerirse en 30 días. Si no se pudo guardar, el aviso sigue y se avisa. */
+  rechazarSugerencia(id: AccionPedidoId): void {
+    this.orderActions.registrarSugerencia(id, "dismissed").pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => { if (this.sugerenciaPedido === id) this.sugerenciaPedido = null; },
+      error: () => this.toastrService.error("No pudimos guardar tus acciones. Intenta de nuevo.", "Acciones del pedido"),
+    });
   }
 
   // ── D-547 (F2): bloque ACCIONES de 8, detrás de la bandera `orderPinnedActions` ───────────────
@@ -943,6 +1010,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const previa = this.resaltadaMemo;
     if ((r?.id ?? null) === (previa?.id ?? null) && (r?.etiqueta ?? null) === (previa?.etiqueta ?? null)) return previa;
     this.resaltadaMemo = r;
+    return r;
+  }
+
+  private resaltadaModalMemo: AccionResaltada | null = null;
+
+  /**
+   * Resaltado dentro de «Opciones del pedido» (D17): solo si la acción NO está entre las 8 del bloque (si lo está, se
+   * resalta allí). Devuelve el mismo objeto mientras no cambie, para el binding OnPush del modal. Sin la bandera, null.
+   */
+  get resaltadaDelModal(): AccionResaltada | null {
+    const r = this.bloquePersonalizado && this.selectedOrder
+      ? resaltadaSoloEnModal(resaltada(this.selectedOrder), this.accionesDelBloque)
+      : null;
+    const previa = this.resaltadaModalMemo;
+    if ((r?.id ?? null) === (previa?.id ?? null) && (r?.etiqueta ?? null) === (previa?.etiqueta ?? null)) return previa;
+    this.resaltadaModalMemo = r;
     return r;
   }
 
@@ -985,6 +1068,78 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           return null;
         }),
     });
+  }
+
+  // ── D-547 (F2, 11.3): pines en «Opciones del pedido» ─────────────────────────────────────────
+  // Solo se AGREGA. Con la bandera apagada `bloquePersonalizado` es falso y el modal no muestra pines.
+
+  private delRolMemo: { de: unknown; valor: AccionPedidoId[] } = { de: undefined, valor: [] };
+
+  /** Las 4 acciones del rol (o General): llevan candado en el modal y no se sueltan. Mismo arreglo mientras el rol no cambie. */
+  get accionesDelRolPedido(): AccionPedidoId[] {
+    const rol = this.orderActions.estado?.role;
+    if (rol !== this.delRolMemo.de) this.delRolMemo = { de: rol, valor: rol ? accionesDelRol(rol) : [] };
+    return this.delRolMemo.valor;
+  }
+
+  private static readonly SIN_PINES: AccionPedidoId[] = [];
+
+  /** Lo que el usuario fijó, tal como lo confirmó el servidor. Mismo arreglo hasta que el servidor confirme un cambio. */
+  get pinesDelUsuario(): AccionPedidoId[] {
+    return (this.orderActions.estado?.pinned as AccionPedidoId[]) || ListOrdersComponent.SIN_PINES;
+  }
+
+  /** Mientras se guarda un pin no se acepta otro toque: evita dos `PUT /me/pins` cruzados. */
+  private guardandoPines = false;
+
+  /**
+   * D-547 (F2, D15): el usuario tocó un pin en el modal. Fijar con espacio libre y soltar guardan directo; con los 4
+   * espacios llenos se pregunta cuál reemplazar. El bloque cambia SOLO cuando el servidor confirma; si falla, todo
+   * queda como estaba y se avisa. La acción que se estaba usando sigue disponible en el modal.
+   */
+  fijarAccionDelModal(ev: { id: AccionPedidoId; fijar: boolean }): void {
+    if (!this.bloquePersonalizado || this.guardandoPines) return;
+    const decision = decidirPin(ev.id, ev.fijar, this.accionesDelRolPedido, this.pinesDelUsuario);
+    if (decision.tipo === "guardar") {
+      this.guardarPinesDelModal(decision.lista);
+    } else if (decision.tipo === "elegir") {
+      this.preguntarCualReemplazar(decision.entra, decision.actuales);
+    }
+  }
+
+  private guardarPinesDelModal(lista: AccionPedidoId[]): void {
+    this.guardandoPines = true;
+    this.orderActions
+      .guardarPines(lista)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.guardandoPines = false; }))
+      .subscribe({
+        error: () => this.toastrService.error("No pudimos guardar tus acciones. Intenta de nuevo.", "Acciones del pedido"),
+      });
+  }
+
+  /** Con las 4 fijadas: un Swal con las 4 como opciones. Cancelar no cambia nada. */
+  private preguntarCualReemplazar(entra: AccionPedidoId, actuales: AccionPedidoId[]): void {
+    const opciones: Record<string, string> = {};
+    for (const id of actuales) opciones[id] = accionPorId(id).titulo;
+    this.guardandoPines = true;
+    Swal.fire({
+      title: "Ya fijaste 4 acciones",
+      text: `¿Cuál reemplazamos por «${accionPorId(entra).titulo}»?`,
+      input: "radio",
+      inputOptions: opciones,
+      inputValidator: (valor) => (valor ? null : "Escoge la acción que sale."),
+      showCancelButton: true,
+      confirmButtonColor: "#5F3FE0",
+      confirmButtonText: "Reemplazar",
+      cancelButtonText: "Cancelar",
+      showLoaderOnConfirm: true,
+      allowOutsideClick: () => !Swal.isLoading(),
+      preConfirm: (sale: string) =>
+        firstValueFrom(this.orderActions.guardarPines(reemplazarPin(actuales, sale, entra))).catch(() => {
+          Swal.showValidationMessage("No pudimos guardar tus acciones. Intenta de nuevo.");
+          return null;
+        }),
+    }).then(() => { this.guardandoPines = false; });
   }
 
   /**
@@ -5287,6 +5442,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /** Selecciona un pedido para mostrarlo en el panel de detalle (no toca selectedOrder del modal). */
   seleccionarPedidoDetalle(pedido: any): void {
     this.pedidoDetalle = pedido;
+    this.evaluarSugerenciaDeLaSesion();
   }
 
   /**

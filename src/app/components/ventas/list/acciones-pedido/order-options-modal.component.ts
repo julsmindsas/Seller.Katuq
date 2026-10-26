@@ -4,6 +4,7 @@ import {
 } from '@angular/core';
 import { AccionPedidoId } from './acciones-pedido.catalogo';
 import { EstadoAcciones } from './acciones-pedido.estado';
+import { EstadoPin, estadosPin, etiquetaPin } from './acciones-pedido.pines';
 import {
   ColumnaVista, ContextoVista, TarjetaVista, VistaModal, construirVista, resolverClic, resolverEnter,
 } from './order-options-modal.vista';
@@ -31,15 +32,21 @@ export class OrderOptionsModalComponent implements OnChanges, AfterViewInit, OnD
   @Input() estados: EstadoAcciones | null = null;
   /** El pedido se abrió desde Producción: solo las acciones que hoy aplican allí, en flujo. */
   @Input() desdeProduccion = false;
-  /** F2 (acciones fijadas por el usuario o por el rol). Sin uso en F1: el lugar del pin queda vacío. */
+  /** F2: `true` con la bandera `orderPinnedActions` encendida y el estado cargado. Apagado, el modal no muestra pines. */
+  @Input() pinesActivos = false;
+  /** F2: las 4 acciones del rol (fijadas por el administrador; llevan candado y no se sueltan). */
+  @Input() delRol: AccionPedidoId[] = [];
+  /** F2: las acciones que el usuario fijó (máximo 4). */
   @Input() pines: AccionPedidoId[] = [];
-  /** F2 (resaltar sin mover). Sin uso en F1. */
+  /** F2 (resaltar sin mover, D17): la tarjeta de esta acción se pinta con el par de alerta y su etiqueta. */
   @Input() resaltada: { id: AccionPedidoId; etiqueta: string } | null = null;
 
   /** El usuario escogió una acción habilitada. */
   @Output() accion = new EventEmitter<AccionPedidoId>();
   /** Esc, la X, «Cerrar» o el clic fuera: cierra sin hacer nada. */
   @Output() cerrar = new EventEmitter<void>();
+  /** F2: el usuario tocó un pin. `fijar: true` pide fijarla y `false` soltarla; el padre decide y guarda. */
+  @Output() fijar = new EventEmitter<{ id: AccionPedidoId; fijar: boolean }>();
 
   @ViewChild('buscador', { static: true }) buscador!: ElementRef<HTMLInputElement>;
   @ViewChild('dialogo', { static: true }) dialogo!: ElementRef<HTMLElement>;
@@ -48,6 +55,8 @@ export class OrderOptionsModalComponent implements OnChanges, AfterViewInit, OnD
   vista: VistaModal | null = null;
   facturaAbierta = false;
   descuentoAbierto = false;
+  /** F2: estado del pin de cada una de las 16 fijas (rol, usuario o libre). */
+  estadoPines: Record<string, EstadoPin> = {};
 
   /** Quién tenía el foco al abrir: vuelve a él al cerrar. */
   private abridor: HTMLElement | null = null;
@@ -55,6 +64,7 @@ export class OrderOptionsModalComponent implements OnChanges, AfterViewInit, OnD
   constructor(private cdr: ChangeDetectorRef) {}
 
   ngOnChanges(): void {
+    this.estadoPines = this.pinesActivos ? estadosPin(this.delRol || [], this.pines || []) : {};
     this.reconstruir();
   }
 
@@ -120,6 +130,19 @@ export class OrderOptionsModalComponent implements OnChanges, AfterViewInit, OnD
     if (r.tipo === 'emitir') this.accion.emit(r.id);
     else if (r.tipo === 'menuFactura') { this.facturaAbierta = !this.facturaAbierta; this.descuentoAbierto = false; }
     else if (r.tipo === 'menuDescuento') { this.descuentoAbierto = !this.descuentoAbierto; this.facturaAbierta = false; }
+  }
+
+  /** F2: el pin de una tarjeta. Una fijada por el rol no se suelta. */
+  alPin(t: TarjetaVista): void {
+    const estado = this.estadoPines[t.id];
+    if (!estado || estado === 'rol') return;
+    this.fijar.emit({ id: t.id, fijar: estado === 'libre' });
+  }
+
+  /** Nombre accesible y `title` del pin de una acción. */
+  etiquetaPin(id: string): string {
+    const estado = this.estadoPines[id];
+    return estado ? etiquetaPin(estado) : '';
   }
 
   /** Una opción de un menú desplegado (hijos de Factura electrónica; Aplicar otro / Editar o quitar). */

@@ -22,6 +22,14 @@ export interface AccionResaltada {
 
 const PAGADO: ReadonlySet<string> = new Set(['Aprobado', 'PreAprobado']);
 
+/**
+ * D-547 (F2, 11.5): dónde se pinta el resaltado. Si la acción está entre las 8 del bloque, se resalta ahí y el modal no
+ * la repite; si no está entre las 8, se resalta solo su tarjeta en «Opciones del pedido». Nunca mueve nada.
+ */
+export function resaltadaSoloEnModal(r: AccionResaltada | null, ocho: readonly string[]): AccionResaltada | null {
+  return r && !ocho.includes(r.id) ? r : null;
+}
+
 export function resaltada(pedido: any): AccionResaltada | null {
   const estado = String(pedido?.estadoPago ?? '').trim();
   if (estado === 'Pendiente') return { id: 'payments', etiqueta: 'Pago pendiente' };

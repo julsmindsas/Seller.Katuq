@@ -1,6 +1,6 @@
 <!-- D-547 (F1): modal «Opciones del pedido». Clases con prefijo opm- (ninguna lleva «p-»: AGENTS.md, trampas de CSS global). -->
 <div class="opm-fondo" (click)="alFondo($event)">
-  <div #dialogo class="opm-modal" role="dialog" aria-modal="true" aria-labelledby="opm-titulo"
+  <div #dialogo class="opm-modal" [class.opm-con-pines]="pinesActivos" role="dialog" aria-modal="true" aria-labelledby="opm-titulo"
        (keydown.escape)="alEscape($event)" (keydown.tab)="alTab($any($event))">
 
     <!-- Encabezado -->
@@ -107,6 +107,7 @@
 <!-- Tarjeta de una acción (fija o resultado de búsqueda) -->
 <ng-template #tarjetaPlantilla let-t>
   <button type="button" class="opm-tarjeta" [class.opm-tarjeta-bloqueada]="!t.habilitada"
+          [class.opm-tarjeta-resaltada]="t.habilitada && resaltada?.id === t.id"
           [disabled]="!t.habilitada" [attr.aria-disabled]="!t.habilitada ? 'true' : null"
           [attr.aria-haspopup]="t.id === 'discount' && vista?.descuentoConMenu ? 'menu' : null"
           [attr.aria-expanded]="t.id === 'discount' && vista?.descuentoConMenu ? descuentoAbierto : null"
@@ -114,12 +115,24 @@
     <span class="opm-icono"><app-icono-tabler [nombre]="t.icono" [tamano]="28" [trazo]="1.6"></app-icono-tabler></span>
     <span class="opm-texto">
       <span class="opm-tarjeta-titulo">{{ t.titulo }}</span>
-      <span class="opm-tarjeta-resena" *ngIf="t.habilitada">{{ t.resena }}</span>
+      <span class="opm-tarjeta-resena" *ngIf="t.habilitada && resaltada?.id !== t.id">{{ t.resena }}</span>
+      <!-- Resaltado sin mover (F2, D17): la etiqueta ocupa el lugar de la reseña, en el par de alerta -->
+      <span class="opm-tarjeta-alerta" *ngIf="t.habilitada && resaltada?.id === t.id">{{ resaltada?.etiqueta }}</span>
       <span class="opm-tarjeta-motivo" *ngIf="!t.habilitada && t.motivo">
         <app-icono-tabler nombre="lock" [tamano]="13"></app-icono-tabler>{{ t.motivo }}
       </span>
     </span>
-    <!-- Lugar del pin (F2). En F1 queda vacío. -->
+    <!-- Lugar del pin: reserva su ancho; el pin (botón propio) va encima, fuera de este botón. -->
     <span class="opm-lugar-pin" aria-hidden="true"></span>
+  </button>
+  <!-- Pin (F2): botón propio de 24×24, hermano de la tarjeta. Azul si la acción está fijada (rol o usuario), gris si no.
+       Las del rol llevan candado, «Fijada por tu rol» y no se sueltan. Fijar no da acceso: también sirve en una deshabilitada. -->
+  <button type="button" class="opm-pin" *ngIf="estadoPines[t.id] as ep"
+          [class.opm-pin-fijado]="ep !== 'libre'" [class.opm-pin-rol]="ep === 'rol'"
+          [attr.aria-pressed]="ep !== 'libre'" [attr.aria-disabled]="ep === 'rol' ? 'true' : null"
+          [attr.aria-label]="etiquetaPin(t.id)" [attr.title]="etiquetaPin(t.id)"
+          (click)="alPin(t)">
+    <app-icono-tabler [nombre]="ep === 'libre' ? 'pin' : 'pinned'" [tamano]="16" [relleno]="ep !== 'libre'"></app-icono-tabler>
+    <app-icono-tabler *ngIf="ep === 'rol'" class="opm-pin-candado" nombre="lock" [tamano]="10" [trazo]="2.4"></app-icono-tabler>
   </button>
 </ng-template>

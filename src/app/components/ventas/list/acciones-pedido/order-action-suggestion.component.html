@@ -1,0 +1,9 @@
+<!-- D-547 (F2): aviso de sugerencia. Clases con prefijo sug- (ninguna lleva «p-»: AGENTS.md, trampas de CSS global). -->
+<div class="sug-aviso" role="status" *ngIf="texto">
+  <span class="sug-icono"><app-icono-tabler nombre="pin" [tamano]="18"></app-icono-tabler></span>
+  <span class="sug-texto">{{ texto }}</span>
+  <span class="sug-botones">
+    <button type="button" class="sug-boton sug-boton-principal" (click)="fijar.emit()">Fijar</button>
+    <button type="button" class="sug-boton" (click)="ahoraNo.emit()">Ahora no</button>
+  </span>
+</div>

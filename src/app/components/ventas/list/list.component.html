@@ -568,6 +568,8 @@
                                                         <!-- acciones rápidas -->
                                                         <div class="pedido-detail__sectionlabel">{{ 'ACCIONES' | translate }}</div>
                                                         <!-- D-547 (F2): con la bandera orderPinnedActions, el bloque de 8 (4 del rol y 4 del usuario) -->
+                                                        <app-order-action-suggestion *ngIf="sugerenciaVisible as sug" [accion]="sug"
+                                                                (fijar)="fijarSugerencia(sug)" (ahoraNo)="rechazarSugerencia(sug)"></app-order-action-suggestion>
                                                         <app-order-pinned-actions *ngIf="bloquePersonalizado"
                                                                 [acciones]="accionesDelBloque" [estados]="estadosDelBloque(pedidoDetalle)"
                                                                 [pedido]="pedidoDetalle" [resaltada]="resaltadaDe(pedidoDetalle)"
@@ -658,7 +660,7 @@
 
                                                     <!-- footer -->
                                                     <div class="pedido-detail__footer">
-                                                        <button type="button" class="pedido-detail__btn pedido-detail__btn--ghost" *ngIf="!(bloquePersonalizado && accionesDelBloque.includes('history'))" (click)="verHistorialPedido(pedidoDetalle)">
+                                                        <button type="button" class="pedido-detail__btn pedido-detail__btn--ghost" *ngIf="!(bloquePersonalizado && accionesDelBloque.includes('history'))" (click)="verHistorialPedido(pedidoDetalle); contarUso('history')">
                                                             <i class="pi pi-history"></i> {{ 'Historial' | translate }}
                                                         </button>
                                                         <button type="button" class="pedido-detail__btn pedido-detail__btn--primary" (click)="openOptionsModal(pedidoDetalle)">
@@ -2182,7 +2184,10 @@
     [pedido]="selectedOrder"
     [estados]="estadosAccionesDe(selectedOrder)"
     [desdeProduccion]="isFromProduction"
+    [pinesActivos]="bloquePersonalizado" [delRol]="accionesDelRolPedido" [pines]="pinesDelUsuario"
+    [resaltada]="resaltadaDelModal"
     (accion)="ejecutarAccionPedido($event, selectedOrder)"
+    (fijar)="fijarAccionDelModal($event)"
     (cerrar)="closeOptionsModal()"></app-order-options-modal>
 
 <!-- Modal de Detalles de Entrega -->

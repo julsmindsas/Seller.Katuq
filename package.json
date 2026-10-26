@@ -16,6 +16,7 @@
     "test:dian-config": "node --test tests/integrations/dian-config-save.test.js tests/integrations/dian-batch-status.test.js",
     "test:dian-invoice": "node --test tests/integrations/dian-invoice-composer.test.js",
     "test:theme": "node --test tests/theme/theme-mode.test.js tests/theme/users-edit-contract.test.js tests/theme/user-writers.test.js tests/theme/conteos.test.js",
+    "test:acciones-pedido": "node --test tests/ventas/acciones-pedido-*.test.js tests/ventas/acciones-rol-pedido.test.js",
     "lint": "node --max_old_space_size=4096 node_modules/@angular/cli/bin/ng lint",
     "e2e": "node --max_old_space_size=4096 node_modules/@angular/cli/bin/ng e2e",
     "gc": "ng generate component",

@@ -1,0 +1,94 @@
+// D-547 (F2): aviso de sugerencia. Tokens de openspec/specs/design-system/spec.md (D-131) y regla de diseño Katuq
+// (D-399): plano, sin gradientes, acento #5F3FE0, tinta #211F3A, radios 16/11.
+//
+// Trampas de CSS global (AGENTS.md) que este archivo evita:
+//   - `[class*="p-"]` fuerza el font-size: ninguna clase de aquí contiene «p-» (todas llevan el prefijo sug-).
+//   - `span.ng-star-inserted` pinta de azul todo span creado por *ngIf: TODO span lleva color y tamaño propios.
+//   - `button:focus` quita el outline: se devuelve con :focus-visible.
+//   - `a` y `p` traen letter-spacing: aquí se neutraliza.
+
+$ink: #211F3A;
+$acento: #5F3FE0;
+$acento-suave: #EFE9FF;
+$superficie: #F7F5FF;
+$linea: #E4DDFB;
+$borde-boton: #E4E2EF;
+$hover: #FAF9FF;
+$foco: #7C5CFF;
+
+:host { display: block; }
+
+.sug-aviso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-bottom: 9px;
+  padding: 10px 12px;
+  background: $superficie;
+  border: 1px solid $linea;
+  border-radius: 16px;
+  color: $ink;
+  letter-spacing: normal;
+
+  button { font-family: inherit; letter-spacing: normal; }
+  button:focus-visible { outline: 3px solid $foco !important; outline-offset: 2px; }
+}
+
+.sug-icono {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: $acento-suave;
+  border-radius: 11px;
+  color: $acento;
+  font-size: 13px;
+  line-height: 1;
+}
+
+span.sug-texto {
+  flex: 1 1 160px;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 700;
+  color: $ink;
+  letter-spacing: normal;
+  overflow-wrap: break-word;
+}
+
+.sug-botones {
+  flex: none;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.sug-boton {
+  height: 32px;
+  padding: 0 14px;
+  background: #fff;
+  border: 1px solid $borde-boton;
+  border-radius: 11px;
+  font-size: 12.5px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #5B5878;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover { background: $hover; }
+
+  &.sug-boton-principal {
+    background: $acento;
+    border-color: $acento;
+    color: #fff;
+    &:hover { background: #4a2fc0; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sug-boton { transition: none; }
+}
