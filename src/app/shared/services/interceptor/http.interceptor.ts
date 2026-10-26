@@ -85,10 +85,16 @@ export class HttpInterceptor2 implements HttpInterceptor {
               // inválido en middleware/auth.js). Leyendo solo `message`, un 403
               // de sesión caía al texto cableado y se anunciaba como "Límite de
               // suscripción alcanzado" — mandaba a diagnosticar otra cosa.
+              //
+              // Un permiso que le falta al usuario no es de suscripción: antes
+              // salía «Suscripción» con los nombres de los roles permitidos.
+              const sinPermiso = ['ROLE_NOT_ALLOWED', 'PERMISSION_DENIED', 'ROLE_NOT_FOUND', 'INSUFFICIENT_ROLE'].includes(err.error?.code);
               const mensajeBackend = err.error?.message || err.error?.error;
               this.toastr.warning(
-                mensajeBackend || 'Límite de suscripción alcanzado',
-                'Suscripción',
+                sinPermiso
+                  ? 'No tienes permiso para hacer esto. Pídele a un administrador de tu empresa que lo haga o que te dé el permiso.'
+                  : mensajeBackend || 'Límite de suscripción alcanzado',
+                sinPermiso ? 'Sin permiso' : 'Suscripción',
                 {
                   timeOut: 8000,
                   closeButton: true,
