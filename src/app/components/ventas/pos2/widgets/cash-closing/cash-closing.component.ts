@@ -24,14 +24,21 @@ interface ProductoVenta {
   numeroPedido: string;
 }
 
+function hoyLocal(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 @Component({
   selector: 'app-cash-closing',
   templateUrl: './cash-closing.component.html',
   styleUrls: ['./cash-closing.component.scss']
 })
 export class CashClosingComponent {
-  fechaCierre: string = new Date().toISOString().split('T')[0];
-  fechaFin: string = new Date().toISOString().split('T')[0];
+  // Fecha LOCAL de hoy: toISOString() da la fecha UTC y desde las 7 p. m. de
+  // Colombia ya marcaba el día siguiente (el cierre salía "sin ventas").
+  fechaCierre: string = hoyLocal();
+  fechaFin: string = hoyLocal();
   efectivoInicial: number = 0;
   efectivoFinal: number = 0;
   observaciones: string = '';
@@ -113,10 +120,12 @@ export class CashClosingComponent {
           this.informe.totalProductos = this.productosVendidos.reduce((sum, p) => sum + p.cantidad, 0);
           this.mostrarBotonCompletar = true;
         } else {
+          // No es un error: simplemente no hubo ventas POS en esas fechas.
           Swal.fire({
-            title: 'Error',
+            title: 'Sin ventas',
             text: 'No se encontraron ventas en el período seleccionado',
-            icon: 'error'
+            icon: 'info',
+            confirmButtonColor: '#5F3FE0'
           });
         }
       },
@@ -131,10 +140,11 @@ export class CashClosingComponent {
   }
 
   calcularDiferencia(): number {
-    const ventasEfectivo = this.formasPago.find(fp => fp.nombre === 'Efectivo')?.total || 0;
+    const ventasEfectivo = this.formasPago.find(fp => (fp.nombre || '').toLowerCase() === 'efectivo')?.total || 0;
     this.informe.diferencia = this.efectivoFinal - (this.efectivoInicial + ventasEfectivo);
     return this.informe.diferencia;
   }
+
 
   calcularTotalProductos(): number {
     return this.productosVendidos.reduce((sum, p) => sum + p.total, 0);
@@ -212,7 +222,7 @@ export class CashClosingComponent {
    * Obtiene el total de ventas en efectivo
    */
   get totalEfectivo(): number {
-    return this.formasPago.find(fp => fp.nombre === 'Efectivo')?.total || 0;
+    return this.formasPago.find(fp => (fp.nombre || '').toLowerCase() === 'efectivo')?.total || 0;
   }
 
   /**

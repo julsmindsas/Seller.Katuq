@@ -290,6 +290,30 @@ export class CashClosingHistoryComponent implements OnInit {
     window.print();
   }
 
+  /** Ventas en efectivo del cierre: el total guardado o, si no viene, la forma de pago. */
+  efectivoDeCierre(item: HistorialItem): number {
+    if (typeof item.totalEfectivo === 'number') return item.totalEfectivo;
+    return item.formasPago?.['efectivo'] || 0;
+  }
+
+  /**
+   * Diferencia del cuadre con la MISMA fórmula de la pantalla de cierre
+   * (calcularDiferencia) y del reporte impreso (diferenciaCaja):
+   * contado − (saldo inicial + ventas en efectivo).
+   * El historial mostraba final − inicial con el mismo rótulo, así que un mismo
+   * cierre daba una diferencia al cerrarlo y otra al consultarlo.
+   */
+  diferenciaCierre(item: HistorialItem): number {
+    return (item.efectivoFinal || 0) - ((item.efectivoInicial || 0) + this.efectivoDeCierre(item));
+  }
+
+  /** Texto corto para la cajera: Cuadra / Sobra $X / Falta $X. */
+  estadoCuadre(item: HistorialItem): string {
+    const d = this.diferenciaCierre(item);
+    if (d === 0) return 'Cuadra';
+    return (d > 0 ? 'Sobra ' : 'Falta ') + this.formatCurrency(Math.abs(d));
+  }
+
   // Funciones de formato (mantener las que aún se necesiten)
   // Ticket 1173: pesos colombianos (antes salía en formato de Chile) y nunca "$NaN".
   formatCurrency(value: number): string {

@@ -12321,3 +12321,11 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - Subida, sin desplegar: la publica Daniel.
 - Siguen, sensibles y con diff: 2.5 (`requestId` y códigos en `from-order`), 2.6 y 2.7 (`verify-invoice`), 2.9 y 2.11.
 - La rama local del front en el equipo del agente tiene 139 commits del 21-oct (fusión de `feature/tickets-web`) que no están en `origin` y chocan con él en 13 archivos (reportes, menú lateral, `company-features`, `CONTRACT.md`, `package.json`). No se subieron; hay que resolverlos antes.
+
+
+### 2026-10-26 — D-562: POS, recuperar los arreglos de cálculo del 14-oct sobre el rediseño del equipo
+- **Contexto:** los arreglos del POS del 14-oct quedaron sin commitear y chocaron con D-520/D-531/D-540. Se recupera solo la lógica; el diseño se queda el del equipo.
+- **Qué cambió:** alerta Swal al Agregar sin existencias (`agregarDesdeTarjeta`); el cierre propone la fecha LOCAL (`toISOString` daba el día siguiente desde las 7 p. m.); "Sin ventas" es aviso informativo, no error; el efectivo se reconoce sin importar mayúsculas (cierre y reporte impreso).
+- **Historial de cierres:** la fila Diferencia usa la fórmula única aprobada el 14-oct, contado − (inicial + ventas en efectivo), y muestra Cuadra / Sobra / Falta. Antes era final − inicial, y un mismo cierre daba un número al cerrarlo y otro al consultarlo. `formasPagoComoNumeros` pasa las claves a minúscula para que "Efectivo" y "efectivo" no queden duplicados ni se sume el efectivo doble. Se conserva el normalizador del ticket 1173.
+- **Verificado:** compila (`ng serve`); la consulta del historial devuelve 14 cierres de ALMARA en octubre. **Sin revisar en navegador.**
+- **Pendiente:** el servidor sigue cortando los días en UTC; los descuentos e impuestos no se guardan en los cierres nuevos.
