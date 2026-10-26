@@ -178,7 +178,21 @@ producto sin cantidades ni fechas, no sirve para 30 días. Índice de Firestore
 - `scripts/medir-render-frio.js --dry-run`: solo lectura contra producción, sin ejecutar JS (no
   pasa por la baliza). Tiempo del HTML en frío y en caliente de FLORECER, OH MY STORE y
   lino-y-lona, y por etapa con la proyección. Corre con `CRON_ENABLED` apagado.
+  **Ajuste al construirlo (bloque TX34-B04):** `--dry-run`, que es el modo por defecto, corre sobre
+  la Firestore en memoria con las tiendas del laboratorio. La lectura de producción es
+  `--real --sitios …` y queda bloqueada hasta el OK de Daniel.
 - Herramientas como `devDependencies` con versión exacta. No van al servidor.
+  **Desvío (bloque TX34-B04):** no van en las `devDependencies` de `functions/`, porque
+  `functions/node_modules` es un enlace a otro repositorio y ahí no se instala nada. El laboratorio
+  tiene su propio `package.json` y `package-lock.json` en `functions/scripts/laboratorio-tienda/`
+  con versiones exactas: `lighthouse` 12.2.1, `puppeteer-core` 23.11.1 y `@puppeteer/browsers`
+  2.6.1.
+  - Sus `node_modules` y el navegador (`.navegador/`) quedan ignorados en git.
+  - El navegador es Chrome for Testing 131.0.6778.204. En este Ubuntu 24.04 le faltan librerías
+    del sistema: `preparar-navegador.js` las baja con `apt-get download` y `dpkg -x` dentro de
+    `.navegador/`, sin root y sin tocar el sistema.
+  - Se prepara con `npm run lab:tienda:preparar` y se corre con `npm run lab:tienda`, desde
+    `functions/`.
 
 ### D3. Baliza sin robots
 - Cliente: no manda `/vista` (ni la búsqueda sin resultados de D7) si `navigator.webdriver` es
