@@ -6,8 +6,9 @@
       <p class="cfg-sub">{{ 'dashboard.home.subtitle' | translate }}</p>
     </div>
     <div class="cfg-acciones">
-      <button type="button" class="cfg-btn cfg-btn--sec" (click)="openClassic()">
-        <i class="fa fa-chart-line"></i> {{ 'dashboard.home.classicView' | translate }}
+      <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="openClassic()" title="Resumen de ventas, despachos, inventario, producción y finanzas en una sola pantalla">
+        <i class="fa fa-tachometer"></i> Panel de control <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
       </button>
       <button type="button" class="cfg-btn" (click)="newReport()">
         <i class="fa fa-plus"></i> {{ 'dashboard.home.newReport' | translate }}
@@ -20,12 +21,12 @@
   </div>
 
   <div *ngIf="loadError && !loading" class="state-error">
-    <i class="fa fa-triangle-exclamation"></i> {{ loadError | translate }}
+    <i class="fa fa-exclamation-triangle"></i> {{ loadError | translate }}
   </div>
 
   <div *ngIf="!loading && !loadError && reports.length === 0" class="state-empty">
-    <h2>{{ 'dashboard.home.emptyTitle' | translate }}</h2>
-    <p>{{ 'dashboard.home.emptyText' | translate }}</p>
+    <h2>Aún no tienes reportes</h2> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+    <p>Elige qué quieres revisar (pedidos, productos, clientes…), arrastra los datos que te interesan y escoge cómo verlos: tabla, barras o torta. También puedes arrancar con una plantilla lista.</p> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
     <button type="button" class="cfg-btn" (click)="newReport()">
       <i class="fa fa-plus"></i> {{ 'dashboard.home.createFirst' | translate }}
     </button>
@@ -34,7 +35,7 @@
   <!-- Plantillas pre-armadas (request Harmony Lens punto 6) -->
   <section *ngIf="!loading && presets.length > 0" class="presets-section">
     <header class="presets-header">
-      <h2><i class="fa fa-wand-magic-sparkles me-1"></i> {{ 'dashboard.home.presetsTitle' | translate }}</h2>
+      <h2><i class="fa fa-magic me-1"></i> {{ 'dashboard.home.presetsTitle' | translate }}</h2>
       <small>{{ 'dashboard.home.presetsHelp' | translate }}</small>
     </header>
     <div class="presets-grid">
@@ -49,7 +50,7 @@
           <div class="preset-desc">{{ cat(p.description) }}</div>
           <div class="preset-meta">
             <span class="preset-category">{{ p.category }}</span>
-            <span class="preset-viz">{{ p.viz.type }}</span>
+            <span class="preset-viz">{{ vizLabel(p.viz.type) }}</span>
           </div>
         </div>
       </article>
@@ -64,18 +65,18 @@
       (click)="selectReport(r)">
       <div class="report-card-icon">
         <i class="fa"
-          [class.fa-chart-bar]="r.viz?.type === 'bar'"
-          [class.fa-chart-line]="r.viz?.type === 'line'"
-          [class.fa-chart-pie]="r.viz?.type === 'pie' || r.viz?.type === 'donut'"
+          [class.fa-bar-chart]="r.viz?.type === 'bar'"
+          [class.fa-line-chart]="r.viz?.type === 'line'"
+          [class.fa-pie-chart]="r.viz?.type === 'pie' || r.viz?.type === 'donut'"
           [class.fa-table]="r.viz?.type === 'table' || r.viz?.type === 'pivot'"
-          [class.fa-gauge-high]="r.viz?.type === 'kpi'"></i>
+          [class.fa-tachometer]="r.viz?.type === 'kpi'"></i>
       </div>
       <div class="report-card-body">
         <h3 class="report-card-title">{{ r.name }}</h3>
-        <p class="report-card-desc">{{ r.description || (r.source + ' · ' + (r.viz?.type || ('dashboard.home.defaultViz' | translate))) }}</p>
+        <p class="report-card-desc">{{ r.description || (cat(sourceLabel(r.source)) + ' · ' + vizLabel(r.viz?.type)) }}</p>
         <div class="report-card-meta">
-          <span><i class="fa fa-database me-1"></i>{{ r.source }}</span>
-          <span *ngIf="r.updatedAt"><i class="fa fa-clock me-1"></i>{{ r.updatedAt | date: 'short' }}</span>
+          <span><i class="fa fa-database me-1"></i>{{ cat(sourceLabel(r.source)) }}</span>
+          <span *ngIf="r.updatedAt"><i class="fa fa-clock-o me-1"></i>{{ r.updatedAt | date: 'dd/MM/yyyy' }}</span>
         </div>
       </div>
     </article>
@@ -104,20 +105,20 @@
       </div>
       <div class="preview-actions">
         <button type="button" class="cfg-btn cfg-btn--sec btn-outline-sm" (click)="editSelected()">
-          <i class="fa fa-pen me-1"></i> {{ 'comun.editar' | translate }}
+          <i class="fa fa-pencil me-1"></i> {{ 'comun.editar' | translate }}
         </button>
         <button type="button" class="btn-icon-sm" (click)="closePreview()" [title]="'comun.cerrar' | translate">
-          <i class="fa fa-xmark"></i>
+          <i class="fa fa-times"></i>
         </button>
       </div>
     </div>
 
     <div class="preview-body">
       <div *ngIf="previewRunning" class="preview-state">
-        <i class="fa fa-spinner fa-spin"></i> {{ 'dashboard.home.running' | translate }}
+        <i class="fa fa-spinner fa-spin"></i> Calculando… <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
       </div>
       <div *ngIf="previewError && !previewRunning" class="preview-error">
-        <i class="fa fa-triangle-exclamation me-1"></i>{{ previewError | translate }}
+        <i class="fa fa-exclamation-triangle me-1"></i>{{ previewError | translate }}
       </div>
       <div class="preview-viz" *ngIf="result && !previewRunning">
         <app-viz-kpi   *ngIf="activeVizTypes.has('kpi')"   [result]="result"></app-viz-kpi>

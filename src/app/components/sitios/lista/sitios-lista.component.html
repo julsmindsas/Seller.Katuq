@@ -3,7 +3,7 @@
 
     <header class="cabecera">
       <div class="cabecera__texto">
-        <h1>{{ soloTipo === 'catalogo' ? 'Catálogos' : 'Mis sitios' }}</h1>
+        <h1>{{ soloTipo === 'catalogo' ? 'Catálogos' : soloTipo === 'landing' ? 'Landings' : 'Mis sitios' }}</h1>
         <p *ngIf="soloTipo !== 'catalogo'">Publica una tienda o una landing con tus productos. Eliges una plantilla y listo — no
           necesitas saber de diseño.</p>
         <p *ngIf="soloTipo === 'catalogo'">Catálogos para compartir por WhatsApp: tus productos con precio y disponibilidad,
@@ -21,7 +21,7 @@
         </button>
         <button class="btn-primario" (click)="abrirAsistente()">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
-          {{ soloTipo === 'catalogo' ? 'Crear catálogo' : 'Crear sitio' }}
+          {{ soloTipo === 'catalogo' ? 'Crear catálogo' : soloTipo === 'landing' ? 'Crear landing' : 'Crear sitio' }}
         </button>
       </div>
     </header>
@@ -42,12 +42,12 @@
       <span class="vacio__icono">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18"/></svg>
       </span>
-      <h2>{{ soloTipo === 'catalogo' ? 'Todavía no tienes ningún catálogo' : 'Todavía no tienes ningún sitio' }}</h2>
+      <h2>{{ soloTipo === 'catalogo' ? 'Todavía no tienes ningún catálogo' : soloTipo === 'landing' ? 'Todavía no tienes ninguna landing' : 'Todavía no tienes ningún sitio' }}</h2>
       <p>Elige una plantilla de tu sector y publícala en minutos. Tus productos, precios y
         disponibilidad salen de Katuq, así que no tienes que volver a escribirlos.</p>
       <button class="btn-primario" (click)="abrirAsistente()">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
-        {{ soloTipo === 'catalogo' ? 'Crear mi primer catálogo' : 'Crear mi primer sitio' }}
+        {{ soloTipo === 'catalogo' ? 'Crear mi primer catálogo' : soloTipo === 'landing' ? 'Crear mi primera landing' : 'Crear mi primer sitio' }}
       </button>
     </div>
 

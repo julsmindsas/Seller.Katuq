@@ -32,6 +32,12 @@
         </label>
       </div>
 
+      <label class="cbm-field">
+        <span class="cbm-label">Código <span class="cbm-label-hint">(opcional, para actualizarlo desde Excel)</span></span>
+        <input type="text" class="cbm-input cbm-input-codigo" formControlName="codigo" maxlength="40"
+               placeholder="Ej.: ENS-5BF-10HP">
+      </label>
+
       <div class="cbm-field">
         <div class="cbm-label-row">
           <span class="cbm-label" id="cbm-productos">Productos del combo</span>
@@ -78,6 +84,13 @@
               <span class="cbm-item-name" [title]="item.titulo">{{ item.titulo }}</span>
               <span class="cbm-ref">{{ item.referencia }}</span>
             </span>
+            <!-- Ticket 1323: unidades que lleva el combo (vacío = la mínima de venta) -->
+            <label class="cbm-qty" [title]="'Unidades de ' + item.titulo + ' en el combo'">
+              <span class="cbm-qty-label">Cant.</span>
+              <input type="number" min="1" max="9999" step="1" class="cbm-qty-input"
+                     [value]="cantidadDe(item)" (change)="cambiarCantidad(item, $any($event.target).value)"
+                     [attr.aria-label]="'Cantidad de ' + item.titulo">
+            </label>
             <!-- Ticket 1131: sin IVA, que es la referencia del comercio; con IVA debajo -->
             <span class="cbm-price">
               <ng-container *ngIf="item.precio">

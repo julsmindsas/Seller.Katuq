@@ -55,7 +55,8 @@ test('2.2 (D3): títulos, encabezados, rutas e insignias del menú idénticos al
 
 test('2.2 (D3): el código sigue comparando por el título en español', () => {
   const nav = leer('src/app/shared/services/nav.service.ts');
-  assert.match(nav, /item\.title === "Mensajes"/);
+  // D-546: el menú ya no compara `item.title === "Mensajes"`; el grupo se identifica por su `id`, y su título sigue literal.
+  assert.match(nav, /id: "mensajes",\s+title: "Mensajes"/);
   assert.match(nav, /badgeValue: "Próximamente"/, 'la insignia de los canales futuros sigue siendo el dato en español');
 });
 
@@ -74,7 +75,7 @@ test('2.2: con el panel en inglés todo el menú visible está en inglés (i18n:
   assert.deepEqual(iguales.map(h => `${h.idioma}: ${h.clave}`), []);
   // Muestra fija del criterio: lo que más se ve del menú en inglés.
   const en = dics.en;
-  assert.equal(en['Gestión Comercial'], 'Sales management');
+  assert.equal(en['Gestión comercial'], 'Sales management');
   assert.equal(en['Venta asistida'], 'Assisted sale');
   assert.equal(en['Cotizaciones'], 'Quotes');
   assert.equal(en['Mi página web'], 'My website');
@@ -102,16 +103,11 @@ test('2.2: glosario de D7 en los títulos del menú (pt-BR y de-CH)', () => {
 test('2.2: la ortografía se corrige solo en el valor de es.json (la clave no cambia)', () => {
   const es = dics.es;
   const esperado = {
+    // D-546 renombró varios títulos a minúscula en el propio menú (p. ej. «Gestión comercial»); quedan los que aún conservan la mayúscula.
     'Configuración Plataforma': 'Configuración plataforma',
-    'Gestión Comercial': 'Gestión comercial',
     'Gestión General': 'Gestión general',
-    'Inventarios y Productos': 'Inventarios y productos',
-    'Central de Abastecimiento': 'Central de abastecimiento',
-    'Inteligencia de Negocios': 'Inteligencia de negocios',
     'Activación Módulos': 'Activación módulos',
     'Mi Empresa': 'Mi empresa',
-    'Tipos de Cliente': 'Tipos de cliente',
-    'Descuentos y Promociones': 'Descuentos y promociones',
   };
   for (const [clave, valor] of Object.entries(esperado)) assert.equal(es[clave], valor, clave);
   const titulos = new Set(extraerMenu().MENUITEMS.flatMap(o => [o.title, o.headTitle1]).filter(Boolean));
@@ -144,8 +140,9 @@ test('2.3: ningún atributo arma una frase pegando español con + (claves con pa
     });
   }
   const sidebar = leer(`${SHELL}/sidebar/sidebar.component.html`);
-  assert.match(sidebar, /'shell\.sidebar\.goTo' \| translate: \{ title: \(favorite\.title \| translate\) \}/);
-  assert.match(sidebar, /'shell\.sidebar\.removeFavoriteNamed' \| translate/);
+  assert.match(sidebar, /'shell\.sidebar\.goTo' \| translate: \{ title: \(favorite\.titulo \| translate\) \}/);
+  // D-546: la estrella reemplaza al botón «Quitar de favoritos»; su etiqueta sale de claves, no de texto fijo.
+  assert.match(leer(`${SHELL}/sidebar/sidebar.component.ts`), /'shell\.sidebar\.removeFavorite' : 'shell\.sidebar\.addFavorite'/);
   assert.match(sidebar, /'shell\.sidebar\.openInMenu' \| translate/);
   assert.match(sidebar, /'shell\.sidebar\.externalLink' \| translate/);
 });
@@ -184,12 +181,12 @@ test('2.3: el selector de idioma traduce su aria-label y no traduce los nombres 
 
 test('2.3: «Próximamente» se traduce al mostrarse (plantilla y submenú flotante), no en el dato', () => {
   const html = leer(`${SHELL}/sidebar/sidebar.component.html`);
-  assert.match(html, /badgeValue \| translate/);
-  assert.match(html, /\{\{ 'Próximamente' \| translate \}\}/);
+  // D-546: la insignia se arma en menu-vista.ts («NUEVO» / «PRONTO») y la plantilla la traduce al pintarla;
+  // el dato del menú (`badgeValue: "Próximamente"`) sigue en español.
+  assert.match(html, /fila\.insignia\.texto \| translate/);
+  assert.match(html, /'shell\.sidebar\.soonNamed' \| translate/);
   assert.doesNotMatch(html, />\s*Próximamente\s*</);
-  const sidebarTs = leer(`${SHELL}/sidebar/sidebar.component.ts`);
-  assert.match(sidebarTs, /this\.translate\.instant\('Próximamente'\)/);
-  assert.doesNotMatch(sidebarTs, /createText\('Próximamente'\)/);
+  for (const idioma of IDIOMAS) assert.ok(dics[idioma]['PRONTO'], `${idioma}: PRONTO`);
 });
 
 test('2.3: las claves shell.* que usan las plantillas existen en los cuatro diccionarios con las mismas variables', () => {
@@ -236,42 +233,18 @@ test('2.3: los componentes Cuba sin uso siguen sin pintarse en ninguna plantilla
 
 // ---------------------------------------------------------------- submenú flotante del menú plegado (2.2)
 
-test('2.2: el submenú flotante del menú plegado muestra los títulos y «Próximamente» en inglés, sin tocar el dato', () => {
-  const archivo = path.join(RAIZ, `${SHELL}/sidebar/sidebar.component.ts`);
-  const sf = ts.createSourceFile(archivo, fs.readFileSync(archivo, 'utf8'), ts.ScriptTarget.Latest, true);
-  const clase = sf.statements.find(ts.isClassDeclaration);
-  const metodo = clase.members.find(m => m.name?.getText(sf) === 'showCollapsedSubmenu');
-  const js = ts.transpileModule(`export class SubmenuPrueba { ${metodo.getText(sf)} }`, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
-  }).outputText;
-  const contexto = { exports: {}, window: { innerHeight: 900 }, document: { body: { children: [] } }, setTimeout: () => null };
-  vm.runInNewContext(js, contexto);
-  const sidebar = new contexto.exports.SubmenuPrueba();
-  Object.assign(sidebar, {
-    isMobile: () => false, closeCollapsedSubmenu() {}, getMenuIcon: () => 'fa-circle',
-    rutaMenu: p => p, navigateAndCleanup() {},
-    translate: { currentLang: 'en', instant: k => dics.en[k] ?? k },
-    renderer: {
-      createElement: tag => ({ tag, attrs: {}, children: [] }),
-      createText: text => ({ text }), addClass() {}, removeClass() {}, setStyle() {},
-      setAttribute: (el, key, value) => { el.attrs[key] = value; },
-      appendChild: (el, child) => el.children && el.children.push(child),
-      listen: () => () => {},
-    },
-  });
-  const hijos = [
-    { title: 'Todos los pedidos', path: 'ventas/pedidos', type: 'link' },
-    { title: 'Cotizaciones', path: 'cotizaciones', type: 'link' },
-    { title: 'TikTok', type: 'info', badgeValue: 'Próximamente' },
-  ];
-  const datoAntes = JSON.stringify(hijos);
-  const padre = { getBoundingClientRect: () => ({ top: 100, right: 200 }) };
-  sidebar.showCollapsedSubmenu({ title: 'Ventas', children: hijos }, { target: { closest: () => padre } });
-  const textos = n => (n.text !== undefined ? [n.text] : (n.children || []).flatMap(textos));
-  const entradas = sidebar.currentCollapsedSubmenu.children;
-  assert.deepEqual(entradas.map(e => e.attrs.title), ['All orders', 'Quotes', 'TikTok']);
-  assert.deepEqual(entradas.map(textos), [['All orders'], ['Quotes'], ['TikTok', 'Coming soon']]);
-  assert.equal(JSON.stringify(hijos), datoAntes, 'el dato del menú sigue con la clave en español');
+test('2.2: el panel flotante del riel compacto traduce los títulos al pintarlos y no toca el dato', () => {
+  // D-546 retiró el submenú flotante armado a mano (`showCollapsedSubmenu`): ahora lo pinta `panelTpl`.
+  const html = leer(`${SHELL}/sidebar/sidebar.component.html`);
+  const panel = html.slice(html.indexOf('<ng-template #panelTpl'), html.indexOf('<!-- Menú Principal -->'));
+  assert.match(panel, /\{\{fila\.titulo \| translate\}\}/);
+  assert.match(panel, /\[attr\.title\]="hijo\.titulo \| translate"/);
+  assert.match(html, /<ng-template #filaTpl[\s\S]*fila\.insignia\.texto \| translate/);
+  const sidebarTs = leer(`${SHELL}/sidebar/sidebar.component.ts`);
+  assert.doesNotMatch(sidebarTs, /showCollapsedSubmenu/);
+  // El título que viaja es la clave en español; el traductor lo recibe, no lo reemplaza.
+  assert.equal(dics.en['Todos los pedidos'], 'All orders');
+  assert.equal(dics.en['Próximamente'], 'Coming soon');
 });
 
 // ---------------------------------------------------------------- favoritos y secciones (criterio 2.2)
@@ -280,33 +253,30 @@ function cargarSidebar(guardado) {
   const archivo = path.join(RAIZ, `${SHELL}/sidebar/sidebar.component.ts`);
   const sf = ts.createSourceFile(archivo, fs.readFileSync(archivo, 'utf8'), ts.ScriptTarget.Latest, true);
   const clase = sf.statements.find(ts.isClassDeclaration);
-  const nombres = new Set(['toggleFavorite', 'isFavorite', 'saveFavoriteItems', 'toggleSection', 'saveSectionsState']);
+  const nombres = new Set(['toggleSection', 'saveSectionsState']);
   const miembros = clase.members.filter(m => nombres.has(m.name?.getText(sf)));
   assert.equal(miembros.length, nombres.size);
   const js = ts.transpileModule(`export class SidebarPrueba { ${miembros.map(m => m.getText(sf)).join('\n')} }`, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
   }).outputText;
-  const contexto = { exports: {}, localStorage: { setItem: (k, v) => { guardado[k] = v; } } };
+  const contexto = { exports: {}, localStorage: { getItem: () => null, setItem: (k, v) => { guardado[k] = v; } } };
   vm.runInNewContext(js, contexto);
   return new contexto.exports.SidebarPrueba();
 }
 
-test('2.2: con el panel en inglés, favoritos y secciones plegadas se guardan por el título original', () => {
+test('2.2: con el panel en inglés, secciones plegadas se guardan por su id o título original y los favoritos por ruta o id', () => {
   const guardado = {};
   const sidebar = cargarSidebar(guardado);
   // Un traductor en inglés a mano: si algo guardara lo que se muestra, la prueba lo vería.
   sidebar.translate = { currentLang: 'en', instant: k => dics.en[k] ?? k };
-  sidebar.favoriteItems = [];
-  sidebar.toggleFavorite({ title: 'Todos los pedidos', path: 'ventas/pedidos', icon: 'list', type: 'link' });
-  sidebar.toggleFavorite({ title: 'Cotizaciones', icon: 'file-text', type: 'sub', children: [{ title: 'Nueva cotización', path: 'cotizaciones/editor' }] });
-  const favoritos = JSON.parse(guardado.sidebarFavoriteItems);
-  assert.deepEqual(favoritos.map(f => f.title), ['Cotizaciones', 'Todos los pedidos']);
-  assert.ok(sidebar.isFavorite({ title: 'Todos los pedidos', path: 'ventas/pedidos' }));
-
   sidebar.sections = [
-    { title: 'Gestión Comercial', isHeaderSection: true, collapsed: true },
+    { id: 'gestion-comercial', title: 'Gestión comercial', isHeaderSection: true, collapsed: true },
     { title: 'Operaciones', isHeaderSection: true, collapsed: true },
   ];
   sidebar.toggleSection(sidebar.sections[1]);
-  assert.deepEqual(JSON.parse(guardado.sidebarSectionsState), { 'Gestión Comercial': true, Operaciones: false });
+  assert.deepEqual(JSON.parse(guardado.sidebarSectionsState), { 'gestion-comercial': true, Operaciones: false });
+  // D-546 F3: los favoritos ya no guardan títulos: una pantalla se guarda por su ruta y un grupo por su `id`,
+  // así que el idioma del panel no puede entrar en el dato (menu-favoritos.ts no usa el traductor).
+  assert.doesNotMatch(leer(`${SHELL}/sidebar/menu-favoritos.ts`), /translate/);
+  assert.doesNotMatch(leer(`${SHELL}/sidebar/menu-vista.ts`), /translate/);
 });

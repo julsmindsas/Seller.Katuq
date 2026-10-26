@@ -1,0 +1,85 @@
+// Un cambio del historial del producto (D-548, F1). Plano, sin gradientes. Prefijo `hprod-`:
+// ningún nombre de clase lleva «p-» (trampa del reset global `[class*="p-"]`). Todo texto lleva color
+// y tamaño propios.
+
+$tinta: #211F3A;
+$cuerpo: #5b5878;
+$muted: #8f8bab;
+$linea: #ececf4;
+$acento-suave: #efe9ff;
+
+:host { display: block; }
+
+.hprod-evento {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #fff;
+  border: 1px solid $linea;
+  border-radius: 16px;
+  padding: 12px 14px;
+  min-width: 0;
+}
+
+.hprod-evento--sistema { background: #faf9fe; }
+
+// Azulejo de 32 px con su par semántico (texto fuerte / fondo suave).
+.hprod-evento__tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  i { font-size: 14px; }
+}
+
+.hprod-tono--primario { background: $acento-suave; color: #5F3FE0; i { color: #5F3FE0; } }
+.hprod-tono--info { background: #E7F1FF; color: #1E6FD9; i { color: #1E6FD9; } }
+.hprod-tono--alerta { background: #FFF1DF; color: #D9820A; i { color: #D9820A; } }
+.hprod-tono--peligro { background: #FDECEC; color: #D64545; i { color: #D64545; } }
+.hprod-tono--exito { background: #E6F7EE; color: #1E874B; i { color: #1E874B; } }
+.hprod-tono--neutro { background: #eef0f3; color: #5A6B78; i { color: #5A6B78; } }
+
+.hprod-evento__cuerpo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.hprod-evento__titulo { font-size: 14px; font-weight: 700; color: $tinta; line-height: 1.3; }
+.hprod-evento__quien { font-size: 12px; color: $muted; line-height: 1.35; overflow-wrap: anywhere; }
+
+// Datos que cambiaron.
+.hprod-detalles, .hprod-precios { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.hprod-detalle, .hprod-precio { margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; min-width: 0; }
+
+.hprod-detalle__etiqueta, .hprod-precio__etiqueta {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: $muted;
+  text-transform: uppercase;
+}
+
+.hprod-detalle__valores { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; min-width: 0; }
+.hprod-detalle__antes { font-size: 13px; color: $muted; text-decoration: line-through; overflow-wrap: anywhere; }
+.hprod-detalle__despues { font-size: 13px; font-weight: 700; color: $tinta; overflow-wrap: anywhere; }
+.hprod-detalle__flecha { font-size: 10px; color: $muted; }
+
+// Pastilla de plata: «$42.621 → $78.291 (+$35.670, +83,7 %)».
+.hprod-pastilla {
+  display: inline-block;
+  max-width: 100%;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: $acento-suave;
+  color: $tinta;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.hprod-foto { font-size: 12.5px; color: $cuerpo; overflow-wrap: anywhere; }
+
+.hprod-lote { display: flex; align-items: center; gap: 6px; min-width: 0; i { font-size: 11px; color: $muted; } }
+.hprod-lote__texto { font-size: 12px; color: $cuerpo; overflow-wrap: anywhere; }
+
+.hprod-motivo { font-size: 12.5px; color: $cuerpo; overflow-wrap: anywhere; }

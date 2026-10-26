@@ -169,7 +169,7 @@ inventario, costo de venta, ingreso y devolución. Hoy `createProduct` usa
 
 Los tres primeros van con D-504 (aprobada por Daniel el 21-oct, en bloque) y
 están anotados en el contrato. El candado (S.1) no estaba en lo aprobado: es
-la propuesta D-541, apagada y pendiente de ratificar.
+la propuesta D-561, apagada y pendiente de ratificar.
 
 - **D3 detrás de una bandera por comercio.** La búsqueda del equivalente solo
   corre con `siigoProductEquivalence` (`companies.featureFlags`, D-505), apagada
@@ -189,12 +189,12 @@ la propuesta D-541, apagada y pendiente de ratificar.
   se refieren.
 - **Candado de emisión (S.1), fuera del diseño original.** Hallazgo de
   planificación del 21-oct: `from-order` y `from-order-async` le creían al
-  header `company`. Va en su propia decisión, D-541, con el interruptor global
+  header `company`. Va en su propia decisión, D-561, con el interruptor global
   `config/feature_flags.invoiceTenantLock` (off | shadow | on), que nace en
   `off`. Que el `orderId` sea de la empresa queda en S.2. Daniel la ratifica
   antes de desplegar (3.1).
 - **Requisitos EARS sin pasar a la spec.** El de la vista previa sí entró
-  (1229-B02) porque era la recomendación 5, aprobada. Los del candado (D-541,
+  (1229-B02) porque era la recomendación 5, aprobada. Los del candado (D-561,
   propuesta) y los de la carga con `--aprobado` y `--verificar` (D5 y D6) no
   estaban en el plan aprobado; quedan para que Daniel los apruebe, junto con
   la condición de la bandera en «Equivalencia única antes de crear».

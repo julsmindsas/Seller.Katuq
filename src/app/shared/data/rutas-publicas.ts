@@ -27,6 +27,8 @@ export const RUTAS_PUBLICAS: readonly string[] = [
   '/promo', '/payment-callback', '/subscription-callback', '/onboarding',
   '/r', '/c', '/s', '/cat',
   '/encuesta',
+  // Subida de archivos de un ticket abierto desde Claude (D-549, plan B): enlace de un solo uso, sin cuenta.
+  '/adjuntar',
 ];
 
 /** Ruta sin query, fragmento ni parámetros de matriz. */

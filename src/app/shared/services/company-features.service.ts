@@ -25,6 +25,8 @@ export const COMPANY_FEATURE_FLAGS = [
   'opttiaProduccion',
   // Opttia propone en la escena, fase 2 (D-422): "Abrir WhatsApp" en la señal de cobro (no envía nada).
   'opttiaCobroWhatsapp',
+  // Tickets desde el chat integrado (D-545). Dueño: Daniel. Revisión/retiro: 2027-01-31.
+  'opttiaSupportTickets',
   // Varios números de WhatsApp por comercio, asignados a vendedores, y dueño del chat (D-437).
   // Dueño: Daniel. Se retira 30 días después de tenerla encendida para todos.
   'whatsappMultiNumero',
@@ -71,6 +73,22 @@ export const COMPANY_FEATURE_FLAGS = [
   'invoiceIdempotency',
   // Bandeja única de facturación (D-499 fase 1, FE-02). Dueño: Daniel. Se retira el 2027-03-31.
   'invoicingTray',
+  // D-539 (ticket 1331): pedido con productos de varias bodegas de una misma zona.
+  'multiBodegaMismaZona',
+  // Cifras oficiales de los reportes (D-551, tickets 1341-1348, F1): una sola definición de venta,
+  // por fecha de entrega, sin pedidos caídos. Apagada, los reportes calculan como hoy.
+  // Dueño: Daniel. Se retira el 2027-04-30 (Artículo XII).
+  'reportsOfficialMetrics',
+  // Acciones principales del pedido por rol y por usuario (D-547 F2, ticket 1349 parte 1): el bloque
+  // ACCIONES de 8 (4 del rol y 4 del usuario), el pin, las sugerencias y el resaltado. Apagada, el bloque
+  // y el modal son los de F1. Dueño: Daniel. Se retira el 2027-04-30: encendida para todos o eliminada
+  // (Artículo XII).
+  'orderPinnedActions',
+  // Historial del producto (D-548 F1, tickets 1357 y 1358): quién cambió qué en un producto, sus precios
+  // y su costo, desde el panel, las importaciones, las acciones masivas y Claude. Apagada, la ficha
+  // muestra la pestaña de hoy y Listas de precios no ofrece «Historial». Dueño: Daniel. Se retira el
+  // 2027-04-30: encendida para todos o eliminada (Artículo XII).
+  'productHistoryLog',
   // La tienda en el celular (TX-34, D10): una bandera por pieza; el modo lo pone el interruptor
   // general `config/feature_flags.storeMobile`. No nacen encendidas para empresas nuevas.
   // Dueño: Daniel. Cada una se retira 30 días después de quedar su pieza para todas las tiendas.

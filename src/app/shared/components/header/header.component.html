@@ -56,6 +56,17 @@
           </button>
         </li>
 
+        <!-- Ticket 1340: Opttia en el encabezado (antes era un botón flotante que tapaba
+             los botones de pago del POS y otros controles abajo a la derecha). -->
+        <li *ngIf="opttiaChat.launcherDisponible$ | async">
+          <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+          <button type="button" class="opttia-encabezado" (click)="opttiaChat.toggleMenuFromHeader()" aria-label="Abrir Opttia" title="Opttia">
+            <img src="assets/images/opttia/tuki-avatar-v1.webp" alt="" width="24" height="24" decoding="async">
+            <span class="opttia-encabezado__texto">Opttia</span>
+            <span class="opttia-encabezado__ia">IA</span> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+          </button>
+        </li>
+
         <!-- Notifications -->
         <li class="onhover-dropdown" [attr.aria-label]="'shell.header.notifications' | translate">
           <app-notification-center></app-notification-center>

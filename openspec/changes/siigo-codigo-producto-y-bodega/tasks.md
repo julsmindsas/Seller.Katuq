@@ -8,7 +8,7 @@ vez, con diff revisado.
 con la bandera `siigoProductEquivalence` apagada: backend ee5ee2e7 (4030ec8c,
 91c5f916 y 83202c51) y front release 2026.10.21.2 (6d7d00a1 y 55059eab). Lo de
 los bloques 1229-B01 a 1229-B04 (S.1, 1.9, 1b.2 y 2.6) está commiteado en la
-rama `feature/tickets-web` y **sin desplegar** (3.1). Candado de emisión: D-541,
+rama `feature/tickets-web` y **sin desplegar** (3.1). Candado de emisión: D-561,
 propuesta commiteada y apagada que Daniel ratifica antes de 3.1 (no estaba en
 lo aprobado en bloque).
 
@@ -194,7 +194,7 @@ servicios.
 - [ ] 2.5 Prender `siigoProductEquivalence` para ALMACEN BOMBAS
       (`scripts/set-company-feature.js`).
       **Quién desbloquea:** Daniel, cuando estén 2.3 aplicada, 2.4 con
-      `--verificar` en 0, D-541 ratificada y en `shadow` sin desajustes, S.2
+      `--verificar` en 0, D-561 ratificada y en `shadow` sin desajustes, S.2
       resuelta o en sombra, y 2.7 respondida por el comercio (inventario inicial
       de la bodega 31 cargado en SIIGO, bloqueo por falta de stock apagado y los
       2 ambiguos elegidos).
@@ -235,7 +235,7 @@ servicios.
       `feature/tickets-web`: backend cb6aad91, 70f97a54 y f9f89660; front
       693069ce, 7b7dcca1, 9a57fab7, 4290122d y el commit de 1229-B05.
       **Quién desbloquea:** Daniel (push, despliegue y release). Antes ratifica
-      D-541 (el candado va en cb6aad91 y no estaba en lo aprobado en bloque).
+      D-561 (el candado va en cb6aad91 y no estaba en lo aprobado en bloque).
 - [ ] 3.2 Vista previa de una factura de Bombas con un producto de formato
       largo: debe mostrar el código SIIGO corto y "existente", no "se creará".
       Incluye la revisión de la vista previa en navegador a 1440 y 390 px (1b.2).
@@ -246,7 +246,7 @@ servicios.
       color del chip de alerta de 1b.2, `#8a5300`, y la revisión visual a 1440
       y 390 px de la vista previa). Hecho en el bloque 1229-B05: D-504
       APROBADA y EN PRODUCCIÓN con la bandera apagada, desvíos en `design.md`,
-      decisión D-541 del candado y D-453 citada por su cd (no estaba errada: el
+      decisión D-561 del candado y D-453 citada por su cd (no estaba errada: el
       número 1229 se repite con «Web · F2-20»). La parte del ticket pasó a 3.4.
 - [ ] 3.4 Pegar en el ticket 1229 (cd nF3GLH3F2sZGnKsqNODM) la nota de cierre
       de abajo, con los Excel adjuntos, y cerrarlo cuando 2.3, 2.4, 2.5 y 3.2
@@ -259,7 +259,7 @@ servicios.
       producción: «Equivalencia única antes de crear» pasa a «WHILE la empresa
       tiene `siigoProductEquivalence` encendida» (desvío D3), y se suman los
       EARS de la carga (`--aprobado`, `--verificar`) y, si Daniel ratifica
-      D-541, los del candado. Antes de `/opsx:archive`.
+      D-561, los del candado. Antes de `/opsx:archive`.
       **Quién desbloquea:** Daniel (cambia una spec aprobada fuera de lo que
       cubrió la recomendación 5).
 
@@ -366,7 +366,7 @@ adjuntar la versión que Laura aprobó, o la que salga de repetir la prueba.
       - **Encenderlo es decisión de Daniel:** primero `shadow`
         (`node scripts/platform-flags.js invoiceTenantLock shadow --execute`),
         revisar los eventos y después `on`. Va antes de prender
-        `siigoProductEquivalence` en ALMACEN BOMBAS (2.5). Decisión **D-541**
+        `siigoProductEquivalence` en ALMACEN BOMBAS (2.5). Decisión **D-561**
         en el contrato (bloque 1229-B05), como **propuesta** pendiente de
         ratificar: el candado no estaba en lo aprobado en bloque. Sus EARS
         (off/shadow/on, 403, Julsmind, API key) pasan a la spec en 3.6 si
@@ -387,7 +387,7 @@ adjuntar la versión que Laura aprobó, o la que salga de repetir la prueba.
       (nace en `off`, sombra primero) y aprobación de Daniel. Debe quedar
       resuelto, o al menos en sombra sin desajustes, antes de 2.5.
       **Quién desbloquea:** Daniel (aprobar la propuesta).
-- [ ] S.3 Revisar `invoiceTenantLock` el 2027-01-31 (D-541, Art. XII; dueño
+- [ ] S.3 Revisar `invoiceTenantLock` el 2027-01-31 (D-561, Art. XII; dueño
       Daniel): si está en `on` sin problemas, retirar el interruptor y dejar el
       candado fijo; si no, decidir si se elimina. Antes, encenderlo: `shadow`,
       revisar `tenant_mismatch_shadow` y pasar a `on`. Para 2.5 basta `shadow`

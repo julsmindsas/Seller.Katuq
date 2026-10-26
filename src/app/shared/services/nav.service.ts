@@ -13,11 +13,35 @@ import { FUTURE_MESSAGE_CHANNELS } from "../data/future-message-channels";
 
 // Menu
 export interface Menu {
+  /**
+   * D-546: identificador estable de una sección o un grupo. No cambia si cambia el nombre: de él dependen
+   * los canales «pronto» de Mensajes, los permisos fuera del menú (Creación rápida), el estado plegado de
+   * cada sección y los favoritos de grupo.
+   */
+  id?: string;
   headTitle1?: string;
   headTitle2?: string;
   path?: string;
   title?: string;
   icon?: string;
+  /**
+   * D-546: nombre del ícono Tabler (src/app/shared/icons/tabler-usados.json) que dibuja el menú
+   * lateral. Lo declara cada sección y cada grupo o enlace directo: no se adivina por el nombre.
+   * `icon` (Feather) se queda para el buscador del encabezado y los roles guardados.
+   */
+  menuIcon?: string;
+  /**
+   * D-546: `inline` = el grupo no se dibuja y sus hijos pasan a ser enlaces de la sección (Finanzas y
+   * Comunicaciones). Los permisos y las reglas de cada hijo son los mismos de siempre.
+   */
+  display?: "inline";
+  /** D-546: el nombre de antes. El buscador del menú y el editor de roles lo encuentran hasta PREVIOUS_TITLES_UNTIL. */
+  previousTitle?: string;
+  /**
+   * D-546: la entrada se ve solo si esa ruta está autorizada. Nunca es un permiso propio: no se ofrece en
+   * el editor de roles. La usa «Landings», que ve quien ve «Mis sitios».
+   */
+  inheritsPermissionFrom?: string;
   type?: string;
   badgeType?: string;
   badgeValue?: string;
@@ -34,6 +58,13 @@ export interface Menu {
    */
   permisoPrevio?: string;
 }
+
+/**
+ * D-546: hasta esta fecha (YYYY-MM-DD) el buscador del menú y el editor de roles también encuentran cada
+ * entrada por su nombre anterior (`previousTitle`). Es la fecha de publicación de F3 más 90 días; después
+ * se apagan solos, sin borrar código. Provisional: la fija la tarea 9.3 al publicar.
+ */
+export const PREVIOUS_TITLES_UNTIL = "2027-01-21";
 
 @Injectable({
   providedIn: "root",
@@ -354,7 +385,9 @@ export class NavService implements OnDestroy {
               // D-386: "Katuq en vivo" no depende del menú del rol; basta ser Administrador o
               // Super Administrador de Julsmind (los mismos roles que acepta el backend).
               (child.path === "en-vivo/katuq" && isAdminKatuqEnVivo) ||
-              (child.path === "contabilidad" && canUseBookkeepingWorkspace))
+              (child.path === "contabilidad" && canUseBookkeepingWorkspace) ||
+              // D-546: Landings no tiene permiso propio; la ve quien ve «Mis sitios».
+              (!!child.inheritsPermissionFrom && authorizedPaths.includes(child.inheritsPermissionFrom)))
           );
         });
 
@@ -368,9 +401,10 @@ export class NavService implements OnDestroy {
         }
         // Los futuros canales son información dentro de un grupo ya autorizado.
         // No entran al catálogo de permisos ni pueden mantener visible Mensajes solos.
-        const children: Menu[] = item.title === "Mensajes"
+        // D-546: el grupo se reconoce por su `id`, no por el nombre (que cambia).
+        const children: Menu[] = item.id === "mensajes"
           ? [...filteredChildren, ...FUTURE_MESSAGE_CHANNELS.map(channel => ({
-              title: channel.title, icon: channel.icon, type: "info", badgeValue: "Próximamente",
+              title: channel.title, icon: channel.icon, menuIcon: channel.menuIcon, type: "info", badgeValue: "Próximamente",
             }))]
           : filteredChildren;
         return { ...item, children };
@@ -440,11 +474,29 @@ export class NavService implements OnDestroy {
     this.items.next(this.MENUITEMS);
   }
 
+  /**
+   * Estructura del menú lateral (D-546). Reglas para entradas nuevas — spec `sidebar-structure`
+   * (openspec/changes/menu-lateral-ordenado, «Reglas para módulos nuevos»); las comprueba
+   * tests/navigation/menu-reglas.test.js:
+   *  - máximo 3 niveles: sección → grupo o enlace directo → hijo;
+   *  - ningún grupo con un solo hijo: un grupo que queda con uno (por definición o por el rol) se dibuja
+   *    como enlace directo (construirVistaMenu); un grupo `display: "inline"` no se dibuja y sus hijos
+   *    pasan a ser enlaces de la sección (Finanzas, Comunicaciones);
+   *  - el hijo no repite el nombre del padre; nombre de 1 o 2 palabras, de unos 14 caracteres, en
+   *    español y con mayúscula solo al inicio; crear empieza con «Nuevo» o «Nueva»;
+   *  - cada sección, grupo y enlace directo declara `id` (estable: no cambia si cambia el nombre) y
+   *    `menuIcon` (Tabler, único en el menú);
+   *  - la insignia NUEVO lleva `badgeUntil`;
+   *  - al renombrar, `previousTitle` conserva el nombre de antes: el buscador lo encuentra 90 días.
+   * Una excepción se registra como decisión en specs/CONTRACT.md.
+   */
   MENUITEMS: Menu[] = [
     // CONFIGURACIÓN PLATAFORMA
-    { headTitle1: "Configuración Plataforma" },
+    { headTitle1: "Configuración Plataforma", id: "seccion-plataforma", menuIcon: "adjustments" },
     {
+      id: "gestion-general",
       title: "Gestión General",
+      menuIcon: "adjustments-alt",
       icon: "settings",
       type: "sub",
       active: false,
@@ -460,35 +512,37 @@ export class NavService implements OnDestroy {
           icon: "gift",
           isOnlySuperAdministrador: true,
         },
-        { path: "prospectos/lista", title: "Prospectos", type: "link", icon: "user-plus" },
+        // Ticket 1330: "Prospectos" (prospectos/lista) se quitó. Su ruta salió de
+        // routes.ts en b8e2eed5 (2026-03-25) y el enlace llevaba a "No encontramos
+        // esta página". Los prospectos se trabajan en el CRM (Gestión comercial → Pipeline).
+        // (D-546: «Prospectos» vuelve al CRM, pero es la pantalla de Clientes corporativos con otro nombre.)
       ],
     },
 
     // GESTIÓN COMERCIAL
-    { headTitle1: "Gestión Comercial" },
+    { headTitle1: "Gestión comercial", id: "seccion-comercial", menuIcon: "briefcase" },
     {
+      id: "clientes",
       title: "Clientes",
+      menuIcon: "users",
       icon: "user-check",
       type: "sub",
       active: false,
       children: [
-        { path: "ventas/clientes", title: "Crear cliente", type: "link", icon: "user-plus" },
+        { path: "ventas/clientes", title: "Nuevo cliente", previousTitle: "Crear cliente", type: "link", icon: "user-plus" },
         {
           path: "ventas/clienteslista",
-          title: "Listado de clientes",
+          title: "Listado",
+          previousTitle: "Listado de clientes",
           type: "link",
           icon: "list",
-        },
-        {
-          path: "ventas/clientes-corporativos",
-          title: "Clientes corporativos",
-          type: "link",
-          icon: "briefcase",
         },
       ],
     },
     {
+      id: "ventas",
       title: "Ventas",
+      menuIcon: "shopping-bag",
       icon: "dollar-sign",
       type: "sub",
       active: false,
@@ -497,22 +551,51 @@ export class NavService implements OnDestroy {
         // «Por pasos» (el asistente de siempre) y la elección se recuerda. Los roles
         // guardados con la ruta del asistente siguen viendo la entrada (permisoPrevio).
         { path: "ventas/venta-asistida", title: "Venta asistida", type: "link", icon: "shopping-bag", permisoPrevio: "ventas/crear-ventas" },
-        { path: "ventas/carga-ventas", title: "Ventas masivas", type: "link", icon: "upload" },
-        { path: "ventas/ventas-pos", title: "Ventas POS", type: "link", icon: "monitor" },
+        { path: "ventas/carga-ventas", title: "Venta masiva", previousTitle: "Ventas masivas", type: "link", icon: "upload" },
+        { path: "ventas/ventas-pos", title: "POS", previousTitle: "Ventas POS", type: "link", icon: "monitor" },
       ],
     },
     {
+      id: "cotizaciones",
       title: "Cotizaciones",
+      menuIcon: "file-dollar",
       icon: "file-text",
       type: "sub",
       active: false,
       children: [
-        { path: "cotizaciones", title: "Listado de cotizaciones", type: "link", icon: "list" },
-        { path: "cotizaciones/editor", title: "Nueva cotización", type: "link", icon: "file-plus" },
+        { path: "cotizaciones", title: "Listado", previousTitle: "Listado de cotizaciones", type: "link", icon: "list" },
+        { path: "cotizaciones/editor", title: "Nueva", previousTitle: "Nueva cotización", type: "link", icon: "file-plus" },
+      ],
+    },
+    {
+      id: "sitio-web",
+      title: "Sitio web",
+      previousTitle: "Mi página web",
+      menuIcon: "world-www",
+      icon: "globe",
+      type: "sub",
+      active: false,
+      children: [
+        { path: "sitios", title: "Mis sitios", type: "link", icon: "layout" },
+        // D-546: las landings son un tipo de sitio dentro de «Mis sitios» (como los catálogos, ticket 1175).
+        // No tiene permiso propio: la ve quien ve «Mis sitios» (`inheritsPermissionFrom`), igual que D-416.
+        { path: "sitios/landings", title: "Landings", type: "link", icon: "layout", inheritsPermissionFrom: "sitios" },
+        // Ticket 1175: acceso directo a los catálogos digitales (vitrina D-141).
+        {
+          path: "sitios/catalogos",
+          title: "Catálogo web",
+          previousTitle: "Catálogos",
+          type: "link",
+          icon: "book-open",
+          badgeType: "primary",
+          badgeValue: "NUEVO",
+          badgeUntil: "2026-11-30",
+        },
         // D-416: visible para quien ya ve Cotizaciones, sin tocar los menús de cada rol.
         {
           path: "cotizaciones/catalogos",
-          title: "Catálogos por link",
+          title: "Catálogo por link",
+          previousTitle: "Catálogos por link",
           type: "link",
           icon: "share-2",
           permisoPrevio: "cotizaciones",
@@ -523,31 +606,28 @@ export class NavService implements OnDestroy {
       ],
     },
     {
-      title: "Mi página web",
-      icon: "globe",
+      id: "crm",
+      title: "CRM",
+      menuIcon: "target-arrow",
+      icon: "target",
       type: "sub",
       active: false,
       children: [
-        { path: "sitios", title: "Mis sitios", type: "link", icon: "layout" },
-        // Ticket 1175: acceso directo a los catálogos digitales (vitrina D-141).
-        {
-          path: "sitios/catalogos",
-          title: "Catálogos",
-          type: "link",
-          icon: "book-open",
-          badgeType: "primary",
-          badgeValue: "NUEVO",
-          badgeUntil: "2026-11-30",
-        },
+        { path: "crm/list", title: "Pipeline", type: "link", icon: "bar-chart-2" },
+        { path: "crm/tasks", title: "Seguimiento", type: "link", icon: "alert-circle" },
+        // D-546: la pantalla de «Clientes corporativos» con otro nombre y en el CRM. Misma ruta y mismos datos.
+        { path: "ventas/clientes-corporativos", title: "Prospectos", previousTitle: "Clientes corporativos", type: "link", icon: "briefcase" },
       ],
     },
     {
+      id: "dropshipping",
       title: "Dropshipping",
+      menuIcon: "package-export",
       icon: "truck",
       type: "sub",
       active: false,
       children: [
-        { path: "dropshipping/dashboard", title: "Dashboard", type: "link", icon: "bar-chart-2" },
+        { path: "dropshipping/dashboard", title: "Panel", previousTitle: "Dashboard", type: "link", icon: "bar-chart-2" },
         {
           path: "dropshipping/proveedores",
           title: "Proveedores",
@@ -558,20 +638,12 @@ export class NavService implements OnDestroy {
         { path: "dropshipping/ordenes", title: "Órdenes", type: "link", icon: "clipboard" },
       ],
     },
-    {
-      title: "CRM",
-      icon: "target",
-      type: "sub",
-      active: false,
-      children: [
-        { path: "crm/list", title: "Pipeline", type: "link", icon: "bar-chart-2" },
-        { path: "crm/tasks", title: "Seguimiento", type: "link", icon: "alert-circle" },
-      ],
-    },
     // NPS por comercio (D-490). Cada pestaña es un hijo para que el administrador pueda dar
     // solo Seguimiento a quien atiende a los clientes inconformes.
     {
+      id: "nps",
       title: "NPS",
+      menuIcon: "mood-smile",
       icon: "fa-smile-o",
       type: "sub",
       active: false,
@@ -582,58 +654,24 @@ export class NavService implements OnDestroy {
       ],
     },
 
-    // FINANZAS — spec 014: agrupa Tesorería (spec 013, path intacto para
-    // conservar la autorización de roles existente) + Cartera (CxC).
-    // Cada hijo entra por separado al pickList del maestro de roles.
-    { headTitle1: "Finanzas" },
-    {
-      title: "Finanzas",
-      icon: "dollar-sign",
-      type: "sub",
-      active: false,
-      children: [
-        {
-          path: "facturacion-electronica",
-          title: "Facturación electrónica",
-          type: "link",
-          icon: "file-text",
-          badgeType: "primary",
-          badgeValue: "NUEVO",
-        },
-        { path: "tesoreria", title: "Tesorería", type: "link", icon: "check-square" },
-        {
-          path: "cartera",
-          title: "Cartera (CxC)",
-          type: "link",
-          icon: "credit-card",
-          badgeType: "primary",
-          badgeValue: "NUEVO",
-        },
-        {
-          path: "contabilidad",
-          title: "Contabilidad",
-          type: "link",
-          icon: "book-open",
-          badgeType: "primary",
-          badgeValue: "NUEVO",
-        },
-      ],
-    },
-
     // OPERACIONES
-    { headTitle1: "Operaciones" },
+    { headTitle1: "Operaciones", id: "seccion-operaciones", menuIcon: "settings-automation" },
     {
+      id: "pedidos",
       title: "Pedidos",
+      menuIcon: "clipboard-list",
       icon: "shopping-cart",
       type: "sub",
       active: false,
       children: [
-        { path: "ventas/pedidos", title: "Todos los pedidos", type: "link", icon: "list" },
-        { path: "pos/list-ventas", title: "Pedidos POS", type: "link", icon: "monitor" },
+        { path: "ventas/pedidos", title: "Todos", previousTitle: "Todos los pedidos", type: "link", icon: "list" },
+        { path: "pos/list-ventas", title: "POS", previousTitle: "Pedidos POS", type: "link", icon: "monitor" },
       ],
     },
     {
+      id: "produccion",
       title: "Producción",
+      menuIcon: "building-factory-2",
       icon: "archive",
       type: "sub",
       active: false,
@@ -648,31 +686,38 @@ export class NavService implements OnDestroy {
     },
     {
       // Agenda de servicios (D-491): solo con la bandera `serviceAgenda` de la empresa.
+      id: "agenda",
       title: "Agenda",
+      menuIcon: "calendar-event",
       icon: "calendar",
       type: "sub",
       active: false,
       children: [
         { path: "agenda", title: "Citas", type: "link", icon: "calendar" },
-        { path: "agenda/configuracion", title: "Horario y personas", type: "link", icon: "settings" },
+        { path: "agenda/configuracion", title: "Horarios", previousTitle: "Horario y personas", type: "link", icon: "settings" },
       ],
     },
     {
+      id: "logistica",
       title: "Logística",
+      menuIcon: "truck-delivery",
       icon: "map-pin",
       type: "sub",
       active: false,
       children: [
-        { path: "despachos", title: "Envíos y entregas", type: "link", icon: "send" },
+        { path: "despachos", title: "Envíos", previousTitle: "Envíos y entregas", type: "link", icon: "send" },
         // D-354: lo ve el rol que tenga esta entrada en sus menús (se agrega en Roles).
-        { path: "centro-operaciones", title: "Centro de operaciones", type: "link", icon: "layers" },
+        { path: "centro-operaciones", title: "Centro operativo", previousTitle: "Centro de operaciones", type: "link", icon: "layers" },
       ],
     },
     {
       // D-381: "En vivo" lo ve el rol que tenga esta entrada en sus menús (misma llave
       // única que D-354: el path es el permiso). "Katuq en vivo" (toda la plataforma)
       // solo aparece para los administradores de Julsmind; el candado real es del backend.
+      // D-546: para los demás comercios el grupo queda con un solo hijo y se dibuja como enlace directo.
+      id: "en-vivo",
       title: "En vivo",
+      menuIcon: "live-view",
       icon: "activity",
       type: "sub",
       active: false,
@@ -682,15 +727,17 @@ export class NavService implements OnDestroy {
       ],
     },
 
-    // INVENTARIOS Y PRODUCTOS
-    { headTitle1: "Inventarios y Productos" },
+    // INVENTARIO
+    { headTitle1: "Inventario", id: "seccion-inventario", menuIcon: "box" },
     {
+      id: "productos",
       title: "Productos",
+      menuIcon: "package",
       icon: "package",
       type: "sub",
       active: false,
       children: [
-        { path: "productos", title: "Productos", type: "link", icon: "grid" },
+        { path: "productos", title: "Listado", previousTitle: "Productos", type: "link", icon: "grid" },
         // "Creación rápida" ya NO va en el menú: se entra por el desplegable del
         // botón Crear Producto, dentro del listado. Tenerlo en los dos lados era
         // redundante. La ruta `productos/crear-rapido` sigue viva y el permiso
@@ -706,62 +753,74 @@ export class NavService implements OnDestroy {
       ],
     },
     {
-      title: "Inventarios",
+      id: "bodegas",
+      title: "Bodegas",
+      previousTitle: "Inventarios",
+      menuIcon: "building-warehouse",
       icon: "box",
       type: "sub",
       active: false,
       children: [
         {
           path: "inventario/inventario-catalogo",
-          title: "Inventario por bodega",
+          title: "Existencias",
+          previousTitle: "Inventario por bodega",
           type: "link",
           icon: "database",
         },
         {
           path: "inventario/bodega-detalle",
-          title: "Detalle por bodega",
+          title: "Detalle",
+          previousTitle: "Detalle por bodega",
           type: "link",
           icon: "fa-list-alt",
         },
         {
           path: "inventario/recepcion-mercancia",
-          title: "Ajustes de inventario",
+          title: "Ajustes",
+          previousTitle: "Ajustes de inventario",
           type: "link",
           icon: "edit-3",
         },
         {
           path: "inventario/traslados",
-          title: "Traslados entre bodegas",
+          title: "Traslados",
+          previousTitle: "Traslados entre bodegas",
           type: "link",
           icon: "refresh-cw",
         },
         {
           path: "inventario/central-abastecimiento",
-          title: "Central de Abastecimiento",
+          title: "Abastecimiento",
+          previousTitle: "Central de Abastecimiento",
           type: "link",
           icon: "fa-line-chart",
         },
         {
           path: "inventario/historial-movimientos",
-          title: "Historial de movimientos",
+          title: "Movimientos",
+          previousTitle: "Historial de movimientos",
           type: "link",
           icon: "activity",
         },
         {
           path: "inventario/indicadores",
-          title: "Indicadores de bodega",
+          title: "Indicadores",
+          previousTitle: "Indicadores de bodega",
           type: "link",
           icon: "trending-up",
         },
         {
           path: "inventario/ubicaciones",
-          title: "Mapa de la bodega",
+          title: "Mapa",
+          previousTitle: "Mapa de la bodega",
           type: "link",
           icon: "map",
         },
         {
           path: "inventario/conteos",
-          title: "Conteos de inventario",
+          title: "Conteos",
+          previousTitle: "Conteos de inventario",
           type: "link",
           icon: "check-square",
         },
@@ -772,7 +831,9 @@ export class NavService implements OnDestroy {
     // también en el menú. La ruta de las órdenes se deja como estaba para no
     // romper permisos ya dados ni enlaces guardados.
     {
+      id: "compras",
       title: "Compras",
+      menuIcon: "shopping-cart",
       icon: "shopping-cart",
       type: "sub",
       active: false,
@@ -785,7 +846,8 @@ export class NavService implements OnDestroy {
         },
         {
           path: "inventario/ordenes-compra",
-          title: "Órdenes de compra",
+          title: "Órdenes",
+          previousTitle: "Órdenes de compra",
           type: "link",
           icon: "shopping-cart",
         },
@@ -798,7 +860,35 @@ export class NavService implements OnDestroy {
       ],
     },
     {
-      title: "Lista de precios",
+      id: "alistamiento",
+      title: "Alistamiento",
+      previousTitle: "Picking y packing",
+      menuIcon: "checklist",
+      icon: "layers",
+      type: "sub",
+      active: false,
+      children: [
+        {
+          path: "picking-packing/picking",
+          title: "Picking",
+          previousTitle: "Órdenes de picking",
+          type: "link",
+          icon: "search",
+        },
+        {
+          path: "picking-packing/packing",
+          title: "Packing",
+          previousTitle: "Órdenes de packing",
+          type: "link",
+          icon: "archive",
+        },
+      ],
+    },
+    {
+      id: "precios",
+      title: "Precios",
+      previousTitle: "Lista de precios",
+      menuIcon: "tag",
       icon: "dollar-sign",
       type: "sub",
       active: false,
@@ -811,60 +901,92 @@ export class NavService implements OnDestroy {
         },
       ],
     },
+
+    // FINANZAS — spec 014: agrupa Tesorería (spec 013, path intacto para
+    // conservar la autorización de roles existente) + Cartera (CxC).
+    // Cada hijo entra por separado al pickList del maestro de roles.
+    // D-546: el grupo `finanzas` no se dibuja (`display: "inline"`): sus hijos son los enlaces de la sección.
+    { headTitle1: "Finanzas", id: "seccion-finanzas", menuIcon: "cash" },
     {
-      title: "Picking y packing",
-      icon: "layers",
+      id: "finanzas",
+      title: "Finanzas",
+      display: "inline",
+      icon: "dollar-sign",
       type: "sub",
       active: false,
       children: [
         {
-          path: "picking-packing/picking",
-          title: "Órdenes de picking",
+          path: "facturacion-electronica",
+          title: "Facturación",
+          previousTitle: "Facturación electrónica",
+          menuIcon: "file-invoice",
           type: "link",
-          icon: "search",
+          icon: "file-text",
+          badgeType: "primary",
+          badgeValue: "NUEVO",
+        },
+        { path: "tesoreria", title: "Tesorería", menuIcon: "building-bank", type: "link", icon: "check-square" },
+        {
+          path: "cartera",
+          title: "Cartera",
+          previousTitle: "Cartera (CxC)",
+          menuIcon: "wallet",
+          type: "link",
+          icon: "credit-card",
+          badgeType: "primary",
+          badgeValue: "NUEVO",
         },
         {
-          path: "picking-packing/packing",
-          title: "Órdenes de packing",
+          path: "contabilidad",
+          title: "Contabilidad",
+          menuIcon: "calculator",
           type: "link",
-          icon: "archive",
+          icon: "book-open",
+          badgeType: "primary",
+          badgeValue: "NUEVO",
         },
       ],
     },
 
     // MARKETING
-    { headTitle1: "Marketing" },
-    {
-      title: "Dashboard de Marketing",
-      icon: "bar-chart-2",
-      type: "link",
-      path: "/marketing",
-      active: false,
-    },
+    { headTitle1: "Marketing", id: "seccion-marketing", menuIcon: "speakerphone" },
     {
       // WhatsApp y, desde D-318, correo: los dos canales viven en la misma
-      // pantalla. Misma ruta, así que los permisos de los roles no cambian.
+      // pantalla. Mismas rutas que antes, así que los permisos de los roles no cambian.
+      // Quien solo ve el panel ve «Campañas» como enlace directo (grupo de un hijo).
+      id: "campanas",
       title: "Campañas",
+      menuIcon: "ad-2",
       icon: "send",
-      type: "link",
-      path: "/marketing/campanas",
+      type: "sub",
       active: false,
+      children: [
+        { path: "/marketing", title: "Panel", previousTitle: "Dashboard de Marketing", type: "link", icon: "bar-chart-2" },
+        { path: "/marketing/campanas", title: "Historial", previousTitle: "Campañas", type: "link", icon: "send" },
+      ],
     },
     // Embudo de la pauta de Katuq hasta el pago (D-485): solo el Super
     // Administrador de Julsmind (filtro en filterMenuItemsByAuthorization).
     {
+      id: "pauta",
       title: "Pauta",
+      menuIcon: "rocket",
       icon: "target",
       type: "link",
       path: "/marketing/pauta",
       active: false,
       isOnlySuperAdministrador: true,
     },
-    // Los tres buzones agrupados: el menú no crece cada vez que se suma un
+
+    // COMUNICACIONES — los tres buzones agrupados: el menú no crece cada vez que se suma un
     // canal, y el operador entiende que es la misma tarea en distintos lugares.
     // La ruta de WhatsApp NO cambia, para no romper enlaces ya guardados.
+    // D-546: antes el grupo «Mensajes»; ahora sus canales son los enlaces de la sección Comunicaciones.
+    { headTitle1: "Comunicaciones", id: "seccion-comunicaciones", menuIcon: "messages" },
     {
+      id: "mensajes",
       title: "Mensajes",
+      display: "inline",
       icon: "message-circle",
       type: "sub",
       active: false,
@@ -876,54 +998,64 @@ export class NavService implements OnDestroy {
         {
           path: "/notificaciones/whatsapp/inbox",
           title: "WhatsApp",
+          menuIcon: "brand-whatsapp",
           type: "link",
           icon: "message-circle",
         },
         {
           path: "/notificaciones/instagram/inbox",
           title: "Instagram",
+          menuIcon: "brand-instagram",
           type: "link",
           icon: "instagram",
         },
         {
           path: "/notificaciones/facebook/inbox",
           title: "Facebook",
+          menuIcon: "brand-facebook",
           type: "link",
           icon: "facebook",
         },
       ],
     },
 
-    // INTELIGENCIA DE NEGOCIOS
-    { headTitle1: "Inteligencia de Negocios" },
+    // ANALÍTICA
+    { headTitle1: "Analítica", id: "seccion-analitica", menuIcon: "chart-pie" },
     {
+      id: "indicadores",
       title: "Indicadores",
+      menuIcon: "chart-bar",
       icon: "trending-up",
       type: "sub",
       active: false,
       children: [
-        { path: "dashboards", title: "Dashboard gerencial", type: "link", icon: "pie-chart" },
-        { path: "dashboards/builder", title: "Constructor de reportes", type: "link", icon: "edit-3" },
+        { path: "dashboards", title: "Panel gerencial", previousTitle: "Dashboard gerencial", type: "link", icon: "pie-chart" },
+        { path: "dashboards/builder", title: "Reportes", previousTitle: "Constructor de reportes", type: "link", icon: "edit-3" },
       ],
     },
     {
-      title: "Agent Builder",
+      id: "agentes-ia",
+      title: "Agentes IA",
+      previousTitle: "Agent Builder",
+      menuIcon: "robot",
       icon: "cpu",
       type: "sub",
       active: false,
       children: [
-        { path: "agent-builder/chat-agui", title: "KAI Chat", type: "link", icon: "message-circle" },
-        { path: "agent-builder/general-chat", title: "Chat Básico", type: "link", icon: "message-square" },
-        { path: "agent-builder/library", title: "Mis Agentes IA", type: "link", icon: "cpu" },
-        { path: "agent-builder/wizard", title: "Crear Agente", type: "link", icon: "plus" },
+        { path: "agent-builder/chat-agui", title: "Chat KAI", previousTitle: "KAI Chat", type: "link", icon: "message-circle" },
+        { path: "agent-builder/general-chat", title: "Chat básico", previousTitle: "Chat Básico", type: "link", icon: "message-square" },
+        { path: "agent-builder/library", title: "Mis agentes", previousTitle: "Mis Agentes IA", type: "link", icon: "cpu" },
+        { path: "agent-builder/wizard", title: "Nuevo agente", previousTitle: "Crear Agente", type: "link", icon: "plus" },
         { path: "agent-builder/monitor", title: "Monitor A2A", type: "link", icon: "activity" },
       ],
     },
 
     // CONFIGURACIÓN
-    { headTitle1: "Configuración" },
+    { headTitle1: "Configuración", id: "seccion-configuracion", menuIcon: "settings" },
     {
+      id: "seguridad",
       title: "Seguridad",
+      menuIcon: "shield-lock",
       icon: "shield",
       type: "sub",
       active: false,
@@ -933,7 +1065,9 @@ export class NavService implements OnDestroy {
       ],
     },
     {
+      id: "empresa",
       title: "Empresa",
+      menuIcon: "building",
       icon: "briefcase",
       type: "sub",
       active: false,
@@ -960,7 +1094,10 @@ export class NavService implements OnDestroy {
       ],
     },
     {
-      title: "Módulos Variables",
+      id: "modulos-variables",
+      title: "Módulos variables",
+      previousTitle: "Módulos Variables",
+      menuIcon: "forms",
       icon: "grid",
       type: "sub",
       active: false,
@@ -979,21 +1116,25 @@ export class NavService implements OnDestroy {
         },
         {
           path: "empresas/modulovariable/campos-personalizados",
-          title: "Campos Personalizados",
+          title: "Campos",
+          previousTitle: "Campos Personalizados",
           type: "link",
           icon: "list",
         },
       ],
     },
     {
-      title: "Inventarios y productos",
+      id: "config-inventario",
+      title: "Inventario",
+      previousTitle: "Inventarios y productos",
+      menuIcon: "packages",
       icon: "database",
       type: "sub",
       active: false,
       children: [
-        { path: "categorias", title: "Categorías de productos", type: "link", icon: "folder" },
+        { path: "categorias", title: "Categorías", previousTitle: "Categorías de productos", type: "link", icon: "folder" },
         { path: "inventario/bodegas", title: "Bodegas", type: "link", icon: "home" },
-        { path: "proceso/canales", title: "Canales de venta", type: "link", icon: "share-2" },
+        { path: "proceso/canales", title: "Canales", previousTitle: "Canales de venta", type: "link", icon: "share-2" },
         {
           path: "proceso/bodegas-por-canal",
           title: "Bodegas por canal",
@@ -1003,19 +1144,24 @@ export class NavService implements OnDestroy {
       ],
     },
     {
-      title: "Producto",
+      id: "config-productos",
+      title: "Productos",
+      previousTitle: "Producto",
+      menuIcon: "tags",
       icon: "tag",
       type: "sub",
       active: false,
       children: [
         { path: "proceso/ocasiones", title: "Ocasiones", type: "link", icon: "gift" },
         { path: "proceso/generos", title: "Géneros", type: "link", icon: "users" },
-        { path: "proceso/tipos-cliente", title: "Tipos de Cliente", type: "link", icon: "user-check" },
-        { path: "proceso/descuentos-promociones", title: "Descuentos y Promociones", type: "link", icon: "percent" },
+        { path: "proceso/tipos-cliente", title: "Tipos de cliente", previousTitle: "Tipos de Cliente", type: "link", icon: "user-check" },
+        { path: "proceso/descuentos-promociones", title: "Descuentos", previousTitle: "Descuentos y Promociones", type: "link", icon: "percent" },
       ],
     },
     {
+      id: "config-logistica",
       title: "Logística",
+      menuIcon: "route",
       icon: "truck",
       type: "sub",
       active: false,
@@ -1032,32 +1178,39 @@ export class NavService implements OnDestroy {
       ],
     },
     {
+      id: "pagos",
       title: "Pagos",
+      menuIcon: "credit-card",
       icon: "credit-card",
       type: "sub",
       active: false,
       children: [
-        { path: "extras/formasPago", title: "Métodos de pago", type: "link", icon: "dollar-sign" },
+        { path: "extras/formasPago", title: "Métodos", previousTitle: "Métodos de pago", type: "link", icon: "dollar-sign" },
         {
           path: "extras/pos/formasPago",
-          title: "Métodos de pago POS",
+          title: "Métodos POS",
+          previousTitle: "Métodos de pago POS",
           type: "link",
           icon: "monitor",
         },
       ],
     },
     {
+      id: "integraciones",
       title: "Integraciones",
+      menuIcon: "plug-connected",
       icon: "link",
       type: "sub",
       active: false,
       children: [
-        { path: "integrations", title: "Integraciones", type: "link", icon: "link-2" },
+        { path: "integrations", title: "Conexiones", previousTitle: "Integraciones", type: "link", icon: "link-2" },
         { path: "flows", title: "Automatizaciones", type: "link", icon: "git-merge" },
       ],
     },
     {
+      id: "notificaciones",
       title: "Notificaciones",
+      menuIcon: "bell",
       icon: "bell",
       type: "sub",
       active: false,

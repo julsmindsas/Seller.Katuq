@@ -1,5 +1,5 @@
 {
-  "_nota": "IDI-B01a (D-540, tarea 2.2): títulos, encabezados, rutas e insignias del menú tomados de nav.service.ts en 6e6d67bd (sin cambios desde 96b9fef1), antes del bloque. Excepción D3: no cambian.",
+  "_nota": "IDI-B01a (D-540, tarea 2.2): títulos, encabezados, rutas e insignias del menú tomados de nav.service.ts tras integrar el menú ordenado de la rama principal (D-546); antes, nav.service.ts en 6e6d67bd. Excepción D3: no cambian.",
   "MENUITEMS": [
     {
       "headTitle1": "Configuración Plataforma"
@@ -12,26 +12,18 @@
       "title": "Campañas de registro"
     },
     {
-      "path": "prospectos/lista",
-      "title": "Prospectos"
-    },
-    {
-      "headTitle1": "Gestión Comercial"
+      "headTitle1": "Gestión comercial"
     },
     {
       "title": "Clientes"
     },
     {
       "path": "ventas/clientes",
-      "title": "Crear cliente"
+      "title": "Nuevo cliente"
     },
     {
       "path": "ventas/clienteslista",
-      "title": "Listado de clientes"
-    },
-    {
-      "path": "ventas/clientes-corporativos",
-      "title": "Clientes corporativos"
+      "title": "Listado"
     },
     {
       "title": "Ventas"
@@ -42,46 +34,65 @@
     },
     {
       "path": "ventas/carga-ventas",
-      "title": "Ventas masivas"
+      "title": "Venta masiva"
     },
     {
       "path": "ventas/ventas-pos",
-      "title": "Ventas POS"
+      "title": "POS"
     },
     {
       "title": "Cotizaciones"
     },
     {
       "path": "cotizaciones",
-      "title": "Listado de cotizaciones"
+      "title": "Listado"
     },
     {
       "path": "cotizaciones/editor",
-      "title": "Nueva cotización"
+      "title": "Nueva"
     },
     {
-      "path": "cotizaciones/catalogos",
-      "title": "Catálogos por link",
-      "badgeValue": "NUEVO"
-    },
-    {
-      "title": "Mi página web"
+      "title": "Sitio web"
     },
     {
       "path": "sitios",
       "title": "Mis sitios"
     },
     {
+      "path": "sitios/landings",
+      "title": "Landings"
+    },
+    {
       "path": "sitios/catalogos",
-      "title": "Catálogos",
+      "title": "Catálogo web",
       "badgeValue": "NUEVO"
+    },
+    {
+      "path": "cotizaciones/catalogos",
+      "title": "Catálogo por link",
+      "badgeValue": "NUEVO"
+    },
+    {
+      "title": "CRM"
+    },
+    {
+      "path": "crm/list",
+      "title": "Pipeline"
+    },
+    {
+      "path": "crm/tasks",
+      "title": "Seguimiento"
+    },
+    {
+      "path": "ventas/clientes-corporativos",
+      "title": "Prospectos"
     },
     {
       "title": "Dropshipping"
     },
     {
       "path": "dropshipping/dashboard",
-      "title": "Dashboard"
+      "title": "Panel"
     },
     {
       "path": "dropshipping/proveedores",
@@ -94,17 +105,6 @@
     {
       "path": "dropshipping/ordenes",
       "title": "Órdenes"
-    },
-    {
-      "title": "CRM"
-    },
-    {
-      "path": "crm/list",
-      "title": "Pipeline"
-    },
-    {
-      "path": "crm/tasks",
-      "title": "Seguimiento"
     },
     {
       "title": "NPS"
@@ -122,31 +122,6 @@
       "title": "Seguimiento"
     },
     {
-      "headTitle1": "Finanzas"
-    },
-    {
-      "title": "Finanzas"
-    },
-    {
-      "path": "facturacion-electronica",
-      "title": "Facturación electrónica",
-      "badgeValue": "NUEVO"
-    },
-    {
-      "path": "tesoreria",
-      "title": "Tesorería"
-    },
-    {
-      "path": "cartera",
-      "title": "Cartera (CxC)",
-      "badgeValue": "NUEVO"
-    },
-    {
-      "path": "contabilidad",
-      "title": "Contabilidad",
-      "badgeValue": "NUEVO"
-    },
-    {
       "headTitle1": "Operaciones"
     },
     {
@@ -154,11 +129,11 @@
     },
     {
       "path": "ventas/pedidos",
-      "title": "Todos los pedidos"
+      "title": "Todos"
     },
     {
       "path": "pos/list-ventas",
-      "title": "Pedidos POS"
+      "title": "POS"
     },
     {
       "title": "Producción"
@@ -176,18 +151,18 @@
     },
     {
       "path": "agenda/configuracion",
-      "title": "Horario y personas"
+      "title": "Horarios"
     },
     {
       "title": "Logística"
     },
     {
       "path": "despachos",
-      "title": "Envíos y entregas"
+      "title": "Envíos"
     },
     {
       "path": "centro-operaciones",
-      "title": "Centro de operaciones"
+      "title": "Centro operativo"
     },
     {
       "title": "En vivo"
@@ -201,14 +176,14 @@
       "title": "Katuq en vivo"
     },
     {
-      "headTitle1": "Inventarios y Productos"
+      "headTitle1": "Inventario"
     },
     {
       "title": "Productos"
     },
     {
       "path": "productos",
-      "title": "Productos"
+      "title": "Listado"
     },
     {
       "path": "ecommerce/adiciones/listar",
@@ -219,43 +194,43 @@
       "title": "Combos"
     },
     {
-      "title": "Inventarios"
+      "title": "Bodegas"
     },
     {
       "path": "inventario/inventario-catalogo",
-      "title": "Inventario por bodega"
+      "title": "Existencias"
     },
     {
       "path": "inventario/bodega-detalle",
-      "title": "Detalle por bodega"
+      "title": "Detalle"
     },
     {
       "path": "inventario/recepcion-mercancia",
-      "title": "Ajustes de inventario"
+      "title": "Ajustes"
     },
     {
       "path": "inventario/traslados",
-      "title": "Traslados entre bodegas"
+      "title": "Traslados"
     },
     {
       "path": "inventario/central-abastecimiento",
-      "title": "Central de Abastecimiento"
+      "title": "Abastecimiento"
     },
     {
       "path": "inventario/historial-movimientos",
-      "title": "Historial de movimientos"
+      "title": "Movimientos"
     },
     {
       "path": "inventario/indicadores",
-      "title": "Indicadores de bodega"
+      "title": "Indicadores"
     },
     {
       "path": "inventario/ubicaciones",
-      "title": "Mapa de la bodega"
+      "title": "Mapa"
     },
     {
       "path": "inventario/conteos",
-      "title": "Conteos de inventario"
+      "title": "Conteos"
     },
     {
       "title": "Compras"
@@ -266,44 +241,75 @@
     },
     {
       "path": "inventario/ordenes-compra",
-      "title": "Órdenes de compra"
+      "title": "Órdenes"
     },
     {
       "path": "compras/proveedores",
       "title": "Proveedores"
     },
     {
-      "title": "Lista de precios"
+      "title": "Alistamiento"
+    },
+    {
+      "path": "picking-packing/picking",
+      "title": "Picking"
+    },
+    {
+      "path": "picking-packing/packing",
+      "title": "Packing"
+    },
+    {
+      "title": "Precios"
     },
     {
       "path": "lista-precios/lista-precios",
       "title": "Lista de precios"
     },
     {
-      "title": "Picking y packing"
+      "headTitle1": "Finanzas"
     },
     {
-      "path": "picking-packing/picking",
-      "title": "Órdenes de picking"
+      "title": "Finanzas"
     },
     {
-      "path": "picking-packing/packing",
-      "title": "Órdenes de packing"
+      "path": "facturacion-electronica",
+      "title": "Facturación",
+      "badgeValue": "NUEVO"
+    },
+    {
+      "path": "tesoreria",
+      "title": "Tesorería"
+    },
+    {
+      "path": "cartera",
+      "title": "Cartera",
+      "badgeValue": "NUEVO"
+    },
+    {
+      "path": "contabilidad",
+      "title": "Contabilidad",
+      "badgeValue": "NUEVO"
     },
     {
       "headTitle1": "Marketing"
     },
     {
-      "title": "Dashboard de Marketing",
-      "path": "/marketing"
+      "title": "Campañas"
     },
     {
-      "title": "Campañas",
-      "path": "/marketing/campanas"
+      "path": "/marketing",
+      "title": "Panel"
+    },
+    {
+      "path": "/marketing/campanas",
+      "title": "Historial"
     },
     {
       "title": "Pauta",
       "path": "/marketing/pauta"
+    },
+    {
+      "headTitle1": "Comunicaciones"
     },
     {
       "title": "Mensajes"
@@ -321,37 +327,37 @@
       "title": "Facebook"
     },
     {
-      "headTitle1": "Inteligencia de Negocios"
+      "headTitle1": "Analítica"
     },
     {
       "title": "Indicadores"
     },
     {
       "path": "dashboards",
-      "title": "Dashboard gerencial"
+      "title": "Panel gerencial"
     },
     {
       "path": "dashboards/builder",
-      "title": "Constructor de reportes"
+      "title": "Reportes"
     },
     {
-      "title": "Agent Builder"
+      "title": "Agentes IA"
     },
     {
       "path": "agent-builder/chat-agui",
-      "title": "KAI Chat"
+      "title": "Chat KAI"
     },
     {
       "path": "agent-builder/general-chat",
-      "title": "Chat Básico"
+      "title": "Chat básico"
     },
     {
       "path": "agent-builder/library",
-      "title": "Mis Agentes IA"
+      "title": "Mis agentes"
     },
     {
       "path": "agent-builder/wizard",
-      "title": "Crear Agente"
+      "title": "Nuevo agente"
     },
     {
       "path": "agent-builder/monitor",
@@ -399,7 +405,7 @@
       "title": "Activación Módulos"
     },
     {
-      "title": "Módulos Variables"
+      "title": "Módulos variables"
     },
     {
       "path": "empresas/modulovariable/produccion/opciones",
@@ -411,14 +417,14 @@
     },
     {
       "path": "empresas/modulovariable/campos-personalizados",
-      "title": "Campos Personalizados"
+      "title": "Campos"
     },
     {
-      "title": "Inventarios y productos"
+      "title": "Inventario"
     },
     {
       "path": "categorias",
-      "title": "Categorías de productos"
+      "title": "Categorías"
     },
     {
       "path": "inventario/bodegas",
@@ -426,14 +432,14 @@
     },
     {
       "path": "proceso/canales",
-      "title": "Canales de venta"
+      "title": "Canales"
     },
     {
       "path": "proceso/bodegas-por-canal",
       "title": "Bodegas por canal"
     },
     {
-      "title": "Producto"
+      "title": "Productos"
     },
     {
       "path": "proceso/ocasiones",
@@ -445,11 +451,11 @@
     },
     {
       "path": "proceso/tipos-cliente",
-      "title": "Tipos de Cliente"
+      "title": "Tipos de cliente"
     },
     {
       "path": "proceso/descuentos-promociones",
-      "title": "Descuentos y Promociones"
+      "title": "Descuentos"
     },
     {
       "title": "Logística"
@@ -475,18 +481,18 @@
     },
     {
       "path": "extras/formasPago",
-      "title": "Métodos de pago"
+      "title": "Métodos"
     },
     {
       "path": "extras/pos/formasPago",
-      "title": "Métodos de pago POS"
+      "title": "Métodos POS"
     },
     {
       "title": "Integraciones"
     },
     {
       "path": "integrations",
-      "title": "Integraciones"
+      "title": "Conexiones"
     },
     {
       "path": "flows",

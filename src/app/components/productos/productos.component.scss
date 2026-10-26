@@ -812,6 +812,15 @@ $fs-active-border: $pk-accent-border;
     color: $pk-text-light;
 }
 
+// Quién hizo la última edición (D-548, 6.1), debajo de la fecha.
+.pk-editor {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: $pk-text-light;
+    overflow-wrap: anywhere;
+}
+
 // Miniatura de producto
 .pk-thumb {
     border-radius: 12px;

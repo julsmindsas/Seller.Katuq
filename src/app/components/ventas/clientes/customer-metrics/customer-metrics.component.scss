@@ -234,3 +234,14 @@
   font-size: 0.8rem;
   color: var(--ds-muted);
 }
+
+// Ticket 1328: la tarjeta dentro de un panel o ventana angosta. La cuadrícula depende del ancho de
+// la pantalla, no del panel, así que sin esto salían 4 columnas apretadas en 420 px.
+.cm-wrap.cm-compacto {
+  padding: 0;
+
+  .cm-grid,
+  .cm-details-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

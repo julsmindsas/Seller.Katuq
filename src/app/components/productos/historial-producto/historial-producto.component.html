@@ -1,0 +1,89 @@
+<div class="hprod" role="region" aria-label="Historial del producto">
+
+  <!-- Resumen -->
+  <div class="hprod-resumen" *ngIf="!sinResumen && resumen && !noDisponible">
+    <div class="hprod-resumen__fila">
+      <div class="hprod-resumen__quien">
+        <div class="hprod-resumen__ref" *ngIf="resumen.referencia">{{ resumen.referencia }}</div>
+        <div class="hprod-resumen__nombre" *ngIf="resumen.nombre">{{ resumen.nombre }}</div>
+      </div>
+      <div class="hprod-resumen__datos">
+        <div class="hprod-resumen__dato" *ngIf="cuentaTexto">
+          <div class="hprod-etiqueta">CAMBIOS</div>
+          <div class="hprod-resumen__valor">{{ cuentaTexto }}</div>
+        </div>
+        <div class="hprod-resumen__dato" *ngIf="ultimoCambioTexto">
+          <div class="hprod-etiqueta">ÚLTIMO CAMBIO</div>
+          <div class="hprod-resumen__valor">{{ ultimoCambioTexto }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra: orden -->
+  <div class="hprod-barra" *ngIf="!cargando && !error && !noDisponible && eventos.length > 0">
+    <button type="button" class="hprod-boton hprod-boton--sec" (click)="cambiarOrden()">
+      <i class="pi pi-sort-alt" aria-hidden="true"></i>
+      <span class="hprod-boton__texto">{{ textoOrden }}</span>
+    </button>
+  </div>
+
+  <!-- Cargando: esqueleto -->
+  <div class="hprod-esqueleto" *ngIf="cargando" aria-busy="true" aria-label="Cargando el historial">
+    <div class="hprod-esqueleto__fila" *ngFor="let _ of [1, 2, 3]">
+      <div class="hprod-esqueleto__tile"></div>
+      <div class="hprod-esqueleto__textos">
+        <div class="hprod-esqueleto__linea hprod-esqueleto__linea--larga"></div>
+        <div class="hprod-esqueleto__linea hprod-esqueleto__linea--corta"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="hprod-aviso hprod-aviso--error" *ngIf="error" role="alert">
+    <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+    <div class="hprod-aviso__cuerpo">
+      <div class="hprod-aviso__titulo">No pudimos cargar el historial</div>
+      <div class="hprod-aviso__texto">Revisa tu conexión e inténtalo de nuevo.</div>
+    </div>
+    <button type="button" class="hprod-boton" (click)="reintentar()">
+      <span class="hprod-boton__texto hprod-boton__texto--claro">Reintentar</span>
+    </button>
+  </div>
+
+  <!-- El servidor respondió la vista de antes -->
+  <div class="hprod-vacio" *ngIf="noDisponible">
+    <div class="hprod-vacio__icono"><i class="pi pi-history" aria-hidden="true"></i></div>
+    <div class="hprod-vacio__titulo">Historial detallado no disponible por ahora</div>
+    <div class="hprod-vacio__texto">Vuelve a intentarlo en unos minutos.</div>
+  </div>
+
+  <!-- Vacío -->
+  <div class="hprod-vacio" *ngIf="vacio">
+    <div class="hprod-vacio__icono"><i class="pi pi-history" aria-hidden="true"></i></div>
+    <div class="hprod-vacio__titulo">{{ textoVacio }}</div>
+    <div class="hprod-vacio__texto">Los cambios nuevos aparecerán aquí con quién los hizo y el valor de antes.</div>
+  </div>
+
+  <!-- Línea de tiempo por día -->
+  <div class="hprod-dias" *ngIf="grupos.length > 0">
+    <section class="hprod-dia" *ngFor="let g of grupos; trackBy: trackGrupo">
+      <div class="hprod-dia__titulo" role="heading" aria-level="3">{{ g.etiqueta }}</div>
+      <ol class="hprod-lista">
+        <li class="hprod-lista__item" *ngFor="let e of g.eventos; trackBy: trackEvento">
+          <app-historial-producto-evento [evento]="e"></app-historial-producto-evento>
+        </li>
+      </ol>
+    </section>
+  </div>
+
+  <!-- Ver más -->
+  <div class="hprod-mas" *ngIf="!cargando && eventos.length > 0 && (hayMas || errorMas)">
+    <div class="hprod-aviso__texto" *ngIf="errorMas" role="alert">No pudimos traer más cambios.</div>
+    <button type="button" class="hprod-boton hprod-boton--sec" (click)="verMas()" [disabled]="cargandoMas">
+      <i class="pi pi-spin pi-spinner" *ngIf="cargandoMas" aria-hidden="true"></i>
+      <span class="hprod-boton__texto">{{ cargandoMas ? 'Cargando…' : errorMas ? 'Reintentar' : 'Ver más' }}</span>
+    </button>
+  </div>
+
+</div>

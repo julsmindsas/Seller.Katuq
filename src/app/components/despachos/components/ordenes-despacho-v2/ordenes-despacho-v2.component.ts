@@ -1400,118 +1400,16 @@ export class OrdenesDespachoV2Component implements OnInit {
     return false;
   }
 
-  // ========== MÉTODOS DE CÁLCULO DE PRECIOS (COPIADOS DEL ORIGINAL) ==========
+  // ========== SALDO POR COBRAR ==========
 
-  getTotalImpuesto(pedido: any): number {
-    let totalPrecioIVADef = 0;
-    pedido.carrito.forEach((itemCarrito: any) => {
-      let totalPrecioIVA = 0;
-      if (itemCarrito.producto && itemCarrito.producto.precio) {
-        if (itemCarrito.producto.precio.preciosVolumen && itemCarrito.producto.precio.preciosVolumen.length > 0) {
-          itemCarrito.producto.precio.preciosVolumen.forEach((x: any) => {
-            if (
-              itemCarrito.cantidad >= x.numeroUnidadesInicial &&
-              itemCarrito.cantidad <= x.numeroUnidadesLimite
-            ) {
-              totalPrecioIVA = x.valorUnitarioPorVolumenIva * itemCarrito.cantidad;
-            } else {
-              totalPrecioIVA = itemCarrito.producto?.precio?.valorIva * itemCarrito.cantidad;
-            }
-          });
-        } else {
-          totalPrecioIVA = itemCarrito.producto?.precio?.valorIva * itemCarrito.cantidad;
-        }
-      }
-      
-      if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
-        itemCarrito.configuracion.adiciones.forEach((adicion: any) => {
-          try {
-            if (adicion["referencia"]["precioIva"])
-              totalPrecioIVA += adicion["cantidad"] * adicion["referencia"]["precioIva"] * itemCarrito.cantidad;
-          } catch (error) { }
-        });
-      }
-
-      if (itemCarrito.configuracion && itemCarrito.configuracion.preferencias) {
-        itemCarrito.configuracion.preferencias.forEach((preferencia: any) => {
-          totalPrecioIVA += preferencia["valorIva"] * itemCarrito.cantidad;
-        });
-      }
-      totalPrecioIVADef += totalPrecioIVA;
-    });
-
-    return totalPrecioIVADef;
-  }
-
+  /**
+   * Ticket 1352: el saldo es el que manda el servidor (`faltaPorPagar`, mismo cálculo del
+   * listado de pedidos, con el precio guardado en cada línea). Antes se recalculaba aquí con
+   * el precio de catálogo y sin precio manual, promociones ni descuento por línea: un pedido
+   * con una línea a $6.000 sobre catálogo $1 cobraba $5.999 menos. No modifica el pedido.
+   */
   getValorACobrarPorPedido(pedido: any): number {
-    const order = pedido;
-
-    order.totalPedidoSinDescuento = this.getSubTotalPedido(order);
-    order.totalImpuesto = this.getTotalImpuesto(order);
-    order.subtotal = order.totalPedidoSinDescuento + order.totalEnvio - order.totalDescuento;
-    order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
-
-    if (order.PagosAsentados && order.PagosAsentados.length > 0) {
-      order.anticipo = order.PagosAsentados.reduce((acc: number, pago: any) => {
-        if (
-          pago.formaPago?.toLowerCase().includes("wompi") &&
-          pago.estadoVerificacion === "Pendiente"
-        ) {
-          return acc;
-        }
-        const valorPago = pago.valor || pago.valorRegistrado || 0;
-        return acc + valorPago;
-      }, 0);
-    } else if (order.anticipo == null || order.anticipo == undefined) {
-      order.anticipo = 0;
-    }
-
-    order.faltaPorPagar = Math.max(0, order.totalPedididoConDescuento - order.anticipo);
-    return order.faltaPorPagar;
-  }
-
-  getSubTotalPedido(pedido: any): number {
-    let totalPrecioSinIVADef = 0;
-    pedido.carrito.map((itemCarrito: any) => {
-      let totalPrecioSinIVA = 0;
-      if (itemCarrito.producto && itemCarrito.producto.precio) {
-        if (itemCarrito.producto.precio.preciosVolumen && itemCarrito.producto.precio.preciosVolumen.length > 0) {
-          itemCarrito.producto.precio.preciosVolumen.map((x: any) => {
-            if (
-              itemCarrito.cantidad >= x.numeroUnidadesInicial &&
-              itemCarrito.cantidad <= x.numeroUnidadesLimite
-            ) {
-              totalPrecioSinIVA = x.valorUnitarioPorVolumenSinIVA * itemCarrito.cantidad;
-            } else {
-              totalPrecioSinIVA = itemCarrito.producto?.precio?.precioUnitarioSinIva * itemCarrito.cantidad;
-            }
-          });
-        } else {
-          totalPrecioSinIVA = itemCarrito.producto?.precio?.precioUnitarioSinIva * itemCarrito.cantidad;
-        }
-      }
-
-      if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
-        itemCarrito.configuracion.adiciones.forEach((adicion: any) => {
-          try {
-            if (adicion["referencia"]["precioUnitario"]) {
-              totalPrecioSinIVA += adicion["cantidad"] * (adicion["referencia"]["precioUnitario"] ?? 1) * itemCarrito.cantidad;
-            }
-          } catch (error) {
-            console.log("Pedido: ", adicion);
-          }
-        });
-      }
-
-      if (itemCarrito.configuracion && itemCarrito.configuracion.preferencias) {
-        itemCarrito.configuracion.preferencias.forEach((preferencia: any) => {
-          totalPrecioSinIVA += preferencia["valorUnitarioSinIva"] * itemCarrito.cantidad;
-        });
-      }
-      totalPrecioSinIVADef += totalPrecioSinIVA;
-    });
-
-    return totalPrecioSinIVADef;
+    return Math.max(0, Number(pedido?.faltaPorPagar) || 0);
   }
 
   /**

@@ -66,6 +66,7 @@ import { ToastrService } from 'ngx-toastr';
 import { DispatchRulesService } from '../services/dispatch-rules.service';
 import { Subject, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged, finalize, takeUntil } from 'rxjs/operators';
+import { mayusculaInicial } from '../../../shared/utils/mayuscula-inicial';
 
 interface MapaMetricas {
   despachados: number;
@@ -3157,10 +3158,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
     }
 
     // Función helper para capitalizar cada palabra
-    const toTitleCaseSwal = (texto: string): string => {
-      if (!texto) return '';
-      return texto.replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
-    };
+    // Ticket 1340: la misma función de todo Katuq, que respeta las tildes («Ángela», no «ÁNgela»).
+    const toTitleCaseSwal = (texto: string): string => (texto ? mayusculaInicial(texto) : '');
 
     // Función helper para escapar HTML y caracteres especiales
     const escapeHtml = (text) => {

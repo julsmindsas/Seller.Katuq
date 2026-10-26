@@ -66,7 +66,7 @@ import { PedidoEntrega } from "../../despachos/interfaces/pedido-entrega.interfa
 import { LogisticaService } from "../../../shared/services/despachos/logistica.services";
 import { normalizeTransportadorName } from "../../../shared/services/despachos/transportador.util";
 import { Observable, Subject, firstValueFrom, forkJoin, of } from "rxjs";
-import { catchError, debounceTime, distinctUntilChanged, map, switchMap, takeUntil } from "rxjs/operators";
+import { catchError, debounceTime, distinctUntilChanged, finalize, map, switchMap, takeUntil } from "rxjs/operators";
 import { OrdenVentaComponent } from "../orden-venta/orden-venta.component";
 import { IntegrationsService } from "../../integrations/integrations.service";
 import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
@@ -76,6 +76,22 @@ import {
 } from "../../../shared/services/facturacion/facturacion-automatica.service";
 import { TreasuryService } from "../../../shared/services/treasury/treasury.service";
 import { debePreguntarSiVolvio, preguntarSiVolvio } from "../../../shared/utils/pedido-mercancia-devuelta";
+import { AccionPedidoId, accionPorId } from "./acciones-pedido/acciones-pedido.catalogo";
+import { PlantillaPedido, pasoDe } from "./acciones-pedido/acciones-pedido.plan";
+import {
+  AccionPrecioEntrada,
+  EntradaEstadoAcciones,
+  EstadoAcciones,
+  estadoAcciones,
+} from "./acciones-pedido/acciones-pedido.estado";
+import { accionesDelRol, ochoAcciones } from "./acciones-pedido/acciones-pedido.ocho";
+import { decidirPin, reemplazarPin } from "./acciones-pedido/acciones-pedido.pines";
+import { cuentaComoUso, idFijaPorTitulo } from "./acciones-pedido/acciones-pedido.uso";
+import { AccionResaltada, resaltada, resaltadaSoloEnModal } from "./acciones-pedido/acciones-pedido.resaltada";
+import { diaColombia } from "./acciones-pedido/acciones-pedido.dia";
+import { sugerencia } from "./acciones-pedido/acciones-pedido.sugerencia";
+import { AccionesUsuario } from "./acciones-pedido/acciones-pedido.me";
+import { OrderActionsService } from "../../../shared/services/ventas/order-actions.service";
 
 /** Estados en los que el pedido ya salió de la bodega (ticket 1318). */
 const ESTADOS_DE_SALIDA = ['Despachado', 'Entregado', 'Cerrado'];
@@ -122,6 +138,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild("clientesModal", { static: false }) clientesModalRef: any;
   @ViewChild("notasModal", { static: false }) notasModalRef: any;
 
+  // D-547 (F1): el resto de plantillas que piden los métodos de las acciones del pedido. Las lee
+  // `ejecutarAccionPedido` según `acciones-pedido.plan.ts`. Son referencias, no cambian ninguna acción.
+  @ViewChild("datosEnregaModal", { static: false }) datosEnregaModalRef: any;
+  @ViewChild("datosFacturacionModal", { static: false }) datosFacturacionModalRef: any;
+  @ViewChild("cambioEstadoPagoModal", { static: false }) cambioEstadoPagoModalRef: any;
+  @ViewChild("recompraModal", { static: false }) recompraModalRef: any;
+  @ViewChild("pagosModal", { static: false }) pagosModalRef: any;
+  @ViewChild("descuentoModal", { static: false }) descuentoModalRef: any;
+  @ViewChild("editarDescuentoModal", { static: false }) editarDescuentoModalRef: any;
+
   @ViewChild("fechaInicialCtrl", { static: false })
   fechaInicialCtrl: ElementRef;
   @ViewChild("fechaFinalCtrl", { static: false }) fechaFinalCtrl: ElementRef;
@@ -156,6 +182,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   // Con inject() para no cambiar el constructor.
   private companyFeatures = inject(CompanyFeaturesService);
   private facturacionAutomatica = inject(FacturacionAutomaticaService);
+  // D-547 (F2): acciones fijadas por rol y por usuario. Solo se usa con la bandera orderPinnedActions encendida.
+  private orderActions = inject(OrderActionsService);
 
   // ===== Modal de facturación SIIGO: forma de pago + vencimiento de crédito (D-042) =====
   @ViewChild("facturaSiigoModal") facturaSiigoModal: any;
@@ -509,7 +537,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Construir menú dinámicamente según el pedido - Opciones más usadas
     const items: MenuItem[] = [
       {
-        label: 'Imprimir PDF',
+        label: 'PDF del pedido',
         icon: 'pi pi-file-pdf',
         command: () => this.pdfOrder(this.modalContentRef, this.selectedMenuPedido)
       },
@@ -522,7 +550,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (!this.isFromProduction) {
       items.push({
-        label: 'Enviar de nuevo la confirmación',
+        label: 'Reenviar confirmación',
         icon: 'pi pi-envelope',
         command: () => this.reenviarConfirmacionPedido(this.selectedMenuPedido)
       });
@@ -532,7 +560,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.isFromProduction) {
       items.push(
         {
-          label: 'Editar Cliente',
+          label: 'Editar cliente',
           icon: 'pi pi-user-edit',
           command: () => this.editDatosClientes(this.clientesModalRef, this.selectedMenuPedido)
         }
@@ -541,7 +569,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Solo mostrar "Editar Notas" si NO es un pedido del POS
       if (!this.isPedidoPOS(this.selectedMenuPedido)) {
         items.push({
-          label: 'Editar Notas',
+          label: 'Notas',
           icon: 'pi pi-pencil',
           command: () => this.editNotas(this.notasModalRef, this.selectedMenuPedido)
         });
@@ -578,22 +606,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.isFromProduction && this.esFacturaDian(pedido)) {
       items.push(
         {
-          label: 'Consultar estado DIAN',
+          label: 'Estado DIAN',
           icon: 'pi pi-search',
           command: () => this.consultarEstadoDian(this.selectedMenuPedido)
         },
         {
-          label: 'Descargar PDF DIAN',
+          label: 'PDF DIAN',
           icon: 'pi pi-file-pdf',
           command: () => this.descargarArtefactoDian(this.selectedMenuPedido, 'pdf')
         },
         {
-          label: 'Crear nota crédito total',
+          label: 'Nota crédito',
           icon: 'pi pi-replay',
           command: () => this.crearNotaCreditoDian(this.selectedMenuPedido)
         },
         {
-          label: 'Crear ajuste NC / ND',
+          label: 'Ajuste NC/ND',
           icon: 'pi pi-pencil',
           command: () => this.crearAjusteDian(this.selectedMenuPedido)
         }
@@ -623,7 +651,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     );
 
-    this.rowMenuItems = items;
+    this.rowMenuItems = this.conConteoDeUso(items);
     menu.toggle(event);
   }
 
@@ -785,6 +813,333 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     return !!(
       this.UserLogged?.email && authorizedEmails.includes(this.UserLogged.email)
     );
+  }
+
+  // ── D-547 (F1): acciones del pedido ──────────────────────────────────────────────────────────
+  // Piezas que usa el modal «Opciones del pedido». Solo SE AGREGAN: ningún método de arriba cambia.
+
+  /**
+   * D-543 y D-544 (Corregir precio, Cambiar tipo de precio): su consulta de permisos llena esta lista. Vacía,
+   * el modal no muestra ninguna de las dos. Quien la llene no cambia las reglas del otro (ver tasks.md 4.3).
+   */
+  accionesPrecioPedido: AccionPrecioEntrada[] = [];
+
+  /** D-547 6.1: título y reseña de cada acción salen del catálogo, el mismo del modal y del «⋯». */
+  readonly accionCat = accionPorId;
+
+  private entradaEstadosAnterior: EntradaEstadoAcciones | null = null;
+  private estadosAccionesAnterior: EstadoAcciones | null = null;
+
+  /** Los datos que `estadoAcciones` necesita, calculados con los mismos métodos que usaba la plantilla de hoy. */
+  entradaEstadoAcciones(pedido: Pedido): EntradaEstadoAcciones {
+    const p: any = pedido;
+    return {
+      produccion: !!this.isFromProduction,
+      puedeDireccion: this.canEditDeliveryAddressByDeliveryType(pedido),
+      puedeFacturacion: this.canEditBilling(pedido),
+      puedeProductos: this.canAddProducts(pedido),
+      puedeDescuentoEImpuestos: this.canModifyProducts(pedido) || this.isAdminUser(),
+      puedeAsesor: this.canAssignSeller(pedido),
+      esPOS: this.isPedidoPOS(pedido),
+      tieneDescuento: !!((p?.porceDescuento && p.porceDescuento > 0) || p?.descuentoAplicado),
+      puedeEliminar: this.canDeleteOrder(),
+      esBrenda: this.checkIfUserIsBrenda(),
+      estadoProceso: String(p?.estadoProceso ?? ""),
+      puedeFacturarSiigo: this.puedeFacturarSiigo(pedido),
+      puedeRefacturar: this.puedeRefacturar(pedido),
+      puedeLiberar: this.puedeLiberarFactura(pedido),
+      esDian: this.esFacturaDian(pedido),
+      despachadoOEntregado: p?.estadoProceso === "Despachado" || p?.estadoProceso === "Entregado",
+      revisado: !!p?.revisadoParaProduccion,
+      accionesPrecio: this.accionesPrecioPedido,
+    };
+  }
+
+  /**
+   * Estados de las acciones del pedido para el modal. Devuelve el MISMO objeto mientras nada cambie, para que
+   * el binding `[estados]` del modal (OnPush) no vea un objeto nuevo en cada ciclo de detección.
+   */
+  estadosAccionesDe(pedido: Pedido): EstadoAcciones | null {
+    if (!pedido) return null;
+    const entrada = this.entradaEstadoAcciones(pedido);
+    const previa: any = this.entradaEstadosAnterior;
+    // `accionesPrecio` se compara por referencia: D-543 y D-544 deben REEMPLAZAR la lista, no mutarla.
+    const igual = !!previa && !!this.estadosAccionesAnterior &&
+      (Object.keys(entrada) as (keyof EntradaEstadoAcciones)[]).every((k) => previa[k] === entrada[k]);
+    if (igual) return this.estadosAccionesAnterior;
+    this.entradaEstadosAnterior = entrada;
+    this.estadosAccionesAnterior = estadoAcciones(entrada);
+    return this.estadosAccionesAnterior;
+  }
+
+  /** Marcar revisión o Quitar revisión: el ternario que traía la plantilla de «Más opciones», sin cambiarlo. */
+  marcarOQuitarRevision(order: Pedido): void {
+    if ((order as any)?.revisadoParaProduccion) {
+      this.quitarRevision(order);
+    } else {
+      this.marcarComoRevisado(order);
+    }
+  }
+
+  /**
+   * Ejecuta una acción del pedido tal como lo hacía cada botón del modal: llama al método de hoy con su
+   * plantilla (si la pide) y cierra el modal DESPUÉS solo si el plan lo dice (las que cierran por dentro,
+   * como Editar cliente, no lo cierran dos veces). La prueba de contrato
+   * `tests/ventas/acciones-pedido-plan.contract.test.js` compara el plan con la plantilla de antes.
+   */
+  ejecutarAccionPedido(id: AccionPedidoId, pedido: Pedido): void {
+    const paso = pasoDe(id);
+    if (!paso || !pedido) return;
+    const metodo = (this as any)[paso.metodo];
+    if (typeof metodo !== "function") return;
+    this.contarUso(id);
+    const argumentos: any[] = [];
+    if (paso.plantilla) argumentos.push(this.plantillaDeAccion(paso.plantilla));
+    argumentos.push(pedido);
+    if (paso.argumentoExtra) argumentos.push(paso.argumentoExtra);
+    metodo.apply(this, argumentos);
+    if (paso.cerrar) this.closeOptionsModal();
+  }
+
+  /** Referencia de plantilla (`<ng-template #…>`) por el nombre que usa el plan. */
+  private plantillaDeAccion(nombre: PlantillaPedido): any {
+    const plantillas: Record<PlantillaPedido, any> = {
+      modalContent: this.modalContentRef,
+      clientesModal: this.clientesModalRef,
+      notasModal: this.notasModalRef,
+      datosEnregaModal: this.datosEnregaModalRef,
+      datosFacturacionModal: this.datosFacturacionModalRef,
+      cambioEstadoPagoModal: this.cambioEstadoPagoModalRef,
+      recompraModal: this.recompraModalRef,
+      pagosModal: this.pagosModalRef,
+      descuentoModal: this.descuentoModalRef,
+      editarDescuentoModal: this.editarDescuentoModalRef,
+    };
+    return plantillas[nombre];
+  }
+
+  // ── D-547 (F2, 11.4): conteo de uso ─────────────────────────────────────────────────────────
+  // Desde `ejecutarAccionPedido` (el modal y el bloque de 8) y desde el «⋯» de cada fila se cuenta, una vez por acción
+  // y por día, el uso de las 16 fijas. Sin la bandera no hay estado cargado y `registrarUso` no hace nada. Falla en
+  // silencio, guarda solo el id de la acción (nada del pedido ni del cliente) y no escribe en consola.
+
+  /** Cuenta el uso de una acción fija (las demás no se cuentan). */
+  contarUso(id: string): void {
+    if (cuentaComoUso(id)) this.orderActions.registrarUso(id);
+  }
+
+  /** Las entradas del «⋯» que llevan el título de una acción fija cuentan su uso antes de ejecutarse; el resto queda igual. */
+  private conConteoDeUso(items: MenuItem[]): MenuItem[] {
+    return items.map((item) => {
+      const id = idFijaPorTitulo(item.label);
+      const comando = item.command;
+      if (!id || !comando) return item;
+      return { ...item, command: (e: any) => { this.contarUso(id); comando(e); } };
+    });
+  }
+
+  // ── D-547 (F2, 11.4): sugerencia de fijar ──────────────────────────────────────────────────
+  // Katuq SOLO sugiere: el aviso va dentro del detalle, sin ventana, y nada cambia sin que el usuario acepte.
+
+  /** La acción que se le sugiere fijar al usuario (se calcula al abrir el primer pedido de la sesión con estado cargado). */
+  sugerenciaPedido: AccionPedidoId | null = null;
+  private sugerenciaEvaluada = false;
+
+  /** La sugerencia a mostrar: desaparece si el usuario ya la fijó por su cuenta. */
+  get sugerenciaVisible(): AccionPedidoId | null {
+    const id = this.sugerenciaPedido;
+    return id && this.bloquePersonalizado && !this.accionesDelBloque.includes(id) ? id : null;
+  }
+
+  /**
+   * Una sola evaluación por sesión, al abrir el primer pedido con las acciones ya cargadas (si el estado aún no llegó,
+   * se intenta en el siguiente pedido). Al mostrarla se avisa al servidor (`shown`) para respetar la semana entre
+   * sugerencias; si ese aviso falla, el aviso se ve igual y no se interrumpe al usuario.
+   */
+  private evaluarSugerenciaDeLaSesion(): void {
+    if (this.sugerenciaEvaluada || !this.bloquePersonalizado) return;
+    this.sugerenciaEvaluada = true;
+    const me = this.orderActions.estado;
+    if (!me) return;
+    const id = sugerencia(me.usageDays, this.accionesDelBloque, me.dismissed, me.lastSuggestionAt, diaColombia());
+    if (!id) return;
+    this.sugerenciaPedido = id;
+    this.orderActions.registrarSugerencia(id, "shown").pipe(takeUntil(this.destroy$)).subscribe({ error: () => { /* en silencio */ } });
+  }
+
+  /** «Fijar»: hace lo mismo que el pin del modal (con los 4 espacios llenos pregunta cuál reemplazar). */
+  fijarSugerencia(id: AccionPedidoId): void {
+    this.fijarAccionDelModal({ id, fijar: true });
+  }
+
+  /** «Ahora no»: esa acción no vuelve a sugerirse en 30 días. Si no se pudo guardar, el aviso sigue y se avisa. */
+  rechazarSugerencia(id: AccionPedidoId): void {
+    this.orderActions.registrarSugerencia(id, "dismissed").pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => { if (this.sugerenciaPedido === id) this.sugerenciaPedido = null; },
+      error: () => this.toastrService.error("No pudimos guardar tus acciones. Intenta de nuevo.", "Acciones del pedido"),
+    });
+  }
+
+  // ── D-547 (F2): bloque ACCIONES de 8, detrás de la bandera `orderPinnedActions` ───────────────
+  // Solo se AGREGA: el bloque de F1 sigue como estaba y se ve siempre que esto no aplique.
+
+  /**
+   * `true`: el detalle muestra el bloque de 8 (4 del rol y 4 del usuario). Exige la bandera encendida y que el
+   * servidor haya respondido; Desde Producción y cualquier falla dejan el bloque de F1.
+   */
+  get bloquePersonalizado(): boolean {
+    return !this.isFromProduction
+      && this.companyFeatures.isEnabled("orderPinnedActions")
+      && !!this.orderActions.estado;
+  }
+
+  private ochoMemo: { de: AccionesUsuario | null; valor: AccionPedidoId[] } = { de: null, valor: [] };
+
+  /** Las 8 acciones: las 4 del rol (o General) y las 4 personales. Mismo arreglo mientras el estado no cambie. */
+  get accionesDelBloque(): AccionPedidoId[] {
+    const me = this.orderActions.estado;
+    if (me !== this.ochoMemo.de) this.ochoMemo = { de: me, valor: ochoAcciones(me?.role, me?.pinned) };
+    return this.ochoMemo.valor;
+  }
+
+  private resaltadaMemo: AccionResaltada | null = null;
+
+  /** Acción a resaltar según el estado del pedido (D17). Devuelve el mismo objeto mientras no cambie. */
+  resaltadaDe(pedido: Pedido): AccionResaltada | null {
+    const r = resaltada(pedido);
+    const previa = this.resaltadaMemo;
+    if ((r?.id ?? null) === (previa?.id ?? null) && (r?.etiqueta ?? null) === (previa?.etiqueta ?? null)) return previa;
+    this.resaltadaMemo = r;
+    return r;
+  }
+
+  private resaltadaModalMemo: AccionResaltada | null = null;
+
+  /**
+   * Resaltado dentro de «Opciones del pedido» (D17): solo si la acción NO está entre las 8 del bloque (si lo está, se
+   * resalta allí). Devuelve el mismo objeto mientras no cambie, para el binding OnPush del modal. Sin la bandera, null.
+   */
+  get resaltadaDelModal(): AccionResaltada | null {
+    const r = this.bloquePersonalizado && this.selectedOrder
+      ? resaltadaSoloEnModal(resaltada(this.selectedOrder), this.accionesDelBloque)
+      : null;
+    const previa = this.resaltadaModalMemo;
+    if ((r?.id ?? null) === (previa?.id ?? null) && (r?.etiqueta ?? null) === (previa?.etiqueta ?? null)) return previa;
+    this.resaltadaModalMemo = r;
+    return r;
+  }
+
+  private estadosPorPedido = new WeakMap<object, { entrada: EntradaEstadoAcciones; estados: EstadoAcciones }>();
+
+  /**
+   * Igual que `estadosAccionesDe`, pero con una entrada por pedido: el modal puede estar abierto para otro pedido
+   * (desde el «⋯» de una fila) sin que las dos plantillas se pisen el memo y cambien el objeto en cada ciclo.
+   */
+  estadosDelBloque(pedido: Pedido): EstadoAcciones | null {
+    if (!pedido) return null;
+    const entrada = this.entradaEstadoAcciones(pedido);
+    const previo = this.estadosPorPedido.get(pedido as object);
+    if (previo && (Object.keys(entrada) as (keyof EntradaEstadoAcciones)[]).every((k) => previo.entrada[k] === entrada[k])) {
+      return previo.estados;
+    }
+    const estados = estadoAcciones(entrada);
+    this.estadosPorPedido.set(pedido as object, { entrada, estados });
+    return estados;
+  }
+
+  /**
+   * «Restablecer acciones»: pide confirmar y guarda `pinned: []`. Las 4 del rol no cambian. El bloque cambia solo
+   * cuando el servidor confirma; si falla, todo queda como estaba y se avisa dentro de la misma ventana.
+   */
+  restablecerAccionesBloque(): void {
+    Swal.fire({
+      title: "Restablecer acciones",
+      text: "Tus 4 acciones personales vuelven al orden de siempre. Las de tu rol no cambian.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#5F3FE0",
+      confirmButtonText: "Restablecer",
+      cancelButtonText: "Cancelar",
+      showLoaderOnConfirm: true,
+      allowOutsideClick: () => !Swal.isLoading(),
+      preConfirm: () =>
+        firstValueFrom(this.orderActions.guardarPines([])).catch(() => {
+          Swal.showValidationMessage("No pudimos guardar tus acciones. Intenta de nuevo.");
+          return null;
+        }),
+    });
+  }
+
+  // ── D-547 (F2, 11.3): pines en «Opciones del pedido» ─────────────────────────────────────────
+  // Solo se AGREGA. Con la bandera apagada `bloquePersonalizado` es falso y el modal no muestra pines.
+
+  private delRolMemo: { de: unknown; valor: AccionPedidoId[] } = { de: undefined, valor: [] };
+
+  /** Las 4 acciones del rol (o General): llevan candado en el modal y no se sueltan. Mismo arreglo mientras el rol no cambie. */
+  get accionesDelRolPedido(): AccionPedidoId[] {
+    const rol = this.orderActions.estado?.role;
+    if (rol !== this.delRolMemo.de) this.delRolMemo = { de: rol, valor: rol ? accionesDelRol(rol) : [] };
+    return this.delRolMemo.valor;
+  }
+
+  private static readonly SIN_PINES: AccionPedidoId[] = [];
+
+  /** Lo que el usuario fijó, tal como lo confirmó el servidor. Mismo arreglo hasta que el servidor confirme un cambio. */
+  get pinesDelUsuario(): AccionPedidoId[] {
+    return (this.orderActions.estado?.pinned as AccionPedidoId[]) || ListOrdersComponent.SIN_PINES;
+  }
+
+  /** Mientras se guarda un pin no se acepta otro toque: evita dos `PUT /me/pins` cruzados. */
+  private guardandoPines = false;
+
+  /**
+   * D-547 (F2, D15): el usuario tocó un pin en el modal. Fijar con espacio libre y soltar guardan directo; con los 4
+   * espacios llenos se pregunta cuál reemplazar. El bloque cambia SOLO cuando el servidor confirma; si falla, todo
+   * queda como estaba y se avisa. La acción que se estaba usando sigue disponible en el modal.
+   */
+  fijarAccionDelModal(ev: { id: AccionPedidoId; fijar: boolean }): void {
+    if (!this.bloquePersonalizado || this.guardandoPines) return;
+    const decision = decidirPin(ev.id, ev.fijar, this.accionesDelRolPedido, this.pinesDelUsuario);
+    if (decision.tipo === "guardar") {
+      this.guardarPinesDelModal(decision.lista);
+    } else if (decision.tipo === "elegir") {
+      this.preguntarCualReemplazar(decision.entra, decision.actuales);
+    }
+  }
+
+  private guardarPinesDelModal(lista: AccionPedidoId[]): void {
+    this.guardandoPines = true;
+    this.orderActions
+      .guardarPines(lista)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.guardandoPines = false; }))
+      .subscribe({
+        error: () => this.toastrService.error("No pudimos guardar tus acciones. Intenta de nuevo.", "Acciones del pedido"),
+      });
+  }
+
+  /** Con las 4 fijadas: un Swal con las 4 como opciones. Cancelar no cambia nada. */
+  private preguntarCualReemplazar(entra: AccionPedidoId, actuales: AccionPedidoId[]): void {
+    const opciones: Record<string, string> = {};
+    for (const id of actuales) opciones[id] = accionPorId(id).titulo;
+    this.guardandoPines = true;
+    Swal.fire({
+      title: "Ya fijaste 4 acciones",
+      text: `¿Cuál reemplazamos por «${accionPorId(entra).titulo}»?`,
+      input: "radio",
+      inputOptions: opciones,
+      inputValidator: (valor) => (valor ? null : "Escoge la acción que sale."),
+      showCancelButton: true,
+      confirmButtonColor: "#5F3FE0",
+      confirmButtonText: "Reemplazar",
+      cancelButtonText: "Cancelar",
+      showLoaderOnConfirm: true,
+      allowOutsideClick: () => !Swal.isLoading(),
+      preConfirm: (sale: string) =>
+        firstValueFrom(this.orderActions.guardarPines(reemplazarPin(actuales, sale, entra))).catch(() => {
+          Swal.showValidationMessage("No pudimos guardar tus acciones. Intenta de nuevo.");
+          return null;
+        }),
+    }).then(() => { this.guardandoPines = false; });
   }
 
   /**
@@ -2425,9 +2780,39 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   confirmDeleteOrder(order: any) {
-    if (confirm(`¿Está seguro de eliminar el pedido #${order.nroPedido}?`)) {
-      this.deleteOrder(order);
-    }
+    // D-547 5.1: Swal con el número del pedido en lugar de confirm(). El botón de eliminar
+    // queda deshabilitado hasta que el texto recortado sea igual a nroPedido, e
+    // inputValidator rechaza cualquier otro texto (Enter sin coincidencia no elimina).
+    const esperado = String(order?.nroPedido ?? '').trim();
+    Swal.fire({
+      title: 'Eliminar pedido',
+      text: `Para confirmar, escribe el número del pedido (${esperado}). Se borra para siempre.`,
+      icon: 'warning',
+      input: 'text',
+      inputPlaceholder: esperado,
+      inputAttributes: { autocomplete: 'off', 'aria-label': 'Número del pedido' },
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#D64545',
+      focusCancel: false,
+      didOpen: () => {
+        const confirmar = Swal.getConfirmButton();
+        const campo = Swal.getInput();
+        if (confirmar) { confirmar.disabled = true; }
+        campo?.addEventListener('input', () => {
+          if (confirmar) { confirmar.disabled = !esperado || campo.value.trim() !== esperado; }
+        });
+      },
+      inputValidator: (valor: string) =>
+        esperado && (valor || '').trim() === esperado
+          ? null
+          : 'El número no coincide con el del pedido',
+    }).then((resultado) => {
+      if (resultado.isConfirmed) {
+        this.deleteOrder(order);
+      }
+    });
   }
   ESTADOPAGO: any[];
   cargando = true;
@@ -3562,6 +3947,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // D-547 (F2): con la bandera encendida se piden las acciones del rol y del usuario UNA vez por sesión
+    // (abrir un pedido no consulta nada). Apagada, no se hace ninguna petición.
+    if (!this.isFromProduction && this.companyFeatures.isEnabled("orderPinnedActions")) {
+      this.orderActions.cargar().pipe(takeUntil(this.destroy$)).subscribe();
+    }
+
     // Spec 013 — precarga el flag de tesorería (cacheado en el servicio) para que
     // el recálculo de estadoPago pueda leerlo de forma sincrónica al cargar pedidos.
     this.treasuryService
@@ -5051,6 +5442,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /** Selecciona un pedido para mostrarlo en el panel de detalle (no toca selectedOrder del modal). */
   seleccionarPedidoDetalle(pedido: any): void {
     this.pedidoDetalle = pedido;
+    this.evaluarSugerenciaDeLaSesion();
   }
 
   /**
@@ -10185,8 +10577,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   quitarRevision(order: Pedido): void {
     if (!order || !order.revisadoParaProduccion) return;
 
-    // Confirmar acción
-    if (confirm("¿Está seguro de quitar la revisión de este pedido?")) {
+    // D-547 5.3: ventana de Katuq (Swal) en lugar de confirm() del navegador. Lo que pasa al confirmar no cambia.
+    Swal.fire({
+      title: "Quitar la revisión",
+      text: "¿Está seguro de quitar la revisión de este pedido?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Quitar revisión",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#5F3FE0",
+      cancelButtonColor: "#6c757d",
+    }).then((resultado) => {
+      if (!resultado.isConfirmed) return;
+
       // Quitar revisión - dejar en blanco
       order.revisadoParaProduccion = "";
 
@@ -10206,7 +10609,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.toastrService.error("Error al quitar revisión", "Error");
         },
       });
-    }
+    });
   }
 
   isOrderRevisado(order: Pedido): boolean {

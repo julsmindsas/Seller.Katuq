@@ -52,7 +52,7 @@
   <!-- INFORMACIÓN DEL CIERRE -->
   <div class="seccion-efectivo" style="margin-bottom: 25px;">
     <h3 style="font-size: 16px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 15px;">
-      <i class="fa fa-money-bill-wave" style="margin-right: 8px;"></i>CONTROL DE EFECTIVO
+      <i class="fa fa-money" style="margin-right: 8px;"></i>CONTROL DE EFECTIVO
     </h3>
     
     <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
@@ -137,7 +137,7 @@
   <!-- PRODUCTOS VENDIDOS -->
   <div class="seccion-productos" style="margin-bottom: 25px;" *ngIf="datosCierre?.productosVendidos && datosCierre.productosVendidos.length > 0">
     <h3 style="font-size: 16px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 15px;">
-      <i class="fa fa-box" style="margin-right: 8px;"></i>PRODUCTOS VENDIDOS
+      <i class="fa fa-cube" style="margin-right: 8px;"></i>PRODUCTOS VENDIDOS
     </h3>
     
     <table style="width: 100%; border-collapse: collapse; border: 1px solid #333; font-size: 11px;">
@@ -217,7 +217,7 @@
     type="button"
     class="rc-btn rc-btn--sec"
     (click)="printPOS()">
-    <i class="fa fa-receipt"></i> Imprimir (POS)
+    <i class="fa fa-file-text-o"></i> Imprimir (POS)
   </button>
 
   <button

@@ -8,7 +8,7 @@
   </div>
   <div class="card-body pt-0 order-details p-3">
     <div class="payment-options">
-      <div class="icons">
+      <div class="icons" role="group" aria-label="Cobrar con">
         <button (click)="handleCashPayment()" class="icon" [class.selected]="selectedMethod === 'Efectivo'">
           <img src="assets/images/dashboard-8/payment-option/cash.svg" alt="Efectivo" />
           <span>Efectivo</span>

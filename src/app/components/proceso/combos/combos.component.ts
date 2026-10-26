@@ -3,6 +3,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
 import { CrearComboComponent } from './crear-combo/crear-combo.component';
+import { ImportarCombosComponent } from './importar-combos/importar-combos.component';
 
 type FiltroEstado = 'todos' | 'activos' | 'inactivos';
 
@@ -133,6 +134,15 @@ export class CombosComponent implements OnInit {
   openCrearModal() {
     const modalRef = this.abrirModal();
     modalRef.componentInstance.mostrarCrear = true;
+    modalRef.result.then((result) => {
+      if (result === 'success') this.cargarDatos();
+    }).catch(() => {});
+  }
+
+  /** Ticket 1323 (D-538): carga de combos desde Excel; la plantilla sale con los combos actuales. */
+  openImportarModal() {
+    const modalRef = this.modalService.open(ImportarCombosComponent, { size: 'lg', centered: true, windowClass: 'kq-combo-modal' });
+    modalRef.componentInstance.combos = this.combos;
     modalRef.result.then((result) => {
       if (result === 'success') this.cargarDatos();
     }).catch(() => {});

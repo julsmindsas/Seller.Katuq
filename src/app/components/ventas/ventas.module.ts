@@ -31,6 +31,10 @@ import { DropdownModule } from "primeng/dropdown";
 import { NgxHotkeysModule, NgxHotkeysService } from "@balticcode/ngx-hotkeys";
 import { NgxStarRatingModule } from "ngx-star-rating";
 import { ListOrdersComponent } from "./list/list.component";
+import { OrderOptionsModalComponent } from "./list/acciones-pedido/order-options-modal.component";
+import { OrderPinnedActionsComponent } from "./list/acciones-pedido/order-pinned-actions.component";
+import { OrderActionSuggestionComponent } from "./list/acciones-pedido/order-action-suggestion.component";
+import { IconoTablerComponent } from "../../shared/icons/icono-tabler.component";
 import { Pedido3dComponent } from "./list/pedido-3d/pedido-3d.component";
 import { PedidoRepartoComponent } from "./list/pedido-reparto/pedido-reparto.component";
 import { PedidoPagoCuotasComponent } from "./list/pedido-pago-cuotas/pedido-pago-cuotas.component";
@@ -80,6 +84,7 @@ import { DireccionEstructuradaComponent } from "./entrega/direccion-estructurada
 import { CustomerSectionComponent } from "./pos2/widgets/customer-section/customer-section.component";
 import { PosFacturacionComponent } from "./pos2/widgets/pos-facturacion/pos-facturacion.component";
 import { CartSummaryComponent } from "./pos2/widgets/cart-summary/cart-summary.component";
+import { PosLineaPrecioComponent } from "./pos2/widgets/pos-linea-precio/pos-linea-precio.component";
 import { PaymentSelectorComponent } from "./pos2/widgets/payment-selector/payment-selector.component";
 import {
   PosCheckoutService,
@@ -101,6 +106,7 @@ import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-im
   imports: [
     ModuloIaComponent,
     ImagenProductoPipe,
+    IconoTablerComponent, // D-547: íconos Tabler del modal «Opciones del pedido» (mismo registro de D-546)
     VisorImagenModule,
     NgSelectModule,
     CommonModule,
@@ -155,6 +161,9 @@ import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-im
     CheckOutComponent,
     PedidoEntregaComponent,
     ListOrdersComponent,
+    OrderOptionsModalComponent, // D-547 (F1): modal «Opciones del pedido» en grilla
+    OrderPinnedActionsComponent, // D-547 (F2): bloque ACCIONES de 8 (4 del rol y 4 del usuario), tras la bandera
+    OrderActionSuggestionComponent, // D-547 (F2): aviso «Usas Pagos a diario, ¿lo fijamos?», tras la bandera
     CrearVentasComponent,
     VentaAsistidaUnicaComponent,
     SelectorVistaVentaComponent,
@@ -183,6 +192,7 @@ import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-im
     CustomerSectionComponent,
     PosFacturacionComponent,
     CartSummaryComponent,
+    PosLineaPrecioComponent,
     OrderHistoryTimelineComponent, // NUEVO: 2025-10-21 - Componente de timeline de historial
     PaymentSelectorComponent,
     ListProduccionComponent,

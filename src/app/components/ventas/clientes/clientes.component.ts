@@ -4,7 +4,8 @@ import Swal from 'sweetalert2'
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ClientConfigService, ClientTag } from './services/client-config.service';
-import { clientBillingProfiles, matchesClientSearch } from '../../../shared/utils/client-search';
+import { clientBillingProfiles } from '../../../shared/utils/client-search';
+import { mayusculaInicial } from '../../../shared/utils/mayuscula-inicial';
 
 /**
  * Pantalla Crear cliente (`ventas/clientes`).
@@ -25,7 +26,6 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   @ViewChild('documentoBusqueda') documentoBusqueda: ElementRef
   @ViewChild('resultadosModal') resultadosModal: any;
 
-  tipoBusqueda: string = 'CC-NIT'; // Valor por defecto para el dropdown de búsqueda
   encontrado = false;
   /** Documento buscado que no existe: se precarga en el formulario para crearlo. */
   documentoNoEncontrado = '';
@@ -86,11 +86,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     if (!invoiceCustomer || invoiceCustomer.length > 50) return;
     // El buscador va plegado (ticket 1163): se abre para que exista el campo de búsqueda.
     this.buscadorAbierto = true;
-    this.tipoBusqueda = 'CC-NIT';
     this.cdr.detectChanges();
     if (!this.documentoBusqueda?.nativeElement) return;
     this.documentoBusqueda.nativeElement.value = invoiceCustomer;
-    this.buscar();
+    this.buscarPorDocumento(invoiceCustomer.trim());
     this.cdr.detectChanges();
   }
 
@@ -117,81 +116,94 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    // Validar que se haya ingresado algo en el campo de búsqueda
-    if (!this.documentoBusqueda.nativeElement.value || this.documentoBusqueda.nativeElement.value.trim() === '') {
+    // El servidor pide al menos 2 caracteres.
+    const term = String(this.documentoBusqueda.nativeElement.value || '').trim();
+    if (term.length < 2) {
       Swal.fire({
         title: 'Campo vacío',
-        text: 'Por favor ingrese un documento para buscar',
+        text: 'Escribe el documento, nombre y apellido, celular o correo del cliente',
         icon: 'warning',
         confirmButtonText: 'Ok'
       });
       return;
     }
 
-    this.bloqueado = false
+    this.bloqueado = false;
+    this.resultadosBusqueda = [];
 
-    if (this.tipoBusqueda == "CC-NIT") {
+    // Ticket 1326: antes había que escoger "Buscar por" (no existía celular) y
+    // nombre/email bajaban todos los clientes de la empresa (69.000 en ALMARA,
+    // ~40 s). Ahora va por el índice de búsqueda del servidor (D-260).
+    this.service.searchClients(term, 50).subscribe((res: any) => {
+      // matchClient agrega campos de búsqueda: no deben llegar al formulario que edita la ficha.
+      const lista: any[] = (Array.isArray(res) ? res : [])
+        .map(({ displayLabel, matchedBillingProfiles, ...cliente }: any) => cliente);
+      const digitos = term.replace(/\D/g, '');
+      const soloDigitos = /^[\d.\s()+-]+$/.test(term);
+      // Documento exacto: se abre directo, como hacía "Buscar por Documento".
+      const exactos = soloDigitos && digitos
+        ? lista.filter(c => String(c.documento || '').replace(/\D/g, '') === digitos)
+        : [];
 
-      const data = {
-        documento: this.documentoBusqueda.nativeElement.value
-      }
-
-      this.service.getClientByDocument(data).subscribe((res: any) => {
-        if (!res.company) {
-          this.encontrado = false
-          this.datos = null
-          this.bloqueado = false
-          this.documentoNoEncontrado = String(data.documento || '').trim();
-          Swal.fire({
-            title: 'No encontrado!',
-            text: 'No se encuentra el documento. Si desea crearlo llene los datos a continuacion',
-            icon: 'warning',
-            confirmButtonText: 'Ok'
-          });
-        } else {
-          this.mostrarCliente(res);
-          Swal.fire({
-            title: 'Consultado!',
-            text: 'Consultado con éxito',
-            icon: 'success',
-            confirmButtonText: 'Ok'
-          });
-        }
-      }, error => {
+      if (lista.length === 0) {
         this.encontrado = false;
         this.datos = null;
-        Swal.fire({ title: 'No se pudo consultar',
-          text: error?.error?.error || 'No se pudo verificar el cliente. Intenta de nuevo antes de crear otra ficha.',
-          icon: 'error', confirmButtonText: 'Entendido' });
-      });
+        // Si buscó un número y no existe, se precarga en el formulario para crearlo.
+        this.documentoNoEncontrado = soloDigitos ? term : '';
+        Swal.fire({
+          title: 'No encontrado!',
+          text: 'No encontramos un cliente con ese dato. Si es nuevo, llena los datos a continuación',
+          icon: 'warning',
+          confirmButtonText: 'Ok'
+        });
+      } else if (lista.length === 1 || exactos.length === 1) {
+        this.mostrarCliente(lista.length === 1 ? lista[0] : exactos[0]);
+      } else {
+        this.encontrado = false;
+        this.resultadosBusqueda = [...lista];
+        this.modalService.open(this.resultadosModal, { size: 'lg', backdrop: 'static' });
+      }
+    }, error => {
+      this.encontrado = false;
+      this.datos = null;
+      Swal.fire({ title: 'No se pudo consultar',
+        text: 'No se pudo buscar el cliente. Intenta de nuevo antes de crear otra ficha.',
+        icon: 'error', confirmButtonText: 'Entendido' });
+    });
+  }
 
-    } else if (this.tipoBusqueda === 'email' || this.tipoBusqueda === 'nombre') {
-
-      const term = this.documentoBusqueda.nativeElement.value.toLowerCase().trim();
-      this.service.obtenerClientes().subscribe((res: any) => {
-        const todos: any[] = Array.isArray(res) ? res : (res.data || res.clients || res.clientes || []);
-        let lista: any[];
-        if (this.tipoBusqueda === 'email') {
-          lista = todos.filter(c => matchesClientSearch(c, term, 'email'));
-        } else {
-          lista = todos.filter(c => matchesClientSearch(c, term, 'name'));
-        }
-        if (!lista || lista.length === 0) {
-          this.resultadosBusqueda = [];
-          this.encontrado = false;
-          this.bloqueado = false;
-          Swal.fire({
-            title: 'No encontrado!',
-            text: 'No se encontró ningún cliente con ese criterio.',
-            icon: 'warning',
-            confirmButtonText: 'Ok'
-          });
-        } else {
-          this.resultadosBusqueda = [...lista];
-          this.modalService.open(this.resultadosModal, { size: 'lg', backdrop: 'static' });
-        }
-      });
-    }
+  /** Búsqueda exacta por documento (entrada desde Nueva factura). */
+  private buscarPorDocumento(documento: string): void {
+    this.bloqueado = false;
+    const data = { documento };
+    this.service.getClientByDocument(data).subscribe((res: any) => {
+      if (!res.company) {
+        this.encontrado = false
+        this.datos = null
+        this.bloqueado = false
+        this.documentoNoEncontrado = String(data.documento || '').trim();
+        Swal.fire({
+          title: 'No encontrado!',
+          text: 'No se encuentra el documento. Si desea crearlo llene los datos a continuacion',
+          icon: 'warning',
+          confirmButtonText: 'Ok'
+        });
+      } else {
+        this.mostrarCliente(res);
+        Swal.fire({
+          title: 'Consultado!',
+          text: 'Consultado con éxito',
+          icon: 'success',
+          confirmButtonText: 'Ok'
+        });
+      }
+    }, error => {
+      this.encontrado = false;
+      this.datos = null;
+      Swal.fire({ title: 'No se pudo consultar',
+        text: error?.error?.error || 'No se pudo verificar el cliente. Intenta de nuevo antes de crear otra ficha.',
+        icon: 'error', confirmButtonText: 'Entendido' });
+    });
   }
 
   seleccionarClienteResultado(cliente: any) {
@@ -451,8 +463,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   }
 
   private toTitleCase(str: string): string {
-    if (!str) return str;
-    return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    return mayusculaInicial(str); // Ticket 1340: respeta las tildes («Gómez», no «GóMez»)
   }
 
   // =============================================

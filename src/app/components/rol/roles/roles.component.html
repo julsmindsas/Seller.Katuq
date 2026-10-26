@@ -85,7 +85,7 @@
                   sourceHeader="Menús disponibles" targetHeader="Menús asignados al rol"
                   [dragdrop]="false" [responsive]="true"
                   [sourceStyle]="{'height':'22rem'}" [targetStyle]="{'height':'22rem'}"
-                  sourceFilterPlaceholder="Buscar menú..." filterBy="title"
+                  sourceFilterPlaceholder="Buscar menú..." filterBy="etiqueta,title,previousTitle"
                   targetFilterPlaceholder="Buscar menú..."
                   (onMoveToTarget)="onMenuChange($event,'target')"
                   (onMoveToSource)="onMenuChange($event,'source')"
@@ -93,7 +93,7 @@
                   <ng-template let-menu pTemplate="item">
                     <div class="menu-item" *ngIf="!menu.children">
                       <i class="icofont icofont-sub-listing" style="margin-right: 6px; opacity: 0.5;"></i>
-                      <span>{{ menu.title }}</span>
+                      <span>{{ textoDeEntrada(menu) }}</span>
                     </div>
                     <div class="menu-item menu-parent" *ngIf="menu.children">
                       <i class="icofont icofont-listine-dots" style="margin-right: 6px;"></i>
@@ -106,6 +106,10 @@
                 </small>
               </div>
             </div>
+
+            <!-- D-547 (F2): acciones principales del pedido de este rol (bandera orderPinnedActions) -->
+            <app-acciones-rol-pedido *ngIf="mostrarAccionesPedido"
+                [roleId]="editingRoleId" [orderActions]="accionesPedidoDelRol"></app-acciones-rol-pedido>
 
             <!-- Acciones -->
             <div class="cfg-form__pie">

@@ -189,7 +189,7 @@
                         <i class="pi pi-info-circle me-1"></i>Sin configurar
                       </span>
                     </td>
-                    <td>{{ obtenerFechaEdicion(producto) }}</td>
+                    <td>{{ obtenerFechaEdicion(producto) }}<small class="editor-edicion" *ngIf="obtenerEditor(producto)">{{ obtenerEditor(producto) }}</small></td>
                     <td class="text-center">
                       <button
                         class="btn btn-sm btn-outline-primary"
@@ -197,6 +197,15 @@
                         pTooltip="Editar precios por tipo de cliente"
                         tooltipPosition="left">
                         <i class="pi pi-pencil"></i>
+                      </button>
+                      <button
+                        *ngIf="historialDisponible"
+                        class="btn btn-sm btn-outline-primary ms-1"
+                        (click)="verHistorial(producto, 'precios')"
+                        aria-label="Ver el historial de precios"
+                        pTooltip="Ver el historial de precios"
+                        tooltipPosition="left">
+                        <i class="pi pi-history"></i>
                       </button>
                     </td>
                   </tr>
@@ -436,7 +445,7 @@
                         $ {{ producto.precio?.precioUnitarioConIva | number:'1.0-0' }}
                       </span>
                     </td>
-                    <td>{{ obtenerFechaEdicion(producto) }}</td>
+                    <td>{{ obtenerFechaEdicion(producto) }}<small class="editor-edicion" *ngIf="obtenerEditor(producto)">{{ obtenerEditor(producto) }}</small></td>
                     <td class="text-center">
                       <button
                         class="btn btn-sm btn-outline-primary"
@@ -444,6 +453,15 @@
                         pTooltip="Editar precio unitario"
                         tooltipPosition="left">
                         <i class="pi pi-pencil"></i>
+                      </button>
+                      <button
+                        *ngIf="historialDisponible"
+                        class="btn btn-sm btn-outline-primary ms-1"
+                        (click)="verHistorial(producto, 'precios')"
+                        aria-label="Ver el historial de precios"
+                        pTooltip="Ver el historial de precios"
+                        tooltipPosition="left">
+                        <i class="pi pi-history"></i>
                       </button>
                     </td>
                   </tr>
@@ -576,7 +594,7 @@
                         <i class="pi pi-info-circle me-1"></i>Sin rangos configurados
                       </span>
                     </td>
-                    <td>{{ obtenerFechaEdicion(producto) }}</td>
+                    <td>{{ obtenerFechaEdicion(producto) }}<small class="editor-edicion" *ngIf="obtenerEditor(producto)">{{ obtenerEditor(producto) }}</small></td>
                     <td class="text-center">
                       <button
                         class="btn btn-sm btn-outline-primary"
@@ -584,6 +602,15 @@
                         pTooltip="Editar precios por volumen"
                         tooltipPosition="left">
                         <i class="pi pi-pencil"></i>
+                      </button>
+                      <button
+                        *ngIf="historialDisponible"
+                        class="btn btn-sm btn-outline-primary ms-1"
+                        (click)="verHistorial(producto, 'precios')"
+                        aria-label="Ver el historial de precios"
+                        pTooltip="Ver el historial de precios"
+                        tooltipPosition="left">
+                        <i class="pi pi-history"></i>
                       </button>
                     </td>
                   </tr>
@@ -707,7 +734,7 @@
                         $ {{ obtenerPrecioBase(producto) | number:'1.0-0' }}
                       </span>
                     </td>
-                    <td>{{ obtenerFechaEdicion(producto) }}</td>
+                    <td>{{ obtenerFechaEdicion(producto) }}<small class="editor-edicion" *ngIf="obtenerEditor(producto)">{{ obtenerEditor(producto) }}</small></td>
                     <td class="text-center">
                       <button
                         class="btn btn-sm btn-outline-primary"
@@ -715,6 +742,15 @@
                         pTooltip="Editar costo"
                         tooltipPosition="left">
                         <i class="pi pi-pencil"></i>
+                      </button>
+                      <button
+                        *ngIf="historialDisponible && puedeVerHistorialCosto"
+                        class="btn btn-sm btn-outline-primary ms-1"
+                        (click)="verHistorial(producto, 'costo')"
+                        aria-label="Ver el historial de costo"
+                        pTooltip="Ver el historial de costo"
+                        tooltipPosition="left">
+                        <i class="pi pi-history"></i>
                       </button>
                     </td>
                   </tr>

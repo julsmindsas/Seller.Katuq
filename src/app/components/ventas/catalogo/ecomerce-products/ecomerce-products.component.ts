@@ -10,7 +10,10 @@ import {
   OnChanges,
   SimpleChanges,
   OnDestroy,
+  inject,
 } from "@angular/core";
+import { CompanyFeaturesService } from "../../../../shared/services/company-features.service";
+import { bodegasDeLaZona } from "../../../../shared/utils/bodega-zona";
 import { Subject, of, forkJoin, EMPTY, Observable, timer } from "rxjs";
 import { takeUntil, debounceTime, distinctUntilChanged, switchMap, tap, catchError, filter, expand, map, last } from "rxjs/operators";
 import { QuickViewComponent } from "../../quick-view/quick-view.component";
@@ -51,6 +54,9 @@ export class EcomerceProductsComponent
   private searchSubject$ = new Subject<string>();
   @Input() public ciudad: string;
   @Input() public bodega: any;
+  /** D-539: bodegas del canal; con la bandera, el stock se suma en las de la zona de `bodega`. */
+  @Input() public bodegas: any[] = [];
+  private readonly companyFeatures = inject(CompanyFeaturesService);
   @Output() onRender = new EventEmitter<void>();
 
   // Nuevos inputs y outputs para el selector de ciudad
@@ -312,10 +318,13 @@ export class EcomerceProductsComponent
     if (!Array.isArray(products) || this.soloNoInventariables || !idBodega) {
       return products || [];
     }
+    // D-539: con la bandera, se venden las existencias de todas las bodegas de la zona.
+    const zona = this.companyFeatures.isEnabled('multiBodegaMismaZona') ? bodegasDeLaZona(this.bodega, this.bodegas) : [];
+    const codigos = zona.length > 1 ? zona.map((b: any) => b.idBodega) : [idBodega];
     return products.map((p) => {
       if (!p || p.disponibilidad?.inventariable === false) return p;
       if (!p.stockPorBodega) return p;
-      const enBodega = p.stockPorBodega[idBodega] || 0;
+      const enBodega = codigos.reduce((suma: number, c: string) => suma + (Number(p.stockPorBodega[c]) || 0), 0);
       if (p.disponibilidad?.cantidadDisponible === enBodega) return p;
       return {
         ...p,
@@ -1750,6 +1759,8 @@ export class EcomerceProductsComponent
       mostrarToast?: boolean;
       /** Ticket 1097: la línea entra como parte de este combo, cerrado (una sola fila). */
       combo?: { id: string; nombre: string; grupo: string; descripcion?: string };
+      /** Ticket 1323 (D-538): unidades que lleva el combo; sin ella, la mínima de venta. */
+      cantidad?: number;
     } = {}
   ): boolean {
     const mostrarToast = opts.mostrarToast !== false;
@@ -1770,7 +1781,10 @@ export class EcomerceProductsComponent
     }
 
     // 2. Obtener la cantidad mínima de venta
-    const cantidadMinima = producto.disponibilidad?.cantidadMinVenta || 1;
+    // Ticket 1323: la cantidad del combo, si la trae, manda sobre la mínima de venta.
+    const cantidadMinima = opts.cantidad && opts.cantidad > 0
+      ? opts.cantidad
+      : (producto.disponibilidad?.cantidadMinVenta || 1);
 
     // 3. Obtener el producto con precio ajustado por categoría (si aplica)
     const productoConPrecio = this.obtenerProductoConPrecioCategoria(producto);
@@ -1914,6 +1928,12 @@ export class EcomerceProductsComponent
     const ids: string[] = (combo?.productos || [])
       .map((p: any) => p.productoId)
       .filter((id: any) => !!id);
+    // Ticket 1323 (D-538): unidades por producto definidas en el combo.
+    const cantidades = new Map<string, number>(
+      (combo?.productos || [])
+        .filter((p: any) => p?.productoId && Number.isInteger(p.cantidad) && p.cantidad > 0)
+        .map((p: any) => [p.productoId, p.cantidad])
+    );
 
     if (ids.length === 0) {
       return;
@@ -1981,7 +2001,8 @@ export class EcomerceProductsComponent
           const agregado = this.agregarProductoAlCarritoInterno(producto, {
             requiereConfiguracionPendiente: requiereConfig,
             mostrarToast: false,
-            combo: completo ? marcaCombo : undefined
+            combo: completo ? marcaCombo : undefined,
+            cantidad: cantidades.get((producto as any).cd)
           });
           if (agregado && requiereConfig) pendientesConfig++;
         });

@@ -17,6 +17,10 @@ interface ComboProductoUI {
   precio?: number | null;
   /** Ticket 1131: el mismo precio sin IVA, que es el que el comercio toma de referencia. */
   precioSinIva?: number | null;
+  /** Cantidad mínima de venta del producto: la que entra al vender si el combo no dice otra. */
+  cantidadMin?: number;
+  /** Ticket 1323 (D-538): cuántas unidades lleva el combo. Vacía = la mínima de venta. */
+  cantidad?: number | null;
 }
 
 @Component({
@@ -55,6 +59,8 @@ export class CrearComboComponent implements OnInit, OnDestroy {
     this.form = this.fb.group({
       id: [''],
       nombre: ['', Validators.required],
+      // Ticket 1323 (D-538): opcional, único por empresa; es la llave del Excel.
+      codigo: [''],
       descripcion: [''],
       activo: [true]
     });
@@ -74,7 +80,8 @@ export class CrearComboComponent implements OnInit, OnDestroy {
       const productosGuardados: ComboProductoUI[] = (this.comboData.productos || []).map((p: any) => ({
         cd: p.productoId,
         titulo: p.nombre || '(producto)',
-        referencia: p.referencia || ''
+        referencia: p.referencia || '',
+        cantidad: Number.isInteger(p.cantidad) && p.cantidad > 0 ? p.cantidad : null
       }));
       this.productosSeleccionados = productosGuardados;
       this.resolverProductosGuardados(productosGuardados.map(p => p.cd));
@@ -90,7 +97,10 @@ export class CrearComboComponent implements OnInit, OnDestroy {
         const items = this.mapProductos(res?.products || []);
         const porId = new Map(items.map(i => [i.cd, i]));
         // Mantiene el orden guardado; completa lo que traiga el producto.
-        this.productosSeleccionados = this.productosSeleccionados.map(p => porId.get(p.cd) || p);
+        this.productosSeleccionados = this.productosSeleccionados.map(p => {
+          const completo = porId.get(p.cd);
+          return completo ? { ...completo, cantidad: p.cantidad } : p;
+        });
         this.cargandoSeleccionados = false;
       },
       error: () => { this.cargandoSeleccionados = false; }
@@ -110,7 +120,8 @@ export class CrearComboComponent implements OnInit, OnDestroy {
       imagen: p.crearProducto?.imagenesPrincipales?.[0]?.urls || null,
       descripcion: p.crearProducto?.descripcion || null,
       precio: Number(p.precio?.precioUnitarioConIva) || null,
-      precioSinIva: this.precioSinIvaDe(p.precio)
+      precioSinIva: this.precioSinIvaDe(p.precio),
+      cantidadMin: Number(p.disponibilidad?.cantidadMinVenta) || 1
     }));
   }
 
@@ -179,14 +190,25 @@ export class CrearComboComponent implements OnInit, OnDestroy {
     return String(this.form.get('descripcion')?.value || '').trim();
   }
 
-  /** Suma de los precios generales; el valor real sale de la lista de cada cliente al vender. */
+  /** Unidades con que entra el producto al vender el combo: la del combo o la mínima de venta. */
+  cantidadDe(p: ComboProductoUI): number {
+    return (p.cantidad && p.cantidad > 0 ? p.cantidad : p.cantidadMin) || 1;
+  }
+
+  /** Ticket 1323: entero de 1 a 9999; vacío o inválido = la mínima de venta. */
+  cambiarCantidad(item: ComboProductoUI, valor: any): void {
+    const n = Number(valor);
+    item.cantidad = Number.isInteger(n) && n >= 1 && n <= 9999 ? n : null;
+  }
+
+  /** Suma de los precios generales por su cantidad; el valor real sale de la lista de cada cliente al vender. */
   get totalGeneral(): number {
-    return this.productosSeleccionados.reduce((acc, p) => acc + (Number(p.precio) || 0), 0);
+    return this.productosSeleccionados.reduce((acc, p) => acc + (Number(p.precio) || 0) * this.cantidadDe(p), 0);
   }
 
   /** Ticket 1131: la misma suma sin IVA (lo que la cotización llama base gravable). */
   get totalSinIva(): number {
-    return this.productosSeleccionados.reduce((acc, p) => acc + (Number(p.precioSinIva) || 0), 0);
+    return this.productosSeleccionados.reduce((acc, p) => acc + (Number(p.precioSinIva) || 0) * this.cantidadDe(p), 0);
   }
 
   get totalIva(): number {
@@ -300,10 +322,13 @@ export class CrearComboComponent implements OnInit, OnDestroy {
   private armarPayload(): any {
     return {
       ...this.form.value,
+      codigo: String(this.form.value.codigo || '').trim(),
       productos: this.productosSeleccionados.map(p => ({
         productoId: p.cd,
         referencia: p.referencia,
-        nombre: p.titulo
+        nombre: p.titulo,
+        // Ticket 1323: solo si el comercio la puso; sin ella, la mínima de venta.
+        ...(p.cantidad ? { cantidad: p.cantidad } : {})
       }))
     };
   }

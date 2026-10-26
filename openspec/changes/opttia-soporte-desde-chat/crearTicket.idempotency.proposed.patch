@@ -1,0 +1,109 @@
+Base-SHA256: 3023612e602855c6bde89dcba9c1e8b27bf28636cd056849e80c3e287f11ca1c
+# D-545: aprobado y aplicado localmente el 2026-10-23. Base/hunks originales para auditoría; no reaplicar.
+diff --git a/functions/services/soporte/crearTicket.js b/functions/services/soporte/crearTicket.js
+--- a/functions/services/soporte/crearTicket.js
++++ b/functions/services/soporte/crearTicket.js
+@@ -22,6 +22,45 @@ const { loggerStream } = require('../../utils/handleLogger');
+ const ticketNotifier = require('../notifications/supportTicketNotifier');
+ const { sinCamposInternos } = require('./comerciosAfectados');
+ const { EMPRESA_OPERADORA, normalizeTenant } = require('../../tools/_tenant');
++const { hashSupportContent } = require('../opttiaSupportProposal');
++
++// Solo opciones internas verificadas del MCP integrado, nunca datos del cuerpo.
++function intentError(code = 'OPTTIA_SUPPORT_INTENT_INVALID') {
++  const error = new Error(code === 'OPTTIA_SUPPORT_RESULT_UNCERTAIN'
++    ? 'No se pudo comprobar el resultado del ticket. Reintenta la misma propuesta.'
++    : 'La intención del ticket no coincide con los datos autorizados.');
++  error.code = code;
++  return error;
++}
++
++function validateIntent(raw, body) {
++  if (raw === undefined) return null;
++  try {
++    if (!raw || raw.version !== 1 || typeof raw.docId !== 'string'
++      || !/^opttia_[a-f0-9]{64}$/.test(raw.docId) || raw.company !== body.company
++      || typeof raw.actorId !== 'string' || !raw.actorId.trim()
++      || typeof raw.approvedAt !== 'string' || !Number.isFinite(Date.parse(raw.approvedAt))
++      || raw.contentHash !== hashSupportContent({
++        asunto: body.asunto, descripcion: body.descripcion, adjuntos: body.adjuntos,
++      })) throw intentError();
++    return { version: 1, docId: raw.docId, company: raw.company, actorId: raw.actorId,
++      contentHash: raw.contentHash, approvedAt: raw.approvedAt };
++  } catch (_) { throw intentError(); }
++}
++
++function resultForIntent(snapshot, intent) {
++  if (!snapshot.exists) return null;
++  const datos = snapshot.data(), origin = datos.opttiaSupportIntent;
++  try {
++    if (datos.company !== intent.company || !origin || origin.version !== 1
++      || origin.intentId !== intent.docId || origin.actorId !== intent.actorId
++      || origin.contentHash !== intent.contentHash
++      || !Number.isSafeInteger(datos.nroTicket) || datos.nroTicket <= 0
++      || hashSupportContent({ asunto: datos.asunto, descripcion: datos.descripcion,
++        adjuntos: datos.adjuntos }) !== intent.contentHash) throw intentError();
++  } catch (_) { throw intentError(); }
++  return { id: snapshot.id, nroTicket: datos.nroTicket, datos, existing: true };
++}
+ 
+ // Lo que el comercio no decide al abrir un ticket (D-512): la empresa dueña
+ // (y su `nit`) sale del JWT, y estado, agente e historial son del equipo Katuq.
+@@ -90,6 +129,7 @@ async function reservarNroTicket({ fs = db, rtdb = admin.database() } = {}) {
+  * @param {string} actorEmail  Quien lo abre, para el correo.
+  * @param {object} [deps]  { fs, rtdb } inyectables para pruebas, y `sesion`:
+  *        `req.userInfo` cuando la petición trae sesión (D-512).
++ *        `idempotency`: intención privada validada por el MCP integrado (D-545).
+  * @returns {Promise<{id: string, nroTicket: number, datos: object}>}
+  */
+ async function crearTicketSoporte(cuerpo, actorEmail, deps = {}) {
+@@ -97,6 +137,10 @@ async function crearTicketSoporte(cuerpo, actorEmail, deps = {}) {
+   // equipo (D-411/D-412) no pueden entrar por aqui. Se agregan despues desde
+   // Support, con el PUT que solo acepta el equipo operador.
+   const body = sinCamposInternos(cuerpoSegunSesion(cuerpo, deps.sesion));
++  // Un cuerpo público no puede guardar procedencia ni capacidades privadas.
++  ['opttiaSupportIntent', 'idempotency', 'docId', 'comprobante', 'confirmationToken']
++    .forEach((campo) => { delete body[campo]; });
++  const intent = validateIntent(deps.idempotency, body);
+   // Mismos valores por defecto que tenia el controlador: el documento se guarda
+   // saneado y no `body` crudo, porque un ticket sin `status` o sin `prioridad`
+   // se le perdia al tablero.
+@@ -118,14 +162,35 @@ async function crearTicketSoporte(cuerpo, actorEmail, deps = {}) {
+     date_add: new Date().toISOString(),
+   };
+ 
+-  const ref = db.collection('support').doc();
++  const tickets = (deps.fs || db).collection('support');
++  const ref = intent ? tickets.doc(intent.docId) : tickets.doc();
+   const documento = { ...body, ...ticketData };
++  if (intent) {
++    const previous = resultForIntent(await ref.get(), intent);
++    if (previous) return previous;
++    documento.opttiaSupportIntent = { version: 1, intentId: intent.docId,
++      actorId: intent.actorId, contentHash: intent.contentHash, approvedAt: intent.approvedAt };
++  }
+ 
+   // El numero que mande el cliente no cuenta (D-507): sale del contador compartido.
++  // Se conserva la reserva habitual: una carrera puede dejar huecos, nunca números repetidos.
+   const nroTicket = await reservarNroTicket(deps);
+-  await ref.set({ ...documento, nroTicket });
+-
+   const guardado = { ...documento, nroTicket };
++  if (intent) {
++    try {
++      await ref.create(guardado);
++    } catch (_) {
++      // También cubre respuesta perdida después de guardar. Nunca cambiar de clave,
++      // sobrescribir, decrementar el contador ni anunciar un resultado no comprobado.
++      try {
++        const previous = resultForIntent(await ref.get(), intent);
++        if (previous) return previous;
++      } catch (_) { /* No acreditar éxito si no podemos verificar lo guardado. */ }
++      throw intentError('OPTTIA_SUPPORT_RESULT_UNCERTAIN');
++    }
++  } else {
++    await ref.set(guardado);
++  }
+ 
+   loggerStream.write2(`
+             🎫 *NUEVO TICKET DE SOPORTE*

@@ -27,6 +27,17 @@ export class NovedadesService {
    */
   private readonly novedades: Novedad[] = [
     {
+      // D-546: se muestra una sola vez por usuario (el id define el «ya visto»).
+      id: '2026-11-menu-ordenado',
+      tipo: 'texto',
+      titulo: 'Tu menú quedó más ordenado',
+      descripcion:
+        'Ahora los nombres se leen completos, cada módulo tiene su ícono y puedes dejar el menú en modo compacto con el botón de arriba; Katuq recuerda tu elección. ' +
+        'También cambiaron algunos nombres: «Inventarios» ahora es «Bodegas» y «Mi página web» es «Sitio web». ' +
+        'Si no encuentras algo, escribe el nombre de antes en el buscador del menú: lo reconoce y te lleva a la misma pantalla.',
+      fecha: '2026-11-02',
+    },
+    {
       id: '2026-07-venta-asistida-rediseno',
       tipo: 'video',
       titulo: '¡Venta asistida estrena diseño! 🎉',

@@ -31,7 +31,10 @@
   // ticket (.pos-ticket) hace scroll en vez de encimar las piezas.
   // Medido (bundle de producción): cliente 148 + encabezado 35 + lista mínima 70
   // + 18 + cupón 50 + totales 182 + pago 151 = 654 px.
-  min-height: 660px;
+  // Ticket 1340: ese piso suponía un cliente de 148 px; con cliente asociado y la fila de
+  // Facturación (D-419) crece a ~320 y el carrito se encogía a 0 (lista y cupón invisibles,
+  // totales debajo de «Cobrar con»). El piso ahora lo pone el propio carrito (abajo).
+  min-height: 0;
 
   // Hoja de móvil: la lista tiene piso de 140 px y los toques son más grandes
   // (cliente 161 + 36 + 140 + 18 + cupón 61 + totales 182 + pago 166 = 764 px).
@@ -42,8 +45,34 @@
 
 // Cliente: alto fijo. Carrito: se estira y scrollea. Pago: alto fijo abajo.
 app-customer-section { flex-shrink: 0; }
-app-cart-summary     { flex: 1; min-height: 0; }
+// Ticket 1340: el carrito nunca baja de encabezado 35 + lista mínima 70 + 18 + cupón 50 +
+// totales 182 ≈ 355 px. Si la columna no alcanza, hace scroll (.pos-ticket) en vez de encimar.
+app-cart-summary     { flex: 1 1 0; min-height: 360px; }
 app-payment-selector { flex-shrink: 0; }
+
+// =============================================================================
+// D-540 (ticket 1340): un solo scroll en escritorio.
+//
+// Modo normal: el cliente, el título, el TOTAL y los pagos no se encogen; el
+// carrito toma el resto y dentro de él solo la lista se desplaza. El piso de
+// 360 px queda solo para la hoja de móvil.
+//
+// Modo «panel completo» (.ticket-apretado, lo pone el TS cuando a la lista no
+// le caben 2 líneas): todo toma su alto natural y se desplaza .pos-ticket, la
+// columna completa, sin barra en la lista. Así el cobro siempre se alcanza (D-430).
+// =============================================================================
+@media (min-width: 1001px) {
+  app-cart-summary { flex: 1 1 0; min-height: 0; }
+
+  :host(.ticket-apretado) {
+    height: auto;
+    flex-shrink: 0;
+  }
+
+  :host(.ticket-apretado) .pos-checkout-container { height: auto; }
+
+  :host(.ticket-apretado) app-cart-summary { flex: none; }
+}
 
 .header-top {
   display: inline-flex;

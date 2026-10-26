@@ -37,6 +37,7 @@ function montarHeader(respuesta) {
     notificationService: { getNotifications: () => rxjs.of([]), markAsRead: () => Promise.resolve() },
     tourNavigationService: { showTourMenu() {} },
     subscriptionService: {},
+    opttiaChat: {},
     modal: {},
     authService: { SignOut: () => cierres.push(1) },
     themeMode: tema && tema.servicio,

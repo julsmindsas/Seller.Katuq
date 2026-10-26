@@ -52,7 +52,20 @@
     }
 
     .header-logos-section { order: 1; }
-    .nav-right { order: 3; }
+    // _responsive.scss la fija en 71.67 % entre 992 y 1199 px y empujaba el perfil
+    // fuera de la pantalla: toma el espacio que quede, como con `col`.
+    .nav-right { order: 3; flex: 1 0 0% !important; max-width: none !important; }
+
+    // El nombre del comercio cede espacio a las acciones en cualquier ancho (sin scroll lateral):
+    // primero se encoge el buscador (shrink 6) y luego el nombre, con «…». Con el menú de 264 px
+    // (D-546) y un nombre largo, a 1147 px el perfil se salía 38 px.
+    app-search { flex-shrink: 6; }
+    .header-logos-section { flex: 0 1 auto !important; overflow: hidden; }
+    .company-logo { overflow: hidden; }
+
+    @media (max-width: 575.98px) {
+      .nav-right .nav-menus { gap: 4px; }
+    }
 
     @media (max-width: 767.98px) {
       app-search { display: none; } // en móvil manda el buscador del menú
@@ -330,5 +343,41 @@
 
   @media (max-width: 767.98px) {
     padding: 0 12px;
+  }
+}
+
+// Ticket 1340: botón de Opttia en el encabezado. Cada span lleva color y tamaño propios.
+.opttia-encabezado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px 0 6px;
+  border: 1px solid #e4e2ef;
+  border-radius: 20px;
+  background: #fff;
+  color: #211F3A;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease;
+
+  img { width: 24px; height: 24px; border-radius: 50%; }
+
+  .opttia-encabezado__texto { color: #211F3A; font-size: 13px; font-weight: 700; letter-spacing: normal; }
+  .opttia-encabezado__ia {
+    color: #5F3FE0;
+    background: #efe9ff;
+    border-radius: 20px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  &:hover { border-color: #5F3FE0; box-shadow: 0 6px 14px -8px rgba(50, 40, 110, .35); }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+
+  // Por debajo de 1200 px solo el avatar: con el texto, la barra no cabía.
+  @media (max-width: 1199.98px) {
+    padding: 0 6px;
+    .opttia-encabezado__texto, .opttia-encabezado__ia { display: none; }
   }
 }

@@ -226,6 +226,18 @@ const routes: Routes = [
       }
     ]
   },
+  // Subida pública de archivos de un ticket abierto desde Claude (D-549, plan B): la abre la persona desde el
+  // enlace de la tarjeta, sin cuenta. El enlace vale 30 minutos y se usa una sola vez.
+  {
+    path: 'adjuntar',
+    component: BlankComponent,
+    children: [
+      {
+        path: ':token',
+        loadComponent: () => import('./components/adjuntar-publico/adjuntar-publico.component').then(m => m.AdjuntarPublicoComponent),
+      }
+    ]
+  },
   {
     path: '',
     component: ContentComponent,

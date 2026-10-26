@@ -547,6 +547,30 @@
   }
 }
 
+/* Ticket 1327: persona de la empresa a la que va dirigida. */
+.cot-dirigida {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 12px;
+
+  .cot-dirigida-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .cot-dirigida-select {
+    flex: 1 1 240px;
+    max-width: 420px;
+    border-radius: 11px;
+  }
+}
+
 /* Acción "crear cliente" bajo el buscador. */
 .cot-cliente-actions {
   margin-top: 14px;
@@ -1204,7 +1228,8 @@
     // El `strong` de arriba es display:block a 16px (es el nombre del cliente).
     // Sin devolverlo a inline, el nombre del tipo se iría a otro renglón y
     // saldría del tamaño de un titular.
-    .doc-client-tipo {
+    .doc-client-tipo,
+    .doc-client-atencion {
       margin-top: 3px;
 
       strong {

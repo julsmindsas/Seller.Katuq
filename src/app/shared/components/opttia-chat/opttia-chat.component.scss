@@ -3,6 +3,12 @@
 // Acento canónico Katuq (D-131): el $primary-color global (lila claro heredado) queda solo por compatibilidad.
 $oc-accent: #5F3FE0;
 
+.ost-reply {
+  padding: 8px 12px; color: #211F3A; background: #f3f1fb; font-size: 12px;
+  button { margin-left: 6px; border: 0; background: transparent; color: $oc-accent; font-size: 12px; text-decoration: underline; }
+  button:focus-visible { outline: 3px solid #7C5CFF !important; }
+}
+
 :host {
   display: block;
   width: 100%;

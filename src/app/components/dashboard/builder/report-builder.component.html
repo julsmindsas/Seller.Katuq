@@ -19,21 +19,21 @@
 
     <!-- Comparativo (Harmony Lens punto 5) -->
     <select class="date-input" [(ngModel)]="compareMode" [title]="'dashboard.builder.compareTitle' | translate">
-      <option value="none">{{ 'dashboard.builder.compareNone' | translate }}</option>
-      <option value="prev_month">{{ 'dashboard.builder.comparePrevMonth' | translate }}</option>
-      <option value="prev_year">{{ 'dashboard.builder.comparePrevYear' | translate }}</option>
+      <option value="none">Sin comparación</option> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+      <option value="prev_month">Mes anterior (mismas fechas)</option> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+      <option value="prev_year">Mismo período del año pasado</option> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
     </select>
 
     <span class="spacer"></span>
 
     <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="exportExcel()" [disabled]="!result || exporting">
-      <i class="fa fa-file-excel"></i> Excel
+      <i class="fa fa-file-excel-o"></i> Excel
     </button>
     <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="exportPng()" [disabled]="!result || exporting">
-      <i class="fa fa-file-image"></i> PNG
+      <i class="fa fa-file-image-o"></i> PNG
     </button>
     <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="exportPdf()" [disabled]="!result || exporting">
-      <i class="fa fa-file-pdf"></i> PDF
+      <i class="fa fa-file-pdf-o"></i> PDF
     </button>
     <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="openShareModal()">
       <i class="fa fa-users"></i> {{ 'dashboard.builder.share' | translate }}
@@ -47,7 +47,7 @@
       {{ (publishing ? 'dashboard.builder.publishing' : (isPublic ? 'dashboard.builder.published' : 'dashboard.builder.publish')) | translate }}
     </button>
     <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="save()" [disabled]="saving">
-      <i class="fa fa-floppy-disk"></i> {{ (saving ? 'dashboard.builder.saving' : 'comun.guardar') | translate }}
+      <i class="fa fa-floppy-o"></i> {{ (saving ? 'dashboard.builder.saving' : 'comun.guardar') | translate }}
     </button>
     <button type="button" class="cfg-btn rb-btn" (click)="run()" [disabled]="running">
       <i class="fa" [class.fa-play]="!running" [class.fa-spinner]="running" [class.fa-spin]="running"></i>
@@ -57,7 +57,7 @@
 
   <!-- Banner para usuarios con rol Vendedor: filtro server-side aplicado -->
   <div *ngIf="isSeller && sourceHasSellerField" class="seller-banner">
-    <i class="fa fa-user-shield me-1"></i>
+    <i class="fa fa-user me-1"></i>
     <span [innerHTML]="'dashboard.builder.sellerBanner' | translate"></span>
   </div>
 
@@ -65,7 +65,7 @@
     <!-- Panel izquierdo: source + campos -->
     <aside class="panel-left">
       <div class="panel-section">
-        <label class="panel-label">{{ 'dashboard.builder.source' | translate }}</label>
+        <label class="panel-label">Información de</label> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
         <select class="panel-select" [ngModel]="source?.id" (ngModelChange)="selectSourceById($event)">
           <option *ngFor="let s of catalog" [value]="s.id">{{ cat(s.label) }}</option>
         </select>
@@ -73,7 +73,7 @@
       </div>
 
       <div class="panel-section" *ngIf="source">
-        <label class="panel-label">{{ 'dashboard.builder.dimensions' | translate }}</label>
+        <label class="panel-label">Datos para agrupar</label> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
         <ul class="field-list" cdkDropList id="palette" [cdkDropListData]="dimFields" [cdkDropListConnectedTo]="['rows-zone','cols-zone']" [cdkDropListSortingDisabled]="true">
           <li *ngFor="let d of dimFields"
               class="field-pill"
@@ -89,14 +89,14 @@
       </div>
 
       <div class="panel-section" *ngIf="source">
-        <label class="panel-label">{{ 'dashboard.builder.measures' | translate }}</label>
+        <label class="panel-label">Datos para medir</label> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
         <ul class="field-list" cdkDropList id="palette-m" [cdkDropListData]="measFields" [cdkDropListConnectedTo]="['values-zone']" [cdkDropListSortingDisabled]="true">
           <li *ngFor="let m of measFields"
               class="field-pill is-measure"
               cdkDrag
               [cdkDragData]="m"
               (click)="addToZone('values', m)">
-            <i class="fa fa-ruler"></i>
+            <i class="fa fa-bar-chart"></i>
             <span>{{ cat(m.label) }}</span>
           </li>
         </ul>
@@ -112,15 +112,15 @@
           [cdkDropListData]="rows"
           [cdkDropListConnectedTo]="['cols-zone','values-zone','palette','palette-m']"
           (cdkDropListDropped)="drop($event,'rows')">
-          <h4 class="zone-title"><i class="fa fa-grip-lines me-1"></i> {{ 'dashboard.builder.rows' | translate }}</h4>
+          <h4 class="zone-title"><i class="fa fa-list me-1"></i> Agrupar por</h4> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
           <div class="zone-content">
             <ng-container *ngIf="rows.length === 0">
-              <span class="zone-empty">{{ 'dashboard.builder.dropDimension' | translate }}</span>
+              <span class="zone-empty">Arrastra un dato aquí</span> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
             </ng-container>
             <div *ngFor="let f of rows; let i = index" class="zone-pill" cdkDrag [cdkDragData]="f">
               <span>{{ cat(f.label) }}</span>
               <select *ngIf="f.dataType === 'date'" [ngModel]="f.granularity" (ngModelChange)="changeGranularity(f, $event)" class="pill-select">
-                <option *ngFor="let g of availableGranularities(f)" [value]="g">{{ g }}</option>
+                <option *ngFor="let g of availableGranularities(f)" [value]="g">{{ granularityLabel(g) }}</option>
               </select>
               <button type="button" class="pill-x" (click)="removeFromZone('rows', i)">×</button>
             </div>
@@ -133,15 +133,15 @@
           [cdkDropListData]="cols"
           [cdkDropListConnectedTo]="['rows-zone','values-zone','palette','palette-m']"
           (cdkDropListDropped)="drop($event,'cols')">
-          <h4 class="zone-title"><i class="fa fa-grip-lines-vertical me-1"></i> {{ 'dashboard.builder.columns' | translate }}</h4>
+          <h4 class="zone-title"><i class="fa fa-columns me-1"></i> Comparar por</h4> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
           <div class="zone-content">
             <ng-container *ngIf="cols.length === 0">
-              <span class="zone-empty">{{ 'dashboard.builder.columnsHelp' | translate }}</span>
+              <span class="zone-empty">Opcional · cada valor sale en su propia columna</span> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
             </ng-container>
             <div *ngFor="let f of cols; let i = index" class="zone-pill" cdkDrag [cdkDragData]="f">
               <span>{{ cat(f.label) }}</span>
               <select *ngIf="f.dataType === 'date'" [ngModel]="f.granularity" (ngModelChange)="changeGranularity(f, $event)" class="pill-select">
-                <option *ngFor="let g of availableGranularities(f)" [value]="g">{{ g }}</option>
+                <option *ngFor="let g of availableGranularities(f)" [value]="g">{{ granularityLabel(g) }}</option>
               </select>
               <button type="button" class="pill-x" (click)="removeFromZone('cols', i)">×</button>
             </div>
@@ -155,18 +155,18 @@
           [cdkDropListConnectedTo]="['rows-zone','cols-zone','palette','palette-m']"
           (cdkDropListDropped)="drop($event,'values')">
           <h4 class="zone-title">
-            <i class="fa fa-ruler me-1"></i> {{ 'dashboard.builder.values' | translate }}
-            <button type="button" class="btn-calc-add" (click)="openCalcModal()" [title]="'dashboard.builder.calcButtonTitle' | translate">
-              <i class="fa fa-calculator"></i> {{ 'dashboard.builder.calcButton' | translate }}
+            <i class="fa fa-bar-chart me-1"></i> Qué medir <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+            <button type="button" class="btn-calc-add" (click)="openCalcModal()" title="Crear una fórmula con los datos que estás midiendo"> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+              <i class="fa fa-calculator"></i> + Fórmula <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
             </button>
           </h4>
           <div class="zone-content">
             <ng-container *ngIf="values.length === 0 && calculated.length === 0">
-              <span class="zone-empty">{{ 'dashboard.builder.dropMeasure' | translate }}</span>
+              <span class="zone-empty">Arrastra un dato aquí</span> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
             </ng-container>
             <div *ngFor="let f of values; let i = index" class="zone-pill is-measure" cdkDrag [cdkDragData]="f">
               <select [ngModel]="f.agg" (ngModelChange)="changeAgg(f, $event)" class="pill-select">
-                <option *ngFor="let a of availableAggs(f)" [value]="a">{{ a }}</option>
+                <option *ngFor="let a of availableAggs(f)" [value]="a">{{ aggLabel(a) }}</option>
               </select>
               <span>{{ cat(f.label) }}</span>
               <button type="button" class="pill-x" (click)="removeFromZone('values', i)">×</button>
@@ -182,12 +182,12 @@
 
       <section class="result-area" #vizContainer>
         <div *ngIf="errorMsg" class="result-error">
-          <i class="fa fa-triangle-exclamation me-1"></i>{{ errorMsg | translate }}
+          <i class="fa fa-exclamation-triangle me-1"></i>{{ errorMsg | translate }}
         </div>
 
         <div *ngIf="!result && !running && !errorMsg" class="result-empty">
-          <i class="fa fa-magnifying-glass-chart"></i>
-          <p [innerHTML]="'dashboard.builder.emptyResult' | translate"></p>
+          <i class="fa fa-area-chart"></i>
+          <p>Arrastra los datos que quieres agrupar y medir. Después haz clic en <strong>Ejecutar</strong>.</p> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
         </div>
 
         <div *ngIf="running" class="result-empty">
@@ -219,18 +219,18 @@
           <i class="fa"
             [class.fa-table]="v==='table'"
             [class.fa-th]="v==='pivot'"
-            [class.fa-chart-bar]="v==='bar'"
-            [class.fa-chart-line]="v==='line'"
-            [class.fa-chart-pie]="v==='pie'"
-            [class.fa-gauge-high]="v==='kpi'"></i>
-          <span>{{ v }}</span>
+            [class.fa-bar-chart]="v==='bar'"
+            [class.fa-line-chart]="v==='line'"
+            [class.fa-pie-chart]="v==='pie'"
+            [class.fa-tachometer]="v==='kpi'"></i>
+          <span>{{ vizLabel(v) }}</span>
         </button>
       </div>
 
       <div *ngIf="result" class="result-meta">
         <h5>{{ 'dashboard.builder.detail' | translate }}</h5>
         <p><strong>{{ result.meta.totalRows }}</strong> {{ 'dashboard.builder.rowsLabel' | translate }}</p>
-        <p><strong>{{ result.meta.durationMs }}</strong> ms</p>
+        <p><strong>{{ secondsText(result.meta.durationMs) }}</strong> segundos</p> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
         <div *ngIf="result.meta.truncated" class="truncated-notice">
           <p class="info">
             <i class="fa fa-info-circle me-1"></i>

@@ -22,6 +22,7 @@ import { EMPTY, of } from 'rxjs';
 import { parse as flatedParse } from 'flatted';
 import { LoaderService } from '../../shared/services/loader.service';
 import { CompanyFeatureFlag, CompanyFeaturesService } from '../../shared/services/company-features.service';
+import { editorDeProducto, fechaHoraColombia } from './historial-producto/historial-producto.util';
 import { rutaDeFiltros } from './fotos-uniformes/fotos-uniformes-entradas';
 
 const FILTROS_SESSION_KEY = 'productos_filtros';
@@ -2162,6 +2163,22 @@ export class ProductosComponent implements OnInit, OnDestroy {
     // Si es un string o número, intentar parsear
     const parsed = new Date(value);
     return isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  /** D-548: ¿esta empresa tiene el historial nuevo (bandera `productHistoryLog`)? Apagada, la columna es la de siempre. */
+  get historialNuevo(): boolean {
+    return this.features.isEnabled('productHistoryLog');
+  }
+
+  /** D-548 (6.1): la última edición en hora de Colombia («23 oct 2026, 10:54 a. m.»), no el texto ISO ni la hora del navegador. */
+  fechaEdicion(row: any): string {
+    const fecha = this.toDate(row?.date_edit);
+    return fecha ? fechaHoraColombia(fecha) : 'N/A';
+  }
+
+  /** D-548 (6.1): quién hizo la última edición; vacío si quedó un texto técnico y no una persona. */
+  editorEdicion(row: any): string {
+    return editorDeProducto(row?.user_edit);
   }
 
   // ============== MÉTODOS ADMINISTRATIVOS ==============

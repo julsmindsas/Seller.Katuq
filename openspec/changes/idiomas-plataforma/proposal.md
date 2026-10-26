@@ -1,6 +1,6 @@
 # Idiomas del panel Seller: español, inglés, portugués y alemán de Suiza (ticket «Traducción», cd CMNdBkVZXgYoOCvqfGZc)
 
-> Estado: **APROBADA por Daniel el 2026-10-21.** Recomendaciones 1 a 9 («Base + módulo por módulo», ver «Aprobación (2026-10-21)» al final) y, en bloque, `design.md`, las dos specs, `tasks.md` y la asignación de carpetas de D10 (tarea 0.2). Cada pregunta abierta se resuelve con la recomendación escrita. Decisión asentada como **D-540** en `specs/CONTRACT.md` (tarea 0.3).
+> Estado: **APROBADA por Daniel el 2026-10-21.** Recomendaciones 1 a 9 («Base + módulo por módulo», ver «Aprobación (2026-10-21)» al final) y, en bloque, `design.md`, las dos specs, `tasks.md` y la asignación de carpetas de D10 (tarea 0.2). Cada pregunta abierta se resuelve con la recomendación escrita. Decisión asentada como **D-560** en `specs/CONTRACT.md` (tarea 0.3).
 >
 > **Cómo citar el ticket:** por su `cd` (`CMNdBkVZXgYoOCvqfGZc`), no por el número 1231. El contrato ya usa «ticket 1231» en D-446 para otro ticket (estrellas del sitio). Informe de lectura: `entender/traduccion.md` de la sesión 571efb0a (2026-10-21).
 
@@ -77,10 +77,10 @@ Esta propuesta retoma los dos con lo que Daniel pidió: trabajo por módulo y un
 
 - **Art. I y II:** specs sin tecnología; nada de código antes de la tarea 0.2.
 - **Art. VIII:** el campo nuevo del login lleva prueba de contrato antes de implementarse (tarea 1.2).
-- **Art. IX:** Angular 14.3 no tiene signals ni `@if`. Los módulos existentes siguen en NgModule y sus directivas; el servicio nuevo de PrimeNG es un servicio raíz pequeño. Excepción acotada, a registrar en el D-540.
+- **Art. IX:** Angular 14.3 no tiene signals ni `@if`. Los módulos existentes siguen en NgModule y sus directivas; el servicio nuevo de PrimeNG es un servicio raíz pequeño. Excepción acotada, a registrar en el D-560.
 - **Art. XII:** la lista de empresas de prueba de idiomas ocultos es una bandera temporal: dueño Daniel, se retira cuando de-CH se publique o el 2027-06-30, lo que pase primero (tarea 14.3). La lista de idiomas visibles es configuración permanente, no una bandera temporal.
 - **Art. XIII:** dos specs de menos de tres páginas; los bloques de módulo no agregan requisitos nuevos, aplican los mismos.
-- **Art. XIV:** D-540 y bitácora en `CONTRACT.md`.
+- **Art. XIV:** D-560 y bitácora en `CONTRACT.md`.
 
 ## Observación lateral
 

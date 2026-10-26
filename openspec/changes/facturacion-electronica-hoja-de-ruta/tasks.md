@@ -52,7 +52,7 @@
   Depende de 2.1, 2.8 y 1.5. Éxito: 1.1 y 1.5 en verde, 1.6 sin regresión.
 - [x] 2.3 **SENSIBLE (pedidos).** `utils/pedidoYaFacturado.js` usa `candadoFactura.js` y deja de copiar `LOCK_TTL_MS`:
   un `uncertain` bloquea aunque tenga más de 3 min. Depende de 2.1. Éxito: `test:pedido-ya-facturado` con casos nuevos.
-- [ ] 2.4 **SENSIBLE (consecutivos).** `providers/dianXMLProvider.js`: `beforeSend` con `{ number, cufe }`,
+- [x] 2.4 **SENSIBLE (consecutivos).** `providers/dianXMLProvider.js`: `beforeSend` con `{ number, cufe }`,
   `requestId` y `submittedToDian` en toda auditoría, `error.document` después de enviar y números del set anotados.
   `dian/numbering.js` sin cambios (el diff lo prueba). Depende de 2.2. Éxito: `test:dian-invoice` sin regresión.
 - [ ] 2.5 **SENSIBLE (entrada de facturación de pedidos).** `controllers/accountingController.js`: `from-order` y

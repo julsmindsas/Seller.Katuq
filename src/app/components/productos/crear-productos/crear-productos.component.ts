@@ -61,6 +61,7 @@ import { MunicipioDane } from "../../../shared/data/colombia-dane-codes";
 import { AVISO_REFERENCIA_CON_ESPACIOS, limpiarReferencia, referenciaRechazada } from 'src/app/shared/utils/referencia-producto';
 import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
 import type { CompanyFeatureFlag } from "../../../shared/services/company-features.service";
+import { editorDeProducto, fechaHoraColombia } from "../historial-producto/historial-producto.util";
 import { FichaDesdeFotoService } from "../../../shared/services/productos/ficha-desde-foto.service";
 import { medirCalidadDeArchivo } from "../../../shared/services/productos/photo-quality-canvas";
 import { textoDeAvisos } from "../../../shared/services/productos/photo-quality";
@@ -2863,7 +2864,8 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     if (header.includes('Pedidos') && !this.pedidosCargados) {
       this.cargarPedidosRelacionados(productoId);
     }
-    if (header.includes('Historial') && !this.historialCargado) {
+    // D-548: con la bandera, la pestaña nueva se pide sola al abrirse (no usa `cargarHistorial`).
+    if (header.includes('Historial') && !this.historialCargado && !this.historialNuevo) {
       this.cargarHistorial(productoId);
     }
   }
@@ -2892,6 +2894,29 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
   trackById(index: number, item: any): string {
     return item?.cd || item?.id || item?.referencia || index;
+  }
+
+  /** D-548 (F1): ¿esta empresa tiene la pestaña «Historial» nueva? Apagada, la de hoy. */
+  get historialNuevo(): boolean {
+    return this.features.isEnabled('productHistoryLog');
+  }
+
+  /** D-548 (6.1): la última edición en hora de Colombia, como en Listas de precios; vacío si el producto no la tiene. */
+  get fechaUltimaEdicion(): string {
+    const f = this.edit?.date_edit;
+    if (!f) return '';
+    const crudo = typeof f === 'object' && typeof f.toDate === 'function' ? f.toDate() : typeof f === 'object' && 'seconds' in f ? new Date(f.seconds * 1000) : f;
+    return fechaHoraColombia(crudo);
+  }
+
+  /** D-548 (6.1): quién hizo la última edición (correo); vacío si quedó un texto técnico. */
+  get editorUltimaEdicion(): string {
+    return editorDeProducto(this.edit?.user_edit);
+  }
+
+  /** Id del producto para el historial nuevo; vacío si todavía no se ha guardado. */
+  get productoIdHistorial(): string {
+    return this.edit?.cd || this.cd || '';
   }
 
   cargarHistorial(productoId?: string): void {

@@ -23,7 +23,7 @@ import {
   VendedorCotizacion,
   EventoEstadoCotizacion,
 } from "../modelo/cotizacion";
-import { Carrito, Cliente } from "../../ventas/modelo/pedido";
+import { Carrito, Cliente, ContactoCliente } from "../../ventas/modelo/pedido";
 import { Producto } from "../../../shared/models/productos/Producto";
 import { ConfProductToCartComponent } from "../../ventas/catalogo/conf-product-to-cart/conf-product-to-cart.component";
 import { CrearClienteModalComponent } from "../../ventas/clientes/crear-cliente-modal/crear-cliente-modal.component";
@@ -572,12 +572,58 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     this.cotizacion.cliente = cli as Cliente;
     this.clienteTerm = this.clienteNombre(cli);
     this.clienteSuggestions = [];
+    // Ticket 1327: se conserva la persona elegida si sigue en la ficha (p. ej. al
+    // editar el cliente); si no, se propone la principal.
+    const actual = this.cotizacion.contactoDestino?.id;
+    const contactos = this.contactosCliente;
+    const conservar = actual ? contactos.find((c) => c.id === actual) : null;
+    this.fijarContactoDestino(conservar || contactos.find((c) => c.principal) || null);
   }
 
   quitarCliente(): void {
     this.cotizacion.cliente = null;
+    this.cotizacion.contactoDestino = null;
     this.clienteTerm = "";
     this.clienteSuggestions = [];
+  }
+
+  // ---- Ticket 1327 (D-537): persona del cliente a la que va dirigida ----
+
+  /** Personas de contacto del cliente seleccionado (pestaña Contactos de la ficha). */
+  get contactosCliente(): ContactoCliente[] {
+    const lista = (this.cotizacion.cliente as any)?.contactos;
+    return Array.isArray(lista) ? lista.filter((c: any) => c && c.id && c.nombre) : [];
+  }
+
+  get contactoDestinoId(): string {
+    return this.cotizacion.contactoDestino?.id || "";
+  }
+
+  elegirContactoDestino(id: string): void {
+    this.fijarContactoDestino(this.contactosCliente.find((c) => c.id === id) || null);
+  }
+
+  /** Copia de la persona: un cambio posterior en la ficha no altera esta cotización. */
+  private fijarContactoDestino(c: ContactoCliente | null): void {
+    this.cotizacion.contactoDestino = c
+      ? { id: c.id, nombre: c.nombre, cargo: c.cargo || "", correo: c.correo || "", celular: c.celular || "" }
+      : null;
+  }
+
+  /** "Atención: nombre — cargo · correo · celular" para el documento. */
+  get atencionDoc(): string {
+    const c = this.cotizacion.contactoDestino;
+    if (!c || !c.nombre) return "";
+    const quien = [c.nombre, c.cargo].filter(Boolean).join(" — ");
+    return [quien, c.correo, c.celular].filter(Boolean).join(" · ");
+  }
+
+  /** Celular para WhatsApp: el de la persona si lo tiene (con el indicativo del cliente), si no el del cliente. */
+  private celularWhatsApp(cli: any): string {
+    const propio = String(this.cotizacion.contactoDestino?.celular || "").replace(/\D/g, "");
+    if (!propio) return (this.clienteCelular(cli) || "").replace(/\D/g, "");
+    const ind = String(cli?.indicativo_celular_comprador || "").replace(/\D/g, "");
+    return ind && propio.length === 10 ? ind + propio : propio;
   }
 
   /**
@@ -703,6 +749,12 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
    */
   agregarCombo(combo: any): void {
     const ids: string[] = (combo?.productos || []).map((p: any) => p?.productoId).filter((id: any) => !!id);
+    // Ticket 1323 (D-538): unidades por producto definidas en el combo.
+    const cantidades = new Map<string, number>(
+      (combo?.productos || [])
+        .filter((p: any) => p?.productoId && Number.isInteger(p.cantidad) && p.cantidad > 0)
+        .map((p: any) => [p.productoId, p.cantidad])
+    );
     this.productoTerm = "";
     this.productoSuggestions = [];
     this.comboSuggestions = [];
@@ -738,7 +790,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
         let configurables = 0;
         agregables.forEach((producto) => {
           if (this.requiereConfiguracion(producto)) configurables++;
-          this.agregarDirecto(producto, false, completo ? marca : undefined);
+          this.agregarDirecto(producto, false, completo ? marca : undefined, cantidades.get((producto as any).cd));
         });
         const config = configurables > 0 ? ` ${configurables} se configuran al convertirla en pedido.` : "";
         if (completo) {
@@ -856,10 +908,14 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   private agregarDirecto(
     producto: Producto,
     mostrarToast = true,
-    combo?: { id: string; nombre: string; grupo: string; descripcion?: string }
+    combo?: { id: string; nombre: string; grupo: string; descripcion?: string },
+    cantidadCombo?: number
   ): void {
     const productoConPrecio = this.aplicarPrecioCategoria(producto);
-    const cantidadMinima = (producto as any)?.disponibilidad?.cantidadMinVenta || 1;
+    // Ticket 1323: la cantidad del combo, si la trae, manda sobre la mínima de venta.
+    const cantidadMinima = cantidadCombo && cantidadCombo > 0
+      ? cantidadCombo
+      : (producto as any)?.disponibilidad?.cantidadMinVenta || 1;
     const hoy = new Date();
     const datosEntrega = {
       fechaEntrega: {
@@ -2362,9 +2418,10 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
         }
 
         const cli = this.cotizacion.cliente as any;
-        const telefono = (this.clienteCelular(cli) || "").replace(/\D/g, "");
+        const telefono = this.celularWhatsApp(cli);
+        const saludo = this.cotizacion.contactoDestino?.nombre || this.clienteNombre(cli) || "";
         const lineas = [
-          `Hola ${this.clienteNombre(cli) || ""}`.trim() + ",",
+          `Hola ${saludo}`.trim() + ",",
           "",
           `Te comparto la cotización ${this.cotizacion.nroCotizacion || ""}.`,
           `Total: ${this.formatCurrency(this.total)}`,

@@ -10,6 +10,7 @@ import { environment } from '../../../../environments/environment';
 import { AuthService } from '../firebase/auth.service';
 import { ToastrService } from 'ngx-toastr';
 import * as Sentry from '@sentry/angular';
+import { isOpttiaMcpEndpoint, OPTTIA_MCP_TRANSPORT } from './opttia-mcp.context';
 
 @Injectable()
 export class HttpInterceptor2 implements HttpInterceptor {
@@ -251,6 +252,8 @@ export class HttpInterceptor2 implements HttpInterceptor {
         // subida de archivos.
         const esFormData = request.body instanceof FormData;
         const contentType = esFormData ? {} : { 'Content-Type': 'application/json' };
+        const accept = request.context.get(OPTTIA_MCP_TRANSPORT) && isOpttiaMcpEndpoint(request.url)
+          ? 'application/json, text/event-stream' : 'application/json';
 
         if (company) {
           headers = {
@@ -259,7 +262,7 @@ export class HttpInterceptor2 implements HttpInterceptor {
             'user': user?.nit,
             'usage-code': user?.authorizationCode,
             ...contentType,
-            'Accept': 'application/json',
+            'Accept': accept,
             'email': user.email,
             'Access-Control-Allow-Origin': environment.urlPermitidas
           };
@@ -268,7 +271,7 @@ export class HttpInterceptor2 implements HttpInterceptor {
             "Authorization": 'Bearer ' + token,
             'user': user?.nit,
             ...contentType,
-            'Accept': 'application/json',
+            'Accept': accept,
             'email': user.email,
             'Access-Control-Allow-Origin': environment.urlPermitidas
           };

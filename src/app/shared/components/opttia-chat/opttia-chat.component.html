@@ -9,11 +9,11 @@
     </div>
 
     <div class="toolbar-actions">
-      <button type="button" (click)="clearConversation()" [disabled]="isSending" [title]="'asistentes.opttiaChat.nuevaConversacion' | translate"
+      <button type="button" (click)="clearConversation()" [disabled]="isSending || opttia.supportSubmitting" [title]="'asistentes.opttiaChat.nuevaConversacion' | translate"
         [attr.aria-label]="'asistentes.opttiaChat.iniciarUnaConversacionNueva' | translate">
         <i class="fa fa-plus"></i>
       </button>
-      <button type="button" (click)="withdrawConsent()" [disabled]="isSending" [title]="'asistentes.opttiaChat.privacidad' | translate"
+      <button type="button" (click)="withdrawConsent()" [disabled]="isSending || opttia.supportSubmitting" [title]="'asistentes.opttiaChat.privacidad' | translate"
         [attr.aria-label]="'asistentes.opttiaChat.retirarPermisoParaUsarOpttia' | translate">
         <i class="fa fa-shield"></i>
       </button>
@@ -55,6 +55,9 @@
       <button type="button" *ngIf="canSuggestStore" [disabled]="!opttia.canSend" (click)="fillStoreDraft()">
         {{ 'asistentes.opttiaChat.crearMiTiendaConIa' | translate }}
       </button>
+      <button type="button" *ngIf="opttia.hasTool('create_support_ticket')" [disabled]="!opttia.canSend" (click)="fillSupportDraft()">
+        Reportar un problema de Katuq <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+      </button>
     </div>
 
     <article class="interrupt-card" *ngIf="pendingInterrupt as interrupt">
@@ -79,6 +82,10 @@
       </ng-template>
     </article>
 
+    <app-opttia-support-ticket *ngIf="supportView as support" [view]="support" [blocked]="isSending"
+      (confirmRequested)="opttia.confirmSupport()" (cancelRequested)="opttia.cancelSupport()"
+      (replyRequested)="completeSupportReport()"></app-opttia-support-ticket>
+
     <div class="thinking" *ngIf="isSending">
       <span></span><span></span><span></span>
       <small>{{ 'asistentes.opttiaChat.opttiaEstaPensando' | translate }}</small>
@@ -93,10 +100,14 @@
     </button>
   </div>
 
+  <div class="ost-reply" *ngIf="replyingToSupport">
+    Completando este reporte. <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+    <button type="button" (click)="replyingToSupport = false">Hacer otra consulta</button> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+  </div>
   <form class="composer" (ngSubmit)="send()">
-    <textarea name="opttiaMessage" [(ngModel)]="draft" (keydown)="onKeydown($event)"
-      [disabled]="isSending || !opttia.canSend" rows="1" maxlength="4000"
-      [placeholder]="'asistentes.opttiaChat.preguntaleAOpttiaSobreTu' | translate"
+    <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+    <textarea name="opttiaMessage" [placeholder]="replyingToSupport ? 'Escribe el dato que falta para tu reporte…' : ('asistentes.opttiaChat.preguntaleAOpttiaSobreTu' | translate)" [(ngModel)]="draft" (keydown)="onKeydown($event)"
+      [disabled]="isSending || !opttia.canSend" rows="1" maxlength="2000"
       [attr.aria-label]="'asistentes.opttiaChat.mensajeParaOpttia' | translate"></textarea>
     <button *ngIf="!isSending" type="submit" [disabled]="!draft.trim() || !opttia.canSend" [attr.aria-label]="'asistentes.opttiaChat.enviarMensaje' | translate">
       <i class="fa fa-paper-plane"></i>
@@ -107,7 +118,7 @@
     </button>
   </form>
 
-  <p class="disclaimer">{{ 'asistentes.opttiaChat.consultasBrevesYDeSolo' | translate }}</p>
+  <p class="disclaimer">Consultas breves{{ opttia.hasTool('create_support_ticket') ? ' y tickets de soporte con tu confirmación' : ' y de solo lectura' }}. Para agentes y automatizaciones usa opttia.com.</p> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
 </section>
 
 <ng-template #consentView>

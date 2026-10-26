@@ -1,0 +1,138 @@
+<!-- D-547 (F1): modal «Opciones del pedido». Clases con prefijo opm- (ninguna lleva «p-»: AGENTS.md, trampas de CSS global). -->
+<div class="opm-fondo" (click)="alFondo($event)">
+  <div #dialogo class="opm-modal" [class.opm-con-pines]="pinesActivos" role="dialog" aria-modal="true" aria-labelledby="opm-titulo"
+       (keydown.escape)="alEscape($event)" (keydown.tab)="alTab($any($event))">
+
+    <!-- Encabezado -->
+    <header class="opm-cabeza">
+      <div class="opm-titulos">
+        <h2 id="opm-titulo" class="opm-titulo">Opciones del pedido</h2>
+        <div class="opm-numero" *ngIf="numeroPedido">Pedido #{{ numeroPedido }}</div>
+      </div>
+      <div class="opm-buscar">
+        <app-icono-tabler class="opm-buscar-icono" nombre="search" [tamano]="18"></app-icono-tabler>
+        <input #buscador class="opm-buscar-campo" type="search" autocomplete="off" spellcheck="false"
+               placeholder="Buscar acción" aria-label="Buscar acción"
+               [value]="texto"
+               (input)="alEscribir($any($event.target).value)"
+               (keydown.enter)="alEnter($event)">
+      </div>
+      <button type="button" class="opm-cerrar-x" aria-label="Cerrar" (click)="cerrar.emit()">
+        <app-icono-tabler nombre="x" [tamano]="20"></app-icono-tabler>
+      </button>
+    </header>
+
+    <ng-container *ngIf="vista">
+      <!-- Cuerpo: grilla por tema, o lista en flujo (buscando o desde Producción) -->
+      <div class="opm-cuerpo">
+        <div class="opm-grilla" *ngIf="!vista.modoLista">
+          <ng-container *ngFor="let col of vista.columnas; trackBy: trackColumna">
+            <div class="opm-etiqueta">{{ col.titulo }}</div>
+            <div class="opm-celda" *ngFor="let t of col.tarjetas; trackBy: trackTarjeta">
+              <ng-container *ngTemplateOutlet="tarjetaPlantilla; context: { $implicit: t }"></ng-container>
+              <!-- Descuento con descuento aplicado: menú de dos opciones -->
+              <div class="opm-menu opm-menu-descuento" *ngIf="t.id === 'discount' && descuentoAbierto" role="menu">
+                <button type="button" role="menuitem" class="opm-menu-opcion" *ngFor="let o of vista.opcionesDescuento"
+                        (click)="elegir(o)">
+                  <app-icono-tabler [nombre]="o.icono" [tamano]="18"></app-icono-tabler>
+                  <span class="opm-menu-texto">{{ o.titulo }}</span>
+                </button>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+
+        <div class="opm-lista" *ngIf="vista.modoLista && !vista.sinCoincidencias">
+          <div class="opm-celda" *ngFor="let t of vista.lista; trackBy: trackTarjeta">
+            <ng-container *ngTemplateOutlet="tarjetaPlantilla; context: { $implicit: t }"></ng-container>
+            <div class="opm-menu opm-menu-descuento" *ngIf="t.id === 'discount' && descuentoAbierto" role="menu">
+              <button type="button" role="menuitem" class="opm-menu-opcion" *ngFor="let o of vista.opcionesDescuento"
+                      (click)="elegir(o)">
+                <app-icono-tabler [nombre]="o.icono" [tamano]="18"></app-icono-tabler>
+                <span class="opm-menu-texto">{{ o.titulo }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="opm-vacio" *ngIf="vista.sinCoincidencias" role="status">
+          <app-icono-tabler nombre="search" [tamano]="28"></app-icono-tabler>
+          <div class="opm-vacio-titulo">Ninguna acción con ese nombre</div>
+          <div class="opm-vacio-texto">Prueba con otra palabra, por ejemplo «pdf», «cliente» o «pagos».</div>
+        </div>
+      </div>
+
+      <!-- Para este pedido: solo existe si aplica alguna acción de contexto -->
+      <section class="opm-contexto" *ngIf="vista.contexto.length && !vista.sinCoincidencias && !buscando"
+               aria-label="Para este pedido">
+        <div class="opm-contexto-fila">
+          <div class="opm-contexto-etiqueta">Para este pedido</div>
+          <div class="opm-contexto-botones">
+            <button type="button" class="opm-contexto-boton" *ngFor="let c of vista.contexto; trackBy: trackTarjeta"
+                    [disabled]="!c.habilitada" [attr.aria-disabled]="!c.habilitada ? 'true' : null"
+                    [attr.aria-expanded]="c.desplegable ? facturaAbierta : null"
+                    [attr.title]="c.motivo || null"
+                    (click)="tocar(c)">
+              <app-icono-tabler [nombre]="c.icono" [tamano]="18"></app-icono-tabler>
+              <span class="opm-contexto-texto">{{ c.titulo }}</span>
+              <app-icono-tabler *ngIf="c.desplegable" class="opm-contexto-flecha" nombre="chevron-down" [tamano]="16"
+                                [class.opm-girada]="facturaAbierta"></app-icono-tabler>
+              <app-icono-tabler *ngIf="!c.habilitada" nombre="lock" [tamano]="16"></app-icono-tabler>
+            </button>
+          </div>
+        </div>
+        <div class="opm-contexto-fila opm-contexto-hijos" *ngIf="facturaAbierta">
+          <div class="opm-contexto-etiqueta">Factura electrónica</div>
+          <div class="opm-contexto-botones">
+            <button type="button" class="opm-contexto-boton opm-contexto-hijo" *ngFor="let h of vista.hijosFactura; trackBy: trackTarjeta"
+                    (click)="elegir(h)">
+              <app-icono-tabler [nombre]="h.icono" [tamano]="18"></app-icono-tabler>
+              <span class="opm-contexto-texto">{{ h.titulo }}</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </ng-container>
+
+    <!-- Pie -->
+    <footer class="opm-pie">
+      <button type="button" class="opm-eliminar" *ngIf="vista?.puedeEliminar" (click)="accion.emit('deleteOrder')">
+        Eliminar pedido <span class="opm-eliminar-nota">· se borra para siempre</span>
+      </button>
+      <button type="button" class="opm-cerrar" (click)="cerrar.emit()">Cerrar</button>
+    </footer>
+  </div>
+</div>
+
+<!-- Tarjeta de una acción (fija o resultado de búsqueda) -->
+<ng-template #tarjetaPlantilla let-t>
+  <button type="button" class="opm-tarjeta" [class.opm-tarjeta-bloqueada]="!t.habilitada"
+          [class.opm-tarjeta-resaltada]="t.habilitada && resaltada?.id === t.id"
+          [disabled]="!t.habilitada" [attr.aria-disabled]="!t.habilitada ? 'true' : null"
+          [attr.aria-haspopup]="t.id === 'discount' && vista?.descuentoConMenu ? 'menu' : null"
+          [attr.aria-expanded]="t.id === 'discount' && vista?.descuentoConMenu ? descuentoAbierto : null"
+          (click)="tocar(t)">
+    <span class="opm-icono"><app-icono-tabler [nombre]="t.icono" [tamano]="28" [trazo]="1.6"></app-icono-tabler></span>
+    <span class="opm-texto">
+      <span class="opm-tarjeta-titulo">{{ t.titulo }}</span>
+      <span class="opm-tarjeta-resena" *ngIf="t.habilitada && resaltada?.id !== t.id">{{ t.resena }}</span>
+      <!-- Resaltado sin mover (F2, D17): la etiqueta ocupa el lugar de la reseña, en el par de alerta -->
+      <span class="opm-tarjeta-alerta" *ngIf="t.habilitada && resaltada?.id === t.id">{{ resaltada?.etiqueta }}</span>
+      <span class="opm-tarjeta-motivo" *ngIf="!t.habilitada && t.motivo">
+        <app-icono-tabler nombre="lock" [tamano]="13"></app-icono-tabler>{{ t.motivo }}
+      </span>
+    </span>
+    <!-- Lugar del pin: reserva su ancho; el pin (botón propio) va encima, fuera de este botón. -->
+    <span class="opm-lugar-pin" aria-hidden="true"></span>
+  </button>
+  <!-- Pin (F2): botón propio de 24×24, hermano de la tarjeta. Azul si la acción está fijada (rol o usuario), gris si no.
+       Las del rol llevan candado, «Fijada por tu rol» y no se sueltan. Fijar no da acceso: también sirve en una deshabilitada. -->
+  <button type="button" class="opm-pin" *ngIf="estadoPines[t.id] as ep"
+          [class.opm-pin-fijado]="ep !== 'libre'" [class.opm-pin-rol]="ep === 'rol'"
+          [attr.aria-pressed]="ep !== 'libre'" [attr.aria-disabled]="ep === 'rol' ? 'true' : null"
+          [attr.aria-label]="etiquetaPin(t.id)" [attr.title]="etiquetaPin(t.id)"
+          (click)="alPin(t)">
+    <app-icono-tabler [nombre]="ep === 'libre' ? 'pin' : 'pinned'" [tamano]="16" [relleno]="ep !== 'libre'"></app-icono-tabler>
+    <app-icono-tabler *ngIf="ep === 'rol'" class="opm-pin-candado" nombre="lock" [tamano]="10" [trazo]="2.4"></app-icono-tabler>
+  </button>
+</ng-template>

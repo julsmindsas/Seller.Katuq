@@ -71,7 +71,7 @@ interface FilterOption {
             </select>
           </label>
           <button type="button" class="btn-clear" (click)="clearFilters()" *ngIf="hasActiveFilters()">
-            <i class="fa fa-xmark me-1"></i> Limpiar filtros
+            <i class="fa fa-times me-1"></i> Limpiar filtros
           </button>
         </div>
       </div>

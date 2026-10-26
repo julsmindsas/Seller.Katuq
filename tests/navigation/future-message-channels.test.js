@@ -15,7 +15,7 @@ for (const options of [
 ]) {
   test(`Próximamente conserva exactamente los canales autorizados: ${options.expected.join(', ')}`, () => {
     const { nav } = fixture(1440, options);
-    const group = nav.getMenuItems().find(i => i.title === 'Mensajes');
+    const group = nav.getMenuItems().find(i => i.id === 'mensajes');
     assert(group);
     assert.deepEqual(Array.from(group.children.filter(c => c.type === 'link'), c => c.path), options.expected);
     const future = group.children.filter(c => c.type === 'info');
@@ -25,7 +25,7 @@ for (const options of [
     nav.filterMenuItemsByAuthorization(); nav.filterMenuItemsByAuthorization();
     assert.equal(JSON.stringify(nav.ALLMENUITEMS), original);
     assert(!nav.ALLMENUITEMS.some(i => i.children?.some(c => c.type === 'info')));
-    assert.equal(nav.getMenuItems().find(i => i.title === 'Mensajes').children.filter(c => c.type === 'info').length, 3);
+    assert.equal(nav.getMenuItems().find(i => i.id === 'mensajes').children.filter(c => c.type === 'info').length, 3);
     nav.ngOnDestroy();
   });
 }
@@ -33,16 +33,16 @@ for (const options of [
 test('los informativos no crean Mensajes cuando ninguna bandeja está autorizada, ni siquiera con un permiso parecido', () => {
   for (const paths of [[], ['productos'], ['notificaciones/whatsapp/inbox']]) {
     const { nav } = fixture(390, { paths });
-    assert(!nav.getMenuItems().some(i => i.title === 'Mensajes'));
+    assert(!nav.getMenuItems().some(i => i.id === 'mensajes'));
     nav.ngOnDestroy();
   }
 });
 
 test('retirar el último permiso quita también los informativos tras recalcular', () => {
   const { nav, storage } = fixture(390, { paths: [channels[0]] });
-  assert(nav.getMenuItems().some(i => i.title === 'Mensajes'));
+  assert(nav.getMenuItems().some(i => i.id === 'mensajes'));
   storage.set('authorizedMenuItems', '[]');
   nav.filterMenuItemsByAuthorization();
-  assert(!nav.getMenuItems().some(i => i.title === 'Mensajes'));
+  assert(!nav.getMenuItems().some(i => i.id === 'mensajes'));
   nav.ngOnDestroy();
 });

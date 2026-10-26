@@ -1,0 +1,42 @@
+<!-- D-547 (F2): bloque ACCIONES de 8. Clases con prefijo opa- (ninguna lleva «p-»: AGENTS.md, trampas de CSS global). -->
+<div class="opa-bloque" *ngIf="vista">
+  <div class="opa-grilla" role="group" aria-label="Acciones principales">
+    <div class="opa-celda" *ngFor="let t of vista.tarjetas; trackBy: trackTarjeta">
+      <button type="button" class="opa-accion"
+              [class.opa-bloqueada]="!t.habilitada" [class.opa-resaltada]="!!t.etiqueta"
+              [disabled]="!t.habilitada" [attr.aria-disabled]="!t.habilitada ? 'true' : null"
+              [attr.aria-haspopup]="t.id === 'discount' && vista.descuentoConMenu ? 'menu' : null"
+              [attr.aria-expanded]="t.id === 'discount' && vista.descuentoConMenu ? descuentoAbierto : null"
+              (click)="tocar(t)">
+        <span class="opa-icono"><app-icono-tabler [nombre]="t.icono" [tamano]="20" [trazo]="1.7"></app-icono-tabler></span>
+        <span class="opa-texto">
+          <span class="opa-titulo">{{ t.titulo }}</span>
+          <span class="opa-resena" *ngIf="t.habilitada">{{ t.resena }}</span>
+          <span class="opa-motivo" *ngIf="!t.habilitada && t.motivo">
+            <app-icono-tabler nombre="lock" [tamano]="12"></app-icono-tabler>{{ t.motivo }}
+          </span>
+          <span class="opa-etiqueta" *ngIf="t.etiqueta">{{ t.etiqueta }}</span>
+        </span>
+      </button>
+      <!-- Descuento con descuento aplicado: dos opciones, igual que en «Opciones del pedido» -->
+      <div class="opa-menu" *ngIf="t.id === 'discount' && descuentoAbierto" role="menu">
+        <button type="button" role="menuitem" class="opa-menu-opcion" *ngFor="let o of vista.opcionesDescuento"
+                (click)="elegir(o)">
+          <app-icono-tabler [nombre]="o.icono" [tamano]="16"></app-icono-tabler>
+          <span class="opa-menu-texto">{{ o.titulo }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Factura electrónica: las que aplican hoy, debajo de las 8 -->
+  <div class="opa-factura" *ngIf="vista.hijosFactura.length" role="group" aria-label="Factura electrónica">
+    <button type="button" class="opa-factura-boton" *ngFor="let h of vista.hijosFactura; trackBy: trackTarjeta"
+            (click)="elegir(h)">
+      <app-icono-tabler [nombre]="h.icono" [tamano]="16"></app-icono-tabler>
+      <span class="opa-factura-texto">{{ h.titulo }}</span>
+    </button>
+  </div>
+
+  <button type="button" class="opa-restablecer" (click)="restablecer.emit()">Restablecer acciones</button>
+</div>

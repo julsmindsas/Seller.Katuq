@@ -46,22 +46,34 @@ export function asuntoDe(texto: string, max = 70): string {
   return base.replace(/[\s.,;:¡!¿?-]+$/, '') + '…';
 }
 
-/** Título del menú de la pantalla (la ruta más larga que coincida), p. ej. "Inventario por bodega". */
+/**
+ * Nombre de la pantalla en el menú (la ruta más larga que coincida). D-546: una pantalla dentro de un grupo se
+ * nombra con su grupo, porque los nombres cortos se repiten («Listado» de Clientes, de Cotizaciones y de Productos):
+ * «Bodegas · Ajustes». Un grupo de un solo hijo se dibuja como enlace y se nombra como él; un grupo `inline`
+ * (Finanzas, Comunicaciones) no se ve, así que sus entradas van solas.
+ */
 export function nombreDePantalla(ruta: string, menu: Menu[] | undefined): string | null {
   let titulo: string | null = null;
   let largo = 0;
-  const pendientes: Menu[] = [...(menu || [])];
+  const pendientes: Array<{ item: Menu; padre?: Menu }> = (menu || []).map(item => ({ item }));
   while (pendientes.length) {
-    const it = pendientes.pop() as Menu;
-    if (it.children) pendientes.push(...it.children);
-    if (!it.path || !it.title) continue;
-    const p = '/' + it.path.replace(/^\/+/, '');
+    const { item, padre } = pendientes.pop() as { item: Menu; padre?: Menu };
+    if (item.children) pendientes.push(...item.children.map(hijo => ({ item: hijo, padre: item })));
+    if (!item.path || !item.title) continue;
+    const p = '/' + item.path.replace(/^\/+/, '');
     if ((ruta === p || ruta.startsWith(p + '/')) && p.length > largo) {
       largo = p.length;
-      titulo = it.title;
+      titulo = nombreEnMenu(item, padre);
     }
   }
   return titulo;
+}
+
+function nombreEnMenu(item: Menu, padre?: Menu): string {
+  if (!padre || !padre.title || padre.display === 'inline') return item.title as string;
+  const navegables = (padre.children || []).filter(hijo => hijo.type !== 'info');
+  if (navegables.length <= 1) return padre.title;
+  return padre.title === item.title ? padre.title : `${padre.title} · ${item.title}`;
 }
 
 /**

@@ -232,3 +232,63 @@
     span { font-size: 12px; }
   }
 }
+
+// =============================================================================
+// D-540 (ticket 1340): PAGOS EN UNA FILA EN ESCRITORIO (4 + 42 + 10 = 56 px)
+//
+// «Cobrar con» queda visualmente oculto pero en el DOM (y el grupo lleva
+// aria-label) para los lectores de pantalla. Textos, handlers y selectedMethod
+// no cambian. En móvil todo sigue como antes.
+// =============================================================================
+@media (min-width: 1001px) {
+  .card.payment-methods-sticky > .tarjeta-cabeza {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0 !important;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .card.payment-methods-sticky > .card-body {
+    padding: 4px 12px 10px !important;
+  }
+
+  .payment-methods-sticky .icons {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  // Ícono de 20 px a la izquierda y etiqueta de hasta 2 líneas.
+  .payment-methods-sticky .icon {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+    height: 42px;
+    padding: 0 8px;
+    border-radius: 11px;
+
+    img {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+    }
+
+    span {
+      min-width: 0;
+      text-align: left;
+      font-size: 11.5px;
+      line-height: 1.2;
+      letter-spacing: normal;
+    }
+
+    &:focus-visible { outline: 3px solid #7C5CFF !important; }
+  }
+}

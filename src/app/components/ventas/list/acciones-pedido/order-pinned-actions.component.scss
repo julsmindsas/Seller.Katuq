@@ -1,0 +1,259 @@
+// D-547 (F2): bloque ACCIONES de 8. Tokens de openspec/specs/design-system/spec.md (D-131) y regla de diseño
+// Katuq (D-399): plano, sin gradientes, acento #5F3FE0, tinta #211F3A, radios 16/11/20.
+//
+// Trampas de CSS global (AGENTS.md) que este archivo evita:
+//   - `[class*="p-"]` fuerza el font-size: ninguna clase de aquí contiene «p-» (todas llevan el prefijo opa-).
+//   - `span.ng-star-inserted` pinta de azul todo span creado por *ngIf/*ngFor: TODO span lleva color y tamaño propios.
+//   - `button:focus` quita el outline: se devuelve con :focus-visible.
+//   - `a` y `p` traen letter-spacing: aquí se neutraliza en todo el bloque.
+
+$ink: #211F3A;
+$cuerpo: #6B6890;
+$acento: #5F3FE0;
+$acento-suave: #EFE9FF;
+$linea: #ECEAF4;
+$linea-suave: #F1F0F7;
+$hover: #FAF9FF;
+$superficie: #FAF9FE;
+$alerta: #D9820A;
+$alerta-suave: #FFF1DF;
+$foco: #7C5CFF;
+
+:host { display: block; }
+
+.opa-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  color: $ink;
+  letter-spacing: normal;
+
+  button { font-family: inherit; letter-spacing: normal; }
+  button:focus-visible { outline: 3px solid $foco !important; outline-offset: 2px; }
+}
+
+// D14: una columna desde 992 px y dos por debajo (celular de 390 px incluido). El texto baja de línea y nunca hay
+// scroll horizontal.
+.opa-grilla {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 9px;
+
+  @media (max-width: 991.98px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.opa-celda {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.opa-accion {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid $linea;
+  border-radius: 16px;
+  color: $ink;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover:not(:disabled) { background: $hover; border-color: #DDD6F7; }
+
+  &.opa-bloqueada {
+    background: $superficie;
+    cursor: not-allowed;
+
+    .opa-icono { background: $linea-suave; color: #A9A5C2; }
+    span.opa-titulo { color: $cuerpo; }
+  }
+
+  // Resaltar sin mover (D17): el par semántico de alerta, en el mismo lugar de siempre.
+  &.opa-resaltada {
+    background: $alerta-suave;
+    border-color: $alerta;
+    &:hover:not(:disabled) { background: $alerta-suave; border-color: $alerta; }
+  }
+}
+
+.opa-icono {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: $acento-suave;
+  border-radius: 11px;
+  color: $acento;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.opa-texto {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  font-size: 13px;
+  line-height: 1.3;
+  color: $ink;
+}
+
+span.opa-titulo {
+  display: block;
+  font-size: 12.5px;
+  line-height: 1.25;
+  font-weight: 700;
+  color: $ink;
+  letter-spacing: normal;
+  overflow-wrap: break-word;
+}
+
+span.opa-resena {
+  display: block;
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 400;
+  color: $cuerpo;
+  letter-spacing: normal;
+  overflow-wrap: break-word;
+}
+
+// Motivo de una acción deshabilitada: el par de alerta, igual que en el modal.
+span.opa-motivo {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 4px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 2px 8px;
+  background: $alerta-suave;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: $alerta;
+  letter-spacing: normal;
+  min-width: 0;
+  overflow-wrap: anywhere;
+
+  app-icono-tabler { margin-top: 1px; }
+}
+
+// Etiqueta del resaltado («Pago pendiente», «Sin factura»).
+span.opa-etiqueta {
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  padding: 2px 8px;
+  background: #fff;
+  border: 1px solid $alerta;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: $alerta;
+  letter-spacing: normal;
+  overflow-wrap: anywhere;
+}
+
+// ── Menú de Descuento (Aplicar otro / Editar o quitar), en flujo bajo la tarjeta ──
+.opa-menu {
+  padding: 4px;
+  background: #fff;
+  border: 1px solid $linea;
+  border-radius: 11px;
+}
+
+.opa-menu-opcion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  color: $ink;
+  text-align: left;
+  cursor: pointer;
+
+  app-icono-tabler { color: $acento; }
+  &:hover { background: $hover; }
+}
+
+span.opa-menu-texto {
+  font-size: 12.5px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: $ink;
+}
+
+// ── Factura electrónica, debajo de las 8 ────────────────────────────────────
+.opa-factura {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.opa-factura-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  background: #fff;
+  border: 1px solid $linea;
+  border-radius: 11px;
+  color: $acento;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover { background: $hover; border-color: #DDD6F7; }
+}
+
+span.opa-factura-texto {
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: $ink;
+  letter-spacing: normal;
+}
+
+// ── «Restablecer acciones»: enlace secundario ───────────────────────────────
+.opa-restablecer {
+  align-self: flex-start;
+  padding: 4px 2px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: $cuerpo;
+  text-decoration: underline;
+  cursor: pointer;
+
+  &:hover { color: $acento; }
+}
+
+@media (max-width: 420px) {
+  .opa-accion { padding: 10px; gap: 8px; }
+  .opa-icono { width: 32px; height: 32px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .opa-accion, .opa-factura-boton { transition: none; }
+}

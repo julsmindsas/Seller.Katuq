@@ -119,6 +119,8 @@
                 <div class="item-meta">
                   <span class="item-name">{{ itemCarrito?.producto?.crearProducto?.titulo }}</span>
                   <span class="item-sku">{{ itemCarrito?.producto?.identificacion?.referencia || 'N/A' }}</span>
+                  <!-- D-539 (ticket 1331): de qué bodega de la zona sale esta línea -->
+                  <span class="item-bodega" *ngIf="itemCarrito?.bodegaNombre">Sale de {{ itemCarrito.bodegaNombre }}</span>
                   <!-- Pill de configuración pendiente (D-147): línea agregada desde un
                        combo que requiere configuración adicional antes de cerrar la venta. -->
                   <button *ngIf="itemCarrito?._requiereConfiguracionPendiente" type="button"

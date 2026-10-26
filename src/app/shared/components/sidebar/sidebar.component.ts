@@ -1,6 +1,6 @@
 import { Component, ViewEncapsulation, HostListener, OnInit, OnDestroy, ElementRef, Renderer2, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { Menu, NavService } from '../../services/nav.service';
+import { Menu, NavService, PREVIOUS_TITLES_UNTIL } from '../../services/nav.service';
 import { LayoutService } from '../../services/layout.service';
 import { environment } from '../../../../environments/environment';
 import { SecurityService } from '../../services/security/security.service';
@@ -10,14 +10,27 @@ import { NotificationStatus } from '../../services/notifications/notification.ty
 import { Subject, Subscription } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { SubscriptionService } from '../../services/subscription.service';
+import { FilaMenu, ResultadoBusqueda, SeccionVista, buscarEntradas, construirVistaMenu, hasNewChild as tieneHijoNuevo, insigniaVigente } from './menu-vista';
+import {
+  FavoritoGuardado, FavoritoVista, agregarFavorito, cargarFavoritos, esFavorito, guardarFavoritos, quitarFavorito, resolverFavoritos
+} from './menu-favoritos';
+import { ModoMenu, guardarModo, modoInicial } from './menu-modo';
 import { TranslateService } from '@ngx-translate/core';
 // Asegúrate de que PlanSelectorComponent esté importado si aún no lo está
 // import { PlanSelectorComponent } from '../plan-selector/plan-selector.component';
 
 // Nueva interfaz para las secciones
 export interface SidebarSection {
+  /** D-546 F3: `id` estable de la sección (el estado plegado se guarda con él). */
+  id?: string;
+  /** F3: la sección es un grupo `inline` (Finanzas, Comunicaciones): su cabecera lleva la estrella de ese grupo. */
+  grupoEnLinea?: { id: string; titulo: string };
   title: string | null;
+  /** D-546 F2: ícono Tabler de la sección (`menuIcon` de su cabecera). */
+  icono?: string;
   items: Menu[];
+  /** D-546: las filas ya resueltas que dibuja la plantilla (`construirVistaMenu`). */
+  filas: FilaMenu[];
   collapsed: boolean;
   isHeaderSection: boolean; // Para saber si tiene título o es la sección inicial
 }
@@ -30,131 +43,11 @@ export interface SidebarSection {
 })
 export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
-  /**
-   * Host Listener para manejar hover-expand en colapso tradicional
-   * OPTIMIZADO: Expansión instantánea y mejor control
-   */
-  @HostListener('mouseenter')
-  onMouseEnter() {
-    // Solo activar en modo colapso tradicional (desktop, sin auto-collapse)
-    if (this.collapseMenu && !this.isAutoCollapseEnabled && !this.isMobile()) {
-      // Limpiar cualquier timeout pendiente de colapso
-      if (this.hoverExpandTimeout) {
-        clearTimeout(this.hoverExpandTimeout);
-        this.hoverExpandTimeout = null;
-      }
-
-      // Expandir instantáneamente
-      this.isTemporarilyExpanded = true;
-      this.isMouseInsideSidebar = true;
-
-      // Marcar visualmente para que el header/wrapper se ajusten al ancho expandido
-      const wrapper = document.querySelector('.page-wrapper') as HTMLElement;
-      if (wrapper) {
-        wrapper.classList.add('sidebar-temporarily-expanded');
-        wrapper.style.display = 'block';
-      }
-
-      const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
-      if (sidebar) {
-        this.renderer.addClass(sidebar, 'temporarily-expanded');
-      }
-
-      const headerEl = document.querySelector('.page-header') as HTMLElement;
-      if (headerEl) {
-        headerEl.classList.add('temporarily-expanded');
-        headerEl.offsetHeight; // forzar reflow para aplicar el CSS de inmediato
-      }
-    }
-  }
-
-  @HostListener('mouseleave')
-  onMouseLeave() {
-    this.isMouseInsideSidebar = false;
-
-    // Si está temporalmente expandido por hover, colapsar al salir el mouse
-    if (this.isTemporarilyExpanded && this.collapseMenu && !this.isMobile()) {
-      // Pequeño delay para evitar colapsos accidentales
-      if (this.hoverExpandTimeout) {
-        clearTimeout(this.hoverExpandTimeout);
-      }
-
-      this.hoverExpandTimeout = setTimeout(() => {
-        if (!this.isMouseInsideSidebar) {
-          this.collapseTemporaryExpansion();
-        }
-      }, 150); // 150ms de delay
-    }
-  }
-
-  /**
-   * Colapsa el sidebar temporalmente expandido y limpia las clases CSS
-   */
-  private collapseTemporaryExpansion(): void {
-    this.isTemporarilyExpanded = false;
-    this.cleanupTemporaryExpansionClasses();
-  }
-
-  /**
-   * Limpia TODAS las clases relacionadas con la expansión temporal
-   * Se llama tanto al colapsar como al anclar el sidebar
-   */
-  private cleanupTemporaryExpansionClasses(): void {
-    // Remover clase del sidebar
-    const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
-    if (sidebar) {
-      this.renderer.removeClass(sidebar, 'temporarily-expanded');
-    }
-
-    // Remover clase del page-wrapper
-    const wrapper = document.querySelector('.page-wrapper') as HTMLElement;
-    if (wrapper) {
-      wrapper.classList.remove('sidebar-temporarily-expanded');
-    }
-
-    // Remover clase del header
-    const headerEl = document.querySelector('.page-header') as HTMLElement;
-    if (headerEl) {
-      headerEl.classList.remove('temporarily-expanded');
-    }
-  }
-
-  /**
-   * Navega a una ruta y limpia las clases de expansión temporal
-   * Resuelve el bug donde el header queda colapsado después de navegar
-   */
+  /** Navega a una ruta y cierra el panel flotante del modo compacto, si hay uno abierto. */
   private navigateAndCleanup(path: string): void {
-    // Resetear estado de expansión temporal
-    this.isTemporarilyExpanded = false;
-
-    // Limpiar todas las clases de expansión temporal
-    this.cleanupTemporaryExpansionClasses();
-
-    // Cerrar cualquier submenú flotante abierto
-    this.closeCollapsedSubmenu();
-
-    // Limpiar timeouts pendientes
-    if (this.hoverExpandTimeout) {
-      clearTimeout(this.hoverExpandTimeout);
-      this.hoverExpandTimeout = null;
-    }
-
-    // Navegar a la ruta
+    this.cerrarPanel();
     this.router.navigate([path]);
   }
-
-  /**
-   * NUEVO: Listener para clicks dentro del sidebar
-   * COMENTADO: Se desactiva para evitar extensiones no deseadas del timer
-   * Los clicks ahora se manejan específicamente en cada tipo de elemento
-   */
-  /*@HostListener('click', ['$event'])
-  onSidebarClick(event: Event) {
-    // Si está temporalmente expandido, resetear el timer de colapso
-    if (this.isTemporarilyExpanded) {
-      this.resetCollapseTimer();
-    }
-  }*/
 
   public showPlanModal: boolean = false;
   public currentPlan: any = {
@@ -190,12 +83,14 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public isPlanCardCollapsed: boolean = true; // compacto por defecto: libera espacio para el menú
   public isAdminUser: boolean = false;
 
-  // Nuevas propiedades
-  public isCompactMode: boolean = false;
   public searchTerm: string = '';
-  public searchResults: Menu[] = [];
+  public searchResults: ResultadoBusqueda[] = [];
   public isSearchActive: boolean = false;
-  public favoriteItems: Menu[] = [];
+  /** F3: lo guardado en `sidebarFavoritesV2` (rutas e `id` de grupo) y su resolución contra el menú actual. */
+  private favoritosGuardados: FavoritoGuardado[] = [];
+  public favoritos: FavoritoVista[] = [];
+  private favoritosPendientes = false;
+  private vista: SeccionVista[] = [];
   public isSearchFocused: boolean = false;
 
   // Propiedades del perfil de usuario (Glassmorphism redesign)
@@ -239,16 +134,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   private clickOutsideListener: any;
   private hoverZoneListener: any;
   private sidebarStateSubscription: Subscription;
-
-  // Propiedades para hover-expand en colapso tradicional (MEJORADAS)
-  public isTemporarilyExpanded: boolean = false;
-  private hoverExpandTimeout: any;
-  private isMouseInsideSidebar: boolean = false;
-  private collapseDelayMs: number = 300; // ✅ Optimizado: 500ms → 300ms
-
-  // Propiedades para auto-collapse (DEPRECADO - será eliminado)
-  public isAutoCollapseEnabled: boolean = false;
-  private autoCollapseTimeout: any;
 
   constructor(
     private router: Router,
@@ -304,7 +189,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-
   ngOnInit(): void {
     this.loadSubscriptionData();
     this.securityService.getCompanyInformationLogged$().subscribe((companyInformation: CompanyInformation | null) => {
@@ -327,15 +211,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Inicializar sistema de notificaciones
     this.initializeNotifications();
-
-    // Cargar preferencia de modo compacto
-    const compactMode = localStorage.getItem('sidebarCompactMode');
-    if (compactMode) {
-      this.isCompactMode = compactMode === 'true';
-      if (this.isCompactMode) {
-        document.body.classList.add('sidebar-compact-mode');
-      }
-    }
 
     // Cargar favoritos
     this.loadFavoriteItems();
@@ -368,8 +243,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       isAutoCollapseEnabled: false,
       isVisible: true,
       isPinned: false,
-      isHovering: false,
-      isTemporarilyExpanded: false
+      isHovering: false
     });
 
     if (this.isMobile()) {
@@ -377,18 +251,8 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       this.collapseMenu = true;
       this.navServices.collapseSidebar = true;
     } else {
-      // En desktop: usar estado guardado o expandido por defecto
-      const sidebarCollapsed = localStorage.getItem('sidebarCollapsed');
-      if (sidebarCollapsed !== null) {
-        this.collapseMenu = sidebarCollapsed === 'true';
-        this.navServices.collapseSidebar = this.collapseMenu;
-      } else {
-        this.collapseMenu = false;
-        this.navServices.collapseSidebar = false;
-      }
-
-      // Sincronizar LayoutService con el estado final
-      this.layout.updateSidebarState({ isCollapsed: this.collapseMenu });
+      // En desktop: el modo que eligió este usuario (abierto o compacto); abierto por defecto
+      this.aplicarModo(this.modoDelUsuario());
     }
   }
 
@@ -487,12 +351,8 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       document.body.style.width = '';
       document.body.style.top = '';
 
-      // Solo cambiar estado si no estaba guardado intencionalmente
-      const savedCollapsed = localStorage.getItem('sidebarCollapsed');
-      if (savedCollapsed === null) {
-        this.collapseMenu = false;
-        this.navServices.collapseSidebar = false;
-      }
+      // Al volver a escritorio se recupera el modo que eligió este usuario
+      this.aplicarModo(this.modoDelUsuario());
     } else {
       // Móvil: cerrar sidebar
       if (!this.collapseMenu) {
@@ -576,96 +436,40 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // Nueva función para procesar los items del menú en secciones
+  // Convierte el menú filtrado en secciones con sus filas (D-546: `construirVistaMenu`).
   private processMenuItems(menuItems: Menu[]): void {
-    // Limpiar las secciones existentes
-    this.sections = [];
-
-    // Variables para seguimiento de la sección actual
-    let currentTitle: string | null = null;
-    let currentItems: Menu[] = [];
-    let isHeaderSection = false;
-
-    // Recorrer cada ítem
+    // Ocultar rutas y títulos de Empresa/Usuarios/Roles (viven en Configuración de empresa)
     const shouldHide = (mi: Menu): boolean => {
       const path = (mi.path || '').toLowerCase();
       const title = (mi.title || '').toLowerCase();
-      // Ocultar rutas y títulos de Empresa/Usuarios/Roles
       if (path.includes('/empresas') || path.includes('/usuarios') || path.includes('/rol')) return true;
       if (title.includes('empresa') || title.includes('usuario') || title.includes('rol')) return true;
       return false;
     };
 
-    menuItems.forEach(item => {
-      // Ignorar items nulos
-      if (!item) return;
-      // Filtrar items que deben ocultarse del sidebar
-      if (shouldHide(item)) return;
+    this.vista = construirVistaMenu(menuItems, shouldHide);
+    this.sections = this.vista.map(seccion => ({
+      id: seccion.id,
+      grupoEnLinea: seccion.grupoEnLinea,
+      title: seccion.titulo,
+      icono: seccion.icono,
+      items: seccion.items,
+      filas: seccion.filas,
+      collapsed: true,
+      isHeaderSection: seccion.isHeaderSection
+    }));
 
-      // Si es un encabezado, crear nueva sección con el encabezado anterior (si existe)
-      if (item.headTitle1) {
-        // Si ya hay una sección en curso, guardarla (si tiene items)
-        if (currentItems.length > 0) {
-          this.sections.push({
-            title: currentTitle,
-            items: [...currentItems],
-            collapsed: true,
-            isHeaderSection
-          });
-
-          // Reiniciar los items
-          currentItems = [];
-        }
-
-        // Actualizar variables para la nueva sección
-        currentTitle = item.headTitle1;
-        isHeaderSection = true;
-      }
-      // Si es un ítem normal (no headTitle)
-      else if (!item.headTitle1 && !item.headTitle2) {
-        // Si aún no hay sección, crear una sin título
-        if (currentTitle === null && currentItems.length === 0) {
-          isHeaderSection = false;
-        }
-        // Si el item tiene hijos, filtrarlos también
-        if (item.children && item.children.length) {
-          item.children = item.children.filter(ch => !shouldHide(ch));
-          // Filtrado en nietos
-          item.children.forEach(ch => {
-            if (ch.children && ch.children.length) {
-              ch.children = ch.children.filter(gn => !shouldHide(gn));
-            }
-          });
-        }
-
-        // Añadir el ítem a la sección actual
-        currentItems.push(item);
-      }
-      // Ignorar headTitle2 u otros tipos
-    });
-
-    // No olvidar añadir la última sección si tiene items
-    if (currentItems.length > 0) {
-      this.sections.push({
-        title: currentTitle,
-        items: [...currentItems],
-        collapsed: true,
-        isHeaderSection
-      });
-    }
-
-    // Recuperar estado colapsado de localStorage
+    // Recuperar estado colapsado de localStorage (por `id`; el formato de antes, por título, se sigue leyendo)
     const savedSectionsState = localStorage.getItem('sidebarSectionsState');
-    let collapsedStates: { [title: string]: boolean } = {};
-
     if (savedSectionsState) {
       try {
-        collapsedStates = JSON.parse(savedSectionsState);
+        const collapsedStates: { [clave: string]: boolean } = JSON.parse(savedSectionsState);
 
         // Aplicar estados guardados a las secciones
         this.sections.forEach(section => {
-          if (section.title && collapsedStates[section.title] !== undefined) {
-            section.collapsed = collapsedStates[section.title];
+          const guardado = this.estadoGuardadoDe(collapsedStates, section);
+          if (guardado !== undefined) {
+            section.collapsed = guardado;
           }
         });
       } catch (e) {
@@ -673,19 +477,34 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         localStorage.removeItem('sidebarSectionsState');
       }
     }
+
+    // Los favoritos se resuelven contra el menú de ahora: un cambio de nombre no los rompe.
+    this.sincronizarFavoritos();
+  }
+
+  /** El título que tenía cada sección antes de F3, para leer el estado plegado guardado con el formato viejo. */
+  private static readonly TITULOS_VIEJOS_DE_SECCIONES: Record<string, string> = {
+    'seccion-comercial': 'Gestión Comercial',
+    'seccion-inventario': 'Inventarios y Productos',
+    'seccion-analitica': 'Inteligencia de Negocios',
+  };
+
+  private estadoGuardadoDe(estados: { [clave: string]: boolean }, section: SidebarSection): boolean | undefined {
+    if (section.id && estados[section.id] !== undefined) { return estados[section.id]; }
+    const viejo = (section.id && SidebarComponent.TITULOS_VIEJOS_DE_SECCIONES[section.id]) || section.title;
+    return viejo ? estados[viejo] : undefined;
   }
 
   // Method to close sidebar after navigation on mobile/tablet
-  // MEJORADO: También colapsa inmediatamente en desktop con hover-expand
   onMobileLinkClick(): void {
     if (window.innerWidth < 992) {
       // Close sidebar on mobile/tablet after navigation
       setTimeout(() => {
         this.navServices.hideMobileSidebar();
       }, 100); // Small delay to ensure navigation starts
-    } else if (this.collapseMenu && this.isTemporarilyExpanded) {
-      // Para desktop con hover-expand, colapsar inmediatamente
-      this.collapseImmediately();
+    } else {
+      // Compacto: al navegar se cierra el panel flotante del grupo
+      this.cerrarPanel();
     }
   }
 
@@ -708,10 +527,16 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Guardar estado colapsado en localStorage
   private saveSectionsState(): void {
-    const collapsedStates: { [title: string]: boolean } = {};
+    let collapsedStates: { [clave: string]: boolean } = {};
+    try {
+      collapsedStates = JSON.parse(localStorage.getItem('sidebarSectionsState') || '{}') || {};
+    } catch {
+      collapsedStates = {};
+    }
     this.sections.forEach(section => {
-      if (section.title) {
-        collapsedStates[section.title] = section.collapsed;
+      const clave = section.id || section.title;
+      if (clave) {
+        collapsedStates[clave] = section.collapsed;
       }
     });
     localStorage.setItem('sidebarSectionsState', JSON.stringify(collapsedStates));
@@ -891,20 +716,8 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     // Actualizar ContentComponent para que refleje el cambio inmediatamente
     this.updateContentMargin();
 
-    // Resetear estado temporal cuando se hace click manual
-    this.isTemporarilyExpanded = false;
-
-    // ★ IMPORTANTE: Limpiar TODAS las clases de expansión temporal
-    this.cleanupTemporaryExpansionClasses();
-
-    // Limpiar timeouts de hover
-    if (this.hoverExpandTimeout) {
-      clearTimeout(this.hoverExpandTimeout);
-      this.hoverExpandTimeout = null;
-    }
-
-    // Cerrar submenú flotante si está abierto
-    this.closeCollapsedSubmenu();
+    // Cerrar el panel flotante si está abierto
+    this.cerrarPanel();
 
     // Manejar body scroll SOLO en móviles
     if (this.isMobile()) {
@@ -922,15 +735,13 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       this.clearSearch();
     }
 
-    // En modo compacto, cerrar submenús al colapsar
-    if (this.collapseMenu && this.isCompactMode) {
+    // Compacto: los grupos abiertos de antes no se ven; se cierran para que no reaparezcan abiertos
+    if (this.collapseMenu && !this.isMobile()) {
       this.closeAllSubmenus();
     }
 
-    // Guardar estado en localStorage SOLO en desktop
-    if (!this.isMobile()) {
-      localStorage.setItem('sidebarCollapsed', this.collapseMenu.toString());
-    }
+    // Recordar la elección de este usuario SOLO en escritorio
+    this.persistirModo();
 
     // Liberar lock de toggle después de animación - optimizado para responsividad inmediata
     setTimeout(() => {
@@ -1006,7 +817,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     return isActive; // Devolver si este subárbol contiene el item activo
   }
 
-
   // ==================== ESTADO DEL ACORDEÓN ====================
 
   /**
@@ -1062,19 +872,14 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     const isCurrentlyOpen = this.isMenuOpen(item);
     const isFirstLevel = this.isFirstLevelItem(item);
 
-    // En estado colapsado para desktop (sin expansión temporal), mostrar submenú flotante
-    if (this.collapseMenu && !this.isTemporarilyExpanded && !this.isMobile()) {
+    // Compacto en escritorio: el grupo abre su panel flotante (D-546 D8), no se despliega en la lista.
+    if (this.compacto) {
       if (item.path && !item.children) {
         this.navigateAndCleanup(item.path);
         return;
       }
-      this.showCollapsedSubmenu(item, event);
-      // Accordion en modo colapsado
-      if (!isCurrentlyOpen && isFirstLevel) {
-        this.closeAllFirstLevelMenus();
-      }
-      item.active = true;
-      this.cdr.detectChanges();
+      const fila = this.filaDeFuente(item);
+      if (fila) { this.abrirPanel(fila, event); }
       return;
     }
 
@@ -1115,7 +920,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       currentItem.children.forEach(child => this.resetActiveState(child, toggledItem));
     }
   }
-
 
   // Helper para verificar si un item es ancestro de otro
   private isAncestor(potentialAncestor: Menu, item: Menu): boolean {
@@ -1209,108 +1013,14 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     return result;
   }
 
-  /**
-   * NUEVO: Verificar si hay algún submenú abierto en todo el sidebar
-   * Esto previene el colapso automático cuando el usuario está interactuando con submenús
-   */
-  private hasOpenSubmenu(): boolean {
-    // Verificar en todas las secciones
-    for (const section of this.sections) {
-      for (const item of section.items) {
-        if (this.hasActiveChildren(item)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  /**
-   * NUEVO: Verificar recursivamente si un item o sus hijos están activos
-   */
-  private hasActiveChildren(item: Menu): boolean {
-    if (!item) return false;
-
-    // Si el item está activo y tiene hijos, hay un submenú abierto
-    if (item.active && item.children && item.children.length > 0) {
-      return true;
-    }
-
-    // Verificar recursivamente en los hijos
-    if (item.children) {
-      return item.children.some(child => this.hasActiveChildren(child));
-    }
-
-    return false;
-  }
-
-  /**
-   * NUEVO: Resetear el timer de colapso cuando el usuario está interactuando
-   * Esto da más tiempo al usuario para navegar por los menús
-   */
-  private resetCollapseTimer(): void {
-    // Limpiar timeout existente
-    if (this.hoverExpandTimeout) {
-      clearTimeout(this.hoverExpandTimeout);
-      this.hoverExpandTimeout = null;
-    }
-
-    // Establecer nuevo timeout con delay extendido
-    this.hoverExpandTimeout = setTimeout(() => {
-      // Solo colapsar si no hay submenús abiertos y el mouse no está dentro
-      if (!this.hasOpenSubmenu() && !this.isMouseInsideSidebar) {
-        this.isTemporarilyExpanded = false;
-      }
-    }, 800); // Tiempo extendido para mejor UX
-  }
-
-  /**
-   * NUEVO: Método para colapsar inmediatamente el sidebar
-   * Usado cuando el usuario hace click en un link de navegación
-   */
-  private collapseImmediately(): void {
-    this.isTemporarilyExpanded = false;
-    this.isMouseInsideSidebar = false;
-    if (this.hoverExpandTimeout) {
-      clearTimeout(this.hoverExpandTimeout);
-      this.hoverExpandTimeout = null;
-    }
-  }
-
-  /**
-   * Manejar click en items del menú principal
-   * Limpia las clases de expansión temporal cuando se navega
-   */
+  /** Click en una entrada del menú principal: cierra el panel flotante del modo compacto. */
   onMenuItemClick(item: Menu): void {
-    // Si está temporalmente expandido, limpiar estado para que el header se ajuste
-    if (this.isTemporarilyExpanded) {
-      this.isTemporarilyExpanded = false;
-      this.cleanupTemporaryExpansionClasses();
-
-      // Limpiar timeouts pendientes
-      if (this.hoverExpandTimeout) {
-        clearTimeout(this.hoverExpandTimeout);
-        this.hoverExpandTimeout = null;
-      }
-    }
+    this.cerrarPanel();
   }
 
-  /**
-   * Manejar click en items de submenús
-   * Limpia las clases de expansión temporal cuando se navega
-   */
+  /** Click en un hijo de un grupo. */
   onSubMenuItemClick(event: Event): void {
-    // Si está temporalmente expandido, limpiar estado para que el header se ajuste
-    if (this.isTemporarilyExpanded) {
-      this.isTemporarilyExpanded = false;
-      this.cleanupTemporaryExpansionClasses();
-
-      // Limpiar timeouts pendientes
-      if (this.hoverExpandTimeout) {
-        clearTimeout(this.hoverExpandTimeout);
-        this.hoverExpandTimeout = null;
-      }
-    }
+    this.cerrarPanel();
   }
 
   // For Horizontal Menu (Sin cambios)
@@ -1367,716 +1077,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  getSectionIcon(sectionTitle: string): string {
-    const iconMap: { [key: string]: string } = {
-      // Secciones principales - Compatible con FontAwesome 4.7.0
-      'Gestión Comercial': 'fa-shopping-bag',
-      'Operaciones Internas': 'fa-cogs',
-      'Logística': 'fa-truck',
-      'Inteligencia de Negocios': 'fa-lightbulb-o',
-      'Administración Global': 'fa-users',
-      'Configuración Plataforma': 'fa-sliders',
-
-      // Módulos específicos
-      'Ventas': 'fa-line-chart',
-      'Inventario': 'fa-building-o',
-      'Reportes': 'fa-bar-chart',
-      'Usuarios': 'fa-users',
-      'Configuración': 'fa-cog',
-      'Finanzas': 'fa-dollar',
-      'Marketing': 'fa-bullhorn',
-      'Soporte': 'fa-headphones',
-      'Análisis': 'fa-line-chart',
-      'Productos': 'fa-cubes',
-      'Clientes': 'fa-handshake-o',
-      'Facturación': 'fa-file-text-o',
-      'Compras': 'fa-shopping-cart',
-      'Contabilidad': 'fa-calculator',
-      'Recursos Humanos': 'fa-users',
-      'Calidad': 'fa-star',
-      'Seguridad': 'fa-shield',
-      'Comunicaciones': 'fa-comments',
-      'Herramientas': 'fa-wrench',
-      'Integraciones': 'fa-puzzle-piece',
-      'API': 'fa-code',
-      'Notificaciones': 'fa-bell',
-      'Alertas': 'fa-exclamation-triangle',
-      'Estadísticas': 'fa-bar-chart',
-      'Dashboard': 'fa-pie-chart',
-      'Panel Control': 'fa-tachometer',
-      'Monitoreo': 'fa-desktop',
-      'Auditoría': 'fa-search',
-      'Backup': 'fa-cloud-upload',
-      'Importar/Exportar': 'fa-exchange',
-      // === LOGÍSTICA Y TRANSPORTE ===
-      'truck': 'fa-truck',
-      // Iconos adicionales mapeados para compatibilidad
-      'map-pin': 'fa-map-marker',
-      'user-check': 'fa-user',
-      'layers': 'fa-th-large',
-      'grid': 'fa-th',
-      'shipping': 'fa-truck',
-      'map': 'fa-map-o',
-      'route': 'fa-road',
-      'location': 'fa-map-marker',
-      'gps': 'fa-crosshairs',
-      'tracking': 'fa-location-arrow',
-      'logistics': 'fa-truck',
-
-      // === ESTADOS Y ALERTAS ===
-      'check': 'fa-check',
-      'success': 'fa-check-circle',
-      'times': 'fa-times',
-      'error': 'fa-times-circle',
-      'exclamation': 'fa-exclamation-triangle',
-      'warning': 'fa-exclamation-triangle',
-      'info': 'fa-info-circle',
-      'question': 'fa-question-circle',
-      'help': 'fa-question-circle',
-      'alert': 'fa-exclamation',
-      'pending': 'fa-clock-o',
-      'processing': 'fa-spinner',
-      'completed': 'fa-check',
-      'status': 'fa-circle',
-
-      // === ACCIONES ===
-      'plus': 'fa-plus',
-      'add': 'fa-plus',
-      'create': 'fa-plus',
-      'new': 'fa-plus',
-      'minus': 'fa-minus',
-      'remove': 'fa-minus',
-      'edit': 'fa-edit',
-      'modify': 'fa-edit',
-      'update': 'fa-edit',
-      'delete': 'fa-trash',
-      'trash': 'fa-trash-o',
-      'save': 'fa-save',
-      'download': 'fa-download',
-      'upload': 'fa-upload',
-      'import': 'fa-download',
-      'export': 'fa-upload',
-      'print': 'fa-print',
-      'copy': 'fa-copy',
-      'duplicate': 'fa-copy',
-      'move': 'fa-arrows',
-      'sync': 'fa-refresh',
-      'refresh': 'fa-refresh',
-      'reload': 'fa-repeat',
-
-      // === BÚSQUEDA Y FILTROS ===
-      'search': 'fa-search',
-      'find': 'fa-search',
-      'filter': 'fa-filter',
-      'sort': 'fa-sort',
-      'sort-asc': 'fa-sort-up',
-      'sort-desc': 'fa-sort-down',
-      'view': 'fa-eye',
-      'hide': 'fa-eye-slash',
-      'show': 'fa-eye',
-
-      // === TIEMPO Y CALENDARIO ===
-      'calendar': 'fa-calendar',
-      'date': 'fa-calendar-o',
-      'time': 'fa-clock-o',
-      'schedule': 'fa-calendar-check-o',
-      'appointment': 'fa-calendar-plus-o',
-      'event': 'fa-calendar',
-      'deadline': 'fa-hourglass-end',
-      'timer': 'fa-clock-o',
-      'history': 'fa-history',
-
-      // === EMPRESARIAL Y NEGOCIOS ===
-      'building': 'fa-building',
-      'company': 'fa-building',
-      'office': 'fa-building',
-      'industry': 'fa-industry',
-      'factory': 'fa-industry',
-      'handshake': 'fa-handshake-o',
-      'deal': 'fa-handshake-o',
-      'partnership': 'fa-handshake-o',
-      'briefcase': 'fa-briefcase',
-      'business': 'fa-briefcase',
-      'calculator': 'fa-calculator',
-      'accounting': 'fa-calculator',
-      'finance': 'fa-dollar',
-      'budget': 'fa-money',
-      'investment': 'fa-line-chart',
-      'profit': 'fa-arrow-up',
-      'loss': 'fa-arrow-down',
-
-      // === CALIDAD Y CERTIFICACIONES ===
-      'quality': 'fa-star',
-      'medal': 'fa-star',
-      'trophy': 'fa-trophy',
-      'badge': 'fa-certificate',
-      'verification': 'fa-check-circle',
-      'approval': 'fa-check-square-o',
-      'signature': 'fa-pencil-square-o',
-
-      // === SEGURIDAD ===
-      'security': 'fa-shield',
-      'shield': 'fa-shield',
-      'lock': 'fa-lock',
-      'unlock': 'fa-unlock',
-      'key': 'fa-key',
-      'password': 'fa-key',
-      'encryption': 'fa-user-secret',
-      'privacy': 'fa-user-secret',
-      'backup': 'fa-cloud-upload',
-      'restore': 'fa-cloud-download',
-
-      // === TECNOLOGÍA ===
-      'computer': 'fa-desktop',
-      'laptop': 'fa-laptop',
-      'mobile': 'fa-mobile',
-      'tablet': 'fa-tablet',
-      'wifi': 'fa-wifi',
-      'bluetooth': 'fa-bluetooth-b',
-      'usb': 'fa-usb',
-      'cloud': 'fa-cloud',
-      'network': 'fa-sitemap',
-      'internet': 'fa-globe',
-
-      // === GENÉRICOS MEJORADOS ===
-      'circle': 'fa-circle',
-      'dot': 'fa-circle',
-      'point': 'fa-map-marker',
-      'marker': 'fa-map-marker',
-      'flag': 'fa-flag',
-      'tag': 'fa-tag',
-      'label': 'fa-tag',
-      'external-link': 'fa-external-link',
-    };
-    return iconMap[sectionTitle] || 'fa-folder-open-o';
-  }
-
-  // Método inteligente para obtener iconos de menú con mapeo para FontAwesome 4.7.0
-  getMenuIcon(icon: string | undefined, title?: string, isSubmenu: boolean = false): string {
-    // Si no hay icono, intentar inferir del título
-    if (!icon && title) {
-      icon = this.inferIconFromTitle(title);
-    }
-
-    if (!icon) {
-      return isSubmenu ? 'fa-circle-o' : 'fa-circle-o';
-    }
-
-    // Si ya tiene el prefijo fa-, devolverlo tal como está
-    if (icon.startsWith('fa-')) {
-      return icon;
-    }
-
-    // Mapeo de iconos compatible con FontAwesome 4.7.0
-    const iconMap: { [key: string]: string } = {
-      // === COMERCIAL Y VENTAS ===
-      'shopping-cart': 'fa-shopping-cart',
-      'cart': 'fa-shopping-cart',
-      'store': 'fa-shopping-bag',
-      'shop': 'fa-shopping-bag',
-      'receipt': 'fa-file-text-o',
-      'cash-register': 'fa-calculator',
-      'credit-card': 'fa-credit-card',
-      'payment': 'fa-credit-card',
-      'dollar-sign': 'fa-dollar',
-      'euro-sign': 'fa-eur',
-      'peso': 'fa-dollar',
-      'money': 'fa-money',
-      'coins': 'fa-money',
-      'wallet': 'fa-credit-card-alt',
-      'pos': 'fa-calculator',
-      'sale': 'fa-tags',
-      'discount': 'fa-percent',
-      'percent': 'fa-percent',
-      'price': 'fa-tag',
-      'invoice': 'fa-file-text-o',
-      'billing': 'fa-file-text-o',
-      'quotation': 'fa-file-text-o',
-      'file-plus': 'fa-plus-square',
-      'check-square': 'fa-university',
-      'order': 'fa-clipboard',
-      'purchase': 'fa-shopping-cart',
-      'sell': 'fa-handshake-o',
-
-      // === USUARIOS Y PERSONAS ===
-      'user': 'fa-user',
-      'users': 'fa-users',
-      'user-check': 'fa-user',
-      'user-tie': 'fa-user',
-      'user-cog': 'fa-user',
-      'user-friends': 'fa-users',
-      'user-shield': 'fa-user',
-      'customer': 'fa-user',
-      'client': 'fa-handshake-o',
-      'supplier': 'fa-truck',
-      'employee': 'fa-id-card-o',
-      'team': 'fa-users',
-      'profile': 'fa-address-card-o',
-      'contact': 'fa-address-book-o',
-      'permission': 'fa-key',
-      'role': 'fa-user-circle-o',
-      'group': 'fa-users',
-      'organization': 'fa-sitemap',
-
-      // === INVENTARIO Y PRODUCTOS ===
-      'box': 'fa-cube',
-      'boxes': 'fa-cubes',
-      'layers': 'fa-th-large',
-      'cube': 'fa-cube',
-      'cubes': 'fa-cubes',
-      'warehouse': 'fa-building-o',
-      'inventory': 'fa-building-o',
-      'stock': 'fa-cubes',
-      'product': 'fa-cube',
-      'category': 'fa-folder-o',
-      'barcode': 'fa-barcode',
-      'qrcode': 'fa-qrcode',
-      'package': 'fa-cube',
-      'shipment': 'fa-truck',
-      'delivery': 'fa-truck',
-      'pickup': 'fa-hand-paper-o',
-      'transfer': 'fa-exchange',
-      'movement': 'fa-arrows',
-      'catalog': 'fa-book',
-
-      // === REPORTES Y ANÁLISIS ===
-      'chart-bar': 'fa-bar-chart',
-      'chart-line': 'fa-line-chart',
-      'chart-pie': 'fa-pie-chart',
-      'analytics': 'fa-line-chart',
-      'graph': 'fa-area-chart',
-      'trending-up': 'fa-arrow-up',
-      'trending-down': 'fa-arrow-down',
-      'statistics': 'fa-bar-chart',
-      'metrics': 'fa-tachometer',
-      'dashboard': 'fa-tachometer',
-      'kpi': 'fa-bullseye',
-      'performance': 'fa-line-chart',
-      'insights': 'fa-lightbulb-o',
-      'business-intelligence': 'fa-lightbulb-o',
-      'report': 'fa-file-text-o',
-
-      // === DOCUMENTOS Y ARCHIVOS ===
-      'file': 'fa-file-o',
-      'document': 'fa-file-text-o',
-      'file-invoice': 'fa-file-text-o',
-      'file-invoice-dollar': 'fa-file-text-o',
-      'file-pdf': 'fa-file-pdf-o',
-      'file-excel': 'fa-file-excel-o',
-      'file-word': 'fa-file-word-o',
-      'file-image': 'fa-file-image-o',
-      'file-video': 'fa-file-video-o',
-      'clipboard': 'fa-clipboard',
-      'clipboard-list': 'fa-clipboard',
-      'note': 'fa-sticky-note-o',
-      'contract': 'fa-file-text-o',
-      'certificate': 'fa-certificate',
-      'archive': 'fa-file-archive-o',
-      'folder': 'fa-folder-o',
-      'folder-open': 'fa-folder-open-o',
-
-      // === CONFIGURACIÓN Y SISTEMA ===
-      'cog': 'fa-cog',
-      'cogs': 'fa-cogs',
-      'settings': 'fa-cogs',
-      'config': 'fa-sliders',
-      'tools': 'fa-wrench',
-      'wrench': 'fa-wrench',
-      'preferences': 'fa-toggle-on',
-      'customize': 'fa-paint-brush',
-      'system': 'fa-desktop',
-      'server': 'fa-server',
-      'database': 'fa-database',
-      'api': 'fa-code',
-      'integration': 'fa-puzzle-piece',
-      'plugin': 'fa-plug',
-
-      // === NAVEGACIÓN Y UI ===
-      'home': 'fa-home',
-      'menu': 'fa-bars',
-      'list': 'fa-list',
-      'grid': 'fa-th',
-      'bookmark': 'fa-bookmark',
-      'star': 'fa-star',
-      'favorite': 'fa-heart',
-      'pin': 'fa-thumb-tack',
-      'link': 'fa-link',
-      'back': 'fa-arrow-left',
-      'forward': 'fa-arrow-right',
-      'up': 'fa-arrow-up',
-      'down': 'fa-arrow-down',
-      'expand': 'fa-expand',
-      'collapse': 'fa-compress',
-      'sidebar': 'fa-bars',
-
-      // === COMUNICACIÓN ===
-      'envelope': 'fa-envelope',
-      'email': 'fa-envelope',
-      'phone': 'fa-phone',
-      'comments': 'fa-comments',
-      'chat': 'fa-comment',
-      'message-circle': 'fa-comment-o',
-      'message-square': 'fa-comments',
-      'alert-circle': 'fa-exclamation-circle',
-      'bell': 'fa-bell',
-      'message': 'fa-comment',
-      'notification': 'fa-bell',
-      'announcement': 'fa-bullhorn',
-      'news': 'fa-newspaper-o',
-      'broadcast': 'fa-bullhorn',
-      'support': 'fa-headphones',
-
-      // === LOGÍSTICA Y TRANSPORTE ===
-      'truck': 'fa-truck',
-      'shipping': 'fa-truck',
-      'plane': 'fa-plane',
-      'train': 'fa-train',
-      'ship': 'fa-ship',
-      'map': 'fa-map-o',
-      'route': 'fa-road',
-      'location': 'fa-map-marker',
-      'gps': 'fa-crosshairs',
-      'tracking': 'fa-location-arrow',
-      'logistics': 'fa-truck',
-
-      // === ESTADOS Y ALERTAS ===
-      'check': 'fa-check',
-      'success': 'fa-check-circle',
-      'times': 'fa-times',
-      'error': 'fa-times-circle',
-      'exclamation': 'fa-exclamation-triangle',
-      'warning': 'fa-exclamation-triangle',
-      'info': 'fa-info-circle',
-      'question': 'fa-question-circle',
-      'help': 'fa-question-circle',
-      'alert': 'fa-exclamation',
-      'pending': 'fa-clock-o',
-      'processing': 'fa-spinner',
-      'completed': 'fa-check',
-      'status': 'fa-circle',
-
-      // === ACCIONES ===
-      'plus': 'fa-plus',
-      'add': 'fa-plus',
-      'create': 'fa-plus',
-      'new': 'fa-plus',
-      'minus': 'fa-minus',
-      'remove': 'fa-minus',
-      'edit': 'fa-edit',
-      'modify': 'fa-edit',
-      'update': 'fa-edit',
-      'delete': 'fa-trash',
-      'trash': 'fa-trash-o',
-      'save': 'fa-save',
-      'download': 'fa-download',
-      'upload': 'fa-upload',
-      'import': 'fa-download',
-      'export': 'fa-upload',
-      'print': 'fa-print',
-      'copy': 'fa-copy',
-      'duplicate': 'fa-copy',
-      'move': 'fa-arrows',
-      'sync': 'fa-refresh',
-      'refresh': 'fa-refresh',
-      'reload': 'fa-repeat',
-
-      // === BÚSQUEDA Y FILTROS ===
-      'search': 'fa-search',
-      'find': 'fa-search',
-      'filter': 'fa-filter',
-      'sort': 'fa-sort',
-      'sort-asc': 'fa-sort-up',
-      'sort-desc': 'fa-sort-down',
-      'view': 'fa-eye',
-      'hide': 'fa-eye-slash',
-      'show': 'fa-eye',
-
-      // === TIEMPO Y CALENDARIO ===
-      'calendar': 'fa-calendar',
-      'date': 'fa-calendar-o',
-      'time': 'fa-clock-o',
-      'schedule': 'fa-calendar-check-o',
-      'appointment': 'fa-calendar-plus-o',
-      'event': 'fa-calendar',
-      'deadline': 'fa-hourglass-end',
-      'timer': 'fa-clock-o',
-      'history': 'fa-history',
-
-      // === EMPRESARIAL Y NEGOCIOS ===
-      'building': 'fa-building',
-      'company': 'fa-building',
-      'office': 'fa-building',
-      'industry': 'fa-industry',
-      'factory': 'fa-industry',
-      'handshake': 'fa-handshake-o',
-      'deal': 'fa-handshake-o',
-      'partnership': 'fa-handshake-o',
-      'briefcase': 'fa-briefcase',
-      'business': 'fa-briefcase',
-      'calculator': 'fa-calculator',
-      'accounting': 'fa-calculator',
-      'finance': 'fa-dollar',
-      'budget': 'fa-money',
-      'investment': 'fa-line-chart',
-      'profit': 'fa-arrow-up',
-      'loss': 'fa-arrow-down',
-
-      // === CALIDAD Y CERTIFICACIONES ===
-      'quality': 'fa-star',
-      'medal': 'fa-star',
-      'trophy': 'fa-trophy',
-      'badge': 'fa-certificate',
-      'verification': 'fa-check-circle',
-      'approval': 'fa-check-square-o',
-      'signature': 'fa-pencil-square-o',
-
-      // === SEGURIDAD ===
-      'security': 'fa-shield',
-      'shield': 'fa-shield',
-      'lock': 'fa-lock',
-      'unlock': 'fa-unlock',
-      'key': 'fa-key',
-      'password': 'fa-key',
-      'encryption': 'fa-user-secret',
-      'privacy': 'fa-user-secret',
-      'backup': 'fa-cloud-upload',
-      'restore': 'fa-cloud-download',
-
-      // === TECNOLOGÍA ===
-      'computer': 'fa-desktop',
-      'laptop': 'fa-laptop',
-      'mobile': 'fa-mobile',
-      'tablet': 'fa-tablet',
-      'wifi': 'fa-wifi',
-      'bluetooth': 'fa-bluetooth-b',
-      'usb': 'fa-usb',
-      'cloud': 'fa-cloud',
-      'network': 'fa-sitemap',
-      'internet': 'fa-globe',
-
-      // === GENÉRICOS MEJORADOS ===
-      'circle': 'fa-circle',
-      'dot': 'fa-circle',
-      'point': 'fa-map-marker',
-      'marker': 'fa-map-marker',
-      'flag': 'fa-flag',
-      'tag': 'fa-tag',
-      'label': 'fa-tag',
-      'external-link': 'fa-external-link',
-      'map-pin': 'fa-map-marker',
-
-      // === ICONOS FEATHER ADICIONALES ===
-      'target': 'fa-bullseye',
-      'bar-chart-2': 'fa-bar-chart',
-      'pie-chart': 'fa-pie-chart',
-      'toggle-right': 'fa-toggle-on',
-      'toggle-left': 'fa-toggle-off',
-      'share-2': 'fa-share-alt',
-      'git-branch': 'fa-code-fork',
-      'git-merge': 'fa-code-fork',
-      'link-2': 'fa-link',
-      'gift': 'fa-gift',
-      'user-plus': 'fa-user-plus',
-      'shopping-bag': 'fa-shopping-bag',
-      'monitor': 'fa-desktop',
-      'tool': 'fa-wrench',
-      'plus-circle': 'fa-plus-circle',
-      'minus-circle': 'fa-minus-circle',
-      'clock': 'fa-clock-o',
-      'send': 'fa-paper-plane',
-      'plus-square': 'fa-plus-square',
-      'minus-square': 'fa-minus-square',
-      'edit-3': 'fa-pencil',
-      'edit-2': 'fa-pencil',
-      'refresh-cw': 'fa-refresh',
-      'rotate-cw': 'fa-refresh',
-      'activity': 'fa-line-chart',
-      'zap': 'fa-bolt',
-      'award': 'fa-trophy',
-      'file-text': 'fa-file-text-o',
-      'smartphone': 'fa-mobile',
-      'cpu': 'fa-microchip',
-      'navigation': 'fa-location-arrow',
-      'navigation-2': 'fa-location-arrow',
-      'chevron-right': 'fa-chevron-right',
-      'chevron-left': 'fa-chevron-left',
-      'chevron-down': 'fa-chevron-down',
-      'chevron-up': 'fa-chevron-up',
-    };
-
-    // Intentar mapear el icono
-    let mappedIcon = iconMap[icon.toLowerCase()];
-
-    // Si no se encuentra en el mapa, intentar con el nombre original añadiendo fa-
-    // (sin espacios — un template string con espacios generaba 3 clases CSS
-    // separadas: "fa", "-", "nombre" en vez de "fa-nombre", dejando el ícono
-    // invisible aunque el HTML "tuviera" una clase). Solo se usa si esa clase
-    // realmente existe en FontAwesome 4.7; si no, cae al icono por defecto.
-    if (!mappedIcon) {
-      const guessed = `fa-${icon.toLowerCase()}`;
-      mappedIcon = this.isValidFA4Icon(guessed) ? guessed : '';
-    }
-
-    // Si aún no es válido, usar icono por defecto
-    return mappedIcon || (isSubmenu ? 'fa-circle-o' : 'fa-circle-o');
-  }
-
-  // Método para obtener icono contextual inteligente - Compatible con FontAwesome 4.7.0
-  private getContextualIcon(title: string, position: number, hasSubmenu: boolean): string {
-    const titleLower = title.toLowerCase();
-
-    // Iconos específicos por posición (primeros items suelen ser más importantes)
-    if (position === 0) {
-      if (titleLower.includes('inicio') || titleLower.includes('dashboard')) return 'fa-home';
-      if (titleLower.includes('principal')) return 'fa-star';
-    }
-
-    // Iconos para items con submenús (más elaborados)
-    if (hasSubmenu) {
-      if (titleLower.includes('venta')) return 'fa-shopping-bag';
-      if (titleLower.includes('inventario')) return 'fa-building-o';
-      if (titleLower.includes('reporte')) return 'fa-line-chart';
-      if (titleLower.includes('usuario')) return 'fa-users';
-      if (titleLower.includes('config')) return 'fa-cogs';
-    }
-
-    // Usar el método de inferencia estándar como fallback
-    return this.inferIconFromTitle(title);
-  }
-
-  // Método para inferir iconos basado en el título del menú - Compatible con FontAwesome 4.7.0
-  private inferIconFromTitle(title: string): string {
-    const titleLower = title.toLowerCase();
-
-    // Patrones de títulos comunes y sus iconos (FontAwesome 4.7.0)
-    const titlePatterns: { [key: string]: string } = {
-      // Dashboard y home
-      'inicio': 'home',
-      'dashboard': 'tachometer',
-      'panel': 'tachometer',
-      'escritorio': 'desktop',
-
-      // Ventas y comercial
-      'venta': 'shopping-cart',
-      'ventas': 'line-chart',
-      'factura': 'file-text-o',
-      'cotiza': 'file-text-o',
-      'pedido': 'clipboard',
-      'orden': 'clipboard',
-      'cliente': 'user',
-      'prospecto': 'user-plus',
-
-      // Inventario
-      'producto': 'cube',
-      'inventario': 'building-o',
-      'stock': 'cubes',
-      'categoria': 'folder-o',
-      'almacén': 'building-o',
-      'bodega': 'building-o',
-
-      // Finanzas
-      'finanza': 'dollar',
-      'contab': 'calculator',
-      'pago': 'credit-card',
-      'cobro': 'money',
-      'gasto': 'arrow-down',
-      'ingreso': 'arrow-up',
-      'presupuesto': 'calculator',
-
-      // Reportes
-      'reporte': 'bar-chart',
-      'estadística': 'bar-chart',
-      'análisis': 'search',
-      'gráfico': 'pie-chart',
-      'métrica': 'tachometer',
-
-      // Usuarios y administración
-      'usuario': 'user',
-      'empleado': 'id-card-o',
-      'equipo': 'users',
-      'rol': 'user-circle-o',
-      'permiso': 'key',
-      'configuración': 'cog',
-      'ajuste': 'sliders',
-
-      // Logística
-      'envío': 'truck',
-      'entrega': 'truck',
-      'transporte': 'truck',
-      'ruta': 'road',
-      'ubicación': 'map-marker',
-
-      // Comunicación
-      'mensaje': 'comment',
-      'notificación': 'bell',
-      'correo': 'envelope',
-      'chat': 'comments',
-      'soporte': 'headphones',
-
-      // Documentos
-      'documento': 'file-text-o',
-      'archivo': 'file-o',
-      'carpeta': 'folder-o',
-      'pdf': 'file-pdf-o',
-      'excel': 'file-excel-o',
-      'word': 'file-word-o',
-
-      // Procesos
-      'proceso': 'cogs',
-      'flujo': 'refresh',
-      'tarea': 'list',
-      'actividad': 'clock-o',
-      'historial': 'history',
-
-      // Calidad y control
-      'calidad': 'star',
-      'auditoría': 'search',
-      'control': 'shield',
-      'seguridad': 'lock',
-      'backup': 'cloud-upload',
-
-      // Herramientas
-      'herramienta': 'wrench',
-      'utilidad': 'wrench',
-      'integración': 'puzzle-piece',
-      'api': 'code',
-      'webhook': 'link'
-    };
-
-    // Buscar patrones en el título
-    for (const [pattern, icon] of Object.entries(titlePatterns)) {
-      if (titleLower.includes(pattern)) {
-        return icon;
-      }
-    }
-
-    // Si no se encuentra patrón, retornar icono genérico
-    return 'circle-o';
-  }
-
-  // Método específico para iconos de subitems
-  getSubmenuIcon(icon: string | undefined, title?: string): string {
-    return this.getMenuIcon(icon, title, true);
-  }
-
-  // Método para alternar modo compacto
-  toggleCompactMode(): void {
-    this.isCompactMode = !this.isCompactMode;
-    localStorage.setItem('sidebarCompactMode', this.isCompactMode.toString());
-
-    // Aplicar clase CSS para el modo compacto
-    if (this.isCompactMode) {
-      document.body.classList.add('sidebar-compact-mode');
-    } else {
-      document.body.classList.remove('sidebar-compact-mode');
-    }
-
-    // Cerrar submenús abiertos en modo compacto para evitar conflictos
-    if (this.isCompactMode) {
-      this.closeAllSubmenus();
-    }
-  }
-
   // Método para crear etiqueta para enlaces externos
   getExtLinkLabel(title: string): string {
     return `${title} (enlace externo)`;
@@ -2087,10 +1087,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     return `${title} (se abre en nueva ventana)`;
   }
 
-  // Método para buscar en el menú
+  // D11: busca por nombre, ruta y, hasta PREVIOUS_TITLES_UNTIL, por el nombre de antes; sin mayúsculas ni tildes.
   searchMenu(): void {
-    // Eliminar espacios innecesarios y normalizar término
-    const term = this.searchTerm.trim().toLowerCase();
+    const term = this.searchTerm.trim();
 
     // Activar/desactivar modo búsqueda según exista término
     this.isSearchActive = term.length > 0;
@@ -2100,14 +1099,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    // Filtrar por coincidencia en título o ruta
-    this.searchResults = this.getAllMenuItems()
-      .filter(item => {
-        const titleMatch = item.title?.toLowerCase().includes(term);
-        const pathMatch = item.path?.toLowerCase().includes(term);
-        return titleMatch || pathMatch;
-      })
-      .slice(0, 8); // Limitar resultados para performance
+    this.searchResults = buscarEntradas(this.vista, term, new Date(), PREVIOUS_TITLES_UNTIL);
   }
 
   // Método para limpiar la búsqueda
@@ -2140,150 +1132,129 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     return allItems;
   }
 
-  // Método para agregar/quitar de favoritos
-  toggleFavorite(item: Menu, event?: Event): void {
-    if (event) {
-      event.stopPropagation();
-      event.preventDefault();
+  // ===================== FAVORITOS (D-546 F3: se guardan por ruta o por `id` de grupo) =====================
+
+  /** Resuelve los favoritos guardados contra el menú actual; si aún estaban sin convertir, los convierte. */
+  private sincronizarFavoritos(): void {
+    if (this.favoritosPendientes && this.vista.length > 0) {
+      this.loadFavoriteItems();
     }
-
-    const index = this.favoriteItems.findIndex(fav =>
-      fav.path === item.path && fav.title === item.title
-    );
-
-    // Ticket 1222/1232: se agrega lo que lleva a una pantalla o una sección con
-    // submenú (que se abre en el menú, ver abrirSeccionFavorita).
-    if (index === -1 && !item.path && !item.children?.length) return;
-
-    if (index > -1) {
-      this.favoriteItems.splice(index, 1);
-    } else {
-      // Limitar a 5 favoritos
-      if (this.favoriteItems.length >= 5) {
-        this.favoriteItems.pop();
-      }
-      this.favoriteItems.unshift(item);
-    }
-
-    this.saveFavoriteItems();
+    this.favoritos = resolverFavoritos(this.favoritosGuardados, this.vista);
+    this.favoritosMemo = new WeakMap();
   }
 
   /**
-   * Ticket 1232: un favorito que es una sección (sin ruta) abre esa sección en el
-   * menú, con sus padres, y la deja a la vista.
+   * Carga `sidebarFavoritesV2`. La primera vez que se abre el menú nuevo en un navegador, convierte los de antes
+   * (`sidebarFavoriteItems`) sin tocarlos ni borrar nada. Sin menú cargado espera a tenerlo.
    */
-  abrirSeccionFavorita(favorito: Menu, event?: Event): void {
-    if (event) {
-      event.stopPropagation();
-      event.preventDefault();
-    }
-    const cadena = this.cadenaDeSeccion(favorito.title);
-    if (!cadena) return;
-
-    this.closeAllFirstLevelMenus();
-    cadena.forEach(item => (item.active = true));
-    this.cdr.detectChanges();
-    const destino = cadena[cadena.length - 1];
-    setTimeout(() => {
-      document.getElementById(this.getMenuKey(destino) + '-toggle')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-  }
-
-  /** La sección del menú (sin ruta, con hijos) con ese título, con sus padres. */
-  private cadenaDeSeccion(titulo: string | undefined): Menu[] | null {
-    const buscar = (items: Menu[], cadena: Menu[]): Menu[] | null => {
-      for (const item of items || []) {
-        if (!item.path && item.children?.length && item.title === titulo) return [...cadena, item];
-        const hallado = item.children ? buscar(item.children, [...cadena, item]) : null;
-        if (hallado) return hallado;
-      }
-      return null;
-    };
-    for (const section of this.sections) {
-      const cadena = buscar(section.items, []);
-      if (cadena) return cadena;
-    }
-    return null;
-  }
-
-  /**
-   * Ticket 1322: un favorito que es una sección muestra de una vez sus pantallas
-   * (por ejemplo Pedidos → Todos los pedidos y Pedidos POS). Salen del menú ya
-   * cargado, así respetan el rol y los cambios del menú sin guardar nada más.
-   * Se memoriza por `sections`, que se reemplaza en cada navegación.
-   */
-  private enlacesMemo: { sections: any[]; porTitulo: Map<string, Menu[]> } | null = null;
-  enlacesDeFavorito(favorito: Menu): Menu[] {
-    if (favorito.path) return [];
-    if (!this.enlacesMemo || this.enlacesMemo.sections !== this.sections) {
-      this.enlacesMemo = { sections: this.sections, porTitulo: new Map() };
-    }
-    const titulo = favorito.title || '';
-    let enlaces = this.enlacesMemo.porTitulo.get(titulo);
-    if (!enlaces) {
-      const seccion = this.cadenaDeSeccion(favorito.title)?.slice(-1)[0];
-      const pantallas = (items: Menu[] = []): Menu[] =>
-        items.flatMap(hijo => (hijo.children?.length ? pantallas(hijo.children) : hijo.type === 'link' && hijo.path ? [hijo] : []));
-      enlaces = pantallas(seccion?.children);
-      this.enlacesMemo.porTitulo.set(titulo, enlaces);
-    }
-    return enlaces;
-  }
-
-  // Comprobar si un item está en favoritos
-  isFavorite(item: Menu): boolean {
-    return this.favoriteItems.some(fav =>
-      fav.path === item.path && fav.title === item.title
-    );
-  }
-
-  // Guardar favoritos en localStorage
-  private saveFavoriteItems(): void {
-    const favoritesToSave = this.favoriteItems.map(item => ({
-      title: item.title,
-      path: item.path,
-      icon: item.icon,
-      type: item.type
-    }));
-
-    localStorage.setItem('sidebarFavoriteItems', JSON.stringify(favoritesToSave));
-  }
-
-  // Cargar favoritos desde localStorage
   private loadFavoriteItems(): void {
-    const savedFavorites = localStorage.getItem('sidebarFavoriteItems');
-    if (!savedFavorites) {
-      return;
-    }
     try {
-      const parsed: Menu[] = (JSON.parse(savedFavorites) || []).filter((fav: Menu) => !!fav?.title);
-
-      // SEGURIDAD DE ROLES: descartar favoritos cuya ruta (o sección, si es un
-      // favorito sin ruta) ya no esté en el menú autorizado del usuario (el menú
-      // ya viene filtrado por NavService).
-      const menu = this.getAllMenuItems();
-      const authorizedPaths = new Set(
-        menu
-          .map(i => (i.path || '').replace(/^\/+/, '').toLowerCase())
-          .filter(p => p.length > 0)
-      );
-      // Ticket 1232: las secciones con submenú vuelven a ser favoritos válidos.
-      const authorizedSections = new Set(
-        menu.filter(i => !i.path && i.children?.length).map(i => i.title)
-      );
-
-      // Si el menú aún no cargó (set vacío), no filtrar para no ocultar favoritos válidos.
-      this.favoriteItems = authorizedPaths.size === 0
-        ? parsed
-        : parsed.filter(fav => {
-            if (!fav.path) return authorizedSections.has(fav.title);
-            const p = fav.path.replace(/^\/+/, '').toLowerCase();
-            return p.length > 0 && authorizedPaths.has(p);
-          });
+      const { lista, pendiente } = cargarFavoritos(localStorage, this.vista);
+      this.favoritosGuardados = lista;
+      this.favoritosPendientes = pendiente;
     } catch (e) {
       console.error('Error loading favorite items:', e);
-      this.favoriteItems = [];
+      this.favoritosGuardados = [];
+      this.favoritosPendientes = false;
     }
+    this.favoritos = resolverFavoritos(this.favoritosGuardados, this.vista);
+  }
+
+  private guardarFavoritosActuales(): void {
+    guardarFavoritos(localStorage, this.favoritosGuardados);
+    this.favoritos = resolverFavoritos(this.favoritosGuardados, this.vista);
+  }
+
+  /** Lo que la estrella de una fila marca: la pantalla o el grupo. Un enlace que sale de un grupo de un hijo también cuenta por el grupo. */
+  private favoritosMemo = new WeakMap<FilaMenu, { fav: FavoritoGuardado; alt?: FavoritoGuardado } | null>();
+  public favoritoDeFila(fila: FilaMenu): { fav: FavoritoGuardado; alt?: FavoritoGuardado } | null {
+    let valor = this.favoritosMemo.get(fila);
+    if (valor === undefined) {
+      if (fila.tipo === 'grupo' && fila.id && fila.hijos.length > 0) {
+        valor = { fav: { kind: 'group', id: fila.id } };
+      } else if (fila.tipo === 'enlace' && fila.ruta) {
+        valor = { fav: { kind: 'screen', path: fila.ruta }, alt: fila.deGrupo && fila.id ? { kind: 'group', id: fila.id } : undefined };
+      } else {
+        valor = null;
+      }
+      this.favoritosMemo.set(fila, valor);
+    }
+    return valor;
+  }
+
+  /** La estrella de la cabecera de una sección hecha de un grupo `inline` (Finanzas, Comunicaciones). */
+  private favoritoSeccionMemo = new Map<string, { fav: FavoritoGuardado }>();
+  public favoritoDeSeccion(section: SidebarSection): { fav: FavoritoGuardado } | null {
+    if (!section.grupoEnLinea?.id) { return null; }
+    let valor = this.favoritoSeccionMemo.get(section.grupoEnLinea.id);
+    if (!valor) {
+      valor = { fav: { kind: 'group', id: section.grupoEnLinea.id } };
+      this.favoritoSeccionMemo.set(section.grupoEnLinea.id, valor);
+    }
+    return valor;
+  }
+
+  public esFavorita(estrella: { fav: FavoritoGuardado; alt?: FavoritoGuardado } | null | undefined): boolean {
+    if (!estrella) { return false; }
+    return esFavorito(this.favoritosGuardados, estrella.fav) || (!!estrella.alt && esFavorito(this.favoritosGuardados, estrella.alt));
+  }
+
+  /** Nombre accesible de la estrella. */
+  public etiquetaEstrella(estrella: { fav: FavoritoGuardado; alt?: FavoritoGuardado } | null | undefined): string {
+    return this.translate.instant(this.esFavorita(estrella) ? 'shell.sidebar.removeFavorite' : 'shell.sidebar.addFavorite');
+  }
+
+  /**
+   * Agrega o quita un favorito. Con el límite de 5 (D-517) sale el último. Lo que se guarda es la ruta o el `id`,
+   * nunca el nombre.
+   */
+  public alternarFavorito(estrella: { fav: FavoritoGuardado; alt?: FavoritoGuardado } | null | undefined, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    if (!estrella) { return; }
+    if (this.esFavorita(estrella)) {
+      this.favoritosGuardados = quitarFavorito(this.favoritosGuardados, estrella.fav);
+      if (estrella.alt) { this.favoritosGuardados = quitarFavorito(this.favoritosGuardados, estrella.alt); }
+    } else {
+      this.favoritosGuardados = agregarFavorito(this.favoritosGuardados, estrella.fav);
+    }
+    this.guardarFavoritosActuales();
+  }
+
+  /** Quitar un favorito desde la lista de arriba (su estrella siempre está rellena). */
+  public quitarDeLista(favorito: FavoritoVista, event?: Event): void {
+    this.alternarFavorito(favorito.estrella, event);
+  }
+
+  /**
+   * Un favorito que es un grupo (sin ruta) abre ese grupo en el menú y lo deja a la vista (ticket 1232). Si el grupo
+   * es `inline` (Finanzas, Comunicaciones), abre su sección.
+   */
+  abrirSeccionFavorita(favorito: FavoritoVista, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    const seccion = this.sections.find(s => (favorito.seccionId ? s.id === favorito.seccionId : s.filas.some(f => f === favorito.filaGrupo)));
+    if (!seccion) { return; }
+
+    // Acordeón de secciones: abrir esta, plegar las demás.
+    this.sections.forEach(s => { if (s !== seccion && s.isHeaderSection) { s.collapsed = true; } });
+    seccion.collapsed = false;
+    this.saveSectionsState();
+
+    let destinoId = 'section-header-' + this.sections.indexOf(seccion);
+    if (favorito.filaGrupo) {
+      this.closeAllFirstLevelMenus();
+      favorito.filaGrupo.fuente.active = true;
+      destinoId = this.getMenuKey(favorito.filaGrupo.fuente) + '-toggle';
+    }
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      document.getElementById(destinoId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
   }
 
   // Métodos para perfil de usuario (Glassmorphism redesign)
@@ -2352,6 +1323,11 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   // Método para manejar clic fuera del sidebar en móviles
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
+    // Compacto: un toque fuera de la fila y de su panel cierra el panel.
+    if (this.panel) {
+      const destino = event.target as HTMLElement;
+      if (!destino.closest?.('.menu-item.panel-activo')) { this.cerrarPanel(); }
+    }
     if (this.isMobile() && !this.collapseMenu && !this.isToggling) {
       const target = event.target as HTMLElement;
       const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
@@ -2401,170 +1377,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cdr.detectChanges();
   }
 
-  // Método mejorado para mostrar submenú flotante en estado colapsado
-  private showCollapsedSubmenu(item: Menu, event?: Event): void {
-    if (!item.children || this.isMobile()) return;
-
-    // Cerrar cualquier submenú flotante existente
-    this.closeCollapsedSubmenu();
-
-    // Crear elemento del submenú flotante
-    const submenuElement = this.renderer.createElement('div');
-    this.renderer.addClass(submenuElement, 'collapsed-submenu-floating');
-    this.renderer.setAttribute(submenuElement, 'role', 'menu');
-
-    // Obtener posición del elemento padre
-    const parentElement = (event?.target as HTMLElement)?.closest('.menu-link');
-    if (!parentElement) return;
-
-    const rect = parentElement.getBoundingClientRect();
-
-    // Calcular posición óptima del submenú
-    const viewportHeight = window.innerHeight;
-    const submenuHeight = item.children.length * 48 + 16; // Estimación
-    let topPosition = rect.top;
-
-    // Ajustar posición si se sale de la pantalla
-    if (topPosition + submenuHeight > viewportHeight) {
-      topPosition = Math.max(16, viewportHeight - submenuHeight - 16);
-    }
-
-    // Posicionar el submenú
-    this.renderer.setStyle(submenuElement, 'position', 'fixed');
-    this.renderer.setStyle(submenuElement, 'left', `${rect.right + 12} px`);
-    this.renderer.setStyle(submenuElement, 'top', `${topPosition} px`);
-    this.renderer.setStyle(submenuElement, 'z-index', '1200');
-    this.renderer.setStyle(submenuElement, 'max-height', `${viewportHeight - topPosition - 32} px`);
-    this.renderer.setStyle(submenuElement, 'overflow-y', 'auto');
-
-    // Crear contenido del submenú con diseño mejorado
-    item.children.forEach((childItem, index) => {
-      const informational = childItem.type === 'info';
-      const itemElement = this.renderer.createElement(informational ? 'div' : 'a');
-      if (informational) {
-        this.renderer.addClass(itemElement, 'submenu-future');
-        this.renderer.setAttribute(itemElement, 'aria-disabled', 'true');
-      }
-
-      if (childItem.type === 'link') {
-        this.renderer.setAttribute(itemElement, 'href', this.rutaMenu(childItem.path) || '#');
-        this.renderer.listen(itemElement, 'click', (e) => {
-          e.preventDefault();
-          if (childItem.path) {
-            this.navigateAndCleanup(childItem.path);
-          }
-        });
-      } else if (childItem.type === 'extLink') {
-        this.renderer.setAttribute(itemElement, 'href', childItem.path || '#');
-        this.renderer.setAttribute(itemElement, 'target', '_blank');
-        this.renderer.setAttribute(itemElement, 'rel', 'noopener noreferrer');
-      }
-
-      this.renderer.addClass(itemElement, 'collapsed-submenu-item');
-      this.renderer.setAttribute(itemElement, 'role', 'menuitem');
-      // D-540: el submenú flotante muestra el título traducido; el dato sigue siendo la clave en español.
-      const tituloVisible = childItem.title ? this.translate.instant(childItem.title) : '';
-      this.renderer.setAttribute(itemElement, 'title', tituloVisible);
-      this.renderer.setStyle(itemElement, 'animation-delay', `${index * 0.05} s`);
-
-      // Crear wrapper de icono
-      const iconWrapper = this.renderer.createElement('div');
-      this.renderer.addClass(iconWrapper, 'submenu-icon-wrapper');
-
-      // Crear icono con sistema mejorado y contexto
-      const iconElement = this.renderer.createElement('i');
-      this.renderer.addClass(iconElement, 'fa');
-      const iconClass = this.getMenuIcon(childItem.icon, childItem.title);
-      this.renderer.addClass(iconElement, iconClass);
-      this.renderer.addClass(iconElement, 'floating-submenu-icon');
-      this.renderer.setAttribute(iconElement, 'aria-hidden', 'true');
-      this.renderer.setStyle(iconElement, '--floating-icon-index', index.toString());
-
-      this.renderer.appendChild(iconWrapper, iconElement);
-
-      // Crear wrapper de contenido
-      const contentWrapper = this.renderer.createElement('div');
-      this.renderer.addClass(contentWrapper, 'submenu-content');
-
-      // Crear texto principal
-      const textElement = this.renderer.createElement('span');
-      this.renderer.addClass(textElement, 'submenu-text');
-      this.renderer.appendChild(textElement, this.renderer.createText(tituloVisible));
-
-      this.renderer.appendChild(contentWrapper, textElement);
-
-      if (informational) {
-        const label = this.renderer.createElement('span');
-        this.renderer.addClass(label, 'submenu-future-label');
-        this.renderer.appendChild(label, this.renderer.createText(this.translate.instant('Próximamente')));
-        this.renderer.appendChild(contentWrapper, label);
-      }
-
-      // Añadir indicador para enlaces externos
-      if (childItem.type === 'extLink') {
-        const externalIcon = this.renderer.createElement('i');
-        this.renderer.addClass(externalIcon, 'fa');
-        this.renderer.addClass(externalIcon, 'fa-arrow-up-right-from-square');
-        this.renderer.addClass(externalIcon, 'external-indicator');
-        this.renderer.setAttribute(externalIcon, 'aria-hidden', 'true');
-        this.renderer.appendChild(contentWrapper, externalIcon);
-      }
-
-      // Añadir indicador para submenús anidados
-      if (childItem.children && childItem.children.length > 0) {
-        const chevronIcon = this.renderer.createElement('i');
-        this.renderer.addClass(chevronIcon, 'fa');
-        this.renderer.addClass(chevronIcon, 'fa-chevron-right');
-        this.renderer.addClass(chevronIcon, 'submenu-chevron');
-        this.renderer.setAttribute(chevronIcon, 'aria-hidden', 'true');
-        this.renderer.appendChild(contentWrapper, chevronIcon);
-      }
-
-      this.renderer.appendChild(itemElement, iconWrapper);
-      this.renderer.appendChild(itemElement, contentWrapper);
-      this.renderer.appendChild(submenuElement, itemElement);
-
-      // Añadir eventos de hover para mejor UX
-      this.renderer.listen(itemElement, 'mouseenter', () => {
-        this.renderer.addClass(itemElement, 'hovered');
-      });
-
-      this.renderer.listen(itemElement, 'mouseleave', () => {
-        this.renderer.removeClass(itemElement, 'hovered');
-      });
-    });
-
-    // Añadir al DOM
-    this.renderer.appendChild(document.body, submenuElement);
-
-    // Listener para cerrar al hacer clic fuera con debounce
-    setTimeout(() => {
-      const closeListener = this.renderer.listen('document', 'click', (e) => {
-        if (!submenuElement.contains(e.target) && !parentElement.contains(e.target)) {
-          this.closeCollapsedSubmenu();
-          closeListener();
-        }
-      });
-
-      // Guardar referencia para poder cerrarlo después
-      (submenuElement as any)._closeListener = closeListener;
-    }, 100);
-
-    this.currentCollapsedSubmenu = submenuElement;
-  }
-
-  private currentCollapsedSubmenu: any = null;
-
-  private closeCollapsedSubmenu(): void {
-    if (this.currentCollapsedSubmenu) {
-      if (this.currentCollapsedSubmenu._closeListener) {
-        this.currentCollapsedSubmenu._closeListener();
-      }
-      this.renderer.removeChild(document.body, this.currentCollapsedSubmenu);
-      this.currentCollapsedSubmenu = null;
-    }
-  }
-
   // Método para resetear el sidebar al estado inicial
   resetSidebar(): void {
     this.searchTerm = '';
@@ -2572,7 +1384,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isSearchActive = false;
     this.isSearchFocused = false;
     this.closeAllSubmenus();
-    this.closeCollapsedSubmenu();
+    this.cerrarPanel();
 
     // Resetear estado de secciones si es necesario
     this.sections.forEach(section => {
@@ -2581,369 +1393,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     });
     this.saveSectionsState();
-  }
-
-
-  // ===================================================
-  // VALIDACIÓN Y OPTIMIZACIÓN DE ICONOS FA 4.7.0
-  // ===================================================
-
-  // Cache para iconos validados
-  private iconCache = new Map<string, string>();
-
-  // Lista de iconos válidos en FontAwesome 4.7.0
-  private readonly validFA4Icons = new Set([
-    'fa-home', 'fa-user', 'fa-users', 'fa-cog', 'fa-cogs', 'fa-search', 'fa-bell',
-    'fa-envelope', 'fa-star', 'fa-heart', 'fa-shopping-cart', 'fa-truck', 'fa-calendar',
-    'fa-clock-o', 'fa-file-o', 'fa-folder-o', 'fa-folder-open-o', 'fa-edit', 'fa-trash-o',
-    'fa-save', 'fa-download', 'fa-upload', 'fa-print', 'fa-copy', 'fa-cut', 'fa-paste',
-    'fa-undo', 'fa-repeat', 'fa-refresh', 'fa-lock', 'fa-unlock', 'fa-key', 'fa-shield',
-    'fa-check', 'fa-times', 'fa-plus', 'fa-minus', 'fa-question', 'fa-info', 'fa-exclamation',
-    'fa-warning', 'fa-ban', 'fa-arrow-up', 'fa-arrow-down', 'fa-arrow-left', 'fa-arrow-right',
-    'fa-chevron-up', 'fa-chevron-down', 'fa-chevron-left', 'fa-chevron-right', 'fa-angle-up',
-    'fa-angle-down', 'fa-angle-left', 'fa-angle-right', 'fa-sort', 'fa-sort-up', 'fa-sort-down',
-    'fa-list', 'fa-th', 'fa-th-list', 'fa-table', 'fa-columns', 'fa-bars', 'fa-navicon',
-    'fa-filter', 'fa-tag', 'fa-tags', 'fa-bookmark', 'fa-flag', 'fa-thumbs-up', 'fa-thumbs-down',
-    'fa-share', 'fa-external-link', 'fa-link', 'fa-chain', 'fa-unlink', 'fa-chain-broken',
-    'fa-paperclip', 'fa-quote-left', 'fa-quote-right', 'fa-comment', 'fa-comments', 'fa-sitemap',
-    'fa-umbrella', 'fa-lightbulb-o', 'fa-exchange', 'fa-cloud-download', 'fa-cloud-upload',
-    'fa-user-md', 'fa-stethoscope', 'fa-suitcase', 'fa-bell-o', 'fa-coffee', 'fa-cutlery',
-    'fa-file-text-o', 'fa-building-o', 'fa-hospital-o', 'fa-ambulance', 'fa-medkit', 'fa-fighter-jet',
-    'fa-beer', 'fa-h-square', 'fa-plus-square', 'fa-angle-double-left', 'fa-angle-double-right',
-    'fa-angle-double-up', 'fa-angle-double-down', 'fa-angle-left', 'fa-angle-right', 'fa-angle-up',
-    'fa-angle-down', 'fa-desktop', 'fa-laptop', 'fa-tablet', 'fa-mobile', 'fa-circle-o',
-    'fa-quote-left', 'fa-quote-right', 'fa-spinner', 'fa-circle', 'fa-reply', 'fa-github-alt',
-    'fa-folder-o', 'fa-folder-open-o', 'fa-smile-o', 'fa-frown-o', 'fa-meh-o', 'fa-gamepad',
-    'fa-keyboard-o', 'fa-flag-o', 'fa-flag-checkered', 'fa-terminal', 'fa-code', 'fa-reply-all',
-    'fa-mail-reply-all', 'fa-star-half-empty', 'fa-star-half-full', 'fa-star-half-o', 'fa-star-o',
-    'fa-location-arrow', 'fa-crop', 'fa-code-fork', 'fa-unlink', 'fa-chain-broken', 'fa-question',
-    'fa-info', 'fa-exclamation', 'fa-superscript', 'fa-subscript', 'fa-eraser', 'fa-puzzle-piece',
-    'fa-microphone', 'fa-microphone-slash', 'fa-shield', 'fa-calendar-o', 'fa-fire-extinguisher',
-    'fa-rocket', 'fa-maxcdn', 'fa-chevron-circle-left', 'fa-chevron-circle-right', 'fa-chevron-circle-up',
-    'fa-chevron-circle-down', 'fa-html5', 'fa-css3', 'fa-anchor', 'fa-unlock-alt', 'fa-bullseye',
-    'fa-ellipsis-h', 'fa-ellipsis-v', 'fa-rss-square', 'fa-play-circle', 'fa-ticket', 'fa-minus-square',
-    'fa-minus-square-o', 'fa-level-up', 'fa-level-down', 'fa-check-square', 'fa-pencil-square',
-    'fa-external-link-square', 'fa-share-square', 'fa-compass', 'fa-toggle-down', 'fa-caret-down',
-    'fa-toggle-up', 'fa-caret-up', 'fa-toggle-right', 'fa-caret-right', 'fa-euro', 'fa-eur',
-    'fa-gbp', 'fa-dollar', 'fa-usd', 'fa-rupee', 'fa-inr', 'fa-cny', 'fa-rmb', 'fa-yen',
-    'fa-jpy', 'fa-ruble', 'fa-rouble', 'fa-rub', 'fa-won', 'fa-krw', 'fa-bitcoin', 'fa-btc',
-    'fa-file', 'fa-file-text', 'fa-sort-alpha-asc', 'fa-sort-alpha-desc', 'fa-sort-amount-asc',
-    'fa-sort-amount-desc', 'fa-sort-numeric-asc', 'fa-sort-numeric-desc', 'fa-thumbs-up',
-    'fa-thumbs-down', 'fa-youtube-square', 'fa-youtube', 'fa-xing', 'fa-xing-square', 'fa-youtube-play',
-    'fa-dropbox', 'fa-stack-overflow', 'fa-instagram', 'fa-flickr', 'fa-adn', 'fa-bitbucket',
-    'fa-bitbucket-square', 'fa-tumblr', 'fa-tumblr-square', 'fa-long-arrow-down', 'fa-long-arrow-up',
-    'fa-long-arrow-left', 'fa-long-arrow-right', 'fa-apple', 'fa-windows', 'fa-android', 'fa-linux',
-    'fa-dribbble', 'fa-skype', 'fa-foursquare', 'fa-trello', 'fa-female', 'fa-male', 'fa-gittip',
-    'fa-sun-o', 'fa-moon-o', 'fa-archive', 'fa-bug', 'fa-vk', 'fa-weibo', 'fa-renren', 'fa-pagelines',
-    'fa-stack-exchange', 'fa-arrow-circle-o-right', 'fa-arrow-circle-o-left', 'fa-toggle-left',
-    'fa-caret-left', 'fa-dot-circle-o', 'fa-wheelchair', 'fa-vimeo-square', 'fa-turkish-lira',
-    'fa-try', 'fa-plus-square-o', 'fa-space-shuttle', 'fa-slack', 'fa-envelope-square', 'fa-wordpress',
-    'fa-openid', 'fa-institution', 'fa-bank', 'fa-university', 'fa-mortar-board', 'fa-graduation-cap',
-    'fa-yahoo', 'fa-google', 'fa-reddit', 'fa-reddit-square', 'fa-stumbleupon-circle', 'fa-stumbleupon',
-    'fa-delicious', 'fa-digg', 'fa-pied-piper-pp', 'fa-pied-piper-alt', 'fa-drupal', 'fa-joomla',
-    'fa-language', 'fa-fax', 'fa-building', 'fa-child', 'fa-paw', 'fa-spoon', 'fa-cube', 'fa-cubes',
-    'fa-behance', 'fa-behance-square', 'fa-steam', 'fa-steam-square', 'fa-recycle', 'fa-automobile',
-    'fa-car', 'fa-cab', 'fa-taxi', 'fa-tree', 'fa-spotify', 'fa-deviantart', 'fa-soundcloud',
-    'fa-database', 'fa-file-pdf-o', 'fa-file-word-o', 'fa-file-excel-o', 'fa-file-powerpoint-o',
-    'fa-file-photo-o', 'fa-file-picture-o', 'fa-file-image-o', 'fa-file-zip-o', 'fa-file-archive-o',
-    'fa-file-sound-o', 'fa-file-audio-o', 'fa-file-movie-o', 'fa-file-video-o', 'fa-file-code-o',
-    'fa-vine', 'fa-codepen', 'fa-jsfiddle', 'fa-life-bouy', 'fa-life-buoy', 'fa-life-saver',
-    'fa-support', 'fa-life-ring', 'fa-circle-o-notch', 'fa-ra', 'fa-resistance', 'fa-rebel',
-    'fa-ge', 'fa-empire', 'fa-git-square', 'fa-git', 'fa-y-combinator-square', 'fa-yc-square',
-    'fa-hacker-news', 'fa-tencent-weibo', 'fa-qq', 'fa-wechat', 'fa-weixin', 'fa-send', 'fa-paper-plane',
-    'fa-send-o', 'fa-paper-plane-o', 'fa-history', 'fa-circle-thin', 'fa-header', 'fa-paragraph',
-    'fa-sliders', 'fa-share-alt', 'fa-share-alt-square', 'fa-bomb', 'fa-soccer-ball-o', 'fa-futbol-o',
-    'fa-tty', 'fa-binoculars', 'fa-plug', 'fa-slideshare', 'fa-twitch', 'fa-yelp', 'fa-newspaper-o',
-    'fa-wifi', 'fa-calculator', 'fa-paypal', 'fa-google-wallet', 'fa-cc-visa', 'fa-cc-mastercard',
-    'fa-cc-discover', 'fa-cc-amex', 'fa-cc-paypal', 'fa-cc-stripe', 'fa-bell-slash', 'fa-bell-slash-o',
-    'fa-trash', 'fa-copyright', 'fa-at', 'fa-eyedropper', 'fa-paint-brush', 'fa-birthday-cake',
-    'fa-area-chart', 'fa-pie-chart', 'fa-line-chart', 'fa-lastfm', 'fa-lastfm-square', 'fa-toggle-off',
-    'fa-toggle-on', 'fa-bicycle', 'fa-bus', 'fa-ioxhost', 'fa-angellist', 'fa-cc', 'fa-shekel',
-    'fa-sheqel', 'fa-ils', 'fa-meanpath', 'fa-buysellads', 'fa-connectdevelop', 'fa-dashcube',
-    'fa-forumbee', 'fa-leanpub', 'fa-sellsy', 'fa-shirtsinbulk', 'fa-simplybuilt', 'fa-skyatlas',
-    'fa-cart-plus', 'fa-cart-arrow-down', 'fa-diamond', 'fa-ship', 'fa-user-secret', 'fa-motorcycle',
-    'fa-street-view', 'fa-heartbeat', 'fa-venus', 'fa-mars', 'fa-mercury', 'fa-intersex',
-    'fa-transgender', 'fa-transgender-alt', 'fa-venus-double', 'fa-mars-double', 'fa-venus-mars',
-    'fa-mars-stroke', 'fa-mars-stroke-v', 'fa-mars-stroke-h', 'fa-neuter', 'fa-genderless',
-    'fa-facebook-official', 'fa-pinterest-p', 'fa-whatsapp', 'fa-server', 'fa-user-plus',
-    'fa-user-times', 'fa-hotel', 'fa-bed', 'fa-viacoin', 'fa-train', 'fa-subway', 'fa-medium',
-    'fa-yc', 'fa-y-combinator', 'fa-optin-monster', 'fa-opencart', 'fa-expeditedssl', 'fa-battery-4',
-    'fa-battery', 'fa-battery-full', 'fa-battery-3', 'fa-battery-three-quarters', 'fa-battery-2',
-    'fa-battery-half', 'fa-battery-1', 'fa-battery-quarter', 'fa-battery-0', 'fa-battery-empty',
-    'fa-mouse-pointer', 'fa-i-cursor', 'fa-object-group', 'fa-object-ungroup', 'fa-sticky-note',
-    'fa-sticky-note-o', 'fa-cc-jcb', 'fa-cc-diners-club', 'fa-clone', 'fa-balance-scale',
-    'fa-hourglass-o', 'fa-hourglass-1', 'fa-hourglass-start', 'fa-hourglass-2', 'fa-hourglass-half',
-    'fa-hourglass-3', 'fa-hourglass-end', 'fa-hourglass', 'fa-hand-grab-o', 'fa-hand-rock-o',
-    'fa-hand-stop-o', 'fa-hand-paper-o', 'fa-hand-scissors-o', 'fa-hand-lizard-o', 'fa-hand-spock-o',
-    'fa-hand-pointer-o', 'fa-hand-peace-o', 'fa-trademark', 'fa-registered', 'fa-creative-commons',
-    'fa-gg', 'fa-gg-circle', 'fa-tripadvisor', 'fa-odnoklassniki', 'fa-odnoklassniki-square',
-    'fa-get-pocket', 'fa-wikipedia-w', 'fa-safari', 'fa-chrome', 'fa-firefox', 'fa-opera',
-    'fa-internet-explorer', 'fa-tv', 'fa-television', 'fa-contao', 'fa-500px', 'fa-amazon',
-    'fa-calendar-plus-o', 'fa-calendar-minus-o', 'fa-calendar-times-o', 'fa-calendar-check-o',
-    'fa-industry', 'fa-map-pin', 'fa-map-signs', 'fa-map-o', 'fa-map', 'fa-commenting',
-    'fa-commenting-o', 'fa-houzz', 'fa-vimeo', 'fa-black-tie', 'fa-fonticons', 'fa-reddit-alien',
-    'fa-edge', 'fa-credit-card-alt', 'fa-codiepie', 'fa-modx', 'fa-fort-awesome', 'fa-usb',
-    'fa-product-hunt', 'fa-mixcloud', 'fa-scribd', 'fa-pause-circle', 'fa-pause-circle-o',
-    'fa-stop-circle', 'fa-stop-circle-o', 'fa-shopping-bag', 'fa-shopping-basket', 'fa-hashtag',
-    'fa-bluetooth', 'fa-bluetooth-b', 'fa-percent'
-  ]);
-
-  // Iconos de fallback por categoría
-  private readonly fallbackIcons = {
-    'user': 'fa-user',
-    'file': 'fa-file-o',
-    'folder': 'fa-folder-o',
-    'settings': 'fa-cog',
-    'navigation': 'fa-bars',
-    'action': 'fa-circle-o',
-    'status': 'fa-circle',
-    'communication': 'fa-comment',
-    'data': 'fa-database',
-    'business': 'fa-briefcase',
-    'default': 'fa-circle-o'
-  };
-
-  /**
-   * Valida si un icono existe en FontAwesome 4.7.0
-   */
-  private isValidFA4Icon(iconClass: string): boolean {
-    return this.validFA4Icons.has(iconClass);
-  }
-
-  /**
-   * Optimiza y valida un icono para FontAwesome 4.7.0
-   */
-  validateAndOptimizeIcon(iconClass: string, category: string = 'default'): string {
-    // Verificar cache primero
-    const cacheKey = `${iconClass}-${category}`;
-    if (this.iconCache.has(cacheKey)) {
-      return this.iconCache.get(cacheKey)!;
-    }
-
-    let optimizedIcon = iconClass;
-
-    // Asegurar que tiene prefijo fa- (sin espacios — ver nota en getMenuIcon)
-    if (!optimizedIcon.startsWith('fa-')) {
-      optimizedIcon = `fa-${optimizedIcon}`;
-    }
-
-    // Verificar si es válido
-    if (this.isValidFA4Icon(optimizedIcon)) {
-      this.iconCache.set(cacheKey, optimizedIcon);
-      return optimizedIcon;
-    }
-
-    // Intentar mapear iconos de FA5/6 a FA4
-    const fa4Mapped = this.mapToFA4Icon(optimizedIcon);
-    if (fa4Mapped && this.isValidFA4Icon(fa4Mapped)) {
-      this.iconCache.set(cacheKey, fa4Mapped);
-      return fa4Mapped;
-    }
-
-    // Usar icono de fallback
-    const fallbackIcon = this.fallbackIcons[category] || this.fallbackIcons['default'];
-    this.iconCache.set(cacheKey, fallbackIcon);
-
-    // Log para debugging en desarrollo
-    if (!environment.production) {
-      console.warn(`Icon '${iconClass}' not found in FA 4.7.0, using fallback: ${fallbackIcon} `);
-    }
-
-    return fallbackIcon;
-  }
-
-  /**
-   * Mapea iconos de FontAwesome 5/6 a equivalentes en 4.7.0
-   */
-  private mapToFA4Icon(iconClass: string): string | null {
-    const fa5ToFa4Map: { [key: string]: string } = {
-      'fa-house': 'fa-home',
-      'fa-house-user': 'fa-home',
-      'fa-bars': 'fa-bars',
-      'fa-navicon': 'fa-bars',
-      'fa-chart-bar': 'fa-bar-chart',
-      'fa-chart-line': 'fa-line-chart',
-      'fa-chart-pie': 'fa-pie-chart',
-      'fa-chart-area': 'fa-area-chart',
-      'fa-file-alt': 'fa-file-text-o',
-      'fa-file-text': 'fa-file-text-o',
-      'fa-folder-open': 'fa-folder-open-o',
-      'fa-calendar-alt': 'fa-calendar-o',
-      'fa-clock': 'fa-clock-o',
-      'fa-user-tie': 'fa-user',
-      'fa-user-cog': 'fa-user',
-      'fa-users-cog': 'fa-users',
-      'fa-shield-alt': 'fa-shield',
-      'fa-shopping-bag': 'fa-shopping-bag',
-      'fa-shipping-fast': 'fa-truck',
-      'fa-warehouse': 'fa-building-o',
-      'fa-boxes': 'fa-cubes',
-      'fa-layer-group': 'fa-folder-o',
-      'fa-tachometer-alt': 'fa-tachometer',
-      'fa-dollar-sign': 'fa-dollar',
-      'fa-euro-sign': 'fa-eur',
-      'fa-pound-sign': 'fa-gbp',
-      'fa-yen-sign': 'fa-yen',
-      'fa-ruble-sign': 'fa-rub',
-      'fa-rupee-sign': 'fa-inr',
-      'fa-won-sign': 'fa-krw',
-      'fa-external-link-alt': 'fa-external-link',
-      'fa-mobile-alt': 'fa-mobile',
-      'fa-tablet-alt': 'fa-tablet',
-      'fa-desktop': 'fa-desktop',
-      'fa-laptop': 'fa-laptop',
-      'fa-headset': 'fa-headphones',
-      'fa-newspaper': 'fa-newspaper-o',
-      'fa-handshake': 'fa-handshake-o',
-      'fa-map-marker-alt': 'fa-map-marker',
-      'fa-route': 'fa-road',
-      'fa-id-badge': 'fa-id-card-o',
-      'fa-address-card': 'fa-address-card-o',
-      'fa-address-book': 'fa-address-book-o',
-      'fa-sticky-note': 'fa-sticky-note-o',
-      'fa-file-pdf': 'fa-file-pdf-o',
-      'fa-file-word': 'fa-file-word-o',
-      'fa-file-excel': 'fa-file-excel-o',
-      'fa-file-powerpoint': 'fa-file-powerpoint-o',
-      'fa-file-image': 'fa-file-image-o',
-      'fa-file-video': 'fa-file-video-o',
-      'fa-file-audio': 'fa-file-audio-o',
-      'fa-file-archive': 'fa-file-archive-o',
-      'fa-sliders-h': 'fa-sliders',
-      'fa-tools': 'fa-wrench',
-      'fa-cogs': 'fa-cogs',
-      'fa-microchip': 'fa-desktop',
-      'fa-palette': 'fa-paint-brush',
-      'fa-sync': 'fa-refresh',
-      'fa-sync-alt': 'fa-refresh',
-      'fa-redo': 'fa-repeat',
-      'fa-undo': 'fa-undo',
-      'fa-trash-alt': 'fa-trash-o',
-      'fa-eye-slash': 'fa-eye-slash',
-      'fa-lightbulb': 'fa-lightbulb-o',
-      'fa-brain': 'fa-lightbulb-o',
-      'fa-award': 'fa-star',
-      'fa-medal': 'fa-star',
-      'fa-crown': 'fa-star',
-      'fa-stamp': 'fa-certificate',
-      'fa-signature': 'fa-pencil-square-o',
-      'fa-user-shield': 'fa-user-secret',
-      'fa-cloud-upload-alt': 'fa-cloud-upload',
-      'fa-cloud-download-alt': 'fa-cloud-download',
-      'fa-bluetooth-b': 'fa-bluetooth-b',
-      'fa-compress': 'fa-compress',
-      'fa-expand': 'fa-expand',
-      'fa-thumbtack': 'fa-thumb-tack',
-      'fa-arrows-alt': 'fa-arrows',
-      'fa-exchange-alt': 'fa-exchange',
-      'fa-money-bill-alt': 'fa-money',
-      'fa-coins': 'fa-money',
-      'fa-wallet': 'fa-credit-card',
-      'fa-cash-register': 'fa-calculator',
-      'fa-receipt': 'fa-file-text-o',
-      'fa-clipboard-list': 'fa-clipboard',
-      'fa-file-contract': 'fa-file-text-o',
-      'fa-file-invoice': 'fa-file-text-o',
-      'fa-file-invoice-dollar': 'fa-file-text-o',
-      'fa-check-double': 'fa-check',
-      'fa-check-circle': 'fa-check-circle',
-      'fa-times-circle': 'fa-times-circle',
-      'fa-exclamation-triangle': 'fa-warning',
-      'fa-info-circle': 'fa-info-circle',
-      'fa-question-circle': 'fa-question-circle',
-      // Mapeos adicionales para iconos problemáticos
-      'fa-pencil-alt': 'fa-pencil',
-      'fa-user-edit': 'fa-user',
-      'fa-battery-empty': 'fa-battery-0',
-      'fa-hand-holding-usd': 'fa-usd',
-      'fa-industry': 'fa-cogs',
-      'fa-box': 'fa-cube'
-    };
-
-    return fa5ToFa4Map[iconClass] || null;
-  }
-
-  /**
-   * Detecta el tipo de elemento para mejor mapeo de iconos
-   */
-  private detectIconCategory(title: string, hasChildren: boolean = false): string {
-    const titleLower = title.toLowerCase();
-
-    if (titleLower.includes('usuario') || titleLower.includes('empleado') || titleLower.includes('cliente')) {
-      return 'user';
-    }
-    if (titleLower.includes('archivo') || titleLower.includes('documento') || titleLower.includes('reporte')) {
-      return 'file';
-    }
-    if (titleLower.includes('carpeta') || titleLower.includes('categoria') || hasChildren) {
-      return 'folder';
-    }
-    if (titleLower.includes('config') || titleLower.includes('ajuste') || titleLower.includes('setting')) {
-      return 'settings';
-    }
-    if (titleLower.includes('menú') || titleLower.includes('navegación') || titleLower.includes('inicio')) {
-      return 'navigation';
-    }
-    if (titleLower.includes('mensaje') || titleLower.includes('correo') || titleLower.includes('chat')) {
-      return 'communication';
-    }
-    if (titleLower.includes('base') || titleLower.includes('datos') || titleLower.includes('inventario')) {
-      return 'data';
-    }
-    if (titleLower.includes('empresa') || titleLower.includes('negocio') || titleLower.includes('comercial')) {
-      return 'business';
-    }
-    if (titleLower.includes('agregar') || titleLower.includes('crear') || titleLower.includes('nuevo')) {
-      return 'action';
-    }
-    if (titleLower.includes('estado') || titleLower.includes('estatus') || titleLower.includes('activo')) {
-      return 'status';
-    }
-
-    return 'default';
-  }
-
-  /**
-   * Método público mejorado para obtener iconos optimizados
-   */
-  getOptimizedMenuIcon(icon: string | undefined, title?: string, hasChildren: boolean = false): string {
-    // Si no hay icono, inferir del título
-    if (!icon && title) {
-      icon = this.inferIconFromTitle(title);
-    }
-
-    if (!icon) {
-      const category = this.detectIconCategory(title || '', hasChildren);
-      return this.validateAndOptimizeIcon('circle-o', category);
-    }
-
-    // Detectar categoría para mejor fallback
-    const category = this.detectIconCategory(title || '', hasChildren);
-
-    // Usar mapeo existente primero
-    const mappedIcon = this.getMenuIcon(icon, title, false);
-
-    // Validar y optimizar el resultado
-    return this.validateAndOptimizeIcon(mappedIcon, category);
-  }
-
-  /**
-   * Limpiar cache de iconos (útil para desarrollo)
-   */
-  clearIconCache(): void {
-    this.iconCache.clear();
-    if (!environment.production) {
-    }
-  }
-
-  /**
-   * Obtener estadísticas del cache de iconos
-   */
-  getIconCacheStats(): { size: number; keys: string[] } {
-    return {
-      size: this.iconCache.size,
-      keys: Array.from(this.iconCache.keys())
-    };
   }
 
   // ===================================================
@@ -3094,12 +1543,162 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   /** Ticket 1177: la insignia del ítem se muestra mientras no venza badgeUntil. */
   public badgeVisible(item: Menu): boolean {
-    return NavService.badgeVisible(item);
+    return insigniaVigente(item);
   }
 
-  /** Ticket 1177: un ítem padre marca un punto cuando alguno de sus hijos tiene insignia vigente. */
+  /** D-546: un grupo marca el punto en el ícono solo si algún hijo tiene NUEVO vigente (PRONTO no cuenta). */
   public hasNewChild(item: Menu): boolean {
-    return !!item?.children?.some((c) => NavService.badgeVisible(c));
+    return tieneHijoNuevo(item);
+  }
+
+  /**
+   * D-546 (D8): escritorio con el menú en modo compacto (72 px: solo íconos y un panel flotante por grupo).
+   * En el celular no hay compacto: `collapseMenu` significa «cajón cerrado» y las filas siempre van completas.
+   */
+  public get compacto(): boolean {
+    return this.collapseMenu && !this.isMobile();
+  }
+
+  /** El modo que la plantilla muestra en el botón alternar. */
+  public get modo(): ModoMenu {
+    return this.compacto ? 'compacto' : 'abierto';
+  }
+
+  /** `trackBy` de las filas: la clave es estable mientras el menú no cambie de forma. */
+  public porClave(_indice: number, fila: FilaMenu): string {
+    return fila.clave;
+  }
+
+  /** El ícono de un resultado de la búsqueda. */
+  public iconoDeResultado(resultado: ResultadoBusqueda): string {
+    return resultado.icono || '';
+  }
+
+  // ===================== MODO DEL MENÚ (D-546 D8): abierto o compacto =====================
+
+  /** Correo de la sesión: la preferencia se guarda por usuario (con hash, nunca en claro). */
+  private correoUsuario(): string {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}')?.email || '';
+    } catch {
+      return '';
+    }
+  }
+
+  private modoDelUsuario(): ModoMenu {
+    return modoInicial(localStorage, this.correoUsuario());
+  }
+
+  /** Deja el menú en un modo, en escritorio, y avisa a NavService y LayoutService (ellos derivan de aquí). */
+  private aplicarModo(modo: ModoMenu): void {
+    this.collapseMenu = modo === 'compacto';
+    this.navServices.collapseSidebar = this.collapseMenu;
+    this.layout.updateSidebarState({ isCollapsed: this.collapseMenu });
+  }
+
+  /** Recuerda la elección de este usuario. En el celular «colapsado» es solo el cajón cerrado: no se guarda. */
+  private persistirModo(): void {
+    if (this.isMobile()) { return; }
+    guardarModo(localStorage, this.correoUsuario(), this.collapseMenu ? 'compacto' : 'abierto');
+  }
+
+  // ===================== PANEL FLOTANTE DEL RIEL COMPACTO (D-546 D8) =====================
+
+  /** El panel abierto: la clave de su fila y su posición vertical (se pinta con `position: fixed`). */
+  public panel: { clave: string; top: number } | null = null;
+
+  public filaDeFuente(fuente: Menu): FilaMenu | undefined {
+    for (const seccion of this.sections) {
+      const fila = seccion.filas.find(f => f.fuente === fuente);
+      if (fila) { return fila; }
+    }
+    return undefined;
+  }
+
+  /**
+   * Abre el panel de un grupo (sus pantallas) o de un enlace directo (solo su nombre).
+   * La posición vertical es la de la fila, con tope para que no se salga de la ventana.
+   */
+  public abrirPanel(fila: FilaMenu, evento?: Event): void {
+    if (!this.compacto || this.sinAbrirPanel) { return; }
+    if (this.panel?.clave === fila.clave) { return; }
+    const origen = evento?.currentTarget as HTMLElement | null;
+    const item = origen?.closest?.('.menu-item') as HTMLElement | null;
+    const boton = (item?.querySelector('.menu-link') || origen) as HTMLElement | null;
+    const rect = boton?.getBoundingClientRect?.();
+    const alto = fila.tipo === 'grupo' ? 56 + fila.hijos.length * 40 : 40;
+    const arriba = rect ? Math.max(8, Math.min(rect.top, window.innerHeight - alto - 8)) : 8;
+    this.panel = { clave: fila.clave, top: Math.round(arriba) };
+  }
+
+  private sinAbrirPanel = false;
+
+  public cerrarPanel(): void {
+    if (this.panel) { this.panel = null; }
+  }
+
+  /** El puntero entra a una fila del riel (el panel no se abre con el dedo: ahí manda el toque). */
+  public alEntrarPuntero(fila: FilaMenu, evento: PointerEvent): void {
+    if (evento.pointerType === 'touch') { return; }
+    this.abrirPanel(fila, evento);
+  }
+
+  public alSalirPuntero(evento: PointerEvent): void {
+    if (evento.pointerType === 'touch') { return; }
+    this.cerrarPanel();
+  }
+
+  /** El foco sale de la fila y de su panel: se cierra. */
+  public alPerderFoco(evento: FocusEvent): void {
+    const item = evento.currentTarget as HTMLElement;
+    const siguiente = evento.relatedTarget as Node | null;
+    if (!siguiente || !item.contains(siguiente)) { this.cerrarPanel(); }
+  }
+
+  /** Enter, espacio o flecha derecha abren el panel y llevan el foco a su primer enlace. */
+  public abrirPanelConTeclado(fila: FilaMenu, evento: Event): void {
+    evento.preventDefault();
+    evento.stopPropagation();
+    if (!this.compacto) { return; }
+    this.panel = null;
+    this.abrirPanel(fila, evento);
+    this.cdr.detectChanges();
+    const item = (evento.currentTarget as HTMLElement).closest('.menu-item');
+    (item?.querySelector('.panel-flotante a, .panel-flotante [role="menuitem"]:not([aria-disabled])') as HTMLElement | null)?.focus();
+  }
+
+  /** Esc cierra el panel y devuelve el foco al botón de la fila. */
+  public cerrarPanelConTeclado(evento: Event): void {
+    if (!this.panel) { return; }
+    const item = (evento.currentTarget as HTMLElement).closest('.menu-item');
+    this.cerrarPanel();
+    // Devolver el foco al botón no debe volver a abrir el panel (`focusin` de la fila).
+    this.sinAbrirPanel = true;
+    (item?.querySelector('.menu-link') as HTMLElement | null)?.focus();
+    this.sinAbrirPanel = false;
+  }
+
+  /** Flechas arriba y abajo entre los enlaces del panel. */
+  public moverFocoPanel(evento: Event, paso: 1 | -1): void {
+    const panel = evento.currentTarget as HTMLElement;
+    const enlaces = Array.from(panel.querySelectorAll<HTMLElement>('a'));
+    if (!enlaces.length) { return; }
+    evento.preventDefault();
+    const actual = enlaces.indexOf(document.activeElement as HTMLElement);
+    const siguiente = actual < 0 ? 0 : (actual + paso + enlaces.length) % enlaces.length;
+    enlaces[siguiente].focus();
+  }
+
+  /** El punto del ícono: una novedad vigente o, en el riel compacto, también un favorito dentro del grupo. */
+  public puntoVisible(fila: FilaMenu): boolean {
+    if (fila.punto) { return true; }
+    if (!this.compacto) { return false; }
+    return this.esFavorita(this.favoritoDeFila(fila)) || fila.hijos.some(hijo => this.esFavorita(this.favoritoDeFila(hijo)));
+  }
+
+  /** Puede ser favorita la entrada que lleva a una pantalla o abre un grupo (D-517); los avisos «pronto» no. */
+  public puedeSerFavorita(fila: FilaMenu): boolean {
+    return this.favoritoDeFila(fila) !== null;
   }
 
   public toggleNotificationSound(event: Event): void {
@@ -3118,13 +1717,14 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     // Suscribirse a los cambios de estado del sidebar desde LayoutService
     this.sidebarStateSubscription = this.layout.sidebarState$.subscribe(state => {
       this.isAutoHideEnabled = state.isAutoHideEnabled;
-      this.isAutoCollapseEnabled = state.isAutoCollapseEnabled;
-      this.isTemporarilyExpanded = state.isTemporarilyExpanded;
       this.isSidebarVisible = state.isVisible;
       this.isPinned = state.isPinned;
       this.isHovering = state.isHovering;
       // Mantener sincronizado el estado de colapso para plantillas y hover-zone
+      if (this.collapseMenu !== state.isCollapsed) { this.cerrarPanel(); }
       this.collapseMenu = state.isCollapsed;
+      // El botón del encabezado también alterna el menú: la elección del usuario se recuerda venga de donde venga
+      this.persistirModo();
 
       // Aplicar clases CSS correspondientes
       this.updateSidebarClasses();
@@ -3132,9 +1732,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Configurar listener para clicks fuera del sidebar
     this.setupClickOutsideListener();
-
-    // Configurar eventos de hover para auto-collapse
-    this.setupAutoCollapseListeners();
   }
 
   /**
@@ -3146,12 +1743,8 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.renderer.addClass(hoverZone, 'sidebar-hover-zone');
     this.renderer.appendChild(document.body, hoverZone);
 
-    // Listener para mostrar sidebar en hover
+    // Listener para mostrar sidebar en hover (solo auto-hide: el menú compacto ya no se expande al pasar el puntero)
     this.hoverZoneListener = this.renderer.listen(hoverZone, 'mouseenter', () => {
-      // Forzar expansión temporal visual del header/sidebar cuando está colapsado
-      if (this.collapseMenu && !this.isAutoCollapseEnabled && !this.isMobile()) {
-        this.onMouseEnter();
-      }
       if (this.isAutoHideEnabled && !this.isSidebarVisible) {
         // Limpiar timeout de ocultar si existe
         if (this.hideTimeout) {
@@ -3163,13 +1756,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
           this.layout.showSidebar();
           this.layout.setHovering(true);
         }, this.layout.autoHideConfig.hoverDelay);
-      }
-    });
-
-    // Listener para ocultar sidebar cuando el mouse sale
-    this.renderer.listen(hoverZone, 'mouseleave', () => {
-      if (this.collapseMenu && this.isTemporarilyExpanded && !this.isAutoCollapseEnabled && !this.isMobile()) {
-        this.onMouseLeave();
       }
     });
 
@@ -3230,20 +1816,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.renderer.removeClass(sidebarElement, 'sidebar-hidden');
     this.renderer.removeClass(sidebarElement, 'sidebar-pinned');
     this.renderer.removeClass(sidebarElement, 'sidebar-hovering');
-    this.renderer.removeClass(sidebarElement, 'auto-collapse-enabled');
-    this.renderer.removeClass(sidebarElement, 'auto-collapse-expanded');
-    this.renderer.removeClass(sidebarElement, 'temporarily-expanded');
 
-    // Aplicar clases para auto-collapse
-    if (this.isAutoCollapseEnabled) {
-      this.renderer.addClass(sidebarElement, 'auto-collapse-enabled');
-
-      if (this.isTemporarilyExpanded) {
-        this.renderer.addClass(sidebarElement, 'auto-collapse-expanded');
-      }
-    }
-    // Aplicar clases para auto-hide (solo si auto-collapse no está activo)
-    else if (this.isAutoHideEnabled) {
+    // Aplicar clases para auto-hide
+    if (this.isAutoHideEnabled) {
       this.renderer.addClass(sidebarElement, 'auto-hide-enabled');
 
       if (!this.isSidebarVisible) {
@@ -3255,14 +1830,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       if (this.isHovering) {
         this.renderer.addClass(sidebarElement, 'sidebar-hovering');
       }
-    }
-
-    // Marcar temporalmente expandido para ajustar el header por CSS
-    if (this.collapseMenu && this.isTemporarilyExpanded && !this.isMobile()) {
-      this.renderer.addClass(sidebarElement, 'temporarily-expanded');
-      document.querySelector('.page-wrapper')?.classList.add('sidebar-temporarily-expanded');
-    } else {
-      document.querySelector('.page-wrapper')?.classList.remove('sidebar-temporarily-expanded');
     }
 
     // Actualizar el contenido principal
@@ -3293,52 +1860,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       this.navServices.collapseSidebar = false;
     }
     this.layout.toggleAutoHide();
-  }
-
-  /**
-   * Método deprecado - Auto-collapse ha sido reemplazado por hover-expand en colapso tradicional
-   * @deprecated Usar el botón de flecha con hover-expand
-   */
-  public toggleAutoCollapse(): void {
-    // Función desactivada - redirigir al colapso tradicional
-    console.warn('Auto-collapse está deprecado. Use el botón de flecha con hover-expand.');
-    this.sidebarToggle();
-  }
-
-  /**
-   * Configura los listeners para auto-collapse
-   */
-  private setupAutoCollapseListeners(): void {
-    const sidebarElement = this.elementRef.nativeElement.querySelector('.sidebar-container');
-    if (!sidebarElement) return;
-
-    // Mouse enter - expandir inmediatamente
-    this.renderer.listen(sidebarElement, 'mouseenter', () => {
-      if (this.isAutoCollapseEnabled && !this.isTemporarilyExpanded) {
-        // Limpiar cualquier timeout de colapso pendiente
-        if (this.autoCollapseTimeout) {
-          clearTimeout(this.autoCollapseTimeout);
-          this.autoCollapseTimeout = null;
-        }
-
-        this.isMouseInsideSidebar = true;
-        this.layout.setTemporarilyExpanded(true);
-      }
-    });
-
-    // Mouse leave - colapsar después de un delay
-    this.renderer.listen(sidebarElement, 'mouseleave', () => {
-      if (this.isAutoCollapseEnabled && this.isTemporarilyExpanded) {
-        this.isMouseInsideSidebar = false;
-
-        // Aplicar delay antes de colapsar
-        this.autoCollapseTimeout = setTimeout(() => {
-          if (!this.isMouseInsideSidebar && this.isAutoCollapseEnabled) {
-            this.layout.setTemporarilyExpanded(false);
-          }
-        }, this.layout.autoCollapseConfig.collapseDelay);
-      }
-    });
   }
 
   // Funcionalidad de pin eliminada - ya no es necesaria

@@ -341,22 +341,53 @@
 .spinner-border { color: var(--accent); }
 
 // ===================== Filtros =====================
+// Ticket 1338: tarjeta compacta (~170 px). Fila 1: Buscar (40 %) | Nº cotización |
+// Comercial | Período, todos de 40 px. Fila 2: los estados en una sola línea.
+.filtros-card .cotz-card-head { padding: 8px 20px; }
+.filtros-card .cotz-card-head-actions {
+  flex-wrap: wrap;
+  > button { white-space: nowrap; }
+}
+
 .filtros-body {
-  padding: 20px 22px;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1.4fr;
-  gap: 22px;
-  align-items: start;
+  padding: 10px 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filtros-fila {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+
+  // Buscar 40 %; Nº cotización un poco más ancho que Comercial y Período para
+  // que se lea su texto de ayuda completo.
+  > .filtro-field { flex: 1.7 1 0; min-width: 0; }
+  > .filtro-field--buscar { flex: 4 1 0; }
+  > .filtro-field--numero { flex: 2.6 1 0; }
 }
 
 .filtro-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
+  line-height: 14px;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
+
+.filtro-estado {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+
+  > .filtro-label { flex: none; margin: 0; }
+}
+
+.filtro-motivo { max-width: 360px; }
 
 .filtro-input {
   display: flex;
@@ -365,7 +396,9 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 11px;
-  padding: 11px 14px;
+  height: 40px;
+  padding: 0 12px;
+  box-sizing: border-box;
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
 
   &:focus-within {
@@ -388,30 +421,47 @@
 
     &::placeholder { color: #9aa0b2; font-weight: 500; }
   }
+
+  input { min-width: 0; text-overflow: ellipsis; }
+  select { height: 100%; min-width: 0; cursor: pointer; }
 }
 
+// Ticket 1338: los estados no se parten en varias filas; si no caben, se
+// desplazan de lado. El relleno de 3 px deja ver el anillo de foco.
 .chips {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 3px;
+  margin: -3px;
+  scrollbar-width: thin;
+  scrollbar-color: #e0dcf0 transparent;
 }
 
 .chip {
   display: inline-flex;
+  flex: none;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  white-space: nowrap;
   background: #fff;
   color: #52586b;
   border: 1px solid #e4e5ee;
   border-radius: 999px;
-  padding: 9px 16px;
+  padding: 6px 13px;
   font-family: var(--font-body);
   font-weight: 800;
-  font-size: 13px;
+  font-size: 12.5px;
+  line-height: 1.3;
+  letter-spacing: normal;
   cursor: pointer;
   transition: all 0.12s ease;
 
-  .chip-count { color: var(--accent); font-weight: 800; }
+  // Ticket 1338: antes `chip-count`, que la regla global [class*="p-"] alcanzaba.
+  .conteo-estado { color: var(--accent); font-weight: 800; font-size: inherit; }
 
   &:hover { border-color: var(--accent); }
 
@@ -420,8 +470,21 @@
     color: #fff;
     border-color: var(--accent);
 
-    .chip-count { color: rgba(255, 255, 255, 0.75); }
+    .conteo-estado { color: rgba(255, 255, 255, 0.75); }
   }
+}
+
+.btn-ghost,
+.btn-accent,
+.chip {
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+
+// Ticket 1338: "Limpiar filtros (N)" junto a Exportar, solo con filtros puestos.
+.btn-ghost.btn-limpiar {
+  color: var(--accent);
+  border-color: #e2d9fb;
+  &:hover { background: var(--accent-bg); }
 }
 
 // ===================== Tabla =====================
@@ -736,7 +799,9 @@
 }
 
 @media (max-width: 900px) {
-  .filtros-body { grid-template-columns: 1fr; gap: 16px; }
+  .filtros-fila { flex-wrap: wrap; }
+  .filtros-fila > .filtro-field { flex: 1 1 160px; }
+  .filtros-fila > .filtro-field--buscar { flex-basis: 100%; }
 }
 
 @media (max-width: 620px) {

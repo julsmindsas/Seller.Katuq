@@ -1,0 +1,186 @@
+// Ticket 1323 (D-538): carga de combos desde Excel. Tema de combos (D-341).
+@import '../combos-tema';
+
+:host { display: block; }
+
+.icb {
+  padding: 26px 28px 22px;
+  font-family: $cb-text;
+  color: $cb-ink;
+  background: #fff;
+}
+
+.icb-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.icb-eyebrow { @include cb-chip-accent; }
+
+.icb-title {
+  margin: 10px 0 6px;
+  font-family: $cb-display;
+  font-size: 22px !important;
+  line-height: 1.2;
+  color: $cb-ink;
+}
+
+.icb-sub {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  letter-spacing: normal;
+  color: $cb-muted;
+}
+
+.icb-close {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid $cb-line;
+  border-radius: 11px;
+  background: #fff;
+  color: $cb-muted;
+  cursor: pointer;
+  &:focus-visible { outline: 3px solid #7C5CFF !important; }
+}
+
+.icb-pasos {
+  display: grid;
+  gap: 10px;
+}
+
+.icb-paso {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid $cb-line;
+  border-radius: 16px;
+}
+
+.icb-paso-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $cb-accent-soft;
+  color: $cb-accent;
+  font-weight: 800;
+}
+
+.icb-paso-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 13px;
+  color: $cb-muted;
+  strong { font-size: 14px; color: $cb-ink; }
+  span { color: $cb-muted !important; font-size: 13px !important; overflow-wrap: anywhere; }
+}
+
+.icb-btn-ghost { @include cb-btn-ghost; }
+.icb-btn-primary { @include cb-btn-primary; }
+
+.icb-file {
+  position: relative;
+  margin: 0;
+  input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+}
+
+.icb-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  color: $cb-accent;
+  .icb-loading-txt { color: $cb-accent !important; font-size: 13px !important; }
+}
+
+.icb-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.icb-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid $cb-line;
+  border-radius: 11px;
+  &--err { border-color: #f0b4b4; background: $cb-err-soft; }
+}
+
+.icb-stat-label { @include cb-label; }
+.icb-stat-value { font-family: $cb-display; font-size: 20px; color: $cb-ink; }
+
+.icb-aviso {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 11px;
+  &--err { background: $cb-err-soft; }
+  .icb-aviso-txt { color: $cb-err !important; font-size: 13px !important; font-weight: 600; }
+}
+
+.icb-table-wrap {
+  margin-top: 12px;
+  max-height: 280px;
+  overflow: auto;
+  border: 1px solid $cb-line;
+  border-radius: 11px;
+}
+
+.icb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  th {
+    position: sticky;
+    top: 0;
+    padding: 8px 10px;
+    background: #faf9ff;
+    text-align: left;
+    @include cb-label;
+  }
+  td {
+    padding: 8px 10px;
+    border-top: 1px solid $cb-line;
+    color: $cb-ink;
+    vertical-align: top;
+  }
+}
+
+.icb-tag {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 20px;
+  background: $cb-slate-soft;
+  color: $cb-slate !important;
+  font-size: 11.5px !important;
+  font-weight: 700;
+  &--new { background: $cb-accent-soft; color: $cb-accent !important; }
+}
+
+.icb-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+@media (max-width: 575px) {
+  .icb { padding: 20px 16px; }
+  .icb-paso { grid-template-columns: 32px minmax(0, 1fr); }
+  .icb-paso > .icb-btn-ghost { grid-column: 1 / -1; }
+  .icb-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

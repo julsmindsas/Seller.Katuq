@@ -598,6 +598,12 @@
             </div>
         </div>
 
+        <!-- Ticket 1328: métricas de compra del cliente (spec 009), las mismas de Crear cliente -->
+        <div class="mb-3">
+            <div class="detalle-section-title">Métricas</div>
+            <app-customer-metrics [documento]="clienteDetalle.documento" [compacto]="true"></app-customer-metrics>
+        </div>
+
         <!-- Etiquetas -->
         <div class="mb-3" *ngIf="clienteDetalle.etiquetas?.length > 0">
             <div class="detalle-section-title">Etiquetas</div>

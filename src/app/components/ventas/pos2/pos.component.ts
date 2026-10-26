@@ -1,4 +1,4 @@
-import { Component, ViewChild, AfterViewInit, OnInit, HostListener } from '@angular/core'; // Importar OnInit
+import { Component, ViewChild, AfterViewInit, OnInit, OnDestroy, HostListener } from '@angular/core'; // Importar OnInit
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 import { ProductCategoryComponent } from "./widgets/product-category/product-category.component";
@@ -17,7 +17,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./pos.component.scss']
 })
 
-export class PosComponent implements OnInit, AfterViewInit { // Implementar OnInit además de AfterViewInit
+export class PosComponent implements OnInit, AfterViewInit, OnDestroy { // Implementar OnInit además de AfterViewInit
   @ViewChild(ProductComponent) productComponent: ProductComponent;
   @ViewChild(WarehouseSelectorComponent) warehouseSelectorComponent: WarehouseSelectorComponent; // Añadir ViewChild para WarehouseSelector
 
@@ -57,6 +57,9 @@ export class PosComponent implements OnInit, AfterViewInit { // Implementar OnIn
   }
 
   ngOnInit(): void {
+    // Ticket 1340: el POS ocupa la ventana sin scroll de página (doble barra). La clase solo
+    // vive mientras el POS está abierto; el ajuste está en styles.scss, solo en escritorio.
+    document.body.classList.add('katuq-pos-escritorio');
     // Debug logging para verificar contexto de empresa
     const currentCompanyStr = localStorage.getItem("currentCompany");
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -270,4 +273,8 @@ export class PosComponent implements OnInit, AfterViewInit { // Implementar OnIn
     return parseFloat(n.toPrecision(10)).toString();
   }
   // ───────────────────────────────────────────────────────────────
+
+  ngOnDestroy(): void {
+    document.body.classList.remove('katuq-pos-escritorio');
+  }
 }

@@ -2,7 +2,7 @@
 
   <!-- Not found -->
   <div *ngIf="notFound" class="view-state">
-    <i class="fa fa-circle-exclamation"></i>
+    <i class="fa fa-exclamation-circle"></i>
     <p>{{ 'dashboard.view.notFound' | translate }}</p>
     <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="goHome()">
       <i class="fa fa-arrow-left me-1"></i> {{ 'dashboard.common.back' | translate }}
@@ -45,16 +45,16 @@
       <span class="spacer"></span>
 
       <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="exportExcel()" [disabled]="!result || exporting" [title]="'dashboard.common.exportExcel' | translate">
-        <i class="fa fa-file-excel"></i> Excel
+        <i class="fa fa-file-excel-o"></i> Excel
       </button>
       <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="exportPng()" [disabled]="!result || exporting" [title]="'dashboard.common.exportPng' | translate">
-        <i class="fa fa-file-image"></i> PNG
+        <i class="fa fa-file-image-o"></i> PNG
       </button>
       <button type="button" class="cfg-btn cfg-btn--sec rb-btn" (click)="exportPdf()" [disabled]="!result || exporting" [title]="'dashboard.common.exportPdf' | translate">
-        <i class="fa fa-file-pdf"></i> PDF
+        <i class="fa fa-file-pdf-o"></i> PDF
       </button>
       <button type="button" class="cfg-btn rb-btn" (click)="goEdit()" [title]="'dashboard.view.editReport' | translate">
-        <i class="fa fa-pen me-1"></i> {{ 'comun.editar' | translate }}
+        <i class="fa fa-pencil me-1"></i> {{ 'comun.editar' | translate }}
       </button>
     </header>
 
@@ -62,7 +62,7 @@
     <main class="view-body">
 
       <div *ngIf="errorMsg" class="view-error">
-        <i class="fa fa-triangle-exclamation me-1"></i>{{ errorMsg | translate }}
+        <i class="fa fa-exclamation-triangle me-1"></i>{{ errorMsg | translate }}
       </div>
 
       <div *ngIf="running && result" class="view-refreshing">

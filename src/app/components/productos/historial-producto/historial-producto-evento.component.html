@@ -1,0 +1,41 @@
+<article class="hprod-evento" [class.hprod-evento--sistema]="evento.sistema">
+  <div class="hprod-evento__tile hprod-tono--{{ aspecto.tono }}">
+    <i [class]="aspecto.icono" aria-hidden="true"></i>
+  </div>
+
+  <div class="hprod-evento__cuerpo">
+    <div class="hprod-evento__titulo">{{ evento.titulo }}</div>
+    <div class="hprod-evento__quien">{{ quien }}</div>
+
+    <!-- Datos que cambiaron: «Nombre: Camisa → Camisa azul» -->
+    <ul class="hprod-detalles" *ngIf="evento.detalles?.length">
+      <li class="hprod-detalle" *ngFor="let d of evento.detalles; trackBy: trackIndice">
+        <div class="hprod-detalle__etiqueta">{{ d.etiqueta }}</div>
+        <div class="hprod-detalle__valores">
+          <div class="hprod-detalle__antes">{{ valor(d.antes, d.clase) }}</div>
+          <i class="pi pi-arrow-right hprod-detalle__flecha" aria-hidden="true"></i>
+          <div class="hprod-detalle__despues">{{ valor(d.despues, d.clase) }}</div>
+        </div>
+      </li>
+    </ul>
+
+    <!-- Precios y costo: «$42.621 → $78.291 (+$35.670, +83,7 %)» -->
+    <ul class="hprod-precios" *ngIf="evento.precios?.length">
+      <li class="hprod-precio" *ngFor="let p of evento.precios; trackBy: trackIndice">
+        <div class="hprod-precio__etiqueta">{{ p.etiqueta }}</div>
+        <div class="hprod-pastilla hprod-pastilla--{{ sentido(p) }}">{{ linea(p) }}</div>
+      </li>
+    </ul>
+
+    <!-- Producto creado o eliminado -->
+    <div class="hprod-foto" *ngIf="resumenFoto">{{ resumenFoto }}</div>
+
+    <!-- Importaciones y acciones masivas -->
+    <div class="hprod-lote" *ngIf="evento.lote?.nombre">
+      <i class="pi pi-list" aria-hidden="true"></i>
+      <div class="hprod-lote__texto">{{ evento.lote?.nombre }}<ng-container *ngIf="evento.lote?.total"> · {{ evento.lote?.total }} en el lote</ng-container></div>
+    </div>
+
+    <div class="hprod-motivo" *ngIf="evento.motivo">Motivo: {{ evento.motivo }}</div>
+  </div>
+</article>

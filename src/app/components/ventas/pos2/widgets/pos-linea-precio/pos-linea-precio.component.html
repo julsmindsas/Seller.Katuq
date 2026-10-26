@@ -1,0 +1,33 @@
+<div class="lin-editor">
+  <div class="lin-campos">
+    <label class="lin-campo lin-base">
+      <span class="lin-label">Base</span>
+      <input *ngIf="permiteManual; else baseFija" class="lin-input" type="number" min="0" step="100"
+             [ngModel]="precioBase"
+             (ngModelChange)="onPrecioInput($event)"
+             (blur)="onPrecioConfirm()"
+             (keyup.enter)="onPrecioConfirm()"
+             aria-label="Precio base sin IVA">
+      <ng-template #baseFija>
+        <span class="lin-fijo">{{ resuelta.sinIva | currency:'USD':'symbol':'1.0-0' }}</span>
+      </ng-template>
+    </label>
+    <label class="lin-campo lin-iva">
+      <span class="lin-label">IVA</span>
+      <select class="lin-input" [ngModel]="ivaActual" (ngModelChange)="onIvaChange($event)" aria-label="IVA de la línea">
+        <option *ngFor="let t of tarifas" [ngValue]="t">{{ t }}%</option>
+      </select>
+    </label>
+    <label class="lin-campo lin-desc">
+      <span class="lin-label">Desc. %</span>
+      <input class="lin-input" type="number" min="0" max="100" step="1"
+             [ngModel]="descActual"
+             (ngModelChange)="onDescChange($event)"
+             aria-label="Descuento de la línea en porcentaje">
+    </label>
+  </div>
+  <div class="lin-desglose">
+    <span class="lin-texto">+ {{ resuelta.ivaUnitarioNeto | currency:'USD':'symbol':'1.0-0' }} IVA = {{ resuelta.conIvaUnitarioNeto | currency:'USD':'symbol':'1.0-0' }}</span>
+    <button *ngIf="editada" type="button" class="lin-restaurar" (click)="restaurar()">Restaurar</button>
+  </div>
+</div>

@@ -567,71 +567,81 @@
 
                                                         <!-- acciones rápidas -->
                                                         <div class="pedido-detail__sectionlabel">{{ 'ACCIONES' | translate }}</div>
-                                                        <div class="pedido-actions">
+                                                        <!-- D-547 (F2): con la bandera orderPinnedActions, el bloque de 8 (4 del rol y 4 del usuario) -->
+                                                        <app-order-action-suggestion *ngIf="sugerenciaVisible as sug" [accion]="sug"
+                                                                (fijar)="fijarSugerencia(sug)" (ahoraNo)="rechazarSugerencia(sug)"></app-order-action-suggestion>
+                                                        <app-order-pinned-actions *ngIf="bloquePersonalizado"
+                                                                [acciones]="accionesDelBloque" [estados]="estadosDelBloque(pedidoDetalle)"
+                                                                [pedido]="pedidoDetalle" [resaltada]="resaltadaDe(pedidoDetalle)"
+                                                                (accion)="ejecutarAccionPedido($event, pedidoDetalle)"
+                                                                (restablecer)="restablecerAccionesBloque()"></app-order-pinned-actions>
+                                                        <div class="pedido-actions" *ngIf="!bloquePersonalizado">
                                                             <button type="button" class="pedido-action" (click)="pdfOrder(modalContent, pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-pdf"><i class="fa fa-file-pdf-o"></i></span>
-                                                                <span class="pedido-action__txt"><b>{{ 'Imprimir PDF' | translate }}</b><small>{{ 'Generar documento' | translate }}</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('orderPdf').titulo | translate }}</b><small>{{ accionCat('orderPdf').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" (click)="generarOrdenVenta(pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-ov"><i class="fa fa-file-text-o"></i></span>
-                                                                <span class="pedido-action__txt"><b>{{ 'Orden de Venta' | translate }}</b><small>{{ 'Documento profesional' | translate }}</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('salesOrder').titulo | translate }}</b><small>{{ accionCat('salesOrder').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction" (click)="editDatosClientes(clientesModal, pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-cli"><i class="fa fa-user"></i></span>
-                                                                <span class="pedido-action__txt"><b>{{ 'Editar Cliente' | translate }}</b><small>{{ 'Datos del cliente' | translate }}</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('editCustomer').titulo | translate }}</b><small>{{ accionCat('editCustomer').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction"
                                                                     [disabled]="!canEditBilling(pedidoDetalle)" [class.is-locked]="!canEditBilling(pedidoDetalle)"
                                                                     (click)="editDatosFacturacion(datosFacturacionModal, pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-fac"><i class="fa fa-credit-card"></i></span>
-                                                                <span class="pedido-action__txt"><b>{{ 'Facturación' | translate }}</b><small>{{ 'Datos de factura' | translate }}</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('billingData').titulo | translate }}</b>
+                                                                    <small *ngIf="canEditBilling(pedidoDetalle)">{{ accionCat('billingData').resena | translate }}</small>
+                                                                    <small *ngIf="!canEditBilling(pedidoDetalle)">{{ 'Ya tiene factura' | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction && puedeFacturarSiigo(pedidoDetalle)"
                                                                     (click)="facturarPedidoSiigo(pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-invoice"><i class="pi pi-file-export"></i></span>
-                                                                <span class="pedido-action__txt"><b>{{ 'Facturar' | translate }}</b><small>{{ 'Generar factura electrónica' | translate }}</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('invoice').titulo | translate }}</b><small>{{ accionCat('invoice').resena | translate }}</small></span>
                                                             </button>
                                                             <!-- Ticket 1145: factura ya anulada con nota crédito → liberar para corregir y refacturar -->
                                                             <button type="button" class="pedido-action" *ngIf="puedeLiberarFactura(pedidoDetalle)"
                                                                     (click)="liberarFactura(pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-not"><i class="pi pi-lock-open"></i></span>
-                                                                <span class="pedido-action__txt"><b>Liberar factura</b><small>Ya anulada con nota crédito</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('releaseInvoice').titulo | translate }}</b><small>{{ accionCat('releaseInvoice').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction && esFacturaDian(pedidoDetalle)"
                                                                     (click)="consultarEstadoDian(pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-invoice"><i class="pi pi-search"></i></span>
-                                                                <span class="pedido-action__txt"><b>Estado DIAN</b><small>Consultar por CUFE</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('dianStatus').titulo | translate }}</b><small>{{ accionCat('dianStatus').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction && esFacturaDian(pedidoDetalle)"
                                                                     (click)="descargarArtefactoDian(pedidoDetalle, 'pdf')">
                                                                 <span class="pedido-action__icon ico-pdf"><i class="pi pi-file-pdf"></i></span>
-                                                                <span class="pedido-action__txt"><b>PDF DIAN</b><small>Descargar representación</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('dianPdf').titulo | translate }}</b><small>{{ accionCat('dianPdf').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction && esFacturaDian(pedidoDetalle)"
                                                                     (click)="crearNotaCreditoDian(pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-not"><i class="pi pi-replay"></i></span>
-                                                                <span class="pedido-action__txt"><b>Nota crédito</b><small>Anulación total DIAN</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('creditNote').titulo | translate }}</b><small>{{ accionCat('creditNote').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction && esFacturaDian(pedidoDetalle)"
                                                                     (click)="crearAjusteDian(pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-not"><i class="pi pi-pencil"></i></span>
-                                                                <span class="pedido-action__txt"><b>Ajuste NC / ND</b><small>Crédito o débito parcial</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('dianAdjustment').titulo | translate }}</b><small>{{ accionCat('dianAdjustment').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction && !isPedidoPOS(pedidoDetalle)" (click)="editNotas(notasModal, pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-not"><i class="fa fa-sticky-note"></i></span>
-                                                                <span class="pedido-action__txt"><b>{{ 'Editar Notas' | translate }}</b><small>{{ 'Agregar o modificar' | translate }}</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('notes').titulo | translate }}</b><small>{{ accionCat('notes').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" (click)="editarEstadoPago(cambioEstadoPagoModal, pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-pay"><i class="fa fa-credit-card-alt"></i></span>
-                                                                <span class="pedido-action__txt"><b>{{ 'Estado de Pago' | translate }}</b><small>{{ 'Cambiar estado' | translate }}</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('changeStatus').titulo | translate }}</b><small>{{ accionCat('changeStatus').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction"
                                                                     [disabled]="!canAddProducts(pedidoDetalle)" [class.is-locked]="!canAddProducts(pedidoDetalle)"
                                                                     (click)="addProductToCart(recompraModal, pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-add"><i class="fa fa-shopping-cart"></i></span>
                                                                 <span class="pedido-action__txt">
-                                                                    <b>{{ 'Agregar Productos' | translate }}</b>
-                                                                    <small *ngIf="canAddProducts(pedidoDetalle)">{{ 'Añadir al pedido' | translate }}</small>
+                                                                    <b>{{ accionCat('editProducts').titulo | translate }}</b>
+                                                                    <small *ngIf="canAddProducts(pedidoDetalle)">{{ accionCat('editProducts').resena | translate }}</small>
                                                                     <small *ngIf="!canAddProducts(pedidoDetalle)">{{ 'Congelado' | translate }} · {{ pedidoDetalle?.estadoProceso }}</small>
                                                                 </span>
                                                             </button>
@@ -640,8 +650,8 @@
                                                                     (click)="editDatosEntrega(datosEnregaModal, pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-dir"><i class="fa fa-map-marker"></i></span>
                                                                 <span class="pedido-action__txt">
-                                                                    <b>{{ 'Editar Dirección' | translate }}</b>
-                                                                    <small *ngIf="canEditDeliveryAddressByDeliveryType(pedidoDetalle)">{{ 'Dirección de entrega' | translate }}</small>
+                                                                    <b>{{ accionCat('editAddress').titulo | translate }}</b>
+                                                                    <small *ngIf="canEditDeliveryAddressByDeliveryType(pedidoDetalle)">{{ accionCat('editAddress').resena | translate }}</small>
                                                                     <small *ngIf="!canEditDeliveryAddressByDeliveryType(pedidoDetalle)">{{ 'Solo domicilios' | translate }}</small>
                                                                 </span>
                                                             </button>
@@ -650,7 +660,7 @@
 
                                                     <!-- footer -->
                                                     <div class="pedido-detail__footer">
-                                                        <button type="button" class="pedido-detail__btn pedido-detail__btn--ghost" (click)="verHistorialPedido(pedidoDetalle)">
+                                                        <button type="button" class="pedido-detail__btn pedido-detail__btn--ghost" *ngIf="!(bloquePersonalizado && accionesDelBloque.includes('history'))" (click)="verHistorialPedido(pedidoDetalle); contarUso('history')">
                                                             <i class="pi pi-history"></i> {{ 'Historial' | translate }}
                                                         </button>
                                                         <button type="button" class="pedido-detail__btn pedido-detail__btn--primary" (click)="openOptionsModal(pedidoDetalle)">
@@ -2168,376 +2178,17 @@
     </div>
 </ng-template>
 
-<!-- Modal de Opciones -->
-<div *ngIf="modalVisible" class="custom-modal-overlay" (click)="onBackdropClick($event)">
-    <!-- Ticket 1188: las opciones se reparten en varias columnas para no tener que hacer scroll -->
-    <div class="custom-modal options-modal">
-        <div class="custom-modal-content">
-            <!-- Modal Header -->
-            <div class="modal-header border-0 pb-2">
-                <div class="d-flex align-items-center">
-                    <div class="option-modal-icon me-3">
-                        <i class="pi pi-cog"></i>
-                    </div>
-                    <div>
-                        <h5 class="modal-title mb-0">{{ 'Opciones del Pedido' | translate }}</h5>
-                        <small class="text-muted">{{ 'Pedido #' | translate }}{{ selectedOrder?.nroPedido }}</small>
-                    </div>
-                </div>
-                <button type="button" class="btn-close" (click)="closeOptionsModal()" aria-label="Close"></button>
-            </div>
-
-            <!-- Modal Body -->
-            <div class="modal-body pt-2">
-                <div class="options-grid">
-
-                    <!-- Imprimir PDF -->
-                    <button class="option-btn" type="button"
-                        (click)="pdfOrder(modalContent, selectedOrder); closeOptionsModal()">
-                        <div class="option-icon pdf-icon">
-                            <i class="fa fa-file-pdf-o"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Generar PDF del pedido' | translate }}</span>
-                            <small class="option-description">{{ 'Genera un documento PDF con toda la información completa del pedido.' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- Orden de Venta -->
-                    <button class="option-btn" type="button"
-                        (click)="generarOrdenVenta(selectedOrder); closeOptionsModal()">
-                        <div class="option-icon orden-venta-icon" style="background: #5F3FE0;">
-                            <i class="fa fa-file-text-o"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Generar PDF orden de venta simplificada' | translate }}</span>
-                            <small class="option-description">{{ 'Genera una orden de venta con formato profesional para presentar al cliente.' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- Ticket 1189: Duplicar también en la lista general (antes solo en el menú rápido) -->
-                    <button class="option-btn" type="button"
-                        (click)="duplicarPedido(selectedOrder); closeOptionsModal()">
-                        <div class="option-icon duplicate-icon">
-                            <i class="fa fa-clone"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Duplicar pedido' | translate }}</span>
-                            <small class="option-description">{{ 'Ten en cuenta que el nuevo debes editarlo según tus necesidades.' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- Reenviar al cliente el correo de confirmación con los datos actuales -->
-                    <button *ngIf="!isFromProduction" class="option-btn" type="button"
-                        (click)="reenviarConfirmacionPedido(selectedOrder); closeOptionsModal()">
-                        <div class="option-icon notes-icon">
-                            <i class="fa fa-envelope"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Envía de nuevo la confirmación del pedido' | translate }}</span>
-                            <small class="option-description">{{ 'Utiliza esta opción para enviar la confirmación del pedido si ha tenido actualizaciones o cambios luego de la creación del pedido.' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- Ticket 1189: Facturar también en la lista general (misma condición que el menú rápido) -->
-                    <button *ngIf="!isFromProduction && puedeFacturarSiigo(selectedOrder)" class="option-btn" type="button"
-                        (click)="facturarPedidoSiigo(selectedOrder); closeOptionsModal()">
-                        <div class="option-icon invoice-icon">
-                            <i class="fa fa-file-text"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Facturar' | translate }}</span>
-                            <small class="option-description">{{ 'Genera la factura electrónica de este pedido.' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- REFACTURAR: solo si el pedido ya está facturado (SIIGO / World Office) -->
-                    <button *ngIf="puedeRefacturar(selectedOrder)" class="option-btn" type="button"
-                        (click)="refacturarPedido(selectedOrder); closeOptionsModal()">
-                        <div class="option-icon invoice-icon">
-                            <i class="fa fa-refresh"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'REFACTURAR' | translate }}</span>
-                            <small class="option-description">{{ 'Usa esta opción si te equivocaste en la generación de la factura anterior, ten cuidado debes anular manualmente la factura anterior y evitar duplicidades.' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- Producción (solo si isFromProduction) -->
-                    <button *ngIf="isFromProduction" class="option-btn" type="button"
-                        (click)="produceOrder(selectedOrder); closeOptionsModal()">
-                        <div class="option-icon production-icon">
-                            <i class="fa fa-sitemap"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Producción' | translate }}</span>
-                            <small class="option-description">{{ 'Gestionar proceso productivo' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- Botón dinámico: Marcar/Quitar Revisión -->
-                    <button *ngIf="isFromProduction && checkIfUserIsBrenda()"
-                        class="option-btn"
-                        type="button"
-                        (click)="selectedOrder?.revisadoParaProduccion ?
-                                 quitarRevision(selectedOrder) :
-                                 marcarComoRevisado(selectedOrder);
-                                 closeOptionsModal()">
-
-                        <!-- Icono y colores dinámicos -->
-                        <div class="option-icon revision-icon"
-                             [style.background-color]="selectedOrder?.revisadoParaProduccion ? '#dc3545' : '#28a745'"
-                             style="color: white;">
-                            <i [class]="selectedOrder?.revisadoParaProduccion ?
-                                        'fa fa-times-circle' :
-                                        'fa fa-check-circle'"></i>
-                        </div>
-
-                        <!-- Texto dinámico -->
-                        <div class="option-content">
-                            <span class="option-title">
-                                {{ selectedOrder?.revisadoParaProduccion ?
-                                   'Quitar Revisión' :
-                                   'Marcar como Revisado' }}
-                            </span>
-                            <small class="option-description">
-                                {{ selectedOrder?.revisadoParaProduccion ?
-                                   'Quitar estado de revisión' :
-                                   'Revisar y enviar a producción' }}
-                            </small>
-                        </div>
-                    </button>
-
-                    <!-- Editar Cliente - SIEMPRE DISPONIBLE -->
-                    <button *ngIf="!isFromProduction" class="option-btn" type="button"
-                        (click)="editDatosClientes(clientesModal, selectedOrder)">
-                        <div class="option-icon client-icon">
-                            <i class="fa fa-user"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Permite actualizar la información principal del cliente asociado al pedido.' | translate }}</span>
-                            <small class="option-description">{{ 'Modificar datos del cliente' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- Editar Dirección - BLOQUEADA SI FORMA DE ENTREGA ES RECOGE -->
-                    <button *ngIf="!isFromProduction" class="option-btn" type="button"
-                        [disabled]="!canEditDeliveryAddressByDeliveryType(selectedOrder)"
-                        [ngClass]="{'disabled-option': !canEditDeliveryAddressByDeliveryType(selectedOrder)}"
-                        (click)="editDatosEntrega(datosEnregaModal, selectedOrder)">
-                        <div class="option-icon address-icon">
-                            <i class="fa fa-map-marker"></i>
-                            <i *ngIf="!canEditDeliveryAddressByDeliveryType(selectedOrder)" class="fa fa-lock frozen-lock"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Edita o corrige la dirección registrada para la entrega del pedido.' | translate }}</span>
-                            <small class="option-description">
-                                <span *ngIf="canEditDeliveryAddressByDeliveryType(selectedOrder)">{{ 'Modificar dirección de entrega' | translate }}</span>
-                                <span *ngIf="!canEditDeliveryAddressByDeliveryType(selectedOrder)" class="text-warning">
-                                    <i class="fa fa-lock me-1"></i>
-                                    {{ 'No disponible - Solo domicilios' | translate }}
-                                </span>
-                            </small>
-                        </div>
-                    </button>
-
-                    <!-- Editar Facturación - SIEMPRE DISPONIBLE (por ahora) -->
-                    <button *ngIf="!isFromProduction" class="option-btn" type="button"
-                        [disabled]="!canEditBilling(selectedOrder)"
-                        [ngClass]="{'disabled-option': !canEditBilling(selectedOrder)}"
-                        (click)="editDatosFacturacion(datosFacturacionModal, selectedOrder)">
-                        <div class="option-icon billing-icon">
-                            <i class="fa fa-credit-card"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Ajusta los datos de facturación necesarios para esta venta.' | translate }}</span>
-                            <small class="option-description">{{ 'Modificar datos de facturación' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- Editar Notas - NO DISPONIBLE PARA PEDIDOS POS -->
-                    <button *ngIf="!isFromProduction && !isPedidoPOS(selectedOrder)" class="option-btn" type="button"
-                        (click)="editNotas(notasModal, selectedOrder)">
-                        <div class="option-icon notes-icon">
-                            <i class="fa fa-sticky-note"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Notas del pedido' | translate }}</span>
-                            <small class="option-description">{{ 'Agrega, visualiza o modifica notas importantes relacionadas con el pedido.' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- Limpiar Notas Huérfanas - SIEMPRE DISPONIBLE -->
-                    <button class="option-btn" type="button"
-                        (click)="limpiarNotasHuerfanasPedido(selectedOrder); closeOptionsModal()">
-                        <div class="option-icon cleanup-icon">
-                            <i class="fa fa-broom"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Eliminar notas huérfanas' | translate }}</span>
-                            <small class="option-description">{{ 'Borra notas asociadas a productos que ya no están en el pedido.' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- Estado de Pago - Disponible para todos (opciones limitadas para usuarios normales) -->
-                    <button class="option-btn" type="button"
-                        (click)="editarEstadoPago(cambioEstadoPagoModal, selectedOrder); closeOptionsModal()">
-                        <div class="option-icon payment-icon">
-                            <i class="fa fa-credit-card-alt"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Actualizar estados del pedido' | translate }}</span>
-                            <small class="option-description">{{ 'Modifica manualmente los estados de pago y proceso según corresponda.' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- Agregar Productos - BLOQUEADO EN TODOS LOS ESTADOS CONGELADOS -->
-                    <button *ngIf="!isFromProduction" class="option-btn" type="button"
-                        [disabled]="!canAddProducts(selectedOrder)"
-                        [ngClass]="{'disabled-option': !canAddProducts(selectedOrder)}"
-                        (click)="addProductToCart(recompraModal, selectedOrder); closeOptionsModal()">
-                        <div class="option-icon cart-icon"
-                            [ngClass]="{'frozen-icon': !canAddProducts(selectedOrder)}">
-                            <i class="fa fa-shopping-cart"></i>
-                            <i *ngIf="!canAddProducts(selectedOrder)" class="fa fa-lock frozen-lock"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Añadir o retirar productos' | translate }}</span>
-                            <small class="option-description">
-                                <span *ngIf="canAddProducts(selectedOrder)">{{ 'Incluye o retira productos en el pedido actual.' | translate }}</span>
-                                <span *ngIf="!canAddProducts(selectedOrder)" class="text-warning">
-                                    <i class="fa fa-lock me-1"></i>
-                                    {{ 'Pedido congelado - Estado: ' + selectedOrder?.estadoProceso | translate }}
-                                </span>
-                            </small>
-                        </div>
-                    </button>
-
-                    <!-- Asignar Asesor - SOLO ADMINISTRADORES -->
-                    <button *ngIf="!isFromProduction" class="option-btn" type="button"
-                        [disabled]="!canAssignSeller(selectedOrder)"
-                        [ngClass]="{'disabled-option': !canAssignSeller(selectedOrder)}"
-                        (click)="editSeller(selectedOrder); closeOptionsModal()">
-                        <div class="option-icon seller-icon">
-                            <i class="fa fa-users"></i>
-                            <i *ngIf="!canAssignSeller(selectedOrder)" class="fa fa-lock frozen-lock"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Actualiza el asesor asignado para el seguimiento del pedido.' | translate }}</span>
-                            <small class="option-description">
-                                <span *ngIf="canAssignSeller(selectedOrder)">{{ 'Cambiar asesor responsable' | translate }}</span>
-                                <span *ngIf="!canAssignSeller(selectedOrder)" class="text-warning">
-                                    <i class="fa fa-lock me-1"></i>
-                                    {{ 'Solo administradores' | translate }}
-                                </span>
-                            </small>
-                        </div>
-                    </button>
-
-                    <!-- Historial de Pagos - SIEMPRE DISPONIBLE -->
-                    <button *ngIf="!isFromProduction" class="option-btn" type="button"
-                        (click)="AsentarPago(pagosModal, selectedOrder); closeOptionsModal()">
-                        <div class="option-icon history-icon">
-                            <i class="fa fa-history"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Gestión de pagos' | translate }}</span>
-                            <small class="option-description">{{ 'Registra nuevos pagos y consulta el historial completo de transacciones.' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- Aplicar Código de Descuento -->
-                    <button *ngIf="!isFromProduction && (canModifyProducts(selectedOrder) || isAdminUser())" class="option-btn" type="button"
-                        (click)="aplicarCodigoDescuento(descuentoModal, selectedOrder); closeOptionsModal()">
-                        <div class="option-icon discount-icon">
-                            <i class="fa fa-ticket"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Aplicar descuento al pedido' | translate }}</span>
-                            <small class="option-description">{{ 'Aplica o ajusta los descuentos asociados al pedido.' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- Editar/Eliminar Descuento (Solo si el pedido tiene descuento) -->
-                    <button *ngIf="!isFromProduction && ((selectedOrder?.porceDescuento && selectedOrder.porceDescuento > 0) || selectedOrder?.descuentoAplicado) && (canModifyProducts(selectedOrder) || isAdminUser())" 
-                            class="option-btn" 
-                            type="button"
-                            (click)="editarDescuentoPedido(editarDescuentoModal, selectedOrder); closeOptionsModal()">
-                        <div class="option-icon edit-discount-icon">
-                            <i class="fa fa-edit"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Editar/Eliminar Descuento' | translate }}</span>
-                            <small class="option-description">{{ 'Modificar o eliminar descuento aplicado' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- Ver Detalles de Entrega (Desde Despachado en adelante) -->
-                    <button *ngIf="selectedOrder?.estadoProceso === 'Despachado' || selectedOrder?.estadoProceso === 'Entregado'" class="option-btn" type="button"
-                        (click)="mostrarDetalleEntrega(selectedOrder); closeOptionsModal()">
-                        <div class="option-icon delivery-icon">
-                            <i class="fa fa-truck"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Ver detalles de despacho y entrega' | translate }}</span>
-                            <small class="option-description">{{ 'Obtén información sobre el despacho y la entrega.' | translate }}</small>
-                        </div>
-                    </button>
-
-
-                    <!-- NUEVO: Ver Historial de Estados (Creado: 2025-10-21) -->
-                    <button class="option-btn info-btn" type="button"
-                        (click)="verHistorialPedido(selectedOrder); closeOptionsModal()"
-                        [pTooltip]="'Ver todos los cambios de estado de este pedido'"
-                        tooltipPosition="left">
-                        <div class="option-icon info-icon">
-                            <i class="pi pi-history"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Historial de estados y movimientos' | translate }}</span>
-                            <small class="option-description">{{ 'Revisa la trazabilidad del pedido y los cambios realizados.' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- Editar IVA de una línea (OpenSpec edit-order-line-iva, D-135) -->
-                    <button *ngIf="!isFromProduction && (canModifyProducts(selectedOrder) || isAdminUser())" class="option-btn" type="button"
-                        (click)="abrirModalEditarIva(selectedOrder); closeOptionsModal()"
-                        [pTooltip]="'Cambiar el IVA de un producto de este pedido'"
-                        tooltipPosition="left">
-                        <div class="option-icon edit-discount-icon">
-                            <i class="fa fa-percent"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Ajustar impuestos de este pedido' | translate }}</span>
-                            <small class="option-description">{{ 'Ajusta los impuestos que refiere según la condición que aplique.' | translate }}</small>
-                        </div>
-                    </button>
-
-                    <!-- Eliminar Pedido (Solo usuarios autorizados) -->
-                    <button *ngIf="canDeleteOrder() && !isFromProduction" class="option-btn danger-btn" type="button"
-                        (click)="confirmDeleteOrder(selectedOrder); closeOptionsModal()">
-                        <div class="option-icon delete-icon">
-                            <i class="fa fa-trash"></i>
-                        </div>
-                        <div class="option-content">
-                            <span class="option-title">{{ 'Eliminar pedido permanentemente' | translate }}</span>
-                            <small class="option-description">{{ 'Elimina el pedido de forma irreversible de la plataforma.' | translate }}</small>
-                        </div>
-                    </button>
-
-                </div>
-            </div>
-
-            <!-- Modal Footer -->
-            <div class="modal-footer border-0 pt-2">
-                <button type="button" class="btn btn-secondary btn-sm" (click)="closeOptionsModal()">
-                    <i class="fa fa-times me-1"></i>
-                    {{ 'Cancelar' | translate }}
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Modal de Opciones (D-547 F1, tarea 4.4): «Opciones del pedido» en grilla. Solo pinta y avisa; la acción la
+     ejecuta `ejecutarAccionPedido` con los mismos métodos de siempre. Cierra con Esc, la X, «Cerrar» y el clic fuera. -->
+<app-order-options-modal *ngIf="modalVisible"
+    [pedido]="selectedOrder"
+    [estados]="estadosAccionesDe(selectedOrder)"
+    [desdeProduccion]="isFromProduction"
+    [pinesActivos]="bloquePersonalizado" [delRol]="accionesDelRolPedido" [pines]="pinesDelUsuario"
+    [resaltada]="resaltadaDelModal"
+    (accion)="ejecutarAccionPedido($event, selectedOrder)"
+    (fijar)="fijarAccionDelModal($event)"
+    (cerrar)="closeOptionsModal()"></app-order-options-modal>
 
 <!-- Modal de Detalles de Entrega -->
 <div *ngIf="detalleEntregaVisible" class="custom-modal-overlay" (click)="cerrarDetalleEntrega()">

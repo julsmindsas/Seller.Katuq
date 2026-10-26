@@ -2066,8 +2066,24 @@
 							</div>
 						</p-tabPanel>
 
+						<!-- D-548 (F1): con la bandera productHistoryLog, la pestaña «Historial» nueva (quién cambió qué,
+						     cuándo y desde dónde, con el valor de antes). Se crea al abrir la pestaña. Sin la bandera,
+						     la de hoy, sin cambios. -->
+						<p-tabPanel header="Historial" *ngIf="historialNuevo && (!mostrarCrear || edit)">
+							<ng-template pTemplate="content">
+								<div class="container-fluid mt-3">
+									<div *ngIf="fechaUltimaEdicion" class="alert alert-light border mb-3">
+										<small class="text-muted">
+											<strong>Última edición:</strong> {{ fechaUltimaEdicion }}<ng-container *ngIf="editorUltimaEdicion"> · {{ editorUltimaEdicion }}</ng-container>
+										</small>
+									</div>
+									<app-historial-producto [productoId]="productoIdHistorial"></app-historial-producto>
+								</div>
+							</ng-template>
+						</p-tabPanel>
+
 						<!-- PESTAÑA: Historial de cambios -->
-						<p-tabPanel header="Historial de cambios" *ngIf="!mostrarCrear || edit">
+						<p-tabPanel header="Historial de cambios" *ngIf="!historialNuevo && (!mostrarCrear || edit)">
 							<div class="container-fluid mt-3">
 
 								<!-- Estado: no hay producto guardado -->

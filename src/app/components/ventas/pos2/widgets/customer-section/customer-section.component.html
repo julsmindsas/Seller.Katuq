@@ -10,8 +10,23 @@
     </div>
     <div class="card-body pt-0 order-details p-3">
         <div class="search-section">
+            <!-- D-540: cliente plegado a una línea (solo escritorio; en móvil no se ve). -->
+            <div class="cli-linea" *ngIf="datosCliente" [class.cli-oculto]="cambiando">
+                <button type="button" class="cli-resumen" (click)="desplegado = !desplegado"
+                        [attr.aria-expanded]="desplegado">
+                    <span class="cli-avatar" aria-hidden="true">{{ inicialCliente }}</span>
+                    <span class="cli-datos">
+                        <span class="cli-nombre">{{ datosCliente?.nombres_completos }} {{ datosCliente?.apellidos_completos }}</span>
+                        <span class="cli-doc">{{ datosCliente?.documento }}</span>
+                        <span class="cli-aviso" *ngIf="facturacionIncompleta">{{ 'Facturación incompleta' | translate }}</span>
+                    </span>
+                    <i class="fa fa-angle-down cli-flecha" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="cli-cambiar" (click)="cambiarCliente()" aria-label="Cambiar cliente">{{ 'Cambiar' | translate }}</button>
+            </div>
+
             <!-- Autocompletado de clientes -->
-            <div class="autocomplete-box">
+            <div class="autocomplete-box" [class.cli-oculto]="datosCliente && !cambiando">
                 <i class="fa fa-search search-icon-left"></i>
                 <p-autoComplete
                     [(ngModel)]="selectedCliente"
@@ -19,6 +34,7 @@
                     (completeMethod)="searchClientes($event)"
                     (onSelect)="onClienteSelect($event)"
                     (onClear)="onClienteClear()"
+                    (keydown.escape)="cancelarCambio(true)"
                     field="displayLabel"
                     [minLength]="3"
                     [forceSelection]="false"
@@ -47,26 +63,35 @@
                     </ng-template>
                     <ng-template pTemplate="empty">
                         <div class="empty-results">
-                            <i class="fa fa-user-slash"></i>
+                            <i class="fa fa-user-times"></i>
                             <span>{{ 'No se encontraron clientes' | translate }}</span>
                         </div>
                     </ng-template>
                 </p-autoComplete>
                 <span class="loading-spinner" *ngIf="isSearching">
-                    <i class="fa fa-circle-notch fa-spin"></i>
+                    <i class="fa fa-circle-o-notch fa-spin"></i>
                 </span>
             </div>
+            <!-- D-540: «Nuevo» junto al buscador (solo escritorio). -->
+            <button type="button" class="cli-nuevo" [class.cli-oculto]="datosCliente && !cambiando" (click)="openModal()">
+                <i class="fa fa-plus" aria-hidden="true"></i> {{ 'Nuevo' | translate }}
+            </button>
 
-            <!-- Cliente seleccionado -->
-            <div class="cliente-card" *ngIf="datosCliente">
+            <!-- Cliente seleccionado (en escritorio, solo con la línea desplegada) -->
+            <div class="cliente-card" *ngIf="datosCliente" [class.cli-abierto]="desplegado && !cambiando">
                 <div class="cliente-cabeza">
                     <div class="cliente-status">
                         <i class="fa fa-check-circle"></i>
                         <span>Cliente Asociado</span>
                     </div>
                     <div class="cliente-actions">
+                        <!-- Ticket 1328: métricas de compra del cliente (spec 009) -->
+                        <button class="btn-action" type="button" (click)="mostrarMetricas = true"
+                                title="Ver métricas" aria-label="Ver métricas del cliente">
+                            <i class="fa fa-line-chart"></i>
+                        </button>
                         <button class="btn-action" (click)="editarCliente()" title="Editar">
-                            <i class="fa fa-pen"></i>
+                            <i class="fa fa-pencil"></i>
                         </button>
                         <button class="btn-action btn-action-danger" (click)="limpiar()" title="Quitar">
                             <i class="fa fa-times"></i>
@@ -89,7 +114,7 @@
                     </div>
                     <!-- D-419 (ticket 1171): a quién se factura la venta -->
                     <div class="cliente-facturacion" [class.incompleta]="facturacionIncompleta">
-                        <i class="fa fa-file-invoice"></i>
+                        <i class="fa fa-file-text-o"></i>
                         <span class="cf-label">{{ 'Facturación' | translate }}:</span>
                         <span class="cf-valor">{{ resumenFacturacion }}</span>
                         <button type="button" class="cf-cambiar" (click)="abrirFacturacion()">{{ 'Cambiar' | translate }}</button>
@@ -109,3 +134,11 @@
         </div>
     </div>
 </div>
+
+<!-- Ticket 1328: métricas del cliente asociado a la venta -->
+<p-dialog [(visible)]="mostrarMetricas" [modal]="true" [dismissableMask]="true" [draggable]="false"
+          [resizable]="false" appendTo="body" [style]="{ width: '640px', maxWidth: '95vw' }"
+          header="Métricas del cliente">
+    <app-customer-metrics *ngIf="mostrarMetricas" [documento]="datosCliente?.documento" [compacto]="true">
+    </app-customer-metrics>
+</p-dialog>

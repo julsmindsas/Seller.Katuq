@@ -1,0 +1,3605 @@
+{
+ "generadoAntesDeF3": true,
+ "rutas": [
+  "/marketing",
+  "/marketing/campanas",
+  "/marketing/pauta",
+  "/notificaciones/facebook/inbox",
+  "/notificaciones/instagram/inbox",
+  "/notificaciones/whatsapp/inbox",
+  "agenda",
+  "agenda/configuracion",
+  "agent-builder/chat-agui",
+  "agent-builder/general-chat",
+  "agent-builder/library",
+  "agent-builder/monitor",
+  "agent-builder/wizard",
+  "billing",
+  "cartera",
+  "categorias",
+  "centro-operaciones",
+  "compras/proveedores",
+  "compras/reposicion",
+  "contabilidad",
+  "cotizaciones",
+  "cotizaciones/catalogos",
+  "cotizaciones/editor",
+  "crm/list",
+  "crm/tasks",
+  "dashboards",
+  "dashboards/builder",
+  "despachos",
+  "dropshipping/dashboard",
+  "dropshipping/ordenes",
+  "dropshipping/productos",
+  "dropshipping/proveedores",
+  "ecommerce/adiciones/listar",
+  "empresas",
+  "empresas/modulovariable/campos-personalizados",
+  "empresas/modulovariable/dropshipping/configuracion",
+  "empresas/modulovariable/produccion/opciones",
+  "en-vivo",
+  "en-vivo/katuq",
+  "extras/formasPago",
+  "extras/pos/formasPago",
+  "extras/zonasCobro",
+  "facturacion-electronica",
+  "flows",
+  "formasEntrega",
+  "formasEntrega/tipoentrega/lista",
+  "integrations",
+  "inventario/bodega-detalle",
+  "inventario/bodegas",
+  "inventario/central-abastecimiento",
+  "inventario/conteos",
+  "inventario/historial-movimientos",
+  "inventario/indicadores",
+  "inventario/inventario-catalogo",
+  "inventario/ordenes-compra",
+  "inventario/recepcion-mercancia",
+  "inventario/traslados",
+  "inventario/ubicaciones",
+  "kuvo",
+  "lista-precios/lista-precios",
+  "notificaciones",
+  "nps/encuestas",
+  "nps/resultados",
+  "nps/seguimiento",
+  "picking-packing/packing",
+  "picking-packing/picking",
+  "pos/list-ventas",
+  "pricing",
+  "proceso/bodegas-por-canal",
+  "proceso/canales",
+  "proceso/combos",
+  "proceso/descuentos-promociones",
+  "proceso/generos",
+  "proceso/ocasiones",
+  "proceso/tipos-cliente",
+  "produccion/dashboard",
+  "productos",
+  "rol",
+  "sitios",
+  "sitios/catalogos",
+  "superadmin/campanas",
+  "tesoreria",
+  "tiempoentrega",
+  "usuarios",
+  "ventas/carga-ventas",
+  "ventas/clientes",
+  "ventas/clientes-corporativos",
+  "ventas/clienteslista",
+  "ventas/pedidos",
+  "ventas/venta-asistida",
+  "ventas/ventas-pos"
+ ],
+ "escenarios": [
+  {
+   "nombre": "administrador, banderas apagadas",
+   "user": {
+    "rol": "Administrador",
+    "company": "QA"
+   },
+   "paths": [],
+   "banderas": false,
+   "visibles": [
+    "/marketing",
+    "/marketing/campanas",
+    "/notificaciones/facebook/inbox",
+    "/notificaciones/instagram/inbox",
+    "/notificaciones/whatsapp/inbox",
+    "agent-builder/chat-agui",
+    "agent-builder/general-chat",
+    "agent-builder/library",
+    "agent-builder/monitor",
+    "agent-builder/wizard",
+    "billing",
+    "cartera",
+    "categorias",
+    "centro-operaciones",
+    "compras/proveedores",
+    "compras/reposicion",
+    "contabilidad",
+    "cotizaciones",
+    "cotizaciones/catalogos",
+    "cotizaciones/editor",
+    "crm/list",
+    "crm/tasks",
+    "dashboards",
+    "dashboards/builder",
+    "despachos",
+    "ecommerce/adiciones/listar",
+    "empresas",
+    "empresas/modulovariable/campos-personalizados",
+    "empresas/modulovariable/produccion/opciones",
+    "en-vivo",
+    "en-vivo/katuq",
+    "extras/formasPago",
+    "extras/pos/formasPago",
+    "extras/zonasCobro",
+    "facturacion-electronica",
+    "flows",
+    "formasEntrega",
+    "formasEntrega/tipoentrega/lista",
+    "integrations",
+    "inventario/bodega-detalle",
+    "inventario/bodegas",
+    "inventario/central-abastecimiento",
+    "inventario/conteos",
+    "inventario/historial-movimientos",
+    "inventario/indicadores",
+    "inventario/inventario-catalogo",
+    "inventario/ordenes-compra",
+    "inventario/recepcion-mercancia",
+    "inventario/traslados",
+    "inventario/ubicaciones",
+    "kuvo",
+    "lista-precios/lista-precios",
+    "notificaciones",
+    "pos/list-ventas",
+    "pricing",
+    "proceso/bodegas-por-canal",
+    "proceso/canales",
+    "proceso/combos",
+    "proceso/descuentos-promociones",
+    "proceso/generos",
+    "proceso/ocasiones",
+    "proceso/tipos-cliente",
+    "produccion/dashboard",
+    "productos",
+    "rol",
+    "sitios",
+    "sitios/catalogos",
+    "tesoreria",
+    "tiempoentrega",
+    "usuarios",
+    "ventas/carga-ventas",
+    "ventas/clientes",
+    "ventas/clientes-corporativos",
+    "ventas/clienteslista",
+    "ventas/pedidos",
+    "ventas/venta-asistida",
+    "ventas/ventas-pos"
+   ]
+  },
+  {
+   "nombre": "administrador, banderas encendidas",
+   "user": {
+    "rol": "Administrador",
+    "company": "QA"
+   },
+   "paths": [],
+   "banderas": true,
+   "visibles": [
+    "/marketing",
+    "/marketing/campanas",
+    "/notificaciones/facebook/inbox",
+    "/notificaciones/instagram/inbox",
+    "/notificaciones/whatsapp/inbox",
+    "agenda",
+    "agenda/configuracion",
+    "agent-builder/chat-agui",
+    "agent-builder/general-chat",
+    "agent-builder/library",
+    "agent-builder/monitor",
+    "agent-builder/wizard",
+    "billing",
+    "cartera",
+    "categorias",
+    "centro-operaciones",
+    "compras/proveedores",
+    "compras/reposicion",
+    "contabilidad",
+    "cotizaciones",
+    "cotizaciones/catalogos",
+    "cotizaciones/editor",
+    "crm/list",
+    "crm/tasks",
+    "dashboards",
+    "dashboards/builder",
+    "despachos",
+    "dropshipping/dashboard",
+    "dropshipping/ordenes",
+    "dropshipping/productos",
+    "dropshipping/proveedores",
+    "ecommerce/adiciones/listar",
+    "empresas",
+    "empresas/modulovariable/campos-personalizados",
+    "empresas/modulovariable/dropshipping/configuracion",
+    "empresas/modulovariable/produccion/opciones",
+    "en-vivo",
+    "en-vivo/katuq",
+    "extras/formasPago",
+    "extras/pos/formasPago",
+    "extras/zonasCobro",
+    "facturacion-electronica",
+    "flows",
+    "formasEntrega",
+    "formasEntrega/tipoentrega/lista",
+    "integrations",
+    "inventario/bodega-detalle",
+    "inventario/bodegas",
+    "inventario/central-abastecimiento",
+    "inventario/conteos",
+    "inventario/historial-movimientos",
+    "inventario/indicadores",
+    "inventario/inventario-catalogo",
+    "inventario/ordenes-compra",
+    "inventario/recepcion-mercancia",
+    "inventario/traslados",
+    "inventario/ubicaciones",
+    "kuvo",
+    "lista-precios/lista-precios",
+    "notificaciones",
+    "nps/encuestas",
+    "nps/resultados",
+    "nps/seguimiento",
+    "picking-packing/packing",
+    "picking-packing/picking",
+    "pos/list-ventas",
+    "pricing",
+    "proceso/bodegas-por-canal",
+    "proceso/canales",
+    "proceso/combos",
+    "proceso/descuentos-promociones",
+    "proceso/generos",
+    "proceso/ocasiones",
+    "proceso/tipos-cliente",
+    "produccion/dashboard",
+    "productos",
+    "rol",
+    "sitios",
+    "sitios/catalogos",
+    "tesoreria",
+    "tiempoentrega",
+    "usuarios",
+    "ventas/carga-ventas",
+    "ventas/clientes",
+    "ventas/clientes-corporativos",
+    "ventas/clienteslista",
+    "ventas/pedidos",
+    "ventas/venta-asistida",
+    "ventas/ventas-pos"
+   ]
+  },
+  {
+   "nombre": "comodín, banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "*"
+   ],
+   "banderas": false,
+   "visibles": [
+    "/marketing",
+    "/marketing/campanas",
+    "/notificaciones/facebook/inbox",
+    "/notificaciones/instagram/inbox",
+    "/notificaciones/whatsapp/inbox",
+    "agent-builder/chat-agui",
+    "agent-builder/general-chat",
+    "agent-builder/library",
+    "agent-builder/monitor",
+    "agent-builder/wizard",
+    "billing",
+    "cartera",
+    "categorias",
+    "centro-operaciones",
+    "compras/proveedores",
+    "compras/reposicion",
+    "contabilidad",
+    "cotizaciones",
+    "cotizaciones/catalogos",
+    "cotizaciones/editor",
+    "crm/list",
+    "crm/tasks",
+    "dashboards",
+    "dashboards/builder",
+    "despachos",
+    "ecommerce/adiciones/listar",
+    "empresas",
+    "empresas/modulovariable/campos-personalizados",
+    "empresas/modulovariable/produccion/opciones",
+    "en-vivo",
+    "en-vivo/katuq",
+    "extras/formasPago",
+    "extras/pos/formasPago",
+    "extras/zonasCobro",
+    "facturacion-electronica",
+    "flows",
+    "formasEntrega",
+    "formasEntrega/tipoentrega/lista",
+    "integrations",
+    "inventario/bodega-detalle",
+    "inventario/bodegas",
+    "inventario/central-abastecimiento",
+    "inventario/conteos",
+    "inventario/historial-movimientos",
+    "inventario/indicadores",
+    "inventario/inventario-catalogo",
+    "inventario/ordenes-compra",
+    "inventario/recepcion-mercancia",
+    "inventario/traslados",
+    "inventario/ubicaciones",
+    "lista-precios/lista-precios",
+    "notificaciones",
+    "pos/list-ventas",
+    "pricing",
+    "proceso/bodegas-por-canal",
+    "proceso/canales",
+    "proceso/combos",
+    "proceso/descuentos-promociones",
+    "proceso/generos",
+    "proceso/ocasiones",
+    "proceso/tipos-cliente",
+    "produccion/dashboard",
+    "productos",
+    "rol",
+    "sitios",
+    "sitios/catalogos",
+    "tesoreria",
+    "tiempoentrega",
+    "usuarios",
+    "ventas/carga-ventas",
+    "ventas/clientes",
+    "ventas/clientes-corporativos",
+    "ventas/clienteslista",
+    "ventas/pedidos",
+    "ventas/venta-asistida",
+    "ventas/ventas-pos"
+   ]
+  },
+  {
+   "nombre": "comodín, banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "*"
+   ],
+   "banderas": true,
+   "visibles": [
+    "/marketing",
+    "/marketing/campanas",
+    "/notificaciones/facebook/inbox",
+    "/notificaciones/instagram/inbox",
+    "/notificaciones/whatsapp/inbox",
+    "agenda",
+    "agent-builder/chat-agui",
+    "agent-builder/general-chat",
+    "agent-builder/library",
+    "agent-builder/monitor",
+    "agent-builder/wizard",
+    "billing",
+    "cartera",
+    "categorias",
+    "centro-operaciones",
+    "compras/proveedores",
+    "compras/reposicion",
+    "contabilidad",
+    "cotizaciones",
+    "cotizaciones/catalogos",
+    "cotizaciones/editor",
+    "crm/list",
+    "crm/tasks",
+    "dashboards",
+    "dashboards/builder",
+    "despachos",
+    "dropshipping/dashboard",
+    "dropshipping/ordenes",
+    "dropshipping/productos",
+    "dropshipping/proveedores",
+    "ecommerce/adiciones/listar",
+    "empresas",
+    "empresas/modulovariable/campos-personalizados",
+    "empresas/modulovariable/dropshipping/configuracion",
+    "empresas/modulovariable/produccion/opciones",
+    "en-vivo",
+    "en-vivo/katuq",
+    "extras/formasPago",
+    "extras/pos/formasPago",
+    "extras/zonasCobro",
+    "facturacion-electronica",
+    "flows",
+    "formasEntrega",
+    "formasEntrega/tipoentrega/lista",
+    "integrations",
+    "inventario/bodega-detalle",
+    "inventario/bodegas",
+    "inventario/central-abastecimiento",
+    "inventario/conteos",
+    "inventario/historial-movimientos",
+    "inventario/indicadores",
+    "inventario/inventario-catalogo",
+    "inventario/ordenes-compra",
+    "inventario/recepcion-mercancia",
+    "inventario/traslados",
+    "inventario/ubicaciones",
+    "lista-precios/lista-precios",
+    "notificaciones",
+    "nps/seguimiento",
+    "picking-packing/packing",
+    "picking-packing/picking",
+    "pos/list-ventas",
+    "pricing",
+    "proceso/bodegas-por-canal",
+    "proceso/canales",
+    "proceso/combos",
+    "proceso/descuentos-promociones",
+    "proceso/generos",
+    "proceso/ocasiones",
+    "proceso/tipos-cliente",
+    "produccion/dashboard",
+    "productos",
+    "rol",
+    "sitios",
+    "sitios/catalogos",
+    "tesoreria",
+    "tiempoentrega",
+    "usuarios",
+    "ventas/carga-ventas",
+    "ventas/clientes",
+    "ventas/clientes-corporativos",
+    "ventas/clienteslista",
+    "ventas/pedidos",
+    "ventas/venta-asistida",
+    "ventas/ventas-pos"
+   ]
+  },
+  {
+   "nombre": "super administrador, banderas apagadas",
+   "user": {
+    "rol": "Super Administrador",
+    "company": "QA"
+   },
+   "paths": [],
+   "banderas": false,
+   "visibles": [
+    "/marketing",
+    "/marketing/campanas",
+    "/notificaciones/facebook/inbox",
+    "/notificaciones/instagram/inbox",
+    "/notificaciones/whatsapp/inbox",
+    "agent-builder/chat-agui",
+    "agent-builder/general-chat",
+    "agent-builder/library",
+    "agent-builder/monitor",
+    "agent-builder/wizard",
+    "billing",
+    "cartera",
+    "categorias",
+    "centro-operaciones",
+    "compras/proveedores",
+    "compras/reposicion",
+    "contabilidad",
+    "cotizaciones",
+    "cotizaciones/catalogos",
+    "cotizaciones/editor",
+    "crm/list",
+    "crm/tasks",
+    "dashboards",
+    "dashboards/builder",
+    "despachos",
+    "ecommerce/adiciones/listar",
+    "empresas",
+    "empresas/modulovariable/campos-personalizados",
+    "empresas/modulovariable/produccion/opciones",
+    "en-vivo",
+    "en-vivo/katuq",
+    "extras/formasPago",
+    "extras/pos/formasPago",
+    "extras/zonasCobro",
+    "facturacion-electronica",
+    "flows",
+    "formasEntrega",
+    "formasEntrega/tipoentrega/lista",
+    "integrations",
+    "inventario/bodega-detalle",
+    "inventario/bodegas",
+    "inventario/central-abastecimiento",
+    "inventario/conteos",
+    "inventario/historial-movimientos",
+    "inventario/indicadores",
+    "inventario/inventario-catalogo",
+    "inventario/ordenes-compra",
+    "inventario/recepcion-mercancia",
+    "inventario/traslados",
+    "inventario/ubicaciones",
+    "kuvo",
+    "lista-precios/lista-precios",
+    "notificaciones",
+    "pos/list-ventas",
+    "pricing",
+    "proceso/bodegas-por-canal",
+    "proceso/canales",
+    "proceso/combos",
+    "proceso/descuentos-promociones",
+    "proceso/generos",
+    "proceso/ocasiones",
+    "proceso/tipos-cliente",
+    "produccion/dashboard",
+    "productos",
+    "rol",
+    "sitios",
+    "sitios/catalogos",
+    "superadmin/campanas",
+    "tesoreria",
+    "tiempoentrega",
+    "usuarios",
+    "ventas/carga-ventas",
+    "ventas/clientes",
+    "ventas/clientes-corporativos",
+    "ventas/clienteslista",
+    "ventas/pedidos",
+    "ventas/venta-asistida",
+    "ventas/ventas-pos"
+   ]
+  },
+  {
+   "nombre": "super administrador, banderas encendidas",
+   "user": {
+    "rol": "Super Administrador",
+    "company": "QA"
+   },
+   "paths": [],
+   "banderas": true,
+   "visibles": [
+    "/marketing",
+    "/marketing/campanas",
+    "/notificaciones/facebook/inbox",
+    "/notificaciones/instagram/inbox",
+    "/notificaciones/whatsapp/inbox",
+    "agenda",
+    "agenda/configuracion",
+    "agent-builder/chat-agui",
+    "agent-builder/general-chat",
+    "agent-builder/library",
+    "agent-builder/monitor",
+    "agent-builder/wizard",
+    "billing",
+    "cartera",
+    "categorias",
+    "centro-operaciones",
+    "compras/proveedores",
+    "compras/reposicion",
+    "contabilidad",
+    "cotizaciones",
+    "cotizaciones/catalogos",
+    "cotizaciones/editor",
+    "crm/list",
+    "crm/tasks",
+    "dashboards",
+    "dashboards/builder",
+    "despachos",
+    "dropshipping/dashboard",
+    "dropshipping/ordenes",
+    "dropshipping/productos",
+    "dropshipping/proveedores",
+    "ecommerce/adiciones/listar",
+    "empresas",
+    "empresas/modulovariable/campos-personalizados",
+    "empresas/modulovariable/dropshipping/configuracion",
+    "empresas/modulovariable/produccion/opciones",
+    "en-vivo",
+    "en-vivo/katuq",
+    "extras/formasPago",
+    "extras/pos/formasPago",
+    "extras/zonasCobro",
+    "facturacion-electronica",
+    "flows",
+    "formasEntrega",
+    "formasEntrega/tipoentrega/lista",
+    "integrations",
+    "inventario/bodega-detalle",
+    "inventario/bodegas",
+    "inventario/central-abastecimiento",
+    "inventario/conteos",
+    "inventario/historial-movimientos",
+    "inventario/indicadores",
+    "inventario/inventario-catalogo",
+    "inventario/ordenes-compra",
+    "inventario/recepcion-mercancia",
+    "inventario/traslados",
+    "inventario/ubicaciones",
+    "kuvo",
+    "lista-precios/lista-precios",
+    "notificaciones",
+    "nps/encuestas",
+    "nps/resultados",
+    "nps/seguimiento",
+    "picking-packing/packing",
+    "picking-packing/picking",
+    "pos/list-ventas",
+    "pricing",
+    "proceso/bodegas-por-canal",
+    "proceso/canales",
+    "proceso/combos",
+    "proceso/descuentos-promociones",
+    "proceso/generos",
+    "proceso/ocasiones",
+    "proceso/tipos-cliente",
+    "produccion/dashboard",
+    "productos",
+    "rol",
+    "sitios",
+    "sitios/catalogos",
+    "superadmin/campanas",
+    "tesoreria",
+    "tiempoentrega",
+    "usuarios",
+    "ventas/carga-ventas",
+    "ventas/clientes",
+    "ventas/clientes-corporativos",
+    "ventas/clienteslista",
+    "ventas/pedidos",
+    "ventas/venta-asistida",
+    "ventas/ventas-pos"
+   ]
+  },
+  {
+   "nombre": "administrador de Julsmind, banderas apagadas",
+   "user": {
+    "rol": "Administrador",
+    "company": "Julsmind"
+   },
+   "paths": [],
+   "banderas": false,
+   "visibles": [
+    "/marketing",
+    "/marketing/campanas",
+    "/notificaciones/facebook/inbox",
+    "/notificaciones/instagram/inbox",
+    "/notificaciones/whatsapp/inbox",
+    "agent-builder/chat-agui",
+    "agent-builder/general-chat",
+    "agent-builder/library",
+    "agent-builder/monitor",
+    "agent-builder/wizard",
+    "billing",
+    "cartera",
+    "categorias",
+    "centro-operaciones",
+    "compras/proveedores",
+    "compras/reposicion",
+    "contabilidad",
+    "cotizaciones",
+    "cotizaciones/catalogos",
+    "cotizaciones/editor",
+    "crm/list",
+    "crm/tasks",
+    "dashboards",
+    "dashboards/builder",
+    "despachos",
+    "ecommerce/adiciones/listar",
+    "empresas",
+    "empresas/modulovariable/campos-personalizados",
+    "empresas/modulovariable/produccion/opciones",
+    "en-vivo",
+    "en-vivo/katuq",
+    "extras/formasPago",
+    "extras/pos/formasPago",
+    "extras/zonasCobro",
+    "facturacion-electronica",
+    "flows",
+    "formasEntrega",
+    "formasEntrega/tipoentrega/lista",
+    "integrations",
+    "inventario/bodega-detalle",
+    "inventario/bodegas",
+    "inventario/central-abastecimiento",
+    "inventario/conteos",
+    "inventario/historial-movimientos",
+    "inventario/indicadores",
+    "inventario/inventario-catalogo",
+    "inventario/ordenes-compra",
+    "inventario/recepcion-mercancia",
+    "inventario/traslados",
+    "inventario/ubicaciones",
+    "kuvo",
+    "lista-precios/lista-precios",
+    "notificaciones",
+    "nps/encuestas",
+    "nps/resultados",
+    "nps/seguimiento",
+    "pos/list-ventas",
+    "pricing",
+    "proceso/bodegas-por-canal",
+    "proceso/canales",
+    "proceso/combos",
+    "proceso/descuentos-promociones",
+    "proceso/generos",
+    "proceso/ocasiones",
+    "proceso/tipos-cliente",
+    "produccion/dashboard",
+    "productos",
+    "rol",
+    "sitios",
+    "sitios/catalogos",
+    "tesoreria",
+    "tiempoentrega",
+    "usuarios",
+    "ventas/carga-ventas",
+    "ventas/clientes",
+    "ventas/clientes-corporativos",
+    "ventas/clienteslista",
+    "ventas/pedidos",
+    "ventas/venta-asistida",
+    "ventas/ventas-pos"
+   ]
+  },
+  {
+   "nombre": "administrador de Julsmind, banderas encendidas",
+   "user": {
+    "rol": "Administrador",
+    "company": "Julsmind"
+   },
+   "paths": [],
+   "banderas": true,
+   "visibles": [
+    "/marketing",
+    "/marketing/campanas",
+    "/notificaciones/facebook/inbox",
+    "/notificaciones/instagram/inbox",
+    "/notificaciones/whatsapp/inbox",
+    "agenda",
+    "agenda/configuracion",
+    "agent-builder/chat-agui",
+    "agent-builder/general-chat",
+    "agent-builder/library",
+    "agent-builder/monitor",
+    "agent-builder/wizard",
+    "billing",
+    "cartera",
+    "categorias",
+    "centro-operaciones",
+    "compras/proveedores",
+    "compras/reposicion",
+    "contabilidad",
+    "cotizaciones",
+    "cotizaciones/catalogos",
+    "cotizaciones/editor",
+    "crm/list",
+    "crm/tasks",
+    "dashboards",
+    "dashboards/builder",
+    "despachos",
+    "dropshipping/dashboard",
+    "dropshipping/ordenes",
+    "dropshipping/productos",
+    "dropshipping/proveedores",
+    "ecommerce/adiciones/listar",
+    "empresas",
+    "empresas/modulovariable/campos-personalizados",
+    "empresas/modulovariable/dropshipping/configuracion",
+    "empresas/modulovariable/produccion/opciones",
+    "en-vivo",
+    "en-vivo/katuq",
+    "extras/formasPago",
+    "extras/pos/formasPago",
+    "extras/zonasCobro",
+    "facturacion-electronica",
+    "flows",
+    "formasEntrega",
+    "formasEntrega/tipoentrega/lista",
+    "integrations",
+    "inventario/bodega-detalle",
+    "inventario/bodegas",
+    "inventario/central-abastecimiento",
+    "inventario/conteos",
+    "inventario/historial-movimientos",
+    "inventario/indicadores",
+    "inventario/inventario-catalogo",
+    "inventario/ordenes-compra",
+    "inventario/recepcion-mercancia",
+    "inventario/traslados",
+    "inventario/ubicaciones",
+    "kuvo",
+    "lista-precios/lista-precios",
+    "notificaciones",
+    "nps/encuestas",
+    "nps/resultados",
+    "nps/seguimiento",
+    "picking-packing/packing",
+    "picking-packing/picking",
+    "pos/list-ventas",
+    "pricing",
+    "proceso/bodegas-por-canal",
+    "proceso/canales",
+    "proceso/combos",
+    "proceso/descuentos-promociones",
+    "proceso/generos",
+    "proceso/ocasiones",
+    "proceso/tipos-cliente",
+    "produccion/dashboard",
+    "productos",
+    "rol",
+    "sitios",
+    "sitios/catalogos",
+    "tesoreria",
+    "tiempoentrega",
+    "usuarios",
+    "ventas/carga-ventas",
+    "ventas/clientes",
+    "ventas/clientes-corporativos",
+    "ventas/clienteslista",
+    "ventas/pedidos",
+    "ventas/venta-asistida",
+    "ventas/ventas-pos"
+   ]
+  },
+  {
+   "nombre": "super administrador de Julsmind, banderas apagadas",
+   "user": {
+    "rol": "Super Administrador",
+    "company": "Julsmind"
+   },
+   "paths": [],
+   "banderas": false,
+   "visibles": [
+    "/marketing",
+    "/marketing/campanas",
+    "/marketing/pauta",
+    "/notificaciones/facebook/inbox",
+    "/notificaciones/instagram/inbox",
+    "/notificaciones/whatsapp/inbox",
+    "agent-builder/chat-agui",
+    "agent-builder/general-chat",
+    "agent-builder/library",
+    "agent-builder/monitor",
+    "agent-builder/wizard",
+    "billing",
+    "cartera",
+    "categorias",
+    "centro-operaciones",
+    "compras/proveedores",
+    "compras/reposicion",
+    "contabilidad",
+    "cotizaciones",
+    "cotizaciones/catalogos",
+    "cotizaciones/editor",
+    "crm/list",
+    "crm/tasks",
+    "dashboards",
+    "dashboards/builder",
+    "despachos",
+    "ecommerce/adiciones/listar",
+    "empresas",
+    "empresas/modulovariable/campos-personalizados",
+    "empresas/modulovariable/produccion/opciones",
+    "en-vivo",
+    "en-vivo/katuq",
+    "extras/formasPago",
+    "extras/pos/formasPago",
+    "extras/zonasCobro",
+    "facturacion-electronica",
+    "flows",
+    "formasEntrega",
+    "formasEntrega/tipoentrega/lista",
+    "integrations",
+    "inventario/bodega-detalle",
+    "inventario/bodegas",
+    "inventario/central-abastecimiento",
+    "inventario/conteos",
+    "inventario/historial-movimientos",
+    "inventario/indicadores",
+    "inventario/inventario-catalogo",
+    "inventario/ordenes-compra",
+    "inventario/recepcion-mercancia",
+    "inventario/traslados",
+    "inventario/ubicaciones",
+    "kuvo",
+    "lista-precios/lista-precios",
+    "notificaciones",
+    "nps/encuestas",
+    "nps/resultados",
+    "nps/seguimiento",
+    "pos/list-ventas",
+    "pricing",
+    "proceso/bodegas-por-canal",
+    "proceso/canales",
+    "proceso/combos",
+    "proceso/descuentos-promociones",
+    "proceso/generos",
+    "proceso/ocasiones",
+    "proceso/tipos-cliente",
+    "produccion/dashboard",
+    "productos",
+    "rol",
+    "sitios",
+    "sitios/catalogos",
+    "superadmin/campanas",
+    "tesoreria",
+    "tiempoentrega",
+    "usuarios",
+    "ventas/carga-ventas",
+    "ventas/clientes",
+    "ventas/clientes-corporativos",
+    "ventas/clienteslista",
+    "ventas/pedidos",
+    "ventas/venta-asistida",
+    "ventas/ventas-pos"
+   ]
+  },
+  {
+   "nombre": "super administrador de Julsmind, banderas encendidas",
+   "user": {
+    "rol": "Super Administrador",
+    "company": "Julsmind"
+   },
+   "paths": [],
+   "banderas": true,
+   "visibles": [
+    "/marketing",
+    "/marketing/campanas",
+    "/marketing/pauta",
+    "/notificaciones/facebook/inbox",
+    "/notificaciones/instagram/inbox",
+    "/notificaciones/whatsapp/inbox",
+    "agenda",
+    "agenda/configuracion",
+    "agent-builder/chat-agui",
+    "agent-builder/general-chat",
+    "agent-builder/library",
+    "agent-builder/monitor",
+    "agent-builder/wizard",
+    "billing",
+    "cartera",
+    "categorias",
+    "centro-operaciones",
+    "compras/proveedores",
+    "compras/reposicion",
+    "contabilidad",
+    "cotizaciones",
+    "cotizaciones/catalogos",
+    "cotizaciones/editor",
+    "crm/list",
+    "crm/tasks",
+    "dashboards",
+    "dashboards/builder",
+    "despachos",
+    "dropshipping/dashboard",
+    "dropshipping/ordenes",
+    "dropshipping/productos",
+    "dropshipping/proveedores",
+    "ecommerce/adiciones/listar",
+    "empresas",
+    "empresas/modulovariable/campos-personalizados",
+    "empresas/modulovariable/dropshipping/configuracion",
+    "empresas/modulovariable/produccion/opciones",
+    "en-vivo",
+    "en-vivo/katuq",
+    "extras/formasPago",
+    "extras/pos/formasPago",
+    "extras/zonasCobro",
+    "facturacion-electronica",
+    "flows",
+    "formasEntrega",
+    "formasEntrega/tipoentrega/lista",
+    "integrations",
+    "inventario/bodega-detalle",
+    "inventario/bodegas",
+    "inventario/central-abastecimiento",
+    "inventario/conteos",
+    "inventario/historial-movimientos",
+    "inventario/indicadores",
+    "inventario/inventario-catalogo",
+    "inventario/ordenes-compra",
+    "inventario/recepcion-mercancia",
+    "inventario/traslados",
+    "inventario/ubicaciones",
+    "kuvo",
+    "lista-precios/lista-precios",
+    "notificaciones",
+    "nps/encuestas",
+    "nps/resultados",
+    "nps/seguimiento",
+    "picking-packing/packing",
+    "picking-packing/picking",
+    "pos/list-ventas",
+    "pricing",
+    "proceso/bodegas-por-canal",
+    "proceso/canales",
+    "proceso/combos",
+    "proceso/descuentos-promociones",
+    "proceso/generos",
+    "proceso/ocasiones",
+    "proceso/tipos-cliente",
+    "produccion/dashboard",
+    "productos",
+    "rol",
+    "sitios",
+    "sitios/catalogos",
+    "superadmin/campanas",
+    "tesoreria",
+    "tiempoentrega",
+    "usuarios",
+    "ventas/carga-ventas",
+    "ventas/clientes",
+    "ventas/clientes-corporativos",
+    "ventas/clienteslista",
+    "ventas/pedidos",
+    "ventas/venta-asistida",
+    "ventas/ventas-pos"
+   ]
+  },
+  {
+   "nombre": "contador, banderas apagadas",
+   "user": {
+    "rol": "Contador",
+    "company": "QA"
+   },
+   "paths": [],
+   "banderas": false,
+   "visibles": [
+    "contabilidad"
+   ]
+  },
+  {
+   "nombre": "contador, banderas encendidas",
+   "user": {
+    "rol": "Contador",
+    "company": "QA"
+   },
+   "paths": [],
+   "banderas": true,
+   "visibles": [
+    "contabilidad"
+   ]
+  },
+  {
+   "nombre": "rol sin rutas, banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [],
+   "banderas": false,
+   "visibles": []
+  },
+  {
+   "nombre": "rol sin rutas, banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [],
+   "banderas": true,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «/marketing», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "/marketing"
+   ],
+   "banderas": false,
+   "visibles": [
+    "/marketing"
+   ]
+  },
+  {
+   "nombre": "solo «/marketing», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "/marketing"
+   ],
+   "banderas": true,
+   "visibles": [
+    "/marketing"
+   ]
+  },
+  {
+   "nombre": "solo «/marketing/campanas», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "/marketing/campanas"
+   ],
+   "banderas": false,
+   "visibles": [
+    "/marketing/campanas"
+   ]
+  },
+  {
+   "nombre": "solo «/marketing/campanas», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "/marketing/campanas"
+   ],
+   "banderas": true,
+   "visibles": [
+    "/marketing/campanas"
+   ]
+  },
+  {
+   "nombre": "solo «/marketing/pauta», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "/marketing/pauta"
+   ],
+   "banderas": false,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «/marketing/pauta», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "/marketing/pauta"
+   ],
+   "banderas": true,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «/notificaciones/facebook/inbox», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "/notificaciones/facebook/inbox"
+   ],
+   "banderas": false,
+   "visibles": [
+    "/notificaciones/facebook/inbox"
+   ]
+  },
+  {
+   "nombre": "solo «/notificaciones/facebook/inbox», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "/notificaciones/facebook/inbox"
+   ],
+   "banderas": true,
+   "visibles": [
+    "/notificaciones/facebook/inbox"
+   ]
+  },
+  {
+   "nombre": "solo «/notificaciones/instagram/inbox», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "/notificaciones/instagram/inbox"
+   ],
+   "banderas": false,
+   "visibles": [
+    "/notificaciones/instagram/inbox"
+   ]
+  },
+  {
+   "nombre": "solo «/notificaciones/instagram/inbox», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "/notificaciones/instagram/inbox"
+   ],
+   "banderas": true,
+   "visibles": [
+    "/notificaciones/instagram/inbox"
+   ]
+  },
+  {
+   "nombre": "solo «/notificaciones/whatsapp/inbox», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "/notificaciones/whatsapp/inbox"
+   ],
+   "banderas": false,
+   "visibles": [
+    "/notificaciones/whatsapp/inbox"
+   ]
+  },
+  {
+   "nombre": "solo «/notificaciones/whatsapp/inbox», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "/notificaciones/whatsapp/inbox"
+   ],
+   "banderas": true,
+   "visibles": [
+    "/notificaciones/whatsapp/inbox"
+   ]
+  },
+  {
+   "nombre": "solo «agenda», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "agenda"
+   ],
+   "banderas": false,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «agenda», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "agenda"
+   ],
+   "banderas": true,
+   "visibles": [
+    "agenda"
+   ]
+  },
+  {
+   "nombre": "solo «agenda/configuracion», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "agenda/configuracion"
+   ],
+   "banderas": false,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «agenda/configuracion», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "agenda/configuracion"
+   ],
+   "banderas": true,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «agent-builder/chat-agui», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "agent-builder/chat-agui"
+   ],
+   "banderas": false,
+   "visibles": [
+    "agent-builder/chat-agui"
+   ]
+  },
+  {
+   "nombre": "solo «agent-builder/chat-agui», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "agent-builder/chat-agui"
+   ],
+   "banderas": true,
+   "visibles": [
+    "agent-builder/chat-agui"
+   ]
+  },
+  {
+   "nombre": "solo «agent-builder/general-chat», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "agent-builder/general-chat"
+   ],
+   "banderas": false,
+   "visibles": [
+    "agent-builder/general-chat"
+   ]
+  },
+  {
+   "nombre": "solo «agent-builder/general-chat», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "agent-builder/general-chat"
+   ],
+   "banderas": true,
+   "visibles": [
+    "agent-builder/general-chat"
+   ]
+  },
+  {
+   "nombre": "solo «agent-builder/library», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "agent-builder/library"
+   ],
+   "banderas": false,
+   "visibles": [
+    "agent-builder/library"
+   ]
+  },
+  {
+   "nombre": "solo «agent-builder/library», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "agent-builder/library"
+   ],
+   "banderas": true,
+   "visibles": [
+    "agent-builder/library"
+   ]
+  },
+  {
+   "nombre": "solo «agent-builder/monitor», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "agent-builder/monitor"
+   ],
+   "banderas": false,
+   "visibles": [
+    "agent-builder/monitor"
+   ]
+  },
+  {
+   "nombre": "solo «agent-builder/monitor», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "agent-builder/monitor"
+   ],
+   "banderas": true,
+   "visibles": [
+    "agent-builder/monitor"
+   ]
+  },
+  {
+   "nombre": "solo «agent-builder/wizard», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "agent-builder/wizard"
+   ],
+   "banderas": false,
+   "visibles": [
+    "agent-builder/wizard"
+   ]
+  },
+  {
+   "nombre": "solo «agent-builder/wizard», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "agent-builder/wizard"
+   ],
+   "banderas": true,
+   "visibles": [
+    "agent-builder/wizard"
+   ]
+  },
+  {
+   "nombre": "solo «billing», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "billing"
+   ],
+   "banderas": false,
+   "visibles": [
+    "billing"
+   ]
+  },
+  {
+   "nombre": "solo «billing», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "billing"
+   ],
+   "banderas": true,
+   "visibles": [
+    "billing"
+   ]
+  },
+  {
+   "nombre": "solo «cartera», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "cartera"
+   ],
+   "banderas": false,
+   "visibles": [
+    "cartera",
+    "facturacion-electronica"
+   ]
+  },
+  {
+   "nombre": "solo «cartera», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "cartera"
+   ],
+   "banderas": true,
+   "visibles": [
+    "cartera",
+    "facturacion-electronica"
+   ]
+  },
+  {
+   "nombre": "solo «categorias», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "categorias"
+   ],
+   "banderas": false,
+   "visibles": [
+    "categorias"
+   ]
+  },
+  {
+   "nombre": "solo «categorias», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "categorias"
+   ],
+   "banderas": true,
+   "visibles": [
+    "categorias"
+   ]
+  },
+  {
+   "nombre": "solo «centro-operaciones», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "centro-operaciones"
+   ],
+   "banderas": false,
+   "visibles": [
+    "centro-operaciones"
+   ]
+  },
+  {
+   "nombre": "solo «centro-operaciones», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "centro-operaciones"
+   ],
+   "banderas": true,
+   "visibles": [
+    "centro-operaciones"
+   ]
+  },
+  {
+   "nombre": "solo «compras/proveedores», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "compras/proveedores"
+   ],
+   "banderas": false,
+   "visibles": [
+    "compras/proveedores"
+   ]
+  },
+  {
+   "nombre": "solo «compras/proveedores», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "compras/proveedores"
+   ],
+   "banderas": true,
+   "visibles": [
+    "compras/proveedores"
+   ]
+  },
+  {
+   "nombre": "solo «compras/reposicion», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "compras/reposicion"
+   ],
+   "banderas": false,
+   "visibles": [
+    "compras/reposicion"
+   ]
+  },
+  {
+   "nombre": "solo «compras/reposicion», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "compras/reposicion"
+   ],
+   "banderas": true,
+   "visibles": [
+    "compras/reposicion"
+   ]
+  },
+  {
+   "nombre": "solo «contabilidad», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "contabilidad"
+   ],
+   "banderas": false,
+   "visibles": [
+    "contabilidad"
+   ]
+  },
+  {
+   "nombre": "solo «contabilidad», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "contabilidad"
+   ],
+   "banderas": true,
+   "visibles": [
+    "contabilidad"
+   ]
+  },
+  {
+   "nombre": "solo «cotizaciones», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "cotizaciones"
+   ],
+   "banderas": false,
+   "visibles": [
+    "cotizaciones",
+    "cotizaciones/catalogos"
+   ]
+  },
+  {
+   "nombre": "solo «cotizaciones», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "cotizaciones"
+   ],
+   "banderas": true,
+   "visibles": [
+    "cotizaciones",
+    "cotizaciones/catalogos"
+   ]
+  },
+  {
+   "nombre": "solo «cotizaciones/catalogos», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "cotizaciones/catalogos"
+   ],
+   "banderas": false,
+   "visibles": [
+    "cotizaciones/catalogos"
+   ]
+  },
+  {
+   "nombre": "solo «cotizaciones/catalogos», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "cotizaciones/catalogos"
+   ],
+   "banderas": true,
+   "visibles": [
+    "cotizaciones/catalogos"
+   ]
+  },
+  {
+   "nombre": "solo «cotizaciones/editor», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "cotizaciones/editor"
+   ],
+   "banderas": false,
+   "visibles": [
+    "cotizaciones/editor"
+   ]
+  },
+  {
+   "nombre": "solo «cotizaciones/editor», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "cotizaciones/editor"
+   ],
+   "banderas": true,
+   "visibles": [
+    "cotizaciones/editor"
+   ]
+  },
+  {
+   "nombre": "solo «crm/list», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "crm/list"
+   ],
+   "banderas": false,
+   "visibles": [
+    "crm/list"
+   ]
+  },
+  {
+   "nombre": "solo «crm/list», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "crm/list"
+   ],
+   "banderas": true,
+   "visibles": [
+    "crm/list"
+   ]
+  },
+  {
+   "nombre": "solo «crm/tasks», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "crm/tasks"
+   ],
+   "banderas": false,
+   "visibles": [
+    "crm/tasks"
+   ]
+  },
+  {
+   "nombre": "solo «crm/tasks», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "crm/tasks"
+   ],
+   "banderas": true,
+   "visibles": [
+    "crm/tasks"
+   ]
+  },
+  {
+   "nombre": "solo «dashboards», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "dashboards"
+   ],
+   "banderas": false,
+   "visibles": [
+    "dashboards"
+   ]
+  },
+  {
+   "nombre": "solo «dashboards», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "dashboards"
+   ],
+   "banderas": true,
+   "visibles": [
+    "dashboards"
+   ]
+  },
+  {
+   "nombre": "solo «dashboards/builder», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "dashboards/builder"
+   ],
+   "banderas": false,
+   "visibles": [
+    "dashboards/builder"
+   ]
+  },
+  {
+   "nombre": "solo «dashboards/builder», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "dashboards/builder"
+   ],
+   "banderas": true,
+   "visibles": [
+    "dashboards/builder"
+   ]
+  },
+  {
+   "nombre": "solo «despachos», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "despachos"
+   ],
+   "banderas": false,
+   "visibles": [
+    "despachos"
+   ]
+  },
+  {
+   "nombre": "solo «despachos», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "despachos"
+   ],
+   "banderas": true,
+   "visibles": [
+    "despachos"
+   ]
+  },
+  {
+   "nombre": "solo «dropshipping/dashboard», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "dropshipping/dashboard"
+   ],
+   "banderas": false,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «dropshipping/dashboard», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "dropshipping/dashboard"
+   ],
+   "banderas": true,
+   "visibles": [
+    "dropshipping/dashboard"
+   ]
+  },
+  {
+   "nombre": "solo «dropshipping/ordenes», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "dropshipping/ordenes"
+   ],
+   "banderas": false,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «dropshipping/ordenes», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "dropshipping/ordenes"
+   ],
+   "banderas": true,
+   "visibles": [
+    "dropshipping/ordenes"
+   ]
+  },
+  {
+   "nombre": "solo «dropshipping/productos», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "dropshipping/productos"
+   ],
+   "banderas": false,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «dropshipping/productos», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "dropshipping/productos"
+   ],
+   "banderas": true,
+   "visibles": [
+    "dropshipping/productos"
+   ]
+  },
+  {
+   "nombre": "solo «dropshipping/proveedores», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "dropshipping/proveedores"
+   ],
+   "banderas": false,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «dropshipping/proveedores», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "dropshipping/proveedores"
+   ],
+   "banderas": true,
+   "visibles": [
+    "dropshipping/proveedores"
+   ]
+  },
+  {
+   "nombre": "solo «ecommerce/adiciones/listar», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "ecommerce/adiciones/listar"
+   ],
+   "banderas": false,
+   "visibles": [
+    "ecommerce/adiciones/listar"
+   ]
+  },
+  {
+   "nombre": "solo «ecommerce/adiciones/listar», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "ecommerce/adiciones/listar"
+   ],
+   "banderas": true,
+   "visibles": [
+    "ecommerce/adiciones/listar"
+   ]
+  },
+  {
+   "nombre": "solo «empresas», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "empresas"
+   ],
+   "banderas": false,
+   "visibles": [
+    "empresas"
+   ]
+  },
+  {
+   "nombre": "solo «empresas», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "empresas"
+   ],
+   "banderas": true,
+   "visibles": [
+    "empresas"
+   ]
+  },
+  {
+   "nombre": "solo «empresas/modulovariable/campos-personalizados», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "empresas/modulovariable/campos-personalizados"
+   ],
+   "banderas": false,
+   "visibles": [
+    "empresas/modulovariable/campos-personalizados"
+   ]
+  },
+  {
+   "nombre": "solo «empresas/modulovariable/campos-personalizados», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "empresas/modulovariable/campos-personalizados"
+   ],
+   "banderas": true,
+   "visibles": [
+    "empresas/modulovariable/campos-personalizados"
+   ]
+  },
+  {
+   "nombre": "solo «empresas/modulovariable/dropshipping/configuracion», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "empresas/modulovariable/dropshipping/configuracion"
+   ],
+   "banderas": false,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «empresas/modulovariable/dropshipping/configuracion», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "empresas/modulovariable/dropshipping/configuracion"
+   ],
+   "banderas": true,
+   "visibles": [
+    "empresas/modulovariable/dropshipping/configuracion"
+   ]
+  },
+  {
+   "nombre": "solo «empresas/modulovariable/produccion/opciones», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "empresas/modulovariable/produccion/opciones"
+   ],
+   "banderas": false,
+   "visibles": [
+    "empresas/modulovariable/produccion/opciones"
+   ]
+  },
+  {
+   "nombre": "solo «empresas/modulovariable/produccion/opciones», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "empresas/modulovariable/produccion/opciones"
+   ],
+   "banderas": true,
+   "visibles": [
+    "empresas/modulovariable/produccion/opciones"
+   ]
+  },
+  {
+   "nombre": "solo «en-vivo», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "en-vivo"
+   ],
+   "banderas": false,
+   "visibles": [
+    "en-vivo"
+   ]
+  },
+  {
+   "nombre": "solo «en-vivo», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "en-vivo"
+   ],
+   "banderas": true,
+   "visibles": [
+    "en-vivo"
+   ]
+  },
+  {
+   "nombre": "solo «en-vivo/katuq», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "en-vivo/katuq"
+   ],
+   "banderas": false,
+   "visibles": [
+    "en-vivo/katuq"
+   ]
+  },
+  {
+   "nombre": "solo «en-vivo/katuq», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "en-vivo/katuq"
+   ],
+   "banderas": true,
+   "visibles": [
+    "en-vivo/katuq"
+   ]
+  },
+  {
+   "nombre": "solo «extras/formasPago», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "extras/formasPago"
+   ],
+   "banderas": false,
+   "visibles": [
+    "extras/formasPago"
+   ]
+  },
+  {
+   "nombre": "solo «extras/formasPago», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "extras/formasPago"
+   ],
+   "banderas": true,
+   "visibles": [
+    "extras/formasPago"
+   ]
+  },
+  {
+   "nombre": "solo «extras/pos/formasPago», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "extras/pos/formasPago"
+   ],
+   "banderas": false,
+   "visibles": [
+    "extras/pos/formasPago"
+   ]
+  },
+  {
+   "nombre": "solo «extras/pos/formasPago», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "extras/pos/formasPago"
+   ],
+   "banderas": true,
+   "visibles": [
+    "extras/pos/formasPago"
+   ]
+  },
+  {
+   "nombre": "solo «extras/zonasCobro», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "extras/zonasCobro"
+   ],
+   "banderas": false,
+   "visibles": [
+    "extras/zonasCobro"
+   ]
+  },
+  {
+   "nombre": "solo «extras/zonasCobro», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "extras/zonasCobro"
+   ],
+   "banderas": true,
+   "visibles": [
+    "extras/zonasCobro"
+   ]
+  },
+  {
+   "nombre": "solo «facturacion-electronica», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "facturacion-electronica"
+   ],
+   "banderas": false,
+   "visibles": [
+    "facturacion-electronica"
+   ]
+  },
+  {
+   "nombre": "solo «facturacion-electronica», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "facturacion-electronica"
+   ],
+   "banderas": true,
+   "visibles": [
+    "facturacion-electronica"
+   ]
+  },
+  {
+   "nombre": "solo «flows», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "flows"
+   ],
+   "banderas": false,
+   "visibles": [
+    "flows"
+   ]
+  },
+  {
+   "nombre": "solo «flows», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "flows"
+   ],
+   "banderas": true,
+   "visibles": [
+    "flows"
+   ]
+  },
+  {
+   "nombre": "solo «formasEntrega», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "formasEntrega"
+   ],
+   "banderas": false,
+   "visibles": [
+    "formasEntrega"
+   ]
+  },
+  {
+   "nombre": "solo «formasEntrega», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "formasEntrega"
+   ],
+   "banderas": true,
+   "visibles": [
+    "formasEntrega"
+   ]
+  },
+  {
+   "nombre": "solo «formasEntrega/tipoentrega/lista», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "formasEntrega/tipoentrega/lista"
+   ],
+   "banderas": false,
+   "visibles": [
+    "formasEntrega/tipoentrega/lista"
+   ]
+  },
+  {
+   "nombre": "solo «formasEntrega/tipoentrega/lista», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "formasEntrega/tipoentrega/lista"
+   ],
+   "banderas": true,
+   "visibles": [
+    "formasEntrega/tipoentrega/lista"
+   ]
+  },
+  {
+   "nombre": "solo «integrations», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "integrations"
+   ],
+   "banderas": false,
+   "visibles": [
+    "facturacion-electronica",
+    "integrations"
+   ]
+  },
+  {
+   "nombre": "solo «integrations», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "integrations"
+   ],
+   "banderas": true,
+   "visibles": [
+    "facturacion-electronica",
+    "integrations"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/bodega-detalle», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/bodega-detalle"
+   ],
+   "banderas": false,
+   "visibles": [
+    "inventario/bodega-detalle"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/bodega-detalle», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/bodega-detalle"
+   ],
+   "banderas": true,
+   "visibles": [
+    "inventario/bodega-detalle"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/bodegas», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/bodegas"
+   ],
+   "banderas": false,
+   "visibles": [
+    "inventario/bodegas"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/bodegas», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/bodegas"
+   ],
+   "banderas": true,
+   "visibles": [
+    "inventario/bodegas"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/central-abastecimiento», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/central-abastecimiento"
+   ],
+   "banderas": false,
+   "visibles": [
+    "inventario/central-abastecimiento"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/central-abastecimiento», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/central-abastecimiento"
+   ],
+   "banderas": true,
+   "visibles": [
+    "inventario/central-abastecimiento"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/conteos», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/conteos"
+   ],
+   "banderas": false,
+   "visibles": [
+    "inventario/conteos"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/conteos», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/conteos"
+   ],
+   "banderas": true,
+   "visibles": [
+    "inventario/conteos"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/historial-movimientos», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/historial-movimientos"
+   ],
+   "banderas": false,
+   "visibles": [
+    "inventario/historial-movimientos"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/historial-movimientos», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/historial-movimientos"
+   ],
+   "banderas": true,
+   "visibles": [
+    "inventario/historial-movimientos"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/indicadores», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/indicadores"
+   ],
+   "banderas": false,
+   "visibles": [
+    "inventario/indicadores"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/indicadores», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/indicadores"
+   ],
+   "banderas": true,
+   "visibles": [
+    "inventario/indicadores"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/inventario-catalogo», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/inventario-catalogo"
+   ],
+   "banderas": false,
+   "visibles": [
+    "inventario/inventario-catalogo"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/inventario-catalogo», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/inventario-catalogo"
+   ],
+   "banderas": true,
+   "visibles": [
+    "inventario/inventario-catalogo"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/ordenes-compra», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/ordenes-compra"
+   ],
+   "banderas": false,
+   "visibles": [
+    "inventario/ordenes-compra"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/ordenes-compra», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/ordenes-compra"
+   ],
+   "banderas": true,
+   "visibles": [
+    "inventario/ordenes-compra"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/recepcion-mercancia», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/recepcion-mercancia"
+   ],
+   "banderas": false,
+   "visibles": [
+    "inventario/recepcion-mercancia"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/recepcion-mercancia», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/recepcion-mercancia"
+   ],
+   "banderas": true,
+   "visibles": [
+    "inventario/recepcion-mercancia"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/traslados», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/traslados"
+   ],
+   "banderas": false,
+   "visibles": [
+    "inventario/traslados"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/traslados», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/traslados"
+   ],
+   "banderas": true,
+   "visibles": [
+    "inventario/traslados"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/ubicaciones», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/ubicaciones"
+   ],
+   "banderas": false,
+   "visibles": [
+    "inventario/ubicaciones"
+   ]
+  },
+  {
+   "nombre": "solo «inventario/ubicaciones», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "inventario/ubicaciones"
+   ],
+   "banderas": true,
+   "visibles": [
+    "inventario/ubicaciones"
+   ]
+  },
+  {
+   "nombre": "solo «kuvo», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "kuvo"
+   ],
+   "banderas": false,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «kuvo», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "kuvo"
+   ],
+   "banderas": true,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «lista-precios/lista-precios», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "lista-precios/lista-precios"
+   ],
+   "banderas": false,
+   "visibles": [
+    "lista-precios/lista-precios"
+   ]
+  },
+  {
+   "nombre": "solo «lista-precios/lista-precios», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "lista-precios/lista-precios"
+   ],
+   "banderas": true,
+   "visibles": [
+    "lista-precios/lista-precios"
+   ]
+  },
+  {
+   "nombre": "solo «notificaciones», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "notificaciones"
+   ],
+   "banderas": false,
+   "visibles": [
+    "notificaciones"
+   ]
+  },
+  {
+   "nombre": "solo «notificaciones», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "notificaciones"
+   ],
+   "banderas": true,
+   "visibles": [
+    "notificaciones"
+   ]
+  },
+  {
+   "nombre": "solo «nps/encuestas», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "nps/encuestas"
+   ],
+   "banderas": false,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «nps/encuestas», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "nps/encuestas"
+   ],
+   "banderas": true,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «nps/resultados», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "nps/resultados"
+   ],
+   "banderas": false,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «nps/resultados», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "nps/resultados"
+   ],
+   "banderas": true,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «nps/seguimiento», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "nps/seguimiento"
+   ],
+   "banderas": false,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «nps/seguimiento», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "nps/seguimiento"
+   ],
+   "banderas": true,
+   "visibles": [
+    "nps/seguimiento"
+   ]
+  },
+  {
+   "nombre": "solo «picking-packing/packing», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "picking-packing/packing"
+   ],
+   "banderas": false,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «picking-packing/packing», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "picking-packing/packing"
+   ],
+   "banderas": true,
+   "visibles": [
+    "picking-packing/packing"
+   ]
+  },
+  {
+   "nombre": "solo «picking-packing/picking», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "picking-packing/picking"
+   ],
+   "banderas": false,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «picking-packing/picking», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "picking-packing/picking"
+   ],
+   "banderas": true,
+   "visibles": [
+    "picking-packing/picking"
+   ]
+  },
+  {
+   "nombre": "solo «pos/list-ventas», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "pos/list-ventas"
+   ],
+   "banderas": false,
+   "visibles": [
+    "pos/list-ventas"
+   ]
+  },
+  {
+   "nombre": "solo «pos/list-ventas», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "pos/list-ventas"
+   ],
+   "banderas": true,
+   "visibles": [
+    "pos/list-ventas"
+   ]
+  },
+  {
+   "nombre": "solo «pricing», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "pricing"
+   ],
+   "banderas": false,
+   "visibles": [
+    "pricing"
+   ]
+  },
+  {
+   "nombre": "solo «pricing», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "pricing"
+   ],
+   "banderas": true,
+   "visibles": [
+    "pricing"
+   ]
+  },
+  {
+   "nombre": "solo «proceso/bodegas-por-canal», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "proceso/bodegas-por-canal"
+   ],
+   "banderas": false,
+   "visibles": [
+    "proceso/bodegas-por-canal"
+   ]
+  },
+  {
+   "nombre": "solo «proceso/bodegas-por-canal», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "proceso/bodegas-por-canal"
+   ],
+   "banderas": true,
+   "visibles": [
+    "proceso/bodegas-por-canal"
+   ]
+  },
+  {
+   "nombre": "solo «proceso/canales», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "proceso/canales"
+   ],
+   "banderas": false,
+   "visibles": [
+    "proceso/canales"
+   ]
+  },
+  {
+   "nombre": "solo «proceso/canales», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "proceso/canales"
+   ],
+   "banderas": true,
+   "visibles": [
+    "proceso/canales"
+   ]
+  },
+  {
+   "nombre": "solo «proceso/combos», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "proceso/combos"
+   ],
+   "banderas": false,
+   "visibles": [
+    "proceso/combos"
+   ]
+  },
+  {
+   "nombre": "solo «proceso/combos», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "proceso/combos"
+   ],
+   "banderas": true,
+   "visibles": [
+    "proceso/combos"
+   ]
+  },
+  {
+   "nombre": "solo «proceso/descuentos-promociones», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "proceso/descuentos-promociones"
+   ],
+   "banderas": false,
+   "visibles": [
+    "proceso/descuentos-promociones"
+   ]
+  },
+  {
+   "nombre": "solo «proceso/descuentos-promociones», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "proceso/descuentos-promociones"
+   ],
+   "banderas": true,
+   "visibles": [
+    "proceso/descuentos-promociones"
+   ]
+  },
+  {
+   "nombre": "solo «proceso/generos», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "proceso/generos"
+   ],
+   "banderas": false,
+   "visibles": [
+    "proceso/generos"
+   ]
+  },
+  {
+   "nombre": "solo «proceso/generos», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "proceso/generos"
+   ],
+   "banderas": true,
+   "visibles": [
+    "proceso/generos"
+   ]
+  },
+  {
+   "nombre": "solo «proceso/ocasiones», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "proceso/ocasiones"
+   ],
+   "banderas": false,
+   "visibles": [
+    "proceso/ocasiones"
+   ]
+  },
+  {
+   "nombre": "solo «proceso/ocasiones», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "proceso/ocasiones"
+   ],
+   "banderas": true,
+   "visibles": [
+    "proceso/ocasiones"
+   ]
+  },
+  {
+   "nombre": "solo «proceso/tipos-cliente», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "proceso/tipos-cliente"
+   ],
+   "banderas": false,
+   "visibles": [
+    "proceso/tipos-cliente"
+   ]
+  },
+  {
+   "nombre": "solo «proceso/tipos-cliente», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "proceso/tipos-cliente"
+   ],
+   "banderas": true,
+   "visibles": [
+    "proceso/tipos-cliente"
+   ]
+  },
+  {
+   "nombre": "solo «produccion/dashboard», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "produccion/dashboard"
+   ],
+   "banderas": false,
+   "visibles": [
+    "produccion/dashboard"
+   ]
+  },
+  {
+   "nombre": "solo «produccion/dashboard», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "produccion/dashboard"
+   ],
+   "banderas": true,
+   "visibles": [
+    "produccion/dashboard"
+   ]
+  },
+  {
+   "nombre": "solo «productos», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "productos"
+   ],
+   "banderas": false,
+   "visibles": [
+    "productos"
+   ]
+  },
+  {
+   "nombre": "solo «productos», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "productos"
+   ],
+   "banderas": true,
+   "visibles": [
+    "productos"
+   ]
+  },
+  {
+   "nombre": "solo «rol», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "rol"
+   ],
+   "banderas": false,
+   "visibles": [
+    "rol"
+   ]
+  },
+  {
+   "nombre": "solo «rol», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "rol"
+   ],
+   "banderas": true,
+   "visibles": [
+    "rol"
+   ]
+  },
+  {
+   "nombre": "solo «sitios», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "sitios"
+   ],
+   "banderas": false,
+   "visibles": [
+    "sitios"
+   ]
+  },
+  {
+   "nombre": "solo «sitios», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "sitios"
+   ],
+   "banderas": true,
+   "visibles": [
+    "sitios"
+   ]
+  },
+  {
+   "nombre": "solo «sitios/catalogos», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "sitios/catalogos"
+   ],
+   "banderas": false,
+   "visibles": [
+    "sitios/catalogos"
+   ]
+  },
+  {
+   "nombre": "solo «sitios/catalogos», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "sitios/catalogos"
+   ],
+   "banderas": true,
+   "visibles": [
+    "sitios/catalogos"
+   ]
+  },
+  {
+   "nombre": "solo «superadmin/campanas», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "superadmin/campanas"
+   ],
+   "banderas": false,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «superadmin/campanas», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "superadmin/campanas"
+   ],
+   "banderas": true,
+   "visibles": []
+  },
+  {
+   "nombre": "solo «tesoreria», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "tesoreria"
+   ],
+   "banderas": false,
+   "visibles": [
+    "tesoreria"
+   ]
+  },
+  {
+   "nombre": "solo «tesoreria», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "tesoreria"
+   ],
+   "banderas": true,
+   "visibles": [
+    "tesoreria"
+   ]
+  },
+  {
+   "nombre": "solo «tiempoentrega», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "tiempoentrega"
+   ],
+   "banderas": false,
+   "visibles": [
+    "tiempoentrega"
+   ]
+  },
+  {
+   "nombre": "solo «tiempoentrega», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "tiempoentrega"
+   ],
+   "banderas": true,
+   "visibles": [
+    "tiempoentrega"
+   ]
+  },
+  {
+   "nombre": "solo «usuarios», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "usuarios"
+   ],
+   "banderas": false,
+   "visibles": [
+    "usuarios"
+   ]
+  },
+  {
+   "nombre": "solo «usuarios», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "usuarios"
+   ],
+   "banderas": true,
+   "visibles": [
+    "usuarios"
+   ]
+  },
+  {
+   "nombre": "solo «ventas/carga-ventas», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "ventas/carga-ventas"
+   ],
+   "banderas": false,
+   "visibles": [
+    "ventas/carga-ventas"
+   ]
+  },
+  {
+   "nombre": "solo «ventas/carga-ventas», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "ventas/carga-ventas"
+   ],
+   "banderas": true,
+   "visibles": [
+    "ventas/carga-ventas"
+   ]
+  },
+  {
+   "nombre": "solo «ventas/clientes», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "ventas/clientes"
+   ],
+   "banderas": false,
+   "visibles": [
+    "ventas/clientes"
+   ]
+  },
+  {
+   "nombre": "solo «ventas/clientes», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "ventas/clientes"
+   ],
+   "banderas": true,
+   "visibles": [
+    "ventas/clientes"
+   ]
+  },
+  {
+   "nombre": "solo «ventas/clientes-corporativos», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "ventas/clientes-corporativos"
+   ],
+   "banderas": false,
+   "visibles": [
+    "ventas/clientes-corporativos"
+   ]
+  },
+  {
+   "nombre": "solo «ventas/clientes-corporativos», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "ventas/clientes-corporativos"
+   ],
+   "banderas": true,
+   "visibles": [
+    "ventas/clientes-corporativos"
+   ]
+  },
+  {
+   "nombre": "solo «ventas/clienteslista», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "ventas/clienteslista"
+   ],
+   "banderas": false,
+   "visibles": [
+    "ventas/clienteslista"
+   ]
+  },
+  {
+   "nombre": "solo «ventas/clienteslista», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "ventas/clienteslista"
+   ],
+   "banderas": true,
+   "visibles": [
+    "ventas/clienteslista"
+   ]
+  },
+  {
+   "nombre": "solo «ventas/pedidos», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "ventas/pedidos"
+   ],
+   "banderas": false,
+   "visibles": [
+    "ventas/pedidos"
+   ]
+  },
+  {
+   "nombre": "solo «ventas/pedidos», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "ventas/pedidos"
+   ],
+   "banderas": true,
+   "visibles": [
+    "ventas/pedidos"
+   ]
+  },
+  {
+   "nombre": "solo «ventas/venta-asistida», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "ventas/venta-asistida"
+   ],
+   "banderas": false,
+   "visibles": [
+    "ventas/venta-asistida"
+   ]
+  },
+  {
+   "nombre": "solo «ventas/venta-asistida», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "ventas/venta-asistida"
+   ],
+   "banderas": true,
+   "visibles": [
+    "ventas/venta-asistida"
+   ]
+  },
+  {
+   "nombre": "solo «ventas/ventas-pos», banderas apagadas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "ventas/ventas-pos"
+   ],
+   "banderas": false,
+   "visibles": [
+    "ventas/ventas-pos"
+   ]
+  },
+  {
+   "nombre": "solo «ventas/ventas-pos», banderas encendidas",
+   "user": {
+    "rol": "Vendedor",
+    "company": "QA"
+   },
+   "paths": [
+    "ventas/ventas-pos"
+   ],
+   "banderas": true,
+   "visibles": [
+    "ventas/ventas-pos"
+   ]
+  }
+ ]
+}

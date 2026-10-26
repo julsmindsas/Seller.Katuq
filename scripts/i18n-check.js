@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Verificación de los diccionarios y de los textos sueltos del panel (`npm run i18n:check`).
- * D-540, ticket «Traducción» (cd CMNdBkVZXgYoOCvqfGZc), bloque IDI-B00c, design.md D6.
+ * D-560, ticket «Traducción» (cd CMNdBkVZXgYoOCvqfGZc), bloque IDI-B00c, design.md D6.
  *
  * Node puro: no compila Angular ni usa dependencias. Lee `src/assets/i18n/*.json` y los
  * `.html`/`.ts` de `src/app` (sin `*.spec.ts`). La configuración está en
@@ -1144,7 +1144,7 @@ function main(argv) {
   }
 
   const dic = Object.entries(informe.diccionarios).map(([k, v]) => `${k} ${v == null ? '(no existe)' : v}`).join(', ');
-  console.log(`i18n:check (D-540). Diccionarios: ${dic}. Archivos revisados: ${informe.archivos} en ${informe.duracionMs} ms.`);
+  console.log(`i18n:check (D-560). Diccionarios: ${dic}. Archivos revisados: ${informe.archivos} en ${informe.duracionMs} ms.`);
   console.log(`Módulos cerrados: ${informe.modulosCerrados.length ? informe.modulosCerrados.join(', ') : 'ninguno'}.`);
   if (informe.errores.length) imprimirGrupo('ERRORES', informe.errores, ERRORES, todo);
   if (informe.avisos.length) imprimirGrupo('Avisos', informe.avisos, AVISOS, todo);

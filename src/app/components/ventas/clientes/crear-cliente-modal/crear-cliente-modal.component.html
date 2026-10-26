@@ -176,13 +176,14 @@
                         styleClass="country-code" panelStyleClass="buscar-por-panel">
                       </p-dropdown>
                       <input pInputText type="text" placeholder="{{ 'Número celular' | translate }}"
-                        formControlName="numero_celular_comprador" autocomplete="tel" maxlength="10"
+                        formControlName="numero_celular_comprador" autocomplete="tel" [attr.maxlength]="esCelularColombia ? 10 : largoCelularOtroPais.max"
                         (keypress)="validarSoloNumeros($event)" class="flex-grow-1">
                     </div>
                     <div *ngIf="formulario.get('numero_celular_comprador')?.invalid && formulario.get('numero_celular_comprador')?.touched" class="error-message mt-1">
                       <i class="pi pi-exclamation-circle"></i>
                       <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
-                      <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('pattern')">{{ "Debe tener exactamente 10 dígitos" | translate }}</span>
+                      <span *ngIf="formulario.get('numero_celular_comprador')?.getError('celular')?.colombia">{{ "Debe tener exactamente 10 dígitos" | translate }}</span>
+                      <span *ngIf="formulario.get('numero_celular_comprador')?.getError('celular')?.colombia === false">{{ "Debe tener entre 6 y 14 dígitos" | translate }}</span>
                     </div>
                   </div>
 
@@ -276,6 +277,91 @@
               </div>
             </div>
 
+          </div>
+        </p-tabPanel>
+
+        <!-- ══════════════ CONTACTOS (ticket 1327, D-537) ══════════════ -->
+        <p-tabPanel *ngIf="permiteExtras">
+          <ng-template pTemplate="header">
+            <i class="pi pi-users"></i>
+            <span>{{ "Contactos" | translate }}</span>
+            <span class="tab-count" *ngIf="totalContactos">{{ totalContactos }}</span>
+            <span class="tab-alert" *ngIf="contactoPendiente" title="Contacto sin terminar">!</span>
+          </ng-template>
+
+          <div class="form-section-modern">
+            <div class="section-header">
+              <i class="pi pi-users"></i>
+              <h6>{{ "Personas de contacto" | translate }}</h6>
+              <small class="text-muted ms-2">{{ "Opcional · a quién se le dirige una cotización" | translate }}</small>
+              <button pButton type="button" icon="pi pi-plus" label="{{ 'Agregar contacto' | translate }}"
+                class="p-button-outlined p-button-sm ms-auto" (click)="nuevoContacto()" *ngIf="!contactoEditando"></button>
+            </div>
+
+            <div *ngIf="contactos.length; else sinContactos" class="lista-items">
+              <div *ngFor="let c of contactos; let i = index" class="item-row" [class.item-row--editing]="contactoIndex === i">
+                <i class="pi pi-user item-icon"></i>
+                <div class="item-main">
+                  <div class="item-title">
+                    {{ c.nombre }}
+                    <span class="pill-default" *ngIf="c.principal">{{ "Principal" | translate }}</span>
+                  </div>
+                  <div class="item-sub"><span *ngIf="c.cargo">{{ c.cargo }}</span><span *ngIf="c.cargo && (c.correo || c.celular)"> · </span>{{ c.correo }}<span *ngIf="c.correo && c.celular"> · </span>{{ c.celular }}</div>
+                </div>
+                <div class="item-actions">
+                  <button type="button" class="btn-icon" *ngIf="!c.principal" title="{{ 'Hacer principal' | translate }}" (click)="marcarPrincipal(i)"><i class="pi pi-star"></i></button>
+                  <button type="button" class="btn-icon" title="{{ 'Editar' | translate }}" (click)="editarContacto(i)"><i class="pi pi-pencil"></i></button>
+                  <button type="button" class="btn-icon btn-icon--danger" title="{{ 'Eliminar' | translate }}" (click)="eliminarContacto(i)"><i class="pi pi-trash"></i></button>
+                </div>
+              </div>
+            </div>
+            <ng-template #sinContactos>
+              <div class="tags-empty-hint" *ngIf="!contactoEditando">
+                <i class="pi pi-info-circle me-1"></i>{{ "Sin contactos: la cotización va a los datos de contacto del cliente." | translate }}
+              </div>
+            </ng-template>
+
+            <div class="item-editor" *ngIf="contactoEditando">
+              <div class="item-editor__title">
+                <i class="pi" [ngClass]="contactoIndex >= 0 ? 'pi-pencil' : 'pi-plus'"></i>
+                {{ (contactoIndex >= 0 ? "Editar contacto" : "Nuevo contacto") | translate }}
+              </div>
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label class="form-label-modern" for="contacto-nombre">{{ "Nombre" | translate }} <span class="required">*</span></label>
+                  <input id="contacto-nombre" pInputText type="text" class="w-100"
+                    [(ngModel)]="contactoEditando.nombre" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label-modern" for="contacto-cargo">{{ "Cargo" | translate }}</label>
+                  <input id="contacto-cargo" pInputText type="text" class="w-100" placeholder="{{ 'Jefe de compras, Ingeniero…' | translate }}"
+                    [(ngModel)]="contactoEditando.cargo" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label-modern" for="contacto-correo">{{ "Correo" | translate }}</label>
+                  <input id="contacto-correo" pInputText type="email" class="w-100"
+                    [(ngModel)]="contactoEditando.correo" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label-modern" for="contacto-celular">{{ "Celular" | translate }}</label>
+                  <input id="contacto-celular" pInputText type="tel" class="w-100"
+                    [(ngModel)]="contactoEditando.celular" [ngModelOptions]="{ standalone: true }">
+                </div>
+                <div class="col-12">
+                  <label class="check-inline">
+                    <input type="checkbox" class="form-check-input mt-0"
+                      [(ngModel)]="contactoEditando.principal" [ngModelOptions]="{ standalone: true }">
+                    <span>{{ "Contacto principal: el que se propone al cotizar" | translate }}</span>
+                  </label>
+                </div>
+              </div>
+              <div class="item-editor__actions">
+                <button pButton type="button" icon="pi pi-times" label="{{ 'Descartar' | translate }}"
+                  class="p-button-text p-button-secondary p-button-sm" (click)="descartarContacto()"></button>
+                <button pButton type="button" icon="pi pi-check" label="{{ (contactoIndex >= 0 ? 'Guardar cambios' : 'Agregar a la lista') | translate }}"
+                  class="p-button-outlined p-button-sm" (click)="confirmarContacto()"></button>
+              </div>
+            </div>
           </div>
         </p-tabPanel>
 

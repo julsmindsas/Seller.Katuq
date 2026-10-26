@@ -281,8 +281,13 @@ export class ServiciosService {
     };
     // return this.afAuth.auth.signOut().then(() => {
     // this.showLoader = false;
+    // D-546: el modo del menú (abierto o compacto) es una preferencia de cada usuario y sobrevive al cierre de sesión.
+    const modoMenu = localStorage.getItem('katuqMenuModo');
     localStorage.clear();
     sessionStorage.clear();
+    if (modoMenu !== null) {
+      localStorage.setItem('katuqMenuModo', modoMenu);
+    }
     this.ngZone.run(() => {
       this.router.navigate(['/login']);
     });

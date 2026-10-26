@@ -25,6 +25,7 @@ import { PickListModule } from 'primeng/picklist';
 import { ImagenProductoPipe } from '../../../shared/pipes/imagen-producto.pipe';
 import { FotosUniformesComponent } from '../fotos-uniformes/fotos-uniformes.component';
 import { EspecificacionesProductoComponent } from './especificaciones-producto/especificaciones-producto.component';
+import { HistorialProductoModule } from '../historial-producto/historial-producto.module';
 @NgModule({
   imports: [
     ImagenProductoPipe,
@@ -32,6 +33,8 @@ import { EspecificacionesProductoComponent } from './especificaciones-producto/e
     FotosUniformesComponent,
     // D-495: pestaña standalone «Especificaciones» (bandera categoryAttributes).
     EspecificacionesProductoComponent,
+    // D-548 (F1): pestaña «Historial» del producto, con la bandera productHistoryLog.
+    HistorialProductoModule,
     NgSelectModule,
     CommonModule,
     DropdownModule,

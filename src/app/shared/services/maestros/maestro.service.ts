@@ -387,7 +387,11 @@ export class MaestroService {
     return this.http.post(this.urlBase + '/v1/productos/edit', product, this.httpOptions);
   }
 
-  public importPreciosTipoCliente(data: { precios: any[], porcentajeIva: number, preciosConIva: boolean }) {
+  /**
+   * `archivo` (D-548, 6.7): nombre del Excel que se importó. Es opcional y solo se muestra en el
+   * historial del producto («Importación de precios · precios-octubre.xlsx»); no cambia lo que se guarda.
+   */
+  public importPreciosTipoCliente(data: { precios: any[], porcentajeIva: number, preciosConIva: boolean, archivo?: string }) {
     return this.http.post<any>(this.urlBase + '/v1/productos/import-precios', data, this.httpOptions);
   }
 
@@ -401,16 +405,16 @@ export class MaestroService {
   }
 
   /** Importa el precio unitario (pestaña "Precio unitario" de Lista de Precios). */
-  public importPreciosUnitarios(items: { referencia: string; precioSinIva: number; porcentajeIva?: number | null }[]) {
-    return this.http.post<any>(this.urlBase + '/v1/productos/import-precios-unitarios', { items }, this.httpOptions);
+  public importPreciosUnitarios(items: { referencia: string; precioSinIva: number; porcentajeIva?: number | null }[], archivo?: string) {
+    return this.http.post<any>(this.urlBase + '/v1/productos/import-precios-unitarios', archivo ? { items, archivo } : { items }, this.httpOptions);
   }
 
   /**
    * Importa los rangos por volumen. Cada item lleva TODOS los rangos de su
    * referencia: el backend sobrescribe `preciosVolumen` completo.
    */
-  public importPreciosVolumen(items: { referencia: string; rangos: any[] }[]) {
-    return this.http.post<any>(this.urlBase + '/v1/productos/import-precios-volumen', { items }, this.httpOptions);
+  public importPreciosVolumen(items: { referencia: string; rangos: any[] }[], archivo?: string) {
+    return this.http.post<any>(this.urlBase + '/v1/productos/import-precios-volumen', archivo ? { items, archivo } : { items }, this.httpOptions);
   }
 
   /** Guarda los precios por tipo de cliente de UN producto (merge por tipoClienteId en backend). */
@@ -500,6 +504,10 @@ export class MaestroService {
   }
   public deletePermanentCombo(id: string) {
     return this.http.post(this.urlBase + '/v1/combos/delete-permanent', { id }, this.httpOptions);
+  }
+  /** Ticket 1323 (D-538): carga desde Excel. Con `simular` no guarda nada; devuelve el plan y los errores. */
+  public importarCombos(filas: any[], simular: boolean) {
+    return this.http.post(this.urlBase + '/v1/combos/import', { filas, simular }, this.httpOptions);
   }
   // Batch fetch de productos por id — el catálogo de venta asistida es
   // paginado/buscado, así que los productos de un combo no necesariamente
