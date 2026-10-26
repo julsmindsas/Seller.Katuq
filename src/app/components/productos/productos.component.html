@@ -152,6 +152,8 @@
                                     [value]="filtros.texto"
                                     [placeholder]="searchPlaceholder"
                                     (input)="onSearchInput($event)"
+                                    (focus)="seleccionarBusquedaPrevia($event)"
+                                    (mouseup)="$event.preventDefault()"
                                 />
                                 <button *ngIf="filtros.texto"
                                     class="btn btn-outline-secondary border-start-0"

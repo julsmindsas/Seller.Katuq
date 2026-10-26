@@ -869,6 +869,16 @@ export class ProductosComponent implements OnInit, OnDestroy {
     this.searchSubject.next(event.target.value);
   }
 
+  /**
+   * Ticket 1414: al volver al listado el buscador conserva la búsqueda anterior
+   * (sesión) y lo que se escribía se pegaba detrás («2292ALM-2688»). Al entrar
+   * al campo se selecciona el texto, así lo nuevo lo reemplaza.
+   */
+  seleccionarBusquedaPrevia(event: FocusEvent): void {
+    const input = event.target as HTMLInputElement | null;
+    if (input?.value) input.select();
+  }
+
   onSearchCriteriaChange(): void {
     if (this.filtros.texto?.trim().length >= 2) {
       this.searchSubject.next(this.filtros.texto);
@@ -878,8 +888,9 @@ export class ProductosComponent implements OnInit, OnDestroy {
 
   limpiarTexto(): void {
     this.filtros.texto = '';
-    this.resetPaginacion();
-    this.cargarConFiltros();
+    // Por el mismo buscador: si va directo a cargar, `distinctUntilChanged`
+    // recuerda el texto viejo y volver a escribirlo no buscaba nada.
+    this.searchSubject.next('');
   }
 
   onPrecioBlur(): void {
