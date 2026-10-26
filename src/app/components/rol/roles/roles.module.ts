@@ -4,10 +4,11 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 import { RolesComponent } from './roles.component';
+import { AccionesRolPedidoComponent } from './acciones-rol-pedido.component';
 import { PickListModule } from 'primeng/picklist';
 
 @NgModule({
-  declarations: [RolesComponent],
+  declarations: [RolesComponent, AccionesRolPedidoComponent],
   imports: [
     CommonModule,
     ReactiveFormsModule,

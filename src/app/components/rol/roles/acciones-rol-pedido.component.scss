@@ -1,0 +1,139 @@
+// D-547 (F2): acciones principales del pedido de un rol. Tokens de openspec/specs/design-system/spec.md (D-131)
+// y regla de diseño Katuq (D-399): plano, sin gradientes, acento #5F3FE0, tinta #211F3A, radios 16/11/20.
+//
+// Trampas de CSS global (AGENTS.md) que este archivo evita:
+//   - `[class*="p-"]` fuerza el font-size: ninguna clase de aquí contiene «p-» (todas llevan el prefijo racc-).
+//   - `span.ng-star-inserted` pinta de azul todo span creado por *ngIf/*ngFor: TODO span lleva color y tamaño propios.
+//   - `h1..h6` y `button:focus`: el título lleva !important y el foco se devuelve con :focus-visible.
+
+$ink: #211F3A;
+$cuerpo: #6B6890;
+$muted: #8F8BAB;
+$acento: #5F3FE0;
+$acento-suave: #EFE9FF;
+$linea: #ECEAF4;
+$borde-boton: #E4E2EF;
+$foco: #7C5CFF;
+
+:host { display: block; }
+
+.racc-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 8px 0 24px;
+  padding: 16px;
+  border: 1px solid $linea;
+  border-radius: 16px;
+  background: #fff;
+  color: $ink;
+  letter-spacing: normal;
+
+  button, select { font-family: inherit; letter-spacing: normal; }
+  button:focus-visible, select:focus-visible { outline: 3px solid $foco !important; outline-offset: 2px; }
+}
+
+.racc-titulo {
+  margin: 0;
+  font-size: 15px !important;
+  line-height: 1.3 !important;
+  font-weight: 800;
+  color: $ink;
+  letter-spacing: normal;
+}
+
+.racc-sub {
+  margin: -6px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: $cuerpo;
+  letter-spacing: normal;
+}
+
+.racc-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0; }
+
+span.racc-etiqueta, label.racc-etiqueta {
+  display: block;
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: $muted;
+  letter-spacing: 0.04em;
+}
+
+.racc-perfiles { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.racc-perfil {
+  height: 34px;
+  padding: 0 14px;
+  background: #fff;
+  border: 1px solid $borde-boton;
+  border-radius: 11px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #5B5878;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover { background: #FAF9FF; }
+
+  &.racc-perfil-activo {
+    background: $acento-suave;
+    border-color: $acento;
+    color: $acento;
+  }
+}
+
+span.racc-nota {
+  font-size: 12px;
+  line-height: 1.3;
+  color: $cuerpo;
+  letter-spacing: normal;
+}
+
+.racc-listas {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.racc-campo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+
+.racc-select { width: 100%; min-width: 0; }
+
+.racc-pie { display: flex; align-items: center; gap: 12px; }
+
+// Botón principal: el mismo morado plano de `cfg-btn` (el encapsulado del componente no ve esa clase).
+.racc-guardar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  background: $acento;
+  border: 1px solid $acento;
+  border-radius: 11px;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover:not(:disabled) { background: #4A2FC0; border-color: #4A2FC0; }
+  &:disabled { background: #D8D4EA; border-color: #D8D4EA; cursor: not-allowed; }
+}
+
+@media (max-width: 991px) {
+  .racc-listas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 520px) {
+  .racc-listas { grid-template-columns: minmax(0, 1fr); }
+  .racc-seccion { padding: 14px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .racc-perfil, .racc-guardar { transition: none; }
+}

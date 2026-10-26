@@ -107,6 +107,10 @@
               </div>
             </div>
 
+            <!-- D-547 (F2): acciones principales del pedido de este rol (bandera orderPinnedActions) -->
+            <app-acciones-rol-pedido *ngIf="mostrarAccionesPedido"
+                [roleId]="editingRoleId" [orderActions]="accionesPedidoDelRol"></app-acciones-rol-pedido>
+
             <!-- Acciones -->
             <div class="cfg-form__pie">
                 <button class="cfg-btn cfg-btn--sec" type="button" (click)="volver()">

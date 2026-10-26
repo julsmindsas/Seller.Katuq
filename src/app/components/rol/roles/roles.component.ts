@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, TemplateRef } from '@angular/core';
+import { Component, OnInit, ViewChild, TemplateRef, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -7,6 +7,7 @@ import { NavService, Menu } from '../../../shared/services/nav.service';
 import { Role } from '../../../shared/models/roles/roles';
 import Swal from 'sweetalert2';
 import { UtilsService } from '../../../shared/services/utils.service';
+import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
 import { ROLE_TEMPLATES, RoleTemplate } from '../../../shared/models/roles/role-templates';
 import { catalogoDeMenus, disponiblesSinSeleccionadas, entradasConNombresActuales, menusParaGuardar, textoDeEntrada } from './roles-menus';
 
@@ -40,6 +41,9 @@ export class RolesComponent implements OnInit {
   public empresas: string[] = [];
   public isJulsmind: boolean = false;
   public editingRoleId: string | null = null;
+  /** D-547 (F2): lo que el rol en edición trae guardado en `orderActions` (puede no existir). */
+  public accionesPedidoDelRol: unknown = null;
+  private companyFeatures = inject(CompanyFeaturesService);
   @ViewChild('configModal') configModal: TemplateRef<any>;
 
   // ─── Plantillas de roles ────────────────────────────────────────
@@ -71,6 +75,14 @@ export class RolesComponent implements OnInit {
     this.loadMenus();
     this.loadRoles();
     this.loadRoleToEdit(); // nuevo
+  }
+
+  /**
+   * D-547 (F2): «Acciones principales del pedido» del rol. Solo con la bandera `orderPinnedActions` encendida y
+   * un rol ya guardado. Apagada, el componente no existe.
+   */
+  get mostrarAccionesPedido(): boolean {
+    return !!this.editingRoleId && this.companyFeatures.isEnabled('orderPinnedActions');
   }
 
   checkCompany(): void {
@@ -155,6 +167,7 @@ export class RolesComponent implements OnInit {
     if (roleString) {
       const role: Role = JSON.parse(roleString);
       this.editingRoleId = (role as any).id || null;
+      this.accionesPedidoDelRol = (role as any).orderActions || null;
       this.roleForm.patchValue({
         rol: role.rol,
         empresa: role.empresa,

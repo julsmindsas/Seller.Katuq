@@ -84,6 +84,10 @@ import {
   EstadoAcciones,
   estadoAcciones,
 } from "./acciones-pedido/acciones-pedido.estado";
+import { ochoAcciones } from "./acciones-pedido/acciones-pedido.ocho";
+import { AccionResaltada, resaltada } from "./acciones-pedido/acciones-pedido.resaltada";
+import { AccionesUsuario } from "./acciones-pedido/acciones-pedido.me";
+import { OrderActionsService } from "../../../shared/services/ventas/order-actions.service";
 
 /** Estados en los que el pedido ya salió de la bodega (ticket 1318). */
 const ESTADOS_DE_SALIDA = ['Despachado', 'Entregado', 'Cerrado'];
@@ -174,6 +178,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   // Con inject() para no cambiar el constructor.
   private companyFeatures = inject(CompanyFeaturesService);
   private facturacionAutomatica = inject(FacturacionAutomaticaService);
+  // D-547 (F2): acciones fijadas por rol y por usuario. Solo se usa con la bandera orderPinnedActions encendida.
+  private orderActions = inject(OrderActionsService);
 
   // ===== Modal de facturación SIIGO: forma de pago + vencimiento de crédito (D-042) =====
   @ViewChild("facturaSiigoModal") facturaSiigoModal: any;
@@ -905,6 +911,80 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       editarDescuentoModal: this.editarDescuentoModalRef,
     };
     return plantillas[nombre];
+  }
+
+  // ── D-547 (F2): bloque ACCIONES de 8, detrás de la bandera `orderPinnedActions` ───────────────
+  // Solo se AGREGA: el bloque de F1 sigue como estaba y se ve siempre que esto no aplique.
+
+  /**
+   * `true`: el detalle muestra el bloque de 8 (4 del rol y 4 del usuario). Exige la bandera encendida y que el
+   * servidor haya respondido; Desde Producción y cualquier falla dejan el bloque de F1.
+   */
+  get bloquePersonalizado(): boolean {
+    return !this.isFromProduction
+      && this.companyFeatures.isEnabled("orderPinnedActions")
+      && !!this.orderActions.estado;
+  }
+
+  private ochoMemo: { de: AccionesUsuario | null; valor: AccionPedidoId[] } = { de: null, valor: [] };
+
+  /** Las 8 acciones: las 4 del rol (o General) y las 4 personales. Mismo arreglo mientras el estado no cambie. */
+  get accionesDelBloque(): AccionPedidoId[] {
+    const me = this.orderActions.estado;
+    if (me !== this.ochoMemo.de) this.ochoMemo = { de: me, valor: ochoAcciones(me?.role, me?.pinned) };
+    return this.ochoMemo.valor;
+  }
+
+  private resaltadaMemo: AccionResaltada | null = null;
+
+  /** Acción a resaltar según el estado del pedido (D17). Devuelve el mismo objeto mientras no cambie. */
+  resaltadaDe(pedido: Pedido): AccionResaltada | null {
+    const r = resaltada(pedido);
+    const previa = this.resaltadaMemo;
+    if ((r?.id ?? null) === (previa?.id ?? null) && (r?.etiqueta ?? null) === (previa?.etiqueta ?? null)) return previa;
+    this.resaltadaMemo = r;
+    return r;
+  }
+
+  private estadosPorPedido = new WeakMap<object, { entrada: EntradaEstadoAcciones; estados: EstadoAcciones }>();
+
+  /**
+   * Igual que `estadosAccionesDe`, pero con una entrada por pedido: el modal puede estar abierto para otro pedido
+   * (desde el «⋯» de una fila) sin que las dos plantillas se pisen el memo y cambien el objeto en cada ciclo.
+   */
+  estadosDelBloque(pedido: Pedido): EstadoAcciones | null {
+    if (!pedido) return null;
+    const entrada = this.entradaEstadoAcciones(pedido);
+    const previo = this.estadosPorPedido.get(pedido as object);
+    if (previo && (Object.keys(entrada) as (keyof EntradaEstadoAcciones)[]).every((k) => previo.entrada[k] === entrada[k])) {
+      return previo.estados;
+    }
+    const estados = estadoAcciones(entrada);
+    this.estadosPorPedido.set(pedido as object, { entrada, estados });
+    return estados;
+  }
+
+  /**
+   * «Restablecer acciones»: pide confirmar y guarda `pinned: []`. Las 4 del rol no cambian. El bloque cambia solo
+   * cuando el servidor confirma; si falla, todo queda como estaba y se avisa dentro de la misma ventana.
+   */
+  restablecerAccionesBloque(): void {
+    Swal.fire({
+      title: "Restablecer acciones",
+      text: "Tus 4 acciones personales vuelven al orden de siempre. Las de tu rol no cambian.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#5F3FE0",
+      confirmButtonText: "Restablecer",
+      cancelButtonText: "Cancelar",
+      showLoaderOnConfirm: true,
+      allowOutsideClick: () => !Swal.isLoading(),
+      preConfirm: () =>
+        firstValueFrom(this.orderActions.guardarPines([])).catch(() => {
+          Swal.showValidationMessage("No pudimos guardar tus acciones. Intenta de nuevo.");
+          return null;
+        }),
+    });
   }
 
   /**
@@ -3712,6 +3792,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // D-547 (F2): con la bandera encendida se piden las acciones del rol y del usuario UNA vez por sesión
+    // (abrir un pedido no consulta nada). Apagada, no se hace ninguna petición.
+    if (!this.isFromProduction && this.companyFeatures.isEnabled("orderPinnedActions")) {
+      this.orderActions.cargar().pipe(takeUntil(this.destroy$)).subscribe();
+    }
+
     // Spec 013 — precarga el flag de tesorería (cacheado en el servicio) para que
     // el recálculo de estadoPago pueda leerlo de forma sincrónica al cargar pedidos.
     this.treasuryService

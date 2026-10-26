@@ -51,7 +51,7 @@ export interface VistaModal {
   puedeEliminar: boolean;
 }
 
-function tarjeta(accion: AccionPedido, estado: EstadoAccion, revisado: boolean): TarjetaVista {
+export function tarjeta(accion: AccionPedido, estado: EstadoAccion, revisado: boolean): TarjetaVista {
   const habilitada = estado.visible && estado.habilitada;
   return {
     id: accion.id,
