@@ -121,7 +121,8 @@
 - [ ] 2.5 [S] `/gracias`: «Reintentar pago» solo con regreso válido, pago rechazado o anulado,
   reserva vigente e interruptor encendido; la promesa del correo solo con regreso válido y correo
   salido o elegible.
-- [ ] 2.6 [P] La precarga de la ficha lleva el mismo `srcset` y `sizes` que su foto.
+- [x] 2.6 [P] La precarga de la ficha lleva el mismo `srcset` y `sizes` que su foto.
+  — **Hecha (bloque TX34-B07):** `tests/sitios/precargaFichaSrcset.test.js` (11 pruebas) compara las dos listas, con fotos del constructor y de TX-37; probada en rojo cambiando el `imagesizes`.
 
 ## 3. Backend sin módulos sensibles
 
@@ -152,10 +153,11 @@
   muestra un aviso `role="alert"` con «Reintentar» de 44 px que repite la misma petición. Prueba
   `catalogoErrorDeRed.test.js` con la red cortada en un Chromium de celular (7 escenarios; probada en
   rojo quitando el aviso y la regla de la última).
-- [ ] 3.4 [P] Imágenes (D14): `srcset` y `sizes` con variantes, precarga de la ficha con el
+- [x] 3.4 [P] Imágenes (D14): `srcset` y `sizes` con variantes, precarga de la ficha con el
   mismo `srcset`, primera fila sin carga diferida, medidas reservadas; la portada JPEG de TX-37
   sin `srcset` salvo que TX-37 cambie su pregunta 7. **Éxito:** 2.6 en verde, VE «Fotos del
   tamaño justo» y CLS ≤ 0,1 en el laboratorio.
+  — **Hecha (bloque TX34-B07):** `srcset` y `sizes` en tarjeta (2 columnas en celular), ficha y miniaturas con las variantes `-wN.webp` (constructor y TX-37); precarga de la ficha con la misma lista, tomada de la primera foto del bloque; el script de la ficha cambia `srcset` y `src` juntos; primera fila del catálogo (4) sin `loading=lazy` y la primera con `fetchpriority=high`, también en las tarjetas que arma el script; el espacio de la foto ya lo reserva `aspect-ratio`. Portada `-cover.jpg` y fotos sin variantes, como hoy. **Pendiente de medir:** CLS en el laboratorio (no se corrió la medición completa).
 - [ ] 3.5 Proyección de tienda (D1) en modo sombra, con invalidación, para todo lo público
   (catálogo, ficha, categorías con foto, afines, marcas, plan gratis, feed, sitemap, directorio y
   el precio y lo vendible de KAI). Banderas de D10 en `config/feature_flags.storeMobile` y
