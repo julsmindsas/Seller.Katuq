@@ -48,6 +48,16 @@ Katuq está en producción con comercios reales. Leer el código y trazar el flu
 - Toda tarea de código debe cerrar con build/compilación sin errores y los checks del cambio.
 - Para cambios de backend, leer también las instrucciones de `katuq_admin_back_firebase`.
 
+## Pruebas fuera de git (D-566)
+
+Muchas pruebas llevan contraseñas, tokens o datos reales. Por eso, desde el 2026-10-26, rige en los tres repos (Seller.Katuq, backend y kai):
+
+- **Las pruebas nuevas no se suben a git.** Esto incluye unitarias, de contrato y de emulador, scripts `test-*`, fixtures y arneses: se quedan en la copia local. El `.gitignore` las bloquea; nunca usar `git add -f` con una prueba.
+- **Las que ya estaban en git se quedan** y se pueden actualizar, pero sin credenciales ni datos reales. Se usan valores de mentira evidentes (`clave-de-prueba`, `persona@example.invalid`) o variables de entorno.
+- **Si una prueba versionada tiene una credencial real:** se le avisa a Daniel. La credencial se rota y la prueba se limpia en un cambio aparte; no basta con borrarla del archivo, porque queda en el historial.
+- **La evidencia va en el mensaje de commit o en el contrato:** qué pruebas se corrieron y su resultado.
+- **Los subagentes siguen la misma regla:** `git commit -- <archivos>` nunca incluye pruebas nuevas.
+
 ## Subagentes y workflows
 
 Cuando una sesión delega trabajo en subagentes o workflows (Agent, Workflow, Task):

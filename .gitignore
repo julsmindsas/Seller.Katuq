@@ -194,3 +194,19 @@ src/assets/novedades/*.mp4
 
 # Grafo de conocimiento generado por Graphify (artefacto local, se regenera)
 graphify-out/
+
+# D-566 (2026-10-26): las pruebas nuevas no se suben a git; pueden llevar contraseñas o datos reales.
+# Las ya versionadas siguen en git (el .gitignore no las saca). Nunca usar git add -f con una prueba.
+**/tests/
+**/test/
+**/__tests__/
+**/e2e/
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+*.e2e-spec.ts
+**/scripts/test-*.js
+**/scripts/test-*.ts
+test_*.py
+*_test.py

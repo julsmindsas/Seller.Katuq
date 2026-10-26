@@ -12356,3 +12356,19 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Verificado:** CAFÉ ESCOBAR, Mi Campo Verde y la demo usan https (siguen permitidas). FLORECER local queda bloqueada en producción, donde igual no era alcanzable. Contra la tienda local con axios real, la respuesta llegó con llaves solo en la cabecera.
 - **Pruebas:** `woocommerceLlavesEnCabecera.test.js` nueva; `woocommercePruebaConexion` ajustada a los dos intentos; las 11 de WooCommerce y `webhooksVivosRegresion` en verde.
 - **Sin desplegar.**
+
+### 2026-10-26 — D-566: las pruebas nuevas no se suben a git
+
+- **Decisión de Daniel:** «no subir los test a git, hay muchos test con contraseñas». Escogió aplicarla solo a las pruebas nuevas.
+- **Regla:**
+  - Las pruebas nuevas no se suben: unitarias, de contrato y de emulador, scripts `test-*`, fixtures y arneses. Se quedan en la copia local.
+  - Las ya versionadas se quedan y se pueden actualizar, sin credenciales ni datos reales.
+  - Nunca `git add -f` con una prueba.
+  - La evidencia (qué pruebas corrieron y su resultado) va en el commit o en el contrato.
+- **Dónde quedó:**
+  - Sección «Pruebas fuera de git» de `AGENTS.md`, `CLAUDE.md` del backend, `AGENTS.md` de kai y los demás repos de Katuq.
+  - Bloque D-566 en cada `.gitignore`: `**/tests/`, `**/test/`, `**/__tests__/`, `**/e2e/`, `*.test.*`, `*.spec.*`, `scripts/test-*` y `test_*.py`/`*_test.py`. No saca de git ningún archivo; se verificó que `git add` de una prueba nueva queda bloqueado.
+- **Credenciales encontradas en pruebas ya versionadas** (revisión con valores enmascarados; los valores no se copian aquí):
+  - **Real:** `functions/scripts/test-360-acceptance.js` (backend) tiene un token de OH MY STORE desde mayo (`6fdc5fac`). Hay que rotarlo y limpiar el archivo en un cambio aparte.
+  - **Revisar:** una contraseña por defecto escrita en código de producción del backend (`controllers/authentication.js`, `controllers/users.js`, `services/registrationSecurity.js`, `scripts/clone-company.js`), repetida en dos pruebas de auth y onboarding.
+  - El resto de coincidencias son valores de mentira evidentes (`secreto-de-prueba`, `fake`, `synthetic`, `PRIVATE_CONFIRM_SENTINEL`).
