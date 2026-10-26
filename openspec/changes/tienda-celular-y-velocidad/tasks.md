@@ -59,16 +59,42 @@
   y memoria del índice y de la proyección (con `imagenesPrincipales`), y demora por lectura, en
   FLORECER, OH MY STORE y lino-y-lona. **Éxito:** cifras en `design.md`; la demora alimenta la
   corrida fría de 1.1.
-- [ ] 1.4 [P] Caracterización del catálogo: prueba dorada de `consultarCatalogo` con un catálogo
+- [x] 1.4 [P] Caracterización del catálogo: prueba dorada de `consultarCatalogo` con un catálogo
   de muestra (texto, categoría, marca, precio, oferta, ocasión, los 3 órdenes de hoy, plan gratis
   y ocultas). **Éxito:** verde con el código de hoy.
-- [ ] 1.5 Prueba de compra en celular (TC «Compra completa»): portada → búsqueda o catálogo →
+  — Hecha el 26-oct (bloque TX34-B05, commit local en `feature/tickets-web`):
+  `tests/sitios/consultarCatalogo.golden.test.js` y `consultarCatalogo.golden.json` (26 casos sobre
+  un catálogo de muestra en la Firestore falsa, con el reloj congelado). Cubre los tres órdenes de
+  hoy (el natural, `precio-asc`, `precio-desc`; «novedad» cae al natural), texto con tildes y por
+  referencia, categoría (también por ruta), marca (también por ruta), rango de precio, oferta (la
+  vencida no cuenta), ocasión, lo vendible (agotado, inactivo, fuera de Página Web y sin precio no
+  salen), `enPaginaWeb` con y sin marketplace (`publicacionExplicita`), categorías ocultas y plan
+  gratis (50 visibles, 5 páginas). Fija también que hoy NO tolera errores de tipeo ni busca en la
+  marca. `consultarCatalogo` se expone en `exports._test` (una línea). `npm run test:catalogo-dorado`.
+  Red de seguridad de la proyección (TX34-B08).
+- [x] 1.5 Prueba de compra en celular (TC «Compra completa»): portada → búsqueda o catálogo →
   ficha → carrito → checkout → paso a la pasarela simulada, a 360 y 390 px, en las 15 plantillas.
   Revisa desplazamiento horizontal, campos de 16 px, áreas de 44 px, textos legibles (P20) y
   elementos fijos cruzados.
   Se suma a un script de `package.json`, junto con `rendimientoMovil.test.js`.
   - **Éxito:** corre; hoy falla solo por lo que esta propuesta corrige (44 px, cruces), con la
     lista de fallas guardada.
+  — Hecha el 26-oct (bloque TX34-B05, commit local): `tests/sitios/compraCelular.e2e.js` (medidor en
+  `_medidorMovil.js`) sobre el servidor y el Chromium del laboratorio (D2), a 360 y 390 px en las 15
+  plantillas (30 recorridos, 217 s). El POST del pedido lo contesta la prueba y el paso final llega a
+  una pasarela simulada (`/pasarela-simulada`): no hay Wompi ni escrituras. Las tiendas de muestra
+  llevan el aviso de cookies, el WhatsApp flotante y el botón de KAI encendidos. El medidor se
+  autoprueba antes de cada corrida con una página de fallas conocidas.
+  Resultado de hoy: no falla desplazamiento horizontal ni campos de 16 px en ningún paso; sí fallan
+  44 px (2.727 en la lista), textos de 12 px (296), controles con texto de 14 px (1.054) y cruces
+  (261: KAI sobre el aviso de cookies en las 15 plantillas, el carrito flotante sobre KAI y sobre el
+  aviso, y el aviso de cookies tapando «Revisar mi pedido» y «Confirmar pedido» del checkout y, en 3
+  recorridos, «Agregar al carrito»). Lista guardada en
+  `tests/sitios/compraCelular.fallas.json` (4.338 líneas, una por falla). La prueba termina en rojo si
+  falla otra categoría, si el recorrido no llega a la pasarela o si aparece una falla que no está en la
+  lista; con `--estricto` no tolera ninguna (TX34-B06 las corrige y la lista se vacía).
+  Script `npm run test:tienda-celular` (incluye `rendimientoMovil.test.js`); sin el Chromium del
+  laboratorio el e2e se salta con un mensaje y sale con código 0.
 - [ ] 1.6 [S] Caracterización del pago: `/gracias` en cada estado (aprobado, pendiente, rechazado,
   anulado, vencido, a cuotas, con y sin regreso válido) y `/pagar` en cada estado, incluido el
   pedido del bot (F4-40 D11). Se apoya en `pedidoTiendaCaracterizacion`, `recordatorioPagoBase` y
@@ -83,19 +109,27 @@
 
 ## 2. Contract tests primero (rojos hasta implementar; Artículo VIII)
 
-- [ ] 2.1 [P] `GET /sugerencias`: forma de la respuesta, sin precios, 404 sin catálogo visible,
+- [x] 2.1 [P] `GET /sugerencias`: forma de la respuesta, sin precios, 404 sin catálogo visible,
   tope de longitud, nunca categorías ocultas.
+  — `tests/sitios/sugerencias.contract.test.js` (19 pruebas; incluye `Cache-Control`, solo con `search` en `on`,
+  plan gratis y límites del router).
 - [ ] 2.2 [P] `GET /catalogo`: los 5 órdenes, valor desconocido → orden de hoy, `sugerencias` con
   total 0, sin cantidades vendidas en la respuesta.
+  — **Avance (bloque TX34-B10): parte `sugerencias` con total 0 hecha** (`buscadorTienda.test.js`, sin
+  cantidades vendidas ni existencias). Faltan los 5 órdenes (TX34-B12).
 - [x] 2.3 [P] `POST /vista` con agente de robot o automatizado → 204 sin escribir.
   — **`tests/sitios/vistaSinRobots.contract.test.js` (8 pruebas, roja contra el código anterior);
   bloque TX34-B03.**
 - [ ] 2.4 [P] Write-set: la tarea nocturna solo escribe `storeProductStats` [si P1]; la proyección
   y el buscador no escriben. Canario: una escritura en `products` u `orders` hace fallar la prueba.
+  — **Avance (bloque TX34-B08): parte proyección hecha** (revisión estática de `indiceTienda.js` con
+  canarios y una corrida con la Firestore en solo lectura, en `indiceTiendaSombra.test.js`). Faltan la
+  tarea nocturna (TX34-B12) y el buscador (TX34-B10).
 - [ ] 2.5 [S] `/gracias`: «Reintentar pago» solo con regreso válido, pago rechazado o anulado,
   reserva vigente e interruptor encendido; la promesa del correo solo con regreso válido y correo
   salido o elegible.
-- [ ] 2.6 [P] La precarga de la ficha lleva el mismo `srcset` y `sizes` que su foto.
+- [x] 2.6 [P] La precarga de la ficha lleva el mismo `srcset` y `sizes` que su foto.
+  — **Hecha (bloque TX34-B07):** `tests/sitios/precargaFichaSrcset.test.js` (11 pruebas) compara las dos listas, con fotos del constructor y de TX-37; probada en rojo cambiando el `imagesizes`.
 
 ## 3. Backend sin módulos sensibles
 
@@ -108,16 +142,30 @@
   propósito la instantánea de `fichaEspecificaciones`, solo en la compuerta de la baliza: es el
   cambio de D3, aprobado con el diseño, y queda anotado para que Daniel lo vea. Sin interruptor,
   como dice D3.**
-- [ ] 3.2 [P] Áreas táctiles, textos legibles y elementos fijos (D9) en `siteHtml.js` y
+- [x] 3.2 [P] Áreas táctiles, textos legibles y elementos fijos (D9) en `siteHtml.js` y
   `siteTienda.js`; panel de filtros con Escape y toque fuera. **Éxito:** 1.5 sin fallas de 44 px,
   de textos ni cruces.
-- [ ] 3.3 [P] Error de red (D13) en catálogo, búsqueda y orden (el checkout va en la 4.4).
+  — **Hecha (bloque TX34-B06):** bloque D9 al final de la hoja de la tienda (`estilosTienda`, solo ≤767 px,
+  sin interruptor), pila fija barra de la ficha < carrito y WhatsApp < aviso de cookies < KAI con el alto
+  del aviso entregado por una variable, aviso de cookies compacto y bajo el panel del carrito, y panel de
+  filtros con Escape, toque en el fondo y foco de vuelta a «Filtrar». La 1.5 pasa en `--estricto`: 0 fallas
+  en las 15 plantillas a 360 y 390 px (la lista de fallas quedó vacía). El medidor de cruces ahora da por
+  libre un botón si en alguna altura de la pantalla nada lo tapa (un elemento fijo siempre tapa algo al
+  desplazarse). Pruebas nuevas: `panelFiltrosMovil` y `elementosFijosMovil`. Texto mínimo con
+  `max(14px,…)` para respetar «texto chico» de F2-17.
+- [x] 3.3 [P] Error de red (D13) en catálogo, búsqueda y orden (el checkout va en la 4.4).
   **Éxito:** escenarios de ES «Error de red» del catálogo en prueba con red cortada.
-- [ ] 3.4 [P] Imágenes (D14): `srcset` y `sizes` con variantes, precarga de la ficha con el
+  — **Hecha (bloque TX34-B06):** `traer()` pasa a «la última gana» (aborta la anterior; sin AbortController
+  ignora la respuesta vieja). Si falla, responde sin éxito o no es JSON, deja los productos de antes y
+  muestra un aviso `role="alert"` con «Reintentar» de 44 px que repite la misma petición. Prueba
+  `catalogoErrorDeRed.test.js` con la red cortada en un Chromium de celular (7 escenarios; probada en
+  rojo quitando el aviso y la regla de la última).
+- [x] 3.4 [P] Imágenes (D14): `srcset` y `sizes` con variantes, precarga de la ficha con el
   mismo `srcset`, primera fila sin carga diferida, medidas reservadas; la portada JPEG de TX-37
   sin `srcset` salvo que TX-37 cambie su pregunta 7. **Éxito:** 2.6 en verde, VE «Fotos del
   tamaño justo» y CLS ≤ 0,1 en el laboratorio.
-- [ ] 3.5 Proyección de tienda (D1) en modo sombra, con invalidación, para todo lo público
+  — **Hecha (bloque TX34-B07):** `srcset` y `sizes` en tarjeta (2 columnas en celular), ficha y miniaturas con las variantes `-wN.webp` (constructor y TX-37); precarga de la ficha con la misma lista, tomada de la primera foto del bloque; el script de la ficha cambia `srcset` y `src` juntos; primera fila del catálogo (4) sin `loading=lazy` y la primera con `fetchpriority=high`, también en las tarjetas que arma el script; el espacio de la foto ya lo reserva `aspect-ratio`. Portada `-cover.jpg` y fotos sin variantes, como hoy. **Pendiente de medir:** CLS en el laboratorio (no se corrió la medición completa).
+- [x] 3.5 Proyección de tienda (D1) en modo sombra, con invalidación, para todo lo público
   (catálogo, ficha, categorías con foto, afines, marcas, plan gratis, feed, sitemap, directorio y
   el precio y lo vendible de KAI). Banderas de D10 en `config/feature_flags.storeMobile` y
   `companies.featureFlags` (catálogo cerrado del backend y del front). **Éxito:** 1.4 en verde
@@ -130,14 +178,53 @@
   Pendiente al desplegar (D10, columna «Al crear», D-385): FLORECER recibe `storeLightIndex`
   para que la sombra corra allí: `set-company-feature.js` primero en simulación y luego con
   `--execute`, solo con OK de Daniel. Sin esa bandera la sombra no corre en ninguna tienda.**
-- [ ] 3.5b Clave de la caché del HTML sin parámetros de campaña (D15, revisión privada S4).
+  — **Hecha (bloque TX34-B08, commit local):** `services/sites/indiceTienda.js` (una lectura de `products`
+  por empresa, solo los campos de la tienda con `marketplace` entero; precio y oferta de vitrina con las
+  funciones puras de `vitrinaProducto.js`; un registro por empresa con TTL de 5 min y la carga en vuelo
+  compartida; `attributes` y `palabras` solo si se piden). Se invalida en `invalidateSearchIndex` y al
+  publicar. Con `storeMobile.lightIndex` en `shadow` calcula los dos, sirve lo de hoy y cuenta las
+  diferencias por empresa (sin términos ni datos del comprador); en `on` leen de la proyección
+  `consultarCatalogo`, `categoriasConFoto`, `productosAfines`, `marcasDeTienda`,
+  `productosVisiblesDelPlan` (el plan gratis), el feed, el sitemap, el directorio y lo vendible y el
+  precio de KAI (que sigue leyendo del índice compartido solo descripción, características y etiquetas);
+  la ficha compara en sombra su precio y lo vendible. Con `on`, `preciosVitrinaCache`,
+  `ofertasVitrinaCache` y las fechas aparte ya no se leen (3 lecturas de `products` pasan a 1; probado
+  con la Firestore falsa). Si la proyección falla, se sirve lo de hoy. `getSearchIndex`, el Seller y
+  `tools/searchProducts.js` no cambian. Pruebas: `tests/sitios/indiceTiendaSombra.test.js` (cero
+  diferencias en la muestra con ofertas, ofertas vencidas, lista mayorista y plan gratis, y en los 15
+  sitios del laboratorio; canarios; `on` igual a `off`; invalidación; multi-tenant; write-set) y el golden
+  de 1.4 con `on`, `shadow` y `off`.
+  **Pendiente:** la medición 1.3 repetida sobre FLORECER y OH MY STORE (bloqueada); la bandera
+  `storeLightIndex` en FLORECER al desplegar; P18: las facetas de F2-42 deben leer de la proyección
+  (punto de extensión documentado en `indiceTienda.js`; no se tocó F2-42).
+- [x] 3.5b Clave de la caché del HTML sin parámetros de campaña (D15, revisión privada S4).
   **Éxito:** VE «Quien llega por un anuncio no espera de más»; prueba de atribución del pedido
   igual que hoy.
-- [ ] 3.6 Buscador tolerante (D4) en sombra, con atributos solo con `categoryAttributes`.
+  — Hecho (TX34-B09, sin interruptor): la lista de campos de atribución es una sola y la comparten
+  el script de captura y la clave; el segundo clic de otro anuncio sale de la copia reciente.
+  Prueba `claveCacheHtml.test.js` (15) y las de atribución sin cambios. Resto: ver revisión
+  privada (S4).
+- [x] 3.6 Buscador tolerante (D4) en sombra, con atributos solo con `categoryAttributes`.
   **Éxito:** escenarios de BO; ≤ 50 ms con 8.568 productos de muestra.
-- [ ] 3.7 Autocompletar (D5): endpoint y lista accesible. **Éxito:** 2.1 en verde, revisión con axe
+  — Hecho (TX34-B10): `services/sites/buscadorTienda.js` (funciones puras) conectado en `consultarCatalogo`
+  según `storeMobile.search` (off = hoy, shadow = sirve hoy y cuenta sin términos, on = nuevo). Prueba
+  `buscadorTienda.test.js` (error de tipeo, marca y categoría, atributo, exacta antes que aproximada, ocultas;
+  caliente 3,6 ms en el peor caso con 8.568 productos). Desvíos menores frente a D4: (1) las palabras se
+  separan por campo (para el peso) y se calculan en el buscador, memorizadas por entrada, en vez de la lista
+  única `palabras` de la proyección; (2) se suma un último escalón «contiene» (3 letras o más) para que `on`
+  nunca encuentre menos que la subcadena de hoy; (3) los atributos solo se buscan sobre la proyección que se
+  sirve (no en la sombra de `lightIndex`), con los valores que `valoresVisibles` muestra en la ficha.
+- [x] 3.7 Autocompletar (D5): endpoint y lista accesible. **Éxito:** 2.1 en verde, revisión con axe
   sin errores nuevos, controles de la revisión privada.
-- [ ] 3.8 Sin resultados (D7) y, [si P8], el evento por la baliza. **Éxito:** 2.2 en verde.
+  — Hecho (TX34-B11): `GET /sugerencias` (`services/sites/sugerenciasTienda.js`), lista combobox en la cabecera y el
+  catálogo (`siteHtml.js`), clases `kq-auto*` (no `kq-sug*`, que es el «Completa tu pedido» del carrito). Prueba en
+  navegador real con axe: `tests/sitios/autocompletarNavegador.test.js` (16 pruebas, escenario «Elegir con teclado»).
+- [x] 3.8 Sin resultados (D7) y, [si P8], el evento por la baliza. **Éxito:** 2.2 en verde.
+  — Hecho (TX34-B10): `sugerencias` (corrección con resultado a 2 errores o menos, hasta 4 categorías visibles,
+  «Ver todo el catálogo» y WhatsApp) solo con `search` en `on`; el HTML y el script las pintan con enlaces y
+  `textContent`. Evento `busqueda_sin_resultado` por `POST /vista` con su filtro de robots, solo con la búsqueda
+  enviada (Enter, cabecera o `?q=`), una vez por término y sesión, saneado en el servidor y guardado solo con
+  `on`. De la 2.2 queda en verde la parte de `sugerencias`; los 5 órdenes son del bloque TX34-B12.
 - [ ] 3.9 Tarea nocturna de ventas (D6): primero `--dry-run` que solo imprime totales por empresa
   (pedidos leídos, líneas sin resolver, si llegó al tope); luego modo `compute`. Resuelve cada
   línea por id y, si no, por referencia → docId; documento por docId de empresa; `completo:

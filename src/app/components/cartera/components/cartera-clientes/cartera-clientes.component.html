@@ -1,14 +1,14 @@
 <div class="cx-clientes">
 
   <!-- KPI cards -->
-  <div class="cx-grid" *ngIf="data as d">
+  <div class="cx-grid" *ngIf="kpisVista as k">
     <div class="cx-card cx-accent-purple">
       <div class="cx-kpi-head">
         <span class="cx-kpi-icon"><i class="pi pi-wallet"></i></span>
         <span class="cx-label">{{ 'cartera.carteraClientes.carteraTotal' | translate }}</span>
       </div>
-      <div class="cx-value">{{ d.kpis.carteraTotal.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
-      <div class="cx-sub">{{ d.kpis.carteraTotal.clientes | number }} {{ 'cartera.carteraClientes.clienteSConSaldo' | translate }}</div>
+      <div class="cx-value">{{ k.carteraTotal.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="cx-sub">{{ k.carteraTotal.clientes | number }} {{ 'cartera.carteraClientes.clienteSConSaldo' | translate }}</div>
     </div>
 
     <div class="cx-card cx-accent-red">
@@ -16,8 +16,8 @@
         <span class="cx-kpi-icon"><i class="pi pi-clock"></i></span>
         <span class="cx-label">{{ 'cartera.carteraClientes.carteraVencida' | translate }}</span>
       </div>
-      <div class="cx-value">{{ d.kpis.carteraVencida.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
-      <div class="cx-sub">{{ d.kpis.carteraVencida.pct | number:'1.0-0' }}{{ 'cartera.carteraClientes.delTotal15Dias' | translate }}</div>
+      <div class="cx-value">{{ k.carteraVencida.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="cx-sub">{{ k.carteraVencida.pct | number:'1.0-0' }}{{ 'cartera.carteraClientes.delTotal15Dias' | translate }}</div>
     </div>
 
     <div class="cx-card cx-accent-blue">
@@ -25,16 +25,16 @@
         <span class="cx-kpi-icon"><i class="pi pi-chart-bar"></i></span>
         <span class="cx-label">{{ 'cartera.carteraClientes.dsoPromedio' | translate }}</span>
       </div>
-      <div class="cx-value">{{ d.kpis.dsoPromedio | number:'1.0-0' }} <span class="cx-value-unit">{{ 'cartera.carteraClientes.dias' | translate }}</span></div>
+      <div class="cx-value">{{ k.dsoPromedio | number:'1.0-0' }} <span class="cx-value-unit">{{ 'cartera.carteraClientes.dias' | translate }}</span></div>
       <div class="cx-sub">{{ 'cartera.carteraClientes.antiguedadPromedioDeLaCartera' | translate }}</div>
     </div>
 
-    <div class="cx-card" [ngClass]="d.kpis.excedenCupo.cantidad > 0 ? 'cx-accent-orange' : 'cx-accent-gray'">
+    <div class="cx-card" [ngClass]="k.excedenCupo.cantidad > 0 ? 'cx-accent-orange' : 'cx-accent-gray'">
       <div class="cx-kpi-head">
         <span class="cx-kpi-icon"><i class="pi pi-ban"></i></span>
         <span class="cx-label">{{ 'cartera.carteraClientes.excedenCupo' | translate }}</span>
       </div>
-      <div class="cx-value">{{ d.kpis.excedenCupo.cantidad | number }}</div>
+      <div class="cx-value">{{ k.excedenCupo.cantidad | number }}</div>
       <div class="cx-sub">{{ 'cartera.carteraClientes.clienteSSobreSuCupo' | translate }}</div>
     </div>
   </div>
