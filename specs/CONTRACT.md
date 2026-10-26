@@ -12310,3 +12310,14 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **de-CH:** borrador escrito por el agente (Opttia no responde aquí), con «Sie»; sigue oculto hasta la revisión nativa.
 - **Pruebas:** `test:i18n` 222/222 (prueba nueva `asistentes-cierre.test.js`, 7 casos), `opttia-chat-ui` y `opttia-markdown` en verde, `i18n:check` 0 errores, tsc con candado sin errores.
 - **Sin marcar:** 13.6 y 13.7 (falta `build:prod` y la revisión en navegador a 1440 y 390 px). 13.2 a 13.5 quedan marcadas con los seis sub-bloques B12a a B12f hechos.
+||||||| bc135796
+
+
+### 2026-10-26 — D-499 2.4 aprobada por Daniel y subida
+
+- Daniel la aprobó en el chat («si»). Backend `3d123326` en `backend-aws-security`, rebasada sobre la punta del 26-oct sin conflictos.
+- `dianXMLProvider.createInvoice` llama a `hooks.beforeSend({ number, cufe })` justo antes de enviar. Todo error lleva `submittedToDian`, y `error.document` cuando ya salió. La auditoría guarda `requestId`, `submittedToDian` y `cufe`. `dian/numbering.js` sin cambios.
+- Pruebas: `test:dian-invoice` 64/64, `test:invoicing`, candados, `pedido-ya-facturado`, liberar y reemplazar factura en verde.
+- Subida, sin desplegar: la publica Daniel.
+- Siguen, sensibles y con diff: 2.5 (`requestId` y códigos en `from-order`), 2.6 y 2.7 (`verify-invoice`), 2.9 y 2.11.
+- La rama local del front en el equipo del agente tiene 139 commits del 21-oct (fusión de `feature/tickets-web`) que no están en `origin` y chocan con él en 13 archivos (reportes, menú lateral, `company-features`, `CONTRACT.md`, `package.json`). No se subieron; hay que resolverlos antes.
