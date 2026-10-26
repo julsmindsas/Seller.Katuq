@@ -55,7 +55,7 @@
                   <div class="col-12 col-sm-6">
                     <label class="form-label-modern">{{ "Número de Documento" | translate }} <span class="required">*</span></label>
                     <input pInputText type="text" placeholder="{{ 'Número de documento' | translate }}"
-                      formControlName="documento" [attr.disabled]="isEdit ? true : null" class="w-100">
+                      formControlName="documento" [attr.disabled]="isEdit && !documentoEditable ? true : null" class="w-100">
                     <div *ngIf="formulario.get('documento')?.invalid && formulario.get('documento')?.touched" class="error-message mt-1">
                       <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
                     </div>
