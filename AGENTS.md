@@ -48,6 +48,16 @@ Katuq está en producción con comercios reales. Leer el código y trazar el flu
 - Toda tarea de código debe cerrar con build/compilación sin errores y los checks del cambio.
 - Para cambios de backend, leer también las instrucciones de `katuq_admin_back_firebase`.
 
+## Subagentes y workflows
+
+Cuando una sesión delega trabajo en subagentes o workflows (Agent, Workflow, Task):
+
+- **Modelo:** todo subagente corre con **Sonnet 5.5** (`model: "sonnet"` en cada llamada, también en el planificador, los revisores y los correctores). No se lanzan subagentes con Opus ni con el modelo heredado de la sesión. Solo Daniel puede autorizar otra cosa, de forma explícita y para esa tarea.
+- **Fuentes obligatorias y con prueba:** cada subagente lee él mismo el ticket completo (descripción, todos los comentarios, adjuntos y tickets relacionados), el informe, las decisiones aprobadas, el diseño y la revisión privada de seguridad. Se le exige demostrarlo en su respuesta (cuántos comentarios tiene el ticket, fecha del último, decisiones y controles que aplicó). Nunca se le pasa un resumen como verdad, y nunca se le pide «ser austero» con la lectura de las fuentes.
+- **Revisión:** el orquestador revisa el diff de cada commit de un subagente antes de darlo por bueno, corriendo sus pruebas. En módulos sensibles (pedidos, pagos, inventario, consecutivos, auth) se sigue la regla de un cambio a la vez con diff aprobado por Daniel; una aprobación en bloque del diseño no reemplaza la del diff.
+- **Números de decisión:** un subagente no asigna D-XXX nuevas; las asigna el orquestador después de revisar el contrato de la rama principal, para evitar choques.
+- **Concurrencia:** dos subagentes no editan el mismo archivo a la vez. Cada uno hace commit solo de sus archivos (`git commit -- <archivos>`, nunca `git add -A`), y ninguno hace `stash`, `checkout`, `reset`, `merge` ni `push`.
+
 ## Integraciones e inventario: guardarraíles críticos
 
 ### Campo canónico de integraciones
