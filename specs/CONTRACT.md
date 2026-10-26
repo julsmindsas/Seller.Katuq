@@ -12417,7 +12417,7 @@ _(Antes D-509 en los OpenSpec del backend.)_
 - **Pruebas y revisión.** 35 puras y de contrato más 31 contra el emulador de Firestore (ciclo completo con un independiente, entrega real, avisos con reintentos y en orden), verificadas rompiendo a propósito 14 protecciones, y la pantalla con 99 pruebas de lógica. Un agente aparte revisó la API como atacante (3 hallazgos altos, 14 medios y 13 bajos) y casi todo se corrigió antes de este commit; lo que quedó está en el diseño del OpenSpec. El primer despliegue necesita una prueba real con un comercio de prueba y un celular.
 - **Spec:** `openspec/changes/domicilios-api-y-pantalla/` en el repo del backend.
 
-## D-523 (2026-10-21) — Registro de mensajeros independientes con Google o Apple — backend `9aaf350e` (sin desplegar); app Android `d6d5b99` (versión 29, sin publicar); apagado por configuración
+## D-571 (2026-10-21) — Registro de mensajeros independientes con Google o Apple — backend `9aaf350e` (sin desplegar); app Android `d6d5b99` (versión 29, sin publicar); apagado por configuración
 
 - **Disparador.** Daniel: «a la app para registrarse deberíamos habilitar los botones de Google y Apple, y completar datos también».
 - **Qué hace.** Arriba del formulario de registro, «Continuar con Google» y «Continuar con Apple». La cuenta llena nombres, apellidos y el correo (verificado, no editable); el mensajero completa celular, cédula, vehículo, ciudad y contraseña. No salta ningún paso: el celular se sigue verificando por SMS, los documentos los sigue revisando la operadora y la contraseña sigue siendo la del formulario (la app entra con placa y contraseña).
