@@ -72,6 +72,11 @@ export const COMPANY_FEATURE_FLAGS = [
   // por fecha de entrega, sin pedidos caídos. Apagada, los reportes calculan como hoy.
   // Dueño: Daniel. Se retira el 2027-04-30 (Artículo XII).
   'reportsOfficialMetrics',
+  // Acciones principales del pedido por rol y por usuario (D-547 F2, ticket 1349 parte 1): el bloque
+  // ACCIONES de 8 (4 del rol y 4 del usuario), el pin, las sugerencias y el resaltado. Apagada, el bloque
+  // y el modal son los de F1. Dueño: Daniel. Se retira el 2027-04-30: encendida para todos o eliminada
+  // (Artículo XII).
+  'orderPinnedActions',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

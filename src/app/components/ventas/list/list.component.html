@@ -570,68 +570,70 @@
                                                         <div class="pedido-actions">
                                                             <button type="button" class="pedido-action" (click)="pdfOrder(modalContent, pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-pdf"><i class="fa fa-file-pdf-o"></i></span>
-                                                                <span class="pedido-action__txt"><b>{{ 'Imprimir PDF' | translate }}</b><small>{{ 'Generar documento' | translate }}</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('orderPdf').titulo | translate }}</b><small>{{ accionCat('orderPdf').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" (click)="generarOrdenVenta(pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-ov"><i class="fa fa-file-text-o"></i></span>
-                                                                <span class="pedido-action__txt"><b>{{ 'Orden de Venta' | translate }}</b><small>{{ 'Documento profesional' | translate }}</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('salesOrder').titulo | translate }}</b><small>{{ accionCat('salesOrder').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction" (click)="editDatosClientes(clientesModal, pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-cli"><i class="fa fa-user"></i></span>
-                                                                <span class="pedido-action__txt"><b>{{ 'Editar Cliente' | translate }}</b><small>{{ 'Datos del cliente' | translate }}</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('editCustomer').titulo | translate }}</b><small>{{ accionCat('editCustomer').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction"
                                                                     [disabled]="!canEditBilling(pedidoDetalle)" [class.is-locked]="!canEditBilling(pedidoDetalle)"
                                                                     (click)="editDatosFacturacion(datosFacturacionModal, pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-fac"><i class="fa fa-credit-card"></i></span>
-                                                                <span class="pedido-action__txt"><b>{{ 'Facturación' | translate }}</b><small>{{ 'Datos de factura' | translate }}</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('billingData').titulo | translate }}</b>
+                                                                    <small *ngIf="canEditBilling(pedidoDetalle)">{{ accionCat('billingData').resena | translate }}</small>
+                                                                    <small *ngIf="!canEditBilling(pedidoDetalle)">{{ 'Ya tiene factura' | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction && puedeFacturarSiigo(pedidoDetalle)"
                                                                     (click)="facturarPedidoSiigo(pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-invoice"><i class="pi pi-file-export"></i></span>
-                                                                <span class="pedido-action__txt"><b>{{ 'Facturar' | translate }}</b><small>{{ 'Generar factura electrónica' | translate }}</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('invoice').titulo | translate }}</b><small>{{ accionCat('invoice').resena | translate }}</small></span>
                                                             </button>
                                                             <!-- Ticket 1145: factura ya anulada con nota crédito → liberar para corregir y refacturar -->
                                                             <button type="button" class="pedido-action" *ngIf="puedeLiberarFactura(pedidoDetalle)"
                                                                     (click)="liberarFactura(pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-not"><i class="pi pi-lock-open"></i></span>
-                                                                <span class="pedido-action__txt"><b>Liberar factura</b><small>Ya anulada con nota crédito</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('releaseInvoice').titulo | translate }}</b><small>{{ accionCat('releaseInvoice').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction && esFacturaDian(pedidoDetalle)"
                                                                     (click)="consultarEstadoDian(pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-invoice"><i class="pi pi-search"></i></span>
-                                                                <span class="pedido-action__txt"><b>Estado DIAN</b><small>Consultar por CUFE</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('dianStatus').titulo | translate }}</b><small>{{ accionCat('dianStatus').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction && esFacturaDian(pedidoDetalle)"
                                                                     (click)="descargarArtefactoDian(pedidoDetalle, 'pdf')">
                                                                 <span class="pedido-action__icon ico-pdf"><i class="pi pi-file-pdf"></i></span>
-                                                                <span class="pedido-action__txt"><b>PDF DIAN</b><small>Descargar representación</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('dianPdf').titulo | translate }}</b><small>{{ accionCat('dianPdf').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction && esFacturaDian(pedidoDetalle)"
                                                                     (click)="crearNotaCreditoDian(pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-not"><i class="pi pi-replay"></i></span>
-                                                                <span class="pedido-action__txt"><b>Nota crédito</b><small>Anulación total DIAN</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('creditNote').titulo | translate }}</b><small>{{ accionCat('creditNote').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction && esFacturaDian(pedidoDetalle)"
                                                                     (click)="crearAjusteDian(pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-not"><i class="pi pi-pencil"></i></span>
-                                                                <span class="pedido-action__txt"><b>Ajuste NC / ND</b><small>Crédito o débito parcial</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('dianAdjustment').titulo | translate }}</b><small>{{ accionCat('dianAdjustment').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction && !isPedidoPOS(pedidoDetalle)" (click)="editNotas(notasModal, pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-not"><i class="fa fa-sticky-note"></i></span>
-                                                                <span class="pedido-action__txt"><b>{{ 'Editar Notas' | translate }}</b><small>{{ 'Agregar o modificar' | translate }}</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('notes').titulo | translate }}</b><small>{{ accionCat('notes').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" (click)="editarEstadoPago(cambioEstadoPagoModal, pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-pay"><i class="fa fa-credit-card-alt"></i></span>
-                                                                <span class="pedido-action__txt"><b>{{ 'Estado de Pago' | translate }}</b><small>{{ 'Cambiar estado' | translate }}</small></span>
+                                                                <span class="pedido-action__txt"><b>{{ accionCat('changeStatus').titulo | translate }}</b><small>{{ accionCat('changeStatus').resena | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction"
                                                                     [disabled]="!canAddProducts(pedidoDetalle)" [class.is-locked]="!canAddProducts(pedidoDetalle)"
                                                                     (click)="addProductToCart(recompraModal, pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-add"><i class="fa fa-shopping-cart"></i></span>
                                                                 <span class="pedido-action__txt">
-                                                                    <b>{{ 'Agregar Productos' | translate }}</b>
-                                                                    <small *ngIf="canAddProducts(pedidoDetalle)">{{ 'Añadir al pedido' | translate }}</small>
+                                                                    <b>{{ accionCat('editProducts').titulo | translate }}</b>
+                                                                    <small *ngIf="canAddProducts(pedidoDetalle)">{{ accionCat('editProducts').resena | translate }}</small>
                                                                     <small *ngIf="!canAddProducts(pedidoDetalle)">{{ 'Congelado' | translate }} · {{ pedidoDetalle?.estadoProceso }}</small>
                                                                 </span>
                                                             </button>
@@ -640,8 +642,8 @@
                                                                     (click)="editDatosEntrega(datosEnregaModal, pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-dir"><i class="fa fa-map-marker"></i></span>
                                                                 <span class="pedido-action__txt">
-                                                                    <b>{{ 'Editar Dirección' | translate }}</b>
-                                                                    <small *ngIf="canEditDeliveryAddressByDeliveryType(pedidoDetalle)">{{ 'Dirección de entrega' | translate }}</small>
+                                                                    <b>{{ accionCat('editAddress').titulo | translate }}</b>
+                                                                    <small *ngIf="canEditDeliveryAddressByDeliveryType(pedidoDetalle)">{{ accionCat('editAddress').resena | translate }}</small>
                                                                     <small *ngIf="!canEditDeliveryAddressByDeliveryType(pedidoDetalle)">{{ 'Solo domicilios' | translate }}</small>
                                                                 </span>
                                                             </button>

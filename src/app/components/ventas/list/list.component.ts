@@ -76,7 +76,7 @@ import {
 } from "../../../shared/services/facturacion/facturacion-automatica.service";
 import { TreasuryService } from "../../../shared/services/treasury/treasury.service";
 import { debePreguntarSiVolvio, preguntarSiVolvio } from "../../../shared/utils/pedido-mercancia-devuelta";
-import { AccionPedidoId } from "./acciones-pedido/acciones-pedido.catalogo";
+import { AccionPedidoId, accionPorId } from "./acciones-pedido/acciones-pedido.catalogo";
 import { PlantillaPedido, pasoDe } from "./acciones-pedido/acciones-pedido.plan";
 import {
   AccionPrecioEntrada,
@@ -527,7 +527,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Construir menú dinámicamente según el pedido - Opciones más usadas
     const items: MenuItem[] = [
       {
-        label: 'Imprimir PDF',
+        label: 'PDF del pedido',
         icon: 'pi pi-file-pdf',
         command: () => this.pdfOrder(this.modalContentRef, this.selectedMenuPedido)
       },
@@ -540,7 +540,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (!this.isFromProduction) {
       items.push({
-        label: 'Enviar de nuevo la confirmación',
+        label: 'Reenviar confirmación',
         icon: 'pi pi-envelope',
         command: () => this.reenviarConfirmacionPedido(this.selectedMenuPedido)
       });
@@ -550,7 +550,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.isFromProduction) {
       items.push(
         {
-          label: 'Editar Cliente',
+          label: 'Editar cliente',
           icon: 'pi pi-user-edit',
           command: () => this.editDatosClientes(this.clientesModalRef, this.selectedMenuPedido)
         }
@@ -559,7 +559,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Solo mostrar "Editar Notas" si NO es un pedido del POS
       if (!this.isPedidoPOS(this.selectedMenuPedido)) {
         items.push({
-          label: 'Editar Notas',
+          label: 'Notas',
           icon: 'pi pi-pencil',
           command: () => this.editNotas(this.notasModalRef, this.selectedMenuPedido)
         });
@@ -596,22 +596,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.isFromProduction && this.esFacturaDian(pedido)) {
       items.push(
         {
-          label: 'Consultar estado DIAN',
+          label: 'Estado DIAN',
           icon: 'pi pi-search',
           command: () => this.consultarEstadoDian(this.selectedMenuPedido)
         },
         {
-          label: 'Descargar PDF DIAN',
+          label: 'PDF DIAN',
           icon: 'pi pi-file-pdf',
           command: () => this.descargarArtefactoDian(this.selectedMenuPedido, 'pdf')
         },
         {
-          label: 'Crear nota crédito total',
+          label: 'Nota crédito',
           icon: 'pi pi-replay',
           command: () => this.crearNotaCreditoDian(this.selectedMenuPedido)
         },
         {
-          label: 'Crear ajuste NC / ND',
+          label: 'Ajuste NC/ND',
           icon: 'pi pi-pencil',
           command: () => this.crearAjusteDian(this.selectedMenuPedido)
         }
@@ -813,6 +813,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * el modal no muestra ninguna de las dos. Quien la llene no cambia las reglas del otro (ver tasks.md 4.3).
    */
   accionesPrecioPedido: AccionPrecioEntrada[] = [];
+
+  /** D-547 6.1: título y reseña de cada acción salen del catálogo, el mismo del modal y del «⋯». */
+  readonly accionCat = accionPorId;
 
   private entradaEstadosAnterior: EntradaEstadoAcciones | null = null;
   private estadosAccionesAnterior: EstadoAcciones | null = null;
@@ -10332,8 +10335,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   quitarRevision(order: Pedido): void {
     if (!order || !order.revisadoParaProduccion) return;
 
-    // Confirmar acción
-    if (confirm("¿Está seguro de quitar la revisión de este pedido?")) {
+    // D-547 5.3: ventana de Katuq (Swal) en lugar de confirm() del navegador. Lo que pasa al confirmar no cambia.
+    Swal.fire({
+      title: "Quitar la revisión",
+      text: "¿Está seguro de quitar la revisión de este pedido?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Quitar revisión",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#5F3FE0",
+      cancelButtonColor: "#6c757d",
+    }).then((resultado) => {
+      if (!resultado.isConfirmed) return;
+
       // Quitar revisión - dejar en blanco
       order.revisadoParaProduccion = "";
 
@@ -10353,7 +10367,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.toastrService.error("Error al quitar revisión", "Error");
         },
       });
-    }
+    });
   }
 
   isOrderRevisado(order: Pedido): boolean {
