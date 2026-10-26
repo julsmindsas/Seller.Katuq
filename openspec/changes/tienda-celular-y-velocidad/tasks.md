@@ -113,6 +113,8 @@
   tope de longitud, nunca categorías ocultas.
 - [ ] 2.2 [P] `GET /catalogo`: los 5 órdenes, valor desconocido → orden de hoy, `sugerencias` con
   total 0, sin cantidades vendidas en la respuesta.
+  — **Avance (bloque TX34-B10): parte `sugerencias` con total 0 hecha** (`buscadorTienda.test.js`, sin
+  cantidades vendidas ni existencias). Faltan los 5 órdenes (TX34-B12).
 - [x] 2.3 [P] `POST /vista` con agente de robot o automatizado → 204 sin escribir.
   — **`tests/sitios/vistaSinRobots.contract.test.js` (8 pruebas, roja contra el código anterior);
   bloque TX34-B03.**
@@ -200,11 +202,24 @@
   el script de captura y la clave; el segundo clic de otro anuncio sale de la copia reciente.
   Prueba `claveCacheHtml.test.js` (15) y las de atribución sin cambios. Resto: ver revisión
   privada (S4).
-- [ ] 3.6 Buscador tolerante (D4) en sombra, con atributos solo con `categoryAttributes`.
+- [x] 3.6 Buscador tolerante (D4) en sombra, con atributos solo con `categoryAttributes`.
   **Éxito:** escenarios de BO; ≤ 50 ms con 8.568 productos de muestra.
+  — Hecho (TX34-B10): `services/sites/buscadorTienda.js` (funciones puras) conectado en `consultarCatalogo`
+  según `storeMobile.search` (off = hoy, shadow = sirve hoy y cuenta sin términos, on = nuevo). Prueba
+  `buscadorTienda.test.js` (error de tipeo, marca y categoría, atributo, exacta antes que aproximada, ocultas;
+  caliente 3,6 ms en el peor caso con 8.568 productos). Desvíos menores frente a D4: (1) las palabras se
+  separan por campo (para el peso) y se calculan en el buscador, memorizadas por entrada, en vez de la lista
+  única `palabras` de la proyección; (2) se suma un último escalón «contiene» (3 letras o más) para que `on`
+  nunca encuentre menos que la subcadena de hoy; (3) los atributos solo se buscan sobre la proyección que se
+  sirve (no en la sombra de `lightIndex`), con los valores que `valoresVisibles` muestra en la ficha.
 - [ ] 3.7 Autocompletar (D5): endpoint y lista accesible. **Éxito:** 2.1 en verde, revisión con axe
   sin errores nuevos, controles de la revisión privada.
-- [ ] 3.8 Sin resultados (D7) y, [si P8], el evento por la baliza. **Éxito:** 2.2 en verde.
+- [x] 3.8 Sin resultados (D7) y, [si P8], el evento por la baliza. **Éxito:** 2.2 en verde.
+  — Hecho (TX34-B10): `sugerencias` (corrección con resultado a 2 errores o menos, hasta 4 categorías visibles,
+  «Ver todo el catálogo» y WhatsApp) solo con `search` en `on`; el HTML y el script las pintan con enlaces y
+  `textContent`. Evento `busqueda_sin_resultado` por `POST /vista` con su filtro de robots, solo con la búsqueda
+  enviada (Enter, cabecera o `?q=`), una vez por término y sesión, saneado en el servidor y guardado solo con
+  `on`. De la 2.2 queda en verde la parte de `sugerencias`; los 5 órdenes son del bloque TX34-B12.
 - [ ] 3.9 Tarea nocturna de ventas (D6): primero `--dry-run` que solo imprime totales por empresa
   (pedidos leídos, líneas sin resolver, si llegó al tope); luego modo `compute`. Resuelve cada
   línea por id y, si no, por referencia → docId; documento por docId de empresa; `completo:
