@@ -1,0 +1,183 @@
+// Historial del producto (D-548, F1). Plano, fondo blanco, acento #5F3FE0, sin gradientes ni
+// primarios paralelos (AGENTS.md: regla de diseño Katuq). Prefijo `hprod-`: NINGÚN nombre de clase
+// lleva «p-» (el reset global `[class*="p-"]` forzaría su tamaño de letra; por eso no es `hp-`).
+// Todo texto lleva color y tamaño propios (`span.ng-star-inserted` pinta de azul los span de *ngIf).
+
+$tinta: #211F3A;
+$cuerpo: #5b5878;
+$muted: #8f8bab;
+$linea: #ececf4;
+$acento: #5F3FE0;
+$acento-hover: #4a2fc0;
+$acento-suave: #efe9ff;
+$lila: #faf9fe;
+
+:host {
+  display: block;
+}
+
+.hprod {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: $tinta;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.hprod-etiqueta {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: $muted;
+  text-transform: uppercase;
+}
+
+// ── Resumen ──────────────────────────────────────────────────────────────────
+.hprod-resumen {
+  background: #fff;
+  border: 1px solid $linea;
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
+}
+
+.hprod-resumen__fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+
+.hprod-resumen__quien { min-width: 0; flex: 1 1 200px; }
+
+.hprod-resumen__ref {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1E6FD9;
+  overflow-wrap: anywhere;
+}
+
+.hprod-resumen__nombre {
+  font-size: 14px;
+  font-weight: 700;
+  color: $tinta;
+  overflow-wrap: anywhere;
+}
+
+.hprod-resumen__datos { display: flex; flex-wrap: wrap; gap: 12px 28px; }
+.hprod-resumen__dato { display: flex; flex-direction: column; gap: 2px; }
+.hprod-resumen__valor { font-size: 13px; font-weight: 700; color: $tinta; }
+
+// ── Barra y botones ──────────────────────────────────────────────────────────
+.hprod-barra { display: flex; justify-content: flex-end; }
+
+.hprod-boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid $acento;
+  border-radius: 11px;
+  background: $acento;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color .12s ease, border-color .12s ease;
+
+  &:hover:not(:disabled) { background: $acento-hover; border-color: $acento-hover; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  &:disabled { opacity: .6; cursor: default; }
+}
+
+.hprod-boton--sec {
+  background: #fff;
+  border-color: #e4e2ef;
+  color: $cuerpo;
+
+  &:hover:not(:disabled) { background: $lila; border-color: #d9d5ee; }
+}
+
+.hprod-boton__texto { font-size: 13px; font-weight: 700; color: $cuerpo; }
+.hprod-boton__texto--claro { color: #fff; }
+.hprod-boton i { font-size: 13px; color: $cuerpo; }
+.hprod-boton:not(.hprod-boton--sec) i { color: #fff; }
+
+// ── Cargando ─────────────────────────────────────────────────────────────────
+.hprod-esqueleto { display: flex; flex-direction: column; gap: 14px; }
+.hprod-esqueleto__fila { display: flex; gap: 12px; align-items: center; }
+.hprod-esqueleto__tile { width: 32px; height: 32px; flex: none; border-radius: 10px; background: #f1f0f7; animation: hprod-brillo 1.2s ease-in-out infinite; }
+.hprod-esqueleto__textos { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.hprod-esqueleto__linea { height: 11px; border-radius: 6px; background: #f1f0f7; animation: hprod-brillo 1.2s ease-in-out infinite; }
+.hprod-esqueleto__linea--larga { width: 60%; }
+.hprod-esqueleto__linea--corta { width: 35%; }
+
+@keyframes hprod-brillo {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hprod-esqueleto__tile, .hprod-esqueleto__linea { animation: none; }
+}
+
+// ── Avisos y vacío ───────────────────────────────────────────────────────────
+.hprod-aviso {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  flex-wrap: wrap;
+}
+
+.hprod-aviso--error { background: #FDECEC; > i { color: #D64545; font-size: 16px; } }
+.hprod-aviso__cuerpo { flex: 1 1 180px; min-width: 0; }
+.hprod-aviso__titulo { font-size: 13px; font-weight: 700; color: #D64545; }
+.hprod-aviso__texto { font-size: 12.5px; color: $cuerpo; }
+
+.hprod-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 32px 16px;
+  text-align: center;
+}
+
+.hprod-vacio__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #f3f1fb;
+  i { font-size: 20px; color: $acento; }
+}
+
+.hprod-vacio__titulo { font-size: 15px; font-weight: 800; color: $tinta; }
+.hprod-vacio__texto { font-size: 12.5px; color: $muted; max-width: 360px; }
+
+// ── Días ─────────────────────────────────────────────────────────────────────
+.hprod-dias { display: flex; flex-direction: column; gap: 18px; }
+.hprod-dia { display: flex; flex-direction: column; gap: 8px; }
+
+.hprod-dia__titulo {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: $muted;
+  text-transform: uppercase;
+}
+
+.hprod-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.hprod-lista__item { margin: 0; padding: 0; min-width: 0; }
+
+.hprod-mas { display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 4px; }

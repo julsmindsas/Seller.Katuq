@@ -21,9 +21,12 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
+import { HistorialProductoModule } from '../productos/historial-producto/historial-producto.module';
 @NgModule({
   imports: [
     ImagenProductoPipe,
+    // D-548 (F1): diálogo «Historial» por producto.
+    HistorialProductoModule,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,

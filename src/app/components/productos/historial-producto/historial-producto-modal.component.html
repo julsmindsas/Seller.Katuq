@@ -1,0 +1,15 @@
+<div class="modal-header hprod-modal__cabeza">
+  <div class="hprod-modal__titulos">
+    <div class="modal-title hprod-modal__titulo">{{ titulo }}</div>
+    <div class="hprod-modal__sub" *ngIf="referencia || nombre">{{ referencia }}<ng-container *ngIf="referencia && nombre"> · </ng-container>{{ nombre }}</div>
+  </div>
+  <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrar()"></button>
+</div>
+
+<div class="modal-body hprod-modal__cuerpo">
+  <app-historial-producto [productoId]="productoId" [tipo]="tipo" [sinResumen]="true"></app-historial-producto>
+</div>
+
+<div class="modal-footer hprod-modal__pie">
+  <button type="button" class="hprod-modal__cerrar" (click)="cerrar()">Cerrar</button>
+</div>

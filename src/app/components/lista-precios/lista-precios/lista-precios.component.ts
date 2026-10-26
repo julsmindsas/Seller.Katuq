@@ -12,6 +12,10 @@ import { EditarCostoComponent } from '../editar-costo/editar-costo.component';
 import { ImportarCostosModalComponent } from '../importar-costos-modal/importar-costos-modal.component';
 import { Producto, PrecioPorTipoCliente } from 'src/app/shared/models/productos/Producto';
 import { ConfigPrecios, ModoPrecio, PricingModeService } from 'src/app/shared/services/empresas/pricing-mode.service';
+import { CompanyFeaturesService } from 'src/app/shared/services/company-features.service';
+import { HistorialProductoModalComponent } from '../../productos/historial-producto/historial-producto-modal.component';
+import { puedeVerCostosHistorial } from '../../productos/historial-producto/historial-producto.util';
+import type { FiltroHistorialProducto } from 'src/app/shared/models/historial-producto.model';
 
 @Component({
   selector: 'app-lista-precios',
@@ -95,7 +99,8 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
   constructor(
     private service: MaestroService,
     private modalService: NgbModal,
-    private pricingMode: PricingModeService
+    private pricingMode: PricingModeService,
+    public features: CompanyFeaturesService
   ) {}
 
   ngOnInit(): void {
@@ -496,6 +501,51 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
   obtenerEditor(producto: Producto): string {
     const editor = String((producto as any)?.user_edit || '').trim();
     return editor && editor !== 'precios-tipo-cliente' ? editor : '';
+  }
+
+  // ── Historial del producto (D-548, F1) ──
+
+  /** La acción «Historial» solo existe con la bandera `productHistoryLog`. Apagada, la pantalla es la de hoy. */
+  get historialDisponible(): boolean {
+    return this.features.isEnabled('productHistoryLog');
+  }
+
+  private _puedeVerHistorialCosto: boolean | null = null;
+
+  /**
+   * La acción «Historial» de la pestaña «Costo» solo se ofrece a quien puede ver costos (D9: familia
+   * Administrador, `puedeVerMargen` o el menú «Lista de precios»). Se calcula una vez; el servidor
+   * decide igual y, sin permiso, devuelve la lista de costo vacía.
+   */
+  get puedeVerHistorialCosto(): boolean {
+    if (this._puedeVerHistorialCosto === null) {
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const rutas = JSON.parse(localStorage.getItem('authorizedMenuItems') || '[]');
+        this._puedeVerHistorialCosto = puedeVerCostosHistorial(user?.rol, rutas);
+      } catch {
+        this._puedeVerHistorialCosto = false;
+      }
+    }
+    return this._puedeVerHistorialCosto;
+  }
+
+  /**
+   * Abre el historial de UN producto: en las pestañas de precios, solo sus cambios de precio; en
+   * «Costo», solo los de costo. Quien puede ver costos lo decide el servidor (D9: familia
+   * Administrador, `puedeVerMargen` o el menú «Lista de precios», que es el de esta pantalla); sin
+   * ese permiso la lista de costo llega vacía y nunca se revela que existan cambios.
+   */
+  verHistorial(producto: Producto, tipo: FiltroHistorialProducto) {
+    if (!producto?.cd) return;
+    const modalRef = this.modalService.open(HistorialProductoModalComponent, {
+      size: 'lg', centered: true, scrollable: false
+    });
+    modalRef.componentInstance.productoId = producto.cd;
+    modalRef.componentInstance.referencia = producto.identificacion?.referencia || '';
+    modalRef.componentInstance.nombre = producto.crearProducto?.titulo || '';
+    modalRef.componentInstance.tipo = tipo;
+    modalRef.result.catch(() => {});
   }
 
   // ── TrackBy ──
@@ -1047,7 +1097,15 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     this.leerArchivoExcel(file);
   }
 
+  /**
+   * Nombre del Excel que se está importando (D-548, 6.7). Viaja como el campo opcional `archivo` de
+   * las tres importaciones de precios para que el historial del producto diga de qué archivo vino el
+   * cambio. Solo se muestra; no cambia lo que se guarda.
+   */
+  private archivoImportacion = '';
+
   private leerArchivoExcel(file: File) {
+    this.archivoImportacion = String(file?.name || '').trim();
     const reader = new FileReader();
     reader.onload = (e: any) => {
       try {
@@ -1169,7 +1227,7 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
 
     await this.enviarImportacionPorLotes(
       items,
-      (lote) => firstValueFrom(this.service.importPreciosUnitarios(lote)),
+      (lote) => firstValueFrom(this.service.importPreciosUnitarios(lote, this.archivoImportacion || undefined)),
       'Precios unitarios'
     );
   }
@@ -1237,7 +1295,7 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
 
     await this.enviarImportacionPorLotes(
       items,
-      (lote) => firstValueFrom(this.service.importPreciosVolumen(lote)),
+      (lote) => firstValueFrom(this.service.importPreciosVolumen(lote, this.archivoImportacion || undefined)),
       'Precios por volumen'
     );
   }
@@ -1484,7 +1542,10 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
         const response: any = await firstValueFrom(
           // `preciosConIva` viaja por ítem (según el sufijo del encabezado); el global
           // queda solo como respaldo para lotes que no lo traigan.
-          this.service.importPreciosTipoCliente({ precios: lotes[i], porcentajeIva: 19, preciosConIva: false })
+          this.service.importPreciosTipoCliente({
+            precios: lotes[i], porcentajeIva: 19, preciosConIva: false,
+            ...(this.archivoImportacion ? { archivo: this.archivoImportacion } : {})
+          })
         );
         const data = response?.data || response || {};
         actualizados += data.actualizados || 0;

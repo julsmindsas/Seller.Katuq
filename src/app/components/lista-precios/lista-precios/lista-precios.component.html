@@ -198,6 +198,15 @@
                         tooltipPosition="left">
                         <i class="pi pi-pencil"></i>
                       </button>
+                      <button
+                        *ngIf="historialDisponible"
+                        class="btn btn-sm btn-outline-primary ms-1"
+                        (click)="verHistorial(producto, 'precios')"
+                        aria-label="Ver el historial de precios"
+                        pTooltip="Ver el historial de precios"
+                        tooltipPosition="left">
+                        <i class="pi pi-history"></i>
+                      </button>
                     </td>
                   </tr>
                 </ng-template>
@@ -445,6 +454,15 @@
                         tooltipPosition="left">
                         <i class="pi pi-pencil"></i>
                       </button>
+                      <button
+                        *ngIf="historialDisponible"
+                        class="btn btn-sm btn-outline-primary ms-1"
+                        (click)="verHistorial(producto, 'precios')"
+                        aria-label="Ver el historial de precios"
+                        pTooltip="Ver el historial de precios"
+                        tooltipPosition="left">
+                        <i class="pi pi-history"></i>
+                      </button>
                     </td>
                   </tr>
                 </ng-template>
@@ -585,6 +603,15 @@
                         tooltipPosition="left">
                         <i class="pi pi-pencil"></i>
                       </button>
+                      <button
+                        *ngIf="historialDisponible"
+                        class="btn btn-sm btn-outline-primary ms-1"
+                        (click)="verHistorial(producto, 'precios')"
+                        aria-label="Ver el historial de precios"
+                        pTooltip="Ver el historial de precios"
+                        tooltipPosition="left">
+                        <i class="pi pi-history"></i>
+                      </button>
                     </td>
                   </tr>
                 </ng-template>
@@ -715,6 +742,15 @@
                         pTooltip="Editar costo"
                         tooltipPosition="left">
                         <i class="pi pi-pencil"></i>
+                      </button>
+                      <button
+                        *ngIf="historialDisponible && puedeVerHistorialCosto"
+                        class="btn btn-sm btn-outline-primary ms-1"
+                        (click)="verHistorial(producto, 'costo')"
+                        aria-label="Ver el historial de costo"
+                        pTooltip="Ver el historial de costo"
+                        tooltipPosition="left">
+                        <i class="pi pi-history"></i>
                       </button>
                     </td>
                   </tr>

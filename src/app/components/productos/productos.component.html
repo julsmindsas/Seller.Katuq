@@ -770,12 +770,19 @@
 
                                 <!-- Fecha editado (solo en desktop) -->
                                 <td *ngIf="!isMobile && isColVisible('ultimaEdicion')" class="text-center">
-                                    <small class="pk-date">{{
-                                        toDate(row.date_edit)
-                                            ? (toDate(row.date_edit)
-                                              | date: "dd/MM/yyyy")
-                                            : "N/A"
-                                    }}</small>
+                                    <!-- D-548 (6.1): con la bandera productHistoryLog, hora de Colombia y quién editó; sin ella, la fecha de siempre. -->
+                                    <ng-container *ngIf="historialNuevo; else fechaDeSiempre">
+                                        <small class="pk-date">{{ fechaEdicion(row) }}</small>
+                                        <small class="pk-editor" *ngIf="editorEdicion(row)">{{ editorEdicion(row) }}</small>
+                                    </ng-container>
+                                    <ng-template #fechaDeSiempre>
+                                        <small class="pk-date">{{
+                                            toDate(row.date_edit)
+                                                ? (toDate(row.date_edit)
+                                                  | date: "dd/MM/yyyy")
+                                                : "N/A"
+                                        }}</small>
+                                    </ng-template>
                                 </td>
 
                                 <!-- Tipo de producto - OCULTO -->

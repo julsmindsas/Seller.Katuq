@@ -77,6 +77,11 @@ export const COMPANY_FEATURE_FLAGS = [
   // y el modal son los de F1. Dueño: Daniel. Se retira el 2027-04-30: encendida para todos o eliminada
   // (Artículo XII).
   'orderPinnedActions',
+  // Historial del producto (D-548 F1, tickets 1357 y 1358): quién cambió qué en un producto, sus precios
+  // y su costo, desde el panel, las importaciones, las acciones masivas y Claude. Apagada, la ficha
+  // muestra la pestaña de hoy y Listas de precios no ofrece «Historial». Dueño: Daniel. Se retira el
+  // 2027-04-30: encendida para todos o eliminada (Artículo XII).
+  'productHistoryLog',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];
