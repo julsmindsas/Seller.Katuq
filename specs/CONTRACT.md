@@ -12067,3 +12067,12 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - Decisiones del mismo día:
   - D-551: se dispensa la evidencia del 403 en producción (tarea 1.1) y no se aprueba el detalle por clic (3.9 y 3.12).
   - D-550: se aceptan los pedidos sin `date_upd`. El cierre de «el modelo puede aprobar» va en un cambio aparte, `mcp-aprobacion-solo-humano`, antes de encender la edición desde Claude.
+
+### 2026-10-26 — D-499 2.4 aprobada por Daniel y subida
+
+- Daniel la aprobó en el chat («si»). Backend `3d123326` en `backend-aws-security`, rebasada sobre la punta del 26-oct sin conflictos.
+- `dianXMLProvider.createInvoice` llama a `hooks.beforeSend({ number, cufe })` justo antes de enviar. Todo error lleva `submittedToDian`, y `error.document` cuando ya salió. La auditoría guarda `requestId`, `submittedToDian` y `cufe`. `dian/numbering.js` sin cambios.
+- Pruebas: `test:dian-invoice` 64/64, `test:invoicing`, candados, `pedido-ya-facturado`, liberar y reemplazar factura en verde.
+- Subida, sin desplegar: la publica Daniel.
+- Siguen, sensibles y con diff: 2.5 (`requestId` y códigos en `from-order`), 2.6 y 2.7 (`verify-invoice`), 2.9 y 2.11.
+- La rama local del front en el equipo del agente tiene 139 commits del 21-oct (fusión de `feature/tickets-web`) que no están en `origin` y chocan con él en 13 archivos (reportes, menú lateral, `company-features`, `CONTRACT.md`, `package.json`). No se subieron; hay que resolverlos antes.
