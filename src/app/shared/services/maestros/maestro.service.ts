@@ -299,6 +299,12 @@ export class MaestroService {
     if (excludeId) params = params.set('excludeId', excludeId);
     return this.http.get(this.urlBase + '/v1/productos/check-referencia', { params });
   }
+  /** Ticket 1411: otros productos de la empresa con el mismo nombre (aviso, no bloquea). */
+  public buscarMismoNombre(titulo: string, excludeId?: string): Observable<any> {
+    let params = new HttpParams().set('titulo', titulo);
+    if (excludeId) params = params.set('excludeId', excludeId);
+    return this.http.get(this.urlBase + '/v1/productos/check-referencia', { params });
+  }
   public getTotalProducts() {
     return this.http.get(this.urlBase + '/v1/productos/totalProducts', this.httpOptions);
   }

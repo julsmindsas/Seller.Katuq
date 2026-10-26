@@ -211,7 +211,17 @@
             </thead>
             <tbody>
               <tr *ngFor="let p of pedidosVisibles(c); trackBy: trackByPedido">
-                <td class="cx-cell-strong">{{ p.nroPedido || '—' }}</td>
+                <!-- Ticket 1386: el número abre el pedido en otra pestaña -->
+                <td class="cx-cell-strong">
+                  <a *ngIf="p.nroPedido; else sinNroPedido"
+                     class="cx-link-pedido"
+                     [routerLink]="['/ventas/pedidos']"
+                     [queryParams]="{ buscar: p.nroPedido }"
+                     target="_blank"
+                     rel="noopener"
+                     (click)="$event.stopPropagation()">{{ p.nroPedido }} <i class="pi pi-external-link"></i></a>
+                  <ng-template #sinNroPedido>—</ng-template>
+                </td>
                 <td class="text-center">
                   <span class="cx-badge" [ngClass]="metaPago(p.estadoPago).badgeClass">{{ metaPago(p.estadoPago).label }}</span>
                 </td>

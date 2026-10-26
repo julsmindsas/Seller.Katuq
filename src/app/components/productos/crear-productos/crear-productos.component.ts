@@ -29,7 +29,7 @@ import {
 } from "ngx-dropzone-wrapper";
 import Swal from "sweetalert2";
 
-import { Observable, Subscription } from "rxjs";
+import { Observable, Subscription, firstValueFrom } from "rxjs";
 import { parse, stringify } from "flatted";
 import { TreeNode } from "primeng/api";
 import { TabView } from "primeng/tabview";
@@ -46,6 +46,7 @@ import { ProcesoConCentroTrabajo } from "../../empresas/model/produccion/proceso
 import { UtilsService } from "../../../shared/services/utils.service";
 import { KatuqintelligenceService } from "../../../shared/services/katuqintelligence/katuqintelligence.service";
 import { ArchivoSubido, ImagenService } from "../../../shared/utils/image.service";
+import { textoPlanoADescripcionHtml } from "../../../shared/utils/texto-plano-descripcion";
 import { HttpEventType } from "@angular/common/http";
 import { error } from "console";
 
@@ -1110,6 +1111,25 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     return false;
   }
 
+  /**
+   * Ticket 1410 (ALMARA): al pegar texto plano en la descripción, las líneas que
+   * empiezan con «- », «• » o «* » quedan como viñetas y las demás como párrafos.
+   * Antes todo entraba sin estructura y, pegado dentro de una lista, todas las
+   * líneas quedaban con viñeta. Lo pegado desde Word o la web (HTML) sigue igual.
+   */
+  alListoEditorDescripcion(editor: any): void {
+    const documento = editor?.editing?.view?.document;
+    if (!documento) return;
+    documento.on('clipboardInput', (_evt: any, data: any) => {
+      const dt = data?.dataTransfer;
+      if (!dt || data.content) return;
+      const html = dt.getData('text/html');
+      const texto = dt.getData('text/plain');
+      if (html || !texto || !/\r?\n/.test(texto)) return;
+      data.content = editor.data.htmlProcessor.toView(textoPlanoADescripcionHtml(texto));
+    }, { priority: 'high' });
+  }
+
   deleteImg(imgToDelete: string, index: number): void {
     Swal.fire({
       title: "¿Estás seguro?",
@@ -1887,6 +1907,43 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.validarReferenciaUnica().then(() => {});
   }
 
+  /**
+   * Ticket 1411 (ALMARA): si otro producto de la empresa tiene el mismo nombre (sin
+   * distinguir mayúsculas, tildes ni espacios), se avisa con cuáles son (nombre, referencia,
+   * precio y estado). Es un aviso: «Guardar de todas formas» sigue. Si la consulta falla, se guarda.
+   */
+  private async confirmarSiHayMismoNombre(): Promise<boolean> {
+    const titulo = String(this.crearProducto?.getRawValue?.()?.titulo || '').trim();
+    if (!titulo) return true;
+    // Al editar, solo si el nombre cambió (si no, el aviso saldría en cada guardado).
+    if (this.isEditMode() && titulo === String(this.edit?.crearProducto?.titulo || '').trim()) return true;
+    const excludeId = this.isEditMode() ? (this.edit?.cd || this.edit?.id || this.cd) : undefined;
+    let mismos: any[] = [];
+    try {
+      const r: any = await firstValueFrom(this.service.buscarMismoNombre(titulo, excludeId));
+      mismos = Array.isArray(r?.mismoNombre) ? r.mismoNombre : [];
+    } catch {
+      return true;
+    }
+    if (!mismos.length) return true;
+    const esc = (s: any) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' } as any)[c]);
+    const filas = mismos.map((p) => {
+      const precio = p.precio != null ? ` · $${Number(p.precio).toLocaleString('es-CO')}` : '';
+      const estado = p.activo ? 'activo' : 'inactivo';
+      return `<li><strong>${esc(p.titulo)}</strong> (${esc(p.referencia || 'sin referencia')}${precio} · ${estado})</li>`;
+    }).join('');
+    const r = await Swal.fire({
+      icon: 'warning',
+      title: 'Ya existe un producto con este nombre',
+      html: `<ul style="text-align:left;margin:0;padding-left:18px">${filas}</ul>` +
+        `<p style="margin-top:10px">¿Quieres guardar este de todas formas?</p>`,
+      showCancelButton: true,
+      confirmButtonText: 'Guardar de todas formas',
+      cancelButtonText: 'Volver',
+    });
+    return !!r.isConfirmed;
+  }
+
   private validarReferenciaUnica(): Promise<boolean> {
     const tipoRef = this.identificacion.get('tipoReferencia')?.value;
     // Referencias automáticas ('propio') son únicas por diseño — no validar
@@ -1968,6 +2025,11 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       setTimeout(() => {
         this.referencia?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
+      return;
+    }
+
+    if (!(await this.confirmarSiHayMismoNombre())) {
+      this.saving = false;
       return;
     }
 
@@ -2119,6 +2181,11 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     // Al editar avisa pero no bloquea (salvo la imagen), para no dejar
     // intocables los productos viejos que no cumplen los obligatorios de hoy.
     if (!(await this.validarAntesDeGuardar('editar'))) {
+      this.saving = false;
+      return;
+    }
+
+    if (!(await this.confirmarSiHayMismoNombre())) {
       this.saving = false;
       return;
     }

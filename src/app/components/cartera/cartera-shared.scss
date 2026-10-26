@@ -251,5 +251,13 @@ $cx-aging-60:        #e0483f;
 .cx-c-d60       { color: $cx-aging-60; }
 
 .cx-cell-strong { font-weight: 800; color: var(--kc-ink); }
+// Ticket 1386: número de pedido que abre el pedido en otra pestaña.
+.cx-link-pedido {
+  color: #5F3FE0;
+  text-decoration: none;
+  white-space: nowrap;
+  i { font-size: 0.65rem; margin-left: 2px; }
+  &:hover { text-decoration: underline; }
+}
 .text-end    { text-align: right; font-variant-numeric: tabular-nums; }
 .text-center { text-align: center; }

@@ -212,6 +212,7 @@
 										<label class="form-label" for="validationCustom01">Descripción y
 											contenido<span class="redasteris">*</span></label>
 										<ckeditor formControlName="descripcion" [editor]="ClassicEditor"
+											(ready)="alListoEditorDescripcion($event)"
 											data="<p>Descripcion</p>"></ckeditor>
 										<div *ngIf="crearProducto.controls['descripcion'].invalid && crearProducto.controls['descripcion'].touched"
 											class="error-message">
@@ -233,6 +234,7 @@
 											Podés usar negrita y listas.
 										</small>
 										<ckeditor formControlName="descripcion" [editor]="ClassicEditor"
+											(ready)="alListoEditorDescripcion($event)"
 											data="<p>Descripcion</p>"></ckeditor>
 										<div *ngIf="crearProducto.controls['descripcion'].invalid && crearProducto.controls['descripcion'].touched"
 											class="error-message">
