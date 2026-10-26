@@ -193,9 +193,13 @@
   **Pendiente:** la medición 1.3 repetida sobre FLORECER y OH MY STORE (bloqueada); la bandera
   `storeLightIndex` en FLORECER al desplegar; P18: las facetas de F2-42 deben leer de la proyección
   (punto de extensión documentado en `indiceTienda.js`; no se tocó F2-42).
-- [ ] 3.5b Clave de la caché del HTML sin parámetros de campaña (D15, revisión privada S4).
+- [x] 3.5b Clave de la caché del HTML sin parámetros de campaña (D15, revisión privada S4).
   **Éxito:** VE «Quien llega por un anuncio no espera de más»; prueba de atribución del pedido
   igual que hoy.
+  — Hecho (TX34-B09, sin interruptor): la lista de campos de atribución es una sola y la comparten
+  el script de captura y la clave; el segundo clic de otro anuncio sale de la copia reciente.
+  Prueba `claveCacheHtml.test.js` (15) y las de atribución sin cambios. Resto: ver revisión
+  privada (S4).
 - [ ] 3.6 Buscador tolerante (D4) en sombra, con atributos solo con `categoryAttributes`.
   **Éxito:** escenarios de BO; ≤ 50 ms con 8.568 productos de muestra.
 - [ ] 3.7 Autocompletar (D5): endpoint y lista accesible. **Éxito:** 2.1 en verde, revisión con axe
