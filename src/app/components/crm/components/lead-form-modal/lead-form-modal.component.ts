@@ -1,3 +1,4 @@
+import { TranslateModule } from '@ngx-translate/core';
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -28,6 +29,7 @@ export interface LeadTag {
   selector: 'app-lead-form-modal',
   standalone: true,
   imports: [
+    TranslateModule,
     CommonModule, ReactiveFormsModule,
     InputTextModule, InputTextareaModule, InputNumberModule, ButtonModule,
   ],
