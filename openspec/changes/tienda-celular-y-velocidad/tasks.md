@@ -59,16 +59,42 @@
   y memoria del índice y de la proyección (con `imagenesPrincipales`), y demora por lectura, en
   FLORECER, OH MY STORE y lino-y-lona. **Éxito:** cifras en `design.md`; la demora alimenta la
   corrida fría de 1.1.
-- [ ] 1.4 [P] Caracterización del catálogo: prueba dorada de `consultarCatalogo` con un catálogo
+- [x] 1.4 [P] Caracterización del catálogo: prueba dorada de `consultarCatalogo` con un catálogo
   de muestra (texto, categoría, marca, precio, oferta, ocasión, los 3 órdenes de hoy, plan gratis
   y ocultas). **Éxito:** verde con el código de hoy.
-- [ ] 1.5 Prueba de compra en celular (TC «Compra completa»): portada → búsqueda o catálogo →
+  — Hecha el 26-oct (bloque TX34-B05, commit local en `feature/tickets-web`):
+  `tests/sitios/consultarCatalogo.golden.test.js` y `consultarCatalogo.golden.json` (26 casos sobre
+  un catálogo de muestra en la Firestore falsa, con el reloj congelado). Cubre los tres órdenes de
+  hoy (el natural, `precio-asc`, `precio-desc`; «novedad» cae al natural), texto con tildes y por
+  referencia, categoría (también por ruta), marca (también por ruta), rango de precio, oferta (la
+  vencida no cuenta), ocasión, lo vendible (agotado, inactivo, fuera de Página Web y sin precio no
+  salen), `enPaginaWeb` con y sin marketplace (`publicacionExplicita`), categorías ocultas y plan
+  gratis (50 visibles, 5 páginas). Fija también que hoy NO tolera errores de tipeo ni busca en la
+  marca. `consultarCatalogo` se expone en `exports._test` (una línea). `npm run test:catalogo-dorado`.
+  Red de seguridad de la proyección (TX34-B08).
+- [x] 1.5 Prueba de compra en celular (TC «Compra completa»): portada → búsqueda o catálogo →
   ficha → carrito → checkout → paso a la pasarela simulada, a 360 y 390 px, en las 15 plantillas.
   Revisa desplazamiento horizontal, campos de 16 px, áreas de 44 px, textos legibles (P20) y
   elementos fijos cruzados.
   Se suma a un script de `package.json`, junto con `rendimientoMovil.test.js`.
   - **Éxito:** corre; hoy falla solo por lo que esta propuesta corrige (44 px, cruces), con la
     lista de fallas guardada.
+  — Hecha el 26-oct (bloque TX34-B05, commit local): `tests/sitios/compraCelular.e2e.js` (medidor en
+  `_medidorMovil.js`) sobre el servidor y el Chromium del laboratorio (D2), a 360 y 390 px en las 15
+  plantillas (30 recorridos, 217 s). El POST del pedido lo contesta la prueba y el paso final llega a
+  una pasarela simulada (`/pasarela-simulada`): no hay Wompi ni escrituras. Las tiendas de muestra
+  llevan el aviso de cookies, el WhatsApp flotante y el botón de KAI encendidos. El medidor se
+  autoprueba antes de cada corrida con una página de fallas conocidas.
+  Resultado de hoy: no falla desplazamiento horizontal ni campos de 16 px en ningún paso; sí fallan
+  44 px (2.727 en la lista), textos de 12 px (296), controles con texto de 14 px (1.054) y cruces
+  (261: KAI sobre el aviso de cookies en las 15 plantillas, el carrito flotante sobre KAI y sobre el
+  aviso, y el aviso de cookies tapando «Revisar mi pedido» y «Confirmar pedido» del checkout y, en 3
+  recorridos, «Agregar al carrito»). Lista guardada en
+  `tests/sitios/compraCelular.fallas.json` (4.338 líneas, una por falla). La prueba termina en rojo si
+  falla otra categoría, si el recorrido no llega a la pasarela o si aparece una falla que no está en la
+  lista; con `--estricto` no tolera ninguna (TX34-B06 las corrige y la lista se vacía).
+  Script `npm run test:tienda-celular` (incluye `rendimientoMovil.test.js`); sin el Chromium del
+  laboratorio el e2e se salta con un mensaje y sale con código 0.
 - [ ] 1.6 [S] Caracterización del pago: `/gracias` en cada estado (aprobado, pendiente, rechazado,
   anulado, vencido, a cuotas, con y sin regreso válido) y `/pagar` en cada estado, incluido el
   pedido del bot (F4-40 D11). Se apoya en `pedidoTiendaCaracterizacion`, `recordatorioPagoBase` y
