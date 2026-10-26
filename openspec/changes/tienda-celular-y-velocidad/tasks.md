@@ -134,11 +134,24 @@
   propósito la instantánea de `fichaEspecificaciones`, solo en la compuerta de la baliza: es el
   cambio de D3, aprobado con el diseño, y queda anotado para que Daniel lo vea. Sin interruptor,
   como dice D3.**
-- [ ] 3.2 [P] Áreas táctiles, textos legibles y elementos fijos (D9) en `siteHtml.js` y
+- [x] 3.2 [P] Áreas táctiles, textos legibles y elementos fijos (D9) en `siteHtml.js` y
   `siteTienda.js`; panel de filtros con Escape y toque fuera. **Éxito:** 1.5 sin fallas de 44 px,
   de textos ni cruces.
-- [ ] 3.3 [P] Error de red (D13) en catálogo, búsqueda y orden (el checkout va en la 4.4).
+  — **Hecha (bloque TX34-B06):** bloque D9 al final de la hoja de la tienda (`estilosTienda`, solo ≤767 px,
+  sin interruptor), pila fija barra de la ficha < carrito y WhatsApp < aviso de cookies < KAI con el alto
+  del aviso entregado por una variable, aviso de cookies compacto y bajo el panel del carrito, y panel de
+  filtros con Escape, toque en el fondo y foco de vuelta a «Filtrar». La 1.5 pasa en `--estricto`: 0 fallas
+  en las 15 plantillas a 360 y 390 px (la lista de fallas quedó vacía). El medidor de cruces ahora da por
+  libre un botón si en alguna altura de la pantalla nada lo tapa (un elemento fijo siempre tapa algo al
+  desplazarse). Pruebas nuevas: `panelFiltrosMovil` y `elementosFijosMovil`. Texto mínimo con
+  `max(14px,…)` para respetar «texto chico» de F2-17.
+- [x] 3.3 [P] Error de red (D13) en catálogo, búsqueda y orden (el checkout va en la 4.4).
   **Éxito:** escenarios de ES «Error de red» del catálogo en prueba con red cortada.
+  — **Hecha (bloque TX34-B06):** `traer()` pasa a «la última gana» (aborta la anterior; sin AbortController
+  ignora la respuesta vieja). Si falla, responde sin éxito o no es JSON, deja los productos de antes y
+  muestra un aviso `role="alert"` con «Reintentar» de 44 px que repite la misma petición. Prueba
+  `catalogoErrorDeRed.test.js` con la red cortada en un Chromium de celular (7 escenarios; probada en
+  rojo quitando el aviso y la regla de la última).
 - [ ] 3.4 [P] Imágenes (D14): `srcset` y `sizes` con variantes, precarga de la ficha con el
   mismo `srcset`, primera fila sin carga diferida, medidas reservadas; la portada JPEG de TX-37
   sin `srcset` salvo que TX-37 cambie su pregunta 7. **Éxito:** 2.6 en verde, VE «Fotos del
